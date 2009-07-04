@@ -1,50 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32867 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754942AbZGMUic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:38:32 -0400
-Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <b170af450907131332x65b43bbfxa76ff2abc743317a@mail.gmail.com>
-References: <1247174482.17896.1304.camel@rc-desk>
-	 <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
-	 <1247182010.17896.1344.camel@rc-desk>
-	 <b170af450907131330o7eda50bakd6119f47af35d564@mail.gmail.com>
-	 <b170af450907131332x65b43bbfxa76ff2abc743317a@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 13 Jul 2009 13:38:31 -0700
-Message-Id: <1247517511.17896.1652.camel@rc-desk>
-Mime-Version: 1.0
+Received: from an-out-0708.google.com ([209.85.132.244]:56878 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbZGDEnW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jul 2009 00:43:22 -0400
+Received: by an-out-0708.google.com with SMTP id d40so6596975and.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jul 2009 21:43:25 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 3 Jul 2009 23:43:25 -0500
+Message-ID: <dcc24d260907032143h38165b8as9f18da70b16ed2a@mail.gmail.com>
+Subject: Slow wired network when wireless card is also active
+From: David Webber <dwebber@illinois.edu>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-13 at 13:32 -0700, Rafał Miłecki wrote:
-> W dniu 13 lipca 2009 22:30 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> > W dniu 10 lipca 2009 01:26 użytkownik reinette chatre
-> > <reinette.chatre@intel.com> napisał:
-> >>> Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
-> >>> estimate would be nice to known. This month? This year?
-> >>
-> >> I am not aware of any scheduled date for a new release. Are there
-> >> critical issues that you are aware of that requires a new uCode?
-> >
-> > I noticed new bug report about firmware failure on scp (using new
-> > firmware). I use ssh/sftp/scp a lot, so it doesn't sound nice to me.
-> >
-> > Moreover it seems to be quite reproductable, so I'm scared of hittint
-> > it quite often.
-> 
-> Probably I really should post link to bug report:
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004
+I'm trying to use Jaunty on my Centrino laptop as a wireless access
+point / NAT. My cable modem is plugged in to the ethernet port.
+Strangely, when I enable the wireless card (via hostapd or simply
+'ifconfig wlan1 192.168.0.1 up'), my WIRED network slows down. On a
+terminal on the laptop, I see transfer speeds drop from over about 200
+K/s to about 40 K/s. As far as I can tell, the problem is not affected
+by iptables rules, ip_forward on/off, or ipv6. Just having the
+wireless card present and active seems to affect the wired interface.
+The problem may have something to do with having hostapd active, but
+I'm not sure.
 
-This bug was reported against 5100 series hardware and is not present in
-4965. Even so, this bug was fixed in the driver and the patch has
-already been pushed upstream.
+Aside: I have an intel wireless card built-in but since it can't do
+hostap-mode, I purchased the ath9k cardbus card. The intel card is
+disabled by function-key and is not active on boot. I have recent
+versions of the kernel and hostapd from the subversion repositories
+discussed on linuxwireless.org.
 
-Reinette
+Linux version 2.6.30-custom-wl (root@whitebook) (gcc version 4.3.3
+(Ubuntu 4.3.3-5ubuntu4) ) #1 SMP Thu Jun 18 19:22:02 CDT 2009
 
+00:00.0 Host bridge: Intel Corporation 82852/82855 GM/GME/PM/GMV
+Processor to I/O Controller (rev 02)
+00:00.1 System peripheral: Intel Corporation 82852/82855 GM/GME/PM/GMV
+Processor to I/O Controller (rev 02)
+00:00.3 System peripheral: Intel Corporation 82852/82855 GM/GME/PM/GMV
+Processor to I/O Controller (rev 02)
+00:02.0 VGA compatible controller: Intel Corporation 82852/855GM
+Integrated Graphics Device (rev 02)
+00:02.1 Display controller: Intel Corporation 82852/855GM Integrated
+Graphics Device (rev 02)
+00:1d.0 USB Controller: Intel Corporation 82801DB/DBL/DBM
+(ICH4/ICH4-L/ICH4-M) USB UHCI Controller #1 (rev 03)
+00:1d.1 USB Controller: Intel Corporation 82801DB/DBL/DBM
+(ICH4/ICH4-L/ICH4-M) USB UHCI Controller #2 (rev 03)
+00:1d.2 USB Controller: Intel Corporation 82801DB/DBL/DBM
+(ICH4/ICH4-L/ICH4-M) USB UHCI Controller #3 (rev 03)
+00:1d.7 USB Controller: Intel Corporation 82801DB/DBM (ICH4/ICH4-M)
+USB2 EHCI Controller (rev 03)
+00:1e.0 PCI bridge: Intel Corporation 82801 Mobile PCI Bridge (rev 83)
+00:1f.0 ISA bridge: Intel Corporation 82801DBM (ICH4-M) LPC Interface
+Bridge (rev 03)
+00:1f.1 IDE interface: Intel Corporation 82801DBM (ICH4-M) IDE
+Controller (rev 03)
+00:1f.3 SMBus: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M)
+SMBus Controller (rev 03)
+00:1f.5 Multimedia audio controller: Intel Corporation 82801DB/DBL/DBM
+(ICH4/ICH4-L/ICH4-M) AC'97 Audio Controller (rev 03)
+00:1f.6 Modem: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M)
+AC'97 Modem Controller (rev 03)
+01:01.0 Network controller: Intel Corporation PRO/Wireless 2200BG
+[Calexico2] Network Connection (rev 05)
+01:02.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+RTL-8139/8139C/8139C+ (rev 10)
+01:04.0 CardBus bridge: Texas Instruments PCI1410 PC card Cardbus
+Controller (rev 02)
+01:05.0 FireWire (IEEE 1394): VIA Technologies, Inc. VT6306 Fire II
+IEEE 1394 OHCI Link Layer Controller (rev 80)
+02:00.0 Network controller: Atheros Communications Inc. AR5008
+Wireless Network Adapter (rev 01)
 
+Speed test:
+(start with everything active. NAT works, other computers can reach
+the internet through the laptop, but the speed is just slow. For this
+test, no other machines were connected so they're not consuming the
+bandwidth)
+$ wget http://cosmos.cites.uiuc.edu/pub/ubuntu-iso/9.04/ubuntu-9.04-desktop-amd64.iso
+[snip] 47.6K/s eta 4h 56m
+$ sudo ifdown wlan1
+[snip] 44.5K/s eta 5h 54m
+$ sudo ifconfig mon.wlan1 down
+[snip] 245K/s eta 45m 7s
+
+As you can see, I lose about a factor of 5 when the wireless card is active.
+
+I also posted this question to
+https://answers.launchpad.net/ubuntu/+question/76037
+
+Thanks in advance,
+David
