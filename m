@@ -1,214 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:50175 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbZGaQPE (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:55072 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbZGDKLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 12:15:04 -0400
-Received: by bwz19 with SMTP id 19so1285215bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 09:15:01 -0700 (PDT)
-Subject: [PATCH 000/002] Fix frequent reconnects caused by new conection
- monitor
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: multipart/mixed; boundary="=-xmg/2bmumQZjWoMrv0to"
-Date: Fri, 31 Jul 2009 19:13:37 +0300
-Message-Id: <1249056817.20593.1.camel@maxim-laptop>
-Mime-Version: 1.0
+	Sat, 4 Jul 2009 06:11:46 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Sat, 4 Jul 2009 12:11:48 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Max Filippov <jcmvbkbc@gmail.com>
+References: <200907040053.05654.chunkeey@web.de> <4A4EBB68.6050502@lwfinger.net>
+In-Reply-To: <4A4EBB68.6050502@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907041211.49115.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 04 July 2009 04:16:08 Larry Finger wrote:
+> Christian Lamparter wrote:
+> > This patch tries to address a long standing issue: 
+> > how to survive serve memory starvation situations,
+> > without losing the device due to missing transfer-buffers.
+> > 
+> > And with a flick of __GFP_NOWARN, we're able to handle ?all? memory
+> > allocation failures on the rx-side during operation without much fuss.
+> > 
+> > However, there is still an issue within the xmit-part.
+> > This is likely due to p54's demand for a large free headroom for
+> > every outgoing frame:
+> > 
+> -- snip --
+> 
+> > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+> > index 461d88f..c521bbc 100644
+> > --- a/drivers/net/wireless/p54/p54usb.c
+> > +++ b/drivers/net/wireless/p54/p54usb.c
+> > @@ -120,37 +120,14 @@ static void p54u_rx_cb(struct urb *urb)
+> >  	}
+> >  
+> >  	skb_put(skb, urb->actual_length);
+> > +	skb = p54_rx(dev, skb);
+> >  
+> > -	if (priv->hw_type == P54U_NET2280)
+> > -		skb_pull(skb, priv->common.tx_hdr_len);
+> > -	if (priv->common.fw_interface == FW_LM87) {
+> > -		skb_pull(skb, 4);
+> > -		skb_put(skb, 4);
+> > -	}
+> > -
+> > -	if (p54_rx(dev, skb)) {
+> > -		skb = dev_alloc_skb(priv->common.rx_mtu + 32);
+> > -		if (unlikely(!skb)) {
+> > -			/* TODO check rx queue length and refill *somewhere* */
+> > -			return;
+> > -		}
+> > +	info = (struct p54u_rx_info *) skb->cb;
+> > +	info->urb = urb;
+> > +	info->dev = dev;
+> > +	urb->transfer_buffer = skb_tail_pointer(skb);
+> > +	urb->context = skb;
+> >  
+> > -		info = (struct p54u_rx_info *) skb->cb;
+> > -		info->urb = urb;
+> > -		info->dev = dev;
+> > -		urb->transfer_buffer = skb_tail_pointer(skb);
+> > -		urb->context = skb;
+> > -	} else {
+> > -		if (priv->hw_type == P54U_NET2280)
+> > -			skb_push(skb, priv->common.tx_hdr_len);
+> > -		if (priv->common.fw_interface == FW_LM87) {
+> > -			skb_push(skb, 4);
+> > -			skb_put(skb, 4);
+> > -		}
+> > -		skb_reset_tail_pointer(skb);
+> > -		skb_trim(skb, 0);
+> > -		urb->transfer_buffer = skb_tail_pointer(skb);
+> > -	}
+> >  	skb_queue_tail(&priv->rx_queue, skb);
+> >  	usb_anchor_urb(urb, &priv->submitted);
+> >  	if (usb_submit_urb(urb, GFP_ATOMIC)) {
+> > @@ -186,7 +163,7 @@ static int p54u_init_urbs(struct ieee80211_hw *dev)
+> >  	int ret = 0;
+> >  
+> >  	while (skb_queue_len(&priv->rx_queue) < 32) {
+> > -		skb = __dev_alloc_skb(priv->common.rx_mtu + 32, GFP_KERNEL);
+> > +		skb = __dev_alloc_skb(priv->common.rx_mtu, GFP_KERNEL);
+> >  		if (!skb) {
+> >  			ret = -ENOMEM;
+> >  			goto err;
+> > @@ -927,14 +904,17 @@ static int __devinit p54u_probe(struct usb_interface *intf,
+> >  #endif
+> >  
+> >  		priv->hw_type = P54U_3887;
+> > +		priv->common.rx_wa_extra_tail_space = true;
+> >  		dev->extra_tx_headroom += sizeof(struct lm87_tx_hdr);
+> >  		priv->common.tx_hdr_len = sizeof(struct lm87_tx_hdr);
+> > +		priv->common.rx_hdr_len = sizeof(struct lm87_rx_hdr);
+> >  		priv->common.tx = p54u_tx_lm87;
+> >  		priv->upload_fw = p54u_upload_firmware_3887;
+> >  	} else {
+> >  		priv->hw_type = P54U_NET2280;
+> >  		dev->extra_tx_headroom += sizeof(struct net2280_tx_hdr);
+> >  		priv->common.tx_hdr_len = sizeof(struct net2280_tx_hdr);
+> > +		priv->common.rx_hdr_len = sizeof(struct net2280_tx_hdr);
+>                                                                 ==
+> Should this be rx rather than tx?
+I hope not...
+@@ -120,37 +120,14 @@ static void p54u_rx_cb(struct urb *urb)
+   
+  	skb_put(skb, urb->actual_length);
+  
+	if (priv->hw_type == P54U_NET2280)
+		skb_pull(skb, priv->common.tx_hdr_len);
 
---=-xmg/2bmumQZjWoMrv0to
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+net2280_tx_hdr's name is misleading, as the rx urbs have the header as well.
+will probably change that to net2280_hdr in the future. 
 
-Hi, here is the updated version of these two patches that fix the
-$SUBJECT issue.
+> -- skip --
+> 
+> I have a problem that is not new with this patch. Using p54usb with
+> LM87 firmware and under the heavy load of building a kernel with the
+> source tree mounted with NFS, the interface will go off-line and
+> cannot reconnect. When the driver is unloaded and reloaded, it is
+> unable to reload the firmware. My log is as follows:
+> 
+> usb 1-5: new high speed USB device using ehci_hcd and address 3
+> usb 1-5: configuration #1 chosen from 1 choice
+> cfg80211: Calling CRDA to update world regulatory domain
+> usb 1-5: reset high speed USB device using ehci_hcd and address 3
+> usb 1-5: firmware: requesting isl3887usb
+> phy0: p54 detected a LM87 firmware
+> p54: rx_mtu reduced from 3240 to 2380
+> phy0: FW rev 2.13.24.0 - Softmac protocol 5.9
+> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> phy0: hwaddr 00:90:4b:d2:1f:cd, MAC:isl3892 RF:Xbow
+> phy0: Selected rate control algorithm 'minstrel'
+> Registered led device: p54-phy0::assoc
+> Registered led device: p54-phy0::tx
+> Registered led device: p54-phy0::rx
+> Registered led device: p54-phy0::radio
+> usb 1-5: is registered as 'phy0'
+> usbcore: registered new interface driver p54usb
+> wlan0: authenticate with AP 00:1a:70:46:ba:b1
+> wlan0: authenticated
+> wlan0: associate with AP 00:1a:70:46:ba:b1
+> wlan0: RX AssocResp from 00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=1)
+> wlan0: associated
+> wlan0: no probe response from AP 00:1a:70:46:ba:b1 - disassociating
+> usbcore: deregistering interface driver p54usb
+> cfg80211: Calling CRDA to update world regulatory domain
+> usb 1-5: reset high speed USB device using ehci_hcd and address 3
+> usb 1-5: firmware: requesting isl3887usb
+> phy0: p54 detected a LM87 firmware
+> p54: rx_mtu reduced from 3240 to 2380
+> phy0: FW rev 2.13.24.0 - Softmac protocol 5.9
+> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> usb 1-5: (p54usb) firmware upload failed!
+> p54usb: probe of 1-5:1.0 failed with error -110
+> 
 
-I attach these (in case mailer mangles them), and reply with patches.
+hmm, is it possible for you to log the usb transfer?
+A excellent tool for this is usbmon (userspace)... can be found here: 
+	http://git.sipsolutions.net/usbmon.git
 
-Tested both with low quality signal, and beacon loss.
-Lack of TX is found, every 30 seconds now, and quite reliable.
-Lack of beacons, triggers probe like it did every 2 seconds.
+usbmon -s 3000 -i $(USB_ID) (which is usually number between 1 and the amount of connected usb devices))  > dst
 
+and set p54common nohwcrypt=1, if you don't want to show GK/TK around ;-)
 
-
-Best regards,
-Maxim Levitsky
-
---=-xmg/2bmumQZjWoMrv0to
-Content-Disposition: attachment; filename="0001--MAC80211-Retry-probe-request-few-times.patch"
-Content-Type: text/x-patch; name="0001--MAC80211-Retry-probe-request-few-times.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
->From 0bf5749f2878f9245b8fb1b64456386374205225 Mon Sep 17 00:00:00 2001
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-Date: Fri, 31 Jul 2009 18:54:12 +0300
-Subject: [PATCH] [MAC80211] Retry probe request few times
-
-Retry 5 times  (chosen arbitary ), before assuming
-that station is out of range.
-
-Fixes frequent disassociations while connected to weak,
-and sometimes even strong access points.
-
-Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   42 ++++++++++++++++++++++++++++++------------
- 2 files changed, 31 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index aec6853..bca7b60 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
- 	struct work_struct beacon_loss_work;
- 
- 	unsigned long probe_timeout;
-+	int probe_send_count;
- 
- 	struct mutex mtx;
- 	struct ieee80211_bss *associated;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee83125..1d8640a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -31,6 +31,7 @@
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
-+#define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-  * beacon loss detection timeout
-@@ -1156,11 +1157,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
- }
- 
-+static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	const u8 *ssid;
-+
-+	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
-+	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
-+				 ssid + 2, ssid[1], NULL, 0);
-+
-+	ifmgd->probe_send_count++;
-+	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-+	run_again(ifmgd, ifmgd->probe_timeout);
-+}
-+
- static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 				   bool beacon)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	const u8 *ssid;
- 	bool already = false;
- 
- 	if (!netif_running(sdata->dev))
-@@ -1203,18 +1217,12 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (already)
- 		goto out;
- 
--	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
--
- 	mutex_lock(&sdata->local->iflist_mtx);
- 	ieee80211_recalc_ps(sdata->local, -1);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
--	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
--	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
--				 ssid + 2, ssid[1], NULL, 0);
--
--	run_again(ifmgd, ifmgd->probe_timeout);
--
-+	ifmgd->probe_send_count = 0;
-+	ieee80211_mgd_probe_ap_send(sdata);
-  out:
- 	mutex_unlock(&ifmgd->mtx);
- }
-@@ -2072,17 +2080,27 @@ static void ieee80211_sta_work(struct work_struct *work)
- 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
-+		u8 bssid[ETH_ALEN];
-+
-+		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
--		else {
--			u8 bssid[ETH_ALEN];
-+
-+		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+			printk(KERN_DEBUG "No probe response from AP %pM"
-+				" after %dms, try %d\n", bssid,
-+				(1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				ifmgd->probe_send_count);
-+#endif
-+			ieee80211_mgd_probe_ap_send(sdata);
-+		} else {
- 			/*
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 			printk(KERN_DEBUG "No probe response from AP %pM"
- 				" after %dms, disconnecting.\n",
- 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
--- 
-1.6.0.4
-
-
---=-xmg/2bmumQZjWoMrv0to
-Content-Disposition: attachment; filename="0002--MAC80211-Increase-timeouts-for-station-polling.patch"
-Content-Type: text/x-patch; name="0002--MAC80211-Increase-timeouts-for-station-polling.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
->From 04976d22d45f26aa4b4dece5dd520e3347ac32d7 Mon Sep 17 00:00:00 2001
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-Date: Fri, 31 Jul 2009 18:54:23 +0300
-Subject: [PATCH] [MAC80211] Increase timeouts for station polling
-
-Do a probe request every 30 seconds, and wait for probe response, half a second
-This should lower the traffic that card sends, thus save power
-Wainting longer for response makes probe more robust against 'slow' access points
-
-Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
----
- net/mac80211/mlme.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1d8640a..e4bb590 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -42,13 +42,13 @@
-  * Time the connection can be idle before we probe
-  * it to see if we can still talk to the AP.
-  */
--#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
-+#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
- /*
-  * Time we wait for a probe response after sending
-  * a probe request because of beacon loss or for
-  * checking the connection still works.
-  */
--#define IEEE80211_PROBE_WAIT		(HZ / 5)
-+#define IEEE80211_PROBE_WAIT		(HZ / 2)
- 
- #define TMR_RUNNING_TIMER	0
- #define TMR_RUNNING_CHANSW	1
--- 
-1.6.0.4
-
-
---=-xmg/2bmumQZjWoMrv0to--
-
+Regards,
+	Chr
