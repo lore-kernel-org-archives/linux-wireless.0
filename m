@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate09.web.de ([217.72.192.184]:38852 "EHLO
-	fmmailgate09.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbZG1KnX convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3103 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbZGDRA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 06:43:23 -0400
-Date: Tue, 28 Jul 2009 12:12:37 +0200
-Message-Id: <1737871759@web.de>
-MIME-Version: 1.0
-From: Chunkeey@web.de
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: Re: [PATCH] ar9170: remove EXPERIMENTAL marker
-Content-Type: text/plain; charset=iso-8859-15
+	Sat, 4 Jul 2009 13:00:59 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [PATCH 4/5] ath5k: do not release irq across suspend/resume
+Date: Sat,  4 Jul 2009 12:59:54 -0400
+Message-Id: <1246726795-3934-5-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
+References: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+Paraphrasing Rafael J. Wysocki: "drivers should not release PCI IRQs
+in suspend."  Doing so causes a warning during suspend/resume on some
+platforms.
 
-> Cc: Christian Lamparter <chunkeey@web.de>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> drivers/net/wireless/ath/ar9170/Kconfig | 3 ++-
-> 1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ar9170/Kconfig b/drivers/net/wireless/ath/ar9170/Kconfig
-> index de4281f..05918f1 100644
-> --- a/drivers/net/wireless/ath/ar9170/Kconfig
-> +++ b/drivers/net/wireless/ath/ar9170/Kconfig
-> @@ -1,12 +1,13 @@
-> config AR9170_USB
-> tristate "Atheros AR9170 802.11n USB support"
-> - depends on USB && MAC80211 && WLAN_80211 && EXPERIMENTAL
-> + depends on USB && MAC80211 && WLAN_80211
->
-huh? there are still:
-- 9 TODOs
-- 7 XXX
-- 3 FIXMEs
-left _to do_ for the driver.
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+Reported-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
-Not to mention known problems and bugs!
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 4829329..3f55e90 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -674,7 +674,6 @@ ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+ 
+ 	ath5k_led_off(sc);
+ 
+-	free_irq(pdev->irq, sc);
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_power_state(pdev, PCI_D3hot);
+@@ -702,18 +701,8 @@ ath5k_pci_resume(struct pci_dev *pdev)
+ 	 */
+ 	pci_write_config_byte(pdev, 0x41, 0);
+ 
+-	err = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+-	if (err) {
+-		ATH5K_ERR(sc, "request_irq failed\n");
+-		goto err_no_irq;
+-	}
+-
+ 	ath5k_led_enable(sc);
+ 	return 0;
+-
+-err_no_irq:
+-	pci_disable_device(pdev);
+-	return err;
+ }
+ #endif /* CONFIG_PM */
+ 
+-- 
+1.6.2.5
 
-________________________________________________________________
-Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
-für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
 
