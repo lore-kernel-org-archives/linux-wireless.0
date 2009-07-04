@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36013 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756104AbZGATg2 (ORCPT
+Received: from fmailhost06.isp.att.net ([207.115.11.56]:60856 "EHLO
+	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbZGDQkA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 15:36:28 -0400
-Message-Id: <20090701193421.957624423@sipsolutions.net>
-References: <20090701192641.072258140@sipsolutions.net>
-Date: Wed, 01 Jul 2009 21:27:01 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 20/20 v4] mac80211: re-add HT disabling
-Mime-Version: 1.0
+	Sat, 4 Jul 2009 12:40:00 -0400
+Message-ID: <4A4F85EE.5090007@lwfinger.net>
+Date: Sat, 04 Jul 2009 11:40:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+References: <200907040053.05654.chunkeey@web.de> <4A4EBB68.6050502@lwfinger.net> <200907041211.49115.chunkeey@web.de>
+In-Reply-To: <200907041211.49115.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IEEE80211_STA_TKIP_WEP_USED flag is used internally to
-disable HT when WEP or TKIP are used. Now that cfg80211 is
-giving us the required information, we can set the flag
-appropriately again.
+Christian Lamparter wrote:
+> 
+> hmm, is it possible for you to log the usb transfer?
+> A excellent tool for this is usbmon (userspace)... can be found here: 
+> 	http://git.sipsolutions.net/usbmon.git
+> 
+> usbmon -s 3000 -i $(USB_ID) (which is usually number between 1 and the amount of connected usb devices))  > dst
+> 
+> and set p54common nohwcrypt=1, if you don't want to show GK/TK around ;-)
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/cfg.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+I have logged the usb transfers, but not yet analyzed them. This time
+I got a new failure - I hit this warning at
+           net/mac80211/tx.c:1299
+                        retries++;
+                        if (WARN(retries > 10, "tx refused but queue
+active\n"))
+                                goto drop;
+                        goto retry;
 
---- wireless-testing.orig/net/mac80211/cfg.c	2009-07-01 20:29:45.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2009-07-01 20:29:47.000000000 +0200
-@@ -1228,7 +1228,7 @@ static int ieee80211_assoc(struct wiphy 
- 			   struct cfg80211_assoc_request *req)
- {
- 	struct ieee80211_sub_if_data *sdata;
--	int ret;
-+	int ret, i;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
-@@ -1236,6 +1236,14 @@ static int ieee80211_assoc(struct wiphy 
- 	    !(sdata->u.mgd.flags & IEEE80211_STA_AUTHENTICATED))
- 		return -ENOLINK; /* not authenticated */
- 
-+	sdata->u.mgd.flags &= ~IEEE80211_STA_TKIP_WEP_USED;
-+
-+	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
-+		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
-+		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
-+		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
-+			sdata->u.mgd.flags |= IEEE80211_STA_TKIP_WEP_USED;
-+
- 	sdata->u.mgd.flags &= ~IEEE80211_STA_AUTO_BSSID_SEL;
- 	sdata->u.mgd.flags |= IEEE80211_STA_BSSID_SET;
- 
 
--- 
+If I have analyzed this correctly, I hit this section of
+p54_tx_qos_accounting_alloc at drivers/net/wireless/p54/txrx.c:204.
+I'm running the splitup patches.
+
+        if (unlikely(queue->len > queue->limit &&
+IS_QOS_QUEUE(p54_queue))) {
+                spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
+                return -ENOSPC;
+        }
+
+Any suggestions on debugging this would be appreciated.
+
+Larry
 
