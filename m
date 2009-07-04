@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s32.blu0.hotmail.com ([65.55.111.107]:3636 "EHLO
-	blu0-omc2-s32.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751790AbZGDCo3 (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:40746 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbZGDR23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 22:44:29 -0400
-Message-ID: <BLU0-SMTP33F4230D49592F7AC596A9C22D0@phx.gbl>
-Date: Fri, 03 Jul 2009 21:44:27 -0500
-From: Brett Ussher <breusshe@hotmail.com>
+	Sat, 4 Jul 2009 13:28:29 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Sat, 4 Jul 2009 19:28:31 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200907040053.05654.chunkeey@web.de> <200907041211.49115.chunkeey@web.de> <4A4F85EE.5090007@lwfinger.net>
+In-Reply-To: <4A4F85EE.5090007@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 'skb_queue_is_last' and 'skb_queue_next' errors during make (2.6.31-rc1)
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907041928.32269.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I keep getting an error when I try to make the 2.6.31-rc1 compat-wireless:
+On Saturday 04 July 2009 18:40:14 Larry Finger wrote:
+> I have logged the usb transfers, but not yet analyzed them.
+great!
 
-=====================================================================
+> This time I got a new failure - I hit this warning at
+>            net/mac80211/tx.c:1299
+>                         retries++;
+>                         if (WARN(retries > 10, "tx refused but queue
+> active\n"))
+>                                 goto drop;
+>                         goto retry;
+> 
 
-compat-wireless-2.6.31-rc1 $ make
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.28-13-generic/build 
-M=/home/brett/Desktop/compat-wireless-2.6.31-rc1 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.28-13-generic'
-LD 
-/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/built-in.o
-CC [M] 
-/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/eeprom_93cx6.o
-In file included from <command-line>:0:
-/home/brett/Desktop/compat-wireless-2.6.31-rc1/include/net/compat.h:123: 
-error: redefinition of ‘skb_queue_is_last’
-include/linux/skbuff.h:477: error: previous definition of 
-‘skb_queue_is_last’ was here
-/home/brett/Desktop/compat-wireless-2.6.31-rc1/include/net/compat.h:137: 
-error: redefinition of ‘skb_queue_next’
-include/linux/skbuff.h:491: error: previous definition of 
-‘skb_queue_next’ was here
-make[3]: *** 
-[/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom/eeprom_93cx6.o] 
-Error 1
-make[2]: *** 
-[/home/brett/Desktop/compat-wireless-2.6.31-rc1/drivers/misc/eeprom] Error 2
-make[1]: *** [_module_/home/brett/Desktop/compat-wireless-2.6.31-rc1] 
-Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.28-13-generic'
-make: *** [modules] Error 2
+> If I have analyzed this correctly, I hit this section of
+> p54_tx_qos_accounting_alloc at drivers/net/wireless/p54/txrx.c:204.
+> I'm running the splitup patches.
+> 
+>         if (unlikely(queue->len > queue->limit &&
+> IS_QOS_QUEUE(p54_queue))) {
+>                 spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
+>                 return -ENOSPC;
+>         }
+> 
+> Any suggestions on debugging this would be appreciated.
+---
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index ea074a6..69fc70a 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -25,6 +25,7 @@
+ #include "p54.h"
+ #include "lmac.h"
+ 
++#define P54_MM_DEBUG
+ #ifdef P54_MM_DEBUG
+ static void p54_dump_tx_queue(struct p54_common *priv)
+ {
+@@ -200,7 +201,18 @@ static int p54_tx_qos_accounting_alloc(struct p54_common *priv,
+ 
+ 	spin_lock_irqsave(&priv->tx_stats_lock, flags);
+ 	if (unlikely(queue->len > queue->limit && IS_QOS_QUEUE(p54_queue))) {
++		u16 ac_queue = p54_queue - P54_QUEUE_DATA;
++		int i;
++
++		printk(KERN_DEBUG "TX queue stats\n");
++		for (i = 0; i < 8; i++)
++			printk(KERN_DEBUG "\ttxq[%d]: used %d [of %d] => %s\n",
++			       i, priv->tx_stats[i].len,
++			       priv->tx_stats[i].limit,
++			       ieee80211_queue_stopped(priv->hw, ac_queue) ?
++			       "stopped" : "running");
+ 		spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
++		p54_dump_tx_queue(priv);
+ 		return -ENOSPC;
+ 	}
+ 
+---
+let's hope the queue .len count does not turn negative!
 
-=====================================================================
-
-I'm using Ubuntu 9.04 with kernel 2.6.28-13-generic. Is there a way to 
-stop this error?
-
--- 
-Brett D. Ussher
-
+regards,
+	Chr
