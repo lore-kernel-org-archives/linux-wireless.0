@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.zhaw.ch ([160.85.104.51]:61165 "EHLO mx2.zhaw.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754561AbZGPJFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:05:14 -0400
-From: Tobias Klauser <klto@zhaw.ch>
-To: stefano.brivio@polimi.it, mb@bu3sch.de, linville@tuxdriver.com,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Cc: Tobias Klauser <klto@zhaw.ch>
-Subject: [PATCH 3/8] b43: Use %pM conversion specifier
-Date: Thu, 16 Jul 2009 10:56:02 +0200
-Message-Id: <1247734562-20848-1-git-send-email-klto@zhaw.ch>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44959 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727AbZGDHxA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jul 2009 03:53:00 -0400
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Max Filippov <jcmvbkbc@gmail.com>
+In-Reply-To: <200907040053.05654.chunkeey@web.de>
+References: <200907040053.05654.chunkeey@web.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7G2aUFnQb4kvVg9K2vkN"
+Date: Sat, 04 Jul 2009 09:52:55 +0200
+Message-Id: <1246693975.16770.68.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the %pM conversion specifier for printk instead of print_mac.
 
-Signed-off-by: Tobias Klauser <klto@zhaw.ch>
----
- drivers/net/wireless/b43/main.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+--=-7G2aUFnQb4kvVg9K2vkN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index e71c8d9..3f4360a 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -938,7 +938,6 @@ static void b43_clear_keys(struct b43_wldev *dev)
- static void b43_dump_keymemory(struct b43_wldev *dev)
- {
- 	unsigned int i, index, offset;
--	DECLARE_MAC_BUF(macbuf);
- 	u8 mac[ETH_ALEN];
- 	u16 algo;
- 	u32 rcmta0;
-@@ -973,8 +972,7 @@ static void b43_dump_keymemory(struct b43_wldev *dev)
- 						((index - 4) * 2) + 1);
- 			*((__le32 *)(&mac[0])) = cpu_to_le32(rcmta0);
- 			*((__le16 *)(&mac[4])) = cpu_to_le16(rcmta1);
--			printk("   MAC: %s",
--			       print_mac(macbuf, mac));
-+			printk("   MAC: %pM", mac);
- 		} else
- 			printk("   DEFAULT KEY");
- 		printk("\n");
--- 
-1.6.0.4
+On Sat, 2009-07-04 at 00:53 +0200, Christian Lamparter wrote:
+
+> the simplest answer is probably this one:
+> https://dev.openwrt.org/changeset/15761
+
+Humm. Davem and I looked into this problem some time ago, came up with
+patches and concluded that if everything is set up correctly this
+shouldn't be happening.
+
+Look at net/mac80211/iface.c::ieee80211_if_add:
+
+        ndev->needed_headroom =3D local->tx_headroom +
+                                4*6 /* four MAC addresses */
+                                + 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
+                                + 6 /* mesh */
+                                + 8 /* rfc1042/bridge tunnel */
+                                - ETH_HLEN /* ethernet hard_header_len */ =20
+                                + IEEE80211_ENCRYPT_HEADROOM;
+        ndev->needed_tailroom =3D IEEE80211_ENCRYPT_TAILROOM;
+
+Due to that, skbs allocated for our device ought to have enough
+headroom. If they don't, you should try to figure out where they're
+coming from and why they don't,
+http://johannes.sipsolutions.net/patches/kernel/all/2008-05-04-23:09/028-sk=
+b-alloc-stackdump.patch might help with that.
+
+OTOH, I guess that you're using IPv4 and that should do things
+correctly, I think.
+
+johannes
+
+
+--=-7G2aUFnQb4kvVg9K2vkN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKTwpUAAoJEODzc/N7+Qma8kwP/jsyJw5yTo9EalwBsNMMsnK6
+VKdaW5BGBamubxbh2/+GyZmzQyJYFUaFDYpPeb/t6izkWLil6kKZnMhrPHYxex4C
+K8QN+MiEL7p2LU54iGh6HnGH1/CdRxQv9D0PDFOm3fD3OoFzeJYCoV6H9OUs6vcu
+4Xy8O7wxKDTS7Dc9d+aJJg91BkIeStTYsjygYqlsPwjYwHQMmOQl7hte8Oa/0ozk
+chcKSlFADi+c1wMJqYo1vbn4EtVMUhdBUFkWXy14npDL4QiAUmCG2woMPz9Ja0z4
+4NpfBqZpZ4Efbr0ZfMFP3JpTbtlDlwpT81CImOqddk52wYKM7MDUKJV8NSXiH4Nn
+RYdd0qiY2QwcyuJAW5vOiRSuBWqaneyrTx096vwqjLLVQdODe+cys11aq88bEfOV
+n/GHQvLo0VKRdXLZxvDH5PUWmMnJfwGLpYbVGgiOTMqGzMkCuBH5Rz9qg1W+DBpX
+yyo68wlkBYbqtdy2/1Hs8Aj1egmA0GSTUvqrMN6j5wcdJo8mPJAK8cMDfL3hEZ3u
+iaQNh8NGlkpYrV7si3/H+5K/2HvEwiKPr4MyQCEn59fDNygD6SWwsQtC7q86jVTJ
+xUhy3RvpeybUjDRx/bPt7nldMrcH7bYbxB2vuzymUDCIjD0jJ5JciCmHBqKAkUwa
+mNnsTdZxbQN/O/UIbaC1
+=sv7i
+-----END PGP SIGNATURE-----
+
+--=-7G2aUFnQb4kvVg9K2vkN--
 
