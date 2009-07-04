@@ -1,80 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57520 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755409AbZGMLaa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 07:30:30 -0400
-Subject: Re: [PATCH] rfkill: fix rfkill_set_states() to set the hw state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4A5A0941.2000408@tuffmail.co.uk>
-References: <4A5A0941.2000408@tuffmail.co.uk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CzZzrhydI0JH1aO1UevH"
-Date: Mon, 13 Jul 2009 13:30:26 +0200
-Message-Id: <1247484626.4166.5.camel@johannes.local>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:48054 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752340AbZGDVhp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jul 2009 17:37:45 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 4/5] ath5k: do not release irq across suspend/resume
+Date: Sat, 4 Jul 2009 23:37:58 +0200
+Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	mickflemm@gmail.com, lrodriguez@atheros.com,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+References: <1246726795-3934-1-git-send-email-me@bobcopeland.com> <1246726795-3934-5-git-send-email-me@bobcopeland.com> <4A4FC889.9000401@gmail.com>
+In-Reply-To: <4A4FC889.9000401@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907042337.59470.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Saturday 04 July 2009, Jiri Slaby wrote:
+> On 07/04/2009 06:59 PM, Bob Copeland wrote:
+> > Paraphrasing Rafael J. Wysocki: "drivers should not release PCI IRQs
+> > in suspend."  Doing so causes a warning during suspend/resume on some
+> > platforms.
+> 
+> Hmm, I added it because I was told an irq can change over suspend (or at
+> least it could in the past). I think it's not true anymore, since we
+> would have serious problems with the code all over the tree.
+> 
+> I can't find where Rafael uttered those words above, do you have a link?
 
---=-CzZzrhydI0JH1aO1UevH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Someone recently asked on a mailing list (unfortunately I can't recall
+which one) if drivers should release irqs over suspend.
 
-On Sun, 2009-07-12 at 17:03 +0100, Alan Jenkins wrote:
-> The point of this function is to set the software and hardware state at
-> the same time.  When I tried to use it, I found it was only setting the
-> software state.
+The answer was more-or-less that drivers are not expected to do that and it
+really is not recommended.  In fact, we do the whole suspend_device_irqs()
+thing, because the drivers are expected not to do that.
 
-Oops, thanks.
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-This is for 2.6.31, obviously.
-
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> ---
-> net/rfkill/core.c |    4 ++++
-> 1 files changed, 4 insertions(+), 0 deletions(-)
->=20
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 79693fe..db9948e 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -549,6 +549,10 @@ void rfkill_set_states(struct rfkill *rfkill, bool=20
-> sw, bool hw)
-> 	swprev =3D !!(rfkill->state & RFKILL_BLOCK_SW);
-> 	hwprev =3D !!(rfkill->state & RFKILL_BLOCK_HW);
-> 	__rfkill_set_sw_state(rfkill, sw);
-> +	if (hw)
-> +		rfkill->state |=3D RFKILL_BLOCK_HW;
-> +	else
-> +		rfkill->state &=3D ~RFKILL_BLOCK_HW;
->=20
-> 	spin_unlock_irqrestore(&rfkill->lock, flags);
->=20
-
---=-CzZzrhydI0JH1aO1UevH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKWxrOAAoJEODzc/N7+QmaIuwQAINilqiMmFpYOGb4WyOeRDVi
-QsNOfy+Ta3v4/sTC5KfJcnpoM4dZPxc7SV/Q5/u0oNKZZ3WeedID+qcrn/zubf4Y
-62h7qEHpcaWjbPMLI9wUKWw7mewhJgUcqoiMMKQOh122Mbv2LKw93LDx3TSbRHoT
-tEeSS6mPXUubBNCNoIF9hnTS/HykSTjXUlCocq1p2oU831lbjxVPQSSgH/JSStZV
-beU0oDsjCGc1goktthjZFZzoYQwpJ98tzuQE2UVMGIEWE/cFfrlrP3Zz/u6jZdml
-Ab1BrGMFbmM+B76mKwC8HlC8VcGs6R3CjTguXI5ModI7fUWe17WXXAL38usfeXTy
-8/FMDdtGqlrWBEq/pVRD5KCqPfE9fdJiy+E8AdnGw9kJuOYf5EZGkPsd5VU2qKqT
-8+cUkJ7LPP3h9NUNKrigcuTAZ4XetRl78YNSc7C2K0Zb5RhshhSHzsJqvJ7dSKaZ
-Tb5RTcFfSXVxIkNuau3/JFGEOaLKV45W6Zu4v+vrtYBZYlWJpKODQQ1kRQWYlzQx
-W+p9OyEM2cVfoJzNfDqA5H3cmf3yG3mWcOISjdrv/uZ3H8VYFFg8eHy7DUs0fS/M
-Lc68Ojjhf2Q32Z8UTVp2eEQnZ5t9lH9klyu85hA0TZsMAuZG1WkniMhXHHVcZsso
-7IJbtnOfUDe+ouN4jzzg
-=MACD
------END PGP SIGNATURE-----
-
---=-CzZzrhydI0JH1aO1UevH--
-
+Best,
+Rafael
