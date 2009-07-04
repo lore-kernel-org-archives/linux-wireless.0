@@ -1,74 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56107.mail.re3.yahoo.com ([216.252.110.201]:22672 "HELO
-	web56107.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753906AbZGVBKR (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:56438 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbZGDPt4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 21:10:17 -0400
-Message-ID: <928354.18240.qm@web56107.mail.re3.yahoo.com>
-References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com>  <20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com>  <20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com>
-Date: Tue, 21 Jul 2009 18:03:36 -0700 (PDT)
-From: Purushotham Nayak <nayak_purushotham@yahoo.com>
-Subject: Re: AR5523 driver - old Atheros USB
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Christoph Hellwig <hch@lst.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Dan Williams <dcbw@redhat.com>
-In-Reply-To: <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com>
+	Sat, 4 Jul 2009 11:49:56 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] p54spi: remove dead code and definitions
+Date: Sat, 4 Jul 2009 17:49:59 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Max Filippov <jcmvbkbc@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200907041749.59388.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes some dead code: 
+p54spi.c:115: warning: ‘p54spi_read16’ defined but not used
 
-Hi,
+and while we're at it, p54spi_registers_array is purged as well.
 
-I'm interested in working on this. I just posted to the Linux driver project a few days ago if I could work on the atheros USB devices. Please let me also know the USB device that uses the AR5523.
-
-Thanks,
-Purush
-
-
-
------ Original Message ----
-From: Luis R. Rodriguez <mcgrof@gmail.com>
-To: Christoph Hellwig <hch@lst.de>; linux-wireless <linux-wireless@vger.kernel.org>; linux-kernel@vger.kernel.org
-Cc: devel@driverdev.osuosl.org; Dan Williams <dcbw@redhat.com>; ath5k-devel@lists.ath5k.org; madwifi-devel <madwifi-devel@lists.sourceforge.net>; Jouni Malinen <j@w1.fi>; ath9k-devel@lists.ath9k.org
-Sent: Tuesday, July 21, 2009 8:03:36 PM
-Subject: Re: AR5523 driver - old Atheros USB
-
-On Tue, Jul 21, 2009 at 2:42 PM, Christoph Hellwig<hch@lst.de> wrote:
-> On Tue, Jul 21, 2009 at 02:24:36PM -0700, Luis R. Rodriguez wrote:
->> >> Hey Chris, was curious if you still had lying around the driver you
->> >> had worked on for the old Atheros 802.11 USB device. Dan asked about
->> >> it, seems he bought one. We at least now have specs for it and can
->> >> provide them to interested developers. Since Dan brought this device
->> >> up figured I'd check to see if you still had it to see if you still
->> >> had the code and might be willing to let someone try to give a shot at
->> >> finishing it up for inclusion. Perhaps staging?
->> >
->> > The code has been at http://verein.lst.de/~hch/ar5523.tgz.
->>
->> Sweet. How functional is this? Does it TX/RX?
->
-> It's been quite some time.  IIRC it does TX, but can't actually see
-> any packets on RX (filter issue or something).
-
-Sorry for the large cross post, just seeing if someone is interested
-in working on a wireless driver. The task would be to try to get
-AR5523 USB driver up to speed with mac80211 from wireless-testing and
-giving it a shot to fix remaining issues?
-
-It seems to have compiled last for 2.6.23.
-
-If you're interested please remove all lists and only leave
-linux-wireless on the reply.
-
-  Luis
-_______________________________________________
-devel mailing list
-devel@linuxdriverproject.org
-http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
-
-
-
-      
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 9b347ce..d5f181a 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -111,15 +111,6 @@ static void p54spi_spi_write(struct p54s_priv *priv, u8 address,
+ 	spi_sync(priv->spi, &m);
+ }
+ 
+-static u16 p54spi_read16(struct p54s_priv *priv, u8 addr)
+-{
+-	__le16 val;
+-
+-	p54spi_spi_read(priv, addr, &val, sizeof(val));
+-
+-	return le16_to_cpu(val);
+-}
+-
+ static u32 p54spi_read32(struct p54s_priv *priv, u8 addr)
+ {
+ 	__le32 val;
+@@ -139,31 +130,6 @@ static inline void p54spi_write32(struct p54s_priv *priv, u8 addr, __le32 val)
+ 	p54spi_spi_write(priv, addr, &val, sizeof(val));
+ }
+ 
+-struct p54spi_spi_reg {
+-	u16 address;		/* __le16 ? */
+-	u16 length;
+-	char *name;
+-};
+-
+-static const struct p54spi_spi_reg p54spi_registers_array[] =
+-{
+-	{ SPI_ADRS_ARM_INTERRUPTS,	32, "ARM_INT     " },
+-	{ SPI_ADRS_ARM_INT_EN,		32, "ARM_INT_ENA " },
+-	{ SPI_ADRS_HOST_INTERRUPTS,	32, "HOST_INT    " },
+-	{ SPI_ADRS_HOST_INT_EN,		32, "HOST_INT_ENA" },
+-	{ SPI_ADRS_HOST_INT_ACK,	32, "HOST_INT_ACK" },
+-	{ SPI_ADRS_GEN_PURP_1,		32, "GP1_COMM    " },
+-	{ SPI_ADRS_GEN_PURP_2,		32, "GP2_COMM    " },
+-	{ SPI_ADRS_DEV_CTRL_STAT,	32, "DEV_CTRL_STA" },
+-	{ SPI_ADRS_DMA_DATA,		16, "DMA_DATA    " },
+-	{ SPI_ADRS_DMA_WRITE_CTRL,	16, "DMA_WR_CTRL " },
+-	{ SPI_ADRS_DMA_WRITE_LEN,	16, "DMA_WR_LEN  " },
+-	{ SPI_ADRS_DMA_WRITE_BASE,	32, "DMA_WR_BASE " },
+-	{ SPI_ADRS_DMA_READ_CTRL,	16, "DMA_RD_CTRL " },
+-	{ SPI_ADRS_DMA_READ_LEN,	16, "DMA_RD_LEN  " },
+-	{ SPI_ADRS_DMA_WRITE_BASE,	32, "DMA_RD_BASE " }
+-};
+-
+ static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, u32 bits)
+ {
+ 	int i;
