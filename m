@@ -1,293 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42316 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752877AbZGOAOZ (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:47461 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754160AbZGEMNu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:25 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 18/21] ath9k: Remove dead code in rate control
-Date: Tue, 14 Jul 2009 20:14:10 -0400
-Message-Id: <1247616853-11221-19-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 5 Jul 2009 08:13:50 -0400
+Received: by yxe26 with SMTP id 26so4740867yxe.33
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Jul 2009 05:13:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	 <6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com>
+	 <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
+Date: Sun, 5 Jul 2009 08:13:49 -0400
+Message-ID: <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+From: Jasin Colegrove <j.wholesalesupply@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Thanks bob for the reply. I did not mean to shout, but someone else
+told me that I should make it very clear that I was not subscribed.
+But, now I am so it doesn't matter :)
 
-ath9k rate control is based on only PER (packet error rate),
-remove unused code which was intented to do rssi based rate
-selection.
+I guess I will just wait to file a bug after I get through the bisect
+process and test out the newest compat-wireless drivers. Then I should
+have a more clear picture of the issue and maybe enough technical
+details to file a proper bug report. Thanks again for your time,
+greatly appreciated.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |  163 +----------------------------------
- 1 files changed, 4 insertions(+), 159 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index e66734c..a39b1a7 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -607,47 +607,14 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
- 				 const struct ath_rate_table *rate_table,
- 				 int *is_probing)
- {
--	u32 dt, best_thruput, this_thruput, now_msec;
-+	u32 best_thruput, this_thruput, now_msec;
- 	u8 rate, next_rate, best_rate, maxindex, minindex;
--	int8_t  rssi_last, rssi_reduce = 0, index = 0;
--
--	*is_probing = 0;
--
--	rssi_last = median(ath_rc_priv->rssi_last,
--			   ath_rc_priv->rssi_last_prev,
--			   ath_rc_priv->rssi_last_prev2);
--
--	/*
--	 * Age (reduce) last ack rssi based on how old it is.
--	 * The bizarre numbers are so the delta is 160msec,
--	 * meaning we divide by 16.
--	 *   0msec   <= dt <= 25msec:   don't derate
--	 *   25msec  <= dt <= 185msec:  derate linearly from 0 to 10dB
--	 *   185msec <= dt:             derate by 10dB
--	 */
-+	int8_t index = 0;
- 
- 	now_msec = jiffies_to_msecs(jiffies);
--	dt = now_msec - ath_rc_priv->rssi_time;
--
--	if (dt >= 185)
--		rssi_reduce = 10;
--	else if (dt >= 25)
--		rssi_reduce = (u8)((dt - 25) >> 4);
--
--	/* Now reduce rssi_last by rssi_reduce */
--	if (rssi_last < rssi_reduce)
--		rssi_last = 0;
--	else
--		rssi_last -= rssi_reduce;
--
--	/*
--	 * Now look up the rate in the rssi table and return it.
--	 * If no rates match then we return 0 (lowest rate)
--	 */
--
-+	*is_probing = 0;
- 	best_thruput = 0;
- 	maxindex = ath_rc_priv->max_valid_rate-1;
--
- 	minindex = 0;
- 	best_rate = minindex;
- 
-@@ -687,7 +654,6 @@ static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
- 	}
- 
- 	rate = best_rate;
--	ath_rc_priv->rssi_last_lookup = rssi_last;
- 
- 	/*
- 	 * Must check the actual rate (ratekbps) to account for
-@@ -977,10 +943,6 @@ static bool ath_rc_update_per(struct ath_softc *sc,
- 				     (nretry_to_per_lookup[retries] >> 3));
- 		}
- 
--		ath_rc_priv->rssi_last_prev2 = ath_rc_priv->rssi_last_prev;
--		ath_rc_priv->rssi_last_prev  = ath_rc_priv->rssi_last;
--		ath_rc_priv->rssi_last = tx_info_priv->tx.ts_rssi;
--		ath_rc_priv->rssi_time = now_msec;
- 
- 		/*
- 		 * If we got at most one retry then increase the max rate if
-@@ -1024,18 +986,9 @@ static bool ath_rc_update_per(struct ath_softc *sc,
- 			/*
- 			 * Don't update anything.  We don't know if
- 			 * this was because of collisions or poor signal.
--			 *
--			 * Later: if rssi_ack is close to
--			 * ath_rc_priv->state[txRate].rssi_thres and we see lots
--			 * of retries, then we could increase
--			 * ath_rc_priv->state[txRate].rssi_thres.
- 			 */
- 			ath_rc_priv->hw_maxretry_pktcnt = 0;
- 		} else {
--			int32_t rssi_ackAvg;
--			int8_t rssi_thres;
--			int8_t rssi_ack_vmin;
--
- 			/*
- 			 * It worked with no retries. First ignore bogus (small)
- 			 * rssi_ack values.
-@@ -1045,43 +998,9 @@ static bool ath_rc_update_per(struct ath_softc *sc,
- 				ath_rc_priv->hw_maxretry_pktcnt++;
- 			}
- 
--			if (tx_info_priv->tx.ts_rssi <
--			    rate_table->info[tx_rate].rssi_ack_validmin)
--				goto exit;
--
--			/* Average the rssi */
--			if (tx_rate != ath_rc_priv->rssi_sum_rate) {
--				ath_rc_priv->rssi_sum_rate = tx_rate;
--				ath_rc_priv->rssi_sum =
--					ath_rc_priv->rssi_sum_cnt = 0;
--			}
--
--			ath_rc_priv->rssi_sum += tx_info_priv->tx.ts_rssi;
--			ath_rc_priv->rssi_sum_cnt++;
--
--			if (ath_rc_priv->rssi_sum_cnt < 4)
--				goto exit;
--
--			rssi_ackAvg =
--				(ath_rc_priv->rssi_sum + 2) / 4;
--			rssi_thres =
--				ath_rc_priv->state[tx_rate].rssi_thres;
--			rssi_ack_vmin =
--				rate_table->info[tx_rate].rssi_ack_validmin;
--
--			ath_rc_priv->rssi_sum =
--				ath_rc_priv->rssi_sum_cnt = 0;
--
--			/* Now reduce the current rssi threshold */
--			if ((rssi_ackAvg < rssi_thres + 2) &&
--			    (rssi_thres > rssi_ack_vmin)) {
--				ath_rc_priv->state[tx_rate].rssi_thres--;
--			}
--
--			state_change = true;
- 		}
- 	}
--exit:
-+
- 	return state_change;
- }
- 
-@@ -1093,11 +1012,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 			     struct ath_tx_info_priv *tx_info_priv,
- 			     int tx_rate, int xretries, int retries)
- {
--#define CHK_RSSI(rate)					\
--	((ath_rc_priv->state[(rate)].rssi_thres +	\
--	  rate_table->info[(rate)].rssi_ack_deltamin) > \
--	 ath_rc_priv->state[(rate)+1].rssi_thres)
--
- 	u32 now_msec = jiffies_to_msecs(jiffies);
- 	int rate;
- 	u8 last_per;
-@@ -1108,13 +1022,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if ((tx_rate < 0) || (tx_rate > rate_table->rate_cnt))
- 		return;
- 
--	/* To compensate for some imbalance between ctrl and ext. channel */
--
--	if (WLAN_RC_PHY_40(rate_table->info[tx_rate].phy))
--		tx_info_priv->tx.ts_rssi =
--			tx_info_priv->tx.ts_rssi < 3 ? 0 :
--			tx_info_priv->tx.ts_rssi - 3;
--
- 	last_per = ath_rc_priv->state[tx_rate].per;
- 
- 	/* Update PER first */
-@@ -1136,51 +1043,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 		ath_rc_priv->probe_time = now_msec;
- 	}
- 
--	if (state_change) {
--		/*
--		 * Make sure the rates above this have higher rssi thresholds.
--		 * (Note:  Monotonicity is kept within the OFDM rates and
--		 *         within the CCK rates. However, no adjustment is
--		 *         made to keep the rssi thresholds monotonically
--		 *         increasing between the CCK and OFDM rates.)
--		 */
--		for (rate = tx_rate; rate < size - 1; rate++) {
--			if (rate_table->info[rate+1].phy !=
--			    rate_table->info[tx_rate].phy)
--				break;
--
--			if (CHK_RSSI(rate)) {
--				ath_rc_priv->state[rate+1].rssi_thres =
--					ath_rc_priv->state[rate].rssi_thres +
--					rate_table->info[rate].rssi_ack_deltamin;
--			}
--		}
--
--		/* Make sure the rates below this have lower rssi thresholds. */
--		for (rate = tx_rate - 1; rate >= 0; rate--) {
--			if (rate_table->info[rate].phy !=
--			    rate_table->info[tx_rate].phy)
--				break;
--
--			if (CHK_RSSI(rate)) {
--				if (ath_rc_priv->state[rate+1].rssi_thres <
--				    rate_table->info[rate].rssi_ack_deltamin)
--					ath_rc_priv->state[rate].rssi_thres = 0;
--				else {
--					ath_rc_priv->state[rate].rssi_thres =
--					ath_rc_priv->state[rate+1].rssi_thres -
--					rate_table->info[rate].rssi_ack_deltamin;
--				}
--
--				if (ath_rc_priv->state[rate].rssi_thres <
--				    rate_table->info[rate].rssi_ack_validmin) {
--					ath_rc_priv->state[rate].rssi_thres =
--					rate_table->info[rate].rssi_ack_validmin;
--				}
--			}
--		}
--	}
--
- 	/* Make sure the rates below this have lower PER */
- 	/* Monotonicity is kept only for rates below the current rate. */
- 	if (ath_rc_priv->state[tx_rate].per < last_per) {
-@@ -1205,19 +1067,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 				ath_rc_priv->state[rate].per;
- 	}
- 
--	/* Every so often, we reduce the thresholds and
--	 * PER (different for CCK and OFDM). */
--	if (now_msec - ath_rc_priv->rssi_down_time >=
--	    rate_table->rssi_reduce_interval) {
--
--		for (rate = 0; rate < size; rate++) {
--			if (ath_rc_priv->state[rate].rssi_thres >
--			    rate_table->info[rate].rssi_ack_validmin)
--				ath_rc_priv->state[rate].rssi_thres -= 1;
--		}
--		ath_rc_priv->rssi_down_time = now_msec;
--	}
--
- 	/* Every so often, we reduce the thresholds
- 	 * and PER (different for CCK and OFDM). */
- 	if (now_msec - ath_rc_priv->per_down_time >=
-@@ -1233,7 +1082,6 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	ath_debug_stat_retries(sc, tx_rate, xretries, retries,
- 			       ath_rc_priv->state[tx_rate].per);
- 
--#undef CHK_RSSI
- }
- 
- static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
-@@ -1369,8 +1217,6 @@ static void ath_rc_init(struct ath_softc *sc,
- 
- 	/* Initialize thresholds according to the global rate table */
- 	for (i = 0 ; i < ath_rc_priv->rate_table_size; i++) {
--		ath_rc_priv->state[i].rssi_thres =
--			rate_table->info[i].rssi_ack_validmin;
- 		ath_rc_priv->state[i].per = 0;
- 	}
- 
-@@ -1631,7 +1477,6 @@ static void *ath_rate_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp
- 		return NULL;
- 	}
- 
--	rate_priv->rssi_down_time = jiffies_to_msecs(jiffies);
- 	rate_priv->tx_triglevel_max = sc->sc_ah->caps.tx_triglevel_max;
- 
- 	return rate_priv;
--- 
-1.6.0.6
-
+On Thu, Jul 2, 2009 at 11:36 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Tue, Jun 30, 2009 at 6:50 PM, Jasin
+> Colegrove<j.wholesalesupply@gmail.com> wrote:
+>> I AM NOT A SUBSCRIBER. Please reply to me directly at this e-mail
+>> address j.wholesalesupply@gmail.com
+>
+> No need to shout -- also common etiquette on Linux kernel lists is
+> to "reply-all" anyway :)
+>
+>> Then I decided to see if it the card was working, So I tried to iwlist
+>> wlan0 scan, it returned the expected results.
+>
+>> I would be glad to offer up as much
+>> information as I can, but I don't have the slightest on how to debug
+>> this issue?
+>
+> So to summarize:
+>
+> 2.6.29 works, 2.6.30 doesn't, ath9k works, ath5k doesn't, userspace
+> setup is unchanged.  ath5k can get scan results (which means RX is
+> working at least some of the time) but dhcp does not.
+>
+> You said you are comfortable with the command line, in that case the
+> easiest way to debug the change is to just bisect the ath5k changes
+> using git.  There were only 50 or so patches since 2.6.29 so you will
+> likely only need to compile the kernel 5 or 6 times.  You can do
+> something like:
+>
+> $ git bisect start v2.6.30 v2.6.29 -- drivers/net/wireless/ath5k
+>
+>> Any help on that issue is much appreciated. Where can I
+>> file the appropriate bug and what information do I need to post from a
+>> technical standpoint.
+>
+> http://bugzilla.kernel.org/ is where you would file it, the information
+> you've already given here is a good start.
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
