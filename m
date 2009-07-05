@@ -1,83 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49339 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751108AbZGTPcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 11:32:52 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 08:32:52 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Stephen Chen <stephen.chen@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Tony Yang <tony.yang@atheros.com>
-Subject: [PATCH] ath: add support for special 0x8000 regulatory domain
-Date: Mon, 20 Jul 2009 08:32:47 -0700
-Message-ID: <1248103967-5320-1-git-send-email-lrodriguez@atheros.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:35587 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855AbZGEN73 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jul 2009 09:59:29 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Sun, 5 Jul 2009 15:59:32 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200907040053.05654.chunkeey@web.de> <4A4FB3F2.5050405@lwfinger.net> <4A4FC61A.30004@lwfinger.net>
+In-Reply-To: <4A4FC61A.30004@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907051559.32958.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two users of ar9170 devices have now reported their cards
-have been programmed with a regulatory domain of 0x8000.
-This is not a valid regulatory domain as such these users were
-unable to use these devices. Since this doesn't seem to be
-a device EEPROM corruption we must treat it specially. It
-may have been possible the manufacturer intended to use 0x0
-as the regulatory domain and that would ultimately yield
-to US but since we cannot get confirmationf or this we
-default this special case to one of our world regulatory
-domains, specifically 0x64.
+On Saturday 04 July 2009 23:14:02 Larry Finger wrote:
+> Larry Finger wrote:
+> > @@ -224,6 +236,7 @@ static void p54_tx_qos_accounting_free(s
+> >                 struct p54_tx_data *data = (void *) hdr->data;
+> > 
+> >                 priv->tx_stats[data->hw_queue].len--;
+> > +               WARN_ON(priv->tx_stats[data->hw_queue].len < 0);
+> >         }
+> >         p54_wake_queues(priv);
+> >  }
+> > 
+> 
+> The new WARN_ON did _NOT_ trigger when the len went negative.
+Now that's what I call a really cool coincident!
+The only _official_ codepath where the queue len actually could be
+decremented is not really responsible for this -1!
 
-Reported-by: DavidFreeman on #linux-wireless
-Reported-by: Joerg Albert <jal2@gmx.de>
-Cc: Christian Lamparter <chunkeey@web.de>,
-Cc: Stephen Chen <stephen.chen@atheros.com>
-Cc: David Quan <david.quan@atheros.com>
-Cc: Tony Yang <tony.yang@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/regd.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+maybe, after decreasing priv->tx_stats[data->hw_queue].len--;
+we should override data->hw_queue (aka mark) and place WARN_ON
+everywhere (e.g. p54_free_skb / p54_find_and_unlink_skb & p54_dump_tx_queue
+whenever they spot the marker.
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index f37c832..077bcc1 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -474,6 +474,21 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
- 	return 0;
- }
- 
-+/*
-+ * Some users have reported their EEPROM programmed with
-+ * 0x8000 set, this is not a supported regulatory domain
-+ * but since we have more than one user with it we need
-+ * a solution for them. We default to 0x64, which is the
-+ * default Atheros world regulatory domain.
-+ */
-+static void ath_regd_sanitize(struct ath_regulatory *reg)
-+{
-+	if (reg->current_rd != COUNTRY_ERD_FLAG)
-+		return;
-+	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
-+	reg->current_rd = 0x64;
-+}
-+
- int
- ath_regd_init(struct ath_regulatory *reg,
- 	      struct wiphy *wiphy,
-@@ -486,6 +501,8 @@ ath_regd_init(struct ath_regulatory *reg,
- 	if (!reg)
- 		return -EINVAL;
- 
-+	ath_regd_sanitize(reg);
-+
- 	printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
- 
- 	if (!ath_regd_is_eeprom_valid(reg)) {
--- 
-1.6.3.3
+(OT: in there's a _wrong_ p54_tx_qos_accounting_free in p54_rx_eeprom_readback
+ which will be removed... 
+ however its a bit unlikely this causes this havok as the eeprom_readback is a
+ control frame and therefore p54_tx_qos_accounting_free is a nop for those)
 
+> The only other place where len could be decremented is through
+> txhdr->backlog. I noticed that the p54common.c had
+> 
+> txhdr->backlog = current_queue->len;
+> 
+> This was replaced in txrx.c by
+> 
+> txhdr->backlog = priv->tx_stats[queue].len - 1;
+>
+> Was this intentional?
+the spec only says "Number of backlogged frames for given queue."
+however there's no word about if this count is for the number of
+frames which [are already(now)]/[or will be(old behaviour)]
+in the device memory window... 
+
+and to add more confusion => there's even a third interpretation:
+could be this the number of frames which are still buffered by the driver,
+because they don't fit yet?
+
+Now back to the lines:
+I somehow fail to see how exactly tx_stats[queue].len gets
+decremented here?
+as the result of priv->tx_stats[queue].len - 1 will be written into
+txhdr->backlog and not priv->tx_stats[queue].len?
+
+it's really a txhdr->backlog = priv->tx_stats[queue].len - 1;
+vs.
+priv->tx_stats[queue].len = priv->tx_stats[queue].len - 1;
+
+where as the second one is obviously wrong _here_...
+
+> To test if this is the problem, I added the following hunk:
+> 
+> @@ -840,6 +853,7 @@ int p54_tx_80211(struct ieee80211_hw *de
+>         txhdr->crypt_offset = crypt_offset;
+>         txhdr->hw_queue = queue;
+>         txhdr->backlog = priv->tx_stats[queue].len - 1;
+> +       WARN_ON(!priv->tx_stats[queue].len);
+>         memset(txhdr->durations, 0, sizeof(txhdr->durations));
+>         txhdr->tx_antenna = ((info->antenna_sel_tx == 0) ?
+>                 2 : info->antenna_sel_tx - 1) & priv->tx_diversity_mask;
+> 
+> This WARN_ON did trigger just before txq[6].len went negative. I'm now
+> testing with that changed as follows:
+> 
+> @@ -839,7 +852,8 @@ int p54_tx_80211(struct ieee80211_hw *de
+>         }
+>         txhdr->crypt_offset = crypt_offset;
+>         txhdr->hw_queue = queue;
+> -       txhdr->backlog = priv->tx_stats[queue].len - 1;
+> +       txhdr->backlog = priv->tx_stats[queue].len;
+> +       WARN_ON(priv->tx_stats[queue].len < 0);
+>         memset(txhdr->durations, 0, sizeof(txhdr->durations));
+>         txhdr->tx_antenna = ((info->antenna_sel_tx == 0) ?
+>                 2 : info->antenna_sel_tx - 1) & priv->tx_diversity_mask;
+> 
+> This WARN_ON did not trigger, but I still had the queue len go negative.
+well, you have to change the WARN_ON to  priv->tx_stats[queue].len <= 0 (or ==)
+as priv->tx_stats[queue].len will never be 0 here, because it was just 
+incremented by p54_tx_qos_accounting_alloc.
+> 
+> One other question: struct p54_burst is defined in lmac.h, but it
+> doesn't seem to be used anywhere. Will it be needed later?
+It's on the todo list...... somewhere.
+However, the LMAC API needs to be updated for this.
+As there is no description (TBD) about the flags.
+
+Regards,
+	Chr
