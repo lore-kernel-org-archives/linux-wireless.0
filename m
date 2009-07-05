@@ -1,115 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:57688 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751583AbZGTXww (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:59157 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbZGERtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 19:52:52 -0400
-Message-ID: <4A650331.9020409@redfish-solutions.com>
-Date: Mon, 20 Jul 2009 16:52:17 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Sun, 5 Jul 2009 13:49:45 -0400
+Message-ID: <4A50E7C5.4040309@lwfinger.net>
+Date: Sun, 05 Jul 2009 12:49:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> 	<4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet> 	<4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet> 	<4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
-In-Reply-To: <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+References: <200907040053.05654.chunkeey@web.de> <4A4FB3F2.5050405@lwfinger.net> <4A4FC61A.30004@lwfinger.net> <200907051559.32958.chunkeey@web.de>
+In-Reply-To: <200907051559.32958.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Jul 20, 2009 at 12:16 PM, Philip A.
-> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->> Bob Copeland wrote:
->>> On Sun, Jul 19, 2009 at 08:05:47PM -0700, Philip A. Prindeville wrote:
->>>> Actually, it's saying:
->>>>
->>>> filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
->>>> depends:        mac80211,cfg80211
->>>>
->>>> And the 0.6.0 version number matches ath5k/base.c in the compat-wireless
->>>> sources as well.
->>> Yeah, ignore the module version number, no one ever changes it.
->>>
->>>> Not seeing the dependency on "ath", which is strange.  Is that common code
->>>> that's shared in 2.6.30 for the Atheros drivers?
->>> In 2.6.31, yes.
->>>
->>>>> The fix was merged after 2.6.30, IIRC, but it should definitely be in
->>>>> compat-wireless.  Also check your modules directory for an old ath5k.ko
->>>>> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
->>> See above, the fix was post-2.6.30, however compat-wireless should have
->>> it.  The module should now be in drivers/net/wireless/ath/ath5k, not
->>> drivers/net/wireless/ath5k.
->>>
->> I'm using the tarball out of:
->>
->> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30
->>
->> perhaps I should be using a different one?  I tried 2.6.31-rc1, but it doesn't build against 2.6.27.
-> 
-> I have to fix this, will do so in a bit, will also update it to
-> account for the new rc3.
-> 
->   Luis
+Christian,
 
-Well, while waiting for a "blessed" (or at least, 'stable') tarball to be pushed out, I tried running 2009-06-30, and I'm seeing a lot of:
+I changed the section in p54_tx_qos_accounting_free() to be the following:
 
-mgmt::proberesp cb
-Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
-STA 00:21:29:69:3e:a0 sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-...
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-STA 00:21:e9:6e:a7:4f sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
-STA 00:21:29:69:3e:a0 sent probe request for our SSID
-Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
-MGMT (TX callback) ACK
-mgmt::proberesp cb
-STA 00:21:29:69:3e:a0 sent probe request for our SSID
-MGMT (TX callback) fail
-mgmt::proberesp cb
+@@ -223,7 +235,10 @@ static void p54_tx_qos_accounting_free(s
+                struct p54_hdr *hdr = (void *) skb->data;
+                struct p54_tx_data *data = (void *) hdr->data;
 
+-               priv->tx_stats[data->hw_queue].len--;
++               if (priv->tx_stats[data->hw_queue].len)
++                       priv->tx_stats[data->hw_queue].len--;
++               else
++                       dump_stack();
+        }
+        p54_wake_queues(priv);
+ }
 
+In a 1 hour period running a 'make ARCH=i386 -j6' with the kernel
+sources on an NFS mounted volume, I got the following sequence of
+"failures":
 
-00:21:29:69:3e:a0 is a PC running Vista SP2.
+a. dump_stack() with call from p54_find_and_unlock_skb()
+b. dump_stack() with call from p54_find_and_unlock_skb()
+c. disassociation error
+d. dump_stack() with call from p54_find_and_unlock_skb()
+e. dump_stack() with call from p54_find_and_unlock_skb()
+f. dump_stack() with call from p54_find_and_unlock_skb()
+g. disassociation error
+h. disassociation error
+i. disassociation error
+j. disassociation error
+k. dump_stack() with call from p54_find_and_unlock_skb()
+l. disassociation error
+m. disassociation error
 
-00:21:e9:6e:a7:4f is an iPhone running 3.0.
+When the dump_stack() occurs, the interface keeps going as long as the
+queue len never goes negative. With the disassociation error, the
+device must be powered cycled by unplugging and replugging it. The
+driver does not need to be reloaded.
 
-The iPhone should be scanning for available networks, but it's also been explicitly configured with this particular AP (and SSID).
+If I run the kernel make with -j1 rather than -j6, the builds have
+always completed. Neither of the errors show up.
 
-Is this a known issue?
+A "paper over the problem" workaround for the queue len < 0 would be
 
--Philip
+-               priv->tx_stats[data->hw_queue].len--;
++               if (priv->tx_stats[data->hw_queue].len)
++                       priv->tx_stats[data->hw_queue].len--;
+
+but it doesn't properly fix the problem.
+
+How sure are you of the locking? It seems that the more threads that
+I'm using, the more likely that it is to happen. Similarly, the
+disassociation errors could be overloading the firmware by adding too
+many entries. Of course, it could result from a firmware error when
+the device is driven hard.
+
+I've only given it one trial, but p54usb only survived for 24 minutes
+running my other torture test with repeating tcpperf in one terminal
+and a flood ping in  a second. This one got the disassociation error
+and also a "failure to remove key" (error code -95) and two "failed to
+uodate LEDs" (error code -12).
