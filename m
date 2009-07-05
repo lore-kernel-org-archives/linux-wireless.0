@@ -1,377 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52584 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756678AbZGOAWD (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:46633 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752554AbZGEA5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:22:03 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/5] cfg80211: add WoW support
-Date: Tue, 14 Jul 2009 20:21:58 -0400
-Message-Id: <1247617320-20163-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 4 Jul 2009 20:57:06 -0400
+Received: by bwz25 with SMTP id 25so120754bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jul 2009 17:57:07 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Sun, 5 Jul 2009 04:56:59 +0400
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200907040053.05654.chunkeey@web.de>
+In-Reply-To: <200907040053.05654.chunkeey@web.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907050457.00689.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We support a set and get for WoW parameters. We support
-setting of 3 type of triggers:
+> This patch tries to address a long standing issue: 
+> how to survive serve memory starvation situations,
+> without losing the device due to missing transfer-buffers.
+> 
+> And with a flick of __GFP_NOWARN, we're able to handle ?all? memory
+> allocation failures on the rx-side during operation without much fuss.
+> 
+> However, there is still an issue within the xmit-part.
+> This is likely due to p54's demand for a large free headroom for
+> every outgoing frame:
+> 
+>  + transport header (differs from device to device)
+>       -> 16 bytes transport header (USB 1st gen)
+>       -> 8 bytes for (USB 2nd gen)
+>       -> 0 bytes for spi & pci
+>  + 12 bytes for p54_hdr
+>  + 44 bytes for p54_tx_data
+>  + up to 3 bytes for alignment
+> (+ 802.11 header as well? )
+> 
+> and this is where ieee80211_skb_resize comes into the play...
+> which will try to _relocate_ (alloc new, copy, free old) frame data,
+> as the headroom is most of the time simply not enough.
+> =>
+>  Call Trace: (from Larry - Bug #13319 )
+>  [<ffffffff80292a7b>] __alloc_pages_internal+0x43d/0x45e
+>  [<ffffffff802b1f1f>] alloc_pages_current+0xbe/0xc6
+>  [<ffffffff802b6362>] new_slab+0xcf/0x28b
+>  [<ffffffff802b4d1f>] ? unfreeze_slab+0x4c/0xbd
+>  [<ffffffff802b672e>] __slab_alloc+0x210/0x44c
+>  [<ffffffff803e7bee>] ? pskb_expand_head+0x52/0x166
+>  [<ffffffff803e7bee>] ? pskb_expand_head+0x52/0x166
+>  [<ffffffff802b7e60>] __kmalloc+0x119/0x194
+>  [<ffffffff803e7bee>] pskb_expand_head+0x52/0x166
+>  [<ffffffffa02913d6>] ieee80211_skb_resize+0x91/0xc7 [mac80211]
+>  [<ffffffffa0291c0f>] ieee80211_master_start_xmit+0x298/0x319 [mac80211]
+>  [<ffffffff803ef72a>] dev_hard_start_xmit+0x229/0x2a8
+> (sl*b debug option will help to bloat even more.)
+> 
+> So?! how to prevent ieee80211_skb_resize from raping
+> the bits of memory left?
+> 
+> the simplest answer is probably this one:
+> https://dev.openwrt.org/changeset/15761
+> --
+> 
+> back to rx  failures.
+> the attached code below was only usb was tested so far!
+> you have been warned!
+> 
+> regards,
+> 	chr
+> 
+> btw: max what do you think about the p54spi changes, are they total ****?
 
- * Magic Packet
- * Beacon miss
- * Link change (no longer associated)
+Christian, I'm trying to test it, but it seems that many things have changed since 2.6.28.
+Right now I see this:
 
-Not yet supported:
+[  416.738586] Freeing init memory: 140K                                                                                     
+[  417.208801] cx3110x spi2.0: firmware: requesting 3826.arm                                                                 
+[  417.272094] hub 1-0:1.0: hub_suspend                                                                                      
+[  417.272155] usb usb1: bus auto-suspend                                                                                    
+[  417.295501] phy0: p54 detected a LM20 firmware                                                                            
+[  417.298034] p54: rx_mtu reduced from 3240 to 2376                                                                         
+[  417.300598] phy0: FW rev 2.13.0.0.a.22.8 - Softmac protocol 5.6                                                           
+[  417.303558] phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES                                                   
+[  417.306732] cx3110x spi2.0: firmware: requesting 3826.eeprom                                                              
+[  417.385742] firmware spi2.0: firmware_loading_store: vmap() failed                                                        
+[  417.391540] cx3110x spi2.0: loading default eeprom...                                                                     
+[  417.395568] phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbow                                                        
+[  417.468841] phy0: Selected rate control algorithm 'minstrel'                                                              
+[  417.473693] cx3110x spi2.0: is registered as 'phy0'                                                                       
+[  419.150909] g_ether gadget: notify connect false                                                                          
+[  419.182891] g_ether gadget: notify speed 425984000                                                                        
+[  420.409210] usb0: eth_open                                                                                                
+[  420.409240] usb0: eth_start                                                                                               
+[  420.409423] g_ether gadget: ecm_open                                                                                      
+[  420.409454] g_ether gadget: notify connect true                                                                           
+[  420.430908] g_ether gadget: notify speed 425984000
+[  421.186340] phy0: device now idle
+[  421.200958] skb_over_panic: text:bf000498 len:2 put:2 head:c793a200 data:c793a220 tail:0xc793a222 end:0xc793a220 dev:<NULL>
+[  421.211669] kernel BUG at net/core/skbuff.c:127!
+[  421.217407] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+[  421.223571] pgd = c0004000
+[  421.229797] [00000000] *pgd=00000000
+[  421.236236] Internal error: Oops: 817 [#1]
+[  421.242736] Modules linked in: p54spi
+[  421.249420] CPU: 0    Not tainted  (2.6.31-rc1-omap1-wl #4)
+[  421.256378] PC is at __bug+0x1c/0x28
+[  421.263458] LR is at __bug+0x18/0x28
+[  421.270538] pc : [<c002f828>]    lr : [<c002f824>]    psr: 60000113
+[  421.270568] sp : c798ff20  ip : 00000000  fp : 00000000
+[  421.284851] r10: 00000000  r9 : 00000000  r8 : c7976b34
+[  421.291870] r7 : c793a220  r6 : c793a222  r5 : c793a220  r4 : c793a200
+[  421.298980] r3 : 00000000  r2 : c033cb84  r1 : 000045b2  r0 : 0000003a
+[  421.306091] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+[  421.313323] Control: 00c5387d  Table: 87fe0000  DAC: 00000017
+[  421.320526] Process phy0 (pid: 426, stack limit = 0xc798e268)
+[  421.327697] Stack: (0xc798ff20 to 0xc7990000)
+[  421.334747] ff20: 00000002 c01dc03c c793a200 c793a220 c793a222 c793a220 c02fba60 00000000
+[  421.342346] ff40: c798ff40 c784abc0 c793a220 bf000498 c784abc0 c01dd1a8 00000058 c7976940
+[  421.349975] ff60: c798ff6e bf000498 c798e000 80000058 c7976afc c7976940 50000000 c7976b0c
+[  421.357574] ff80: 00000000 bf0008ec c796fd20 10000000 c0060510 bf000808 c796fd20 c798e000
+[  421.365173] ffa0: c0060510 c0060650 c798ffd4 00000000 c78cc9a0 c00636ac c798ffb8 c798ffb8
+[  421.372558] ffc0: c798ffd4 c7951d98 c796fd20 c0063440 00000000 00000000 c798ffd8 c798ffd8
+[  421.379730] ffe0: 00000000 00000000 00000000 00000000 00000000 c002cca8 53384842 4e86725f
+[  421.386993] Code: e1a01000 e59f000c eb0088c3 e3a03000 (e5833000)
+[  421.394104] ---[ end trace 75ac12f5b28efc30 ]---
 
- * User pattern match
+Looks like something's wrong with firmware loading. 
+I hope to fix it tomorrow and see how your changes work.
 
-The user pattern match will need a parser as patterns
-can be customized. It should be noted WoW will require
-suspend to S3 Hot (power cable plugged), and proper
-BIOS support to receive PCI PMEs and kick the box on.
-
-For USB this may be easier and no BIOS intervention should
-be required.
-
-Drivers which support WoW must set their supported hardware/driver
-triggers on the wiphy's cfg80211 wow_triggers_supported. cfg80211
-drivers will be informed of the enabled wow triggers through the
-suspend() cfg80211 callback. By default we disable all triggers.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/nl80211.h |   46 +++++++++++++++++++
- include/net/cfg80211.h  |   26 ++++++++++-
- net/wireless/core.h     |    3 +
- net/wireless/nl80211.c  |  116 +++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/sysfs.c    |    2 +-
- 5 files changed, 190 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 962e223..0c869ca 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -262,6 +262,18 @@
-  *	reasons, for this the %NL80211_ATTR_DISCONNECTED_BY_AP and
-  *	%NL80211_ATTR_REASON_CODE attributes are used.
-  *
-+ * @NL80211_CMD_GET_WOW: get Wake-on-Wireless-LAN (WoW) settings.
-+ * @NL80211_CMD_SET_WOW: set Wake-on-Wireless-LAN (Wow) settings. Wake on
-+ *	wireless makes use of standard Wake-on-LAN (WoL) frames, you receive
-+ *	a WoW frame when your AP sends you a regular WOL frame. The difference
-+ *	difference WoL is you need to be associated to an AP in order to
-+ *	receive WoW frames, so additional triggers are available for a wakeup.
-+ *	A driver capable of WoW should initialize the wiphy with its supported
-+ *	WoW triggers. Upon suspend cfg80211 will inform the driver of the user
-+ *	enabled triggers. By default no WoW triggers are enabled.
-+ *	For more information see:
-+ *	http://wireless.kernel.org/en/users/Documentation/WoW
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -336,6 +348,9 @@ enum nl80211_commands {
- 	NL80211_CMD_ROAM,
- 	NL80211_CMD_DISCONNECT,
- 
-+	NL80211_CMD_GET_WOW,
-+	NL80211_CMD_SET_WOW,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -355,6 +370,8 @@ enum nl80211_commands {
- #define NL80211_CMD_DEAUTHENTICATE NL80211_CMD_DEAUTHENTICATE
- #define NL80211_CMD_DISASSOCIATE NL80211_CMD_DISASSOCIATE
- #define NL80211_CMD_REG_BEACON_HINT NL80211_CMD_REG_BEACON_HINT
-+#define NL80211_CMD_GET_WOW NL80211_CMD_GET_WOW
-+#define NL80211_CMD_SET_WOW NL80211_CMD_SET_WOW
- 
- /**
-  * enum nl80211_attrs - nl80211 netlink attributes
-@@ -573,6 +590,12 @@ enum nl80211_commands {
-  *	and join_ibss(), key information is in a nested attribute each
-  *	with %NL80211_KEY_* sub-attributes
-  *
-+ * @NL80211_ATTR_WOW_TRIGGERS_SUPPORTED: the supported WoW triggers
-+ * @NL80211_ATTR_WOW_TRIGGERS_ENABLED: used by %NL80211_CMD_SET_WOW to
-+ *	indicate which WoW triggers should be enabled. This is also
-+ *	used by %NL80211_CMD_GET_WOW to get the currently enabled WoW
-+ *	triggers.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -701,6 +724,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_KEY,
- 	NL80211_ATTR_KEYS,
- 
-+	NL80211_ATTR_WOW_TRIGGERS_SUPPORTED,
-+	NL80211_ATTR_WOW_TRIGGERS_ENABLED,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1372,4 +1398,24 @@ enum nl80211_key_attributes {
- 	NL80211_KEY_MAX = __NL80211_KEY_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_wow_triggers - Wake-on-Wireless-LAN triggers
-+ *
-+ * NL80211_WOW_TRIGGER_MAGIC_PACKET: a wake signal will be sent to the
-+ *     devices if a magic packet is received.
-+ * NL80211_WOW_TRIGGER_BMISS: WoW signal will be sent to the device when
-+ *     a beacon has been missed by the associated AP.
-+ * NL80211_WOW_TRIGGER_LINK_CHANGE: a wake signal will be sent to
-+ *     the device if a link change is detected on the device.
-+ * NL80211_WOW_TRIGGER_USER_PATTERN: a wake signal will be sent to the
-+ *     device if a user configurable pattern is received by
-+ *     the device.
-+ */
-+enum nl80211_wow_triggers {
-+	NL80211_WOW_TRIGGER_MAGIC_PACKET	= 1 << 0,
-+	NL80211_WOW_TRIGGER_BMISS		= 1 << 1,
-+	NL80211_WOW_TRIGGER_LINK_CHANGE		= 1 << 2,
-+	NL80211_WOW_TRIGGER_PATTERN		= 1 << 3,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a981ca8..d45fcec 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -828,6 +828,21 @@ struct cfg80211_bitrate_mask {
- 	u32 maxrate; /* in kbps, 0 == no limit */
- };
- 
-+/*
-+ * struct cfg80211_wow - Wake on Wireless-LAN support info
-+ *
-+ * This structure defines the WoW triggers enabled and set for the device.
-+ * For now we only carry the supported tiggers but this is expected to grow
-+ * once we add support for user patterns.
-+ *
-+ * @triggers_enabled: enabled triggers by the user. Default
-+ *	is to disable all triggers. The flags for this bitmask
-+ *	are %NL80211_WOW_TRIGGER_*.
-+ */
-+struct cfg80211_wow {
-+	u32 triggers_enabled;
-+};
-+
- /**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-@@ -841,7 +856,8 @@ struct cfg80211_bitrate_mask {
-  * wireless extensions but this is subject to reevaluation as soon as this
-  * code is used more widely and we have a first user without wext.
-  *
-- * @suspend: wiphy device needs to be suspended
-+ * @suspend: wiphy device needs to be suspended. We pass the struct cfg80211_wow
-+ *	so the device enables the appropriate triggers during suspend.
-  * @resume: wiphy device needs to be resumed
-  *
-  * @add_virtual_intf: create a new virtual interface with the given name,
-@@ -931,7 +947,7 @@ struct cfg80211_bitrate_mask {
-  * @testmode_cmd: run a test mode command
-  */
- struct cfg80211_ops {
--	int	(*suspend)(struct wiphy *wiphy);
-+	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wow *wow);
- 	int	(*resume)(struct wiphy *wiphy);
- 
- 	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
-@@ -1088,6 +1104,10 @@ struct cfg80211_ops {
-  * @frag_threshold: Fragmentation threshold (dot11FragmentationThreshold);
-  *	-1 = fragmentation disabled, only odd values >= 256 used
-  * @rts_threshold: RTS threshold (dot11RTSThreshold); -1 = RTS/CTS disabled
-+ * @wow_triggers_supported: supported bitmask of Wake-on-Wireless triggers.
-+ *	The flags for this bitmask are %NL80211_WOW_TRIGGER_*. The driver
-+ *	should set the capabilities before registering the wiphy. WoW triggers
-+ *	which should be used are passed to the driver upon suspend.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -1115,6 +1135,8 @@ struct wiphy {
- 	u32 frag_threshold;
- 	u32 rts_threshold;
- 
-+	u32 wow_triggers_supported;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 2ec8ddb..1d250cd 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -66,6 +66,9 @@ struct cfg80211_registered_device {
- 	struct work_struct conn_work;
- 	struct work_struct event_work;
- 
-+	/* Used to keep track of user configurable triggers */
-+	struct cfg80211_wow wow;
-+
- #ifdef CONFIG_CFG80211_DEBUGFS
- 	/* Debugfs entries */
- 	struct wiphy_debugfsdentries {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6dad3e7..50de866 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -133,6 +133,9 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
- 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
-+
-+	[NL80211_ATTR_WOW_TRIGGERS_SUPPORTED] = { .type = NLA_U32 },
-+	[NL80211_ATTR_WOW_TRIGGERS_ENABLED] = { .type = NLA_U32 },
- };
- 
- /* policy for the attributes */
-@@ -4023,6 +4026,109 @@ unlock_rtnl:
- 	return err;
- }
- 
-+static int nl80211_get_wow(struct sk_buff *skb,
-+			   struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct net_device *dev;
-+	struct wiphy *wiphy;
-+	int err;
-+	void *hdr;
-+	struct sk_buff *msg;
-+
-+	rtnl_lock();
-+
-+	/* Look up our device */
-+	err = get_rdev_dev_by_info_ifindex(info->attrs, &rdev, &dev);
-+	if (err)
-+		goto out_rtnl;
-+
-+	wiphy = &rdev->wiphy;
-+
-+	/* Draw up a netlink message to send back */
-+	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-+	if (!msg) {
-+		err = -ENOBUFS;
-+		goto out;
-+	}
-+	hdr = nl80211hdr_put(msg, info->snd_pid, info->snd_seq, 0,
-+			     NL80211_CMD_GET_WOW);
-+	if (!hdr)
-+		goto nla_put_failure;
-+	NLA_PUT_U32(msg, NL80211_ATTR_WOW_TRIGGERS_SUPPORTED,
-+		    wiphy->wow_triggers_supported);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WOW_TRIGGERS_ENABLED,
-+		    rdev->wow.triggers_enabled);
-+
-+	genlmsg_end(msg, hdr);
-+	err = genlmsg_unicast(msg, info->snd_pid);
-+	goto out;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	err = -EMSGSIZE;
-+ out:
-+	/* Cleanup */
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+ out_rtnl:
-+	rtnl_unlock();
-+
-+	return err;
-+}
-+
-+static int nl80211_set_wow(struct sk_buff *skb, struct genl_info *info)
-+{
-+	int err;
-+	struct cfg80211_registered_device *rdev;
-+	struct net_device *dev;
-+	struct wiphy *wiphy;
-+	u32 triggers_requested;
-+
-+	if (!info->attrs[NL80211_ATTR_WOW_TRIGGERS_ENABLED])
-+		return -EINVAL;
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info->attrs, &rdev, &dev);
-+	if (err)
-+		goto out_rtnl;
-+
-+	wiphy = &rdev->wiphy;
-+
-+	if (!wiphy->wow_triggers_supported) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	triggers_requested =
-+		nla_get_u32(info->attrs[NL80211_ATTR_WOW_TRIGGERS_ENABLED]);
-+
-+	/* Needs a pattern attribute implemented and passed to the driver */
-+	if (triggers_requested & NL80211_WOW_TRIGGER_PATTERN)
-+		return -EOPNOTSUPP;
-+
-+	if (!(wiphy->wow_triggers_supported & triggers_requested)) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Apply changes. This information gets passed to the
-+	 * drivers during suspend.
-+	 */
-+	rdev->wow.triggers_enabled = triggers_requested;
-+
-+ out:
-+	/* cleanup */
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+ out_rtnl:
-+	rtnl_unlock();
-+
-+	return err;
-+}
-+
- static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_GET_WIPHY,
-@@ -4253,6 +4359,16 @@ static struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_DISCONNECT,
- 		.doit = nl80211_disconnect,
-+	},
-+	{
-+		.cmd = NL80211_CMD_GET_WOW,
-+		.doit = nl80211_get_wow,
-+		.policy = nl80211_policy,
-+		/* can be retrieved by unprivileged users */
-+	},
-+	{
-+		.cmd = NL80211_CMD_SET_WOW,
-+		.doit = nl80211_set_wow,
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
-index efe3c5c..8b60a5b 100644
---- a/net/wireless/sysfs.c
-+++ b/net/wireless/sysfs.c
-@@ -64,7 +64,7 @@ static int wiphy_suspend(struct device *dev, pm_message_t state)
- 
- 	if (rdev->ops->suspend) {
- 		rtnl_lock();
--		ret = rdev->ops->suspend(&rdev->wiphy);
-+		ret = rdev->ops->suspend(&rdev->wiphy, &rdev->wow);
- 		rtnl_unlock();
- 	}
- 
--- 
-1.6.0.6
-
+Thanks.
+-- Max
