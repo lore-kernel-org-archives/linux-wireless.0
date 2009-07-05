@@ -1,84 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41704 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:49060 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313AbZGBJxR (ORCPT
+	with ESMTP id S1752542AbZGENiV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2009 05:53:17 -0400
-Subject: Re: [PATCH 8/8 v3.1] mac80211: re-add HT disabling
+	Sun, 5 Jul 2009 09:38:21 -0400
+Subject: Re: [PATCH] rfkill: prep for rfkill API changes
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jmalinen@atheros.com>
-In-Reply-To: <20090702095134.GA11235@jm.kir.nu>
-References: <20090630115245.675553951@sipsolutions.net>
-	 <20090630115303.111250594@sipsolutions.net>
-	 <20090630132547.GB24667@vasanth-laptop>
-	 <1246369077.16643.10.camel@johannes.local>
-	 <20090630135207.GC24667@vasanth-laptop>
-	 <1246370452.16643.11.camel@johannes.local>
-	 <1246433956.16643.35.camel@johannes.local>
-	 <20090701101336.GD24667@vasanth-laptop>
-	 <1246444959.4131.15.camel@johannes.local>
-	 <20090702095134.GA11235@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6/7RbkYQWOTGa6RmZ94t"
-Date: Thu, 02 Jul 2009 11:53:17 +0200
-Message-Id: <1246528397.16770.31.camel@johannes.local>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090705132422.GA30334@khazad-dum.debian.net>
+References: <1246798266.4411.1.camel@johannes.local>
+	 <20090705132422.GA30334@khazad-dum.debian.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JM7OzO4a5gU8u+sRnS8w"
+Date: Sun, 05 Jul 2009 15:38:18 +0200
+Message-Id: <1246801098.4411.5.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-6/7RbkYQWOTGa6RmZ94t
+--=-JM7OzO4a5gU8u+sRnS8w
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-07-02 at 12:51 +0300, Jouni Malinen wrote:
-> On Wed, Jul 01, 2009 at 12:42:39PM +0200, Johannes Berg wrote:
-> > On Wed, 2009-07-01 at 15:43 +0530, Vasanthakumar Thiagarajan wrote:
-> > > On Wed, Jul 01, 2009 at 01:09:16PM +0530, Johannes Berg wrote:
-> > > > @@ -1236,6 +1236,14 @@ static int ieee80211_assoc(struct wiphy
-> > > > +       for (i =3D 0; i < req->crypto.n_ciphers_pairwise; i++)
-> > > > +               if (req->crypto.ciphers_pairwise[i] =3D=3D WLAN_CIP=
-HER_SUITE_WEP40 ||
->=20
-> > > for..loop does not seem to be necessary here as it is very unlikely t=
-hat
-> > > an assoc req will have more than one cipher suite.
->=20
-> > True, but so far we've defined the API that way. Should we redefine the
-> > API? I keep forgetting what is valid where. Jouni?
->=20
-> The (re)association request is only allowed to list one pairwise cipher
-> suite (see IEEE 802.11, 8.4.3). Various other use cases for RSN IE
-> support multiple cipher suites, but this one does not.
+On Sun, 2009-07-05 at 10:24 -0300, Henrique de Moraes Holschuh wrote:
 
-So we have to support multiple for connect() to allow the card/driver to
-choose, but a single one for associate()?
+> This is good, but not complete.  Changes to the API that don't change the
+> size (or those which reduces it) are a problem: they are impossible with =
+a
+> schema that detects API version by the size alone.
+
+Umm, no, we can also add operations as required already.
+
+> Maybe a new field with a API serial number should be added right _now_ wh=
+ile
+> it is still not too painful to do it?  This would be V2 of the API
+> (detectable by the size change), but there aren't many users yet, so the
+> effort to support it would not be daunting.
+>=20
+> You can also publish the API version through a read-only sysfs attribute =
+or
+> a separate IOCTL... it doesn't really need to be in-band (although in-ban=
+d
+> is a lot better).
+
+No.
+
+This patch doesn't change anything at all. It just reduces the
+_subtlety_ involved in actually doing a size change, nothing more. A
+real event version is _not_ necessary at all. In fact, I would argue
+that basing _anything_ on the "version" rather than the "feature set" is
+useless.
 
 johannes
 
---=-6/7RbkYQWOTGa6RmZ94t
+--=-JM7OzO4a5gU8u+sRnS8w
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKTIOKAAoJEODzc/N7+QmaKMcP/iBp6eUrJ2zEo8D8tuiScV1b
-Jh3QBKHfCT2AgPkKyMzSVIkXSafiOSemrvBSg+L9rFOwsPv8z2EOmipK4A/SCQRQ
-i1qBjJB8Q02CgSCeK8FYeh6ehLdhBTVLTah870EF8XL9HzzhAqX4OWOi+Sm8V3XG
-/fge+GHn7tp45SM9W9Bl4UcU3E677UUpVXOX58IAS3n4TpFK3/G60IUosMCGTdmL
-LIRhdAuDCq3/foqIu67kTbtvxUMd4i7pCFG1U3qq705lgPt9iGxX48MsxpaHq9qk
-i58XYwebqyPDX7nLC1lOlhaGc6GnJOOD7S2BrJKdQ9+4X85kWG2jfQNzs7XG18Io
-nP8mNbsamSqnVJMBg4tUqRssOWwEul8IFGfti/mi3mifXLTKoKrB3HHXacQ42A9M
-0I3M1mENqCZQwX8QDViP4jQyUsjqvMSGgX5mPBAiuqQxnAuVn3uvABuhyWg6PzJh
-Abl9rlYxPxrO9VmRVn9huaJuAGrskR2yA51ZUsTrF9rbT/oSKPVj8Z1xbHjkeDfN
-6MR5KLTKf4osdAvJTd3oZ53CJT1B7EnfxIm5Qv4cdNaDCcNjPcNEx4kmQFtPtffb
-ZBZ1nugZXcfwx+fsWS6tS7PDZ6ZFuszMnMLExuFyM2MEOOK7lbDfiJJO2Bi6Wx2e
-wTWraXTgmAQAjIfTzLys
-=jyDW
+iQIcBAABAgAGBQJKUKzFAAoJEODzc/N7+QmaY9IP/i0T8H/fYLs0IsOJG2Drx6Sf
+TSuPut53gPosMcm8A1SaRIla+Ccz1ydGsm8WWZqt13Lvty42tpC88rP2lumdHhiT
+YdB8kSmWSa9MGbShoD64inE7+n7BQRPfReEcA+3VaiPkpqgZPA4HM2RmpAR0e/lt
+I1uI+creEs7cltC3OQUd1imNhuILdhJaDguhU3XK+jqFPKOyc4vjZpdhn3rW+eC3
+aAn39G+Ozc6ycAgLPUdXjn5JRhwsUMrvxvAcMODYYuPwrrGgvEswzZI4//knMQTu
+jojYrirBWr1nrmRLGme60lqhQQuNHmMd4+2Tx6VeKGNH9YDR7/vOY0DxUcbLAbua
+bx060YnqVzJM74XF58XjxMzmzmdVLuK74AL7vLNRiRnKuzjS4gFpfC1TmY4lNdKz
+NriMkvASJKI4vCw5guB04BjscBR8LGKBDn7Dn6droKKcbRwtRVy4VQjNkb05Dw6T
+Gs6ZYSKPhA4d9cIxfiob+FG3z+q1o3eq0Tc4ThySkOhdDWI07RGPUOY3bjImXdci
+YSTOIgiZd4aSc5NzPinWlTUHoqfAIXjMnbviGVeLi5chG6X9Nyc1cZ/xjQf0/9zC
++GRVzUJtsBNU6kvN8pIo0gxuU/0ErwWx5YTQEsE5kzKtkeUIBEXy7awhIO1GrHHO
+Es+ZU0zxCr/VjheiF+E1
+=if52
 -----END PGP SIGNATURE-----
 
---=-6/7RbkYQWOTGa6RmZ94t--
+--=-JM7OzO4a5gU8u+sRnS8w--
 
