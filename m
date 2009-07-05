@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:39884 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbZGKQTl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916AbZGEMvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jul 2009 12:19:41 -0400
-Received: by ewy26 with SMTP id 26so1736680ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Jul 2009 09:19:39 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Sun, 5 Jul 2009 08:51:07 -0400
+Subject: [PATCH] rfkill: prep for rfkill API changes
+From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Remove DEVICE_STATE_DISABLED_RADIO_HW
-Date: Sat, 11 Jul 2009 18:00:19 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907111800.19613.IvDoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sun, 05 Jul 2009 14:51:06 +0200
+Message-Id: <1246798266.4411.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The DEVICE_STATE_DISABLED_RADIO_HW flag is only read but never set,
-it is an ancient part of one of the many versions of the rfkill implementations
-in rt2x00. It is about time is disappears.
+We've designed the /dev/rfkill API in a way that we
+can increase the event struct by adding members at
+the end, should it become necessary. To validate the
+events, userspace and the kernel need to have the
+proper event size to check for -- when reading from
+the other end they need to verify that it's at least
+version 1 of the event API, with the current struct
+size, so define a constant for that and make the
+code a little more 'future proof'.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Not that I expect that we'll have to change the event
+size any time soon, but it's better to write the code
+in a way that lends itself to extending.
+
+Due to the current size of the event struct, the code
+is currently equivalent, but should the event struct
+ever need to be increased the new code might not need
+changing.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index de3f13a..a111b04 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -600,7 +600,6 @@ enum rt2x00_flags {
- 	DEVICE_STATE_INITIALIZED,
- 	DEVICE_STATE_STARTED,
- 	DEVICE_STATE_ENABLED_RADIO,
--	DEVICE_STATE_DISABLED_RADIO_HW,
+ include/linux/rfkill.h |   14 ++++++++++++++
+ net/rfkill/core.c      |   10 ++++++++--
+ 2 files changed, 22 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/include/linux/rfkill.h	2009-07-05 14:39:09.000000000 +0200
++++ wireless-testing/include/linux/rfkill.h	2009-07-05 14:41:58.000000000 +0200
+@@ -82,6 +82,20 @@ struct rfkill_event {
+ 	__u8  soft, hard;
+ } __packed;
  
- 	/*
- 	 * Driver requirements
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 4fff3a8..658a63b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -40,8 +40,7 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	 * Don't enable the radio twice.
- 	 * And check if the hardware button has been disabled.
- 	 */
--	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    test_bit(DEVICE_STATE_DISABLED_RADIO_HW, &rt2x00dev->flags))
-+	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return 0;
++/*
++ * We are planning to be backward and forward compatible with changes
++ * to the event struct, by adding new, optional, members at the end.
++ * When reading an event (whether the kernel from userspace or vice
++ * versa) we need to accept anything that's at least as large as the
++ * version 1 event size, but might be able to accept other sizes in
++ * the future.
++ *
++ * One exception is the kernel -- we already have two event sizes in
++ * that we've made the 'hard' member optional since our only option
++ * is to ignore it anyway.
++ */
++#define RFKILL_EVENT_SIZE_V1	8
++
+ /* ioctl for turning off rfkill-input (if present) */
+ #define RFKILL_IOC_MAGIC	'R'
+ #define RFKILL_IOC_NOINPUT	1
+--- wireless-testing.orig/net/rfkill/core.c	2009-07-05 14:40:13.000000000 +0200
++++ wireless-testing/net/rfkill/core.c	2009-07-05 14:49:41.000000000 +0200
+@@ -1076,10 +1076,16 @@ static ssize_t rfkill_fop_write(struct f
+ 	struct rfkill_event ev;
  
- 	/*
+ 	/* we don't need the 'hard' variable but accept it */
+-	if (count < sizeof(ev) - 1)
++	if (count < RFKILL_EVENT_SIZE_V1 - 1)
+ 		return -EINVAL;
+ 
+-	if (copy_from_user(&ev, buf, sizeof(ev) - 1))
++	/*
++	 * Copy as much data as we can accept into our 'ev' buffer,
++	 * but tell userspace how much we've copied so it can determine
++	 * our API version even in a write() call, if it cares.
++	 */
++	count = min(count, sizeof(ev));
++	if (copy_from_user(&ev, buf, count))
+ 		return -EFAULT;
+ 
+ 	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
+
+
