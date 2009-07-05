@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34342 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753018AbZGaVIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 17:08:32 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: gregor kowski <gregor.kowski@gmail.com>
-Subject: Re: [RESEND] [PATCHv2] b43 add harware tkip
-Date: Fri, 31 Jul 2009 23:08:30 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com> <200907281808.35906.mb@bu3sch.de> <83a869cd0907311404o793c1733p43e936437a923340@mail.gmail.com>
-In-Reply-To: <83a869cd0907311404o793c1733p43e936437a923340@mail.gmail.com>
+Received: from mail-gx0-f226.google.com ([209.85.217.226]:38755 "EHLO
+	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbZGEAlx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jul 2009 20:41:53 -0400
+Received: by gxk26 with SMTP id 26so4967766gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Jul 2009 17:41:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907312308.31066.mb@bu3sch.de>
+In-Reply-To: <4A4FA224.40006@openwrt.org>
+References: <1246726795-3934-1-git-send-email-me@bobcopeland.com>
+	 <1246726795-3934-6-git-send-email-me@bobcopeland.com>
+	 <4A4FA224.40006@openwrt.org>
+Date: Sat, 4 Jul 2009 20:41:56 -0400
+Message-ID: <b6c5339f0907041741w2fe6c6aaifda6f005e7313c66@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ath5k: write PCU registers on initial reset
+From: Bob Copeland <me@bobcopeland.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 31 July 2009 23:04:17 gregor kowski wrote:
-> Hi Michael,
-> 
-> On 7/28/09, Michael Buesch <mb@bu3sch.de> wrote:
-> >> This add hardware tkip for b43.
-> >
-> > First of all, I don't really want to support hw tkip on b43.
-> > Broadcom removed the support for hw tkip from their drivers. I bet they
-> > had a very good reason to do so.
-> Did they remove it from the firmware or only the driver ?
+>>       }
+>> -     ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+>> +     ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan == NULL);
+>
+> Shouldn't this be chan != NULL? I'd assume that chan is NULL the first
+> time and change_channel thus should be false to initialize all the
+> registers.
 
-I'm not sure about the firmware. But they removed it from the driver.
+Yup, it should... I could swear I tested it, must've gotten lucky.
 
-> > It's mapped to 4, because you removed the old API support.
-> > (I'm not sure whether we want to remove that support, yet. Gimme some time
-> > on it...)
-> >
-> Does the old API still useful ?
-
-Well, I'm not sure. Why do we remove it at all? It just avoids one single
-if condition in your tkip patch, doesn't it?
-
-> Are there v4 firmware supporting old API ?
-
-Yes
+Thanks for the catch.
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
