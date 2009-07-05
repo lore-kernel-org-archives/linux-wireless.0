@@ -1,111 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f183.google.com ([209.85.211.183]:46296 "EHLO
-	mail-yw0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbZGaBbX convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:46765 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457AbZGEWrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 21:31:23 -0400
-Received: by ywh13 with SMTP id 13so1304341ywh.15
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 18:31:23 -0700 (PDT)
+	Sun, 5 Jul 2009 18:47:03 -0400
+Received: by fxm18 with SMTP id 18so3543968fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Jul 2009 15:47:05 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Mon, 6 Jul 2009 02:46:58 +0400
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200907040053.05654.chunkeey@web.de> <200907051600.55958.chunkeey@web.de> <200907052316.30207.jcmvbkbc@gmail.com>
+In-Reply-To: <200907052316.30207.jcmvbkbc@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4A7246D0.1040200@gmail.com>
-References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
-	<43e72e890907291453k444e2d06k864149ddcda8f351@mail.gmail.com>
-	<1248904631.1216.1027.camel@rc-desk> <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com>
-	<4A719C44.6050208@gmail.com> <43e72e890907300743nd3a80eck2153d01f4e99ddf9@mail.gmail.com>
-	<4A71D172.1000306@gmail.com> <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
-	<4A7246D0.1040200@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 30 Jul 2009 18:31:03 -0700
-Message-ID: <43e72e890907301831ped2ea3wd5173b95be54f912@mail.gmail.com>
-Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
-To: Roman Macko <rmacko72@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907060246.59188.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 6:20 PM, Roman Macko<rmacko72@gmail.com> wrote:
-> Hi Luis,
->
-> I have version 3.6 of module-init-tools and this version reads /etc/depmod.d
-> directory too.
->
-> But I wanted to understand how depmod reads config files, so I looked into
-> source codes (both version 3.6 and 3.10)
-> and finally found out how it works.
->
-> Assume depmod is run without -C or --config option
->
-> Version 3.6 reads firstly /etc/depmod.conf file and then it reads config
-> files in directory /etc/depmod.d.
-> Files in directory /etc/depmod.d are read and parsed in unpredictable order
-> by readdir function (this function uses
-> raw directory structures of filesystem)
->
-> Version 3.10 reads /etc/depmod.conf firstly as well, but this config file is
-> considered as deprecated in this version
-> and prints out warning about that. Then it reads config files in directory
-> /etc/depmod.d by readdir function as well, but before it starts
-> to parse them, it sorts them accord to filename, so you know the order in
-> which they are going to be parsed
-> and this is very improtant!!! This behavior should be from version 3.7
->
-> The same for both versions:
-> 1) List of directories to be searched is created from search commands from
-> all config files in order how particular
-> search commands are found in config files (so order of parsed config files
-> is important). If no search command is found,
-> updates directory is added before "built-in" directory.
->
-> 2) As for override command, the last one found for particular module and
-> kernel in all config files wins,
-> so again the order of parsed config files is important.
->
-> From this is evident, that both versions can work differently which depends
-> on the order of parsed config files from
-> /etc/depmod.d directory that is different in both versions.
->
-> So solution would be:
-> 1) if there is no search command in any of config files (in /etc/depmod.conf
->  or those in /etc/depmod.d directory), do nothing.
-> 2) if there is a search command in any of config files and does not contain
-> updates directory before built-in add search command
->   "search updates" in
->  a) if system has version >=3.7, create config file in /etc/depmod.d
-> directory which name is alphabeticaly less than all you will find
->     in that directory
->  b) if system has version <=3.6 add search command "search updates" at the
-> begining of /etc/depmod.conf file
->
-> But such adding of "search updates" can break depmod configuration in some
-> systems or it is not desirable to make search in
-> updates directory at all. So maybe it would be better to use another name
-> for directory than updates
->
-> Or it would be also interesting to use override command for all modules
-> compiled in compat-wireless
-> and put it all to configuration file /etc/depmod.d/compat-wireless.conf and
-> not bothering with version of depmod nor
-> finding the search command in all configuration files, e.g
->
-> compat-wireless.conf
-> ======================================
-> override iwlagn * updates/drivers/net/wireless/iwlwifi
-> override iwlcore * updates/drivers/net/wireless/iwlwifi
-> ....
-> ....
-> ....
-> ======================================
->
-> it can make problem only when some other config file in /etc/depmod.d
-> directory contains override command for
-> any module from compat-wireless
->
->
-> I hope this help you
+> > hmm, looks like someone tries to skb_push on a NULL skb. hmmmm,
+> > can you please enable ksym, it's a bit hard to see the obvious bug here.
 
-Thanks, since you have read this and can read code, mind putting
-together a patch for the script on compat-wireless?
+> [ 1612.708465] skb_over_panic: text:bf000544 len:88 put:88 head:c78f4000 data:c78f4020 tail:0xc78f4078 end:0xc78f4020 dev:<NULL>
 
-  Luis
+I see here valid skb with size 0x20, where we try to put 88 more bytes.
+That's because p54spi_probe calls __dev_alloc_skb before p54spi_request_firmware.
+
+It's working with the following change:
+
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index ab5b9b8..ff73a64 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -651,11 +651,6 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+ 	priv->common.stop = p54spi_op_stop;
+ 	priv->common.tx = p54spi_op_tx;
+ 
+-	skb = __dev_alloc_skb(priv->common.rx_mtu, GFP_KERNEL);
+-	if (!skb)
+-		goto err_free_common;
+-	skb_queue_tail(&priv->rx_pool, skb);
+-
+ 	ret = p54spi_request_firmware(hw);
+ 	if (ret < 0)
+ 		goto err_free_common;
+@@ -664,6 +659,11 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+ 	if (ret)
+ 		goto err_free_common;
+ 
++	skb = __dev_alloc_skb(priv->common.rx_mtu, GFP_KERNEL);
++	if (!skb)
++		goto err_free_common;
++	skb_queue_tail(&priv->rx_pool, skb);
++
+ 	ret = p54_register_common(hw, &priv->spi->dev);
+ 	if (ret)
+ 		goto err_free_common;
+
+
+Still cannot stress-test it: it hangs in IBSS mode (I suspect rate control)
+and it cannot initialize mesh: firmware doesn't respond after beacon submission.
+
+Does mesh work now with USB/PCI?
+
+Thanks.
+-- Max
