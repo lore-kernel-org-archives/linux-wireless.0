@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:52356 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbZGOICR (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:37577 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754575AbZGFNQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 04:02:17 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, kalle.valo@nokia.com,
-	Niko Jokinen <ext-niko.k.jokinen@nokia.com>
-Subject: [PATCH] nl80211: Memory leak fixed
-Date: Wed, 15 Jul 2009 11:00:53 +0300
-Message-Id: <1247644853-11638-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 6 Jul 2009 09:16:53 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+Date: Mon, 6 Jul 2009 15:16:50 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200907040053.05654.chunkeey@web.de> <200907060005.55329.chunkeey@web.de> <4A51553B.9050204@lwfinger.net>
+In-Reply-To: <4A51553B.9050204@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907061516.50254.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Niko Jokinen <ext-niko.k.jokinen@nokia.com>
+On Monday 06 July 2009 03:36:59 Larry Finger wrote:
+> Christian Lamparter wrote:
+> 
+> > hmm, can you please give this a go? (I hope this patch still applies...)
+> > I'm curious if you can dump the tx_queue when p54_alloc_skb fail?
+> 
+> The patch applied with the aid of wiggle.
+yeah, I don't want to delay these changes... so they are based on top of
+the last _official_ patches, rather than the experimental ones.
 
-Potential memory leak via msg pointer in nl80211_get_key() function.
+> Since adding it, I've had 7 of the disassociation failures, but none of the
+> queue len problems.
+ohh, forgot to add that...
+- do you think you can add another p54_dump_tx_queue
+  when it "disassociates". I'm curious if the queue was empty or is full
+  (with what?!)
 
-Signed-off-by: Niko Jokinen <ext-niko.k.jokinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- net/wireless/nl80211.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> I have modified every place that p54_alloc_skb() fails with a printk
+> that tells why it failed and then calls p54_dump_tx_queue(), but I
+> have not gotten to test it yet. I found an oops when 2.6.31-rc2 is
+> booted that I'm bisecting right now.
+yeah, in the mean time I'll get these fixes to linville.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6dad3e7..9beaed8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1215,7 +1215,7 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
- 
- 	if (IS_ERR(hdr)) {
- 		err = PTR_ERR(hdr);
--		goto out;
-+		goto free_msg;
- 	}
- 
- 	cookie.msg = msg;
-@@ -1230,7 +1230,7 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
- 				&cookie, get_key_callback);
- 
- 	if (err)
--		goto out;
-+		goto free_msg;
- 
- 	if (cookie.error)
- 		goto nla_put_failure;
-@@ -1241,6 +1241,7 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
- 
-  nla_put_failure:
- 	err = -ENOBUFS;
-+ free_msg:
- 	nlmsg_free(msg);
-  out:
- 	cfg80211_unlock_rdev(rdev);
--- 
-1.5.6.5
-
+Regards,
+	Chr
