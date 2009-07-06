@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47957 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbZG0PX6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 11:23:58 -0400
-Date: Mon, 27 Jul 2009 16:23:56 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tim Gardner <timg@tpi.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] dell-laptop: Fix rfkill state setting
-Message-ID: <20090727152356.GA8049@srcf.ucam.org>
-References: <20090727144747.E7F4EF891B@sepang.rtg.net> <1248707418.8500.1.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1248707418.8500.1.camel@johannes.local>
+Received: from mx2.redhat.com ([66.187.237.31]:40887 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752927AbZGFRaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2009 13:30:05 -0400
+Subject: Re: BUG REPORT: libertas causing kernel lockups
+From: Dan Williams <dcbw@redhat.com>
+To: Alexander Barinov <alex.barinov@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090705125933.5a9f7ce4@dream>
+References: <20090704130346.01b2e869@dream>
+	 <1246704102.16770.71.camel@johannes.local>  <20090705125933.5a9f7ce4@dream>
+Content-Type: text/plain
+Date: Mon, 06 Jul 2009 13:29:55 -0400
+Message-Id: <1246901395.21990.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 27, 2009 at 05:10:18PM +0200, Johannes Berg wrote:
-
-> Hmm. The previous code was
+On Sun, 2009-07-05 at 12:59 +0400, Alexander Barinov wrote:
+> On Sat, 04 Jul 2009 12:41:42 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Sat, 2009-07-04 at 13:03 +0400, Alexander Barinov wrote:
+> > > The initial symptom of the bug was system lockup when executing
+> > > 'ifdown eth0' with 'BUG: scheduling while atomic'. Trying to
+> > > understand the cause of the bug and find a workaround I was able to
+> > > find an easier way to reproduce it. By executing
+> > > 'cat /proc/net/wireless' I get the same bug:
+> > This should have been fixed by
+> > 87057825824973f29cf2f37cff1e549170b2d7e6. For some reason everybody
+> > seems to have assumed that get_wireless_stats can sleep, which before
+> > that commit it could _not_.
 > 
-> -       if (status & (1<<16))
-> -               new_state = RFKILL_STATE_SOFT_BLOCKED;
-> -
-> -       if (status & (1<<bit))
-> -               *state = new_state;
-> -       else
-> -               *state = RFKILL_STATE_UNBLOCKED;
-> -
-> -       return 0;
-> 
-> where new_state was initialised to RFKILL_STATE_HARD_BLOCKED.
-> 
-> So doesn't that mean that 1<<bit is the hard-block bit? Or was the
-> previous code just bogus, but happened to work since rfkill didn't
-> separate the hard/soft kill concepts?
+> The patch you have mentioned was not directly applicable to 2.6.30
+> kernel so I pulled wireless-testing git tree and compiled it. This
+> deteriorated the situation further - now after executing
+> 'cat /proc/net/wireless' I get kernel lockup without any further
+> messages.
 
-The previous code may well have been bogus. The code is basically the 
-only documentation I have here - bit 16 indicates that the switch is on 
-(and thus everything else is hard blocked), while bits 17, 18 and 19 
-indicate blocked wifi, bluetooth and wwan respectively. I'd assumed that 
-those indicated that they were soft blocked independently of the 
-hardware block state, but it may be that the hardware doesn't expose the 
-soft state if the hard switch is blocking the devices.
+Can you get anything at all out of the kernel on that?  2.6.29.5 with
+quite recent wireless-testing libertas driver works fine with sd8686 on
+my machine (hp 2530p laptop with a Ricoh controller).  Can you post your
+backport of that patch too?
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Dan
+
+
