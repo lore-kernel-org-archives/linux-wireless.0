@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60350 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756720AbZGHDH0 (ORCPT
+Received: from fmailhost02.isp.att.net ([207.115.11.52]:44758 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754477AbZGFTne (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 23:07:26 -0400
-Subject: Re: Possible memory leak in net/wireless/scan.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Hw7ePegt/4QO/g8lVWSe"
-Date: Wed, 08 Jul 2009 05:06:53 +0200
-Message-Id: <1247022413.4755.56.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 6 Jul 2009 15:43:34 -0400
+Message-ID: <4A5253F1.50504@lwfinger.net>
+Date: Mon, 06 Jul 2009 14:43:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: chunkeey@web.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa
+ - sleeping function called from invalid context
+References: <4a524b55.wIWqgs5uHs2CpdJy%Larry.Finger@lwfinger.net>	<20090706.121429.36217952.davem@davemloft.net>	<200907062119.25642.chunkeey@web.de> <20090706.123441.246532764.davem@davemloft.net>
+In-Reply-To: <20090706.123441.246532764.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+David Miller wrote:
+> From: Christian Lamparter <chunkeey@web.de>
+> Date: Mon, 6 Jul 2009 21:19:25 +0200
+> 
+>> On Monday 06 July 2009 21:14:29 David Miller wrote:
+>>> If I can't figure it out quickly I'll just simply revert.
+>> hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+>> [2.6.31] p54: band-aid to restore driver functionality
+>> http://patchwork.ozlabs.org/patch/28918/
+>>
+>> in case someone missed it.
+> 
+> It is so much cleaner to not do multiple things in one patch.
+> 
+> It's also better to completely revert the SKB list handling
+> changes first, then add whatever other fixes you want make
+> on top.
+> 
+> Partial revert really makes no sense here and is only asking
+> for even more potential regressions.
+> 
+> So, like I said, I'm reverting this wholesale unless I can figure
+> out a fix quickly.
 
---=-Hw7ePegt/4QO/g8lVWSe
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm available for testing.
 
-On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
-> Hi,
->=20
-> I'm investigating several kmemleak reports like the one below (it could
-> as well be a false positive but it needs more digging):
-
-By the way, what kind of machine do you need for kmemleak to be
-feasible? I tried booting a kernel with it in kvm on my 2 ghz laptop,
-and that was completely unfeasible.
-
-johannes
-
---=-Hw7ePegt/4QO/g8lVWSe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKVA1JAAoJEODzc/N7+QmaPUQP/2rY9IrdF/M7ikk727ZVo1Rs
-LMovxUWcCyvK39s7tDM/yPoBZiiH0nPjUt87cEQFgMTP7omi7cFPnWQEDyiVmq5X
-+drLoY2/IHAmvfRFuS5unl5OAKd18ZdAQAD1uxS/1Fj8kurVEFCmBhmrb3U9ivqE
-ZMBe22XBzI7FvqPO1pcBMJa9mZvP9tjeLLVa2Onp4HnxKwoYfveKjCy0dWAu4B57
-ULa1/IdGqg9m9/Z2sMqngUhG8zgp511LK84AA2+qFez8eRa1q/w0rx4f22ZohVCP
-GAGuARZG9gAjwaWK5dgqUz+PDXuCUcEFE2yStDoDxL2T20lvTALMCqLWhTRSn4vC
-+hPn/cVk/sIVYnregh9QzxBAoKZgCDMtmNfA2ztFLzbRmNJWqIKFcFwvGOZBUqBS
-X2evYzJcb5kWVYQkfTtH+kWtmXuPwuH2/An4p9+KVVpbIpv0q6EFYsdns7lsfGBI
-9duu8lEv0mFTH6aMEVrA9HEvfi8VvQhor2bBngbIinO8eOqKZ8pd+J09W0t0MCJv
-NDfvOv3irOvPqoNHbH+jfJrPfiudrF75IVAmkCAeMF/r04iQpGHpPuEJ1sC7Sipi
-aD+ekVgttBqSzFFZSlAdBvktRsSyebxmutNCYJRDkmmle+Qfy+Z4a8HFUOvJOjKV
-5AhyU/0l2KCjb8itNRJg
-=I8C/
------END PGP SIGNATURE-----
-
---=-Hw7ePegt/4QO/g8lVWSe--
-
+Larry
