@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:40850 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404AbZG3PnT convert rfc822-to-8bit (ORCPT
+Received: from fmailhost04.isp.att.net ([207.115.11.54]:43134 "EHLO
+	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752949AbZGFBgs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 11:43:19 -0400
-Received: by gxk9 with SMTP id 9so2769885gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 08:43:19 -0700 (PDT)
+	Sun, 5 Jul 2009 21:36:48 -0400
+Message-ID: <4A51553B.9050204@lwfinger.net>
+Date: Sun, 05 Jul 2009 20:36:59 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1248940662.8925.6.camel@johannes.local>
-References: <1248915719-6208-1-git-send-email-lrodriguez@atheros.com>
-	<1248940662.8925.6.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 30 Jul 2009 08:42:59 -0700
-Message-ID: <43e72e890907300842l12609fdatd0ac8128b705b4a9@mail.gmail.com>
-Subject: Re: [RFT] cfg80211: enable country IE support to all cfg80211 drivers
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [WIP] p54: deal with allocation failures in rx path
+References: <200907040053.05654.chunkeey@web.de> <200907051559.32958.chunkeey@web.de> <4A50E7C5.4040309@lwfinger.net> <200907060005.55329.chunkeey@web.de>
+In-Reply-To: <200907060005.55329.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 12:57 AM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-07-29 at 18:01 -0700, Luis R. Rodriguez wrote:
->> Since the bss is always set now once we are connected, if the
->> bss has its own information element we refer to it and pass that
->> instead of relying on mac80211's parsing.
->>
->> Now all cfg80211 drivers get country IE support, automatically.
->>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>
->> Johill, I think this is what you wanted in the end, I tested it and
->> I get no country IE hint going through :( I could debug further but I'm
->> done for now and gotta work on some other stuff, not sure when I can
->> get back to this.
->
-> Well, you've made a critical mistake:
->
-> +       regulatory_hint_11d(wdev->wiphy,
-> +                           bss->information_elements,
-> +                           bss->len_information_elements);
->
-> needs to be
->
->        const u8 *country_ie
->
->        country_ie = ieee80211_bss_get_ie(&bss->pub, WLAN_EID_COUNTRY);
->        if (country_ie)
->                regulatory_hint_11d(wdev->wiphy,
->                                    country_ie + 2,
->                                    country_ie[1]);
->
->
-> It's rather likely that it doesn't come first, so whatever is in
-> information_elements first would end up not looking like a country IE or
-> having the right length, so the _11d function would just throw it out.
+Christian Lamparter wrote:
 
-Hah, thanks, will try it.
+> hmm, can you please give this a go? (I hope this patch still applies...)
+> I'm curious if you can dump the tx_queue when p54_alloc_skb fail?
 
-  Luis
+The patch applied with the aid of wiggle. Since adding it, I've had 7
+of the disassociation failures, but none of the queue len problems.
+
+I have modified every place that p54_alloc_skb() fails with a printk
+that tells why it failed and then calls p54_dump_tx_queue(), but I
+have not gotten to test it yet. I found an oops when 2.6.31-rc2 is
+booted that I'm bisecting right now.
+
+Larry
+
+
