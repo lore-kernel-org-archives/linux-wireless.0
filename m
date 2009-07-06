@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:41530 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933091AbZGQAAD (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49325
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753184AbZGFTeh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 20:00:03 -0400
-Received: by gxk9 with SMTP id 9so878861gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 17:00:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090716235013.GA26789@jm.kir.nu>
-References: <wfljmpm4xl.fsf@calligramme.charmers> <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
-	<wf63dsmvjg.fsf@calligramme.charmers> <20090716235013.GA26789@jm.kir.nu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 16:59:43 -0700
-Message-ID: <43e72e890907161659h320e6d5fpefe7e0881634addd@mail.gmail.com>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-To: Jouni Malinen <j@w1.fi>
-Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 6 Jul 2009 15:34:37 -0400
+Date: Mon, 06 Jul 2009 12:34:41 -0700 (PDT)
+Message-Id: <20090706.123441.246532764.davem@davemloft.net>
+To: chunkeey@web.de
+Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa
+ - sleeping function called from invalid context
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200907062119.25642.chunkeey@web.de>
+References: <4a524b55.wIWqgs5uHs2CpdJy%Larry.Finger@lwfinger.net>
+	<20090706.121429.36217952.davem@davemloft.net>
+	<200907062119.25642.chunkeey@web.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 4:50 PM, Jouni Malinen<j@w1.fi> wrote:
-> On Thu, Jul 16, 2009 at 05:39:47PM +0100, Jon Fairbairn wrote:
->> "Luis R. Rodriguez" <mcgrof@gmail.com>
->> writes:
->> > http://wireless.kernel.org/en/users/Drivers/ath9k
->
->> Thanks, but I've seen that page and "products with supported ath9k
->> cards" points to a page that lists "Laptops with ath9k cards" (I'm
->> looking for PCIe, not mini-PCIe) and "APs with ath9k cards", not "ath9k
->> cards". Before I can buy a card, I need to know what it is called in the
->> shops (on-line or otherwise), not what chipset it has.
->
-> I don't know how the product list ended up being split that way, but the
-> "laptops" page does actually include number of D-Link adapters,
-> including a PCIe desktop adapter (D-Link DWA-556) that seems to match
-> the request. I saw it at Fry's last week and it does indeed look like a
-> PCIe card.
+From: Christian Lamparter <chunkeey@web.de>
+Date: Mon, 6 Jul 2009 21:19:25 +0200
 
-Sorry that was my doing, I forgot there were a few external cards
-available, I've updated the wiki to reflect this and added a new
-external cards page:
+> On Monday 06 July 2009 21:14:29 David Miller wrote:
+>> If I can't figure it out quickly I'll just simply revert.
+> hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+> [2.6.31] p54: band-aid to restore driver functionality
+> http://patchwork.ozlabs.org/patch/28918/
+> 
+> in case someone missed it.
 
-http://wireless.kernel.org/en/users/Drivers/ath9k/products/external
+It is so much cleaner to not do multiple things in one patch.
 
- Luis
+It's also better to completely revert the SKB list handling
+changes first, then add whatever other fixes you want make
+on top.
+
+Partial revert really makes no sense here and is only asking
+for even more potential regressions.
+
+So, like I said, I'm reverting this wholesale unless I can figure
+out a fix quickly.
