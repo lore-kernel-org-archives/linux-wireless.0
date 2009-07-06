@@ -1,69 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43494 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745AbZGJQdI (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49647
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753897AbZGFVgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 12:33:08 -0400
-Subject: Re: [PATCH] cfg80211: don't look at wdev->ssid for giwessid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1247243482.2877.14.camel@mj>
-References: <1247241214.29747.5.camel@johannes.local>
-	 <1247243482.2877.14.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EeN3wx9Sa9fbiWsrPCbw"
-Date: Fri, 10 Jul 2009 18:32:59 +0200
-Message-Id: <1247243579.29747.6.camel@johannes.local>
+	Mon, 6 Jul 2009 17:36:00 -0400
+Date: Mon, 06 Jul 2009 14:36:06 -0700 (PDT)
+Message-Id: <20090706.143606.09407511.davem@davemloft.net>
+To: gurligebis@gmail.com
+Cc: Larry.Finger@lwfinger.net, chunkeey@web.de,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa
+ - sleeping function called from invalid context
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <9c30dffe0907061326n77823e03lf87f4feb616c8f7b@mail.gmail.com>
+References: <4A5253F1.50504@lwfinger.net>
+	<20090706.125011.56653570.davem@davemloft.net>
+	<9c30dffe0907061326n77823e03lf87f4feb616c8f7b@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Bjarke Istrup Pedersen <gurligebis@gmail.com>
+Date: Mon, 6 Jul 2009 22:26:09 +0200
 
---=-EeN3wx9Sa9fbiWsrPCbw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I can confirm that the patch fixes the problem with my PCMCIA card :-)
 
-On Fri, 2009-07-10 at 12:31 -0400, Pavel Roskin wrote:
-> On Fri, 2009-07-10 at 17:53 +0200, Johannes Berg wrote:
-> > This variable is only used internally, _while_ connected.
-> > If we use it, the sequence
-> >=20
-> > # iwconfig wlan1 essid foo
-> > <connects>
-> > # iwconfig wlan1 essid ""
-> > <disconnects>
-> > # iwconfig
->=20
-> That was quick, thank you!  Indeed, it's possible to unset ESSID not and
-> set it to another value.  But switching from "foo" to "bar" is still not
-> working.
-
-Dunno, switching is definitely working for me... And I can't see how the
-code could _possibly_ fail.
-
-johannes
-
---=-EeN3wx9Sa9fbiWsrPCbw
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKV202AAoJEODzc/N7+Qmao5AP/0QHlzgxtVReYPMsGuqpJtkC
-m4PWtnn2ijJZWOLsuV8ciKiH3dHNsM3NkRjsv1w1zlmgAoXP3P0ulJ/k8YXPfJZ/
-kjpsGmmHLbu4/F/LYRsNvEURZ0lxffkUXvGBMyO6M7Db6hGtI2G6wp383SCF+2bF
-oQ1eeslXYpYKsDx6vVJsoBzxRF4Sv+31pMryNzGpfX0iKtZeu6nDXqQrb85zS7kh
-gU825cQblnjFVp9ak0gLhltsA/6yyeVsLKGrpOhBv2Qk8KHkVSuXm/b7CXQONMkX
-r0uzFOb4zd9Q+qvU1xTYgicdYGJ7pOlXhtFE8ZGkl0HVNeTAhtSFwwUa0unM7R84
-w+RfUe4ubnME7Rd3IhDvtsd8W52ZugZb3kNdE5XldTb06i3wEU1t4fOn357X8I2q
-7qilxit9We9LJ0Mmt+MM4phE/+RAqjz/0Uwj8SEyE9Tc7KLIbM3amwRHEU9n82YE
-SY4F9IUo8JTBYe5sWstKeD0qeShSCTQJEheWOwUzVBs6xmy+MOPNkMqjDLCEK0sJ
-acnFZdZNKr6Pxlx1dg1jnPLbc9TFe5vhwXLmUYqgJcdRvnekU41K+6by2DWq8URj
-UyYj4GSDCQgRdMPc1PIB9DVQUURGWW8KkJmBbVziMxhAccokgaVWOZviqk086zh9
-FxM4+BfXvxL3nasz2zqL
-=udOJ
------END PGP SIGNATURE-----
-
---=-EeN3wx9Sa9fbiWsrPCbw--
-
+Thanks for testing :)
