@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28091 "EHLO mail.atheros.com"
+Received: from thunk.org ([69.25.196.29]:42602 "EHLO thunker.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753252AbZG1PDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 11:03:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 08:03:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH v2] rt2x00: move experimental on kconfig only to rt2800usb
-Date: Tue, 28 Jul 2009 08:03:42 -0700
-Message-ID: <1248793422-9106-1-git-send-email-lrodriguez@atheros.com>
+	id S1753973AbZGFCcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jul 2009 22:32:15 -0400
+Date: Sun, 5 Jul 2009 22:31:13 -0400
+From: Theodore Tso <tytso@mit.edu>
+To: Jesper Dangaard Brouer <hawk@comx.dk>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net,
+	axboe@kernel.dk, Patrick McHardy <kaber@trash.net>,
+	christine.caulfield@googlemail.com, Trond.Myklebust@netapp.com,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	yoshfuji@linux-ipv6.org, shemminger@linux-foundation.org,
+	linux-nfs@vger.kernel.org, bfields@fieldses.org, neilb@suse.de,
+	linux-ext4@vger.kernel.org, adilger@sun.com,
+	netfilter-devel@vger.kernel.org
+Subject: Re: [PATCH 01/10] ext4: Use rcu_barrier() on module unload.
+Message-ID: <20090706023113.GE6706@mit.edu>
+References: <20090623150330.22490.87327.stgit@localhost> <20090623150358.22490.24818.stgit@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090623150358.22490.24818.stgit@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These drivers have been around for a while, if there are issues
-they should be reported. rt2800usb is still a bit flaky though.
+On Tue, Jun 23, 2009 at 05:03:59PM +0200, Jesper Dangaard Brouer wrote:
+> The ext4 module uses rcu_call() thus it should use rcu_barrier()on
+> module unload.
+> 
+> The kmem cache ext4_pspace_cachep is sometimes free'ed using
+> call_rcu() callbacks.  Thus, we must wait for completion of call_rcu()
+> before doing kmem_cache_destroy().
+> 
+> I have difficult determining if no new call_rcu() callbacks can be envoked.
+> Would the maintainer please verify this?
 
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/rt2x00/Kconfig |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Yes, that's correct.  Thanks; I've included this in the ext4 patch
+queue.
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index f970aa2..ed1f997 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -1,8 +1,8 @@
- menuconfig RT2X00
- 	tristate "Ralink driver support"
--	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	depends on MAC80211 && WLAN_80211
- 	---help---
--	  This will enable the experimental support for the Ralink drivers,
-+	  This will enable the support for the Ralink drivers,
- 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
- 
- 	  These drivers make use of the mac80211 stack.
-@@ -79,14 +79,14 @@ config RT73USB
- 
- config RT2800USB
- 	tristate "Ralink rt2800 (USB) support"
--	depends on USB
-+	depends on USB && EXPERIMENTAL
- 	select RT2X00_LIB_USB
- 	select RT2X00_LIB_HT
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_CCITT
- 	---help---
--	  This adds support for rt2800 wireless chipset family.
-+	  This adds experimental support for rt2800 wireless chipset family.
- 	  Supported chips: RT2770, RT2870 & RT3070.
- 
- 	  When compiled as a module, this driver will be called "rt2800usb.ko".
--- 
-1.6.3.3
-
+						- Ted
