@@ -1,96 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:12884 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964888AbZGQQae (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:34 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/14] iwlwifi: inform user about rfkill state changes
-Date: Fri, 17 Jul 2009 09:30:26 -0700
-Message-Id: <1247848227-24031-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-13-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-10-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-11-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-12-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-13-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40544 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179AbZGFMxD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2009 08:53:03 -0400
+Subject: Re: Insist on cfg80211 for new drivers?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Dave <kilroyd@googlemail.com>,
+	Karl Relton <karllinuxtest.relton@ntlworld.com>,
+	dwmw2@infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20090701193657.GD3473@tuxdriver.com>
+References: <1246388712.4949.52.camel@localhost>
+	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
+	 <1246396179.4949.76.camel@localhost>
+	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
+	 <1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
+	 <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
+	 <1246473300.30522.10.camel@localhost.localdomain>
+	 <20090701193657.GD3473@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ABFZ9IAPKHmrHWp7SQeo"
+Date: Mon, 06 Jul 2009 14:52:40 +0200
+Message-Id: <1246884761.20908.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
 
-rfkill state changes are mostly available through debug messages.
-These are significant enough to always make user aware of so
-we turn them into warnings.
+--=-ABFZ9IAPKHmrHWp7SQeo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Also insert a missing newline in some rfkill related debug message.
+On Wed, 2009-07-01 at 15:36 -0400, John W. Linville wrote:
+> On Wed, Jul 01, 2009 at 02:35:00PM -0400, Dan Williams wrote:
+>=20
+> > That's really all I
+> > care about, I don't want another WEXT-based driver accepted; I want all
+> > the new ones using cfg80211.
+>=20
+> Now there is a discussion we should have had in Berlin...is it time
+> to insist on cfg80211-based configuration for all new drivers?
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Should we publish something like this:
+http://wireless.kernel.org/wext-statement (don't want it indexed by
+google yet so you need to log on to view it), for example on lwn? Just
+so more application developers are also aware.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b7ac4ee..44c7f23 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -964,7 +964,7 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
- 			hw_rf_kill = 1;
- 
--		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
-+		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
- 				hw_rf_kill ? "disable radio" : "enable radio");
- 
- 		priv->isr_stats.rfkill++;
-@@ -1137,7 +1137,7 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
- 			hw_rf_kill = 1;
- 
--		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
-+		IWL_WARN(priv, "RF_KILL bit toggled to %s.\n",
- 				hw_rf_kill ? "disable radio" : "enable radio");
- 
- 		priv->isr_stats.rfkill++;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index ef7e6bd..0912987 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -940,7 +940,7 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	       !(cmd->meta.flags & CMD_SIZE_HUGE));
- 
- 	if (iwl_is_rfkill(priv)) {
--		IWL_DEBUG_INFO(priv, "Not sending command - RF KILL");
-+		IWL_DEBUG_INFO(priv, "Not sending command - RF KILL\n");
- 		return -EIO;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8891d6e..2cc7e30 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -926,7 +926,7 @@ static void iwl3945_rx_card_state_notif(struct iwl_priv *priv,
- 	u32 flags = le32_to_cpu(pkt->u.card_state_notif.flags);
- 	unsigned long status = priv->status;
- 
--	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s\n",
-+	IWL_WARN(priv, "Card state received: HW:%s SW:%s\n",
- 			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
- 			  (flags & SW_CARD_DISABLED) ? "Kill" : "On");
- 
--- 
-1.5.6.3
+johannes
+
+--=-ABFZ9IAPKHmrHWp7SQeo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKUfOVAAoJEODzc/N7+QmaxCIQAIojvjkN+lrHk5j3nS/rc+gI
+SXmzV6o6O9BvjzP5WWdPgevtQET/OIEBZdyRuUaRcm36Mq2dMvq31voOyaEQAVBt
+MDzk1rmVwWYPntOMgeCJMUUu0pb8ST4ltuevBfoAsIaAqiMLyNog5JLKU5AyPeLK
+JvCCAwgRY6sgxxdYOREllWtNsvi1TKd8QOCoXElkQ6wCXrQ0EjL4d56nfkuHq/nd
+cIvSdfLOW6z36xzAfBPFTuYmHQlSGFekrF5eLkwljhc86fuq6lxHhEOA+ZryZ49T
+Pfe2paJaMaL7LUqnErxFhfZVFgJZTcmasGwG0D9pXSB8F6zyeA1q4xH/zAqtK47V
+9RNJUxl5TATfXog3nJxBRYXG+qw1m3nYz03vP1ksthm0Wn5lPpAIsJNRe9PlpH1Q
+FekY/MDdtHsaRpeuCYRGHFtOKFvnuxIK30QjlEJGNHPH60UxbBg62WdLCZx5Ip9X
+MXd9T0SaWZ6R2WRCT4YQHfyXzoMTHbAuu2l4KSgs+YgEBekDrJVcevmrzujQWGzU
+f4dPhWewGe7AHwt4fn2m+/H08O2THiiZjvYegtkY2dhkddP29Qh0uG0pgc+AyoQu
+fJMmrKAR1ypoMxsLblKe6kKMlyT9of5e8c9giW65pguUIklEFspUQk+eIc0Kk2IP
+VBOlo1vv52MdfEqc8djj
+=JuIg
+-----END PGP SIGNATURE-----
+
+--=-ABFZ9IAPKHmrHWp7SQeo--
 
