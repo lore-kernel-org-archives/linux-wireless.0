@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:46613 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755227AbZGVIAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 04:00:39 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MTWkf-0001pl-1a
-	for linux-wireless@vger.kernel.org; Wed, 22 Jul 2009 08:00:37 +0000
-Received: from bdz194.neoplus.adsl.tpnet.pl ([83.28.11.194])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 08:00:37 +0000
-Received: from kamil.dzida by bdz194.neoplus.adsl.tpnet.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 08:00:37 +0000
-To: linux-wireless@vger.kernel.org
-From: Kamil Dzida <kamil.dzida@gmail.com>
-Subject: Re: AR5523 driver - old Atheros USB
-Date: Wed, 22 Jul 2009 08:00:28 +0000 (UTC)
-Message-ID: <loom.20090722T074629-659@post.gmane.org>
-References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com> 	<20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> 	<20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> 	<928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com> <4A66A482.6050401@erley.org>
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:61180 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbZGFTXR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2009 15:23:17 -0400
+Received: by bwz25 with SMTP id 25so1527675bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 12:23:20 -0700 (PDT)
+Date: Mon, 6 Jul 2009 23:23:39 +0400
+From: Alexander Barinov <alex.barinov@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: BUG REPORT: libertas causing kernel lockups
+Message-ID: <20090706232339.292ff530@dream>
+In-Reply-To: <1246901395.21990.1.camel@localhost.localdomain>
+References: <20090704130346.01b2e869@dream>
+	<1246704102.16770.71.camel@johannes.local>
+	<20090705125933.5a9f7ce4@dream>
+	<1246901395.21990.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pat Erley <pat-lkml@...> writes:
-
-> 
-> Luis R. Rodriguez wrote:
-> > On Tue, Jul 21, 2009 at 6:03 PM, Purushotham
-> > Nayak<nayak_purushotham@...> wrote:
-> >> Hi,
-> >>
-> >> I'm interested in working on this. I just posted to the Linux driver
-project a few days ago if I could work on
-> the atheros USB devices. Please let me also know the USB device that uses the
-AR5523.
+On Mon, 06 Jul 2009 13:29:55 -0400
+Dan Williams <dcbw@redhat.com> wrote:
+> On Sun, 2009-07-05 at 12:59 +0400, Alexander Barinov wrote:
+> > On Sat, 04 Jul 2009 12:41:42 +0200
+> > Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > On Sat, 2009-07-04 at 13:03 +0400, Alexander Barinov wrote:
+> > > > The initial symptom of the bug was system lockup when executing
+> > > > 'ifdown eth0' with 'BUG: scheduling while atomic'. Trying to
+> > > > understand the cause of the bug and find a workaround I was
+> > > > able to find an easier way to reproduce it. By executing
+> > > > 'cat /proc/net/wireless' I get the same bug:
+> > > This should have been fixed by
+> > > 87057825824973f29cf2f37cff1e549170b2d7e6. For some reason
+> > > everybody seems to have assumed that get_wireless_stats can
+> > > sleep, which before that commit it could _not_.
 > > 
-> > Dan recently purchased one of these devices. Dan any pointers?
+> > The patch you have mentioned was not directly applicable to 2.6.30
+> > kernel so I pulled wireless-testing git tree and compiled it. This
+> > deteriorated the situation further - now after executing
+> > 'cat /proc/net/wireless' I get kernel lockup without any further
+> > messages.
 > 
-> I have a few WPN111 Refurbed devices that are AR5523 based.  Apparently
-> there is a WPN111v2 that may or may not be otus supported, I can't confirm 
-> that.  Based on pictures from google and the devices I own, the AR5523 ones
-> are silver, and the Otus ones are white.  I'd be more than happy to test and
-> do what I can to try to help, but my time is limited, so I'm not up for 
-> taking the task onto my shoulders right now.
-> 
-> Pat
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> Can you get anything at all out of the kernel on that?  2.6.29.5 with
+> quite recent wireless-testing libertas driver works fine with sd8686
+> on my machine (hp 2530p laptop with a Ricoh controller).  Can you
+> post your backport of that patch too?
 
-It seems that OpenBSD has driver for AR5523 (AR5005UG and AR5005UX) upstream. I
-doubt that they would like to share their code with Linux - like dual licensing
-GPL/BSD. Fortunately their documentation mentions which hardware includes those
-chipsets, look here:
+The problem is I get no kernel messages at all, just a lockup. Wireless
+debug (CONFIG_MAC80211_*_DEBUG) and libertas debug
+(CONFIG_LIBERTAS_DEBUG) are on, no "quiet" option on boot. Is there any
+other way I can increase level of debug output to be able to give you
+some meaningful information with regards to my problem?
 
-http://www.openbsd.org/cgi-bin/man.cgi?query=uath&sektion=4&apropos=0&manpath=OpenBSD+Current&arch=i386
+BTW, my case is sd8686 on some SDHCI PCI controller, I am not sure how
+to find the vendor.
 
+I am not sure which backport you are talking about, as I am using
+wireless-testing pulled from git, it should be something around
+2.6.31-rc1.
 
-Note that Atheros AR5007UG (alternatively known as AR2524/AR5524) is supported
-by Linux zd1211rw driver.
-
-Kamil
-
-
+Regards,
+Alexander
