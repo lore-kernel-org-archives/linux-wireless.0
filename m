@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50803 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755999AbZGILnx (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:39048 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751049AbZGFP6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 07:43:53 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MOs2Y-0006QO-23
-	for linux-wireless@vger.kernel.org; Thu, 09 Jul 2009 13:43:50 +0200
-Subject: nl80211 and wext interoperability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OkwWHkZXwl8RwFrrXNza"
-Date: Thu, 09 Jul 2009 13:43:17 +0200
-Message-Id: <1247139797.2144.27.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 6 Jul 2009 11:58:06 -0400
+Date: Mon, 6 Jul 2009 12:58:05 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rfkill: prep for rfkill API changes
+Message-ID: <20090706155805.GD753@khazad-dum.debian.net>
+References: <1246798266.4411.1.camel@johannes.local>
+ <20090705132422.GA30334@khazad-dum.debian.net>
+ <1246801098.4411.5.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1246801098.4411.5.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, 05 Jul 2009, Johannes Berg wrote:
+> On Sun, 2009-07-05 at 10:24 -0300, Henrique de Moraes Holschuh wrote:
+> > This is good, but not complete.  Changes to the API that don't change the
+> > size (or those which reduces it) are a problem: they are impossible with a
+> > schema that detects API version by the size alone.
+> 
+> Umm, no, we can also add operations as required already.
 
---=-OkwWHkZXwl8RwFrrXNza
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, I know.  What we can't do is to change the current ones, or drop them.
 
-Hi!
+> _subtlety_ involved in actually doing a size change, nothing more. A
+> real event version is _not_ necessary at all. In fact, I would argue
+> that basing _anything_ on the "version" rather than the "feature set" is
+> useless.
 
-With the recent work I've done in cfg80211 for nl80211 and wext, we've
-mostly removed wext code everywhere. The only thing missing right now is
-the key support, and I think then we can declare cfg80211's wext compat
-layer pretty much done in terms of what mac80211 had -- orinoco will
-need the sensitivity (or AP density) thing but I'm not sure how we
-should do that since it's a value that is hardware dependent -- we'll
-need to have very good discovery code for the allowed values (unlike
-wext where you can set 0..3 and don't know what that means). Anyway,
-that wasn't the point of this email.
+IMO version can tell you the supported feature set, but one could use a
+feature set bitmap as well if one wanted.  Anyway, if you guys deem the
+current way good enough, I am fine with it.
 
-Currently, if you use wpa_supplicant -Dwext and -Dnl80211 mixed,
--Dnl80211 gets confused because -Dwext will set a 32-byte random SSID to
-"disconnect". When then the interface is brought UP again, the cfg80211
-code assumes that you set configuration while it was DOWN, and tries to
-recover that configuration. This means it will start scanning for the
-network, which means -Dnl80211 gets -EBUSY for the scan and it all gets
-very delayed. This also happens if you set an SSID with iwconfig before
-using -Dnl80211.
-
-Do we just ignore that issue? It's only added timeout and people using
-purely nl80211 will never have a problem.
-
-I'm all for ignoring wext issues, but I can also see people complain
-about things like this. Not sure what mac80211 did, did it just ignore
-settings while interfaces were down? I never really made sense of that
-code.
-
-johannes
-
---=-OkwWHkZXwl8RwFrrXNza
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKVdfSAAoJEODzc/N7+QmaG9MP/RaZGWCufhJmhXLiI8Y1Bc5K
-nrvqr1Z558XTJTVQYU4j3Dt5zK0ej8acTBiK9u60L4yMVoYNIk6mDOe8yZrNtwHB
-SVJlampTHF9hI7lr30NpDuviY/M+2BX1cDKRyclg8nT9ZZVvWp4IHKnDN0xbi5fw
-GlvaqxC371PKIbp599r3ZDCGJPHTEd8sq24AGDHkYhF7Yq5OFw9IyFtApMOYITAl
-R26h6xAh0u7gOE6+xUzSEbzW4zlf3wj91hz0NqUraKaFBza8Z2WbMsvYqYmBPWoo
-/NLcVv4UF5oGv39gA7/3FEi+sAXYJZ5PxEQFN32xE0JIxSvky5Jxu+KMZV4Dug/i
-8U9Vgy68Yik8iV9f29aklqURVvlWohuyCt5pHF0jwiyAQ6FIFxuuz9Kh0oVKvowS
-gh0wScv0nEdzURP3CQoZPUQzD8sKdv9ks4QAj2FJOCK+/hMiPbZ8pGO6rP6ADpPI
-Ic0bbEVKW8lLyHWRnm5Rrykcxfl3jLQOZknFSckoji2dw6Hivgkrcu+YNO05rSBm
-PzVE1egrVis4UtNYU7BxgkCbnMDYfGr/um3R2ga21HVgrDsOoM4udwEDgn/32VrY
-zpFvquqOSFUYoxF/dSIscGnpTntY9ma3Ukvmbal7aPFXg4PNOYpOEWh0lsA1OWX5
-wncGe6T3DS5Yxf8F0+UU
-=8szr
------END PGP SIGNATURE-----
-
---=-OkwWHkZXwl8RwFrrXNza--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
