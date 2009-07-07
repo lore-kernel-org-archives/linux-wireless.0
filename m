@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:32272 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752393AbZGYWby (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:46116 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbZGGDD4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 18:31:54 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so288835fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 15:31:54 -0700 (PDT)
-Subject: Re: [BUG] Current head of wireless testing unusable
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1248558755.11389.21.camel@mj>
-References: <1248531054.15242.16.camel@maxim-laptop>
-	 <1248558755.11389.21.camel@mj>
-Content-Type: text/plain
-Date: Sun, 26 Jul 2009 01:31:49 +0300
-Message-Id: <1248561109.4753.9.camel@maxim-laptop>
-Mime-Version: 1.0
+	Mon, 6 Jul 2009 23:03:56 -0400
+Received: by yxe26 with SMTP id 26so6275059yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 20:03:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1246930856.4652.11.camel@johannes.local>
+References: <1246928780.4652.10.camel@johannes.local>
+	 <1246929954-15282-1-git-send-email-javier@cozybit.com>
+	 <1246930856.4652.11.camel@johannes.local>
+Date: Mon, 6 Jul 2009 20:03:59 -0700
+Message-ID: <445f43ac0907062003r3943e374ue9b6c498e76ea0b8@mail.gmail.com>
+Subject: Re: [PATCH v2] Fix regression in mesh forwarding path.
+From: Javier Cardona <javier@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	Andrey Yurovsky <andrey@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-07-25 at 17:52 -0400, Pavel Roskin wrote:
-> On Sat, 2009-07-25 at 17:10 +0300, Maxim Levitsky wrote:
-> > I probably should work more to did these bugs out myself, but anyway I
-> > want to let you know what I currently see.
-> > 
-> > First system oopses just after NM starts up, happens always, and after
-> > planting few test points bug happens somewhere in following lines. 
-> 
-> We are discussing a bug in the scan state machine in another thread,
-> which could have nasty consequences in not caught.  And I don't quite
-> understand why my system was catching it immediately, maybe because I'm
-> using gcc 4.4, which has array bounds checking.
-Yea, there are two patches with same title for this, I applied the
-newer.
+Johannes,
 
-Currently thanks to Johannes Berg, the patch
-[PATCH] nl80211: add missing parameter clearing
-Fixes this nasty oops, now wireless more or less works, but plenty of
-problems still, first it oopses on reconnect as inilialized from
-wpa_supplicant, second iwconfig misses most of its settings, and
-probably thus NM think signal level is zero. If I switch to good old
-wext in wpa_supplicant, it works just fine and none of above problems
-present (I recheck this again to be sure)
+On Mon, Jul 6, 2009 at 6:40 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> Hmm, now I'm confused, why not just do
+>
+> if (mpath->flags & MESH_PATH_ACTIVE)
+>        ieee80211_add_pending_skbs(mpath->sdata->local,
+>                                   &mpath->frame_queue);
+> ?
 
-Thanks, I soon run kmemcheck as well.
+Ah, yes, much better.  I had missed the trailing 's' in your previous
+e-mail.  See v3 of the patch.
 
-Best regards,
-	Maxim Levitsky
+Thanks,
 
-> 
-> I have also seen two oopses in the code unrelated to wireless
-> networking, one of which lead to my .bash_history becoming empty.
-> 
-> So please be extra careful.  It would be great if somebody could test
-> the current kernel extensively with kmemcheck an other options and
-> bisect the bad commit, whether it's wireless related or not.
+Javier
 
-Thanks!
-
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
