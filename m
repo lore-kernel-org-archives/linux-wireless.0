@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:34730 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbZGRQIH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 12:08:07 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111)
-Date: Sat, 18 Jul 2009 18:08:04 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <4A611FC0.9040507@lwfinger.net> <200907181433.47985.chunkeey@web.de> <4A61E436.9060808@lwfinger.net>
-In-Reply-To: <4A61E436.9060808@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907181808.05142.chunkeey@web.de>
+Received: from mx2.redhat.com ([66.187.237.31]:51773 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753233AbZGGPU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2009 11:20:56 -0400
+Subject: Re: 4965AGN loses connection on Custom wireless event
+From: Dan Williams <dcbw@redhat.com>
+To: Jan Willies <jan@willies.info>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A535168.4050800@willies.info>
+References: <4A4B5EC8.8060804@willies.info>
+	 <1246458585.12198.114.camel@localhost.localdomain>
+	 <4A535168.4050800@willies.info>
+Content-Type: text/plain
+Date: Tue, 07 Jul 2009 11:21:03 -0400
+Message-Id: <1246980063.28570.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 18 July 2009 17:03:18 Larry Finger wrote:
-> Christian Lamparter wrote:
-> > If my memory serves my right some people have triggered the same WARN_ON
-> > with the ath5k driver as well...
-> > unfortunately, I didn't follow the thread and now I can't find it anymore.
-anyone? Bob, Nick?
+On Tue, 2009-07-07 at 15:45 +0200, Jan Willies wrote:
+> Hi,
+> 
+> On 01.07.2009 16:29, Dan Williams wrote:
+> > Jouni, how should the supplicant handle a WEXT assoc event for the AP
+> > that's already associated with?  That seems to be what's going on here;
+> > the card is coming back from a scan and emitting an assoc event (not
+> > sure why) and that's making the supplicant (wrongly IMHO) try to reauth
+> > at the EAP level for some reason.
+> 
+> Did I miss the answer here? Is there any more information I can provide?
 
-> Thanks for the patch. I'll let you know what happens.
-I have my doubts. Do you still have the WARN_ON dump?
-or at least which of the two functions are listed in the dump?
-- rate_control_get_rate 
-- rate_control_rate_init <- unlikely/really surprising
+Nope, not yet.  Jouni's traveling at the moment though so he might reply
+when he gets back.
 
-Regards,
-	Chr
+Dan
+
+
