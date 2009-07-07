@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46289 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:44098 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756419AbZGJT5Z (ORCPT
+	with ESMTP id S1753575AbZGGBm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:57:25 -0400
-Message-Id: <20090710195131.504091075@sipsolutions.net>
-Date: Fri, 10 Jul 2009 21:51:31 +0200
+	Mon, 6 Jul 2009 21:42:58 -0400
+Subject: [PATCH] mac80211_hwsim: avoid NULL access
 From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: [PATCH 0/4] generic netlink namespace awareness
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 07 Jul 2009 03:43:02 +0200
+Message-Id: <1246930982.26030.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series makes generic netlink network namespace
-aware, in some way, paving the way for making wireless
-completely netns aware (which I will submit to John's tree).
+There's a race condition -- started can be set to true
+before channel is set due to the way mac80211 callbacks
+currently work (->start should probably pass the channel
+we would like to have initially). For now simply add a
+check to hwsim to avoid dereferencing the NULL channel
+pointer.
 
-The required changes are basically some preparations in
-core netlink, a change to make it possible to iterate net
-namespaces under just RCU (which may be useful elsewhere in
-the future), the actual genetlink patch and finally also
-exporting get_net_ns_by_pid() which wireless will need.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-The last patch (for get_net_ns_by_pid) could go through
-the wireless tree as well, but I've put it in here since
-it touches core code. The others probably shouldn't go
-through the wireless tree since they touch more than that.
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-07-07 03:29:38.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-07-07 03:37:02.000000000 +0200
+@@ -427,6 +427,7 @@ static bool mac80211_hwsim_tx_frame(stru
+ 			continue;
+ 
+ 		if (!data2->started || !hwsim_ps_rx_ok(data2, skb) ||
++		    !data->channel || !data2->channel ||
+ 		    data->channel->center_freq != data2->channel->center_freq ||
+ 		    !(data->group & data2->group))
+ 			continue;
 
-The first patch in this series fixes the last remaining
-problem I had with the generic netlink one, the patches
-are actually unchanged from the previous submission other
-than adding patch 1 in front.
-
-johannes
 
