@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43449 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751921AbZGXPpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 11:45:04 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MUMxC-0005Uy-JV
-	for linux-wireless@vger.kernel.org; Fri, 24 Jul 2009 15:45:02 +0000
-Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 15:45:02 +0000
-Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 15:45:02 +0000
+Received: from xc.sipsolutions.net ([83.246.72.84]:43520 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbZGGCHl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jul 2009 22:07:41 -0400
+Message-Id: <20090707020236.921639975@sipsolutions.net>
+Date: Tue, 07 Jul 2009 04:02:36 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-Date: Fri, 24 Jul 2009 16:43:29 +0100
-Message-ID: <wfr5w66q8u.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj> <wfzlau7co1.fsf@calligramme.charmers> <1248449030.21715.23.camel@mj> <1248449371.32151.23.camel@johannes.local>
+Cc: j@w1.fi
+Subject: [RFC 0/2] nl80211 key handling improvements
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+I dislike the current situation in nl80211, you
+cannot connect to any protected network without
+wpa_supplicant, but nl80211 can't _properly_ be
+used to set keys either...
 
-> On Fri, 2009-07-24 at 11:23 -0400, Pavel Roskin wrote:
->
->> I tried to add a link for PCI Express devices, but I don't have
->> permissions to reorganize the Wiki to have a separate table.  
->
->> From the users' perspective, PCI and PCI Express are different busses
->> and should be listed separately.
->
-> I'm not sure. The ID spaces are the same really, and users really don't
-> distinguish that much, for them PCI-E is just the new PCI technology
-> with a different form factor. Kinda like mini-pci vs. pci.
+These patches implement my new plan. According
+to that plan, static key configuration is passed
+directly to CONNECT or JOIN_IBSS along with the
+privacy flag, or the privacy flag itself is used
+to indicate that the application will later set
+the keys appropriately.
 
-Speaking as a user, I do want to distinguish them: PCIe fits into a
-physically different slot from PCI, so having only PCIe slots free, I
-really did want to select by socket type. Similarly someone with a PCI
-only motherboard would be looking for PCI and not PCIe.
+Internally, we store all the keys and call the
+add_key() function after we have joined the IBSS
+or connected to the AP (this could be changed if
+there are drivers that need static keys during
+connect(), but that seems rather unlikely). The
+only complication is shared key auth -- but this
+can be handled by simply passing the required
+WEP key directly to ->auth() or ->connect().
 
--- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+This might break iwm wrt. shared key auth if that
+currently works, but I couldn't figure out how it
+actually works now, if at all.
+
+johannes
 
