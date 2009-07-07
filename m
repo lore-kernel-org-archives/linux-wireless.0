@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45090 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751272AbZGRX4R (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59722 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755960AbZGGCAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 19:56:17 -0400
-Date: Sat, 18 Jul 2009 20:56:10 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Subject: Re: Generic events for wake up from S1-S4
-Message-ID: <20090718235609.GC25343@khazad-dum.debian.net>
-References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
- <20090714235332.GA1552@ucw.cz>
- <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
- <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
- <20090718103756.GA11381@elf.ucw.cz>
- <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
+	Mon, 6 Jul 2009 22:00:14 -0400
+Message-Id: <20090707015708.702314416@sipsolutions.net>
+References: <20090707015604.369008211@sipsolutions.net>
+Date: Tue, 07 Jul 2009 03:56:08 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/9] cfg80211: warn again on spurious deauth
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
-> Hm yeah, but I doubt someone will do that, generally we'd get one wake
-> up event. Can't we just report the first one and ignore the rest?
+The original code in mac80211 could send a deauth
+frame under certain circumstances even if nothing
+had ever requested an authentication. This has been
+fixed with the rework there, so cfg80211 can now
+warn again about spurious events to catch possible
+future drivers or mac80211 regressions.
 
-Well, I'd say keeping it simple is best, here.  What if you ignore the more
-interesting wakeup events by chance (and it is really up to userspace to
-know what it considers interesting...)?  IMHO, just issue as many
-notifications as needed, let userspace filter it if it wants.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/mlme.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-But if you guys are talking about something really generic, shouldn't it
-also provide the important "why" along with the "who"?
-
-Even for the most common cases, the "why" is useful: userspace may well want
-to run special routines when it wakes up because of WoL and WoW (instead of
-a key press, lid open or mouse movement...).
-
-When you factor in wakeups caused by platform alarms, well, the "why"
-becomes even more interesting.
-
-> > What about simply reporting "wake event happened on this device" and
-> > doing that for all the devices?
-> 
-> That's fine too. Just think it would be nice to be more specific if possible.
-
-A generic way for a device (of any sort, not just network devices!) to
-report that they just issued a system wakeup message, as well as the reason
-it did that seems like a good way to do it to me.
+--- wireless-testing.orig/net/wireless/mlme.c	2009-07-07 03:37:04.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2009-07-07 03:37:05.000000000 +0200
+@@ -122,15 +122,9 @@ void cfg80211_send_deauth(struct net_dev
+ 			break;
+ 		}
+ 	}
+-/*
+- * mac80211 currently triggers this warning,
+- * so disable for now (it's harmless, just
+- * means that we got a spurious event)
+ 
+ 	WARN_ON(!done);
+ 
+- */
+-
+ 	if (wdev->sme_state == CFG80211_SME_CONNECTED) {
+ 		u16 reason_code;
+ 		bool from_ap;
 
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+
