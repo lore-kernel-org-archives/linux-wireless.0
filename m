@@ -1,79 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:31051 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbZGYQJe (ORCPT
+Received: from mail-pz0-f193.google.com ([209.85.222.193]:41676 "EHLO
+	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754028AbZGGSDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 12:09:34 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so600927fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 09:09:34 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: add missing parameter clearing
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1248533676.19945.2.camel@johannes.local>
-References: <1248533676.19945.2.camel@johannes.local>
-Content-Type: text/plain
-Date: Sat, 25 Jul 2009 19:09:28 +0300
-Message-Id: <1248538168.5338.4.camel@maxim-laptop>
-Mime-Version: 1.0
+	Tue, 7 Jul 2009 14:03:45 -0400
+Received: by pzk31 with SMTP id 31so3140949pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 11:03:44 -0700 (PDT)
+From: javier@cozybit.com
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
+	Javier Cardona <javier@cozybit.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH v5] Fix regression in mesh forwarding path.
+Date: Tue,  7 Jul 2009 10:55:03 -0700
+Message-Id: <1246989303-19462-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <20090707170307.GC2768@tuxdriver.com>
+References: <20090707170307.GC2768@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-07-25 at 16:54 +0200, Johannes Berg wrote:
-> Jouni and Maxim reported an oops when using wpa_supplicant -Dnl80211,
-> which seems to be due to random data being contained in the crypto
-> settings for the assoc() command. This seems to be due to the missing
-> memset here, so add it -- it's certainly missing but I'm not 100%
-> certain that it will fix the problem.
-Indeed this fixes it.
-Although the NM still reports zero as signal level, and I see 
+From: Javier Cardona <javier@cozybit.com>
 
-[  417.210115] No probe response from AP 00:1b:9e:d8:77:02 after 200ms,
-disconnecting.
-[  419.363655] wlan0: direct probe to AP 00:1b:9e:d8:77:02 (try 1)
-[  419.369285] wlan0 direct probe responded
-[  419.369292] wlan0: authenticate with AP 00:1b:9e:d8:77:02 (try 1)
-[  419.371189] wlan0: authenticated
-[  419.371513] wlan0: associate with AP 00:1b:9e:d8:77:02 (try 1)
-[  419.374094] wlan0: RX AssocResp from 00:1b:9e:d8:77:02 (capab=0x411
-status=0 aid=3)
+The removal of the master netdev broke the mesh forwarding path.  This patch
+fixes it by using the new internal 'pending' queue.
 
-Although it isn't visible any more.
+As a result of this change, mesh forwarding no longer does the inefficient
+802.11 -> 802.3 -> 802.11 conversion that was done before.
 
-Did wext compatibility layer got partially removed?
-iwconfig does show now much
+[Changes since v1]
+Suggested by Johannes:
+ - Select queue before adding to mpath queue
+ - ieee80211_add_pending_skb -> ieee80211_add_pending_skbs
+ - Remove unnecessary header wme.h
 
-The last use of it, is to set tx power and bitrate, as this doesn't seem
-to be implemented in iw.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mesh_hwmp.c    |    3 ++-
+ net/mac80211/mesh_pathtbl.c |    8 +++-----
+ net/mac80211/rx.c           |   17 +++++++++++++++--
+ net/mac80211/tx.c           |    3 ---
+ 4 files changed, 20 insertions(+), 11 deletions(-)
 
-
-Also NM applet doesn't show my network as connected. When I attempted to
-connect it freezed the system.
-
-Best regards,
-	Maxim  Levitsky
-
-
-
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/wireless/nl80211.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> --- wireless-testing.orig/net/wireless/nl80211.c	2009-07-25 16:50:39.000000000 +0200
-> +++ wireless-testing/net/wireless/nl80211.c	2009-07-25 16:51:00.000000000 +0200
-> @@ -3385,6 +3385,8 @@ static int nl80211_crypto_settings(struc
->  				   struct cfg80211_crypto_settings *settings,
->  				   int cipher_limit)
->  {
-> +	memset(settings, 0, sizeof(*settings));
-> +
->  	settings->control_port = info->attrs[NL80211_ATTR_CONTROL_PORT];
->  
->  	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
-> 
-> 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f49ef28..c31fe79 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -784,7 +784,6 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		mesh_path_add(dst_addr, sdata);
+ 		mpath = mesh_path_lookup(dst_addr, sdata);
+ 		if (!mpath) {
+-			dev_kfree_skb(skb);
+ 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
+ 			err = -ENOSPC;
+ 			goto endlookup;
+@@ -804,6 +803,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		memcpy(hdr->addr1, mpath->next_hop->sta.addr,
+ 				ETH_ALEN);
+ 	} else {
++		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
+ 			/* Start discovery only if it is not running yet */
+ 			mesh_queue_preq(mpath, PREQ_Q_F_START);
+@@ -815,6 +815,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 			skb_unlink(skb_to_free, &mpath->frame_queue);
+ 		}
+ 
++		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 		skb_queue_tail(&mpath->frame_queue, skb);
+ 		if (skb_to_free)
+ 			mesh_path_discard_frame(skb_to_free, sdata);
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3c72557..ae98766 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -478,11 +478,9 @@ enddel:
+  */
+ void mesh_path_tx_pending(struct mesh_path *mpath)
+ {
+-	struct sk_buff *skb;
+-
+-	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
+-			(mpath->flags & MESH_PATH_ACTIVE))
+-		dev_queue_xmit(skb);
++	if (mpath->flags & MESH_PATH_ACTIVE)
++		ieee80211_add_pending_skbs(mpath->sdata->local,
++				&mpath->frame_queue);
+ }
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9601b22..9d1dcaf 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1485,10 +1485,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	unsigned int hdrlen;
+ 	struct sk_buff *skb = rx->skb, *fwd_skb;
+ 	struct ieee80211_local *local = rx->local;
++	struct ieee80211_sub_if_data *sdata;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
++	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control))
+ 		return RX_CONTINUE;
+@@ -1498,10 +1500,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_MONITOR;
+ 
+ 	if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6){
+-		struct ieee80211_sub_if_data *sdata;
+ 		struct mesh_path *mppath;
+ 
+-		sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 		rcu_read_lock();
+ 		mppath = mpp_path_lookup(mesh_hdr->eaddr2, sdata);
+ 		if (!mppath) {
+@@ -1547,6 +1547,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			fwd_skb->iif = rx->dev->ifindex;
+ 			ieee80211_select_queue(local, fwd_skb);
++			if (is_multicast_ether_addr(fwd_hdr->addr3))
++				memcpy(fwd_hdr->addr1, fwd_hdr->addr3,
++						ETH_ALEN);
++			else {
++				int err = mesh_nexthop_lookup(fwd_skb, sdata);
++				/* Failed to immediately resolve next hop:
++				 * fwded frame was dropped or will be added
++				 * later to the pending skb queue.  */
++				if (err)
++					return RX_DROP_MONITOR;
++			}
++			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
++						     fwded_frames);
+ 			ieee80211_add_pending_skb(local, fwd_skb);
+ 		}
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 66d9a42..969a4b2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1399,9 +1399,6 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 				dev_put(sdata->dev);
+ 				return;
+ 			}
+-		if (memcmp(sdata->dev->dev_addr, hdr->addr4, ETH_ALEN) != 0)
+-			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-						     fwded_frames);
+ 	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
+ 		int hdrlen;
+ 		u16 len_rthdr;
+-- 
+1.5.4.3
 
