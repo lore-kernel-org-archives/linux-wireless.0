@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:39208 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933293AbZGPUgP (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([193.131.176.58]:45664 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759056AbZGGV3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 16:36:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <200907162227.30362.IvDoorn@gmail.com>
-References: <1247734839-21394-1-git-send-email-klto@zhaw.ch>
-	<200907162227.30362.IvDoorn@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 13:35:54 -0700
-Message-ID: <43e72e890907161335m4a6b6e7cx1aa945181eb408e3@mail.gmail.com>
-Subject: Re: [PATCH 7/8] rt2x00: Use %pM conversion specifier
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Tobias Klauser <klto@zhaw.ch>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 7 Jul 2009 17:29:39 -0400
+Subject: Re: Possible memory leak in net/wireless/scan.c
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1246986768.4755.43.camel@johannes.local>
+References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
+	 <1246986768.4755.43.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 07 Jul 2009 22:29:28 +0100
+Message-Id: <1247002168.5710.1.camel@pc1117.cambridge.arm.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 1:27 PM, Ivo van Doorn<ivdoorn@gmail.com> wrote:
-> On Thursday 16 July 2009, Tobias Klauser wrote:
->> Use the %pM conversion specifier for printk instead of print_mac.
->>
->> Signed-off-by: Tobias Klauser <klto@zhaw.ch>
->
-> Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Tue, 2009-07-07 at 19:12 +0200, Johannes Berg wrote:
+> On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
+> 
+> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> > index e95b638..f8e71b3 100644
+> > --- a/net/wireless/scan.c
+> > +++ b/net/wireless/scan.c
+> > @@ -366,7 +366,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+> >  	found = rb_find_bss(dev, res);
+> >  
+> >  	if (found) {
+> > -		kref_get(&found->ref);
+> >  		found->pub.beacon_interval = res->pub.beacon_interval;
+> >  		found->pub.tsf = res->pub.tsf;
+> >  		found->pub.signal = res->pub.signal;
+> > 
+> > I'll try this later today to see if it fixes the leak. If that's not
+> > correct, I'll post more information about the content of the reported
+> > object (in general, it shouldn't be on any valid list or rb tree since
+> > kmemleak can't find it).
+> 
+> I have already sent that exact patch.
 
-Johannes already has a patch for this posted which takes care of all of these.
+OK. I can now confirm that it fixes the memory leak.
 
-http://marc.info/?l=linux-wireless&m=124767211929848&w=2
+Thanks.
 
-  Luis
+-- 
+Catalin
+
