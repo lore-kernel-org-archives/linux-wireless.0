@@ -1,124 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:37600 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755536AbZGMRhI convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:33948 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753146AbZGGBfO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 13:37:08 -0400
-Received: by qyk30 with SMTP id 30so827479qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 10:37:07 -0700 (PDT)
+	Mon, 6 Jul 2009 21:35:14 -0400
+Received: by yxe26 with SMTP id 26so6214849yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 18:35:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A5B301B.8060405@gmail.com>
-References: <4A5B301B.8060405@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 13 Jul 2009 10:36:47 -0700
-Message-ID: <43e72e890907131036y4d12f532ta7a303577bcb4014@mail.gmail.com>
-Subject: Re: Proper Regulatory Enforcement
-To: Richard Farina <sidhayn@gmail.com>
+In-Reply-To: <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	 <6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com>
+	 <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
+	 <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
+Date: Mon, 6 Jul 2009 21:35:16 -0400
+Message-ID: <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+From: Jasin Colegrove <j.wholesalesupply@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 13, 2009 at 6:01 AM, Richard Farina<sidhayn@gmail.com> wrote:
-> Many discussions in #Linux-wireless and even on this list seem to revolve
-> around how regulatory enforcement is provided.  At one point I thought that
-> I understood how this works, but as things evolve it seems I am losing my
-> edge.  With the goal of understanding a unified policy for all drivers and
-> proper (safe) regulatory enforcement, I'm starting this thread so that
-> people can help clarify how this currently works, and how it should work.
+I have found the bad commit.
+
+$ git bisect good
+1e3e6e8fe2f422f75619b1110f78bb638ae905b9 is first bad commit
+commit 1e3e6e8fe2f422f75619b1110f78bb638ae905b9
+Author: Nick Kossifidis <mick@madwifi-project.org>
+Date:   Mon Feb 9 06:15:42 2009 +0200
+
+    ath5k: Disable BMISS interrupts
+
+     * Don't enable BMISS interrupts as we don't handle them yet
+
+     Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+:040000 040000 4a52fc89878d63cdb5da78e78d1ee17a6b5694c0
+ff6f1d15f33d1dd3547e03fa191a779b50ad9ed4 M        drivers
+
+Do you still think it would be wise to file a bug report for this
+issue. I have yet to try the latest compat-wireless.
+
+On Sun, Jul 5, 2009 at 8:13 AM, Jasin
+Colegrove<j.wholesalesupply@gmail.com> wrote:
+> Thanks bob for the reply. I did not mean to shout, but someone else
+> told me that I should make it very clear that I was not subscribed.
+> But, now I am so it doesn't matter :)
 >
-> As I see this all working in an ideal world is as follows:
+> I guess I will just wait to file a bug after I get through the bisect
+> process and test out the newest compat-wireless drivers. Then I should
+> have a more clear picture of the issue and maybe enough technical
+> details to file a proper bug report. Thanks again for your time,
+> greatly appreciated.
 >
-> 1.) Driver reads eeprom of card for the permissible frequencies for that
-> hardware. It is only safe to allow the frequencies in the eeprom because we
-> cannot assume that any other values were calibrated in the hardware.  This
-> information (or initial regulatory domain) should be passed up to and
-> immediately enforced by crda.  Drivers shouldn't have their own enforcement
-> in addition to crda as we have a properly functioning regulatory enforcement
-> engine and having 1 per driver makes things pointlessly complicated.
-
-You for got the case 0) where cards have no EEPROM information from
-which a regulatory_hint() can be constructed for. In this case we
-always world roam at first but user input can then set the channels
-for the user. User input in these cases may enable new channels as the
-card has no location information. It certainly would shave off some
-more pounds from the driver.
-
-You also forgot the case where cards have EEPROM information but also
-have a few set of custom world regulatory domains. For example,
-Atheros cards have 12 world regulatory domains, apart from the group
-regulatory domains (which map to an alpha2) or a specific alpha2
-country code mapping. cfg80211 allows drivers to specify custom world
-regulatory domains and use them when applicable. It may be the case we
-can just get rid of these in favor of the 1 world regulatory domain
-that cfg80211 has, but that needs some good internal company review.
-
-> 2.) If the user sets a reg domain, intersect user reg domain with eeprom reg
-> domain.
+> On Thu, Jul 2, 2009 at 11:36 AM, Bob Copeland<me@bobcopeland.com> wrote:
+>> On Tue, Jun 30, 2009 at 6:50 PM, Jasin
+>> Colegrove<j.wholesalesupply@gmail.com> wrote:
+>>> I AM NOT A SUBSCRIBER. Please reply to me directly at this e-mail
+>>> address j.wholesalesupply@gmail.com
+>>
+>> No need to shout -- also common etiquette on Linux kernel lists is
+>> to "reply-all" anyway :)
+>>
+>>> Then I decided to see if it the card was working, So I tried to iwlist
+>>> wlan0 scan, it returned the expected results.
+>>
+>>> I would be glad to offer up as much
+>>> information as I can, but I don't have the slightest on how to debug
+>>> this issue?
+>>
+>> So to summarize:
+>>
+>> 2.6.29 works, 2.6.30 doesn't, ath9k works, ath5k doesn't, userspace
+>> setup is unchanged. �ath5k can get scan results (which means RX is
+>> working at least some of the time) but dhcp does not.
+>>
+>> You said you are comfortable with the command line, in that case the
+>> easiest way to debug the change is to just bisect the ath5k changes
+>> using git. �There were only 50 or so patches since 2.6.29 so you will
+>> likely only need to compile the kernel 5 or 6 times. �You can do
+>> something like:
+>>
+>> $ git bisect start v2.6.30 v2.6.29 -- drivers/net/wireless/ath5k
+>>
+>>> Any help on that issue is much appreciated. Where can I
+>>> file the appropriate bug and what information do I need to post from a
+>>> technical standpoint.
+>>
+>> http://bugzilla.kernel.org/ is where you would file it, the information
+>> you've already given here is a good start.
+>>
+>> --
+>> Bob Copeland %% www.bobcopeland.com
+>>
 >
-> 3.) When user connects to AP, if available, read country IE and intersect
-> that with the currently effective reg domain (which is at least the eeprom
-> and may include user input from step 2 as well).
-
-You also forgot about the world roaming feature of scanning and
-finding beacons. When you scan and find a beacon from an AP passive
-scan flags and no-ibss flags are lifted. This is under the assumption
-APs which beacon can be trusted. This feature is only used when your
-card is world roaming.
-
-> I realize some distros have cool stuff happening like setting a reg domain
-> using the location from the timezone or some other cool thing.  For the
-> purpose of this discussion however, that is really nothing different from a
-> user set reg domain (in fact I believe that is how it is done) so let's not
-> worry about those specifics of "well the user didn't directly call iw reg
-> set so blah blah blah".
->
-> How far off base am I here?
-
-Pretty good -- except for the few notes above.
-
-> I know that Intel enforces reg domain in their
-> ucode and we cannot do anything about it,
-
-Well you can help compliance further by setting the regdomain, that
-may disable channels your country does not allow for which the intel
-cards may have passive scanning enabled for. This can help in scan
-time since no APs are expected to be found in those channels.
-
-> but I'm more interested in the
-> cards where our drivers have full control.  Are the drivers themselves
-> performing limiting that users don't even get to see?
-
-ath9k reads the CTL (Conformance Test Limit) indexes for the target
-frequency and may reduce power further depending on the information
-read. This is where that argument about calibration comes in -- this
-the that calibrated data that should be cared for. Each frequency a
-card is capable of gets tested and has a CTL index map. If it does not
-have a CTL index power the max regulatory EIRP is used. CTL index for
-Atheros cards come in quite handy at band edges where we want to
-ensure the power curve does not go over the edge but it also can be
-used for regular regulatory compliance and ensures you also won't bust
-your card by trying to use a tx power that can damage the card.
-
-> Or is all this
-> actually passed up to crda as it should be?
-
-CRDA is used to get the driver regulatory control information for each
-country. Drivers then can use calibration data at will for further
-compliance. Each device may do this differently. For instance, I have
-no idea how Intel handles band edge power compliance parameters, it
-must be data stuffed in the EEPROM somewhere or it may just user a
-lower safe value.. not sure. Also not sure how Broadcom does this, I
-think Johannes mentioned to me once that the firmware may be doing
-that.
-
-> I'm personally especially
-> interested in how the three atheros drivers do it, but I think this
-> discussion should extend beyond my personal interests and any and all
-> drivers should be discussed.
-
-Some devices may not even have such band edge calibration data, and
-don't ask me how they ensure proper regulatory power is used, I know
-only exactly how Atheros stuff does it.
-
-  Luis
