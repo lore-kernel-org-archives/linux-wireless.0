@@ -1,68 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60196 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752776AbZGHKcX (ORCPT
+Received: from mail-px0-f190.google.com ([209.85.216.190]:56608 "EHLO
+	mail-px0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753027AbZGGBe1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 06:32:23 -0400
-Subject: Re: Possible memory leak in net/wireless/scan.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1247042784.6595.7.camel@pc1117.cambridge.arm.com>
-References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-	 <1247022413.4755.56.camel@johannes.local>
-	 <1247042784.6595.7.camel@pc1117.cambridge.arm.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0edu/znVxt1wtd/oxhKY"
-Date: Wed, 08 Jul 2009 12:24:46 +0200
-Message-Id: <1247048686.4755.57.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 6 Jul 2009 21:34:27 -0400
+Received: by pxi28 with SMTP id 28so3908854pxi.33
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 18:34:30 -0700 (PDT)
+From: javier@cozybit.com
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
+	Javier Cardona <javier@cozybit.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH v2] Fix regression in mesh forwarding path.
+Date: Mon,  6 Jul 2009 18:25:54 -0700
+Message-Id: <1246929954-15282-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <1246928780.4652.10.camel@johannes.local>
+References: <1246928780.4652.10.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Javier Cardona <javier@cozybit.com>
 
---=-0edu/znVxt1wtd/oxhKY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+The removal of the master netdev broke the mesh forwarding path.  This patch
+fixes it by using the new internal 'pending' queue.
 
-On Wed, 2009-07-08 at 09:46 +0100, Catalin Marinas wrote:
+As a result of this change, mesh forwarding no longer does the inefficient
+802.11 -> 802.3 -> 802.11 conversion that was done before.
 
-> Anyway, I run it from some ARM embedded systems at ~200MHz and 256MB of
-> RAM to dual core x86 at 2GHz with 3GB of RAM. I also ran it on quemu in
-> the past (but, well, in the embedded world I'm pretty used with
-> emulators taking 10 min to boot the kernel).
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c    |    3 ++-
+ net/mac80211/mesh_pathtbl.c |    3 ++-
+ net/mac80211/rx.c           |   17 +++++++++++++++--
+ net/mac80211/tx.c           |    3 ---
+ 4 files changed, 19 insertions(+), 7 deletions(-)
 
-:)
-
-> But it can slow things down since it tracks every memory allocation and
-> it needs to look up the pointer in an rb tree.
-
-It was so slow I gave up after a while. But then my real purpose was
-testing something, not waiting for kmemleak, so I guess I just didn't
-wait long enough :)
-
-johannes
-
---=-0edu/znVxt1wtd/oxhKY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKVHPpAAoJEODzc/N7+QmaA9wQAIsrUvltj4gJpYNYGBCwHv2Q
-pue1BBe7YgiqoWIMvyRFpZQEo9rhrGm7Ynkpw6LqlA71jr43DpZYeVnLggOzP0An
-u28VTtDfFXt4gYEs1XlgTOQBQ6enyudqs1JSxgMFbEmVnK8Ss3FaHb2yiXhu3GDO
-85tR+43Bqdl8zxw9I6NVu3X8lTxT2DOZjWh4bw8ysAUor58wW6RBmkKHS0cr1N8j
-ufBFWwpdV31LizTBB8nlDBx9mMFgQLVAOwHjefvZxncp247fdnAXxbTKyecd6Jkv
-LxFdRD/h2XcEw+RgCuB9uW2dWd9WD7W52fp5toeRoTEwA6+H3Y44caLEpaneWF3N
-vvBFY8XXjuaipAoERKKY2sIog5QyO2EmwQOf5BSH2EP6jRz5RlRZcpg67ehBFc/5
-XIFq3ehGl1Irvk3t/JKgMUvadDStTosgR2SJ1VYI6MnocKmwANUc7TK0DUQKs3LY
-Gh3NjH/D09wsQAmC+tmf1FMkZrQLuLKe1iAQsHPjaZPejnrEDkIN4X1xgT3gVukb
-YHdvq6EWRxGvyD4zuz+NG76NZVU5DiO7jU4HL/+SWxmLwIo3ZnNauyof4iKkl1tn
-FfYx+XpUWPH3psHUEbIaQ1foUOqnOv9HyntSew9jlTHBDMfFoUCJAh+wdpMgwKgI
-lvRwTlPsfh8exgx0iFbz
-=tnro
------END PGP SIGNATURE-----
-
---=-0edu/znVxt1wtd/oxhKY--
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f49ef28..c31fe79 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -784,7 +784,6 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		mesh_path_add(dst_addr, sdata);
+ 		mpath = mesh_path_lookup(dst_addr, sdata);
+ 		if (!mpath) {
+-			dev_kfree_skb(skb);
+ 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
+ 			err = -ENOSPC;
+ 			goto endlookup;
+@@ -804,6 +803,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		memcpy(hdr->addr1, mpath->next_hop->sta.addr,
+ 				ETH_ALEN);
+ 	} else {
++		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
+ 			/* Start discovery only if it is not running yet */
+ 			mesh_queue_preq(mpath, PREQ_Q_F_START);
+@@ -815,6 +815,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 			skb_unlink(skb_to_free, &mpath->frame_queue);
+ 		}
+ 
++		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 		skb_queue_tail(&mpath->frame_queue, skb);
+ 		if (skb_to_free)
+ 			mesh_path_discard_frame(skb_to_free, sdata);
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 3c72557..e716e7d 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -14,6 +14,7 @@
+ #include <linux/string.h>
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
++#include "wme.h"
+ #include "mesh.h"
+ 
+ /* There will be initially 2^INIT_PATHS_SIZE_ORDER buckets */
+@@ -482,7 +483,7 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
+ 
+ 	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
+ 			(mpath->flags & MESH_PATH_ACTIVE))
+-		dev_queue_xmit(skb);
++		ieee80211_add_pending_skb(mpath->sdata->local, skb);
+ }
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 91747be..1a22636 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1485,10 +1485,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	unsigned int hdrlen;
+ 	struct sk_buff *skb = rx->skb, *fwd_skb;
+ 	struct ieee80211_local *local = rx->local;
++	struct ieee80211_sub_if_data *sdata;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
++	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control))
+ 		return RX_CONTINUE;
+@@ -1498,10 +1500,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_MONITOR;
+ 
+ 	if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6){
+-		struct ieee80211_sub_if_data *sdata;
+ 		struct mesh_path *mppath;
+ 
+-		sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+ 		rcu_read_lock();
+ 		mppath = mpp_path_lookup(mesh_hdr->eaddr2, sdata);
+ 		if (!mppath) {
+@@ -1547,6 +1547,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			fwd_skb->iif = rx->dev->ifindex;
+ 			ieee80211_select_queue(local, fwd_skb);
++			if (is_multicast_ether_addr(fwd_hdr->addr3))
++				memcpy(fwd_hdr->addr1, fwd_hdr->addr3,
++						ETH_ALEN);
++			else {
++				int err = mesh_nexthop_lookup(fwd_skb, sdata);
++				/* Failed to immediately resolve next hop:
++				 * fwded frame was dropped or will be added
++				 * later to the pending skb queue.  */
++				if (err)
++					return RX_DROP_MONITOR;
++			}
++			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
++						     fwded_frames);
+ 			ieee80211_add_pending_skb(local, fwd_skb);
+ 		}
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 66d9a42..969a4b2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1399,9 +1399,6 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 				dev_put(sdata->dev);
+ 				return;
+ 			}
+-		if (memcmp(sdata->dev->dev_addr, hdr->addr4, ETH_ALEN) != 0)
+-			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+-						     fwded_frames);
+ 	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
+ 		int hdrlen;
+ 		u16 len_rthdr;
+-- 
+1.5.4.3
 
