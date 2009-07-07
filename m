@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2856 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbZGQTUd (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59717 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755960AbZGGCAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 15:20:33 -0400
-From: "Bob Copeland" <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
+	Mon, 6 Jul 2009 22:00:08 -0400
+Message-Id: <20090707015708.306828606@sipsolutions.net>
+References: <20090707015604.369008211@sipsolutions.net>
+Date: Tue, 07 Jul 2009 03:56:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH v2 0/8] wl1251 sdio interface
-Date: Fri, 17 Jul 2009 15:20:11 -0400
-Message-Id: <20090717191624.M88302@bobcopeland.com>
-In-Reply-To: <87r5wfp1v4.fsf@litku.valot.fi>
-References: <20090717184643.25883.95065.stgit@tikku> <87r5wfp1v4.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=utf-8
+Subject: [PATCH 2/9] cfg80211: dont use union for wext
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 17 Jul 2009 22:04:47 +0300, Kalle Valo wrote
-> Kalle Valo <kalle.valo@iki.fi> writes:
-> I forgot to mention that wl1251 most probably is still broken regards to
-> bssid handling. I will fix this after my (current) vacation, unless
-> someone else is faster. To get wl1251 temporarily working, this patch
-> must be reverted:
+Otherwise it becomes very hard to reset the structs
+correctly since wext can be configured while the
+interface is down.
 
-Thanks Kalle, 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/cfg80211.h |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-I'll take a look at doing this conversion too.
+--- wireless-testing.orig/include/net/cfg80211.h	2009-07-07 03:36:58.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-07-07 03:37:04.000000000 +0200
+@@ -1270,10 +1270,8 @@ struct wireless_dev {
+ #ifdef CONFIG_WIRELESS_EXT
+ 	/* wext data */
+ 	struct {
+-		union {
+-			struct cfg80211_ibss_params ibss;
+-			struct cfg80211_connect_params connect;
+-		};
++		struct cfg80211_ibss_params ibss;
++		struct cfg80211_connect_params connect;
+ 		u8 *ie;
+ 		size_t ie_len;
+ 		u8 bssid[ETH_ALEN];
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
 
