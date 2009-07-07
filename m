@@ -1,96 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:45770 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756242AbZGILPz (ORCPT
+Received: from charon.antacs.com ([150.101.188.194]:38816 "EHLO
+	mail.antacs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753562AbZGGLZh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 07:15:55 -0400
-Message-ID: <4A55D123.5090802@gmail.com>
-Date: Thu, 09 Jul 2009 13:14:43 +0200
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
+	Tue, 7 Jul 2009 07:25:37 -0400
+Message-ID: <4A532D3C.5060601@antacs.com>
+Date: Tue, 07 Jul 2009 21:10:52 +1000
+From: David Ross <dave@antacs.com>
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Przemyslaw Kulczycki <azrael@autocom.pl>,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
-References: <4A54FB81.30302@gmail.com>	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>	 <4A551B43.3020104@gmail.com>	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>	 <4A5575C1.8090403@lwfinger.net> <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
-In-Reply-To: <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Valentin Manea <linux-wireless@mrs.ro>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and broadcast frames
+References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com> 	<4A4B056B.9000602@mrs.ro> <43e72e890907011033r52c4256dtecf603f56213a825@mail.gmail.com> <4A530131.9050207@mrs.ro>
+In-Reply-To: <4A530131.9050207@mrs.ro>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung pisze:
-> 2009/7/9 Larry Finger <Larry.Finger@lwfinger.net>:
->> Hin-Tak Leung wrote:
->>> if they are not labelled v1/v2/v3 as such, it may be more
->>> useful/informative to change to
+Actually it is required to be a mutual BASIC rate (not extended rates) - 
+not necessarily the "lowest possible" - David.
+
+Valentin Manea wrote:
+> Hi,
+>
+>   I've tracked this problem down and to my shame the problem was on 
+> the sending side, it seems that when sending broadcast/multicast 
+> frames the sending side chooses the lowest bit rate possible. Is this 
+> how it is supposed to behave?
+>
+> Best Regards,
+> Valentin
+>
+> On 07/01/2009 08:33 PM, Luis R. Rodriguez wrote:
+>> On Tue, Jun 30, 2009 at 11:42 PM, Valentin 
+>> Manea<linux-wireless@mrs.ro>  wrote:
 >>>
->>>     [some variant of ] ... [(other variants are supported by the
->>> rt2070/rt3070 modules)]
->>>
->>> instead of just adding [v2] to the end.
->> I don't know about the box as I bought mine used on Ebay, but the
->> label on the device clearly states that it is a WG111v2.
+>>> On 06/30/2009 07:20 PM, Luis R. Rodriguez wrote:
+>>>> On Tue, Jun 30, 2009 at 3:53 AM, Valentin Manea<linux-wireless@mrs.ro>
+>>>>   wrote:
+>>>>> Hi,
+>>>>>
+>>>>>    I've been working on a small project that basically sends 
+>>>>> broadcast UDP
+>>>>> frames from an Wireless AP to multiple clients. While I can send UDP
+>>>>> frames
+>>>>> just fine from the AP to the client the only a few broadcast 
+>>>>> frames reach
+>>>>> my
+>>>>> client. What is really puzzling is that on the client machine using
+>>>>> tcpdump
+>>>>> I can see all the broadcast frames arriving, my application sees 
+>>>>> only a
+>>>>> small fraction of them.
+>>>> Keep in mind when you use tcpdump it will modify the RX filters of the
+>>>> device you use but if you say you see them on tcpdump and at the same
+>>>> time do not see them on the application that seems fishy and non
+>>>> driver related.
+>>>>
+>>>>    Luis
+>>> tcpdump doesn't affect the results at all, with or without it 
+>>> running it's
+>>> the same.
 >>
->> Larry
+>> Well it would if you had had other nodes sending data on the same BSS,
+>> it would mean more RX'd frames that are passed up on your host. This
+>> would just be specific to your BSS as you would be using promiscuous
+>> mode and not a real monitor mode, so just wanted to point that out.
 >>
+>>> I have tried tracing the packets, I thought that maybe there is a 
+>>> problem in
+>>> the 80211 stack and for some reason they would be dropped but as far 
+>>> as I
+>>> can tell every packet is routed to the ip stack with the correct 
+>>> protocol
+>>> and pkt_type.
 >>
-> 
-> But that's  a Netgear WG111v2 ? We are talking about Linksys
-> WUSB54GC-EU and its v1/v2/v3 . I am just thinking that if it is for
-> informative purposes (for those who actually selectively build their
-> kernel modules), adding a bit more info, such as suggesting to use
-> rt73usb/rt2070/rt3070 modules, won't hurt.
-> 
-> Incidentally I like to know a bit more about this patch - presumably
-> Marcin has such a device? I am also a little curious, as this commit
-> should be accompanied by a corresponding update in another Kconfig
-> which supports the device? I am not trying to be picky, but for an
-> informative (non-code-changing) patch, it can be more informative.
-
-I have a v3 device and this driver does not support it.
-Below is the commit which added the string my patch corrects.
-I've sent yesterday another patch which adds support for WUSB54GC v3
-to the rt3070 driver.
-
-commit aeeab4ff06b8e29cfe2fe730ba626f7e2487ba03
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Wed May 27 09:21:57 2009 +0200
-
-    rtl8187: add USB ID for Linksys WUSB54GC-EU v2 USB wifi dongle
-
-    http://bugzilla.kernel.org/show_bug.cgi?id=13383
-
-    Reported-by: Przemyslaw Kulczycki <azrael@autocom.pl>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 8a08235..3d94e7d 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -430,6 +430,7 @@ config RTL8187
-          ASUS P5B Deluxe
-          Toshiba Satellite Pro series of laptops
-          Asus Wireless Link
-+         Linksys WUSB54GC-EU
-
-          Thanks to Realtek for their support!
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index bac6cfb..d51ba0a 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -71,6 +71,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
-        {USB_DEVICE(0x18E8, 0x6232), .driver_info = DEVICE_RTL8187},
-        /* AirLive */
-        {USB_DEVICE(0x1b75, 0x8187), .driver_info = DEVICE_RTL8187},
-+       /* Linksys */
-+       {USB_DEVICE(0x1737, 0x0073), .driver_info = DEVICE_RTL8187B},
-        {}
- };
-
-
+>> OK  then the issue is further down and not related to the driver or
+>> wireless stack it seems.
+>>
+>>> One more strange thing, if I'm looking at netstat -s everything 
+>>> seems to be
+>>> normal, InBcastPkts is fine, also the number of incomming UDP packets.
+>>
+>> More confirmation things are peachy on the linux-wireless front and
+>> that this is a userspace issue somewhere.
+>>
+>>> Any ideas where I could look? it just gets stranger and stranger.
+>>
+>> If you see the frames do get to the host then definitely not on the
+>> drivers / stack.
+>>
+>>    Luis
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
