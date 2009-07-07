@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipmail04.adl2.internode.on.net ([203.16.214.57]:9363 "EHLO
-	ipmail04.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750935AbZGCH0x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 03:26:53 -0400
-Message-ID: <4A4DB343.7060800@call-direct.com.au>
-Date: Fri, 03 Jul 2009 17:29:07 +1000
-From: Iwo Mergler <iwo@call-direct.com.au>
-MIME-Version: 1.0
-To: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211: Force beacon update?
-References: <4A4DB01E.2030408@informatik.uni-kl.de>
-In-Reply-To: <4A4DB01E.2030408@informatik.uni-kl.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:64518 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754650AbZGGSUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2009 14:20:54 -0400
+Subject: [PATCH] Atheros Kconfig needs to be dependent on WLAN_80211
+From: Jay Sternberg <jay.e.sternberg@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 07 Jul 2009 11:18:46 -0700
+Message-Id: <1246990726.4720.12.camel@jesternb-capella>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reiner Herrmann wrote:
-> Hi,
-> 
-> I want to attach a custom IE to beacons, but some drivers (like b43)
-> are fetching their beacons via ieee80211_beacon_get() only once and
-> retransmit this beacon every time.
-> Some other drivers (like mac80211_hwsim, ath9k) are calling it
-> before every beacon transmission.
-> 
-> Is there a general way to make all drivers generate new beacons instead
-> of caching them or would I have to adapt them?
-> If adapting drivers is the only way, do you have any suggestions on
-> how to do that?
+Atheros top level menu needs a "depends WLAN_80211" to properly indent
+within menuconfig and xconfig interfaces.
 
-Hi Reiner
+This is purely a visual issue but it effects all subsequent drivers.  
+The issue is the top level menu does not include a dependency on
+WLAN_80211 so within the tree structure, Atheros is at the same level as
+WLAN_80211 but when WLAN_80211 collapsed, the menu disappears along with
+all subsequent drives, so it is really a subordinate.
 
-the drivers that call ieee80211_beacon_get() only once, have
-hardware that transmits beacons automatically. That is, the
-beacon template from ieee80211_beacon_get() is stored in the
-hardware and the hardware then automatically sends that while
-updating a few fields as needed.
+Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
+---
+ drivers/net/wireless/ath/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-In other words, the driver doesn't know anything about the
-beacons after the initial setup, and thus can't call ieee80211_beacon_get().
-No caching is involved. :-)
-
-So to do what you want, you need to disable the automatic
-beaconing and use packet injection and send your beacons
-as raw frames.
-
-
-Best regards,
-
-Iwo
+diff --git a/drivers/net/wireless/ath/Kconfig
+b/drivers/net/wireless/ath/Kconfig
+index d26e7b4..eb0337c 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -1,5 +1,6 @@
+ config ATH_COMMON
+ 	tristate "Atheros Wireless Cards"
++	depends on WLAN_80211
+ 	depends on ATH5K || ATH9K || AR9170_USB
+ 
+ source "drivers/net/wireless/ath/ath5k/Kconfig"
+-- 
+1.5.4.3
 
