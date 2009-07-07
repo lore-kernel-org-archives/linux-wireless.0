@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:37323 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbZGCIpJ (ORCPT
+Received: from mail-pz0-f193.google.com ([209.85.222.193]:35104 "EHLO
+	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394AbZGGSm4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 04:45:09 -0400
-Message-ID: <4A4DC4EC.6010708@nokia.com>
-Date: Fri, 03 Jul 2009 11:44:28 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Tue, 7 Jul 2009 14:42:56 -0400
+Received: by pzk31 with SMTP id 31so3157319pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 11:42:53 -0700 (PDT)
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.org" <linville@tuxdriver.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>,
-	"Govindan Vidhya (Nokia-D/Tampere)" <vidhya.govindan@nokia.com>,
-	"nbd@openwrt.org" <nbd@openwrt.org>
-Subject: Re: [PATCH v2] mac80211: minstrel: avoid accessing negative indices
- in rix_to_ndx()
-References: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com> <1246609742.16770.54.camel@johannes.local>
-In-Reply-To: <1246609742.16770.54.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20090705120515.GA6329@hash.localnet>
+References: <4A3B5B11.7060103@bitnet.be>
+	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
+	 <b6c5339f0906191019ve40014dp98af5ada875e2a24@mail.gmail.com>
+	 <45e8e6c40906191042k5c96d3a6wff85358da22a7b92@mail.gmail.com>
+	 <20090705120515.GA6329@hash.localnet>
+Date: Tue, 7 Jul 2009 11:42:53 -0700
+Message-ID: <45e8e6c40907071142l3edf9133sd8c3758175c7ae3c@mail.gmail.com>
+Subject: Re: current status of 802.11s mesh in ath5k ?
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Hans Maes <Hans@bitnet.be>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Fri, 2009-07-03 at 08:25 +0300, Luciano Coelho wrote:
->   
->> If rix is not found in mi->r[], i will become -1 after the loop.  This value
->> is eventually used to access arrays, so we were accessing arrays with a
->> negative index, which is obviously not what we want to do.  This patch fixes
->> this potential problem.
->>     
+On Sun, Jul 5, 2009 at 5:05 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Fri, Jun 19, 2009 at 10:42:22AM -0700, Andrey Yurovsky wrote:
+>> > I have been working on a patch to rework the beaconing, namely using
+>> > bss_conf->enable_beacon and calling beacon_config whenever the beacon
+>> > interval or beacon changes, that might fix it but I'm not too familiar
+>> > with mesh details to say.
+>>
+>> 'looking forward to that patch.  From the driver side, there's not
+>> much difference between mesh beaconing and AP or IBSS beaconing.
 >
-> This seems odd -- are you or are you not saying that this can happen in
-> normal operation?
->   
+> Can you check whether my most recent patch (I think it was 2/5 in the
+> ath5k series) helps?  I looked at mac80211 and it seems we set
+> enable_beacon properly in mesh mode so that should configure beaconing
+> to start.
 
-This should *not* happen in normal operation, but it was happening due 
-to a bug elsewhere (which has already been fixed).
+Thanks Bob, I confirm that your patch fixes mesh beaconing.
 
->> @@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->>  	for (i = rix; i >= 0; i--)
->>  		if (mi->r[i].rix == rix)
->>  			break;
->> -	WARN_ON(mi->r[i].rix != rix);
->> +	WARN_ON(i < 0);
->>  	return i;
->>     
->
-> If it can, this warning seems wrong.
->   
-
-We were reaching this WARN_ON on our device some time ago, before we 
-backported some other minstrel fixes from upstream.  So this patch 
-doesn't fix an *active* bug, but it makes things more robust in case 
-there is a bug elsewhere.  It is not good at all to access mi->r[-1], 
-especially the code later which writes to this array and could 
-potentially overwrite somebody else's memory.
-
--- 
-Cheers,
-Luca.
-
+  -Andrey
