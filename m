@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snt0-omc4-s23.snt0.hotmail.com ([65.55.90.226]:42624 "EHLO
-	snt0-omc4-s23.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750970AbZGaO0J convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 10:26:09 -0400
-Message-ID: <SNT102-W488F134CE050C692A451DABD100@phx.gbl>
-From: Jack Lau <jackelectronics@hotmail.com>
-To: <proski@gnu.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
-Date: Fri, 31 Jul 2009 14:26:01 +0000
-In-Reply-To: <1248821338.5206.12.camel@mj>
-References: <BAY0-DP2-2945C3011C834624418944BD170@phx.gbl>
-	 <1248640816.32168.42.camel@mj>
- 	 <BAY0-DP3-241EC0B1A0E15935251FCBBD150@phx.gbl>
- <1248821338.5206.12.camel@mj>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:47656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659AbZGGVs3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jul 2009 17:48:29 -0400
+Subject: Re: Possible memory leak in net/wireless/scan.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1247002168.5710.1.camel@pc1117.cambridge.arm.com>
+References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
+	 <1246986768.4755.43.camel@johannes.local>
+	 <1247002168.5710.1.camel@pc1117.cambridge.arm.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0PUhK/GrmTISWbbafTOi"
+Date: Tue, 07 Jul 2009 23:47:21 +0200
+Message-Id: <1247003241.4755.55.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Dear Pavel,
- 
-As a follow-up to yesterday's email that I have sent, I have also tried a different Linux distribution (Arch Linux), 64-bit instead of 32-bit and on a different machine dedicated for this test.
- 
-I am still getting this crash!
- 
-Regards,
- 
- 
- 
-Jack
+--=-0PUhK/GrmTISWbbafTOi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-----------------------------------------
-> Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
-> From: proski@gnu.org
-> To: jackelectronics@hotmail.com
-> CC: linux-wireless@vger.kernel.org
-> Date: Tue, 28 Jul 2009 18:48:58 -0400
->
-> On Tue, 2009-07-28 at 21:21 +0000, Jack Lau wrote:
->
->>> I have enabled debugging in config.mk and installed it.
->
-> I didn't suggest that. I think it's irrelevant. Only the setting
-> in .config is relevant.
->
-> If you are using compat-wireless, I suggest that you try the current
-> kernel from wireless-testing. It was quite unstable a few days ago, but
-> it should be cleaned up by now. Since you are using the AP mode, you'll
-> need this patch, it's still not applied as of now:
->
-> http://marc.info/?l=linux-wireless&m=124871936602667&w=2
->
-> compat-wireless is great if everything is working, but if something is
-> broken, the first suspicion is that compat-wireless doesn't backport
-> something correctly.
->
->> The kernel already has debugging enabled as I have examined the
->> source from Ubuntu.
->
-> Please be specific what you found and where. I don't have Ubuntu
-> around, but others could correct you if you are looking in a wrong
-> place.
->
->>> When I load the gdb command, I just get no debugging symbols found
->> and with the l command I just get no symbol file now.
->
-> Please don't rephrase tell the error messages, especially if you don't
-> understand them fully. I cannot see from your words why there are no
-> debugging symbols.
->
-> Also please don't top-post, as it makes it harder to quote the
-> discussion in a reasonable way.
->
-> --
-> Regards,
-> Pavel Roskin
-_________________________________________________________________
-Celebrate a decade of Messenger with free winks, emoticons, display pics, and more.
-http://clk.atdmt.com/UKM/go/157562755/direct/01/
+On Tue, 2009-07-07 at 22:29 +0100, Catalin Marinas wrote:
+
+> > >  	if (found) {
+> > > -		kref_get(&found->ref);
+> > >  		found->pub.beacon_interval =3D res->pub.beacon_interval;
+> > >  		found->pub.tsf =3D res->pub.tsf;
+> > >  		found->pub.signal =3D res->pub.signal;
+> > >=20
+> > > I'll try this later today to see if it fixes the leak. If that's not
+> > > correct, I'll post more information about the content of the reported
+> > > object (in general, it shouldn't be on any valid list or rb tree sinc=
+e
+> > > kmemleak can't find it).
+> >=20
+> > I have already sent that exact patch.
+>=20
+> OK. I can now confirm that it fixes the memory leak.
+
+Great, thanks for checking.
+
+johannes
+
+--=-0PUhK/GrmTISWbbafTOi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKU8JmAAoJEODzc/N7+QmaypIQAMSKA3v2RAeggGyjGvQphO46
+aS9Na8t0aNrQIGGiThPI8dFpP5A9oe5RBuNusn0SXR2pw1yPY2ZP0h4fgAZ0GVuR
+o14L6F1eAjO0xZv/dNaeFtItqi2kDaHl962LK5S/zZ2dKBtSjuMIX5qE9brMbDiF
+585VzuF03AJnKN4Ahd/ao6OqxYkNZS/y4mlqRpTzSAlqD0yJw3cXW8B7odSw184R
+hzHW/oOaTMXHkN5r5lEGoz/JclzyHJqK0W76IJNxNNP/Xv5sY60HzlErkIi4ZiRZ
+9QGXQwnBpTTFEOA0Wu3637K+q06MFlRlyGqhsnqFVcZkLOhJ4UqtHM2AfHXWWb2H
+PJkCU6ZPprEu9vZnolXFl8WHCJFpjELONWIBv3nBEumnOSUCWQebqy9RRVSbJDTp
+wp9fIbSrgU9mov6WHCK4IFLiiX+Z2ZpC5V+kQdLj8cfPfTQVyc98cC9dndOSWmmA
+YegaeqoRVq+moAM+XnzJjBlz+HbZW744gG9d5cBZZOXX+aGW/FNPyX2e31XXGVp5
+KHxH1glyLRlyOVOPOV7MRnWEdKMHBaq5Z4y3rRTEZPQY9kSJWezLuk564rpvqgGp
+GhEpUKDUzz1tQwQtxY4+M4RGTCcRmEabM1TPuiNUn01AHRwRMP7yKtfBumGqESV6
+YHQ47UlmUh3YW8gKhoG2
+=w21r
+-----END PGP SIGNATURE-----
+
+--=-0PUhK/GrmTISWbbafTOi--
+
