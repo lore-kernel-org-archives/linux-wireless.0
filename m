@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55295 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbZG2WKg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57134 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754975AbZGGVmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 18:10:36 -0400
-Message-ID: <4A70C8D2.5050100@candelatech.com>
-Date: Wed, 29 Jul 2009 15:10:26 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com> <1248903902.8925.1.camel@johannes.local>
-In-Reply-To: <1248903902.8925.1.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 7 Jul 2009 17:42:03 -0400
+Subject: [PATCH] cfg80211: fix race in giwrate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 07 Jul 2009 23:41:27 +0200
+Message-Id: <1247002887.4755.48.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2009 02:45 PM, Johannes Berg wrote:
-> On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
->> From: Reinette Chatre<reinette.chatre@intel.com>
->>
->> The connection monitor currently relies on probe requests paired
->> with probe responses to ensure that a connection is alive. This is
->> fragile in some environments where probe responses can get lost.
->> When we receive beacons we can also consider the connection to be
->> alive, so cancel connection poll instance when we receive a beacon.
->>
->> The debug message "cancelling probereq poll due to a received beacon"
->> is removed as part of this change as this case is hit very often after
->> the above change and debug log receives significant number of these messages.
->
-> Not doing that was actually intentional -- we want to know whether or
-> not the connection is working both ways, not just whether we can receive
-> frames. This can certainly be improved, but I'm not sure this is the
-> best approach.
->
-> johannes
+cfg80211_wext_giwrate doesn't lock the wdev, so it
+cannot access current_bss race-free. Also, there's
+little point in trying to ask the driver for an AP
+that it never told us about, so avoid that case.
 
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/wext-compat.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-While poking in this code, I think I found a logic bug:
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-07-07 23:39:11.000000000 +0200
+@@ -1127,7 +1127,7 @@ int cfg80211_wext_giwrate(struct net_dev
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+ 	/* we are under RTNL - globally locked - so can use a static struct */
+ 	static struct station_info sinfo;
+-	u8 *addr;
++	u8 addr[ETH_ALEN];
+ 	int err;
+ 
+ 	if (wdev->iftype != NL80211_IFTYPE_STATION)
+@@ -1136,12 +1136,15 @@ int cfg80211_wext_giwrate(struct net_dev
+ 	if (!rdev->ops->get_station)
+ 		return -EOPNOTSUPP;
+ 
++	err = 0;
++	wdev_lock(wdev);
+ 	if (wdev->current_bss)
+-		addr = wdev->current_bss->pub.bssid;
+-	else if (wdev->wext.connect.bssid)
+-		addr = wdev->wext.connect.bssid;
++		memcpy(addr, wdev->current_bss->pub.bssid, ETH_ALEN);
+ 	else
+-		return -EOPNOTSUPP;
++		err = -EOPNOTSUPP;
++	wdev_unlock(wdev);
++	if (err)
++		return err;
+ 
+ 	err = rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo);
+ 	if (err)
 
-In mlme.c ieee80211_associated, there are several places that do a mod-timer,
-and then goto out.  But, out: just does a mod timer again blindly.
-
-Am I missing something, or is this just wrong?
-
-....
-		mod_timer(&ifmgd->timer, jiffies + IEEE80211_PROBE_WAIT);
-		goto out;
-	}
-
-	if (time_after(jiffies, last_rx + IEEE80211_PROBE_IDLE_TIME)) {
-		ifmgd->flags |= IEEE80211_STA_PROBEREQ_POLL;
-		mutex_lock(&local->iflist_mtx);
-		ieee80211_recalc_ps(local, -1);
-		mutex_unlock(&local->iflist_mtx);
-		ieee80211_send_probe_req(sdata, ifmgd->bssid, ifmgd->ssid,
-					 ifmgd->ssid_len, NULL, 0);
-	}
-
-  out:
-	if (!disassoc)
-		mod_timer(&ifmgd->timer,
-			  jiffies + IEEE80211_MONITORING_INTERVAL);
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
