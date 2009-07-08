@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:55418 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbZGYU4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 16:56:13 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [Acpi4asus-user] [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-Date: Sat, 25 Jul 2009 22:56:43 +0200
-Cc: acpi4asus-user@lists.sourceforge.net,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>
-References: <4A5716AA.5000903@ph.tum.de> <507E47A184%linux@youmustbejoking.demon.co.uk> <1247262952.26071.1.camel@johannes.local>
-In-Reply-To: <1247262952.26071.1.camel@johannes.local>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52136 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbZGHNAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2009 09:00:55 -0400
+Date: Wed, 8 Jul 2009 08:57:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Valentin Manea <linux-wireless@mrs.ro>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	David Ross <dave@antacs.com>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and broadcast frames
+Message-ID: <20090708125727.GC4253@tuxdriver.com>
+References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com> <4A4B056B.9000602@mrs.ro> <43e72e890907011033r52c4256dtecf603f56213a825@mail.gmail.com> <4A530131.9050207@mrs.ro> <4A532D3C.5060601@antacs.com> <20090707144851.GA2768@tuxdriver.com> <43e72e890907070915y5fd131b7l6aa845a0785f8c76@mail.gmail.com> <4A544B15.8030106@mrs.ro>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <200907252256.44570.rjw@sisk.pl>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4A544B15.8030106@mrs.ro>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 10 July 2009, Johannes Berg wrote:
-> On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
-> > I demand that Johannes Berg may or may not have written...
-> > 
-> > > Apparently there actually _are_ tools that try to set this in sysfs even
-> > > though it wasn't supposed to be used this way without claiming first.
-> > 
-> > Then it should have been documented as such. I don't see anything about this
-> > in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
-> > statement that "Kernel handles events", which isn't exactly helpful :-\
-> 
-> Oh, it's not just that rfkill was horrible, the documentation matched :)
-> All the SHOUTING in it about what you must and must not do but nothing
-> actually helpful :)
-> 
-> > > *shrug*, I don't like it, but whatever...
-> > 
-> > I do. It means that we have a nice simple text-based interface for use in
-> > scripts (for now), and a binary interface which is better suited to the likes
-> > of desktop applications.
-> 
-> Indeed, and as long as you expect to only use soft toggle... problem is
-> that you won't know whether it's soft-toggled or not while it's
-> hard-blocked (off)!
-> 
-> > > Please test & report.
-> > 
-> > With the patch applied, Bluetooth toggling is working again, so you get to
-> > add this:
-> > 
-> > Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-> 
-> Ok, John, please pick up the patch.
+On Wed, Jul 08, 2009 at 10:30:29AM +0300, Valentin Manea wrote:
+>
+>
+> On 07/07/2009 07:15 PM, Luis R. Rodriguez wrote:
+>> On Tue, Jul 7, 2009 at 7:48 AM, John W. Linville<linville@tuxdriver.com>  wrote:
+>>> On Tue, Jul 07, 2009 at 09:10:52PM +1000, David Ross wrote:
+>>>> Actually it is required to be a mutual BASIC rate (not extended rates) -
+>>>> not necessarily the "lowest possible" - David.
+>>> True, but FWIW I think all of our rate scaling algorithms choose the
+>>> lowest rate.
+>>
+>> And then iwlwifi and ath9k have their own rate control algo, and at
+>> least ath9k uses the lowest valid rate IIRC.
+>>
+>>    Luis
+>
+>
+>   I've found the code in ath9k and you are right, it always chooses the  
+> lowest rate.
+>   So, basically to transmit multicast frames at a better bitrate I have  
+> to hack the rate control algorithm, right?
 
-Is there anything going on with the patch?
+Yes.  Feel free to suggest patches for all of the available (i.e. both
+generic and device-dependent) algorithms as well.
 
-Surely it's not in -rc4.
-
-Rafael
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
