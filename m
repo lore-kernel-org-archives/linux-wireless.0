@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:47008 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbZGVBDL (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756720AbZGHDH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 21:03:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: do not stop the queues in driver stop
-Date: Tue, 21 Jul 2009 21:03:10 -0400
-Message-Id: <1248224590-16627-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 7 Jul 2009 23:07:26 -0400
+Subject: Re: Possible memory leak in net/wireless/scan.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
+References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Hw7ePegt/4QO/g8lVWSe"
+Date: Wed, 08 Jul 2009 05:06:53 +0200
+Message-Id: <1247022413.4755.56.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 will have disabled the queues for us when
-needed.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+--=-Hw7ePegt/4QO/g8lVWSe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 254e787..3436295 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2101,8 +2101,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 
--	ieee80211_stop_queues(hw);
--
- 	if (ath9k_wiphy_started(sc)) {
- 		mutex_unlock(&sc->mutex);
- 		return; /* another wiphy still in use */
--- 
-1.6.0.4
+On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
+> Hi,
+>=20
+> I'm investigating several kmemleak reports like the one below (it could
+> as well be a false positive but it needs more digging):
+
+By the way, what kind of machine do you need for kmemleak to be
+feasible? I tried booting a kernel with it in kvm on my 2 ghz laptop,
+and that was completely unfeasible.
+
+johannes
+
+--=-Hw7ePegt/4QO/g8lVWSe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKVA1JAAoJEODzc/N7+QmaPUQP/2rY9IrdF/M7ikk727ZVo1Rs
+LMovxUWcCyvK39s7tDM/yPoBZiiH0nPjUt87cEQFgMTP7omi7cFPnWQEDyiVmq5X
++drLoY2/IHAmvfRFuS5unl5OAKd18ZdAQAD1uxS/1Fj8kurVEFCmBhmrb3U9ivqE
+ZMBe22XBzI7FvqPO1pcBMJa9mZvP9tjeLLVa2Onp4HnxKwoYfveKjCy0dWAu4B57
+ULa1/IdGqg9m9/Z2sMqngUhG8zgp511LK84AA2+qFez8eRa1q/w0rx4f22ZohVCP
+GAGuARZG9gAjwaWK5dgqUz+PDXuCUcEFE2yStDoDxL2T20lvTALMCqLWhTRSn4vC
++hPn/cVk/sIVYnregh9QzxBAoKZgCDMtmNfA2ztFLzbRmNJWqIKFcFwvGOZBUqBS
+X2evYzJcb5kWVYQkfTtH+kWtmXuPwuH2/An4p9+KVVpbIpv0q6EFYsdns7lsfGBI
+9duu8lEv0mFTH6aMEVrA9HEvfi8VvQhor2bBngbIinO8eOqKZ8pd+J09W0t0MCJv
+NDfvOv3irOvPqoNHbH+jfJrPfiudrF75IVAmkCAeMF/r04iQpGHpPuEJ1sC7Sipi
+aD+ekVgttBqSzFFZSlAdBvktRsSyebxmutNCYJRDkmmle+Qfy+Z4a8HFUOvJOjKV
+5AhyU/0l2KCjb8itNRJg
+=I8C/
+-----END PGP SIGNATURE-----
+
+--=-Hw7ePegt/4QO/g8lVWSe--
 
