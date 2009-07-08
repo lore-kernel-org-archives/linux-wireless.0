@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbZGVUUr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 16:20:47 -0400
-Subject: Re: [PATCH] mac80211: fix autoloading of crypto modules for WEP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Oberritter <obi@linuxtv.org>
-Cc: linux-wireless@vger.kernel.org,
-	Herbert Xu <herbert@gondor.apana.org.au>
-In-Reply-To: <4A677126.3040907@linuxtv.org>
-References: <4A677126.3040907@linuxtv.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Sc9p44LFpVevrbvRH1Yz"
-Date: Wed, 22 Jul 2009 22:20:07 +0200
-Message-Id: <1248294007.19121.9.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mrs.ro ([207.192.75.59]:46445 "EHLO li37-59.members.linode.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753273AbZGHHag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jul 2009 03:30:36 -0400
+Message-ID: <4A544B15.8030106@mrs.ro>
+Date: Wed, 08 Jul 2009 10:30:29 +0300
+From: Valentin Manea <linux-wireless@mrs.ro>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	David Ross <dave@antacs.com>, linux-wireless@vger.kernel.org
+Subject: Re: mac80211 and broadcast frames
+References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com> 	<4A4B056B.9000602@mrs.ro> <43e72e890907011033r52c4256dtecf603f56213a825@mail.gmail.com> 	<4A530131.9050207@mrs.ro> <4A532D3C.5060601@antacs.com> <20090707144851.GA2768@tuxdriver.com> <43e72e890907070915y5fd131b7l6aa845a0785f8c76@mail.gmail.com>
+In-Reply-To: <43e72e890907070915y5fd131b7l6aa845a0785f8c76@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-Sc9p44LFpVevrbvRH1Yz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-07-22 at 22:05 +0200, Andreas Oberritter wrote:
-> If at least one of arc4 and ecb is built as a module, then autoloading
-> of the algorithm fails, because crypto_alloc_blkcipher tries to
-> request the module "ecb(arc4)", which does not exist.
->=20
-> This patch was made against 2.6.30, but should apply cleanly on top of
-> the wireless-2.6 git tree.
+On 07/07/2009 07:15 PM, Luis R. Rodriguez wrote:
+> On Tue, Jul 7, 2009 at 7:48 AM, John W. Linville<linville@tuxdriver.com>  wrote:
+>> On Tue, Jul 07, 2009 at 09:10:52PM +1000, David Ross wrote:
+>>> Actually it is required to be a mutual BASIC rate (not extended rates) -
+>>> not necessarily the "lowest possible" - David.
+>> True, but FWIW I think all of our rate scaling algorithms choose the
+>> lowest rate.
+>
+> And then iwlwifi and ath9k have their own rate control algo, and at
+> least ath9k uses the lowest valid rate IIRC.
+>
+>    Luis
 
-> +       /*
-> +        * crypto_alloc_blkcipher() will request the
-> +        * module "ecb(arc4)", which does not exist.
-> +        */
-> +#ifdef CONFIG_CRYPTO_ARC4_MODULE
-> +       request_module("arc4");
-> +#endif
-> +#ifdef CONFIG_CRYPTO_ECB_MODULE
-> +       request_module("ecb");
-> +#endif
-> +
->         local->wep_tx_tfm =3D crypto_alloc_blkcipher("ecb(arc4)", 0,
->                                                 CRYPTO_ALG_ASYNC);
 
-But it will absolutely not _be_ applied. Fix the crypto layer instead if
-it has a problem loading modules.
+   I've found the code in ath9k and you are right, it always chooses the 
+lowest rate.
+   So, basically to transmit multicast frames at a better bitrate I have 
+to hack the rate control algorithm, right?
 
-johannes
 
---=-Sc9p44LFpVevrbvRH1Yz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKZ3RxAAoJEODzc/N7+QmaZdAP/2kQhfY8l0UIrcP6FeecRmOd
-MxNwHHVI0dm8EHcf9qZlLHNHpy6yvhO0nUMe8fbG8PkVfrceV9VD0wsO2UNhxnZz
-eF+aX2g4s+BvQTC+IdmkMWkPeY1KXFCZ9LKLPto4rWmqjg67QMTKwFD5ATi+vfFr
-DZSVjbnzn/9RpIrs4zdUPyeAVX7I+0jMZb3PbWWFwEyCKf04SO0qcOsL1dcfvJAo
-f+LSHABGDFtRdwCa27mJhLYK3jl2lNp5bU7F1s0MrtFNb3C/dW/3vsh/XcZtf4EC
-2/AKNp7et0dlLkFTooaIYKObSvo7yQAUMyHw5xC7Tz/VQ1pQkGtxNBRYxp5S3+H6
-juL47P0qFhELfyNA3W/3C1aY6lrDfJm9BkJK75oTCR7moKHxFYqakagIW+fuGXPw
-MX1olvD8zoMLCt5c1J7a+EXYIDKOXZ38FGbXLXVbcST1sPZHeUzAvhYLuWyNZ3YA
-DR2P889ZMo/xhx1C+i+3daLU/jznQHhWkIwi3tcJWdC7RzbQzfM/nvXYte5EidOP
-Q0Ku7e6uQkZxqPmGV/o836yxUE5a3tFcc6wO/LghL+Jb2onNOWyTMQDn1Uml36HD
-alyH7MrmFgT7FFWigG/V7uLuNdOibvSBk/9rq1Tut8BxqUvnmZKPBwOtOYCdbfgE
-ZhrhHbYJZJ6sx+7dKybT
-=zfu3
------END PGP SIGNATURE-----
-
---=-Sc9p44LFpVevrbvRH1Yz--
-
+Thanks,
+Valentin
