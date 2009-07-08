@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.221.181]:38584 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767AbZG0PJL (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:53035 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755265AbZGHUEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 11:09:11 -0400
-Received: by qyk11 with SMTP id 11so703185qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 08:09:11 -0700 (PDT)
+	Wed, 8 Jul 2009 16:04:24 -0400
+Message-ID: <4A54FB81.30302@gmail.com>
+Date: Wed, 08 Jul 2009 22:03:13 +0200
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20090727092714.218550@gmx.net>
-References: <20090727092714.218550@gmx.net>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Mon, 27 Jul 2009 08:08:51 -0700
-Message-ID: <43e72e890907270808k5c1668f4odc7f14785615635f@mail.gmail.com>
-Subject: Re: [PATCH] compat-2.6: update for master-2009-07-24 wireless-testing
-To: Joerg Albert <jal2@gmx.de>
-Cc: linux-wireless@vger.kernel.org
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH] wireless: fix supported cards for rtl8187
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 27, 2009 at 2:27 AM, Joerg Albert<jal2@gmx.de> wrote:
-> drivers/net/usb/Makefile: remove cdc-phonet
->
-> Signed-off-by: Joerg Albert <jal2@gmx.de>
+Different revisions of WUSB54GC-EU use different chipsets -
+v2 uses rtl8187, but v3 uses Ralink RT3070.
 
-Didn't apply but applied something similar. Pushed out a new tarball.
+Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: Przemyslaw Kulczycki <azrael@autocom.pl>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Linux wireless <linux-wireless@vger.kernel.org>
+---
+ drivers/net/wireless/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-git-describe for wireless-testing.git says: v2.6.31-rc4-29150-g77206c0
-This is a bleeding edge compat-wireless release based on: master-2009-07-26
-This is compat-release: master-2009-07-26-2-g6295a8a
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 5bc00db..7d5902d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -431,7 +431,7 @@ config RTL8187
+ 	  ASUS P5B Deluxe
+ 	  Toshiba Satellite Pro series of laptops
+ 	  Asus Wireless Link
+-	  Linksys WUSB54GC-EU
++	  Linksys WUSB54GC-EU v2
+ 
+ 	  Thanks to Realtek for their support!
+ 
+-- 
+1.6.3.3
 
-  Luis
+
