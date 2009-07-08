@@ -1,469 +1,460 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34626 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755949AbZG0KDh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60644 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753931AbZGHVA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 06:03:37 -0400
-Message-Id: <20090727100244.154781962@sipsolutions.net>
-References: <20090727100149.839649874@sipsolutions.net>
-Date: Mon, 27 Jul 2009 12:01:53 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] cfg80211: self-contained wext handling where possible
-Mime-Version: 1.0
+	Wed, 8 Jul 2009 17:00:56 -0400
+Date: Wed, 8 Jul 2009 16:37:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-07-08
+Message-ID: <20090708203745.GK4253@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finally! This is what you've all been waiting for!
+Dave,
 
-This patch makes cfg80211 take care of wext emulation
-_completely_ by itself, drivers that don't need things
-cfg80211 doesn't do yet don't even need to be aware of
-wireless extensions.
-This means we can also clean up mac80211's and iwm's
-Kconfig and make it possible to build them w/o wext
-now!
+Here is a collection of bug fixes, build fixes, and minor hardware
+enablement patches intended for 2.6.31.  I don't think there is anything
+controversial.
 
-		RIP wext.
+Please let me know if there are problems!
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/iwmc3200wifi/Kconfig  |    1 
- drivers/net/wireless/iwmc3200wifi/Makefile |    2 
- drivers/net/wireless/iwmc3200wifi/iwm.h    |    2 
- drivers/net/wireless/iwmc3200wifi/netdev.c |    1 
- drivers/net/wireless/iwmc3200wifi/wext.c   |   95 ----------------------------
- net/mac80211/Kconfig                       |    1 
- net/mac80211/Makefile                      |    1 
- net/mac80211/ieee80211_i.h                 |    4 -
- net/mac80211/iface.c                       |    1 
- net/mac80211/scan.c                        |    1 
- net/mac80211/wext.c                        |   98 -----------------------------
- net/wireless/core.c                        |    3 
- net/wireless/mlme.c                        |    2 
- net/wireless/scan.c                        |    1 
- net/wireless/sme.c                         |    2 
- net/wireless/wext-compat.c                 |   40 +++++++++++
- net/wireless/wext-compat.h                 |    5 +
- 17 files changed, 54 insertions(+), 206 deletions(-)
 
---- wireless-testing.orig/net/mac80211/wext.c	2009-07-27 11:42:06.000000000 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,98 +0,0 @@
--/*
-- * Copyright 2002-2005, Instant802 Networks, Inc.
-- * Copyright 2005-2006, Devicescape Software, Inc.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--#include <linux/module.h>
--#include <linux/init.h>
--#include <linux/netdevice.h>
--#include <linux/types.h>
--#include <linux/slab.h>
--#include <linux/skbuff.h>
--#include <linux/etherdevice.h>
--#include <linux/if_arp.h>
--#include <linux/wireless.h>
--#include <net/iw_handler.h>
--#include <asm/uaccess.h>
--
--#include <net/mac80211.h>
--#include "ieee80211_i.h"
--#include "led.h"
--#include "rate.h"
--#include "wpa.h"
--#include "aes_ccm.h"
--
--
--
--/* Structures to export the Wireless Handlers */
--
--static const iw_handler ieee80211_handler[] =
--{
--	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
--	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
--	(iw_handler) NULL,				/* SIOCSIWNWID */
--	(iw_handler) NULL,				/* SIOCGIWNWID */
--	(iw_handler) cfg80211_wext_siwfreq,		/* SIOCSIWFREQ */
--	(iw_handler) cfg80211_wext_giwfreq,		/* SIOCGIWFREQ */
--	(iw_handler) cfg80211_wext_siwmode,		/* SIOCSIWMODE */
--	(iw_handler) cfg80211_wext_giwmode,		/* SIOCGIWMODE */
--	(iw_handler) NULL,				/* SIOCSIWSENS */
--	(iw_handler) NULL,				/* SIOCGIWSENS */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
--	(iw_handler) cfg80211_wext_giwrange,		/* SIOCGIWRANGE */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWPRIV */
--	(iw_handler) NULL /* kernel code */,		/* SIOCGIWPRIV */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWSTATS */
--	(iw_handler) NULL /* kernel code */,		/* SIOCGIWSTATS */
--	(iw_handler) NULL,				/* SIOCSIWSPY */
--	(iw_handler) NULL,				/* SIOCGIWSPY */
--	(iw_handler) NULL,				/* SIOCSIWTHRSPY */
--	(iw_handler) NULL,				/* SIOCGIWTHRSPY */
--	(iw_handler) cfg80211_wext_siwap,		/* SIOCSIWAP */
--	(iw_handler) cfg80211_wext_giwap,		/* SIOCGIWAP */
--	(iw_handler) cfg80211_wext_siwmlme,		/* SIOCSIWMLME */
--	(iw_handler) NULL,				/* SIOCGIWAPLIST */
--	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
--	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
--	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
--	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
--	(iw_handler) NULL,				/* SIOCSIWNICKN */
--	(iw_handler) NULL,				/* SIOCGIWNICKN */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) cfg80211_wext_siwrate,		/* SIOCSIWRATE */
--	(iw_handler) cfg80211_wext_giwrate,		/* SIOCGIWRATE */
--	(iw_handler) cfg80211_wext_siwrts,		/* SIOCSIWRTS */
--	(iw_handler) cfg80211_wext_giwrts,		/* SIOCGIWRTS */
--	(iw_handler) cfg80211_wext_siwfrag,		/* SIOCSIWFRAG */
--	(iw_handler) cfg80211_wext_giwfrag,		/* SIOCGIWFRAG */
--	(iw_handler) cfg80211_wext_siwtxpower,		/* SIOCSIWTXPOW */
--	(iw_handler) cfg80211_wext_giwtxpower,		/* SIOCGIWTXPOW */
--	(iw_handler) cfg80211_wext_siwretry,		/* SIOCSIWRETRY */
--	(iw_handler) cfg80211_wext_giwretry,		/* SIOCGIWRETRY */
--	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
--	(iw_handler) cfg80211_wext_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) cfg80211_wext_siwpower,		/* SIOCSIWPOWER */
--	(iw_handler) cfg80211_wext_giwpower,		/* SIOCGIWPOWER */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) cfg80211_wext_siwgenie,		/* SIOCSIWGENIE */
--	(iw_handler) NULL,				/* SIOCGIWGENIE */
--	(iw_handler) cfg80211_wext_siwauth,		/* SIOCSIWAUTH */
--	(iw_handler) cfg80211_wext_giwauth,		/* SIOCGIWAUTH */
--	(iw_handler) cfg80211_wext_siwencodeext,	/* SIOCSIWENCODEEXT */
--	(iw_handler) NULL,				/* SIOCGIWENCODEEXT */
--	(iw_handler) NULL,				/* SIOCSIWPMKSA */
--	(iw_handler) NULL,				/* -- hole -- */
--};
--
--const struct iw_handler_def ieee80211_iw_handler_def =
--{
--	.num_standard	= ARRAY_SIZE(ieee80211_handler),
--	.standard	= (iw_handler *) ieee80211_handler,
--	.get_wireless_stats = cfg80211_wireless_stats,
--};
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-27 11:42:06.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-07-27 11:42:14.000000000 +0200
-@@ -1397,3 +1397,43 @@ int cfg80211_wext_giwessid(struct net_de
- 	}
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 0ca1b08eba627b4245efd0f71b55a062bf163777:
+  David S. Miller (1):
+        Revert "p54: Use SKB list handling helpers instead of by-hand code."
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Andrey Yurovsky (1):
+      mac80211: fix allocation in mesh_queue_preq
+
+Clyde McPherson (2):
+      b43: Add support for 4318E
+      ssb: Add support for 4318E
+
+Hin-Tak Leung (1):
+      zd1211rw: adding SONY IFU-WLM2 (054c:0257) as a zd1211b device
+
+Jaswinder Singh Rajput (1):
+      includecheck fix: include/linux, rfkill.h
+
+Jay Sternberg (1):
+      Atheros Kconfig needs to be dependent on WLAN_80211
+
+Jiri Slaby (1):
+      Wireless: nl80211, fix lock imbalance
+
+Johannes Berg (4):
+      hp-wmi: fix rfkill bug
+      cfg80211: fix refcount leak
+      mac80211_hwsim: avoid NULL access
+      mac80211: fix docbook
+
+Larry Finger (2):
+      b43/b43legacy: fix radio LED initialization
+      p54: tx refused but queue active
+
+Luciano Coelho (1):
+      mac80211: minstrel: avoid accessing negative indices in rix_to_ndx()
+
+Pascal Terjan (1):
+      zd1211rw: 07b8:6001 is a ZD1211B
+
+Samuel Ortiz (1):
+      iwmc3200wifi: add Kconfig help
+
+Vasanthakumar Thiagarajan (1):
+      ath9k: Fix leak in tx descriptor
+
+ Documentation/DocBook/mac80211.tmpl        |    2 --
+ drivers/net/wireless/ath/Kconfig           |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c      |    9 ++++++++-
+ drivers/net/wireless/b43/b43.h             |    1 +
+ drivers/net/wireless/b43/main.c            |    7 +++++--
+ drivers/net/wireless/b43/pcmcia.c          |    1 +
+ drivers/net/wireless/b43legacy/b43legacy.h |    1 +
+ drivers/net/wireless/b43legacy/main.c      |    7 +++++--
+ drivers/net/wireless/iwmc3200wifi/Kconfig  |    9 +++++++++
+ drivers/net/wireless/mac80211_hwsim.c      |    1 +
+ drivers/net/wireless/p54/p54common.c       |    5 +++--
+ drivers/net/wireless/zd1211rw/zd_usb.c     |    3 ++-
+ drivers/platform/x86/hp-wmi.c              |    2 +-
+ drivers/ssb/pcmcia.c                       |    6 ++++--
+ include/linux/rfkill.h                     |    1 -
+ net/mac80211/mesh_hwmp.c                   |    2 +-
+ net/mac80211/rc80211_minstrel.c            |    5 ++++-
+ net/wireless/nl80211.c                     |    1 +
+ net/wireless/scan.c                        |    1 -
+ 19 files changed, 48 insertions(+), 17 deletions(-)
+
+diff --git a/Documentation/DocBook/mac80211.tmpl b/Documentation/DocBook/mac80211.tmpl
+index e369866..f3f37f1 100644
+--- a/Documentation/DocBook/mac80211.tmpl
++++ b/Documentation/DocBook/mac80211.tmpl
+@@ -184,8 +184,6 @@ usage should require reading the full document.
+ !Finclude/net/mac80211.h ieee80211_ctstoself_get
+ !Finclude/net/mac80211.h ieee80211_ctstoself_duration
+ !Finclude/net/mac80211.h ieee80211_generic_frame_duration
+-!Finclude/net/mac80211.h ieee80211_get_hdrlen_from_skb
+-!Finclude/net/mac80211.h ieee80211_hdrlen
+ !Finclude/net/mac80211.h ieee80211_wake_queue
+ !Finclude/net/mac80211.h ieee80211_stop_queue
+ !Finclude/net/mac80211.h ieee80211_wake_queues
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index d26e7b4..eb0337c 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -1,5 +1,6 @@
+ config ATH_COMMON
+ 	tristate "Atheros Wireless Cards"
++	depends on WLAN_80211
+ 	depends on ATH5K || ATH9K || AR9170_USB
+ 
+ source "drivers/net/wireless/ath/ath5k/Kconfig"
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index b61a071..4ccf48e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -355,7 +355,14 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		}
+ 
+ 		if (bf_next == NULL) {
+-			INIT_LIST_HEAD(&bf_head);
++			/*
++			 * Make sure the last desc is reclaimed if it
++			 * not a holding desc.
++			 */
++			if (!bf_last->bf_stale)
++				list_move_tail(&bf->list, &bf_head);
++			else
++				INIT_LIST_HEAD(&bf_head);
+ 		} else {
+ 			ASSERT(!list_empty(bf_q));
+ 			list_move_tail(&bf->list, &bf_head);
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index f580c28..4044806 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -648,6 +648,7 @@ struct b43_wl {
+ 	u8 nr_devs;
+ 
+ 	bool radiotap_enabled;
++	bool radio_enabled;
+ 
+ 	/* The beacon we are currently using (AP or IBSS mode).
+ 	 * This beacon stuff is protected by the irq_lock. */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 6456afe..e71c8d9 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -3497,8 +3497,8 @@ static int b43_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (phy->ops->set_rx_antenna)
+ 		phy->ops->set_rx_antenna(dev, antenna);
+ 
+-	if (!!conf->radio_enabled != phy->radio_on) {
+-		if (conf->radio_enabled) {
++	if (wl->radio_enabled != phy->radio_on) {
++		if (wl->radio_enabled) {
+ 			b43_software_rfkill(dev, false);
+ 			b43info(dev->wl, "Radio turned on by software\n");
+ 			if (!dev->radio_hw_enable) {
+@@ -4339,6 +4339,7 @@ static int b43_op_start(struct ieee80211_hw *hw)
+ 	wl->beacon0_uploaded = 0;
+ 	wl->beacon1_uploaded = 0;
+ 	wl->beacon_templates_virgin = 1;
++	wl->radio_enabled = 1;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -4378,6 +4379,7 @@ static void b43_op_stop(struct ieee80211_hw *hw)
+ 	if (b43_status(dev) >= B43_STAT_STARTED)
+ 		b43_wireless_core_stop(dev);
+ 	b43_wireless_core_exit(dev);
++	wl->radio_enabled = 0;
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	cancel_work_sync(&(wl->txpower_adjust_work));
+@@ -4560,6 +4562,7 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
+ 		B43_WARN_ON(1);
+ 
+ 	dev->phy.gmode = have_2ghz_phy;
++	dev->phy.radio_on = 1;
+ 	tmp = dev->phy.gmode ? B43_TMSLOW_GMODE : 0;
+ 	b43_wireless_core_reset(dev, tmp);
+ 
+diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
+index 3cfc303..6c3a749 100644
+--- a/drivers/net/wireless/b43/pcmcia.c
++++ b/drivers/net/wireless/b43/pcmcia.c
+@@ -35,6 +35,7 @@
+ 
+ static /*const */ struct pcmcia_device_id b43_pcmcia_tbl[] = {
+ 	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
++	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
+ 	PCMCIA_DEVICE_NULL,
+ };
+ 
+diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
+index 77fda14..038baa8 100644
+--- a/drivers/net/wireless/b43legacy/b43legacy.h
++++ b/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -607,6 +607,7 @@ struct b43legacy_wl {
+ 	u8 nr_devs;
+ 
+ 	bool radiotap_enabled;
++	bool radio_enabled;
+ 
+ 	/* The beacon we are currently using (AP or IBSS mode).
+ 	 * This beacon stuff is protected by the irq_lock. */
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index e5136fb..c4973c1 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -2689,8 +2689,8 @@ static int b43legacy_op_dev_config(struct ieee80211_hw *hw,
+ 	/* Antennas for RX and management frame TX. */
+ 	b43legacy_mgmtframe_txantenna(dev, antenna_tx);
+ 
+-	if (!!conf->radio_enabled != phy->radio_on) {
+-		if (conf->radio_enabled) {
++	if (wl->radio_enabled != phy->radio_on) {
++		if (wl->radio_enabled) {
+ 			b43legacy_radio_turn_on(dev);
+ 			b43legacyinfo(dev->wl, "Radio turned on by software\n");
+ 			if (!dev->radio_hw_enable)
+@@ -3441,6 +3441,7 @@ static int b43legacy_op_start(struct ieee80211_hw *hw)
+ 	wl->beacon0_uploaded = 0;
+ 	wl->beacon1_uploaded = 0;
+ 	wl->beacon_templates_virgin = 1;
++	wl->radio_enabled = 1;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -3479,6 +3480,7 @@ static void b43legacy_op_stop(struct ieee80211_hw *hw)
+ 	if (b43legacy_status(dev) >= B43legacy_STAT_STARTED)
+ 		b43legacy_wireless_core_stop(dev);
+ 	b43legacy_wireless_core_exit(dev);
++	wl->radio_enabled = 0;
+ 	mutex_unlock(&wl->mutex);
  }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
-+
-+static const iw_handler cfg80211_handlers[] = {
-+	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
-+	[IW_IOCTL_IDX(SIOCSIWFREQ)]	= (iw_handler) cfg80211_wext_siwfreq,
-+	[IW_IOCTL_IDX(SIOCGIWFREQ)]	= (iw_handler) cfg80211_wext_giwfreq,
-+	[IW_IOCTL_IDX(SIOCSIWMODE)]	= (iw_handler) cfg80211_wext_siwmode,
-+	[IW_IOCTL_IDX(SIOCGIWMODE)]	= (iw_handler) cfg80211_wext_giwmode,
-+	[IW_IOCTL_IDX(SIOCGIWRANGE)]	= (iw_handler) cfg80211_wext_giwrange,
-+	[IW_IOCTL_IDX(SIOCSIWAP)]	= (iw_handler) cfg80211_wext_siwap,
-+	[IW_IOCTL_IDX(SIOCGIWAP)]	= (iw_handler) cfg80211_wext_giwap,
-+	[IW_IOCTL_IDX(SIOCSIWMLME)]	= (iw_handler) cfg80211_wext_siwmlme,
-+	[IW_IOCTL_IDX(SIOCSIWSCAN)]	= (iw_handler) cfg80211_wext_siwscan,
-+	[IW_IOCTL_IDX(SIOCGIWSCAN)]	= (iw_handler) cfg80211_wext_giwscan,
-+	[IW_IOCTL_IDX(SIOCSIWESSID)]	= (iw_handler) cfg80211_wext_siwessid,
-+	[IW_IOCTL_IDX(SIOCGIWESSID)]	= (iw_handler) cfg80211_wext_giwessid,
-+	[IW_IOCTL_IDX(SIOCSIWRATE)]	= (iw_handler) cfg80211_wext_siwrate,
-+	[IW_IOCTL_IDX(SIOCGIWRATE)]	= (iw_handler) cfg80211_wext_giwrate,
-+	[IW_IOCTL_IDX(SIOCSIWRTS)]	= (iw_handler) cfg80211_wext_siwrts,
-+	[IW_IOCTL_IDX(SIOCGIWRTS)]	= (iw_handler) cfg80211_wext_giwrts,
-+	[IW_IOCTL_IDX(SIOCSIWFRAG)]	= (iw_handler) cfg80211_wext_siwfrag,
-+	[IW_IOCTL_IDX(SIOCGIWFRAG)]	= (iw_handler) cfg80211_wext_giwfrag,
-+	[IW_IOCTL_IDX(SIOCSIWTXPOW)]	= (iw_handler) cfg80211_wext_siwtxpower,
-+	[IW_IOCTL_IDX(SIOCGIWTXPOW)]	= (iw_handler) cfg80211_wext_giwtxpower,
-+	[IW_IOCTL_IDX(SIOCSIWRETRY)]	= (iw_handler) cfg80211_wext_siwretry,
-+	[IW_IOCTL_IDX(SIOCGIWRETRY)]	= (iw_handler) cfg80211_wext_giwretry,
-+	[IW_IOCTL_IDX(SIOCSIWENCODE)]	= (iw_handler) cfg80211_wext_siwencode,
-+	[IW_IOCTL_IDX(SIOCGIWENCODE)]	= (iw_handler) cfg80211_wext_giwencode,
-+	[IW_IOCTL_IDX(SIOCSIWPOWER)]	= (iw_handler) cfg80211_wext_siwpower,
-+	[IW_IOCTL_IDX(SIOCGIWPOWER)]	= (iw_handler) cfg80211_wext_giwpower,
-+	[IW_IOCTL_IDX(SIOCSIWGENIE)]	= (iw_handler) cfg80211_wext_siwgenie,
-+	[IW_IOCTL_IDX(SIOCSIWAUTH)]	= (iw_handler) cfg80211_wext_siwauth,
-+	[IW_IOCTL_IDX(SIOCGIWAUTH)]	= (iw_handler) cfg80211_wext_giwauth,
-+	[IW_IOCTL_IDX(SIOCSIWENCODEEXT)]= (iw_handler) cfg80211_wext_siwencodeext,
-+};
-+
-+const struct iw_handler_def cfg80211_wext_handler = {
-+	.num_standard		= ARRAY_SIZE(cfg80211_handlers),
-+	.standard		= cfg80211_handlers,
-+	.get_wireless_stats = cfg80211_wireless_stats,
-+};
---- wireless-testing.orig/net/wireless/wext-compat.h	2009-07-27 11:42:06.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.h	2009-07-27 11:42:14.000000000 +0200
-@@ -1,6 +1,9 @@
- #ifndef __WEXT_COMPAT
- #define __WEXT_COMPAT
  
-+#include <net/iw_handler.h>
-+#include <linux/wireless.h>
-+
- int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
- 			       struct iw_request_info *info,
- 			       struct iw_freq *freq, char *extra);
-@@ -42,4 +45,6 @@ int cfg80211_mgd_wext_giwessid(struct ne
- struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
- 					     struct iw_freq *freq);
+@@ -3620,6 +3622,7 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
+ 		have_bphy = 1;
  
-+
-+extern const struct iw_handler_def cfg80211_wext_handler;
- #endif /* __WEXT_COMPAT */
---- wireless-testing.orig/net/mac80211/Kconfig	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/mac80211/Kconfig	2009-07-27 11:42:14.000000000 +0200
-@@ -6,7 +6,6 @@ config MAC80211
- 	select CRYPTO_ARC4
- 	select CRYPTO_AES
- 	select CRC32
--	select WIRELESS_EXT
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
---- wireless-testing.orig/net/mac80211/Makefile	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/mac80211/Makefile	2009-07-27 11:42:14.000000000 +0200
-@@ -3,7 +3,6 @@ obj-$(CONFIG_MAC80211) += mac80211.o
- # mac80211 objects
- mac80211-y := \
- 	main.o \
--	wext.o \
- 	sta_info.o \
- 	wep.o \
- 	wpa.o \
---- wireless-testing.orig/net/mac80211/scan.c	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-07-27 11:42:15.000000000 +0200
-@@ -18,7 +18,6 @@
- #include <linux/if_arp.h>
- #include <linux/rtnetlink.h>
- #include <net/mac80211.h>
--#include <net/iw_handler.h>
+ 	dev->phy.gmode = (have_gphy || have_bphy);
++	dev->phy.radio_on = 1;
+ 	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
+ 	b43legacy_wireless_core_reset(dev, tmp);
  
- #include "ieee80211_i.h"
- #include "driver-ops.h"
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2009-07-27 11:42:15.000000000 +0200
-@@ -24,7 +24,6 @@
- #include <linux/spinlock.h>
- #include <linux/etherdevice.h>
- #include <net/cfg80211.h>
--#include <net/iw_handler.h>
- #include <net/mac80211.h>
- #include "key.h"
- #include "sta_info.h"
-@@ -951,9 +950,6 @@ void ieee80211_bss_info_change_notify(st
- void ieee80211_configure_filter(struct ieee80211_local *local);
- u32 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
- 
--/* wireless extensions */
--extern const struct iw_handler_def ieee80211_iw_handler_def;
--
- /* STA code */
- void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata);
- int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
---- wireless-testing.orig/net/mac80211/iface.c	2009-07-25 10:45:14.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-07-27 11:42:15.000000000 +0200
-@@ -684,7 +684,6 @@ static void ieee80211_if_setup(struct ne
- {
- 	ether_setup(dev);
- 	dev->netdev_ops = &ieee80211_dataif_ops;
--	dev->wireless_handlers = &ieee80211_iw_handler_def;
- 	dev->destructor = free_netdev;
- }
- 
---- wireless-testing.orig/net/wireless/scan.c	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2009-07-27 11:42:15.000000000 +0200
-@@ -14,6 +14,7 @@
- #include <net/iw_handler.h>
- #include "core.h"
- #include "nl80211.h"
-+#include "wext-compat.h"
- 
- #define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
- 
---- wireless-testing.orig/net/wireless/core.c	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-07-27 11:42:15.000000000 +0200
-@@ -19,6 +19,7 @@
- #include "core.h"
- #include "sysfs.h"
- #include "debugfs.h"
-+#include "wext-compat.h"
- 
- /* name for sysfs, %d is appended */
- #define PHY_NAME "phy"
-@@ -665,6 +666,8 @@ static int cfg80211_netdev_notifier_call
- 		wdev->sme_state = CFG80211_SME_IDLE;
- 		mutex_unlock(&rdev->devlist_mtx);
- #ifdef CONFIG_WIRELESS_EXT
-+		if (!dev->wireless_handlers)
-+			dev->wireless_handlers = &cfg80211_wext_handler;
- 		wdev->wext.default_key = -1;
- 		wdev->wext.default_mgmt_key = -1;
- 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
---- wireless-testing.orig/net/wireless/sme.c	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/net/wireless/sme.c	2009-07-27 11:42:15.000000000 +0200
-@@ -8,6 +8,8 @@
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
- #include <linux/workqueue.h>
-+#include <linux/wireless.h>
-+#include <net/iw_handler.h>
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
- #include "nl80211.h"
---- wireless-testing.orig/net/wireless/mlme.c	2009-07-27 11:42:03.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2009-07-27 11:42:15.000000000 +0200
-@@ -8,7 +8,9 @@
- #include <linux/module.h>
- #include <linux/netdevice.h>
- #include <linux/nl80211.h>
-+#include <linux/wireless.h>
- #include <net/cfg80211.h>
-+#include <net/iw_handler.h>
- #include "core.h"
- #include "nl80211.h"
- 
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/Makefile	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/Makefile	2009-07-27 11:42:15.000000000 +0200
-@@ -1,5 +1,5 @@
- obj-$(CONFIG_IWM) := iwmc3200wifi.o
- iwmc3200wifi-objs += main.o netdev.o rx.o tx.o sdio.o hal.o fw.o
--iwmc3200wifi-objs += commands.o wext.o cfg80211.o eeprom.o
-+iwmc3200wifi-objs += commands.o cfg80211.o eeprom.o
- 
- iwmc3200wifi-$(CONFIG_IWM_DEBUG) += debugfs.o
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/iwm.h	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/iwm.h	2009-07-27 11:42:15.000000000 +0200
-@@ -306,8 +306,6 @@ static inline void *iwm_private(struct i
- #define skb_to_rx_info(s) ((struct iwm_rx_info *)(s->cb))
- #define skb_to_tx_info(s) ((struct iwm_tx_info *)s->cb)
- 
--extern const struct iw_handler_def iwm_iw_handler_def;
--
- void *iwm_if_alloc(int sizeof_bus, struct device *dev,
- 		   struct iwm_if_ops *if_ops);
- void iwm_if_free(struct iwm_priv *iwm);
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-27 11:42:15.000000000 +0200
-@@ -123,7 +123,6 @@ void *iwm_if_alloc(int sizeof_bus, struc
- 	}
- 
- 	ndev->netdev_ops = &iwm_netdev_ops;
--	ndev->wireless_handlers = &iwm_iw_handler_def;
- 	ndev->ieee80211_ptr = wdev;
- 	SET_NETDEV_DEV(ndev, wiphy_dev(wdev->wiphy));
- 	wdev->netdev = ndev;
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/wext.c	2009-07-27 11:42:06.000000000 +0200
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,95 +0,0 @@
--/*
-- * Intel Wireless Multicomm 3200 WiFi driver
-- *
-- * Copyright (C) 2009 Intel Corporation <ilw@linux.intel.com>
-- * Samuel Ortiz <samuel.ortiz@intel.com>
-- * Zhu Yi <yi.zhu@intel.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License version
-- * 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-- * 02110-1301, USA.
-- *
-- */
--
--#include <linux/wireless.h>
--#include <net/cfg80211.h>
--
--#include "iwm.h"
--#include "commands.h"
--
--static const iw_handler iwm_handlers[] =
--{
--	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
--	(iw_handler) cfg80211_wext_giwname,		/* SIOCGIWNAME */
--	(iw_handler) NULL,				/* SIOCSIWNWID */
--	(iw_handler) NULL,				/* SIOCGIWNWID */
--	(iw_handler) cfg80211_wext_siwfreq,		/* SIOCSIWFREQ */
--	(iw_handler) cfg80211_wext_giwfreq,		/* SIOCGIWFREQ */
--	(iw_handler) cfg80211_wext_siwmode,		/* SIOCSIWMODE */
--	(iw_handler) cfg80211_wext_giwmode,		/* SIOCGIWMODE */
--	(iw_handler) NULL,				/* SIOCSIWSENS */
--	(iw_handler) NULL,				/* SIOCGIWSENS */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWRANGE */
--	(iw_handler) cfg80211_wext_giwrange,		/* SIOCGIWRANGE */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWPRIV */
--	(iw_handler) NULL /* kernel code */,		/* SIOCGIWPRIV */
--	(iw_handler) NULL /* not used */,		/* SIOCSIWSTATS */
--	(iw_handler) NULL /* kernel code */,		/* SIOCGIWSTATS */
--	(iw_handler) NULL,				/* SIOCSIWSPY */
--	(iw_handler) NULL,				/* SIOCGIWSPY */
--	(iw_handler) NULL,				/* SIOCSIWTHRSPY */
--	(iw_handler) NULL,				/* SIOCGIWTHRSPY */
--	(iw_handler) cfg80211_wext_siwap,		/* SIOCSIWAP */
--	(iw_handler) cfg80211_wext_giwap,		/* SIOCGIWAP */
--	(iw_handler) NULL,			        /* SIOCSIWMLME */
--	(iw_handler) NULL,				/* SIOCGIWAPLIST */
--	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
--	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
--	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
--	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
--	(iw_handler) NULL,				/* SIOCSIWNICKN */
--	(iw_handler) NULL,				/* SIOCGIWNICKN */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* SIOCSIWRATE */
--	(iw_handler) cfg80211_wext_giwrate,		/* SIOCGIWRATE */
--	(iw_handler) cfg80211_wext_siwrts,		/* SIOCSIWRTS */
--	(iw_handler) cfg80211_wext_giwrts,		/* SIOCGIWRTS */
--	(iw_handler) cfg80211_wext_siwfrag,	        /* SIOCSIWFRAG */
--	(iw_handler) cfg80211_wext_giwfrag,		/* SIOCGIWFRAG */
--	(iw_handler) cfg80211_wext_siwtxpower,		/* SIOCSIWTXPOW */
--	(iw_handler) cfg80211_wext_giwtxpower,		/* SIOCGIWTXPOW */
--	(iw_handler) NULL,				/* SIOCSIWRETRY */
--	(iw_handler) NULL,				/* SIOCGIWRETRY */
--	(iw_handler) cfg80211_wext_siwencode,		/* SIOCSIWENCODE */
--	(iw_handler) cfg80211_wext_giwencode,		/* SIOCGIWENCODE */
--	(iw_handler) cfg80211_wext_siwpower,		/* SIOCSIWPOWER */
--	(iw_handler) cfg80211_wext_giwpower,		/* SIOCGIWPOWER */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) NULL,				/* -- hole -- */
--	(iw_handler) cfg80211_wext_siwgenie,            /* SIOCSIWGENIE */
--	(iw_handler) NULL,				/* SIOCGIWGENIE */
--	(iw_handler) cfg80211_wext_siwauth,		/* SIOCSIWAUTH */
--	(iw_handler) cfg80211_wext_giwauth,		/* SIOCGIWAUTH */
--	(iw_handler) cfg80211_wext_siwencodeext,	/* SIOCSIWENCODEEXT */
--	(iw_handler) NULL,				/* SIOCGIWENCODEEXT */
--	(iw_handler) NULL,				/* SIOCSIWPMKSA */
--	(iw_handler) NULL,				/* -- hole -- */
--};
--
--const struct iw_handler_def iwm_iw_handler_def = {
--	.num_standard	= ARRAY_SIZE(iwm_handlers),
--	.standard	= (iw_handler *) iwm_handlers,
--	.get_wireless_stats = cfg80211_wireless_stats,
--};
--
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/Kconfig	2009-07-25 10:45:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/Kconfig	2009-07-27 11:42:15.000000000 +0200
-@@ -2,7 +2,6 @@ config IWM
- 	tristate "Intel Wireless Multicomm 3200 WiFi driver"
- 	depends on MMC && WLAN_80211 && EXPERIMENTAL
+diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
+index 1eccb6d..030401d 100644
+--- a/drivers/net/wireless/iwmc3200wifi/Kconfig
++++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
+@@ -4,6 +4,15 @@ config IWM
  	depends on CFG80211
--	select WIRELESS_EXT
+ 	select WIRELESS_EXT
  	select FW_LOADER
- 	help
- 	  The Intel Wireless Multicomm 3200 hardware is a combo
-
++	help
++	  The Intel Wireless Multicomm 3200 hardware is a combo
++	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
++	  runs over SDIO and is typically found on Moorestown
++	  based platform. This driver takes care of the 802.11
++	  part, which is a fullmac one.
++
++	  If you choose to build it as a module, it'll be called
++	  iwmc3200wifi.ko.
+ 
+ config IWM_DEBUG
+ 	bool "Enable full debugging output in iwmc3200wifi"
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index e789c6e..a111bda 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -418,6 +418,7 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 			continue;
+ 
+ 		if (!data2->started || !hwsim_ps_rx_ok(data2, skb) ||
++		    !data->channel || !data2->channel ||
+ 		    data->channel->center_freq != data2->channel->center_freq ||
+ 		    !(data->group & data2->group))
+ 			continue;
+diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
+index 48d81d9..22ca122 100644
+--- a/drivers/net/wireless/p54/p54common.c
++++ b/drivers/net/wireless/p54/p54common.c
+@@ -912,13 +912,14 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
+ 		}
+ 
+ 		__skb_unlink(entry, &priv->tx_queue);
+-		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ 		frame_len = entry->len;
+ 		entry_hdr = (struct p54_hdr *) entry->data;
+ 		entry_data = (struct p54_tx_data *) entry_hdr->data;
+-		priv->tx_stats[entry_data->hw_queue].len--;
++		if (priv->tx_stats[entry_data->hw_queue].len)
++			priv->tx_stats[entry_data->hw_queue].len--;
+ 		priv->stats.dot11ACKFailureCount += payload->tries - 1;
++		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ 		/*
+ 		 * Frames in P54_QUEUE_FWSCAN and P54_QUEUE_BEACON are
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 14a19ba..0e6e446 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -38,7 +38,6 @@ static struct usb_device_id usb_ids[] = {
+ 	/* ZD1211 */
+ 	{ USB_DEVICE(0x0ace, 0x1211), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0ace, 0xa211), .driver_info = DEVICE_ZD1211 },
+-	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x126f, 0xa006), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x6891, 0xa727), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0df6, 0x9071), .driver_info = DEVICE_ZD1211 },
+@@ -61,6 +60,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x157e, 0x300a), .driver_info = DEVICE_ZD1211 },
+ 	{ USB_DEVICE(0x0105, 0x145f), .driver_info = DEVICE_ZD1211 },
+ 	/* ZD1211B */
++	{ USB_DEVICE(0x054c, 0x0257), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0ace, 0x1215), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0ace, 0xb215), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x157e, 0x300d), .driver_info = DEVICE_ZD1211B },
+@@ -87,6 +87,7 @@ static struct usb_device_id usb_ids[] = {
+ 	{ USB_DEVICE(0x0471, 0x1237), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x07fa, 0x1196), .driver_info = DEVICE_ZD1211B },
+ 	{ USB_DEVICE(0x0df6, 0x0036), .driver_info = DEVICE_ZD1211B },
++	{ USB_DEVICE(0x07b8, 0x6001), .driver_info = DEVICE_ZD1211B },
+ 	/* "Driverless" devices that need ejecting */
+ 	{ USB_DEVICE(0x0ace, 0x2011), .driver_info = DEVICE_INSTALLER },
+ 	{ USB_DEVICE(0x0ace, 0x20ff), .driver_info = DEVICE_INSTALLER },
+diff --git a/drivers/platform/x86/hp-wmi.c b/drivers/platform/x86/hp-wmi.c
+index 4ac2311..ca50856 100644
+--- a/drivers/platform/x86/hp-wmi.c
++++ b/drivers/platform/x86/hp-wmi.c
+@@ -171,7 +171,7 @@ static int hp_wmi_tablet_state(void)
+ static int hp_wmi_set_block(void *data, bool blocked)
+ {
+ 	unsigned long b = (unsigned long) data;
+-	int query = BIT(b + 8) | ((!!blocked) << b);
++	int query = BIT(b + 8) | ((!blocked) << b);
+ 
+ 	return hp_wmi_perform_query(HPWMI_WIRELESS_QUERY, 1, query);
+ }
+diff --git a/drivers/ssb/pcmcia.c b/drivers/ssb/pcmcia.c
+index fbfadba..d288608 100644
+--- a/drivers/ssb/pcmcia.c
++++ b/drivers/ssb/pcmcia.c
+@@ -678,7 +678,8 @@ int ssb_pcmcia_get_invariants(struct ssb_bus *bus,
+ 			sprom->board_rev = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_PA:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 9,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 9) &&
++				      (tuple.TupleDataLen != 10),
+ 				      "pa tpl size");
+ 			sprom->pa0b0 = tuple.TupleData[1] |
+ 				 ((u16)tuple.TupleData[2] << 8);
+@@ -718,7 +719,8 @@ int ssb_pcmcia_get_invariants(struct ssb_bus *bus,
+ 			sprom->antenna_gain.ghz5.a3 = tuple.TupleData[1];
+ 			break;
+ 		case SSB_PCMCIA_CIS_BFLAGS:
+-			GOTO_ERROR_ON(tuple.TupleDataLen != 3,
++			GOTO_ERROR_ON((tuple.TupleDataLen != 3) &&
++				      (tuple.TupleDataLen != 5),
+ 				      "bfl tpl size");
+ 			sprom->boardflags_lo = tuple.TupleData[1] |
+ 					 ((u16)tuple.TupleData[2] << 8);
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index e73e242..2ce2983 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -99,7 +99,6 @@ enum rfkill_user_states {
+ #undef RFKILL_STATE_UNBLOCKED
+ #undef RFKILL_STATE_HARD_BLOCKED
+ 
+-#include <linux/types.h>
+ #include <linux/kernel.h>
+ #include <linux/list.h>
+ #include <linux/mutex.h>
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 003cb47..f49ef28 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -637,7 +637,7 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_preq_queue *preq_node;
+ 
+-	preq_node = kmalloc(sizeof(struct mesh_preq_queue), GFP_KERNEL);
++	preq_node = kmalloc(sizeof(struct mesh_preq_queue), GFP_ATOMIC);
+ 	if (!preq_node) {
+ 		printk(KERN_DEBUG "Mesh HWMP: could not allocate PREQ node\n");
+ 		return;
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index b218b98..37771ab 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+ 	for (i = rix; i >= 0; i--)
+ 		if (mi->r[i].rix == rix)
+ 			break;
+-	WARN_ON(mi->r[i].rix != rix);
++	WARN_ON(i < 0);
+ 	return i;
+ }
+ 
+@@ -181,6 +181,9 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			break;
+ 
+ 		ndx = rix_to_ndx(mi, ar[i].idx);
++		if (ndx < 0)
++			continue;
++
+ 		mi->r[ndx].attempts += ar[i].count;
+ 
+ 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 241bddd..43bdb13 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -447,6 +447,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	rdev = __cfg80211_drv_from_info(info);
+ 	if (IS_ERR(rdev)) {
++		mutex_unlock(&cfg80211_mutex);
+ 		result = PTR_ERR(rdev);
+ 		goto unlock;
+ 	}
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index e95b638..f8e71b3 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -366,7 +366,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+ 	found = rb_find_bss(dev, res);
+ 
+ 	if (found) {
+-		kref_get(&found->ref);
+ 		found->pub.beacon_interval = res->pub.beacon_interval;
+ 		found->pub.tsf = res->pub.tsf;
+ 		found->pub.signal = res->pub.signal;
 -- 
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
