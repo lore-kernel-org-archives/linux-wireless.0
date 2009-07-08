@@ -1,89 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44259 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbZGCIBk (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:41469 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823AbZGHHc3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 04:01:40 -0400
-Subject: Re: [PATCH] cfg80211: check for current_bss from giwrate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090703000044.GB4143@sortiz.org>
-References: <20090701192641.072258140@sipsolutions.net>
-	 <20090701193421.155074452@sipsolutions.net>
-	 <20090703000044.GB4143@sortiz.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7RgT68tYVsRAQVtKT05R"
-Date: Fri, 03 Jul 2009 10:01:36 +0200
-Message-Id: <1246608096.16770.52.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 8 Jul 2009 03:32:29 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: BUG REPORT: libertas causing kernel lockups
+Date: Wed, 8 Jul 2009 09:32:17 +0200
+Cc: Alexander Barinov <alex.barinov@gmail.com>
+References: <20090704130346.01b2e869@dream> <200907070859.39413.hs4233@mail.mn-solutions.de> <20090708003734.0d57b389@dream>
+In-Reply-To: <20090708003734.0d57b389@dream>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907080932.17728.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> Sorry for asking a potentially stupid question as I am no way
+> a wireless hardware expert, but can this bug be caused by
+> wrong firmware version?
 
---=-7RgT68tYVsRAQVtKT05R
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+AFAIK not.
 
-On Fri, 2009-07-03 at 02:00 +0200, Samuel Ortiz wrote:
-> When connecting to an ESSID manually, we may not set the BSSID, and thus
-> wdev->wext.connect.bssid will be NULL.
-> wdev->current_bss is always updated when a connection is established so w=
-e
-> should check it first.
+> BTW, it is really hard to find a patch you are talking about
+> in the archive. 
 
-Indeed, good catch
+It's dead easy:
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+$ cd linux-git
+$ git show 87057825824973f29cf2f37cff1e549170b2d7e6
 
-> Signed-off-by: Samuel Ortiz <samuel.ortiz@intel.com>
-> ---
->  net/wireless/wext-compat.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
->=20
-> Index: iwm-2.6/net/wireless/wext-compat.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- iwm-2.6.orig/net/wireless/wext-compat.c	2009-07-03 01:40:09.000000000=
- +0200
-> +++ iwm-2.6/net/wireless/wext-compat.c	2009-07-03 01:40:18.000000000 +020=
-0
-> @@ -1137,8 +1137,11 @@ int cfg80211_wext_giwrate(struct net_dev
->  	if (!rdev->ops->get_station)
->  		return -EOPNOTSUPP;
-> =20
-> -	addr =3D wdev->wext.connect.bssid;
-> -	if (!addr)
-> +	if (wdev->current_bss)
-> +		addr =3D wdev->current_bss->bssid;
-> +	else if (wdev->wext.connect.bssid)
-> +		addr =3D wdev->wext.connect.bssid;
-> +	else
->  		return -ENOTSUPP;
-> =20
->  	err =3D rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo);
+Or you can go via the web-interface: start at 
+http://git.kernel.org, search Linus' tree and you end up at 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=summary.
 
---=-7RgT68tYVsRAQVtKT05R
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Now select any commitdiff, and substitute in the URL the 
+hex-thingy from above. And voila, you're at
 
------BEGIN PGP SIGNATURE-----
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=87057825824973f29cf2f37cff1e549170b2d7e6
 
-iQIcBAABAgAGBQJKTbrdAAoJEODzc/N7+QmaRt4QAIN1TdjfLuJLUwMgDUXXP0Lb
-CfmaG7aH1Hff2FXwH3gKjykyftzgPMM7nx5I7Wa0kvmQCrlzFKjYys3SsbZo/78N
-LoUELNXR6aVUIbyzuceiWtFmhu2xjcVDSGCK4qgbJdpY1mgEsO9VkdU8DNrucEBH
-phmYCvdMmHNJ+Wsq8O58eB5hMEes3Gy6mgRgbwJl8D7I3NLAo17w1coofi+wHdCs
-bS8Jm17yj73RsHvB7NaGehTPsQF1eVyDqZE1Z+dfMD5+qmi5VkMxKFfiF3fNtspI
-e9u3L2gTBPej0Ae6NGXHk3xmoQ+Kjq9IJ8CHr2jzeBYj0tqiiynzZojLEFNxFA5t
-X3KaNKxZfbGmaUehZoFdl4PDgXZ8gB+yBjvWXBEKtPBeOnlD9LdYVWXP/3McNsNm
-UEBa7YdoglfKdobS+Q/MTRLgVVFL+NDKHAl2BBFl1nH1vpA5Y77RXtruzBbp702u
-QXUdvk+eInST2Rr9TNtF2NYvDx1DiPvfPZsP5tLfm1myeVHFOM3SYM+zbWx5bbGt
-/ORrdaux+F4dhPp911Gu6/BvVAwMp8JuK8YmSsF22JxLr0g+De09WNi38MzaXQho
-CBE8PZVIw6Xasw5nxOy/9XRr1loYa0liX8NnEMTK5XBVC35KrB99jRaruisRY0Ek
-/KJTPA+H/kfnIfewgOwr
-=BHk6
------END PGP SIGNATURE-----
 
---=-7RgT68tYVsRAQVtKT05R--
-
+-- 
+http://www.holgerschurig.de
