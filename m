@@ -1,76 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54456 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:53184 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492AbZG3Phm (ORCPT
+	with ESMTP id S1752922AbZGHKkq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 11:37:42 -0400
-Subject: Re: Ath5k/mac80211 triggers WARN_ON in kernel/softirq.c
+	Wed, 8 Jul 2009 06:40:46 -0400
+Subject: Re: [PATCH] Assign next hop address to pending mesh frames once
+ the path is resolved.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Michael Buesch <mb@bu3sch.de>, jirislaby@gmail.com,
-	mickflemm@gmail.com, lrodriguez@atheros.com,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <b6c5339f0907300745l3e7ec63eu9819503c4e7766bb@mail.gmail.com>
-References: <200907301631.50780.mb@bu3sch.de>
-	 <b6c5339f0907300745l3e7ec63eu9819503c4e7766bb@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vSths7oaWnqtS777acmC"
-Date: Thu, 30 Jul 2009 17:37:09 +0200
-Message-Id: <1248968229.16129.9.camel@johannes.local>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+In-Reply-To: <1247032403-8312-1-git-send-email-javier@cozybit.com>
+References: <>  <1247032403-8312-1-git-send-email-javier@cozybit.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UhNkLIW23wNFBIqGwkuB"
+Date: Wed, 08 Jul 2009 12:40:13 +0200
+Message-Id: <1247049613.4755.65.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-vSths7oaWnqtS777acmC
+--=-UhNkLIW23wNFBIqGwkuB
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-07-30 at 10:45 -0400, Bob Copeland wrote:
-> On Thu, Jul 30, 2009 at 10:31 AM, Michael Buesch<mb@bu3sch.de> wrote:
-> > Ath5k from today's compat-wireless triggers the following WARNing
-> > on hostapd startup.
-> > [ 1669.799870] ------------[ cut here ]------------
-> > [ 1669.799934] WARNING: at kernel/softirq.c:141 local_bh_enable_ip+0x8b=
-/0xb0()
->=20
-> because ath5k calls ieee80211_beacon_get inside a spin_lock_irqsave()
-> and this is WARN_ON_ONCE(in_irq() || irqs_disabled).
+On Tue, 2009-07-07 at 22:53 -0700, Javier Cardona wrote:
+> Regression.  Frames transmitted when a mesh path was wating to be resolve=
+d were
+> being transmitted with an invalid Receiver Address.
 
-> > [ 1669.800493]  [<ffffffff807e0fef>] _spin_unlock_bh+0xf/0x20
-> > [ 1669.800564]  [<ffffffffa0040b92>] ieee80211_beacon_get+0x2c2/0x2d0 [=
-mac80211]
->=20
-> I guess this is the first victim of spin_lock_bh conversion?
+> -	rcu_assign_pointer(mpath->next_hop, sta);
+> +	struct sk_buff *skb, *skb_first =3D NULL;
+> +	struct ieee80211_hdr *hdr;
+> +
+> +	rcu_read_lock();
+> +	mpath->next_hop =3D sta;
+> +
+> +	while ((skb =3D skb_dequeue(&mpath->frame_queue)) !=3D skb_first) {
+> +		if (!skb_first)
+> +			skb_first =3D skb;
+> +		hdr =3D (struct ieee80211_hdr *) skb->data;
+> +		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
+> +		skb_queue_tail(&mpath->frame_queue, skb);
+> +	}
+> +	if (skb_first)
+> +		skb_queue_tail(&mpath->frame_queue, skb_first);
+> +
+> +	rcu_read_unlock();
 
-Indeed. I think this means we need to convert the local->sta_lock back
-to _irqsave/restore.
+Since skb queues have a locks, why use rcu too?
 
-John, can you revert the BH patch ("mac80211: do not use irq locks where
-not necessary") and I'll send a new one with those changes removed?
+Also I think you should probably use a different pattern -- this looks
+prone to breakage, maybe something like
+
+	sk_buff_head tmpq;
+	unsigned long flags;
+
+	__skb_queue_head_init(&tmpq);
+
+	spin_lock_irqsave(&frame_queue->lock);
+
+	while (skb =3D __skb_dequeue(&frame_queue)) {
+		hdr =3D (struct ieee80211_hdr *) skb->data;
+		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
+		__skb_queue_tail(&tmpq, skb);
+	}
+
+	skb_queue_splice(&tmpq, frame_queue);
+	spin_unlock_irqrestore(&frame_queue->lock);
 
 johannes
 
---=-vSths7oaWnqtS777acmC
+--=-UhNkLIW23wNFBIqGwkuB
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKcb4iAAoJEODzc/N7+QmaydIQAMnuSGXiPhcBfvc1ouPjD0Zw
-zdFg9cxTuKPgy8WsBuBwvY8e+WkJWnv4F+w9WsyJHVQtrQ4KYBRc6uFWQW3Z02u6
-dJpbbpIklIKen1IWXo3h693nGvHum2edoVa6u7fQxmCgN6Qq0+Mev0nWixcrceFn
-t098RSr5hbAkBAlviM8xiHSb1Zyo3ZrMZVZfsiWqII+sFTJtBAEN41jCPM+wT6r5
-3E7035cv1T+LmVQhhTitn55b4XRSpTaEJ4kMmfyqUlJnR6y4G6tKryGJEcwE6ZRv
-XiEd15q8tPGKVi7AZydzYk1NwIXPYIE0fx1NI28ZFVvjhzUeEW1Jafv8nvuIty2y
-DwhA1s/3VHhFiU6rRTiPBGIsUwZ3TJK9My0sevWFlZXiDC21jTVUAZSySpqSGIFL
-P2iFnNfPXno1iKinOeiet1qKfzD5KyqL6FsaGbgqkIAOhcfGd4R0ACh5DcUKua5T
-vPQZZPK6yjgcBI2j1olZ4yL/D9SLWY+1MlhifRYzOo9VroDuCSdHqxeJDkCKGj1A
-G05KNiDzF4EPNMnk2s0qTIjrYdrDs/z5I6XRGVNhz/7oIQZ6g8cHmUB+XxDppPDJ
-Mmm670fIiXsm9+6AzmtCm877KgpdejtMDUv2MeJwOZxSF5Mi2ojIpy4t1G5Hn9xS
-nuuRI/ZOFihQWDISFX5w
-=f/jJ
+iQIcBAABAgAGBQJKVHeIAAoJEODzc/N7+QmamcAP+gIIX9eCr5/xeVRBBKjWwB0w
+G4T4jI7vK+Pd4zdfzCzg6Bt92HBZqykXdP6arxNhEAaVA6q0o4KyaFK4z1T6Q+gj
+vasWvdB9ddggVy2j86oPYEGNHJHkx6UeOpaarZXOSsY9DMSh3Iy5OiYtVCzDCFhp
+Xxri0ei70gvZ5D+GYGlM15L1Maj2MTkWGn+mbDKN/CvV9+RAgl2+ThkR8WLrWnjI
+6728mZE5cfkc0W4SWMBxPzxcrbLaqQWu5AOcpPAAHc/0W6TiwUzARshgZt8ReXsD
+UEXCBhIKG17Yz76Q4IzIv18XSUssyDBrqUvoHEWmsAkBH1xXtlgoiEcSsKIx+6ww
+sBT/MYs7vGeDgRlHIkOyDiaAEjMd/AMsa+EAvVlrsAivDWbojPdfvNiQ6cTUdfYW
+FBUk03o9E1cypJcEmovcQJXH2bwnqgVqUB2PWcgjKoZ1hXYiiDRBqaOZLubHANP9
+TQMgharAj+ZlQ5VolvRqaS/mWuHD7ixTL+tCRK5i3cgkUegeweTv2zYCJGXeKcFB
+uhtoJlWowSXWYq+9/cHqoNHCHy3hV7W7Pnz+FxYJGVLz6UbEzp3nL07RkEYU8Eup
+hQrPFmPdxvqRQvwgCZfKE6KxZy8/BrUH5i+TIkF6DtcyB1qE9/VkeLEImuBA2ueM
+wJfPemHZlPU16P8p6cYN
+=dEq0
 -----END PGP SIGNATURE-----
 
---=-vSths7oaWnqtS777acmC--
+--=-UhNkLIW23wNFBIqGwkuB--
 
