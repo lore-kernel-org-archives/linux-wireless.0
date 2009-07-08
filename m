@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:17595 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750866AbZGSNEU (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:52218 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757830AbZGHVkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 09:04:20 -0400
-Message-ID: <4A6319AA.7050700@nokia.com>
-Date: Sun, 19 Jul 2009 16:03:38 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Wed, 8 Jul 2009 17:40:10 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org
+Subject: [regression] ath5k: Overrides regulatory domain set for cfg80211
+Date: Wed, 8 Jul 2009 23:40:06 +0200
+Cc: netdev@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 MIME-Version: 1.0
-To: ext Kalle Valo <kalle.valo@iki.fi>
-CC: Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 0/8] wl1251 sdio interface
-References: <20090717184643.25883.95065.stgit@tikku> <87r5wfp1v4.fsf@litku.valot.fi>
-In-Reply-To: <87r5wfp1v4.fsf@litku.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200907082340.07787.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Kalle Valo wrote:
-> Kalle Valo <kalle.valo@iki.fi> writes:
->
->   
->> Here is v2 of Bob's wl1251 sdio patches. I have now rebased them on
->> top of wl1251/wl1271 split patches. Only compile-tested because I
->> don't have working test setup right now (neither spi or sdio), but I
->> should have access to one in two weeks.
->>     
->
-> I forgot to mention that wl1251 most probably is still broken regards to
-> bssid handling. I will fix this after my (current) vacation, unless
-> someone else is faster. To get wl1251 temporarily working, this patch
-> must be reverted:
->   
+In /etc/modprobe.d I have a file containing:
+options cfg80211 ieee80211_regdom=EU
 
-Wow! This is just what I needed to know.  I have been struggling the 
-whole of last week trying to figure out why the wl1271 driver that I'm 
-planning to submit doesn't work with the latest wireless-testing.  I've 
-been using the wl1251 from wireless-testing as a reference and I was 
-running out of ideas as to why wl1251 was working and my version of the 
-wl1271 wasn't.  So, it's very good to know that wl1251 isn't working 
-either :)
+During boot this results in:
+<snip>
+cfg80211: Using static regulatory domain info
+cfg80211: Regulatory domain: EU
+	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+	(2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+	(5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+cfg80211: Calling CRDA for country: EU
+</snip>
 
-This is the only thing that is currently preventing me from submitting 
-the wl1271 code.  Obviously I want to make sure that it works before 
-sending it for inclusion in wireless-testing...
+But with 2.6.31-rc2 I then get (the lines marked with "!" are not there 
+with .30):
+<snip>
+  ath5k 0000:02:00.0: enabling device (0000 -> 0002)
+  ath5k 0000:02:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+  ath5k 0000:02:00.0: registered as 'phy0'
+! ath: EEPROM regdomain: 0x30
+! ath: EEPROM indicates we should expect a direct regpair map
+! ath: Country alpha2 being used: AM
+! ath: Regpair used: 0x30
+  phy0: Selected rate control algorithm 'minstrel'
+  ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+  ath5k phy0: RF2112B 2GHz radio found (0x46)
+! cfg80211: Calling CRDA for country: AM
+</snip>
 
->     commit cc3ec8cb518534c1c593e5f2682710d33c903627
->     Author: Johannes Berg <johannes@sipsolutions.net>
->     Date:   Thu May 14 13:10:14 2009 +0200
->
->     mac80211: fix managed mode BSSID handling
->     
->     Currently, we will ask the driver to configure right away
->     when somebody changes the desired BSSID. That's totally
->     strange because then we will configure the driver without
->     even knowing whether the BSS exists. Change this to only
->     configure the BSSID when associated, and configure a zero
->     BSSID when not associated.
->
-> Oddly enough I can't find this patch anymore in wireless-testing, I
-> could only find a revert. I don't know what happened to it.
->   
+So it looks as if ath5k has started to override the regdomain I want.
 
-The original patch *is* there, but it has been reverted.  In any case, I 
-noticed that the change introduced by this patch is there, so I guess 
-some other patch has replaced it later.
-
-Now I need to read the archives of the linux-wireless mailing list to 
-figure out exactly what has changed and what I need to do to get wl1271 
-to work with the new API.  Or is anyone willing to give me a brief 
-summary of what the driver is expected to do with the new API? (yeah, 
-it's a sunny Sunday and I'm a bit lazy today :P)
-
--- 
 Cheers,
-Luca.
-
+FJP
