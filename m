@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:36580 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177AbZGISgW (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([193.131.176.58]:40714 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754794AbZGHIqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 14:36:22 -0400
-Received: by yxe26 with SMTP id 26so551511yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 11:36:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890907091050p7bc08a25s86f9bb7a1c8740aa@mail.gmail.com>
-References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
-	 <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
-	 <20090707030719.GC7199@hash.localnet>
-	 <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
-	 <20090708114252.GG7199@hash.localnet>
-	 <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
-	 <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
-	 <43e72e890907091002r2dd36efevbfbce06155beb7e5@mail.gmail.com>
-	 <b6c5339f0907091048v665dcdf6i659e94de95038856@mail.gmail.com>
-	 <43e72e890907091050p7bc08a25s86f9bb7a1c8740aa@mail.gmail.com>
-Date: Thu, 9 Jul 2009 14:36:20 -0400
-Message-ID: <6c354a1a0907091136v5619efb5oc6a8a89ec24d4e74@mail.gmail.com>
-Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
-From: Jasin Colegrove <j.wholesalesupply@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 8 Jul 2009 04:46:30 -0400
+Subject: Re: Possible memory leak in net/wireless/scan.c
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1247022413.4755.56.camel@johannes.local>
+References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
+	 <1247022413.4755.56.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 08 Jul 2009 09:46:24 +0100
+Message-Id: <1247042784.6595.7.camel@pc1117.cambridge.arm.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I got one more question and it's driving me mad. I am really confused...
+On Wed, 2009-07-08 at 05:06 +0200, Johannes Berg wrote:
+> On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
+> > Hi,
+> > 
+> > I'm investigating several kmemleak reports like the one below (it could
+> > as well be a false positive but it needs more digging):
+> 
+> By the way, what kind of machine do you need for kmemleak to be
+> feasible? I tried booting a kernel with it in kvm on my 2 ghz laptop,
+> and that was completely unfeasible.
 
-When running git bisect it keeps building 2.6.29-rc kernels. I thought
-v2.6.29 was in the future compared to 2.6.29-rc7 for example.
-running the command git bisect start v2.6.29-rc7 v2.6.29 disagrees
-though and tells me.
+What do you mean by unfeasible?
 
-$ git bisect start v2.6.29-rc7 v2.6.29
-Some good revs are not ancestor of the bad rev.
-git bisect cannot work properly in this case.
-Maybe you mistake good and bad revs?
+There are some patches in my kmemleak branch which I'll push upstream
+again (important ones are the renicing of the kmemleak thread and a few
+more cond_resched calls):
 
-But, when I run the command
+http://www.linux-arm.org/git?p=linux-2.6.git;a=shortlog;h=kmemleak
 
-$ git bisect start v2.6.30 v2.6.29
+There are 3 more patches under discussion to track the bootmem
+allocations (which dropped the number of false positives to 0 on my
+laptop).
 
-It co's a commit somewhere around 2.6.29-rc7 which ultimately was a
-bad commit. Am I misunderstanding how this all works? Sorry to be a
-pain
+Anyway, I run it from some ARM embedded systems at ~200MHz and 256MB of
+RAM to dual core x86 at 2GHz with 3GB of RAM. I also ran it on quemu in
+the past (but, well, in the embedded world I'm pretty used with
+emulators taking 10 min to boot the kernel).
+
+But it can slow things down since it tracks every memory allocation and
+it needs to look up the pointer in an rb tree.
+
+-- 
+Catalin
+
