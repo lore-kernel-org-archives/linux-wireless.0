@@ -1,45 +1,1544 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:35299 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbZGWKOU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbZGHLNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 06:14:20 -0400
-Received: by mail-bw0-f228.google.com with SMTP id 28so709536bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:14:20 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 7/7] cfg80211: increase scan result expire time
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Thu, 23 Jul 2009 12:14:29 +0200
-Message-ID: <20090723101428.5147.53956.stgit@localhost.localdomain>
-In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
-References: <20090723100732.5147.73989.stgit@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 8 Jul 2009 07:13:38 -0400
+Subject: [PATCH] cfg80211: rework key operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 08 Jul 2009 13:13:06 +0200
+Message-Id: <1247051586.4755.81.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using background scanning in mac80211 the time a scan needs to
-finish can exceed 10 seconds. Hence, increase the scan results
-expire time to 15 seconds which should be sufficient.
-    
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+This reworks the key operation in cfg80211, and now only
+allows, from userspace, configuring keys (via nl80211)
+after the connection has been established (in managed
+mode), the IBSS been joined (in IBSS mode), at any time
+(in AP[_VLAN] modes) or never for all the other modes.
+
+In order to do shared key authentication correctly, it
+is now possible to give a WEP key to the AUTH command.
+To configure static WEP keys, these are given to the
+CONNECT or IBSS_JOIN command directly, for a userspace
+SME it is assumed it will configure it properly after
+the connection has been established.
+
+Since mac80211 used to check the default key in IBSS
+mode to see whether or not the network is protected,
+it needs an update in that area, as well as an update
+to make use of the WEP key passed to auth() for shared
+key authentication.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+Samuel, if you would like the keys passed directly to the connect() call
+then feel free submit a patch changing that.
 
- net/wireless/scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/nl80211.h    |    4 +
+ include/net/cfg80211.h     |   18 ++++
+ net/mac80211/ibss.c        |    9 +-
+ net/mac80211/ieee80211_i.h |    8 +-
+ net/mac80211/mlme.c        |   11 ++
+ net/mac80211/util.c        |   16 ++--
+ net/mac80211/wep.c         |    6 -
+ net/mac80211/wep.h         |    3 
+ net/wireless/core.c        |   11 +-
+ net/wireless/core.h        |   32 ++++++--
+ net/wireless/ibss.c        |   79 +++++++++++++++++---
+ net/wireless/mlme.c        |   16 +++-
+ net/wireless/nl80211.c     |  170 +++++++++++++++++++++++++++++++++++++++------
+ net/wireless/sme.c         |   97 ++++++++++++++++++-------
+ net/wireless/util.c        |   41 ++++++++++
+ net/wireless/wext-compat.c |  167 +++++++++++++++++++++++++++-----------------
+ net/wireless/wext-sme.c    |   30 ++++++-
+ 17 files changed, 555 insertions(+), 163 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 4ad8b4b..0850b98 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -15,7 +15,7 @@
- #include "core.h"
+--- wireless-testing.orig/include/linux/nl80211.h	2009-07-08 00:45:16.000000000 +0200
++++ wireless-testing/include/linux/nl80211.h	2009-07-08 00:45:16.000000000 +0200
+@@ -576,6 +576,9 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_KEY: key information in a nested attribute with
+  *	%NL80211_KEY_* sub-attributes
++ * @NL80211_ATTR_KEYS: array of keys for static WEP keys for connect()
++ *	and join_ibss(), key information is in a nested attribute each
++ *	with %NL80211_KEY_* sub-attributes
+  *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -705,6 +708,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_PID,
+ 
+ 	NL80211_ATTR_KEY,
++	NL80211_ATTR_KEYS,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-07-08 00:45:16.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-07-08 00:45:16.000000000 +0200
+@@ -143,8 +143,7 @@ static struct nla_policy nl80211_policy[
+ /* policy for the attributes */
+ static struct nla_policy
+ nl80211_key_policy[NL80211_KEY_MAX + 1] __read_mostly = {
+-	[NL80211_KEY_DATA] = { .type = NLA_BINARY,
+-				    .len = WLAN_MAX_KEY_LEN },
++	[NL80211_KEY_DATA] = { .type = NLA_BINARY, .len = WLAN_MAX_KEY_LEN },
+ 	[NL80211_KEY_IDX] = { .type = NLA_U8 },
+ 	[NL80211_KEY_CIPHER] = { .type = NLA_U32 },
+ 	[NL80211_KEY_SEQ] = { .type = NLA_BINARY, .len = 8 },
+@@ -310,6 +309,83 @@ static int nl80211_parse_key(struct genl
+ 	return 0;
+ }
+ 
++static struct cfg80211_cached_keys *
++nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
++		       struct nlattr *keys)
++{
++	struct key_parse parse;
++	struct nlattr *key;
++	struct cfg80211_cached_keys *result;
++	int rem, err, def = 0;
++
++	result = kzalloc(sizeof(*result), GFP_KERNEL);
++	if (!result)
++		return ERR_PTR(-ENOMEM);
++
++	result->def = -1;
++	result->defmgmt = -1;
++
++	nla_for_each_nested(key, keys, rem) {
++		memset(&parse, 0, sizeof(parse));
++		parse.idx = -1;
++
++		err = nl80211_parse_key_new(key, &parse);
++		if (err)
++			goto error;
++		err = -EINVAL;
++		if (!parse.p.key)
++			goto error;
++		if (parse.idx < 0 || parse.idx > 4)
++			goto error;
++		if (parse.def) {
++			if (def)
++				goto error;
++			def = 1;
++			result->def = parse.idx;
++		} else if (parse.defmgmt)
++			goto error;
++		err = cfg80211_validate_key_settings(rdev, &parse.p,
++						     parse.idx, NULL);
++		if (err)
++			goto error;
++		result->params[parse.idx].cipher = parse.p.cipher;
++		result->params[parse.idx].key_len = parse.p.key_len;
++		result->params[parse.idx].key = result->data[parse.idx];
++		memcpy(result->data[parse.idx], parse.p.key, parse.p.key_len);
++	}
++
++	return result;
++ error:
++	kfree(result);
++	return ERR_PTR(err);
++}
++
++static int nl80211_key_allowed(struct wireless_dev *wdev)
++{
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (!netif_running(wdev->netdev))
++		return -ENETDOWN;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_AP_VLAN:
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		if (!wdev->current_bss)
++			return -ENOLINK;
++		break;
++	case NL80211_IFTYPE_STATION:
++		if (wdev->sme_state != CFG80211_SME_CONNECTED)
++			return -ENOLINK;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			      struct cfg80211_registered_device *dev)
+ {
+@@ -1223,7 +1299,11 @@ static int nl80211_set_key(struct sk_buf
+ 		goto out;
+ 	}
+ 
+-	err = func(&rdev->wiphy, dev, key.idx);
++	wdev_lock(dev->ieee80211_ptr);
++	err = nl80211_key_allowed(dev->ieee80211_ptr);
++	if (!err)
++		err = func(&rdev->wiphy, dev, key.idx);
++
+ #ifdef CONFIG_WIRELESS_EXT
+ 	if (!err) {
+ 		if (func == rdev->ops->set_default_key)
+@@ -1232,6 +1312,7 @@ static int nl80211_set_key(struct sk_buf
+ 			dev->ieee80211_ptr->wext.default_mgmt_key = key.idx;
+ 	}
+ #endif
++	wdev_unlock(dev->ieee80211_ptr);
+ 
+  out:
+ 	cfg80211_unlock_rdev(rdev);
+@@ -1246,7 +1327,7 @@ static int nl80211_set_key(struct sk_buf
+ static int nl80211_new_key(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev;
+-	int err, i;
++	int err;
+ 	struct net_device *dev;
+ 	struct key_parse key;
+ 	u8 *mac_addr = NULL;
+@@ -1261,29 +1342,28 @@ static int nl80211_new_key(struct sk_buf
+ 	if (info->attrs[NL80211_ATTR_MAC])
+ 		mac_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 
+-	if (cfg80211_validate_key_settings(&key.p, key.idx, mac_addr))
+-		return -EINVAL;
+-
+ 	rtnl_lock();
+ 
+ 	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+ 	if (err)
+ 		goto unlock_rtnl;
+ 
+-	for (i = 0; i < rdev->wiphy.n_cipher_suites; i++)
+-		if (key.p.cipher == rdev->wiphy.cipher_suites[i])
+-			break;
+-	if (i == rdev->wiphy.n_cipher_suites) {
+-		err = -EINVAL;
++	if (!rdev->ops->add_key) {
++		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
+ 
+-	if (!rdev->ops->add_key) {
+-		err = -EOPNOTSUPP;
++	if (cfg80211_validate_key_settings(rdev, &key.p, key.idx, mac_addr)) {
++		err = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	err = rdev->ops->add_key(&rdev->wiphy, dev, key.idx, mac_addr, &key.p);
++	wdev_lock(dev->ieee80211_ptr);
++	err = nl80211_key_allowed(dev->ieee80211_ptr);
++	if (!err)
++		err = rdev->ops->add_key(&rdev->wiphy, dev, key.idx,
++					 mac_addr, &key.p);
++	wdev_unlock(dev->ieee80211_ptr);
+ 
+  out:
+ 	cfg80211_unlock_rdev(rdev);
+@@ -1320,7 +1400,10 @@ static int nl80211_del_key(struct sk_buf
+ 		goto out;
+ 	}
+ 
+-	err = rdev->ops->del_key(&rdev->wiphy, dev, key.idx, mac_addr);
++	wdev_lock(dev->ieee80211_ptr);
++	err = nl80211_key_allowed(dev->ieee80211_ptr);
++	if (!err)
++		err = rdev->ops->del_key(&rdev->wiphy, dev, key.idx, mac_addr);
+ 
+ #ifdef CONFIG_WIRELESS_EXT
+ 	if (!err) {
+@@ -1330,6 +1413,7 @@ static int nl80211_del_key(struct sk_buf
+ 			dev->ieee80211_ptr->wext.default_mgmt_key = -1;
+ 	}
+ #endif
++	wdev_unlock(dev->ieee80211_ptr);
+ 
+  out:
+ 	cfg80211_unlock_rdev(rdev);
+@@ -3174,6 +3258,7 @@ static int nl80211_authenticate(struct s
+ 	const u8 *bssid, *ssid, *ie = NULL;
+ 	int err, ssid_len, ie_len = 0;
+ 	enum nl80211_auth_type auth_type;
++	struct key_parse key;
+ 
+ 	if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+ 		return -EINVAL;
+@@ -3190,6 +3275,25 @@ static int nl80211_authenticate(struct s
+ 	if (!info->attrs[NL80211_ATTR_WIPHY_FREQ])
+ 		return -EINVAL;
+ 
++	err = nl80211_parse_key(info, &key);
++	if (err)
++		return err;
++
++	if (key.idx >= 0) {
++		if (!key.p.key || !key.p.key_len)
++			return -EINVAL;
++		if ((key.p.cipher != WLAN_CIPHER_SUITE_WEP40 ||
++		     key.p.key_len != WLAN_KEY_LEN_WEP40) &&
++		    (key.p.cipher != WLAN_CIPHER_SUITE_WEP104 ||
++		     key.p.key_len != WLAN_KEY_LEN_WEP104))
++			return -EINVAL;
++		if (key.idx > 4)
++			return -EINVAL;
++	} else {
++		key.p.key_len = 0;
++		key.p.key = NULL;
++	}
++
+ 	rtnl_lock();
+ 
+ 	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+@@ -3234,7 +3338,8 @@ static int nl80211_authenticate(struct s
+ 	}
+ 
+ 	err = cfg80211_mlme_auth(rdev, dev, chan, auth_type, bssid,
+-				 ssid, ssid_len, ie, ie_len);
++				 ssid, ssid_len, ie, ie_len,
++				 key.p.key, key.p.key_len, key.idx);
+ 
+ out:
+ 	cfg80211_unlock_rdev(rdev);
+@@ -3521,6 +3626,7 @@ static int nl80211_join_ibss(struct sk_b
+ 	struct net_device *dev;
+ 	struct cfg80211_ibss_params ibss;
+ 	struct wiphy *wiphy;
++	struct cfg80211_cached_keys *connkeys = NULL;
+ 	int err;
+ 
+ 	memset(&ibss, 0, sizeof(ibss));
+@@ -3585,13 +3691,26 @@ static int nl80211_join_ibss(struct sk_b
+ 	}
+ 
+ 	ibss.channel_fixed = !!info->attrs[NL80211_ATTR_FREQ_FIXED];
++	ibss.privacy = !!info->attrs[NL80211_ATTR_PRIVACY];
++
++	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
++		connkeys = nl80211_parse_connkeys(rdev,
++					info->attrs[NL80211_ATTR_KEYS]);
++		if (IS_ERR(connkeys)) {
++			err = PTR_ERR(connkeys);
++			connkeys = NULL;
++			goto out;
++		}
++	}
+ 
+-	err = cfg80211_join_ibss(rdev, dev, &ibss);
++	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+ 
+ out:
+ 	cfg80211_unlock_rdev(rdev);
+ 	dev_put(dev);
+ unlock_rtnl:
++	if (err)
++		kfree(connkeys);
+ 	rtnl_unlock();
+ 	return err;
+ }
+@@ -3761,6 +3880,7 @@ static int nl80211_connect(struct sk_buf
+ 	struct net_device *dev;
+ 	struct cfg80211_connect_params connect;
+ 	struct wiphy *wiphy;
++	struct cfg80211_cached_keys *connkeys = NULL;
+ 	int err;
+ 
+ 	memset(&connect, 0, sizeof(connect));
+@@ -3825,12 +3945,24 @@ static int nl80211_connect(struct sk_buf
+ 		}
+ 	}
+ 
+-	err = cfg80211_connect(rdev, dev, &connect);
++	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
++		connkeys = nl80211_parse_connkeys(rdev,
++					info->attrs[NL80211_ATTR_KEYS]);
++		if (IS_ERR(connkeys)) {
++			err = PTR_ERR(connkeys);
++			connkeys = NULL;
++			goto out;
++		}
++	}
++
++	err = cfg80211_connect(rdev, dev, &connect, connkeys);
+ 
+ out:
+ 	cfg80211_unlock_rdev(rdev);
+ 	dev_put(dev);
+ unlock_rtnl:
++	if (err)
++		kfree(connkeys);
+ 	rtnl_unlock();
+ 	return err;
+ }
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-07 23:39:11.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-07-08 00:45:17.000000000 +0200
+@@ -453,15 +453,32 @@ int cfg80211_wext_giwretry(struct net_de
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwretry);
+ 
+-static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+-				   struct net_device *dev, const u8 *addr,
+-				   bool remove, bool tx_key, int idx,
+-				   struct key_params *params)
+-{
+-	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	int err;
++static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
++				     struct net_device *dev, const u8 *addr,
++				     bool remove, bool tx_key, int idx,
++				     struct key_params *params)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err, i;
++
++	if (!wdev->wext.keys) {
++		wdev->wext.keys = kzalloc(sizeof(*wdev->wext.keys),
++					      GFP_KERNEL);
++		if (!wdev->wext.keys)
++			return -ENOMEM;
++		for (i = 0; i < 6; i++)
++			wdev->wext.keys->params[i].key =
++				wdev->wext.keys->data[i];
++	}
++
++	if (wdev->iftype != NL80211_IFTYPE_ADHOC &&
++	    wdev->iftype != NL80211_IFTYPE_STATION)
++		return -EOPNOTSUPP;
+ 
+ 	if (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
++		if (!wdev->current_bss)
++			return -ENOLINK;
++
+ 		if (!rdev->ops->set_default_mgmt_key)
+ 			return -EOPNOTSUPP;
+ 
+@@ -471,8 +488,14 @@ static int cfg80211_set_encryption(struc
+ 		return -EINVAL;
+ 
+ 	if (remove) {
+-		err = rdev->ops->del_key(&rdev->wiphy, dev, idx, addr);
++		err = 0;
++		if (wdev->current_bss)
++			err = rdev->ops->del_key(&rdev->wiphy, dev, idx, addr);
+ 		if (!err) {
++			if (!addr) {
++				wdev->wext.keys->params[idx].key_len = 0;
++				wdev->wext.keys->params[idx].cipher = 0;
++			}
+ 			if (idx == wdev->wext.default_key)
+ 				wdev->wext.default_key = -1;
+ 			else if (idx == wdev->wext.default_mgmt_key)
+@@ -486,36 +509,64 @@ static int cfg80211_set_encryption(struc
+ 			return 0;
+ 
+ 		return err;
+-	} else {
+-		if (addr)
+-			tx_key = false;
++	}
+ 
+-		if (cfg80211_validate_key_settings(params, idx, addr))
+-			return -EINVAL;
++	if (addr)
++		tx_key = false;
++
++	if (cfg80211_validate_key_settings(rdev, params, idx, addr))
++		return -EINVAL;
+ 
++	err = 0;
++	if (wdev->current_bss)
+ 		err = rdev->ops->add_key(&rdev->wiphy, dev, idx, addr, params);
+-		if (err)
+-			return err;
++	if (err)
++		return err;
+ 
+-		if (tx_key || (!addr && wdev->wext.default_key == -1)) {
++	if (!addr) {
++		wdev->wext.keys->params[idx] = *params;
++		memcpy(wdev->wext.keys->data[idx],
++			params->key, params->key_len);
++		wdev->wext.keys->params[idx].key =
++			wdev->wext.keys->data[idx];
++	}
++
++	if (params->cipher != WLAN_CIPHER_SUITE_AES_CMAC &&
++	    (tx_key || (!addr && wdev->wext.default_key == -1))) {
++		if (wdev->current_bss)
+ 			err = rdev->ops->set_default_key(&rdev->wiphy,
+ 							 dev, idx);
+-			if (!err)
+-				wdev->wext.default_key = idx;
+-			return err;
+-		}
++		if (!err)
++			wdev->wext.default_key = idx;
++		return err;
++	}
+ 
+-		if (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC &&
+-		    (tx_key || (!addr && wdev->wext.default_mgmt_key == -1))) {
++	if (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC &&
++	    (tx_key || (!addr && wdev->wext.default_mgmt_key == -1))) {
++	    	if (wdev->current_bss)
+ 			err = rdev->ops->set_default_mgmt_key(&rdev->wiphy,
+ 							      dev, idx);
+-			if (!err)
+-				wdev->wext.default_mgmt_key = idx;
+-			return err;
+-		}
+-
+-		return 0;
++		if (!err)
++			wdev->wext.default_mgmt_key = idx;
++		return err;
+ 	}
++
++	return 0;
++}
++
++static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
++				   struct net_device *dev, const u8 *addr,
++				   bool remove, bool tx_key, int idx,
++				   struct key_params *params)
++{
++	int err;
++
++	wdev_lock(dev->ieee80211_ptr);
++	err = __cfg80211_set_encryption(rdev, dev, addr, remove,
++					tx_key, idx, params);
++	wdev_unlock(dev->ieee80211_ptr);
++
++	return err;
+ }
+ 
+ int cfg80211_wext_siwencode(struct net_device *dev,
+@@ -528,6 +579,10 @@ int cfg80211_wext_siwencode(struct net_d
+ 	bool remove = false;
+ 	struct key_params params;
+ 
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_ADHOC)
++		return -EOPNOTSUPP;
++
+ 	/* no use -- only MFP (set_default_mgmt_key) is optional */
+ 	if (!rdev->ops->del_key ||
+ 	    !rdev->ops->add_key ||
+@@ -548,9 +603,14 @@ int cfg80211_wext_siwencode(struct net_d
+ 		remove = true;
+ 	else if (erq->length == 0) {
+ 		/* No key data - just set the default TX key index */
+-		err = rdev->ops->set_default_key(&rdev->wiphy, dev, idx);
++		err = 0;
++		wdev_lock(wdev);
++		if (wdev->current_bss)
++			err = rdev->ops->set_default_key(&rdev->wiphy,
++							 dev, idx);
+ 		if (!err)
+ 			wdev->wext.default_key = idx;
++		wdev_unlock(wdev);
+ 		return err;
+ 	}
+ 
+@@ -583,6 +643,10 @@ int cfg80211_wext_siwencodeext(struct ne
+ 	struct key_params params;
+ 	u32 cipher;
+ 
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_ADHOC)
++		return -EOPNOTSUPP;
++
+ 	/* no use -- only MFP (set_default_mgmt_key) is optional */
+ 	if (!rdev->ops->del_key ||
+ 	    !rdev->ops->add_key ||
+@@ -656,37 +720,15 @@ int cfg80211_wext_siwencodeext(struct ne
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_siwencodeext);
+ 
+-struct giwencode_cookie {
+-	size_t buflen;
+-	char *keybuf;
+-};
+-
+-static void giwencode_get_key_cb(void *cookie, struct key_params *params)
+-{
+-	struct giwencode_cookie *data = cookie;
+-
+-	if (!params->key) {
+-		data->buflen = 0;
+-		return;
+-	}
+-
+-	data->buflen = min_t(size_t, data->buflen, params->key_len);
+-	memcpy(data->keybuf, params->key, data->buflen);
+-}
+-
+ int cfg80211_wext_giwencode(struct net_device *dev,
+ 			    struct iw_request_info *info,
+ 			    struct iw_point *erq, char *keybuf)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+-	int idx, err;
+-	struct giwencode_cookie data = {
+-		.keybuf = keybuf,
+-		.buflen = erq->length,
+-	};
++	int idx;
+ 
+-	if (!rdev->ops->get_key)
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_ADHOC)
+ 		return -EOPNOTSUPP;
+ 
+ 	idx = erq->flags & IW_ENCODE_INDEX;
+@@ -701,21 +743,18 @@ int cfg80211_wext_giwencode(struct net_d
+ 
+ 	erq->flags = idx + 1;
+ 
+-	err = rdev->ops->get_key(&rdev->wiphy, dev, idx, NULL, &data,
+-				 giwencode_get_key_cb);
+-	if (!err) {
+-		erq->length = data.buflen;
+-		erq->flags |= IW_ENCODE_ENABLED;
+-		return 0;
+-	}
+-
+-	if (err == -ENOENT) {
++	if (!wdev->wext.keys || !wdev->wext.keys->params[idx].cipher) {
+ 		erq->flags |= IW_ENCODE_DISABLED;
+ 		erq->length = 0;
+ 		return 0;
+ 	}
+ 
+-	return err;
++	erq->length = min_t(size_t, erq->length,
++			    wdev->wext.keys->params[idx].key_len);
++	memcpy(keybuf, wdev->wext.keys->params[idx].key, erq->length);
++	erq->flags |= IW_ENCODE_ENABLED;
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwencode);
+ 
+--- wireless-testing.orig/include/net/cfg80211.h	2009-07-07 23:39:04.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-07-08 00:45:17.000000000 +0200
+@@ -647,12 +647,17 @@ struct cfg80211_crypto_settings {
+  * @auth_type: Authentication type (algorithm)
+  * @ie: Extra IEs to add to Authentication frame or %NULL
+  * @ie_len: Length of ie buffer in octets
++ * @key_len: length of WEP key for shared key authentication
++ * @key_idx: index of WEP key for shared key authentication
++ * @key: WEP key for shared key authentication
+  */
+ struct cfg80211_auth_request {
+ 	struct cfg80211_bss *bss;
+ 	const u8 *ie;
+ 	size_t ie_len;
+ 	enum nl80211_auth_type auth_type;
++	const u8 *key;
++	u8 key_len, key_idx;
+ };
+ 
+ /**
+@@ -727,6 +732,8 @@ struct cfg80211_disassoc_request {
+  * @ie: information element(s) to include in the beacon
+  * @ie_len: length of that
+  * @beacon_interval: beacon interval to use
++ * @privacy: this is a protected network, keys will be configured
++ *	after joining
+  */
+ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+@@ -736,6 +743,7 @@ struct cfg80211_ibss_params {
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
+ 	bool channel_fixed;
++	bool privacy;
+ };
+ 
+ /**
+@@ -755,6 +763,9 @@ struct cfg80211_ibss_params {
+  * @assoc_ie_len: Length of assoc_ie in octets
+  * @privacy: indicates whether privacy-enabled APs should be used
+  * @crypto: crypto settings
++ * @key_len: length of WEP key for shared key authentication
++ * @key_idx: index of WEP key for shared key authentication
++ * @key: WEP key for shared key authentication
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -766,6 +777,8 @@ struct cfg80211_connect_params {
+ 	size_t ie_len;
+ 	bool privacy;
+ 	struct cfg80211_crypto_settings crypto;
++	const u8 *key;
++	u8 key_len, key_idx;
+ };
+ 
+ /**
+@@ -1255,9 +1268,10 @@ extern void wiphy_unregister(struct wiph
+  */
+ extern void wiphy_free(struct wiphy *wiphy);
+ 
+-/* internal struct */
++/* internal structs */
+ struct cfg80211_conn;
+ struct cfg80211_internal_bss;
++struct cfg80211_cached_keys;
+ 
+ #define MAX_AUTH_BSSES		4
+ 
+@@ -1299,6 +1313,7 @@ struct wireless_dev {
+ 		CFG80211_SME_CONNECTED,
+ 	} sme_state;
+ 	struct cfg80211_conn *conn;
++	struct cfg80211_cached_keys *connect_keys;
+ 
+ 	struct list_head event_list;
+ 	spinlock_t event_lock;
+@@ -1312,6 +1327,7 @@ struct wireless_dev {
+ 	struct {
+ 		struct cfg80211_ibss_params ibss;
+ 		struct cfg80211_connect_params connect;
++		struct cfg80211_cached_keys *keys;
+ 		u8 *ie;
+ 		size_t ie_len;
+ 		u8 bssid[ETH_ALEN];
+--- wireless-testing.orig/net/wireless/core.h	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-07-08 00:45:17.000000000 +0200
+@@ -241,6 +241,12 @@ struct cfg80211_event {
+ 	};
+ };
+ 
++struct cfg80211_cached_keys {
++	struct key_params params[6];
++	u8 data[6][WLAN_MAX_KEY_LEN];
++	int def, defmgmt;
++};
++
+ 
+ /* free object */
+ extern void cfg80211_dev_free(struct cfg80211_registered_device *rdev);
+@@ -259,14 +265,18 @@ void cfg80211_bss_age(struct cfg80211_re
+ /* IBSS */
+ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 			 struct net_device *dev,
+-			 struct cfg80211_ibss_params *params);
++			 struct cfg80211_ibss_params *params,
++			 struct cfg80211_cached_keys *connkeys);
+ int cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+-		       struct cfg80211_ibss_params *params);
++		       struct cfg80211_ibss_params *params,
++		       struct cfg80211_cached_keys *connkeys);
+ void cfg80211_clear_ibss(struct net_device *dev, bool nowext);
+ int cfg80211_leave_ibss(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, bool nowext);
+ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid);
++int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
++			    struct wireless_dev *wdev);
+ 
+ /* MLME */
+ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+@@ -275,12 +285,14 @@ int __cfg80211_mlme_auth(struct cfg80211
+ 			 enum nl80211_auth_type auth_type,
+ 			 const u8 *bssid,
+ 			 const u8 *ssid, int ssid_len,
+-			 const u8 *ie, int ie_len);
++			 const u8 *ie, int ie_len,
++			 const u8 *key, int key_len, int key_idx);
+ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev, struct ieee80211_channel *chan,
+ 		       enum nl80211_auth_type auth_type, const u8 *bssid,
+ 		       const u8 *ssid, int ssid_len,
+-		       const u8 *ie, int ie_len);
++		       const u8 *ie, int ie_len,
++		       const u8 *key, int key_len, int key_idx);
+ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev,
+ 			  struct ieee80211_channel *chan,
+@@ -313,10 +325,12 @@ void __cfg80211_connect_result(struct ne
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+-		       struct cfg80211_connect_params *connect);
++		       struct cfg80211_connect_params *connect,
++		       struct cfg80211_cached_keys *connkeys);
+ int cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 		     struct net_device *dev,
+-		     struct cfg80211_connect_params *connect);
++		     struct cfg80211_connect_params *connect,
++		     struct cfg80211_cached_keys *connkeys);
+ int __cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 			  struct net_device *dev, u16 reason,
+ 			  bool wextev);
+@@ -326,11 +340,14 @@ int cfg80211_disconnect(struct cfg80211_
+ void __cfg80211_roamed(struct wireless_dev *wdev, const u8 *bssid,
+ 		       const u8 *req_ie, size_t req_ie_len,
+ 		       const u8 *resp_ie, size_t resp_ie_len);
++int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
++			      struct wireless_dev *wdev);
+ 
+ void cfg80211_conn_work(struct work_struct *work);
+ 
+ /* internal helpers */
+-int cfg80211_validate_key_settings(struct key_params *params, int key_idx,
++int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
++				   struct key_params *params, int key_idx,
+ 				   const u8 *mac_addr);
+ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 			     size_t ie_len, u16 reason, bool from_ap);
+@@ -338,5 +355,6 @@ void cfg80211_sme_scan_done(struct net_d
+ void cfg80211_sme_rx_auth(struct net_device *dev, const u8 *buf, size_t len);
+ void cfg80211_sme_disassoc(struct net_device *dev, int idx);
+ void __cfg80211_scan_done(struct work_struct *wk);
++void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
+ 
+ #endif /* __NET_WIRELESS_CORE_H */
+--- wireless-testing.orig/net/wireless/core.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-07-08 00:45:17.000000000 +0200
+@@ -707,14 +707,10 @@ static int cfg80211_netdev_notifier_call
+ 		wdev_lock(wdev);
+ 		switch (wdev->iftype) {
+ 		case NL80211_IFTYPE_ADHOC:
+-			if (wdev->wext.ibss.ssid_len)
+-				__cfg80211_join_ibss(rdev, dev,
+-						     &wdev->wext.ibss);
++			cfg80211_ibss_wext_join(rdev, wdev);
+ 			break;
+ 		case NL80211_IFTYPE_STATION:
+-			if (wdev->wext.connect.ssid_len)
+-				__cfg80211_connect(rdev, dev,
+-						   &wdev->wext.connect);
++			cfg80211_mgd_wext_connect(rdev, wdev);
+ 			break;
+ 		default:
+ 			break;
+@@ -731,6 +727,9 @@ static int cfg80211_netdev_notifier_call
+ 		}
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		mutex_destroy(&wdev->mtx);
++#ifdef CONFIG_WIRELESS_EXT
++		kfree(wdev->wext.keys);
++#endif
+ 		break;
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+--- wireless-testing.orig/net/wireless/sme.c	2009-07-07 23:39:05.000000000 +0200
++++ wireless-testing/net/wireless/sme.c	2009-07-08 00:45:17.000000000 +0200
+@@ -126,7 +126,9 @@ static int cfg80211_conn_do_work(struct 
+ 					    params->channel, params->auth_type,
+ 					    params->bssid,
+ 					    params->ssid, params->ssid_len,
+-					    NULL, 0);
++					    NULL, 0,
++					    params->key, params->key_len,
++					    params->key_idx);
+ 	case CFG80211_CONN_ASSOCIATE_NEXT:
+ 		BUG_ON(!rdev->ops->assoc);
+ 		wdev->conn->state = CFG80211_CONN_ASSOCIATING;
+@@ -280,8 +282,12 @@ void cfg80211_sme_rx_auth(struct net_dev
+ 		/* select automatically between only open, shared, leap */
+ 		switch (wdev->conn->params.auth_type) {
+ 		case NL80211_AUTHTYPE_OPEN_SYSTEM:
+-			wdev->conn->params.auth_type =
+-				NL80211_AUTHTYPE_SHARED_KEY;
++			if (wdev->connect_keys)
++				wdev->conn->params.auth_type =
++					NL80211_AUTHTYPE_SHARED_KEY;
++			else
++				wdev->conn->params.auth_type =
++					NL80211_AUTHTYPE_NETWORK_EAP;
+ 			break;
+ 		case NL80211_AUTHTYPE_SHARED_KEY:
+ 			wdev->conn->params.auth_type =
+@@ -354,10 +360,8 @@ void __cfg80211_connect_result(struct ne
+ #endif
+ 
+ 	if (status == WLAN_STATUS_SUCCESS &&
+-	    wdev->sme_state == CFG80211_SME_IDLE) {
+-		wdev->sme_state = CFG80211_SME_CONNECTED;
+-		return;
+-	}
++	    wdev->sme_state == CFG80211_SME_IDLE)
++		goto success;
+ 
+ 	if (wdev->sme_state != CFG80211_SME_CONNECTING)
+ 		return;
+@@ -371,24 +375,29 @@ void __cfg80211_connect_result(struct ne
+ 	if (wdev->conn)
+ 		wdev->conn->state = CFG80211_CONN_IDLE;
+ 
+-	if (status == WLAN_STATUS_SUCCESS) {
+-		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
+-				       wdev->ssid, wdev->ssid_len,
+-				       WLAN_CAPABILITY_ESS,
+-				       WLAN_CAPABILITY_ESS);
+-
+-		if (WARN_ON(!bss))
+-			return;
+-
+-		cfg80211_hold_bss(bss_from_pub(bss));
+-		wdev->current_bss = bss_from_pub(bss);
+-
+-		wdev->sme_state = CFG80211_SME_CONNECTED;
+-	} else {
++	if (status != WLAN_STATUS_SUCCESS) {
+ 		wdev->sme_state = CFG80211_SME_IDLE;
+ 		kfree(wdev->conn);
+ 		wdev->conn = NULL;
++		kfree(wdev->connect_keys);
++		wdev->connect_keys = NULL;
++		return;
+ 	}
++
++	bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
++			       wdev->ssid, wdev->ssid_len,
++			       WLAN_CAPABILITY_ESS,
++			       WLAN_CAPABILITY_ESS);
++
++	if (WARN_ON(!bss))
++		return;
++
++	cfg80211_hold_bss(bss_from_pub(bss));
++	wdev->current_bss = bss_from_pub(bss);
++
++ success:
++	wdev->sme_state = CFG80211_SME_CONNECTED;
++	cfg80211_upload_connect_keys(wdev);
+ }
+ 
+ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+@@ -517,6 +526,8 @@ void __cfg80211_disconnected(struct net_
+ 			     size_t ie_len, u16 reason, bool from_ap)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	int i;
+ #ifdef CONFIG_WIRELESS_EXT
+ 	union iwreq_data wrqu;
+ #endif
+@@ -544,8 +555,15 @@ void __cfg80211_disconnected(struct net_
+ 		wdev->conn = NULL;
+ 	}
+ 
+-	nl80211_send_disconnected(wiphy_to_dev(wdev->wiphy), dev,
+-				  reason, ie, ie_len, from_ap);
++	nl80211_send_disconnected(rdev, dev, reason, ie, ie_len, from_ap);
++
++	/*
++	 * Delete all the keys ... pairwise keys can't really
++	 * exist any more anyway, but default keys might.
++	 */
++	if (rdev->ops->del_key)
++		for (i = 0; i < 6; i++)
++			rdev->ops->del_key(wdev->wiphy, dev, i, NULL);
+ 
+ #ifdef CONFIG_WIRELESS_EXT
+ 	memset(&wrqu, 0, sizeof(wrqu));
+@@ -581,7 +599,8 @@ EXPORT_SYMBOL(cfg80211_disconnected);
+ 
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+-		       struct cfg80211_connect_params *connect)
++		       struct cfg80211_connect_params *connect,
++		       struct cfg80211_cached_keys *connkeys)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+@@ -591,6 +610,24 @@ int __cfg80211_connect(struct cfg80211_r
+ 	if (wdev->sme_state != CFG80211_SME_IDLE)
+ 		return -EALREADY;
+ 
++	if (WARN_ON(wdev->connect_keys)) {
++		kfree(wdev->connect_keys);
++		wdev->connect_keys = NULL;
++	}
++
++	if (connkeys && connkeys->def >= 0) {
++		int idx;
++
++		idx = connkeys->def;
++		/* If given a WEP key we may need it for shared key auth */
++		if (connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP40 ||
++		    connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP104) {
++			connect->key_idx = idx;
++			connect->key = connkeys->params[idx].key;
++			connect->key_len = connkeys->params[idx].key_len;
++		}
++	}
++
+ 	if (!rdev->ops->connect) {
+ 		if (!rdev->ops->auth || !rdev->ops->assoc)
+ 			return -EOPNOTSUPP;
+@@ -641,6 +678,7 @@ int __cfg80211_connect(struct cfg80211_r
+ 			cfg80211_get_conn_bss(wdev);
+ 
+ 		wdev->sme_state = CFG80211_SME_CONNECTING;
++		wdev->connect_keys = connkeys;
+ 
+ 		/* we're good if we have both BSSID and channel */
+ 		if (wdev->conn->params.bssid && wdev->conn->params.channel) {
+@@ -663,13 +701,16 @@ int __cfg80211_connect(struct cfg80211_r
+ 			kfree(wdev->conn);
+ 			wdev->conn = NULL;
+ 			wdev->sme_state = CFG80211_SME_IDLE;
++			wdev->connect_keys = NULL;
+ 		}
+ 
+ 		return err;
+ 	} else {
+ 		wdev->sme_state = CFG80211_SME_CONNECTING;
++		wdev->connect_keys = connkeys;
+ 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
+ 		if (err) {
++			wdev->connect_keys = NULL;
+ 			wdev->sme_state = CFG80211_SME_IDLE;
+ 			return err;
+ 		}
+@@ -683,12 +724,13 @@ int __cfg80211_connect(struct cfg80211_r
+ 
+ int cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 		     struct net_device *dev,
+-		     struct cfg80211_connect_params *connect)
++		     struct cfg80211_connect_params *connect,
++		     struct cfg80211_cached_keys *connkeys)
+ {
+ 	int err;
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
+-	err = __cfg80211_connect(rdev, dev, connect);
++	err = __cfg80211_connect(rdev, dev, connect, connkeys);
+ 	wdev_unlock(dev->ieee80211_ptr);
+ 
+ 	return err;
+@@ -705,6 +747,9 @@ int __cfg80211_disconnect(struct cfg8021
+ 	if (wdev->sme_state == CFG80211_SME_IDLE)
+ 		return -EINVAL;
+ 
++	kfree(wdev->connect_keys);
++	wdev->connect_keys = NULL;
++
+ 	if (!rdev->ops->disconnect) {
+ 		if (!rdev->ops->deauth)
+ 			return -EOPNOTSUPP;
+--- wireless-testing.orig/net/wireless/wext-sme.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/wext-sme.c	2009-07-08 00:45:17.000000000 +0200
+@@ -10,10 +10,11 @@
+ #include <net/cfg80211.h>
  #include "nl80211.h"
  
--#define IEEE80211_SCAN_RESULT_EXPIRE	(10 * HZ)
-+#define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
- 
- void __cfg80211_scan_done(struct work_struct *wk)
+-static int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+-				     struct wireless_dev *wdev)
++int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
++			      struct wireless_dev *wdev)
  {
+-	int err;
++	struct cfg80211_cached_keys *ck = NULL;
++	int err, i;
+ 
+ 	ASSERT_RDEV_LOCK(rdev);
+ 	ASSERT_WDEV_LOCK(wdev);
+@@ -25,10 +26,25 @@ static int cfg80211_mgd_wext_connect(str
+ 	wdev->wext.connect.ie_len = wdev->wext.ie_len;
+ 	wdev->wext.connect.privacy = wdev->wext.default_key != -1;
+ 
+-	err = 0;
+-	if (wdev->wext.connect.ssid_len != 0)
+-		err = __cfg80211_connect(rdev, wdev->netdev,
+-					 &wdev->wext.connect);
++	if (wdev->wext.keys) {
++		wdev->wext.keys->def = wdev->wext.default_key;
++		wdev->wext.keys->defmgmt = wdev->wext.default_mgmt_key;
++	}
++
++	if (!wdev->wext.connect.ssid_len)
++		return 0;
++
++	if (wdev->wext.keys) {
++		ck = kmemdup(wdev->wext.keys, sizeof(*ck), GFP_KERNEL);
++		if (!ck)
++			return -ENOMEM;
++		for (i = 0; i < 6; i++)
++			ck->params[i].key = ck->data[i];
++	}
++	err = __cfg80211_connect(rdev, wdev->netdev,
++				 &wdev->wext.connect, ck);
++	if (err)
++		kfree(ck);
+ 
+ 	return err;
+ }
+--- wireless-testing.orig/net/wireless/mlme.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2009-07-08 00:45:17.000000000 +0200
+@@ -328,7 +328,8 @@ int __cfg80211_mlme_auth(struct cfg80211
+ 			 enum nl80211_auth_type auth_type,
+ 			 const u8 *bssid,
+ 			 const u8 *ssid, int ssid_len,
+-			 const u8 *ie, int ie_len)
++			 const u8 *ie, int ie_len,
++			 const u8 *key, int key_len, int key_idx)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_auth_request req;
+@@ -337,6 +338,10 @@ int __cfg80211_mlme_auth(struct cfg80211
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
++	if (auth_type == NL80211_AUTHTYPE_SHARED_KEY)
++		if (!key || !key_len || key_idx < 0 || key_idx > 4)
++			return -EINVAL;
++
+ 	if (wdev->current_bss &&
+ 	    memcmp(bssid, wdev->current_bss->pub.bssid, ETH_ALEN) == 0)
+ 		return -EALREADY;
+@@ -359,6 +364,9 @@ int __cfg80211_mlme_auth(struct cfg80211
+ 	req.auth_type = auth_type;
+ 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
+ 				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
++	req.key = key;
++	req.key_len = key_len;
++	req.key_idx = key_idx;
+ 	if (!req.bss)
+ 		return -ENOENT;
+ 
+@@ -396,13 +404,15 @@ int cfg80211_mlme_auth(struct cfg80211_r
+ 		       struct net_device *dev, struct ieee80211_channel *chan,
+ 		       enum nl80211_auth_type auth_type, const u8 *bssid,
+ 		       const u8 *ssid, int ssid_len,
+-		       const u8 *ie, int ie_len)
++		       const u8 *ie, int ie_len,
++		       const u8 *key, int key_len, int key_idx)
+ {
+ 	int err;
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
+ 	err = __cfg80211_mlme_auth(rdev, dev, chan, auth_type, bssid,
+-				   ssid, ssid_len, ie, ie_len);
++				   ssid, ssid_len, ie, ie_len,
++				   key, key_len, key_idx);
+ 	wdev_unlock(dev->ieee80211_ptr);
+ 
+ 	return err;
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-07-08 00:45:17.000000000 +0200
+@@ -247,6 +247,9 @@ struct ieee80211_mgd_work {
+ 
+ 	int tries;
+ 
++	u8 key[WLAN_KEY_LEN_WEP104];
++	u8 key_len, key_idx;
++
+ 	/* must be last */
+ 	u8 ie[0]; /* for auth or assoc frame, not probe */
+ };
+@@ -321,6 +324,7 @@ struct ieee80211_if_ibss {
+ 
+ 	bool fixed_bssid;
+ 	bool fixed_channel;
++	bool privacy;
+ 
+ 	u8 bssid[ETH_ALEN];
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+@@ -1090,8 +1094,8 @@ int ieee80211_add_pending_skbs(struct ie
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+-			 u8 *extra, size_t extra_len,
+-			 const u8 *bssid, int encrypt);
++			 u8 *extra, size_t extra_len, const u8 *bssid,
++			 const u8 *key, u8 key_len, u8 key_idx);
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-07-08 00:45:17.000000000 +0200
+@@ -954,7 +954,7 @@ ieee80211_authenticate(struct ieee80211_
+ 	       sdata->dev->name, wk->bss->cbss.bssid, wk->tries);
+ 
+ 	ieee80211_send_auth(sdata, 1, wk->auth_alg, wk->ie, wk->ie_len,
+-			    wk->bss->cbss.bssid, 0);
++			    wk->bss->cbss.bssid, NULL, 0, 0);
+ 	wk->auth_transaction = 2;
+ 
+ 	wk->timeout = jiffies + IEEE80211_AUTH_TIMEOUT;
+@@ -1176,7 +1176,8 @@ static void ieee80211_auth_challenge(str
+ 		return;
+ 	ieee80211_send_auth(sdata, 3, wk->auth_alg,
+ 			    elems.challenge - 2, elems.challenge_len + 2,
+-			    wk->bss->cbss.bssid, 1);
++			    wk->bss->cbss.bssid,
++			    wk->key, wk->key_len, wk->key_idx);
+ 	wk->auth_transaction = 4;
+ }
+ 
+@@ -2175,6 +2176,12 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 		wk->ie_len = req->ie_len;
+ 	}
+ 
++	if (req->key && req->key_len) {
++		wk->key_len = req->key_len;
++		wk->key_idx = req->key_idx;
++		memcpy(wk->key, req->key, req->key_len);
++	}
++
+ 	ssid = ieee80211_bss_get_ie(req->bss, WLAN_EID_SSID);
+ 	memcpy(wk->ssid, ssid + 2, ssid[1]);
+ 	wk->ssid_len = ssid[1];
+--- wireless-testing.orig/net/mac80211/ibss.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2009-07-08 00:45:17.000000000 +0200
+@@ -57,7 +57,7 @@ static void ieee80211_rx_mgmt_auth_ibss(
+ 	 */
+ 	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
+ 		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
+-				    sdata->u.ibss.bssid, 0);
++				    sdata->u.ibss.bssid, NULL, 0, 0);
+ }
+ 
+ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -494,7 +494,7 @@ static void ieee80211_sta_create_ibss(st
+ 
+ 	capability = WLAN_CAPABILITY_IBSS;
+ 
+-	if (sdata->default_key)
++	if (ifibss->privacy)
+ 		capability |= WLAN_CAPABILITY_PRIVACY;
+ 	else
+ 		sdata->drop_unencrypted = 0;
+@@ -524,9 +524,8 @@ static void ieee80211_sta_find_ibss(stru
+ 		return;
+ 
+ 	capability = WLAN_CAPABILITY_IBSS;
+-	if (sdata->default_key)
++	if (ifibss->privacy)
+ 		capability |= WLAN_CAPABILITY_PRIVACY;
+-
+ 	if (ifibss->fixed_bssid)
+ 		bssid = ifibss->bssid;
+ 	if (ifibss->fixed_channel)
+@@ -872,6 +871,8 @@ int ieee80211_ibss_join(struct ieee80211
+ 	} else
+ 		sdata->u.ibss.fixed_bssid = false;
+ 
++	sdata->u.ibss.privacy = params->privacy;
++
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 
+ 	sdata->u.ibss.channel = params->channel;
+--- wireless-testing.orig/net/mac80211/util.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2009-07-08 00:45:17.000000000 +0200
+@@ -31,6 +31,7 @@
+ #include "mesh.h"
+ #include "wme.h"
+ #include "led.h"
++#include "wep.h"
+ 
+ /* privid for wiphys to determine whether they belong to us or not */
+ void *mac80211_wiphy_privid = &mac80211_wiphy_privid;
+@@ -778,12 +779,13 @@ u32 ieee80211_mandatory_rates(struct iee
+ 
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+-			 u8 *extra, size_t extra_len,
+-			 const u8 *bssid, int encrypt)
++			 u8 *extra, size_t extra_len, const u8 *bssid,
++			 const u8 *key, u8 key_len, u8 key_idx)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	int err;
+ 
+ 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+ 			    sizeof(*mgmt) + 6 + extra_len);
+@@ -798,8 +800,6 @@ void ieee80211_send_auth(struct ieee8021
+ 	memset(mgmt, 0, 24 + 6);
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+ 					  IEEE80211_STYPE_AUTH);
+-	if (encrypt)
+-		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 	memcpy(mgmt->da, bssid, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->dev->dev_addr, ETH_ALEN);
+ 	memcpy(mgmt->bssid, bssid, ETH_ALEN);
+@@ -809,7 +809,13 @@ void ieee80211_send_auth(struct ieee8021
+ 	if (extra)
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
+ 
+-	ieee80211_tx_skb(sdata, skb, encrypt);
++	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
++		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
++		err = ieee80211_wep_encrypt(local, skb, key, key_len, key_idx);
++		WARN_ON(err);
++	}
++
++	ieee80211_tx_skb(sdata, skb, 0);
+ }
+ 
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+--- wireless-testing.orig/net/mac80211/wep.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/wep.c	2009-07-08 00:45:17.000000000 +0200
+@@ -144,9 +144,9 @@ void ieee80211_wep_encrypt_data(struct c
+  *
+  * WEP frame payload: IV + TX key idx, RC4(data), ICV = RC4(CRC32(data))
+  */
+-static int ieee80211_wep_encrypt(struct ieee80211_local *local,
+-				 struct sk_buff *skb,
+-				 const u8 *key, int keylen, int keyidx)
++int ieee80211_wep_encrypt(struct ieee80211_local *local,
++			  struct sk_buff *skb,
++			  const u8 *key, int keylen, int keyidx)
+ {
+ 	u8 *iv;
+ 	size_t len;
+--- wireless-testing.orig/net/mac80211/wep.h	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/mac80211/wep.h	2009-07-08 00:45:17.000000000 +0200
+@@ -20,6 +20,9 @@ int ieee80211_wep_init(struct ieee80211_
+ void ieee80211_wep_free(struct ieee80211_local *local);
+ void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+ 				size_t klen, u8 *data, size_t data_len);
++int ieee80211_wep_encrypt(struct ieee80211_local *local,
++			  struct sk_buff *skb,
++			  const u8 *key, int keylen, int keyidx);
+ int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
+ 			       size_t klen, u8 *data, size_t data_len);
+ bool ieee80211_wep_is_weak_iv(struct sk_buff *skb, struct ieee80211_key *key);
+--- wireless-testing.orig/net/wireless/ibss.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/ibss.c	2009-07-08 00:45:17.000000000 +0200
+@@ -39,6 +39,8 @@ void __cfg80211_ibss_joined(struct net_d
+ 	cfg80211_hold_bss(bss_from_pub(bss));
+ 	wdev->current_bss = bss_from_pub(bss);
+ 
++	cfg80211_upload_connect_keys(wdev);
++
+ 	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid,
+ 				GFP_KERNEL);
+ #ifdef CONFIG_WIRELESS_EXT
+@@ -71,7 +73,8 @@ EXPORT_SYMBOL(cfg80211_ibss_joined);
+ 
+ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 			 struct net_device *dev,
+-			 struct cfg80211_ibss_params *params)
++			 struct cfg80211_ibss_params *params,
++			 struct cfg80211_cached_keys *connkeys)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+@@ -81,13 +84,18 @@ int __cfg80211_join_ibss(struct cfg80211
+ 	if (wdev->ssid_len)
+ 		return -EALREADY;
+ 
++	if (WARN_ON(wdev->connect_keys))
++		kfree(wdev->connect_keys);
++	wdev->connect_keys = connkeys;
++
+ #ifdef CONFIG_WIRELESS_EXT
+ 	wdev->wext.ibss.channel = params->channel;
+ #endif
+ 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
+-
+-	if (err)
++	if (err) {
++		wdev->connect_keys = NULL;
+ 		return err;
++	}
+ 
+ 	memcpy(wdev->ssid, params->ssid, params->ssid_len);
+ 	wdev->ssid_len = params->ssid_len;
+@@ -97,13 +105,14 @@ int __cfg80211_join_ibss(struct cfg80211
+ 
+ int cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev,
+-		       struct cfg80211_ibss_params *params)
++		       struct cfg80211_ibss_params *params,
++		       struct cfg80211_cached_keys *connkeys)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	int err;
+ 
+ 	wdev_lock(wdev);
+-	err = __cfg80211_join_ibss(rdev, dev, params);
++	err = __cfg80211_join_ibss(rdev, dev, params, connkeys);
+ 	wdev_unlock(wdev);
+ 
+ 	return err;
+@@ -112,9 +121,22 @@ int cfg80211_join_ibss(struct cfg80211_r
+ static void __cfg80211_clear_ibss(struct net_device *dev, bool nowext)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	int i;
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
++	kfree(wdev->connect_keys);
++	wdev->connect_keys = NULL;
++
++	/*
++	 * Delete all the keys ... pairwise keys can't really
++	 * exist any more anyway, but default keys might.
++	 */
++	if (rdev->ops->del_key)
++		for (i = 0; i < 6; i++)
++			rdev->ops->del_key(wdev->wiphy, dev, i, NULL);
++
+ 	if (wdev->current_bss) {
+ 		cfg80211_unhold_bss(wdev->current_bss);
+ 		cfg80211_put_bss(&wdev->current_bss->pub);
+@@ -172,11 +194,14 @@ int cfg80211_leave_ibss(struct cfg80211_
+ }
+ 
+ #ifdef CONFIG_WIRELESS_EXT
+-static int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+-				   struct wireless_dev *wdev)
++int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
++			    struct wireless_dev *wdev)
+ {
++	struct cfg80211_cached_keys *ck = NULL;
+ 	enum ieee80211_band band;
+-	int i;
++	int i, err;
++
++	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (!wdev->wext.ibss.beacon_interval)
+ 		wdev->wext.ibss.beacon_interval = 100;
+@@ -216,8 +241,24 @@ static int cfg80211_ibss_wext_join(struc
+ 	if (!netif_running(wdev->netdev))
+ 		return 0;
+ 
+-	return cfg80211_join_ibss(wiphy_to_dev(wdev->wiphy),
+-				  wdev->netdev, &wdev->wext.ibss);
++	if (wdev->wext.keys)
++		wdev->wext.keys->def = wdev->wext.default_key;
++
++	wdev->wext.ibss.privacy = wdev->wext.default_key != -1;
++
++	if (wdev->wext.keys) {
++		ck = kmemdup(wdev->wext.keys, sizeof(*ck), GFP_KERNEL);
++		if (!ck)
++			return -ENOMEM;
++		for (i = 0; i < 6; i++)
++			ck->params[i].key = ck->data[i];
++	}
++	err = __cfg80211_join_ibss(rdev, wdev->netdev,
++				   &wdev->wext.ibss, ck);
++	if (err)
++		kfree(ck);
++
++	return err;
+ }
+ 
+ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+@@ -265,7 +306,11 @@ int cfg80211_ibss_wext_siwfreq(struct ne
+ 		wdev->wext.ibss.channel_fixed = false;
+ 	}
+ 
+-	return cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_lock(wdev);
++	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_unlock(wdev);
++
++	return err;
+ }
+ /* temporary symbol - mark GPL - in the future the handler won't be */
+ EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_siwfreq);
+@@ -333,7 +378,11 @@ int cfg80211_ibss_wext_siwessid(struct n
+ 	memcpy(wdev->wext.ibss.ssid, ssid, len);
+ 	wdev->wext.ibss.ssid_len = len;
+ 
+-	return cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_lock(wdev);
++	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_unlock(wdev);
++
++	return err;
+ }
+ /* temporary symbol - mark GPL - in the future the handler won't be */
+ EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_siwessid);
+@@ -414,7 +463,11 @@ int cfg80211_ibss_wext_siwap(struct net_
+ 	} else
+ 		wdev->wext.ibss.bssid = NULL;
+ 
+-	return cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_lock(wdev);
++	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
++	wdev_unlock(wdev);
++
++	return err;
+ }
+ /* temporary symbol - mark GPL - in the future the handler won't be */
+ EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_siwap);
+--- wireless-testing.orig/net/wireless/util.c	2009-07-07 23:39:01.000000000 +0200
++++ wireless-testing/net/wireless/util.c	2009-07-08 00:45:17.000000000 +0200
+@@ -141,9 +141,12 @@ void ieee80211_set_bitrate_flags(struct 
+ 			set_mandatory_flags_band(wiphy->bands[band], band);
+ }
+ 
+-int cfg80211_validate_key_settings(struct key_params *params, int key_idx,
++int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
++				   struct key_params *params, int key_idx,
+ 				   const u8 *mac_addr)
+ {
++	int i;
++
+ 	if (key_idx > 5)
+ 		return -EINVAL;
+ 
+@@ -197,6 +200,12 @@ int cfg80211_validate_key_settings(struc
+ 		}
+ 	}
+ 
++	for (i = 0; i < rdev->wiphy.n_cipher_suites; i++)
++		if (params->cipher == rdev->wiphy.cipher_suites[i])
++			break;
++	if (i == rdev->wiphy.n_cipher_suites)
++		return -EINVAL;
++
+ 	return 0;
+ }
+ 
+@@ -523,3 +532,33 @@ const u8 *ieee80211_bss_get_ie(struct cf
+ 	return NULL;
+ }
+ EXPORT_SYMBOL(ieee80211_bss_get_ie);
++
++void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
++{
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	struct net_device *dev = wdev->netdev;
++	int i;
++
++	if (!wdev->connect_keys)
++		return;
++
++	for (i = 0; i < 6; i++) {
++		if (!wdev->connect_keys->params[i].cipher)
++			continue;
++		if (rdev->ops->add_key(wdev->wiphy, dev, i, NULL,
++					&wdev->connect_keys->params[i]))
++			printk(KERN_ERR "%s: failed to set key %d\n",
++				dev->name, i);
++		if (wdev->connect_keys->def == i)
++			if (rdev->ops->set_default_key(wdev->wiphy, dev, i))
++				printk(KERN_ERR "%s: failed to set defkey %d\n",
++					dev->name, i);
++		if (wdev->connect_keys->defmgmt == i)
++			if (rdev->ops->set_default_mgmt_key(wdev->wiphy, dev, i))
++				printk(KERN_ERR "%s: failed to set mgtdef %d\n",
++					dev->name, i);
++	}
++
++	kfree(wdev->connect_keys);
++	wdev->connect_keys = NULL;
++}
+
 
