@@ -1,78 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60277 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755960AbZGOSSN (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40069 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753886AbZGHNcx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 14:18:13 -0400
-Subject: Re: [PATCH] mac80211: don't sleep in mesh_path_add allocation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <1247680936-21513-1-git-send-email-andrey@cozybit.com>
-References: <1247680936-21513-1-git-send-email-andrey@cozybit.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1cDIsl19uis3CTk1vQZD"
-Date: Wed, 15 Jul 2009 20:17:43 +0200
-Message-Id: <1247681863.10754.26.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 8 Jul 2009 09:32:53 -0400
+Date: Wed, 08 Jul 2009 08:33:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chunkeey@web.de, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, rjw@sisk.pl, davem@davemloft.net
+Subject: [PATCH] p54: Fix for Bugzilla #13725 - tx refused but queue
+ active
+Message-ID: <4a54a00e.f/eBx8U+poa0aDtQ%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In the mainline kernel, p54usb will fail because the TX queue length can
+become < 0. This problem has been reported as Bugzilla #13725. The failure
+is expressed by the following message in the logs:
 
---=-1cDIsl19uis3CTk1vQZD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+WARNING: at net/mac80211/tx.c:1325 ieee80211_tx+0x23c/0x298 [mac80211]()
+Hardware name: HP Pavilion dv2700 Notebook PC
+tx refused but queue active
 
-On Wed, 2009-07-15 at 11:02 -0700, Andrey Yurovsky wrote:
-> mesh_path_add allocates an mpath and a node but it is called with RCU
-> held.  Use the GFP_ATOMIC flag to prevent these allocations from
-> sleeping since otherwise we can hit the following sleep-while-atomic:
+This problem has been recently observed in the wireless-testing tree, where
+a full solution is being tested. That fix is too invasive for 2.6.31-rcX,
+but the simple change supplied here will prevent the failure.
 
-This isn't sufficient, quoting from the function, highlight added:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
-{
-...
-        if (grow) {
-                struct mesh_table *oldtbl, *newtbl;
+John,
 
-                write_lock(&pathtbl_resize_lock);
-                oldtbl =3D mesh_paths;
-                newtbl =3D mesh_table_grow(mesh_paths);
-                if (!newtbl) {
-                        write_unlock(&pathtbl_resize_lock);
-                        return 0;
-                }
-                rcu_assign_pointer(mesh_paths, newtbl);
-                write_unlock(&pathtbl_resize_lock);
+This patch should be sent to mainline. As stated above, it should not be
+applied to wireless-testing.
 
-*******         synchronize_rcu();
-                mesh_table_free(oldtbl, false);
-        }
-...
-}
+Thanks,
 
-johannes
+Larry
+---
 
---=-1cDIsl19uis3CTk1vQZD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Index: linux-2.6/drivers/net/wireless/p54/p54common.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/p54/p54common.c
++++ linux-2.6/drivers/net/wireless/p54/p54common.c
+@@ -912,13 +912,14 @@ static void p54_rx_frame_sent(struct iee
+ 		}
+ 
+ 		__skb_unlink(entry, &priv->tx_queue);
+-		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ 		frame_len = entry->len;
+ 		entry_hdr = (struct p54_hdr *) entry->data;
+ 		entry_data = (struct p54_tx_data *) entry_hdr->data;
+-		priv->tx_stats[entry_data->hw_queue].len--;
++		if (priv->tx_stats[entry_data->hw_queue].len)
++			priv->tx_stats[entry_data->hw_queue].len--;
+ 		priv->stats.dot11ACKFailureCount += payload->tries - 1;
++		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
+ 
+ 		/*
+ 		 * Frames in P54_QUEUE_FWSCAN and P54_QUEUE_BEACON are
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXh1DAAoJEODzc/N7+Qmar54P/2y3LcOmJtfBBsyEAOqVGj/I
-98bPMLNn5J1KdTRp4h6DTnceJV5Q8S9yW8qUYMBmPq2pxWBr7R1l3pANuTdfUW5d
-/XLXs2ywdk9nkFqe8FMJgOYsWr2ERwR6P4xtDfjM7q6UbZSn35Upfm1FsqL9hYiV
-nPxlMCvEk0pTOpzdi46rzFOz/2ut7+EB/KtcIN/0DuL1Xa64VshTdb1ZYZz9DVSW
-szz6dpvMowsns1xGSUXIoy7eHHXnjr9qj6Y3xf4ODNyfH8LJBNiDWYSYE0+Gmad9
-E6G7I+mOkOMYvjU3JeqqSPcc7JVd2GWWx3Y5wtRLrRO+ug8IGmUxhFMEn6TshBCh
-spNVKxYxvH61RsJDE4iRhrv/YWuJWZgcbc9AWNNHVueY+PmrwbLaVuDfH9umFQBt
-+FUnSvVGn8dc7N3YoGHDuYC+vRV83dEE1XYdKPpuQEaLiQYnYx6fI5Ucb6YwXMTf
-wcbFYrLbcoIIlrJfqFWRjqAbyfwLhn9Y9Iv5HgnM6DAds88CsV2vNSgPe3RFt4BD
-h7Z1MUudVF5aep4yKt+ZOWXN32YnucaSDZMwUtmAWIx1qzAPOOxXIpRbEwSymMpC
-MF82yBF9AauyR7wnfNuJzC3EuRCKUrc60NlX/QM7Ad89sJm5htbdeqBHYP6ZOj2F
-MtmbDh140cAPJm+iXoZL
-=yntJ
------END PGP SIGNATURE-----
-
---=-1cDIsl19uis3CTk1vQZD--
-
+---
