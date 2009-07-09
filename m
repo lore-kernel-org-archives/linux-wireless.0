@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:59959 "EHLO c60.cesmail.net"
+Received: from hera.kernel.org ([140.211.167.34]:49259 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843AbZG2Fw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 01:52:58 -0400
-Subject: [RFC PATCH] rt61pci: fix module reloading with power saving enabled
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
+	id S1750735AbZGIEDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 00:03:47 -0400
+Subject: Re: [PATCH 41/44] includecheck fix: include/linux, rfkill.h
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1247081557.9709.16.camel@localhost.localdomain>
+References: <1247063308.4382.12.camel@ht.satnam>
+	 <1247068554.4382.106.camel@ht.satnam>
+	 <1247081557.9709.16.camel@localhost.localdomain>
 Content-Type: text/plain
-Date: Wed, 29 Jul 2009 01:52:41 -0400
-Message-Id: <1248846761.18329.20.camel@ct>
+Date: Thu, 09 Jul 2009 09:31:59 +0530
+Message-Id: <1247112119.2453.4.camel@ht.satnam>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unloading rt61pci can leave the device in such state that reloading
-rt61pci would fail to reinitialize it.  Bogus data would be read from
-the EEPROM and the RF version won't be recognized.  Only reboot would
-return the device to a sane state.
+Hello Marcel,
 
-It appears that it happens if rt61pci is unloaded while power saving is
-active.  To initialize the device properly, SOFT_RESET_CSR should be set
-to the same value as rt61pci_config_ps() uses to wake up the device.
+On Wed, 2009-07-08 at 12:32 -0700, Marcel Holtmann wrote:
+> Hi Jaswinder,
+> 
+> > fix the following 'make includecheck' warning:
+> > 
+> >   include/linux/rfkill.h: linux/types.h is included more than once.
+> > 
+> > Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+> > ---
+> >  include/linux/rfkill.h |    1 -
+> >  1 files changed, 0 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> > index e73e242..2ce2983 100644
+> > --- a/include/linux/rfkill.h
+> > +++ b/include/linux/rfkill.h
+> > @@ -99,7 +99,6 @@ enum rfkill_user_states {
+> >  #undef RFKILL_STATE_UNBLOCKED
+> >  #undef RFKILL_STATE_HARD_BLOCKED
+> >  
+> > -#include <linux/types.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/list.h>
+> >  #include <linux/mutex.h>
+> 
+> with the #ifdef __KERNEL__ in between it is kinda weird, but patch seems
+> correct.
+> 
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
+ACK or Reviewed-by ?
 
-I don't know what 0x00000007 is and I don't want to make up a name for
-it.
+Thanks,
+--
+JSR
 
-rt61pci_config_ps() does other things, but this is the minimal required
-change.  If anyone has a specification for rt61, it should mention
-SOFT_RESET_CSR and possibly other registers to be set before EEPROM may
-be accessed.
-
-Please note that unloading rt61pci (as well as rt73usb) can trigger an
-oops or panic in sysfs code that I didn't have a chance to fix yet.
-It's very elusive and manifests differently every time.  Fortunately
-(for everyone not debugging it), it's rare.
-
-
- drivers/net/wireless/rt2x00/rt61pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index fb95b8c..f615fe6 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2600,6 +2600,8 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
- 
-+	rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
-+
- 	/*
- 	 * Allocate eeprom data.
- 	 */
-
--- 
-Regards,
-Pavel Roskin
