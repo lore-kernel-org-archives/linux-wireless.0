@@ -1,99 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50481 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933477AbZGPWbG (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:65102 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108AbZGIR5a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 18:31:06 -0400
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1247782731.31442.3.camel@johannes.local>
-References: <4A5D0374.5040702@mandriva.org>
-	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>
-	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>
-	 <1247782731.31442.3.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 17 Jul 2009 00:30:33 +0200
-Message-Id: <1247783433.31442.11.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 9 Jul 2009 13:57:30 -0400
+Received: by fxm18 with SMTP id 18so354735fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 10:57:28 -0700 (PDT)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Alexander Wenzel <wenzel@fgan.de>
+Subject: Re: Problem with p54 driver and ibss mode
+Date: Thu, 9 Jul 2009 21:57:20 +0400
+Cc: linux-wireless@vger.kernel.org
+References: <4A55DB91.2070305@fgan.de> <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com> <4A560E4B.6080209@fgan.de>
+In-Reply-To: <4A560E4B.6080209@fgan.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200907092157.21784.jcmvbkbc@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
-
-> > And pressing it again gets this:
-> > [root@tmb-laptop rfkill]# ./rfkill list
-> > 0: acer-wireless: Wireless LAN
-> > 	Soft blocked: no
-> > 	Hard blocked: no
-> > 1: acer-bluetooth: Bluetooth
-> > 	Soft blocked: yes
-> > 	Hard blocked: no
-> > 2: phy0: Wireless LAN
-> > 	Soft blocked: yes
-> > 	Hard blocked: no
-> > 
-> > And after that I cant get wireless back until I again do a:
-> > ./rfkill unblock 2
-> > (works only when acer-wireless is no/no and Wireless LAN is yes/no)
+В сообщении от Thursday 09 July 2009 Alexander Wenzel написал(a):
+> Hi!
+> >> I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
+> >> to work on a Nokia N810... So far, without any success.
+> >> [ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
+> > As far as I can see, this is check that incoming STA and your STA have
+> > different MAC addresses. If you don't set up MAC manually on both
+> > devices and make it unique, chances high that they are equal.
 > 
-> Right. This is bad. The button press shouldn't have affected the
-> soft-state of the rfkill #2.
+> You saved my day :D Finally it works...! Thanks for the hint.
 > 
-> > Applying this patch:
-> > [PATCH] rfkill: fix rfkill_set_states() to set the hw state
-> > sent by Alan Jenkins does not help this issue either...
-> > 
-> > Any  suggestions how to fix the rfkill ?
+> [  214.478668] wlan0: Selected IBSS BSSID 56:97:1a:24:11:6c based on configured SSID
 > 
-> I'll poke at the acer code to see what it's doing wrong...
+> # iw dev wlan0 station dump
+> Station 00:02:ee:c0:ff:ee (on wlan0)
+> 	inactive time:	429 ms
+> 	rx bytes:	8964
+> 	tx bytes:	408
+> 	signal:  	55 dBm
+> 	tx bitrate:	1.0 MBit/s
+> 
+> I just checked the other N810 devices and every device has
+> the same mac address. And here we go... [p54spi_eeprom.h:39]
+> 0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
+> 
+> The original kernel with default os shows the correct address.
+> When booting a different os with the with the original or custom
+> kernel it shows the 'coffee' address.
+> So is there a way to let the kernel receive and set the
+> correct mac address of the wlan device?
+> I guess my problem is this line:
+> [ 3685.320800] cx3110x spi2.0: loading default eeprom...
 
-Can't see anything wrong. I wonder if the button you have sends both the
-ACPI event _and_ an input event.
+You're right. I guess that easiest way to deal with it is to save blob from p54spi_eeprom.h into a file
+3826.eeprom in the same directory as 3826.arm and fix MAC address in it, according to comments in p54spi_eeprom.h
 
-Can you try this patch and tell us what happens?
+These data for sure must reside on /dev/mtdblk1 partition, but they're probably somehow coded/obfuscated.
+I couldn't find anything similar to MAC of my own n810 there.
 
-johannes
-
---- wireless-testing.orig/net/rfkill/input.c	2009-07-17 00:27:29.000000000 +0200
-+++ wireless-testing/net/rfkill/input.c	2009-07-17 00:29:50.000000000 +0200
-@@ -57,6 +57,8 @@ static void __rfkill_handle_global_op(en
- {
- 	unsigned int i;
- 
-+	printk(KERN_DEBUG "__rfkill_handle_global_op(%d)\n", op);
-+
- 	switch (op) {
- 	case RFKILL_GLOBAL_OP_EPO:
- 		rfkill_epo();
-@@ -87,6 +89,7 @@ static void __rfkill_handle_normal_op(co
- 	bool blocked;
- 
- 	blocked = rfkill_get_global_sw_state(type);
-+	printk(KERN_DEBUG "__rfkill_handle_normal_op(%d, %d) [%d]\n", type, complement, blocked);
- 	if (complement)
- 		blocked = !blocked;
- 
-@@ -175,6 +178,8 @@ static void rfkill_schedule_toggle(enum 
- {
- 	unsigned long flags;
- 
-+	printk(KERN_DEBUG "rfkill_schedule_toggle(%d)\n", type);
-+
- 	if (rfkill_is_epo_lock_active())
- 		return;
- 
-@@ -189,6 +194,8 @@ static void rfkill_schedule_toggle(enum 
- 
- static void rfkill_schedule_evsw_rfkillall(int state)
- {
-+	printk(KERN_DEBUG "rfkill_schedule_evsw_rfkillall(%d)\n", state);
-+
- 	if (state)
- 		rfkill_schedule_global_op(rfkill_master_switch_op);
- 	else
-
-
+Thanks.
+-- Max
