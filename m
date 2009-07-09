@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39531 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392AbZG0OqA (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:38137 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757238AbZGIFrj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 10:46:00 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ettl.martin@gmx.de, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ray_cs: avoid potential null dereference in ray_get_wireless_stats
-Date: Mon, 27 Jul 2009 10:34:42 -0400
-Message-Id: <1248705282-9951-1-git-send-email-linville@tuxdriver.com>
+	Thu, 9 Jul 2009 01:47:39 -0400
+Subject: Re: [PATCH 41/44] includecheck fix: include/linux, rfkill.h
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Jaswinder Singh Rajput <jaswinder@kernel.org>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Sam Ravnborg <sam@ravnborg.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1247112119.2453.4.camel@ht.satnam>
+References: <1247063308.4382.12.camel@ht.satnam>
+	 <1247068554.4382.106.camel@ht.satnam>
+	 <1247081557.9709.16.camel@localhost.localdomain>
+	 <1247112119.2453.4.camel@ht.satnam>
+Content-Type: text/plain
+Date: Wed, 08 Jul 2009 22:47:42 -0700
+Message-Id: <1247118462.9709.36.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13854
+Hi Jaswinder,
 
-Reported-by: Martin Ettl <ettl.martin@gmx.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ray_cs.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+> > > fix the following 'make includecheck' warning:
+> > > 
+> > >   include/linux/rfkill.h: linux/types.h is included more than once.
+> > > 
+> > > Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+> > > ---
+> > >  include/linux/rfkill.h |    1 -
+> > >  1 files changed, 0 insertions(+), 1 deletions(-)
+> > > 
+> > > diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+> > > index e73e242..2ce2983 100644
+> > > --- a/include/linux/rfkill.h
+> > > +++ b/include/linux/rfkill.h
+> > > @@ -99,7 +99,6 @@ enum rfkill_user_states {
+> > >  #undef RFKILL_STATE_UNBLOCKED
+> > >  #undef RFKILL_STATE_HARD_BLOCKED
+> > >  
+> > > -#include <linux/types.h>
+> > >  #include <linux/kernel.h>
+> > >  #include <linux/list.h>
+> > >  #include <linux/mutex.h>
+> > 
+> > with the #ifdef __KERNEL__ in between it is kinda weird, but patch seems
+> > correct.
+> > 
+> 
+> ACK or Reviewed-by ?
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 698b11b..a4308a6 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -1508,11 +1508,13 @@ static int ray_commit(struct net_device *dev, struct iw_request_info *info,	/* N
- static iw_stats *ray_get_wireless_stats(struct net_device *dev)
- {
- 	ray_dev_t *local = netdev_priv(dev);
--	struct pcmcia_device *link = local->finder;
--	struct status __iomem *p = local->sram + STATUS_BASE;
-+	struct pcmcia_device *link;
-+	struct status __iomem *p;
- 
- 	if (local == (ray_dev_t *) NULL)
- 		return (iw_stats *) NULL;
-+	link = local->finder;
-+	p = local->sram + STATUS_BASE;
- 
- 	local->wstats.status = local->card_status;
- #ifdef WIRELESS_SPY
--- 
-1.6.2.5
+both if you want to, but John already picked it up for wireless-testing
+if I am not mistaken. So it is on its way into 2.6.32 somehow.
+
+Regards
+
+Marcel
+
 
