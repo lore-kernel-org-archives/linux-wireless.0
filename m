@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14972 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755047AbZGOPO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 11:14:26 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 08:14:26 -0700
-Date: Wed, 15 Jul 2009 08:14:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 3/5] cfg80211: add WoW support
-Message-ID: <20090715151425.GC5682@mosca>
-References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
- <1247617320-20163-4-git-send-email-lrodriguez@atheros.com>
- <1247658322.2302.1.camel@johannes.local>
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:64897 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750835AbZGIESr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 00:18:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1247658322.2302.1.camel@johannes.local>
+In-Reply-To: <4A551B43.3020104@gmail.com>
+References: <4A54FB81.30302@gmail.com>
+	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
+	 <4A551B43.3020104@gmail.com>
+Date: Thu, 9 Jul 2009 05:18:45 +0100
+Message-ID: <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 15, 2009 at 04:45:22AM -0700, Johannes Berg wrote:
-> On Tue, 2009-07-14 at 20:21 -0400, Luis R. Rodriguez wrote:
-> 
-> > +	/* Draw up a netlink message to send back */
-> > +	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-> > +	if (!msg) {
-> 
-> Need to use DEFAULT_SIZE or something.
+On Wed, Jul 8, 2009 at 11:18 PM, Marcin Slusarz<marcin.slusarz@gmail.com> wrote:
+> Hin-Tak Leung wrote:
+>> Is there a v1, and what does it use?
+>
+> I don't know.
 
-Will change it, thanks. I see NLMSG_DEFAULT_SIZE is smaller than
-NLMSG_GOODSIZE (it removes the NLMSG_HDRLEN), but no documentation
-for either, when should I use either?
+2009/7/8 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Wed, Jul 8, 2009 at 11:49 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>> Is there a v1, and what does it use?
+>
+> I have the v1, it is rt73-based. (v3 is rt2070, not rt3070, though.)
 
-> > +	if (!(wiphy->wow_triggers_supported & triggers_requested)) {
-> > +		err = -EOPNOTSUPP;
-> > +		goto out;
-> 
-> This seems wrong, should be "requested & supported != requested", I
-> think.
+I guess I have two questions: (1) are the 3 variants labelled in that
+way as such v1/v2/v3 (on the box,
+or one of the USB device identity queries)? (2) are they distinguished
+by different product IDs?
 
-The above one won't return -EOPNOTSUPP when you add additional junk, you're
-right, better to just inform userspace of that.
+The point is that the commit (which only changes the help message) is
+only appropriate if they are labelled as v1/v2/v3 and not
+distinguished by different product IDs. If they are distinguished by
+different product IDs and the current codes for the three drivers bind
+correctly to each, then the change is only relevant to people who
+manually build their kernel and want to build one driver but not the
+others. (i.e. instead of distros which ship the full set of driver
+modules). Which goes to my first question...
 
-> > @@ -4253,6 +4359,16 @@ static struct genl_ops nl80211_ops[] = {
-> >  	{
-> >  		.cmd = NL80211_CMD_DISCONNECT,
-> >  		.doit = nl80211_disconnect,
-> > +	},
-> > +	{
-> > +		.cmd = NL80211_CMD_GET_WOW,
-> > +		.doit = nl80211_get_wow,
-> > +		.policy = nl80211_policy,
-> > +		/* can be retrieved by unprivileged users */
-> > +	},
-> > +	{
-> > +		.cmd = NL80211_CMD_SET_WOW,
-> > +		.doit = nl80211_set_wow,
-> >  		.policy = nl80211_policy,
-> >  		.flags = GENL_ADMIN_PERM,
-> >  	},
-> 
-> This messes up the disconnect command.
+if they are not labelled v1/v2/v3 as such, it may be more
+useful/informative to change to
 
-Must have been a rebase issue, strange, thanks, will fix up.
+    [some variant of ] ... [(other variants are supported by the
+rt2070/rt3070 modules)]
 
-  Luis
+instead of just adding [v2] to the end.
