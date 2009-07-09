@@ -1,49 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:60999 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814AbZGZClG convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:37340 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756632AbZGINM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 22:41:06 -0400
-Received: by bwz28 with SMTP id 28so2030087bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 19:41:04 -0700 (PDT)
+	Thu, 9 Jul 2009 09:12:56 -0400
+Message-ID: <4A55EC95.5000309@gmail.com>
+Date: Thu, 09 Jul 2009 15:11:49 +0200
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890907160913i40c8341fo13b75b38b2700055@mail.gmail.com>
-References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
-	 <1247673740.17896.1983.camel@rc-desk>
-	 <1247674310.10754.19.camel@johannes.local>
-	 <43e72e890907150925p51c1a019r95266cbdc1e762e4@mail.gmail.com>
-	 <bcd1ba70907152058m14249f40gf0ebff1620e56674@mail.gmail.com>
-	 <43e72e890907160913i40c8341fo13b75b38b2700055@mail.gmail.com>
-Date: Sat, 25 Jul 2009 19:41:04 -0700
-Message-ID: <bcd1ba70907251941w725c2e6l77870a3157f48d17@mail.gmail.com>
-Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
-From: John Ranson <ranson@analager.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
+References: <4A54FB81.30302@gmail.com>	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>	 <4A551B43.3020104@gmail.com>	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>	 <4A5575C1.8090403@lwfinger.net>	 <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>	 <4A55D123.5090802@gmail.com> <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
+In-Reply-To: <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Running wireless testing directly fixed this issue.
+Hin-Tak Leung wrote:
+> 2009/7/9 Marcin Slusarz <marcin.slusarz@gmail.com>:
+>> Hin-Tak Leung pisze:
+>>> 2009/7/9 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>> Hin-Tak Leung wrote:
+>>>>> if they are not labelled v1/v2/v3 as such, it may be more
+>>>>> useful/informative to change to
+>>>>>
+>>>>>     [some variant of ] ... [(other variants are supported by the
+>>>>> rt2070/rt3070 modules)]
+>>>>>
+>>>>> instead of just adding [v2] to the end.
+>>>> I don't know about the box as I bought mine used on Ebay, but the
+>>>> label on the device clearly states that it is a WG111v2.
+>>>>
+>>>> Larry
+>>>>
+>>>>
+>>> But that's  a Netgear WG111v2 ? We are talking about Linksys
+>>> WUSB54GC-EU and its v1/v2/v3 . I am just thinking that if it is for
+>>> informative purposes (for those who actually selectively build their
+>>> kernel modules), adding a bit more info, such as suggesting to use
+>>> rt73usb/rt2070/rt3070 modules, won't hurt.
+>>>
+>>> Incidentally I like to know a bit more about this patch - presumably
+>>> Marcin has such a device? I am also a little curious, as this commit
+>>> should be accompanied by a corresponding update in another Kconfig
+>>> which supports the device? I am not trying to be picky, but for an
+>>> informative (non-code-changing) patch, it can be more informative.
+>> I have a v3 device and this driver does not support it.
+>> Below is the commit which added the string my patch corrects.
+>> I've sent yesterday another patch which adds support for WUSB54GC v3
+>> to the rt3070 driver.
+> 
+> Here is some info from Gabor (shouldn't this be reply-all rather than just me):
+> ------------------
+> The v1 and v2 look identical (though the label on the device indicates
+> the revision). The v3 looks completely different. They all have
+> different USB IDs (v1 is stock RT73, v2 has a custom ID, while v3 is
+> AFAIK stock RT2070).
+> ------------------
+> 
+> I guess to be informative, may I suggest adding '(for v1  see rt73usb,
+> and v3 see rt3070)' or something similiar to the 'v2' change?
+> It is fair customary in Kconfig to mention even alternative/competing
+> drivers for the same device. And when you add v3 support to the rt3070
+> driver, a reverse mention may be appropriate. (I guess I am spending
+> far too long on this discussion - but I reckon, the purpose of a
+> non-code-changing change is meant to be informative, so one might want
+> to be as informative as appropriate without being too wordy...)
 
-John
+Look, support for Ralink chipsets is a mess. They are supported by too sets
+of drivers - Ralink's ugly as hell but working staging drivers (rt2860,
+rt2870, rt3070, soon rt3090) and properly developed but lagging rt2x00
+drivers (RT2400PCI, RT2500PCI, RT61PCI, RT2500USB, RT73USB, RT2800USB).
 
-On Thu, Jul 16, 2009 at 9:13 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Wed, Jul 15, 2009 at 8:58 PM, John Ranson<ranson@analager.net> wrote:
->> The release is master-2009-07-08-3-g3615cdf
->>
->> /sys/class/ieee80211/ is empty
->>
->> I'm running Gentoo on an Lenovo R61. I don't think that there is
->> anything too special about my configuration.
->>
->> Is there any more information that I can provide that will help debug?
->
-> You can try wireless-testing directly:
->
-> http://wireless.kernel.org/en/developers/Documentation/git-guide
->
->  Luis
->
+Theoretically my WUSB54GCv3 is supported by RT2800USB (which was added during
+2.6.31 merge window), but it doesn't work. With tiny patch added to rt3070 
+(just usb id) my card works. Some day rt2x00 drivers will be better than Ralink's,
+but right now they are not.
+
+So I wouldn't like to encourage any of them. I just wanted to fix clearly
+wrong help text which stated that rtl8187 (Realtek's chipset!) supports
+all WUSB54GC cards.
+
+Marcin
+
