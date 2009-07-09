@@ -1,168 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f196.google.com ([209.85.221.196]:62392 "EHLO
-	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745AbZGaBR2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 21:17:28 -0400
-Received: by qyk34 with SMTP id 34so1276423qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 18:17:28 -0700 (PDT)
-Message-ID: <4A7246D0.1040200@gmail.com>
-Date: Thu, 30 Jul 2009 21:20:16 -0400
-From: Roman Macko <rmacko72@gmail.com>
+Received: from mailguard.fgan.de ([128.7.3.5]:34891 "EHLO mailguard.fgan.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756632AbZGIMmo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 08:42:44 -0400
+Received: from rufsun5.fkie.fgan.de ([128.7.2.5] helo=mailhost.fgan.de)
+	by mailguard.fgan.de with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <wenzel@fgan.de>)
+	id 1MOsHa-0002HO-Si
+	for linux-wireless@vger.kernel.org; Thu, 09 Jul 2009 13:59:22 +0200
+Received: from gustav.fkie.fgan.de ([128.7.5.95])
+	by mailhost.fgan.de with esmtps (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <wenzel@fgan.de>)
+	id 1MOsHa-0002ES-DO
+	for linux-wireless@vger.kernel.org; Thu, 09 Jul 2009 13:59:22 +0200
+Message-ID: <4A55DB91.2070305@fgan.de>
+Date: Thu, 09 Jul 2009 13:59:13 +0200
+From: Alexander Wenzel <wenzel@fgan.de>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
-References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net> 	<43e72e890907291453k444e2d06k864149ddcda8f351@mail.gmail.com> 	<1248904631.1216.1027.camel@rc-desk> <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com> 	<4A719C44.6050208@gmail.com> <43e72e890907300743nd3a80eck2153d01f4e99ddf9@mail.gmail.com> 	<4A71D172.1000306@gmail.com> <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
-In-Reply-To: <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Problem with p54 driver and ibss mode
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Hi!
+I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
+to work on a Nokia N810... So far, without any success.
 
-I have version 3.6 of module-init-tools and this version reads 
-/etc/depmod.d directory too.
+Some words about my scenario:
+- Nokia N810 running a custom omap1 kernel
+  (linux-omap-2.6.git / tag: "v2.6.29-omap1")
+  Patched keyboard (board-n800.c) and usb driver (usb-tusb6010.c)
+  to get it working...
 
-But I wanted to understand how depmod reads config files, so I looked 
-into source codes (both version 3.6 and 3.10)
-and finally found out how it works.
+- Installed Mer (Ubuntu 9.04) on an external mmc 4GB card
+  Patched the bootmenu stuff to get rid of static /dev/ nodes problem
+  which come up with the new kernel...
 
-Assume depmod is run without -C or --config option
+- compiled compat wireless drivers 2009-07-09
+  disabled CONFIG_RFKILL_BACKPORT_LEDS because it didn't compile
 
-Version 3.6 reads firstly /etc/depmod.conf file and then it reads config 
-files in directory /etc/depmod.d.
-Files in directory /etc/depmod.d are read and parsed in unpredictable 
-order by readdir function (this function uses
-raw directory structures of filesystem)
+- A second N810 running debian and nokias 2.6.21er kernel
+  Ad-hoc mode is active. (ad-hoc is working, tested with some
+  other N810 devices)
 
-Version 3.10 reads /etc/depmod.conf firstly as well, but this config 
-file is considered as deprecated in this version
-and prints out warning about that. Then it reads config files in 
-directory /etc/depmod.d by readdir function as well, but before it starts
-to parse them, it sorts them accord to filename, so you know the order 
-in which they are going to be parsed
-and this is very improtant!!! This behavior should be from version 3.7
+After all these preparations, patching and workaround stuff,
+i finally inserted the wireless modules into the kernel
+(rfkill_backport, cfg80211, mac80211, p54common, p54spi)
+dmesg looks fine so far:
+[ 3671.237365] cfg80211: Using static regulatory domain info
+[ 3671.237396] cfg80211: Regulatory domain: US
+[ 3671.237426] 	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[ 3671.237457] 	(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+[ 3671.237487] 	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 3671.237518] 	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 3671.237548] 	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 3671.237579] 	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[ 3671.237609] 	(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+[ 3671.238555] cfg80211: Calling CRDA for country: US
+[ 3685.186523] cx3110x spi2.0: firmware: requesting 3826.arm
+[ 3685.265045] phy0: p54 detected a LM20 firmware
+[ 3685.265106] p54: rx_mtu reduced from 3240 to 2376
+[ 3685.265106] phy0: FW rev 2.13.0.0.a.22.8 - Softmac protocol 5.6
+[ 3685.265136] phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+[ 3685.265197] cx3110x spi2.0: firmware: requesting 3826.eeprom
+[ 3685.320800] cx3110x spi2.0: loading default eeprom...
+[ 3685.320922] phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbow
+[ 3685.455108] phy0: Selected rate control algorithm 'minstrel'
+[ 3685.456787] Registered led device: p54-phy0::assoc
+[ 3685.457031] Registered led device: p54-phy0::tx
+[ 3685.457275] Registered led device: p54-phy0::rx
+[ 3685.457489] Registered led device: p54-phy0::radio
+[ 3685.457550] cx3110x spi2.0: is registered as 'phy0'
 
-The same for both versions:
-1) List of directories to be searched is created from search commands 
-from all config files in order how particular
-search commands are found in config files (so order of parsed config 
-files is important). If no search command is found,
-updates directory is added before "built-in" directory.
+Monitor mode is also working. Here are some beacons from my second device:
+00:01:37.463744 51669459us tsft 1.0 Mb/s 2462 MHz (0x00a0) 30dB signal -63dB noise antenna 0 [0x0000000e] Beacon (rita) [1.0* 2.0* 5.5 11.0 Mbit] IBSS CH: 11
+00:01:37.566100 51771860us tsft 1.0 Mb/s 2462 MHz (0x00a0) 29dB signal -63dB noise antenna 0 [0x0000000e] Beacon (rita) [1.0* 2.0* 5.5 11.0 Mbit] IBSS CH: 11
+00:01:37.668517 51874300us tsft 1.0 Mb/s 2462 MHz (0x00a0) 30dB signal -63dB noise antenna 0 [0x0000000e] Beacon (rita) [1.0* 2.0* 5.5 11.0 Mbit] IBSS CH: 11
 
-2) As for override command, the last one found for particular module and 
-kernel in all config files wins,
- so again the order of parsed config files is important.
+After this short test, i switched the driver into ad-hoc mode,
+setup the essid, channel and assigned an ip address... I tried
+to ping, tcpdump, whatsoever... nothing happens. Driver statistics
+are also frozen (in monitor mode the rx stats incr.).
+The only hints to the problem are:
+- this repeating kernel msg:
+[...cut...]
+[ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
+[ 3905.535186] Modules linked in: p54spi p54common mac80211 cfg80211 rfkill_backport
+[ 3905.535247] [<c02b73a0>] (dump_stack+0x0/0x14) from [<c00541cc>] (warn_slowpath+0x70/0x8c)
+[ 3905.535308] [<c005415c>] (warn_slowpath+0x0/0x8c) from [<bf02af40>] (sta_info_insert+0x7c/0x15c [mac80211])
+[ 3905.535522]  r3:00000000 r2:00000000
+[ 3905.535552]  r7:c53a4200 r6:c7e65800 r5:0000c0ee r4:c5303b60
+[ 3905.535583] [<bf02aec4>] (sta_info_insert+0x0/0x15c [mac80211]) from [<bf02f220>] (ieee80211_ibss_add_sta+0x114/0x130 [mac80211])
+[ 3905.535919]  r7:c7d9442e r6:c7e65800 r5:c53a4200 r4:c7e65800
+[ 3905.535949] [<bf02f10c>] (ieee80211_ibss_add_sta+0x0/0x130 [mac80211]) from [<bf02f35c>] (ieee80211_rx_bss_info+0x120/0x160 [mac80211])
+[ 3905.536407] [<bf02f23c>] (ieee80211_rx_bss_info+0x0/0x160 [mac80211]) from [<bf02f590>] (ieee80211_ibss_rx_queued_mgmt+0x1f4/0x274 [mac80211])
+[ 3905.536743] [<bf02f39c>] (ieee80211_ibss_rx_queued_mgmt+0x0/0x274 [mac80211]) from [<bf02f684>] (ieee80211_ibss_work+0x74/0x198 [mac80211])
+[ 3905.537048] [<bf02f610>] (ieee80211_ibss_work+0x0/0x198 [mac80211]) from [<c0064318>] (run_workqueue+0xac/0x124)
+[ 3905.537261]  r5:c53ac000 r4:c53a7a80
+[ 3905.537292] [<c006426c>] (run_workqueue+0x0/0x124) from [<c00649dc>] (worker_thread+0x104/0x118)
+[ 3905.537353]  r7:c53a7a88 r6:c53adfa4 r5:c53ac000 r4:c53a7a80
+[ 3905.537384] [<c00648d8>] (worker_thread+0x0/0x118) from [<c0067fe4>] (kthread+0x58/0x94)
+[ 3905.537475]  r7:00000000 r6:c53a7a80 r5:c00648d8 r4:c53ac000
+[ 3905.537506] [<c0067f8c>] (kthread+0x0/0x94) from [<c0057054>] (do_exit+0x0/0x67c)
+[ 3905.537567]  r7:00000000 r6:00000000 r5:00000000 r4:00000000
+[ 3905.537597] ---[ end trace 09523b411832988b ]---
+[...cut...]
 
- From this is evident, that both versions can work differently which 
-depends on the order of parsed config files from
-/etc/depmod.d directory that is different in both versions.
+- and the fact, that the device is up, but not "running"
+# ifconfig wlan0
+wlan0     Link encap:Ethernet  HWaddr 00:02:ee:c0:ff:ee
+          inet addr:10.0.59.34  Bcast:10.0.59.255  Mask:255.255.255.0
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:550 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:18 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:58779 (58.7 KB)  TX bytes:1080 (1.0 KB)
 
-So solution would be:
-1) if there is no search command in any of config files (in 
-/etc/depmod.conf  or those in /etc/depmod.d directory), do nothing.
-2) if there is a search command in any of config files and does not 
-contain updates directory before built-in add search command
-    "search updates" in
-   a) if system has version >=3.7, create config file in /etc/depmod.d 
-directory which name is alphabeticaly less than all you will find
-      in that directory
-   b) if system has version <=3.6 add search command "search updates" at 
-the begining of /etc/depmod.conf file
+# iwconfig wlan0
+wlan0     IEEE 802.11bg  ESSID:"rita"
+          Mode:Ad-Hoc  Frequency:2.462 GHz  Cell: 1A:7E:4B:A7:14:45
+          Tx-Power=27 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
 
-But such adding of "search updates" can break depmod configuration in 
-some systems or it is not desirable to make search in
-updates directory at all. So maybe it would be better to use another 
-name for directory than updates
+If you have any ideas, or patches or infos,
+i'll be happy to try these and give some feedback :)
 
-Or it would be also interesting to use override command for all modules 
-compiled in compat-wireless
-and put it all to configuration file /etc/depmod.d/compat-wireless.conf 
-and not bothering with version of depmod nor
-finding the search command in all configuration files, e.g
+Regards,
+AleX
 
-compat-wireless.conf
-======================================
-override iwlagn * updates/drivers/net/wireless/iwlwifi
-override iwlcore * updates/drivers/net/wireless/iwlwifi
-....
-....
-....
-======================================
-
-it can make problem only when some other config file in /etc/depmod.d 
-directory contains override command for
-any module from compat-wireless
-
-
-I hope this help you
-
-Regards
-
-Roman
-
-Luis R. Rodriguez wrote:
-> On Thu, Jul 30, 2009 at 9:59 AM, Roman Macko<rmacko72@gmail.com> wrote:
->   
->> Yes, I tested it. When you place that config file containing "search updates
->> built-in" in /etc/depmod.d
->> directory, it doesn't work.
->>     
->
-> OK you probably have an old version of depmod. depmod is provided by
-> module-init-tools, what version of module-init-tools do you have?
->
-> I have 3.10 (as on Ubuntu Karmic)
->
->   
->> You have to place it in global config file
->> /etc/depmod.conf.
->>     
->
-> If this is an old depmod thing we will have to check the version of
-> depmod and do this for that case.
->
->   
->> How depmod works with config files in /etc/depmod.d directory is a mystery
->> for me.
->>     
->
-> Its not that tricky, the new version reads /etc/depmod.conf and if
-> that is not found then moves on to check /etc/depmod.d/* files.
->
->   
->> I wasn't able to learn
->> this from manual pages.
->>     
->
-> That's probably because your version doesn't use depmod.d dir.
->
->   
->> And I tested another thing too. When some of config files (either global
->> /etc/depmod.conf or one of those in /etc/depmod.d directory)
->> doesn't contain search command ,
->> everything works fine, according to manual page for depmod, using builtin
->> search string "updates built-in" what  is
->> what you need.
->>     
->
-> Right, built-in will use /lib/modules/$(uname -r)/kernel/ for modules,
-> chances are if no depmod.conf file or depmod.d dir is present default
-> may be to use built-in.
->
->   
->> As soon as one of them (either global or one of those in
->> /etc/depmod.d directory) contains search command,
->> then depmod uses this one. It seems seach command in global config file
->> (/etc/depmod.conf) has higher priory. But as I say
->> I really don't know how depmod works with all config files.
->>     
->
-> I believe this is built-in by default, then read depmod.conf first, if
-> that is not present read depmod.d dir.
->
->   Luis
->   
-
+ps: If you need further infos, just let me know...
+-- 
+**********************************************
+Dipl.-Inform. (FH) Alexander Wenzel
+Forschungsgesellschaft fuer
+Angewandte Naturwissenschaften e. V. (FGAN)
+Neuenahrer Str. 20, 53343 Wachtberg, Germany
+Tel.  : 0049 (0)228 9435-263
+Fax   : 0049 (0)228 9435-685
+E-Mail: wenzel@fgan.de
+Web   : http://www.fgan.de/
+**********************************************
+Sitz der Gesellschaft: Bonn
+Registergericht: Amtsgericht Bonn VR 2530
+Vorstand: Prof. Dr. Maurus Tacke (komm. Vors.)
+          Prof. Dr. Joachim Ender (Stellv.)
