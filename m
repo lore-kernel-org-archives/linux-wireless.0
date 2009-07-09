@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.highlandsun.com ([70.87.222.79]:60416 "EHLO
-	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753999AbZGUBYX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 21:24:23 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by mail.highlandsun.com (Postfix) with ESMTP id 4C72510F96
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 20:56:11 -0400 (EDT)
-Message-ID: <4A65122B.2040500@highlandsun.com>
-Date: Mon, 20 Jul 2009 17:56:11 -0700
-From: Howard Chu <hyc@highlandsun.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath9k rfkill behavior
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:49775 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751831AbZGIRdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 13:33:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/6] iwlwifi driver updates 07/09/2009
+Date: Thu,  9 Jul 2009 10:33:35 -0700
+Message-Id: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm currently running 2.6.31-rc2 and noticed an annoying change in rfkill 
-behavior now; I can no longer toggle the state by echoing 0/1 into 
-sys/class/rfkill/rfkillX/state, it says write operation not permitted. I 
-haven't found any posts online related to this change in behavior, can anyone 
-point me to an explanation/rationale? The only way to change the state now 
-appears to be by using the wifi toggle switch on the laptop.
+John,
 
-This is particularly obnoxious on recent HP Pavilion laptops, because there's 
-a single button/LED and it affects both the bluetooth and the wifi 
-transmitters. I never use bluetooth and I want that turned off, but I want to 
-keep the wifi enabled. I used to be able to do this by explicitly echoing 0 
-into the bluetooth rfkill/state but not any more. Even with the bluetooth 
-software disabled, powertop shows it's still eating power+cycles on my USB 
-controller unless I zero its rfkill state.
+We include two fixes targeting 2.6.31. One is needed for powertop
+to be able to parse the sysfs information correctly. The second fix
+is needed to be able to transfer fragmented frames in certain
+environments. The rest of the series include a security fix and cleanup.
 
-Also, when I press the toggle switch, the bluetooth device unregisters itself 
-and disappears from the rfkill directory, while the wifi entry remains, but 
-its state reads as "2" instead of 0 or 1. When it gets into this state, 
-further toggling of the button doesn't reactivate it (though it continues to 
-toggle the bluetooth on and off), and a reboot is required to re-enable the 
-wifi. What is state "2" ?
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+I do not know if patch 3/6 (the security fix) can be considered as 2.6.31
+material. It does apply cleanly if you wish to take it.
+
+[PATCH 1/6] iwlwifi: move show_qos to debugfs
+[PATCH 2/6 2.6.31 and w-t] iwlwifi: only show active power level via sysfs
+[PATCH 3/6] iwlwifi: fix permissions on debugfs files
+[PATCH 4/6 2.6.31 and w-t] iwlwifi: only update byte count table during aggregation
+[PATCH 5/6] iwl3945: cleanup number of queues settings
+[PATCH 6/6] iwlagn: fix minimum number of queues setting
+
+Thank you
+
+Reinette
+
