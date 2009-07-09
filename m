@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50459 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754269AbZG2UBC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 16:01:02 -0400
-Message-ID: <4A709E55.2070909@candelatech.com>
-Date: Wed, 29 Jul 2009 12:09:09 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mailguard.fgan.de ([128.7.3.5]:43999 "EHLO mailguard.fgan.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760012AbZGIPft (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 11:35:49 -0400
+Message-ID: <4A560E4B.6080209@fgan.de>
+Date: Thu, 09 Jul 2009 17:35:39 +0200
+From: Alexander Wenzel <wenzel@fgan.de>
 MIME-Version: 1.0
-To: Adrian von Bidder <avbidder@fortytwo.ch>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k connection loss (failed to wakeup the MAC Chip)
-References: <200907280838.42541@fortytwo.ch> <40f31dec0907281653g63375736id57f547a8ba12cad@mail.gmail.com> <200907291211.21133@fortytwo.ch>
-In-Reply-To: <200907291211.21133@fortytwo.ch>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Max Filippov <jcmvbkbc@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Problem with p54 driver and ibss mode
+References: <4A55DB91.2070305@fgan.de> <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com>
+In-Reply-To: <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure if it helps, but if I:
+Hi!
+>> I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
+>> to work on a Nokia N810... So far, without any success.
+>> [ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
+> As far as I can see, this is check that incoming STA and your STA have
+> different MAC addresses. If you don't set up MAC manually on both
+> devices and make it unique, chances high that they are equal.
 
-load ath5k and let some stations associate (I'm testing virtual
-STA logic)
+You saved my day :D Finally it works...! Thanks for the hint.
 
-.. wait a bit ...
+[  214.478668] wlan0: Selected IBSS BSSID 56:97:1a:24:11:6c based on configured SSID
 
-rmmod ath5k; modprobe ath5k
+# iw dev wlan0 station dump
+Station 00:02:ee:c0:ff:ee (on wlan0)
+	inactive time:	429 ms
+	rx bytes:	8964
+	tx bytes:	408
+	signal:  	55 dBm
+	tx bitrate:	1.0 MBit/s
 
-then it fails to wakeup the MAC chip every time.
+I just checked the other N810 devices and every device has
+the same mac address. And here we go... [p54spi_eeprom.h:39]
+0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
 
-But, if I then wait a few seconds, and repeat the rmmod/modprobe commands, then it wakes
-up and works fine.
+The original kernel with default os shows the correct address.
+When booting a different os with the with the original or custom
+kernel it shows the 'coffee' address.
+So is there a way to let the kernel receive and set the
+correct mac address of the wlan device?
+I guess my problem is this line:
+[ 3685.320800] cx3110x spi2.0: loading default eeprom...
 
-I'm running a hacked kernel (and ath5k/wifi stack), so could be something
-I'm doing wrong, but just maybe it will give you a reproducible test
-case...
+Anyway, i'm happy that it's working now.
 
-Thanks,
-Ben
-
+Regards,
+AleX
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+**********************************************
+Dipl.-Inform. (FH) Alexander Wenzel
+Forschungsgesellschaft fuer
+Angewandte Naturwissenschaften e. V. (FGAN)
+Neuenahrer Str. 20, 53343 Wachtberg, Germany
+Tel.  : 0049 (0)228 9435-263
+Fax   : 0049 (0)228 9435-685
+E-Mail: wenzel@fgan.de
+Web   : http://www.fgan.de/
+**********************************************
+Sitz der Gesellschaft: Bonn
+Registergericht: Amtsgericht Bonn VR 2530
+Vorstand: Prof. Dr. Maurus Tacke (komm. Vors.)
+          Prof. Dr. Joachim Ender (Stellv.)
