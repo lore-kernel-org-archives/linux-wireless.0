@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:36927 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751283AbZG1C16 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 22:27:58 -0400
-Subject: RE: [PATCH] iwlwifi: Read outside array bounds
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Chatre, Reinette" <reinette.chatre@intel.com>
-Cc: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	Roel Kluin <roel.kluin@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <1248732735.1216.565.camel@rc-desk>
-References: <4A6B7A67.9070906@gmail.com> <1248658905.3747.97.camel@debian>
-	 <6F5C1D715B2DA5498A628E6B9C124F040141D0B0DC@hasmsx504.ger.corp.intel.com>
-	 <1248732735.1216.565.camel@rc-desk>
-Content-Type: text/plain
-Date: Tue, 28 Jul 2009 10:27:56 +0800
-Message-Id: <1248748076.3747.1097.camel@debian>
-Mime-Version: 1.0
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:57652 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821AbZGIQzV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 12:55:21 -0400
+Received: by yxe26 with SMTP id 26so447889yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 09:55:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	 <6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com>
+	 <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
+	 <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
+	 <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
+	 <20090707030719.GC7199@hash.localnet>
+	 <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
+	 <20090708114252.GG7199@hash.localnet>
+	 <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
+Date: Thu, 9 Jul 2009 12:55:20 -0400
+Message-ID: <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+From: Bob Copeland <me@bobcopeland.com>
+To: Jasin Colegrove <j.wholesalesupply@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-07-28 at 06:12 +0800, Chatre, Reinette wrote:
-> On Mon, 2009-07-27 at 01:28 -0700, Winkler, Tomas wrote:
-> > 
-> > > -----Original Message-----
-> > > From: Zhu, Yi
-> > > Sent: Monday, July 27, 2009 4:42 AM
-> > > To: Roel Kluin; Winkler, Tomas; Chatre, Reinette
-> > > Cc: linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net;
-> > > Andrew Morton
-> > > Subject: Re: [PATCH] iwlwifi: Read outside array bounds
-> > > 
-> > > On Sun, 2009-07-26 at 05:34 +0800, Roel Kluin wrote:
-> > > > tid is bounded (above) by the size of default_tid_to_tx_fifo (17
-> > > elements), but
-> > > > the size of priv->stations[].tid[] is MAX_TID_COUNT (9) elements.
-> > > 
-> > > I think MAX_TID_COUNT should be defined as 16 or 17. Tomas?
-> > >
-> > 
-> > In general it's 16. In practice we use only 8.
-> 
-> I think the above statement means that we are mostly using EDCA quality
-> of service which only uses 8 tids. We do not currently use HCCA (and
-> thus of course not the hybrid) which would cause more tids to be used.
-> 
-> A closer look at this flow to this function shows:
-> rs_tl_turn_on_agg 
+On Thu, Jul 9, 2009 at 12:42 PM, Jasin
+Colegrove<j.wholesalesupply@gmail.com> wrote:
+>> BTW, can you (re?)post the "Atheros AR5212 chip found (MAC xxx,
+>> PHY xxxx)?"
+>>
+> What exact information do you want and where can I find it?
 
-rs_tl_add_packet
-{
-	...
-	u8 *qc = ieee80211_get_qos_ctl(hdr);
-	tid = qc[0] & 0xf;
-	...
+Run 'dmesg'; a string like the above is printed out when the module
+loads.  In case there was something broken specifically for your
+chipset, the mac/phy versions will help narrow it down.
 
-	tl = &lq_data->load[tid];
-}
+> $git bisect start v2.6.30-rc4 v2.6.29 -- drivers/net net/
+>
+> Is that what you where hinting at? I wasted a whole day trying to fix
+> errors in drivers/staging before I was told I could just disable
+> compilation of staging with one switch. Oh well...
 
-This should be a problem.
+Yes, that's what I meant.  And it does help to have a relatively
+slimmed down .config, especially when bisecting. :\
 
-Thanks,
--yi
-
+-- 
+Bob Copeland %% www.bobcopeland.com
