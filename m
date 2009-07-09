@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:29068 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755356AbZGUTwH (ORCPT
+Received: from n20.bullet.mail.mud.yahoo.com ([68.142.206.147]:38961 "HELO
+	n20.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754125AbZGIVSB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 15:52:07 -0400
-Message-ID: <4A661C4B.5070803@nokia.com>
-Date: Tue, 21 Jul 2009 22:51:39 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Thu, 9 Jul 2009 17:18:01 -0400
+Date: Thu, 9 Jul 2009 14:12:21 -0700
+From: Steven Luo <steven@steven676.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH] ath9k: Fix enabling OFDM weak signal detection
+Message-ID: <20090709211221.GA4854@steven676.net>
 MIME-Version: 1.0
-To: ext Kalle Valo <kalle.valo@iki.fi>
-CC: Joe Perches <joe@perches.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jirislaby@gmail.com" <jirislaby@gmail.com>
-Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
-References: <20090721191136.22374.69017.stgit@tikku>	<20090721191154.22374.17349.stgit@tikku>	<1248204540.31365.275.camel@Joe-Laptop.home> <87ocrdsu9f.fsf@litku.valot.fi>
-In-Reply-To: <87ocrdsu9f.fsf@litku.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
->
->   
->>> +F:	drivers/net/wireless/wl12xx/wl1251*
->>>       
->> Not that I'm asking you to maintain more than you want to,
->> but why not:
->>
->> F:	drivers/net/wireless/wl12xx/
->>     
->
-> Just because Luciano will soon publish wl1271 driver (which will use
-> wl1271_ prefix) and he will be maintaining that part, no other reason.
->
-> But what should we do with the shared Makefile and Kconfig? Also in the
-> future we might share some of the code between 1251 and 1271. Any tips
-> for this?
->   
+From: Steven Luo <steven@steven676.net>
 
-I think we have to choose one maintainer for the shared files (= you! 
-;).  So we could have something like this for your part:
+It seems that OFDM weak signal detection should be enabled after an ANI
+state reset, as indicated by the initial setting of ofdmWeakSigDetectOff
+and what the open Atheros HAL does.  Unfortunately, the reversed sense
+of ofdmWeakSigDetectOff (true if weak signal detection is NOT enabled)
+seems to have resulted in a mixup here, causing weak signal detection to
+be disabled.
 
-F:   drivers/net/wireless/wl12xx/*
-X:   drivers/net/wireless/wl12xx/wl1271*
+This patch significantly improves reception and throughput from distant
+stations for my AR5416-based AP running compat-wireless 2009-06-25.
 
-Of course this doesn't apply yet, because there is no wl1271* at the 
-moment (hopefully there will be very soon).  So, for now I think you 
-could have just the F line.  And when I add my maintainer's block there, 
-I can add the X line to your part at the same time... How does that sound?
+Signed-off-by: Steven Luo <steven@steven676.net>
+Cc: stable@kernel.org
+---
 
--- 
-Cheers,
-Luca.
+--- a/drivers/net/wireless/ath/ath9k/ani.c	2009-06-24 21:14:00.000000000 -0700
++++ b/drivers/net/wireless/ath/ath9k/ani.c	2009-07-06 02:45:57.000000000 -0700
+@@ -482,7 +482,7 @@ void ath9k_ani_reset(struct ath_hw *ah)
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+-				     !ATH9K_ANI_USE_OFDM_WEAK_SIG);
++				     ATH9K_ANI_USE_OFDM_WEAK_SIG);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_CCK_WEAK_SIGNAL_THR,
+ 				     ATH9K_ANI_CCK_WEAK_SIG_THR);
+ 
 
