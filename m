@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46292 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756937AbZGJT53 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:62376 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754661AbZGIKrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:57:29 -0400
-Message-Id: <20090710195536.341132270@sipsolutions.net>
-References: <20090710195131.504091075@sipsolutions.net>
-Date: Fri, 10 Jul 2009 21:51:33 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: [PATCH 2/4] net: make namespace iteration possible under RCU
-Mime-Version: 1.0
+	Thu, 9 Jul 2009 06:47:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <4A5575C1.8090403@lwfinger.net>
+References: <4A54FB81.30302@gmail.com>
+	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
+	 <4A551B43.3020104@gmail.com>
+	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
+	 <4A5575C1.8090403@lwfinger.net>
+Date: Thu, 9 Jul 2009 11:47:18 +0100
+Message-ID: <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Marcin Slusarz <marcin.slusarz@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All we need to take care of is using proper RCU list
-add/del primitives and inserting a synchronize_rcu()
-at one place to make sure the exit notifiers are run
-after everybody has stopped iterating the list.
+2009/7/9 Larry Finger <Larry.Finger@lwfinger.net>:
+> Hin-Tak Leung wrote:
+>>
+>> if they are not labelled v1/v2/v3 as such, it may be more
+>> useful/informative to change to
+>>
+>>     [some variant of ] ... [(other variants are supported by the
+>> rt2070/rt3070 modules)]
+>>
+>> instead of just adding [v2] to the end.
+>
+> I don't know about the box as I bought mine used on Ebay, but the
+> label on the device clearly states that it is a WG111v2.
+>
+> Larry
+>
+>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/net_namespace.h |    3 +++
- net/core/net_namespace.c    |   14 +++++++++++---
- 2 files changed, 14 insertions(+), 3 deletions(-)
+But that's  a Netgear WG111v2 ? We are talking about Linksys
+WUSB54GC-EU and its v1/v2/v3 . I am just thinking that if it is for
+informative purposes (for those who actually selectively build their
+kernel modules), adding a bit more info, such as suggesting to use
+rt73usb/rt2070/rt3070 modules, won't hurt.
 
---- wireless-testing.orig/include/net/net_namespace.h	2009-07-07 04:14:39.000000000 +0200
-+++ wireless-testing/include/net/net_namespace.h	2009-07-07 12:17:17.000000000 +0200
-@@ -211,6 +211,9 @@ static inline struct net *read_pnet(stru
- #define for_each_net(VAR)				\
- 	list_for_each_entry(VAR, &net_namespace_list, list)
- 
-+#define for_each_net_rcu(VAR)				\
-+	list_for_each_entry_rcu(VAR, &net_namespace_list, list)
-+
- #ifdef CONFIG_NET_NS
- #define __net_init
- #define __net_exit
---- wireless-testing.orig/net/core/net_namespace.c	2009-07-07 03:43:35.000000000 +0200
-+++ wireless-testing/net/core/net_namespace.c	2009-07-07 12:18:19.000000000 +0200
-@@ -6,6 +6,7 @@
- #include <linux/delay.h>
- #include <linux/sched.h>
- #include <linux/idr.h>
-+#include <linux/rculist.h>
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
- 
-@@ -127,7 +128,7 @@ static struct net *net_create(void)
- 	rv = setup_net(net);
- 	if (rv == 0) {
- 		rtnl_lock();
--		list_add_tail(&net->list, &net_namespace_list);
-+		list_add_tail_rcu(&net->list, &net_namespace_list);
- 		rtnl_unlock();
- 	}
- 	mutex_unlock(&net_mutex);
-@@ -156,9 +157,16 @@ static void cleanup_net(struct work_stru
- 
- 	/* Don't let anyone else find us. */
- 	rtnl_lock();
--	list_del(&net->list);
-+	list_del_rcu(&net->list);
- 	rtnl_unlock();
- 
-+	/*
-+	 * Another CPU might be rcu-iterating the list, wait for it.
-+	 * This needs to be before calling the exit() notifiers, so
-+	 * the rcu_barrier() below isn't sufficient alone.
-+	 */
-+	synchronize_rcu();
-+
- 	/* Run all of the network namespace exit methods */
- 	list_for_each_entry_reverse(ops, &pernet_list, list) {
- 		if (ops->exit)
-@@ -219,7 +227,7 @@ static int __init net_ns_init(void)
- 		panic("Could not setup the initial network namespace");
- 
- 	rtnl_lock();
--	list_add_tail(&init_net.list, &net_namespace_list);
-+	list_add_tail_rcu(&init_net.list, &net_namespace_list);
- 	rtnl_unlock();
- 
- 	mutex_unlock(&net_mutex);
-
--- 
-
+Incidentally I like to know a bit more about this patch - presumably
+Marcin has such a device? I am also a little curious, as this commit
+should be accompanied by a corresponding update in another Kconfig
+which supports the device? I am not trying to be picky, but for an
+informative (non-code-changing) patch, it can be more informative.
