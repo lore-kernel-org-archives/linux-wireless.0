@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:32902 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbZGXN6t convert rfc822-to-8bit (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:57277 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754073AbZGIRvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 09:58:49 -0400
-Received: by gxk9 with SMTP id 9so3107294gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 06:58:48 -0700 (PDT)
+	Thu, 9 Jul 2009 13:51:09 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so122159qwb.37
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 10:51:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A68E80C.808@redfish-solutions.com>
-References: <4A612514.4050708@redfish-solutions.com>
-	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
-	 <4A650331.9020409@redfish-solutions.com>
-	 <4A6620B9.4@redfish-solutions.com>
-	 <20090723112428.GC13742@hash.localnet>
-	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>
-	 <4A68C821.7060208@redfish-solutions.com>
-	 <4A68DBDE.7060504@redfish-solutions.com>
-	 <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>
-	 <4A68E80C.808@redfish-solutions.com>
-Date: Fri, 24 Jul 2009 09:58:48 -0400
-Message-ID: <b6c5339f0907240658o38f4ee76t2de8a071cd2f37f4@mail.gmail.com>
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+In-Reply-To: <b6c5339f0907091048v665dcdf6i659e94de95038856@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	<6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
+	<6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
+	<20090707030719.GC7199@hash.localnet> <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
+	<20090708114252.GG7199@hash.localnet> <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
+	<b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
+	<43e72e890907091002r2dd36efevbfbce06155beb7e5@mail.gmail.com>
+	<b6c5339f0907091048v665dcdf6i659e94de95038856@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 9 Jul 2009 10:50:48 -0700
+Message-ID: <43e72e890907091050p7bc08a25s86f9bb7a1c8740aa@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jasin Colegrove <j.wholesalesupply@gmail.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 6:45 PM, Philip A.
-Prindeville<philipp_subx@redfish-solutions.com> wrote:
-> Bob Copeland wrote:
->> On Thu, Jul 23, 2009 at 5:53 PM, Philip A.
->> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->>>> Getting closer :-)
->>>>
->>>> ath5k_tx_processq(sc, &sc->txqs[i]);
->>>>
->>> Didn't work with rc4:
->>
->> What did you apply against?  It's supposed to be against
->> wireless-testing (or, at worst, latest compat-wireless).
->>
->>> BUG: unable to handle kernel NULL pointer dereference at 00000000
->>> IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
->>
-
-> This was against compat-wireless-2.6.31-rc4.
+On Thu, Jul 9, 2009 at 10:48 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Thu, Jul 9, 2009 at 1:02 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
 >
-> Alas, I already blew away the build directory...
+>>>> $git bisect start v2.6.30-rc4 v2.6.29 -- drivers/net net/
+>
+>> I'd add net/mac80211 and net/wireless in there as well, just to be safe.
+>
+> net/ was already in there :)
 
-I think you need to use the unstable compat-wireless snapshots;
-I have a feeling that the above doesn't have all of the tx queues.
-
-Check out ath5k.h, the txq array in struct ath5k_softc should have
-NUM_TX_QUEUES entries, an earlier version only had 2.
-
-Although your compiler generates rather different code from mine
-(different config or whatever), it looks like the oops happened
-in the list_for_each_entry(... txq->q ...) -- but I don't see how
-that can happen in my copy, since txq[i].q is initialized at the
-same time as txq[i].setup.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Ah yes :)
