@@ -1,106 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:39227 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933442AbZGPWJw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:11111 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759349AbZGIMuP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 18:09:52 -0400
-Message-ID: <4A5FA52D.7030701@mandriva.org>
-Date: Fri, 17 Jul 2009 01:09:49 +0300
-From: Thomas Backlund <tmb@mandriva.org>
+	Thu, 9 Jul 2009 08:50:15 -0400
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org> <1247672725.17896.1974.camel@rc-desk>
-In-Reply-To: <1247672725.17896.1974.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
+References: <4A54FB81.30302@gmail.com> <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
+	<4A551B43.3020104@gmail.com> <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
+	<4A5575C1.8090403@lwfinger.net> <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
+	<4A55D123.5090802@gmail.com> <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 9 Jul 2009 14:49:54 +0200
+Message-ID: <69e28c910907090549q542691fan6756ebf9edac45a9@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Marcin Slusarz <marcin.slusarz@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre skrev:
-> Thomas,
-> 
-> On Tue, 2009-07-14 at 15:45 -0700, Thomas Backlund wrote:
->> Johannes Berg skrev:
->>> On Wed, 2009-07-15 at 01:15 +0300, Thomas Backlund wrote:
+2009/7/9 Hin-Tak Leung <hintak.leung@gmail.com>:
+> Here is some info from Gabor (shouldn't this be reply-all rather than just me):
+> ------------------
+> The v1 and v2 look identical (though the label on the device indicates
+> the revision). The v3 looks completely different. They all have
+> different USB IDs (v1 is stock RT73, v2 has a custom ID, while v3 is
+> AFAIK stock RT2070).
+> ------------------
+>
+> I guess to be informative, may I suggest adding '(for v1  see rt73usb,
+> and v3 see rt3070)' or something similiar to the 'v2' change?
+> It is fair customary in Kconfig to mention even alternative/competing
+> drivers for the same device. And when you add v3 support to the rt3070
+> driver, a reverse mention may be appropriate. (I guess I am spending
+> far too long on this discussion - but I reckon, the purpose of a
+> non-code-changing change is meant to be informative, so one might want
+> to be as informative as appropriate without being too wordy...)
+>
 
->>>> --- cut ---
->>>> Bringing up interface wlan0:  RTNETLINK answers: Unknown error 132
->>>> RTNETLINK answers: Unknown error 132
->>> press your rfkill button.
->> I wish it was that simple :-(
->>
->> I already tried it, but it does not help...
->> I get no reaction what so ever from pressing it...
->>
->> The laptop is an Acer 5720G if that makes any difference...
->>
->> Could it be that rfkill has been broken for my laptop ?
->>
->> And why should I need to press rfkill now, when I didn't before ?
->> Has some kernel defaults changed since 2.6.30 series ?
-> 
-> Do you have debugging enabled? Does your logs contain anything useful?
-> 
+Yes, sorry, it was intended to be reply-to-all, but Gmail's
+default-reply-to-all feature appears to be broken.
 
-Nope.
-Nothing gets logged when I press the rfkill...
-
-I'd say that the rfkill rewrite killed my wireless :-(
-
-Bluetooth works at it whould, but not the wireless
-
-But now I have atleast found one way to get it working...
-
-I've built the rfkill utility, and with it I can get the wireless working...
-
-Here is the output when wireless works:
-[root@tmb-laptop rfkill]# ./rfkill list
-0: acer-wireless: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: acer-bluetooth: Bluetooth
-	Soft blocked: yes
-	Hard blocked: no
-2: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-
-Pressing the rfkill button gets me this:
-[root@tmb-laptop rfkill]# ./rfkill list
-0: acer-wireless: Wireless LAN
-	Soft blocked: yes
-	Hard blocked: no
-1: acer-bluetooth: Bluetooth
-	Soft blocked: yes
-	Hard blocked: no
-2: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: yes
-
-And pressing it again gets this:
-[root@tmb-laptop rfkill]# ./rfkill list
-0: acer-wireless: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: acer-bluetooth: Bluetooth
-	Soft blocked: yes
-	Hard blocked: no
-2: phy0: Wireless LAN
-	Soft blocked: yes
-	Hard blocked: no
-
-And after that I cant get wireless back until I again do a:
-./rfkill unblock 2
-(works only when acer-wireless is no/no and Wireless LAN is yes/no)
-
-Applying this patch:
-[PATCH] rfkill: fix rfkill_set_states() to set the hw state
-sent by Alan Jenkins does not help this issue either...
-
-Any  suggestions how to fix the rfkill ?
-
---
-Thomas
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
