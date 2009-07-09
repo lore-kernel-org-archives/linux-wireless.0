@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42383 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751118AbZGPMPG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 08:15:06 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MRPrb-0005iE-Bn
-	for linux-wireless@vger.kernel.org; Thu, 16 Jul 2009 12:15:03 +0000
-Received: from mail.sevone.com ([mail.sevone.com])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 12:15:03 +0000
-Received: from dave.mulford by mail.sevone.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 12:15:03 +0000
-To: linux-wireless@vger.kernel.org
-From: Dave <dave.mulford@gmail.com>
-Subject: prism54 firmware cannot initialize pcmcia card
-Date: Thu, 16 Jul 2009 12:09:14 +0000 (UTC)
-Message-ID: <loom.20090716T120033-657@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from fmailhost03.isp.att.net ([207.115.11.53]:34555 "EHLO
+	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753339AbZGITbe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 15:31:34 -0400
+Message-ID: <4A5645A3.9000906@lwfinger.net>
+Date: Thu, 09 Jul 2009 14:31:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Chr <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: p54usb - problems with "no probe,response from AP ..."
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First, some generic info about the laptop I'm using
+Christian,
 
-gentoo kernel-2.6.29
-prism54-firmware-2.13.2 (listed as working with in-kernel >=2.6.29 driver)
-yenta_cardbus driver
+I have not gotten very far with the problem in the subject; however, I
+have a few things to report:
 
-Everything seems to work. The driver is loaded, the card is recognized, the
-driver requests the correct firmware name, then the firmware seems to have
-issues initializing the card. I have posted the relevant entries in dmesg to
-http://pastebin.com/f7514c9c0
+I got a dump of the TX queues when the disassociation event came
+through. All were normal.
 
-Any help is appreciated. Thanks!
+I tested with 2.6.31-rc2 from Linus's tree. It does _NOT_ have the
+problem, thus it is something that was introduced in the process of
+splitting p54common.{ch} into the component parts.
 
-Regards,
-Dave
+In comparing the code, I see that the variable 'cached_beacon' was
+eliminated and the code that handles beacons was changed. When I made
+the following change, the "no probe response" message went away - the
+interface just hangs:
 
+Index: wireless-testing/drivers/net/wireless/p54/txrx.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/txrx.c
++++ wireless-testing/drivers/net/wireless/p54/txrx.c
+@@ -386,7 +386,8 @@ static void p54_rx_frame_sent(struct p54
+                        priv->beacon_req_id = cpu_to_le32(0);
+
+                dev_kfree_skb_any(entry);
+-               return ;
++               p54_wake_queues(priv);
++               return;
+        }
+
+        /*
+
+
+Any thoughts?
+
+Larry
