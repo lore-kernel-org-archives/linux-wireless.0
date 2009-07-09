@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f184.google.com ([209.85.210.184]:49145 "EHLO
-	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbZGSMwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 08:52:07 -0400
-Received: by mail-yx0-f184.google.com with SMTP id 14so2912186yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2009 05:52:07 -0700 (PDT)
-Date: Sun, 19 Jul 2009 14:53:57 +0300 (EAT)
-From: Dan Carpenter <error27@gmail.com>
-To: flamingice@sourmilk.net
-cc: linux-wireless@vger.kernel.org
-Subject: [patch] wireless: potential null deref in p54spi.c
-Message-ID: <alpine.DEB.2.00.0907171607280.12306@bicker>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:62445 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751215AbZGIX0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 19:26:50 -0400
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Jul 2009 16:26:50 -0700
+Message-Id: <1247182010.17896.1344.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can't use dev_err() becuase "priv" is NULL.
+On Thu, 2009-07-09 at 16:13 -0700, Rafał Miłecki wrote:
+> 2009/7/9 reinette chatre <reinette.chatre@intel.com>:
+> > Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
+> > available for download from
+> > http://intellinuxwireless.org/?n=Downloads
+> >
+> > Changes:
+> >
+> > -- More graceful handling of Rx hangs (NMI)
+> > -- More reliable scanning
+> > -- Wait 10 seconds after association before power down
+> > -- Reset receiver via retune after missing beacons
+> > -- Disable TGK measurement when receiving packet
+> > -- More reliable Tx of ACK/BA/CTS
+> 
+> Nice work, AFAICU this should fix a few annoying issues, right?
 
-Found by smatch (http://repo.or.cz/w/smatch.git).
+We hope so. 
 
-regards,
-dan carpenter
+> Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
+> estimate would be nice to known. This month? This year?
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+I am not aware of any scheduled date for a new release. Are there
+critical issues that you are aware of that requires a new uCode?
 
---- orig/drivers/net/wireless/p54/p54spi.c	2009-07-17 16:04:20.000000000 +0300
-+++ new/drivers/net/wireless/p54/p54spi.c	2009-07-17 16:05:28.000000000 +0300
-@@ -635,7 +635,7 @@
- 
- 	hw = p54_init_common(sizeof(*priv));
- 	if (!hw) {
--		dev_err(&priv->spi->dev, "could not alloc ieee80211_hw");
-+		printk(KERN_ERR "could not alloc ieee80211_hw");
- 		return -ENOMEM;
- 	}
- 
+Reinette
+
+
