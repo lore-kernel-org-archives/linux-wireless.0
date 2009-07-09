@@ -1,80 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n24.bullet.mail.mud.yahoo.com ([68.142.206.163]:26203 "HELO
-	n24.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750730AbZGOEE2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 00:04:28 -0400
-Date: Tue, 14 Jul 2009 21:04:26 -0700
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Bennyam Malavazi <Bennyam.Malavazi@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"Vasanth@venema.h4ckr.net" <Vasanth@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix enabling OFDM weak signal detection
-Message-ID: <20090715040426.GA14415@steven676.net>
-References: <20090709211221.GA4854@steven676.net> <43e72e890907101102i29352c6bq9e511663e2c3a986@mail.gmail.com> <20090714180348.GD25788@mosca> <20090714181148.GE25788@mosca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090714181148.GE25788@mosca>
-From: steven@steven676.net (Steven Luo)
+Received: from mga03.intel.com ([143.182.124.21]:24416 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752736AbZGIRdn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 13:33:43 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 3/6] iwlwifi: fix permissions on debugfs files
+Date: Thu,  9 Jul 2009 10:33:38 -0700
+Message-Id: <1247160821-14989-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247160821-14989-3-git-send-email-reinette.chatre@intel.com>
+References: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
+ <1247160821-14989-2-git-send-email-reinette.chatre@intel.com>
+ <1247160821-14989-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 14, 2009 at 11:11:48AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jul 14, 2009 at 11:03:48AM -0700, Luis Rodriguez wrote:
-> > Please try this patch instead, I've only compile tested this.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Yeah, this works too.  Thanks!
+debugfs files are created with 644 permissions which gives everybody
+read access. This presents a security issue if a user opens the file and
+holds it open at the time the driver removes the file. At this point
+invalid memory will be accessed.
 
--Steven Luo
+Fix this by only allowing root to read debugfs files.
 
-> Now without the double AP check :)
-> 
-> From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Subject: [PATCH] ath9k: Tune ANI function processing on AP mode during ANI reset
-> 
-> For AP mode we must tune ANI specially for 2 GHz and
-> for 5 GHz. We mask in only the flags we want to toggle
-> on ath9k_hw_ani_control() through the ah->ani_function
-> bitmask, this will take care of ignoring changes during
-> ANI reset which we were disabling before.
-> 
-> Reported-by: Steven Luo <steven@steven676.net>
-> Cc: Bennyam Malavazi <Bennyam.Malavazi@Atheros.com
-> Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c |   12 ++++++++++++
->  1 files changed, 12 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -478,6 +478,18 @@ void ath9k_ani_reset(struct ath_hw *ah)
->  			"Reset ANI state opmode %u\n", ah->opmode);
->  		ah->stats.ast_ani_reset++;
->  
-> +		if (ah->opmode == NL80211_IFTYPE_AP) {
-> +			/*
-> +			 * ath9k_hw_ani_control() will only process items set on
-> +			 * ah->ani_function
-> +			 */
-> +			if (IS_CHAN_2GHZ(chan))
-> +				ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
-> +						    ATH9K_ANI_FIRSTEP_LEVEL);
-> +			else
-> +				ah->ani_function = 0;
-> +		}
-> +
->  		ath9k_hw_ani_control(ah, ATH9K_ANI_NOISE_IMMUNITY_LEVEL, 0);
->  		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
->  		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
-> -- 
-> 1.6.3.3
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index e38ec81..0b9e824 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -49,7 +49,8 @@
+ 
+ #define DEBUGFS_ADD_FILE(name, parent) do {                             \
+ 	dbgfs->dbgfs_##parent##_files.file_##name =                     \
+-	debugfs_create_file(#name, 0644, dbgfs->dir_##parent, priv,     \
++	debugfs_create_file(#name, S_IWUSR | S_IRUSR,                   \
++				dbgfs->dir_##parent, priv,              \
+ 				&iwl_dbgfs_##name##_ops);               \
+ 	if (!(dbgfs->dbgfs_##parent##_files.file_##name))               \
+ 		goto err;                                               \
+@@ -57,7 +58,8 @@
+ 
+ #define DEBUGFS_ADD_BOOL(name, parent, ptr) do {                        \
+ 	dbgfs->dbgfs_##parent##_files.file_##name =                     \
+-	debugfs_create_bool(#name, 0644, dbgfs->dir_##parent, ptr);     \
++	debugfs_create_bool(#name, S_IWUSR | S_IRUSR,                   \
++			    dbgfs->dir_##parent, ptr);                  \
+ 	if (IS_ERR(dbgfs->dbgfs_##parent##_files.file_##name)		\
+ 			|| !dbgfs->dbgfs_##parent##_files.file_##name)	\
+ 		goto err;                                               \
+@@ -65,7 +67,7 @@
+ 
+ #define DEBUGFS_ADD_X32(name, parent, ptr) do {                        \
+ 	dbgfs->dbgfs_##parent##_files.file_##name =                     \
+-	debugfs_create_x32(#name, 0444, dbgfs->dir_##parent, ptr);     \
++	debugfs_create_x32(#name, S_IRUSR, dbgfs->dir_##parent, ptr);   \
+ 	if (IS_ERR(dbgfs->dbgfs_##parent##_files.file_##name)		\
+ 			|| !dbgfs->dbgfs_##parent##_files.file_##name)	\
+ 		goto err;                                               \
+-- 
+1.5.6.3
 
