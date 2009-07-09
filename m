@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:47475 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141AbZGWKua (ORCPT
+Received: from mail-yx0-f188.google.com ([209.85.210.188]:38795 "EHLO
+	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbZGISow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 06:50:30 -0400
-Received: by bwz28 with SMTP id 28so726949bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:50:29 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 7/7] cfg80211: increase scan result expire time
-Date: Thu, 23 Jul 2009 12:50:36 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20090723100732.5147.73989.stgit@localhost.localdomain> <20090723101428.5147.53956.stgit@localhost.localdomain> <1248345595.19121.25.camel@johannes.local>
-In-Reply-To: <1248345595.19121.25.camel@johannes.local>
+	Thu, 9 Jul 2009 14:44:52 -0400
+Received: by yxe26 with SMTP id 26so560974yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 11:44:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907231250.37025.helmut.schaa@googlemail.com>
+In-Reply-To: <6c354a1a0907091136v5619efb5oc6a8a89ec24d4e74@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	 <20090707030719.GC7199@hash.localnet>
+	 <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
+	 <20090708114252.GG7199@hash.localnet>
+	 <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
+	 <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
+	 <43e72e890907091002r2dd36efevbfbce06155beb7e5@mail.gmail.com>
+	 <b6c5339f0907091048v665dcdf6i659e94de95038856@mail.gmail.com>
+	 <43e72e890907091050p7bc08a25s86f9bb7a1c8740aa@mail.gmail.com>
+	 <6c354a1a0907091136v5619efb5oc6a8a89ec24d4e74@mail.gmail.com>
+Date: Thu, 9 Jul 2009 14:44:51 -0400
+Message-ID: <b6c5339f0907091144h39a3df67wa9327157dedb172@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+From: Bob Copeland <me@bobcopeland.com>
+To: Jasin Colegrove <j.wholesalesupply@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag, 23. Juli 2009 schrieb Johannes Berg:
-> On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
-> > Using background scanning in mac80211 the time a scan needs to
-> > finish can exceed 10 seconds. Hence, increase the scan results
-> > expire time to 15 seconds which should be sufficient.
-> >     
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> 
-> Heh.
+On Thu, Jul 9, 2009 at 2:36 PM, Jasin
+Colegrove<j.wholesalesupply@gmail.com> wrote:
+> When running git bisect it keeps building 2.6.29-rc kernels. I thought
+> v2.6.29 was in the future compared to 2.6.29-rc7 for example.
+> running the command git bisect start v2.6.29-rc7 v2.6.29 disagrees
+> though and tells me.
+>
+> It co's a commit somewhere around 2.6.29-rc7 which ultimately was a
+> bad commit. Am I misunderstanding how this all works? Sorry to be a
+> pain
 
-;)
+That confuses everyone the first time.  Basically the way it works
+is that a commit that was authored before 2.6.29 will still be checked
+since it was only merged in 2.6.29.
 
-Maybe we could later use a dynamic expire time based on the time
-the last scan took or something similar. But for now 15 seconds
-should suffice.
+         +--- B -- D -+
+        /              \
+    -- A -- C ---- E -- F -- G
 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> johannes
-> 
-> > ---
-> > 
-> >  net/wireless/scan.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> > index 4ad8b4b..0850b98 100644
-> > --- a/net/wireless/scan.c
-> > +++ b/net/wireless/scan.c
-> > @@ -15,7 +15,7 @@
-> >  #include "core.h"
-> >  #include "nl80211.h"
-> >  
-> > -#define IEEE80211_SCAN_RESULT_EXPIRE	(10 * HZ)
-> > +#define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
-> >  
-> >  void __cfg80211_scan_done(struct work_struct *wk)
-> >  {
-> > 
-> > 
-> 
+  e.g. in the above graph, imagine E is 2.6.29 and G is 2.6.30.  Commits
+B and D were written from a base of 2.6.29-rc6 (say) but merged at time
+F between 2.6.29 and 2.6.30.  The bisect will check both parents of F if
+it needs to since that's when it actually hit the mainline.
 
-
+-- 
+Bob Copeland %% www.bobcopeland.com
