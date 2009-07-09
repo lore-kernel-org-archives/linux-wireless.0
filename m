@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38537 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbZGMA4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 20:56:06 -0400
-Subject: Re: [PATCH 4/5] drivers/net: Drop unnecessary NULL test
-From: Zhu Yi <yi.zhu@intel.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "jketreno@linux.intel.com" <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0907122205060.22658@ask.diku.dk>
-References: <Pine.LNX.4.64.0907122205060.22658@ask.diku.dk>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 08:56:01 +0800
-Message-Id: <1247446561.26347.10.camel@debian>
-Mime-Version: 1.0
+Received: from ey-out-1920.google.com ([74.125.78.145]:19614 "EHLO
+	ey-out-1920.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750695AbZGIXNK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 19:13:10 -0400
+Received: by ey-out-1920.google.com with SMTP id 3so115249eyh.36
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 16:13:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1247174482.17896.1304.camel@rc-desk>
+References: <1247174482.17896.1304.camel@rc-desk>
+Date: Fri, 10 Jul 2009 01:13:08 +0200
+Message-ID: <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-13 at 04:05 +0800, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> The result of container_of should not be NULL.  In particular, in this case
-> the argument to the enclosing function has passed though INIT_WORK, which
-> dereferences it, implying that its container cannot be NULL.
-> 
-> A simplified version of the semantic patch that makes this change is as
-> follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @@
-> identifier fn,work,x,fld;
-> type T;
-> expression E1,E2;
-> statement S;
-> @@
-> 
-> static fn(struct work_struct *work) {
->   ... when != work = E1
->   x = container_of(work,T,fld)
->   ... when != x = E2
-> - if (x == NULL) S
->   ...
-> }
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
+2009/7/9 reinette chatre <reinette.chatre@intel.com>:
+> Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
+> available for download from
+> http://intellinuxwireless.org/?n=Downloads
+>
+> Changes:
+>
+> -- More graceful handling of Rx hangs (NMI)
+> -- More reliable scanning
+> -- Wait 10 seconds after association before power down
+> -- Reset receiver via retune after missing beacons
+> -- Disable TGK measurement when receiving packet
+> -- More reliable Tx of ACK/BA/CTS
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+Nice work, AFAICU this should fix a few annoying issues, right?
 
-Thanks,
--yi
-> ---
->  drivers/net/wireless/ipw2x00/ipw2200.c         |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index d726b3c..2dc1cdb 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -7250,9 +7250,6 @@ static void ipw_bg_qos_activate(struct work_struct *work)
->  	struct ipw_priv *priv =
->  		container_of(work, struct ipw_priv, qos_activate);
->  
-> -	if (priv == NULL)
-> -		return;
-> -
->  	mutex_lock(&priv->mutex);
->  
->  	if (priv->status & STATUS_ASSOCIATED)
+Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
+estimate would be nice to known. This month? This year?
 
+-- 
+Rafał Miłecki
