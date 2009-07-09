@@ -1,80 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([207.115.11.55]:45108 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270AbZGLUY7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42456 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753730AbZGIVs0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 16:24:59 -0400
-Message-ID: <4A5A46AA.5070605@lwfinger.net>
-Date: Sun, 12 Jul 2009 15:25:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <larry.finger@gmail.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [Bisected][Regression] Oops/panic when rmmoding rtl8187 on SMP
- since 	commit "rtl8187: Implement TX/RX blink for LED"
-References: <69e28c910907121311g2011c960g141bd35891c8ea25@mail.gmail.com>
-In-Reply-To: <69e28c910907121311g2011c960g141bd35891c8ea25@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------020404050809010401030402"
+	Thu, 9 Jul 2009 17:48:26 -0400
+Subject: Re: Problem with p54 driver and ibss mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Max Filippov <jcmvbkbc@gmail.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Christian Lamparter <chunkeey@web.de>,
+	Alexander Wenzel <wenzel@fgan.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200907100143.29004.jcmvbkbc@gmail.com>
+References: <4A55DB91.2070305@fgan.de> <200907092056.53055.chunkeey@web.de>
+	 <87vdm1pr5m.fsf@litku.valot.fi>  <200907100143.29004.jcmvbkbc@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uDa9AYPaulvxKBuQ+pjr"
+Date: Thu, 09 Jul 2009 23:48:18 +0200
+Message-Id: <1247176098.1905.8.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020404050809010401030402
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
 
-Gábor Stefanik wrote:
-> I'm getting a kernel oops/panic when unloading rtl8187. Bisect lead me
-> to commit "rtl8187: Implement TX/RX blink for LED", confirmed by local
-> backout.
-> My card is an RTL8187LvB, "Customer ID 0x00" (P5K Premium integrated
-> WiFi, made by Azurewave).
+--=-uDa9AYPaulvxKBuQ+pjr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Does this patch fix it?
+On Fri, 2009-07-10 at 01:43 +0400, Max Filippov wrote:
+> =D0=92 =D1=81=D0=BE=D0=BE=D0=B1=D1=89=D0=B5=D0=BD=D0=B8=D0=B8 =D0=BE=D1=
+=82 Thursday 09 July 2009 Kalle Valo =D0=BD=D0=B0=D0=BF=D0=B8=D1=81=D0=B0=
+=D0=BB(a):
+> > Christian Lamparter <chunkeey@web.de> writes:
+> >=20
+> > >> These data for sure must reside on /dev/mtdblk1 partition, but
+> > >> they're probably somehow coded/obfuscated. I couldn't find anything
+> > >> similar to MAC of my own n810 there.
+> > >
+> > > well, this is c0ffee comes from nokia's stlc45xx-driver.
+> > > Unfortunately, they don't say how to get the device eeprom from the
+> > > mtdblk1 partition. However, they certainly provide a tool stlc45xx-ca=
+l
+> > > (available at: http://stlc45xx.garage.maemo.org/ ) which can be used
+> > > to locate the eeprom's calibration data.
+> >=20
+> > stlc45xx-cal pushes the device specific calibration data and sets the
+> > MAC address. It's recommended to run it to get optimal performance.
+> >=20
+> IIRC stlc45xx-cal pushes these data into sysfs entries, which stlc45xx us=
+ed to create.
+> There's no such interface in p54spi.
 
+Should be easy to copy the code into p54spi, we just never did, hoping
+Kalle would come up with a better way, maybe request_firmware() :)
 
-Larry
----
+johannes
 
+--=-uDa9AYPaulvxKBuQ+pjr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -212,6 +212,7 @@ void rtl8187_leds_exit(struct ieee80211_
- 	/* turn the LED off before exiting */
- 	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
- 	cancel_delayed_work_sync(&priv->led_off);
-+	cancel_delayed_work_sync(&priv->led_on);
- 	rtl8187_unregister_led(&priv->led_rx);
- }
- #endif /* def CONFIG_RTL8187_LED */
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJKVmWeAAoJEODzc/N7+Qma2MYQAKQCTXdbEZuU1knCbkHy3XQ7
+mtWCfqmPeteK7AFJ9zdPIdcOC1fJ66R72b4Jxi2XJJF8a0RjGnmjp3XvBVuc+C2W
+Tm+5HlZ57YyKjqPx7Hr9sJGIfvtptZGwlnuW22kUxxB3oGwxAj1ZCRcNk+bIeNHE
+IgHkbA2roltBuoiuZWTyOz8j7+m6OvpTR+mXrCjRZEHitNh2p+9FKqjB7/brlixp
+kuoHqZAhU+R+SD+V98avwA2EhWotaeJxRM2C4y0DuP2IIRLk30/FWKK5BjIV7mde
+t5FtLEF0wNkQBmc7kyWU7y/z9hMeMA1SUMaUfaFI9vCwla8Rf5FoRrOcipdjE5S4
+bmVFYq6fvDp/1QWqzbUxqvcYZSXLJu/jLxovkMSQvMp1Nx0G12sC8jcTbCqdRZ1+
+NM3G0VV3Z481WCK6OjTud55l9ccBGxsPx4DGvB2cPd3+QG1msoGXdtHQ3e1/YV9s
+9/7OqcnPnDBfbOEYfJGZLMnE5n4OXN7YpbK8UsakLwHxjBua5MH2i0t2ML7gdQcq
+ETNkLhhlbChe1FEKjRjjz+rRLyHSBp91gKiJVznGqP9Fy7ygvsIaYepo5ZNN01ya
+K633WFo1AluudwsnkB40Oe7WEf8mVWF85IEh3maHpYnSoOK/WkPpAa1jYXhSxtqz
+FADgiNAnQa2DYu5Au0q1
+=1AgK
+-----END PGP SIGNATURE-----
 
---------------020404050809010401030402
-Content-Type: text/plain;
- name="rtl8187_fix_led_exit"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="rtl8187_fix_led_exit"
+--=-uDa9AYPaulvxKBuQ+pjr--
 
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -212,6 +212,7 @@ void rtl8187_leds_exit(struct ieee80211_
- 	/* turn the LED off before exiting */
- 	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
- 	cancel_delayed_work_sync(&priv->led_off);
-+	cancel_delayed_work_sync(&priv->led_on);
- 	rtl8187_unregister_led(&priv->led_rx);
- }
- #endif /* def CONFIG_RTL8187_LED */
-
-
---------------020404050809010401030402--
