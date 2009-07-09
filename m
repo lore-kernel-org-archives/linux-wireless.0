@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost03.isp.att.net ([204.127.217.103]:58725 "EHLO
-	fmailhost03.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896AbZGAP2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 11:28:32 -0400
-Message-ID: <4A4B80AB.6090307@lwfinger.net>
-Date: Wed, 01 Jul 2009 10:28:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John W Linville <linville@tuxdriver.com>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V2] ssb: Add support for 4318E
-References: <4a4ada7f.oItwGXurq7WMW+HE%Larry.Finger@lwfinger.net> <200907011517.34061.mb@bu3sch.de>
-In-Reply-To: <200907011517.34061.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:49775 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753019AbZGIRdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 13:33:44 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/6 2.6.31 and w-t] iwlwifi: only update byte count table during aggregation
+Date: Thu,  9 Jul 2009 10:33:39 -0700
+Message-Id: <1247160821-14989-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247160821-14989-4-git-send-email-reinette.chatre@intel.com>
+References: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
+ <1247160821-14989-2-git-send-email-reinette.chatre@intel.com>
+ <1247160821-14989-3-git-send-email-reinette.chatre@intel.com>
+ <1247160821-14989-4-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Wednesday 01 July 2009 05:39:43 Larry Finger wrote:
->> From: Clyde McPherson <ccmcphe@verizon.net>
->>
->> Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
->> 4318E can do 802.11A/B/G, only B and G mode are supported in b43.
->>
->> Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> ack
-> 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Cc: Stable <stable@vger.kernel.org>
+The byte count table is only used for aggregation. Updating it
+in other cases caused fragmented frames to be dropped.
 
-John,
+This fixes http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004
 
-I forgot the above line in both the b43 and ssb patches.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 753fca3..7073069 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -873,7 +873,8 @@ int iwl_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	iwl_print_hex_dump(priv, IWL_DL_TX, (u8 *)tx_cmd->hdr, hdr_len);
+ 
+ 	/* Set up entry for this TFD in Tx byte-count array */
+-	priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq,
++	if (info->flags & IEEE80211_TX_CTL_AMPDU)
++		priv->cfg->ops->lib->txq_update_byte_cnt_tbl(priv, txq,
+ 						     le16_to_cpu(tx_cmd->len));
+ 
+ 	pci_dma_sync_single_for_device(priv->pci_dev, txcmd_phys,
+-- 
+1.5.6.3
 
