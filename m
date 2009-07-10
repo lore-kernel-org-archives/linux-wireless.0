@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.highlandsun.com ([70.87.222.79]:34121 "EHLO
-	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755840AbZGURVH (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.174]:18342 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343AbZGJTEa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 13:21:07 -0400
-Message-ID: <4A65F901.7030803@highlandsun.com>
-Date: Tue, 21 Jul 2009 10:21:05 -0700
-From: Howard Chu <hyc@highlandsun.com>
+	Fri, 10 Jul 2009 15:04:30 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so316820wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 12:04:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k rfkill behavior
-References: <4A65122B.2040500@highlandsun.com> <200907211327.03954.chunkeey@web.de>
-In-Reply-To: <200907211327.03954.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20090710185150.GF2825@tuxdriver.com>
+References: <20090707170307.GC2768@tuxdriver.com>
+	 <1246989303-19462-1-git-send-email-javier@cozybit.com>
+	 <20090710185150.GF2825@tuxdriver.com>
+Date: Fri, 10 Jul 2009 12:04:30 -0700
+Message-ID: <45e8e6c40907101204g17e66df2vb89243989d297561@mail.gmail.com>
+Subject: Re: [PATCH v5] mac80211: Fix regression in mesh forwarding path.
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
+	devel@lists.open80211s.org, johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Tuesday 21 July 2009 02:56:11 Howard Chu wrote:
->> I'm currently running 2.6.31-rc2 and noticed an annoying change in rfkill
->> behavior now; I can no longer toggle the state by echoing 0/1 into
->> sys/class/rfkill/rfkillX/state, it says write operation not permitted. I
->> haven't found any posts online related to this change in behavior, can anyone
->> point me to an explanation/rationale? The only way to change the state now
->> appears to be by using the wifi toggle switch on the laptop.
+On Fri, Jul 10, 2009 at 11:51 AM, John W.
+Linville<linville@tuxdriver.com> wrote:
+> On Tue, Jul 07, 2009 at 10:55:03AM -0700, javier@cozybit.com wrote:
+>> From: Javier Cardona <javier@cozybit.com>
+>>
+>> The removal of the master netdev broke the mesh forwarding path.  This patch
+>> fixes it by using the new internal 'pending' queue.
+>>
+>> As a result of this change, mesh forwarding no longer does the inefficient
+>> 802.11 -> 802.3 -> 802.11 conversion that was done before.
+>>
+>> [Changes since v1]
+>> Suggested by Johannes:
+>>  - Select queue before adding to mpath queue
+>>  - ieee80211_add_pending_skb -> ieee80211_add_pending_skbs
+>>  - Remove unnecessary header wme.h
+>>
+>> Signed-off-by: Javier Cardona <javier@cozybit.com>
+>> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+>> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 >
-> http://lkml.org/lkml/2009/7/10/339
->
-> but no need to patch the kernel (again):
-> the legacy iwconfig tool can let you do the same:
->
-> iwconfig wlanX txpower off
-> and if you want it back:
-> iwconfig wlanX txpower auto
->
-> (or there's a nice utility there: http://git.sipsolutions.net/?p=rfkill.git )
+> What tree are you basing this on?
 
-Thanks very much, that covers everything.
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+wireless-testing, the latest (re-spun) version applied on top of
+commit 5ac0fb5e5044cb578fb352dc65def1a46a2a21aa
