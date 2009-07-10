@@ -1,71 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:51546 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982AbZGTDGR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57434 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757915AbZGJW4Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 23:06:17 -0400
-Message-ID: <4A63DF0B.4010801@redfish-solutions.com>
-Date: Sun, 19 Jul 2009 20:05:47 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet>
-In-Reply-To: <20090719203150.GA9972@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 10 Jul 2009 18:56:24 -0400
+Subject: Re: ieee80211_tx_status() on injected packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1247265159.6399.31.camel@mj>
+References: <1247265159.6399.31.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8x/2tYW/ZPZ7gyof4Dos"
+Date: Sat, 11 Jul 2009 00:56:19 +0200
+Message-Id: <1247266579.30647.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Sun, Jul 19, 2009 at 10:55:16AM -0700, Philip A. Prindeville wrote:
->> Bob Copeland wrote:
->>> On Fri, Jul 17, 2009 at 9:27 PM, Philip A.
->>>> + iw dev wlan0 interface add ap0 type managed
->>>> + ip link set ap0 up
->>>> + iw dev ap0 connect xxxx
->>>> command failed: Operation not supported (-95)
->>> Why are you adding another interface?  Should be able to use "iw dev wlan0..."
->> Because I might want to run two access points (two SSIDs, anyway) on the same
->> radio...  one with WEP on one VLAN (for Wifi SIP handsets), and one with
->> WPA-PSK2 on another VLAN (for laptops, etc).
-> 
-> Hmm, I don't know if it matters, but you were creating it as a managed
-> interface.  Anyway I don't believe ath5k supports that yet - ath9k might.
-> Someone on ath5k-devel was porting the ath9k virtual wiphy stuff to
-> ath5k but I haven't heard anything recently.
-> 
->> But, if you think there's still a doubt, what to look for in the modinfo?
-> 
-> If it says "depends: mac80211,cfg80211,ath" then it is probably the right
-> one.  It just sounds like this bug:
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=12315
 
-Actually, it's saying:
+--=-8x/2tYW/ZPZ7gyof4Dos
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
-version:        0.6.0 (EXPERIMENTAL)
-license:        Dual BSD/GPL
-description:    Support for 5xxx series of Atheros 802.11 wireless LAN cards.
-author:         Nick Kossifidis
-author:         Jiri Slaby
-srcversion:     E33724BC42EBC4E7E7714E1
-...
-depends:        mac80211,cfg80211
-vermagic:       2.6.27.26-astlinux preempt mod_unload modversions GEODE
-parm:           nohwcrypt:Disable hardware encryption. (int)
+On Fri, 2009-07-10 at 18:32 -0400, Pavel Roskin wrote:
 
-"nohwcrypt" is present in the 2.6.30 wireless-compat sources but not in the 2.6.27 drivers, so I'm pretty sure we're looking at the right ones.
+> /* Original radiotap header, but the length should be 0e, not 18 */
+> 00 00 18 00 03 00 00 00 00 02 6c 09 a0 00
 
-And the 0.6.0 version number matches ath5k/base.c in the compat-wireless sources as well.
+Heh.
 
-Not seeing the dependency on "ath", which is strange.  Is that common code that's shared in 2.6.30 for the Atheros drivers?
+> /* mac80211 treats this as part of the radiotap header */
+> 08 03 00 00 01 0c cc 00 00 00
+> /* frame control */
+> 00 11
+> /* duration */
+> 6b 39
+> /* addr1 */
+> 40 19 11 04 28 00
+> /* addr2 */
+> 00 00 10 00 00 00
+> /* addr3 - incomplete */
+> 00 00 00 00
+> /* sequence control - beyond the skb end */
+>=20
+> I'm using rt73usb to inject.  ieee80211_tx_status() is scheduled by
+> ieee80211_tx_status_irqsafe(), which is called in rt2x00dev.c.
+>=20
+> If we allow to inject malformed packets, we shouldn't assume them to be
+> valid 802.11 packets unless we can verify it.  And even then, maybe it's
+> better to bypass ieee80211_tx_status() for injected packets, as it can
+> influence statistics and rate control algorithms in unpredictable ways.
 
-> The fix was merged after 2.6.30, IIRC, but it should definitely be in
-> compat-wireless.  Also check your modules directory for an old ath5k.ko
-> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
-> 
-> HTH!
-> 
+Yeah, we should verify the length. I don't think we can skip the
+processing since these packets might actually be sent by hostapd which
+wants the processing -- if you fuck up your connection by injecting
+random junk that seems to be your own fault, but I agree we should fix
+the bug.
+
+It would probably be useful to take the code in ieee80211_tx_status up
+to (but not including) the skb_orphan() call, stick it into a separate
+function and call it only when at least the frame the header is valid
+(i.e. skb->len >=3D hdrlen).
+
+johannes
+
+--=-8x/2tYW/ZPZ7gyof4Dos
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKV8cNAAoJEODzc/N7+QmaWaUQANIYRjiuyYBYD45MKYRjKtP6
+xT0aLgziCAek9ZAL5ETYJFgyBWfTeCnD43UwUq9iF/ws7VfZI1Qp/ayuPQ43P8sn
+RdsdkMh0d5Jv6U8zm5WO+TwX+eqPKbtE05o/1/3PBaurZxwTTpxUscxil9LJok2p
+kGISFFHKjpG/dLeWea6ufjkOVATBhBlL9YAZDbKaYr4tk4PW3fWsBPuPKNCjgCVf
+GnH6I6psiNfuvOzN10vHda9KJu2EHfd8969R4EDIEahqxIQCRuILJkWkKfbT85GW
+Qk5jexguPeqRKobLKNv49JnllsnVVv8vigbAYPGrQ9VEyoU+rZjv4JhEG+roeVZg
+5e1OVNiXjTTpOJmvsRpIlSCod6lsknHsBMibsXw9CWXaHN/KFAA1oC+5EM5HIJce
++icNi9JbPmsEQXSV19LT6muog13zRKTcUUs0YRR5G/AUvbCc/It9XiMIqlAAumc+
+063DkBJ+fUHZzGvIgfs5i3Jsw4OV7I1oBBPcb/rVvhASYONwleSUURLU11QqeNlE
+s9sJ/bow2nYP0LwlR2qYuR2E6cvHztC0MC4MNKEpB2QDldQ2+pAh+Z4KJxJcKO/D
+QbV34Fj0egC8p7tBgpVbaHO2fz1tYr0LXccESawWOR22V4o6X5H05AzqCrlmNXVt
+GbsGfo9RqUD/LKuq62YJ
+=PEht
+-----END PGP SIGNATURE-----
+
+--=-8x/2tYW/ZPZ7gyof4Dos--
 
