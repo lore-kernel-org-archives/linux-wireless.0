@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3752 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbZGSUcR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 16:32:17 -0400
-Date: Sun, 19 Jul 2009 16:31:50 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-Message-ID: <20090719203150.GA9972@hash.localnet>
-References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A635E04.4050204@redfish-solutions.com>
+Received: from c60.cesmail.net ([216.154.195.49]:1949 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868AbZGJPJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 11:09:48 -0400
+Subject: Re: PROBLEM: USB wlan device stops working; ehci "kernel BUG"
+From: Pavel Roskin <proski@gnu.org>
+To: Ian Lynagh <igloo@earth.li>
+Cc: dbrownell@users.sourceforge.net, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+In-Reply-To: <20090710143253.GA4133@matrix.chaos.earth.li>
+References: <20090710143253.GA4133@matrix.chaos.earth.li>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Fri, 10 Jul 2009 11:09:46 -0400
+Message-Id: <1247238586.3210.18.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 19, 2009 at 10:55:16AM -0700, Philip A. Prindeville wrote:
-> Bob Copeland wrote:
-> > On Fri, Jul 17, 2009 at 9:27 PM, Philip A.
-> >> + iw dev wlan0 interface add ap0 type managed
-> >> + ip link set ap0 up
-> >> + iw dev ap0 connect xxxx
-> >> command failed: Operation not supported (-95)
-> > 
-> > Why are you adding another interface?  Should be able to use "iw dev wlan0..."
+On Fri, 2009-07-10 at 15:32 +0100, Ian Lynagh wrote:
+> Hi all,
 > 
-> Because I might want to run two access points (two SSIDs, anyway) on the same
-> radio...  one with WEP on one VLAN (for Wifi SIP handsets), and one with
-> WPA-PSK2 on another VLAN (for laptops, etc).
+> [1.] PROBLEM: USB wlan device stops working; ehci "kernel BUG"
+> 
+> [2.]
+> 
+> I am having a problem with an rt73usb and/or ehci. I /think/ the bug is
+> in ehci, and the rt73usb problems are just a symptom, but I'm not sure.
 
-Hmm, I don't know if it matters, but you were creating it as a managed
-interface.  Anyway I don't believe ath5k supports that yet - ath9k might.
-Someone on ath5k-devel was porting the ath9k virtual wiphy stuff to
-ath5k but I haven't heard anything recently.
+Actually, I'm using the current wireless-testing, and I'm getting
+following in the kernel log on rt73us unload:
 
-> But, if you think there's still a doubt, what to look for in the modinfo?
+usbcore: deregistering interface driver rt73usb
+=============================================================================
+BUG kmalloc-16: Redzone overwritten
+-----------------------------------------------------------------------------
 
-If it says "depends: mac80211,cfg80211,ath" then it is probably the right
-one.  It just sounds like this bug:
+INFO: 0xffff88012d860f88-0xffff88012d860f8b. First byte 0xb instead of 0xcc
+INFO: Allocated in rt2x00usb_probe+0xb9/0x180 [rt2x00usb] age=6413897 cpu=1 pid=21955
+INFO: Freed in fsnotify_put_event+0x3b/0x70 age=16350710 cpu=3 pid=2508
+INFO: Slab 0xffffea00067a6100 objects=46 used=46 fp=0x(null) flags=0x8000000000000083
+INFO: Object 0xffff88012d860f78 @offset=3960 fp=0x(null)
 
-http://bugzilla.kernel.org/show_bug.cgi?id=12315
+Bytes b4 0xffff88012d860f68:  0d 49 0a 00 01 00 00 00 5a 5a 5a 5a 5a 5a 5a 5a .I......ZZZZZZZZ
+  Object 0xffff88012d860f78:  00 00 00 00 0c 2c 00 00 86 07 00 00 51 8e 06 00 .....,......Q...
+ Redzone 0xffff88012d860f88:  0b ba 0c 00 cc cc cc cc                         .╨..лллл        
+ Padding 0xffff88012d860fc8:  5a 5a 5a 5a 5a 5a 5a 5a                         ZZZZZZZZ        
+Pid: 3978, comm: rmmod Not tainted 2.6.31-rc2-wl #153
+Call Trace:
+ [<ffffffff810a42a1>] print_trailer+0x101/0x170
+ [<ffffffff810a49d2>] check_bytes_and_report+0xf2/0x120
+ [<ffffffffa01df098>] ? rt2x00usb_free_reg+0x18/0x60 [rt2x00usb]
+ [<ffffffff810a4a65>] check_object+0x65/0x260
+ [<ffffffffa01df098>] ? rt2x00usb_free_reg+0x18/0x60 [rt2x00usb]
+ [<ffffffff810a5563>] __slab_free+0x203/0x330
+ [<ffffffffa01df098>] ? rt2x00usb_free_reg+0x18/0x60 [rt2x00usb]
+ [<ffffffff810a6d47>] kfree+0xf7/0x130
+ [<ffffffffa01df098>] rt2x00usb_free_reg+0x18/0x60 [rt2x00usb]
+ [<ffffffffa01df113>] rt2x00usb_disconnect+0x33/0x70 [rt2x00usb]
+ [<ffffffff812b8764>] usb_unbind_interface+0xb4/0x100
+ [<ffffffff81255e11>] __device_release_driver+0x61/0xc0
+ [<ffffffff81255f30>] driver_detach+0xc0/0xd0
+ [<ffffffff81254fa7>] bus_remove_driver+0x97/0xc0
+ [<ffffffff812564f9>] driver_unregister+0x59/0x90
+ [<ffffffff812b847e>] usb_deregister+0xbe/0xd0
+ [<ffffffffa01e7784>] rt73usb_exit+0x10/0x12 [rt73usb]
+ [<ffffffff8106f1d5>] sys_delete_module+0x185/0x260
+ [<ffffffff8100bd69>] ? retint_swapgs+0xe/0x13
+ [<ffffffff81063f15>] ? trace_hardirqs_on_caller+0x145/0x190
+ [<ffffffff813c686e>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+ [<ffffffff8100b32b>] system_call_fastpath+0x16/0x1b
+FIX kmalloc-16: Restoring 0xffff88012d860f88-0xffff88012d860f8b=0xcc
 
-The fix was merged after 2.6.30, IIRC, but it should definitely be in
-compat-wireless.  Also check your modules directory for an old ath5k.ko
-sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
-
-HTH!
+So I think rt73usb is the main suspect.  Before this is fixed, we should
+probably not suspect EHCI.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Regards,
+Pavel Roskin
