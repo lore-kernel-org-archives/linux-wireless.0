@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:64602 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615AbZGXQED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 12:04:03 -0400
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1248451197.32151.26.camel@johannes.local>
-References: <wfljmpm4xl.fsf@calligramme.charmers>
-	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
-	 <1247775641.6841.16.camel@mj>   <wfzlau7co1.fsf@calligramme.charmers>
-	 <1248449030.21715.23.camel@mj>  <1248449371.32151.23.camel@johannes.local>
-	 <1248450733.21715.26.camel@mj>  <1248451197.32151.26.camel@johannes.local>
+Received: from xc.sipsolutions.net ([83.246.72.84]:42936 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755231AbZGJNSQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 09:18:16 -0400
+Subject: [PATCH] mac80211: mesh: fix two small problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Fri, 24 Jul 2009 12:04:00 -0400
-Message-Id: <1248451440.21715.27.camel@mj>
+Date: Fri, 10 Jul 2009 11:39:26 +0200
+Message-Id: <1247218766.1905.20.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-24 at 17:59 +0200, Johannes Berg wrote:
-> On Fri, 2009-07-24 at 11:52 -0400, Pavel Roskin wrote:
-> > On Fri, 2009-07-24 at 17:29 +0200, Johannes Berg wrote:
-> > 
-> > > > From the
-> > > > users' perspective, PCI and PCI Express are different busses and should
-> > > > be listed separately.
-> > > 
-> > > I'm not sure. The ID spaces are the same really, and users really don't
-> > > distinguish that much, for them PCI-E is just the new PCI technology
-> > > with a different form factor. Kinda like mini-pci vs. pci.
-> > 
-> > We can have "form factors": PCI, CardBus, MiniPCI, PCIe and PCI
-> > ExpressCard.
-> 
-> I've done that and adjusted a few of the b43 entries, go check it out :)
+1) there's a spin_lock() that needs to be spin_lock_bh()
+2) action frames of size 24 might cause an out-of-bounds
+   memory access (for the 25th byte only, so no big deal)
 
-Thanks!  I'll update what I know.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/mesh.c      |    5 ++++-
+ net/mac80211/mesh_hwmp.c |    6 +++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
--- 
-Regards,
-Pavel Roskin
+--- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2009-07-10 11:03:05.000000000 +0200
++++ wireless-testing/net/mac80211/mesh_hwmp.c	2009-07-10 11:03:18.000000000 +0200
+@@ -686,11 +686,11 @@ void mesh_path_start_discovery(struct ie
+ 	u8 ttl, dst_flags;
+ 	u32 lifetime;
+ 
+-	spin_lock(&ifmsh->mesh_preq_queue_lock);
++	spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
+ 	if (!ifmsh->preq_queue_len ||
+ 		time_before(jiffies, ifmsh->last_preq +
+ 				min_preq_int_jiff(sdata))) {
+-		spin_unlock(&ifmsh->mesh_preq_queue_lock);
++		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+ 		return;
+ 	}
+ 
+@@ -698,7 +698,7 @@ void mesh_path_start_discovery(struct ie
+ 			struct mesh_preq_queue, list);
+ 	list_del(&preq_node->list);
+ 	--ifmsh->preq_queue_len;
+-	spin_unlock(&ifmsh->mesh_preq_queue_lock);
++	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+ 
+ 	rcu_read_lock();
+ 	mpath = mesh_path_lookup(preq_node->dst, sdata);
+--- wireless-testing.orig/net/mac80211/mesh.c	2009-07-10 11:20:36.000000000 +0200
++++ wireless-testing/net/mac80211/mesh.c	2009-07-10 11:20:44.000000000 +0200
+@@ -685,9 +685,12 @@ ieee80211_mesh_rx_mgmt(struct ieee80211_
+ 	fc = le16_to_cpu(mgmt->frame_control);
+ 
+ 	switch (fc & IEEE80211_FCTL_STYPE) {
++	case IEEE80211_STYPE_ACTION:
++		if (skb->len < IEEE80211_MIN_ACTION_SIZE)
++			return RX_DROP_MONITOR;
++		/* fall through */
+ 	case IEEE80211_STYPE_PROBE_RESP:
+ 	case IEEE80211_STYPE_BEACON:
+-	case IEEE80211_STYPE_ACTION:
+ 		skb_queue_tail(&ifmsh->skb_queue, skb);
+ 		queue_work(local->hw.workqueue, &ifmsh->work);
+ 		return RX_QUEUED;
+
+
