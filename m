@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52745 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751849AbZG3Srp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 14:47:45 -0400
-Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
- modules
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248979011.23496.4.camel@johannes.local>
-References: <1248947897.8925.13.camel@johannes.local>
-	 <1248978482.1216.1087.camel@rc-desk>
-	 <1248979011.23496.4.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 11:47:45 -0700
-Message-Id: <1248979665.1216.1094.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:48704 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbZGJIgM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 04:36:12 -0400
+Received: by fxm18 with SMTP id 18so712374fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 01:36:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87iqi10xi0.fsf@litku.valot.fi>
+References: <4A55DB91.2070305@fgan.de> <200907092056.53055.chunkeey@web.de>
+	 <87vdm1pr5m.fsf@litku.valot.fi>
+	 <200907100143.29004.jcmvbkbc@gmail.com>
+	 <1247176098.1905.8.camel@johannes.local>
+	 <87my7d10nz.fsf@litku.valot.fi>
+	 <73aaf0dd0907100043p7916c4fbid9aa2faa3580477d@mail.gmail.com>
+	 <87iqi10xi0.fsf@litku.valot.fi>
+Date: Fri, 10 Jul 2009 12:36:10 +0400
+Message-ID: <73aaf0dd0907100136p6c8c560fq39d5287f010e52a3@mail.gmail.com>
+Subject: Re: Problem with p54 driver and ibss mode
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	Alexander Wenzel <wenzel@fgan.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 11:36 -0700, Johannes Berg wrote:
-> On Thu, 2009-07-30 at 11:28 -0700, reinette chatre wrote:
-> > Hi Johannes,
-> > 
-> > On Thu, 2009-07-30 at 02:58 -0700, Johannes Berg wrote:
-> > > Even with the split into iwlcore/agn/3945 not all symbols
-> > > that cross file boundaries are needed in other modules, a
-> > > few are only used within iwlcore, for example.
-> > 
-> > I think in this case we need to be explicit when talking about "need"
-> > and "used". Yes, some of these exported symbols are only used within a
-> > module and this needs to be fixed. At the same time, some of these may
-> > be needed outside, but are just not currently used. Examples of the
-> > latter are: iwl_remove_station, iwl_rx_ant_restriction, and
-> > iwl_send_card_state. I think this is especially important for
-> > iwl_remove_station and iwl_rx_ant_restriction because their partners
-> > (iwl_add_station and iwl_tx_ant_restriction) are exported and used and I
-> > think it will be clean if they are also, even if they are not currently
-> > used.
-> 
-> But they can easily be exported when used. That's done even for
-> subsystem symbols, for instance some generic netlink stuff wasn't
-> exported until it was needed in wimax.
-> 
-> Is there a problem with adding the export back whenever it's needed?
+> Basically we have been talking about fetching calibration data via the
+> request_firmware() interface. In user space there would be a udev script
+> which would dynamically retrieve the calibration data specific to the
+> platform it is running on. In N800/N810 case that would mean to run
+> stlc45xx-cal and provide the calibration data to the driver.
+>
+> This way we can have platform specific implementations and use already
+> existing user space interface. The idea was discussed in this mailing
+> list few months ago. The implementation details are currently unknown to
+> me. I was planning to talk about this at the Wireless Summit, but of
+> course I forgot :/
+>
+> stlc45xx-cal will most probably need some changes, maybe dumping the
+> calibration data to stdout so that udev script can forward it to the
+> driver? I can do the necessary changes to stlc45xx-cal, but it's better
+> to have a some sort of working prototype before I'll start changing
+> stlc45xx-cal.
 
-No. If this is what you want then I think you also need to remove
-iwl_rx_ant_restriction.
+Ok. Gonna make such prototype during this weekend.
 
-Reinette
-
-
+-- 
+Max
