@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44959 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727AbZGDHxA (ORCPT
+Received: from anchor-post-1.mail.demon.net ([195.173.77.132]:39004 "EHLO
+	anchor-post-1.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756584AbZGJXl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 03:53:00 -0400
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Max Filippov <jcmvbkbc@gmail.com>
-In-Reply-To: <200907040053.05654.chunkeey@web.de>
-References: <200907040053.05654.chunkeey@web.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7G2aUFnQb4kvVg9K2vkN"
-Date: Sat, 04 Jul 2009 09:52:55 +0200
-Message-Id: <1246693975.16770.68.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 10 Jul 2009 19:41:29 -0400
+Date: Sat, 11 Jul 2009 00:09:26 +0100
+From: Darren Salt <linux@youmustbejoking.demon.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
+	Corentin Chary <corentin.chary@gmail.com>,
+	debian-eeepc-devel@lists.alioth.debian.org,
+	acpi4asus-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
+Message-ID: <507E529B48%linux@youmustbejoking.demon.co.uk>
+In-Reply-To: <1247262952.26071.1.camel@johannes.local>
+References: <4A5716AA.5000903@ph.tum.de>
+ <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
+ <4A5743AB.6090303@ph.tum.de>
+ <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
+ <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
+ <1247254899.21972.9.camel@johannes.local>
+ <507E47A184%linux@youmustbejoking.demon.co.uk>
+ <1247262952.26071.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I demand that Johannes Berg may or may not have written...
 
---=-7G2aUFnQb4kvVg9K2vkN
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
+>> I demand that Johannes Berg may or may not have written...
+[snip]
+>>> *shrug*, I don't like it, but whatever...
+>> I do. It means that we have a nice simple text-based interface for use in
+>> scripts (for now), and a binary interface which is better suited to the
+>> likes of desktop applications.
 
-On Sat, 2009-07-04 at 00:53 +0200, Christian Lamparter wrote:
+> Indeed, and as long as you expect to only use soft toggle... problem is
+> that you won't know whether it's soft-toggled or not while it's
+> hard-blocked (off)!
 
-> the simplest answer is probably this one:
-> https://dev.openwrt.org/changeset/15761
+Which is fine for eeepc-acpi-scripts and anything else which doesn't care
+about hard-blocking because the hardware doesn't do that.
 
-Humm. Davem and I looked into this problem some time ago, came up with
-patches and concluded that if everything is set up correctly this
-shouldn't be happening.
+eeepc-acpi-scripts should eventually use your rfkill utility, though. (I
+intend to make sure that it does so.)
 
-Look at net/mac80211/iface.c::ieee80211_if_add:
+[snip]
+-- 
+| Darren Salt            | linux at youmustbejoking | nr. Ashington, | Doon
+| using Debian GNU/Linux | or ds    ,demon,co,uk    | Northumberland | Army
+|   Kill all extremists!
 
-        ndev->needed_headroom =3D local->tx_headroom +
-                                4*6 /* four MAC addresses */
-                                + 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
-                                + 6 /* mesh */
-                                + 8 /* rfc1042/bridge tunnel */
-                                - ETH_HLEN /* ethernet hard_header_len */ =20
-                                + IEEE80211_ENCRYPT_HEADROOM;
-        ndev->needed_tailroom =3D IEEE80211_ENCRYPT_TAILROOM;
-
-Due to that, skbs allocated for our device ought to have enough
-headroom. If they don't, you should try to figure out where they're
-coming from and why they don't,
-http://johannes.sipsolutions.net/patches/kernel/all/2008-05-04-23:09/028-sk=
-b-alloc-stackdump.patch might help with that.
-
-OTOH, I guess that you're using IPv4 and that should do things
-correctly, I think.
-
-johannes
-
-
---=-7G2aUFnQb4kvVg9K2vkN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKTwpUAAoJEODzc/N7+Qma8kwP/jsyJw5yTo9EalwBsNMMsnK6
-VKdaW5BGBamubxbh2/+GyZmzQyJYFUaFDYpPeb/t6izkWLil6kKZnMhrPHYxex4C
-K8QN+MiEL7p2LU54iGh6HnGH1/CdRxQv9D0PDFOm3fD3OoFzeJYCoV6H9OUs6vcu
-4Xy8O7wxKDTS7Dc9d+aJJg91BkIeStTYsjygYqlsPwjYwHQMmOQl7hte8Oa/0ozk
-chcKSlFADi+c1wMJqYo1vbn4EtVMUhdBUFkWXy14npDL4QiAUmCG2woMPz9Ja0z4
-4NpfBqZpZ4Efbr0ZfMFP3JpTbtlDlwpT81CImOqddk52wYKM7MDUKJV8NSXiH4Nn
-RYdd0qiY2QwcyuJAW5vOiRSuBWqaneyrTx096vwqjLLVQdODe+cys11aq88bEfOV
-n/GHQvLo0VKRdXLZxvDH5PUWmMnJfwGLpYbVGgiOTMqGzMkCuBH5Rz9qg1W+DBpX
-yyo68wlkBYbqtdy2/1Hs8Aj1egmA0GSTUvqrMN6j5wcdJo8mPJAK8cMDfL3hEZ3u
-iaQNh8NGlkpYrV7si3/H+5K/2HvEwiKPr4MyQCEn59fDNygD6SWwsQtC7q86jVTJ
-xUhy3RvpeybUjDRx/bPt7nldMrcH7bYbxB2vuzymUDCIjD0jJ5JciCmHBqKAkUwa
-mNnsTdZxbQN/O/UIbaC1
-=sv7i
------END PGP SIGNATURE-----
-
---=-7G2aUFnQb4kvVg9K2vkN--
-
+A large dog will have a surprising effect on your life.
