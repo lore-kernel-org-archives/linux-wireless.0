@@ -1,33 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10976 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751873AbZGFQcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 12:32:55 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 09:32:59 -0700
-Date: Mon, 6 Jul 2009 09:32:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: xxiao <austinxxh-ath9k@yahoo.com>, <linux-wireless@vger.kernel.org>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Peter Tarjan <peter.tarjan@birdtelecom.hu>,
-	"mcgrof@gmail.com" <mcgrof@gmail.com>, <vitaly@luban.org>
-Subject: adhoc 11n support
-Message-ID: <20090706163257.GF5523@mosca>
-References: <688927.48007.qm@web55301.mail.re4.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <688927.48007.qm@web55301.mail.re4.yahoo.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:36921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755651AbZGJPZ3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 11:25:29 -0400
+Subject: [PATCH] cfg80211: fix wext stats
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 10 Jul 2009 16:54:07 +0200
+Message-Id: <1247237647.29747.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Jouni's response to me regarding 11n "adhoc" as per IEEE:
+Instead of using the wext BSSID which may be NULL if
+you haven't explicitly set one, we should instead use
+the current_bss pointer -- if that's NULL we aren't
+connected anyway. Fixes missing signal quality output
+reported to me internally at Intel.
 
-<jm> mcgrof: IBSS support in 802.11n is not a specific part of the draft, i.e., one needs to go through 
-                the full draft.. for example, there are IBSS-related specification in 7.3.2.57, 9.13.3.1, 10.3.2.2.2, 
-                11.5.1.1, 11.9.7.2, 11.14.1, 11.14.2; in addition, some AP mode requirements apply, e.g., for radar 
-                detection/DFS, but we are currently handling those by just denying IBSS on channels that could require DFS
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/wext-compat.c |   13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-So if you get a chance please be sure to read through all that and then send patches for mac80211.
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-10 16:24:14.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-07-10 16:32:04.000000000 +0200
+@@ -1209,7 +1209,7 @@ struct iw_statistics *cfg80211_wireless_
+ 	/* we are under RTNL - globally locked - so can use static structs */
+ 	static struct iw_statistics wstats;
+ 	static struct station_info sinfo;
+-	u8 *addr;
++	u8 bssid[ETH_ALEN];
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION)
+ 		return NULL;
+@@ -1217,11 +1217,16 @@ struct iw_statistics *cfg80211_wireless_
+ 	if (!rdev->ops->get_station)
+ 		return NULL;
+ 
+-	addr = wdev->wext.connect.bssid;
+-	if (!addr)
++	/* Grab BSSID of current BSS, if any */
++	wdev_lock(wdev);
++	if (!wdev->current_bss) {
++		wdev_unlock(wdev);
+ 		return NULL;
++	}
++	memcpy(bssid, wdev->current_bss->pub.bssid, ETH_ALEN);
++	wdev_unlock(wdev);
+ 
+-	if (rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo))
++	if (rdev->ops->get_station(&rdev->wiphy, dev, bssid, &sinfo))
+ 		return NULL;
+ 
+ 	memset(&wstats, 0, sizeof(wstats));
 
-  Luis
+
