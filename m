@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33400 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbZGJTAz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:52669 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941AbZGJApk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:00:55 -0400
-Date: Fri, 10 Jul 2009 14:51:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: javier@cozybit.com
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	johannes@sipsolutions.net, Andrey Yurovsky <andrey@cozybit.com>
-Subject: Re: [PATCH v5] mac80211: Fix regression in mesh forwarding path.
-Message-ID: <20090710185150.GF2825@tuxdriver.com>
-References: <20090707170307.GC2768@tuxdriver.com> <1246989303-19462-1-git-send-email-javier@cozybit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1246989303-19462-1-git-send-email-javier@cozybit.com>
+	Thu, 9 Jul 2009 20:45:40 -0400
+Subject: [PATCH] cfg80211: fix a locking bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain
+Date: Fri, 10 Jul 2009 02:45:38 +0200
+Message-Id: <1247186738.1905.15.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 07, 2009 at 10:55:03AM -0700, javier@cozybit.com wrote:
-> From: Javier Cardona <javier@cozybit.com>
-> 
-> The removal of the master netdev broke the mesh forwarding path.  This patch
-> fixes it by using the new internal 'pending' queue.
-> 
-> As a result of this change, mesh forwarding no longer does the inefficient
-> 802.11 -> 802.3 -> 802.11 conversion that was done before.
-> 
-> [Changes since v1]
-> Suggested by Johannes:
->  - Select queue before adding to mpath queue
->  - ieee80211_add_pending_skb -> ieee80211_add_pending_skbs
->  - Remove unnecessary header wme.h
-> 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+The cfg80211_sme_disassoc() function is already holding
+a lock here that cfg80211_mlme_deauth() would take, so
+it needs to use __cfg80211_mlme_deauth() instead.
 
-What tree are you basing this on?
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/sme.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+--- wireless-testing.orig/net/wireless/sme.c	2009-07-10 02:43:53.000000000 +0200
++++ wireless-testing/net/wireless/sme.c	2009-07-10 02:43:59.000000000 +0200
+@@ -826,8 +826,8 @@ void cfg80211_sme_disassoc(struct net_de
+ 		return;
+ 
+ 	memcpy(bssid, wdev->auth_bsses[idx]->pub.bssid, ETH_ALEN);
+-	if (cfg80211_mlme_deauth(rdev, dev, bssid,
+-				 NULL, 0, WLAN_REASON_DEAUTH_LEAVING)) {
++	if (__cfg80211_mlme_deauth(rdev, dev, bssid,
++				   NULL, 0, WLAN_REASON_DEAUTH_LEAVING)) {
+ 		/* whatever -- assume gone anyway */
+ 		cfg80211_unhold_bss(wdev->auth_bsses[idx]);
+ 		cfg80211_put_bss(&wdev->auth_bsses[idx]->pub);
+
+
