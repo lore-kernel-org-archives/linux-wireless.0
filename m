@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:46910 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbZGYEXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 00:23:48 -0400
-Subject: Re: BUG in latest wireless-testing pull - 2.6.31-rc4
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A6A7D95.1080103@lwfinger.net>
-References: <4A6A7D95.1080103@lwfinger.net>
+Received: from mail-pz0-f175.google.com ([209.85.222.175]:53497 "EHLO
+	mail-pz0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732AbZGJBrE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jul 2009 21:47:04 -0400
+Subject: Re: 2.6.31-rc2: Reported regressions from 2.6.30
+From: John Dykstra <john.dykstra1@gmail.com>
+To: Andres Freund <andres@anarazel.de>
+Cc: Eric Sesterhenn <eric.sesterhenn@lsexperts.de>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+In-Reply-To: <200907070325.51439.andres@anarazel.de>
+References: <35kKlbXMqWN.A.RXD.D0oUKB@chimera>
+	 <200907070325.51439.andres@anarazel.de>
 Content-Type: text/plain
-Date: Sat, 25 Jul 2009 00:21:55 -0400
-Message-Id: <1248495715.2391.7.camel@ct>
+Date: Thu, 09 Jul 2009 20:46:57 -0500
+Message-Id: <1247190417.7306.2.camel@merlyn>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-24 at 22:35 -0500, Larry Finger wrote:
-> I pulled from the wireless-testing (git describe yields
-> v2.6.31-rc4-29133-g1addf37) and get the following BUG:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 000000000000000c
-> IP: [<ffffffffa0267fc1>] ieee80211_scan_work+0x18a/0x426 [mac80211]
+On Tue, 2009-07-07 at 03:25 +0200, Andres Freund wrote:
+> There is also http://lkml.org/lkml/2009/6/30/398 : Soft-Lockup/Race
+> in 
+> networking in 2.6.31-rc1+195 (possibly caused by netem)
 
-I got it too :-(
+There is some similarity between this soft lockup and the one reported
+in http://www.spinics.net/lists/netdev/msg100957.html.  In both, the
+process is doing both sends and receives on raw sockets.
 
-> chan = local->scan_req->channels[local->scan_channel_idx];
-> 
-> in ieee80211_scan_state_set_channel().
+  --  John
 
-The same thing here.
-
-The oops happens when local->scan_channel_idx reaches 14, which is
-local->scan_req->n_channels.
-
-I tried this patch:
-
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -588,6 +588,10 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
- 
- 	skip = 0;
-+
-+	if (local->scan_channel_idx >= local->scan_req->n_channels)
-+		return;
-+
- 	chan = local->scan_req->channels[local->scan_channel_idx];
- 
- 	if (chan->flags & IEEE80211_CHAN_DISABLED ||
-
-
-It prevents the oops, but now udev hangs on startup.   Perhaps
-ieee80211_scan_state_set_channel() shouldn't set local->scan_channel_idx
-to an invalid value in the first place.  Or maybe if it happens,
-something else should be done to stop the scan.
-
--- 
-Regards,
-Pavel Roskin
