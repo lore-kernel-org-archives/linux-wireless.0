@@ -1,35 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:39559 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758023AbZGGQdU (ORCPT
+Received: from mail-pz0-f197.google.com ([209.85.222.197]:43588 "EHLO
+	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302AbZGJTed convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 12:33:20 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] p54: fix beacon template dtim IE corruption
-Date: Tue, 7 Jul 2009 20:33:10 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200907041824.07655.chunkeey@web.de> <20090707160431.GB2768@tuxdriver.com>
-In-Reply-To: <20090707160431.GB2768@tuxdriver.com>
+	Fri, 10 Jul 2009 15:34:33 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907072033.10183.chunkeey@web.de>
+In-Reply-To: <507E3B9268%linux@youmustbejoking.demon.co.uk>
+References: <4A5716AA.5000903@ph.tum.de>
+	 <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
+	 <4A5743AB.6090303@ph.tum.de>
+	 <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
+	 <4A575119.9070505@ph.tum.de>
+	 <507E3B9268%linux@youmustbejoking.demon.co.uk>
+Date: Fri, 10 Jul 2009 21:34:32 +0200
+Message-ID: <71cd59b00907101234w772dc141kff52c7393e698e17@mail.gmail.com>
+Subject: Re: [2.6.31-rc2] Writing to /sys/class/rfkill/*/state fails
+From: Corentin Chary <corentin.chary@gmail.com>
+To: Thiemo Nagel <thiemo.nagel@ph.tum.de>,
+	Corentin Chary <corentin.chary@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	debian-eeepc-devel@lists.alioth.debian.org,
+	acpi4asus-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 July 2009 18:04:32 John W. Linville wrote:
-> On Sat, Jul 04, 2009 at 06:24:07PM +0200, Christian Lamparter wrote:
-> > This patch fixes a regression that sneaked in with 
-> > "[PATCH] p54: re-enable power save feature".
-> > When p54_beacon_format_ie_tim was divided up
-> > and rewritten to use skb_* macros.
-> 
-> I don't seem to have any record of that patch,
-hmm, it's right here...
-http://www.spinics.net/lists/linux-wireless/msg35201.html
+On Fri, Jul 10, 2009 at 8:57 PM, Darren
+Salt<linux@youmustbejoking.demon.co.uk> wrote:
+> [full quoting for linux-{kernel,wireless} & the perpetrator]
+>
+> I demand that Thiemo Nagel may or may not have written...
+>
+>> Corentin Chary wrote:
+>>> On Fri, Jul 10, 2009 at 3:35 PM, Thiemo Nagel<thiemo.nagel@ph.tum.de>
+>>> wrote:
+>>>> Corentin Chary wrote:
+>>>>> On Fri, Jul 10, 2009 at 12:23 PM, Thiemo
+>>>>> Nagel<thiemo.nagel@ph.tum.de> wrote:
+>>>>>> I just tested the new GSM rfkill in 2.6.31-rc2 and I get the following
+>>>>>> on my EeePC 1000HGO:
+>>>>>>   eee:/# cat /sys/class/rfkill/rfkill2/name
+>>>>>>   eeepc-wwan3g
+>>>>>>   eee:/# echo 0 > /sys/class/rfkill/rfkill2/state
+>>>>>>   bash: echo: write error: Operation not permitted
+>>>>>> What could be the reason for that?
+>>>>> Reading the kernel source I can find:
+>>>>>         /*
+>>>>>          * The intention was that userspace can only take control over
+>>>>>          * a given device when/if rfkill-input doesn't control it due
+>>>>>          * to user_claim. Since user_claim is currently unsupported,
+>>>>>          * we never support changing the state from userspace -- this
+>>>>>          * can be implemented again later.
+>>>>>          */
+>>>>> It seems that rfkill should be controlled by /dev/rfkill (cf
+>>>>> Documentation/rfkill.txt).
+>>>>> Maybe network-manager can control that .. But I'm not sure.
+>>>>> Maybe you should CC the wireless mailing list.
+>>>> Thanks for the quick reply.  The interesting thing is, that the direct
+>>>> access works well for eeepc-wlan and eeepc-bluetooth rfkills.  I've CC'd
+>>>> debian-eeepc-devel, maybe they know something.
+>>> Are you sure that it works with newer kernels ?
+>>> This commit should have broken it for all rfkill.
+>>>   commit 19d337dff95cbf76edd3ad95c0cee2732c3e1ec5
+>>>   Author: Johannes Berg <johannes@sipsolutions.net>
+>>>   Date:   Tue Jun 2 13:01:37 2009 +0200
+>
+>> You're right, all rfkills work with 2.6.30, but none works with 2.6.31-rc2.
+>
+> This is the first that I've heard of this. I'd not noticed since I've not
+> needed Bluetooth on my 901 recently.
+>
+>> For the debian-eeepc folks:  2.6.31-rc2 breaks bluetooth toggling using
+>> eeepc-acpi-scripts, but WLAN toggling still works.
+>
+> FSVO "works" (http://bugzilla.kernel.org/show_bug.cgi?id=13390), but that's a
+> different problem.
+>
+> I consider this a regression. It breaks an interface which, though flawed, is
+> ideally suited for scripting use and which eeepc-acpi-scripts uses in shell
+> scripts.
+>
+> /dev/rfkill is not useful in shell scripts.
 
-maybe it was lost during the holiday, should I prepare a resend?
+Maybe it would be possible with an rfkill command line tool (in C) ?
+Is there such a tool somewhere ?
 
-Regards,
-	Chr
+
+-- 
+Corentin Chary
+http://xf.iksaif.net - http://uffs.org
