@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:33296 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750745AbZG3EhP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 00:37:15 -0400
-Message-ID: <4A71235C.40405@redfish-solutions.com>
-Date: Wed, 29 Jul 2009 21:36:44 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-References: <4A612514.4050708@redfish-solutions.com>	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>	 <4A650331.9020409@redfish-solutions.com>	 <4A6620B9.4@redfish-solutions.com>	 <20090723112428.GC13742@hash.localnet>	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>	 <4A68C821.7060208@redfish-solutions.com>	 <4A68DBDE.7060504@redfish-solutions.com>	 <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>	 <4A68E80C.808@redfish-solutions.com> <b6c5339f0907240658o38f4ee76t2de8a071cd2f37f4@mail.gmail.com>
-In-Reply-To: <b6c5339f0907240658o38f4ee76t2de8a071cd2f37f4@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:28342 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751376AbZGJO7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 10:59:49 -0400
+Subject: Re: Fwd: 4318 misbehaving with bleeding edge kernels
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Celejar <celejar@gmail.com>
+In-Reply-To: <200907101131.41781.mb@bu3sch.de>
+References: <200907101131.41781.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Fri, 10 Jul 2009 10:59:46 -0400
+Message-Id: <1247237986.3210.10.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Thu, Jul 23, 2009 at 6:45 PM, Philip A.
-> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->> Bob Copeland wrote:
->>> On Thu, Jul 23, 2009 at 5:53 PM, Philip A.
->>> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->>>>> Getting closer :-)
->>>>>
->>>>> ath5k_tx_processq(sc, &sc->txqs[i]);
->>>>>
->>>> Didn't work with rc4:
->>> What did you apply against?  It's supposed to be against
->>> wireless-testing (or, at worst, latest compat-wireless).
->>>
->>>> BUG: unable to handle kernel NULL pointer dereference at 00000000
->>>> IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
-> 
->> This was against compat-wireless-2.6.31-rc4.
->>
->> Alas, I already blew away the build directory...
-> 
-> I think you need to use the unstable compat-wireless snapshots;
-> I have a feeling that the above doesn't have all of the tx queues.
-> 
-> Check out ath5k.h, the txq array in struct ath5k_softc should have
-> NUM_TX_QUEUES entries, an earlier version only had 2.
-> 
-> Although your compiler generates rather different code from mine
-> (different config or whatever), it looks like the oops happened
-> in the list_for_each_entry(... txq->q ...) -- but I don't see how
-> that can happen in my copy, since txq[i].q is initialized at the
-> same time as txq[i].setup.
-> 
+On Fri, 2009-07-10 at 11:31 +0200, Michael Buesch wrote:
 
-Give me a shout when this patch makes its way into compat-wireless-2.6.31-rcN and I'll try again with that.
+> I have a 4318 (rev 02), which has been working fine with b43.
+> Recently, with 2.6.31-rc2 kernels from the wireless-testing git repo,
+> I've been having trouble.  Sometimes the card simply fails to associate
+> after doing 'iwconfig eth0 essid xxxx'.  It doesn't even seem to try;
+> i.e., when it does associate, I see log entries like these:
 
--Philip
+I believe is that the ESSID support in the wext compatibility layer is
+seriously broken.  It's not shown originally at all.  Once it's set, it
+cannot be changed.
 
+[root@mj proski]# modprobe rt73usb
+[root@mj proski]# iwconfig wlan5
+wlan5     IEEE 802.11bg  Mode:Managed  Access Point: Not-Associated   
+          Tx-Power=0 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          
+[root@mj proski]# iwconfig wlan5 essid foo
+[root@mj proski]# iwconfig wlan5
+wlan5     IEEE 802.11bg  ESSID:"foo"  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          
+[root@mj proski]# iwconfig wlan5 essid bar
+[root@mj proski]# iwconfig wlan5
+wlan5     IEEE 802.11bg  ESSID:"foo"  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          
+[root@mj proski]# ifconfig wlan5 up
+[root@mj proski]# iwconfig wlan5
+wlan5     IEEE 802.11bg  ESSID:"foo"  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=7 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          
+[root@mj proski]# iwconfig wlan5 essid bar
+[root@mj proski]# iwconfig wlan5
+wlan5     IEEE 802.11bg  ESSID:"foo"  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=7 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          
+> and subsequent invocations, when the card is still not working, gives:
+> 
+> ~# iwlist eth0 scan
+> eth0      Interface doesn't support scanning : Device or resource busy
+
+This thread may be related:
+http://marc.info/?t=124713997300002&r=1&w=2
+
+-- 
+Regards,
+Pavel Roskin
