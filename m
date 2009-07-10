@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22242 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755209AbZGOQCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 12:02:22 -0400
-Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
-From: reinette chatre <reinette.chatre@intel.com>
-To: John Ranson <ranson@analager.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
-References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 15 Jul 2009 09:02:20 -0700
-Message-Id: <1247673740.17896.1983.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:36486 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbZGJLRd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 07:17:33 -0400
+Received: by fxm18 with SMTP id 18so800638fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 04:17:31 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: monitor the connection
+References: <1247186507.1905.14.camel@johannes.local>
+	<1247187640.1905.16.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 10 Jul 2009 14:17:29 +0300
+In-Reply-To: <1247187640.1905.16.camel@johannes.local> (Johannes Berg's message of "Fri\, 10 Jul 2009 03\:00\:40 +0200")
+Message-ID: <87eiso23ee.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On Tue, 2009-07-14 at 21:25 -0700, John Ranson wrote:
-> [    4.252445] iwlagn 0000:03:00.0: Tunable channels: 11 802.11bg, 13
-> 802.11a channels
-> [    4.252556] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
-> [    4.252945] iwlagn 0000:03:00.0: Failed to register hw (error -17)
-> [    4.253255] iwlagn 0000:03:00.0: PCI INT A disabled
-> [    4.253263] iwlagn: probe of 0000:03:00.0 failed with error -17
+> With the recent MLME rework I accidentally removed the connection
+> monitoring code. In order to add it back, this patch will add new
+> code to monitor both for beacon loss and for the connection actually
+> working, with possibly separate triggers.
+>
+> When no unicast frames have been received from the AP for (currently)
+> two seconds, we will send the AP a probe request.
 
-This is ieee80211_register_hw() returning error 17 (EEXIST). One spot I
-saw where this can happen is if you are trying to register with the same
-name (wlanX) already used by another netdevice. Does this sound possible
-in your setup?
+I think this is too short, but we can change it later. 
 
-Johannes - do you perhaps have an idea when this can happen?
+I quickly looked at the patch and it looks ok for me. Unfortunately I
+can't test it right now because N800 support is broken in 2.6.31. I'm
+fixing that currently.
 
-Reinette
-
-
+-- 
+Kalle Valo
