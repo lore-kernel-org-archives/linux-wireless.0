@@ -1,74 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60071 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437AbZGMTPR (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:47188 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbZGJIKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 15:15:17 -0400
-Subject: Re: nl80211 and wext interoperability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Fri, 10 Jul 2009 04:10:19 -0400
+Received: by bwz25 with SMTP id 25so693084bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 01:10:17 -0700 (PDT)
+To: Max Filippov <jcmvbkbc@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	Alexander Wenzel <wenzel@fgan.de>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1247512206.4369.67.camel@localhost.localdomain>
-References: <1247139797.2144.27.camel@johannes.local>
-	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
-	 <1247163342.22527.2.camel@johannes.local>
-	 <1247507618.4369.11.camel@localhost.localdomain>
-	 <1247507677.4166.27.camel@johannes.local>
-	 <1247512206.4369.67.camel@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-I4IMok1cs2ANwoQBFQYd"
-Date: Mon, 13 Jul 2009 21:14:44 +0200
-Message-Id: <1247512484.30003.0.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: Problem with p54 driver and ibss mode
+References: <4A55DB91.2070305@fgan.de> <200907092056.53055.chunkeey@web.de>
+	<87vdm1pr5m.fsf@litku.valot.fi>
+	<200907100143.29004.jcmvbkbc@gmail.com>
+	<1247176098.1905.8.camel@johannes.local>
+	<87my7d10nz.fsf@litku.valot.fi>
+	<73aaf0dd0907100043p7916c4fbid9aa2faa3580477d@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 10 Jul 2009 11:10:15 +0300
+In-Reply-To: <73aaf0dd0907100043p7916c4fbid9aa2faa3580477d@mail.gmail.com> (Max Filippov's message of "Fri\, 10 Jul 2009 11\:43\:48 +0400")
+Message-ID: <87iqi10xi0.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Max Filippov <jcmvbkbc@gmail.com> writes:
 
---=-I4IMok1cs2ANwoQBFQYd
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>>> Should be easy to copy the code into p54spi, we just never did, hoping
+>>> Kalle would come up with a better way, maybe request_firmware() :)
+>>
+>> I agree with you, better not to copy the sysfs interface to p54spi. I'm
+>> planning to experiment with the firmware interface at some point, but it
+>> would be great if someone else could take a look at it first.
+>
+> I can take a look at it. (:
 
-On Mon, 2009-07-13 at 15:10 -0400, Dan Williams wrote:
-> On Mon, 2009-07-13 at 19:54 +0200, Johannes Berg wrote:
-> > On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
-> >=20
-> > > Mainly because there's no way to tell WEXT drivers to "stop whatever
-> > > you're doing and just be idle"...
-> > >=20
-> > > The supplicant clears out the keys on TERM anyway, and in some cases
-> > > (iwlagn) the driver will keep trying to reassociate internally
-> >=20
-> > Seems unlikely, ITYM ipw?
->=20
-> Nope.  I saw this behavior with iwlagn (both 3945 and 4965) when I was
-> doing all that hidden stuff back in April with 2.6.27 kernels.  Might be
-> different in very recent kernels?
+Excellent!
 
-That doesn't sound right, to the best of my knowledge the _driver_ has
-no chance to try to associate, and mac80211 didn't.
+> But the question is... to take a look at it to see what?
 
-johannes
+:)
 
---=-I4IMok1cs2ANwoQBFQYd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Basically we have been talking about fetching calibration data via the
+request_firmware() interface. In user space there would be a udev script
+which would dynamically retrieve the calibration data specific to the
+platform it is running on. In N800/N810 case that would mean to run
+stlc45xx-cal and provide the calibration data to the driver. 
 
------BEGIN PGP SIGNATURE-----
+This way we can have platform specific implementations and use already
+existing user space interface. The idea was discussed in this mailing
+list few months ago. The implementation details are currently unknown to
+me. I was planning to talk about this at the Wireless Summit, but of
+course I forgot :/
 
-iQIcBAABAgAGBQJKW4egAAoJEODzc/N7+QmazB8QAJ8U1Q22XUY1u62ngJwIrT9d
-R3rynjdoGMxp7B9mGzUdhzbbupN1MBpgnPsPLMOuEnjLTNMawqP8H+t991F5dSJ1
-C2g2NYYE0tE2fa2DLiCIDZu+jCrj7gSv45PmXav/q40QeCtIXtTN7NkrfzDebM/F
-3vJLwuAs9EV8RCLeR0ZAE/PWnYNuXw6+Rode7E32OfwLg24nz21snMVSifuXUIsH
-XjMkkqvRd0v2qr6RLfmoSAB7vaPmWleMPc4DwrEU4FgfN8VLck1D3SK7XbSVGPiO
-BhgdoCvkIUzpm9ebBt+cEQ6whB3zkLNGlb6uhW8B9tRW5Pu5QVH16mfHw7GYjXgm
-YnZWukP+2WERaHcVm/byrqFPqerLQ/eMOJV8inAidyHB9h/7fk8NUv6odoftOh9L
-2AciwQ0boBRQd1PNFSdndmYu8bG2e/HgfEHkjh2O8xbQoB1hqY+XsXMHfoTOdcCb
-XJ5TIbEmYyMk7XAfB4dos5DQ4lIiXzhdTuzqUA9b1Ybpc7x5B08IABxm9uMAZBfM
-PN+Cpm97Bo/Sv4y9WRawK5HJp9g4PSaxQwm8W4dNOj9NReCPxKScqrNw+xDX0k86
-vSefznfMUCgJuiqRn14lljjObjxo1EJcypHrkareKrjNxtRG49kwzLtRzMQJsJZB
-SltwtsAYVmAG+3KU1lni
-=R97W
------END PGP SIGNATURE-----
+stlc45xx-cal will most probably need some changes, maybe dumping the
+calibration data to stdout so that udev script can forward it to the
+driver? I can do the necessary changes to stlc45xx-cal, but it's better
+to have a some sort of working prototype before I'll start changing
+stlc45xx-cal.
 
---=-I4IMok1cs2ANwoQBFQYd--
-
+-- 
+Kalle Valo
