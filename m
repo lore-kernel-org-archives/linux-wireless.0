@@ -1,418 +1,534 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48170 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752144AbZGLU1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 16:27:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3 v2] [compat-2.6] Fix problems with kernel 2.6.31.
-Date: Sun, 12 Jul 2009 22:27:40 +0200
-Message-Id: <1247430460-16954-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1247422129-652-1-git-send-email-hauke@hauke-m.de>
-References: <1247422129-652-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50219 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752573AbZGJUAx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 16:00:53 -0400
+Date: Fri, 10 Jul 2009 15:48:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2009-07-10
+Message-ID: <20090710194822.GH2825@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__dev_addr_sync and __dev_addr_unsync are not exported in kernel < 2.6.32.
+Dave,
 
-Now this is compiling and loading with kernel 2.6.31.
+Here is the usual tsunami of wireless stuff at this stage of the
+development cycle for the next release.  Included are the usual
+driver updates (including movement of orinoco towards cfg80211)
+and many mac80211 improvements.
 
-v2: add missing include for net/compat-2.6.32.h
+Please let me know if there are problems!
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Thanks,
+
+John
+
 ---
- compat/compat-2.6.29.c |    2 +-
- compat/compat-2.6.30.c |    2 +-
- compat/compat-2.6.31.c |  110 +-----------------------------------------
- compat/compat-2.6.32.c |  124 ++++++++++++++++++++++++++++++++++++++++++++++++
- compat/compat-2.6.32.h |   12 +++++
- compat/compat.diff     |   23 +++++----
- compat/compat.h        |    1 +
- 7 files changed, 153 insertions(+), 121 deletions(-)
- create mode 100644 compat/compat-2.6.32.c
- create mode 100644 compat/compat-2.6.32.h
- delete mode 100644 compat/compat.c
 
-diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
-index 82439a5..e0f1e30 100644
---- a/compat/compat-2.6.29.c
-+++ b/compat/compat-2.6.29.c
-@@ -12,7 +12,7 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
- 
--/* 2.6.28 compat code goes here */
-+/* 2.6.29 compat code goes here */
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29) */
- 
-diff --git a/compat/compat-2.6.30.c b/compat/compat-2.6.30.c
-index 0220fb1..ce25dfd 100644
---- a/compat/compat-2.6.30.c
-+++ b/compat/compat-2.6.30.c
-@@ -12,7 +12,7 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
- 
--/* 2.6.28 compat code goes here */
-+/* 2.6.30 compat code goes here */
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) */
- 
-diff --git a/compat/compat-2.6.31.c b/compat/compat-2.6.31.c
-index 5c51bde..a102115 100644
---- a/compat/compat-2.6.31.c
-+++ b/compat/compat-2.6.31.c
-@@ -10,116 +10,10 @@
- 
- #include <net/compat.h>
- 
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
- 
- #include <linux/netdevice.h>
- 
--int __dev_addr_add(struct dev_addr_list **list, int *count,
--		   void *addr, int alen, int glbl)
--{
--	struct dev_addr_list *da;
--
--	for (da = *list; da != NULL; da = da->next) {
--		if (memcmp(da->da_addr, addr, da->da_addrlen) == 0 &&
--		    da->da_addrlen == alen) {
--			if (glbl) {
--				int old_glbl = da->da_gusers;
--				da->da_gusers = 1;
--				if (old_glbl)
--					return 0;
--			}
--			da->da_users++;
--			return 0;
--		}
--	}
--
--	da = kzalloc(sizeof(*da), GFP_ATOMIC);
--	if (da == NULL)
--		return -ENOMEM;
--	memcpy(da->da_addr, addr, alen);
--	da->da_addrlen = alen;
--	da->da_users = 1;
--	da->da_gusers = glbl ? 1 : 0;
--	da->next = *list;
--	*list = da;
--	(*count)++;
--	return 0;
--}
--
--int __dev_addr_delete(struct dev_addr_list **list, int *count,
--		      void *addr, int alen, int glbl)
--{
--	struct dev_addr_list *da;
--
--	for (; (da = *list) != NULL; list = &da->next) {
--		if (memcmp(da->da_addr, addr, da->da_addrlen) == 0 &&
--		    alen == da->da_addrlen) {
--			if (glbl) {
--				int old_glbl = da->da_gusers;
--				da->da_gusers = 0;
--				if (old_glbl == 0)
--					break;
--			}
--			if (--da->da_users)
--				return 0;
--
--			*list = da->next;
--			kfree(da);
--			(*count)--;
--			return 0;
--		}
--	}
--	return -ENOENT;
--}
--
--int __dev_addr_sync(struct dev_addr_list **to, int *to_count,
--		    struct dev_addr_list **from, int *from_count)
--{
--	struct dev_addr_list *da, *next;
--	int err = 0;
--
--	da = *from;
--	while (da != NULL) {
--		next = da->next;
--		if (!da->da_synced) {
--			err = __dev_addr_add(to, to_count,
--					     da->da_addr, da->da_addrlen, 0);
--			if (err < 0)
--				break;
--			da->da_synced = 1;
--			da->da_users++;
--		} else if (da->da_users == 1) {
--			__dev_addr_delete(to, to_count,
--					  da->da_addr, da->da_addrlen, 0);
--			__dev_addr_delete(from, from_count,
--					  da->da_addr, da->da_addrlen, 0);
--		}
--		da = next;
--	}
--	return err;
--}
--EXPORT_SYMBOL_GPL(__dev_addr_sync);
--
--void __dev_addr_unsync(struct dev_addr_list **to, int *to_count,
--		       struct dev_addr_list **from, int *from_count)
--{
--	struct dev_addr_list *da, *next;
--
--	da = *from;
--	while (da != NULL) {
--		next = da->next;
--		if (da->da_synced) {
--			__dev_addr_delete(to, to_count,
--					  da->da_addr, da->da_addrlen, 0);
--			da->da_synced = 0;
--			__dev_addr_delete(from, from_count,
--					  da->da_addr, da->da_addrlen, 0);
--		}
--		da = next;
--	}
--}
--EXPORT_SYMBOL_GPL(__dev_addr_unsync);
--
- /**
-  * genl_register_family_with_ops - register a generic netlink family
-  * @family: generic netlink family
-@@ -166,5 +60,5 @@ err_out:
- }
- EXPORT_SYMBOL(genl_register_family_with_ops);
- 
--#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
- 
-diff --git a/compat/compat-2.6.32.c b/compat/compat-2.6.32.c
-new file mode 100644
-index 0000000..91d03b2
---- /dev/null
-+++ b/compat/compat-2.6.32.c
-@@ -0,0 +1,124 @@
-+/*
-+ * Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 2.6.32.
-+ */
-+
-+#include <net/compat.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
-+
-+#include <linux/netdevice.h>
-+
-+int __dev_addr_add(struct dev_addr_list **list, int *count,
-+		   void *addr, int alen, int glbl)
-+{
-+	struct dev_addr_list *da;
-+
-+	for (da = *list; da != NULL; da = da->next) {
-+		if (memcmp(da->da_addr, addr, da->da_addrlen) == 0 &&
-+		    da->da_addrlen == alen) {
-+			if (glbl) {
-+				int old_glbl = da->da_gusers;
-+				da->da_gusers = 1;
-+				if (old_glbl)
-+					return 0;
-+			}
-+			da->da_users++;
-+			return 0;
-+		}
-+	}
-+
-+	da = kzalloc(sizeof(*da), GFP_ATOMIC);
-+	if (da == NULL)
-+		return -ENOMEM;
-+	memcpy(da->da_addr, addr, alen);
-+	da->da_addrlen = alen;
-+	da->da_users = 1;
-+	da->da_gusers = glbl ? 1 : 0;
-+	da->next = *list;
-+	*list = da;
-+	(*count)++;
-+	return 0;
-+}
-+
-+int __dev_addr_delete(struct dev_addr_list **list, int *count,
-+		      void *addr, int alen, int glbl)
-+{
-+	struct dev_addr_list *da;
-+
-+	for (; (da = *list) != NULL; list = &da->next) {
-+		if (memcmp(da->da_addr, addr, da->da_addrlen) == 0 &&
-+		    alen == da->da_addrlen) {
-+			if (glbl) {
-+				int old_glbl = da->da_gusers;
-+				da->da_gusers = 0;
-+				if (old_glbl == 0)
-+					break;
-+			}
-+			if (--da->da_users)
-+				return 0;
-+
-+			*list = da->next;
-+			kfree(da);
-+			(*count)--;
-+			return 0;
-+		}
-+	}
-+	return -ENOENT;
-+}
-+
-+int __dev_addr_sync(struct dev_addr_list **to, int *to_count,
-+		    struct dev_addr_list **from, int *from_count)
-+{
-+	struct dev_addr_list *da, *next;
-+	int err = 0;
-+
-+	da = *from;
-+	while (da != NULL) {
-+		next = da->next;
-+		if (!da->da_synced) {
-+			err = __dev_addr_add(to, to_count,
-+					     da->da_addr, da->da_addrlen, 0);
-+			if (err < 0)
-+				break;
-+			da->da_synced = 1;
-+			da->da_users++;
-+		} else if (da->da_users == 1) {
-+			__dev_addr_delete(to, to_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+			__dev_addr_delete(from, from_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+		}
-+		da = next;
-+	}
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(__dev_addr_sync);
-+
-+void __dev_addr_unsync(struct dev_addr_list **to, int *to_count,
-+		       struct dev_addr_list **from, int *from_count)
-+{
-+	struct dev_addr_list *da, *next;
-+
-+	da = *from;
-+	while (da != NULL) {
-+		next = da->next;
-+		if (da->da_synced) {
-+			__dev_addr_delete(to, to_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+			da->da_synced = 0;
-+			__dev_addr_delete(from, from_count,
-+					  da->da_addr, da->da_addrlen, 0);
-+		}
-+		da = next;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(__dev_addr_unsync);
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
-+
-diff --git a/compat/compat-2.6.32.h b/compat/compat-2.6.32.h
-new file mode 100644
-index 0000000..53fea83
---- /dev/null
-+++ b/compat/compat-2.6.32.h
-@@ -0,0 +1,12 @@
-+#ifndef LINUX_26_32_COMPAT_H
-+#define LINUX_26_32_COMPAT_H
-+
-+#include <linux/autoconf.h>
-+#include <linux/version.h>
-+#include <linux/compat_autoconf.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
-+
-+#endif /* LINUX_26_32_COMPAT_H */
-diff --git a/compat/compat.c b/compat/compat.c
-deleted file mode 100644
-index e69de29..0000000
-diff --git a/compat/compat.diff b/compat/compat.diff
-index 6c76604..cb15bb7 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -1,10 +1,10 @@
----- a/drivers/misc/eeprom/Makefile	2009-07-02 00:23:37.993293412 -0700
--+++ b/drivers/misc/eeprom/Makefile	2009-07-02 00:23:38.053296505 -0700
--@@ -1,5 +1,2 @@
-+--- a/drivers/misc/eeprom/Makefile
-++++ b/drivers/misc/eeprom/Makefile
-+@@ -1,5 +1 @@
- -obj-$(CONFIG_EEPROM_AT24)	+= at24.o
- -obj-$(CONFIG_EEPROM_AT25)	+= at25.o
- -obj-$(CONFIG_EEPROM_LEGACY)	+= eeprom.o
-- obj-$(CONFIG_EEPROM_MAX6875)	+= max6875.o
-+-obj-$(CONFIG_EEPROM_MAX6875)	+= max6875.o
-  obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
- --- a/drivers/net/b44.c
- +++ b/drivers/net/b44.c
-@@ -51,9 +51,9 @@
-  	dev->irq = sdev->irq;
-  	SET_ETHTOOL_OPS(dev, &b44_ethtool_ops);
-  
----- a/drivers/net/usb/Makefile	2009-07-02 00:23:37.969259980 -0700
--+++ b/drivers/net/usb/Makefile	2009-07-02 00:23:38.057293452 -0700
--@@ -2,23 +2,8 @@
-+--- a/drivers/net/usb/Makefile
-++++ b/drivers/net/usb/Makefile
-+@@ -2,23 +2,7 @@
-  # Makefile for USB Network drivers
-  #
-  
-@@ -75,7 +75,7 @@
- -obj-$(CONFIG_USB_NET_ZAURUS)	+= zaurus.o
- -obj-$(CONFIG_USB_NET_MCS7830)	+= mcs7830.o
-  obj-$(CONFIG_USB_USBNET)	+= usbnet.o
-- obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
-+-obj-$(CONFIG_USB_NET_INT51X1)	+= int51x1.o
-  
- --- a/drivers/net/usb/rndis_host.c
- +++ b/drivers/net/usb/rndis_host.c
-@@ -141,9 +141,9 @@
-  	net->watchdog_timeo = TX_TIMEOUT_JIFFIES;
-  	net->ethtool_ops = &usbnet_ethtool_ops;
-  
----- a/net/wireless/Makefile	2009-07-08 16:35:31.392259166 -0700
--+++ b/net/wireless/Makefile	2009-07-08 16:35:56.036284948 -0700
--@@ -10,3 +10,10 @@
-+--- a/net/wireless/Makefile
-++++ b/net/wireless/Makefile
-+@@ -10,3 +10,11 @@ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
-  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o wext-sme.o
-  
-  ccflags-y += -D__CHECK_ENDIAN__
-@@ -153,6 +153,7 @@
- +cfg80211-y += compat-2.6.29.o
- +cfg80211-y += compat-2.6.30.o
- +cfg80211-y += compat-2.6.31.o
-++cfg80211-y += compat-2.6.32.o
- +
- --- a/drivers/net/wireless/ath/ath5k/base.h
- +++ b/drivers/net/wireless/ath/ath5k/base.h
-diff --git a/compat/compat.h b/compat/compat.h
-index c5ed4ff..05612b2 100644
---- a/compat/compat.h
-+++ b/compat/compat.h
-@@ -20,5 +20,6 @@
- #include <net/compat-2.6.29.h>
- #include <net/compat-2.6.30.h>
- #include <net/compat-2.6.31.h>
-+#include <net/compat-2.6.32.h>
- 
- #endif /* LINUX_26_COMPAT_H */
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+
+---
+
+The following changes since commit e5a8a896f5180f2950695d2d0b79db348d200ca4:
+  David S. Miller (1):
+        Merge branch 'master' of master.kernel.org:/.../davem/net-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Andrey Yurovsky (4):
+      libertas: remove ps_supported flag, use fwcapinfo
+      libertas: copy WPA keys to priv when associating
+      libertas: correct card cleanup order in SPI driver
+      libertas: fix card cleanup order in SDIO driver
+
+Ari Kauppi (2):
+      wl12xx: Fix incorrect warning message.
+      wl12xx: Fix CMD_TEST regression via netlink.
+
+Bob Copeland (7):
+      ath5k: cleanup ath5k_hw struct
+      ath5k: enable hardware LEDs
+      ath5k: send buffered frames after the beacon
+      ath5k: rework beacon configuration
+      ath: remove unnecessary return in ath_regd_get_band_ctl
+      ath5k: do not release irq across suspend/resume
+      ath5k: write PCU registers on initial reset
+
+Christian Lamparter (14):
+      ar9170usb: module link in sysfs
+      p54: redo rx_status into skb->cb
+      p54: Move eeprom code
+      p54: Move eeprom header
+      p54: Move firmware code
+      p54: Move LED code
+      p54: Move LMAC interface definitions
+      p54: Move mac80211 glue code
+      p54: Move TX/RX code
+      p54: Modify p54 files for new organization
+      p54: two endian fixes
+      p54spi: remove dead code and definitions
+      p54usb: fix stalls caused by urb allocation failures
+      p54: fix queue stall due to underrun
+
+David Kilroy (24):
+      cfg80211: add wrapper function to get wiphy from priv pointer
+      cfg80211: Advertise ciphers via WE according to driver capability
+      cfg80211: allow drivers that can't scan for specific ssids
+      cfg80211: set WE encoding size based on available ciphers
+      cfg80211: infer WPA and WPA2 support from TKIP and CCMP
+      orinoco: Move firmware capability determination into hw.c
+      orinoco: Move card reading code into hw.c
+      orinoco: Move FID allocation to hw.c
+      orinoco: use dev_err in early initialisation routines
+      orinoco: firmware helpers should use dev_err and friends
+      orinoco: Replace net_device with orinoco_private in driver interfaces
+      orinoco: initialise independently of netdev
+      orinoco: Change set_tkip to use orinoco_private instead of hermes_t
+      orinoco: initiate cfg80211 conversion
+      orinoco: make firmware download less verbose
+      orinoco: move netdev interface creation to main driver
+      airport: store irq in card private structure
+      orinoco: Handle suspend/restore in core driver
+      orinoco: provide generic commit function
+      orinoco: convert mode setting to cfg80211
+      orinoco: convert scanning to cfg80211
+      orinoco: convert giwrange to cfg80211
+      orinoco: remove WE nickname support
+      orinoco: fix printk format specifier for size_t arguments
+
+Gabor Juhos (2):
+      ath9k: remove unnecessary clearing of SC_OP_WAIT_{BEACON,CAB} flags
+      ath9k: remove ath_rx_ps_back_to_sleep helper
+
+Helmut Schaa (1):
+      mac80211: shorten the passive dwell time for sw scans
+
+Hin-Tak Leung (1):
+      zd1211rw: sort vid/pid pairs by numerical value
+
+Ivo van Doorn (1):
+      rt2x00: use wiphy rfkill interface
+
+Jiri Slaby (2):
+      ath5k: remove permissions from debugfs files
+      ath9k: remove permissions from debugfs files
+
+Joe Perches (2):
+      drivers/net/wireless: Use PCI_VDEVICE
+      drivers/net/wireless/ath/ath9k: Remove unnecessary semicolons
+
+Johannes Berg (54):
+      cfg80211: pass netdev to change_virtual_intf
+      cfg80211: issue netlink notification when scan starts
+      rt2x00: remove skb->do_not_encrypt usage
+      mac80211: push rx status into skb->cb
+      mac80211: improve per-sta debugfs
+      cfg80211: prohibit scanning the same channel more than once
+      mac80211_hwsim: clean up the skb before passing it back
+      cfg80211: send wext MLME-MICHAELMICFAILURE.indication
+      wext: allow returning NULL stats
+      mac80211: fix todo lock
+      wext: default to y
+      cfg80211: move break statement to correct place
+      nl80211: clean up function definitions
+      cfg80211: use proper allocation flags
+      cfg80211: remove wireless_dev->bssid
+      mac80211: tell SME about real auth state
+      wext: constify extra argument to wireless_send_event
+      cfg80211: introduce nl80211 testmode command
+      mac80211: remove an unused function declaration
+      wireless: define AKM suites
+      cfg80211: emulate connect with auth/assoc
+      cfg80211: managed mode wext compatibility
+      cfg80211: implement iwpower
+      cfg80211: implement IWAP for WDS
+      cfg80211: implement IWRATE
+      cfg80211: implement get_wireless_stats
+      mac80211: re-add HT disabling
+      mac80211: remove auth algorithm retry
+      mac80211: remove dead code, clean up
+      cfg80211: send events for userspace SME
+      cfg80211: reset auth algorithm
+      cfg80211: assimilate and export ieee80211_bss_get_ie
+      cfg80211: keep track of BSSes
+      cfg80211: refuse authenticating to same BSSID twice
+      nl80211: limit to one pairwise cipher for associate()
+      cfg80211: fix giwrange
+      iwlwifi: make software queue assignment more efficient
+      iwlwifi: scan requested channels only
+      iwlwifi: fix aggregation limit
+      rfkill: prep for rfkill API changes
+      cfg80211: let SME control reassociation vs. association
+      mac80211: remove dead code from mlme
+      mac80211: rework MLME for multiple authentications
+      mac80211: refactor the WEP code to be directly usable
+      cfg80211: fix netdev down problem
+      cfg80211: dont use union for wext
+      cfg80211: mlme API must be able to sleep
+      cfg80211: warn again on spurious deauth
+      cfg80211: properly name driver locking
+      cfg80211: fix MFP bug, sparse warnings
+      cfg80211: fix locking
+      cfg80211: clean up naming once and for all
+      cfg80211: disallow configuring unsupported interfaces
+      hwsim: make testmode_cmd static
+
+John W. Linville (1):
+      mac80211_hwsim: fix-up build damage from removal of skb->dst
+
+Jussi Kivilinna (3):
+      rndis_wlan: convert get/set frag/rts to cfg80211
+      usbnet: Add stop function pointer to 'struct rndis_data'.
+      rndis_wlan: convert set/get txpower to cfg80211
+
+Juuso Oikarinen (4):
+      wl12xx: removed chipset interrupt source configuration from fw wakeup
+      wl12xx: Moved wl1251 TX path implementation into chip specific files
+      wl12xx: Add support for block reading from a fixed register address
+      wl12xx: Use chipset specific join commands
+
+Kalle Valo (20):
+      wl12xx: cmd and acx interface rework
+      wl12xx: reserver buffer for read32()/write32() in struct wl12xx
+      wl12xx: fix error handling in wl12xx_probe()
+      wl12xx: reserve buffer for partition command in struct wl12xx
+      wl12xx: allocate buffer spi read/write command buffer kzalloc()
+      wl12xx: allocate buffer the spi busy word from struct wl12xx
+      wl12xx: use wl12xx_mem_read32() to read the rx counter
+      wl12xx: fix rx descriptor use
+      wl12xx: protect wl12xx_op_set_rts_threshold()
+      wl12xx: optimise elp wakeup and sleep calls
+      wl12xx: check if elp wakeup failed
+      wl12xx: enable ELP mode
+      wl12xx: rename wl1251.c wl1251_ops.c
+      wl12xx: rename driver to wl1251
+      wl1251: remove wl1271_setup()
+      wl1251: add wl1251 prefix to all 1251 files
+      wl1251: rename wl12xx.h to wl1251.h
+      wl12xx: remove unused wl12xx_hw_init_mem_config()
+      wl1251: use wl1251 prefix everywhere
+      wl1251: fix a checkpatch warning
+
+Luciano Coelho (6):
+      wl12xx: add wl12xx_spi_reg_read() and wl12xx_spi_reg_write() functions
+      wl12xx: moved firmware version reading routine to chip-specific functions
+      wl12xx: add support for new WL1271 chip revision
+      wl12xx: add support for fixed address in wl12xx_spi_read
+      wl12xx: pass the wake up condition when configuring the wake up event
+      wl1251: change psm enabled/disabled info to debug
+
+Luis R. Rodriguez (1):
+      ath9k: differentiate quality reporting between legacy and HT configurations
+
+Mohamed Abbas (1):
+      iwlwifi: Check HW ready before prepare card.
+
+Reinette Chatre (3):
+      iwlagn: re-enable PS support for iwlagn
+      iwlwifi: add utility to print buffer when error occurs
+      iwlwifi: always print buffer when error condition occurs
+
+Roel Kluin (1):
+      wireless: remove redundant tests on unsigned
+
+Samuel Ortiz (6):
+      iwmc3200wifi: invalidate keys when changing the BSSID
+      iwmc3200wifi: handling wifi_if_ntfy responses
+      iwmc3200wifi: cfg80211 key hooks implemetation
+      iwmc3200wifi: cache keys when interface is down
+      cfg80211: connect/disconnect API
+      cfg80211: check for current_bss from giwrate
+
+Senthil Balasubramanian (4):
+      ath9k: remove unnecessary STATION mode check.
+      ath9k: stop ani when the STA gets disconnected.
+      ath9k: race condition in SCANNING state check during ANI calibration
+      ath9k: Handle different TX and RX streams properly.
+
+Tomas Winkler (2):
+      iwlwifi: drop sw_crypto from hw_params.
+      iwlwifi: unify iwl_setup_rxon_timing
+
+Vasanthakumar Thiagarajan (4):
+      ath9k: Nuke unneccesary helper function to see if aggr is active
+      ath9k: Remove unnecessary count for addba attempt
+      ath9k: downgrade ASSERT() in ath_clone_txbuf()
+      ath9k: Make sure we configure a non-zero beacon interval
+
+Vidhya Govindan (1):
+      wl12xx: Assign value to rx msdu lifetime variable
+
+Wey-Yi Guy (3):
+      iwlwifi: modify sensitivity value for 5150
+      iwlwifi: no need to refer to max_nrg_cck range value
+      iwlwifi: remove disable_tx_power for device > 4965
+
+Zhu Yi (5):
+      iwmc3200wifi: change coexist periodic calibration flag
+      iwmc3200wifi: rfkill cleanup
+      iwmc3200wifi: replace netif_rx with netif_rx_ni
+      iwmc3200wifi: simplify calibration map
+      iwmc3200wifi: remove B0 hardware support
+
+ drivers/net/usb/usbnet.c                           |   14 +
+ drivers/net/wireless/adm8211.c                     |    3 +-
+ drivers/net/wireless/at76c50x-usb.c                |    3 +-
+ drivers/net/wireless/ath/ar9170/main.c             |    6 +-
+ drivers/net/wireless/ath/ar9170/usb.c              |    2 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h             |   21 +-
+ drivers/net/wireless/ath/ath5k/attach.c            |    3 +
+ drivers/net/wireless/ath/ath5k/base.c              |  130 +-
+ drivers/net/wireless/ath/ath5k/base.h              |   10 +-
+ drivers/net/wireless/ath/ath5k/debug.c             |    8 +-
+ drivers/net/wireless/ath/ath5k/phy.c               |    7 +-
+ drivers/net/wireless/ath/ath5k/qcu.c               |    1 -
+ drivers/net/wireless/ath/ath5k/reset.c             |    1 -
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    2 +-
+ drivers/net/wireless/ath/ath9k/beacon.c            |   15 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |   10 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c            |    2 -
+ drivers/net/wireless/ath/ath9k/hw.c                |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   62 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |   67 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   33 +-
+ drivers/net/wireless/ath/regd.c                    |    2 -
+ drivers/net/wireless/b43/xmit.c                    |    3 +-
+ drivers/net/wireless/b43legacy/xmit.c              |    3 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c             |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c            |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |   29 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |   74 +-
+ drivers/net/wireless/iwlwifi/iwl-calib.c           |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c            |   63 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h            |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h           |    6 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c              |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c              |   16 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c        |   88 +-
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c       |  235 ++-
+ drivers/net/wireless/iwmc3200wifi/commands.c       |  116 +-
+ drivers/net/wireless/iwmc3200wifi/commands.h       |    7 +-
+ drivers/net/wireless/iwmc3200wifi/eeprom.c         |    4 -
+ drivers/net/wireless/iwmc3200wifi/fw.c             |   21 +-
+ drivers/net/wireless/iwmc3200wifi/iwm.h            |   32 +-
+ drivers/net/wireless/iwmc3200wifi/lmac.h           |    4 +
+ drivers/net/wireless/iwmc3200wifi/main.c           |   38 +-
+ drivers/net/wireless/iwmc3200wifi/netdev.c         |   27 +-
+ drivers/net/wireless/iwmc3200wifi/rx.c             |   36 +-
+ drivers/net/wireless/iwmc3200wifi/sdio.c           |    6 +-
+ drivers/net/wireless/iwmc3200wifi/umac.h           |    2 +
+ drivers/net/wireless/iwmc3200wifi/wext.c           |  352 +---
+ drivers/net/wireless/libertas/assoc.c              |    6 +
+ drivers/net/wireless/libertas/dev.h                |    1 -
+ drivers/net/wireless/libertas/if_cs.c              |    3 -
+ drivers/net/wireless/libertas/if_sdio.c            |    5 +-
+ drivers/net/wireless/libertas/if_spi.c             |    8 +-
+ drivers/net/wireless/libertas/if_usb.c             |    3 +-
+ drivers/net/wireless/libertas/wext.c               |    2 +-
+ drivers/net/wireless/libertas_tf/main.c            |    3 +-
+ drivers/net/wireless/mac80211_hwsim.c              |   81 +-
+ drivers/net/wireless/mwl8k.c                       |    3 +-
+ drivers/net/wireless/orinoco/Kconfig               |    1 +
+ drivers/net/wireless/orinoco/Makefile              |    2 +-
+ drivers/net/wireless/orinoco/airport.c             |   98 +-
+ drivers/net/wireless/orinoco/cfg.c                 |  162 ++
+ drivers/net/wireless/orinoco/cfg.h                 |   15 +
+ drivers/net/wireless/orinoco/fw.c                  |   41 +-
+ drivers/net/wireless/orinoco/hermes.c              |    2 +-
+ drivers/net/wireless/orinoco/hermes.h              |    2 +-
+ drivers/net/wireless/orinoco/hermes_dld.c          |   50 +-
+ drivers/net/wireless/orinoco/hw.c                  |  668 +++++-
+ drivers/net/wireless/orinoco/hw.h                  |   11 +-
+ drivers/net/wireless/orinoco/main.c                | 1133 +++------
+ drivers/net/wireless/orinoco/main.h                |    3 +-
+ drivers/net/wireless/orinoco/orinoco.h             |   49 +-
+ drivers/net/wireless/orinoco/orinoco_cs.c          |   96 +-
+ drivers/net/wireless/orinoco/orinoco_nortel.c      |   38 +-
+ drivers/net/wireless/orinoco/orinoco_pci.c         |   38 +-
+ drivers/net/wireless/orinoco/orinoco_pci.h         |   57 +-
+ drivers/net/wireless/orinoco/orinoco_plx.c         |   38 +-
+ drivers/net/wireless/orinoco/orinoco_tmd.c         |   38 +-
+ drivers/net/wireless/orinoco/scan.c                |  291 ++--
+ drivers/net/wireless/orinoco/scan.h                |   21 +-
+ drivers/net/wireless/orinoco/spectrum_cs.c         |   96 +-
+ drivers/net/wireless/orinoco/wext.c                |  878 +------
+ drivers/net/wireless/p54/Makefile                  |    3 +
+ drivers/net/wireless/p54/eeprom.c                  |  564 ++++
+ drivers/net/wireless/p54/eeprom.h                  |  226 ++
+ drivers/net/wireless/p54/fwio.c                    |  698 +++++
+ drivers/net/wireless/p54/led.c                     |  163 ++
+ drivers/net/wireless/p54/lmac.h                    |  551 ++++
+ drivers/net/wireless/p54/main.c                    |  607 +++++
+ drivers/net/wireless/p54/p54.h                     |  148 +-
+ drivers/net/wireless/p54/p54common.c               | 2688 --------------------
+ drivers/net/wireless/p54/p54common.h               |  644 -----
+ drivers/net/wireless/p54/p54pci.c                  |    9 +-
+ drivers/net/wireless/p54/p54spi.c                  |   50 +-
+ drivers/net/wireless/p54/p54usb.c                  |   42 +-
+ drivers/net/wireless/p54/txrx.c                    |  826 ++++++
+ drivers/net/wireless/prism54/islpci_hotplug.c      |    4 +-
+ drivers/net/wireless/rndis_wlan.c                  |  298 ++--
+ drivers/net/wireless/rt2x00/Kconfig                |    8 -
+ drivers/net/wireless/rt2x00/Makefile               |    1 -
+ drivers/net/wireless/rt2x00/rt2400pci.c            |    7 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |    7 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c            |    7 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c            |    7 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |   13 +-
+ drivers/net/wireless/rt2x00/rt2x00crypto.c         |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |    5 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h            |   21 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c            |   12 +-
+ drivers/net/wireless/rt2x00/rt2x00rfkill.c         |  127 -
+ drivers/net/wireless/rt2x00/rt61pci.c              |    7 +-
+ drivers/net/wireless/rt2x00/rt73usb.c              |    7 +-
+ drivers/net/wireless/rtl818x/rtl8180_dev.c         |    5 +-
+ drivers/net/wireless/rtl818x/rtl8187_dev.c         |    3 +-
+ drivers/net/wireless/wl12xx/Kconfig                |   17 +-
+ drivers/net/wireless/wl12xx/Makefile               |    9 +-
+ drivers/net/wireless/wl12xx/acx.c                  |  689 -----
+ drivers/net/wireless/wl12xx/cmd.c                  |  353 ---
+ drivers/net/wireless/wl12xx/reg.h                  |    1 -
+ drivers/net/wireless/wl12xx/wl1251.h               |  479 +++-
+ drivers/net/wireless/wl12xx/wl1251_acx.c           |  840 ++++++
+ .../net/wireless/wl12xx/{acx.h => wl1251_acx.h}    |  199 +--
+ .../net/wireless/wl12xx/{boot.c => wl1251_boot.c}  |  114 +-
+ .../net/wireless/wl12xx/{boot.h => wl1251_boot.h}  |   12 +-
+ drivers/net/wireless/wl12xx/wl1251_cmd.c           |  428 ++++
+ .../net/wireless/wl12xx/{cmd.h => wl1251_cmd.h}    |  194 ++-
+ .../wl12xx/{debugfs.c => wl1251_debugfs.c}         |   60 +-
+ .../wl12xx/{debugfs.h => wl1251_debugfs.h}         |   16 +-
+ .../wireless/wl12xx/{event.c => wl1251_event.c}    |   54 +-
+ .../wireless/wl12xx/{event.h => wl1251_event.h}    |   12 +-
+ .../net/wireless/wl12xx/{init.c => wl1251_init.c}  |   78 +-
+ .../net/wireless/wl12xx/{init.h => wl1251_init.h}  |   27 +-
+ .../net/wireless/wl12xx/{main.c => wl1251_main.c}  |  638 +++--
+ drivers/net/wireless/wl12xx/wl1251_netlink.c       |  679 +++++
+ .../wl12xx/{debugfs.h => wl1251_netlink.h}         |   15 +-
+ .../net/wireless/wl12xx/{wl1251.c => wl1251_ops.c} |  297 ++-
+ drivers/net/wireless/wl12xx/wl1251_ops.h           |  165 ++
+ drivers/net/wireless/wl12xx/{ps.c => wl1251_ps.c}  |   64 +-
+ drivers/net/wireless/wl12xx/{ps.h => wl1251_ps.h}  |   18 +-
+ drivers/net/wireless/wl12xx/{rx.c => wl1251_rx.c}  |   90 +-
+ drivers/net/wireless/wl12xx/{rx.h => wl1251_rx.h}  |   22 +-
+ .../net/wireless/wl12xx/{spi.c => wl1251_spi.c}    |  179 +-
+ .../net/wireless/wl12xx/{spi.h => wl1251_spi.h}    |   62 +-
+ drivers/net/wireless/wl12xx/{tx.c => wl1251_tx.c}  |  124 +-
+ drivers/net/wireless/wl12xx/{tx.h => wl1251_tx.h}  |   21 +-
+ drivers/net/wireless/wl12xx/wl12xx.h               |  409 ---
+ drivers/net/wireless/zd1211rw/zd_mac.c             |    3 +-
+ drivers/net/wireless/zd1211rw/zd_usb.c             |   73 +-
+ drivers/staging/agnx/xmit.c                        |    3 +-
+ drivers/staging/stlc45xx/stlc45xx.c                |    3 +-
+ drivers/staging/winbond/wb35rx.c                   |    3 +-
+ include/linux/ieee80211.h                          |    4 +
+ include/linux/nl80211.h                            |   96 +
+ include/linux/rfkill.h                             |   14 +
+ include/linux/usb/usbnet.h                         |    3 +
+ include/net/cfg80211.h                             |  460 +++-
+ include/net/iw_handler.h                           |    2 +-
+ include/net/mac80211.h                             |   34 +-
+ net/mac80211/Kconfig                               |   16 -
+ net/mac80211/cfg.c                                 |  216 +-
+ net/mac80211/debugfs_netdev.c                      |   46 -
+ net/mac80211/debugfs_sta.c                         |   98 +-
+ net/mac80211/event.c                               |   23 +-
+ net/mac80211/ibss.c                                |    6 +-
+ net/mac80211/ieee80211_i.h                         |  148 +-
+ net/mac80211/iface.c                               |   30 +-
+ net/mac80211/key.c                                 |   28 +-
+ net/mac80211/main.c                                |    5 +-
+ net/mac80211/mesh.c                                |    6 +-
+ net/mac80211/mesh.h                                |    3 +-
+ net/mac80211/mlme.c                                | 1637 +++++-------
+ net/mac80211/rx.c                                  |  103 +-
+ net/mac80211/scan.c                                |   29 +-
+ net/mac80211/sta_info.h                            |   17 +
+ net/mac80211/wep.c                                 |   52 +-
+ net/mac80211/wep.h                                 |    4 -
+ net/mac80211/wext.c                                |  450 +---
+ net/mac80211/wpa.c                                 |    3 +-
+ net/rfkill/core.c                                  |   10 +-
+ net/wireless/Kconfig                               |   43 +-
+ net/wireless/Makefile                              |    4 +-
+ net/wireless/core.c                                |  385 ++-
+ net/wireless/core.h                                |  184 ++-
+ net/wireless/debugfs.c                             |   14 +-
+ net/wireless/debugfs.h                             |    8 +-
+ net/wireless/ibss.c                                |  158 +-
+ net/wireless/mlme.c                                |  581 ++++-
+ net/wireless/nl80211.c                             | 1110 ++++++---
+ net/wireless/nl80211.h                             |   71 +-
+ net/wireless/reg.c                                 |   48 +-
+ net/wireless/scan.c                                |   75 +-
+ net/wireless/sme.c                                 |  792 ++++++
+ net/wireless/util.c                                |   21 +
+ net/wireless/wext-compat.c                         |  496 ++++-
+ net/wireless/wext-sme.c                            |  380 +++
+ net/wireless/wext.c                                |   11 +-
+ 201 files changed, 15590 insertions(+), 12136 deletions(-)
+ create mode 100644 drivers/net/wireless/orinoco/cfg.c
+ create mode 100644 drivers/net/wireless/orinoco/cfg.h
+ create mode 100644 drivers/net/wireless/p54/eeprom.c
+ create mode 100644 drivers/net/wireless/p54/eeprom.h
+ create mode 100644 drivers/net/wireless/p54/fwio.c
+ create mode 100644 drivers/net/wireless/p54/led.c
+ create mode 100644 drivers/net/wireless/p54/lmac.h
+ create mode 100644 drivers/net/wireless/p54/main.c
+ delete mode 100644 drivers/net/wireless/p54/p54common.c
+ delete mode 100644 drivers/net/wireless/p54/p54common.h
+ create mode 100644 drivers/net/wireless/p54/txrx.c
+ delete mode 100644 drivers/net/wireless/rt2x00/rt2x00rfkill.c
+ delete mode 100644 drivers/net/wireless/wl12xx/acx.c
+ delete mode 100644 drivers/net/wireless/wl12xx/cmd.c
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_acx.c
+ rename drivers/net/wireless/wl12xx/{acx.h => wl1251_acx.h} (86%)
+ rename drivers/net/wireless/wl12xx/{boot.c => wl1251_boot.c} (67%)
+ rename drivers/net/wireless/wl12xx/{boot.h => wl1251_boot.h} (78%)
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_cmd.c
+ rename drivers/net/wireless/wl12xx/{cmd.h => wl1251_cmd.h} (60%)
+ rename drivers/net/wireless/wl12xx/{debugfs.c => wl1251_debugfs.c} (92%)
+ copy drivers/net/wireless/wl12xx/{debugfs.h => wl1251_debugfs.h} (74%)
+ rename drivers/net/wireless/wl12xx/{event.c => wl1251_event.c} (59%)
+ rename drivers/net/wireless/wl12xx/{event.h => wl1251_event.h} (94%)
+ rename drivers/net/wireless/wl12xx/{init.c => wl1251_init.c} (55%)
+ rename drivers/net/wireless/wl12xx/{init.h => wl1251_init.h} (55%)
+ rename drivers/net/wireless/wl12xx/{main.c => wl1251_main.c} (60%)
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_netlink.c
+ rename drivers/net/wireless/wl12xx/{debugfs.h => wl1251_netlink.h} (73%)
+ rename drivers/net/wireless/wl12xx/{wl1251.c => wl1251_ops.c} (66%)
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_ops.h
+ rename drivers/net/wireless/wl12xx/{ps.c => wl1251_ps.c} (55%)
+ rename drivers/net/wireless/wl12xx/{ps.h => wl1251_ps.h} (72%)
+ rename drivers/net/wireless/wl12xx/{rx.c => wl1251_rx.c} (68%)
+ rename drivers/net/wireless/wl12xx/{rx.h => wl1251_rx.h} (89%)
+ rename drivers/net/wireless/wl12xx/{spi.c => wl1251_spi.c} (63%)
+ rename drivers/net/wireless/wl12xx/{spi.h => wl1251_spi.h} (61%)
+ rename drivers/net/wireless/wl12xx/{tx.c => wl1251_tx.c} (79%)
+ rename drivers/net/wireless/wl12xx/{tx.h => wl1251_tx.h} (93%)
+ delete mode 100644 drivers/net/wireless/wl12xx/wl12xx.h
+ create mode 100644 net/wireless/sme.c
+ create mode 100644 net/wireless/wext-sme.c
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-07-10.patch.bz2
+
 -- 
-1.6.2.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
