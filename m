@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55258 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932584AbZGPQ5t (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39911 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017AbZGJUxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:57:49 -0400
-Subject: Re: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"drzeus-list@drzeus.cx" <drzeus-list@drzeus.cx>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1ba2fa240907160804g18b1a215w3161c9682db7b35@mail.gmail.com>
-References: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
-	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA8388BB@pdsmsx502.ccr.corp.intel.com>
-	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
-	 <1ba2fa240907160804g18b1a215w3161c9682db7b35@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 16 Jul 2009 18:57:34 +0200
-Message-Id: <1247763454.4549.56.camel@violet>
-Mime-Version: 1.0
+	Fri, 10 Jul 2009 16:53:04 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1MPN5a-00027g-Nv
+	for linux-wireless@vger.kernel.org; Fri, 10 Jul 2009 22:53:02 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v0.9.15
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1MPN5a-00027g-Nv@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Fri, 10 Jul 2009 22:53:02 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
 
-> > > Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
-> >
-> > BTW, subject should be "iwmc3200".
-> 
-> Thanks. I'll address all comments although I'm not sure how to split
-> the patch since adding SDIO_VENDOR_ID_INTEL to sdio_ids.h it affects
-> all the drivers anyhow, so I'm suggesting to route it through netdev.
+A new release of iw (v0.9.15) is available at:
 
-I think it is best that you take the whole patch via net-next-2.6 to
-avoid breakage during the next merge window.
+http://wireless.kernel.org/download/iw/iw-0.9.15.tar.bz2
 
-Regards
+SHA1 sum: aa17e4e6d47f934adaa60562695ee0f09216e894
 
-Marcel
+Here is the short log of the changes included in this 
+release:
 
-
+Johannes Berg -  bump version to 0.9.15
+Johannes Berg -  print BSS status
+Johannes Berg -  fix a reason string
+Johannes Berg -  make connect able to wait
+Johannes Berg -  remove netns stuff from nl80211.h -- not so soon
+Johannes Berg -  make it possible to pass WEP keys to connect/join
+Johannes Berg -  Merge branch 'master' into connect
+Johannes Berg -  update to experimental nl80211.h
+Johannes Berg -  fix phy0 autodetection
+Johannes Berg -  Merge branch 'master' into connect
+Johannes Berg -  add warning about scripts
+Johannes Berg -  Merge branch 'master' into connect
+Johannes Berg -  autodetect interface/phy
+Johannes Berg -  fix connect help
+Johannes Berg -  Merge branch 'master' into connect
+Johannes Berg -  fix version script to include header and not write file twice
+Johannes Berg -  connect events
+Johannes Berg -  fix version script to include header and not write file twice
+Johannes Berg -  note that the bitrates are non-HT
+Johannes Berg -  update nl80211.h
+Johannes Berg -  note that the bitrates are non-HT
+Johannes Berg -  update nl80211.h
+Johannes Berg -  connect API test
+Johannes Berg -  print event on scan start
+Johannes Berg -  fix assoc/auth event parsing
+Johannes Berg -  "AP setup locked" is a u8 (bool)
+Johannes Berg -  print scan info on event
+Johannes Berg -  update nl80211.h
+Johannes Berg -  sync nl80211.h
+Karl Hiramoto -  iw/Makefile use pkg-config if passed from environmental var.
