@@ -1,72 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56358 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbZG1HeX (ORCPT
+Received: from mail-qy0-f193.google.com ([209.85.221.193]:36964 "EHLO
+	mail-qy0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751935AbZGJPYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 03:34:23 -0400
-Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <1248734807.1216.619.camel@rc-desk>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
-	 <1248733760.7015.0.camel@johannes.local>
-	 <1248734807.1216.619.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ykWic2Drdlx9R2Hj54/q"
-Date: Tue, 28 Jul 2009 09:33:49 +0200
-Message-Id: <1248766429.8113.1.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 10 Jul 2009 11:24:53 -0400
+MIME-Version: 1.0
+In-Reply-To: <200907101343.14113.elendil@planet.nl>
+References: <200907082340.07787.elendil@planet.nl> <200907090311.40205.elendil@planet.nl>
+	<43e72e890907081907j279f48eep99e73cc2951dfdb@mail.gmail.com>
+	<200907101343.14113.elendil@planet.nl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 10 Jul 2009 08:24:32 -0700
+Message-ID: <43e72e890907100824o1a4116aeh6e4d28aa504b29cc@mail.gmail.com>
+Subject: Re: [regression] ath5k: Overrides regulatory domain set for cfg80211
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 10, 2009 at 4:43 AM, Frans Pop<elendil@planet.nl> wrote:
 
---=-ykWic2Drdlx9R2Hj54/q
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+>> >> For further information please also read
+>> >> Documentation/feature-removal-schedule.txt. Please use a valid
+>> >> ISO-3166 alpha2 country code, I also advise to abandon the usage of
+>> >> the ieee80211_regdom module parameter which we do eventually intend
+>> >> on deprecating and if you know anyone using that please suggest the
+>> >> same.
+>> >
+>> > As mentioned above I do not currently have the option of abandoning
+>> > it.
+>>
+>> Yes you do, but you don't seem to want to do anything beyond what your
+>> distribution offers, which is different.
+>
+> You're right :-)
+> However, I am also a Debian Developer and Debian may (just as we did for
+> Etch), at some point want to offer a newer kernel than the current .26
+> for stable (possibly .31).
 
-On Mon, 2009-07-27 at 15:46 -0700, reinette chatre wrote:
+That'd be nice!
 
-> Sorry for missing this. We are trying to be better with documentation
-> and need to do more work in this area. This patch is currently in
-> wireless-testing. I am not sure how to proceed here. If I send a cleanup
-> patch on top of current wireless-testing it will only make sense to
-> address other kernel-doc mishaps. As our driver has not been tested
-> (afaik) to provide meaningful documentation when kernel-doc is used I am
-> hesitant to take on this right now ... but it is something we have to
-> address at some point.
+> From that PoV it is important to ensure there
+> are no incompatibilities with what's in Debian stable.
 
-Yeah, I know it's not used, and I'm sure there's more -- I was just
-looking at the code trying to rebase a patch and this caught my eye.
-It's certainly not too important, but I wanted to point it out anyway if
-only to avoid that in the future :)
+And there shouldn't be.
 
-johannes
+Side note:
 
---=-ykWic2Drdlx9R2Hj54/q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I'd suggest to disable OLD_REG and provide crda and iw on your shiny
+new kernel. In the absence of crda you still have a really good world
+regulatory domain with good world roaming capabilities. For setting
+the regulatory domain you can look at what Fedora folks did with the
+timezone info until the desktop catches up (geoclue and whatever).
 
------BEGIN PGP SIGNATURE-----
+> For that reason I am very conservative when it comes to installer newer or
+> backported versions of packages.
 
-iQIcBAABAgAGBQJKbqnZAAoJEODzc/N7+QmaWuIP/iIKh2rRC5EKIzPi1GAy7JGC
-tueXXKOBkQ9CpHWO9msJY4iGsr85sb4UcWQP+KXGbshUvmDJ2aMMDmw+VSqnMyIS
-7tl/KvtknTCroHqYVOy2S/dk3pMBcAsbcLPBmEsqNdu6y0mZtid2ciNuXwsd6xd2
-tw7uSqTXwrB+nCO9UVwuF6aNAUSIUid2BCjxuwejq7K8nCOuVG/i9J76TaV4fGZy
-itxbkqyEjlX9UYgMAFMHleNK7SPlNX0SwyrhIDTPUlPopiLfbwxDloeDy5IhWbo5
-fmR6HPOELBEe/fGNvI9LYN7pM0PbyOlCf/FpRtzjzwF1hD/N2OhhAQlZctaOzCUQ
-MFerXqUqQPO0bsnoU+8D3yT/M5qx6IDpSJYK2O/ASd6HO+Y7INv65yULhqCk9A9j
-tx+frz1AW18WfbNoCVMzz/rhIt+s/GiS5wDe+aVfQ0/SgFTqARUKB4hqnzcFGYjd
-mjiekrgo8Z0S2u9/AZ/yVbWpALx24dvwVa778xrHvdBVvWlTqax6bp7rJV/mTItH
-jTQfujTlcsO9BcY8cthYE8WNvFP+VhI5jCvqNBPZGJ48QRi+Rm0Tv8E5CzU64oTu
-rw5GvfJfBj0s/MFPMUUYvZ52fuHuLVrtPHvlEMRmyvk3mHzIRoRgJSEUltbI0KWc
-nI7Hfk+5q5V58ls+zIGV
-=m8Bv
------END PGP SIGNATURE-----
+Sure.
 
---=-ykWic2Drdlx9R2Hj54/q--
+>> > That seems particularly bad in my case. For some weird reason this
+>> > Trust PCMCIA card seems to have AM in its EEPROM, which is Armenia...
+>> > The card was bought in the Netherlands (NL), which is also where I
+>> > live.
+>>
+>> Yeah the short story of that is Armenia and Netherlands both have the
+>> same regulatory rules, the first alpha2 that matched the same group
+>> was picked up, which just so happened to be Armenia. In the future it
+>> will be easier if cards are just programmed with the alpha2 country
+>> code or with a world regulatory domain code, and just abandon the
+>> grouping idea. That is something we will have to look forward to
+>> change and promote for future device. What counts for regulatory
+>> purposes is your device is complaint. The alternative was to keep all
+>> the regulatory information statically in the kernel for each
+>> regulatory group for Atheros devices.
+>
+> Ah! I had no idea about that and I guess that this is the real issue here:
+> a simple usability problem. If I had seen the correct countrycode (NL
+> instead of AM), I probably never would have reported a regression. What
+> prompted my mail was that, from a user PoV, the country being selected
+> looked to be completely broken. How am I, as a simple user, supposed to
+> know that Armenia uses the same domain as the Netherlands and that what
+> the driver is doing is actually 100% correct (and even that my PCMCIA
+> card is not as broken as I thought)?
 
+Yeah, its a good point.
+
+> Would it be possible to improve the info presented by the kernel? Maybe
+> print an extra line with a list of countries that use the selected reg
+> domain (depends I guess on what's the max. nr. of countries that share a
+> domain). Or at least indicate that the country code is a somewhat random
+> choice.
+
+Perhaps an informative "group regulatory domain" printk may make
+sense, you're right.
+
+>> > I can to some extend understand respecting hardware settings for APs,
+>> > but for a wireless NIC it seems a useless limitation.
+>>
+>> You are right to a certain degree. The thing is wireless cards *can*
+>> be used as APs on a regular desktops. Perhaps not with iwlagn, but
+>> with ath5k and ath9k you can do AP, IBSS, Mesh, all of which actually
+>> do start transmit with out any AP being around. For these cases you
+>> *do* need to ensure proper regulatory compliance. And we haven't even
+>> touched on DFS!
+>
+> Well, IIUC you do know what mode the card is being used in, so in theory
+> you could distinguish between them. I'm not pushing for that though.
+>
+> End conclusion is that there is no regression and no backwards
+> compatibility issue (which is good news), just a usability issue.
+
+Yup.
+
+  Luis
