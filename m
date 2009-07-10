@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42898 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751439AbZGTDq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 23:46:26 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/5] cfg80211: set_default_key only for WEP
-Date: Mon, 20 Jul 2009 11:47:43 +0800
-Message-Id: <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
-References: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60913 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750981AbZGJR7e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 13:59:34 -0400
+Date: Fri, 10 Jul 2009 13:59:33 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: David Brownell <david-b@pacbell.net>
+cc: Ian Lynagh <igloo@earth.li>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>
+Subject: Re: PROBLEM: USB wlan device stops working; ehci "kernel BUG"
+In-Reply-To: <200907101043.49869.david-b@pacbell.net>
+Message-ID: <Pine.LNX.4.44L0.0907101350000.3149-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We invoke the cfg80211 set_default_key callback only for WEP key
-configuring.
+On Fri, 10 Jul 2009, David Brownell wrote:
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/wireless/wext-compat.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> On Friday 10 July 2009, Ian Lynagh wrote:
+> > [582730.178212] kernel BUG at .../drivers/usb/host/ehci-mem.c:74!
+> 
+> Note that this is a *SECONDARY* failure ... the endpoint hardware
+> is still in use, but it should have been shut down already.  So
+> the interesting question is:  what was the *PRIMARY* failure?
+> 
+> So I'd suggest that the WLAN device driver has at least three bugs:
+> 
+>  1 The error logging should use dev_err() etc so that it shows which
+>    USB device it came from; "phy0 -> rt2x00usb_vendor_request" etc
+>    just leaves us guessing.
+> 
+>  2 The first one, which prevented it from working and caused
+>    all the syslog spam that wasn't triggered by seeming bugs
+>    in userspace code (those "derefnull" and "divbyzero" utils,
+>    also "ghc"); presumably the PHY code is at least one issue.
+>    Maybe it's just mis-handling something at high speed...
+> 
+>  3 The driver's likely doing *something wrong* in disconnect().
+>    Maybe returning while a control message is outstanding; that
+>    might cause the above BUG(), ISTR there was a hole of that
+>    shape in the USB stack a few years ago.
+> 
+> I'm skeptical that the BUG() above would trigger without a driver
+> first misbehaving.  This is not a common BUG(); something else
+> made it happen.  My guess is #3 above.  The first two seem very
+> apparent just from looking at the syslog data provided.
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index aa80c0c..c63e10e 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -531,7 +531,8 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
- 			wdev->wext.keys->data[idx];
- 	}
- 
--	if (params->cipher != WLAN_CIPHER_SUITE_AES_CMAC &&
-+	if ((params->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-+	     params->cipher == WLAN_CIPHER_SUITE_WEP104) &&
- 	    (tx_key || (!addr && wdev->wext.default_key == -1))) {
- 		if (wdev->current_bss)
- 			err = rdev->ops->set_default_key(&rdev->wiphy,
--- 
-1.6.0.4
+That BUG normally cannot be triggered by a driver error.  It happened
+during module unloading, which means all the devices from the root hub
+on down must have been removed and their endpoints flushed and
+disabled.  If a QH's list is still nonempty, it must be because some
+qTD wasn't properly removed -- probably because of the HC_STATE_HALT
+setting.
+
+This particular error path has gotten very little testing.  We 
+shouldn't be surprised to see that it's not working quite right.
+
+In this case the primary failure was most likely either a hardware bug
+in the SB700 controller or (less likely) a bug in the rt73usb driver,
+as noted by other people.
+
+Alan Stern
 
