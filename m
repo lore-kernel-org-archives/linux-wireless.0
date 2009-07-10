@@ -1,93 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35521 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751709AbZG3SEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 14:04:09 -0400
-Subject: Re: [wireless] rt2870sta BUGs on shutdown,
- 2.6.30.2->git.today+git.wireless.today
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mike Galbraith <efault@gmx.de>, linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20090730172657.GA8266@kroah.com>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
-	 <200907301517.57811.bzolnier@gmail.com>
-	 <200907301852.28172.IvDoorn@gmail.com>
-	 <1248973862.22552.4.camel@johannes.local> <20090730172657.GA8266@kroah.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754914AbZGJWRi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 18:17:38 -0400
+Subject: [PATCH] cfg80211: fix more bugs in mlme handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Thu, 30 Jul 2009 14:04:43 -0400
-Message-Id: <1248977083.24886.4.camel@localhost.localdomain>
+Date: Sat, 11 Jul 2009 00:17:32 +0200
+Message-Id: <1247264252.26071.3.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 10:26 -0700, Greg KH wrote:
-> On Thu, Jul 30, 2009 at 07:11:02PM +0200, Johannes Berg wrote:
-> > On Thu, 2009-07-30 at 18:52 +0200, Ivo van Doorn wrote:
-> > 
-> > > [some text expressing his frustration]
-> > 
-> > This is exactly why I was against staging all the time. Now suddenly
-> > "The Crap" seems like a viable alternative. WAKE UP PEOPLE. The code is
-> > not useful. Just look at the code that Mike pasted into his email. That
-> > alone should be enough to send cold shivers down your spine!
-> 
-> Hm, "useful" is in the eye of the beholder.
-> 
-> There is no driver in the mainline kernel tree for this device, so a
-> "normal" user has no chance of getting it working, right?  That's why
-> -staging is working, there is a semi-working driver, and most
-> importantly, people willing to help out getting it working better.
-> 
-> The combination of the two is what works here.
-> 
-> So please, I understand your frustration on a lack of people helping out
-> with out-of-tree wireless drivers that don't quite work properly, but
-> please, that has NOTHING to do with the staging drivers.
-> 
-> Meanwhile, I'm off on the driver-devel list helping Mike fix this
-> problem, which seems simple enough to solve...
+The "what-was-I-thinking-if-anything" patch. Clearly,
+if cfg80211_send_disassoc() does wdev_lock() and then
+calls __cfg80211_send_disassoc(), the latter shouldn't
+lock again. And the sme_state test is ... no further
+comments.
 
-Except that the energy you're now investing in fixing this could have
-gone into rt2x00, and we would come out ahead in the end.  Instead, the
-energy is sapped away by something that will *never* be mainlined.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/mlme.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Dan
+--- wireless-testing.orig/net/wireless/mlme.c	2009-07-11 00:13:50.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2009-07-11 00:14:15.000000000 +0200
+@@ -178,12 +178,12 @@ static void __cfg80211_send_disassoc(str
+ 	bool from_ap;
+ 	bool done = false;
+ 
+-	wdev_lock(wdev);
++	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	nl80211_send_disassoc(rdev, dev, buf, len, GFP_KERNEL);
+ 
+-	if (!wdev->sme_state == CFG80211_SME_CONNECTED)
+-		goto out;
++	if (wdev->sme_state != CFG80211_SME_CONNECTED)
++		return;
+ 
+ 	if (wdev->current_bss &&
+ 	    memcmp(wdev->current_bss, bssid, ETH_ALEN) == 0) {
+@@ -205,8 +205,6 @@ static void __cfg80211_send_disassoc(str
+ 
+ 	from_ap = memcmp(mgmt->da, dev->dev_addr, ETH_ALEN) == 0;
+ 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
+- out:
+-	wdev_unlock(wdev);
+ }
+ 
+ void cfg80211_send_disassoc(struct net_device *dev, const u8 *buf, size_t len,
 
-> > What staging has achieved here is giving the crap vendor code a
-> > blessing, receiving it welcomingly and forgivingly instead of saying
-> > "well screw you, go ahead and ship this to your users but don't ever say
-> > you support Linux well" ... now even some hackers and just just "dumb
-> > users" think that the crap in staging could possibly at some point
-> > become useful code!
-> 
-> Odd, I don't seem to be giving anyone such a "blessing", you are reading
-> way too much into this.  The fact is this vendor does code drops and
-> runs away all the time, despite the code being in the staging tree or
-> not.  Without it in the staging tree users would be worse off, not
-> better, there is no pressure able to be applied here at all, so please
-> stop thinking that.
-> 
-> > It won't. EVER. No matter _how_ much you clean it up, it will NEVER fit
-> > into the code scheme that everything else wireless has adopted.
-> 
-> never say never, it will happen, just give us time :)
-> 
-> In the meanwhile, people like Bart and others are doing real work on
-> getting the staging code into shape and working for real users.  Who are
-> you to tell them to not do such work?
-> 
-> thanks,
-> 
-> greg "i love crap" k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
