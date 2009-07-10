@@ -1,43 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45273 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754118AbZG0AEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2009 20:04:44 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090713223413.255405284@sipsolutions.net>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>
-Content-Type: text/plain
-Date: Sun, 26 Jul 2009 20:04:42 -0400
-Message-Id: <1248653082.3106.7.camel@mj>
+Received: from xc.sipsolutions.net ([83.246.72.84]:46296 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757007AbZGJT5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 15:57:34 -0400
+Message-Id: <20090710195536.664865508@sipsolutions.net>
+References: <20090710195131.504091075@sipsolutions.net>
+Date: Fri, 10 Jul 2009 21:51:35 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH 4/4] net: move and export get_net_ns_by_pid
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-07-14 at 00:33 +0200, Johannes Berg wrote:
-> @@ -1900,10 +1880,16 @@ void ieee80211_tx_pending(unsigned long 
->  
->  		while (!skb_queue_empty(&local->pending[i])) {
->  			struct sk_buff *skb = __skb_dequeue(&local->pending[i]);
-> +			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +			struct ieee80211_sub_if_data *sdata;
-> +
-> +			sdata = vif_to_sdata(info->control.vif);
-> +			dev_hold(sdata->dev);
+The function get_net_ns_by_pid(), to get a network
+namespace from a pid_t, will be required in cfg80211
+as well. Therefore, let's move it to net_namespace.c
+and export it. We can't make it a static inline in
+the !NETNS case because it needs to verify that the
+given pid even exists (and return -ESRCH).
 
-I'm getting a panic at this point if I run hostapd on ath9k and a
-Windows client tries to authenticate with a wrong WPA key.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/net_namespace.h |    2 ++
+ net/core/net_namespace.c    |   21 +++++++++++++++++++++
+ net/core/rtnetlink.c        |   21 +--------------------
+ 3 files changed, 24 insertions(+), 20 deletions(-)
 
-Debugging shows that sdata->dev is NULL.
-
-The current wireless-testing is affected.  The revision preceding to
-this patch is not affected.
-
-CONFIG_NET_NS is not enabled.  The architecture is x86_64.
+--- wireless-testing.orig/include/net/net_namespace.h	2009-07-07 12:18:30.000000000 +0200
++++ wireless-testing/include/net/net_namespace.h	2009-07-07 12:25:42.000000000 +0200
+@@ -111,6 +111,8 @@ static inline struct net *copy_net_ns(un
+ 
+ extern struct list_head net_namespace_list;
+ 
++extern struct net *get_net_ns_by_pid(pid_t pid);
++
+ #ifdef CONFIG_NET_NS
+ extern void __put_net(struct net *net);
+ 
+--- wireless-testing.orig/net/core/net_namespace.c	2009-07-07 12:18:19.000000000 +0200
++++ wireless-testing/net/core/net_namespace.c	2009-07-07 12:25:42.000000000 +0200
+@@ -7,6 +7,7 @@
+ #include <linux/sched.h>
+ #include <linux/idr.h>
+ #include <linux/rculist.h>
++#include <linux/nsproxy.h>
+ #include <net/net_namespace.h>
+ #include <net/netns/generic.h>
+ 
+@@ -201,6 +202,26 @@ struct net *copy_net_ns(unsigned long fl
+ }
+ #endif
+ 
++struct net *get_net_ns_by_pid(pid_t pid)
++{
++	struct task_struct *tsk;
++	struct net *net;
++
++	/* Lookup the network namespace */
++	net = ERR_PTR(-ESRCH);
++	rcu_read_lock();
++	tsk = find_task_by_vpid(pid);
++	if (tsk) {
++		struct nsproxy *nsproxy;
++		nsproxy = task_nsproxy(tsk);
++		if (nsproxy)
++			net = get_net(nsproxy->net_ns);
++	}
++	rcu_read_unlock();
++	return net;
++}
++EXPORT_SYMBOL_GPL(get_net_ns_by_pid);
++
+ static int __init net_ns_init(void)
+ {
+ 	struct net_generic *ng;
+--- wireless-testing.orig/net/core/rtnetlink.c	2009-07-07 12:15:29.000000000 +0200
++++ wireless-testing/net/core/rtnetlink.c	2009-07-07 12:25:42.000000000 +0200
+@@ -35,7 +35,6 @@
+ #include <linux/security.h>
+ #include <linux/mutex.h>
+ #include <linux/if_addr.h>
+-#include <linux/nsproxy.h>
+ 
+ #include <asm/uaccess.h>
+ #include <asm/system.h>
+@@ -52,6 +51,7 @@
+ #include <net/pkt_sched.h>
+ #include <net/fib_rules.h>
+ #include <net/rtnetlink.h>
++#include <net/net_namespace.h>
+ 
+ struct rtnl_link
+ {
+@@ -725,25 +725,6 @@ static const struct nla_policy ifla_info
+ 	[IFLA_INFO_DATA]	= { .type = NLA_NESTED },
+ };
+ 
+-static struct net *get_net_ns_by_pid(pid_t pid)
+-{
+-	struct task_struct *tsk;
+-	struct net *net;
+-
+-	/* Lookup the network namespace */
+-	net = ERR_PTR(-ESRCH);
+-	rcu_read_lock();
+-	tsk = find_task_by_vpid(pid);
+-	if (tsk) {
+-		struct nsproxy *nsproxy;
+-		nsproxy = task_nsproxy(tsk);
+-		if (nsproxy)
+-			net = get_net(nsproxy->net_ns);
+-	}
+-	rcu_read_unlock();
+-	return net;
+-}
+-
+ static int validate_linkmsg(struct net_device *dev, struct nlattr *tb[])
+ {
+ 	if (dev) {
 
 -- 
-Regards,
-Pavel Roskin
+
