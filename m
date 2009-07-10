@@ -1,164 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:47921 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754840AbZGPJdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:33:15 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 08/10] iwmc3200wifi: remove key caches in driver
-Date: Thu, 16 Jul 2009 17:34:13 +0800
-Message-Id: <1247736854-6760-9-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
-References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
+Received: from mail-yx0-f184.google.com ([209.85.210.184]:37105 "EHLO
+	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbZGJRJN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jul 2009 13:09:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <20090710143253.GA4133@matrix.chaos.earth.li>
+References: <20090710143253.GA4133@matrix.chaos.earth.li>
+Date: Fri, 10 Jul 2009 10:03:55 -0700
+Message-ID: <4a5ff6bc0907101003i30a1589fl18048af4c8ff2853@mail.gmail.com>
+Subject: Re: PROBLEM: USB wlan device stops working; ehci "kernel BUG"
+From: Steve Calfee <stevecalfee@gmail.com>
+To: Ian Lynagh <igloo@earth.li>
+Cc: dbrownell@users.sourceforge.net, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 now guarantees keys are set after connecting. We can remove
-the key cache code from the driver now.
+On Fri, Jul 10, 2009 at 7:32 AM, Ian Lynagh<igloo@earth.li> wrote:
+>
+> Hi all,
+>
+> [1.] PROBLEM: USB wlan device stops working; ehci "kernel BUG"
+>
+> [2.]
+>
+> I am having a problem with an rt73usb and/or ehci. I /think/ the bug is
+> in ehci, and the rt73usb problems are just a symptom, but I'm not sure.
+>
+> The actual problem is that after a while (generally a few days, I think)
+> my USB wireless device stops working. I've attached the dmesg log at the
+> point that I noticed it stopped working today; unfortunately, I don't
+> know exactly when it broke. My guess is it was at this line, though:
+>
+> [582576.209231] ehci_hcd 0000:00:12.2: force halt; handhake ffffc20000636024 00004000 00000000 -> -110
+>
+Hi I've seen this too. Once the "handhake" error happens, the ehci
+controller is off line until a reboot. Connect/disconnect is no longer
+detected on any port. I did not try to see if rmmod/insmod for echi
+fixed the problem.
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   43 +-------------------------
- drivers/net/wireless/iwmc3200wifi/commands.c |   29 +-----------------
- 2 files changed, 2 insertions(+), 70 deletions(-)
+I caused it with a very heavy bulk load (flash to flash copy), and
+then lots of control traffic to another device (a scanner and once a
+webcam) while the third device was starting up. It seemed very timing
+sensitive.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 0372658..3f5a08f 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -158,34 +158,6 @@ static int iwm_key_init(struct iwm_key *key, u8 key_index,
- 	return 0;
- }
- 
--static int iwm_reset_profile(struct iwm_priv *iwm)
--{
--	int ret;
--
--	if (!iwm->umac_profile_active)
--		return 0;
--
--	/*
--	 * If there is a current active profile, but no
--	 * default key, it's not worth trying to associate again.
--	 */
--	if (iwm->default_key < 0)
--		return 0;
--
--	/*
--	 * Here we have an active profile, but a key setting changed.
--	 * We thus have to invalidate the current profile, and push the
--	 * new one. Keys will be pushed when association takes place.
--	 */
--	ret = iwm_invalidate_mlme_profile(iwm);
--	if (ret < 0) {
--		IWM_ERR(iwm, "Couldn't invalidate profile\n");
--		return ret;
--	}
--
--	return iwm_send_mlme_profile(iwm);
--}
--
- static int iwm_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 				u8 key_index, const u8 *mac_addr,
- 				struct key_params *params)
-@@ -245,10 +217,6 @@ static int iwm_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (key_index == iwm->default_key)
- 		iwm->default_key = -1;
- 
--	/* If the interface is down, we just cache this */
--	if (!test_bit(IWM_STATUS_READY, &iwm->status))
--		return 0;
--
- 	return iwm_set_key(iwm, 1, key);
- }
- 
-@@ -257,7 +225,6 @@ static int iwm_cfg80211_set_default_key(struct wiphy *wiphy,
- 					u8 key_index)
- {
- 	struct iwm_priv *iwm = ndev_to_iwm(ndev);
--	int ret;
- 
- 	IWM_DBG_WEXT(iwm, DBG, "Default key index is: %d\n", key_index);
- 
-@@ -268,15 +235,7 @@ static int iwm_cfg80211_set_default_key(struct wiphy *wiphy,
- 
- 	iwm->default_key = key_index;
- 
--	/* If the interface is down, we just cache this */
--	if (!test_bit(IWM_STATUS_READY, &iwm->status))
--		return 0;
--
--	ret = iwm_set_tx_key(iwm, key_index);
--	if (ret < 0)
--		return ret;
--
--	return iwm_reset_profile(iwm);
-+	return iwm_set_tx_key(iwm, key_index);
- }
- 
- int iwm_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-index e6be297..0d66370 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.c
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-@@ -584,12 +584,6 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
- 	struct iwm_umac_key_tkip *tkip = (struct iwm_umac_key_tkip *)cmd;
- 	struct iwm_umac_key_ccmp *ccmp = (struct iwm_umac_key_ccmp *)cmd;
- 
--	/*
--	 * We check if our current profile is valid.
--	 * If not, we dont push the key, we just cache them,
--	 * so that with the next siwsessid call, the keys
--	 * will be actually pushed.
--	 */
- 	if (!remove) {
- 		ret = iwm_check_profile(iwm);
- 		if (ret < 0)
-@@ -727,7 +721,7 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
- 
- int iwm_send_mlme_profile(struct iwm_priv *iwm)
- {
--	int ret, i;
-+	int ret;
- 	struct iwm_umac_profile profile;
- 
- 	memcpy(&profile, iwm->umac_profile, sizeof(profile));
-@@ -742,27 +736,6 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
- 		return ret;
- 	}
- 
--	for (i = 0; i < IWM_NUM_KEYS; i++)
--		if (iwm->keys[i].key_len) {
--			struct iwm_key *key = &iwm->keys[i];
--
--			/* Wait for the profile before sending the keys */
--			wait_event_interruptible_timeout(iwm->mlme_queue,
--			     (test_bit(IWM_STATUS_ASSOCIATING, &iwm->status) ||
--			      test_bit(IWM_STATUS_ASSOCIATED, &iwm->status)),
--							 3 * HZ);
--
--			ret = iwm_set_key(iwm, 0, key);
--			if (ret)
--				return ret;
--
--			if (iwm->default_key == i) {
--				ret = iwm_set_tx_key(iwm, i);
--				if (ret)
--					return ret;
--			}
--		}
--
- 	return 0;
- }
- 
--- 
-1.6.0.4
+<snip>
 
+> 00:12.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller (prog-if 20 [EHCI])
+>        Subsystem: Giga-byte Technology Device 5004
+>        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>        Latency: 32, Cache Line Size: 64 bytes
+>        Interrupt: pin B routed to IRQ 17
+>        Region 0: Memory at fe02c000 (32-bit, non-prefetchable) [size=256]
+>        Capabilities: [c0] Power Management version 2
+>                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+>                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+>                Bridge: PM- B3+
+>        Capabilities: [e4] Debug port: BAR=1 offset=00e0
+>        Kernel driver in use: ehci_hcd
+>        Kernel modules: ehci-hcd
+>
+
+And this is the southbridge where I had the problem, too. On an
+earlier kernel someone at AMD presented some patches to ehci for the
+sb600 and sb700 which had some startup hang problems. I think they
+will need to be consulted for a workaround for this problem.
+
+I no longer have access to the system where I ran into the problem, so
+I cannot give more details, sorry.
+
+Regards, Steve
