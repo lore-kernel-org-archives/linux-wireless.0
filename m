@@ -1,92 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f197.google.com ([209.85.222.197]:43588 "EHLO
-	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302AbZGJTed convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57798 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033AbZGJV4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:34:33 -0400
-MIME-Version: 1.0
-In-Reply-To: <507E3B9268%linux@youmustbejoking.demon.co.uk>
+	Fri, 10 Jul 2009 17:56:17 -0400
+Subject: Re: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Darren Salt <linux@youmustbejoking.demon.co.uk>
+Cc: John Linville <linville@tuxdriver.com>,
+	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
+	Corentin Chary <corentin.chary@gmail.com>,
+	debian-eeepc-devel@lists.alioth.debian.org,
+	acpi4asus-user@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <507E47A184%linux@youmustbejoking.demon.co.uk>
 References: <4A5716AA.5000903@ph.tum.de>
 	 <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
 	 <4A5743AB.6090303@ph.tum.de>
 	 <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
-	 <4A575119.9070505@ph.tum.de>
-	 <507E3B9268%linux@youmustbejoking.demon.co.uk>
-Date: Fri, 10 Jul 2009 21:34:32 +0200
-Message-ID: <71cd59b00907101234w772dc141kff52c7393e698e17@mail.gmail.com>
-Subject: Re: [2.6.31-rc2] Writing to /sys/class/rfkill/*/state fails
-From: Corentin Chary <corentin.chary@gmail.com>
-To: Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	acpi4asus-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	 <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
+	 <1247254899.21972.9.camel@johannes.local>
+	 <507E47A184%linux@youmustbejoking.demon.co.uk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MvvnSk+qNM5ucUSE8A8Z"
+Date: Fri, 10 Jul 2009 23:55:52 +0200
+Message-Id: <1247262952.26071.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 10, 2009 at 8:57 PM, Darren
-Salt<linux@youmustbejoking.demon.co.uk> wrote:
-> [full quoting for linux-{kernel,wireless} & the perpetrator]
->
-> I demand that Thiemo Nagel may or may not have written...
->
->> Corentin Chary wrote:
->>> On Fri, Jul 10, 2009 at 3:35 PM, Thiemo Nagel<thiemo.nagel@ph.tum.de>
->>> wrote:
->>>> Corentin Chary wrote:
->>>>> On Fri, Jul 10, 2009 at 12:23 PM, Thiemo
->>>>> Nagel<thiemo.nagel@ph.tum.de> wrote:
->>>>>> I just tested the new GSM rfkill in 2.6.31-rc2 and I get the following
->>>>>> on my EeePC 1000HGO:
->>>>>>   eee:/# cat /sys/class/rfkill/rfkill2/name
->>>>>>   eeepc-wwan3g
->>>>>>   eee:/# echo 0 > /sys/class/rfkill/rfkill2/state
->>>>>>   bash: echo: write error: Operation not permitted
->>>>>> What could be the reason for that?
->>>>> Reading the kernel source I can find:
->>>>>         /*
->>>>>          * The intention was that userspace can only take control over
->>>>>          * a given device when/if rfkill-input doesn't control it due
->>>>>          * to user_claim. Since user_claim is currently unsupported,
->>>>>          * we never support changing the state from userspace -- this
->>>>>          * can be implemented again later.
->>>>>          */
->>>>> It seems that rfkill should be controlled by /dev/rfkill (cf
->>>>> Documentation/rfkill.txt).
->>>>> Maybe network-manager can control that .. But I'm not sure.
->>>>> Maybe you should CC the wireless mailing list.
->>>> Thanks for the quick reply.  The interesting thing is, that the direct
->>>> access works well for eeepc-wlan and eeepc-bluetooth rfkills.  I've CC'd
->>>> debian-eeepc-devel, maybe they know something.
->>> Are you sure that it works with newer kernels ?
->>> This commit should have broken it for all rfkill.
->>>   commit 19d337dff95cbf76edd3ad95c0cee2732c3e1ec5
->>>   Author: Johannes Berg <johannes@sipsolutions.net>
->>>   Date:   Tue Jun 2 13:01:37 2009 +0200
->
->> You're right, all rfkills work with 2.6.30, but none works with 2.6.31-rc2.
->
-> This is the first that I've heard of this. I'd not noticed since I've not
-> needed Bluetooth on my 901 recently.
->
->> For the debian-eeepc folks:  2.6.31-rc2 breaks bluetooth toggling using
->> eeepc-acpi-scripts, but WLAN toggling still works.
->
-> FSVO "works" (http://bugzilla.kernel.org/show_bug.cgi?id=13390), but that's a
-> different problem.
->
-> I consider this a regression. It breaks an interface which, though flawed, is
-> ideally suited for scripting use and which eeepc-acpi-scripts uses in shell
-> scripts.
->
-> /dev/rfkill is not useful in shell scripts.
 
-Maybe it would be possible with an rfkill command line tool (in C) ?
-Is there such a tool somewhere ?
+--=-MvvnSk+qNM5ucUSE8A8Z
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
+> I demand that Johannes Berg may or may not have written...
+>=20
+> > Apparently there actually _are_ tools that try to set this in sysfs eve=
+n
+> > though it wasn't supposed to be used this way without claiming first.
+>=20
+> Then it should have been documented as such. I don't see anything about t=
+his
+> in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
+> statement that "Kernel handles events", which isn't exactly helpful :-\
 
--- 
-Corentin Chary
-http://xf.iksaif.net - http://uffs.org
+Oh, it's not just that rfkill was horrible, the documentation matched :)
+All the SHOUTING in it about what you must and must not do but nothing
+actually helpful :)
+
+> > *shrug*, I don't like it, but whatever...
+>=20
+> I do. It means that we have a nice simple text-based interface for use in
+> scripts (for now), and a binary interface which is better suited to the l=
+ikes
+> of desktop applications.
+
+Indeed, and as long as you expect to only use soft toggle... problem is
+that you won't know whether it's soft-toggled or not while it's
+hard-blocked (off)!
+
+> > Please test & report.
+>=20
+> With the patch applied, Bluetooth toggling is working again, so you get t=
+o
+> add this:
+>=20
+> Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
+
+Ok, John, please pick up the patch.
+
+johannes
+
+--=-MvvnSk+qNM5ucUSE8A8Z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKV7jlAAoJEODzc/N7+QmahX0P/jKd86jntVSAeS8i5p08UnDf
+cnueuwfGqLQHKtliVTcINIZXHciVMCDxaN6w0hE60Y27iBEvwLIuMypu5I1ekjNL
+Kq4enHX//ag7bzske/c70QQ7KBU7ukFLjbx0uOAgk9+b40nzLu/4Ttur/dV9J7qZ
+jtvW1Ch7ZX6AOeexZxC2dXF8Jxfnnvwvxr7ArUzpjcZaexaPyMfass8yN7nenXSL
+N4lDw0cwnMMM5CgPxQDyMVoJ0uRzWh33es1Pw87ON4GYkNwIVVQQAPqGsoNp0LwR
+vNinVWFQVRaabrUnJYsAwnHbrMDn1wfJacXDfXvhmhupaPzePwOkLA8LUP1iOa6A
+Hr/EHNOIIr+Mb0bc7leM3lwQtS11ZnNWw24HIspmTxCEGeSkh9AK/Kbyga5gnnFs
+J1fkqhWqObxs0bLs0vNp17aE4ZmjaBKZBsEmM4BfwxE/ty7Pjl7WzHBw5QF2bBbU
+ADJ+Tw4p112JYRpvNwnD5TWyjS2yphyms8fsquNBDSDWAOB7OcDi/cH9wZ3ksGAv
+TbeqresEv5ox5Va37q432wvlDvxTWOz5ntk9ZBobgxBR2hnu95XmD4N+4wyCTTQ7
+5ATKijsJdeMof0afmmzEmDqhIE0MYYTrXsdF+nZfG5MsdtXoULuHiP831vzJWufh
+wL2ZJezlCKazCeM/G7+S
+=vG3B
+-----END PGP SIGNATURE-----
+
+--=-MvvnSk+qNM5ucUSE8A8Z--
+
