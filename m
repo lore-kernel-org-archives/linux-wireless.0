@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33996 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919AbZG0Raq (ORCPT
+Received: from mail-bw0-f225.google.com ([209.85.218.225]:37785 "EHLO
+	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbZGJJIR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 13:30:46 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248711120.6965.6.camel@mj>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
-	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
-	 <1248710387.8500.5.camel@johannes.local>
-	 <1248710568.8500.7.camel@johannes.local>  <1248711120.6965.6.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-erBjICfnfhhUIG5ApKLY"
-Date: Mon, 27 Jul 2009 19:30:13 +0200
-Message-Id: <1248715813.11549.0.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 10 Jul 2009 05:08:17 -0400
+Received: by bwz25 with SMTP id 25so721784bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 02:08:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <a32f33a40907090458j73b714d6w2fb0648d61beea08@mail.gmail.com>
+References: <f76a32050907061006k3bed082fg3428a50370b0889b@mail.gmail.com>
+	 <1246900337.20908.15.camel@johannes.local>
+	 <f76a32050907061320n18f3c4c9j4d5589c9c9e45c02@mail.gmail.com>
+	 <f76a32050907082230r7b98c438ybf08d1a421717ad6@mail.gmail.com>
+	 <a32f33a40907090458j73b714d6w2fb0648d61beea08@mail.gmail.com>
+Date: Fri, 10 Jul 2009 11:08:16 +0200
+Message-ID: <f76a32050907100208h3a8a3141l8fdf17f2448c0ce7@mail.gmail.com>
+Subject: Re: rt73 in AP mode: PS frames buffered but missing TIM bit?
+From: Stefan Steuerwald <salsasepp@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+With Ivo's help, we have a tested patch. Ivo will take care of
+submitting it and extending it to all rt2x00 drivers.
+I love it when things just work out!
 
---=-erBjICfnfhhUIG5ApKLY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thank you,
+  Stefan.
 
-On Mon, 2009-07-27 at 12:12 -0400, Pavel Roskin wrote:
-> On Mon, 2009-07-27 at 18:02 +0200, Johannes Berg wrote:
->=20
-> > Actually, you're using ath5k, right? So we can see what
-> > info->control.vif points to after ath5k has used the skb, because
-> > apparently it's a valid pointer at least, just not a real vif pointer
-> > any more.
->=20
-> I'm using ath9k.
->=20
-> Here's something interesting I have found.  sdata->dev is valid if
-> info->flags is 0x14091 and not valid if it's 0x12091.
->=20
-> 0x4000 is IEEE80211_TX_INTFL_NEED_TXPROCESSING and 0x2000 is
-> IEEE80211_TX_INTFL_RCALGO.
->=20
-> This patch prevents any panics.  Moreover, I get a connection with the=20
-> correct PSK.
-
-Ok. So the question is where that skb is coming from that's causing the
-issues (your patch leaks it btw)
-
-johannes
-
---=-erBjICfnfhhUIG5ApKLY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbeQiAAoJEODzc/N7+QmarnkP/0CuwNIYMLp2bs6aKsw6A6Zc
-EGwOc8cdPlqQfvkfy6YP3AHdLqW0gjb0+d+HTYWmghq9HKo9pli9xFhO3GmevABp
-vui9ZQD36bB6jgxgzhRX7dMn1GDdKm/guu4V+cljuenKOhLjRgJDrS40+tupKrEu
-Yfd4SFHScc5VLBDLBItTUAlfY9txSl5JeCOeccMJn2tR6GYdjwaYTo0yAl8qrqn0
-w1wH/vdEOjwz4aX1suTD6XZ43NeoS5iVKHqXP7UEy6zh4NOULyxjVge/yWBmuSc1
-wiVwMg1oYRflgpLBkQj+e/pdu70J0uAobJAHJpyjCC4HIdk3J1bEkspKiu+pIwg3
-yL0AjhWBXB3ZY8qp6O9kYzxW86+KENLfgVhgU7T67fZ12w+uqDIwwiFV7ylnnxKq
-h1gl+9TrDJKRvBeYWNnYaHnGpmQ0R0oZ6pOjlvFPw01gjFEqszcZGZ7IQOfRKKLc
-0TxiUGS2TxOMj+HLRMI+x3JVz0urZgBPwPVjNFZVuz3gGYAoKbTXtto+hRp+xD7Y
-RqqryI90TuzB/AeZQStGFCocPULjzT6MEECxzY0/eQkNhekqpMAbFNoNwTrGKTEW
-NtZwm5wdMl9KzZXhD8ictBW3KQxHh74Z2fKlkazYixmbIxOH3IS6szkyrfg603vb
-vq9hq8fgoIOwPL3iB1cX
-=V9ty
------END PGP SIGNATURE-----
-
---=-erBjICfnfhhUIG5ApKLY--
-
+2009/7/9 Ivo Van Doorn <ivdoorn@gmail.com>:
+> On Thu, Jul 9, 2009 at 7:30 AM, Stefan
+> Steuerwald<salsasepp@googlemail.com> wrote:
+>>> > Sounds like a driver problem, it must not be reacting to set_tim()
+>>> > properly.
+>>> >
+>>> > johannes
+>>>
+>>> Looking at rt73usb.c:2242, there isn't any initializer for .set_tim .
+>>> Plausible explanation.
+>>> It may be totally beyond me to just implement it. Let me find someone
+>>> to ask nicely ;-) ...
+>>
+>> I have an experimental patch working (sent for review to the rt2x00
+>> mailing list).
+>> I will report back here.
+>
+> Are you sure you've send it already? Because I haven't seen anything yet.
+>
+> Ivo
+>
