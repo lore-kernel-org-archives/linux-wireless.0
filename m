@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42325 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755520AbZGOAO2 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:46154 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754553AbZGJJb5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/21] ath9k/iwlwifi/mac80211: rate cleanup
-Date: Tue, 14 Jul 2009 20:13:52 -0400
-Message-Id: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 10 Jul 2009 05:31:57 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: 4318 misbehaving with bleeding edge kernels
+Date: Fri, 10 Jul 2009 11:31:41 +0200
+Cc: bcm43xx-dev@lists.berlios.de, Celejar <celejar@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain; charset=US-ASCII
+Message-Id: <200907101131.41781.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the series of pending patches for rate control cleanup
-which apply on ath9k, mac80211 and iwlwifi. This series is now
-rebased against the latest wireless-testing. I've also tacked along
-Vasanth's rate control cleanup patches with this series for your
-and Vasanth's convenience.
 
-Luis R. Rodriguez (17):
-  mac80211: drop frames for sta with no valid rate
-  ath9k: downgrade assert in rc.c for invalid rate
-  iwlwifi: remove rs_get_rate workaround
-  ath9k: cleanup try count for MRR in rate control
-  ath9k: remove unused min rate calculation code
-  ath9k: remove unused stepdown when looking for the next rate
-  ath9k: remove pointless wrapper ath_rc_rate_getidx()
-  ath9k: rename ath_rc_get_nextlowervalid_txrate()
-  ath9k: remove unused ath_rc_isvalid_txmask()
-  ath9k: remove ATH9K_MODE_11B
-  ath9k: remap ATH9K_MODE_*
-  ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
-  ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
-  mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
-  iwlwifi: use ieee80211_is_data(fc)
-  mac80211: add helper for management / no-ack frame rate decision
-  ath9k: remove rate control wraper
+----------  Forwarded Message  ----------
 
-Vasanthakumar Thiagarajan (4):
-  ath9k: Remove dead code in rate control
-  ath9k: Remove unused members from rate control structure
-  ath9k: Use probe interval instead of rssi reduce interval
-  ath9k: Nuke struct ath_tx_ratectrl_state
+Subject: 4318 misbehaving with bleeding edge kernels
+Date: Friday 10 July 2009
+From: Celejar <celejar@gmail.com>
+To: bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
 
- drivers/net/wireless/ath/ath9k/ath9k.h     |    1 -
- drivers/net/wireless/ath/ath9k/hw.c        |    1 -
- drivers/net/wireless/ath/ath9k/hw.h        |   17 +-
- drivers/net/wireless/ath/ath9k/main.c      |    3 +-
- drivers/net/wireless/ath/ath9k/rc.c        |  609 +++++++++-------------------
- drivers/net/wireless/ath/ath9k/rc.h        |   29 +--
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   24 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   16 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 +-
- include/net/mac80211.h                     |   34 ++
- net/mac80211/rate.c                        |   29 ++
- net/mac80211/rc80211_minstrel.c            |   23 +-
- net/mac80211/rc80211_pid_algo.c            |   12 +-
- net/mac80211/tx.c                          |   23 +
- 14 files changed, 298 insertions(+), 528 deletions(-)
+Hi,
 
+I have a 4318 (rev 02), which has been working fine with b43.
+Recently, with 2.6.31-rc2 kernels from the wireless-testing git repo,
+I've been having trouble.  Sometimes the card simply fails to associate
+after doing 'iwconfig eth0 essid xxxx'.  It doesn't even seem to try;
+i.e., when it does associate, I see log entries like these:
+
+Jul 10 02:25:19 lizzie kernel: [  318.302652] eth0: direct probe to AP 00:1a:70:f5:76:7e (try 1)
+Jul 10 02:25:19 lizzie kernel: [  318.310396] eth0 direct probe responded
+Jul 10 02:25:19 lizzie kernel: [  318.310401] eth0: authenticate with AP 00:1a:70:f5:76:7e (try 1)
+Jul 10 02:25:19 lizzie kernel: [  318.312273] eth0: authenticated
+Jul 10 02:25:19 lizzie kernel: [  318.510040] eth0: associate with AP 00:1a:70:f5:76:7e (try 1)
+Jul 10 02:25:19 lizzie kernel: [  318.511947] eth0: RX AssocResp from 00:1a:70:f5:76:7e (capab=0x401 status=0 aid=1)
+Jul 10 02:25:19 lizzie kernel: [  318.511952] eth0: associated
+Jul 10 02:25:19 lizzie kernel: [  318.513218] ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+
+but often I see nothing in the logs at all, and iwconfig shows
+"Not-associated".  I just keep repeating the 'iwconfig eth0 essid xxxx'
+command until it finally takes, and then the connection seems to behave
+normally.  When the card is not functioning, trying 'iwlist eth0 scan'
+initially gives:
+
+~# iwlist eth0 scan
+eth0      Failed to read scan data : Resource temporarily unavailable
+
+and subsequent invocations, when the card is still not working, gives:
+
+~# iwlist eth0 scan
+eth0      Interface doesn't support scanning : Device or resource busy
+
+When the card resumes functioning, scanning works correctly.
+
+I have tried both the old and new firmware, with similar results.  Any
+ideas?
+
+>From lspci -v:
+
+06:02.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
+	Subsystem: AMBIT Microsystem Corp. TravelMate 2410
+	Flags: bus master, fast devsel, latency 64, IRQ 22
+	Memory at d0002000 (32-bit, non-prefetchable) [size=8K]
+	Kernel driver in use: b43-pci-bridge
+
+uname -a:
+
+Linux lizzie 2.6.31-rc2-wl-lizzie-27873-ga483c23-dirty #4 Thu Jul 9 19:13:30 EDT 2009 i686 GNU/Linux
+
+Celejar
+--
+mailmin.sourceforge.net - remote access via secure (OpenPGP) email
+ssuds.sourceforge.net - A Simple Sudoku Solver and Generator
+
+_______________________________________________
+Bcm43xx-dev mailing list
+Bcm43xx-dev@lists.berlios.de
+https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+
+
+-------------------------------------------------------
+
+-- 
+Greetings, Michael.
