@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60043 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893AbZGEBhp (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:47682 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbZGKEd7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 21:37:45 -0400
-Subject: Re: [PATCH] iwmc3200wifi: cfg80211 managed mode port
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090702235513.GA4143@sortiz.org>
-References: <20090701192641.072258140@sipsolutions.net>
-	 <20090701193421.155074452@sipsolutions.net>
-	 <20090702235513.GA4143@sortiz.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fUKkWT9vFHLICA4fgQzP"
-Date: Sun, 05 Jul 2009 03:37:34 +0200
-Message-Id: <1246757854.16770.109.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 11 Jul 2009 00:33:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <4A55EC95.5000309@gmail.com>
+References: <4A54FB81.30302@gmail.com>
+	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
+	 <4A551B43.3020104@gmail.com>
+	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
+	 <4A5575C1.8090403@lwfinger.net>
+	 <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
+	 <4A55D123.5090802@gmail.com>
+	 <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
+	 <4A55EC95.5000309@gmail.com>
+Date: Sat, 11 Jul 2009 05:33:57 +0100
+Message-ID: <3ace41890907102133r1cbcf063vb70f7cb350e813ec@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Marcin Slusarz <marcin.slusarz@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Linux wireless <linux-wireless@vger.kernel.org>,
+	Przemyslaw Kulczycki <azrael@autocom.pl>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/7/9 Marcin Slusarz <marcin.slusarz@gmail.com>:
 
---=-fUKkWT9vFHLICA4fgQzP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Look, support for Ralink chipsets is a mess. They are supported by too sets
+> of drivers - Ralink's ugly as hell but working staging drivers (rt2860,
+> rt2870, rt3070, soon rt3090) and properly developed but lagging rt2x00
+> drivers (RT2400PCI, RT2500PCI, RT61PCI, RT2500USB, RT73USB, RT2800USB).
+>
+> Theoretically my WUSB54GCv3 is supported by RT2800USB (which was added during
+> 2.6.31 merge window), but it doesn't work. With tiny patch added to rt3070
+> (just usb id) my card works. Some day rt2x00 drivers will be better than Ralink's,
+> but right now they are not.
+>
+> So I wouldn't like to encourage any of them. I just wanted to fix clearly
+> wrong help text which stated that rtl8187 (Realtek's chipset!) supports
+> all WUSB54GC cards.
 
-On Fri, 2009-07-03 at 01:55 +0200, Samuel Ortiz wrote:
+I think you mis-read the Kconfig message. GPL clause 11:
+...PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE...
 
-> @@ -521,7 +521,10 @@ static int iwm_mlme_assoc_complete(struc
+The linux kernel never claim to cover *all* of anything, and in
+particular, the message you refers to is meant to read '*some*
+WUSB54GC are known to work', YMMV. I think adding pointers/info to v1
+and3 would be better if you want to add 'v2' to it; particularly since
+Gabor has pointed out that v1/v2/v3 all have different USB ids and a
+full set of kernel modules will bind to the different devices
+correctly, so the message is only for people who has a new/unknown
+device and want to experiment (and expect to have some failures). And
+to be honest, there is a device called rtl8187se, which isn't an
+rtl8187 at all and don't have much in common. If you start insisting
+the rtl8187 Kconfig message should have an extra 5 letters say 'not
+se', I would rather you say 'rtl8187se is covered by ..., which is in
+staging phase'. (the se driver is, the last time I heard, in staging
+and not working and nobody is working on it to make it work, which is
+worse than your situation).
 
--	union iwreq_data wrqu;
--	memset(&wrqu, 0, sizeof(wrqu));
-
-johannes
-
---=-fUKkWT9vFHLICA4fgQzP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKUAPXAAoJEODzc/N7+QmaGpwQAJ+GN6DiBSsEd61N9TxRAri0
-7ogHMTBdppL6E67UTVEPxTh2oBfDsyal94doYZWYZTAEthxmbroujQs5rafglq5W
-KjdOaaIsYA7cisLGHfJtGBpmvoib3F7u2GJW8ypS4d1N1xsjv6CgIFWBhT5IYsp3
-4lfW3MftQ6OIvPsv5sry7nUS3/+gWNyG4O5HBJRjAIoi/HnJkzjHIBc8QGaE20C1
-axEuHxzsjBNXhNzFP+FgqljZhLY2tITcvcxysbcqnuuEieKgcMPuQi0fIfXOitew
-rCbm3yyI3mNQAiKzYtJ9/CAkyW66ta2SpuHjrxN/VDXIiCSoKR1El2mvYK08Fhnz
-gOrsZAGQMVnwF52mRBq9I+DAQl1Wj1kfXQLkA61Madc8X+uEin9sPVKNpywSSnu8
-noNEGkx+lO1Xqhspk9DPL4eXKPAMwhGLB64OvF5yH7XjEXGr4qI9T70TFmYjTACn
-PBLK7w+op8/+89tJnpK/cG6ctyJI9p1o8bJtCwVOebPp1q7+41nTpvCxI1/tqVK6
-qFrM5bkNuRD30/TGggYw4ZiHPDMaRWX9UAzNW8bXbZAT9crpyOB+BOxGopccE+UJ
-bkFuw5ma/F2rmpZtVPN6/M/58D8Mk7hQmnCWtFlBF66jik3TnqWreilgA710U5MF
-+LU6ol6x1I1X0/9mscQL
-=rhm2
------END PGP SIGNATURE-----
-
---=-fUKkWT9vFHLICA4fgQzP--
-
+The situation with Ralink drivers isn't that different in other
+vendors - Realtek provides a vendor driver for rtl8187 called "r8187"
+and there is a community driver rtl8187; Atheros provides a vendor
+driver for Zydas zd1211 and there is a community driver zd1211rw. I
+don't think this "wouldn't like to encourage any of them" attitude is
+helping anybody. In both of the Realtek case and the Zydas case,
+people tolerated the co-existences of both (and sometimes with
+ndiswrapper also) for many months and studied the vendor drivers (+
+ndiswrapper) and eventually improve the community driver.
+Driver codes don't grow on trees - if you 'wouldn't like to encourage
+any of them', maybe you should not be using linux at all.
