@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28212 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149AbZG3RT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 13:19:56 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 10:19:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/3] wireless: fix 11d lockdep and move 11d hint to cfg80211
-Date: Thu, 30 Jul 2009 10:19:43 -0700
-Message-ID: <1248974386-8168-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx03.syneticon.net ([78.111.66.105]:47738 "EHLO
+	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685AbZGKQUO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jul 2009 12:20:14 -0400
+Message-ID: <4A58BBB3.3020908@wpkg.org>
+Date: Sat, 11 Jul 2009 18:20:03 +0200
+From: Tomasz Chmielewski <mangoo@wpkg.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath5k AP support?
+References: <4A381159.70301@wpkg.org> <b6c5339f0906161454tbdaf382k654450a9f1cf8ae7@mail.gmail.com> <4A3AA08E.4050400@wpkg.org> <4A3AA20C.6020908@wpkg.org> <20090705120228.GD2132@hash.localnet>
+In-Reply-To: <20090705120228.GD2132@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This cures the lockdep warning, now with a mutex instead of a spin_lock
-to allow sleeping during the driver reg notifier, and we finish the
-move of the regulatory_hint_11d() to cfg80211. We also add some missing
-lock calls and remove the cfg80211 mutex usage from the driver custom
-regulatory settings wiphy_apply_custom_regulatory(). This caller is now
-used internally within cfg80211 automatically for all cfg80211 drivers.
+Bob Copeland wrote:
+> On Thu, Jun 18, 2009 at 10:22:36PM +0200, Tomasz Chmielewski wrote:
+>> Oh well.
+>> The above is with hostapd 0.7.0 snapshot.
+>> With 0.6.9 I can connect and the connection works fine
+>>
+>> Is it normal?
+> 
+> I'm not sure -- do you have anything in dmesg?  
+> 
+> I've noticed a strange bug lately where some packets to the STA get dropped
+> due to some kind of off-by-u32 bug.  I haven't tracked it down yet to
+> any certain combination of ath5k/w-t/hostapd, though.
 
-Luis R. Rodriguez (3):
-  cfg80211: use goto out on 11d reg hint failure
-  cfg80211: decouple regulatory variables from cfg80211_mutex
-  cfg80211: enable country IE support to all cfg80211 drivers
+No, nothing in dmesg.
 
- include/net/cfg80211.h |   14 ------------
- net/mac80211/mlme.c    |    6 +----
- net/wireless/core.c    |    4 +--
- net/wireless/reg.c     |   53 +++++++++++++++++++++++++++++++++++------------
- net/wireless/reg.h     |   15 +++++++++++++
- net/wireless/sme.c     |   16 ++++++++++++++
- 6 files changed, 72 insertions(+), 36 deletions(-)
+I checked out 0.7 now, and it seems to work.
 
+So, problem solved.
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
