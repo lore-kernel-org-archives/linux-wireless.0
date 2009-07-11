@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:41530 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063AbZGXHj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 03:39:29 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MUFNI-0002Hg-Es
-	for linux-wireless@vger.kernel.org; Fri, 24 Jul 2009 07:39:28 +0000
-Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 07:39:28 +0000
-Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 07:39:28 +0000
+Received: from cp-out11.libero.it ([212.52.84.111]:46497 "EHLO
+	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757206AbZGMWDd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 18:03:33 -0400
+Received: from pcfabio.home.lan (151.48.52.216) by cp-out11.libero.it (8.5.107)
+        id 4A5A72EE00370128 for linux-wireless@vger.kernel.org; Mon, 13 Jul 2009 23:57:31 +0200
+From: Fabio Rossi <rossi.f@inwind.it>
 To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-Date: Fri, 24 Jul 2009 08:39:10 +0100
-Message-ID: <wfzlau7co1.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: p54pci: problems during initialization
+Date: Sat, 11 Jul 2009 20:06:44 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200907112006.45731.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin <proski@gnu.org> writes:
+I have a PCMCIA card (3com 3CRWE154G72 v2) which has problems during the 
+device initialization phase. I'm using the current wireless.git and the 
+firmware included with the working Windows driver (extracted by fwextract).
 
-> On Thu, 2009-07-16 at 18:01 +0100, Jon Fairbairn wrote:
->> The distro I'm using (fedora 11) has 2.6.29 -- will the relevant modules
->> build for that, or would I have to build a whole 2.6.31?
->
-> You can build compat-wireless, which includes the latest ath5k driver
-> backported from the wireless-testing kernel.  Alternatively, you can
-> build madwifi (be sure to use the trunk snapshot).
+Sometimes I'm able to get the card working but most of times it doesn't 
+complete the initialization. When it works dmesg reports:
 
-OK! I bought one and with compat-wireless-2009-07-20 + hostapd 0.6.9 it
-seems to work. I haven't done much testing yet, but I can certainly
-connect to it from an eee pc 901 and from a Macbook Air (and from my IBM
-X30 so long as I don't use WPA).
+pcmcia_socket pcmcia_socket0: pccard: CardBus card inserted into slot 0
+pci 0000:03:00.0: reg 10 32bit mmio: [0x000000-0x001fff]
+pci 0000:03:00.0: supports D1 D2
+pci 0000:03:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+pci 0000:03:00.0: PME# disabled
+p54pci 0000:03:00.0: enabling device (0000 -> 0002)
+p54pci 0000:03:00.0: PCI INT A -> Link[LNKD] -> GSI 11 (level, low) -> IRQ 11
+p54pci 0000:03:00.0: setting latency timer to 64
+p54pci 0000:03:00.0: firmware: requesting isl3886pci
+phy11: p54 detected a LM86 firmware
+phy11: FW rev 2.5.2.0 - Softmac protocol 3.0
+phy11: you are using an obsolete firmware. visit 
+http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 
+2.6.28"!
+phy11: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
+phy11: hwaddr 00:0e:6a:xx:xx:xx, MAC:isl3890 RF:Frisbee
+phy11: Selected rate control algorithm 'minstrel'
+Registered led device: p54-phy11::assoc
+Registered led device: p54-phy11::tx
+Registered led device: p54-phy11::rx
+Registered led device: p54-phy11::radio
+p54pci 0000:03:00.0: is registered as 'phy11'
 
-For reference: The box says "abit airpace wifi", "pci-e wi-fi card",
-"WLP01WCG121095 V0.0B" (on a sticker; this is the only place on the
-outside of the box that mentions WPL01), "EAN 4 710933 354359", "UPC 8
-43323 00028 5"
+When it doesn't work I read:
 
-lspci -nn says
-04:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR242x
-           802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
+pcmcia_socket pcmcia_socket0: pccard: CardBus card inserted into slot 0
+pci 0000:03:00.0: reg 10 32bit mmio: [0x000000-0x001fff]
+pci 0000:03:00.0: supports D1 D2
+pci 0000:03:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+pci 0000:03:00.0: PME# disabled
+p54pci 0000:03:00.0: enabling device (0000 -> 0002)
+p54pci 0000:03:00.0: PCI INT A -> Link[LNKD] -> GSI 11 (level, low) -> IRQ 11
+p54pci 0000:03:00.0: setting latency timer to 64
+p54pci 0000:03:00.0: firmware: requesting isl3886pci
+phy10: p54 detected a LM86 firmware
+phy10: FW rev 2.5.2.0 - Softmac protocol 3.0
+phy10: you are using an obsolete firmware. visit 
+http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 
+2.6.28"!
+phy10: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
+phy10: device does not respond!
+p54pci 0000:03:00.0: PCI INT A disabled
+p54pci: probe of 0000:03:00.0 failed with error -16
+pcmcia_socket pcmcia_socket0: pccard: card ejected from slot 0
 
-Does that want to go on the wiki? (I can't access it right now:
-http://wireless.kernel.org/en/users/Devices * Connection to 83.246.72.84
-Failed )
+It seems there is a problem inside the function p54_read_eeprom().
 
--- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+I have also tried with other firmwares available here
+  http://daemonizer.de/prism54/prism54-fw/
+with the following results:
+
+2.3.2.0.arm - same behaviour
+2.4.2.0.arm - same behaviour
+2.4.6.0.arm - same behaviour
+2.4.8.0.arm - same behaviour
+2.4.11.0.arm - same behaviour
+2.4.12.0.arm - same behaviour
+2.5.2.0.arm - same behaviour
+2.5.3.0.arm - same behaviour
+2.5.6.0.arm - same behaviour
+2.7.0.0.arm - same behaviour
+2.12.0.0.arm - same behaviour
+2.13.1.0.arm - same behaviour
+2.13.8.0.arm - cannot boot firmware, probe error -110
+2.13.12.0.arm - cannot boot firmware, probe error -110
+2.17.2.0.arm - cannot boot firmware, probe error -110
 
 
+Any clue?
+
+Fabio
