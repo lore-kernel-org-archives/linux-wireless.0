@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:60201 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293AbZG1GRy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751833AbZGKRtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 02:17:54 -0400
-Received: by ewy26 with SMTP id 26so3724510ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 23:17:53 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] rt2x00: remove experimental on kconfig
-Date: Tue, 28 Jul 2009 08:17:50 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <1248736854-443-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248736854-443-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200907280817.50877.IvDoorn@gmail.com>
+	Sat, 11 Jul 2009 13:49:24 -0400
+Subject: Re: [PATCH v2] mac80211: cancel/restart all timers across
+ suspend/resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Schwab <schwab@linux-m68k.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <m2hbxjky1q.fsf@igel.home>
+References: <1242391067.5799.53.camel@johannes.local>
+	 <1242553242.10005.76.camel@johannes.local>  <m2hbxjky1q.fsf@igel.home>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SMNl61tGZtX0i8JKFtMD"
+Date: Sat, 11 Jul 2009 19:49:22 +0200
+Message-Id: <1247334562.30647.111.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 28 July 2009, Luis R. Rodriguez wrote:
-> These have been around for a while, if there are issues
-> they should be reported.
-> 
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
-> 
-> Ivo, is this fair to say? Was surprised to see rt2x00 marked
-> as experimental still.
 
-Well I think removing the experimental flag is fine, the most serious
-problem with most drivers is the throughput, but I guess that is not
-a blocker for removing the experimental flag.
+--=-SMNl61tGZtX0i8JKFtMD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-However please move the experimental flag to rt2800usb, since that
-driver is very recent and is not working correctly for a lot of people.
+On Sat, 2009-07-11 at 18:02 +0200, Andreas Schwab wrote:
+>=20
+> Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> writes:
+>=20
+> > We forgot to cancel all timers in mac80211 when suspending.
+> > In particular we forgot to deal with some things that can
+> > cause hardware reconfiguration -- while it is down.
+>=20
+> This is breaking suspend on my iBook.
 
-Thanks,
+Yeah, bug 13337, we've figured out why too, I need two or three days to
+figure out whether it's race-free, but the fix at
+http://mid.gmane.org/8763dznnki.fsf@scholz.fias.uni-frankfurt.de works.
 
-Ivo
+johannes
 
->  drivers/net/wireless/rt2x00/Kconfig |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-> index f970aa2..379da5c 100644
-> --- a/drivers/net/wireless/rt2x00/Kconfig
-> +++ b/drivers/net/wireless/rt2x00/Kconfig
-> @@ -1,8 +1,8 @@
->  menuconfig RT2X00
->  	tristate "Ralink driver support"
-> -	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-> +	depends on MAC80211 && WLAN_80211
->  	---help---
-> -	  This will enable the experimental support for the Ralink drivers,
-> +	  This will enable the support for the Ralink drivers,
->  	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
->  
->  	  These drivers make use of the mac80211 stack.
+--=-SMNl61tGZtX0i8JKFtMD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKWNCeAAoJEODzc/N7+Qmap9gP/A5n9R+uq7OqZchthMEFern2
+DNfE3fygN8RfW6bts6ucKzfaFHCMVbYNHMn8JwjOtihxoAupMV4easfP1ryc6zoP
+3Dzm+PBSSw8VVl/HADkG4ieW4Lquu81YhzxCVPTKUyE4oX1U/y10ARtQ9smwRVTk
+doWh/bTgjkOdFF+zg5gL1bjayOG8PeKuoS4MgYVhDopVg0WjUU+xiBeCYqQYdj+R
+BXJlSgRDr51RCqxOHkRq8zN7S5Qc5FTRcZvxbYd4F0MRMi+35Uuehq7vu5Le6Tz8
+Cq0NXySrE4A7e7/vsjwoD0k07E7GqttP3zshvsff6Y5+obg6T36h2D3oQnZLxY7z
+5k3MlKYfREV3qkQhaC686lGdBQXgME9uIyoBN3BHrYZw+mvp/jYNof5TT2CcGfTF
+l9wNPcaAQ1bukTyIaZX5iRu5aV0rdu/GEVUBL46m8sewleJvrRmH6/AgM31O8jWt
+zRNNJQNCm1uPYqbHCeed+9mTpJFrZ1PNWXmTWXKMiqeoCRcB9ohgk4O8xAERFvFc
+7vYCMg6KV49uVJq8bco1a5izRK33v6Ze3yDvz5vlWyzrG/bLoV72uaNyUj4o8JYZ
+5KI+efbCXpulugaET8gHQ/Bm3Uy0M53CAIO/4MXNHWDNm8u652i0Bnp++1K9i5g3
+Bu+v8WFq7jmg/dyztEKx
+=P4yl
+-----END PGP SIGNATURE-----
+
+--=-SMNl61tGZtX0i8JKFtMD--
 
