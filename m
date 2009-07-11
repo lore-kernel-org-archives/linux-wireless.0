@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:45495 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755773AbZGMNBU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 09:01:20 -0400
-Received: by qyk30 with SMTP id 30so619026qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 06:01:19 -0700 (PDT)
-Message-ID: <4A5B301B.8060405@gmail.com>
-Date: Mon, 13 Jul 2009 09:01:15 -0400
-From: Richard Farina <sidhayn@gmail.com>
+Received: from blaine.gmane.org ([80.91.229.8]:57749 "EHLO hugh.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751211AbZGKQGJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jul 2009 12:06:09 -0400
+Received: from public by hugh.gmane.org with local (Exim 4.63)
+	(envelope-from <public@hugh.gmane.org>)
+	id 1MPf4T-0006yR-0I
+	for linux-wireless@vger.kernel.org; Sat, 11 Jul 2009 18:05:05 +0200
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: Johannes Berg
+	<public-johannes-cdvu00un1VgdHxzADdlk8Q@hugh.gmane.org>
+Cc: John Linville
+	<public-linville-2XuSBdqkA4R54TAoqtyWWQ@hugh.gmane.org>,
+	linux-wireless
+	<public-linux-wireless-u79uwXL29TY76Z2rM5mHXA@hugh.gmane.org>,
+	"Luis R. Rodriguez"
+	<public-mcgrof-Re5JQEeQqe8AvxtiuMwx3w@hugh.gmane.org>
+Subject: Re: [PATCH v2] mac80211: cancel/restart all timers across suspend/resume
+References: <1242391067.5799.53.camel@johannes.local>
+	<1242553242.10005.76.camel@johannes.local>
+Date: Sat, 11 Jul 2009 18:02:41 +0200
+In-Reply-To: <1242553242.10005.76.camel@johannes.local> (Johannes Berg's
+	message of "Sun, 17 May 2009 11:40:42 +0200")
+Message-ID: <m2hbxjky1q.fsf@igel.home>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Proper Regulatory Enforcement
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many discussions in #Linux-wireless and even on this list seem to 
-revolve around how regulatory enforcement is provided.  At one point I 
-thought that I understood how this works, but as things evolve it seems 
-I am losing my edge.  With the goal of understanding a unified policy 
-for all drivers and proper (safe) regulatory enforcement, I'm starting 
-this thread so that people can help clarify how this currently works, 
-and how it should work.
 
-As I see this all working in an ideal world is as follows:
 
-1.) Driver reads eeprom of card for the permissible frequencies for that 
-hardware. It is only safe to allow the frequencies in the eeprom because 
-we cannot assume that any other values were calibrated in the hardware.  
-This information (or initial regulatory domain) should be passed up to 
-and immediately enforced by crda.  Drivers shouldn't have their own 
-enforcement in addition to crda as we have a properly functioning 
-regulatory enforcement engine and having 1 per driver makes things 
-pointlessly complicated.
+Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> writes:
 
-2.) If the user sets a reg domain, intersect user reg domain with eeprom 
-reg domain.
+> We forgot to cancel all timers in mac80211 when suspending.
+> In particular we forgot to deal with some things that can
+> cause hardware reconfiguration -- while it is down.
 
-3.) When user connects to AP, if available, read country IE and 
-intersect that with the currently effective reg domain (which is at 
-least the eeprom and may include user input from step 2 as well).
+This is breaking suspend on my iBook.
 
-I realize some distros have cool stuff happening like setting a reg 
-domain using the location from the timezone or some other cool thing.  
-For the purpose of this discussion however, that is really nothing 
-different from a user set reg domain (in fact I believe that is how it 
-is done) so let's not worry about those specifics of "well the user 
-didn't directly call iw reg set so blah blah blah".
+Andreas.
 
-How far off base am I here? I know that Intel enforces reg domain in 
-their ucode and we cannot do anything about it, but I'm more interested 
-in the cards where our drivers have full control.  Are the drivers 
-themselves performing limiting that users don't even get to see? Or is 
-all this actually passed up to crda as it should be? I'm personally 
-especially interested in how the three atheros drivers do it, but I 
-think this discussion should extend beyond my personal interests and any 
-and all drivers should be discussed.
+-- 
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
 
-Thanks,
-Rick Farina
