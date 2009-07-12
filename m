@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:3126 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753029AbZGWO7C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 10:59:02 -0400
-Message-ID: <4A687AAB.8070306@canonical.com>
-Date: Thu, 23 Jul 2009 08:58:51 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:43926 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbZGLWIl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2009 18:08:41 -0400
+Received: by ewy26 with SMTP id 26so2195008ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2009 15:08:39 -0700 (PDT)
+Message-ID: <4A5A5F3F.80100@gmail.com>
+Date: Mon, 13 Jul 2009 00:10:07 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: rfkill blocking is sticky on virtual instances
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] arlan: inverted logic?
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems that enabling soft blocking on virtual instances of rfkill is
-sticky. For example (using 2.6.31-rc4),
+Inverted logic
 
-rtg@lanai:~$ uname -r
-2.6.31-4-generic
-rtg@lanai:~$ rfkill list
-0: dell-wifi: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-rtg@lanai:~$ sudo rfkill block all
-[sudo] password for rtg:
-rtg@lanai:~$ rfkill list
-0: dell-wifi: Wireless LAN
-	Soft blocked: yes
-	Hard blocked: no
-1: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: yes
-rtg@lanai:~$ sudo rfkill unblock all
-rtg@lanai:~$ rfkill list
-0: dell-wifi: Wireless LAN
-	Soft blocked: no
-	Hard blocked: yes
-1: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Usually the inverted occurs see:
 
-Shouldn't I be able to unblock everything at one fell swoop? As long as
-dell-wifi remains hard blocked, wireless will not reconnect. I've
-observed this behavior on both iwl3945 as well as iwlagn. Dunno if its
-driver specific, but I suspect not because I see similar behaviors on
-platforms with bluetooth.
+s="[[:space:]]*"
+em='!'
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+git grep -E -n -A1 "if$s\($s$em?${s}netif_running$s\(" |
+grep -B1 "[-]EBUSY" | less
+
+Is my patch correct? please review.
+
+diff --git a/drivers/net/wireless/arlan-main.c b/drivers/net/wireless/arlan-main.c
+index d84caf1..4ac519f 100644
+--- a/drivers/net/wireless/arlan-main.c
++++ b/drivers/net/wireless/arlan-main.c
+@@ -1022,7 +1022,7 @@ static int arlan_mac_addr(struct net_device *dev, void *p)
+ 	ARLAN_DEBUG_ENTRY("arlan_mac_addr");
+ 	return -EINVAL;
+ 
+-	if (!netif_running(dev))
++	if (netif_running(dev))
+ 		return -EBUSY;
+ 	memcpy(dev->dev_addr, addr->sa_data, dev->addr_len);
+ 
