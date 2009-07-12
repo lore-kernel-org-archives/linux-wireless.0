@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56071 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:23034 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751493AbZGaAiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 20:38:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 17:38:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 0/4] wireless: fix reg lockdep and move country ie hint
-Date: Thu, 30 Jul 2009 17:38:05 -0700
-Message-ID: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
+	id S1754214AbZGLO5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2009 10:57:30 -0400
+Message-ID: <20090712105807.g85wo8lpgk04k8gk-cebfxv@webmail.spamcop.net>
+Date: Sun, 12 Jul 2009 10:58:07 -0400
+From: Pavel Roskin <proski@gnu.org>
+To: Dave <kilroyd@googlemail.com>
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Gerard <dgerard@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [Orinoco-devel] orinoco-usb in 2.6.31?
+References: <fbad4e140907081555w3a98c570y54d904272094008@mail.gmail.com>
+	<4A577DA9.9000205@gmail.com> <4A57DC26.4090708@gmail.com>
+	<4A58FC5C.8060204@gmail.com>
+In-Reply-To: <4A58FC5C.8060204@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alright, this should be it, the snag I found is fixed by the new
-patch 2/4 of this series. When we want to deal with conflicts
-for multiple country IE hints (when we suspend for example)
-we can deal with the conflict on the workqueue and lift the
-early check out we have there now.
+Quoting Dave <kilroyd@googlemail.com>:
 
-Luis R. Rodriguez (4):
-  cfg80211: use goto out on country IE reg hint failure
-  cfg80211: do not iterate over rdev list on country IE hint
-  cfg80211: decouple regulatory variables from cfg80211_mutex
-  cfg80211: enable country IE support to all cfg80211 drivers
+> The rebasing was a little painful due to all the changes that have been
+> happening on orinoco. However I think I'm done.
 
- include/net/cfg80211.h |   14 ------
- net/mac80211/mlme.c    |    6 +--
- net/wireless/core.c    |    4 +-
- net/wireless/reg.c     |  107 +++++++++++++++++++++--------------------------
- net/wireless/reg.h     |   15 +++++++
- net/wireless/sme.c     |   16 +++++++
- 6 files changed, 81 insertions(+), 81 deletions(-)
+I have an impression that orinoco-usb should be submitted to the  
+staging tree.  Perhaps its symbols should be renamed to allow it to  
+coexist with the plain orinoco driver, even if both are linked into  
+the kernel.
 
+I was hoping that we would reorganize the orinoco driver to allow  
+orinoco-usb to be one of its frontends, but it's not happening.  All  
+the efforts that go into orinoco-usb is keeping it up-to-date with the  
+kernel.
+
+-- 
+Regards,
+Pavel Roskin
