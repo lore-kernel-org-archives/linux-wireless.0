@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:35104 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394AbZGGSm4 convert rfc822-to-8bit (ORCPT
+Received: from ey-out-1920.google.com ([74.125.78.150]:18641 "EHLO
+	ey-out-1920.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807AbZGLQDQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 14:42:56 -0400
-Received: by pzk31 with SMTP id 31so3157319pzk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 11:42:53 -0700 (PDT)
+	Sun, 12 Jul 2009 12:03:16 -0400
+Received: by ey-out-1920.google.com with SMTP id 3so347634eyh.36
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jul 2009 09:03:15 -0700 (PDT)
+Message-ID: <4A5A0941.2000408@tuffmail.co.uk>
+Date: Sun, 12 Jul 2009 17:03:13 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <20090705120515.GA6329@hash.localnet>
-References: <4A3B5B11.7060103@bitnet.be>
-	 <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com>
-	 <b6c5339f0906191019ve40014dp98af5ada875e2a24@mail.gmail.com>
-	 <45e8e6c40906191042k5c96d3a6wff85358da22a7b92@mail.gmail.com>
-	 <20090705120515.GA6329@hash.localnet>
-Date: Tue, 7 Jul 2009 11:42:53 -0700
-Message-ID: <45e8e6c40907071142l3edf9133sd8c3758175c7ae3c@mail.gmail.com>
-Subject: Re: current status of 802.11s mesh in ath5k ?
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Hans Maes <Hans@bitnet.be>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: alan-jenkins@tuffmail.co.uk, johannes@sipsolutions.net
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] rfkill: fix rfkill_set_states() to set the hw state
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 5, 2009 at 5:05 AM, Bob Copeland<me@bobcopeland.com> wrote:
-> On Fri, Jun 19, 2009 at 10:42:22AM -0700, Andrey Yurovsky wrote:
->> > I have been working on a patch to rework the beaconing, namely using
->> > bss_conf->enable_beacon and calling beacon_config whenever the beacon
->> > interval or beacon changes, that might fix it but I'm not too familiar
->> > with mesh details to say.
->>
->> 'looking forward to that patch.  From the driver side, there's not
->> much difference between mesh beaconing and AP or IBSS beaconing.
->
-> Can you check whether my most recent patch (I think it was 2/5 in the
-> ath5k series) helps?  I looked at mac80211 and it seems we set
-> enable_beacon properly in mesh mode so that should configure beaconing
-> to start.
+The point of this function is to set the software and hardware state at
+the same time.  When I tried to use it, I found it was only setting the
+software state.
 
-Thanks Bob, I confirm that your patch fixes mesh beaconing.
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+net/rfkill/core.c |    4 ++++
+1 files changed, 4 insertions(+), 0 deletions(-)
 
-  -Andrey
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 79693fe..db9948e 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -549,6 +549,10 @@ void rfkill_set_states(struct rfkill *rfkill, bool 
+sw, bool hw)
+	swprev = !!(rfkill->state & RFKILL_BLOCK_SW);
+	hwprev = !!(rfkill->state & RFKILL_BLOCK_HW);
+	__rfkill_set_sw_state(rfkill, sw);
++	if (hw)
++		rfkill->state |= RFKILL_BLOCK_HW;
++	else
++		rfkill->state &= ~RFKILL_BLOCK_HW;
+
+	spin_unlock_irqrestore(&rfkill->lock, flags);
+
+-- 
+1.5.4.3
+
