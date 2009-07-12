@@ -1,47 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23615 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753822AbZGXSNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:13:18 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/14] iwlagn: fix null pointer access during ucode load on 1000
-Date: Fri, 24 Jul 2009 11:13:12 -0700
-Message-Id: <1248459194-10239-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:53850 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751497AbZGLLXo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Jul 2009 07:23:44 -0400
+Date: Sun, 12 Jul 2009 01:23:40 -1000
+From: Joel Roth <joelz@pobox.com>
+To: Joel Roth <joelz@pobox.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090712112340.GA3315@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090630170916.GB5137@sprite>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Tue, Jun 30, 2009 at 07:09:16AM -1000, Joel Roth wrote:
+> Hello all,
+> 
+> I'd appreciate some help troubleshooting my wireless connection.
+> 
+> I have a Toshiba Satellite L305 series laptop running Debian
+> sid with a recent, stock Debian kernel version 2.6.29-2-486.
+> 
+> $ lspci | grep Atheros
+> 
+> 05:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 01)
+> 
+> I am seeking to connect to a D-Link 614+ wireless router.
+> For initial testing, the AP is unencrypted, unsecured.
+> 
+> My wife's G3 i-Book with AfterTheMac USB wireless adapter
+> connected just fine, on the first try.
+> 
+> I believe I have the modules I should have:
+> 
+> $ lsmod | grep 80211
+> mac80211              139680  1 ath5k
+> cfg80211               21576  2 ath5k,mac80211
+> 
+> My wireless network interface is present:
+> 
+> $ iwconfig wlan0
+> 
+> wlan0     IEEE 802.11  ESSID:""  
+>           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
+>           Tx-Power=0 dBm   
+>           Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
+>           Link Quality:0  Signal level:0  Noise level:0
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> 
+> $ ifconfig wlan0
+> 
+> wlan0     Link encap:Ethernet  HWaddr 00:21:63:82:82:40  
+>           UP BROADCAST MULTICAST  MTU:1500  Metric:1
+>           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>           collisions:0 txqueuelen:1000 
+>           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+> 
+> 
+> However, I don't find the D-Link 614+:
+> 
+> $ iwlist wlan0 scan
+> 
+> wlan0     No scan results
+> 
+> And of course, dhclient fails to find a server.
+> 
+> Am I missing something? What could I try next?
+> I'd appreciate any pointers.
+> 
+> Thanks.
 
-Commit "iwlwifi: Handle new firmware file with ucode build number
-in header" introduced new ucode header parsing routines, but
-neglected to initialize these routines for 1000. The system thus goes
-into infinite loop trying to load ucode, failing every time with a null
-pointer exception as it tries to parse the header.
+Okay, I'm back with a new kernel 2.6.30.1 and the latest
+ath5k. Here are my basic diagnostics data. 
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+$ iwlist wlan0 scan
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 80a2818..5f7c520 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -124,6 +124,7 @@ static struct iwl_lib_ops iwl1000_lib = {
- };
+wlan0     No scan results
+
+$ iwlist wlan0 ap
+
+wlan0     Interface doesn't have a list of Peers/Access-Points
+
+$ iwconfig wlan0
+
+wlan0     IEEE 802.11bg  ESSID:""  
+          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
+          Tx-Power=27 dBm   
+          Retry min limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+          Link Quality:0  Signal level:0  Noise level:0
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+$ ifconfig wlan0
+
+wlan0     Link encap:Ethernet  HWaddr 00:21:63:82:82:40  
+          UP BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+dmesg highlights
  
- static struct iwl_ops iwl1000_ops = {
-+	.ucode = &iwl5000_ucode,
- 	.lib = &iwl1000_lib,
- 	.hcmd = &iwl5000_hcmd,
- 	.utils = &iwl5000_hcmd_utils,
--- 
-1.5.6.3
+[    4.884157] ath5k 0000:05:00.0: enabling device (0000 -> 0002)
+[    4.884223] ath5k 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[    4.884283] ath5k 0000:05:00.0: setting latency timer to 64
+[    4.884326] ath5k 0000:05:00.0: registered as 'phy0'
+[    6.411392] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+[  337.543014] ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
+I compiled the kernel with debugfs support for wireless. Can someone
+point me to helpful docs in setting this up.
+
+Also, is there a chance that another driver would serve me better?
+
+Regards,
+
+-- 
+Joel Roth
