@@ -1,77 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58514 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbZG3Sh1 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:34721 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbZGMSna convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 14:37:27 -0400
-Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
- modules
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 13 Jul 2009 14:43:30 -0400
+Received: by fxm18 with SMTP id 18so2376369fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 11:43:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1247499979.17896.1556.camel@rc-desk>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <200907121445.42289.helmut.schaa@gmail.com>
+	 <1247499979.17896.1556.camel@rc-desk>
+Date: Mon, 13 Jul 2009 11:43:28 -0700
+Message-ID: <bcd1ba70907131143m2940444ch372ae0bc01417bc4@mail.gmail.com>
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: John Ranson <ranson@analager.net>
 To: reinette chatre <reinette.chatre@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248978482.1216.1087.camel@rc-desk>
-References: <1248947897.8925.13.camel@johannes.local>
-	 <1248978482.1216.1087.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kTFI4cnf+kD/RpRs5aBg"
-Date: Thu, 30 Jul 2009 20:36:51 +0200
-Message-Id: <1248979011.23496.4.camel@johannes.local>
-Mime-Version: 1.0
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I am also seeing frequent loss of association and firmware restarts
+with the new firmware.  On occasion, I can't recover even when I
+reload the driver. Admittedly, I am using an old driver right now
+(2.6.29, I think).
 
---=-kTFI4cnf+kD/RpRs5aBg
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I'm going to upgrade to 2.6.30.1 with the latest compat-wireless. I'll
+file a bug if things continue as they are.
 
-On Thu, 2009-07-30 at 11:28 -0700, reinette chatre wrote:
-> Hi Johannes,
->=20
-> On Thu, 2009-07-30 at 02:58 -0700, Johannes Berg wrote:
-> > Even with the split into iwlcore/agn/3945 not all symbols
-> > that cross file boundaries are needed in other modules, a
-> > few are only used within iwlcore, for example.
->=20
-> I think in this case we need to be explicit when talking about "need"
-> and "used". Yes, some of these exported symbols are only used within a
-> module and this needs to be fixed. At the same time, some of these may
-> be needed outside, but are just not currently used. Examples of the
-> latter are: iwl_remove_station, iwl_rx_ant_restriction, and
-> iwl_send_card_state. I think this is especially important for
-> iwl_remove_station and iwl_rx_ant_restriction because their partners
-> (iwl_add_station and iwl_tx_ant_restriction) are exported and used and I
-> think it will be clean if they are also, even if they are not currently
-> used.
+Thank you very much for getting the new firmware out!
 
-But they can easily be exported when used. That's done even for
-subsystem symbols, for instance some generic netlink stuff wasn't
-exported until it was needed in wimax.
+Cheers,
 
-Is there a problem with adding the export back whenever it's needed?
+John
 
-johannes
-
---=-kTFI4cnf+kD/RpRs5aBg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKceg+AAoJEODzc/N7+QmaE+0P/1xEvxOX1s7BKAXdBLHf9j/R
-4pkPxnAJEQoQ7s30qsZiK1wQ0H8qg6p1sxpi8ansDWlwvbgCKIQdrj6T3511Lg3n
-A12Xe5lOTwZsmbhyCu4SEXI6t3Rb6uIEJQp+7bciscZ9tfi73AhwOAS7VvO673J1
-O31qITrfXZfHxCRHrsQZrH4Zkq7aDxJ0ythN8WGruW+Jy6YyZjm7S5B+KJ7HwOq0
-2TQBACder6mFFzaJJbHGccZ6FUEghYlHGS3Trl/M/zJUuF+d+1F5xJNHY8xXBccI
-mFJsdtzxRSkws0F8fNiT3Fqwl6puB9l4wkgrN9wQGPwUqFNkgBK9jhwzuu2mcAuz
-KW1j8dHJFHqqP6GrVN9ipoj9pZiJoDFqjVIrnTxbqjEl5JGq5Lu7wH8Q7NXlWipC
-OBjD0i9eHVkjepWvzTLQVNh3Fbf3oDX3GaizAFLR7ZPzXp9O3S4KEjM/LKJGhPUh
-OkbgMH5RmAzZKN736+CKS9VbwDIUp6qviquhD4MQUmxOXdj6EO2UY75JNTUKgk/+
-xOEDXDgLYRxZ5xxZm3kkzU0GInV/De25iqUY4zJdATHiIJIISuM8JXlDpJcu+mNn
-McaPZupuXb3dcUr4QZxA//ZaU6XF3V+zmqgFl6savQiGrOVHZDcBdyRGrqVBGhRJ
-vIdcyuQ3h4sXoFR+nwtX
-=qbEr
------END PGP SIGNATURE-----
-
---=-kTFI4cnf+kD/RpRs5aBg--
-
+On Mon, Jul 13, 2009 at 8:46 AM, reinette
+chatre<reinette.chatre@intel.com> wrote:
+> Hi Helmut,
+>
+> On Sun, 2009-07-12 at 05:45 -0700, Helmut Schaa wrote:
+>> Am Donnerstag, 9. Juli 2009 schrieb reinette chatre:
+>> > Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
+>> > available for download from
+>> > http://intellinuxwireless.org/?n=Downloads
+>>
+>> The new ucode seems to cause fw restarts every now and then (together
+>> with wireless-testing).
+>
+> oh no ...
+>
+>>
+>> iwlagn 0000:10:00.0: Microcode SW error detected.  Restarting 0x82000000.
+>
+> What is the status when such an error occurs? Can it recover on its own
+> or do you need to take action? What action is needed?
+>
+>>
+>> I couldn't figure out how to reproduce this but it happened a few times
+>> now since I switched to the new ucode.
+>>
+>> Should I load iwlagn with some special debug flags?
+>
+> If your driver is compiled with CONFIG_IWLWIFI_DEBUG then you can pass a
+> debug flag to the module that will print a ucode event log when it
+> encounters a problem like this. As it will only print out the event log
+> when this error occurs you can safely turn this debugging on permanently
+> without risking a clutter of your logs. Later, if you know how to
+> reproduce is you can increase debugging to get more details about what
+> the driver is actually doing. The debug flag for _just_ the ucode event
+> log is 0x40000 (like "modprobe iwlagn debug=0x40000"). The 0x43fff is a
+> more general debug flag that helps with obtaining more information.
+>
+> When you have this data - could you please submit a bug at
+> intellinuxwireless.org/bugzilla for us to be able to track it?
+>
+> Thank you very much
+>
+> Reinette
+>
+>
+>
+> ------------------------------------------------------------------------------
+> Enter the BlackBerry Developer Challenge
+> This is your chance to win up to $100,000 in prizes! For a limited time,
+> vendors submitting new applications to BlackBerry App World(TM) will have
+> the opportunity to enter the BlackBerry Developer Challenge. See full prize
+> details at: http://p.sf.net/sfu/Challenge
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
