@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from will39.synserver.de ([212.40.172.10]:39705 "EHLO willies.info"
+Received: from mail.tpi.com ([70.99.223.143]:3384 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751618AbZGANmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 09:42:54 -0400
-Received: from nat-extern.rrze.uni-erlangen.de ([192.44.85.23] helo=jan.bude)
-	by willies.info with esmtpsa (TLS-1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.63)
-	(envelope-from <jan@willies.info>)
-	id 1MLzU0-0001ST-5I
-	for linux-wireless@vger.kernel.org; Wed, 01 Jul 2009 15:04:16 +0200
-Message-ID: <4A4B5EC8.8060804@willies.info>
-Date: Wed, 01 Jul 2009 15:04:08 +0200
-From: Jan Willies <jan@willies.info>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 4965AGN loses connection on Custom wireless event
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	id S1756971AbZGMULj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:11:39 -0400
+To: yi.zhu@intel.com
+Subject: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
+Cc: ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, reinette.chatre@intel.com
+Message-Id: <20090713190803.9A70BF8D2C@sepang.rtg.net>
+Date: Mon, 13 Jul 2009 13:08:03 -0600 (MDT)
+From: timg@tpi.com (Tim Gardner)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello list,
+>From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Mon, 13 Jul 2009 12:53:32 -0600
+Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
 
-I have a strange problem with an EAP-Network here. I can associate just 
-fine, but approx 1 min after the _initial_ connection completed the 
-network hangs. Though all the tools say I'm still connected (nm-applet, 
-iwconfig) I can't ping anything. I have to re-new the connection with 
-nm-applet and after that it works again (and longer!).
+Added a missing parameter in the macro invocation to correct a
+compile error when CONFIG_IWLWIFI_DEBUG is enabled.
 
-1. boot notebook and associate with wifi
-2. wait 1 min -> hang
-3. re-establish connection with nm-applet
-4. after that it never hangs again (mostly)
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-You can find the log here: http://jan.willies.info/wpa_supplicant.log
-
-Dan Williams says the interesting line is 1242720593.722277: "the driver 
-sends an association event *after* it's completed association, which the 
-supplicant interprets as a restart of the authentication process".
-
-This is a Thinkpad X300 with Fedora 11 (iwlagn-1.3.27kds and 
-wpa_supplicant-0.6.8)
-
-
-regards,
-
-   - jan
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 2564288..67332fb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+ 	}
+ 
+ 	if (scan->channel_count == 0) {
+-		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
++		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
+ 		goto done;
+ 	}
+ 
+-- 
+1.6.3.3
 
