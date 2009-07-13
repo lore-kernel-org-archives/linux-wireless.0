@@ -1,82 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbZGJTlu (ORCPT
+Received: from server1.wserver.cz ([82.113.45.157]:52901 "EHLO
+	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757480AbZGMVdH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:41:50 -0400
-Subject: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	acpi4asus-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <507E3B9268%linux@youmustbejoking.demon.co.uk>
-References: <4A5716AA.5000903@ph.tum.de>
-	 <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
-	 <4A5743AB.6090303@ph.tum.de>
-	 <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
-	 <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
-Content-Type: text/plain
-Date: Fri, 10 Jul 2009 21:41:39 +0200
-Message-Id: <1247254899.21972.9.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 13 Jul 2009 17:33:07 -0400
+From: Jiri Slaby <jirislaby@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH] wireless: wl12xx, fix lock imbalance
+Date: Mon, 13 Jul 2009 23:24:26 +0200
+Message-Id: <1247520266-32007-1-git-send-email-jirislaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apparently there actually _are_ tools that try to set
-this in sysfs even though it wasn't supposed to be used
-this way without claiming first. Guess what: now that
-I've cleaned it all up it doesn't matter and we can
-simply allow setting the soft-block state in sysfs.
+Add omitted mutex_unlock to one of wl12xx_op_start fail paths (when
+wl12xx_chip_wakeup fails).
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Not sure if the device should be powered off?
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
 ---
-*shrug*, I don't like it, but whatever...
+ drivers/net/wireless/wl12xx/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Please test & report.
-
- net/rfkill/core.c |   27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
-
---- wireless-testing.orig/net/rfkill/core.c	2009-07-10 21:29:10.000000000 +0200
-+++ wireless-testing/net/rfkill/core.c	2009-07-10 21:36:31.000000000 +0200
-@@ -648,15 +648,26 @@ static ssize_t rfkill_state_store(struct
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	/*
--	 * The intention was that userspace can only take control over
--	 * a given device when/if rfkill-input doesn't control it due
--	 * to user_claim. Since user_claim is currently unsupported,
--	 * we never support changing the state from userspace -- this
--	 * can be implemented again later.
--	 */
-+	struct rfkill *rfkill = to_rfkill(dev);
-+	unsigned long state;
-+	int err;
-+
-+	if (!capable(CAP_NET_ADMIN))
-+		return -EPERM;
-+
-+	err = strict_strtoul(buf, 0, &state);
-+	if (err)
-+		return err;
-+
-+	if (state != RFKILL_USER_STATE_SOFT_BLOCKED &&
-+	    state != RFKILL_USER_STATE_UNBLOCKED)
-+		return -EINVAL;
-+
-+	mutex_lock(&rfkill_global_mutex);
-+	rfkill_set_block(rfkill, state == RFKILL_USER_STATE_SOFT_BLOCKED);
-+	mutex_unlock(&rfkill_global_mutex);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 603d611..d241e4a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -336,7 +336,7 @@ static int wl12xx_op_start(struct ieee80211_hw *hw)
  
--	return -EPERM;
-+	return err ?: count;
- }
+ 	ret = wl12xx_chip_wakeup(wl);
+ 	if (ret < 0)
+-		return ret;
++		goto unlock;
  
- static ssize_t rfkill_claim_show(struct device *dev,
-
+ 	ret = wl->chip.op_boot(wl);
+ 	if (ret < 0)
+@@ -357,7 +357,7 @@ static int wl12xx_op_start(struct ieee80211_hw *hw)
+ out:
+ 	if (ret < 0)
+ 		wl12xx_power_off(wl);
+-
++unlock:
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	return ret;
+-- 
+1.6.3.2
 
