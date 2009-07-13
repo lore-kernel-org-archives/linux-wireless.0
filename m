@@ -1,45 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:37577 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754575AbZGFNQx (ORCPT
+Received: from mail-qy0-f192.google.com ([209.85.221.192]:38828 "EHLO
+	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755512AbZGML5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 09:16:53 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-Date: Mon, 6 Jul 2009 15:16:50 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200907040053.05654.chunkeey@web.de> <200907060005.55329.chunkeey@web.de> <4A51553B.9050204@lwfinger.net>
-In-Reply-To: <4A51553B.9050204@lwfinger.net>
+	Mon, 13 Jul 2009 07:57:25 -0400
+Received: by qyk30 with SMTP id 30so597817qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 04:57:23 -0700 (PDT)
+Message-ID: <4A5B211D.3040905@gmail.com>
+Date: Mon, 13 Jul 2009 07:57:17 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907061516.50254.chunkeey@web.de>
+To: Tim Schneider <schneid5@cs.uni-bonn.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Reading the RSSI from a Kernel Module
+References: <0D620DB9-0DF4-41BB-8686-5BC910F88C79@cs.uni-bonn.de> <4A5ADB52.3080401@gmail.com> <2E605895-C629-47C5-8DF8-DF012A3749EB@cs.uni-bonn.de>
+In-Reply-To: <2E605895-C629-47C5-8DF8-DF012A3749EB@cs.uni-bonn.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 06 July 2009 03:36:59 Larry Finger wrote:
-> Christian Lamparter wrote:
-> 
-> > hmm, can you please give this a go? (I hope this patch still applies...)
-> > I'm curious if you can dump the tx_queue when p54_alloc_skb fail?
-> 
-> The patch applied with the aid of wiggle.
-yeah, I don't want to delay these changes... so they are based on top of
-the last _official_ patches, rather than the experimental ones.
+Tim Schneider wrote:
+>
+> Am 13.07.2009 um 08:59 schrieb Richard Farina:
+>> I don't mean to make this a flame so please do not take it that way.  
+>> How exactly do you expect to get the RECEIVED Signal Strength 
+>> indication for a packet which you are SENDING? If you send it, you 
+>> don't receive it...
+>>
+>> Just my 0.02
+>>
+>> -Rick Farina
+>
+> Hi Rick,
+>
+> as far, as I understood, the RSSI-Mechanism also displays the signal 
+> strength of the just sent package. I figured there was some way the 
+> MAC-Layer transported that information, but you're right, I could be 
+> mistaken. Anyways, since I'm trying to implement a TCP Algorithm, i 
+> definitely have a  two-way connection. Assuming, that the route back 
+> is going to be the same as it was on the way there (which basically 
+> should be true, based on the Routing algorithms we're using in our 
+> wireless mesh network), I could just use the RSSI Value of the 
+> received ACK.
+>
+Any RSSI on a sent packet will be a calculated number not an observed 
+number and as such it will be completely pointless for any kind of rate 
+control algorithm.  Assuming that the card could actually receive the 
+packets it is sending (which it can't) then you would be observing a 
+24dBm signal (for instance) with 0 patch loss and your RSSI would be at 
+or above max.  Realistically you can assume that every packet you sent 
+has a max RSSI on your end because you are the one transmitting it.  
+Now, if you want to know what the RSSI on the receiver side is that is a 
+completely different question, one which you cannot answer at all. When 
+you send a packet you do not have the good fortune to know what RSSI the 
+receiver got.  You can roughly assume based on your RSSI when you get an 
+ACK, but honestly that isn't even close to correct because every packet 
+has a very unique experience in the air and you cannot assume things 
+like the same tx power and rx sensitivity will be the same on both 
+ends.  There is some 802.11 protocol (the letter eludes me at present) 
+which is in draft form which adds information to packets so that both 
+ends know each other's RSSI, but I have never seen it implemented 
+anywhere yet.
 
-> Since adding it, I've had 7 of the disassociation failures, but none of the
-> queue len problems.
-ohh, forgot to add that...
-- do you think you can add another p54_dump_tx_queue
-  when it "disassociates". I'm curious if the queue was empty or is full
-  (with what?!)
+I advise you keep the discussion on list as I am by no means an expert 
+and many people much better at this than I may respond.
 
-> I have modified every place that p54_alloc_skb() fails with a printk
-> that tells why it failed and then calls p54_dump_tx_queue(), but I
-> have not gotten to test it yet. I found an oops when 2.6.31-rc2 is
-> booted that I'm bisecting right now.
-yeah, in the mean time I'll get these fixes to linville.
+-Rick Farina
+> Regards,
+>
+> Tim Schneider
+>
+>
 
-Regards,
-	Chr
