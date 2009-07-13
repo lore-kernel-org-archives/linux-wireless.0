@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:63162 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbZGAVSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 17:18:06 -0400
-Date: Wed, 01 Jul 2009 16:18:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] net: remove skb->do_not_encrypt from skbuff.c
-Message-ID: <4a4bd294.Hac6+C1W4gkNIlOX%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:34767 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751572AbZGMTJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 15:09:51 -0400
+Subject: Re: nl80211 and wext interoperability
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1247507677.4166.27.camel@johannes.local>
+References: <1247139797.2144.27.camel@johannes.local>
+	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
+	 <1247163342.22527.2.camel@johannes.local>
+	 <1247507618.4369.11.camel@localhost.localdomain>
+	 <1247507677.4166.27.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 13 Jul 2009 15:10:06 -0400
+Message-Id: <1247512206.4369.67.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 38ba8fb67d6be3258a ("net: remove unused skb->do_not_encrypt")
-removed the variable from struct skbuff, but the usage in net/core/skbuff.c
-crept back in, probably in the merge between mainline and wireless-testing.
+On Mon, 2009-07-13 at 19:54 +0200, Johannes Berg wrote:
+> On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
+> 
+> > Mainly because there's no way to tell WEXT drivers to "stop whatever
+> > you're doing and just be idle"...
+> > 
+> > The supplicant clears out the keys on TERM anyway, and in some cases
+> > (iwlagn) the driver will keep trying to reassociate internally
+> 
+> Seems unlikely, ITYM ipw?
 
-Signed-off-by: Larry.Finger <Larry.Finger@lwfinger.net>
----
+Nope.  I saw this behavior with iwlagn (both 3945 and 4965) when I was
+doing all that hidden stuff back in April with 2.6.27 kernels.  Might be
+different in very recent kernels?
 
-John,
+Dan
 
-This fixes the build problem I reported earlier.
 
-Larry
----
-
-Index: wireless-testing/net/core/skbuff.c
-===================================================================
---- wireless-testing.orig/net/core/skbuff.c
-+++ wireless-testing/net/core/skbuff.c
-@@ -559,9 +559,6 @@ static void __copy_skb_header(struct sk_
- #endif
- #endif
- 	new->vlan_tci		= old->vlan_tci;
--#if defined(CONFIG_MAC80211) || defined(CONFIG_MAC80211_MODULE)
--	new->do_not_encrypt	= old->do_not_encrypt;
--#endif
- 
- 	skb_copy_secmark(new, old);
- }
