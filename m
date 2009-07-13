@@ -1,114 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44898 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753617AbZGXSp5 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:52556 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756212AbZGMPno (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:45:57 -0400
-Date: Fri, 24 Jul 2009 14:35:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/6] ath9k: Add debug counters for TX
-Message-ID: <20090724183502.GA2711@tuxdriver.com>
-References: <19048.13623.675052.94639@localhost.localdomain>
+	Mon, 13 Jul 2009 11:43:44 -0400
+Date: Mon, 13 Jul 2009 10:43:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: netrolller.3d@gmail.com
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [RFC/RFT] rtl8187: Fix for kernel oops when unloading with LEDs
+ enabled
+Message-ID: <4a5b563e.AuhPXmHA0dUFYtzx%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <19048.13623.675052.94639@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 03:32:31PM +0530, Sujith wrote:
-> Location: ath9k/phy#/xmit
-> 
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+may oops when the module is unloaded as the workqueue for led_on was
+not being cancelled. To prevent interference between cfg80211 and rtl8187,
+a separate workqueue has also been established.
 
-Eeek!
+Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
+---
 
-  CC [M]  drivers/net/wireless/ath/ath9k/hw.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/hw.c:21:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/eeprom.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/eeprom.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/mac.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/mac.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/calib.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/calib.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/ani.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/ani.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/phy.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/phy.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/beacon.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/beacon.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/main.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/main.c:19:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/recv.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/recv.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/xmit.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/xmit.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/xmit.c: In function ‘ath_tx_complete_buf’:
-drivers/net/wireless/ath/ath9k/xmit.c:1838: warning: passing argument 2 of ‘ath_debug_stat_tx’ from incompatible pointer type
-drivers/net/wireless/ath/ath9k/debug.h:199: note: expected ‘struct ath_txq *’ but argument is of type ‘struct ath_txq *’
-drivers/net/wireless/ath/ath9k/xmit.c:1838: warning: passing argument 3 of ‘ath_debug_stat_tx’ from incompatible pointer type
-drivers/net/wireless/ath/ath9k/debug.h:199: note: expected ‘struct ath_buf *’ but argument is of type ‘struct ath_buf *’
-  CC [M]  drivers/net/wireless/ath/ath9k/virtual.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/virtual.c:18:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/rc.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/rc.c:19:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
-  CC [M]  drivers/net/wireless/ath/ath9k/pci.o
-In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
-                 from drivers/net/wireless/ath/ath9k/pci.c:20:
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
-drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+Gábor,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+I hope this version of the patch fixes your problem. On my system
+I ran more than 20 rmmod/insmod cycles without a problem.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -108,11 +108,11 @@ static void rtl8187_led_brightness_set(s
+ 	struct rtl8187_priv *priv = hw->priv;
+ 
+ 	if (brightness == LED_OFF) {
+-		queue_delayed_work(hw->workqueue, &priv->led_off, 0);
++		queue_delayed_work(priv->workqueue, &priv->led_off, 0);
+ 		/* The LED is off for 1/20 sec so that it just blinks. */
+-		queue_delayed_work(hw->workqueue, &priv->led_on, HZ / 20);
++		queue_delayed_work(priv->workqueue, &priv->led_on, HZ / 20);
+ 	} else
+-		queue_delayed_work(hw->workqueue, &priv->led_on, 0);
++		queue_delayed_work(priv->workqueue, &priv->led_on, 0);
+ }
+ 
+ static int rtl8187_register_led(struct ieee80211_hw *dev,
+@@ -193,7 +193,7 @@ void rtl8187_leds_init(struct ieee80211_
+ 	err = rtl8187_register_led(dev, &priv->led_rx, name,
+ 			 ieee80211_get_rx_led_name(dev), ledpin);
+ 	if (!err) {
+-		queue_delayed_work(dev->workqueue, &priv->led_on, 0);
++		queue_delayed_work(priv->workqueue, &priv->led_on, 0);
+ 		return;
+ 	}
+ 	/* registration of RX LED failed - unregister TX */
+@@ -208,11 +208,12 @@ void rtl8187_leds_exit(struct ieee80211_
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	rtl8187_unregister_led(&priv->led_tx);
+ 	/* turn the LED off before exiting */
+-	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
++	queue_delayed_work(priv->workqueue, &priv->led_off, 0);
+ 	cancel_delayed_work_sync(&priv->led_off);
++	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
++	rtl8187_unregister_led(&priv->led_tx);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+ 
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187.h
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187.h
+@@ -104,6 +104,7 @@ struct rtl8187_priv {
+ 	struct delayed_work work;
+ 	struct ieee80211_hw *dev;
+ #ifdef CONFIG_RTL8187_LEDS
++	struct workqueue_struct *workqueue;
+ 	struct rtl8187_led led_tx;
+ 	struct rtl8187_led led_rx;
+ 	struct delayed_work led_on;
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1507,6 +1507,12 @@ static int __devinit rtl8187_probe(struc
+ #ifdef CONFIG_RTL8187_LEDS
+ 	eeprom_93cx6_read(&eeprom, 0x3F, &reg);
+ 	reg &= 0xFF;
++	priv->workqueue =
++		 create_singlethread_workqueue(wiphy_name(dev->wiphy));
++	if (!priv->workqueue) {
++		err = -ENOMEM;
++		goto err_free_dmabuf;
++	}
+ 	rtl8187_leds_init(dev, reg);
+ #endif
+ 
