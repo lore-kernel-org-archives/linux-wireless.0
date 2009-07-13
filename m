@@ -1,75 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:44642 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbZGVQQ4 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756802AbZGMRzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 12:16:56 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so150600qwh.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 09:16:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <f7de31c0907220704x5000854bq652b09bf5b6bfc3c@mail.gmail.com>
-References: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
-	<20090722131957.GA5276@tuxdriver.com> <f7de31c0907220704x5000854bq652b09bf5b6bfc3c@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Jul 2009 09:16:35 -0700
-Message-ID: <43e72e890907220916n6a5c76d3ydbfc0233f86e3546@mail.gmail.com>
-Subject: Re: Update for regulatory database on 5GHz band for Thailand (TH)
-To: Phattanon Duangdara <sfalpha@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 13 Jul 2009 13:55:24 -0400
+Subject: Re: nl80211 and wext interoperability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1247507618.4369.11.camel@localhost.localdomain>
+References: <1247139797.2144.27.camel@johannes.local>
+	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
+	 <1247163342.22527.2.camel@johannes.local>
+	 <1247507618.4369.11.camel@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LEgPNj9QC41PMsPOYDTf"
+Date: Mon, 13 Jul 2009 19:54:37 +0200
+Message-Id: <1247507677.4166.27.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding Michael and David,
 
-any thoughts on this Thailand regulatory change?
+--=-LEgPNj9QC41PMsPOYDTf
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Luis
+On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
 
-On Wed, Jul 22, 2009 at 7:04 AM, Phattanon Duangdara<sfalpha@gmail.com> wrote:
-> On Wed, Jul 22, 2009 at 8:19 PM, John W. Linville<linville@tuxdriver.com> wrote:
->> On Wed, Jul 22, 2009 at 08:07:21PM +0700, Phattanon Duangdara wrote:
->>> National Telecommunication Commisions of Thailand has announce new
->>> regulatory about 5GHz for RLAN last year.
->>>
->>> But I found that Linux Wireless Regulatory Database not get updated.
->>>
->>> Reference in Thai Language:
->>> http://www.ratchakitcha.soc.go.th/DATA/PDF/2551/E/042/64.PDF
->>> (Partly in english and reference to ITU/FCC documents, I think it
->>> quite easy to understand)
->>>
->>> How can this get update on Regulatory Database ?
->>
->> What a beautiful font! :-)
->>
->> While there is enough English/numbers there that I can probably judge
->> what it means, I'd feel a lot better if someone else (perhaps you)
->> submitted a patch against the tree here:
->>
->>        git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
->>
->> Thanks!
->>
->> John
->> --
->> John W. Linville                Someday the world will need a hero, and you
->> linville@tuxdriver.com                  might be all we have.  Be ready.
->>                        –iva Honduras Libre!
->>
->
-> Actually, NTC provide english translated documents, but for thism, it
-> missing from their website. I already contact NTC to get those
-> document in english for reference and clarification. Later models of
-> some Laptops sell in Thailand already has 5GHz enabled radio.
->
-> For now I will try to update db against tree from my knowledge.
->
-> Phattanon
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Mainly because there's no way to tell WEXT drivers to "stop whatever
+> you're doing and just be idle"...
+>=20
+> The supplicant clears out the keys on TERM anyway, and in some cases
+> (iwlagn) the driver will keep trying to reassociate internally
+
+Seems unlikely, ITYM ipw?
+
+johannes
+
+--=-LEgPNj9QC41PMsPOYDTf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKW3TZAAoJEODzc/N7+QmaKpIP/R3Y8KGytRS931wKGc7GFj/+
+PsQ8MN92ukRTC4KQCA7tsXCFlaAcNfVCEjuOfD8IlniH2XivMEzgc6bAS0Zx8TLi
+tw+67klRSlmx5tjJ30liBUc6HqbJKN/0slxP3KuBHOVNj2YP2i3XXPOiy8I2j4q1
+uoPepneMjkLN7d2ZsYKEARd38k+iPCrS/R50liPoWfkNy+tOxAcfMsES+ttfkWWP
+yLddZgPM/B4J2Esusx+mBimt5SbmEwuon+FF39T5FngJi4Fjtw7kpuN8KCBmkZ+v
+ZD+RP70ykfbso/wDmszXaZf4osVyjuRD9C0SVFqsIm1mlJKLUAC7E4Od+wW7dNq7
+7bUXe1RcDsDwELfD5RdU1h/GcFfsJ4uqPwZCDylfVaAzsfkQjReuULhfrVv6RIk4
+NbOW9mBYiZTsnVlx4V4LUJEd8ZU5wLjz9JWo74Vk2dP1UYsgjP88GccM77j4yGbx
+Se7cpTNdsF9UXOsJOqWIz0R67+vA0l5TTM8EWErM/tFgLfcGqCsYxRH05nqwOvJN
+Uf+tu+8FC3uXInXCSNLzE5VhoydDofoW2HZnrFDzE1iM7d48sfJQhSkxVRnQcn6B
+H1n+RF+pbbC/OcHLdx1JBIiiSHPv199mNjiUYqEERrCGpOV69OsivQJsXqP3ujGu
+EQ0TA8BgPpdRvEyX8vvl
+=M+33
+-----END PGP SIGNATURE-----
+
+--=-LEgPNj9QC41PMsPOYDTf--
+
