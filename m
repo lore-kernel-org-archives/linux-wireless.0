@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:56748 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751122AbZGQXUy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 19:20:54 -0400
-MIME-Version: 1.0
-In-Reply-To: <4A604246.5060204@gmail.com>
-References: <9f53b4330907161718ydbac090k2afc7a749fc9f6f2@mail.gmail.com>
-	 <4A604246.5060204@gmail.com>
-Date: Fri, 17 Jul 2009 16:20:51 -0700
-Message-ID: <9f53b4330907171620u5fd71e69t862f582a05251f0@mail.gmail.com>
-Subject: Re: SDIO Stack and Device Support
-From: Robert Emanuele <rob@emanuele.us>
-To: Jonathan Cameron <Jonathan.Cameron@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:22203 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756633AbZGMUsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:48:20 -0400
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <b170af450907131343r69af3da6ob49c92ed6682f76f@mail.gmail.com>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+	 <1247182010.17896.1344.camel@rc-desk>
+	 <b170af450907131330o7eda50bakd6119f47af35d564@mail.gmail.com>
+	 <b170af450907131332x65b43bbfxa76ff2abc743317a@mail.gmail.com>
+	 <1247517511.17896.1652.camel@rc-desk>
+	 <b170af450907131343r69af3da6ob49c92ed6682f76f@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Jul 2009 13:48:19 -0700
+Message-Id: <1247518099.17896.1654.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This support for these wireless chips in the mainline kernel is great.
- Originally I was looking at wireless SDIO cards from Spectec and
-Silex.  What manufacturers use the libertas/Marvell chipsets in SDIO
-Cards?  (or are they only available as modules?)
+On Mon, 2009-07-13 at 13:43 -0700, RafaÅ‚ MiÅ‚ecki wrote:
+> W dniu 13 lipca 2009 22:38 uÅ¼ytkownik reinette chatre
+> <reinette.chatre@intel.com> napisaÅ‚:
+> >> Probably I really should post link to bug report:
+> >> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004
+> >
+> > This bug was reported against 5100 series hardware and is not present in
+> > 4965. Even so, this bug was fixed in the driver and the patch has
+> > already been pushed upstream.
+> 
+> Great, thanks for clarifying. It was reported on 5100, reproduced on
+> 5300, so I was afraid also with my 4965 :)
+> 
+> If I may suggest something, it would be nice to keep current status in
+> bug report. I was waiting to see any commend about fixing driver of
+> resolving report by updating firmware.
 
-Thank you,
+I think the information you are asking for is captured in comments 16
+and 17.
 
-Rob
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004#c16
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004#c17
 
-On Fri, Jul 17, 2009 at 2:20 AM, Jonathan
-Cameron<Jonathan.Cameron@gmail.com> wrote:
-> Robert Emanuele wrote:
->> Greetings all,
->>
->> I'm trying to find out more information about the status of an SDIO
->> stack and SDIO devices in the kernel.  I see under drivers/mmc/ some
->> SDIO support.
->>
->> I'm evaluating the potential of getting a Wireless SDIO card to work
->> with the 2.6 kernel.  So far all I see in the kernel is support for an
->> SDIO UART.  There is a patch on sourceforge for an SDIO stack and
->> drivers from Atheros but that is for 2.6.18.  Is there current support
->> for other SDIO wireless devices in the kernel?
->>
-> There is pretty good support for the Marvell chips (sd8686 etc) in the
-> mainline
-> kernel. Take a look under drivers/net/wireless/libertas/
->
-> I've also copied in the linux-wireless list.
->
->
->
->
->
->
+Reinette
+
