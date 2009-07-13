@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51948 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbZGEVNT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 17:13:19 -0400
-Subject: [PATCH] cfg80211: fix giwrange
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dave <kilroyd@googlemail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:39037 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756769AbZGMRzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 13:55:07 -0400
+Subject: Re: nl80211 and wext interoperability
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <1247161696.22527.1.camel@johannes.local>
+References: <1247139797.2144.27.camel@johannes.local>
+	 <1247159625.28654.30.camel@mj>  <1247161696.22527.1.camel@johannes.local>
 Content-Type: text/plain
-Date: Sun, 05 Jul 2009 23:13:19 +0200
-Message-Id: <1246828399.4411.7.camel@johannes.local>
+Date: Mon, 13 Jul 2009 13:55:24 -0400
+Message-Id: <1247507724.4369.13.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit c4c496e49ddbf022e51adbd25cedd071329280db
-Author: David Kilroy <kilroyd@googlemail.com>
-Date:   Thu Jun 18 23:21:14 2009 +0100
+On Thu, 2009-07-09 at 19:48 +0200, Johannes Berg wrote:
+> On Thu, 2009-07-09 at 13:13 -0400, Pavel Roskin wrote:
+> 
+> > I think using random data is a problem by itself.  Are we exposing
+> > random pieces of kernel memory in probe requests?  That's bad.
+> 
+> You misunderstood. wpa_supplicant _explicitly_ tells us it _wants_ to
+> use that 32-byte random SSID. It's just like it telling us it wants to
+> use the ssid "foobar" or "Pavel's House" or ... I don't see what we can
+> do, other than actually take it seriously and at least attempt to
+> connect to that network.
 
-    cfg80211: Advertise ciphers via WE according to driver capability
-    
-    Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-    Acked-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+That was the idea, expect that this random BSSID/SSID combo will simply
+fail to be found in a scan, and either the card driver will just keep
+periodically scanning to find the AP until another request comes in, or
+they will eventually just give up and idle.  What it was meant to do was
+to stop the card from trying to keep re-associating to a previous AP now
+that the supplicant has terminated.  See my just-posted mail a bit up in
+this thread as to why.  WEXT sucks.
 
-unfortunately broke iwrange -- it used the variable c
-that needs to be 0 for the channel list.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-compat.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-05 23:10:33.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-07-05 23:10:37.000000000 +0200
-@@ -154,7 +154,7 @@ int cfg80211_wext_giwrange(struct net_de
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct iw_range *range = (struct iw_range *) extra;
- 	enum ieee80211_band band;
--	int c = 0;
-+	int i, c = 0;
- 
- 	if (!wdev)
- 		return -EOPNOTSUPP;
-@@ -201,7 +201,7 @@ int cfg80211_wext_giwrange(struct net_de
- 	range->avg_qual.noise = range->max_qual.noise / 2;
- 	range->avg_qual.updated = range->max_qual.updated;
- 
--	for (c = 0; c < wdev->wiphy->n_cipher_suites; c++) {
-+	for (i = 0; i < wdev->wiphy->n_cipher_suites; i++) {
- 		switch (wdev->wiphy->cipher_suites[c]) {
- 		case WLAN_CIPHER_SUITE_TKIP:
- 			range->enc_capa |= (IW_ENC_CAPA_CIPHER_TKIP |
-@@ -226,7 +226,6 @@ int cfg80211_wext_giwrange(struct net_de
- 	}
- 
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band ++) {
--		int i;
- 		struct ieee80211_supported_band *sband;
- 
- 		sband = wdev->wiphy->bands[band];
+Dan
 
 
