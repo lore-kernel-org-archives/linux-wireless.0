@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60127 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752845AbZGaS4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:56:06 -0400
-Subject: Re: [PATCH] compat-2.6:  Makefile: fixed test expressions for
- target install
-From: Pavel Roskin <proski@gnu.org>
-To: Joerg Albert <jal2@gmx.de>
+Received: from fg-out-1718.google.com ([72.14.220.152]:28420 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558AbZGMS3u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 14:29:50 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so725407fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 11:29:48 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Subject: Re: iwlwifi 4965 uCode available
+Date: Mon, 13 Jul 2009 20:29:52 +0200
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <4A733CDE.4060801@gmx.de>
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>
-	 <4A733CDE.4060801@gmx.de>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 14:56:04 -0400
-Message-Id: <1249066564.20276.3.camel@mj>
-Mime-Version: 1.0
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+References: <1247174482.17896.1304.camel@rc-desk> <200907121445.42289.helmut.schaa@gmail.com> <1247499979.17896.1556.camel@rc-desk>
+In-Reply-To: <1247499979.17896.1556.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907132029.53507.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-31 at 20:50 +0200, Joerg Albert wrote:
+Am Montag, 13. Juli 2009 schrieb reinette chatre:
+> On Sun, 2009-07-12 at 05:45 -0700, Helmut Schaa wrote:
+> > Am Donnerstag, 9. Juli 2009 schrieb reinette chatre:
+> > > Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
+> > > available for download from
+> > > http://intellinuxwireless.org/?n=Downloads
+> > 
+> > The new ucode seems to cause fw restarts every now and then (together
+> > with wireless-testing).
+> 
+> oh no ...
+> 
+> > 
+> > iwlagn 0000:10:00.0: Microcode SW error detected.  Restarting 0x82000000.
+> 
+> What is the status when such an error occurs? Can it recover on its own
+> or do you need to take action? What action is needed?
 
-> joerg@thinkpad:~$ echo $BASH_VERSION
-> 3.2.39(1)-release
-> joerg@thinkpad:~$ if [ -z "" && -z "" ]; then echo "both empty"; fi
-> bash: [: missing `]'
-> joerg@thinkpad:~$ if [ -z "" -a -z "" ]; then echo "both empty"; fi
-> both empty
-> joerg@thinkpad:~$ if [[ -z "" && -z "" ]]; then echo "both empty"; fi
-> both empty
-> joerg@thinkpad:~$
+It recovers automatically, no action required. Not sure if it has any
+negative impact on the connection. At least I did not notice anything yet.
 
-No, I didn't mean that.  I meant:
+> > I couldn't figure out how to reproduce this but it happened a few times
+> > now since I switched to the new ucode.
+> > 
+> > Should I load iwlagn with some special debug flags?
+> 
+> If your driver is compiled with CONFIG_IWLWIFI_DEBUG then you can pass a
+> debug flag to the module that will print a ucode event log when it
+> encounters a problem like this. As it will only print out the event log
+> when this error occurs you can safely turn this debugging on permanently
+> without risking a clutter of your logs. Later, if you know how to
+> reproduce is you can increase debugging to get more details about what
+> the driver is actually doing. The debug flag for _just_ the ucode event
+> log is 0x40000 (like "modprobe iwlagn debug=0x40000"). The 0x43fff is a
+> more general debug flag that helps with obtaining more information.
+> 
+> When you have this data - could you please submit a bug at
+> intellinuxwireless.org/bugzilla for us to be able to track it?
 
-if [ -z "" ] && [ -z "" ]; then echo "both empty"; fi
+Will do as soon as I find a way to reproduce it.
 
-> If the link for the man page of bash v1 on http://wwwbs.informatik.htw-dresden.de/fbs/bash/old.bash.html is correct,
-> that version supported -a in test.
-> Unfortunately [[ ... ]] was introduced after bash v1 (2.02 AFAIR).
-
-We should not rely on any bash features as /bin/sh may not be bash at
-all.
-
--- 
-Regards,
-Pavel Roskin
+Helmut
