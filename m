@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1800 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978AbZGEMFk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 08:05:40 -0400
-Date: Sun, 5 Jul 2009 08:05:15 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Hans Maes <Hans@bitnet.be>, linux-wireless@vger.kernel.org
-Subject: Re: current status of 802.11s mesh in ath5k ?
-Message-ID: <20090705120515.GA6329@hash.localnet>
-References: <4A3B5B11.7060103@bitnet.be> <45e8e6c40906191000i2e74e06btee7313c5c30bc6a2@mail.gmail.com> <b6c5339f0906191019ve40014dp98af5ada875e2a24@mail.gmail.com> <45e8e6c40906191042k5c96d3a6wff85358da22a7b92@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <45e8e6c40906191042k5c96d3a6wff85358da22a7b92@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:44340 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756972AbZGMUOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:14:15 -0400
+Subject: Re: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
+From: reinette chatre <reinette.chatre@intel.com>
+To: "timg@tpi.com" <timg@tpi.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A5B9388.4030208@tpi.com>
+References: <20090713190803.9A70BF8D2C@sepang.rtg.net>
+	 <1247515401.17896.1630.camel@rc-desk>  <4A5B9388.4030208@tpi.com>
+Content-Type: text/plain
+Date: Mon, 13 Jul 2009 13:14:14 -0700
+Message-Id: <1247516054.17896.1634.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 19, 2009 at 10:42:22AM -0700, Andrey Yurovsky wrote:
-> > I have been working on a patch to rework the beaconing, namely using
-> > bss_conf->enable_beacon and calling beacon_config whenever the beacon
-> > interval or beacon changes, that might fix it but I'm not too familiar
-> > with mesh details to say.
+Hi Tim,
+
+On Mon, 2009-07-13 at 13:05 -0700, Tim Gardner wrote:
+> reinette chatre wrote:
+> > Hi Tim,
+> > 
+> > On Mon, 2009-07-13 at 12:08 -0700, Tim Gardner wrote:
+> >> From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
+> >> From: Tim Gardner <tim.gardner@canonical.com>
+> >> Date: Mon, 13 Jul 2009 12:53:32 -0600
+> >> Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
+> >>
+> >> Added a missing parameter in the macro invocation to correct a
+> >> compile error when CONFIG_IWLWIFI_DEBUG is enabled.
+> >>
+> >> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+> >> ---
+> >>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> >> index 2564288..67332fb 100644
+> >> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> >> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> >> @@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+> >>  	}
+> >>  
+> >>  	if (scan->channel_count == 0) {
+> >> -		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
+> >> +		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
+> >>  		goto done;
+> >>  	}
+> >>  
+> > 
+> > On which code did you base this patch?
+> > 
+> > Reinette
+> > 
+> > 
 > 
-> 'looking forward to that patch.  From the driver side, there's not
-> much difference between mesh beaconing and AP or IBSS beaconing. 
+> Head of Linus' tree, but I see that its already fixed in
+> wireless-testing. I guess I pulled the trigger too soon.
 
-Can you check whether my most recent patch (I think it was 2/5 in the
-ath5k series) helps?  I looked at mac80211 and it seems we set
-enable_beacon properly in mesh mode so that should configure beaconing
-to start.
+I just pulled the latest from Linus but cannot see this problem. We also
+do not have anything related to this pending for 2.6.31.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Reinette
+
 
