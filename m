@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36691
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755473AbZG1Sdq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 14:33:46 -0400
-Date: Tue, 28 Jul 2009 11:33:53 -0700 (PDT)
-Message-Id: <20090728.113353.08715297.davem@davemloft.net>
-To: joe@perches.com
-Cc: linville@tuxdriver.com, julia@diku.dk, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Add networking wireless drivers section
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1248804397.18284.5.camel@Joe-Laptop.home>
-References: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
-	<20090728.103044.179053537.davem@davemloft.net>
-	<1248804397.18284.5.camel@Joe-Laptop.home>
+Received: from mga02.intel.com ([134.134.136.20]:51618 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751161AbZGMS4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 14:56:41 -0400
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: John Ranson <ranson@analager.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <bcd1ba70907131143m2940444ch372ae0bc01417bc4@mail.gmail.com>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <200907121445.42289.helmut.schaa@gmail.com>
+	 <1247499979.17896.1556.camel@rc-desk>
+	 <bcd1ba70907131143m2940444ch372ae0bc01417bc4@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 13 Jul 2009 11:56:40 -0700
+Message-Id: <1247511400.17896.1625.camel@rc-desk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Tue, 28 Jul 2009 11:06:37 -0700
+John,
 
-> On Tue, 2009-07-28 at 10:30 -0700, David Miller wrote:
->> Wireless patches need to be CC:'d to linux-wireless so that
->> John Linville can notice and pick them up
+On Mon, 2009-07-13 at 11:43 -0700, John Ranson wrote:
+> I am also seeing frequent loss of association and firmware restarts
+> with the new firmware.  On occasion, I can't recover even when I
+> reload the driver. Admittedly, I am using an old driver right now
+> (2.6.29, I think).
+
+The better restart work was added in 2.6.31 I think, so it is only in
+the recent driver that you will have a smooth recovery after a failure.
+You may thus be seeing the same problem as Helmut, with him running the
+recent restart code.
+
 > 
-> Signed-off-by: Joe Perches <joe@perches.com>
+> I'm going to upgrade to 2.6.30.1 with the latest compat-wireless. I'll
+> file a bug if things continue as they are.
 
-Why not just create a plain "WIRELESS" umbrella entry
-that contains all of drivers/net/wireless, net/mac80211,
-and net/wireless?
+Even if the restart code gets you up and running smoothly after a
+failure, please do submit a bug report so that we can look into this.
+
+
+> Thank you very much for getting the new firmware out!
+
+
+Reinette
+
+
