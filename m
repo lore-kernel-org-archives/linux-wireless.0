@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:56201 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbZGPJiw (ORCPT
+Received: from ey-out-1920.google.com ([74.125.78.147]:30300 "EHLO
+	ey-out-1920.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbZGMUaZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:38:52 -0400
-Received: by bwz28 with SMTP id 28so1933727bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 02:38:51 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Further improvements to the software scan implementation
-Date: Thu, 16 Jul 2009 11:38:58 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <mcgrof@gmail.com>
+	Mon, 13 Jul 2009 16:30:25 -0400
+Received: by ey-out-1920.google.com with SMTP id 3so490566eyh.36
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 13:30:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907161138.58874.helmut.schaa@gmail.com>
+In-Reply-To: <1247182010.17896.1344.camel@rc-desk>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+	 <1247182010.17896.1344.camel@rc-desk>
+Date: Mon, 13 Jul 2009 22:30:24 +0200
+Message-ID: <b170af450907131330o7eda50bakd6119f47af35d564@mail.gmail.com>
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+W dniu 10 lipca 2009 01:26 użytkownik reinette chatre
+<reinette.chatre@intel.com> napisał:
+>> Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
+>> estimate would be nice to known. This month? This year?
+>
+> I am not aware of any scheduled date for a new release. Are there
+> critical issues that you are aware of that requires a new uCode?
 
-as already discussed with Johannes we can further optimize the scan
-implementation by allowing (on an active channel) to send probes as
-soon as any other frame is received (and updated the NAV) instead of
-ever waiting 30ms.
+I noticed new bug report about firmware failure on scp (using new
+firmware). I use ssh/sftp/scp a lot, so it doesn't sound nice to me.
 
-Another optimization I thought of while reading [1] would be to take the
-same approach as Intel in their ucode. If a frame is received while
-scanning a passive channel switch to active scan mode and send out probes.
-That should allow us to shorten the time needed to stay on that channel.
-Luis, do you think this is ok in regard to regulatory restrictions?
+Moreover it seems to be quite reproductable, so I'm scared of hittint
+it quite often.
 
-Thanks,
-Helmut
-
-[1] http://sourceforge.net/mailarchive/forum.php?thread_name=200907061428.55840.jung%40ecos.de&forum_name=ipw3945-devel
+-- 
+Rafał Miłecki
