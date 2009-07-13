@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:38828 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755512AbZGML5Z (ORCPT
+Received: from pne-smtpout2-sn1.fre.skanova.net ([81.228.11.159]:32924 "EHLO
+	pne-smtpout2-sn1.fre.skanova.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754919AbZGMUYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 07:57:25 -0400
-Received: by qyk30 with SMTP id 30so597817qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 04:57:23 -0700 (PDT)
-Message-ID: <4A5B211D.3040905@gmail.com>
-Date: Mon, 13 Jul 2009 07:57:17 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Mon, 13 Jul 2009 16:24:53 -0400
+From: "Lars Ericsson" <Lars_Ericsson@telia.com>
+To: "'Ivo van Doorn'" <ivdoorn@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>
+Subject: RT61 antenna diversity in 2.6.30
+Date: Mon, 13 Jul 2009 22:24:50 +0200
+Message-ID: <0DC66442F4FF4076964868A5ECAB9790@gotws1589>
 MIME-Version: 1.0
-To: Tim Schneider <schneid5@cs.uni-bonn.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Reading the RSSI from a Kernel Module
-References: <0D620DB9-0DF4-41BB-8686-5BC910F88C79@cs.uni-bonn.de> <4A5ADB52.3080401@gmail.com> <2E605895-C629-47C5-8DF8-DF012A3749EB@cs.uni-bonn.de>
-In-Reply-To: <2E605895-C629-47C5-8DF8-DF012A3749EB@cs.uni-bonn.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Schneider wrote:
->
-> Am 13.07.2009 um 08:59 schrieb Richard Farina:
->> I don't mean to make this a flame so please do not take it that way.  
->> How exactly do you expect to get the RECEIVED Signal Strength 
->> indication for a packet which you are SENDING? If you send it, you 
->> don't receive it...
->>
->> Just my 0.02
->>
->> -Rick Farina
->
-> Hi Rick,
->
-> as far, as I understood, the RSSI-Mechanism also displays the signal 
-> strength of the just sent package. I figured there was some way the 
-> MAC-Layer transported that information, but you're right, I could be 
-> mistaken. Anyways, since I'm trying to implement a TCP Algorithm, i 
-> definitely have a  two-way connection. Assuming, that the route back 
-> is going to be the same as it was on the way there (which basically 
-> should be true, based on the Routing algorithms we're using in our 
-> wireless mesh network), I could just use the RSSI Value of the 
-> received ACK.
->
-Any RSSI on a sent packet will be a calculated number not an observed 
-number and as such it will be completely pointless for any kind of rate 
-control algorithm.  Assuming that the card could actually receive the 
-packets it is sending (which it can't) then you would be observing a 
-24dBm signal (for instance) with 0 patch loss and your RSSI would be at 
-or above max.  Realistically you can assume that every packet you sent 
-has a max RSSI on your end because you are the one transmitting it.  
-Now, if you want to know what the RSSI on the receiver side is that is a 
-completely different question, one which you cannot answer at all. When 
-you send a packet you do not have the good fortune to know what RSSI the 
-receiver got.  You can roughly assume based on your RSSI when you get an 
-ACK, but honestly that isn't even close to correct because every packet 
-has a very unique experience in the air and you cannot assume things 
-like the same tx power and rx sensitivity will be the same on both 
-ends.  There is some 802.11 protocol (the letter eludes me at present) 
-which is in draft form which adds information to packets so that both 
-ends know each other's RSSI, but I have never seen it implemented 
-anywhere yet.
+Hi Ivo,
 
-I advise you keep the discussion on list as I am by no means an expert 
-and many people much better at this than I may respond.
+I recently moved from 2.6.26 to 2.6.30 with a HW that do 
+SW antenna diversity with .26 but not with .30
 
--Rick Farina
-> Regards,
->
-> Tim Schneider
->
->
+I have found two problems:
+1) The rt2x00mac_config() calls rt2x00lib_config_antenna() and reset the
+rt2x00dev->default_ant.
+2) The rt2x00lib_antenna_diversity_sample() does not update the sampled
+antenna rssi.
+
+I have applied the following patches to correct the problems:
+
+1)
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c	2009-07-13
+21:48:45.000000000 +0200
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c	2009-07-13
+21:52:42.000000000 +0200
+@@ -146,8 +151,13 @@ static void rt2x00lib_antenna_diversity_
+ {
+ 	struct link_ant *ant = &rt2x00dev->link.ant;
+ 	struct antenna_setup new_ant;
+-	int sample_a = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+ANTENNA_A);
+-	int sample_b = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+ANTENNA_B);
++	int rssi_curr, sample_a, sample_b;
++			
++	rssi_curr = rt2x00link_antenna_get_link_rssi(rt2x00dev);
++	rt2x00link_antenna_update_rssi_rx_history(rt2x00dev, rssi_curr);
++	
++	sample_a = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+ANTENNA_A);
++	sample_b = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+ANTENNA_B);
+ 
+ 	memcpy(&new_ant, &ant->active, sizeof(new_ant));
+---
+
+2)
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-07-13
+21:51:26.000000000 +0200
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-07-13
+21:54:28.000000000 +0200
+@@ -375,10 +375,12 @@ int rt2x00mac_config(struct ieee80211_hw
+ 		 * diversity. But for non-diversity configurations, we need
+ 		 * to have configured the correct state now.
+ 		 */
+-		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED)
++		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
++			rt2x00dev->link.ant.active = rt2x00dev->default_ant;
+ 			rt2x00lib_config_antenna(rt2x00dev,
+-						 &rt2x00dev->default_ant);
+-
++
+&rt2x00dev->link.ant.active);
++		}
++		
+ 		/* Turn RX back on */
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
+ 	} else {
+
+
+Regards
+Lars
 
