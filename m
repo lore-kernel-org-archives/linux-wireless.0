@@ -1,97 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:34721 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbZGMSna convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753562AbZGMWi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 14:43:30 -0400
-Received: by fxm18 with SMTP id 18so2376369fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 11:43:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1247499979.17896.1556.camel@rc-desk>
-References: <1247174482.17896.1304.camel@rc-desk>
-	 <200907121445.42289.helmut.schaa@gmail.com>
-	 <1247499979.17896.1556.camel@rc-desk>
-Date: Mon, 13 Jul 2009 11:43:28 -0700
-Message-ID: <bcd1ba70907131143m2940444ch372ae0bc01417bc4@mail.gmail.com>
-Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
-From: John Ranson <ranson@analager.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 13 Jul 2009 18:38:29 -0400
+Message-Id: <20090713223413.628454212@sipsolutions.net>
+References: <20090713223333.042733013@sipsolutions.net>
+Date: Tue, 14 Jul 2009 00:33:36 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] mac80211: allow using network namespaces
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am also seeing frequent loss of association and firmware restarts
-with the new firmware.  On occasion, I can't recover even when I
-reload the driver. Admittedly, I am using an old driver right now
-(2.6.29, I think).
+This finally opens up the ability to put mac80211 devices
+into different network namespaces. As long as you don't
+have sysfs, that is.
 
-I'm going to upgrade to 2.6.30.1 with the latest compat-wireless. I'll
-file a bug if things continue as they are.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Semantically, this depends on both
+  mac80211: cooperate more with network namespaces
+and
+  cfg80211: make aware of net namespaces
 
-Thank you very much for getting the new firmware out!
+but in the code only the latter dependency is obvious,
+so I'm sending it as a separate patch.
 
-Cheers,
+ net/mac80211/iface.c |    1 +
+ net/mac80211/main.c  |    1 +
+ 2 files changed, 2 insertions(+)
 
-John
+--- wireless-testing.orig/net/mac80211/main.c	2009-07-14 00:29:34.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-07-14 00:30:10.000000000 +0200
+@@ -620,6 +620,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 	if (!wiphy)
+ 		return NULL;
+ 
++	wiphy->netnsok = true;
+ 	wiphy->privid = mac80211_wiphy_privid;
+ 
+ 	/* Yes, putting cfg80211_bss into ieee80211_bss is a hack */
+--- wireless-testing.orig/net/mac80211/iface.c	2009-07-14 00:30:05.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-07-14 00:30:10.000000000 +0200
+@@ -787,6 +787,7 @@ int ieee80211_if_add(struct ieee80211_lo
+ 			    name, ieee80211_if_setup);
+ 	if (!ndev)
+ 		return -ENOMEM;
++	dev_net_set(ndev, wiphy_net(local->hw.wiphy));
+ 
+ 	ndev->needed_headroom = local->tx_headroom +
+ 				4*6 /* four MAC addresses */
 
-On Mon, Jul 13, 2009 at 8:46 AM, reinette
-chatre<reinette.chatre@intel.com> wrote:
-> Hi Helmut,
->
-> On Sun, 2009-07-12 at 05:45 -0700, Helmut Schaa wrote:
->> Am Donnerstag, 9. Juli 2009 schrieb reinette chatre:
->> > Version 228.61.2.24 of uCode for Intel Wireless WiFi Link 4965AGN is now
->> > available for download from
->> > http://intellinuxwireless.org/?n=Downloads
->>
->> The new ucode seems to cause fw restarts every now and then (together
->> with wireless-testing).
->
-> oh no ...
->
->>
->> iwlagn 0000:10:00.0: Microcode SW error detected.  Restarting 0x82000000.
->
-> What is the status when such an error occurs? Can it recover on its own
-> or do you need to take action? What action is needed?
->
->>
->> I couldn't figure out how to reproduce this but it happened a few times
->> now since I switched to the new ucode.
->>
->> Should I load iwlagn with some special debug flags?
->
-> If your driver is compiled with CONFIG_IWLWIFI_DEBUG then you can pass a
-> debug flag to the module that will print a ucode event log when it
-> encounters a problem like this. As it will only print out the event log
-> when this error occurs you can safely turn this debugging on permanently
-> without risking a clutter of your logs. Later, if you know how to
-> reproduce is you can increase debugging to get more details about what
-> the driver is actually doing. The debug flag for _just_ the ucode event
-> log is 0x40000 (like "modprobe iwlagn debug=0x40000"). The 0x43fff is a
-> more general debug flag that helps with obtaining more information.
->
-> When you have this data - could you please submit a bug at
-> intellinuxwireless.org/bugzilla for us to be able to track it?
->
-> Thank you very much
->
-> Reinette
->
->
->
-> ------------------------------------------------------------------------------
-> Enter the BlackBerry Developer Challenge
-> This is your chance to win up to $100,000 in prizes! For a limited time,
-> vendors submitting new applications to BlackBerry App World(TM) will have
-> the opportunity to enter the BlackBerry Developer Challenge. See full prize
-> details at: http://p.sf.net/sfu/Challenge
-> _______________________________________________
-> Ipw3945-devel mailing list
-> Ipw3945-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
->
+-- 
+
