@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:54419 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089AbZGRPqO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 11:46:14 -0400
-Received: by ewy26 with SMTP id 26so1472976ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 08:46:12 -0700 (PDT)
-Message-ID: <4A61EE43.4060003@tuffmail.co.uk>
-Date: Sat, 18 Jul 2009 16:46:11 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:60556 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756769AbZGMUvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:51:53 -0400
+Subject: Re: nl80211 and wext interoperability
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Rfkill rewrite
-Content-Type: text/plain; charset=UTF-8
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1247512484.30003.0.camel@johannes.local>
+References: <1247139797.2144.27.camel@johannes.local>
+	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
+	 <1247163342.22527.2.camel@johannes.local>
+	 <1247507618.4369.11.camel@localhost.localdomain>
+	 <1247507677.4166.27.camel@johannes.local>
+	 <1247512206.4369.67.camel@localhost.localdomain>
+	 <1247512484.30003.0.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 13 Jul 2009 16:52:05 -0400
+Message-Id: <1247518325.4369.132.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sat, 2009-04-18 at 14:29 +0100, Alan Jenkins wrote:
->
->> API nit:
->> 
->>  * This function tells the rfkill core that the device is capable of
->>  * remembering soft blocks (which it is notified of via the set_block
->>  * method) -- this means that the driver may ignore the return value
->>  * from rfkill_set_hw_state().
->> 
->> Doesn't this conflict with the declaration of rfkill_set_hw_state() as
->> __must_check?
->
-> Yeah, in a way it does, but I figure it's rare enough that those who
-> really can ignore it can write
-> 	(void) rfkill_set_hw_state(...)
->
-> Don't really have a strong opinion, it just seemed the mistake in the
-> other direction would be more common.
+On Mon, 2009-07-13 at 21:14 +0200, Johannes Berg wrote:
+> On Mon, 2009-07-13 at 15:10 -0400, Dan Williams wrote:
+> > On Mon, 2009-07-13 at 19:54 +0200, Johannes Berg wrote:
+> > > On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
+> > > 
+> > > > Mainly because there's no way to tell WEXT drivers to "stop whatever
+> > > > you're doing and just be idle"...
+> > > > 
+> > > > The supplicant clears out the keys on TERM anyway, and in some cases
+> > > > (iwlagn) the driver will keep trying to reassociate internally
+> > > 
+> > > Seems unlikely, ITYM ipw?
+> > 
+> > Nope.  I saw this behavior with iwlagn (both 3945 and 4965) when I was
+> > doing all that hidden stuff back in April with 2.6.27 kernels.  Might be
+> > different in very recent kernels?
+> 
+> That doesn't sound right, to the best of my knowledge the _driver_ has
+> no chance to try to associate, and mac80211 didn't.
 
-It seems my GCC has a stronger definition of "must" than you do :-).  I can't get rid of the warning by casting it to void.  So I'm not sure __must_check is really appropriate here.
+For some reason it did.  I can't figure out why it would keep doing so,
+but the supplicant was dead, and the driver would try to reassociate
+every time the AP kicked it off wtih "AP denied association (code=13)"
+becuase the supplicant already cleared the keys and IEs but not the
+SSID.
 
-drivers/platform/x86/hp-wmi.c: In function ‘hp_wmi_bios_setup’:
-drivers/platform/x86/hp-wmi.c:467: warning: ignoring return value of ‘rfkill_set_hw_state’, declared with attribute warn_unused_result
+All because we can't tell WEXT to just stop doing anything and sit
+there.
 
-$ grep -n rfkill_set_hw_state drivers/platform/x86/hp-wmi.c
-467:            (void) rfkill_set_hw_state(wifi_rfkill,
-
-$ gcc -v
-Using built-in specs.
-Target: x86_64-linux-gnu
-Configured with: ../src/configure -v --enable-languages=c,c++,fortran,objc,obj-c++,treelang --prefix=/usr --enable-shared --with-system-zlib --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --enable-nls --with-gxx-include-dir=/usr/include/c++/4.2 --program-suffix=-4.2 --enable-clocale=gnu --enable-libstdcxx-debug --enable-objc-gc --enable-mpfr --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
-Thread model: posix
-gcc version 4.2.4 (Ubuntu 4.2.4-1ubuntu3)
+Dan
 
 
-Thanks
-Alan
