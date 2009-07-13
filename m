@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239AbZGWJlK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 05:41:10 -0400
-Subject: Re: Update for regulatory database on 5GHz band for Thailand (TH)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>
-In-Reply-To: <200907231031.48801.hs4233@mail.mn-solutions.de>
-References: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
-	 <15B47C78534E094AA9A41F58FB8D74F30147BE67876F@SC1EXMB-MBCL.global.atheros.com>
-	 <43e72e890907220941j70f5ca98g5af9d9372eeef2e@mail.gmail.com>
-	 <200907231031.48801.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-vzEIwztdPodsO8+kXFc1"
-Date: Thu, 23 Jul 2009 11:40:36 +0200
-Message-Id: <1248342036.19121.11.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:51794 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754145AbZGMHJV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 03:09:21 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 00:09:21 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/3] ath9k: Remove pointless ath9k_ps_restore() in ath_detach()
+Date: Mon, 13 Jul 2009 12:32:07 +0530
+Message-ID: <1247468527-5097-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1247468527-5097-2-git-send-email-vasanth@atheros.com>
+References: <1247468527-5097-1-git-send-email-vasanth@atheros.com>
+ <1247468527-5097-2-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
---=-vzEIwztdPodsO8+kXFc1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2009-07-23 at 10:31 +0200, Holger Schurig wrote:
-> >         (5170 - 5250 @ 20), (3, 17)
-> >         (5250 - 5330 @ 20), (3, 20), DFS
->=20
-> Is it an error to have the same frequency listed twice (once in=20
-> the "from" column, once in the "till" column?  And if yes, does=20
-> frequency 5250 get's assigned "(3, 17)" or "(3, 20), DFS" ???
-
-It's not, they can even overlap, and probably need to in this case.
-
-See the discussion about new regulatory rule interpretation a couple of
-months ago.
-
-johannes
-
---=-vzEIwztdPodsO8+kXFc1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKaDAQAAoJEODzc/N7+Qma7jUQAK7Su58PffPZLjyMlB6ltHzv
-xwrtFLJaWC9AYEGusWvdR7vGQzOAoGMwG9rc6cJxGCvdmthBqMVujw0cZxFtbL6w
-5PgSpILAnXvN1cefE2cvtEmT1V2jwB/EIklb8gH3Ot42iR3mQx6FWLL7BmItKIR0
-lWRZ4KKxkz5Olw9cR2BPeGflNu66/sulquVLbYAEbvJ6qr7Dl1uB07ALHBX3ghjm
-X7snte/zY3Mp4pQA11NkS0im/qFyl3kbPHraihDZ9AsuVm1SLrEIH8Dv7VA+lEJX
-0vNRQCiDAtQY7uvnjUkLu18cOO8aWV0KbyeCYMiscvsj538/A1dvXlwPc7VB25Te
-A1zwwyIVdAgdDOhjne6xGPgiu9TzMmxUhiCH7F2DGDWqjDqUJ5+4YD2/qz64R3/2
-TGW6MhJJmRlJ+SawJIoNDL2RS0jkysIb0t/H6IKLkTQXdrHQlM71NgoR4JZzGEMw
-CXJJ4fa6W89BsuRNBUL0eHkRfKc0jjJfME0key00KzhPU0ksGNmjsRG6UoLVm+nA
-eHf97fonpct2wZAOinasInYO74OSgoVK0lz9EwAMHNre4k4KoTVaoxjMHKpJ4BFC
-Hhjby/uOwRoKN0lLYnuMr9TVRfTROiEe0FKk5Ds1zk2riCBGsEUfqEixhos+WHi4
-pkYBYtIKqjTdExQ4j6zF
-=A9qd
------END PGP SIGNATURE-----
-
---=-vzEIwztdPodsO8+kXFc1--
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 961b0ce..16e5f6e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1284,7 +1284,6 @@ void ath_detach(struct ath_softc *sc)
+ 
+ 	ath9k_hw_detach(sc->sc_ah);
+ 	ath9k_exit_debug(sc);
+-	ath9k_ps_restore(sc);
+ }
+ 
+ static int ath9k_reg_notifier(struct wiphy *wiphy,
+-- 
+1.5.5.1
 
