@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:40931 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123AbZG2VH3 (ORCPT
+Received: from mail-pz0-f197.google.com ([209.85.222.197]:50544 "EHLO
+	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756865AbZGMUOH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 17:07:29 -0400
-Received: by ewy10 with SMTP id 10so297353ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 14:07:28 -0700 (PDT)
+	Mon, 13 Jul 2009 16:14:07 -0400
+Received: by pzk35 with SMTP id 35so1010885pzk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 13:14:07 -0700 (PDT)
+From: Mackenzie Morgan <macoafi@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn 0000:03:00.0: Can not allocate SKB buffers
+Date: Mon, 13 Jul 2009 16:13:51 -0400
 MIME-Version: 1.0
-In-Reply-To: <4A709E55.2070909@candelatech.com>
-References: <200907280838.42541@fortytwo.ch>
-	 <40f31dec0907281653g63375736id57f547a8ba12cad@mail.gmail.com>
-	 <200907291211.21133@fortytwo.ch> <4A709E55.2070909@candelatech.com>
-Date: Thu, 30 Jul 2009 00:07:28 +0300
-Message-ID: <40f31dec0907291407p18d2a645u1736ecd4f0258a8a@mail.gmail.com>
-Subject: Re: ath5k connection loss (failed to wakeup the MAC Chip)
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Adrian von Bidder <avbidder@fortytwo.ch>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed;
+  boundary="nextPart1288259.OmONIKHvYH";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200907131614.02132.macoafi@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/29 Ben Greear <greearb@candelatech.com>:
-> I'm not sure if it helps, but if I:
->
-> load ath5k and let some stations associate (I'm testing virtual
-> STA logic)
->
-> .. wait a bit ...
->
-> rmmod ath5k; modprobe ath5k
->
-> then it fails to wakeup the MAC chip every time.
->
-> But, if I then wait a few seconds, and repeat the rmmod/modprobe commands,
-> then it wakes
-> up and works fine.
->
-> I'm running a hacked kernel (and ath5k/wifi stack), so could be something
-> I'm doing wrong, but just maybe it will give you a reproducible test
-> case...
->
-> Thanks,
-> Ben
->
+--nextPart1288259.OmONIKHvYH
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Patch on the way ;-)
+I have the error listed in the subject repeating over and over in my syslog=
+=2E =20
+Ubuntu's kernel team has daily builds of Linus's tree, and I'm using today'=
+s=20
+(13 July 2009) on amd64.  top is also showing iwlagn with very high CPU usa=
+ge. =20
+I'm wondering if these are known issues.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+I have an Intel 4965 with SSID 8086:1100, and I'm using 802.11g with WPA2 a=
+t=20
+the moment (in case that's relevant).
+
+=2D-=20
+Mackenzie Morgan
+http://ubuntulinuxtipstricks.blogspot.com
+apt-get moo
+
+--nextPart1288259.OmONIKHvYH
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEABECAAYFAkpblYAACgkQojm3DbyNMmkRlQCgmL5VDoC1JWVy7C7iWG3ycEvm
+27AAoN0T4Wk52ZHW0/fmyalhCMcEs7L4
+=PB4x
+-----END PGP SIGNATURE-----
+
+--nextPart1288259.OmONIKHvYH--
