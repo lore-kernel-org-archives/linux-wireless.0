@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:38343 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751928AbZGWKNk (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:52658 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757116AbZGMUdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 06:13:40 -0400
-Received: by mail-fx0-f218.google.com with SMTP id 18so715131fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:13:40 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 2/7] mac80211: advance the state machine immediately if no
-	delay is needed
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Date: Thu, 23 Jul 2009 12:13:48 +0200
-Message-ID: <20090723101348.5147.92831.stgit@localhost.localdomain>
-In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
-References: <20090723100732.5147.73989.stgit@localhost.localdomain>
+	Mon, 13 Jul 2009 16:33:08 -0400
+Message-ID: <4A5B99FD.5030505@gmail.com>
+Date: Mon, 13 Jul 2009 22:33:01 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: reinette chatre <reinette.chatre@intel.com>
+CC: "Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Linux kernel mailing list <linux-kernel@vger.kernel.org>
+Subject: Re: iwl: potential deadlock?
+References: <4A5B8C60.9000600@gmail.com> <1247516320.17896.1640.camel@rc-desk>
+In-Reply-To: <1247516320.17896.1640.camel@rc-desk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of queueing the scan work again without delay just process the
-next state immediately.
-    
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+On 07/13/2009 10:18 PM, reinette chatre wrote:
+> On Mon, 2009-07-13 at 12:34 -0700, Jiri Slaby wrote:
+>> we found a potential deadlock in iwl code by our tool.
+> 
+> What tool is this?
 
- net/mac80211/scan.c |   24 +++++++++++++++---------
- 1 files changed, 15 insertions(+), 9 deletions(-)
+It's called stanse[1], we still work on it.
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 71500f1..db122e4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -587,15 +587,21 @@ void ieee80211_scan_work(struct work_struct *work)
- 		return;
- 	}
- 
--	switch (local->scan_state) {
--	case SCAN_SET_CHANNEL:
--		if (ieee80211_scan_state_set_channel(local, &next_delay))
--			return;
--		break;
--	case SCAN_SEND_PROBE:
--		ieee80211_scan_state_send_probe(local, &next_delay);
--		break;
--	}
-+	/*
-+	 * as long as no delay is required advance immediately
-+	 * without scheduling a new work
-+	 */
-+	do {
-+		switch (local->scan_state) {
-+		case SCAN_SET_CHANNEL:
-+			if (ieee80211_scan_state_set_channel(local, &next_delay))
-+				return;
-+			break;
-+		case SCAN_SEND_PROBE:
-+			ieee80211_scan_state_send_probe(local, &next_delay);
-+			break;
-+		}
-+	} while (next_delay == 0);
- 
- 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
- 			   next_delay);
+>> iwl_update_tkip_key()
+>> -> spin_lock_irqsave(&priv->sta_lock)
+>> -> iwl_send_add_sta()
+> 
+> iwl_send_add_sta() is called here with flags = CMD_ASYNC
+> 
+> In iwl_send_add_sta() we have:
+> 	if (ret || (flags & CMD_ASYNC))
+> 		return ret;
 
+Yes, you're right, indeed. Thanks for the explanation.
+
+[1] http://iti.fi.muni.cz/stanse/
