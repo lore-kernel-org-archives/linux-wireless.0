@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:47354 "EHLO ciao.gmane.org"
+Received: from mail.tpi.com ([70.99.223.143]:4006 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932664AbZGPQkB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:40:01 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MRTzz-0000G3-B5
-	for linux-wireless@vger.kernel.org; Thu, 16 Jul 2009 16:40:00 +0000
-Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 16:39:59 +0000
-Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 16:39:59 +0000
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-Date: Thu, 16 Jul 2009 17:39:47 +0100
-Message-ID: <wf63dsmvjg.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers> <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1754942AbZGMUFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:05:33 -0400
+Message-ID: <4A5B9388.4030208@tpi.com>
+Date: Mon, 13 Jul 2009 14:05:28 -0600
+From: Tim Gardner <timg@tpi.com>
+Reply-To: timg@tpi.com
+MIME-Version: 1.0
+To: reinette chatre <reinette.chatre@intel.com>
+CC: "Zhu, Yi" <yi.zhu@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
+References: <20090713190803.9A70BF8D2C@sepang.rtg.net> <1247515401.17896.1630.camel@rc-desk>
+In-Reply-To: <1247515401.17896.1630.camel@rc-desk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@gmail.com>
-writes:
-
-> On Thu, Jul 16, 2009 at 1:02 AM, Jon
-> Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+reinette chatre wrote:
+> Hi Tim,
+> 
+> On Mon, 2009-07-13 at 12:08 -0700, Tim Gardner wrote:
+>> From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
+>> From: Tim Gardner <tim.gardner@canonical.com>
+>> Date: Mon, 13 Jul 2009 12:53:32 -0600
+>> Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
 >>
->> A machine I want to set up as an AP has only PCI express slots free...
->
-> I'd recommend ath9k.
+>> Added a missing parameter in the macro invocation to correct a
+>> compile error when CONFIG_IWLWIFI_DEBUG is enabled.
+>>
+>> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+>> ---
+>>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> index 2564288..67332fb 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+>> @@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
+>>  	}
+>>  
+>>  	if (scan->channel_count == 0) {
+>> -		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
+>> +		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
+>>  		goto done;
+>>  	}
+>>  
+> 
+> On which code did you base this patch?
+> 
+> Reinette
+> 
+> 
 
-> http://wireless.kernel.org/en/users/Drivers/ath9k
+Head of Linus' tree, but I see that its already fixed in
+wireless-testing. I guess I pulled the trigger too soon.
 
-Thanks, but I've seen that page and "products with supported ath9k
-cards" points to a page that lists "Laptops with ath9k cards" (I'm
-looking for PCIe, not mini-PCIe) and "APs with ath9k cards", not "ath9k
-cards". Before I can buy a card, I need to know what it is called in the
-shops (on-line or otherwise), not what chipset it has.
-
-I realise this is the manufacturer's fault, but this is a perennial
-problem for Linux users who want to buy an new card for something: "OK,
-I want something with such-and-such a chipset, but the on-line shops
-just don't say what the chipset is.
-
+rtg
 -- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
-http://www.chaos.org.uk/~jf/Stuff-I-dont-want.html  (updated 2009-01-31)
-
+Tim Gardner timg@tpi.com www.tpi.com
+OR 503-601-0234 x102 MT 406-443-5357
