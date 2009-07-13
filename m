@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37099 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400AbZGOL7R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 07:59:17 -0400
-Subject: Re: [PATCH 01/21] mac80211: drop frames for sta with no valid rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-	 <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H29o7tzm8VWSNYJDaQWq"
-Date: Wed, 15 Jul 2009 13:58:41 +0200
-Message-Id: <1247659121.2477.1.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:51793 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754145AbZGMHJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 03:09:19 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 00:09:19 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/3] ath9k: Handle tx desc shortage more appropriately
+Date: Mon, 13 Jul 2009 12:32:06 +0530
+Message-ID: <1247468527-5097-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1247468527-5097-1-git-send-email-vasanth@atheros.com>
+References: <1247468527-5097-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Update tx BA window and complete the frame as failed
+one if we can't clone the holding descriptor due to
+unavailability of descriptors.
 
---=-H29o7tzm8VWSNYJDaQWq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
 
-On Tue, 2009-07-14 at 20:13 -0400, Luis R. Rodriguez wrote:
-
-> +	if (unlikely((tx->local->sw_scanning) &&
-> +	    (sta_flags & WLAN_STA_ASSOC) &&
-> +	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
-> +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-> +		printk(KERN_DEBUG "%s: dropped data frame -- no "
-> +		       "supported rate for station %pM on %c GHz band\n",
-> +		       tx->dev->name, hdr->addr1,
-> +		       tx->channel->band ? '5' : '2');
-> +#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
-> +		WARN_ON(1);
-> +		return TX_DROP;
-
-Can you use WARN(), and put it into the if() please?
-
-johannes
-
---=-H29o7tzm8VWSNYJDaQWq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXcRuAAoJEODzc/N7+QmasgsP/jPgl/8/uFgGwOATI6ItFGbZ
-x8jZiUurDUIN08Fjom5AqJr/rs9kXHdRBK9bbl+JzInOez176AVsXpRAl+JcKYea
-5BQOKtz9bVTw5toR+2E/IaqUPi9yvuYsuUXLQpMPZ991wTvO/h+3fNCEfPNdwuBC
-HxzM6ksTGihBt5LoKN+O2aBpCvwf15D9gcfnMmBM5MEHHCjtgkN6UZRJW0FPwjpx
-tdNSstUPFB3i5Err7R90Dfe7c0O8QIz31ct7duTvHPLdMTQjl4MsDz/0S7/nvvp6
-qdVawKJthaFiO2x0++WZPj3Scdw1ijNgAjl3pQTrfuM90j5qUyHDZeHWcwUiD2On
-U0mXgSzUPyw6Gs2Bnl5Ei4w9RwjNZgltRyMfP9izbfZhWNakFU/JoPuEguZF5nk5
-pyyYL67AQ3EOJlqfrlmL3FX+x7Sz3rIb1InB0n7eE/LSatswaFnbu+WKchSU2m1K
-qGiNEK2+mtgzke7YB2o7osIG+k3lAti3JbzARJGEmktIFaKpQuRmSbdYuVB+uIdF
-b/0Um4+wMkeV3EAekjQnQD2jTF4XxNjvh6b6EdF4YAsc9TvxgGbxvnTw7FR5mIP6
-rOfYi9S1GupoSCI9bfmmF0rywiNXlBfuem3/EAOjMOsDs4G155QuyKE8aBKFF0oo
-m21WJRdv3ieio/X7NYch
-=+xDU
------END PGP SIGNATURE-----
-
---=-H29o7tzm8VWSNYJDaQWq--
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 45eac35..cbeff1a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -382,8 +382,23 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				struct ath_buf *tbf;
+ 
+ 				tbf = ath_clone_txbuf(sc, bf_last);
+-				if (!tbf)
++				/*
++				 * Update tx baw and complete the frame with
++				 * failed status if we run out of tx buf
++				 */
++				if (!tbf) {
++					spin_lock_bh(&txq->axq_lock);
++					ath_tx_update_baw(sc, tid,
++							  bf->bf_seqno);
++					spin_unlock_bh(&txq->axq_lock);
++
++					bf->bf_state.bf_type |= BUF_XRETRY;
++					ath_tx_rc_status(bf, ds, nbad,
++							 0, false);
++					ath_tx_complete_buf(sc, bf, &bf_head,
++							    0, 0);
+ 					break;
++				}
+ 				ath9k_hw_cleartxdesc(sc->sc_ah, tbf->bf_desc);
+ 				list_add_tail(&tbf->list, &bf_head);
+ 			} else {
+-- 
+1.5.5.1
 
