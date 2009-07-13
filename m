@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42323 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755238AbZGOAO2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 12/21] ath9k: rename ath_rc_ratefind_ht() to ath_rc_get_highest_rix()
-Date: Tue, 14 Jul 2009 20:14:04 -0400
-Message-Id: <1247616853-11221-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga09.intel.com ([134.134.136.24]:32867 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754942AbZGMUic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 16:38:32 -0400
+Subject: Re: [ipw3945-devel] iwlwifi 4965 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <b170af450907131332x65b43bbfxa76ff2abc743317a@mail.gmail.com>
+References: <1247174482.17896.1304.camel@rc-desk>
+	 <b170af450907091613l1607f664he482e13e6fe268bd@mail.gmail.com>
+	 <1247182010.17896.1344.camel@rc-desk>
+	 <b170af450907131330o7eda50bakd6119f47af35d564@mail.gmail.com>
+	 <b170af450907131332x65b43bbfxa76ff2abc743317a@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Jul 2009 13:38:31 -0700
+Message-Id: <1247517511.17896.1652.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The purpose is to find the highest rate we can use.
+On Mon, 2009-07-13 at 13:32 -0700, Rafał Miłecki wrote:
+> W dniu 13 lipca 2009 22:30 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> > W dniu 10 lipca 2009 01:26 użytkownik reinette chatre
+> > <reinette.chatre@intel.com> napisał:
+> >>> Can you reveal some plans of upgrading 5100/5300/5350 uCode? Any
+> >>> estimate would be nice to known. This month? This year?
+> >>
+> >> I am not aware of any scheduled date for a new release. Are there
+> >> critical issues that you are aware of that requires a new uCode?
+> >
+> > I noticed new bug report about firmware failure on scp (using new
+> > firmware). I use ssh/sftp/scp a lot, so it doesn't sound nice to me.
+> >
+> > Moreover it seems to be quite reproductable, so I'm scared of hittint
+> > it quite often.
+> 
+> Probably I really should post link to bug report:
+> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2004
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+This bug was reported against 5100 series hardware and is not present in
+4965. Even so, this bug was fixed in the driver and the patch has
+already been pushed upstream.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 112a0ec..96d46d6 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -601,10 +601,11 @@ static u8 ath_rc_setvalid_htrates(struct ath_rate_priv *ath_rc_priv,
- 	return hi;
- }
- 
--static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
--			     struct ath_rate_priv *ath_rc_priv,
--			     const struct ath_rate_table *rate_table,
--			     int *is_probing)
-+/* Finds the highest rate index we can use */
-+static u8 ath_rc_get_highest_rix(struct ath_softc *sc,
-+			         struct ath_rate_priv *ath_rc_priv,
-+				 const struct ath_rate_table *rate_table,
-+				 int *is_probing)
- {
- 	u32 dt, best_thruput, this_thruput, now_msec;
- 	u8 rate, next_rate, best_rate, maxindex, minindex;
-@@ -812,7 +813,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	try_per_rate = sc->hw->max_rate_tries;
- 
- 	rate_table = sc->cur_rate_table;
--	rix = ath_rc_ratefind_ht(sc, ath_rc_priv, rate_table, &is_probe);
-+	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
- 	nrix = rix;
- 
- 	if (is_probe) {
--- 
-1.6.0.6
+Reinette
+
 
