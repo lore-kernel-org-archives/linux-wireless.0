@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:27321 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753462AbZG2Jmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 05:42:54 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 02:42:55 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/3] ath9k: Update rate control for 11NA HT40 mode
-Date: Wed, 29 Jul 2009 15:05:21 +0530
-Message-ID: <1248860123-12079-1-git-send-email-vasanth@atheros.com>
+Received: from wa-out-1112.google.com ([209.85.146.179]:37017 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661AbZGMHHy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 03:07:54 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so387283wah.21
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 00:07:53 -0700 (PDT)
+Message-ID: <4A5ADB52.3080401@gmail.com>
+Date: Mon, 13 Jul 2009 02:59:30 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Tim Schneider <schneid5@cs.uni-bonn.de>
+CC: Linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Reading the RSSI from a Kernel Module
+References: <0D620DB9-0DF4-41BB-8686-5BC910F88C79@cs.uni-bonn.de>
+In-Reply-To: <0D620DB9-0DF4-41BB-8686-5BC910F88C79@cs.uni-bonn.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now the lowest rate in 11na ht40 mode is 13.5Mbps this shortens the
-range when compared to 11na ht20 mode where the lowest rate is 6.5Mbps.
-To improve the range, make 6.5Mbps as the lowest rate in 11na ht40 mode,
-this improves the range by approximately 2dB. 11ng ht40 does not have
-this issue as it also has basic rates (1, 2, 5.5 and 11).
+Tim Schneider wrote:
+> Hi,
+>
+> I am trying to write a Kernel Module with an implementation of a new 
+> TCP-Algorithm. Since I need to know the RSSI-Value (Received Signal 
+> Strength indication) of the sent package, I extended the Pluggable 
+> Congestion Control Mechanism by a new function which is called right 
+> after the package is send. At that point, I need to read the RSSI-Value.
+>
+> I'm now trying to somehow access that value, but I can't figure out 
+> how. I've come as far, that I found out about the Wirelless 
+> Extensions, which seem to be very promising. In the header file the 
+> author states, that this mechanism can be used by both user-space apps 
+> and kernel modules. Unfortunately nobody seems to ever have used it in 
+> kernel space, since I can't find any documentations about it. I've 
+> already asked this question on the netdev mailing list. They told me, 
+> that there is a new system  with a netlink based cfg80211/nl80211 
+> interface in development right now , which is supposed to replace the 
+> wireless extensions in the future. They also told me, that this would 
+> probably be the correct mailing list for this kind of question.
+>
+I don't mean to make this a flame so please do not take it that way.  
+How exactly do you expect to get the RECEIVED Signal Strength indication 
+for a packet which you are SENDING? If you send it, you don't receive it...
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Just my 0.02
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a07efa2..59ad47c 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -44,7 +44,7 @@ static const struct ath_rate_table ar5416_11na_ratetable = {
- 		{ VALID, VALID, WLAN_RC_PHY_OFDM, 54000, /* 54 Mb */
- 			29300, 0x0c, 0x00, 108,
- 			4,  7, 7, 7, 7, 0 },
--		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 6500, /* 6.5 Mb */
-+		{ VALID_2040, VALID_2040, WLAN_RC_PHY_HT_20_SS, 6500, /* 6.5 Mb */
- 			6400, 0x80, 0x00, 0,
- 			0, 8, 24, 8, 24, 3216 },
- 		{ VALID_20, VALID_20, WLAN_RC_PHY_HT_20_SS, 13000, /* 13 Mb */
-@@ -463,8 +463,6 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- 	if (!ignore_cw && WLAN_RC_PHY_HT(phy))
- 		if (WLAN_RC_PHY_40(phy) && !(capflag & WLAN_RC_40_FLAG))
- 			return 0;
--		if (!WLAN_RC_PHY_40(phy) && (capflag & WLAN_RC_40_FLAG))
--			return 0;
- 	return 1;
- }
- 
--- 
-1.5.5.1
+-Rick Farina
+> I would be very glad, if somebody could give me link to a page 
+> containing informations about this topic, or even just a hint that 
+> could help me.
+>
+> Thank you
+>
+> Tim Schneider
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
