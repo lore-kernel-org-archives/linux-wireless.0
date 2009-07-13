@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:4334 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754542AbZG0UIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 16:08:01 -0400
-Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
-From: Pavel Roskin <proski@gnu.org>
-To: chris2553@googlemail.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200907272035.41193.chris2553@googlemail.com>
-References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-	 <c6b1100b0907270235l19e9c2d9kb33dae2d6a0f78@mail.gmail.com>
-	 <1248704860.2834.6.camel@mj>  <200907272035.41193.chris2553@googlemail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:49187 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbZGML0C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 07:26:02 -0400
+Subject: [PATCH] mac80211_hwsim: fix use after free
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Mon, 27 Jul 2009 16:07:59 -0400
-Message-Id: <1248725279.7440.8.camel@mj>
+Date: Mon, 13 Jul 2009 13:25:58 +0200
+Message-Id: <1247484358.4166.4.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-27 at 20:35 +0100, Chris Clayton wrote:
-> On Monday 27 July 2009, Pavel Roskin wrote:
-> >
-> > But I think you may be getting something when the freeze happen.  But to
-> > see it, you need to be on a text console.  There are other ways to
-> > capture the kernel messages, which are described in the file
-> > Documentation/oops-tracing.txt in the Linux sources.
-> 
-> I've taken some photos of the screen from the insertion of the card through to ejecting it, and 
-> uploaded them to imageshack: They can be viewed at:
-> 
-> http://img145.imageshack.us/img145/8741/xdscn0647.jpg
-> http://img170.imageshack.us/img170/1954/xdscn0648.jpg
-> http://img195.imageshack.us/img195/807/xdscn0649.jpg
-> http://img195.imageshack.us/img195/9625/xdscn0650.jpg
-> http://img195.imageshack.us/img195/2717/xdscn0651.jpg
-> http://img170.imageshack.us/img170/6103/xdscn0652.jpg
-> http://img170.imageshack.us/img170/5844/xdscn0653.jpg
-> 
-> Between them they should show all the output to the console, although some do overlap a little.
-> 
-> I hope they are helpful in tracking down this problem.
+Once the "data" pointer is freed, we can't be iterating
+to the next item in the list any more so we need to use
+list_for_each_entry_safe with a temporary variable.
 
-Do you remove the card?  It's like the card is disconnected at some
-point, either physically or logically.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-It looks like a problem specific to the hardware, not anything in the
-common wireless code.  I suggest that you post your question to
-users@rt2x00.serialmonkey.com.  That's the mailing list for rt61pci and
-other Ralink devices.
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-07-13 13:21:18.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-07-13 13:21:42.000000000 +0200
+@@ -790,7 +790,7 @@ static const struct ieee80211_ops mac802
+ static void mac80211_hwsim_free(void)
+ {
+ 	struct list_head tmplist, *i, *tmp;
+-	struct mac80211_hwsim_data *data;
++	struct mac80211_hwsim_data *data, *tmpdata;
+ 
+ 	INIT_LIST_HEAD(&tmplist);
+ 
+@@ -799,7 +799,7 @@ static void mac80211_hwsim_free(void)
+ 		list_move(i, &tmplist);
+ 	spin_unlock_bh(&hwsim_radio_lock);
+ 
+-	list_for_each_entry(data, &tmplist, list) {
++	list_for_each_entry_safe(data, tmpdata, &tmplist, list) {
+ 		debugfs_remove(data->debugfs_group);
+ 		debugfs_remove(data->debugfs_ps);
+ 		debugfs_remove(data->debugfs);
 
--- 
-Regards,
-Pavel Roskin
+
