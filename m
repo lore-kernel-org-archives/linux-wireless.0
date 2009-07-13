@@ -1,137 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:61369 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753808AbZGPJIA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53865 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755605AbZGMTuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:08:00 -0400
-Received: by bwz28 with SMTP id 28so1917832bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 02:07:57 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT 3/5] mac80211: introduce a new scan state "decision"
-Date: Thu, 16 Jul 2009 11:08:05 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <200907161104.41975.helmut.schaa@gmail.com>
-In-Reply-To: <200907161104.41975.helmut.schaa@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907161108.05473.helmut.schaa@gmail.com>
+	Mon, 13 Jul 2009 15:50:23 -0400
+Subject: Re: [RFC/RFT] rtl8187: Fix for kernel oops when unloading with
+ LEDs enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A5B8F57.5020601@lwfinger.net>
+References: <4a5b563e.AuhPXmHA0dUFYtzx%Larry.Finger@lwfinger.net>
+	 <1247501812.4166.24.camel@johannes.local>  <4A5B8F57.5020601@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LRYCkUAlasmGOOMozaoD"
+Date: Mon, 13 Jul 2009 21:49:49 +0200
+Message-Id: <1247514589.4071.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce a new scan state "decision" which is entered after
-every completed scan operation and decides about the next steps.
-At first the decision is in any case to scan the next channel.
-This shouldn't introduce any functional changes.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+--=-LRYCkUAlasmGOOMozaoD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6a01771..4166418 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -678,7 +678,7 @@ struct ieee80211_local {
- 	int scan_channel_idx;
- 	int scan_ies_len;
- 
--	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
-+	enum { SCAN_DECISION, SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
- 	struct delayed_work scan_work;
- 	struct ieee80211_sub_if_data *scan_sdata;
- 	enum nl80211_channel_type oper_channel_type;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 60a4e00..ef9d86d 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -376,7 +376,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- 
--	local->scan_state = SCAN_SET_CHANNEL;
-+	local->scan_state = SCAN_DECISION;
- 	local->scan_channel_idx = 0;
- 
- 	spin_lock_bh(&local->filter_lock);
-@@ -474,17 +474,25 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 	return rc;
- }
- 
--static int ieee80211_scan_state_set_channel(struct ieee80211_local *local, unsigned long *next_delay)
-+static int ieee80211_scan_state_decision(struct ieee80211_local *local, unsigned long *next_delay)
- {
--	int skip;
--	struct ieee80211_channel *chan;
--	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
--
- 	/* if no more bands/channels left, complete scan */
- 	if (local->scan_channel_idx >= local->scan_req->n_channels) {
- 		ieee80211_scan_completed(&local->hw, false);
- 		return 1;
- 	}
-+
-+	*next_delay = 0;
-+	local->scan_state = SCAN_SET_CHANNEL;
-+	return 0;
-+}
-+
-+static void ieee80211_scan_state_set_channel(struct ieee80211_local *local, unsigned long *next_delay)
-+{
-+	int skip;
-+	struct ieee80211_channel *chan;
-+	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
-+
- 	skip = 0;
- 	chan = local->scan_req->channels[local->scan_channel_idx];
- 
-@@ -504,7 +512,7 @@ static int ieee80211_scan_state_set_channel(struct ieee80211_local *local, unsig
- 	local->scan_channel_idx++;
- 
- 	if (skip)
--		return 0;
-+		return;
- 
- 	/*
- 	 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
-@@ -519,13 +527,13 @@ static int ieee80211_scan_state_set_channel(struct ieee80211_local *local, unsig
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    !local->scan_req->n_ssids) {
- 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
--		return 0;
-+		local->scan_state = SCAN_DECISION;
-+		return;
- 	}
- 
-+	/* active scan, send probes */
- 	*next_delay = IEEE80211_PROBE_DELAY;
- 	local->scan_state = SCAN_SEND_PROBE;
--
--	return 0;
- }
- 
- static void ieee80211_scan_state_send_probe(struct ieee80211_local *local, unsigned long *next_delay)
-@@ -545,7 +553,7 @@ void ieee80211_scan_state_send_probe(struct ieee80211_local *local, unsigned lon
- 	 * on the channel.
- 	 */
- 	*next_delay = IEEE80211_CHANNEL_TIME;
--	local->scan_state = SCAN_SET_CHANNEL;
-+	local->scan_state = SCAN_DECISION;
- }
- 
- void ieee80211_scan_work(struct work_struct *work)
-@@ -591,9 +599,12 @@ void ieee80211_scan_work(struct work_struct *work)
- 	 */
- 	do {
- 		switch (local->scan_state) {
-+	 	case SCAN_DECISION:
-+	 		if (ieee80211_scan_state_decision(local, &next_delay))
-+ 				return;
-+ 			break;
- 		case SCAN_SET_CHANNEL:
--			if (ieee80211_scan_state_set_channel(local, &next_delay))
--				return;
-+			ieee80211_scan_state_set_channel(local, &next_delay);
- 			break;
- 		case SCAN_SEND_PROBE:
- 			ieee80211_scan_state_send_probe(local, &next_delay);
+On Mon, 2009-07-13 at 14:47 -0500, Larry Finger wrote:
+> Johannes Berg wrote:
+> > On Mon, 2009-07-13 at 10:43 -0500, Larry Finger wrote:
+> >> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+> >> may oops when the module is unloaded as the workqueue for led_on was
+> >> not being cancelled. To prevent interference between cfg80211 and rtl8=
+187,
+> >> a separate workqueue has also been established.
+> >=20
+> > It doesn't seem like a separate workqueue should be necessary -- why is
+> > it? Might make more sense to fix cfg80211 or mac80211 instead.
+>=20
+> Probably.
+>=20
+> Attached is the dump for the locking error when b43 is unloaded.
+>=20
+>=20
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> [ INFO: possible circular locking dependency detected ]
+> 2.6.31-rc2-wl #178
+> -------------------------------------------------------
+> modprobe/14721 is trying to acquire lock:
+>  (&rdev->conn_work){+.+.+.}, at: [<ffffffff810510c0>]
+> __cancel_work_timer+0xd9/0x222
+>=20
+> but task is already holding lock:
+>  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa0220524>]
+> wiphy_unregister+0x3a/0xf8 [cfg80211]
+
+That's purely a problem within cfg80211, and I don't think it could be
+solved by your patch at all. I did send a patch earlier today though to
+solve this.
+
+(maybe you didn't reboot, and then lockdep was disabled after the first
+warning?)
+
+johannes
+
+--=-LRYCkUAlasmGOOMozaoD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKW4/aAAoJEODzc/N7+Qma/4gP/R70jozkpEoAcW5vsPcjPqym
+nPiYm3daiitv8TJQkkGyXDeARLnfmuDT7G449RFAc5VtVfoWE4dfz6f7/Ilo3n/4
+2DQUgpi1lDG72ZbPRW255jbTJ3j/LfQ+/03LQrZ6D9srluS9yTQ6oVG98AG5UzbU
+/+V5bsXzQMD8T1Yr2Sc0v0C0+G96XWDsSdzNymQQKuglAprUSQCM1HCss/9zF1ue
+MvTXZc7qj4LiDYrfehBOKPsAhhJo4vFp3Q7LsoLhEmiL96kE8Pa3NvhdizbrONQi
+chtWaW7Y6JOB9k4uOYoUZy0EAV/r7XOEeGXjIlSAPsU0rPJQb6u1heHQrNUskvyI
+m9qhtGzDvNUVjKDNfrSjgz2hGzCmVGQuu6h1fHHXX9lY9e+Y0OlvpyTOEGv8lPJX
+BqOGkwu1cV46k7mN0Xqyfo4xeIL9kh/Q+4U7Zuq2a+3+MZ1WNDJ2eqot18F071Rg
+bkLNeXLIhqgtcN9/VjKLDkdRrJ+2cQ19LSyqZXbzPdI+TXWtybPML/7Aux3iwDQS
+i9P0L0BJBYVZ7rU91snCM2cE4OIZPsiOpZxSI+oslNrdKittZ9oQMjCNYtyHVZ3t
+ItJulQoqkyaCKXUCbp/nL1LIhTQsz4YAyFK4jML/anF8zf7H5LeNEYaDGoTaXpDe
+zmOd07Stp/jYFkMyB/du
+=9f9F
+-----END PGP SIGNATURE-----
+
+--=-LRYCkUAlasmGOOMozaoD--
+
