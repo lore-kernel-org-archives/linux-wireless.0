@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:43845 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701AbZGNWpD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 18:45:03 -0400
-Message-ID: <4A5D0A7F.5090108@mandriva.org>
-Date: Wed, 15 Jul 2009 01:45:19 +0300
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:39004 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754942AbZGMRxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 13:53:30 -0400
+Subject: Re: nl80211 and wext interoperability
+From: Dan Williams <dcbw@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Thomas Backlund <tmb@mandriva.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-References: <4A5D0374.5040702@mandriva.org> <1247611024.1796.21.camel@johannes.local>
-In-Reply-To: <1247611024.1796.21.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1247163342.22527.2.camel@johannes.local>
+References: <1247139797.2144.27.camel@johannes.local>
+	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
+	 <1247163342.22527.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 13 Jul 2009 13:53:38 -0400
+Message-Id: <1247507618.4369.11.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg skrev:
-> On Wed, 2009-07-15 at 01:15 +0300, Thomas Backlund wrote:
->> Hi,
->> (please cc me on replies)
->>
->> before I start to try and figure this out, I thought of asking here if 
->> it rings any bells...
->>
->> Distribution: Mandriva Cooker
->> Arch: x86_64.
->>
->> NIC: 04:00.0 Network controller [0280]: Intel Corporation PRO/Wireless 
->> 4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
->>
->> ucode version: 228.61.2.24
->>
->> wpa_supplicant version: 0.6.9
->> crda version: 1.1.0
->> wireless-regdb version: 2009.04.17
->>
->> Running a 2.6.29.6 based kernel works with iwlagn
->> Running a 2.6.30.1 based kernel works with iwlagn
->>
->> Running a 2.6.31-rc3 based kernel gets me this:
->>
->> --- cut ---
->> Bringing up interface wlan0:  RTNETLINK answers: Unknown error 132
->> RTNETLINK answers: Unknown error 132
+On Thu, 2009-07-09 at 20:15 +0200, Johannes Berg wrote:
+> On Thu, 2009-07-09 at 10:53 -0700, Luis R. Rodriguez wrote:
+> > On Thu, Jul 9, 2009 at 4:43 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> > > Hi!
+> > >
+> > > With the recent work I've done in cfg80211 for nl80211 and wext, we've
+> > > mostly removed wext code everywhere. The only thing missing right now is
+> > > the key support, and I think then we can declare cfg80211's wext compat
+> > > layer pretty much done in terms of what mac80211 had -- orinoco will
+> > > need the sensitivity (or AP density) thing but I'm not sure how we
+> > > should do that since it's a value that is hardware dependent -- we'll
+> > > need to have very good discovery code for the allowed values (unlike
+> > > wext where you can set 0..3 and don't know what that means). Anyway,
+> > > that wasn't the point of this email.
+> > >
+> > > Currently, if you use wpa_supplicant -Dwext and -Dnl80211 mixed,
+> > > -Dnl80211 gets confused because -Dwext will set a 32-byte random SSID to
+> > > "disconnect".
+> > 
+> > When do we disconnect like this? Upon initialization of wpa_supplicant
+> > -Dwext -Dnl80211 ?
 > 
-> press your rfkill button.
+> When you shut down wpa_supplicant -Dwext it does that.
 
-I wish it was that simple :-(
+Mainly because there's no way to tell WEXT drivers to "stop whatever
+you're doing and just be idle"...
 
-I already tried it, but it does not help...
-I get no reaction what so ever from pressing it...
+The supplicant clears out the keys on TERM anyway, and in some cases
+(iwlagn) the driver will keep trying to reassociate internally, and if
+the keys aren't there, the AP will keep rejecting it, which just means
+you're spamming the air and the AP continuously, and then when you
+re-start the supplicant, you get a constant stream of WEXT disconnect
+events because the AP keeps rejecting you, and the supplicant freaks
+out.
 
-The laptop is an Acer 5720G if that makes any difference...
+So, forcing a random SSID/BSSID combo is the best way (with WEXT) to
+tell the driver to just stop trying to associate to anything.
 
-Could it be that rfkill has been broken for my laptop ?
+Dan
 
-And why should I need to press rfkill now, when I didn't before ?
-Has some kernel defaults changed since 2.6.30 series ?
 
---
-Thomas
