@@ -1,68 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52580 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756545AbZGOAWC (ORCPT
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:58892 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756194AbZGNToy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:22:02 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/5] adm8211: remove uneeded code during suspend/resume
-Date: Tue, 14 Jul 2009 20:21:57 -0400
-Message-Id: <1247617320-20163-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 14 Jul 2009 15:44:54 -0400
+Received: by ewy26 with SMTP id 26so3547398ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2009 12:44:53 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: Re: RT61 antenna diversity in 2.6.30
+Date: Tue, 14 Jul 2009 21:44:50 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <0DC66442F4FF4076964868A5ECAB9790@gotws1589>
+In-Reply-To: <0DC66442F4FF4076964868A5ECAB9790@gotws1589>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907142144.50697.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 drivers do not need to stop the software queues
-or call their own stop() callback upon suspend as we do it
-for drivers. Equally drivers don't have to call their own
-start() or start the queues as mac80211 will do it for us.
+On Monday 13 July 2009, Lars Ericsson wrote:
+> Hi Ivo,
+> 
+> I recently moved from 2.6.26 to 2.6.30 with a HW that do 
+> SW antenna diversity with .26 but not with .30
+> 
+> I have found two problems:
+> 1) The rt2x00mac_config() calls rt2x00lib_config_antenna() and reset the
+> rt2x00dev->default_ant.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/adm8211.c |   17 -----------------
- 1 files changed, 0 insertions(+), 17 deletions(-)
+Where is this reset of default_ant occuring?
+There is only 1 write action in that function and that is altering the
+rt2x00dev->link.ant.active field.
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index ecc9383..5695911 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1964,14 +1964,6 @@ static void __devexit adm8211_remove(struct pci_dev *pdev)
- #ifdef CONFIG_PM
- static int adm8211_suspend(struct pci_dev *pdev, pm_message_t state)
- {
--	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
--	struct adm8211_priv *priv = dev->priv;
--
--	if (priv->mode != NL80211_IFTYPE_UNSPECIFIED) {
--		ieee80211_stop_queues(dev);
--		adm8211_stop(dev);
--	}
--
- 	pci_save_state(pdev);
- 	pci_set_power_state(pdev, pci_choose_state(pdev, state));
- 	return 0;
-@@ -1979,17 +1971,8 @@ static int adm8211_suspend(struct pci_dev *pdev, pm_message_t state)
- 
- static int adm8211_resume(struct pci_dev *pdev)
- {
--	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
--	struct adm8211_priv *priv = dev->priv;
--
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
--
--	if (priv->mode != NL80211_IFTYPE_UNSPECIFIED) {
--		adm8211_start(dev);
--		ieee80211_wake_queues(dev);
--	}
--
- 	return 0;
- }
- #endif /* CONFIG_PM */
--- 
-1.6.0.6
+> 2) The rt2x00lib_antenna_diversity_sample() does not update the sampled
+> antenna rssi.
 
+And why should that be done?
+
+> I have applied the following patches to correct the problems:
+> 
+> 1)
+> --- a/drivers/net/wireless/rt2x00/rt2x00link.c	2009-07-13
+> 21:48:45.000000000 +0200
+> +++ b/drivers/net/wireless/rt2x00/rt2x00link.c	2009-07-13
+> 21:52:42.000000000 +0200
+> @@ -146,8 +151,13 @@ static void rt2x00lib_antenna_diversity_
+>  {
+>  	struct link_ant *ant = &rt2x00dev->link.ant;
+>  	struct antenna_setup new_ant;
+> -	int sample_a = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+> ANTENNA_A);
+> -	int sample_b = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+> ANTENNA_B);
+> +	int rssi_curr, sample_a, sample_b;
+> +			
+> +	rssi_curr = rt2x00link_antenna_get_link_rssi(rt2x00dev);
+> +	rt2x00link_antenna_update_rssi_rx_history(rt2x00dev, rssi_curr);
+> +	
+> +	sample_a = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+> ANTENNA_A);
+> +	sample_b = rt2x00link_antenna_get_rssi_history(rt2x00dev,
+> ANTENNA_B);
+>  
+>  	memcpy(&new_ant, &ant->active, sizeof(new_ant));
+> ---
+> 
+> 2)
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-07-13
+> 21:51:26.000000000 +0200
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c	2009-07-13
+> 21:54:28.000000000 +0200
+> @@ -375,10 +375,12 @@ int rt2x00mac_config(struct ieee80211_hw
+>  		 * diversity. But for non-diversity configurations, we need
+>  		 * to have configured the correct state now.
+>  		 */
+> -		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED)
+> +		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED) {
+> +			rt2x00dev->link.ant.active = rt2x00dev->default_ant;
+
+This is done in rt2x00lib_config_antenna where it should.
+
+>  			rt2x00lib_config_antenna(rt2x00dev,
+> -						 &rt2x00dev->default_ant);
+> +
+> &rt2x00dev->link.ant.active);
+
+This is very bad, since calling rt2x00lib_config_antenna() to set it to
+the active configuration should always result in nothing being done.
+Your hack by reseting the active field will cause it to do something,
+but it looks extremely hackish.
