@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26021 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755565AbZG0CKV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2009 22:10:21 -0400
-Subject: Re: [PATCH] ipw2x00: Write outside array bounds
-From: Zhu Yi <yi.zhu@intel.com>
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-In-Reply-To: <4A6B7DB0.7090902@gmail.com>
-References: <4A6B7DB0.7090902@gmail.com>
-Content-Type: text/plain
-Date: Mon, 27 Jul 2009 10:10:20 +0800
-Message-Id: <1248660620.3747.102.camel@debian>
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:1285 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbZGNCZp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 22:25:45 -0400
+Date: Mon, 13 Jul 2009 22:24:58 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Sitsofe Wheeler <sitsofe@yahoo.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [TIP] BUG kmalloc-4096: Poison overwritten (ath5k_rx_skb_alloc)
+Message-ID: <20090714022458.GB28490@hash.localnet>
+References: <20090320131437.GA30120@hash.localnet> <20090329142432.GA15578@sucs.org> <20090329151401.GA26510@hash.localnet> <20090331083041.GA19657@sucs.org> <20090513214416.GA4492@sucs.org> <20090515040904.GA32357@hash.localnet> <20090518100540.GB21150@sucs.org> <20090522093930.GA15375@sucs.org> <20090526211029.GA2011@sucs.org> <20090628202329.GB1546@sucs.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090628202329.GB1546@sucs.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-07-26 at 05:48 +0800, Roel Kluin wrote:
-> channel_index loops up to IPW_SCAN_CHANNELS, but is used after being
-> incremented. This might be able to access 1 past the end of the array
+On Sun, Jun 28, 2009 at 09:23:29PM +0100, Sitsofe Wheeler wrote:
+> OK I'm still trying to follow this. I forwarded your patch to 2.6.31-rc1
+> but this time I have kmemleak enabled. I left it streaming radio for the
+> past few hours and the following appeared in the logs:
 > 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-
-Thanks. Do you think below patch is better?
-
-Thanks,
--yi
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 2dc1cdb..07f171c 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -6226,7 +6226,7 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
- 			};
- 
- 			u8 channel;
--			while (channel_index < IPW_SCAN_CHANNELS) {
-+			while (channel_index < IPW_SCAN_CHANNELS - 1) {
- 				channel =
- 				    priv->speed_scan[priv->speed_scan_pos];
- 				if (channel == 0) {
+> Jun 28 17:01:34 eeepc kernel: [  744.083787] kmemleak: unreferenced object 0xf5845770 (size 64):
+> Jun 28 17:01:34 eeepc kernel: [  744.083795] kmemleak:   comm "swapper", pid 1, jiffies 4294673468
+> Jun 28 17:01:34 eeepc kernel: [  744.083799] kmemleak:   backtrace:
+> Jun 28 17:01:34 eeepc kernel: [  744.083811] kmemleak:     [<c01a749d>] kmemleak_alloc+0x11d/0x2a0
+> Jun 28 17:01:34 eeepc kernel: [  744.083818] kmemleak:     [<c01a4376>] __kmalloc+0x136/0x210
+> Jun 28 17:01:34 eeepc kernel: [  744.083828] kmemleak:     [<c043f923>] ieee80211_register_hw+0x83/0x4b0
+[snip]
 
 
-> ---
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-> index 44c29b3..d1c9d6d 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-> @@ -6249,7 +6249,10 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
->  
->  				channels[channel - 1] = 1;
->  				priv->speed_scan_pos++;
-> -				channel_index++;
-> +
-> +				if (++channel_index >= IPW_SCAN_CHANNELS)
-> +					break;
-> +
->  				scan->channels_list[channel_index] = channel;
->  				index =
->  				    ieee80211_channel_to_index(priv->ieee, channel);
+> There were quite a few leaks before this. I dunno if kmemleak is
+> spurious or not. As always, any ideas?
+
+I can't seem to boot a kmemleak kernel myself.  But there were a number
+of fixes to kmemleak recently to track memory allocated in
+ieee80211_register_hw, IIRC -- so it would be good to know if this
+persists with all the latest fixes.
+
+As always, no ideas :(  I'm guessing nothing in .31-rc has magically
+fixed any problems?  I still say it's some kind of race condition
+made worse by the eeepc performance, but unless I can find one or
+replicate it with introduced load, I'm afraid I'm stumped.  
+
+(Well, I guess we can always go off and rewrite the rx loop without
+the circular terminator and see how well that works on your HW.)
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
