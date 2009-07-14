@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:49772 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751819AbZGaSbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:31:35 -0400
-Date: Fri, 31 Jul 2009 21:31:32 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Subject: Re: [PATCH 2/4] ath5k: Linear PCDAC code fixes
-Message-ID: <20090731183132.GG7963@makis>
-References: <20090731180556.GC7963@makis>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090731180556.GC7963@makis>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37842 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756684AbZGNWhg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2009 18:37:36 -0400
+Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
+ to 2.6.31-rc3
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A5D0374.5040702@mandriva.org>
+References: <4A5D0374.5040702@mandriva.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zdYPj3whRoWXrMSDf0Ks"
+Date: Wed, 15 Jul 2009 00:37:04 +0200
+Message-Id: <1247611024.1796.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Set correct xpd curve indices for high/low gain curves during
-   rfbuffer setup on RF5112B with both calibration curves available.
 
- * Don't return zero min power when we have the same pcdac value
-   twice because it breaks interpolation. Instead return the right
-   x barrier as we do when we have equal power levels for 2 different
-   pcdac values.
+--=-zdYPj3whRoWXrMSDf0Ks
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+On Wed, 2009-07-15 at 01:15 +0300, Thomas Backlund wrote:
+> Hi,
+> (please cc me on replies)
+>=20
+> before I start to try and figure this out, I thought of asking here if=20
+> it rings any bells...
+>=20
+> Distribution: Mandriva Cooker
+> Arch: x86_64.
+>=20
+> NIC: 04:00.0 Network controller [0280]: Intel Corporation PRO/Wireless=20
+> 4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
+>=20
+> ucode version: 228.61.2.24
+>=20
+> wpa_supplicant version: 0.6.9
+> crda version: 1.1.0
+> wireless-regdb version: 2009.04.17
+>=20
+> Running a 2.6.29.6 based kernel works with iwlagn
+> Running a 2.6.30.1 based kernel works with iwlagn
+>=20
+> Running a 2.6.31-rc3 based kernel gets me this:
+>=20
+> --- cut ---
+> Bringing up interface wlan0:  RTNETLINK answers: Unknown error 132
+> RTNETLINK answers: Unknown error 132
 
----
- drivers/net/wireless/ath/ath5k/phy.c |   24 +++++++++++++++++-------
- 1 files changed, 17 insertions(+), 7 deletions(-)
+press your rfkill button.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 2075ba9..6afba98 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -740,13 +740,22 @@ int ath5k_hw_rfregs_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 						AR5K_RF_XPD_GAIN, true);
- 
- 		} else {
--			/* TODO: Set high and low gain bits */
--			ath5k_hw_rfb_op(ah, rf_regs,
--						ee->ee_x_gain[ee_mode],
-+			u8 *pdg_curve_to_idx = ee->ee_pdc_to_idx[ee_mode];
-+			if (ee->ee_pd_gains[ee_mode] > 1) {
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
- 						AR5K_RF_PD_GAIN_LO, true);
--			ath5k_hw_rfb_op(ah, rf_regs,
--						ee->ee_x_gain[ee_mode],
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[1],
- 						AR5K_RF_PD_GAIN_HI, true);
-+			} else {
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
-+						AR5K_RF_PD_GAIN_LO, true);
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
-+						AR5K_RF_PD_GAIN_HI, true);
-+			}
- 
- 			/* Lower synth voltage on Rev 2 */
- 			ath5k_hw_rfb_op(ah, rf_regs, 2,
-@@ -1896,8 +1905,9 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
- 	s16 min_pwrL, min_pwrR;
- 	s16 pwr_i;
- 
--	if (WARN_ON(stepL[0] == stepL[1] || stepR[0] == stepR[1]))
--		return 0;
-+	/* Some vendors write the same pcdac value twice !!! */
-+	if (stepL[0] == stepL[1] || stepR[0] == stepR[1])
-+		return max(pwrL[0], pwrR[0]);
- 
- 	if (pwrL[0] == pwrL[1])
- 		min_pwrL = pwrL[0];
+johannes
+
+--=-zdYPj3whRoWXrMSDf0Ks
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKXQiNAAoJEODzc/N7+QmaOQYP+wYhvyk/4Cxa5imuWUsHuaQ/
+bdSGiLCAnSlY6Rh+B3w/BKSs1oJ2eGH+Im4AoYaLrbrWCepqcgILfzQmmfMoqokO
+KLSX1CXI3Hwu2GZPDXQ8mBjGhyehqVflOm9GPp9ifmao0CmmwDd4f8S9pgD2s0Fo
+VoQ866X+a6UHFybkzrv67Bu4c1CCHZ3KGD6sTQyhjf3rVrDZwWYuwDSTX3ENPz4m
+FzYy8BYta0b7V85gVKBX4d8JBj8rkNJJywgZoyZrw/ssIgD1nI6NRiyYOGXtcgBC
+IW3nBkFDjCC4iw6eYP60DsUbdHU7JCb5V67FJpf9oBslQrfW8xEzFCWWhEfLBSj1
+TQu7P3ExZsHuRnGQhIPugpny1/514LMR9bWtwTA3L45usKQaCCF3a139bvRnVBEP
+QJvV5fmb7SsLQJpnZyOOa+JaBu/JCGqBAGSuAGWz/HR6Mwff6d8Qz26iJN85EgiE
+eazhzIK7Bzw657V224i8EkwJNI+v2WZqvf4dof0EO9WYpLg5S5S5qADdxNbwe83h
+M6M31tDAINXzPgZ00uhKcVG8YjH2ZKDRFnwvKxczpJMFLNKx/5DEOceISQMw0lGy
+ecfK0jH6PmJHPCQ8kVcce36u5Hd31CbbmvAkJHG+HSnTEbjRD19fc5ecdIb4oupy
+XBpulUU8DGaVszyWYwHG
+=fuoL
+-----END PGP SIGNATURE-----
+
+--=-zdYPj3whRoWXrMSDf0Ks--
+
