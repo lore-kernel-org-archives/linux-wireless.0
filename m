@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:36477 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbZGXKqL (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40153 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002AbZGNUy7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 06:46:11 -0400
-Message-ID: <4A6990C1.3020206@nokia.com>
-Date: Fri, 24 Jul 2009 13:45:21 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Tue, 14 Jul 2009 16:54:59 -0400
+Date: Tue, 14 Jul 2009 15:55:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
+ enabled
+Message-ID: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: ext Kalle Valo <kalle.valo@iki.fi>
-CC: Joe Perches <joe@perches.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jirislaby@gmail.com" <jirislaby@gmail.com>
-Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
-References: <20090721191136.22374.69017.stgit@tikku>	<20090721191154.22374.17349.stgit@tikku>	<1248204540.31365.275.camel@Joe-Laptop.home>	<87ocrdsu9f.fsf@litku.valot.fi> <4A661C4B.5070803@nokia.com> <878wiesaip.fsf@litku.valot.fi>
-In-Reply-To: <878wiesaip.fsf@litku.valot.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Kalle Valo wrote:
-> Luciano Coelho <luciano.coelho@nokia.com> writes:
->
->   
->> I think we have to choose one maintainer for the shared files (= you!
->> ;).  So we could have something like this for your part:
->>
->> F:   drivers/net/wireless/wl12xx/*
->> X:   drivers/net/wireless/wl12xx/wl1271*
->>
->> Of course this doesn't apply yet, because there is no wl1271* at the
->> moment (hopefully there will be very soon).  So, for now I think you
->> could have just the F line.  And when I add my maintainer's block
->> there, I can add the X line to your part at the same time... How does
->> that sound?
->>     
->
-> Sounds good to me. I'm too lazy to send a new patch right now, but can
-> you change the entry accordingly when you submit 1271 code?
->   
+When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+may oops when the module is unloaded as the workqueue for led_on was
+not being cancelled.
 
-Yeps, I can do that.  I'm soooo close to getting the wl1271 driver to 
-work... (famous last words ;)
+This patch fixes the problem reported in
+http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
 
--- 
-Cheers,
-Luca.
+Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
+---
 
+V2 - Do not create a new workqueue.
+
+John,
+
+This patch is 2.6.31 material. To the best of my knowledge, a formal bug
+report was never filed; however, it was reported in the reference given above.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
+@@ -208,11 +208,12 @@ void rtl8187_leds_exit(struct ieee80211_
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
+ 
+-	rtl8187_unregister_led(&priv->led_tx);
+ 	/* turn the LED off before exiting */
+ 	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
+ 	cancel_delayed_work_sync(&priv->led_off);
++	cancel_delayed_work_sync(&priv->led_on);
+ 	rtl8187_unregister_led(&priv->led_rx);
++	rtl8187_unregister_led(&priv->led_tx);
+ }
+ #endif /* def CONFIG_RTL8187_LED */
+ 
