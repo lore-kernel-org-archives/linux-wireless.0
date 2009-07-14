@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60489 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754343AbZG0XwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 19:52:18 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:52:19 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath: use menuconfig to put ath stuff in its own page
-Date: Mon, 27 Jul 2009 16:52:08 -0700
-Message-ID: <1248738730-4003-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
-References: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:4875 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbZGNB7E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 21:59:04 -0400
+Date: Mon, 13 Jul 2009 21:57:39 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: proski@gnu.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.31] ath5k: temporarily disable crypto for AP mode
+Message-ID: <20090714015739.GA28490@hash.localnet>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Pavel Roskin reported some issues with using AP mode without
+nohwcrypt=1.  Most likely this is similar to the problem fixed
+some time ago in ath9k by 3f53dd64f192450cb331c0fecfc26ca952fb242f,
+"ath9k: Fix hw crypto configuration for TKIP in AP mode."
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index f27f3a7..253b95a 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,4 +1,4 @@
--config ATH_COMMON
-+menuconfig ATH_COMMON
- 	tristate "Atheros Wireless Cards"
- 	depends on WLAN_80211
- 	depends on CFG80211
+That only affects TKIP but it's easiest to just disable that and
+WEP too until we get a proper fix in.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+
+Pavel, this ok with you for now?
+
+ drivers/net/wireless/ath/ath5k/base.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 20ba6fa..7db32ce 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2980,6 +2980,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (modparam_nohwcrypt)
+ 		return -EOPNOTSUPP;
+ 
++	if (sc->opmode == NL80211_IFTYPE_AP)
++		return -EOPNOTSUPP;
++
+ 	switch (key->alg) {
+ 	case ALG_WEP:
+ 	case ALG_TKIP:
 -- 
-1.6.0.4
+1.6.2.5
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
