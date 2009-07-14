@@ -1,130 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47955 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933364AbZGPWTX (ORCPT
+Received: from mail-yx0-f184.google.com ([209.85.210.184]:41728 "EHLO
+	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756191AbZGNWMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 18:19:23 -0400
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A5FA52D.7030701@mandriva.org>
-References: <4A5D0374.5040702@mandriva.org>
-	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>
-	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ElKcmEpYEIxGudLZxkZr"
-Date: Fri, 17 Jul 2009 00:18:51 +0200
-Message-Id: <1247782731.31442.3.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 14 Jul 2009 18:12:09 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 14 Jul 2009 15:11:45 -0700
+Message-ID: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+Subject: Generic events for wake up from S1-S4
+To: linux-kernel@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm working on Wake-on-Wireless support for wireless right now [1].
+Upon wake up I wanted to inform the kernel of the event which caused
+the wake up but am not clear if there is a generic API for this. Mind
+you, for WoW we'll need at least some AC power to the card so we'll
+need to at least be in S3-Hot so we'll only need events for that for
+now.
 
---=-ElKcmEpYEIxGudLZxkZr
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Do we have some generic infrastructure to gather reasons for wake up
+from S1-S4 and pass this to userspace yet?
 
-On Fri, 2009-07-17 at 01:09 +0300, Thomas Backlund wrote:
+[1] http://wireless.kernel.org/en/users/Documentation/WoW
 
-> Nope.
-> Nothing gets logged when I press the rfkill...
->=20
-> I'd say that the rfkill rewrite killed my wireless :-(
->=20
-> Bluetooth works at it whould, but not the wireless
->=20
-> But now I have atleast found one way to get it working...
->=20
-> I've built the rfkill utility, and with it I can get the wireless working=
-...
-
-Thanks for the analysis!
-
-> Here is the output when wireless works:
-> [root@tmb-laptop rfkill]# ./rfkill list
-> 0: acer-wireless: Wireless LAN
-> 	Soft blocked: no
-> 	Hard blocked: no
-> 1: acer-bluetooth: Bluetooth
-> 	Soft blocked: yes
-> 	Hard blocked: no
-> 2: phy0: Wireless LAN
-> 	Soft blocked: no
-> 	Hard blocked: no
-
-Makes sense that it works at this point :)
-
-> Pressing the rfkill button gets me this:
-> [root@tmb-laptop rfkill]# ./rfkill list
-> 0: acer-wireless: Wireless LAN
-> 	Soft blocked: yes
-> 	Hard blocked: no
-> 1: acer-bluetooth: Bluetooth
-> 	Soft blocked: yes
-> 	Hard blocked: no
-> 2: phy0: Wireless LAN
-> 	Soft blocked: no
-> 	Hard blocked: yes
-
-So far so good. Your platform's soft-switch is wired to the card's hard
-kill line. Mind trying
-
-	./rfkill unblock 0
-
-(or whatever ID the acer-wireless has) at this point to see what
-happens? I would hope it goes back to the working state.
-
-> And pressing it again gets this:
-> [root@tmb-laptop rfkill]# ./rfkill list
-> 0: acer-wireless: Wireless LAN
-> 	Soft blocked: no
-> 	Hard blocked: no
-> 1: acer-bluetooth: Bluetooth
-> 	Soft blocked: yes
-> 	Hard blocked: no
-> 2: phy0: Wireless LAN
-> 	Soft blocked: yes
-> 	Hard blocked: no
->=20
-> And after that I cant get wireless back until I again do a:
-> ./rfkill unblock 2
-> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
-
-Right. This is bad. The button press shouldn't have affected the
-soft-state of the rfkill #2.
-
-> Applying this patch:
-> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
-> sent by Alan Jenkins does not help this issue either...
->=20
-> Any  suggestions how to fix the rfkill ?
-
-I'll poke at the acer code to see what it's doing wrong...
-
-johannes
-
---=-ElKcmEpYEIxGudLZxkZr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKX6dIAAoJEODzc/N7+QmaViQP/RPWU174cTZjYCpd/Hzdp5GG
-rAoj9PW3o7MsU+KYcnDy3Rah+GKP7clpyBjgUW0n2PsXGDYkguC/rSPSyQFIrjem
-0zRCmQKQ57m1oD/waODtbgl1me9lX7mscn4Vm5i+4VVZ3TCZDsI8HC/PMbmqlxuZ
-JO3wMn05jcNWTH0p3Q6VlQoSYAFbmRJe2eQmkmzSy01REfcZG5+ZmCfJGjNDqp9p
-tIrAdSVrQKmGgMsTqdBb5CRST2s0ZyooAVGkn61E0hIGK0s2FeDhd//EFj1dopFC
-tCkH27stl7yBQ1N0iBxcmScT9z+RoA7R6suqMZPEhgpa/YP95WwWePo+6lyAXUkB
-oBEFsZaVSVu2KmgYIIFPHYYd9RrxA3hyGnHSfsTTDgSngIpgya8EmfRNw2v39Jnq
-f6D8lVPJS4bPLDjzVSkz7kVlH2PafTNxDScrYvEwrGyyKP+iMnJV9+bQA2HCwbZm
-VfUoSGbvtmFNpP8SpAnMH4sa+MncXJ1LbnlyT7YQBhjUhgUIeC+n6bZZT6ikTzj6
-YnSpJOWMdYdxUCvCGg6jbvy2MHleJEVzR+I18JNV6F8gidy76o38ISBtFKViQtjX
-cwaKVn0j228LnH7tRMgK+WpS0KASLtSU6du8DXr8mX6l7rR5RuEExteTW/ScmzK+
-lsA4GMwNIMqbmijhLzeM
-=HGkg
------END PGP SIGNATURE-----
-
---=-ElKcmEpYEIxGudLZxkZr--
-
+  Luis
