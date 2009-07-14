@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51482 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbZG0PEt (ORCPT
+Received: from mail-yx0-f184.google.com ([209.85.210.184]:55845 "EHLO
+	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbZGNPmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 11:04:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ettl.martin@gmx.de, johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ray_cs: remove bocus NULL check at head of ray_get_wireless_stats
-Date: Mon, 27 Jul 2009 11:02:49 -0400
-Message-Id: <1248706969-10435-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1248705282-9951-1-git-send-email-linville@tuxdriver.com>
-References: <1248705282-9951-1-git-send-email-linville@tuxdriver.com>
+	Tue, 14 Jul 2009 11:42:13 -0400
+Received: by yxe14 with SMTP id 14so4316539yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2009 08:42:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0907091144h39a3df67wa9327157dedb172@mail.gmail.com>
+References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
+	 <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
+	 <20090708114252.GG7199@hash.localnet>
+	 <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
+	 <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
+	 <43e72e890907091002r2dd36efevbfbce06155beb7e5@mail.gmail.com>
+	 <b6c5339f0907091048v665dcdf6i659e94de95038856@mail.gmail.com>
+	 <43e72e890907091050p7bc08a25s86f9bb7a1c8740aa@mail.gmail.com>
+	 <6c354a1a0907091136v5619efb5oc6a8a89ec24d4e74@mail.gmail.com>
+	 <b6c5339f0907091144h39a3df67wa9327157dedb172@mail.gmail.com>
+Date: Tue, 14 Jul 2009 11:34:26 -0400
+Message-ID: <6c354a1a0907140834s6e71bcecp2b6dfe29ad0b187f@mail.gmail.com>
+Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
+From: Jasin Colegrove <j.wholesalesupply@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Martin Ettl <ettl.martin@gmx.de>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Johannes points-out that the NULL check is mostly bogus given how
-netdev_priv is computed and how get_wireless_stats gets called...
+Just a quick update on this issue. I have come to the conclusion that
+is indeed NOT a kernel driver issue. After removing the cruft and just
+going the manual setup route for the complete bisect I was never once
+able to repeat the behavior I had expirienced before. That was not
+till i tried using wicd again. I have no reported this problem to the
+appropriate bug tracker.
 
- drivers/net/wireless/ray_cs.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 698b11b..8fdea7f 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -1511,9 +1511,6 @@ static iw_stats *ray_get_wireless_stats(struct net_device *dev)
- 	struct pcmcia_device *link = local->finder;
- 	struct status __iomem *p = local->sram + STATUS_BASE;
- 
--	if (local == (ray_dev_t *) NULL)
--		return (iw_stats *) NULL;
--
- 	local->wstats.status = local->card_status;
- #ifdef WIRELESS_SPY
- 	if ((local->spy_data.spy_number > 0)
--- 
-1.6.2.5
-
+Sorry for wasting your precious time, I really do appreciate all your
+responses and hard work!
