@@ -1,63 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39564 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152AbZGAQCF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 12:02:05 -0400
-Subject: Re: [PATCH] iwlwifi: fix aggregation limit
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A4B862C.7080709@nokia.com>
-References: <1246453079.4131.19.camel@johannes.local>
-	 <1246460817.12994.153.camel@localhost.localdomain>
-	 <1246460944.8154.0.camel@johannes.local>  <4A4B862C.7080709@nokia.com>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 09:02:13 -0700
-Message-Id: <1246464133.12994.155.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:35644 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752537AbZGNSDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2009 14:03:49 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2009 11:03:50 -0700
+Date: Tue, 14 Jul 2009 11:03:48 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Steven Luo <steven@steven676.net>,
+	Bennyam Malavazi <Bennyam.Malavazi@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix enabling OFDM weak signal
+ detection
+Message-ID: <20090714180348.GD25788@mosca>
+References: <20090709211221.GA4854@steven676.net>
+ <43e72e890907101102i29352c6bq9e511663e2c3a986@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890907101102i29352c6bq9e511663e2c3a986@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-> >>> According to the documentation, the limit is 0x3f == 63, not 64.
-> >>>
-> >>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> >>> ---
-> >>> It seems bug 2018 is related to the link quality command, because it
-> >>> seems I can trivially trigger it or similar bugs that way, but this
-> >>> doesn't fix it.
-> >>>
-> >>> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-commands.h	2009-07-01 14:53:33.804427206 +0200
-> >>> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-commands.h	2009-07-01 14:53:38.924427592 +0200
-> >>> @@ -1922,7 +1922,7 @@ struct iwl_link_qual_general_params {
-> >>>  #define LINK_QUAL_AGG_DISABLE_START_MIN	(0)
-> >>>  
-> >>>  #define LINK_QUAL_AGG_FRAME_LIMIT_DEF	(31)
-> >>> -#define LINK_QUAL_AGG_FRAME_LIMIT_MAX	(64)
-> >>> +#define LINK_QUAL_AGG_FRAME_LIMIT_MAX	0x3f
-> >>>  #define LINK_QUAL_AGG_FRAME_LIMIT_MIN	(0)
-> >>>       
-> >> why are you switching of hex now? Just putting (63) in there is not
-> >> enough?
-> >>     
+On Fri, Jul 10, 2009 at 11:02:58AM -0700, Luis R. Rodriguez wrote:
+> On Thu, Jul 9, 2009 at 2:12 PM, Steven Luo<steven@steven676.net> wrote:
+> > From: Steven Luo <steven@steven676.net>
 > >
-> > It would be, obviously, but the doc says 0x3f.
-> >   
+> > It seems that OFDM weak signal detection should be enabled after an ANI
+> > state reset, as indicated by the initial setting of ofdmWeakSigDetectOff
+> > and what the open Atheros HAL does.  Unfortunately, the reversed sense
+> > of ofdmWeakSigDetectOff (true if weak signal detection is NOT enabled)
+> > seems to have resulted in a mixup here, causing weak signal detection to
+> > be disabled.
+> >
+> > This patch significantly improves reception and throughput from distant
+> > stations for my AR5416-based AP running compat-wireless 2009-06-25.
+> >
+> > Signed-off-by: Steven Luo <steven@steven676.net>
+> > Cc: stable@kernel.org
+> > ---
 > 
-> I think it would be nicer to have (63) or otherwise convert all the 
-> macros to use the 0x format.  Does the spec use 0x1f for the default 
-> value, for instance, instead of (31)?
+> NACK for now, please give us a chance to review this -- this may
+> actually be correct.
 
-I would agree. Use (31) and let the commit message explain it. Not that
-it is really that important.
+Please try this patch instead, I've only compile tested this.
 
-Regards
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: Tune ANI function processing on AP mode during ANI reset
 
-Marcel
+For AP mode we must tune ANI specially for 2 GHz and
+for 5 GHz. We mask in only the flags we want to toggle
+on ath9k_hw_ani_control() through the ah->ani_function
+bitmask, this will take care of ignoring changes during
+ANI reset which we were disabling before.
 
+Reported-by: Steven Luo <steven@steven676.net>
+Cc: Bennyam Malavazi <Bennyam.Malavazi@Atheros.com
+Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -478,6 +478,19 @@ void ath9k_ani_reset(struct ath_hw *ah)
+ 			"Reset ANI state opmode %u\n", ah->opmode);
+ 		ah->stats.ast_ani_reset++;
+ 
++		if (ah->opmode == NL80211_IFTYPE_AP ||
++		    ah->opmode == NL80211_IFTYPE_AP) {
++			/*
++			 * ath9k_hw_ani_control() will only process items set on
++			 * ah->ani_function
++			 */
++			if (IS_CHAN_2GHZ(chan))
++				ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
++						    ATH9K_ANI_FIRSTEP_LEVEL);
++			else
++				ah->ani_function = 0;
++		}
++
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_NOISE_IMMUNITY_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
+-- 
+1.6.3.3
 
