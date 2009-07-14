@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:58964 "EHLO mgw2.diku.dk"
+Received: from mga02.intel.com ([134.134.136.20]:39767 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170AbZGLUOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 16:14:36 -0400
-Date: Sun, 12 Jul 2009 22:05:33 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: yi.zhu@intel.com, jketreno@linux.intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH 4/5] drivers/net: Drop unnecessary NULL test
-Message-ID: <Pine.LNX.4.64.0907122205060.22658@ask.diku.dk>
+	id S1752043AbZGNCAt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jul 2009 22:00:49 -0400
+From: "Zhu, Yi" <yi.zhu@intel.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>,
+	"drzeus-list@drzeus.cx" <drzeus-list@drzeus.cx>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "Winkler, Tomas" <tomas.winkler@intel.com>
+Date: Tue, 14 Jul 2009 09:59:43 +0800
+Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BA8388BB@pdsmsx502.ccr.corp.intel.com>
+References: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Tomas wrote:
 
-The result of container_of should not be NULL.  In particular, in this case
-the argument to the enclosing function has passed though INIT_WORK, which
-dereferences it, implying that its container cannot be NULL.
+> +#define SDIO_VENDOR_ID_INTEL			0x0089
+> +#define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
+> +#define SDIO_DEVICE_ID_INTEL_IWMC3200WIFI	0x1403
+> +#define SDIO_DEVICE_ID_INTEL_IWMC3200TOP        0x1404
 
-A simplified version of the semantic patch that makes this change is as
-follows:
-(http://www.emn.fr/x-info/coccinelle/)
+Looks good. Please replace the above spaces with a TAB.
 
-// <smpl>
-@@
-identifier fn,work,x,fld;
-type T;
-expression E1,E2;
-statement S;
-@@
+> +#define SDIO_DEVICE_ID_INTEL_IWMC3200BT		0x1406
+> 
+>  #define SDIO_VENDOR_ID_MARVELL			0x02df
+>  #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
 
-static fn(struct work_struct *work) {
-  ... when != work = E1
-  x = container_of(work,T,fld)
-  ... when != x = E2
-- if (x == NULL) S
-  ...
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/ipw2x00/ipw2200.c         |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index d726b3c..2dc1cdb 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -7250,9 +7250,6 @@ static void ipw_bg_qos_activate(struct work_struct *work)
- 	struct ipw_priv *priv =
- 		container_of(work, struct ipw_priv, qos_activate);
- 
--	if (priv == NULL)
--		return;
--
- 	mutex_lock(&priv->mutex);
- 
- 	if (priv->status & STATUS_ASSOCIATED)
+Thanks,
+-yi
