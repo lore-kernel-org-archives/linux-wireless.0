@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730AbZGIVs0 (ORCPT
+Received: from mail-px0-f185.google.com ([209.85.216.185]:48958 "EHLO
+	mail-px0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757674AbZGMX57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 17:48:26 -0400
-Subject: Re: Problem with p54 driver and ibss mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	Christian Lamparter <chunkeey@web.de>,
-	Alexander Wenzel <wenzel@fgan.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <200907100143.29004.jcmvbkbc@gmail.com>
-References: <4A55DB91.2070305@fgan.de> <200907092056.53055.chunkeey@web.de>
-	 <87vdm1pr5m.fsf@litku.valot.fi>  <200907100143.29004.jcmvbkbc@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uDa9AYPaulvxKBuQ+pjr"
-Date: Thu, 09 Jul 2009 23:48:18 +0200
-Message-Id: <1247176098.1905.8.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 13 Jul 2009 19:57:59 -0400
+Received: by pxi15 with SMTP id 15so772692pxi.33
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 16:57:59 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] mac80211: use correct address for mesh Path Error
+Date: Mon, 13 Jul 2009 17:00:10 -0700
+Message-Id: <1247529610-21854-1-git-send-email-andrey@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Javier Cardona <javier@cozybit.com>
 
---=-uDa9AYPaulvxKBuQ+pjr
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+For forwarded frames, we save the precursor address in addr1 in case it
+needs to be used to send a Path Error.  mesh_path_discard_frame,
+however, was using addr2 instead of addr1 to send Path Error frames, so
+correct that and also make the comment regarding this more clear.
 
-On Fri, 2009-07-10 at 01:43 +0400, Max Filippov wrote:
-> =D0=92 =D1=81=D0=BE=D0=BE=D0=B1=D1=89=D0=B5=D0=BD=D0=B8=D0=B8 =D0=BE=D1=
-=82 Thursday 09 July 2009 Kalle Valo =D0=BD=D0=B0=D0=BF=D0=B8=D1=81=D0=B0=
-=D0=BB(a):
-> > Christian Lamparter <chunkeey@web.de> writes:
-> >=20
-> > >> These data for sure must reside on /dev/mtdblk1 partition, but
-> > >> they're probably somehow coded/obfuscated. I couldn't find anything
-> > >> similar to MAC of my own n810 there.
-> > >
-> > > well, this is c0ffee comes from nokia's stlc45xx-driver.
-> > > Unfortunately, they don't say how to get the device eeprom from the
-> > > mtdblk1 partition. However, they certainly provide a tool stlc45xx-ca=
-l
-> > > (available at: http://stlc45xx.garage.maemo.org/ ) which can be used
-> > > to locate the eeprom's calibration data.
-> >=20
-> > stlc45xx-cal pushes the device specific calibration data and sets the
-> > MAC address. It's recommended to run it to get optimal performance.
-> >=20
-> IIRC stlc45xx-cal pushes these data into sysfs entries, which stlc45xx us=
-ed to create.
-> There's no such interface in p54spi.
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ net/mac80211/mesh_pathtbl.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Should be easy to copy the code into p54spi, we just never did, hoping
-Kalle would come up with a better way, maybe request_firmware() :)
-
-johannes
-
---=-uDa9AYPaulvxKBuQ+pjr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKVmWeAAoJEODzc/N7+Qma2MYQAKQCTXdbEZuU1knCbkHy3XQ7
-mtWCfqmPeteK7AFJ9zdPIdcOC1fJ66R72b4Jxi2XJJF8a0RjGnmjp3XvBVuc+C2W
-Tm+5HlZ57YyKjqPx7Hr9sJGIfvtptZGwlnuW22kUxxB3oGwxAj1ZCRcNk+bIeNHE
-IgHkbA2roltBuoiuZWTyOz8j7+m6OvpTR+mXrCjRZEHitNh2p+9FKqjB7/brlixp
-kuoHqZAhU+R+SD+V98avwA2EhWotaeJxRM2C4y0DuP2IIRLk30/FWKK5BjIV7mde
-t5FtLEF0wNkQBmc7kyWU7y/z9hMeMA1SUMaUfaFI9vCwla8Rf5FoRrOcipdjE5S4
-bmVFYq6fvDp/1QWqzbUxqvcYZSXLJu/jLxovkMSQvMp1Nx0G12sC8jcTbCqdRZ1+
-NM3G0VV3Z481WCK6OjTud55l9ccBGxsPx4DGvB2cPd3+QG1msoGXdtHQ3e1/YV9s
-9/7OqcnPnDBfbOEYfJGZLMnE5n4OXN7YpbK8UsakLwHxjBua5MH2i0t2ML7gdQcq
-ETNkLhhlbChe1FEKjRjjz+rRLyHSBp91gKiJVznGqP9Fy7ygvsIaYepo5ZNN01ya
-K633WFo1AluudwsnkB40Oe7WEf8mVWF85IEh3maHpYnSoOK/WkPpAa1jYXhSxtqz
-FADgiNAnQa2DYu5Au0q1
-=1AgK
------END PGP SIGNATURE-----
-
---=-uDa9AYPaulvxKBuQ+pjr--
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 1981af9..1ede8cb 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -507,8 +507,10 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
+  * @skb: frame to discard
+  * @sdata: network subif the frame was to be sent through
+  *
+- * If the frame was beign forwarded from another MP, a PERR frame will be sent
+- * to the precursor.
++ * If the frame was being forwarded from another MP, a PERR frame will be sent
++ * to the precursor.  The precursor's address (i.e. the previous hop) was saved
++ * in addr1 of the frame-to-be-forwarded, and would only be overwritten once
++ * the destination is successfully resolved.
+  *
+  * Locking: the function must me called within a rcu_read_lock region
+  */
+@@ -523,7 +525,7 @@ void mesh_path_discard_frame(struct sk_buff *skb,
+ 		u8 *ra, *da;
+ 
+ 		da = hdr->addr3;
+-		ra = hdr->addr2;
++		ra = hdr->addr1;
+ 		mpath = mesh_path_lookup(da, sdata);
+ 		if (mpath)
+ 			dsn = ++mpath->dsn;
+-- 
+1.5.6.3
 
