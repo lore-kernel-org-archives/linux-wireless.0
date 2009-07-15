@@ -1,285 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f214.google.com ([209.85.220.214]:46474 "EHLO
-	mail-fx0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754681AbZG0UtU (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325AbZGOQGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 16:49:20 -0400
-Received: by fxm10 with SMTP id 10so114935fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 13:49:18 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 27 Jul 2009 22:49:17 +0200
-Message-ID: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com>
-Subject: [RESEND] [PATCHv2] b43 add harware tkip
-From: gregor kowski <gregor.kowski@gmail.com>
-To: bcm43xx-dev@lists.berlios.de
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 15 Jul 2009 12:06:01 -0400
+Subject: Re: [PATCH 3/5] cfg80211: add WoW support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <20090715151425.GC5682@mosca>
+References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
+	 <1247617320-20163-4-git-send-email-lrodriguez@atheros.com>
+	 <1247658322.2302.1.camel@johannes.local>  <20090715151425.GC5682@mosca>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-x8PfWYzBX8mT9GQXNFHx"
+Date: Wed, 15 Jul 2009 18:05:06 +0200
+Message-Id: <1247673906.10754.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update : work with qos, implement dump key, fix an issue with setting
-random value on tkip key clear.
-PS : this depends on "b43 : remove old kidx API"
 
-This add hardware tkip for b43.
+--=-x8PfWYzBX8mT9GQXNFHx
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-It uncovered a bug in b43_write_probe_resp_template : it is writing at the
-wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This patch
-comments these writes.
+On Wed, 2009-07-15 at 08:14 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-Index: linux-2.6/drivers/net/wireless/b43/dma.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/dma.c	2009-07-25
-10:58:30.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/dma.c	2009-07-27 20:46:05.000000000 +0000
-@@ -1188,7 +1188,7 @@
- 	header = &(ring->txhdr_cache[(slot / TX_SLOTS_PER_FRAME) * hdrsize]);
- 	cookie = generate_cookie(ring, slot);
- 	err = b43_generate_txhdr(ring->dev, header,
--				 skb->data, skb->len, info, cookie);
-+				 skb, info, cookie);
- 	if (unlikely(err)) {
- 		ring->current_slot = old_top_slot;
- 		ring->used_slots = old_used_slots;
-Index: linux-2.6/drivers/net/wireless/b43/main.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/main.c	2009-07-27
-20:40:14.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/main.c	2009-07-27
-20:46:05.000000000 +0000
-@@ -836,6 +836,64 @@
- 	}
- }
+> Will change it, thanks. I see NLMSG_DEFAULT_SIZE is smaller than
+> NLMSG_GOODSIZE (it removes the NLMSG_HDRLEN), but no documentation
+> for either, when should I use either?
 
-+/* The ucode will use this with key to decrypt rx packets.
-+ * It will first check if the iv32 match,
-+ * - if they don't it returns the packet without decryption (and software
-+ *   decryption can be done). That's what happen when iv16 wrap.
-+ * - if they do, the rc4 key is computed with tkip phase2, and
-+ *   the wep decryption is tried on the packet. Either it will
-+ *   success and B43_RX_MAC_DEC is returned, either it fails
-+ *   and B43_RX_MAC_DEC|B43_RX_MAC_DECERR is returned and the packet
-+ *   is not usable (wrong key used on it).
-+ * So in order to never have B43_RX_MAC_DECERR, we should provide
-+ * a iv32 and phase1key that match. Because we drop packets in case of
-+ * B43_RX_MAC_DECERR, if we have a correct iv32 but a wrong phase1key, all
-+ * packets will be lost without higher layer knowing (ie no resync possible
-+ * until next wrap).
-+ *
-+ * NOTE : this should support 50 key like RCMTA because
-+ * (B43_SHM_SH_KEYIDXBLOCK - B43_SHM_SH_TKIPTSCTTAK)/14 = 50
-+ */
-+static void rx_tkip_phase1_write(struct b43_wldev *dev, u8 index, u32 iv32,
-+		u16 *phase1key)
-+{
-+	unsigned int i;
-+	u32 offset;
-+	const u8 per_sta_keys_start = 4;
-+
-+	B43_WARN_ON(index < per_sta_keys_start);
-+	/* We have two default TX keys and possibly two default RX keys.
-+	 * Physical mac 0 is mapped to physical key 4 or 8, depending
-+	 * on the firmware version.
-+	 * So we must adjust the index here.
-+	 */
-+	index -= per_sta_keys_start;
-+
-+	if (b43_debug(dev, B43_DBG_KEYS))
-+		b43dbg(dev->wl, "rx_tkip_phase1_write : idx 0x%x, iv32 0x%x\n",
-+				index, iv32);
-+	/* Write the key to the  RX tkip shared mem */
-+	offset = B43_SHM_SH_TKIPTSCTTAK + index * (10 + 4);
-+	for (i = 0; i < 10; i += 2) {
-+		b43_shm_write16(dev, B43_SHM_SHARED, offset + i, phase1key[i/2]);
-+	}
-+	b43_shm_write16(dev, B43_SHM_SHARED, offset + i, iv32);
-+	b43_shm_write16(dev, B43_SHM_SHARED, offset + i + 2, iv32>>16);
-+}
-+
-+static void b43_mac_update_tkip_key(struct ieee80211_hw *hw,
-+			struct ieee80211_key_conf *keyconf, const u8 *addr,
-+			u32 iv32, u16 *phase1key)
-+{
-+	struct b43_wl *wl = hw_to_b43_wl(hw);
-+	struct b43_wldev *dev = wl->current_dev;
-+	int index = keyconf->hw_key_idx;
-+	keymac_write(dev, index, NULL);	/* First zero out mac to avoid race */
-+
-+	rx_tkip_phase1_write(dev, index, iv32, phase1key);
-+	keymac_write(dev, index, addr);
-+}
-+
- static void do_key_write(struct b43_wldev *dev,
- 			 u8 index, u8 algorithm,
- 			 const u8 *key, size_t key_len, const u8 *mac_addr)
-@@ -848,6 +906,19 @@
+I don't know, but GOODSIZE is larger than a page or something, iirc.
+There was a patch recently changing all the users.
 
- 	if (index >= per_sta_keys_start)
- 		keymac_write(dev, index, NULL);	/* First zero out mac. */
-+	if (algorithm == B43_SEC_ALGO_TKIP) {
-+		/*
-+		 * We should provide an initial iv32, phase1key pair.
-+		 * We could start with iv32=0 and compute the corresponding
-+		 * phase1key, but this mean calling ieee80211_get_tkip_key
-+		 * with a fake skb (or export other tkip function).
-+		 * Because we are lazy we hope iv32 won't start with
-+		 * 0xffffffff and let's b43_mac_update_tkip_key provide a
-+		 * correct pair.
-+		 */
-+		rx_tkip_phase1_write(dev, index, 0xffffffff, (u16*)buf);
-+	} else if (index >= per_sta_keys_start) /* clear it */
-+		rx_tkip_phase1_write(dev, index, 0, (u16*)buf);
- 	if (key)
- 		memcpy(buf, key, key_len);
- 	key_write(dev, index, algorithm, buf);
-@@ -865,6 +936,8 @@
- {
- 	int i;
+> > > +	if (!(wiphy->wow_triggers_supported & triggers_requested)) {
+> > > +		err =3D -EOPNOTSUPP;
+> > > +		goto out;
+> >=20
+> > This seems wrong, should be "requested & supported !=3D requested", I
+> > think.
+>=20
+> The above one won't return -EOPNOTSUPP when you add additional junk, you'=
+re
+> right, better to just inform userspace of that.
 
-+	if (algorithm == B43_SEC_ALGO_TKIP && key_len == 32)
-+		key_len = 16;
- 	if (key_len > B43_SEC_KEYSIZE)
- 		return -EINVAL;
- 	for (i = 0; i < dev->max_nr_keys; i++) {
-@@ -946,6 +1019,14 @@
- 		printk("   Algo: %04X/%02X", algo, key->algorithm);
+Your version also disallows turning off WoW again, afaict.
 
- 		if (index >= 4) {
-+			if (key->algorithm == B43_SEC_ALGO_TKIP) {
-+				printk("   TKIP: ");
-+				offset = B43_SHM_SH_TKIPTSCTTAK + (index - 4) * (10 + 4);
-+				for (i = 0; i < 14; i+=2) {
-+					u16 tmp = b43_shm_read16(dev, B43_SHM_SHARED, offset + i);
-+					printk("%02X%02X", (tmp & 0xFF), ((tmp >> 8) & 0xFF));
-+				}
-+			}
- 			rcmta0 = b43_shm_read32(dev, B43_SHM_RCMTA,
- 						((index - 4) * 2) + 0);
- 			rcmta1 = b43_shm_read16(dev, B43_SHM_RCMTA,
-@@ -1505,10 +1586,13 @@
- 	/* Looks like PLCP headers plus packet timings are stored for
- 	 * all possible basic rates
- 	 */
-+	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
-+#if 0
- 	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
- 	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
- 	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
- 	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
-+#endif
+johannes
 
- 	size = min((size_t) size, 0x200 - sizeof(struct b43_plcp_hdr6));
- 	b43_write_template_common(dev, probe_resp_data,
-@@ -3667,8 +3751,9 @@
+--=-x8PfWYzBX8mT9GQXNFHx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
- 	switch (cmd) {
- 	case SET_KEY:
--		if (algorithm == B43_SEC_ALGO_TKIP) {
--			/* FIXME: No TKIP hardware encryption for now. */
-+		if (algorithm == B43_SEC_ALGO_TKIP &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+			/* We support only pairwise key */
- 			err = -EOPNOTSUPP;
- 			goto out_unlock;
- 		}
-@@ -3698,6 +3783,8 @@
- 				     b43_hf_read(dev) & ~B43_HF_USEDEFKEYS);
- 		}
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		if (algorithm == B43_SEC_ALGO_TKIP)
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
- 		break;
- 	case DISABLE_KEY: {
- 		err = b43_key_clear(dev, key->hw_key_idx);
-@@ -4425,6 +4512,7 @@
- 	.bss_info_changed	= b43_op_bss_info_changed,
- 	.configure_filter	= b43_op_configure_filter,
- 	.set_key		= b43_op_set_key,
-+	.update_tkip_key	= b43_mac_update_tkip_key,
- 	.get_stats		= b43_op_get_stats,
- 	.get_tx_stats		= b43_op_get_tx_stats,
- 	.get_tsf		= b43_op_get_tsf,
-Index: linux-2.6/drivers/net/wireless/b43/pio.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/pio.c	2009-07-25
-10:58:30.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/pio.c	2009-07-27 20:46:05.000000000 +0000
-@@ -461,8 +461,8 @@
+-----BEGIN PGP SIGNATURE-----
 
- 	cookie = generate_cookie(q, pack);
- 	hdrlen = b43_txhdr_size(q->dev);
--	err = b43_generate_txhdr(q->dev, (u8 *)&txhdr, skb->data,
--				 skb->len, info, cookie);
-+	err = b43_generate_txhdr(q->dev, (u8 *)&txhdr, skb,
-+				 info, cookie);
- 	if (err)
- 		return err;
+iQIcBAABAgAGBQJKXf4vAAoJEODzc/N7+QmauzkQAIatniMuxVVR+pWO08DpAtNF
+tdAq2b4tpfXNOjkZiI8xRhqntHSN8cOBUO1/tHu+nfGi4FAxBgV/YMk9s9DFDGr5
++Os1Oiuy5mILizskyqhhIKcJRZ1Bz95XGqBUz//bnocxS7zcqxNcKt1Bejwt2Zmq
+rOQPd3k3/7FZo+Y6iGBJqI4h1KCFyiUi7FF61YbkClUwmQmqN41nSNDvwEsfRupX
+vk8j9Cd7luvCot+HBd5SAOzTxKIefFTXeeVGV4YOxZNf+M2lP8r4UpFU85qj318e
+q0/RVJ3u5S0NJBWUZB93a5GBeS51wzSBJ80phncfaNhYQ9yTt5RG/cwPvHF5aRi8
+KUlogcc7P4GTSBHQIP8limUsX3Ycnor0ak6okKYbc0P2aqUdipbHecOBWvfNBq51
+xB3NpJA2H2rVKgfL1Dh7J/S4orSzdbdJFRf+g4Vo7Iqo3c7KR5FFEipvSK8v2YQi
+7a6Tm6V+LEDbWBaf0hk/prlfUcXyCf1f/pqqfW3W6M/vjBVdyyw1+NGvjiMmDeOS
+c5fYCbT1QaDEQjmAMVJaWDIgsih23aBxQkiTpDGHLfiQcINp82i7B7IeClnizFJE
+/iI3D6+Dcn1J9hCwgtuGObGrXCdmWnYALNWA6rUQZHityFIKlXK3zR2HCmrf+EZr
+xw7FP567CnsP5kIeh7zt
+=cws4
+-----END PGP SIGNATURE-----
 
-Index: linux-2.6/drivers/net/wireless/b43/xmit.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/xmit.c	2009-07-27
-20:40:14.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/xmit.c	2009-07-27
-20:46:05.000000000 +0000
-@@ -180,11 +180,12 @@
- /* Generate a TX data header. */
- int b43_generate_txhdr(struct b43_wldev *dev,
- 		       u8 *_txhdr,
--		       const unsigned char *fragment_data,
--		       unsigned int fragment_len,
-+		       struct sk_buff *skb_frag,
- 		       struct ieee80211_tx_info *info,
- 		       u16 cookie)
- {
-+	const unsigned char *fragment_data = skb_frag->data;
-+	unsigned int fragment_len = skb_frag->len;
- 	struct b43_txhdr *txhdr = (struct b43_txhdr *)_txhdr;
- 	const struct b43_phy *phy = &dev->phy;
- 	const struct ieee80211_hdr *wlhdr =
-@@ -257,9 +258,25 @@
- 		mac_ctl |= (key->algorithm << B43_TXH_MAC_KEYALG_SHIFT) &
- 			   B43_TXH_MAC_KEYALG;
- 		wlhdr_len = ieee80211_hdrlen(fctl);
--		iv_len = min((size_t) info->control.hw_key->iv_len,
--			     ARRAY_SIZE(txhdr->iv));
--		memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
-+		if (key->algorithm == B43_SEC_ALGO_TKIP) {
-+			u16 phase1key[5];
-+			int i;
-+			/* we give the phase1key and iv16 here, the key is stored in
-+			 * shm. With that the hardware can do phase 2 and encryption.
-+			 */
-+			ieee80211_get_tkip_key(info->control.hw_key, skb_frag,
-IEEE80211_TKIP_P1_KEY, (u8*)phase1key);
-+			/* phase1key is in host endian */
-+			for (i = 0; i < 5; i++)
-+				phase1key[i] = cpu_to_le16(phase1key[i]);
-+
-+			memcpy(txhdr->iv, phase1key, 10);
-+			/* iv16 */
-+			memcpy(txhdr->iv+10, ((u8 *) wlhdr) + wlhdr_len, 3);
-+		} else {
-+			iv_len = min((size_t) info->control.hw_key->iv_len,
-+				     ARRAY_SIZE(txhdr->iv));
-+			memcpy(txhdr->iv, ((u8 *) wlhdr) + wlhdr_len, iv_len);
-+		}
- 	}
- 	if (b43_is_old_txhdr_format(dev)) {
- 		b43_generate_plcp_hdr((struct b43_plcp_hdr4 *)(&txhdr->old_format.plcp),
-Index: linux-2.6/drivers/net/wireless/b43/xmit.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/b43/xmit.h	2009-07-27
-20:40:14.000000000 +0000
-+++ linux-2.6/drivers/net/wireless/b43/xmit.h	2009-07-27
-20:46:05.000000000 +0000
-@@ -176,8 +176,7 @@
+--=-x8PfWYzBX8mT9GQXNFHx--
 
- int b43_generate_txhdr(struct b43_wldev *dev,
- 		       u8 * txhdr,
--		       const unsigned char *fragment_data,
--		       unsigned int fragment_len,
-+		       struct sk_buff *skb_frag,
- 		       struct ieee80211_tx_info *txctl, u16 cookie);
-
- /* Transmit Status */
