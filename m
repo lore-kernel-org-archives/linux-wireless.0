@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbZGTKes (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42338 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755973AbZGOAO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 06:34:48 -0400
-Subject: Re: [PATCH 1/5] cfg80211: set_default_key only for WEP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
-References: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
-	 <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GEULKHNUvspws8GhCp9S"
-Date: Mon, 20 Jul 2009 12:34:44 +0200
-Message-Id: <1248086084.4204.7.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 14 Jul 2009 20:14:29 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 14/21] mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
+Date: Tue, 14 Jul 2009 20:14:06 -0400
+Message-Id: <1247616853-11221-15-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cc: Felix Fietkau <nbd@openwrt.org>
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/rc80211_minstrel.c |    7 +++----
+ net/mac80211/rc80211_pid_algo.c |    7 +++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
---=-GEULKHNUvspws8GhCp9S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-07-20 at 11:47 +0800, Zhu Yi wrote:
-> We invoke the cfg80211 set_default_key callback only for WEP key
-> configuring.
->=20
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-> ---
->  net/wireless/wext-compat.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-> index aa80c0c..c63e10e 100644
-> --- a/net/wireless/wext-compat.c
-> +++ b/net/wireless/wext-compat.c
-> @@ -531,7 +531,8 @@ static int __cfg80211_set_encryption(struct cfg80211_=
-registered_device *rdev,
->  			wdev->wext.keys->data[idx];
->  	}
-> =20
-> -	if (params->cipher !=3D WLAN_CIPHER_SUITE_AES_CMAC &&
-> +	if ((params->cipher =3D=3D WLAN_CIPHER_SUITE_WEP40 ||
-> +	     params->cipher =3D=3D WLAN_CIPHER_SUITE_WEP104) &&
->  	    (tx_key || (!addr && wdev->wext.default_key =3D=3D -1))) {
->  		if (wdev->current_bss)
->  			err =3D rdev->ops->set_default_key(&rdev->wiphy,
-
---=-GEULKHNUvspws8GhCp9S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKZEhAAAoJEODzc/N7+QmapK4QAMRIKye19cY765i50gSfEJwm
-PIn6JJzYqZ0lgYVhtpgvIS+f3/prC+6rPwkfCGWKC78DbeYIDLbnqjQv4o95B1lJ
-saG0d4sfPgYu74oEIdc3JEHyGQ/nJ1uiDckBBZtXK//bRvH+k6D5ytkHbxlfnUKC
-V8hp/l9TpxP5NCp2wXP8IyTI6TgXMA2QEwyU7GNlr2CVoQyfBYxQNo2afSvUGzdA
-d12hXG87IRKdUGRNIWDMvzsn3drHPwdtutNX3W4CLHZA/+NV0vE/2wWDgXn7XUvG
-SdTA9z2DQIHPIl7egyZ5gfkXTM/BPJ+9/5OsNr7P65/SsHVYsSVwFuAQX49lw3+o
-vq1v01OEx/9sKEeG7k9f4BnkbcNNNPuxkXN+m1unIHHqkpUnSzQxTabG0XNUtxYO
-hlygvZAHsN9YTnn/9hXn9cn+k3uwsSnxU1rwKNtqB9do2i1yPnHFZtMXTSMy3xwS
-4m1ZOo/Xn/eRE2KhdDz1WLldxTqjvZmNaz2I47kGWAErTLsQdg4BK2jV9igd6/br
-k0kGw+F5hBQ9UlGdvzln2Tux06JK3b/Ak9h7QsiL910z1w2CK+w94yKNQDWK6Weo
-Q8GRpLqIkhL8VUq38qaysueVrt3VfI4FT/zC65x/zT1phm+W7iyz7P2dsB8v8EVQ
-7NbWn+E32IxvqZnlqOnv
-=lNrV
------END PGP SIGNATURE-----
-
---=-GEULKHNUvspws8GhCp9S--
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 37771ab..5bdce0c 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -75,12 +75,11 @@ use_low_rate(struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	u16 fc;
++	__le16 fc;
+ 
+-	fc = le16_to_cpu(hdr->frame_control);
++	fc = hdr->frame_control;
+ 
+-	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
+-		(fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA);
++	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
+ }
+ 
+ 
+diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
+index a0bef76..5496077 100644
+--- a/net/mac80211/rc80211_pid_algo.c
++++ b/net/mac80211/rc80211_pid_algo.c
+@@ -280,7 +280,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rc_pid_sta_info *spinfo = priv_sta;
+ 	int rateidx;
+-	u16 fc;
++	__le16 fc;
+ 
+ 	if (txrc->rts)
+ 		info->control.rates[0].count =
+@@ -290,9 +290,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
+ 			txrc->hw->conf.short_frame_max_tx_count;
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if (!sta || !spinfo ||
+-	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
++	fc = hdr->frame_control;
++	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
+ 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+ 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+-- 
+1.6.0.6
 
