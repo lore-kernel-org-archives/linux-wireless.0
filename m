@@ -1,110 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:57709 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbZGaQQo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34001 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932082AbZGOQM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 12:16:44 -0400
-Received: by ewy10 with SMTP id 10so1624492ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 09:16:43 -0700 (PDT)
-Message-ID: <4A7318E6.3000004@gmail.com>
-Date: Fri, 31 Jul 2009 18:16:38 +0200
-From: Artur Skawina <art.08.09@gmail.com>
-MIME-Version: 1.0
-To: Igor Perminov <igor.perminov@inbox.ru>
-CC: hostap@lists.shmoo.com,
+	Wed, 15 Jul 2009 12:12:29 -0400
+Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Ranson <ranson@analager.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: A station can't reconnect after it wakes up
-References: <1248969930.29068.224.camel@sunlight>
-In-Reply-To: <1248969930.29068.224.camel@sunlight>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1247673740.17896.1983.camel@rc-desk>
+References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
+	 <1247673740.17896.1983.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MCgxAfcbMQogEheOqAhi"
+Date: Wed, 15 Jul 2009 18:11:50 +0200
+Message-Id: <1247674310.10754.19.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[linux-wireless added to cc list]
 
-Igor Perminov wrote:
-> I have an issue related to handling power-saving stations by hostapd
-> and/or mac80211 stack. A station can't reconnect after it wakes up.
-> 
-> The problems looks similar to another one having been reported to this
-> list earlier (STA can connect, but fails to reconnect within
-> ap_max_inactivity):
-> http://lists.shmoo.com/pipermail/hostap/2009-February/019192.html
-> 
-> AP: Linux box with D-Link DWA-110 USB Wi-Fi stick (rt73usb kernel
-> driver), kernel 2.6.30 with some patches, hostapd 0.6.9.
-> Station: Toshiba G900 PDA under Windows Mobile 6.0.
-> 
-> The environment is described in details here:
-> http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=5486&start=10
-> 
-> Consider the following step-by-step:
-> 1. A station authenticates and associates with the AP and exchanges
-> traffic.
-> 2. The station indicates to the AP that it is going to sleep.
-> 3. The station device goes to the stand-by mode (not only its wi-fi
-> card, but the device itself).
-> 4. The station device wakes up and begins authentication with an
-> Authentication management frame.
-> 
-> This is the behavior of my PDA.
-> 
-> The problem is the mac80211 stack at the point 4 "remembers" that the
-> station has gone to sleep. So, the response frames from hostapd are
-> buffered by mac80211.
-> The station indicates in the Authentication frame that it isn't sleeping
-> anymore. But the mac80211 stack analyzes sleep/wake transitions in
-> _data_ frames only, but not in management ones. See
-> ieee80211_rx_h_sta_process in net/mac80211/rx.c. A comment there notes:
-> "Ignore doze->wake transitions that are indicated by non-data frames,
-> the standard is unclear here".
-> As the result, the station never receives the authentication response
-> from the AP.
-> 
-> One solution against this problem could be implemented in hostapd: to
-> force the mac80211 stack to "forget" the station just after receiving an
-> authentication frame (the patch is below). After this change the station
-> can reconnect successfully.
+--=-MCgxAfcbMQogEheOqAhi
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-i just did a quick test and your hostapd patch does indeed fix my problem
-too (p54+hostapd with a winmobile device that couldn't reconnect after
-turning the wifi module off and on). 
+Hi,
 
-> Another solution (in theory) would be to improve the mac80211
-> implementation: to analyze not only data frames, but also
-> management ones (or may be just some kinds of them) in
-> ieee80211_rx_h_sta_process.
+> On Tue, 2009-07-14 at 21:25 -0700, John Ranson wrote:
+> > [    4.252445] iwlagn 0000:03:00.0: Tunable channels: 11 802.11bg, 13
+> > 802.11a channels
+> > [    4.252556] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
+> > [    4.252945] iwlagn 0000:03:00.0: Failed to register hw (error -17)
+> > [    4.253255] iwlagn 0000:03:00.0: PCI INT A disabled
+> > [    4.253263] iwlagn: probe of 0000:03:00.0 failed with error -17
+>=20
+> This is ieee80211_register_hw() returning error 17 (EEXIST). One spot I
+> saw where this can happen is if you are trying to register with the same
+> name (wlanX) already used by another netdevice. Does this sound possible
+> in your setup?
+>=20
+> Johannes - do you perhaps have an idea when this can happen?
 
-would seem to make sense, but having not read the spec i have no idea
-if that's the right answer; hence the linux-wireless cc...
+This is strange -- I've had one report of this with 3945 which went away
+and seemed to have been a compat only issue, I suspect this is also just
+a compat-wireless issue, but I have no idea.
 
-> I've asked this question to the linux-wireless mailing list few days
-> ago, but nobody has answered still:
-> http://marc.info/?l=linux-wireless&m=124879549212741&w=2
-> 
-> And what is your opinion, what is a better way: should this problem be
-> fixed in hostapd or in mac80211?
-> 
-> === Begin diff ===
-> --- a/hostapd/ieee802_11.c	2009-06-29 14:21:59.000000000 +0400
-> +++ b/hostapd/ieee802_11.c	2009-07-21 16:28:17.000000000 +0400
-> @@ -583,6 +583,13 @@
->  		goto fail;
->  	}
->  
-> +	res = hostapd_sta_remove(hapd, mgmt->sa);
-> +	if (res) {
-> +		wpa_printf(MSG_DEBUG, "authentication: STA=" MACSTR
-> +				", hostapd_sta_remove returned %d\n",
-> +				MAC2STR(mgmt->sa), res);
-> +	}
-> +
->  	if (vlan_id > 0) {
->  		if (hostapd_get_vlan_id_ifname(hapd->conf->vlan,
->  					       sta->vlan_id) == NULL) {
-> === End diff ===
+-EEXIST should only happen if something has already claimed something in
+sysfs, but not with netdevs (i.e. wlan0 would just be renamed to wlan1)
+and phy0 is numbered all the time so that can't be it either. I don't
+know.
 
-Thanks for the cc, added this to my local hostapd patch set, until the
-issue gets resolved one way or another.
+John, can you poke around in sysfs, /sys/class/ieee80211/ and see if
+there's anything there when loading fails?
 
-artur
+johannes
+
+--=-MCgxAfcbMQogEheOqAhi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKXf/DAAoJEODzc/N7+Qmarg0QAMaTy172CcLFK7KLhWBkq0kp
+dD+iJzYLFpXn7MADUNJZWgXBldfjEaNzPQN0bH8ZB75p1wa7IH+qulc7O+Gy25IE
+aLsmzH8oH7RFHdHUBNA7mp1dFDg/unEy7iSDbTWPQ+j9mh1H+9n4IaeK5jj6COux
+hJiJOI/fCKP48hhg4H3oe6h33603XkrsLOxFxpd7Es6UlRdfee8YNifO8AIO4zQ3
+ax6AhjJFo+MBhenhi2sa9um4jznaxvt2A+pUBa3hvTW1J6UIFqwaAg7Np58tUc0X
+47juI2f+c/KpCeX11Bt0seI7W9Vlk6k/zhDp6yjIZqBmKMKVf14pW1C5iAcJUKzO
+/QWs63LdvB4MsWi7G3ja4FfSQGVHQOLgLBXQLK3BT+q0g3fMl200wSw5P8oVM7f4
+zZGiX59mnG4xbziQPU2glWbyKV7pdL69MTLpwACqekudxSAO8jthCJOMmzBlvYgO
+dOvxcBiQGpEkaxXzSzDTc6Rlt3S92sQFk01OVHz8D722KrQQIblcBsetoz+PrzKO
+edjmc+p/i2aowH3d+X5+png1szxr6xeWpvQUXlw/7jQcDO4K+UjNG6aRM7cA9ytW
+lVcskjr/g2CGb/niilUuRE4Ayr7gPVk8wm1NgDIH16148QTxM9aXzVJAVTSLLYAJ
+QmOKHP8IXr7ASOFgNt7c
+=cxWH
+-----END PGP SIGNATURE-----
+
+--=-MCgxAfcbMQogEheOqAhi--
+
