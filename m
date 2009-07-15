@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42339 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755965AbZGOAO3 (ORCPT
+Received: from mail-qy0-f192.google.com ([209.85.221.192]:53421 "EHLO
+	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932128AbZGOQZ1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 07/21] ath9k: remove pointless wrapper ath_rc_rate_getidx()
-Date: Tue, 14 Jul 2009 20:13:59 -0400
-Message-Id: <1247616853-11221-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 15 Jul 2009 12:25:27 -0400
+Received: by qyk30 with SMTP id 30so2084176qyk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 09:25:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1247674310.10754.19.camel@johannes.local>
+References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
+	<1247673740.17896.1983.camel@rc-desk> <1247674310.10754.19.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 15 Jul 2009 09:25:06 -0700
+Message-ID: <43e72e890907150925p51c1a019r95266cbdc1e762e4@mail.gmail.com>
+Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	John Ranson <ranson@analager.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is just calling another helper, so just use the other
-helper directly. This should make it clear that when do not
-find the next rate we stick to the current one.
+On Wed, Jul 15, 2009 at 9:11 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> Hi,
+>
+>> On Tue, 2009-07-14 at 21:25 -0700, John Ranson wrote:
+>> > [    4.252445] iwlagn 0000:03:00.0: Tunable channels: 11 802.11bg, 13
+>> > 802.11a channels
+>> > [    4.252556] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
+>> > [    4.252945] iwlagn 0000:03:00.0: Failed to register hw (error -17)
+>> > [    4.253255] iwlagn 0000:03:00.0: PCI INT A disabled
+>> > [    4.253263] iwlagn: probe of 0000:03:00.0 failed with error -17
+>>
+>> This is ieee80211_register_hw() returning error 17 (EEXIST). One spot I
+>> saw where this can happen is if you are trying to register with the same
+>> name (wlanX) already used by another netdevice. Does this sound possible
+>> in your setup?
+>>
+>> Johannes - do you perhaps have an idea when this can happen?
+>
+> This is strange -- I've had one report of this with 3945 which went away
+> and seemed to have been a compat only issue, I suspect this is also just
+> a compat-wireless issue, but I have no idea.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   21 ++++-----------------
- 1 files changed, 4 insertions(+), 17 deletions(-)
+We've had a lot of changes to compat-wireless recently so this is possible.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 64cb697..03e7df4 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -814,19 +814,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	tx_info->control.rts_cts_rate_idx = cix;
- }
- 
--static u8 ath_rc_rate_getidx(struct ath_softc *sc,
--			     struct ath_rate_priv *ath_rc_priv,
--			     const struct ath_rate_table *rate_table,
--			     u8 rix)
--{
--	u8 nextindex = 0;
--	if (ath_rc_get_nextlowervalid_txrate(rate_table,
--					     ath_rc_priv, rix, &nextindex))
--		return nextindex;
--	else
--		return rix;
--}
--
- static void ath_rc_ratefind(struct ath_softc *sc,
- 			    struct ath_rate_priv *ath_rc_priv,
- 			    struct ieee80211_tx_rate_control *txrc)
-@@ -865,8 +852,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix);
-+		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
-+						 rix, &nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -883,8 +870,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix);
-+		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
-+						 rix, &nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
--- 
-1.6.0.6
+John, can you cat compat-release on your compat-wireless directory?
 
+  Luis
