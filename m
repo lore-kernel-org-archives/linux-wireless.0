@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21534 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493AbZGVQia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 12:38:30 -0400
-Subject: Re: wireless-testing regression: iwl3945 scan fails
-From: reinette chatre <reinette.chatre@intel.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1248279871.28545.126.camel@violet>
-References: <87k521s2wa.fsf@litku.valot.fi>  <87fxcosron.fsf@litku.valot.fi>
-	 <1248278121.17896.2728.camel@rc-desk>  <1248279871.28545.126.camel@violet>
-Content-Type: text/plain
-Date: Wed, 22 Jul 2009 09:38:30 -0700
-Message-Id: <1248280710.17896.2739.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:40162 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbZGOHNU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2009 03:13:20 -0400
+Received: by bwz28 with SMTP id 28so1226415bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 00:13:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090618022524.GC10014@hash.localnet>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com>
+	<1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu>
+	<87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu>
+	<20090613205737.GA30439@hash.localnet> <20090618022524.GC10014@hash.localnet>
+From: Ohad Ben-Cohen <ohad@bencohen.org>
+Date: Wed, 15 Jul 2009 10:12:59 +0300
+Message-ID: <bd5b16740907150012j7a687dddr5caee38e26bd9868@mail.gmail.com>
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Pierre Ossman <pierre@ossman.eu>, Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless@vger.kernel.org, san@google.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+Hi Bob, Pierre,
 
-On Wed, 2009-07-22 at 09:24 -0700, Marcel Holtmann wrote:
-> Hi Reinette,
-> 
-> > > > I just upgraded to rc3-wl (commit 225b6807) and my iwl3945 doesn't work
-> > > > anymore, even scan fails. I don't have time to investigate this right
-> > > > now, but I'll try to find some time during the evening.
-> > > 
-> > > I have looked at this now a bit and I don't think this is an iwl3945
-> > > problem. Scanning seems to stall in some situations and iwl3945 doesn't
-> > > even receive the scan command. 
-> > 
-> > The patches we sent recently did undergo testing under various scenarios
-> > using wpa_supplicant. We have not done this testing after the
-> > 2.6.31-rc3-wl merge (yesterday) though. I just did a quick test on my
-> > 3945 using iwconfig to associate and it was able to do so on A and G
-> > bands. Looks like I need to do some wpa_supplicant testing.
-> 
-> can also at least get an IP address via DHCP and do some packet
-> transfer. I made the experience that DHCP works and then we get
-> disconnected seconds later.
+On Thu, Jun 18, 2009 at 5:25 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> +#define SDIO_VENDOR_ID_TI                      0x104c
+> +#define SDIO_DEVICE_ID_TI_WL1251               0x9066
 
-I have seen this for a long time now. I am using wpa_supplicant to
-connect to a WPA2 network using a 5100 device and get disconnected very
-regularly (starts with "CTRL-EVENT-DISCONNECTED - Disconnect event -
-remove keys" which is caused by a missing probe response from the AP).
-In these cases wpa_supplicant is able to reconnect. This behavior is
-also present in 2.6.31-rc3-wl from yesterday.
+I wonder how those values are derived ?
 
-Do you not get reconnected after you get disconnected?
+Are they officially registered anywhere ?
 
-Reinette
-
+Thanks,
+Ohad.
