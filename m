@@ -1,29 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49647
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753897AbZGFVgA (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42322 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755196AbZGOAO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 17:36:00 -0400
-Date: Mon, 06 Jul 2009 14:36:06 -0700 (PDT)
-Message-Id: <20090706.143606.09407511.davem@davemloft.net>
-To: gurligebis@gmail.com
-Cc: Larry.Finger@lwfinger.net, chunkeey@web.de,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa
- - sleeping function called from invalid context
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <9c30dffe0907061326n77823e03lf87f4feb616c8f7b@mail.gmail.com>
-References: <4A5253F1.50504@lwfinger.net>
-	<20090706.125011.56653570.davem@davemloft.net>
-	<9c30dffe0907061326n77823e03lf87f4feb616c8f7b@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 14 Jul 2009 20:14:28 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 11/21] ath9k: remap ATH9K_MODE_*
+Date: Tue, 14 Jul 2009 20:14:03 -0400
+Message-Id: <1247616853-11221-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bjarke Istrup Pedersen <gurligebis@gmail.com>
-Date: Mon, 6 Jul 2009 22:26:09 +0200
+There are a lot of gaps here.
 
-> I can confirm that the patch fixes the problem with my PCMCIA card :-)
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Thanks for testing :)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5e40223..9a4570d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -113,14 +113,14 @@
+ 
+ enum wireless_mode {
+ 	ATH9K_MODE_11A = 0,
+-	ATH9K_MODE_11G = 3,
+-	ATH9K_MODE_11NA_HT20 = 6,
+-	ATH9K_MODE_11NG_HT20 = 7,
+-	ATH9K_MODE_11NA_HT40PLUS = 8,
+-	ATH9K_MODE_11NA_HT40MINUS = 9,
+-	ATH9K_MODE_11NG_HT40PLUS = 10,
+-	ATH9K_MODE_11NG_HT40MINUS = 11,
+-	ATH9K_MODE_MAX
++	ATH9K_MODE_11G,
++	ATH9K_MODE_11NA_HT20,
++	ATH9K_MODE_11NG_HT20,
++	ATH9K_MODE_11NA_HT40PLUS,
++	ATH9K_MODE_11NA_HT40MINUS,
++	ATH9K_MODE_11NG_HT40PLUS,
++	ATH9K_MODE_11NG_HT40MINUS,
++	ATH9K_MODE_MAX,
+ };
+ 
+ enum ath9k_hw_caps {
+-- 
+1.6.0.6
+
