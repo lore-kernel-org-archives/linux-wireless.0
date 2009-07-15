@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:62376 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661AbZGIKrU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52578 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755739AbZGOAWB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 06:47:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <4A5575C1.8090403@lwfinger.net>
-References: <4A54FB81.30302@gmail.com>
-	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
-	 <4A551B43.3020104@gmail.com>
-	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
-	 <4A5575C1.8090403@lwfinger.net>
-Date: Thu, 9 Jul 2009 11:47:18 +0100
-Message-ID: <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
-Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Marcin Slusarz <marcin.slusarz@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Przemyslaw Kulczycki <azrael@autocom.pl>,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Jul 2009 20:22:01 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/5] ath9k: do not stop the queues in driver stop
+Date: Tue, 14 Jul 2009 20:21:56 -0400
+Message-Id: <1247617320-20163-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
+References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/9 Larry Finger <Larry.Finger@lwfinger.net>:
-> Hin-Tak Leung wrote:
->>
->> if they are not labelled v1/v2/v3 as such, it may be more
->> useful/informative to change to
->>
->>     [some variant of ] ... [(other variants are supported by the
->> rt2070/rt3070 modules)]
->>
->> instead of just adding [v2] to the end.
->
-> I don't know about the box as I bought mine used on Ebay, but the
-> label on the device clearly states that it is a WG111v2.
->
-> Larry
->
->
+mac80211 will have disabled the queues for us when
+needed.
 
-But that's  a Netgear WG111v2 ? We are talking about Linksys
-WUSB54GC-EU and its v1/v2/v3 . I am just thinking that if it is for
-informative purposes (for those who actually selectively build their
-kernel modules), adding a bit more info, such as suggesting to use
-rt73usb/rt2070/rt3070 modules, won't hurt.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Incidentally I like to know a bit more about this patch - presumably
-Marcin has such a device? I am also a little curious, as this commit
-should be accompanied by a corresponding update in another Kconfig
-which supports the device? I am not trying to be picky, but for an
-informative (non-code-changing) patch, it can be more informative.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index d14f8c9..907434a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2101,8 +2101,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+-	ieee80211_stop_queues(hw);
+-
+ 	if (ath9k_wiphy_started(sc)) {
+ 		mutex_unlock(&sc->mutex);
+ 		return; /* another wiphy still in use */
+-- 
+1.6.0.6
+
