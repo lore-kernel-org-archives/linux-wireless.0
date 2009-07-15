@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39976 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753541AbZGANRk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 09:17:40 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH V2] b43: Add support for 4318E
-Date: Wed, 1 Jul 2009 15:17:41 +0200
-Cc: John W Linville <linville@tuxdriver.com>, ccmcphe@verizon.net,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <4a4ada70.t85pybsO8xH4owyV%Larry.Finger@lwfinger.net>
-In-Reply-To: <4a4ada70.t85pybsO8xH4owyV%Larry.Finger@lwfinger.net>
+Received: from an-out-0708.google.com ([209.85.132.251]:43824 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756034AbZGOUok (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2009 16:44:40 -0400
+Received: by an-out-0708.google.com with SMTP id d40so7646590and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 13:44:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907011517.41572.mb@bu3sch.de>
+In-Reply-To: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
+References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
+Date: Wed, 15 Jul 2009 13:44:39 -0700
+Message-ID: <445f43ac0907151344q6d80ddeckc0c586b34d8ca7c5@mail.gmail.com>
+Subject: Re: any controller working in AP mode ?
+From: Javier Cardona <javier@cozybit.com>
+To: Ram kumar <ramkumar.research@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 01 July 2009 05:39:28 Larry Finger wrote:
-> From: Clyde McPherson <ccmcphe@verizon.net>
-> 
-> Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
-> 4318E can do 802.11A/B/G, only B and G mode are supported in b43.
-> 
-> Signed-off-by: Clyde McPherson <ccmcphe@verizon.net>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Ram,
 
-ack
+On Tue, Jul 14, 2009 at 10:21 PM, Ram kumar<ramkumar.research@gmail.com> wrote:
+> 2.Marvell 8388 controller supports AP mode,but it seems marvell has
+> not released the AP mode firmware.
 
-> ---
-> 
-> diff --git a/drivers/net/wireless/b43/pcmcia.c 
-> b/drivers/net/wireless/b43/pcmcia.c
-> index 3cfc303..6c3a749 100644
-> --- a/drivers/net/wireless/b43/pcmcia.c
-> +++ b/drivers/net/wireless/b43/pcmcia.c
-> @@ -35,6 +35,7 @@
->  
->  static /*const */ struct pcmcia_device_id b43_pcmcia_tbl[] = {
->  	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x448),
-> +	PCMCIA_DEVICE_MANF_CARD(0x2D0, 0x476),
->  	PCMCIA_DEVICE_NULL,
->  };
-> 
-> 
-> 
+The thin firmware that allows using the 8383 with mac80211 and
+implement an AP with hostapd is available here:
+http://dev.laptop.org/pub/firmware/libertas/thinfirm/
 
-
-
--- 
-Greetings, Michael.
+Javier
