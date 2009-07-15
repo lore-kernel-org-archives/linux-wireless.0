@@ -1,128 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:53850 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751497AbZGLLXo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36726 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755471AbZGOPg0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 07:23:44 -0400
-Date: Sun, 12 Jul 2009 01:23:40 -1000
-From: Joel Roth <joelz@pobox.com>
-To: Joel Roth <joelz@pobox.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k and Atheros AR242x - No scan results
-Message-ID: <20090712112340.GA3315@sprite>
-Reply-To: Joel Roth <joelz@pobox.com>
-References: <20090630170916.GB5137@sprite>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090630170916.GB5137@sprite>
+	Wed, 15 Jul 2009 11:36:26 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1MR6Wt-0008PN-JR
+	for linux-wireless@vger.kernel.org; Wed, 15 Jul 2009 17:36:24 +0200
+Subject: [RFC] mac80211: deprecate qual value
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 15 Jul 2009 17:28:48 +0200
+Message-Id: <1247671728.10754.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 30, 2009 at 07:09:16AM -1000, Joel Roth wrote:
-> Hello all,
-> 
-> I'd appreciate some help troubleshooting my wireless connection.
-> 
-> I have a Toshiba Satellite L305 series laptop running Debian
-> sid with a recent, stock Debian kernel version 2.6.29-2-486.
-> 
-> $ lspci | grep Atheros
-> 
-> 05:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 01)
-> 
-> I am seeking to connect to a D-Link 614+ wireless router.
-> For initial testing, the AP is unencrypted, unsecured.
-> 
-> My wife's G3 i-Book with AfterTheMac USB wireless adapter
-> connected just fine, on the first try.
-> 
-> I believe I have the modules I should have:
-> 
-> $ lsmod | grep 80211
-> mac80211              139680  1 ath5k
-> cfg80211               21576  2 ath5k,mac80211
-> 
-> My wireless network interface is present:
-> 
-> $ iwconfig wlan0
-> 
-> wlan0     IEEE 802.11  ESSID:""  
->           Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
->           Tx-Power=0 dBm   
->           Retry min limit:7   RTS thr:off   Fragment thr=2352 B   
->           Link Quality:0  Signal level:0  Noise level:0
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> 
-> $ ifconfig wlan0
-> 
-> wlan0     Link encap:Ethernet  HWaddr 00:21:63:82:82:40  
->           UP BROADCAST MULTICAST  MTU:1500  Metric:1
->           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000 
->           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-> 
-> 
-> However, I don't find the D-Link 614+:
-> 
-> $ iwlist wlan0 scan
-> 
-> wlan0     No scan results
-> 
-> And of course, dhclient fails to find a server.
-> 
-> Am I missing something? What could I try next?
-> I'd appreciate any pointers.
-> 
-> Thanks.
+This value is unused by mac80211, because it was only
+be used by wireless extensions, and turned out to not
+be useful there because the quality value needs to be
+comparable between scan results and the current value
+which is impossible when the qual value is calculated
+taking into account noise, for example.
 
-Okay, I'm back with a new kernel 2.6.30.1 and the latest
-ath5k. Here are my basic diagnostics data. 
+Since it is unused anyway, this patch deprecates it
+in the hope that drivers will remove their sometimes
+quite expensive calculations of the value.
 
-$ iwlist wlan0 scan
+I'm open to actual uses of the value, but the best
+way of using it seems to be what the Intel drivers do
+which should probably be generalised if we have noise
+values from the hardware.
 
-wlan0     No scan results
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h     |    2 +-
+ net/mac80211/debugfs_sta.c |    3 ---
+ net/mac80211/rx.c          |    1 -
+ net/mac80211/sta_info.h    |    3 ---
+ 4 files changed, 1 insertion(+), 8 deletions(-)
 
-$ iwlist wlan0 ap
-
-wlan0     Interface doesn't have a list of Peers/Access-Points
-
-$ iwconfig wlan0
-
-wlan0     IEEE 802.11bg  ESSID:""  
-          Mode:Managed  Frequency:2.412 GHz  Access Point: Not-Associated   
-          Tx-Power=27 dBm   
-          Retry min limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
-          Link Quality:0  Signal level:0  Noise level:0
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-$ ifconfig wlan0
-
-wlan0     Link encap:Ethernet  HWaddr 00:21:63:82:82:40  
-          UP BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-dmesg highlights
+--- wireless-testing.orig/include/net/mac80211.h	2009-07-15 17:27:36.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-07-15 17:27:39.000000000 +0200
+@@ -508,7 +508,7 @@ struct ieee80211_rx_status {
+ 	int freq;
+ 	int signal;
+ 	int noise;
+-	int qual;
++	int __deprecated qual;
+ 	int antenna;
+ 	int rate_idx;
+ 	int flag;
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2009-07-15 17:28:00.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2009-07-15 17:28:04.000000000 +0200
+@@ -57,7 +57,6 @@ STA_FILE(tx_filtered, tx_filtered_count,
+ STA_FILE(tx_retry_failed, tx_retry_failed, LU);
+ STA_FILE(tx_retry_count, tx_retry_count, LU);
+ STA_FILE(last_signal, last_signal, D);
+-STA_FILE(last_qual, last_qual, D);
+ STA_FILE(last_noise, last_noise, D);
+ STA_FILE(wep_weak_iv_count, wep_weak_iv_count, LU);
  
-[    4.884157] ath5k 0000:05:00.0: enabling device (0000 -> 0002)
-[    4.884223] ath5k 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[    4.884283] ath5k 0000:05:00.0: setting latency timer to 64
-[    4.884326] ath5k 0000:05:00.0: registered as 'phy0'
-[    6.411392] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-[  337.543014] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+@@ -209,7 +208,6 @@ void ieee80211_sta_debugfs_add(struct st
+ 	DEBUGFS_ADD(tx_retry_failed);
+ 	DEBUGFS_ADD(tx_retry_count);
+ 	DEBUGFS_ADD(last_signal);
+-	DEBUGFS_ADD(last_qual);
+ 	DEBUGFS_ADD(last_noise);
+ 	DEBUGFS_ADD(wep_weak_iv_count);
+ }
+@@ -235,7 +233,6 @@ void ieee80211_sta_debugfs_remove(struct
+ 	DEBUGFS_DEL(tx_retry_failed);
+ 	DEBUGFS_DEL(tx_retry_count);
+ 	DEBUGFS_DEL(last_signal);
+-	DEBUGFS_DEL(last_qual);
+ 	DEBUGFS_DEL(last_noise);
+ 	DEBUGFS_DEL(wep_weak_iv_count);
+ 
+--- wireless-testing.orig/net/mac80211/rx.c	2009-07-15 17:27:54.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-07-15 17:27:55.000000000 +0200
+@@ -860,7 +860,6 @@ ieee80211_rx_h_sta_process(struct ieee80
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+ 	sta->last_signal = rx->status->signal;
+-	sta->last_qual = rx->status->qual;
+ 	sta->last_noise = rx->status->noise;
+ 
+ 	/*
+--- wireless-testing.orig/net/mac80211/sta_info.h	2009-07-15 17:27:44.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2009-07-15 17:28:10.000000000 +0200
+@@ -195,7 +195,6 @@ struct sta_ampdu_mlme {
+  * @rx_fragments: number of received MPDUs
+  * @rx_dropped: number of dropped MPDUs from this STA
+  * @last_signal: signal of last received frame from this STA
+- * @last_qual: qual of last received frame from this STA
+  * @last_noise: noise of last received frame from this STA
+  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
+  * @tx_filtered_count: number of frames the hardware filtered for this STA
+@@ -261,7 +260,6 @@ struct sta_info {
+ 	unsigned long rx_fragments;
+ 	unsigned long rx_dropped;
+ 	int last_signal;
+-	int last_qual;
+ 	int last_noise;
+ 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
+ 
+@@ -322,7 +320,6 @@ struct sta_info {
+ 		struct dentry *tx_retry_failed;
+ 		struct dentry *tx_retry_count;
+ 		struct dentry *last_signal;
+-		struct dentry *last_qual;
+ 		struct dentry *last_noise;
+ 		struct dentry *wep_weak_iv_count;
+ 		bool add_has_run;
 
-I compiled the kernel with debugfs support for wireless. Can someone
-point me to helpful docs in setting this up.
 
-Also, is there a chance that another driver would serve me better?
-
-Regards,
-
--- 
-Joel Roth
