@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48872 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:37099 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbZGXQYh (ORCPT
+	with ESMTP id S1754400AbZGOL7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 12:24:37 -0400
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+	Wed, 15 Jul 2009 07:59:17 -0400
+Subject: Re: [PATCH 01/21] mac80211: drop frames for sta with no valid rate
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <wfmy6u6opl.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers>
-	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
-	 <1247775641.6841.16.camel@mj> <wfzlau7co1.fsf@calligramme.charmers>
-	 <1248449030.21715.23.camel@mj> <1248449371.32151.23.camel@johannes.local>
-	 <1248450733.21715.26.camel@mj> <1248451197.32151.26.camel@johannes.local>
-	 <1248451440.21715.27.camel@mj> <1248451757.32151.27.camel@johannes.local>
-	 <wfmy6u6opl.fsf@calligramme.charmers>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7bJ5VaLvpiRGANVGAFeD"
-Date: Fri, 24 Jul 2009 18:24:35 +0200
-Message-Id: <1248452675.32151.31.camel@johannes.local>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+In-Reply-To: <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	 <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H29o7tzm8VWSNYJDaQWq"
+Date: Wed, 15 Jul 2009 13:58:41 +0200
+Message-Id: <1247659121.2477.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-7bJ5VaLvpiRGANVGAFeD
+--=-H29o7tzm8VWSNYJDaQWq
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-07-24 at 17:16 +0100, Jon Fairbairn wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> > I also added a short overview over the form factors on the page:
-> > http://wireless.kernel.org/en/users/Devices/PCI.
->=20
-> That's really good!
+On Tue, 2009-07-14 at 20:13 -0400, Luis R. Rodriguez wrote:
 
-And quick too, thanks Pavel!
+> +	if (unlikely((tx->local->sw_scanning) &&
+> +	    (sta_flags & WLAN_STA_ASSOC) &&
+> +	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
+> +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> +		printk(KERN_DEBUG "%s: dropped data frame -- no "
+> +		       "supported rate for station %pM on %c GHz band\n",
+> +		       tx->dev->name, hdr->addr1,
+> +		       tx->channel->band ? '5' : '2');
+> +#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+> +		WARN_ON(1);
+> +		return TX_DROP;
 
-> (In the "asking for the moon on a stick" department, it would be handy
-> to have a table somewhere with "supported features" and "form factor"
-> dropdowns, so that I could have selected "AP" and "PCIe" and get the
-> card I now have ;-)
-
-I wondered about that, but the list really gets too wide, and it's
-really a driver rather than device property whether it supports AP or
-not.
-
-Then of course, there's also band/11n streams/... information that you
-might want.
-
-I'm starting to think we should remove all the numbers (pci vendor,
-product, subvendor, subsystem) in favour of more interesting information
-like that.
-
-However, as far as AP is concerned, how about we just add a little help
-text that explains that you should look on the Drivers page to see
-whether it supports what you need, and then select by driver? We could
-make the driver table better to allow filtering.
+Can you use WARN(), and put it into the if() please?
 
 johannes
 
---=-7bJ5VaLvpiRGANVGAFeD
+--=-H29o7tzm8VWSNYJDaQWq
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKaeBAAAoJEODzc/N7+QmahJwP/iEfzTs7ffLzoCOeMOcFlTRZ
-gK84I6m7tBcHqy9PvqPURGhgzGmcIQQtR/yFLdVRn3iGS62zbDfSIF0WBKPpHTQ3
-A0BfqQVvN4eavahAigMDkI1ffqOhhl3qdv460cYhubV7JlbBc3mNn+BPLy0emFTr
-Qgv2PQmE3RWn1zvnit1jP7DSrlvpgbWV5/MxxiCmapnzeei0jnfO5rJhmLlzpnbb
-ElP98EcDy4NPUL9jEt66ve2Fhla47E5bPxp4nw+UIwpjUe/P3VMQ1GIRMr+oYJkW
-18WiqVqBWOP7JkTD3F7J+uBEyKX8wZtYlk4X5CoAv8ikSx98fTptCCNL+Qz4Swad
-DQXwfFrTTVK0w9mk5EA9fxhEWnVRdn8ZAvECUMU0oSqlBluYr4p4r+wl5hxN0HW3
-uXI+0TmHVsqW2NNHP2K7OA3n9Bwp8K7hJfPbTIA5Bu32Ulx71UGdEYtk//KFwGpJ
-NpxCpoVafDwc374bxzP0q4LxBy5kNbobd++4p6hZmEw3/pSxwC8uK32zklIlYmGB
-bdC3H9VAIMceVtm/0M3Gix24i7PpUy+C8F7exf1VlFFACUpQxRQXRGgSDcE6U5hb
-ymc2U71Z+0NH1lOEpUswExIjhtHTTpS+U77+DXLyH33oRBP9ZXe43EK6kbXw7O3/
-lp3h+aglz9oSWtaUfbej
-=kLuv
+iQIcBAABAgAGBQJKXcRuAAoJEODzc/N7+QmasgsP/jPgl/8/uFgGwOATI6ItFGbZ
+x8jZiUurDUIN08Fjom5AqJr/rs9kXHdRBK9bbl+JzInOez176AVsXpRAl+JcKYea
+5BQOKtz9bVTw5toR+2E/IaqUPi9yvuYsuUXLQpMPZ991wTvO/h+3fNCEfPNdwuBC
+HxzM6ksTGihBt5LoKN+O2aBpCvwf15D9gcfnMmBM5MEHHCjtgkN6UZRJW0FPwjpx
+tdNSstUPFB3i5Err7R90Dfe7c0O8QIz31ct7duTvHPLdMTQjl4MsDz/0S7/nvvp6
+qdVawKJthaFiO2x0++WZPj3Scdw1ijNgAjl3pQTrfuM90j5qUyHDZeHWcwUiD2On
+U0mXgSzUPyw6Gs2Bnl5Ei4w9RwjNZgltRyMfP9izbfZhWNakFU/JoPuEguZF5nk5
+pyyYL67AQ3EOJlqfrlmL3FX+x7Sz3rIb1InB0n7eE/LSatswaFnbu+WKchSU2m1K
+qGiNEK2+mtgzke7YB2o7osIG+k3lAti3JbzARJGEmktIFaKpQuRmSbdYuVB+uIdF
+b/0Um4+wMkeV3EAekjQnQD2jTF4XxNjvh6b6EdF4YAsc9TvxgGbxvnTw7FR5mIP6
+rOfYi9S1GupoSCI9bfmmF0rywiNXlBfuem3/EAOjMOsDs4G155QuyKE8aBKFF0oo
+m21WJRdv3ieio/X7NYch
+=+xDU
 -----END PGP SIGNATURE-----
 
---=-7bJ5VaLvpiRGANVGAFeD--
+--=-H29o7tzm8VWSNYJDaQWq--
 
