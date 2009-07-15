@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:51008 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755517AbZGOP43 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58382 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756798AbZGOARP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 11:56:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
-References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
-	<20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 15 Jul 2009 08:56:08 -0700
-Message-ID: <43e72e890907150856x50735aafv8e3209f16ded7e37@mail.gmail.com>
-Subject: Re: Generic events for wake up from S1-S4
-To: Pavel Machek <pavel@ucw.cz>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Jul 2009 20:17:15 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 7/9] ath9k: serialize ath9k_hw_setpower calls
+Date: Tue, 14 Jul 2009 20:17:13 -0400
+Message-Id: <1247617035-15402-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
+References: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 15, 2009 at 8:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Tue, Jul 14, 2009 at 4:53 PM, Pavel Machek<pavel@ucw.cz> wrote:
+From: Gabor Juhos <juhosg@openwrt.org>
 
->> I thought that wifi stack is in software -> you need
->> main cpu to run for wifi to work?
->
-> Yes, but we are not processing 802.11 frames for data processing and
-> sending them up to any higher layer, we're just doing raw hardware
-> pattern matching and event triggering. This of course also means
-> devices which do not a CPU or a CPU but no special WoW firmware that
-> you won't be able to use WPA for group key stuff for example for which
-> I do believe we do need the box's CPU. Which reminds me, maybe we
-> should not allow WoW for that case for now.
+Because ath9k_setpower is called from various contexts, we have to
+protect it against concurrent calls.
 
-I should clarify a little more here. It is true you need the main CPU
-for wifi to "work", but you don't need it to have the wireless
-device's radio turned on, or other logical components of the hardware
-sending a PCI PME, for example. All you need for that is some juice.
-"Work" in the usual sense would mean to process your raw 802.11
-frames, and send them up the stack. That's the part we leave off to
-the CPU/driver.
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c    |   15 ++++++++++++++-
+ drivers/net/wireless/ath/ath9k/main.c  |    1 +
+ 3 files changed, 16 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 20bf4a7..b37eb59 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -559,6 +559,7 @@ struct ath_softc {
+ 	spinlock_t sc_resetlock;
+ 	spinlock_t sc_serial_rw;
+ 	spinlock_t ani_lock;
++	spinlock_t sc_pm_lock;
+ 	struct mutex mutex;
+ 
+ 	u8 curbssid[ETH_ALEN];
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a115c8c..6740a6b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2728,7 +2728,8 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ 	return true;
+ }
+ 
+-bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
++static bool ath9k_hw_setpower_nolock(struct ath_hw *ah,
++				     enum ath9k_power_mode mode)
+ {
+ 	int status = true, setChip = true;
+ 	static const char *modes[] = {
+@@ -2762,6 +2763,18 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	return status;
+ }
+ 
++bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
++{
++	unsigned long flags;
++	bool ret;
++
++	spin_lock_irqsave(&ah->ah_sc->sc_pm_lock, flags);
++	ret = ath9k_hw_setpower_nolock(ah, mode);
++	spin_unlock_irqrestore(&ah->ah_sc->sc_pm_lock, flags);
++
++	return ret;
++}
++
+ /*
+  * Helper for ASPM support.
+  *
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 90cecce..d14f8c9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1316,6 +1316,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	spin_lock_init(&sc->sc_resetlock);
+ 	spin_lock_init(&sc->sc_serial_rw);
+ 	spin_lock_init(&sc->ani_lock);
++	spin_lock_init(&sc->sc_pm_lock);
+ 	mutex_init(&sc->mutex);
+ 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
+ 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
+-- 
+1.6.0.6
+
