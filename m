@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:36486 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751455AbZGJLRd (ORCPT
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:2597 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbZGODdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 07:17:33 -0400
-Received: by fxm18 with SMTP id 18so800638fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 04:17:31 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: monitor the connection
-References: <1247186507.1905.14.camel@johannes.local>
-	<1247187640.1905.16.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 10 Jul 2009 14:17:29 +0300
-In-Reply-To: <1247187640.1905.16.camel@johannes.local> (Johannes Berg's message of "Fri\, 10 Jul 2009 03\:00\:40 +0200")
-Message-ID: <87eiso23ee.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 14 Jul 2009 23:33:52 -0400
+Subject: Re: [PATCH 3/3] ath9k: Add support for AR9287 based chipsets.
+From: Joe Perches <joe@perches.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090715032412.GE4613@myhost>
+References: <20090715032412.GE4613@myhost>
+Content-Type: text/plain
+Date: Tue, 14 Jul 2009 20:28:32 -0700
+Message-Id: <1247628512.3669.13.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Wed, 2009-07-15 at 08:54 +0530, Vivek Natarajan wrote:
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+> index 1f0c5fe..d1bbb02 100644
+> --- a/drivers/net/wireless/ath/ath9k/calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/calib.c
+> @@ -116,7 +116,7 @@ static void ath9k_hw_do_getnf(struct ath_hw *ah,
+>  				"NF calibrated [ctl] [chain 1] is %d\n", nf);
+>  		nfarray[1] = nf;
+>  
+> -		if (!AR_SREV_9280(ah)) {
+> +		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
 
-> With the recent MLME rework I accidentally removed the connection
-> monitoring code. In order to add it back, this patch will add new
-> code to monitor both for beacon loss and for the connection actually
-> working, with possibly separate triggers.
->
-> When no unicast frames have been received from the AP for (currently)
-> two seconds, we will send the AP a probe request.
+This looks like it needs a helper function like IS_AR_SREV_928x(ah)
 
-I think this is too short, but we can change it later. 
+> +		if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
+> +	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah))
+> +		if (OLC_FOR_AR9280_20_LATER || OLC_FOR_AR9287_10_LATER)
 
-I quickly looked at the patch and it looks ok for me. Unfortunately I
-can't test it right now because N800 support is broken in 2.6.31. I'm
-fixing that currently.
+etc
 
--- 
-Kalle Valo
