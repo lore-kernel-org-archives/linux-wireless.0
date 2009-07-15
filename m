@@ -1,332 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:59233 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712AbZGaNTq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35100 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755821AbZGORw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 09:19:46 -0400
-Received: by fxm17 with SMTP id 17so1362234fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 06:19:45 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1249026181.29587.14.camel@johannes.local>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <1249024097.7653.6.camel@maxim-laptop>
-	 <1249026181.29587.14.camel@johannes.local>
-Content-Type: multipart/mixed; boundary="=-xzyXL1HBlQ4InjRGJPyY"
-Date: Fri, 31 Jul 2009 16:19:40 +0300
-Message-Id: <1249046380.6418.6.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 15 Jul 2009 13:52:29 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 01/21] mac80211: drop frames for sta with no valid rate
+Date: Wed, 15 Jul 2009 13:52:20 -0400
+Message-Id: <1247680340-23294-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When we're associated we should be able to send data to
+target sta. If we cannot we may be trying to use the incorrect
+band to talk to the sta. Lets catch any such cases, warn, and
+drop the frames to not invalidate assumptions being made on
+rate control algorithms when they have a valid sta to
+communicate with. Any such cases should be handled and fixed.
 
---=-xzyXL1HBlQ4InjRGJPyY
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-On Fri, 2009-07-31 at 09:43 +0200, Johannes Berg wrote:
-> On Fri, 2009-07-31 at 10:08 +0300, Maxim Levitsky wrote:
-> > On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
-> > > From: Reinette Chatre <reinette.chatre@intel.com>
-> > > 
-> > > The connection monitor currently relies on probe requests paired
-> > > with probe responses to ensure that a connection is alive. This is
-> > > fragile in some environments where probe responses can get lost.
-> > > When we receive beacons we can also consider the connection to be
-> > > alive, so cancel connection poll instance when we receive a beacon.
-> > > 
-> > > The debug message "cancelling probereq poll due to a received beacon"
-> > > is removed as part of this change as this case is hit very often after
-> > > the above change and debug log receives significant number of these messages.
-> > 
-> > In my opinion this is the correct solution
-> > I did plenty of wireless monitoring, and I see that nobody sends probe
-> > requests at that rate (1 per second it seems). This is ridiculous.
-> 
-> Fix it then. Offer an implementation of your superior solution. We've
-> done pretty much exactly what you're all pointing out _forever_ in
-> mac80211, ever since it was initially merged. Now that it's more
-> explicit in the code, people are complaining?
-> 
-> johannes
-
-
-Here it is:
-
-First patch makes the probe requests be retried (and with it and only
-it, my connection is very stable, it never retries more that 3 times,
-and I set max retries to 5)
-
-Second patch, trivial one bumps up the timeouts (30 for ping, and 1/2
-for response, so device won't send out frames too often)
-
-I attach the patches, since I afraid my mailer would mangle them.
-
-Here they are in-line too:
-
-
--------------------------------------------------------------------------------------------------
-
-[MAC80211] Retry probe request few times, before assuming that AP is out of range
-
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-
-Fixes very often reconnects while connected to nearby APs
-
-Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
 
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   27 ++++++++++++++++++++++++---
- 2 files changed, 25 insertions(+), 3 deletions(-)
+This v2 takes into account johill's comments. Lines diff
+count matches to the previous patch and there are no other
+patches I posted which touch net/mac80211/tx.c so I don't
+expect any conflicts with the other pending patches.
 
+ include/net/mac80211.h |   11 +++++++++++
+ net/mac80211/tx.c      |   23 +++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index aec6853..ac2489b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
- 	struct work_struct beacon_loss_work;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 14ef478..9428258 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2113,6 +2113,17 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+ 	return 0;
+ }
  
- 	unsigned long probe_timeout;
-+	unsigned long probe_miss_count;
++static inline
++bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
++			      struct ieee80211_sta *sta)
++{
++	unsigned int i;
++
++	for (i = 0; i < sband->n_bitrates; i++)
++		if (rate_supported(sta, sband->band, i))
++			return true;
++	return false;
++}
  
- 	struct mutex mtx;
- 	struct ieee80211_bss *associated;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee83125..38ef7f2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -31,6 +31,7 @@
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
-+#define IEEE80211_ASSOC_RETRIES 5
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 969a4b2..ab1152c 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -512,6 +512,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	int i, len;
+ 	bool inval = false, rts = false, short_preamble = false;
+ 	struct ieee80211_tx_rate_control txrc;
++	u32 sta_flags;
  
- /*
-  * beacon loss detection timeout
-@@ -1209,6 +1210,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_ps(sdata->local, -1);
- 	mutex_unlock(&sdata->local->iflist_mtx);
+ 	memset(&txrc, 0, sizeof(txrc));
  
-+	sdata->u.mgd.probe_miss_count = 0;
- 	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
- 	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
- 				 ssid + 2, ssid[1], NULL, 0);
-@@ -2072,17 +2074,36 @@ static void ieee80211_sta_work(struct work_struct *work)
- 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
-+
-+		u8 bssid[ETH_ALEN];
-+		const u8 *ssid;
-+
-+		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
-+
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
--		else {
--			u8 bssid[ETH_ALEN];
-+
-+		else if (ifmgd->probe_miss_count < IEEE80211_ASSOC_RETRIES) {
-+
-+			printk(KERN_DEBUG "No probe response from AP %pM"
-+				" after %dms, try %d\n", bssid,
-+				(1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				(int)ifmgd->probe_miss_count);
-+
-+			ifmgd->probe_miss_count++;
-+			ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-+			run_again(ifmgd, ifmgd->probe_timeout);
-+
-+			ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
-+			ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
-+				ssid + 2, ssid[1], NULL, 0);
-+		} else {
- 			/*
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 			printk(KERN_DEBUG "No probe response from AP %pM"
- 				" after %dms, disconnecting.\n",
- 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-
-
-
-
-
-------------------------------------------------------------------------------------------
-
-[MAC80211] Increase timeouts for AP polling
-
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-
-Do a poll every 30 seconds, and wait for response half a second
-
-Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
----
-
- net/mac80211/mlme.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 38ef7f2..a8ab40c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -42,13 +42,13 @@
-  * Time the connection can be idle before we probe
-  * it to see if we can still talk to the AP.
-  */
--#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
-+#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
- /*
-  * Time we wait for a probe response after sending
-  * a probe request because of beacon loss or for
-  * checking the connection still works.
-  */
--#define IEEE80211_PROBE_WAIT		(HZ / 5)
-+#define IEEE80211_PROBE_WAIT		(HZ / 2)
+@@ -544,7 +545,29 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
+ 		txrc.short_preamble = short_preamble = true;
  
- #define TMR_RUNNING_TIMER	0
- #define TMR_RUNNING_CHANSW	1
-
---=-xzyXL1HBlQ4InjRGJPyY
-Content-Disposition: attachment; filename="0001-mac80211-retry-probe-requests"
-Content-Type: text/plain; name="0001-mac80211-retry-probe-requests"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-[MAC80211] Retry probe request few times, before assuming that AP is out of range
-
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-
-Fixes very often reconnects while connected to nearby APs
-
-Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
----
-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   27 ++++++++++++++++++++++++---
- 2 files changed, 25 insertions(+), 3 deletions(-)
-
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index aec6853..ac2489b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
- 	struct work_struct beacon_loss_work;
++	sta_flags = tx->sta ? get_sta_flags(tx->sta) : 0;
  
- 	unsigned long probe_timeout;
-+	unsigned long probe_miss_count;
++	/*
++	 * Lets not bother rate control if we're associated and cannot
++	 * talk to the sta. This should not happen.
++	 */
++	if (WARN((tx->local->sw_scanning) &&
++	    (sta_flags & WLAN_STA_ASSOC) &&
++	    !rate_usable_index_exists(sband, &tx->sta->sta),
++	    "No usable bitrate found while scanning and associated\n")) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++		printk(KERN_DEBUG "%s: dropped data frame -- no "
++		       "supported rate for station %pM on %c GHz band\n",
++		       tx->dev->name, hdr->addr1,
++		       tx->channel->band ? '5' : '2');
++#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
++		return TX_DROP;
++	}
++
++	/*
++	 * If we're associated with the sta at this point we know we can at
++	 * least send the frame at the lowest bit rate.
++	 */
+ 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
  
- 	struct mutex mtx;
- 	struct ieee80211_bss *associated;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee83125..38ef7f2 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -31,6 +31,7 @@
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
-+#define IEEE80211_ASSOC_RETRIES 5
- 
- /*
-  * beacon loss detection timeout
-@@ -1209,6 +1210,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_recalc_ps(sdata->local, -1);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
-+	sdata->u.mgd.probe_miss_count = 0;
- 	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
- 	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
- 				 ssid + 2, ssid[1], NULL, 0);
-@@ -2072,17 +2074,36 @@ static void ieee80211_sta_work(struct work_struct *work)
- 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
-+
-+		u8 bssid[ETH_ALEN];
-+		const u8 *ssid;
-+
-+		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
-+
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
--		else {
--			u8 bssid[ETH_ALEN];
-+
-+		else if (ifmgd->probe_miss_count < IEEE80211_ASSOC_RETRIES) {
-+
-+			printk(KERN_DEBUG "No probe response from AP %pM"
-+				" after %dms, try %d\n", bssid,
-+				(1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				(int)ifmgd->probe_miss_count);
-+
-+			ifmgd->probe_miss_count++;
-+			ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-+			run_again(ifmgd, ifmgd->probe_timeout);
-+
-+			ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
-+			ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
-+				ssid + 2, ssid[1], NULL, 0);
-+		} else {
- 			/*
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 			printk(KERN_DEBUG "No probe response from AP %pM"
- 				" after %dms, disconnecting.\n",
- 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-
---=-xzyXL1HBlQ4InjRGJPyY
-Content-Disposition: attachment; filename="0002-mac80211-increase-timeouts-for"
-Content-Type: text/plain; name="0002-mac80211-increase-timeouts-for"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-[MAC80211] Increase timeouts for AP polling
-
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-
-Do a poll every 30 seconds, and wait for response half a second
-
-Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
----
-
- net/mac80211/mlme.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 38ef7f2..a8ab40c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -42,13 +42,13 @@
-  * Time the connection can be idle before we probe
-  * it to see if we can still talk to the AP.
-  */
--#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
-+#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
- /*
-  * Time we wait for a probe response after sending
-  * a probe request because of beacon loss or for
-  * checking the connection still works.
-  */
--#define IEEE80211_PROBE_WAIT		(HZ / 5)
-+#define IEEE80211_PROBE_WAIT		(HZ / 2)
- 
- #define TMR_RUNNING_TIMER	0
- #define TMR_RUNNING_CHANSW	1
-
---=-xzyXL1HBlQ4InjRGJPyY--
+ 	if (unlikely(info->control.rates[0].idx < 0))
+-- 
+1.6.3.3
 
