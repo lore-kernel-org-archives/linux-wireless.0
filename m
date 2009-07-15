@@ -1,80 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57137 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462AbZGOQGh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 12:06:37 -0400
-Subject: Re: [PATCH 01/21] mac80211: drop frames for sta with no valid rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-In-Reply-To: <20090715145601.GA5682@mosca>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-	 <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
-	 <1247659121.2477.1.camel@johannes.local>  <20090715145601.GA5682@mosca>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wRxGNqHf8Kodj3XuCB6y"
-Date: Wed, 15 Jul 2009 18:05:45 +0200
-Message-Id: <1247673945.10754.15.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:23328 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932198AbZGOSSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2009 14:18:47 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 11:18:47 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3] mac80211: drop frames for sta with no valid rate
+Date: Wed, 15 Jul 2009 11:18:39 -0700
+Message-ID: <1247681919-13208-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When we're associated we should be able to send data to
+target sta. If we cannot we may be trying to use the incorrect
+band to talk to the sta. Lets catch any such cases, warn, and
+drop the frames to not invalidate assumptions being made on
+rate control algorithms when they have a valid sta to
+communicate with. Any such cases should be handled and fixed.
 
---=-wRxGNqHf8Kodj3XuCB6y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-On Wed, 2009-07-15 at 07:56 -0700, Luis R. Rodriguez wrote:
-> On Wed, Jul 15, 2009 at 04:58:41AM -0700, Johannes Berg wrote:
-> > On Tue, 2009-07-14 at 20:13 -0400, Luis R. Rodriguez wrote:
-> >=20
-> > > +	if (unlikely((tx->local->sw_scanning) &&
-> > > +	    (sta_flags & WLAN_STA_ASSOC) &&
-> > > +	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
-> > > +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-> > > +		printk(KERN_DEBUG "%s: dropped data frame -- no "
-> > > +		       "supported rate for station %pM on %c GHz band\n",
-> > > +		       tx->dev->name, hdr->addr1,
-> > > +		       tx->channel->band ? '5' : '2');
-> > > +#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
-> > > +		WARN_ON(1);
-> > > +		return TX_DROP;
-> >=20
-> > Can you use WARN(),
->=20
-> sure.
->=20
-> > and put it into the if() please?
->=20
-> It is already in the if() branch, do you mean in the #ifdef?
+John, sorry but this one is simpler, removes the #ifdef crap.
 
-No, I mean if (WARN(...)) return TX_DROP;
+ include/net/mac80211.h |   11 +++++++++++
+ net/mac80211/tx.c      |   20 ++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 0 deletions(-)
 
-johannes
-
---=-wRxGNqHf8Kodj3XuCB6y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXf5WAAoJEODzc/N7+QmaI6IQAM0FCjX9NpMReDjqglfCyDfD
-/mUmpijLRQ1krKw5elXu5kpMtJAmXZ8v6Vob0d5aDbtvVIIOOk7MqCGMjJbt+d4x
-DWJCpPh7sjtBTXd2/tR3CIFu4C7k4/1GRHo2bg1XyoGbwwBEgrGp8mnxVq6lcEjn
-lin6UJwa+zkf1+/vSsPJb0yvJN4D+oK7TNEqkhclCdNebjI29i+GVX15QHHXeWCW
-uljrR2R6GTqe9iN/oyg88p/7o0eQC4NU+UDYonxhOS9RiOlYQNOh7i9Tt9P1yYIp
-D6RgrM/ufUTkCROsNkRO7daPWt4QOtdGZVuy3CXYELtyc1AJhbM2EX449TJWnF8j
-NEiZmh+hUGwS1SfRCalVqF+k99yps5oCGi3OOBe9WhC8p6hfWNpxdIedqLtE8daE
-Io8VCSn77fQHYciKbK1Qh7iBzpsSIb7PF6P23pHAdBV6eqyfKhH8In3rkv0wCKNp
-jgurr+S4IIEE/cefazwFRnypRbvAub40bN1+oSz7DnhCA8KbJbhSgY+w0ni+je4G
-huDzsv9zloF9iZom+U0PFP83UlV9JpVRmclndBifky5ti0jG/OPwOiYGP7FWAwsh
-ixRcMKjC6g2Sq0mB/sJlbVYlO0/LqSMIBiTE1M0fT2h3GTF7ogHBxAVWwtXcNx0W
-EvARRdF0VGCoXtl22Itg
-=Hc3q
------END PGP SIGNATURE-----
-
---=-wRxGNqHf8Kodj3XuCB6y--
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 14ef478..9428258 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2113,6 +2113,17 @@ rate_lowest_index(struct ieee80211_supported_band *sband,
+ 	return 0;
+ }
+ 
++static inline
++bool rate_usable_index_exists(struct ieee80211_supported_band *sband,
++			      struct ieee80211_sta *sta)
++{
++	unsigned int i;
++
++	for (i = 0; i < sband->n_bitrates; i++)
++		if (rate_supported(sta, sband->band, i))
++			return true;
++	return false;
++}
+ 
+ int ieee80211_rate_control_register(struct rate_control_ops *ops);
+ void ieee80211_rate_control_unregister(struct rate_control_ops *ops);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 969a4b2..eae43e9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -512,6 +512,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	int i, len;
+ 	bool inval = false, rts = false, short_preamble = false;
+ 	struct ieee80211_tx_rate_control txrc;
++	u32 sta_flags;
+ 
+ 	memset(&txrc, 0, sizeof(txrc));
+ 
+@@ -544,7 +545,26 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	     (tx->sta && test_sta_flags(tx->sta, WLAN_STA_SHORT_PREAMBLE))))
+ 		txrc.short_preamble = short_preamble = true;
+ 
++	sta_flags = tx->sta ? get_sta_flags(tx->sta) : 0;
++
++	/*
++	 * Lets not bother rate control if we're associated and cannot
++	 * talk to the sta. This should not happen.
++	 */
++	if (WARN((tx->local->sw_scanning) &&
++		 (sta_flags & WLAN_STA_ASSOC) &&
++		 !rate_usable_index_exists(sband, &tx->sta->sta),
++		 "%s: Dropped data from as no usable bitrate found while "
++		 "scanning and associated. Target station: "
++		 "%pM on %d GHz band\n",
++		 tx->dev->name, hdr->addr1,
++		 tx->channel->band ? 5 : 2))
++		return TX_DROP;
+ 
++	/*
++	 * If we're associated with the sta at this point we know we can at
++	 * least send the frame at the lowest bit rate.
++	 */
+ 	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+ 
+ 	if (unlikely(info->control.rates[0].idx < 0))
+-- 
+1.6.3.3
 
