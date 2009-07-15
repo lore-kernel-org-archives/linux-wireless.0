@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:56658 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806AbZGAIcY (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42327 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755590AbZGOAO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 04:32:24 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so838477fga.17
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 01:32:27 -0700 (PDT)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, ccmcphe@verizon.net,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: none
-References: <4a4ad9e4.vPnta8trzUXc4YPz%Larry.Finger@lwfinger.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 01 Jul 2009 11:32:24 +0300
-In-Reply-To: <4a4ad9e4.vPnta8trzUXc4YPz%Larry.Finger@lwfinger.net> (Larry Finger's message of "Tue\, 30 Jun 2009 22\:37\:08 -0500")
-Message-ID: <87prcku7l3.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 14 Jul 2009 20:14:28 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 13/21] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
+Date: Tue, 14 Jul 2009 20:14:05 -0400
+Message-Id: <1247616853-11221-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+We check for this condition early on in our mac80211 get_rate()
+callback ath_get_rate(), so remove this check later down the path.
 
-> From: Clyde McPherson <ccmcphe@verizon.net>
->
-> Added support for the Broadcom 4318E chipset on PCMCIA/CF cards. The 
-> 4318E can do 802.11A/B/G, only B and G mode are supported in b43.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Subject missing from this one as well.
-
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 96d46d6..2c72901 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -777,7 +777,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
+ 	 */
+ 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
+-	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+ 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
+ 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
+ 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+@@ -882,9 +881,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 	 *
+ 	 * FIXME: Fix duration
+ 	 */
+-	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
+-	    (ieee80211_has_morefrags(fc) ||
+-	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
++	if (ieee80211_has_morefrags(fc) ||
++	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
+ 		rates[1].count = rates[2].count = rates[3].count = 0;
+ 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
+ 		rates[0].count = ATH_TXMAXTRY;
 -- 
-Kalle Valo
+1.6.0.6
+
