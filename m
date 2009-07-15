@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:46981 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933550AbZGPXQH convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:63314 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbZGOFlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 19:16:07 -0400
-Received: by gxk9 with SMTP id 9so836562gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 16:16:06 -0700 (PDT)
+	Wed, 15 Jul 2009 01:41:49 -0400
+Message-ID: <4A5D6BF9.8030701@nokia.com>
+Date: Wed, 15 Jul 2009 08:41:13 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 16:15:46 -0700
-Message-ID: <43e72e890907161615h507e9c59r421d23d22ff05459@mail.gmail.com>
-Subject: Re: [KARMIC] review these for rt2x00 (adds rt2800pci)
-To: Stefan Bader <stefan.bader@canonical.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Manoj Iyer <manoj.iyer@canonical.com>,
-	kernel-team@lists.ubuntu.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: ext Jiri Slaby <jirislaby@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] wireless: wl12xx, fix lock imbalance
+References: <1247603833-10862-1-git-send-email-jirislaby@gmail.com>
+In-Reply-To: <1247603833-10862-1-git-send-email-jirislaby@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 9:56 AM, Stefan Bader<stefan.bader@canonical.com> wrote:
-> At least this seems to be material for 3 or 4 patches
-> - adapt the rfkill stuff
-> - some documentation update
-> - add the new pci version of the 2800 (with that rt2x00soc lib
->   which might be another patch)
-> - and some fixes...
+ext Jiri Slaby wrote:
+> Add omitted mutex_unlock to one of wl12xx_op_start fail paths (when
+> wl12xx_chip_wakeup fails).
+>
+> [v2]
+> Power off the device, because:
+> \= cite from http://marc.info/?l=linux-kernel&m=124755028209880&w=2
+> If the chip cannot be booted, why should it remain powered on?
+> In some rare cases, the chip might fail to initialize, but can
+> recover if powered off and on again, so turning it off at this
+> point is the right thing to do. =/
+>
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> ---
+>   
 
-Not only that but this driver is not yet merged upstream, there should
-be a good reason for that.
+Looks good now.  Thanks!
 
-Ivo, what's the status on rt2800pci? Some users have been asking about it.
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-  Luis
+>  drivers/net/wireless/wl12xx/main.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 603d611..d30683c 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -336,7 +336,7 @@ static int wl12xx_op_start(struct ieee80211_hw *hw)
+>  
+>  	ret = wl12xx_chip_wakeup(wl);
+>  	if (ret < 0)
+> -		return ret;
+> +		goto out;
+>  
+>  	ret = wl->chip.op_boot(wl);
+>  	if (ret < 0)
+>   
+
+
+-- 
+Cheers,
+Luca.
+
