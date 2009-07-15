@@ -1,75 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from durandal.kismetwireless.net ([199.201.145.179]:44828 "EHLO
-	durandal.nerv-un.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751334AbZGWEgY (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42328 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755714AbZGOAO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 00:36:24 -0400
-Date: Thu, 23 Jul 2009 00:27:36 -0400
-From: Mike Kershaw <dragorn@kismetwireless.net>
-To: peter meng <mengsanshui@yahoo.com.cn>
-Cc: G?bor Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Is there any wireless catpure tool on Linux such as omnipeek
- on  windows ?
-Message-ID: <20090723042736.GC5616@drd1813.lan>
-Reply-To: Mike Kershaw <dragorn@kismetwireless.net>
-References: <69e28c910907170637k6b610d4fgb0566f7148e33b4e@mail.gmail.com>
- <916941.64319.qm@web15704.mail.cnb.yahoo.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GPJrCs/72TxItFYR"
-In-Reply-To: <916941.64319.qm@web15704.mail.cnb.yahoo.com>
+	Tue, 14 Jul 2009 20:14:28 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net
+Subject: [PATCH 15/21] iwlwifi: use ieee80211_is_data(fc)
+Date: Tue, 14 Jul 2009 20:14:07 -0400
+Message-Id: <1247616853-11221-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+iwl-agn-rs.c already uses this.
 
---GPJrCs/72TxItFYR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Cc: ipw3945-devel@lists.sourceforge.net
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-sta.c     |    5 ++---
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-On Thu, Jul 23, 2009 at 11:28:04AM +0800, peter meng wrote:
->=20
-> Hi,G?bor
->=20
-> Thank you very much .
-> I ran Wireshark Version 1.1.3 on Fedora 11 .
-> Running on Linux 2.6.29.5-191.fc11.i586, with libpcap version 0.9.8, GnuT=
-LS
-> 2.6.6, Gcrypt 1.4.4.
-> But I can't see any beacon frame when capturing .
-> Could you explain it ?=20
->=20
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+index b23fd53..2b77692 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
+@@ -673,7 +673,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	s8 scale_action = 0;
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	u16 fc;
++	__le16 fc;
+ 	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
+ 	s8 max_rate_idx = -1;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+@@ -682,9 +682,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
+ 	IWL_DEBUG_RATE(priv, "enter\n");
+ 
+ 	/* Send management frames and NO_ACK data using lowest rate. */
+-	fc = le16_to_cpu(hdr->frame_control);
+-	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
+-	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
++	fc = hdr->frame_control;
++	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
+ 	    !sta || !priv_sta) {
+ 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
+ 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..afa1633 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1044,11 +1044,10 @@ EXPORT_SYMBOL(iwl_rxon_add_station);
+ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+ {
+ 	int sta_id;
+-	u16 fc = le16_to_cpu(hdr->frame_control);
++	__le16 fc = hdr->frame_control;
+ 
+ 	/* If this frame is broadcast or management, use broadcast station id */
+-	if (((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA) ||
+-	    is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+ 		return priv->hw_params.bcast_sta_id;
+ 
+ 	switch (priv->iw_mode) {
+-- 
+1.6.0.6
 
-You must set the device to monitor mode first if you want 802.11 layer
-captures.
-
-See also:
-
-iwconfig mode
-iw
-kismet
-
-
--m
-
---=20
-Mike Kershaw/Dragorn <dragorn@kismetwireless.net>
-GPG Fingerprint: 3546 89DF 3C9D ED80 3381  A661 D7B2 8822 738B BDB1
-
-If you can keep your head, while all others around you are loosing theirs,
-then you must be the one holding the axe.  -- Anonymous
-
---GPJrCs/72TxItFYR
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEARECAAYFAkpn5rgACgkQ17KIInOLvbHbRACgpYO6DB2x+3GluPs/chHygyom
-rdQAoJxL35kZ6p9u5L8mIFgMRB6tqdnA
-=eziy
------END PGP SIGNATURE-----
-
---GPJrCs/72TxItFYR--
