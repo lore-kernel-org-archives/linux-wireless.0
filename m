@@ -1,60 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31178 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754177AbZG0SxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 14:53:08 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 11:53:09 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:42339 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755965AbZGOAO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jul 2009 20:14:29 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] ath9k: re-order cancelling of work on mac80211 workqueue
-Date: Mon, 27 Jul 2009 11:53:02 -0700
-Message-ID: <1248720784-15671-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 07/21] ath9k: remove pointless wrapper ath_rc_rate_getidx()
+Date: Tue, 14 Jul 2009 20:13:59 -0400
+Message-Id: <1247616853-11221-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k uses the mac80211 workqueue for 4 different types of work:
+This is just calling another helper, so just use the other
+helper directly. This should make it clear that when do not
+find the next rate we stick to the current one.
 
- * Led blink work
- * TX hang monitoring work
- * internal wiphy schedular work
- * channel change work done for internal wiphy schedular
-
-Since the internal wiphy schedular can end up kicking off some
-channel channel change work we should first cancel the wiphy
-schedular work and then the channel change work.
-
-The TX hang work can be cancelled second since we're going down
-anyway.
-
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |   21 ++++-----------------
+ 1 files changed, 4 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1ce1de5..dfcd8d9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1253,9 +1253,9 @@ void ath_detach(struct ath_softc *sc)
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach ATH hw\n");
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 64cb697..03e7df4 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -814,19 +814,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	tx_info->control.rts_cts_rate_idx = cix;
+ }
  
- 	ath_deinit_leds(sc);
--	cancel_work_sync(&sc->chan_work);
--	cancel_delayed_work_sync(&sc->wiphy_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
-+	cancel_delayed_work_sync(&sc->wiphy_work);
-+	cancel_work_sync(&sc->chan_work);
+-static u8 ath_rc_rate_getidx(struct ath_softc *sc,
+-			     struct ath_rate_priv *ath_rc_priv,
+-			     const struct ath_rate_table *rate_table,
+-			     u8 rix)
+-{
+-	u8 nextindex = 0;
+-	if (ath_rc_get_nextlowervalid_txrate(rate_table,
+-					     ath_rc_priv, rix, &nextindex))
+-		return nextindex;
+-	else
+-		return rix;
+-}
+-
+ static void ath_rc_ratefind(struct ath_softc *sc,
+ 			    struct ath_rate_priv *ath_rc_priv,
+ 			    struct ieee80211_tx_rate_control *txrc)
+@@ -865,8 +852,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		/* Get the next tried/allowed rate. No RTS for the next series
+ 		 * after the probe rate
+ 		 */
+-		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix);
++		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
++						 rix, &nrix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
  
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+@@ -883,8 +870,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
+-					  rate_table, nrix);
++		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
++						 rix, &nrix);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
 -- 
-1.6.0.4
+1.6.0.6
 
