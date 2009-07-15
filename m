@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx44.mail.ru ([94.100.176.58]:54251 "EHLO mx44.mail.ru"
+Received: from mga03.intel.com ([143.182.124.21]:40505 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751798AbZG1M46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 08:56:58 -0400
-Received: from mx74.mail.ru (mx74.mail.ru [94.100.176.89])
-	by mx44.mail.ru (mPOP.Fallback_MX) with ESMTP id F12D2266CD4
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 16:37:17 +0400 (MSD)
-Received: from [62.176.9.130] (port=55064 helo=[192.168.1.199])
-	by mx74.mail.ru with asmtp
-	id 1MVlvB-00067s-00
-	for linux-wireless@vger.kernel.org; Tue, 28 Jul 2009 16:36:45 +0400
-Subject: rt2x00: rt73usb doesn't receive PS Poll frames in the AP mode
-From: Igor Perminov <igor.perminov@inbox.ru>
-To: linux-wireless@vger.kernel.org
+	id S1755368AbZGOQQQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jul 2009 12:16:16 -0400
+Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Ranson <ranson@analager.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1247674310.10754.19.camel@johannes.local>
+References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
+	 <1247673740.17896.1983.camel@rc-desk>
+	 <1247674310.10754.19.camel@johannes.local>
 Content-Type: text/plain
-Date: Tue, 28 Jul 2009 16:36:43 +0400
-Message-Id: <1248784603.29068.44.camel@sunlight>
+Date: Wed, 15 Jul 2009 09:16:13 -0700
+Message-Id: <1247674573.17896.1989.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear colleagues,
+On Wed, 2009-07-15 at 09:11 -0700, Johannes Berg wrote:
+> Hi,
+> 
+> > On Tue, 2009-07-14 at 21:25 -0700, John Ranson wrote:
+> > > [    4.252445] iwlagn 0000:03:00.0: Tunable channels: 11 802.11bg, 13
+> > > 802.11a channels
+> > > [    4.252556] iwlagn 0000:03:00.0: irq 30 for MSI/MSI-X
+> > > [    4.252945] iwlagn 0000:03:00.0: Failed to register hw (error -17)
+> > > [    4.253255] iwlagn 0000:03:00.0: PCI INT A disabled
+> > > [    4.253263] iwlagn: probe of 0000:03:00.0 failed with error -17
+> > 
+> > This is ieee80211_register_hw() returning error 17 (EEXIST). One spot I
+> > saw where this can happen is if you are trying to register with the same
+> > name (wlanX) already used by another netdevice. Does this sound possible
+> > in your setup?
+> > 
+> > Johannes - do you perhaps have an idea when this can happen?
+> 
+> This is strange -- I've had one report of this with 3945 which went away
+> and seemed to have been a compat only issue, I suspect this is also just
+> a compat-wireless issue, but I have no idea.
+> 
+> -EEXIST should only happen if something has already claimed something in
+> sysfs, but not with netdevs (i.e. wlan0 would just be renamed to wlan1)
+> and phy0 is numbered all the time so that can't be it either. I don't
+> know.
 
-I've discovered that a rt73 usb wi-fi stick in the AP mode doesn't
-receive PS Poll frames from a station. The station sends a PS Poll
-frame, but the mac80211 stack doesn't see it.
-More details can be found here:
-http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=5486&start=10,
-issue #1.
+fyi ... I based my response on register_netdevice() being able to return
+-EEXIST at the time it checks for the existence of "name".
 
-I've found that the FIF_CONTROL flag isn't passed to the rt2x00's
-configure_filter function (namely rt2x00mac_configure_filter) by the
-mac80211 stack even if the device is configured as an access point.
-So, the hardware is configured by the driver to filter out control
-frames according to the flags given.
-
-And here is my question: what would be the correct behaviour?
-A) The mac80211 stack should pass the FIF_CONTROL flag to the driver
-when the device is configured in the AP mode.
-B) The driver should configure the hardware to receive PS Poll frames by
-itself when the device is configured in the AP mode, even if the
-FIF_CONTROL flag isn't passed by the mac80211 stack.
-
-Best regards,
-Igor Perminov
+Reinette
 
 
