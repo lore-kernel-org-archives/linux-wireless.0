@@ -1,97 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57798 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033AbZGJV4R (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52634 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754200AbZGOAW4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 17:56:17 -0400
-Subject: Re: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Darren Salt <linux@youmustbejoking.demon.co.uk>
-Cc: John Linville <linville@tuxdriver.com>,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	acpi4asus-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <507E47A184%linux@youmustbejoking.demon.co.uk>
-References: <4A5716AA.5000903@ph.tum.de>
-	 <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
-	 <4A5743AB.6090303@ph.tum.de>
-	 <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
-	 <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
-	 <1247254899.21972.9.camel@johannes.local>
-	 <507E47A184%linux@youmustbejoking.demon.co.uk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MvvnSk+qNM5ucUSE8A8Z"
-Date: Fri, 10 Jul 2009 23:55:52 +0200
-Message-Id: <1247262952.26071.1.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 14 Jul 2009 20:22:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: disable radio when all devices are marked idle
+Date: Tue, 14 Jul 2009 20:22:53 -0400
+Message-Id: <1247617373-20507-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This uses the new configuration changes indicated up by
+mac80211 when all interfaces are marked idle. We need to do
+a little more work as we have our own set of virtual
+wiphys within ath9k.
 
---=-MvvnSk+qNM5ucUSE8A8Z
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Only when all virtual wiphys are inactive do we allow an idle
+state change for a wiphy to trigger disabling the radio.
 
-On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
-> I demand that Johannes Berg may or may not have written...
->=20
-> > Apparently there actually _are_ tools that try to set this in sysfs eve=
-n
-> > though it wasn't supposed to be used this way without claiming first.
->=20
-> Then it should have been documented as such. I don't see anything about t=
-his
-> in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
-> statement that "Kernel handles events", which isn't exactly helpful :-\
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    1 +
+ drivers/net/wireless/ath/ath9k/main.c    |   24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/virtual.c |   17 +++++++++++++++++
+ 3 files changed, 42 insertions(+), 0 deletions(-)
 
-Oh, it's not just that rfkill was horrible, the documentation matched :)
-All the SHOUTING in it about what you must and must not do but nothing
-actually helpful :)
-
-> > *shrug*, I don't like it, but whatever...
->=20
-> I do. It means that we have a nice simple text-based interface for use in
-> scripts (for now), and a binary interface which is better suited to the l=
-ikes
-> of desktop applications.
-
-Indeed, and as long as you expect to only use soft toggle... problem is
-that you won't know whether it's soft-toggled or not while it's
-hard-blocked (off)!
-
-> > Please test & report.
->=20
-> With the patch applied, Bluetooth toggling is working again, so you get t=
-o
-> add this:
->=20
-> Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-
-Ok, John, please pick up the patch.
-
-johannes
-
---=-MvvnSk+qNM5ucUSE8A8Z
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKV7jlAAoJEODzc/N7+QmahX0P/jKd86jntVSAeS8i5p08UnDf
-cnueuwfGqLQHKtliVTcINIZXHciVMCDxaN6w0hE60Y27iBEvwLIuMypu5I1ekjNL
-Kq4enHX//ag7bzske/c70QQ7KBU7ukFLjbx0uOAgk9+b40nzLu/4Ttur/dV9J7qZ
-jtvW1Ch7ZX6AOeexZxC2dXF8Jxfnnvwvxr7ArUzpjcZaexaPyMfass8yN7nenXSL
-N4lDw0cwnMMM5CgPxQDyMVoJ0uRzWh33es1Pw87ON4GYkNwIVVQQAPqGsoNp0LwR
-vNinVWFQVRaabrUnJYsAwnHbrMDn1wfJacXDfXvhmhupaPzePwOkLA8LUP1iOa6A
-Hr/EHNOIIr+Mb0bc7leM3lwQtS11ZnNWw24HIspmTxCEGeSkh9AK/Kbyga5gnnFs
-J1fkqhWqObxs0bLs0vNp17aE4ZmjaBKZBsEmM4BfwxE/ty7Pjl7WzHBw5QF2bBbU
-ADJ+Tw4p112JYRpvNwnD5TWyjS2yphyms8fsquNBDSDWAOB7OcDi/cH9wZ3ksGAv
-TbeqresEv5ox5Va37q432wvlDvxTWOz5ntk9ZBobgxBR2hnu95XmD4N+4wyCTTQ7
-5ATKijsJdeMof0afmmzEmDqhIE0MYYTrXsdF+nZfG5MsdtXoULuHiP831vzJWufh
-wL2ZJezlCKazCeM/G7+S
-=vG3B
------END PGP SIGNATURE-----
-
---=-MvvnSk+qNM5ucUSE8A8Z--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 2723385..efa185a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -709,6 +709,7 @@ void ath9k_wiphy_pause_all_forced(struct ath_softc *sc,
+ 				  struct ath_wiphy *selected);
+ bool ath9k_wiphy_scanning(struct ath_softc *sc);
+ void ath9k_wiphy_work(struct work_struct *work);
++bool ath9k_all_wiphys_idle(struct ath_softc *sc);
+ 
+ void ath9k_iowrite32(struct ath_hw *ah, u32 reg_offset, u32 val);
+ unsigned int ath9k_ioread32(struct ath_hw *ah, u32 reg_offset);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 84c0fed..2528571 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2281,9 +2281,28 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct ath_hw *ah = sc->sc_ah;
++	bool all_wiphys_idle = false, disable_radio = false;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
++	/* Leave this as the first check */
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++
++		spin_lock_bh(&sc->wiphy_lock);
++		all_wiphys_idle =  ath9k_all_wiphys_idle(sc);
++		spin_unlock_bh(&sc->wiphy_lock);
++
++		if (conf->flags & IEEE80211_CONF_IDLE){
++			if (all_wiphys_idle)
++				disable_radio = true;
++		}
++		else if (all_wiphys_idle) {
++			ath_radio_enable(sc);
++			DPRINTF(sc, ATH_DBG_CONFIG,
++				"not-idle: enabling radio\n");
++		}
++	}
++
+ 	if (changed & IEEE80211_CONF_CHANGE_PS) {
+ 		if (conf->flags & IEEE80211_CONF_PS) {
+ 			if (!(ah->caps.hw_caps &
+@@ -2351,6 +2370,11 @@ skip_chan_change:
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+ 		sc->config.txpowlimit = 2 * conf->power_level;
+ 
++	if (disable_radio) {
++		DPRINTF(sc, ATH_DBG_CONFIG, "idle: disabling radio\n");
++		ath_radio_disable(sc);
++	}
++
+ 	mutex_unlock(&sc->mutex);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index 1ff429b..e1d419e 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -660,3 +660,20 @@ void ath9k_wiphy_set_scheduler(struct ath_softc *sc, unsigned int msec_int)
+ 		queue_delayed_work(sc->hw->workqueue, &sc->wiphy_work,
+ 				   sc->wiphy_scheduler_int);
+ }
++
++/* caller must hold wiphy_lock */
++bool ath9k_all_wiphys_idle(struct ath_softc *sc)
++{
++	unsigned int i;
++	if (sc->pri_wiphy->state != ATH_WIPHY_INACTIVE) {
++		return false;
++	}
++	for (i = 0; i < sc->num_sec_wiphy; i++) {
++		struct ath_wiphy *aphy = sc->sec_wiphy[i];
++		if (!aphy)
++			continue;
++		if (aphy->state != ATH_WIPHY_INACTIVE)
++			return false;
++	}
++	return true;
++}
+-- 
+1.6.0.6
 
