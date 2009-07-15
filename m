@@ -1,145 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:51779 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753164AbZGEWFy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57137 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462AbZGOQGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 18:05:54 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-Date: Mon, 6 Jul 2009 00:05:55 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200907040053.05654.chunkeey@web.de> <200907051559.32958.chunkeey@web.de> <4A50E7C5.4040309@lwfinger.net>
-In-Reply-To: <4A50E7C5.4040309@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907060005.55329.chunkeey@web.de>
+	Wed, 15 Jul 2009 12:06:37 -0400
+Subject: Re: [PATCH 01/21] mac80211: drop frames for sta with no valid rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <20090715145601.GA5682@mosca>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	 <1247616853-11221-2-git-send-email-lrodriguez@atheros.com>
+	 <1247659121.2477.1.camel@johannes.local>  <20090715145601.GA5682@mosca>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wRxGNqHf8Kodj3XuCB6y"
+Date: Wed, 15 Jul 2009 18:05:45 +0200
+Message-Id: <1247673945.10754.15.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 July 2009 19:49:57 Larry Finger wrote:
-> How sure are you of the locking? It seems that the more threads that
-> I'm using, the more likely that it is to happen. Similarly, the
-> disassociation errors could be overloading the firmware by adding too
-> many entries. Of course, it could result from a firmware error when
-> the device is driven hard.
-> 
-> I've only given it one trial, but p54usb only survived for 24 minutes
-> running my other torture test with repeating tcpperf in one terminal
-> and a flood ping in  a second. This one got the disassociation error
-> and also a "failure to remove key" (error code -95) and two "failed to
-> uodate LEDs" (error code -12).
-hmm, can you please give this a go? (I hope this patch still applies...)
-I'm curious if you can dump the tx_queue when p54_alloc_skb fail?
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 461d88f..1dc1a09 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -246,8 +246,10 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb)
- 	struct lm87_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
- 
- 	data_urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!data_urb)
-+	if (!data_urb) {
-+		p54_free_skb(dev, skb);
- 		return;
-+	}
- 
- 	hdr->chksum = p54u_lm87_chksum((__le32 *)skb->data, skb->len);
- 	hdr->device_addr = ((struct p54_hdr *)skb->data)->req_id;
-@@ -269,27 +271,22 @@ static void p54u_tx_lm87(struct ieee80211_hw *dev, struct sk_buff *skb)
- static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- {
- 	struct p54u_priv *priv = dev->priv;
--	struct urb *int_urb, *data_urb;
-+	struct urb *int_urb = NULL, *data_urb = NULL;
- 	struct net2280_tx_hdr *hdr = (void *)skb->data - sizeof(*hdr);
--	struct net2280_reg_write *reg;
--	int err = 0;
-+	struct net2280_reg_write *reg = NULL;
-+	int err = -ENOMEM;
- 
- 	reg = kmalloc(sizeof(*reg), GFP_ATOMIC);
- 	if (!reg)
--		return;
-+		goto out;
- 
- 	int_urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!int_urb) {
--		kfree(reg);
--		return;
--	}
-+	if (!int_urb)
-+		goto out;
- 
- 	data_urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!data_urb) {
--		kfree(reg);
--		usb_free_urb(int_urb);
--		return;
--	}
-+	if (!data_urb)
-+		goto out;
- 
- 	reg->port = cpu_to_le16(NET2280_DEV_U32);
- 	reg->addr = cpu_to_le32(P54U_DEV_BASE);
-@@ -329,14 +326,12 @@ static void p54u_tx_net2280(struct ieee80211_hw *dev, struct sk_buff *skb)
- 		usb_unanchor_urb(data_urb);
- 		goto out;
- 	}
-- out:
-+out:
- 	usb_free_urb(int_urb);
- 	usb_free_urb(data_urb);
- 
--	if (err) {
--		skb_pull(skb, sizeof(*hdr));
-+	if (err)
- 		p54_free_skb(dev, skb);
--	}
- }
- 
- static int p54u_write(struct p54u_priv *priv,
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index ea074a6..01eadb1 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -199,7 +199,7 @@ static int p54_tx_qos_accounting_alloc(struct p54_common *priv,
- 	queue = &priv->tx_stats[p54_queue];
- 
- 	spin_lock_irqsave(&priv->tx_stats_lock, flags);
--	if (unlikely(queue->len > queue->limit && IS_QOS_QUEUE(p54_queue))) {
-+	if (unlikely(queue->len >= queue->limit && IS_QOS_QUEUE(p54_queue))) {
- 		spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
- 		return -ENOSPC;
- 	}
-@@ -222,8 +222,11 @@ static void p54_tx_qos_accounting_free(struct p54_common *priv,
- 	if (skb && IS_DATA_FRAME(skb)) {
- 		struct p54_hdr *hdr = (void *) skb->data;
- 		struct p54_tx_data *data = (void *) hdr->data;
-+		unsigned long flags;
- 
-+		spin_lock_irqsave(&priv->tx_stats_lock, flags);
- 		priv->tx_stats[data->hw_queue].len--;
-+		spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
- 	}
- 	p54_wake_queues(priv);
- }
-@@ -504,7 +507,6 @@ static void p54_rx_eeprom_readback(struct p54_common *priv,
- 
- 	priv->eeprom = NULL;
- 	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
--	p54_tx_qos_accounting_free(priv, tmp);
- 	dev_kfree_skb_any(tmp);
- 	complete(&priv->eeprom_comp);
- }
-@@ -531,7 +533,6 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
- 	priv->noise = p54_rssi_to_dbm(priv, le32_to_cpu(stats->noise));
- 
- 	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
--	p54_tx_qos_accounting_free(priv, tmp);
- 	dev_kfree_skb_any(tmp);
- }
- 
+
+--=-wRxGNqHf8Kodj3XuCB6y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2009-07-15 at 07:56 -0700, Luis R. Rodriguez wrote:
+> On Wed, Jul 15, 2009 at 04:58:41AM -0700, Johannes Berg wrote:
+> > On Tue, 2009-07-14 at 20:13 -0400, Luis R. Rodriguez wrote:
+> >=20
+> > > +	if (unlikely((tx->local->sw_scanning) &&
+> > > +	    (sta_flags & WLAN_STA_ASSOC) &&
+> > > +	    !rate_usable_index_exists(sband, &tx->sta->sta))) {
+> > > +#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+> > > +		printk(KERN_DEBUG "%s: dropped data frame -- no "
+> > > +		       "supported rate for station %pM on %c GHz band\n",
+> > > +		       tx->dev->name, hdr->addr1,
+> > > +		       tx->channel->band ? '5' : '2');
+> > > +#endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
+> > > +		WARN_ON(1);
+> > > +		return TX_DROP;
+> >=20
+> > Can you use WARN(),
+>=20
+> sure.
+>=20
+> > and put it into the if() please?
+>=20
+> It is already in the if() branch, do you mean in the #ifdef?
+
+No, I mean if (WARN(...)) return TX_DROP;
+
+johannes
+
+--=-wRxGNqHf8Kodj3XuCB6y
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKXf5WAAoJEODzc/N7+QmaI6IQAM0FCjX9NpMReDjqglfCyDfD
+/mUmpijLRQ1krKw5elXu5kpMtJAmXZ8v6Vob0d5aDbtvVIIOOk7MqCGMjJbt+d4x
+DWJCpPh7sjtBTXd2/tR3CIFu4C7k4/1GRHo2bg1XyoGbwwBEgrGp8mnxVq6lcEjn
+lin6UJwa+zkf1+/vSsPJb0yvJN4D+oK7TNEqkhclCdNebjI29i+GVX15QHHXeWCW
+uljrR2R6GTqe9iN/oyg88p/7o0eQC4NU+UDYonxhOS9RiOlYQNOh7i9Tt9P1yYIp
+D6RgrM/ufUTkCROsNkRO7daPWt4QOtdGZVuy3CXYELtyc1AJhbM2EX449TJWnF8j
+NEiZmh+hUGwS1SfRCalVqF+k99yps5oCGi3OOBe9WhC8p6hfWNpxdIedqLtE8daE
+Io8VCSn77fQHYciKbK1Qh7iBzpsSIb7PF6P23pHAdBV6eqyfKhH8In3rkv0wCKNp
+jgurr+S4IIEE/cefazwFRnypRbvAub40bN1+oSz7DnhCA8KbJbhSgY+w0ni+je4G
+huDzsv9zloF9iZom+U0PFP83UlV9JpVRmclndBifky5ti0jG/OPwOiYGP7FWAwsh
+ixRcMKjC6g2Sq0mB/sJlbVYlO0/LqSMIBiTE1M0fT2h3GTF7ogHBxAVWwtXcNx0W
+EvARRdF0VGCoXtl22Itg
+=Hc3q
+-----END PGP SIGNATURE-----
+
+--=-wRxGNqHf8Kodj3XuCB6y--
+
