@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f184.google.com ([209.85.210.184]:63773 "EHLO
-	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbZGWL7u convert rfc822-to-8bit (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:61463 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350AbZGOSA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 07:59:50 -0400
-Received: by yxe14 with SMTP id 14so315258yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 04:59:50 -0700 (PDT)
+	Wed, 15 Jul 2009 14:00:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <20090723112428.GC13742@hash.localnet>
-References: <4A612514.4050708@redfish-solutions.com>
-	 <4A635E04.4050204@redfish-solutions.com>
-	 <20090719203150.GA9972@hash.localnet>
-	 <4A63DF0B.4010801@redfish-solutions.com>
-	 <20090720115244.GC9972@hash.localnet>
-	 <4A64C283.6090205@redfish-solutions.com>
-	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
-	 <4A650331.9020409@redfish-solutions.com>
-	 <4A6620B9.4@redfish-solutions.com>
-	 <20090723112428.GC13742@hash.localnet>
-Date: Thu, 23 Jul 2009 07:59:49 -0400
-Message-ID: <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+	<20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 15 Jul 2009 11:00:07 -0700
+Message-ID: <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+Subject: Re: Generic events for wake up from S1-S4
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 7:24 AM, Bob Copeland<me@bobcopeland.com> wrote:
-> -       ath5k_tx_processq(sc, sc->txq);
-> +       for (i=0; i < AR5K_NUM_TX_QUEUES; i++) {
-> +               if (!sc->txqs[i].setup)
-> +                       continue;
-> +               ath5k_tx_processq(sc, sc->txq);
+On Wed, Jul 15, 2009 at 8:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Tue, Jul 14, 2009 at 4:53 PM, Pavel Machek<pavel@ucw.cz> wrote:
+>> On Tue 2009-07-14 15:11:45, Luis R. Rodriguez wrote:
+>>> I'm working on Wake-on-Wireless support for wireless right now [1].
+>>> Upon wake up I wanted to inform the kernel of the event which caused
+>>> the wake up but am not clear if there is a generic API for this. Mind
+>>> you, for WoW we'll need at least some AC power to the card so we'll
+>>> need to at least be in S3-Hot so we'll only need events for that for
+>>> now.
+>>>
+>>> Do we have some generic infrastructure to gather reasons for wake up
+>>> from S1-S4 and pass this to userspace yet?
+>>
+>> I do not think generic api exists...
 
-oops, should be:
+Going back to this topic -- any suggestions? Will a generic netlink
+family be OK? Or perhaps easier a udev event for some suitable
+existing parent ?
 
-ath5k_tx_processq(sc, sc->txqs[i]);
-
-> +       }
->  }
->
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
