@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:24191 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932899AbZGQGF4 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1472 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753510AbZGOMJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 02:05:56 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org, Joel Roth <joelz@pobox.com>
-Subject: Re: ath5k and Atheros AR242x - No scan results
-Date: Fri, 17 Jul 2009 08:06:23 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bob Copeland <me@bobcopeland.com>
-References: <20090630170916.GB5137@sprite> <1247734019.19467.0.camel@johannes.local> <20090716100743.GC3867@sprite>
-In-Reply-To: <20090716100743.GC3867@sprite>
+	Wed, 15 Jul 2009 08:09:09 -0400
+Date: Wed, 15 Jul 2009 08:08:14 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Ohad Ben-Cohen <ohad@bencohen.org>
+Cc: Pierre Ossman <pierre@ossman.eu>, Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless@vger.kernel.org, san@google.com
+Subject: Re: [PATCH/RFC 7/7] wl12xx: add sdio support
+Message-ID: <20090715120814.GC29682@hash.localnet>
+References: <1244685780-28930-1-git-send-email-me@bobcopeland.com> <1244685780-28930-8-git-send-email-me@bobcopeland.com> <20090613132144.6c7783bc@mjolnir.ossman.eu> <87bposnmxi.fsf@litku.valot.fi> <20090613220908.271865cd@mjolnir.ossman.eu> <20090613205737.GA30439@hash.localnet> <20090618022524.GC10014@hash.localnet> <bd5b16740907150012j7a687dddr5caee38e26bd9868@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907170806.23728.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bd5b16740907150012j7a687dddr5caee38e26bd9868@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 1. kernel and driver setup - use compat-wireless
->
-> 2. set wireless interface to UP
->
-> 	ifconfig <interface> up
->
-> 3. find available networks using
->
-> 	iw dev <interface> scan
->  or
-> 	iwlist <interface> scan
+On Wed, Jul 15, 2009 at 10:12:59AM +0300, Ohad Ben-Cohen wrote:
+> Hi Bob, Pierre,
+> 
+> On Thu, Jun 18, 2009 at 5:25 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> > +#define SDIO_VENDOR_ID_TI ? ? ? ? ? ? ? ? ? ? ?0x104c
+> > +#define SDIO_DEVICE_ID_TI_WL1251 ? ? ? ? ? ? ? 0x9066
+> 
+> I wonder how those values are derived ?
+> 
+> Are they officially registered anywhere ?
 
-And maybe here the tools could emit "interface <interface> isn't 
-up" as a more specfic error message ?!?
+This is what the card reports, also you can find it in the TI
+vendor drivers.  I don't know who the registrar is, but as I
+understand, the vendor ID is the same as the PCMCIA vendor ID,
+so it's whoever assigns those.  I'm sure 0x9066 is defined by
+TI.
 
 -- 
-http://www.holgerschurig.de
+Bob Copeland %% www.bobcopeland.com
+
