@@ -1,87 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:61926 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932580AbZGPRBL convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:42321 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754902AbZGOAO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 13:01:11 -0400
-Received: by qyk30 with SMTP id 30so238797qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 10:01:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1247690000.17896.2205.camel@rc-desk>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-	<1247616853-11221-17-git-send-email-lrodriguez@atheros.com>
-	<1247690000.17896.2205.camel@rc-desk>
+	Tue, 14 Jul 2009 20:14:28 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 16 Jul 2009 10:00:50 -0700
-Message-ID: <43e72e890907161000h88ee0bbs86af870c0c9b6d68@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH 16/21] mac80211: add helper for management /
-	no-ack frame rate decision
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	Chittajit Mitra <Chittajit.Mitra@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	Derek Smithies <derek@indranet.co.nz>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: [PATCH 08/21] ath9k: rename ath_rc_get_nextlowervalid_txrate()
+Date: Tue, 14 Jul 2009 20:14:00 -0400
+Message-Id: <1247616853-11221-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 15, 2009 at 1:33 PM, reinette
-chatre<reinette.chatre@intel.com> wrote:
-> Hi Luis,
->
-> On Tue, 2009-07-14 at 17:14 -0700, Luis R. Rodriguez wrote:
->> All current rate control algorithms agree to send management and no-ack
->> frames at the lowest rate. They also agree to do this when sta
->> and the private rate control data is NULL. We add a hlper to mac80211
->> for this and simplify the rate control algorithm code.
->>
->> Developers wishing to make enhancements to rate control algorithms
->> are for broadcast/multicast can opt to not use this in their
->> gate_rate() mac80211 callback.
->>
->> Cc: Zhu Yi <yi.zhu@intel.com>
->> Cc: Reinette Chatre <reinette.chatre@intel.com>
->> Cc: ipw3945-devel@lists.sourceforge.net
->> Cc: Gabor Juhos <juhosg@openwrt.org>
->> Cc: Felix Fietkau <nbd@openwrt.org>
->> Cc: Derek Smithies <derek@indranet.co.nz>
->> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
->>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   13 ++---------
->>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    7 +-----
->>  include/net/mac80211.h                     |   23 ++++++++++++++++++++++
->>  net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
->>  net/mac80211/rc80211_minstrel.c            |   22 +--------------------
->>  net/mac80211/rc80211_pid_algo.c            |   11 +---------
->>  7 files changed, 59 insertions(+), 60 deletions(-)
->>
->
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
->> index 3fea027..695a841 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
->> @@ -2481,13 +2481,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
->>       }
->>
->>       /* Send management frames and NO_ACK data using lowest rate. */
->> -     if (!ieee80211_is_data(hdr->frame_control) ||
->> -         info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
->> -             info->control.rates[0].idx = rate_lowest_index(sband, sta);
->> -             if (info->flags & IEEE80211_TX_CTL_NO_ACK)
->> -                     info->control.rates[0].count = 1;
->> +     if (rate_control_send_low(sta, priv_r, txrc))
->
-> I think it should be priv_sta instead of priv_r here.
->
-> The rest looks good for iwlwifi.
+What this does is get us our next lower rate so call it that,
+ath_rc_get_lower_rix().
 
-Good catch, thanks for testing and reviewing, will post a v2 for this.
+Cc: Derek Smithies <derek@indranet.co.nz>
+Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 03e7df4..c8f800e 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -501,9 +501,9 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
+ }
+ 
+ static inline int
+-ath_rc_get_nextlowervalid_txrate(const struct ath_rate_table *rate_table,
+-				 struct ath_rate_priv *ath_rc_priv,
+-				 u8 cur_valid_txrate, u8 *next_idx)
++ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
++		     struct ath_rate_priv *ath_rc_priv,
++		     u8 cur_valid_txrate, u8 *next_idx)
+ {
+ 	int8_t i;
+ 
+@@ -852,8 +852,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		/* Get the next tried/allowed rate. No RTS for the next series
+ 		 * after the probe rate
+ 		 */
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-						 rix, &nrix);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
+ 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
+ 				       try_per_rate, nrix, 0);
+ 
+@@ -870,8 +869,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
+ 		if (i + 1 == 4)
+ 			try_per_rate = 4;
+ 
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-						 rix, &nrix);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
+ 		/* All other rates in the series have RTS enabled */
+ 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
+ 				       try_per_rate, nrix, 1);
+@@ -1156,8 +1154,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
+ 	    rate_table->info[tx_rate].ratekbps <=
+ 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
+-		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
+-				 (u8)tx_rate, &ath_rc_priv->rate_max_phy);
++		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
++				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
+ 
+ 		/* Don't probe for a little while. */
+ 		ath_rc_priv->probe_time = now_msec;
+-- 
+1.6.0.6
+
