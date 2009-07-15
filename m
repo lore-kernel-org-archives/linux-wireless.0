@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:36333 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541AbZGaHQj (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.168]:56913 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755888AbZGOSkN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 03:16:39 -0400
-Received: by fxm17 with SMTP id 17so1203540fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 00:16:38 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 10:08:17 +0300
-Message-Id: <1249024097.7653.6.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 15 Jul 2009 14:40:13 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1296935wfd.4
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 11:40:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1247681863.10754.26.camel@johannes.local>
+References: <1247680936-21513-1-git-send-email-andrey@cozybit.com>
+	 <1247681863.10754.26.camel@johannes.local>
+Date: Wed, 15 Jul 2009 11:40:13 -0700
+Message-ID: <45e8e6c40907151140j270aa24dl6336c3c291a971af@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: don't sleep in mesh_path_add allocation
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
-> From: Reinette Chatre <reinette.chatre@intel.com>
-> 
-> The connection monitor currently relies on probe requests paired
-> with probe responses to ensure that a connection is alive. This is
-> fragile in some environments where probe responses can get lost.
-> When we receive beacons we can also consider the connection to be
-> alive, so cancel connection poll instance when we receive a beacon.
-> 
-> The debug message "cancelling probereq poll due to a received beacon"
-> is removed as part of this change as this case is hit very often after
-> the above change and debug log receives significant number of these messages.
+On Wed, Jul 15, 2009 at 11:17 AM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-07-15 at 11:02 -0700, Andrey Yurovsky wrote:
+>> mesh_path_add allocates an mpath and a node but it is called with RCU
+>> held.  Use the GFP_ATOMIC flag to prevent these allocations from
+>> sleeping since otherwise we can hit the following sleep-while-atomic:
+>
+> This isn't sufficient, quoting from the function, highlight added:
+>
+> int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
+> {
+> ...
+>        if (grow) {
+>                struct mesh_table *oldtbl, *newtbl;
+>
+>                write_lock(&pathtbl_resize_lock);
+>                oldtbl = mesh_paths;
+>                newtbl = mesh_table_grow(mesh_paths);
+>                if (!newtbl) {
+>                        write_unlock(&pathtbl_resize_lock);
+>                        return 0;
+>                }
+>                rcu_assign_pointer(mesh_paths, newtbl);
+>                write_unlock(&pathtbl_resize_lock);
+>
+> *******         synchronize_rcu();
+>                mesh_table_free(oldtbl, false);
+>        }
+> ...
+> }
+>
+> johannes
+>
 
-In my opinion this is the correct solution
-I did plenty of wireless monitoring, and I see that nobody sends probe
-requests at that rate (1 per second it seems). This is ridiculous.
+Yes, we'll address growing the issue separately.  Ok, we'll send a new
+patch for the allocations as well as growing the table in the future.
 
-According to the monitor on my iwl3945, (which might though be
-incorrect), sometimes AP doesn't respond in time, but then later it
-sends a storm (about 5 or so) probe responses at once (after the deauth)
-I think that while wireless is fast most AP aren't, (mine is 150 Mhz
-mips system for example), thus it can delay the response for more that
-200 ms.
-
-I think that the right solution is to send probes every minute or so,
-and retry at last few times, before concluding that connection is lost.
-(and if beacons are lost for a prolonged period it might make a sense to
-send a probe earlier)
-
-Best regards,
-	Maxim Levitsky
-
+  -Andrey
