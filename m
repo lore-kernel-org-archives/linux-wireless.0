@@ -1,71 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34752 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182AbZGXQAB (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52650 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756800AbZGOAXT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 12:00:01 -0400
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1248450733.21715.26.camel@mj>
-References: <wfljmpm4xl.fsf@calligramme.charmers>
-	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
-	 <1247775641.6841.16.camel@mj>   <wfzlau7co1.fsf@calligramme.charmers>
-	 <1248449030.21715.23.camel@mj>  <1248449371.32151.23.camel@johannes.local>
-	 <1248450733.21715.26.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rHtnYYp5xuKFnbQHlhqc"
-Date: Fri, 24 Jul 2009 17:59:57 +0200
-Message-Id: <1248451197.32151.26.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 14 Jul 2009 20:23:19 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] cfg80211: treat ieee80211_regdom hints as user hints
+Date: Tue, 14 Jul 2009 20:23:15 -0400
+Message-Id: <1247617395-20617-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We were treating ieee80211_regdom module parameter hints
+as core hints, this means we were not letting the user help
+compliance further when using the module parameter. It also
+meant that users with a device with a custom regulatory
+domain set (wiphy->custom_regulatory) using this module
+parameter were being stuck to the original default core
+static regualtory domain. We fix this by using the static
+cfg80211_regdomain alpha2 as the core hint and treating the
+module parameter separately.
 
---=-rHtnYYp5xuKFnbQHlhqc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+All iwlwifi and ath5k/ath9k/ar9170 devices which world roam
+set the wiphy->custom_regulatory. This change allows users
+using this module parameter to have it trated as a a proper
+user hint and not have it ignored.
 
-On Fri, 2009-07-24 at 11:52 -0400, Pavel Roskin wrote:
-> On Fri, 2009-07-24 at 17:29 +0200, Johannes Berg wrote:
->=20
-> > > From the
-> > > users' perspective, PCI and PCI Express are different busses and shou=
-ld
-> > > be listed separately.
-> >=20
-> > I'm not sure. The ID spaces are the same really, and users really don't
-> > distinguish that much, for them PCI-E is just the new PCI technology
-> > with a different form factor. Kinda like mini-pci vs. pci.
->=20
-> We can have "form factors": PCI, CardBus, MiniPCI, PCIe and PCI
-> ExpressCard.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   25 +++++++++----------------
+ 1 files changed, 9 insertions(+), 16 deletions(-)
 
-I've done that and adjusted a few of the b43 entries, go check it out :)
-
-johannes
-
---=-rHtnYYp5xuKFnbQHlhqc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKadp6AAoJEODzc/N7+QmaezQQAIU6dBk8XyzRJvZiQGDkl5SB
-jv8TGPN810LTpHoN4vlin+kuovJtglYAcvC/osPcWup45+StwJUXJGANma5eQ407
-SVsjjqFakH7qcBIoaHUMcu+3cyBWyUzoswyAEBCIa5U5KwcSpnBu2Xm1WwBvlQ2m
-Wy/eSxtL7mbi8yrcxUnrxcjMBRNSCJZ8jU+WT0M3zjNIzHa44DSBd2bf1sUj7zUv
-zZjmEHUWUGiHSwmhHQMeYr0JjwvVZub0wpaiEZRMN5enSa6JBTa/2Z9K7kS9CCeb
-pI8VS3K8+5NQif4UL2+VmzHlrvEEG07bOrrVr8eWDQdFCJucXEL4tn1nWp43A+2D
-unwHvF6BMVwo9smtkIFHW+yfHBBbZPm6LIeZxs1Fgb/0Q4tb2Fe47PTwhX2fvaYk
-mff9ifr/AiZCwAizx6/sOHc6iXOAso45nXZT1Ygj9vcKOkaVgHTXWbl/wEHXYsjX
-xBUo55w9QZxEKlFPRguY4LM6uGCOT6g+ExeJC/kkzjpI1lTXcdy7DI1KBxxv/K0f
-I7n6bGopEpV6IqwhoIJUi5S4C+4vmelyxNS/6GoRuvGWsbJa3DmrOsomr8aHfTGa
-aVdQMoEv90MStlZfFl32PE+xhWBeu9vRxkRB8/ENjwQ/ziBKLY5mEzKv5CNS7wPY
-LoQoMKN0ak2gA4xFYdgi
-=kOwb
------END PGP SIGNATURE-----
-
---=-rHtnYYp5xuKFnbQHlhqc--
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2b4a6c6..fb40428 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -113,11 +113,7 @@ static const struct ieee80211_regdomain world_regdom = {
+ static const struct ieee80211_regdomain *cfg80211_world_regdom =
+ 	&world_regdom;
+ 
+-#ifdef CONFIG_WIRELESS_OLD_REGULATORY
+-static char *ieee80211_regdom = "US";
+-#else
+ static char *ieee80211_regdom = "00";
+-#endif
+ 
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+@@ -2287,22 +2283,12 @@ int regulatory_init(void)
+ 
+ 	printk(KERN_INFO "cfg80211: Using static regulatory domain info\n");
+ 	print_regdomain_info(cfg80211_regdomain);
+-	/*
+-	 * The old code still requests for a new regdomain and if
+-	 * you have CRDA you get it updated, otherwise you get
+-	 * stuck with the static values. Since "EU" is not a valid
+-	 * ISO / IEC 3166 alpha2 code we can't expect userpace to
+-	 * give us a regulatory domain for it. We need last_request
+-	 * iniitalized though so lets just send a request which we
+-	 * know will be ignored... this crap will be removed once
+-	 * OLD_REG dies.
+-	 */
+-	err = regulatory_hint_core(ieee80211_regdom);
+ #else
+ 	cfg80211_regdomain = cfg80211_world_regdom;
+ 
+-	err = regulatory_hint_core(ieee80211_regdom);
+ #endif
++	/* We always try to get an update for the static regdomain */
++	err = regulatory_hint_core(cfg80211_regdomain->alpha2);
+ 	if (err) {
+ 		if (err == -ENOMEM)
+ 			return err;
+@@ -2321,6 +2307,13 @@ int regulatory_init(void)
+ #endif
+ 	}
+ 
++	/*
++	 * Finally, if the user set the module parameter treat it
++	 * as a user hint.
++	 */
++	if (!is_world_regdom(ieee80211_regdom))
++		regulatory_hint_user(ieee80211_regdom);
++
+ 	return 0;
+ }
+ 
+-- 
+1.6.0.6
 
