@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:3128 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752160AbZG1XC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 19:02:56 -0400
-Received: from [192.168.0.22] (static-72-92-88-10.phlapa.fios.verizon.net [72.92.88.10])
-	by smtprelay1.cesmail.net (Postfix) with ESMTPSA id 343B334C6D
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 19:02:55 -0400 (EDT)
-Subject: ath5k does multicast filtering in monitor mode
-From: Pavel Roskin <proski@gnu.org>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 28 Jul 2009 19:02:54 -0400
-Message-Id: <1248822174.5206.26.camel@mj>
-Mime-Version: 1.0
+Received: from qw-out-2122.google.com ([74.125.92.25]:54294 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932660AbZGPQOM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:14:12 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so83566qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:14:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <bcd1ba70907152058m14249f40gf0ebff1620e56674@mail.gmail.com>
+References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
+	<1247673740.17896.1983.camel@rc-desk> <1247674310.10754.19.camel@johannes.local>
+	<43e72e890907150925p51c1a019r95266cbdc1e762e4@mail.gmail.com>
+	<bcd1ba70907152058m14249f40gf0ebff1620e56674@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 09:13:50 -0700
+Message-ID: <43e72e890907160913i40c8341fo13b75b38b2700055@mail.gmail.com>
+Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
+To: John Ranson <ranson@analager.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Wed, Jul 15, 2009 at 8:58 PM, John Ranson<ranson@analager.net> wrote:
+> The release is master-2009-07-08-3-g3615cdf
+>
+> /sys/class/ieee80211/ is empty
+>
+> I'm running Gentoo on an Lenovo R61. I don't think that there is
+> anything too special about my configuration.
+>
+> Is there any more information that I can provide that will help debug?
 
-It turns out ath5k doesn't receive multicast packets while in monitor
-mode.  Multicast packets are only received on the interface if it's set
-to a promiscuous or allmulti mode of if the multicast address I need is
-added by "ip maddr add".
+You can try wireless-testing directly:
 
-Wireshark puts interfaces in promiscuous mode, but some utility I wrote
-wasn't doing that, so it could not capture multicast packets with ath5k.
+http://wireless.kernel.org/en/developers/Documentation/git-guide
 
-Do we have any standard whether multicast filtering is allowed in
-monitor mode?  Should I fix ath5k or the userspace program?
-
--- 
-Regards,
-Pavel Roskin
+  Luis
