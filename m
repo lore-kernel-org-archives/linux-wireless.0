@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41457 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbZG0TJS (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:9990 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932499AbZGPQvv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 15:09:18 -0400
-Subject: Re: [PATCH v2] mac80211: redefine usage of the mac80211 workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
-References: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HI153z6DzS/1WdDoz72N"
-Date: Mon, 27 Jul 2009 21:08:44 +0200
-Message-Id: <1248721724.32365.1.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 16 Jul 2009 12:51:51 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so95265qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:51:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20090716T120033-657@post.gmane.org>
+References: <loom.20090716T120033-657@post.gmane.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 09:51:31 -0700
+Message-ID: <43e72e890907160951w6cad2191tb31fbea7def97306@mail.gmail.com>
+Subject: Re: prism54 firmware cannot initialize pcmcia card
+To: Dave <dave.mulford@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 16, 2009 at 5:09 AM, Dave<dave.mulford@gmail.com> wrote:
+> First, some generic info about the laptop I'm using
+>
+> gentoo kernel-2.6.29
+> prism54-firmware-2.13.2 (listed as working with in-kernel >=2.6.29 driver)
+> yenta_cardbus driver
+>
+> Everything seems to work. The driver is loaded, the card is recognized, the
+> driver requests the correct firmware name, then the firmware seems to have
+> issues initializing the card. I have posted the relevant entries in dmesg to
+> http://pastebin.com/f7514c9c0
+>
+> Any help is appreciated. Thanks!
 
---=-HI153z6DzS/1WdDoz72N
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+You are using p54 softmac firmware with the old fullmac prism54
+driver. You can now use the p54 softmac driver. See:
 
-On Mon, 2009-07-27 at 11:59 -0700, Luis R. Rodriguez wrote:
+http://wireless.kernel.org/en/users/Drivers/p54
 
-> +EXPORT_SYMBOL_GPL(ieee80211_queue_work);
-
-Do we really want to allow these as _GPL only? Most things are not _GPL
-but usable by anyone, which of course isn't too useful since mac80211
-changes all the time :)
-
-johannes
-
---=-HI153z6DzS/1WdDoz72N
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbfs5AAoJEODzc/N7+Qma2gcQANGwxtrf7oEtSNryBox0AzRo
-75d66lrvJ4Mp7vM6oV1901kMlqcSevFIqnv4A3tXB2tI7PeSfHmmxJy5IUIkxi+Q
-QK89I/ldGfAqeKCHOsLJGO2/JgRrb92Ll7xknhlnDWXDukdiIkN1d6mgoKPHSrqj
-BZ0QggmDPvwRZKcdJWAmZFj03B5LXlvGGD7zYakJZrRxsuPbWiqe54Cm0nyFuO3H
-wijAxtq+RDzH/4IrJgfzonRsBqNXO9ULYwNKFHSNVZ0CVlxlPkVjg2edQnVmFNTG
-ZEXh6uD7qqywDiBdgfKS7A4585+U+i6yFv9aRDfDgNKhCa329WwexmTl2xPHpVMQ
-UhCZ749Wt1gEfIe3007vz4S8vMK6MRS5QCrXu6FLZW7C6XYLYb7zqYEv1QiXNVk6
-vmbhQos9U2FOi3EA0PRyvfzRSKD+9cQjG7PpMGt4XLmZV5OiuGx3IUfBqoDRnn+x
-rn3rL00+pBXWsPZyTvCIOsEJtGiMxbEPPVQzrOE6VDCRjMtbq7HOCOxdShAN+1/d
-OpCvpIc0eVjWcVnoYz6YLD1r/YwBT2+lxbOAZeY02eIJMvdlNoPLXT9RlGy9jwWk
-oZMx1XM+KejhGA6oKb2ZduwNAA8RCnGYmmQBY6rGExQ6apXZKLoNUQhmu7qEAqR2
-fr61fGbmIm2UYupy1YCQ
-=yQKf
------END PGP SIGNATURE-----
-
---=-HI153z6DzS/1WdDoz72N--
-
+  Luis
