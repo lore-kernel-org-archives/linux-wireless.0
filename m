@@ -1,70 +1,46 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f193.google.com ([209.85.216.193]:46929 "EHLO
-	mail-px0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715AbZGIV6A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 17:58:00 -0400
-Received: by pxi31 with SMTP id 31so294829pxi.33
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 14:57:59 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH v2] Assign next hop address to pending mesh frames once the path is resolved.
-Date: Thu,  9 Jul 2009 14:42:16 -0700
-Message-Id: <1247175736-6915-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1247049613.4755.65.camel@johannes.local>
-References: <1247049613.4755.65.camel@johannes.local>
-Sender: linux-wireless-owner@vger.kernel.org
+Return-path: <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <1247763941-21396-1-git-send-email-lrodriguez@atheros.com>
+References: <1247763941-21396-1-git-send-email-lrodriguez@atheros.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 16 Jul 2009 19:33:01 +0200
+Message-ID: <69e28c910907161033o1385f70bh3059d62f59bbb31c@mail.gmail.com>
+Subject: Re: [PATCH v2 16/21] mac80211: add helper for management / no-ack
+	frame rate decision
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Zhu Yi <yi.zhu@intel.com>, Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net, Gabor Juhos <juhosg@openwrt.org>,
+	Felix Fietkau <nbd@openwrt.org>, Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-wireless.vger.kernel.org>
 
-Regression.  Frames transmitted when a mesh path was wating to be resolved were
-being transmitted with an invalid Receiver Address.
+On Thu, Jul 16, 2009 at 7:05 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> All current rate control algorithms agree to send management and no-ack
+> frames at the lowest rate. They also agree to do this when sta
+> and the private rate control data is NULL. We add a hlper to mac80211
+> for this and simplify the rate control algorithm code.
+>
+> Developers wishing to make enhancements to rate control algorithms
+> are for broadcast/multicast can opt to not use this in their
+> gate_rate() mac80211 callback.
+>
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: ipw3945-devel@lists.sourceforge.net
+> Cc: Gabor Juhos <juhosg@openwrt.org>
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Cc: Derek Smithies <derek@indranet.co.nz>
+> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
 
-[Changes since v1]
+ACK.
 
-Suggested by Johannes:
- - Improved frame_queue traversal
- - Narower RCU scope
+This will hopefully stop buggy algorithms from cropping up in the future.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index ae98766..1981af9 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -55,7 +55,25 @@ static DEFINE_RWLOCK(pathtbl_resize_lock);
-  */
- void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
- {
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *hdr;
-+	struct sk_buff_head tmpq;
-+	unsigned long flags;
-+
- 	rcu_assign_pointer(mpath->next_hop, sta);
-+
-+	__skb_queue_head_init(&tmpq);
-+
-+	spin_lock_irqsave(&mpath->frame_queue.lock, flags);
-+
-+	while ((skb = __skb_dequeue(&mpath->frame_queue)) != NULL) {
-+		hdr = (struct ieee80211_hdr *) skb->data;
-+		memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
-+		__skb_queue_tail(&tmpq, skb);
-+	}
-+
-+	skb_queue_splice(&tmpq, &mpath->frame_queue);
-+	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
- }
- 
- 
 -- 
-1.5.4.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
