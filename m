@@ -1,72 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:48595 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933343AbZGQAdN (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39025 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933097AbZGPT2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 20:33:13 -0400
-Message-ID: <4A5FC6C6.7010404@mandriva.org>
-Date: Fri, 17 Jul 2009 03:33:10 +0300
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>	 <1247782731.31442.3.camel@johannes.local>  <4A5FB944.90709@mandriva.org> <1247788728.1055.15.camel@johannes.local>
-In-Reply-To: <1247788728.1055.15.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 16 Jul 2009 15:28:11 -0400
+Subject: Re: Cross compiling crda and SSL word size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jon Smirl <jonsmirl@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <9e4733910907161225m7322b5dcidf9271cb45c07657@mail.gmail.com>
+References: <9e4733910907161204x441c21b9n22530800682d363@mail.gmail.com>
+	 <1247771344.30529.41.camel@johannes.local>
+	 <1247772250.30529.42.camel@johannes.local>
+	 <9e4733910907161225m7322b5dcidf9271cb45c07657@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0Htlu549TPJ16T2ssTku"
+Date: Thu, 16 Jul 2009 21:27:41 +0200
+Message-Id: <1247772461.30529.43.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg skrev:
-> On Fri, 2009-07-17 at 02:35 +0300, Thomas Backlund wrote:
-> 
->>> So far so good. Your platform's soft-switch is wired to the card's hard
->>> kill line. Mind trying
->>>
->>> 	./rfkill unblock 0
->>>
->>> (or whatever ID the acer-wireless has) at this point to see what
->>> happens? I would hope it goes back to the working state.
->>>
->> Nothing happends...
->>
->> It does not change anything on either acer-wireless or phy0
-> 
-> Humm. Can you try this?
-> 
-> johannes
-> 
-> --- wireless-testing.orig/drivers/platform/x86/acer-wmi.c	2009-07-17 00:19:20.000000000 +0200
-> +++ wireless-testing/drivers/platform/x86/acer-wmi.c	2009-07-17 01:58:11.000000000 +0200
-> @@ -973,7 +973,7 @@ static int acer_rfkill_set(void *data, b
->  {
->  	acpi_status status;
->  	u32 cap = (unsigned long)data;
-> -	status = set_u32(!!blocked, cap);
-> +	status = set_u32(!blocked, cap);
->  	if (ACPI_FAILURE(status))
->  		return -ENODEV;
->  	return 0;
-> 
 
+--=-0Htlu549TPJ16T2ssTku
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Funny how easy the fix was...
+On Thu, 2009-07-16 at 15:25 -0400, Jon Smirl wrote:
+> On Thu, Jul 16, 2009 at 3:24 PM, Johannes Berg<johannes@sipsolutions.net>=
+ wrote:
+> > On Thu, 2009-07-16 at 21:09 +0200, Johannes Berg wrote:
+> >> On Thu, 2009-07-16 at 15:04 -0400, Jon Smirl wrote:
+> >> > When cross compiling crda the Makefile asks the python system what t=
+he
+> >> > word size is. This gets the word size from the host. Is there a way =
+to
+> >> > ask the word size using gcc? In my environment the Makefile is
+> >> > automatically using the correct gcc cross compiler.
+> >>
+> >> Can you just use gnutls instead? it has no such issue :)
+> >>
+> >> Otherwise you can probably parse it out of "gcc -dumpspecs", but that
+> >> format doesn't look too nice, especially with multilib gcc...
+> >
+> > C99 says this works, I think:
+> >
+> > echo -e '#include <limits.h>\n#if ULONG_MAX =3D=3D 4294967295\n32\n#eli=
+f ULONG_MAX =3D=3D 18446744073709551615U\n64\n#else\n0\n#endif' | gcc -E - =
+| sed 's/^\(#.*\|\)$//;T;d'
+>=20
+> The problem test is in key2pub.py
+>=20
+> def print_ssl(output, name, val):
+>     import struct
+>     if len(struct.pack('@L', 0)) =3D=3D 8:
+>         return print_ssl_64(output, name, val)
+>     else:
+>         return print_ssl_32(output, name, val)
+>=20
 
-Now the rfkill works... ;-)
+I know, I wrote that code :)
+You could make the makefile pass that in as a parameter to the script
+instead.
 
-I can enable/disable it as many times as I want...
+johannes
 
-So it's:
+--=-0Htlu549TPJ16T2ssTku
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Tested-by: Thomas Backlund <tmb@mandriva.org>
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJKX38qAAoJEODzc/N7+Qma8woQAJdfxhjlHcuJsAszY3ibg9yL
+nY1E7gfAIxce9h2eVLsFx5EZHtgzA7hz3Iorgx6vPq5Ne4mTSWbljn+EWBbdn2yh
+fth93LgF0q8Oc+ieisJj+PJJ9FiSiJ7NBJ5ROAkdjdpXLtNQoF/lUyJ/qqOnVcrB
+S6U9frzyArd4nfzfpFZ/ygEI0yoII2UFC+upsMIXKjFAXEX2tlPSybXeccbve/5/
+QNRhvYmdFySG7XnnJLw2OdN+psiW9Q5rAEHTdVAp7Uq1ZUgCJO7CcMz1y9rOYrlk
+AQX9ExRm0h8ZOa4zkY2hd5xm0DLstb4OhwxUW5W+DiJjO88PsX1KSwk+fbK/FJ8W
+GCX+3B+CPc4f8yUqAddqyBCSutehEVxbSiCPxHl4QYFzncvKtn8QrMD/hRz0c+oD
+2uny18iMUcFH06GxKZngmqeSfwWAFxYujUhyQTD50HzCkqIdbheper0Z6z5dxWOq
+Xnb+uyHmx6mw5jMguciDv4lSblTV92QhbwtEh77/HyhxiCfjPWJBVv4XKw4Qx6Ca
+RqyMFPdIZuN2lhcwyZu4JUilK1UM5FzRhJ63mgZccGSCLBdb3hY0fKsUg4HbAZ96
+a7Gm9nifm/SVwrpmgZm4zR9GrsZ/HNk6CLQSLRzAA5cfUQ0tulFPdFliOmQmBpFv
+vMMLdh3pHCtmPp5pm6qn
+=3qFM
+-----END PGP SIGNATURE-----
 
-The difference is that before this patch, bluetooth & wireless were both
-disabled at boot...
-
-With this patch the system boots up with bluetooth & wireless is enabled 
-by default (But it's not a regression as it now behaves just like 2.6.29 
-& 2.6.30 series kernels)
+--=-0Htlu549TPJ16T2ssTku--
 
