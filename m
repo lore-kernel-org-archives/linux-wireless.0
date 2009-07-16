@@ -1,292 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36969 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932794AbZGPRFo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 13:05:44 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 10:05:45 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	<ipw3945-devel@lists.sourceforge.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH v2 16/21] mac80211: add helper for management / no-ack frame rate decision
-Date: Thu, 16 Jul 2009 10:05:41 -0700
-Message-ID: <1247763941-21396-1-git-send-email-lrodriguez@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.153]:35218 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932759AbZGPRBn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 13:01:43 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so1136540fga.17
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 10:01:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <43e72e890907160948o507a3bbbv2f08298c5dcdcee6@mail.gmail.com>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
+	<wf63dsmvjg.fsf@calligramme.charmers> <43e72e890907160948o507a3bbbv2f08298c5dcdcee6@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 16 Jul 2009 19:01:22 +0200
+Message-ID: <69e28c910907161001g782789f2q84b9061a6809afd9@mail.gmail.com>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	Pen Li <Pen.Li@atheros.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All current rate control algorithms agree to send management and no-ack
-frames at the lowest rate. They also agree to do this when sta
-and the private rate control data is NULL. We add a hlper to mac80211
-for this and simplify the rate control algorithm code.
+On Thu, Jul 16, 2009 at 6:48 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Thu, Jul 16, 2009 at 9:39 AM, Jon
+> Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+>> "Luis R. Rodriguez" <mcgrof@gmail.com>
+>> writes:
+>>
+>>> On Thu, Jul 16, 2009 at 1:02 AM, Jon
+>>> Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+>>>>
+>>>> A machine I want to set up as an AP has only PCI express slots free...
+>>>
+>>> I'd recommend ath9k.
+>>
+>>> http://wireless.kernel.org/en/users/Drivers/ath9k
+>>
+>> Thanks, but I've seen that page and "products with supported ath9k
+>> cards" points to a page that lists "Laptops with ath9k cards" (I'm
+>> looking for PCIe, not mini-PCIe) and "APs with ath9k cards", not "ath9k
+>> cards". Before I can buy a card, I need to know what it is called in the
+>> shops (on-line or otherwise), not what chipset it has.
+>
+> The page lists all products and the manufacturer names of the products.
+>
+> But yeah, I am not aware of PCI-Express devices sold in the market
+> with separately. Adding Pen Li in case he is aware.
+>
+> Pen, this e-mail is in a public mailing list.
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Developers wishing to make enhancements to rate control algorithms
-are for broadcast/multicast can opt to not use this in their
-gate_rate() mac80211 callback.
+A possible solution to the PCIE vs. MiniPCIE problem:
+http://www.hwtools.net/Adapter/MP2W.html
+http://shop.ebay.com/?_from=R40&_trksid=m38&_nkw=MP2W
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: ipw3945-devel@lists.sourceforge.net
-Cc: Gabor Juhos <juhosg@openwrt.org>
-Cc: Felix Fietkau <nbd@openwrt.org>
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   13 ++---------
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    7 +-----
- include/net/mac80211.h                     |   23 ++++++++++++++++++++++
- net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
- net/mac80211/rc80211_minstrel.c            |   22 +--------------------
- net/mac80211/rc80211_pid_algo.c            |   11 +---------
- 7 files changed, 59 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 2c72901..630fcf4 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1518,23 +1518,11 @@ exit:
- static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 			 struct ieee80211_tx_rate_control *txrc)
- {
--	struct ieee80211_supported_band *sband = txrc->sband;
--	struct sk_buff *skb = txrc->skb;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_softc *sc = priv;
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
--	__le16 fc = hdr->frame_control;
- 
--	/* lowest rate for management and NO_ACK frames */
--	if (!ieee80211_is_data(fc) ||
--	    tx_info->flags & IEEE80211_TX_CTL_NO_ACK || !sta) {
--		tx_info->control.rates[0].idx = rate_lowest_index(sband, sta);
--		tx_info->control.rates[0].count =
--			(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) ?
--				1 : ATH_MGT_TXMAXTRY;
-+	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
--	}
- 
- 	/* Find tx rate for unicast frames */
- 	ath_rc_ratefind(sc, ath_rc_priv, txrc);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 2b77692..a16bd41 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -673,7 +673,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	s8 scale_action = 0;
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	__le16 fc;
- 	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
- 	s8 max_rate_idx = -1;
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
-@@ -681,16 +680,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 
- 	IWL_DEBUG_RATE(priv, "enter\n");
- 
--	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = hdr->frame_control;
--	if (!ieee80211_is_data(fc) || info->flags & IEEE80211_TX_CTL_NO_ACK ||
--	    !sta || !priv_sta) {
--		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
--		info->control.rates[0].idx = rate_lowest_index(sband, sta);
--		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
--			info->control.rates[0].count = 1;
-+	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
--	}
-+
-+	rate_mask = sta->supp_rates[sband->band];
- 
- 	/* get user max rate if set */
- 	max_rate_idx = txrc->max_rate_idx;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 3fea027..6328041 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2481,13 +2481,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 	}
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	if (!ieee80211_is_data(hdr->frame_control) ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
--		info->control.rates[0].idx = rate_lowest_index(sband, sta);
--		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
--			info->control.rates[0].count = 1;
-+	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
--	}
- 
- 	rate_idx  = lq_sta->last_txrate_idx;
- 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9428258..7dd67a1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2097,6 +2097,29 @@ static inline int rate_supported(struct ieee80211_sta *sta,
- 	return (sta == NULL || sta->supp_rates[band] & BIT(index));
- }
- 
-+/**
-+ * rate_control_send_low - helper for drivers for management/no-ack frames
-+ *
-+ * Rate control algorithms that agree to use the lowest rate to
-+ * send management frames and NO_ACK data with the respective hw
-+ * retries should use this in the beginning of their mac80211 get_rate
-+ * callback. If true is returned the rate control can simply return.
-+ * If false is returned we guarantee that sta and sta and priv_sta is
-+ * not null.
-+ *
-+ * Rate control algorithms wishing to do more intelligent selection of
-+ * rate for multicast/broadcast frames may choose to not use this.
-+ *
-+ * @sta: &struct ieee80211_sta pointer to the target destination. Note
-+ * 	that this may be null.
-+ * @priv_sta: private rate control structure. This may be null.
-+ * @txrc: rate control information we sholud populate for mac80211.
-+ */
-+bool rate_control_send_low(struct ieee80211_sta *sta,
-+			   void *priv_sta,
-+			   struct ieee80211_tx_rate_control *txrc);
-+
-+
- static inline s8
- rate_lowest_index(struct ieee80211_supported_band *sband,
- 		  struct ieee80211_sta *sta)
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index ac5c8e9..b33efc4 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -198,6 +198,35 @@ static void rate_control_release(struct kref *kref)
- 	kfree(ctrl_ref);
- }
- 
-+static bool rc_no_data_or_no_ack(struct ieee80211_tx_rate_control *txrc)
-+{
-+	struct sk_buff *skb = txrc->skb;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	__le16 fc;
-+
-+	fc = hdr->frame_control;
-+
-+	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
-+}
-+
-+bool rate_control_send_low(struct ieee80211_sta *sta,
-+			   void *priv_sta,
-+			   struct ieee80211_tx_rate_control *txrc)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(txrc->skb);
-+
-+	if (!sta || !priv_sta || rc_no_data_or_no_ack(txrc)) {
-+		info->control.rates[0].idx = rate_lowest_index(txrc->sband, sta);
-+		info->control.rates[0].count =
-+			(info->flags & IEEE80211_TX_CTL_NO_ACK) ?
-+			1 : txrc->hw->max_rate_tries;
-+		return true;
-+	}
-+	return false;
-+}
-+EXPORT_SYMBOL(rate_control_send_low);
-+
- void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 			   struct sta_info *sta,
- 			   struct ieee80211_tx_rate_control *txrc)
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 5bdce0c..7c51429 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -70,19 +70,6 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
- 	return i;
- }
- 
--static inline bool
--use_low_rate(struct sk_buff *skb)
--{
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	__le16 fc;
--
--	fc = hdr->frame_control;
--
--	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
--}
--
--
- static void
- minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- {
-@@ -231,7 +218,6 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 		  void *priv_sta, struct ieee80211_tx_rate_control *txrc)
- {
- 	struct sk_buff *skb = txrc->skb;
--	struct ieee80211_supported_band *sband = txrc->sband;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct minstrel_sta_info *mi = priv_sta;
- 	struct minstrel_priv *mp = priv;
-@@ -244,14 +230,8 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 	int mrr_ndx[3];
- 	int sample_rate;
- 
--	if (!sta || !mi || use_low_rate(skb)) {
--		ar[0].idx = rate_lowest_index(sband, sta);
--		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
--			ar[0].count = 1;
--		else
--			ar[0].count = mp->max_retry;
-+	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
--	}
- 
- 	mrr = mp->has_mrr && !txrc->rts && !txrc->bss_conf->use_cts_prot;
- 
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index 5496077..8c053be 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -276,11 +276,9 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- {
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_supported_band *sband = txrc->sband;
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct rc_pid_sta_info *spinfo = priv_sta;
- 	int rateidx;
--	__le16 fc;
- 
- 	if (txrc->rts)
- 		info->control.rates[0].count =
-@@ -290,15 +288,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 			txrc->hw->conf.short_frame_max_tx_count;
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = hdr->frame_control;
--	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
--	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
--		info->control.rates[0].idx = rate_lowest_index(sband, sta);
--		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
--			info->control.rates[0].count = 1;
--
-+	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
--	}
- 
- 	rateidx = spinfo->txrate_idx;
- 
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
