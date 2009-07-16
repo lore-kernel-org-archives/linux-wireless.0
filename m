@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34871 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbZGAPGs (ORCPT
+Received: from b-pb-sasl-sd.pobox.com ([64.74.157.63]:33231 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754866AbZGPKNE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 11:06:48 -0400
-Subject: Re: [PATCH] iwlwifi: fix aggregation limit
-From: Marcel Holtmann <marcel@holtmann.org>
+	Thu, 16 Jul 2009 06:13:04 -0400
+Date: Thu, 16 Jul 2009 00:07:43 -1000
+From: Joel Roth <joelz@pobox.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246453079.4131.19.camel@johannes.local>
-References: <1246453079.4131.19.camel@johannes.local>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 08:06:57 -0700
-Message-Id: <1246460817.12994.153.camel@localhost.localdomain>
-Mime-Version: 1.0
+Cc: Joel Roth <joelz@pobox.com>, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090716100743.GC3867@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite> <20090712112340.GA3315@sprite>
+ <40f31dec0907120808y45f575b6l6d83afd731e6d51@mail.gmail.com>
+ <20090712203449.GA3058@sprite>
+ <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
+ <20090714065414.GA16708@sprite> <20090716061457.GA1576@sprite>
+ <1247734019.19467.0.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1247734019.19467.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-> According to the documentation, the limit is 0x3f == 63, not 64.
+On Thu, Jul 16, 2009 at 10:46:59AM +0200, Johannes Berg wrote:
+> On Wed, 2009-07-15 at 20:14 -1000, Joel Roth wrote:
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> It seems bug 2018 is related to the link quality command, because it
-> seems I can trivially trigger it or similar bugs that way, but this
-> doesn't fix it.
+> > # iwlist wlan0 ap
+> > 
+> > wlan0     Interface doesn't have a list of Peers/Access-Points
 > 
-> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-commands.h	2009-07-01 14:53:33.804427206 +0200
-> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-commands.h	2009-07-01 14:53:38.924427592 +0200
-> @@ -1922,7 +1922,7 @@ struct iwl_link_qual_general_params {
->  #define LINK_QUAL_AGG_DISABLE_START_MIN	(0)
->  
->  #define LINK_QUAL_AGG_FRAME_LIMIT_DEF	(31)
-> -#define LINK_QUAL_AGG_FRAME_LIMIT_MAX	(64)
-> +#define LINK_QUAL_AGG_FRAME_LIMIT_MAX	0x3f
->  #define LINK_QUAL_AGG_FRAME_LIMIT_MIN	(0)
+> # iwlist wlan0 scan
+> 
+> should have worked, but I'm glad you're making good use of iw :)
 
-why are you switching of hex now? Just putting (63) in there is not
-enough?
+Hmm. It does work _now_, provided the interface is UP.
 
-Regards
+That may be thanks to having a recent kernel with the latest
+compat-wireless drivers.
 
-Marcel
+I was also misled by assuming iwlist's 'ap' option would
+provide useful information. 
+
+To summarize what I now know, the steps to follow for basic
+wireless connectivity to an unencrypted network would be:
+
+1. kernel and driver setup - use compat-wireless
+
+2. set wireless interface to UP
+
+	ifconfig <interface> up
+
+3. find available networks using
+
+	iw dev <interface> scan
+ or 
+	iwlist <interface> scan
+
+4. connect to a network using 
+
+	iw dev <interface> connect <SSID> 
+
+5. acquire IP address, typically by
+
+	dhclient <interface>
+
+Regards,
+
+Joel
+ 
+> johannes
 
 
+
+-- 
+Joel Roth
