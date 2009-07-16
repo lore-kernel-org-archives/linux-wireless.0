@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45492 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbZGaH6m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 03:58:42 -0400
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1249026181.29587.14.camel@johannes.local>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <1249024097.7653.6.camel@maxim-laptop>
-	 <1249026181.29587.14.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MDRdiwxXcPYoZOBd7wSH"
-Date: Fri, 31 Jul 2009 09:58:07 +0200
-Message-Id: <1249027087.29587.18.camel@johannes.local>
+Received: from main.gmane.org ([80.91.229.2]:49493 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932659AbZGPRBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 13:01:20 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MRUKc-0001Oi-Jr
+	for linux-wireless@vger.kernel.org; Thu, 16 Jul 2009 17:01:18 +0000
+Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 17:01:18 +0000
+Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 17:01:18 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+Date: Thu, 16 Jul 2009 18:01:07 +0100
+Message-ID: <wf1vogmujw.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pavel Roskin <proski@gnu.org> writes:
 
---=-MDRdiwxXcPYoZOBd7wSH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Thu, 2009-07-16 at 09:02 +0100, Jon Fairbairn wrote:
+>
+>> I've seen adverts for the Abit WLP-01, and elsewhere on the net seen
+>> implications that it's 168c:001c, which isn't listed at
+>> <http://wireless.kernel.org/en/users/Devices/PCI>, but
+>> <http://wireless.kernel.org/en/users/Drivers/ath5k> does list it and
+>> says AP mode not working, but mentions
+>> <http://madwifi-project.org/wiki/Compatibility/Abit>, which suggest AP
+>> mode works with madwifi. What's the current status?
+>
+> ath5k will support the AP mode in Linux 2.6.31.  It's already in Linux
+> 2.6.31-rc3.
 
-On Fri, 2009-07-31 at 09:43 +0200, Johannes Berg wrote:
+Ah, thanks for that. Three questions arise:
 
-> Fix it then. Offer an implementation of your superior solution.
+Are the pci ids quoted above recognised as needing ath5k?
 
-I just don't think that this patch is a solution because it means that
-we'll be connected to the AP forever, without knowing anything is wrong,
-if the AP can reach us but we can't reach the AP (maybe because we have
-a good Intel card with great sensitivity).
+Is the WLP-01 really ath5k/really have those ids?
 
-Sure -- it's possible to factor in transmit status reports (but remember
-that not all hardware gives those reliably) or do things on a different
-schedule etc. But as long as nobody wants to really improve things I
-don't see why we should take the regression and _remove_ the current
-behaviour.
+The distro I'm using (fedora 11) has 2.6.29 -- will the relevant modules
+build for that, or would I have to build a whole 2.6.31?
 
-johannes
+Thanks.
+-- 
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
 
---=-MDRdiwxXcPYoZOBd7wSH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcqQKAAoJEODzc/N7+QmamJgP/1zj9+gpWM4WWU+eANXhGyDT
-XG7xUdNdMz1ADamyGPA/eyFP/2WEuY2/02W492nS5O0/OyocgrNlwVP5ShQHy1Wb
-JXI4KSfsSGrGYbcnLcXl6F1WHFPrXECfi5hk0y4UrdtZ2SifW/IvxTwCNsHMSE+e
-oBHSkjUXiBtjKCk32C3iGJ/UUd0dI40XSAgUkIUyouWBUqflLI/9T6Rh3+6hAHZK
-IAyxirT4ccqcu+UmrgbcbAuz5AmjcVlP2Wc6qRgZHNljSzJ9hOZKl728Q7+tEbQc
-7q7HoPrDW34UZ089CSP9s8p1rYGqXeidFj4wjun0PnIsQniyyZNjfNRK4AchzjY0
-NKuUWwKZz1ViC+mk1C2gYxwXr/mdIwiZjzlCjVVE1Utx1MF+m894pC+50IiRC1j0
-q8WDONBI28Qb7zFgVeFgKhh88R/sxg245CZOE2wiNn1bg9pRFO1u66iGekGKu+Me
-wsDUOWxwWNOk8bZE740eyYWdBNqayqbC+s3SzGo+6APnNIoHorVFRIRZ9A7fPqk+
-wNZZ7t+2lKoZ20+c1wpyWCgSi9wMOONhDLKUCSxA3auvn40EMjsnVnozziNeTPET
-XHB0/d5+tGo9NAA4qqvDc6z+9grnVKe2sjwIK6XFvBSMNUiWh8dk8lAgaWr9CSgz
-frM7yh73CQD38kEQw8UV
-=NQoC
------END PGP SIGNATURE-----
-
---=-MDRdiwxXcPYoZOBd7wSH--
 
