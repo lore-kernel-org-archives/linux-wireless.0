@@ -1,57 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1773 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752228AbZGaNTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 09:19:36 -0400
-Message-ID: <4A72EF60.1090501@tpi.com>
-Date: Fri, 31 Jul 2009 07:19:28 -0600
-From: Tim Gardner <timg@tpi.com>
-Reply-To: timg@tpi.com
+Received: from qw-out-2122.google.com ([74.125.92.24]:38889 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932585AbZGPQPU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:15:20 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so83950qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:15:19 -0700 (PDT)
 MIME-Version: 1.0
-To: Matthew Garrett <mjg@redhat.com>
-CC: linux-acpi@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] dell-laptop: Fix rfkill state queries
-References: <1249007138-27354-1-git-send-email-mjg@redhat.com>
-In-Reply-To: <1249007138-27354-1-git-send-email-mjg@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <wfljmpm4xl.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 09:14:59 -0700
+Message-ID: <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> The current code in dell-laptop is confused about the hardware rfkill
-> state. Fix it up such that it's always reported correctly.
-> 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
-> ---
->  drivers/platform/x86/dell-laptop.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
-> index 74909c4..9061111 100644
-> --- a/drivers/platform/x86/dell-laptop.c
-> +++ b/drivers/platform/x86/dell-laptop.c
-> @@ -197,8 +197,8 @@ static void dell_rfkill_query(struct rfkill *rfkill, void *data)
->  	dell_send_request(&buffer, 17, 11);
->  	status = buffer.output[1];
->  
-> -	if (status & BIT(bit))
-> -		rfkill_set_hw_state(rfkill, !!(status & BIT(16)));
-> +	rfkill_set_sw_state(rfkill, !!(status & BIT(bit)));
-> +	rfkill_set_hw_state(rfkill, !(status & BIT(16)));
->  }
->  
->  static const struct rfkill_ops dell_rfkill_ops = {
+On Thu, Jul 16, 2009 at 1:02 AM, Jon
+Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+>
+> A machine I want to set up as an AP has only PCI express slots free...
 
-This works on an Inspiron 1420 and XPS1330 as far as I was able to test.
-The physical rfkill switch sets 'Hard blocked: yes' for 'phy0: Wireless
-LAN', and everything returns to normal 'blocked: no' when the switch is
-disabled. I was not able to figure out how to get BIT(16) cleared. Is
-that a keyboard function? Anyways,
+I'd recommend ath9k.
 
-Tested-by: Tim Gardner <tim.gardner@canonical.com>
+http://wireless.kernel.org/en/users/Drivers/ath9k
 
-rtg
--- 
-Tim Gardner timg@tpi.com www.tpi.com
-OR 503-601-0234 x102 MT 406-443-5357
+  Luis
