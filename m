@@ -1,156 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f190.google.com ([209.85.216.190]:57543 "EHLO
-	mail-px0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbZGGBBE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 21:01:04 -0400
-Received: by pxi28 with SMTP id 28so3894879pxi.33
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 18:01:08 -0700 (PDT)
-From: javier@cozybit.com
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
-	Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] Fix regression in mesh forwarding path.
-Date: Mon,  6 Jul 2009 17:52:21 -0700
-Message-Id: <1246927941-27148-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1246927662-25461-1-git-send-email-javier@cozybit.com>
-References: <1246927662-25461-1-git-send-email-javier@cozybit.com>
+Received: from mga03.intel.com ([143.182.124.21]:47921 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754840AbZGPJdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:33:15 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 08/10] iwmc3200wifi: remove key caches in driver
+Date: Thu, 16 Jul 2009 17:34:13 +0800
+Message-Id: <1247736854-6760-9-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
+References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+cfg80211 now guarantees keys are set after connecting. We can remove
+the key cache code from the driver now.
 
-The removal of the master netdev broke the mesh forwarding path.  This patch
-fixes it by using the new internal 'pending' queue.
-
-As a result of this change, mesh forwarding no longer does the inefficient
-802.11 -> 802.3 -> 802.11 conversion that was done before.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- net/mac80211/mesh_hwmp.c    |    3 ++-
- net/mac80211/mesh_pathtbl.c |    7 +++++--
- net/mac80211/rx.c           |   17 +++++++++++++++--
- net/mac80211/tx.c           |    3 ---
- 4 files changed, 22 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   43 +-------------------------
+ drivers/net/wireless/iwmc3200wifi/commands.c |   29 +-----------------
+ 2 files changed, 2 insertions(+), 70 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f49ef28..c31fe79 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -784,7 +784,6 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		mesh_path_add(dst_addr, sdata);
- 		mpath = mesh_path_lookup(dst_addr, sdata);
- 		if (!mpath) {
--			dev_kfree_skb(skb);
- 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
- 			err = -ENOSPC;
- 			goto endlookup;
-@@ -804,6 +803,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		memcpy(hdr->addr1, mpath->next_hop->sta.addr,
- 				ETH_ALEN);
- 	} else {
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
- 			/* Start discovery only if it is not running yet */
- 			mesh_queue_preq(mpath, PREQ_Q_F_START);
-@@ -815,6 +815,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 			skb_unlink(skb_to_free, &mpath->frame_queue);
- 		}
- 
-+		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		skb_queue_tail(&mpath->frame_queue, skb);
- 		if (skb_to_free)
- 			mesh_path_discard_frame(skb_to_free, sdata);
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 3c72557..ac7d823 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -14,6 +14,7 @@
- #include <linux/string.h>
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-+#include "wme.h"
- #include "mesh.h"
- 
- /* There will be initially 2^INIT_PATHS_SIZE_ORDER buckets */
-@@ -481,8 +482,10 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
- 	struct sk_buff *skb;
- 
- 	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
--			(mpath->flags & MESH_PATH_ACTIVE))
--		dev_queue_xmit(skb);
-+			(mpath->flags & MESH_PATH_ACTIVE)) {
-+		ieee80211_select_queue(mpath->sdata->local, skb);
-+		ieee80211_add_pending_skb(mpath->sdata->local, skb);
-+	}
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 0372658..3f5a08f 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -158,34 +158,6 @@ static int iwm_key_init(struct iwm_key *key, u8 key_index,
+ 	return 0;
  }
  
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 91747be..e3b58a4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1485,10 +1485,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	unsigned int hdrlen;
- 	struct sk_buff *skb = rx->skb, *fwd_skb;
- 	struct ieee80211_local *local = rx->local;
-+	struct ieee80211_sub_if_data *sdata;
+-static int iwm_reset_profile(struct iwm_priv *iwm)
+-{
+-	int ret;
+-
+-	if (!iwm->umac_profile_active)
+-		return 0;
+-
+-	/*
+-	 * If there is a current active profile, but no
+-	 * default key, it's not worth trying to associate again.
+-	 */
+-	if (iwm->default_key < 0)
+-		return 0;
+-
+-	/*
+-	 * Here we have an active profile, but a key setting changed.
+-	 * We thus have to invalidate the current profile, and push the
+-	 * new one. Keys will be pushed when association takes place.
+-	 */
+-	ret = iwm_invalidate_mlme_profile(iwm);
+-	if (ret < 0) {
+-		IWM_ERR(iwm, "Couldn't invalidate profile\n");
+-		return ret;
+-	}
+-
+-	return iwm_send_mlme_profile(iwm);
+-}
+-
+ static int iwm_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 				u8 key_index, const u8 *mac_addr,
+ 				struct key_params *params)
+@@ -245,10 +217,6 @@ static int iwm_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (key_index == iwm->default_key)
+ 		iwm->default_key = -1;
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
-+	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
+-	/* If the interface is down, we just cache this */
+-	if (!test_bit(IWM_STATUS_READY, &iwm->status))
+-		return 0;
+-
+ 	return iwm_set_key(iwm, 1, key);
+ }
  
- 	if (!ieee80211_is_data(hdr->frame_control))
- 		return RX_CONTINUE;
-@@ -1498,10 +1500,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 		return RX_DROP_MONITOR;
+@@ -257,7 +225,6 @@ static int iwm_cfg80211_set_default_key(struct wiphy *wiphy,
+ 					u8 key_index)
+ {
+ 	struct iwm_priv *iwm = ndev_to_iwm(ndev);
+-	int ret;
  
- 	if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6){
--		struct ieee80211_sub_if_data *sdata;
- 		struct mesh_path *mppath;
+ 	IWM_DBG_WEXT(iwm, DBG, "Default key index is: %d\n", key_index);
  
--		sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 		rcu_read_lock();
- 		mppath = mpp_path_lookup(mesh_hdr->eaddr2, sdata);
- 		if (!mppath) {
-@@ -1546,6 +1546,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			memset(info, 0, sizeof(*info));
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			fwd_skb->iif = rx->dev->ifindex;
-+			if (is_multicast_ether_addr(fwd_hdr->addr3))
-+				memcpy(fwd_hdr->addr1, fwd_hdr->addr3,
-+						ETH_ALEN);
-+			else {
-+				int err = mesh_nexthop_lookup(fwd_skb, sdata);
-+				/* Failed to immediately resolve next hop:
-+				 * fwded frame was dropped or will be added
-+				 * later to the pending skb queue.  */
-+				if (err)
-+					return RX_DROP_MONITOR;
-+			}
-+			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
-+						     fwded_frames);
- 			ieee80211_select_queue(local, fwd_skb);
- 			ieee80211_add_pending_skb(local, fwd_skb);
- 		}
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 66d9a42..969a4b2 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1399,9 +1399,6 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 				dev_put(sdata->dev);
- 				return;
- 			}
--		if (memcmp(sdata->dev->dev_addr, hdr->addr4, ETH_ALEN) != 0)
--			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
--						     fwded_frames);
- 	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
- 		int hdrlen;
- 		u16 len_rthdr;
+@@ -268,15 +235,7 @@ static int iwm_cfg80211_set_default_key(struct wiphy *wiphy,
+ 
+ 	iwm->default_key = key_index;
+ 
+-	/* If the interface is down, we just cache this */
+-	if (!test_bit(IWM_STATUS_READY, &iwm->status))
+-		return 0;
+-
+-	ret = iwm_set_tx_key(iwm, key_index);
+-	if (ret < 0)
+-		return ret;
+-
+-	return iwm_reset_profile(iwm);
++	return iwm_set_tx_key(iwm, key_index);
+ }
+ 
+ int iwm_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index e6be297..0d66370 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -584,12 +584,6 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 	struct iwm_umac_key_tkip *tkip = (struct iwm_umac_key_tkip *)cmd;
+ 	struct iwm_umac_key_ccmp *ccmp = (struct iwm_umac_key_ccmp *)cmd;
+ 
+-	/*
+-	 * We check if our current profile is valid.
+-	 * If not, we dont push the key, we just cache them,
+-	 * so that with the next siwsessid call, the keys
+-	 * will be actually pushed.
+-	 */
+ 	if (!remove) {
+ 		ret = iwm_check_profile(iwm);
+ 		if (ret < 0)
+@@ -727,7 +721,7 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 
+ int iwm_send_mlme_profile(struct iwm_priv *iwm)
+ {
+-	int ret, i;
++	int ret;
+ 	struct iwm_umac_profile profile;
+ 
+ 	memcpy(&profile, iwm->umac_profile, sizeof(profile));
+@@ -742,27 +736,6 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
+ 		return ret;
+ 	}
+ 
+-	for (i = 0; i < IWM_NUM_KEYS; i++)
+-		if (iwm->keys[i].key_len) {
+-			struct iwm_key *key = &iwm->keys[i];
+-
+-			/* Wait for the profile before sending the keys */
+-			wait_event_interruptible_timeout(iwm->mlme_queue,
+-			     (test_bit(IWM_STATUS_ASSOCIATING, &iwm->status) ||
+-			      test_bit(IWM_STATUS_ASSOCIATED, &iwm->status)),
+-							 3 * HZ);
+-
+-			ret = iwm_set_key(iwm, 0, key);
+-			if (ret)
+-				return ret;
+-
+-			if (iwm->default_key == i) {
+-				ret = iwm_set_tx_key(iwm, i);
+-				if (ret)
+-					return ret;
+-			}
+-		}
+-
+ 	return 0;
+ }
+ 
 -- 
-1.5.4.3
+1.6.0.4
 
