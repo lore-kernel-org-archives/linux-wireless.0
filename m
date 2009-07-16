@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59327 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbZG0TI1 (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:65489 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756609AbZGPNok (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 15:08:27 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248721359.7440.2.camel@mj>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
-	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
-	 <1248710387.8500.5.camel@johannes.local>
-	 <1248710568.8500.7.camel@johannes.local>  <1248711120.6965.6.camel@mj>
-	 <1248712821.11808.6.camel@mj>  <1248718929.13118.3.camel@johannes.local>
-	 <1248721359.7440.2.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6LRssp5zYsvsNPdx8pY1"
-Date: Mon, 27 Jul 2009 21:07:55 +0200
-Message-Id: <1248721675.32365.0.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 16 Jul 2009 09:44:40 -0400
+Received: by bwz28 with SMTP id 28so125250bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 06:44:39 -0700 (PDT)
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] wl12xx: loop off by one.
+References: <4A524E91.9040400@gmail.com> <4A5F02C9.50505@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Jul 2009 16:44:35 +0300
+In-Reply-To: <4A5F02C9.50505@gmail.com> (Roel Kluin's message of "Thu\, 16 Jul 2009 12\:36\:57 +0200")
+Message-ID: <87ws684u9o.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Roel Kluin <roel.kluin@gmail.com> writes:
 
---=-6LRssp5zYsvsNPdx8pY1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> With `while (loop++ < INIT_LOOP)' `loop' becomes INIT_LOOP + 1 after
+> the loop.
+>
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+>>> with `while (loop++ < INIT_LOOP)' `loop' reaches -1 after the loop.
+>>
+>> Sorry, my brains are on vacation mode right now and I can't understand
+>> how loop can reach -1.
+>
+> The confusion is my fault. The changelog should have as above. The patch
+> is correct though.
 
-On Mon, 2009-07-27 at 15:02 -0400, Pavel Roskin wrote:
-> On Mon, 2009-07-27 at 20:22 +0200, Johannes Berg wrote:
->=20
-> > Nah, the bug is far more far-reaching, please see and try the patch
-> > below.
->=20
-> Yes, it's working!  There are no crashes with correct and incorrect PSK.
+Ah. Thanks for explaining this to me, I understand this now. Good catch,
+thanks for fixing this.
 
-Good to know, thanks.
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
 
-> I'm not very interested in making code look nicer if the real problem is
-> elsewhere.  I just assumed that the problem was where the panic
-> happened.
+John, please take this patch. Please holler if we need to resend it.
 
-Right, just wanted to point it out anyway.
-
-johannes
-
---=-6LRssp5zYsvsNPdx8pY1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbfsGAAoJEODzc/N7+QmaxPIP/2thnPaV5GrtCVh2yJGBrDyP
-71co4tOdFPMJ6drkR8JPYY4K1sXbjiLy+7leHxJ+qjZV80MGPFoazLMT6eqyBKId
-/rqvfj0UJvuzCbO+ob3XkHo5Fw/nFjZEGw2MRvLR8af9E5vAud3uLVcnp95IZtH3
-dUyZwDndaR3Tm3U5avvTkucDTGE/vVksPUROoMGdFZEj7x3b+Fl8NIf/x6n2DqJD
-EjNtTfdACwoY2DF38GrQWZGUYgK/nKlxl4UzUJ0n4jkuQh14mjC7eEmQnhMOm3pj
-6qLTzSzdRWy5VPiQwdrTv9dHKTbUYOTXICMYOAfS4XA7eemoPySbLqrH+oWmHsi+
-X7M2nd3eSwImva04B/FjWIMMAoBBm4y+UgOwjtp29hEZ7s8uKDW1sz3Qssh3mZ2n
-ePo3094B94xxqVE+gkLYz2jLwVXKAVmZMVYEEjIwv2qmH20Xjg4Bu34CXOaGebl7
-vzWw3X+aUHQ/9mdTigtYUjhHtGU8j1nuVDge5hypLpNzC0zu5qExIfAVx/CuxcGH
-zqpmkSbsUCQmnuRevGa+fwrSiuyFFbDPVkTxGtbq/GgPE6x4pUwYiUW1FG5tuA3k
-j6hXjR3N0zuOjJhBrJRRqlhfa7cvrJtrM/Kbn798z5rPvQoNOMzMpulGNvXjfFY/
-PRaD0IPl9WUMyeBHOIL3
-=X+V4
------END PGP SIGNATURE-----
-
---=-6LRssp5zYsvsNPdx8pY1--
-
+-- 
+Kalle Valo
