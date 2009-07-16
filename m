@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39767 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:38303 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752043AbZGNCAt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 22:00:49 -0400
-From: "Zhu, Yi" <yi.zhu@intel.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	"drzeus-list@drzeus.cx" <drzeus-list@drzeus.cx>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "Winkler, Tomas" <tomas.winkler@intel.com>
-Date: Tue, 14 Jul 2009 09:59:43 +0800
-Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
-Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BA8388BB@pdsmsx502.ccr.corp.intel.com>
-References: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
-In-Reply-To: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S932770AbZGPRRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 13:17:37 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 10:17:38 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bennyam Malavazi <bennyam.malavazi@atheros.com>,
+	Jouni Malinen <jouni.malinen@Atheros.com>
+Subject: [PATCH v2] ath9k: Tune ANI function processing on AP mode during ANI reset
+Date: Thu, 16 Jul 2009 10:17:35 -0700
+Message-ID: <1247764655-23304-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tomas wrote:
+For AP mode we must tune ANI specially for 2 GHz and
+for 5 GHz. We mask in only the flags we want to toggle
+on ath9k_hw_ani_control() through the ah->ani_function
+bitmask, this will take care of ignoring changes during
+ANI reset which we were disabling before.
 
-> +#define SDIO_VENDOR_ID_INTEL			0x0089
-> +#define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
-> +#define SDIO_DEVICE_ID_INTEL_IWMC3200WIFI	0x1403
-> +#define SDIO_DEVICE_ID_INTEL_IWMC3200TOP        0x1404
+Testedy-by: Steven Luo <steven@steven676.net>
+Cc: Bennyam Malavazi <bennyam.malavazi@atheros.com>
+Cc: Jouni Malinen <jouni.malinen@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-Looks good. Please replace the above spaces with a TAB.
+I had messed up an e-mail address on the commit log, here its fixed.
+The actual patch is the same. Seems that shiny new ergonomic keyboard
+helps with the hands but won't actually type for you.
 
-> +#define SDIO_DEVICE_ID_INTEL_IWMC3200BT		0x1406
-> 
->  #define SDIO_VENDOR_ID_MARVELL			0x02df
->  #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
+ drivers/net/wireless/ath/ath9k/ani.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Thanks,
--yi
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 1aeafb5..aad259b 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -478,6 +478,18 @@ void ath9k_ani_reset(struct ath_hw *ah)
+ 			"Reset ANI state opmode %u\n", ah->opmode);
+ 		ah->stats.ast_ani_reset++;
+ 
++		if (ah->opmode == NL80211_IFTYPE_AP) {
++			/*
++			 * ath9k_hw_ani_control() will only process items set on
++			 * ah->ani_function
++			 */
++			if (IS_CHAN_2GHZ(chan))
++				ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
++						    ATH9K_ANI_FIRSTEP_LEVEL);
++			else
++				ah->ani_function = 0;
++		}
++
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_NOISE_IMMUNITY_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
+ 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
+-- 
+1.6.3.3
+
