@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57262 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752994AbZG0XU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 19:20:57 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:20:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH] rt2x00: remove experimental on kconfig
-Date: Mon, 27 Jul 2009 16:20:54 -0700
-Message-ID: <1248736854-443-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qy0-f192.google.com ([209.85.221.192]:43913 "EHLO
+	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932509AbZGPQsZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:48:25 -0400
+Received: by qyk30 with SMTP id 30so228752qyk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:48:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <wf63dsmvjg.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com>
+	<wf63dsmvjg.fsf@calligramme.charmers>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 09:48:04 -0700
+Message-ID: <43e72e890907160948o507a3bbbv2f08298c5dcdcee6@mail.gmail.com>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	Pen Li <Pen.Li@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These have been around for a while, if there are issues
-they should be reported.
+On Thu, Jul 16, 2009 at 9:39 AM, Jon
+Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com>
+> writes:
+>
+>> On Thu, Jul 16, 2009 at 1:02 AM, Jon
+>> Fairbairn<jon.fairbairn@cl.cam.ac.uk> wrote:
+>>>
+>>> A machine I want to set up as an AP has only PCI express slots free...
+>>
+>> I'd recommend ath9k.
+>
+>> http://wireless.kernel.org/en/users/Drivers/ath9k
+>
+> Thanks, but I've seen that page and "products with supported ath9k
+> cards" points to a page that lists "Laptops with ath9k cards" (I'm
+> looking for PCIe, not mini-PCIe) and "APs with ath9k cards", not "ath9k
+> cards". Before I can buy a card, I need to know what it is called in the
+> shops (on-line or otherwise), not what chipset it has.
 
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+The page lists all products and the manufacturer names of the products.
 
-Ivo, is this fair to say? Was surprised to see rt2x00 marked
-as experimental still.
+But yeah, I am not aware of PCI-Express devices sold in the market
+with separately. Adding Pen Li in case he is aware.
 
- drivers/net/wireless/rt2x00/Kconfig |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Pen, this e-mail is in a public mailing list.
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index f970aa2..379da5c 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -1,8 +1,8 @@
- menuconfig RT2X00
- 	tristate "Ralink driver support"
--	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-+	depends on MAC80211 && WLAN_80211
- 	---help---
--	  This will enable the experimental support for the Ralink drivers,
-+	  This will enable the support for the Ralink drivers,
- 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
- 
- 	  These drivers make use of the mac80211 stack.
--- 
-1.6.3.3
-
+  Luis
