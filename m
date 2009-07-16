@@ -1,41 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36504 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbZGULrj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 07:47:39 -0400
-Received: from wireless by sipsolutions.net with local (Exim 4.69)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1MTDop-0000kz-DX
-	for linux-wireless@vger.kernel.org; Tue, 21 Jul 2009 13:47:39 +0200
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] rfkill: v0.1
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1MTDop-0000kz-DX@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Tue, 21 Jul 2009 13:47:39 +0200
+Received: from mga03.intel.com ([143.182.124.21]:47921 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754292AbZGPJdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:33:09 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 00/09] iwmc3200wifi updates
+Date: Thu, 16 Jul 2009 17:34:05 +0800
+Message-Id: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-A new release of rfkill (v0.1) is available at:
+Here are some patches for iwmc3200wifi driver to adapt to recent
+cfg80211 changes.
 
-http://wireless.kernel.org/download/rfkill/rfkill-0.1.tar.bz2
+[PATCH 01/09] iwmc3200wifi: fix UMAC INIT_COMPLETE notification handling
+[PATCH 02/09] iwmc3200wifi: hardware does not support IP checksum
+[PATCH 03/09] iwmc3200wifi: set cipher_suites before registering wiphy
+[PATCH 04/09] iwmc3200wifi: use correct debug level
+[PATCH 05/09] iwmc3200wifi: cfg80211 managed mode port
+[PATCH 06/09] iwmc3200wifi: remove setting WEP keys before setting essid support
+[PATCH 07/09] iwmc3200wifi: make iwm_send_wifi_if_cmd return 0 on success
+[PATCH 08/09] iwmc3200wifi: remove key caches in driver
+[PATCH 09/09] cfg80211: remove WARN_ON in __cfg80211_sme_scan_done
 
-SHA1 sum: ac00cb3887641ab1048218a5979ce32243ce31d2
-
-Here is the short log of the changes included in this 
-release:
-
-Johannes Berg -  bump version to 0.1
-Johannes Berg -  check event size for version 1
-Johannes Berg -  use right event size for read()
-Marcel Holtmann -  open device read-only for list and event operations
-Johannes Berg -  comment out rfkill manpage install for now
-Johannes Berg -  add *~ to gitignore
-Johannes Berg -  add .gitignore
-Johannes Berg -  version script "improvement"
-Marcel Holtmann -  implement basic rfkill functionality
-Marcel Holtmann -  update to latest rfkill.h
-Marcel Holtmann -  fix wrong rfkill_version type
-Johannes Berg -  init rfkill basic code
+Thanks,
+-yi
