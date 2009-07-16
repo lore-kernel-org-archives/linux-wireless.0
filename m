@@ -1,58 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:46056 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934171AbZGQIBA (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:50636 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755052AbZGPScU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 04:01:00 -0400
-Message-ID: <4A602FBA.2010808@canonical.com>
-Date: Fri, 17 Jul 2009 10:00:58 +0200
-From: Stefan Bader <stefan.bader@canonical.com>
+	Thu, 16 Jul 2009 14:32:20 -0400
+Received: by bwz28 with SMTP id 28so297685bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 11:32:17 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] handle broken V4 fw region code shift
+Date: Thu, 16 Jul 2009 20:32:00 +0200
+Cc: Dan Williams <dcbw@redhat.com>, libertas-dev@lists.infradead.org
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Manoj Iyer <manoj.iyer@canonical.com>,
-	kernel-team@lists.ubuntu.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [KARMIC] review these for rt2x00 (adds rt2800pci)
-References: <43e72e890907161615h507e9c59r421d23d22ff05459@mail.gmail.com> <a32f33a40907170011n38367961i54a26c50124241c2@mail.gmail.com>
-In-Reply-To: <a32f33a40907170011n38367961i54a26c50124241c2@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_gI3XKf3R10X9HwW"
+Message-Id: <200907162032.00777.marek.vasut@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo Van Doorn wrote:
-> On Fri, Jul 17, 2009 at 1:15 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Thu, Jul 16, 2009 at 9:56 AM, Stefan Bader<stefan.bader@canonical.com> wrote:
->>> At least this seems to be material for 3 or 4 patches
->>> - adapt the rfkill stuff
->>> - some documentation update
->>> - add the new pci version of the 2800 (with that rt2x00soc lib
->>>   which might be another patch)
->>> - and some fixes...
->> Not only that but this driver is not yet merged upstream, there should
->> be a good reason for that.
->>
->> Ivo, what's the status on rt2800pci? Some users have been asking about it.
-> 
-> The status is that it is not functioning correctly, during boot it
-> will print out
-> tons of errors about the device not being ready, and afterward it cannot scan,
-> connect or do anything useful.
-> 
-> And I think those problems can be considered enough reasons for not merging
-> the driver upstream yet. ;)
-> 
-> Ivo
+--Boundary-00=_gI3XKf3R10X9HwW
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I would say so. :) Assuming there is a bit of truth in those claims of that 
-tarball working better than the current kernel code, we might take away all the 
-new driver bloat and see what remains (which might be the part Ivo has anyways 
-in wireless testing...)
+Dne =C4=8Ct 16. =C4=8Dervence 2009 20:21:30 Dan Williams napsal(a):
+> On Thu, 2009-07-16 at 19:40 +0200, Marek Vasut wrote:
+> > Hi,
+> >
+> > please consider applying/commenting on the following trivial fix. The
+> > description is in the patch. Thanks.
+>
+> Please CC to linux-wireless@vger.kernel and I'll ack there so Linville
+> will pick it up.  Any patch that you consider appropriate for actual
+> inclusion at the time you send it is better on linux-wireless.
+> libertas-dev should really be only for hardware/firmware discussions and
+> not-yet-ready patches.
+>
+> Thanks!
+> Dan
 
-Stefan
+Done, thanks! :-)
+(sorry for sending it twice, I missed the address was incomplete in your ma=
+il)
 
--- 
+--Boundary-00=_gI3XKf3R10X9HwW
+Content-Type: text/x-patch;
+  charset="utf-8";
+  name="0003-Fix-problem-with-broken-V4-firmware-on-CF8381.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0003-Fix-problem-with-broken-V4-firmware-on-CF8381.patch"
 
-When all other means of communication fail, try words!
+=46rom d69e6db9d424e40dade6bbf107dbab2ff4d692d5 Mon Sep 17 00:00:00 2001
+=46rom: Marek Vasut <marek.vasut@gmail.com>
+Date: Thu, 16 Jul 2009 19:19:53 +0200
+Subject: [PATCH] Fix problem with broken V4 firmware on CF8381
+
+=46irmware V4 on CF8381 reports region code shifted by 1 byte to left.
+The following patch checks for this and handles it properly.
+
+Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
+=2D--
+ drivers/net/wireless/libertas/cmd.c  |    8 +++++++-
+ drivers/net/wireless/libertas/defs.h |    2 ++
+ 2 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/lib=
+ertas/cmd.c
+index 01db705..445288d 100644
+=2D-- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -135,8 +135,14 @@ int lbs_update_hw_spec(struct lbs_private *priv)
+ 	/* Clamp region code to 8-bit since FW spec indicates that it should
+ 	 * only ever be 8-bit, even though the field size is 16-bit.  Some firmwa=
+re
+ 	 * returns non-zero high 8 bits here.
++	 *
++	 * Firmware version 4.0.102 used in CF8381 has region code shifted. We
++	 * need to check for this problem and handle it properly.
+ 	 */
+=2D	priv->regioncode =3D le16_to_cpu(cmd.regioncode) & 0xFF;
++	if (MRVL_FW_MAJOR_REV(priv->fwrelease) =3D=3D MRVL_FW_V4)
++		priv->regioncode =3D (le16_to_cpu(cmd.regioncode) >> 8) & 0xFF;
++	else
++		priv->regioncode =3D le16_to_cpu(cmd.regioncode) & 0xFF;
+=20
+ 	for (i =3D 0; i < MRVDRV_MAX_REGION_CODE; i++) {
+ 		/* use the region code to search for the index */
+diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/li=
+bertas/defs.h
+index 48da157..72f3479 100644
+=2D-- a/drivers/net/wireless/libertas/defs.h
++++ b/drivers/net/wireless/libertas/defs.h
+@@ -234,6 +234,8 @@ static inline void lbs_deb_hex(unsigned int grp, const =
+char *prompt, u8 *buf, in
+ /** Mesh enable bit in FW capability */
+ #define MESH_CAPINFO_ENABLE_MASK			(1<<16)
+=20
++/** FW definition from Marvell v4 */
++#define MRVL_FW_V4					(0x04)
+ /** FW definition from Marvell v5 */
+ #define MRVL_FW_V5					(0x05)
+ /** FW definition from Marvell v10 */
+=2D-=20
+1.6.3.3
 
 
+--Boundary-00=_gI3XKf3R10X9HwW--
