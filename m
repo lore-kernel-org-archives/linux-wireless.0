@@ -1,83 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56126 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330AbZG2INg (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:60398 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933623AbZGPXvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 04:13:36 -0400
-Subject: [PATCH] mac80211: disable beacons before removing the associated
- interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Bob Copeland <bcopeland@gmail.com>
-Content-Type: text/plain
-Date: Wed, 29 Jul 2009 10:13:03 +0200
-Message-Id: <1248855183.13742.16.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 16 Jul 2009 19:51:55 -0400
+Message-ID: <4A5FBD19.6000803@mandriva.org>
+Date: Fri, 17 Jul 2009 02:51:53 +0300
+From: Thomas Backlund <tmb@mandriva.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
+ to 2.6.31-rc3
+References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>	 <1247782731.31442.3.camel@johannes.local> <1247783433.31442.11.camel@johannes.local> <4A5FB957.80407@mandriva.org>
+In-Reply-To: <4A5FB957.80407@mandriva.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
-
-When downing interfaces, it's a good idea to tell the driver to
-stop sending beacons; that way the driver doesn't need special
-code in ops->remove_interface() when it should already handle the
-case in bss_info_changed().
-
-This fixes a potential crash with at least ath5k since the vif
-pointer will be nullified while beacon interrupts are still active.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/iface.c |   10 ++++++++++
- net/mac80211/main.c  |    3 ++-
- net/mac80211/pm.c    |    4 ++++
- 3 files changed, 16 insertions(+), 1 deletion(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2009-07-29 10:06:06.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-07-29 10:11:35.000000000 +0200
-@@ -522,6 +522,16 @@ static int ieee80211_stop(struct net_dev
- 				ieee80211_scan_completed(&local->hw, true);
- 		}
- 
-+		/*
-+		 * Disable beaconing for AP and mesh, IBSS can't
-+		 * still be joined to a network at this point.
-+		 */
-+		if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
-+			ieee80211_bss_info_change_notify(sdata,
-+				BSS_CHANGED_BEACON_ENABLED);
-+		}
-+
- 		conf.vif = &sdata->vif;
- 		conf.type = sdata->vif.type;
- 		conf.mac_addr = dev->dev_addr;
---- wireless-testing.orig/net/mac80211/main.c	2009-07-29 10:06:06.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2009-07-29 10:11:35.000000000 +0200
-@@ -198,7 +198,8 @@ void ieee80211_bss_info_change_notify(st
- 	}
- 
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
--		if (test_bit(SCAN_SW_SCANNING, &local->scanning)) {
-+		if (local->quiescing || !netif_running(sdata->dev) ||
-+		    test_bit(SCAN_SW_SCANNING, &local->scanning)) {
- 			sdata->vif.bss_conf.enable_beacon = false;
- 		} else {
- 			/*
---- wireless-testing.orig/net/mac80211/pm.c	2009-07-29 10:06:06.000000000 +0200
-+++ wireless-testing/net/mac80211/pm.c	2009-07-29 10:11:35.000000000 +0200
-@@ -96,6 +96,10 @@ int __ieee80211_suspend(struct ieee80211
- 		if (!netif_running(sdata->dev))
- 			continue;
- 
-+		/* disable beaconing */
-+		ieee80211_bss_info_change_notify(sdata,
-+			BSS_CHANGED_BEACON_ENABLED);
-+
- 		conf.vif = &sdata->vif;
- 		conf.type = sdata->vif.type;
- 		conf.mac_addr = sdata->dev->dev_addr;
+Thomas Backlund skrev:
+> Johannes Berg skrev:
+>> On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
+>>
+>>>> And pressing it again gets this:
+>>>> [root@tmb-laptop rfkill]# ./rfkill list
+>>>> 0: acer-wireless: Wireless LAN
+>>>>     Soft blocked: no
+>>>>     Hard blocked: no
+>>>> 1: acer-bluetooth: Bluetooth
+>>>>     Soft blocked: yes
+>>>>     Hard blocked: no
+>>>> 2: phy0: Wireless LAN
+>>>>     Soft blocked: yes
+>>>>     Hard blocked: no
+>>>>
+>>>> And after that I cant get wireless back until I again do a:
+>>>> ./rfkill unblock 2
+>>>> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
+>>> Right. This is bad. The button press shouldn't have affected the
+>>> soft-state of the rfkill #2.
+>>>
+>>>> Applying this patch:
+>>>> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
+>>>> sent by Alan Jenkins does not help this issue either...
+>>>>
+>>>> Any  suggestions how to fix the rfkill ?
+>>> I'll poke at the acer code to see what it's doing wrong...
+>>
+>> Can't see anything wrong. I wonder if the button you have sends both the
+>> ACPI event _and_ an input event.
+>>
+>> Can you try this patch and tell us what happens?
+>>
+> 
+> pressing rfkill when I have a working wireless gets this:
+> 
+> Jul 17 02:24:35 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+> REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting 
+> RXON_ASSOC (-5)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+> REPLY_ADD_STA: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+> (0, 00:19:5b:51:dc:27) from hardware (-5)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+> REPLY_ADD_STA: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+> (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
+> Jul 17 02:24:35 tmb-laptop dhclient: receive_packet failed on wlan0: 
+> Network is down
+> Jul 17 02:24:35 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+> Jul 17 02:24:36 tmb-laptop ifplugd(wlan0)[1790]: Link beat lost.
+> 
+> 
 
 
+And here is the above rfkill/ iwlagn error with "debug=0x01043fff":
+
+Jul 17 02:41:06 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:41:06 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+77, i = 75, REPLY_RX, 0xc3
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
+Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-38, tim=2957610510 
+usec, phy=0x33, chnl=8
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+77, i = 76, STATISTICS_NOTIFICATION, 0x9d
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
+Statistics notification received (480 vs 484).
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+79, i = 77, REPLY_RX, 0xc3
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
+Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-34, tim=2957712910 
+usec, phy=0x33, chnl=8
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+79, i = 78, STATISTICS_NOTIFICATION, 0x9d
+Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
+Statistics notification received (480 vs 484).
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+81, i = 79, REPLY_RX, 0xc3
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
+Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-37, tim=2957815309 
+usec, phy=0x33, chnl=8
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+81, i = 80, STATISTICS_NOTIFICATION, 0x9d
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
+Statistics notification received (480 vs 484).
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
+82, i = 81, CARD_STATE_NOTIFICATION, 0xa1
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_mac_tx enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_tx_skb Dropping 
+- RF KILL
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_mac_tx leave
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
+leave - RF not ready
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
+leave - RF not ready
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
+leave - RF not ready
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
+leave - RF not ready
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config enter 
+to channel 8 changed 0x100
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_set_rxon_chain 
+rx_chain=0x6806 active=2 idle=2
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config Not 
+re-sending same RXON configuration.
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config leave
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config enter 
+to channel 8 changed 0x40
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_set_rxon_chain 
+rx_chain=0x2806 active=2 idle=2
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
+sending command - RF KILL
+Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
+Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting 
+RXON_ASSOC (-5)
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config leave
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+changes = 0x8F
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+BSSID 00:00:00:00:00:00
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+ERP_PREAMBLE 0
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+ERP_CTS 0
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+ASSOC 0
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
+leave
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
+sending command - RF KILL
+Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_ADD_STA: enqueue_hcmd failed: -5
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key 
+disable hwcrypto key
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key leave
+Jul 17 02:41:07 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+(0, 00:19:5b:51:dc:27) from hardware (-5)
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_configure_filter 
+Enter: changed: 0x0, total: 0x80000000
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
+sending command - RF KILL
+Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_ADD_STA: enqueue_hcmd failed: -5
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key 
+disable hwcrypto key
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key leave
+Jul 17 02:41:07 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+(2, ff:ff:ff:ff:ff:ff) from hardware (-5)
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
+iwl_mac_remove_interface enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
+iwl_mac_remove_interface leave
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_stop enter
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U __iwl_down iwlagn is 
+going down
+Jul 17 02:41:07 tmb-laptop dhclient: receive_packet failed on wlan0: 
+Network is down
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
+iwl4965_apm_stop_master stop master
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
+iwl_clear_free_frames 0 frames on pre-allocated heap on clear.
+Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_stop leave
+Jul 17 02:41:07 tmb-laptop ifplugd(wlan0)[27042]: Link beat lost.
+
+
+
+Oh, btw is this below a refcounting bug?
+For each time I unload & reload the iwlagn,
+the number in front of phy0 gets increased:
+
+[root@tmb-laptop rfkill]# ./rfkill list
+0: acer-wireless: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+1: acer-bluetooth: Bluetooth
+	Soft blocked: yes
+	Hard blocked: no
+5: phy0: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+
+
+--
+Thomas
