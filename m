@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:62600 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbZGaPtw (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:46502 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039AbZGPJHI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 11:49:52 -0400
-Received: by gxk9 with SMTP id 9so3833048gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 08:49:52 -0700 (PDT)
+	Thu, 16 Jul 2009 05:07:08 -0400
+Received: by bwz28 with SMTP id 28so1917418bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 02:07:07 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [RFC/RFT 2/5] mac80211: advance the state machine immediately if no delay is needed
+Date: Thu, 16 Jul 2009 11:07:15 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
+References: <200907161104.41975.helmut.schaa@gmail.com>
+In-Reply-To: <200907161104.41975.helmut.schaa@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1249026324.29587.15.camel@johannes.local>
-References: <1249001028-15110-1-git-send-email-lrodriguez@atheros.com>
-	<1249026324.29587.15.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 31 Jul 2009 08:49:32 -0700
-Message-ID: <43e72e890907310849l3487b8a2p52302f6662a26f95@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix regression on beacon world roaming feature
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni.malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907161107.15922.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 12:45 AM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-07-30 at 17:43 -0700, Luis R. Rodriguez wrote:
->
->> By doing so though we also disallowed beacon hints on devices
->> registering their wiphy with custom world regulatory domains
->> enabled, this happens to be currently ath5k, ath9k and ar9170.
->> The passive scan and beacon restrictions on those devices would
->> never be lifted even if we did find a beacon and the hardware did
->> support such enhancements when world roaming.
->
-> I dislike this solution, it just adds proliferation of possible
-> behaviours.
+Instead of queueing the scan work again without delay just process the
+next state immediately.
 
-Agreed.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-> Can't those devices
-
-Which devices?
-
-> just set the _flags_ in their reg
-> notifier,
-
-So if you mean devices that used custom reg stuff, the answer is no
-because the patch which introduced the regression would prevent the
-setting of the passive scan flag and beaconing restrictions so the
-reg_notifier would never notice the difference.
-
-If you mean iwlwifi devices then yes, this is possible but it also
-means a big change and I'd like to see this regression fixed on
-2.6.31.
-
-> and clear the corresponding bit in the orig_flags?
-
-iwlwifi would just have to touch flags, not orig_flags as orig_flags
-should not be touched.
-
-How about using the patch as is for now for wireless-testing and
-2.6.31, and then have iwlwifi write their own reg_notifier() ?
-
-  Luis
+---
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index a20f9e7..60a4e00 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -585,15 +585,21 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	switch (local->scan_state) {
+-	case SCAN_SET_CHANNEL:
+-		if (ieee80211_scan_state_set_channel(local, &next_delay))
+-			return;
+-		break;
+-	case SCAN_SEND_PROBE:
+-		ieee80211_scan_state_send_probe(local, &next_delay);
+-		break;
+-	}
++	/*
++	 * as long as no delay is required advance immediately
++	 * without scheduling a new work
++	 */
++	do {
++		switch (local->scan_state) {
++		case SCAN_SET_CHANNEL:
++			if (ieee80211_scan_state_set_channel(local, &next_delay))
++				return;
++			break;
++		case SCAN_SEND_PROBE:
++			ieee80211_scan_state_send_probe(local, &next_delay);
++			break;
++		}
++	} while (next_delay == 0);
+ 
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   next_delay);
