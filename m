@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:23034 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754214AbZGLO5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 10:57:30 -0400
-Message-ID: <20090712105807.g85wo8lpgk04k8gk-cebfxv@webmail.spamcop.net>
-Date: Sun, 12 Jul 2009 10:58:07 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: Dave <kilroyd@googlemail.com>
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Gerard <dgerard@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [Orinoco-devel] orinoco-usb in 2.6.31?
-References: <fbad4e140907081555w3a98c570y54d904272094008@mail.gmail.com>
-	<4A577DA9.9000205@gmail.com> <4A57DC26.4090708@gmail.com>
-	<4A58FC5C.8060204@gmail.com>
-In-Reply-To: <4A58FC5C.8060204@gmail.com>
+Received: from mail-vw0-f200.google.com ([209.85.212.200]:56443 "EHLO
+	mail-vw0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbZGPGxg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 02:53:36 -0400
+Received: by vwj38 with SMTP id 38so1538930vwj.33
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 23:53:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+In-Reply-To: <1247628512.3669.13.camel@Joe-Laptop.home>
+References: <20090715032412.GE4613@myhost>
+	 <1247628512.3669.13.camel@Joe-Laptop.home>
+Date: Thu, 16 Jul 2009 12:23:35 +0530
+Message-ID: <8e92b4100907152353l1f9921eew340261e8e50c54eb@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ath9k: Add support for AR9287 based chipsets.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Dave <kilroyd@googlemail.com>:
+On Wed, Jul 15, 2009 at 8:58 AM, Joe Perches<joe@perches.com> wrote:
+> On Wed, 2009-07-15 at 08:54 +0530, Vivek Natarajan wrote:
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>> diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+>> index 1f0c5fe..d1bbb02 100644
+>> --- a/drivers/net/wireless/ath/ath9k/calib.c
+>> +++ b/drivers/net/wireless/ath/ath9k/calib.c
+>> @@ -116,7 +116,7 @@ static void ath9k_hw_do_getnf(struct ath_hw *ah,
+>>                               "NF calibrated [ctl] [chain 1] is %d\n", nf);
+>>               nfarray[1] = nf;
+>>
+>> -             if (!AR_SREV_9280(ah)) {
+>> +             if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
+>
+> This looks like it needs a helper function like IS_AR_SREV_928x(ah)
 
-> The rebasing was a little painful due to all the changes that have been
-> happening on orinoco. However I think I'm done.
+928X is not needed in this case as there is some other chipset AR9285
+which has different capabilities compared to AR9280 and AR9287.
 
-I have an impression that orinoco-usb should be submitted to the  
-staging tree.  Perhaps its symbols should be renamed to allow it to  
-coexist with the plain orinoco driver, even if both are linked into  
-the kernel.
-
-I was hoping that we would reorganize the orinoco driver to allow  
-orinoco-usb to be one of its frontends, but it's not happening.  All  
-the efforts that go into orinoco-usb is keeping it up-to-date with the  
-kernel.
-
--- 
-Regards,
-Pavel Roskin
+Vivek.
