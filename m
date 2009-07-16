@@ -1,33 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:57888 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755477AbZGOSMN (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:54687 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756536AbZGPPEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 14:12:13 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1292575wfd.4
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 11:12:13 -0700 (PDT)
+	Thu, 16 Jul 2009 11:04:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-Date: Wed, 15 Jul 2009 11:12:13 -0700
-Message-ID: <45e8e6c40907151112k5607e19ewc563097552783559@mail.gmail.com>
-Subject: Re: any controller working in AP mode ?
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Ram kumar <ramkumar.research@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
+References: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
+	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA8388BB@pdsmsx502.ccr.corp.intel.com>
+	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
+Date: Thu, 16 Jul 2009 18:04:04 +0300
+Message-ID: <1ba2fa240907160804g18b1a215w3161c9682db7b35@mail.gmail.com>
+Subject: Re: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+From: Tomas Winkler <tomasw@gmail.com>
+To: "Zhu, Yi" <yi.zhu@intel.com>
+Cc: "drzeus-list@drzeus.cx" <drzeus-list@drzeus.cx>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 14, 2009 at 10:21 PM, Ram kumar<ramkumar.research@gmail.com> wrote:
-> 2.Marvell 8388 controller supports AP mode,but it seems marvell has
-> not released the AP mode firmware.
+On Thu, Jul 16, 2009 at 3:23 PM, Zhu, Yi <yi.zhu@intel.com> wrote:
+>
+> > Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+>
+> BTW, subject should be "iwmc3200".
 
-http://wireless.kernel.org/en/users/Drivers/libertastf
+Thanks. I'll address all comments although I'm not sure how to split
+the patch since adding SDIO_VENDOR_ID_INTEL to sdio_ids.h it affects
+all the drivers anyhow, so I'm suggesting to route it through netdev.
 
-> 3.Any info on wireless controller that supports AP mode will be helpful to me.
-
-Perhaps the rt2x00 driver?  I've used the USB variant (rt73usb) in AP
-mode before but haven't tried it recently.
-
- -Andrey
+Thanks
+Tomas
