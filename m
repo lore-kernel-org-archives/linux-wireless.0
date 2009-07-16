@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:52862 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752201AbZGaSU1 (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:34610 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932907AbZGPVwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:20:27 -0400
-Received: by gxk9 with SMTP id 9so3973403gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:20:27 -0700 (PDT)
+	Thu, 16 Jul 2009 17:52:43 -0400
+Received: by bwz28 with SMTP id 28so394248bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 14:52:41 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT 0/5] mac80211: implement background scan
+Date: Thu, 16 Jul 2009 23:52:48 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200907161104.41975.helmut.schaa@gmail.com> <1247779378.30529.46.camel@johannes.local>
+In-Reply-To: <1247779378.30529.46.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
-References: <20090731180238.GA7963@makis> <43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
-	<40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 31 Jul 2009 11:20:07 -0700
-Message-ID: <43e72e890907311120r76d3db6et91128ccbc3a90c63@mail.gmail.com>
-Subject: Re: [PATCH 1/4]: Check EEPROM before tweaking SERDES
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907162352.49020.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 11:18 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
-> 2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
->>
->> Can the changes for the code be done before the move, or after so that
->> way the actual code changes to the section can be easily readable?
->>
->
-> Since we use EEPROM infos we must move this after eeprom initialization.
+Am Donnerstag, 16. Juli 2009 schrieb Johannes Berg:
+> On Thu, 2009-07-16 at 11:04 +0200, Helmut Schaa wrote:
+> 
+> > So, it would be great if somebody could test the patches on other
+> > hardware as well.
+> 
+> If you repost with the stuff we talked about fixed, I'll give them a
+> spin, but for all I can tell they should be good to go in, it's a huge
+> improvement and we can build on that.
 
-Yes, but my point is a move can be done in one patch, changes to that
-code in a separate patch, to help understand what is going on during
-patch review.
+Will do that soon. However, I still have an issue that sometimes
+the connection is stuck and I'm still unsure if it is related to the
+bg scan patches or something else :(
 
-  Luis
+Helmut
