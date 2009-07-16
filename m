@@ -1,73 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1240 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbZGWLZD (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:59446 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933620AbZGPXn4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 07:25:03 -0400
-Date: Thu, 23 Jul 2009 07:24:28 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-Message-ID: <20090723112428.GC13742@hash.localnet>
-References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet> <4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet> <4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com> <4A650331.9020409@redfish-solutions.com> <4A6620B9.4@redfish-solutions.com>
+	Thu, 16 Jul 2009 19:43:56 -0400
+Received: by gxk9 with SMTP id 9so864090gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 16:43:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A6620B9.4@redfish-solutions.com>
+In-Reply-To: <4A5FB957.80407@mandriva.org>
+References: <4A5D0374.5040702@mandriva.org> <1247611024.1796.21.camel@johannes.local>
+	<4A5D0A7F.5090108@mandriva.org> <1247672725.17896.1974.camel@rc-desk>
+	<4A5FA52D.7030701@mandriva.org> <1247782731.31442.3.camel@johannes.local>
+	<1247783433.31442.11.camel@johannes.local> <4A5FB957.80407@mandriva.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 16:43:34 -0700
+Message-ID: <43e72e890907161643v28a621e7ne29ec1e032e0ae95@mail.gmail.com>
+Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6 to
+	2.6.31-rc3
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 21, 2009 at 01:10:33PM -0700, Philip A. Prindeville wrote:
-> A little progress:  I build 2009-07-10 with 2.6.27.26, and I can get the
-> Vista box to associate, but not an iPhone running 3.0...
+On Thu, Jul 16, 2009 at 4:35 PM, Thomas Backlund<tmb@mandriva.org> wrote:
+> Johannes Berg skrev:
+>>
+>> On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
+>>
+>>>> And pressing it again gets this:
+>>>> [root@tmb-laptop rfkill]# ./rfkill list
+>>>> 0: acer-wireless: Wireless LAN
+>>>>        Soft blocked: no
+>>>>        Hard blocked: no
+>>>> 1: acer-bluetooth: Bluetooth
+>>>>        Soft blocked: yes
+>>>>        Hard blocked: no
+>>>> 2: phy0: Wireless LAN
+>>>>        Soft blocked: yes
+>>>>        Hard blocked: no
+>>>>
+>>>> And after that I cant get wireless back until I again do a:
+>>>> ./rfkill unblock 2
+>>>> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
+>>>
+>>> Right. This is bad. The button press shouldn't have affected the
+>>> soft-state of the rfkill #2.
+>>>
+>>>> Applying this patch:
+>>>> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
+>>>> sent by Alan Jenkins does not help this issue either...
+>>>>
+>>>> Any  suggestions how to fix the rfkill ?
+>>>
+>>> I'll poke at the acer code to see what it's doing wrong...
+>>
+>> Can't see anything wrong. I wonder if the button you have sends both the
+>> ACPI event _and_ an input event.
+>>
+>> Can you try this patch and tell us what happens?
+>>
+>
+> pressing rfkill when I have a working wireless gets this:
+>
+> Jul 17 02:24:35 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
+> REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting
+> RXON_ASSOC (-5)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
+> REPLY_ADD_STA: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key (0,
+> 00:19:5b:51:dc:27) from hardware (-5)
+> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
+> REPLY_ADD_STA: enqueue_hcmd failed: -5
+> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key (1,
+> ff:ff:ff:ff:ff:ff) from hardware (-5)
+> Jul 17 02:24:35 tmb-laptop dhclient: receive_packet failed on wlan0: Network
+> is down
+> Jul 17 02:24:35 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+> Jul 17 02:24:36 tmb-laptop ifplugd(wlan0)[1790]: Link beat lost.
+>
+>
+> After that I only get (when pressing rfkill several times...):
+> Jul 17 02:30:16 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:30:16 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
+>
+> Jul 17 02:30:28 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:30:28 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+>
+> Jul 17 02:30:31 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:30:31 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
+>
+> Jul 17 02:30:45 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:30:45 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+>
+> Jul 17 02:32:23 tmb-laptop klogd: rfkill_schedule_toggle(1)
+> Jul 17 02:32:23 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
+>
+> And no wireless network...
+>
+> Issuing ./rfkill unblock 2 gets the wireless back
+> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::radio
+> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::assoc
+> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::RX
+> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::TX
+> Jul 17 02:33:00 tmb-laptop ifplugd(wlan0)[1790]: Link beat detected.
 
-Here's a start, but I still need to find and fix another issue.
+I think we're missing two rfkill defines for compat. Give me a second to review.
 
-Ath5k seems to have had an implicit assumption that config() would
-be called before beacon setup and the opmode would get set in HW then.
-Not sure if the order changed when beacon stuff was moved to bss_conf,
-but it's fragile anyway so I think we should configure the mode up
-front so that the timers actually work.  Also we need to process all
-of the TX queue's status descriptors.
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c00f83f..168649d 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1117,6 +1117,8 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 rfilt;
- 
-+	ah->ah_op_mode = sc->opmode;
-+
- 	/* configure rx filter */
- 	rfilt = sc->filter_flags;
- 	ath5k_hw_set_rx_filter(ah, rfilt);
-@@ -1999,8 +2001,13 @@ static void
- ath5k_tasklet_tx(unsigned long data)
- {
- 	struct ath5k_softc *sc = (void *)data;
-+	int i;
- 
--	ath5k_tx_processq(sc, sc->txq);
-+	for (i=0; i < AR5K_NUM_TX_QUEUES; i++) {
-+		if (!sc->txqs[i].setup)
-+			continue;
-+		ath5k_tx_processq(sc, sc->txq);
-+	}
- }
- 
- 
-@@ -2768,6 +2775,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
-+	ath5k_mode_setup(sc);
- 
- 	ret = 0;
- end:
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
