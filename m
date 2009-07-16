@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42322 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755196AbZGOAO2 (ORCPT
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:35896 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754912AbZGPKfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 11/21] ath9k: remap ATH9K_MODE_*
-Date: Tue, 14 Jul 2009 20:14:03 -0400
-Message-Id: <1247616853-11221-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Jul 2009 06:35:13 -0400
+Received: by ewy26 with SMTP id 26so15529ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 03:35:12 -0700 (PDT)
+Message-ID: <4A5F02C9.50505@gmail.com>
+Date: Thu, 16 Jul 2009 12:36:57 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
+MIME-Version: 1.0
+To: Roel Kluin <roel.kluin@gmail.com>
+CC: kalle.valo@nokia.com, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] wl12xx: loop off by one.
+References: <4A524E91.9040400@gmail.com>
+In-Reply-To: <4A524E91.9040400@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a lot of gaps here.
+With `while (loop++ < INIT_LOOP)' `loop' becomes INIT_LOOP + 1 after
+the loop.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.h |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+>> with `while (loop++ < INIT_LOOP)' `loop' reaches -1 after the loop.
+>
+> Sorry, my brains are on vacation mode right now and I can't understand
+> how loop can reach -1.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5e40223..9a4570d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -113,14 +113,14 @@
- 
- enum wireless_mode {
- 	ATH9K_MODE_11A = 0,
--	ATH9K_MODE_11G = 3,
--	ATH9K_MODE_11NA_HT20 = 6,
--	ATH9K_MODE_11NG_HT20 = 7,
--	ATH9K_MODE_11NA_HT40PLUS = 8,
--	ATH9K_MODE_11NA_HT40MINUS = 9,
--	ATH9K_MODE_11NG_HT40PLUS = 10,
--	ATH9K_MODE_11NG_HT40MINUS = 11,
--	ATH9K_MODE_MAX
-+	ATH9K_MODE_11G,
-+	ATH9K_MODE_11NA_HT20,
-+	ATH9K_MODE_11NG_HT20,
-+	ATH9K_MODE_11NA_HT40PLUS,
-+	ATH9K_MODE_11NA_HT40MINUS,
-+	ATH9K_MODE_11NG_HT40PLUS,
-+	ATH9K_MODE_11NG_HT40MINUS,
-+	ATH9K_MODE_MAX,
- };
- 
- enum ath9k_hw_caps {
--- 
-1.6.0.6
+The confusion is my fault. The changelog should have as above. The patch
+is correct though.
 
+> Here's the code:
+
+>    loop = 0;
+>    while (loop++ < INIT_LOOP) {
+>          ...
+>    }
+>
+>    if (loop >= INIT_LOOP) {
+>       wl1251_error("timeout waiting for the hardware to "
+>                    "complete initialization");
+>       return -EIO;
+>    }
+
+In the last iteration `loop' is `INIT_LOOP -1', the test occurs and then
+the increment to `INIT_LOOP'. If just then the break occurs:
+`if (interrupt & wl->chip.intr_init_complete)' evaluates to true, then
+we error out, although there was no timeout. This could be very unlikely
+to occur.
+
+> Also the patch won't apply to wireless-testing because main.c is renamed
+> to wl1251_main.c.
+
+Ok, this is against your tree
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
+index d8a155d..b2ae71c 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
+@@ -247,7 +247,7 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
+ 		}
+ 	}
+ 
+-	if (loop >= INIT_LOOP) {
++	if (loop > INIT_LOOP) {
+ 		wl1251_error("timeout waiting for the hardware to "
+ 			     "complete initialization");
+ 		return -EIO;
