@@ -1,103 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58170 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755982AbZGOAO3 (ORCPT
+Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:55799 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751147AbZGPGy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 10/21] ath9k: remove ATH9K_MODE_11B
-Date: Tue, 14 Jul 2009 20:14:02 -0400
-Message-Id: <1247616853-11221-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Jul 2009 02:54:57 -0400
+Date: Thu, 16 Jul 2009 06:54:53 +0000
+From: Joel Roth <joelz@pobox.com>
+To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090716065453.GA3154@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite> <20090712112340.GA3315@sprite>
+ <40f31dec0907120808y45f575b6l6d83afd731e6d51@mail.gmail.com>
+ <20090712203449.GA3058@sprite>
+ <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
+ <20090714065414.GA16708@sprite> <20090716061457.GA1576@sprite>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090716061457.GA1576@sprite>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This saves us 2733 bytes.
+On Wed, Jul 15, 2009 at 08:14:57PM -1000, Joel Roth wrote:
+> On Mon, Jul 13, 2009 at 10:08:52AM -0400, Bob Copeland wrote:
+> > On Sun, Jul 12, 2009 at 4:34 PM, Joel Roth<joelz@pobox.com> wrote:
+> > > Vista advised me to:
+> > >
+> > > 1) turn on the hardware wifi switch <blush>
+> > >
+> > > 2) use the hotkey combination to enable wifi
+> > 
+> > It might be worth trying compat-wireless or 2.6.31-rcX.  Support
+> > for reading the card's internal rfkill state was added in the
+> > post-2.6.30 time-frame.
+>  
+> I installed compat-wireless against my 2.6.30.1 kernel,
+> and also the iw command.
+> 
+> I've read some docs, however I'm not sure what the next step should be. 
+> 
+> My general idea is that I should be able to see a list of
+> access points, however iwlist doesn't tell me anything new.
+> 
+> # iwlist wlan0 ap
+> 
+> wlan0     Interface doesn't have a list of Peers/Access-Points
 
-   text    data     bss     dec     hex filename
- 252265    3628    1584  257477   3edc5 ath9k-has-b-rate.ko
- 249905    3628    1584  255117   3e48d ath9k.ko
+After some RTFM'ing,
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Siged-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- drivers/net/wireless/ath/ath9k/rc.c |   23 -----------------------
- 3 files changed, 0 insertions(+), 25 deletions(-)
+# iw wlan0 scan
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cffb078..a115c8c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3305,7 +3305,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	}
- 
- 	if (eeval & AR5416_OPFLAGS_11G) {
--		set_bit(ATH9K_MODE_11B, pCap->wireless_modes);
- 		set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
- 		if (ah->config.ht_enable) {
- 			if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9d0b31a..5e40223 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -113,7 +113,6 @@
- 
- enum wireless_mode {
- 	ATH9K_MODE_11A = 0,
--	ATH9K_MODE_11B = 2,
- 	ATH9K_MODE_11G = 3,
- 	ATH9K_MODE_11NA_HT20 = 6,
- 	ATH9K_MODE_11NG_HT20 = 7,
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index b0e3702..112a0ec 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -380,27 +380,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
- 	0,   /* Phy rates allowed initially */
- };
- 
--static const struct ath_rate_table ar5416_11b_ratetable = {
--	4,
--	{
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 1000, /* 1 Mb */
--			900, 0x1b,  0x00, (0x80|2),
--			0, 0, 1, 0, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 2000, /* 2 Mb */
--			1800, 0x1a, 0x04, (0x80|4),
--			1, 1, 1, 1, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 5500, /* 5.5 Mb */
--			4300, 0x19, 0x04, (0x80|11),
--			1, 2, 2, 2, 0 },
--		{ VALID, VALID, WLAN_RC_PHY_CCK, 11000, /* 11 Mb */
--			7100, 0x18, 0x04, (0x80|22),
--			1, 4, 100, 3, 0 },
--	},
--	100, /* probe interval */
--	100, /* rssi reduce interval */
--	0,   /* Phy rates allowed initially */
--};
--
- static inline int8_t median(int8_t a, int8_t b, int8_t c)
- {
- 	if (a >= b) {
-@@ -1702,8 +1681,6 @@ static struct rate_control_ops ath_rate_ops = {
- 
- void ath_rate_attach(struct ath_softc *sc)
- {
--	sc->hw_rate_table[ATH9K_MODE_11B] =
--		&ar5416_11b_ratetable;
- 	sc->hw_rate_table[ATH9K_MODE_11A] =
- 		&ar5416_11a_ratetable;
- 	sc->hw_rate_table[ATH9K_MODE_11G] =
+BSS 00:40:05:c5:4f:19 (on wlan0) -- associated
+	TSF: 9251942689 usec (0d, 02:34:11)
+	freq: 2412
+	beacon interval: 100
+	capability: ESS PBCC (0x0041)
+	signal: -40.00 dBm
+	SSID: default
+	Supported rates: 1.0* 2.0* 5.5* 11.0* 22.0 
+	DS Paramater set: channel 1
+BSS 00:16:b6:db:fd:78 (on wlan0)
+	TSF: 629448825249 usec (7d, 06:50:48)
+	freq: 2437
+	beacon interval: 100
+	capability: ESS ShortSlotTime (0x0401)
+	signal: -105.00 dBm
+	SSID: linksys
+	Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0 
+	DS Paramater set: channel 6
+	ERP: Barker_Preamble_Mode
+	Extended supported rates: 6.0 9.0 12.0 48.0 
+
+# iw wlan0 connect default 
+
+# dhclient wlan0
+
+And voila! I have an IP address on wlan0.
+I can't think of anything more that I need. :-)
+
+Oh, maybe a pointer for others.
+
+Perhaps I was just missing the iw 'connect' incantation?
+'iwlist' was a complete red herring; didn't help me 
+find my AP.
+
+http://linuxwireless.org/en/users/Documentation was the only
+site of several I visited mentioning 'iw' at all! 
+
+And at linuxwireless, I find no example of using 'iw' to set
+up a connection.  I'd be glad to contribute one.
+
+Thanks Bob, Nick and others for your tips.
+
+
 -- 
-1.6.0.6
-
+Joel Roth
