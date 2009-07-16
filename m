@@ -1,87 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:57742 "EHLO ogre.sisk.pl"
+Received: from mx2.zhaw.ch ([160.85.104.51]:60017 "EHLO mx2.zhaw.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbZGZTcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2009 15:32:32 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [Acpi4asus-user] [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-Date: Sun, 26 Jul 2009 21:32:38 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	acpi4asus-user@lists.sourceforge.net,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>
-References: <4A5716AA.5000903@ph.tum.de> <200907252256.44570.rjw@sisk.pl> <20090725223505.GA2729@tuxdriver.com>
-In-Reply-To: <20090725223505.GA2729@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907262132.38947.rjw@sisk.pl>
+	id S1754266AbZGPJAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:00:13 -0400
+From: Tobias Klauser <klto@zhaw.ch>
+To: chunkeey@web.de, linville@tuxdriver.com, johannes@sipsolutions.net,
+	lrodriguez@atheros.com, yi.zhu@intel.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Tobias Klauser <klto@zhaw.ch>
+Subject: [PATCH 2/8] ar9170: Remove unused DECLARE_MAC_BUF
+Date: Thu, 16 Jul 2009 10:53:01 +0200
+Message-Id: <1247734381-20718-1-git-send-email-klto@zhaw.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 26 July 2009, John W. Linville wrote:
-> On Sat, Jul 25, 2009 at 10:56:43PM +0200, Rafael J. Wysocki wrote:
-> > On Friday 10 July 2009, Johannes Berg wrote:
-> > > On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
-> > > > I demand that Johannes Berg may or may not have written...
-> > > > 
-> > > > > Apparently there actually _are_ tools that try to set this in sysfs even
-> > > > > though it wasn't supposed to be used this way without claiming first.
-> > > > 
-> > > > Then it should have been documented as such. I don't see anything about this
-> > > > in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
-> > > > statement that "Kernel handles events", which isn't exactly helpful :-\
-> > > 
-> > > Oh, it's not just that rfkill was horrible, the documentation matched :)
-> > > All the SHOUTING in it about what you must and must not do but nothing
-> > > actually helpful :)
-> > > 
-> > > > > *shrug*, I don't like it, but whatever...
-> > > > 
-> > > > I do. It means that we have a nice simple text-based interface for use in
-> > > > scripts (for now), and a binary interface which is better suited to the likes
-> > > > of desktop applications.
-> > > 
-> > > Indeed, and as long as you expect to only use soft toggle... problem is
-> > > that you won't know whether it's soft-toggled or not while it's
-> > > hard-blocked (off)!
-> > > 
-> > > > > Please test & report.
-> > > > 
-> > > > With the patch applied, Bluetooth toggling is working again, so you get to
-> > > > add this:
-> > > > 
-> > > > Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-> > > 
-> > > Ok, John, please pick up the patch.
-> > 
-> > Is there anything going on with the patch?
-> > 
-> > Surely it's not in -rc4.
-> 
-> commit f54c142725ad2ba33c3ee627873cb6966bf05447
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Fri Jul 10 21:41:39 2009 +0200
-> 
->     rfkill: allow toggling soft state in sysfs again
->     
->     Apparently there actually _are_ tools that try to set
->     this in sysfs even though it wasn't supposed to be used
->     this way without claiming first. Guess what: now that
->     I've cleaned it all up it doesn't matter and we can
->     simply allow setting the soft-block state in sysfs.
->     
->     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->     Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Didn't make -rc4, should be in -rc5.
+Is not needed anymore because of the %pM printk conversion specifier.
 
-Great, thanks!
+Signed-off-by: Tobias Klauser <klto@zhaw.ch>
+---
+ drivers/net/wireless/ath/ar9170/main.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Best,
-Rafael
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 9d38cf6..3d6373a 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2085,7 +2085,6 @@ static int ar9170_read_eeprom(struct ar9170 *ar)
+ {
+ #define RW	8	/* number of words to read at once */
+ #define RB	(sizeof(u32) * RW)
+-	DECLARE_MAC_BUF(mbuf);
+ 	u8 *eeprom = (void *)&ar->eeprom;
+ 	u8 *addr = ar->eeprom.mac_address;
+ 	__le32 offsets[RW];
+-- 
+1.6.0.4
+
