@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58324 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbZGWW64 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:51868 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755171AbZGPKkT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 18:58:56 -0400
-Subject: Re: [PATCH] mac80211: do not trigger beacon loss work if scanning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	rossi.f@inwind.it
-In-Reply-To: <1248389377-30379-1-git-send-email-lrodriguez@atheros.com>
-References: <1248389377-30379-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-qQMHsrXNcR68phvsPkDn"
-Date: Fri, 24 Jul 2009 00:58:24 +0200
-Message-Id: <1248389904.10342.0.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 16 Jul 2009 06:40:19 -0400
+Received: by fxm18 with SMTP id 18so18104fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 03:40:18 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC/RFT 5/5] mac80211: implement basic background scanning
+Date: Thu, 16 Jul 2009 12:40:25 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200907161104.41975.helmut.schaa@gmail.com> <200907161150.54237.helmut.schaa@gmail.com> <1247739394.29762.9.camel@johannes.local>
+In-Reply-To: <1247739394.29762.9.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907161240.25574.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Donnerstag, 16. Juli 2009 schrieb Johannes Berg:
+> On Thu, 2009-07-16 at 11:50 +0200, Helmut Schaa wrote:
+> > Maybe I should use other terms. Ideas?
+> 
+> Ah, ok. Since your patch 4/5 changes sw_scanning to SW_SCANNING, I think
+> at least change it to BG_SCANNING there already. OTOH, I think people
+> are used to sw_scanning so it would be better to keep it. Maybe do
+> 	SW_SCANNING
+> and
+> 	SW_SCANNING | OFF_CHANNEL
+> 
+> or maybe
+> 	SW_SCANNING | PROBING
+> or something like that?
 
---=-qQMHsrXNcR68phvsPkDn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, something like this sounds better and does not cause so much confusion.
 
-On Thu, 2009-07-23 at 15:49 -0700, Luis R. Rodriguez wrote:
-> We were issues probe requests to the associated AP on the wrong
-> band by having our beacon timer loss trigger while we are scanning.
-> When we would scan the timer could hit and force us to send a
-> probe request to the AP but with a chance we'd be on the wrong band.
->=20
-> This leads to finding no usable bitrate but we should not get so
-> far on the xmit path. We should not be trying to send these probe
-> request frames so prevent the timer from stuffing beacon loss work
-> on the mac80211 workqueue when scanning.
->=20
-> Tested-by: Fabio Rossi <rossi.f@inwind.it>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/mac80211/mlme.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 523c0d9..e90992e 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -2187,7 +2187,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned lo=
-ng data)
->  		(struct ieee80211_sub_if_data *) data;
->  	struct ieee80211_local *local =3D sdata->local;
-> =20
-> -	if (local->quiescing)
-> +	if (local->quiescing || local->sw_scanning || local->hw_scanning)
+> > > Anyway looks pretty good to me! How does it fare during ping -f or
+> > > something?
+> > 
+> > I compared it to the hw_scan implementation of iwlwifi. We loose a few
+> > more frames (I guess due to not flushing the queues before channel switch)
+> > but it's not really much, it was <1% for ping -f).
+> 
+> Yeah, we still need to add a queue flush callback for the hardware, but
+> that can wait some more.
 
-I'd rather have  that check in ieee80211_mgd_probe_ap itself, so it's
-much closer to the source of the problem.
+Right, that can wait :)
 
-johannes
+> > I didn't do much performance testing, just a single wget and the performance
+> > dropped to about 50%. I still have to run some iperf tests (both RX and TX) to
+> > see how it behaves.
+> 
+> I'd be more interested in the rtt stats that ping -f prints after you
+> abort it:
+> 
+> rtt min/avg/max/mdev = 0.021/0.028/1.726/0.051 ms
 
---=-qQMHsrXNcR68phvsPkDn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I don't have any stats here anymore but if I remember correctly the max rtt I
+got was around 250ms. Will try that again when I'm back in the evening.
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKaOsKAAoJEODzc/N7+QmajS8P/0I2mM3yHP+urW9N36m5a5Iq
-wyujl9i5da5WKYQAK04ifs1Wj7lrG7V9XlaCm9YhCynNPNPZDgwBCCxhgEc3qab5
-3TG6pa9oFLxSY/iaTL5Gthu+DqUCxx0nkyI2UyATihToZcK6D8xL4hSx1y8XJ5O6
-IWBc68xCdQU5XHTZRC8z1DJcs3L2XTzz7+VhDHRnk4zL7r+W2Zx4kL8MV4KoK9bq
-+9iwb+JAVV18MpmRw8GkavJ+9LHg5OjR6E7IptibKc4RAOG1REYHncZxYhPjgxFh
-6CXj7x7I0Vcj0unsDNOTqmO58S+GjbPa3O6YLSsqWqNiZDdCBZ2Za+ZOjRnGB7Yb
-8p5zuA7qBZ2TRKrETysyT1MA21ddMRNo2mi1Y58ImuZK0YgVAuntr8/iw2VJcT15
-GbYULXm4oabl3hbYslSkwygmYui2DLDPDF9rpsUrojeT3uwNlG9/A3FzHAoQ7svl
-5MGODqB/QBIyF95Wlu/knKAwli+DsWECR+npwUmRWeMMBRgyhZ6kUxv8iryPrcAP
-B8S0mxjjykm1B+OuIJNJByXnwehTQPNSMw8ptvGwnn1PQy0IqshP5P44RqJAU4Pl
-QhqQw28qDR2v34L5Wj1+Qj8W/KfPnw0kDHmLMoCgS1DYXFSU2viDVWEhOAU1lyZK
-5b72lPAYw7qHGYXsxMZk
-=pRBi
------END PGP SIGNATURE-----
-
---=-qQMHsrXNcR68phvsPkDn--
-
+Helmut
