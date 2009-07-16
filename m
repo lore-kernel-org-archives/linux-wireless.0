@@ -1,88 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42319 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755452AbZGOAO2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933308AbZGPVRi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 20/21] ath9k: Use probe interval instead of rssi reduce interval
-Date: Tue, 14 Jul 2009 20:14:12 -0400
-Message-Id: <1247616853-11221-21-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Jul 2009 17:17:38 -0400
+Subject: Re: [RFC/RFT 5/5] mac80211: implement basic background scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200907162252.09504.helmut.schaa@gmail.com>
+References: <200907161104.41975.helmut.schaa@gmail.com>
+	 <200907161150.54237.helmut.schaa@gmail.com>
+	 <1247739394.29762.9.camel@johannes.local>
+	 <200907162252.09504.helmut.schaa@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wy1IjDcgsSTVIjoXLzTX"
+Date: Thu, 16 Jul 2009 23:17:07 +0200
+Message-Id: <1247779027.30529.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Get rid of rssi reduce interval.
+--=-wy1IjDcgsSTVIjoXLzTX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    6 +-----
- drivers/net/wireless/ath/ath9k/rc.h |    1 -
- 2 files changed, 1 insertions(+), 6 deletions(-)
+On Thu, 2009-07-16 at 22:52 +0200, Helmut Schaa wrote:
+> Am Donnerstag, 16. Juli 2009 schrieb Johannes Berg:
+> > On Thu, 2009-07-16 at 11:50 +0200, Helmut Schaa wrote:
+> > > I didn't do much performance testing, just a single wget and the perf=
+ormance
+> > > dropped to about 50%. I still have to run some iperf tests (both RX a=
+nd TX) to
+> > > see how it behaves.
+> >=20
+> > I'd be more interested in the rtt stats that ping -f prints after you
+> > abort it:
+> >=20
+> > rtt min/avg/max/mdev =3D 0.021/0.028/1.726/0.051 ms
+>=20
+> JFI, here's the result:
+>=20
+> 30851 packets transmitted, 30796 received, 0% packet loss, time 80592ms
+> rtt min/avg/max/mdev =3D 1.512/8.235/251.145/32.479 ms, pipe 12, ipg/ewma=
+ 2.612/1.709 ms
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 731967c..a97dd7b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -148,7 +148,6 @@ static const struct ath_rate_table ar5416_11na_ratetable = {
- 			4,  23, 40, 41, 41, 148400 },
- 	},
- 	50,  /* probe interval */
--	50,  /* rssi reduce interval */
- 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
- };
- 
-@@ -298,7 +297,6 @@ static const struct ath_rate_table ar5416_11ng_ratetable = {
- 			8,  27, 44, 45, 45, 148400 },
- 		},
- 	50,  /* probe interval */
--	50,  /* rssi reduce interval */
- 	WLAN_RC_HT_FLAG,  /* Phy rates allowed initially */
- };
- 
-@@ -331,7 +329,6 @@ static const struct ath_rate_table ar5416_11a_ratetable = {
- 			4,  7, 0 },
- 	},
- 	50,  /* probe interval */
--	50,  /* rssi reduce interval */
- 	0,   /* Phy rates allowed initially */
- };
- 
-@@ -376,7 +373,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
- 			8,  11, 0 },
- 	},
- 	50,  /* probe interval */
--	50,  /* rssi reduce interval */
- 	0,   /* Phy rates allowed initially */
- };
- 
-@@ -1070,7 +1066,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	/* Every so often, we reduce the thresholds
- 	 * and PER (different for CCK and OFDM). */
- 	if (now_msec - ath_rc_priv->per_down_time >=
--	    rate_table->rssi_reduce_interval) {
-+	    rate_table->probe_interval) {
- 		for (rate = 0; rate < size; rate++) {
- 			ath_rc_priv->state[rate].per =
- 				7 * ath_rc_priv->state[rate].per / 8;
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index 6797df0..c794d6c 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -119,7 +119,6 @@ struct ath_rate_table {
- 		u32 max_4ms_framelen;
- 	} info[RATE_TABLE_SIZE];
- 	u32 probe_interval;
--	u32 rssi_reduce_interval;
- 	u8 initial_ratemax;
- };
- 
--- 
-1.6.0.6
+Nice. Much better than the multiple seconds I had :)
+
+johannes
+
+--=-wy1IjDcgsSTVIjoXLzTX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKX5jOAAoJEODzc/N7+QmaA0cP/iqgBWw+PoyuubcFavVI3+QS
+YSKZoiof1v97E948nKVJsucq0jkWtoPzZdFuXfE+//VyCHWnH8AFqHZYR53l8uQM
+oiwCQp/DIhn5PEjoSZYw2X6+AKlxFRM3wO0xNRolLiLdKFv9r7Z7JcY/mi8/vApd
+ozv/mdWu+MAlGbN3immD82MNhygaAsL+Bs2IIwejXmHMkrc4n3yAa89icFTgx4E9
+X2gEuSyapc/gKuO4CL0t9T0ufRhHfdDljDmK+FQAUYhjK6xvknmA/a6Cb49PbaOZ
+YFwuW48kFWretUA98hXrsrgLnxGfGh19cPxovAxDrQEtq03tn2D8dghAYhXomjg+
+CGfCyGF8pzmfAQ0ZeefwOJbHA2GPy/ddJz6uNpduLjnSYLPxs9/UKWvdY3wyyuYr
+t3i2XuEHvqClF+p8v7soUSg5xAMBFThqgvqMOMigLMafO/sKybgGnZsRvSbNwW4d
+sAiSP8NnQN+D8ZRqM6OjF4h9iyVU8Klg8wm3DZjSRzmZT60Fnxnmpfdf8NMolbRz
+gyihFGzohsd+kXyEGOgcni/CFiua4C1lXhTWBVbJqYwwcveMFFuXnOQ2JvqEAa+3
+PAQoxK88coDVcRUjCBZ+nfQfN5GQj6mRWkvLoJU5lmsN4Zmd22LO7KFztDl/qE3g
+329GVFiNmuhF6fYfKiqy
+=0Grg
+-----END PGP SIGNATURE-----
+
+--=-wy1IjDcgsSTVIjoXLzTX--
 
