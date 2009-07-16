@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:35606 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbZGaSZb convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:54745 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754292AbZGPJJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:25:31 -0400
-Received: by ewy10 with SMTP id 10so1710506ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:25:31 -0700 (PDT)
+	Thu, 16 Jul 2009 05:09:55 -0400
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, luciano.coelho@nokia.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] wireless: wl12xx, fix lock imbalance
+References: <1247603833-10862-1-git-send-email-jirislaby@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 16 Jul 2009 12:09:52 +0300
+In-Reply-To: <1247603833-10862-1-git-send-email-jirislaby@gmail.com> (Jiri Slaby's message of "Tue\, 14 Jul 2009 22\:37\:13 +0200")
+Message-ID: <87eish56zj.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
-References: <20090731181020.GE7963@makis>
-	 <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
-Date: Fri, 31 Jul 2009 21:25:31 +0300
-Message-ID: <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Fri, Jul 31, 2009 at 11:10 AM, Nick
-> Kossifidis<mick@madwifi-project.org> wrote:
->>  * Get rid of calibration timer, instead use a software interrupt
->>   to schedule the calibration tasklet.
->
-> An example of itemizing one change. Explain the why, not the how.
->
+Jiri Slaby <jirislaby@gmail.com> writes:
 
-We 've discussed this with various people on wireless summit.
+> Add omitted mutex_unlock to one of wl12xx_op_start fail paths (when
+> wl12xx_chip_wakeup fails).
 
-a) We don't need a timer for this, there is no need for accuracy
-    even with round_jiffies i think this is a waste of resources.
-    Also we don't need to run calibration if we are idle (no interrupts).
+Thanks for fixing this.
 
-b) When we add ANI support we 'll just extend the poll function
-    and calibration tasklet and handle all periodic phy calibration
-    on one place (much cleaner).
+> [v2]
+> Power off the device, because:
+> \= cite from http://marc.info/?l=linux-kernel&m=124755028209880&w=2
+> If the chip cannot be booted, why should it remain powered on?
+> In some rare cases, the chip might fail to initialize, but can
+> recover if powered off and on again, so turning it off at this
+> point is the right thing to do. =/
 
-c) Having calibration on a tasklet is better since during calibration
-    we can't transmit or receive (antennas are detached to measure
-    noise floor), previously calibration could run in parallel with tx/rx
-    and interfere (packet loss).
+Yes, I agree with this.
+
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> ---
+>  drivers/net/wireless/wl12xx/main.c |    2 +-
+
+Unfortunately this won't apply to wireless-testing because main.c is
+renamed to wl1251_main.c. Can you respin the patch or do you want me to
+do it? I'm sending other wl12xx patches anyway and it's easy for me to
+rebase this one at the same time.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Kalle Valo
