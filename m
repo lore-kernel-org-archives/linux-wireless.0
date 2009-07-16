@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f200.google.com ([209.85.212.200]:56443 "EHLO
-	mail-vw0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbZGPGxg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 02:53:36 -0400
-Received: by vwj38 with SMTP id 38so1538930vwj.33
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 23:53:36 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:51404 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933580AbZGPXX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 19:23:29 -0400
+Message-ID: <4A5FB662.5070500@openwrt.org>
+Date: Fri, 17 Jul 2009 01:23:14 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1247628512.3669.13.camel@Joe-Laptop.home>
-References: <20090715032412.GE4613@myhost>
-	 <1247628512.3669.13.camel@Joe-Laptop.home>
-Date: Thu, 16 Jul 2009 12:23:35 +0530
-Message-ID: <8e92b4100907152353l1f9921eew340261e8e50c54eb@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ath9k: Add support for AR9287 based chipsets.
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	ipw3945-devel@lists.sourceforge.net,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+Subject: Re: [PATCH v2 16/21] mac80211: add helper for management / no-ack
+ frame rate decision
+References: <1247763941-21396-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1247763941-21396-1-git-send-email-lrodriguez@atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 15, 2009 at 8:58 AM, Joe Perches<joe@perches.com> wrote:
-> On Wed, 2009-07-15 at 08:54 +0530, Vivek Natarajan wrote:
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->> diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
->> index 1f0c5fe..d1bbb02 100644
->> --- a/drivers/net/wireless/ath/ath9k/calib.c
->> +++ b/drivers/net/wireless/ath/ath9k/calib.c
->> @@ -116,7 +116,7 @@ static void ath9k_hw_do_getnf(struct ath_hw *ah,
->>                               "NF calibrated [ctl] [chain 1] is %d\n", nf);
->>               nfarray[1] = nf;
->>
->> -             if (!AR_SREV_9280(ah)) {
->> +             if (!AR_SREV_9280(ah) && !AR_SREV_9287(ah)) {
->
-> This looks like it needs a helper function like IS_AR_SREV_928x(ah)
+Luis R. Rodriguez wrote:
+> All current rate control algorithms agree to send management and no-ack
+> frames at the lowest rate. They also agree to do this when sta
+> and the private rate control data is NULL. We add a hlper to mac80211
+> for this and simplify the rate control algorithm code.
+> 
+> Developers wishing to make enhancements to rate control algorithms
+> are for broadcast/multicast can opt to not use this in their
+> gate_rate() mac80211 callback.
+> 
+> Cc: Zhu Yi <yi.zhu@intel.com>
+> Cc: Reinette Chatre <reinette.chatre@intel.com>
+> Cc: ipw3945-devel@lists.sourceforge.net
+> Cc: Gabor Juhos <juhosg@openwrt.org>
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> Cc: Derek Smithies <derek@indranet.co.nz>
+> Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/rc.c        |   14 +------------
+>  drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   13 ++---------
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |    7 +-----
+>  include/net/mac80211.h                     |   23 ++++++++++++++++++++++
+>  net/mac80211/rate.c                        |   29 ++++++++++++++++++++++++++++
+>  net/mac80211/rc80211_minstrel.c            |   22 +--------------------
+>  net/mac80211/rc80211_pid_algo.c            |   11 +---------
+>  7 files changed, 59 insertions(+), 60 deletions(-)
 
-928X is not needed in this case as there is some other chipset AR9285
-which has different capabilities compared to AR9280 and AR9287.
-
-Vivek.
+Acked-by: Felix Fietkau <nbd@openwrt.org>
