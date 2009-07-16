@@ -1,185 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([207.115.11.54]:54777 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313AbZGFUmM (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:59466 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933589AbZGPXfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 16:42:12 -0400
-Message-ID: <4A5261AE.1010500@lwfinger.net>
-Date: Mon, 06 Jul 2009 15:42:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 16 Jul 2009 19:35:52 -0400
+Message-ID: <4A5FB957.80407@mandriva.org>
+Date: Fri, 17 Jul 2009 02:35:51 +0300
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: chunkeey@web.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] p54: Fix regression in 2.6.31-rcX since commit a1091aa
- - sleeping function called from invalid context
-References: <200907062119.25642.chunkeey@web.de>	<20090706.123441.246532764.davem@davemloft.net>	<4A5253F1.50504@lwfinger.net> <20090706.125011.56653570.davem@davemloft.net>
-In-Reply-To: <20090706.125011.56653570.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
+ to 2.6.31-rc3
+References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>	 <1247782731.31442.3.camel@johannes.local> <1247783433.31442.11.camel@johannes.local>
+In-Reply-To: <1247783433.31442.11.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Larry Finger <Larry.Finger@lwfinger.net>
-> Date: Mon, 06 Jul 2009 14:43:45 -0500
+Johannes Berg skrev:
+> On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
 > 
->> I'm available for testing.
+>>> And pressing it again gets this:
+>>> [root@tmb-laptop rfkill]# ./rfkill list
+>>> 0: acer-wireless: Wireless LAN
+>>> 	Soft blocked: no
+>>> 	Hard blocked: no
+>>> 1: acer-bluetooth: Bluetooth
+>>> 	Soft blocked: yes
+>>> 	Hard blocked: no
+>>> 2: phy0: Wireless LAN
+>>> 	Soft blocked: yes
+>>> 	Hard blocked: no
+>>>
+>>> And after that I cant get wireless back until I again do a:
+>>> ./rfkill unblock 2
+>>> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
+>> Right. This is bad. The button press shouldn't have affected the
+>> soft-state of the rfkill #2.
+>>
+>>> Applying this patch:
+>>> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
+>>> sent by Alan Jenkins does not help this issue either...
+>>>
+>>> Any  suggestions how to fix the rfkill ?
+>> I'll poke at the acer code to see what it's doing wrong...
 > 
-> I just committed the following to my net-2.6 tree, give
-> it a spin:
+> Can't see anything wrong. I wonder if the button you have sends both the
+> ACPI event _and_ an input event.
 > 
->>From 0ca1b08eba627b4245efd0f71b55a062bf163777 Mon Sep 17 00:00:00 2001
-> From: David S. Miller <davem@davemloft.net>
-> Date: Mon, 6 Jul 2009 12:49:18 -0700
-> Subject: [PATCH] Revert "p54: Use SKB list handling helpers instead of by-hand code."
+> Can you try this patch and tell us what happens?
 > 
-> This reverts commit a1091aae19b1d9c85d91c86915a611387f67a26b.
-> ---
->  drivers/net/wireless/p54/p54common.c |   46 ++++++++++++++++++++--------------
->  1 files changed, 27 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/p54/p54common.c b/drivers/net/wireless/p54/p54common.c
-> index b618bd1..48d81d9 100644
-> --- a/drivers/net/wireless/p54/p54common.c
-> +++ b/drivers/net/wireless/p54/p54common.c
-> @@ -823,30 +823,30 @@ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb)
->  	struct p54_tx_info *range;
->  	unsigned long flags;
->  
-> -	if (unlikely(!skb || !dev || skb_queue_empty(&priv->tx_queue)))
-> +	if (unlikely(!skb || !dev || !skb_queue_len(&priv->tx_queue)))
->  		return;
->  
-> -	/* There used to be a check here to see if the SKB was on the
-> -	 * TX queue or not.  This can never happen because all SKBs we
-> -	 * see here successfully went through p54_assign_address()
-> -	 * which means the SKB is on the ->tx_queue.
-> +	/*
-> +	 * don't try to free an already unlinked skb
->  	 */
-> +	if (unlikely((!skb->next) || (!skb->prev)))
-> +		return;
->  
->  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
->  	info = IEEE80211_SKB_CB(skb);
->  	range = (void *)info->rate_driver_data;
-> -	if (!skb_queue_is_first(&priv->tx_queue, skb)) {
-> +	if (skb->prev != (struct sk_buff *)&priv->tx_queue) {
->  		struct ieee80211_tx_info *ni;
->  		struct p54_tx_info *mr;
->  
-> -		ni = IEEE80211_SKB_CB(skb_queue_prev(&priv->tx_queue, skb));
-> +		ni = IEEE80211_SKB_CB(skb->prev);
->  		mr = (struct p54_tx_info *)ni->rate_driver_data;
->  	}
-> -	if (!skb_queue_is_last(&priv->tx_queue, skb)) {
-> +	if (skb->next != (struct sk_buff *)&priv->tx_queue) {
->  		struct ieee80211_tx_info *ni;
->  		struct p54_tx_info *mr;
->  
-> -		ni = IEEE80211_SKB_CB(skb_queue_next(&priv->tx_queue, skb));
-> +		ni = IEEE80211_SKB_CB(skb->next);
->  		mr = (struct p54_tx_info *)ni->rate_driver_data;
->  	}
->  	__skb_unlink(skb, &priv->tx_queue);
-> @@ -864,13 +864,15 @@ static struct sk_buff *p54_find_tx_entry(struct ieee80211_hw *dev,
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-> -	skb_queue_walk(&priv->tx_queue, entry) {
-> +	entry = priv->tx_queue.next;
-> +	while (entry != (struct sk_buff *)&priv->tx_queue) {
->  		struct p54_hdr *hdr = (struct p54_hdr *) entry->data;
->  
->  		if (hdr->req_id == req_id) {
->  			spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
->  			return entry;
->  		}
-> +		entry = entry->next;
->  	}
->  	spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
->  	return NULL;
-> @@ -888,22 +890,24 @@ static void p54_rx_frame_sent(struct ieee80211_hw *dev, struct sk_buff *skb)
->  	int count, idx;
->  
->  	spin_lock_irqsave(&priv->tx_queue.lock, flags);
-> -	skb_queue_walk(&priv->tx_queue, entry) {
-> +	entry = (struct sk_buff *) priv->tx_queue.next;
-> +	while (entry != (struct sk_buff *)&priv->tx_queue) {
->  		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(entry);
->  		struct p54_hdr *entry_hdr;
->  		struct p54_tx_data *entry_data;
->  		unsigned int pad = 0, frame_len;
->  
->  		range = (void *)info->rate_driver_data;
-> -		if (range->start_addr != addr)
-> +		if (range->start_addr != addr) {
-> +			entry = entry->next;
->  			continue;
-> +		}
->  
-> -		if (!skb_queue_is_last(&priv->tx_queue, entry)) {
-> +		if (entry->next != (struct sk_buff *)&priv->tx_queue) {
->  			struct ieee80211_tx_info *ni;
->  			struct p54_tx_info *mr;
->  
-> -			ni = IEEE80211_SKB_CB(skb_queue_next(&priv->tx_queue,
-> -							     entry));
-> +			ni = IEEE80211_SKB_CB(entry->next);
->  			mr = (struct p54_tx_info *)ni->rate_driver_data;
->  		}
->  
-> @@ -1164,21 +1168,23 @@ static int p54_assign_address(struct ieee80211_hw *dev, struct sk_buff *skb,
->  		}
->  	}
->  
-> -	skb_queue_walk(&priv->tx_queue, entry) {
-> +	entry = priv->tx_queue.next;
-> +	while (left--) {
->  		u32 hole_size;
->  		info = IEEE80211_SKB_CB(entry);
->  		range = (void *)info->rate_driver_data;
->  		hole_size = range->start_addr - last_addr;
->  		if (!target_skb && hole_size >= len) {
-> -			target_skb = skb_queue_prev(&priv->tx_queue, entry);
-> +			target_skb = entry->prev;
->  			hole_size -= len;
->  			target_addr = last_addr;
->  		}
->  		largest_hole = max(largest_hole, hole_size);
->  		last_addr = range->end_addr;
-> +		entry = entry->next;
->  	}
->  	if (!target_skb && priv->rx_end - last_addr >= len) {
-> -		target_skb = skb_peek_tail(&priv->tx_queue);
-> +		target_skb = priv->tx_queue.prev;
->  		largest_hole = max(largest_hole, priv->rx_end - last_addr - len);
->  		if (!skb_queue_empty(&priv->tx_queue)) {
->  			info = IEEE80211_SKB_CB(target_skb);
-> @@ -2084,6 +2090,7 @@ out:
->  static void p54_stop(struct ieee80211_hw *dev)
->  {
->  	struct p54_common *priv = dev->priv;
-> +	struct sk_buff *skb;
->  
->  	mutex_lock(&priv->conf_mutex);
->  	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-> @@ -2098,7 +2105,8 @@ static void p54_stop(struct ieee80211_hw *dev)
->  		p54_tx_cancel(dev, priv->cached_beacon);
->  
->  	priv->stop(dev);
-> -	skb_queue_purge(&priv->tx_queue);
-> +	while ((skb = skb_dequeue(&priv->tx_queue)))
-> +		kfree_skb(skb);
->  	priv->cached_beacon = NULL;
->  	priv->tsf_high32 = priv->tsf_low32 = 0;
->  	mutex_unlock(&priv->conf_mutex);
 
-This patch fixes my USB device.
+pressing rfkill when I have a working wireless gets this:
 
-Please push to Linus.
+Jul 17 02:24:35 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
+Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting 
+RXON_ASSOC (-5)
+Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_ADD_STA: enqueue_hcmd failed: -5
+Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+(0, 00:19:5b:51:dc:27) from hardware (-5)
+Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
+REPLY_ADD_STA: enqueue_hcmd failed: -5
+Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
+(1, ff:ff:ff:ff:ff:ff) from hardware (-5)
+Jul 17 02:24:35 tmb-laptop dhclient: receive_packet failed on wlan0: 
+Network is down
+Jul 17 02:24:35 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+Jul 17 02:24:36 tmb-laptop ifplugd(wlan0)[1790]: Link beat lost.
 
-Thanks,
 
-Larry
+After that I only get (when pressing rfkill several times...):
+Jul 17 02:30:16 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:30:16 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
 
+Jul 17 02:30:28 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:30:28 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+
+Jul 17 02:30:31 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:30:31 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
+
+Jul 17 02:30:45 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:30:45 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
+
+Jul 17 02:32:23 tmb-laptop klogd: rfkill_schedule_toggle(1)
+Jul 17 02:32:23 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
+
+And no wireless network...
+
+Issuing ./rfkill unblock 2 gets the wireless back
+Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::radio
+Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::assoc
+Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::RX
+Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::TX
+Jul 17 02:33:00 tmb-laptop ifplugd(wlan0)[1790]: Link beat detected.
+
+
+--
+Thomas
