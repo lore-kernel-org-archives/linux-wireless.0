@@ -1,100 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:59560 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755903AbZGHWIq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 18:08:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <200907082340.07787.elendil@planet.nl>
-References: <200907082340.07787.elendil@planet.nl>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 8 Jul 2009 15:08:24 -0700
-Message-ID: <43e72e890907081508n6fa5781an1dcbda078efc5379@mail.gmail.com>
-Subject: Re: [regression] ath5k: Overrides regulatory domain set for cfg80211
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:42896 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754753AbZGPJdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:33:14 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 07/10] iwmc3200wifi: make iwm_send_wifi_if_cmd return 0 on success
+Date: Thu, 16 Jul 2009 17:34:12 +0800
+Message-Id: <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
+References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 8, 2009 at 2:40 PM, Frans Pop<elendil@planet.nl> wrote:
-> In /etc/modprobe.d I have a file containing:
-> options cfg80211 ieee80211_regdom=EU
->
-> During boot this results in:
-> <snip>
-> cfg80211: Using static regulatory domain info
-> cfg80211: Regulatory domain: EU
->        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->        (2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
->        (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
->        (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
->        (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
->        (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
->        (5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-> cfg80211: Calling CRDA for country: EU
-> </snip>
->
-> But with 2.6.31-rc2 I then get (the lines marked with "!" are not there
-> with .30):
-> <snip>
->  ath5k 0000:02:00.0: enabling device (0000 -> 0002)
->  ath5k 0000:02:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
->  ath5k 0000:02:00.0: registered as 'phy0'
-> ! ath: EEPROM regdomain: 0x30
-> ! ath: EEPROM indicates we should expect a direct regpair map
-> ! ath: Country alpha2 being used: AM
-> ! ath: Regpair used: 0x30
->  phy0: Selected rate control algorithm 'minstrel'
->  ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
->  ath5k phy0: RF2112B 2GHz radio found (0x46)
-> ! cfg80211: Calling CRDA for country: AM
-> </snip>
->
-> So it looks
+We used to return the result of wait_event_interruptible_timeout()
+which is the remaining timeout on success. But this information is
+not used by any of its callers. So we just return 0 on success.
+This fixed a erroneous return value bug for iwm_set_key().
 
-*looks*
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/commands.c |   27 ++++++++++++-------------
+ 1 files changed, 13 insertions(+), 14 deletions(-)
 
-> as if ath5k has started to override the regdomain I want.
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 0d35afe..e6be297 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -87,8 +87,7 @@ int iwm_send_wifi_if_cmd(struct iwm_priv *iwm, void *payload, u16 payload_size,
+ 				   test_and_clear_bit(oid, &iwm->wifi_ntfy[0]),
+ 				   3 * HZ);
+ 
+-		if (!ret)
+-			ret = -EBUSY;
++		return ret ? 0 : -EBUSY;
+ 	}
+ 
+ 	return ret;
+@@ -480,8 +479,10 @@ static int iwm_target_read(struct iwm_priv *iwm, __le32 address,
+ 	target_cmd.eop = 1;
+ 
+ 	ret = iwm_hal_send_target_cmd(iwm, &target_cmd, NULL);
+-	if (ret < 0)
++	if (ret < 0) {
+ 		IWM_ERR(iwm, "Couldn't send READ command\n");
++		return ret;
++	}
+ 
+ 	/* When succeding, the send_target routine returns the seq number */
+ 	seq_num = ret;
+@@ -501,7 +502,7 @@ static int iwm_target_read(struct iwm_priv *iwm, __le32 address,
+ 
+ 	kfree(cmd);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ int iwm_read_mac(struct iwm_priv *iwm, u8 *mac)
+@@ -511,7 +512,7 @@ int iwm_read_mac(struct iwm_priv *iwm, u8 *mac)
+ 
+ 	ret = iwm_target_read(iwm, cpu_to_le32(WICO_MAC_ADDRESS_ADDR),
+ 			      mac_align, sizeof(mac_align));
+-	if (ret < 0)
++	if (ret)
+ 		return ret;
+ 
+ 	if (is_valid_ether_addr(mac_align))
+@@ -714,7 +715,7 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 		ret =  iwm_send_wifi_if_cmd(iwm, &key_remove,
+ 					    sizeof(struct iwm_umac_key_remove),
+ 					    1);
+-		if (ret < 0)
++		if (ret)
+ 			return ret;
+ 
+ 		iwm->keys[key_idx].key_len = 0;
+@@ -736,7 +737,7 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
+ 					   sizeof(struct iwm_umac_wifi_if));
+ 
+ 	ret = iwm_send_wifi_if_cmd(iwm, &profile, sizeof(profile), 1);
+-	if (ret < 0) {
++	if (ret) {
+ 		IWM_ERR(iwm, "Send profile command failed\n");
+ 		return ret;
+ 	}
+@@ -752,12 +753,12 @@ int iwm_send_mlme_profile(struct iwm_priv *iwm)
+ 							 3 * HZ);
+ 
+ 			ret = iwm_set_key(iwm, 0, key);
+-			if (ret < 0)
++			if (ret)
+ 				return ret;
+ 
+ 			if (iwm->default_key == i) {
+ 				ret = iwm_set_tx_key(iwm, i);
+-				if (ret < 0)
++				if (ret)
+ 					return ret;
+ 			}
+ 		}
+@@ -778,15 +779,13 @@ int iwm_invalidate_mlme_profile(struct iwm_priv *iwm)
+ 	invalid.reason = WLAN_REASON_UNSPECIFIED;
+ 
+ 	ret = iwm_send_wifi_if_cmd(iwm, &invalid, sizeof(invalid), 1);
+-	if (ret < 0)
++	if (ret)
+ 		return ret;
+ 
+ 	ret = wait_event_interruptible_timeout(iwm->mlme_queue,
+ 				(iwm->umac_profile_active == 0), 2 * HZ);
+-	if (!ret)
+-		return -EBUSY;
+ 
+-	return 0;
++	return ret ? 0 : -EBUSY;
+ }
+ 
+ int iwm_send_umac_stats_req(struct iwm_priv *iwm, u32 flags)
+@@ -869,7 +868,7 @@ int iwm_scan_ssids(struct iwm_priv *iwm, struct cfg80211_ssid *ssids,
+ 	}
+ 
+ 	ret = iwm_send_wifi_if_cmd(iwm, &req, sizeof(req), 0);
+-	if (ret < 0) {
++	if (ret) {
+ 		IWM_ERR(iwm, "Couldn't send scan request\n");
+ 		return ret;
+ 	}
+-- 
+1.6.0.4
 
-It looks as if, but you a few things you should be aware of.
-
-First, its not that anything is being ignored, user input is always
-welcomed to help compliance you are just using a wrong ISO-3166
-alpha2.
-
-EU is not a country and as such is only left on older kernels with
-CONFIG_WIRELESS_OLD_REGULATORY  enabled. So "EU" is deprecated for non
-CONFIG_WIRELESS_OLD_REGULATORY based kernels now. For further
-information please also read
-Documentation/feature-removal-schedule.txt. Please use a valid
-ISO-3166 alpha2 country code, I also advise to abandon the usage of
-the ieee80211_regdom module parameter which we do eventually intend on
-deprecating and if you know anyone using that please suggest the same.
-
-Eventually, as you will read from the feature-removal schedule, we
-intend on getting the Linux desktop to provide automatic hints of the
-user's location through things like GeoClue. Reason for removing the
-module parameter is its not the proper way to pass information to the
-kernel, we now have a netlink interface for this exact purpose. Until
-the desktop catches up we'll keep the ieee80211_regdom module
-parameter, but the proper new way to set your regulatory domain as a
-user is through iw [1] which does use netlink. Some distributions
-(like Fedora) automatically set your country based on the timezone
-information. So in the end you should not have to do this at all as a
-user.
-
-Another thing you should note is that if a driver has a regulatory
-domain hint then the driver regulatory domain is always trusted, users
-can *further* help compliance by selecting their country. What this
-means since Atheros drivers do have EEPROM reading for the regulatory
-domain that will be used first, thus enabling only channels allowed by
-the programmed EEPROM. A user input can then only disable channel, but
-never enable new ones. For devices with no regulatory at all the user
-can have more of a say as no driver regulatory hint is available but
-by default, in the absence of a driver regulatory hint, we world roam.
-
-[1] http://wireless.kernel.org/en/users/Documentation/iw
-
-  Luis
