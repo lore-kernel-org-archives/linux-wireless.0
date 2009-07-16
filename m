@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:50064 "EHLO ciao.gmane.org"
+Received: from mga03.intel.com ([143.182.124.21]:47921 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754837AbZGVOPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 10:15:31 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MTcbQ-0002P6-3H
-	for linux-wireless@vger.kernel.org; Wed, 22 Jul 2009 14:15:28 +0000
-Received: from bdz194.neoplus.adsl.tpnet.pl ([83.28.11.194])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 14:15:28 +0000
-Received: from kamil.dzida by bdz194.neoplus.adsl.tpnet.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 14:15:28 +0000
-To: linux-wireless@vger.kernel.org
-From: Kamil Dzida <kamil.dzida@gmail.com>
-Subject: Re: AR5523 driver - old Atheros USB
-Date: Wed, 22 Jul 2009 14:15:15 +0000 (UTC)
-Message-ID: <loom.20090722T140518-0@post.gmane.org>
-References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com> <20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> <20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> <928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com> <4A66A482.6050401@erley.org> <loom.20090722T074629-659@post.gmane.org> <20090722123727.GB3927@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754799AbZGPJdM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:33:12 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 04/10] iwmc3200wifi: use correct debug level
+Date: Thu, 16 Jul 2009 17:34:09 +0800
+Message-Id: <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
+References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville <linville@...> writes:
+This patch uses TX and RX instead of NTF debug levels in some hot
+paths.
 
-> 
-> On Wed, Jul 22, 2009 at 08:00:28AM +0000, Kamil Dzida wrote:
-> 
-> > It seems that OpenBSD has driver for AR5523 (AR5005UG and AR5005UX) upstream.
-> > I doubt that they would like to share their code with Linux - 
-like dual licensing
-> > GPL/BSD.
-> 
-> At the risk of starting another flame war with insane people, I'll
-> point-out that dual licensing is not necessary.  The BSD licensed
-> code is completely available to us.
-> 
-> John
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/rx.c |   32 ++++++++++++++++----------------
+ 1 files changed, 16 insertions(+), 16 deletions(-)
 
-
-I am not here to start a flame war of any sort,
-yet if it sounded like that then I am terribly sorry. 
-I came here to aid with a link to man page which includes a good list of
-AR5005UG and AR5005UX based hardware which could be useful for the
-developers.
-
-Anyway thank you for the clarification.
-
-Kamil Dzida
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index 9fb498b..218933b 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -218,17 +218,17 @@ static int iwm_ntf_tx(struct iwm_priv *iwm, u8 *buf,
+ 		(buf + sizeof(struct iwm_umac_wifi_in_hdr));
+ 	hdr = (struct iwm_umac_wifi_in_hdr *)buf;
+ 
+-	IWM_DBG_NTF(iwm, DBG, "REPLY_TX, buf size: %lu\n", buf_size);
+-
+-	IWM_DBG_NTF(iwm, DBG, "Seqnum: %d\n",
+-		    le16_to_cpu(hdr->sw_hdr.cmd.seq_num));
+-	IWM_DBG_NTF(iwm, DBG, "\tFrame cnt: %d\n", tx_resp->frame_cnt);
+-	IWM_DBG_NTF(iwm, DBG, "\tRetry cnt: %d\n",
+-		    le16_to_cpu(tx_resp->retry_cnt));
+-	IWM_DBG_NTF(iwm, DBG, "\tSeq ctl: %d\n", le16_to_cpu(tx_resp->seq_ctl));
+-	IWM_DBG_NTF(iwm, DBG, "\tByte cnt: %d\n",
+-		    le16_to_cpu(tx_resp->byte_cnt));
+-	IWM_DBG_NTF(iwm, DBG, "\tStatus: 0x%x\n", le32_to_cpu(tx_resp->status));
++	IWM_DBG_TX(iwm, DBG, "REPLY_TX, buf size: %lu\n", buf_size);
++
++	IWM_DBG_TX(iwm, DBG, "Seqnum: %d\n",
++		   le16_to_cpu(hdr->sw_hdr.cmd.seq_num));
++	IWM_DBG_TX(iwm, DBG, "\tFrame cnt: %d\n", tx_resp->frame_cnt);
++	IWM_DBG_TX(iwm, DBG, "\tRetry cnt: %d\n",
++		   le16_to_cpu(tx_resp->retry_cnt));
++	IWM_DBG_TX(iwm, DBG, "\tSeq ctl: %d\n", le16_to_cpu(tx_resp->seq_ctl));
++	IWM_DBG_TX(iwm, DBG, "\tByte cnt: %d\n",
++		   le16_to_cpu(tx_resp->byte_cnt));
++	IWM_DBG_TX(iwm, DBG, "\tStatus: 0x%x\n", le32_to_cpu(tx_resp->status));
+ 
+ 	return 0;
+ }
+@@ -418,8 +418,8 @@ static int iwm_ntf_rx_ticket(struct iwm_priv *iwm, u8 *buf,
+ 			if (IS_ERR(ticket_node))
+ 				return PTR_ERR(ticket_node);
+ 
+-			IWM_DBG_NTF(iwm, DBG, "TICKET RELEASE(%d)\n",
+-				    ticket->id);
++			IWM_DBG_RX(iwm, DBG, "TICKET RELEASE(%d)\n",
++				   ticket->id);
+ 			list_add_tail(&ticket_node->node, &iwm->rx_tickets);
+ 
+ 			/*
+@@ -454,15 +454,15 @@ static int iwm_ntf_rx_packet(struct iwm_priv *iwm, u8 *buf,
+ 	u16 id, buf_offset;
+ 	u32 packet_size;
+ 
+-	IWM_DBG_NTF(iwm, DBG, "\n");
++	IWM_DBG_RX(iwm, DBG, "\n");
+ 
+ 	wifi_hdr = (struct iwm_umac_wifi_in_hdr *)buf;
+ 	id = le16_to_cpu(wifi_hdr->sw_hdr.cmd.seq_num);
+ 	buf_offset = sizeof(struct iwm_umac_wifi_in_hdr);
+ 	packet_size = buf_size - sizeof(struct iwm_umac_wifi_in_hdr);
+ 
+-	IWM_DBG_NTF(iwm, DBG, "CMD:0x%x, seqnum: %d, packet size: %d\n",
+-		    wifi_hdr->sw_hdr.cmd.cmd, id, packet_size);
++	IWM_DBG_RX(iwm, DBG, "CMD:0x%x, seqnum: %d, packet size: %d\n",
++		   wifi_hdr->sw_hdr.cmd.cmd, id, packet_size);
+ 	IWM_DBG_RX(iwm, DBG, "Packet id: %d\n", id);
+ 	IWM_HEXDUMP(iwm, DBG, RX, "PACKET: ", buf + buf_offset, packet_size);
+ 
+-- 
+1.6.0.4
 
