@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:38939 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbZG3Qrf (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47359 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933617AbZGPXuW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 12:47:35 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 04/10] rndis_wlan: reset device and restore multicast list on
-	rndis_wlan_reset()
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Thu, 30 Jul 2009 19:41:37 +0300
-Message-ID: <20090730164137.28317.8315.stgit@fate.lan>
-In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
-References: <20090730164120.28317.53313.stgit@fate.lan>
+	Thu, 16 Jul 2009 19:50:22 -0400
+Date: Fri, 17 Jul 2009 02:50:13 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+Message-ID: <20090716235013.GA26789@jm.kir.nu>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <43e72e890907160914gdaa700amb2394d8b859d95cb@mail.gmail.com> <wf63dsmvjg.fsf@calligramme.charmers>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wf63dsmvjg.fsf@calligramme.charmers>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reset device properly with RNDIS_MSG_RESET in rndis_wlan_reset() and restore
-multicast list afterwards.
+On Thu, Jul 16, 2009 at 05:39:47PM +0100, Jon Fairbairn wrote:
+> "Luis R. Rodriguez" <mcgrof@gmail.com>
+> writes:
+> > http://wireless.kernel.org/en/users/Drivers/ath9k
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+> Thanks, but I've seen that page and "products with supported ath9k
+> cards" points to a page that lists "Laptops with ath9k cards" (I'm
+> looking for PCIe, not mini-PCIe) and "APs with ath9k cards", not "ath9k
+> cards". Before I can buy a card, I need to know what it is called in the
+> shops (on-line or otherwise), not what chipset it has.
 
- drivers/net/wireless/rndis_wlan.c |   30 ++++++++++++++++++++++++++++++
- 1 files changed, 30 insertions(+), 0 deletions(-)
+I don't know how the product list ended up being split that way, but the
+"laptops" page does actually include number of D-Link adapters,
+including a PCIe desktop adapter (D-Link DWA-556) that seems to match
+the request. I saw it at Fry's last week and it does indeed look like a
+PCIe card. It is not exactly the least expensive option and is not the
+latest 11n MAC revision, but at least it is available and I would expect
+it to work with ath9k in AP mode.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index dee0551..bfb9861 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -594,6 +594,28 @@ static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
- }
- 
- 
-+static int rndis_reset(struct usbnet *usbdev)
-+{
-+	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	struct rndis_reset *reset;
-+	int ret;
-+
-+	mutex_lock(&priv->command_lock);
-+
-+	reset = (void *)priv->command_buffer;
-+	memset(reset, 0, sizeof(*reset));
-+	reset->msg_type = RNDIS_MSG_RESET;
-+	reset->msg_len = cpu_to_le32(sizeof(*reset));
-+	ret = rndis_command(usbdev, (void *)reset, CONTROL_BUFFER_SIZE);
-+
-+	mutex_unlock(&priv->command_lock);
-+
-+	if (ret < 0)
-+		return ret;
-+	return 0;
-+}
-+
-+
- /*
-  * Specs say that we can only set config parameters only soon after device
-  * initialization.
-@@ -2500,9 +2522,17 @@ static void rndis_wlan_unbind(struct usbnet *usbdev, struct usb_interface *intf)
- static int rndis_wlan_reset(struct usbnet *usbdev)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	int retval;
- 
- 	devdbg(usbdev, "rndis_wlan_reset");
- 
-+	retval = rndis_reset(usbdev);
-+	if (retval)
-+		devwarn(usbdev, "rndis_reset() failed: %d", retval);
-+
-+	/* rndis_reset cleared multicast list, so restore here. */
-+	set_multicast_list(usbdev);
-+
- 	queue_delayed_work(priv->workqueue, &priv->stats_work,
- 		round_jiffies_relative(STATS_UPDATE_JIFFIES));
- 
+> I realise this is the manufacturer's fault, but this is a perennial
+> problem for Linux users who want to buy an new card for something: "OK,
+> I want something with such-and-such a chipset, but the on-line shops
+> just don't say what the chipset is.
 
+Combination of model number (and revision in some cases! urgh) and
+driver download and/or FCCID lookup can help with that, but yes, this is
+quite painful in many cases. However, I've also seen some cards that
+have the box actually listing both the chipset vendor (even both MAC and
+PHY model number) and Linux support, so there is some hope in figuring
+this out even at a store without having to do an internet lookup..
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
