@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34767 "EHLO mx2.redhat.com"
+Received: from mx2.zhaw.ch ([160.85.104.51]:60156 "EHLO mx2.zhaw.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572AbZGMTJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 15:09:51 -0400
-Subject: Re: nl80211 and wext interoperability
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1247507677.4166.27.camel@johannes.local>
-References: <1247139797.2144.27.camel@johannes.local>
-	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
-	 <1247163342.22527.2.camel@johannes.local>
-	 <1247507618.4369.11.camel@localhost.localdomain>
-	 <1247507677.4166.27.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 15:10:06 -0400
-Message-Id: <1247512206.4369.67.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1754338AbZGPJAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:00:40 -0400
+From: Tobias Klauser <klto@zhaw.ch>
+To: linville@tuxdriver.com, IvDoorn@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: Tobias Klauser <klto@zhaw.ch>
+Subject: [PATCH 7/8] rt2x00: Use %pM conversion specifier
+Date: Thu, 16 Jul 2009 11:00:39 +0200
+Message-Id: <1247734839-21394-1-git-send-email-klto@zhaw.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-13 at 19:54 +0200, Johannes Berg wrote:
-> On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
-> 
-> > Mainly because there's no way to tell WEXT drivers to "stop whatever
-> > you're doing and just be idle"...
-> > 
-> > The supplicant clears out the keys on TERM anyway, and in some cases
-> > (iwlagn) the driver will keep trying to reassociate internally
-> 
-> Seems unlikely, ITYM ipw?
+Use the %pM conversion specifier for printk instead of print_mac.
 
-Nope.  I saw this behavior with iwlagn (both 3945 and 4965) when I was
-doing all that hidden stuff back in April with 2.6.27 kernels.  Might be
-different in very recent kernels?
+Signed-off-by: Tobias Klauser <klto@zhaw.ch>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Dan
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 3756166..da84afb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -2224,10 +2224,8 @@ static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+ 	if (!is_valid_ether_addr(mac)) {
+-		DECLARE_MAC_BUF(macbuf);
+-
+ 		random_ether_addr(mac);
+-		EEPROM(rt2x00dev, "MAC: %s\n", print_mac(macbuf, mac));
++		EEPROM(rt2x00dev, "MAC: %pM\n", mac);
+ 	}
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+-- 
+1.6.0.4
 
