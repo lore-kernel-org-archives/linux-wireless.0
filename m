@@ -1,43 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:36357 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753963AbZGWWqD (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754682AbZGPJjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 18:46:03 -0400
-Message-ID: <4A68E80C.808@redfish-solutions.com>
-Date: Thu, 23 Jul 2009 15:45:32 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-References: <4A612514.4050708@redfish-solutions.com>	 <20090720115244.GC9972@hash.localnet>	 <4A64C283.6090205@redfish-solutions.com>	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>	 <4A650331.9020409@redfish-solutions.com>	 <4A6620B9.4@redfish-solutions.com>	 <20090723112428.GC13742@hash.localnet>	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>	 <4A68C821.7060208@redfish-solutions.com>	 <4A68DBDE.7060504@redfish-solutions.com> <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>
-In-Reply-To: <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 16 Jul 2009 05:39:37 -0400
+Subject: [PATCH] cfg80211: don't optimise wext calls too much
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>
+Content-Type: text/plain
+Date: Thu, 16 Jul 2009 11:39:04 +0200
+Message-Id: <1247737144.24433.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Thu, Jul 23, 2009 at 5:53 PM, Philip A.
-> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->>> Getting closer :-)
->>>
->>> ath5k_tx_processq(sc, &sc->txqs[i]);
->>>
->> Didn't work with rc4:
-> 
-> What did you apply against?  It's supposed to be against
-> wireless-testing (or, at worst, latest compat-wireless).
-> 
->> BUG: unable to handle kernel NULL pointer dereference at 00000000
->> IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
-> 
-> Can you run scripts/markup_oops.pl on that?
-> 
+In the wext code I tried to not reconnect all the time
+when the user wasn't really sure what they were doing,
+like setting the BSSID back to the same value it was.
+However, this optimisation should only be done while
+associated so that setting the BSSID back to the same
+value that it was actually triggers a new association
+if not currently associated. To achieve, that, put the
+relevant code into the !IDLE case instead.
 
-This was against compat-wireless-2.6.31-rc4.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/wext-sme.c |   40 +++++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 19 deletions(-)
 
-Alas, I already blew away the build directory...
+--- wireless-testing.orig/net/wireless/wext-sme.c	2009-07-16 11:29:00.000000000 +0200
++++ wireless-testing/net/wireless/wext-sme.c	2009-07-16 11:31:00.000000000 +0200
+@@ -72,13 +72,14 @@ int cfg80211_mgd_wext_siwfreq(struct net
+ 	cfg80211_lock_rdev(rdev);
+ 	wdev_lock(wdev);
+ 
+-	if (wdev->wext.connect.channel == chan) {
+-		err = 0;
+-		goto out;
+-	}
+-
+ 	if (wdev->sme_state != CFG80211_SME_IDLE) {
+ 		bool event = true;
++
++		if (wdev->wext.connect.channel == chan) {
++			err = 0;
++			goto out;
++		}
++
+ 		/* if SSID set, we'll try right again, avoid event */
+ 		if (wdev->wext.connect.ssid_len)
+ 			event = false;
+@@ -164,13 +165,14 @@ int cfg80211_mgd_wext_siwessid(struct ne
+ 
+ 	err = 0;
+ 
+-	if (wdev->wext.connect.ssid && len &&
+-	    len == wdev->wext.connect.ssid_len &&
+-	    memcmp(wdev->wext.connect.ssid, ssid, len) == 0)
+-		goto out;
+-
+ 	if (wdev->sme_state != CFG80211_SME_IDLE) {
+ 		bool event = true;
++
++		if (wdev->wext.connect.ssid && len &&
++		    len == wdev->wext.connect.ssid_len &&
++		    memcmp(wdev->wext.connect.ssid, ssid, len) == 0)
++			goto out;
++
+ 		/* if SSID set now, we'll try to connect, avoid event */
+ 		if (len)
+ 			event = false;
+@@ -244,17 +246,17 @@ int cfg80211_mgd_wext_siwap(struct net_d
+ 	cfg80211_lock_rdev(wiphy_to_dev(wdev->wiphy));
+ 	wdev_lock(wdev);
+ 
+-	err = 0;
+-	/* both automatic */
+-	if (!bssid && !wdev->wext.connect.bssid)
+-		goto out;
++	if (wdev->sme_state != CFG80211_SME_IDLE) {
++		err = 0;
++		/* both automatic */
++		if (!bssid && !wdev->wext.connect.bssid)
++			goto out;
+ 
+-	/* fixed already - and no change */
+-	if (wdev->wext.connect.bssid && bssid &&
+-	    compare_ether_addr(bssid, wdev->wext.connect.bssid) == 0)
+-		goto out;
++		/* fixed already - and no change */
++		if (wdev->wext.connect.bssid && bssid &&
++		    compare_ether_addr(bssid, wdev->wext.connect.bssid) == 0)
++			goto out;
+ 
+-	if (wdev->sme_state != CFG80211_SME_IDLE) {
+ 		err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
+ 					    dev, WLAN_REASON_DEAUTH_LEAVING,
+ 					    false);
 
 
