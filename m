@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:39048 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751049AbZGFP6G (ORCPT
+Received: from mail-qy0-f190.google.com ([209.85.221.190]:56172 "EHLO
+	mail-qy0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932816AbZGPULr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 11:58:06 -0400
-Date: Mon, 6 Jul 2009 12:58:05 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rfkill: prep for rfkill API changes
-Message-ID: <20090706155805.GD753@khazad-dum.debian.net>
-References: <1246798266.4411.1.camel@johannes.local>
- <20090705132422.GA30334@khazad-dum.debian.net>
- <1246801098.4411.5.camel@johannes.local>
+	Thu, 16 Jul 2009 16:11:47 -0400
+Received: by qyk28 with SMTP id 28so121594qyk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 13:11:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1246801098.4411.5.camel@johannes.local>
+In-Reply-To: <200907162032.00777.marek.vasut@gmail.com>
+References: <200907162032.00777.marek.vasut@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 13:11:26 -0700
+Message-ID: <43e72e890907161311m99e454v7daf9c58a340ae77@mail.gmail.com>
+Subject: Re: [PATCH] handle broken V4 fw region code shift
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 05 Jul 2009, Johannes Berg wrote:
-> On Sun, 2009-07-05 at 10:24 -0300, Henrique de Moraes Holschuh wrote:
-> > This is good, but not complete.  Changes to the API that don't change the
-> > size (or those which reduces it) are a problem: they are impossible with a
-> > schema that detects API version by the size alone.
-> 
-> Umm, no, we can also add operations as required already.
+On Thu, Jul 16, 2009 at 11:32 AM, Marek Vasut<marek.vasut@gmail.com> wrote:
+> Dne Čt 16. července 2009 20:21:30 Dan Williams napsal(a):
+>> On Thu, 2009-07-16 at 19:40 +0200, Marek Vasut wrote:
+>> > Hi,
+>> >
+>> > please consider applying/commenting on the following trivial fix. The
+>> > description is in the patch. Thanks.
+>>
+>> Please CC to linux-wireless@vger.kernel and I'll ack there so Linville
+>> will pick it up.  Any patch that you consider appropriate for actual
+>> inclusion at the time you send it is better on linux-wireless.
+>> libertas-dev should really be only for hardware/firmware discussions and
+>> not-yet-ready patches.
+>>
+>> Thanks!
+>> Dan
+>
+> Done, thanks! :-)
+> (sorry for sending it twice, I missed the address was incomplete in your mail)
+>
 
-Yeah, I know.  What we can't do is to change the current ones, or drop them.
+Please resend inline
 
-> _subtlety_ involved in actually doing a size change, nothing more. A
-> real event version is _not_ necessary at all. In fact, I would argue
-> that basing _anything_ on the "version" rather than the "feature set" is
-> useless.
-
-IMO version can tell you the supported feature set, but one could use a
-feature set bitmap as well if one wanted.  Anyway, if you guys deem the
-current way good enough, I am fine with it.
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+ Luis
