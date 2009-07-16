@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:22519 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755945AbZGUTgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 15:36:54 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so777456fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 12:36:51 -0700 (PDT)
-To: Joe Perches <joe@perches.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	jirislaby@gmail.com, luciano.coelho@nokia.com
-Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
-References: <20090721191136.22374.69017.stgit@tikku>
-	<20090721191154.22374.17349.stgit@tikku>
-	<1248204540.31365.275.camel@Joe-Laptop.home>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 21 Jul 2009 22:36:44 +0300
-In-Reply-To: <1248204540.31365.275.camel@Joe-Laptop.home> (Joe Perches's message of "Tue\, 21 Jul 2009 12\:29\:00 -0700")
-Message-ID: <87ocrdsu9f.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from c60.cesmail.net ([216.154.195.49]:13173 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932695AbZGPQg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:36:58 -0400
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+From: Pavel Roskin <proski@gnu.org>
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <wfljmpm4xl.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers>
+Content-Type: text/plain
+Date: Thu, 16 Jul 2009 12:36:55 -0400
+Message-Id: <1247762215.4235.21.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+On Thu, 2009-07-16 at 09:02 +0100, Jon Fairbairn wrote:
 
->> +F:	drivers/net/wireless/wl12xx/wl1251*
->
-> Not that I'm asking you to maintain more than you want to,
-> but why not:
->
-> F:	drivers/net/wireless/wl12xx/
+> I've seen adverts for the Abit WLP-01, and elsewhere on the net seen
+> implications that it's 168c:001c, which isn't listed at
+> <http://wireless.kernel.org/en/users/Devices/PCI>, but
+> <http://wireless.kernel.org/en/users/Drivers/ath5k> does list it and
+> says AP mode not working, but mentions
+> <http://madwifi-project.org/wiki/Compatibility/Abit>, which suggest AP
+> mode works with madwifi. What's the current status?
 
-Just because Luciano will soon publish wl1271 driver (which will use
-wl1271_ prefix) and he will be maintaining that part, no other reason.
-
-But what should we do with the shared Makefile and Kconfig? Also in the
-future we might share some of the code between 1251 and 1271. Any tips
-for this?
+ath5k will support the AP mode in Linux 2.6.31.  It's already in Linux
+2.6.31-rc3.
 
 -- 
-Kalle Valo
+Regards,
+Pavel Roskin
