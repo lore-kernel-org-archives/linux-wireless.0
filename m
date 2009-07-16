@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45983 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801AbZGVR50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 13:57:26 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:57:27 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2] wireless-regb: make db2bin.py use new hashlib for sha1
-Date: Wed, 22 Jul 2009 10:57:23 -0700
-Message-ID: <1248285443-10890-1-git-send-email-lrodriguez@atheros.com>
+Received: from qw-out-2122.google.com ([74.125.92.27]:20808 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932455AbZGPQJf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 12:09:35 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so82112qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:09:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <200907161138.58874.helmut.schaa@gmail.com>
+References: <200907161138.58874.helmut.schaa@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Jul 2009 09:09:14 -0700
+Message-ID: <43e72e890907160909t6bc5809ued28581e1a7a668f@mail.gmail.com>
+Subject: Re: Further improvements to the software scan implementation
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Python now complains about sha module as its deprecated:
+Adding David Quan and Michael Green, my reply in-line below.
 
-./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-mcgrof.key.priv.pem
-./db2bin.py:5: DeprecationWarning: the sha module is deprecated; use the hashlib module instead
-  import sha
+On Thu, Jul 16, 2009 at 2:38 AM, Helmut
+Schaa<helmut.schaa@googlemail.com> wrote:
+> Hi,
+>
+> as already discussed with Johannes we can further optimize the scan
+> implementation by allowing (on an active channel) to send probes as
+> soon as any other frame is received (and updated the NAV) instead of
+> ever waiting 30ms.
+>
+> Another optimization I thought of while reading [1] would be to take the
+> same approach as Intel in their ucode. If a frame is received while
+> scanning a passive channel switch to active scan mode and send out probes.
+> That should allow us to shorten the time needed to stay on that channel.
+> Luis, do you think this is ok in regard to regulatory restrictions?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Good question. We already enable active scanning if a beacon is
+received from an AP and are world roaming. We do this in mac80211
+through a beacon regulatory hint to the wireless core --
+regulatory_hint_found_beacon(). The assumption of the beacon
+regulatory hint is that APs *must* be compliant, and some cards world
+roam therefore only allowing passive scan on some channels, when you
+receive a beacon from an AP on a non-DFS channel or channel 12-14 it
+is safe to assume you can actively scan and beacon on that same
+channel. Reason for the passive scan flag to exist is for a way to
+enable some cards to world roam on some channels. Because all APs must
+beacon and since we will lift this passive scan flag during an initial
+scan I am inclined to believe we shouldn't bother with processing
+other 802.11 frames. So in summary I'd suggest to not do this because:
 
-Don't pass along my regulatory.bin changes..
+1) We already have the beacons during an initial scan
+2) We'd have to figure out a way to ensure the frame was indeed from an AP
 
- db2bin.py |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+  Luis
 
-diff --git a/db2bin.py b/db2bin.py
-index e783b3a..23d3ee2 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -2,7 +2,7 @@
- 
- from cStringIO import StringIO
- import struct
--import sha
-+import hashlib
- from dbparse import DBParser
- import sys
- 
-@@ -127,13 +127,13 @@ if len(sys.argv) > 3:
- 
-     # determine signature length
-     key = RSA.load_key(sys.argv[3])
--    hash = sha.new()
-+    hash = hashlib.sha1()
-     hash.update(output.getvalue())
-     sig = key.sign(hash.digest())
-     # write it to file
-     siglen.set(len(sig))
-     # sign again
--    hash = sha.new()
-+    hash = hashlib.sha1()
-     hash.update(output.getvalue())
-     sig = key.sign(hash.digest())
- 
--- 
-1.6.3.3
-
+> Thanks,
+> Helmut
+>
+> [1] http://sourceforge.net/mailarchive/forum.php?thread_name=200907061428.55840.jung%40ecos.de&forum_name=ipw3945-devel
+>
