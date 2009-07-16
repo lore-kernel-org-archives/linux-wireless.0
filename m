@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:47682 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbZGKEd7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jul 2009 00:33:59 -0400
+Received: from mail.atheros.com ([12.36.123.2]:55361 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933365AbZGPVSu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 17:18:50 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 14:18:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <jal2@gmx.de>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Tony Yang <Tony.Yang@atheros.com>
+Subject: [PATCH] ath: add support for special 0x8000 regulatory domain
+Date: Thu, 16 Jul 2009 14:18:44 -0700
+Message-ID: <1247779124-29204-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4A55EC95.5000309@gmail.com>
-References: <4A54FB81.30302@gmail.com>
-	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
-	 <4A551B43.3020104@gmail.com>
-	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
-	 <4A5575C1.8090403@lwfinger.net>
-	 <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
-	 <4A55D123.5090802@gmail.com>
-	 <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
-	 <4A55EC95.5000309@gmail.com>
-Date: Sat, 11 Jul 2009 05:33:57 +0100
-Message-ID: <3ace41890907102133r1cbcf063vb70f7cb350e813ec@mail.gmail.com>
-Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Przemyslaw Kulczycki <azrael@autocom.pl>,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/9 Marcin Slusarz <marcin.slusarz@gmail.com>:
+Two users of ar9170 devices have now reported their cards
+have been programmed with a regulatory domain of 0x8000.
+This is not a valid regulatory domain as such these users were
+unable to use these devices. Since this doesn't seem to be
+a device EEPROM corruption we must treat it specially.
 
-> Look, support for Ralink chipsets is a mess. They are supported by too sets
-> of drivers - Ralink's ugly as hell but working staging drivers (rt2860,
-> rt2870, rt3070, soon rt3090) and properly developed but lagging rt2x00
-> drivers (RT2400PCI, RT2500PCI, RT61PCI, RT2500USB, RT73USB, RT2800USB).
->
-> Theoretically my WUSB54GCv3 is supported by RT2800USB (which was added during
-> 2.6.31 merge window), but it doesn't work. With tiny patch added to rt3070
-> (just usb id) my card works. Some day rt2x00 drivers will be better than Ralink's,
-> but right now they are not.
->
-> So I wouldn't like to encourage any of them. I just wanted to fix clearly
-> wrong help text which stated that rtl8187 (Realtek's chipset!) supports
-> all WUSB54GC cards.
+We default these devices to the default Atheros 0x64 world
+regulatory domain.
 
-I think you mis-read the Kconfig message. GPL clause 11:
-...PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
-OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE...
+Reported-by: DavidFreeman on #linux-wireless
+Reported-by: Joerg Albert <jal2@gmx.de>
+Cc: Christian Lamparter <chunkeey@web.de>,
+Cc: Stephen Chen <Stephen.Chen@atheros.com>
+Cc: David Quan <David.Quan@atheros.com>
+Cc: Tony Yang <Tony.Yang@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-The linux kernel never claim to cover *all* of anything, and in
-particular, the message you refers to is meant to read '*some*
-WUSB54GC are known to work', YMMV. I think adding pointers/info to v1
-and3 would be better if you want to add 'v2' to it; particularly since
-Gabor has pointed out that v1/v2/v3 all have different USB ids and a
-full set of kernel modules will bind to the different devices
-correctly, so the message is only for people who has a new/unknown
-device and want to experiment (and expect to have some failures). And
-to be honest, there is a device called rtl8187se, which isn't an
-rtl8187 at all and don't have much in common. If you start insisting
-the rtl8187 Kconfig message should have an extra 5 letters say 'not
-se', I would rather you say 'rtl8187se is covered by ..., which is in
-staging phase'. (the se driver is, the last time I heard, in staging
-and not working and nobody is working on it to make it work, which is
-worse than your situation).
+David, or Joerg, can you please test this patch.
 
-The situation with Ralink drivers isn't that different in other
-vendors - Realtek provides a vendor driver for rtl8187 called "r8187"
-and there is a community driver rtl8187; Atheros provides a vendor
-driver for Zydas zd1211 and there is a community driver zd1211rw. I
-don't think this "wouldn't like to encourage any of them" attitude is
-helping anybody. In both of the Realtek case and the Zydas case,
-people tolerated the co-existences of both (and sometimes with
-ndiswrapper also) for many months and studied the vendor drivers (+
-ndiswrapper) and eventually improve the community driver.
-Driver codes don't grow on trees - if you 'wouldn't like to encourage
-any of them', maybe you should not be using linux at all.
+ drivers/net/wireless/ath/regd.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index f37c832..62aa270 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -474,6 +474,21 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
+ 	return 0;
+ }
+ 
++/*
++ * Some users have reported their EEPROM programmed with
++ * 0x8000 set, this is not a supported regulatory domain
++ * but since we have more than one user with it we need
++ * a solution for them. We default to 0x64, which is the
++ * default Atheros world regulatory domain.
++ */
++static void ath_regd_sanitize(struct ath_regulatory *reg)
++{
++	if (reg->current_rd != CTRY_DEFAULT)
++		return;
++	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
++	reg->current_rd = 0x64;
++}
++
+ int
+ ath_regd_init(struct ath_regulatory *reg,
+ 	      struct wiphy *wiphy,
+@@ -486,6 +501,8 @@ ath_regd_init(struct ath_regulatory *reg,
+ 	if (!reg)
+ 		return -EINVAL;
+ 
++	ath_regd_sanitize(reg);
++
+ 	printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
+ 
+ 	if (!ath_regd_is_eeprom_valid(reg)) {
+-- 
+1.6.3.3
+
