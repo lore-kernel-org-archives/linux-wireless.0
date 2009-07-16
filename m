@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f173.google.com ([209.85.221.173]:41702 "EHLO
-	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602AbZGTQfI (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752749AbZGPOQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 12:35:08 -0400
-Received: by qyk3 with SMTP id 3so188293qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 09:35:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <ABEC48F218774102B9939CE6F5F5F856@Emiel>
-References: <ABEC48F218774102B9939CE6F5F5F856@Emiel>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 20 Jul 2009 09:34:46 -0700
-Message-ID: <43e72e890907200934o319e20d2y825592207b75b0f4@mail.gmail.com>
-Subject: Re: Enabling and disabling Atheros AR9258 wireless card
-To: Emiel Bruijntjes <emiel@bruijntjes.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Jul 2009 10:16:11 -0400
+Subject: Re: Further improvements to the software scan implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <mcgrof@gmail.com>
+In-Reply-To: <200907161138.58874.helmut.schaa@gmail.com>
+References: <200907161138.58874.helmut.schaa@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JE7fXOWyqWLiKyIDPgUo"
+Date: Thu, 16 Jul 2009 16:15:39 +0200
+Message-Id: <1247753739.30529.22.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 19, 2009 at 6:41 AM, Emiel Bruijntjes<emiel@bruijntjes.net> wrote:
->
-> Hi,
->
-> I hope this is the right channel to report a bug/feature-request.
->
-> My laptop (Toshiba NB200) uses a Atheros AR9285 wireless card. Wireless is
-> currently disabled, and the wireless LED is off. This is the default factory
-> setting. There is no way to enable the wireless module from Linux. On
-> Windows, the Fn/F8 key combination enables and disables the wireless module,
-> and turns on or off the LED. On Linux however, this isn't working.
->
-> The advice that I read on discussion forums on the web was to boot Windows,
-> turn on wireless, and then boot Linux again (see http://tjmcgrew.com/). It
-> is - as far as I know - not possible to use the Atheros AR9285 wireless card
-> on a Linux computer, without running Windows first to enable it. This is not
-> very good.
 
-That would mean no one could use ath9k with AR9285 but that is
-obviously not the case.
+--=-JE7fXOWyqWLiKyIDPgUo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-You are generalizing your issue to everyone and making wide assumptions.
+On Thu, 2009-07-16 at 11:38 +0200, Helmut Schaa wrote:
 
-> To sum up:
-> - From Linux it is not possible to enable/disable the Atheros AR9285
-> wireless card, and to turn on and off the wireless LED.
-> - This should be fixed as the wireless card is disabled by default, and it
-> is thus impossible to use it on a system without installing and running
-> Windows first.
+> Another optimization I thought of while reading [1] would be to take the
+> same approach as Intel in their ucode. If a frame is received while
+> scanning a passive channel switch to active scan mode and send out probes=
+.
+> That should allow us to shorten the time needed to stay on that channel.
+> Luis, do you think this is ok in regard to regulatory restrictions?
 
-You probably just need the proper rfkill module to enable your device.
-Whether your rfkill triggers are supported is another question. For
-that you may want to try out the latest kernel and use a tree where
-rfkill was recently re-implemented.
+One problem I could see with that is the TX power to use.
 
-Please try building wireless-testing:
+johannes
 
-http://wireless.kernel.org/en/developers/Documentation/git-guide
+--=-JE7fXOWyqWLiKyIDPgUo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-or compat-wireless:
+-----BEGIN PGP SIGNATURE-----
 
-http://wireless.kernel.org/en/users/Download/
+iQIcBAABAgAGBQJKXzYHAAoJEODzc/N7+QmabL8P/A4KAGJ+DUCa26YLrlaoAror
+3xzqm+JcbIcchoztS7xuLigNkWUzYrIzwJVQTbF2Kf1kaMwil14CtsfFpN3QEBRr
+8SC22YHkxXriCe+Ca1O6BLs5IEZskqymsSIyoKioUYOJUgiJs5kdieov2zFznngC
+jqYM7HyKdTHfJzkD2HkAxA5q669ePB88OyatVgelSIcenBIvLWqz5h9iTNkWdjHX
+O/rIqaB4JlJljVocqpKUEIXY89BO02QPgWQ0Jq/HQghM/0iH5yxNoUxbLJlgp48N
+InOGlHjrJB7B6UHDiL6I6fQ58upqOuG13uTxrP2NzqzCUaLLVNp/hPeZSOrFYo01
+FYIomz+YpQe02CZrr2pQKglQI/5VmM8d8yhsDjBaSi/64egoiNpoKQAQKshYgn0T
+M8V5yoy2NxN+oOCWMSq9zGPe8gi8xdoNW+91Tbaz3ew9VRiFSJyS6YxIRI7+YdG8
+yy+p3ox7EyhS3kwU65Fw4LoyOprfcgBz7vFSnBGs3O0CUTzE31GRWZSkhSDGOhy0
+0hGB4ODW3aml/S2vEiPFPZAUtftGB20ekNm1hCvtg2ck+QupBLaQIk2x+IC3OjL8
+O68h/xf7f8c17WgxUGE7rYZFrOzzE8V9LYK4Su69lYX1tUljbfbox73AVrhg+FOk
+R2HV1H/1/pPdfJie2enO
+=NZt6
+-----END PGP SIGNATURE-----
 
-  Luis
+--=-JE7fXOWyqWLiKyIDPgUo--
+
