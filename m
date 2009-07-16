@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:24386 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096AbZGVTao convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42265 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbZGPImW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 15:30:44 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so238899qwh.37
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 12:30:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1248290605.4717.76.camel@mountain.triplerocks.net>
-References: <1248290605.4717.76.camel@mountain.triplerocks.net>
-From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
-Date: Wed, 22 Jul 2009 12:30:23 -0700
-Message-ID: <43e72e890907221230m53109c3eqf388a2d987d8cdda@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless-old: Fix problem with TX on amd64
-To: Gao Lei <lei.alvin.gao@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 16 Jul 2009 04:42:22 -0400
+Subject: Re: [PATCH v3] cfg80211: rework key operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1247713627.3695.60.camel@debian>
+References: <1247051586.4755.81.camel@johannes.local>
+	 <1247052613.12857.0.camel@johannes.local>
+	 <1247055774.24749.0.camel@johannes.local> <1247647086.3695.48.camel@debian>
+	 <1247650666.14973.0.camel@johannes.local>
+	 <1247669030.10754.1.camel@johannes.local> <1247713627.3695.60.camel@debian>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Nn55YC+mEFnp9oKlHbTs"
+Date: Thu, 16 Jul 2009 10:41:40 +0200
+Message-Id: <1247733700.10754.105.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 22, 2009 at 12:23 PM, Gao Lei<lei.alvin.gao@gmail.com> wrote:
-> On amd64, the `ieee80211_tx_info' struct takes 56 bytes, thus cannot fit
-> into skb's control buffer.
->
-> The very first result is that nothing can be really sent out, because
-> skb's next member `len' also gets cleared when doing:
->
->        info = IEEE80211_SKB_CB(skb);
->        memset(info, 0, sizeof(*info));
->
-> A quick fix may be removing the TX control's sta pointer, since IMHO
-> it's rarely used for now (the only place that I found was a function
-> assigning values to it).
->
-> It has been working well for me so far, but please let me know if
-> there're better solutions. Thanks!
->
-> Best regards,
-> Gao Lei
 
-Thanks, what kernel is this against BTW? Just so you know we should be
-able to bring down compat-wireless down to 2.6.21 and maybe even
-further now that we no longer are using the master netdev, which used
-the multiqueue support added as of 2.6.27. Last I checked
-compat-wireless now compiles on 2.6.25, but I never actually tried
-loading it as I'm on ext4. So if you are on 2.6.25 or 2.6.26 you may
-want to try out compat-wireless directly and see if to works. If you
-are on 2.6.21..2.6.24 you can try adding backport support. I've added
-a few files already for older kernel support based on our old
-compat-wireless-old effort, so only the new stuff that mac80211 makes
-use of should require backporting.
+--=-Nn55YC+mEFnp9oKlHbTs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Thu, 2009-07-16 at 11:07 +0800, Zhu Yi wrote:
+
+> > As discussed with Samuel, there's a possibility to pass _all_ WEP keys
+> > directly to connect(), if desirable, instead of adding them with the
+> > key hooks later.
+>=20
+> I think this should be the right way to go. Currently we have no way to
+> connect to WEP APs (both open and shared) with iwconfig. Because the
+> driver needs to set the correct cipher before connect. But the key
+> callbacks are only called after connected... IWAUTH is expected to be
+> the place to set the cipher here, but unfortunately iwconfig doesn't use
+> it. Passing the WEP keys to connect() can solve this issue. The driver
+> can at least parsing the connect parameters to set the correct cipher
+> before connect.
+
+We could also check the keys and pass the right cipher from cfg80211, in
+this case. Should be easy.
+
+johannes
+
+--=-Nn55YC+mEFnp9oKlHbTs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKXue7AAoJEODzc/N7+Qma+UoP/A7Y+NXsJfhuxfA4cb3urn3u
+QyQSl/Z0dzFfJVeCWiDwtrNjZE6H4tWt77ac9OIDpWMs56zOcfQFrcKEKXlxjIWP
+gXYyB3kGA5cCdHU9AbZyggtTm/OezQCRvXtVU2V8zr+QHawqZc/wLAEa1IXABLbE
+VEcDvSxcYyk3tKw5PVew0+8H+zcZsd+i/Sg0LLqmLM7gxCLmHDz+tPGUEE3/UIU9
+3xge5Qr8qlF2Ru7RRiQcflnBxRPdeBcaKTycMXbl86YZechBlR6XOP47nQx1z49Y
+LOpKyO8ykbpY+oFuD2Cp6NON7hvTt4CLsaFK8XCx++3BXAVISzvOE9eyVpWtJNKs
+R0NlWzyA34g9JXRb8a1KjA7PBs+rMYTMQiBbSIZrxhSJ8BH0obQ7nENLtJkvowM2
+gWaEic9zXwOQfOGWBGdjdP6Lr2B4VuMYw0P+1djGouz+IQE7/9fGcsXYnEFHAhfS
+7ItmNlRls9enl94Z73djKyrxzU3QsDiLzN+EZF128z9k5SarjU0j6Nq0A17dAai0
+ElJTs85I9fAR5p78AkYfaFEMOwjSBhVlm2JFp8GH08edMRYjKVRqNGUmqDi/dACD
+cWUOD/i/sGr/CvtXV9nFCJBg3U81PRMoyGSpc2+gMtlxCbS0WHwYls2LsTFQgOPk
+ZUcyg1opa74n6scv9lUZ
+=WMef
+-----END PGP SIGNATURE-----
+
+--=-Nn55YC+mEFnp9oKlHbTs--
+
