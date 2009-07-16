@@ -1,85 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:34265 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbZGNLE7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50481 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933477AbZGPWbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 07:04:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-Date: Tue, 14 Jul 2009 12:04:56 +0100
-Message-ID: <c6b1100b0907140404h4fdbe419p8443da43350f3520@mail.gmail.com>
-Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
-From: Chris Clayton <chris2553@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 16 Jul 2009 18:31:06 -0400
+Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
+ to 2.6.31-rc3
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1247782731.31442.3.camel@johannes.local>
+References: <4A5D0374.5040702@mandriva.org>
+	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>
+	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>
+	 <1247782731.31442.3.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 17 Jul 2009 00:30:33 +0200
+Message-Id: <1247783433.31442.11.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
+
+> > And pressing it again gets this:
+> > [root@tmb-laptop rfkill]# ./rfkill list
+> > 0: acer-wireless: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: no
+> > 1: acer-bluetooth: Bluetooth
+> > 	Soft blocked: yes
+> > 	Hard blocked: no
+> > 2: phy0: Wireless LAN
+> > 	Soft blocked: yes
+> > 	Hard blocked: no
+> > 
+> > And after that I cant get wireless back until I again do a:
+> > ./rfkill unblock 2
+> > (works only when acer-wireless is no/no and Wireless LAN is yes/no)
+> 
+> Right. This is bad. The button press shouldn't have affected the
+> soft-state of the rfkill #2.
+> 
+> > Applying this patch:
+> > [PATCH] rfkill: fix rfkill_set_states() to set the hw state
+> > sent by Alan Jenkins does not help this issue either...
+> > 
+> > Any  suggestions how to fix the rfkill ?
+> 
+> I'll poke at the acer code to see what it's doing wrong...
+
+Can't see anything wrong. I wonder if the button you have sends both the
+ACPI event _and_ an input event.
+
+Can you try this patch and tell us what happens?
+
+johannes
+
+--- wireless-testing.orig/net/rfkill/input.c	2009-07-17 00:27:29.000000000 +0200
++++ wireless-testing/net/rfkill/input.c	2009-07-17 00:29:50.000000000 +0200
+@@ -57,6 +57,8 @@ static void __rfkill_handle_global_op(en
+ {
+ 	unsigned int i;
+ 
++	printk(KERN_DEBUG "__rfkill_handle_global_op(%d)\n", op);
++
+ 	switch (op) {
+ 	case RFKILL_GLOBAL_OP_EPO:
+ 		rfkill_epo();
+@@ -87,6 +89,7 @@ static void __rfkill_handle_normal_op(co
+ 	bool blocked;
+ 
+ 	blocked = rfkill_get_global_sw_state(type);
++	printk(KERN_DEBUG "__rfkill_handle_normal_op(%d, %d) [%d]\n", type, complement, blocked);
+ 	if (complement)
+ 		blocked = !blocked;
+ 
+@@ -175,6 +178,8 @@ static void rfkill_schedule_toggle(enum 
+ {
+ 	unsigned long flags;
+ 
++	printk(KERN_DEBUG "rfkill_schedule_toggle(%d)\n", type);
++
+ 	if (rfkill_is_epo_lock_active())
+ 		return;
+ 
+@@ -189,6 +194,8 @@ static void rfkill_schedule_toggle(enum 
+ 
+ static void rfkill_schedule_evsw_rfkillall(int state)
+ {
++	printk(KERN_DEBUG "rfkill_schedule_evsw_rfkillall(%d)\n", state);
++
+ 	if (state)
+ 		rfkill_schedule_global_op(rfkill_master_switch_op);
+ 	else
 
 
-2009/7/13 Chris Clayton <chris2553@googlemail.com>:
-> Hi,
->
-> Please cc me on any reply because I'm not subscribed.
->
-> I've been testing 2.6.31 development kernels on my laptop and find
-> that I can induce a complete lock-up more or less at will. To do so,
-> all I have to do is generate some network traffic on my wireless LAN
-> (I've been using wget to transfer a file from another box on my LAN)
-> and then wait. If I run netstat repeatedly while waiting, I see a TCP
-> connection to port 21 on another box on my LAN in a TIME_WAIT state.
-> It seems that when that connection disappears, the laptop locks up
-> hard and I can only recover by powering off and on again. I think the
-> problem is related to the rt61pci driver because I haven't been able
-> to induce the lock-up when using a wireless card that's supported by
-> the ath5k driver. I started bisecting, but a couple of times I arrived
-> at points where although the kernel builds OK, I have no network
-> connectivity. I guessed at good, but the bisection process finished at
-> a change that can't be the culprit (because it's for a different
-> architecture).
->
-> I attach the best diagnostics I can think of at this point in time
-> (but am more than happy to provide any others that are requested). It
-> includes the output from dmesg from a boot that locked up and the
-> syslog journal from that boot; a description of the wireless card from
-> lspci -v and the output from netstat that shows the connection I think
-> is involved. As I say, feel free to ask for any other diagnostics that
-> will help track the problem down.
->
-> I have confirmed that the problem is still present in a kernel built
-> after a 'git pull' this morning, although it was somewhere around the
-> time that -rc2 was released that I first came across it. I cannot
-> induce the problem with 2.6.30.1.
-
-I've updated to 2.6.31-rc3 this morning and done some more testing.
-I'm now convinced that the rt61pci driver is somehow involved in
-locking up the laptop. With the (Belkin) rt61 card inserted, the
-machine will lock up even if I am doing nothing (no web browsing,
-email or anything else at all) except running this script in a console
-window:
-
-i=0
-while true; do
-        let i++
-        echo -n "$i "
-        sleep 1
-done
-
-In the tests I have done so far, the counter has never gone beyond 240
-before the machine locked. With the (no-name) ath5k card inserted I
-can use the laptop for normal web browsing, email, etc with no
-problems - the counter in the script above gets to over 2000.
-
-As I said yesterday, I'm happy to provide additional diagnostics,
-apply patches, etc.
-
-Thanks
-
-Chris
--- 
-No, Sir; there is nothing which has yet been contrived by man, by which
-so much happiness is produced as by a good tavern or inn - Doctor Samuel
-Johnson
