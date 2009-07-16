@@ -1,198 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbZGXLYP (ORCPT
+Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:53512 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752106AbZGPGPD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 07:24:15 -0400
-Subject: [PATCH] mac80211: fix PS-poll response, race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 24 Jul 2009 13:23:09 +0200
-Message-Id: <1248434589.9224.13.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 16 Jul 2009 02:15:03 -0400
+Date: Wed, 15 Jul 2009 20:14:57 -1000
+From: Joel Roth <joelz@pobox.com>
+To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Message-ID: <20090716061457.GA1576@sprite>
+Reply-To: Joel Roth <joelz@pobox.com>
+References: <20090630170916.GB5137@sprite> <20090712112340.GA3315@sprite>
+ <40f31dec0907120808y45f575b6l6d83afd731e6d51@mail.gmail.com>
+ <20090712203449.GA3058@sprite>
+ <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
+ <20090714065414.GA16708@sprite>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090714065414.GA16708@sprite>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a station queries us for a PS-poll response, we wrongly
-queue the frame on the virtual interface's queue rather than
-the pending queue.
+On Mon, Jul 13, 2009 at 10:08:52AM -0400, Bob Copeland wrote:
+> On Sun, Jul 12, 2009 at 4:34 PM, Joel Roth<joelz@pobox.com> wrote:
+> > Vista advised me to:
+> >
+> > 1) turn on the hardware wifi switch <blush>
+> >
+> > 2) use the hotkey combination to enable wifi
+> 
+> It might be worth trying compat-wireless or 2.6.31-rcX.  Support
+> for reading the card's internal rfkill state was added in the
+> post-2.6.30 time-frame.
+ 
+I installed compat-wireless against my 2.6.30.1 kernel,
+and also the iw command.
 
-Additionally, fix a race condition where we could potentially
-send multiple frames to the sleeping station due to using a
-station flag rather than a packet flag. When converting to a
-packet flag, we can also convert p54 and remove the filter
-clearing we added for it.
+I've read some docs, however I'm not sure what the next step should be. 
 
-(Also remove a now dead function)
+My general idea is that I should be able to see a list of
+access points, however iwlist doesn't tell me anything new.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Bob Copeland <me@bobcopeland.com>
-Tested-by: Bob Copeland <me@bobcopeland.com>
-Cc: Christian Lamparter <chunkeey@web.de>
----
-This seems to be fallout from the master netdev removal. Whichever tree
-that is in now...
+# iwlist wlan0 ap
 
- drivers/net/wireless/p54/txrx.c |    2 +-
- include/net/mac80211.h          |    4 ++++
- net/mac80211/rx.c               |   11 ++++++-----
- net/mac80211/sta_info.h         |   13 -------------
- net/mac80211/tx.c               |   19 +------------------
- 5 files changed, 12 insertions(+), 37 deletions(-)
-
---- wireless-testing.orig/net/mac80211/rx.c	2009-07-24 10:58:24.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-07-24 10:58:59.000000000 +0200
-@@ -782,7 +782,7 @@ static void ap_sta_ps_start(struct sta_i
- 	struct ieee80211_local *local = sdata->local;
- 
- 	atomic_inc(&sdata->bss->num_sta_ps);
--	set_and_clear_sta_flags(sta, WLAN_STA_PS, WLAN_STA_PSPOLL);
-+	set_sta_flags(sta, WLAN_STA_PS);
- 	drv_sta_notify(local, &sdata->vif, STA_NOTIFY_SLEEP, &sta->sta);
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %pM aid %d enters power save mode\n",
-@@ -798,7 +798,7 @@ static int ap_sta_ps_end(struct sta_info
- 
- 	atomic_dec(&sdata->bss->num_sta_ps);
- 
--	clear_sta_flags(sta, WLAN_STA_PS | WLAN_STA_PSPOLL);
-+	clear_sta_flags(sta, WLAN_STA_PS);
- 	drv_sta_notify(local, &sdata->vif, STA_NOTIFY_AWAKE, &sta->sta);
- 
- 	if (!skb_queue_empty(&sta->ps_tx_buf))
-@@ -1116,14 +1116,15 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
- 		skb_queue_empty(&rx->sta->ps_tx_buf);
- 
- 	if (skb) {
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		struct ieee80211_hdr *hdr =
- 			(struct ieee80211_hdr *) skb->data;
- 
- 		/*
--		 * Tell TX path to send one frame even though the STA may
-+		 * Tell TX path to send this frame even though the STA may
- 		 * still remain is PS mode after this frame exchange.
- 		 */
--		set_sta_flags(rx->sta, WLAN_STA_PSPOLL);
-+		info->flags |= IEEE80211_TX_CTL_PSPOLL_RESPONSE;
- 
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 		printk(KERN_DEBUG "STA %pM aid %d: PS Poll (entries after %d)\n",
-@@ -1138,7 +1139,7 @@ ieee80211_rx_h_ps_poll(struct ieee80211_
- 		else
- 			hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_MOREDATA);
- 
--		dev_queue_xmit(skb);
-+		ieee80211_add_pending_skb(rx->local, skb);
- 
- 		if (no_pending_pkts)
- 			sta_info_clear_tim_bit(rx->sta);
---- wireless-testing.orig/net/mac80211/sta_info.h	2009-07-24 10:58:04.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2009-07-24 10:59:28.000000000 +0200
-@@ -30,7 +30,6 @@
-  * @WLAN_STA_ASSOC_AP: We're associated to that station, it is an AP.
-  * @WLAN_STA_WME: Station is a QoS-STA.
-  * @WLAN_STA_WDS: Station is one of our WDS peers.
-- * @WLAN_STA_PSPOLL: Station has just PS-polled us.
-  * @WLAN_STA_CLEAR_PS_FILT: Clear PS filter in hardware (using the
-  *	IEEE80211_TX_CTL_CLEAR_PS_FILT control flag) when the next
-  *	frame to this station is transmitted.
-@@ -47,7 +46,6 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_ASSOC_AP	= 1<<5,
- 	WLAN_STA_WME		= 1<<6,
- 	WLAN_STA_WDS		= 1<<7,
--	WLAN_STA_PSPOLL		= 1<<8,
- 	WLAN_STA_CLEAR_PS_FILT	= 1<<9,
- 	WLAN_STA_MFP		= 1<<10,
- 	WLAN_STA_SUSPEND	= 1<<11
-@@ -359,17 +357,6 @@ static inline void clear_sta_flags(struc
- 	spin_unlock_irqrestore(&sta->flaglock, irqfl);
- }
- 
--static inline void set_and_clear_sta_flags(struct sta_info *sta,
--					   const u32 set, const u32 clear)
--{
--	unsigned long irqfl;
--
--	spin_lock_irqsave(&sta->flaglock, irqfl);
--	sta->flags |= set;
--	sta->flags &= ~clear;
--	spin_unlock_irqrestore(&sta->flaglock, irqfl);
--}
--
- static inline u32 test_sta_flags(struct sta_info *sta, const u32 flags)
- {
- 	u32 ret;
---- wireless-testing.orig/include/net/mac80211.h	2009-07-24 10:57:53.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-07-24 10:58:59.000000000 +0200
-@@ -243,6 +243,9 @@ struct ieee80211_bss_conf {
-  *	used to indicate that a frame was already retried due to PS
-  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
-  *	used to indicate frame should not be encrypted
-+ * @IEEE80211_TX_CTL_PSPOLL_RESPONSE: (internal?)
-+ *	This frame is a response to a PS-poll frame and should be sent
-+ *	although the station is in powersave mode.
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
-@@ -262,6 +265,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
- 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
- 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
-+	IEEE80211_TX_CTL_PSPOLL_RESPONSE	= BIT(17),
- };
- 
- /**
---- wireless-testing.orig/net/mac80211/tx.c	2009-07-24 10:58:24.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2009-07-24 11:05:23.000000000 +0200
-@@ -373,7 +373,7 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 	staflags = get_sta_flags(sta);
- 
- 	if (unlikely((staflags & WLAN_STA_PS) &&
--		     !(staflags & WLAN_STA_PSPOLL))) {
-+		     !(info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE))) {
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 		printk(KERN_DEBUG "STA %pM aid %d: PS buffer (entries "
- 		       "before %d)\n",
-@@ -412,24 +412,7 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
- 		       sta->sta.addr);
- 	}
- #endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
--	if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
--		/*
--		 * The sleeping station with pending data is now snoozing.
--		 * It queried us for its buffered frames and will go back
--		 * to deep sleep once it got everything.
--		 *
--		 * inform the driver, in case the hardware does powersave
--		 * frame filtering and keeps a station  blacklist on its own
--		 * (e.g: p54), so that frames can be delivered unimpeded.
--		 *
--		 * Note: It should be safe to disable the filter now.
--		 * As, it is really unlikely that we still have any pending
--		 * frame for this station in the hw's buffers/fifos left,
--		 * that is not rejected with a unsuccessful tx_status yet.
--		 */
- 
--		info->flags |= IEEE80211_TX_CTL_CLEAR_PS_FILT;
--	}
- 	return TX_CONTINUE;
- }
- 
---- wireless-testing.orig/drivers/net/wireless/p54/txrx.c	2009-07-24 11:05:09.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/p54/txrx.c	2009-07-24 11:05:17.000000000 +0200
-@@ -614,7 +614,7 @@ static void p54_tx_80211_header(struct p
- 	if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
- 		*flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
- 
--	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
-+	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
- 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
- 
- 	*queue = skb_get_queue_mapping(skb) + P54_QUEUE_DATA;
+wlan0     Interface doesn't have a list of Peers/Access-Points
 
 
+I'm appending some diagnostics.
+
+Here's what dmesg tells me after 'modprobe ath5k'
+
+[256888.841092] cfg80211: Using static regulatory domain info
+[256888.841098] cfg80211: Regulatory domain: US
+[256888.841101] 	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[256888.841105] 	(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+[256888.841109] 	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[256888.841112] 	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[256888.841116] 	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[256888.841119] 	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+[256888.841123] 	(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+[256888.841134] cfg80211: Calling CRDA for country: US
+[256888.870476] ath5k 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[256888.870492] ath5k 0000:05:00.0: setting latency timer to 64
+[256888.870563] ath5k 0000:05:00.0: registered as 'phy0'
+[256888.943464] ath: EEPROM regdomain: 0x65
+[256888.943466] ath: EEPROM indicates we should expect a direct regpair map
+[256888.943471] ath: Country alpha2 being used: 00
+[256888.943474] ath: Regpair used: 0x65
+[256888.947007] phy0: Selected rate control algorithm 'minstrel'
+[256888.947904] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+
+
+# iw list
+
+
+Wiphy phy0
+	Band 1:
+		Frequencies:
+			* 2412 MHz [1] (20.0 dBm)
+			* 2417 MHz [2] (20.0 dBm)
+			* 2422 MHz [3] (20.0 dBm)
+			* 2427 MHz [4] (20.0 dBm)
+			* 2432 MHz [5] (20.0 dBm)
+			* 2437 MHz [6] (20.0 dBm)
+			* 2442 MHz [7] (20.0 dBm)
+			* 2447 MHz [8] (20.0 dBm)
+			* 2452 MHz [9] (20.0 dBm)
+			* 2457 MHz [10] (20.0 dBm)
+			* 2462 MHz [11] (20.0 dBm)
+			* 2467 MHz [12] (20.0 dBm) (passive scanning)
+			* 2472 MHz [13] (20.0 dBm) (passive scanning)
+			* 2484 MHz [14] (disabled)
+		Bitrates (non-HT):
+			* 1.0 Mbps
+			* 2.0 Mbps (short preamble supported)
+			* 5.5 Mbps (short preamble supported)
+			* 11.0 Mbps (short preamble supported)
+			* 6.0 Mbps
+			* 9.0 Mbps
+			* 12.0 Mbps
+			* 18.0 Mbps
+			* 24.0 Mbps
+			* 36.0 Mbps
+			* 48.0 Mbps
+			* 54.0 Mbps
+	max # scan SSIDs: 4
+	Supported interface modes:
+		 * IBSS
+		 * managed
+		 * AP
+		 * AP/VLAN
+		 * monitor
+		 * mesh point
+
+# iw wlan0 scan
+
+BSS 00:40:05:c5:4f:19 (on wlan0)
+        TSF: 5703065889 usec (0d, 01:35:03)
+        freq: 2412
+        beacon interval: 100
+        capability: ESS PBCC (0x0041)
+        signal: -92.00 dBm
+        SSID: default
+        Supported rates: 1.0* 2.0* 5.5* 11.0* 22.0 
+        DS Paramater set: channel 1
+BSS 00:16:b6:db:fd:78 (on wlan0)
+        TSF: 625899182784 usec (7d, 05:51:39)
+        freq: 2437
+        beacon interval: 100
+        capability: ESS ShortSlotTime (0x0401)
+        signal: -101.00 dBm
+        SSID: linksys
+        Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0
+54.0 
+        DS Paramater set: channel 6
+        ERP: Barker_Preamble_Mode
+        Extended supported rates: 6.0 9.0 12.0 48.0 
+
+# iw wlan0 info
+Interface wlan0
+        ifindex 6
+        type managed
+
+
+
+
+-- 
+Joel Roth
