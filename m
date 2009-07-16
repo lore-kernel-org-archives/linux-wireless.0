@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:42482 "EHLO venema.h4ckr.net"
+Received: from mga03.intel.com ([143.182.124.21]:42896 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828AbZGaSe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:34:58 -0400
-Date: Fri, 31 Jul 2009 21:05:56 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Subject: [PATCH 2/4] ath5k: Linear PCDAC code fixes
-Message-ID: <20090731180556.GC7963@makis>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754576AbZGPJdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 05:33:13 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 06/10] iwmc3200wifi: remove setting WEP keys before setting essid support
+Date: Thu, 16 Jul 2009 17:34:11 +0800
+Message-Id: <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
+References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
+ <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Set correct xpd curve indices for high/low gain curves during
-   rfbuffer setup on RF5112B with both calibration curves available.
+The recent cfg80211 "rework key operation" patch from Johannes Berg
+makes sure keys are set only after the connection has been
+established. So we can remove the setting WEP keys before essid
+support from the driver.
 
- * Don't return zero min power when we have the same pcdac value
-   twice because it breaks interpolation. Instead return the right
-   x barrier as we do when we have equal power levels for 2 different
-   pcdac values.
-
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |   24 +++++++++++++++++-------
- 1 files changed, 17 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   26 --------------------------
+ 1 files changed, 0 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 2075ba9..6afba98 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -740,13 +740,22 @@ int ath5k_hw_rfregs_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 						AR5K_RF_XPD_GAIN, true);
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index ee40317..0372658 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -203,32 +203,6 @@ static int iwm_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return ret;
+ 	}
  
- 		} else {
--			/* TODO: Set high and low gain bits */
--			ath5k_hw_rfb_op(ah, rf_regs,
--						ee->ee_x_gain[ee_mode],
-+			u8 *pdg_curve_to_idx = ee->ee_pdc_to_idx[ee_mode];
-+			if (ee->ee_pd_gains[ee_mode] > 1) {
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
- 						AR5K_RF_PD_GAIN_LO, true);
--			ath5k_hw_rfb_op(ah, rf_regs,
--						ee->ee_x_gain[ee_mode],
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[1],
- 						AR5K_RF_PD_GAIN_HI, true);
-+			} else {
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
-+						AR5K_RF_PD_GAIN_LO, true);
-+				ath5k_hw_rfb_op(ah, rf_regs,
-+						pdg_curve_to_idx[0],
-+						AR5K_RF_PD_GAIN_HI, true);
-+			}
+-	/*
+-	 * The WEP keys can be set before or after setting the essid.
+-	 * We need to handle both cases by simply pushing the keys after
+-	 * we send the profile.
+-	 * If the profile is not set yet (i.e. we're pushing keys before
+-	 * the essid), we set the cipher appropriately.
+-	 * If the profile is set, we havent associated yet because our
+-	 * cipher was incorrectly set. So we invalidate and send the
+-	 * profile again.
+-	 */
+-	if (key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
+-	    key->cipher == WLAN_CIPHER_SUITE_WEP104) {
+-		u8 *ucast_cipher = &iwm->umac_profile->sec.ucast_cipher;
+-		u8 *mcast_cipher = &iwm->umac_profile->sec.mcast_cipher;
+-
+-		IWM_DBG_WEXT(iwm, DBG, "WEP key\n");
+-
+-		if (key->cipher == WLAN_CIPHER_SUITE_WEP40)
+-			*ucast_cipher = *mcast_cipher = UMAC_CIPHER_TYPE_WEP_40;
+-		if (key->cipher == WLAN_CIPHER_SUITE_WEP104)
+-			*ucast_cipher = *mcast_cipher =
+-				UMAC_CIPHER_TYPE_WEP_104;
+-
+-		return iwm_reset_profile(iwm);
+-	}
+-
+ 	return iwm_set_key(iwm, 0, key);
+ }
  
- 			/* Lower synth voltage on Rev 2 */
- 			ath5k_hw_rfb_op(ah, rf_regs, 2,
-@@ -1896,8 +1905,9 @@ ath5k_get_linear_pcdac_min(const u8 *stepL, const u8 *stepR,
- 	s16 min_pwrL, min_pwrR;
- 	s16 pwr_i;
- 
--	if (WARN_ON(stepL[0] == stepL[1] || stepR[0] == stepR[1]))
--		return 0;
-+	/* Some vendors write the same pcdac value twice !!! */
-+	if (stepL[0] == stepL[1] || stepR[0] == stepR[1])
-+		return max(pwrL[0], pwrR[0]);
- 
- 	if (pwrL[0] == pwrL[1])
- 		min_pwrL = pwrL[0];
+-- 
+1.6.0.4
+
