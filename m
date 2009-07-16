@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:14612 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754708AbZGJQlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 12:41:14 -0400
-Subject: Re: [PATCH] cfg80211: fix wext setting SSID
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1247243749.29747.7.camel@johannes.local>
-References: <1247243749.29747.7.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 10 Jul 2009 12:41:12 -0400
-Message-Id: <1247244072.2877.15.camel@mj>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42375
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933192AbZGPUHW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jul 2009 16:07:22 -0400
+Date: Thu, 16 Jul 2009 13:07:26 -0700 (PDT)
+Message-Id: <20090716.130726.220404456.davem@davemloft.net>
+To: marcel@holtmann.org
+Cc: tomasw@gmail.com, yi.zhu@intel.com, drzeus-list@drzeus.cx,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1247763454.4549.56.camel@violet>
+References: <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
+	<1ba2fa240907160804g18b1a215w3161c9682db7b35@mail.gmail.com>
+	<1247763454.4549.56.camel@violet>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-10 at 18:35 +0200, Johannes Berg wrote:
-> Pavel reported that you can't set the SSID from "foo" to
-> "bar". I tried reproducing, but used different values,
-> with different lengths, and thus never saw the obvious
-> problem.
+From: Marcel Holtmann <marcel@holtmann.org>
+Date: Thu, 16 Jul 2009 18:57:34 +0200
+
+> Hi Dave,
 > 
-> Reported-by: Pavel Roskin <proski@gnu.org>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> > > Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+>> >
+>> > BTW, subject should be "iwmc3200".
+>> 
+>> Thanks. I'll address all comments although I'm not sure how to split
+>> the patch since adding SDIO_VENDOR_ID_INTEL to sdio_ids.h it affects
+>> all the drivers anyhow, so I'm suggesting to route it through netdev.
+> 
+> I think it is best that you take the whole patch via net-next-2.6 to
+> avoid breakage during the next merge window.
 
-Tested-by: Pavel Roskin <proski@gnu.org>
-
-> *sigh*
-> tons of stupid mistakes
-
-Two mistakes less.  Thank you!
-
--- 
-Regards,
-Pavel Roskin
+Fair enough.
