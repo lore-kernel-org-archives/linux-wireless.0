@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:42896 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:47318 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754576AbZGPJdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:33:13 -0400
-From: Zhu Yi <yi.zhu@intel.com>
+	id S934735AbZGQQab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:31 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 06/10] iwmc3200wifi: remove setting WEP keys before setting essid support
-Date: Thu, 16 Jul 2009 17:34:11 +0800
-Message-Id: <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
-References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 07/14] iwlwifi: Led blinking counting both tx and rx
+Date: Fri, 17 Jul 2009 09:30:20 -0700
+Message-Id: <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recent cfg80211 "rework key operation" patch from Johannes Berg
-makes sure keys are set only after the connection has been
-established. So we can remove the setting WEP keys before essid
-support from the driver.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+For controlling led blinking, counting both tx and rx data traffic; this
+will be able to handle traffic in either direction
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   26 --------------------------
- 1 files changed, 0 insertions(+), 26 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-led.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index ee40317..0372658 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -203,32 +203,6 @@ static int iwm_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index 36d88a0..8c81152 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -54,7 +54,7 @@ static const char *led_type_str[] = {
  
--	/*
--	 * The WEP keys can be set before or after setting the essid.
--	 * We need to handle both cases by simply pushing the keys after
--	 * we send the profile.
--	 * If the profile is not set yet (i.e. we're pushing keys before
--	 * the essid), we set the cipher appropriately.
--	 * If the profile is set, we havent associated yet because our
--	 * cipher was incorrectly set. So we invalidate and send the
--	 * profile again.
--	 */
--	if (key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
--	    key->cipher == WLAN_CIPHER_SUITE_WEP104) {
--		u8 *ucast_cipher = &iwm->umac_profile->sec.ucast_cipher;
--		u8 *mcast_cipher = &iwm->umac_profile->sec.mcast_cipher;
--
--		IWM_DBG_WEXT(iwm, DBG, "WEP key\n");
--
--		if (key->cipher == WLAN_CIPHER_SUITE_WEP40)
--			*ucast_cipher = *mcast_cipher = UMAC_CIPHER_TYPE_WEP_40;
--		if (key->cipher == WLAN_CIPHER_SUITE_WEP104)
--			*ucast_cipher = *mcast_cipher =
--				UMAC_CIPHER_TYPE_WEP_104;
--
--		return iwm_reset_profile(iwm);
--	}
--
- 	return iwm_set_key(iwm, 0, key);
- }
  
+ static const struct {
+-	u16 tpt;
++	u16 tpt;	/* Mb/s */
+ 	u8 on_time;
+ 	u8 off_time;
+ } blink_tbl[] =
+@@ -264,13 +264,15 @@ static int iwl_leds_register_led(struct iwl_priv *priv, struct iwl_led *led,
+ 
+ 
+ /*
+- * calculate blink rate according to last 2 sec Tx/Rx activities
++ * calculate blink rate according to last second Tx/Rx activities
+  */
+ static int iwl_get_blink_rate(struct iwl_priv *priv)
+ {
+ 	int i;
+-	u64 current_tpt = priv->tx_stats[2].bytes;
+-	/* FIXME: + priv->rx_stats[2].bytes; */
++	/* count both tx and rx traffic to be able to
++	 * handle traffic in either direction
++	 */
++	u64 current_tpt = priv->tx_stats[2].bytes + priv->rx_stats[2].bytes;
+ 	s64 tpt = current_tpt - priv->led_tpt;
+ 
+ 	if (tpt < 0) /* wraparound */
 -- 
-1.6.0.4
+1.5.6.3
 
