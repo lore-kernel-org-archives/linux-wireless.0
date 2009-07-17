@@ -1,29 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48996 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754491AbZGVMpy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 08:45:54 -0400
-Date: Wed, 22 Jul 2009 08:38:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kamil Dzida <kamil.dzida@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: AR5523 driver - old Atheros USB
-Message-ID: <20090722123808.GC3927@tuxdriver.com>
-References: <20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> <20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> <928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com> <4A66A482.6050401@erley.org> <loom.20090722T074629-659@post.gmane.org> <3ace41890907220348i367a2b02had02f05af3ab3d4f@mail.gmail.com> <loom.20090722T115236-65@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <loom.20090722T115236-65@post.gmane.org>
+Received: from mga14.intel.com ([143.182.124.37]:40544 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934737AbZGQQac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:32 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/14] iwlwifi: checking unknown HW type
+Date: Fri, 17 Jul 2009 09:30:21 -0700
+Message-Id: <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 22, 2009 at 12:12:07PM +0000, Kamil Dzida wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> I hope that it is O.K. to have ISC licensed driver in GPL licensed kernel.
+When deciding NVM type, if the HW type is unknown, report error and exit
+with -ENOENT. This check should prevent incorrect behavior by assuming
+the wrong NVM type.
 
-It is.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 7d7554a..51eed72 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -159,6 +159,9 @@ static int iwlcore_get_nvm_type(struct iwl_priv *priv)
+ 
+ 	/* OTP only valid for CP/PP and after */
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
++	case CSR_HW_REV_TYPE_NONE:
++		IWL_ERR(priv, "Unknown hardware type\n");
++		return -ENOENT;
+ 	case CSR_HW_REV_TYPE_3945:
+ 	case CSR_HW_REV_TYPE_4965:
+ 	case CSR_HW_REV_TYPE_5300:
+@@ -266,7 +269,8 @@ int iwl_eeprom_init(struct iwl_priv *priv)
+ 	u32 otpgp;
+ 
+ 	priv->nvm_device_type = iwlcore_get_nvm_type(priv);
+-
++	if (priv->nvm_device_type == -ENOENT)
++		return -ENOENT;
+ 	/* allocate eeprom */
+ 	if (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
+ 		priv->cfg->eeprom_size =
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+1.5.6.3
+
