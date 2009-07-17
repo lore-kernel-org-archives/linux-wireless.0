@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f221.google.com ([209.85.218.221]:55298 "EHLO
-	mail-bw0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695AbZG1TyF (ORCPT
+Received: from ppsw-5.csi.cam.ac.uk ([131.111.8.135]:54611 "EHLO
+	ppsw-5.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934259AbZGQJUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 15:54:05 -0400
-Received: by bwz21 with SMTP id 21so278517bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 12:54:04 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: fix disassoc while not associated
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248682948.19945.27.camel@johannes.local>
-References: <1248682948.19945.27.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 28 Jul 2009 22:53:59 +0300
-Message-Id: <1248810839.30488.10.camel@maxim-laptop>
-Mime-Version: 1.0
+	Fri, 17 Jul 2009 05:20:03 -0400
+Message-ID: <4A604246.5060204@gmail.com>
+Date: Fri, 17 Jul 2009 09:20:06 +0000
+From: Jonathan Cameron <Jonathan.Cameron@gmail.com>
+MIME-Version: 1.0
+To: Robert Emanuele <rob@emanuele.us>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: SDIO Stack and Device Support
+References: <9f53b4330907161718ydbac090k2afc7a749fc9f6f2@mail.gmail.com>
+In-Reply-To: <9f53b4330907161718ydbac090k2afc7a749fc9f6f2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-27 at 10:22 +0200, Johannes Berg wrote:
-> When trying to disassociate while not associated,
-> the kernel would crash rather than refusing the
-> operation, fix this;
-> 
-> Reported-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
->  net/wireless/mlme.c |    6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> --- wireless-testing.orig/net/wireless/mlme.c	2009-07-27 10:20:17.000000000 +0200
-> +++ wireless-testing/net/wireless/mlme.c	2009-07-27 10:20:56.000000000 +0200
-> @@ -545,6 +545,12 @@ static int __cfg80211_mlme_disassoc(stru
->  
->  	ASSERT_WDEV_LOCK(wdev);
->  
-> +	if (wdev->sme_state != CFG80211_SME_CONNECTED)
-> +		return -ENOTCONN;
-> +
-> +	if (WARN_ON(!wdev->current_bss))
-> +		return -ENOTCONN;
-> +
->  	memset(&req, 0, sizeof(req));
->  	req.reason_code = reason;
->  	req.ie = ie;
-> 
-> 
+Robert Emanuele wrote:
+> Greetings all,
+>
+> I'm trying to find out more information about the status of an SDIO
+> stack and SDIO devices in the kernel.  I see under drivers/mmc/ some
+> SDIO support.
+>
+> I'm evaluating the potential of getting a Wireless SDIO card to work
+> with the 2.6 kernel.  So far all I see in the kernel is support for an
+> SDIO UART.  There is a patch on sourceforge for an SDIO stack and
+> drivers from Atheros but that is for 2.6.18.  Is there current support
+> for other SDIO wireless devices in the kernel?
+>   
+There is pretty good support for the Marvell chips (sd8686 etc) in the
+mainline
+kernel. Take a look under drivers/net/wireless/libertas/
 
-Thanks, this fixes this bug for me.
-Still many problems though.
+I've also copied in the linux-wireless list.
 
 
-Best regards,
-	Maxim Levitsky
+
+
 
