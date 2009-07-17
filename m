@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47478 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbZGaCZs (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.245]:43487 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933909AbZGQBTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 22:25:48 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-acpi@vger.kernel.org
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	timg@tpi.com, Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH] dell-laptop: Fix rfkill state queries
-Date: Fri, 31 Jul 2009 03:25:38 +0100
-Message-Id: <1249007138-27354-1-git-send-email-mjg@redhat.com>
+	Thu, 16 Jul 2009 21:19:22 -0400
+Received: by an-out-0708.google.com with SMTP id d40so679976and.1
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 18:19:20 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 16 Jul 2009 21:19:19 -0400
+Message-ID: <9e4733910907161819r4202b06fib34027bba1b672d2@mail.gmail.com>
+Subject: missing piece for starting device on embedded system
+From: Jon Smirl <jonsmirl@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current code in dell-laptop is confused about the hardware rfkill
-state. Fix it up such that it's always reported correctly.
+I must be missing a piece of the necessary environment to get wireless
+started...
+This is an embedded environment that has not had wireless previously.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- drivers/platform/x86/dell-laptop.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+When I plug my rt73 adapter in:
 
-diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
-index 74909c4..9061111 100644
---- a/drivers/platform/x86/dell-laptop.c
-+++ b/drivers/platform/x86/dell-laptop.c
-@@ -197,8 +197,8 @@ static void dell_rfkill_query(struct rfkill *rfkill, void *data)
- 	dell_send_request(&buffer, 17, 11);
- 	status = buffer.output[1];
- 
--	if (status & BIT(bit))
--		rfkill_set_hw_state(rfkill, !!(status & BIT(16)));
-+	rfkill_set_sw_state(rfkill, !!(status & BIT(bit)));
-+	rfkill_set_hw_state(rfkill, !(status & BIT(16)));
- }
- 
- static const struct rfkill_ops dell_rfkill_ops = {
+usb 1-2: USB disconnect, address 6
+usb 1-2: new full speed USB device using ppc-of-ohci and address 7
+usb 1-2: configuration #1 chosen from 1 choice
+phy3 -> rt73usb_validate_eeprom: EEPROM recovery - NIC: 0xffef
+phy3 -> rt73usb_validate_eeprom: EEPROM recovery - Led: 0xe000
+phy3 -> rt73usb_validate_eeprom: EEPROM recovery - RSSI OFFSET A: 0x0000
+phy3 -> rt2x00_set_chip: Info - Chipset detected - rt: 1300, rf: 0002,
+rev: 0002573a.
+phy3: Selected rate control algorithm 'minstrel'
+
+-----------
+
+UDEV  [1247788838.265890] add      /class/net/wmaster0 (net)
+UDEV_LOG=3
+ACTION=add
+DEVPATH=/class/net/wmaster0
+SUBSYSTEM=net
+INTERFACE=wmaster0
+IFINDEX=9
+SEQNUM=594
+
+UDEV  [1247788838.268243] add      /class/net/wlan0 (net)
+UDEV_LOG=3
+ACTION=add
+DEVPATH=/class/net/wlan0
+SUBSYSTEM=net
+INTERFACE=wlan0
+IFINDEX=10
+SEQNUM=595
+MATCHADDR=00:18:f3:2f:0a:de
+MATCHIFTYPE=1
+COMMENT=USB device 0x:0x (rt73usb)
+
+----------
+
+But I never get a request_firmware event. This seems to be because the
+adapter 's start() function is never called.
+
+I'm missing some piece of the system - a kernel module or some part of
+user space.
+Can someone give me a clue on how to debug this?
+
+I though it was missing crda but adding that didn't fix it.
+
 -- 
-1.6.2.5
-
+Jon Smirl
+jonsmirl@gmail.com
