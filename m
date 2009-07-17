@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54863 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbZG0I12 (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.169]:24078 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934709AbZGQP6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 04:27:28 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248653082.3106.7.camel@mj>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bcelWGSbb2MUY3+Pvtdx"
-Date: Mon, 27 Jul 2009 10:27:29 +0200
-Message-Id: <1248683249.19945.29.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 17 Jul 2009 11:58:42 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so277791wfd.4
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 08:58:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090717062907.78420@gmx.net>
+References: <20090717062907.78420@gmx.net>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Fri, 17 Jul 2009 08:58:22 -0700
+Message-ID: <43e72e890907170858v31f1789fu16156022d8330633@mail.gmail.com>
+Subject: Re: compat-2.6 - missing usb_poison_urb on 2.6.27
+To: arne.fitzenreiter@gmx.de
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 16, 2009 at 11:29 PM, <arne.fitzenreiter@gmx.de> wrote:
+> Hi,
+>
+> i had problems to use the compat-wireless pack from yesterday (16.7.2009) because in kernel 2.6.27 the symbols usb_poison_urb and usb_unpoison_urb are missing. They should be first introduced with 2.6.28
+> http://lxr.free-electrons.com/ident?v=2.6.28;i=usb_poison_urb
 
---=-bcelWGSbb2MUY3+Pvtdx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hm, yeah I forgot to add the actual code and the header placement was incorrect.
 
-Thanks Pavel,
+> At my informations also usb_poison_anchored_urbs are also introduced with 2.6.28 so i think this is added to the wrong "compat" file
+> http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=commitdiff;h=a2c9d9009ff5692dbb517df97f328fd67940830a
+> but this could be misinterpreted by me.
+>
+> Please check this. Thanks.
 
-> >  		while (!skb_queue_empty(&local->pending[i])) {
-> >  			struct sk_buff *skb =3D __skb_dequeue(&local->pending[i]);
-> > +			struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-> > +			struct ieee80211_sub_if_data *sdata;
-> > +
-> > +			sdata =3D vif_to_sdata(info->control.vif);
-> > +			dev_hold(sdata->dev);
->=20
-> I'm getting a panic at this point if I run hostapd on ath9k and a
-> Windows client tries to authenticate with a wrong WPA key.
->=20
-> Debugging shows that sdata->dev is NULL.
+Great, thanks, will fix accordingly. Can you try new tarball?
 
-I suspect 'sdata' is already pointing to something bogus, since it's the
-result of a container_of().
+This is a bleeding edge compat-wireless release based on: master-2009-07-10
+This is compat-release: master-2009-07-08-11-g899b22b
 
-Can you try with the sanity checking patch I'm about to send?
-
-johannes
-
---=-bcelWGSbb2MUY3+Pvtdx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbWTuAAoJEODzc/N7+QmaRYAQAI5FX4ElS0ZSYowSZ/vxKzMl
-X33AvPo4jdrxjWx1FxiRplSNTTKWpdH7HslbBktQEHKxWFQ4fcnXADQe8dFpDMuP
-ShularGDlQEI0pzqKbAVS7jvb2+V14EH2W7/ud5gOClqQCDq1DTZbT/C60jvzzud
-sWTQXM6y1N7lXfSCncMbCRs3UZPYhK09EFDGy5w9e93SK6U+6i1UqojIv8zIe/aO
-epU3d7RJOwMAwPhRPjGRkG+S4Nf4WWjYWY2F4xxwTxtWcKNMKp3oV4iimKMkP5uJ
-RV6dNiChIvsAsZdnMVB+KRlb1+dTrXmXre+SILbsKonM7VO1V6gdKqzleUmF1eKN
-LjS6aJeZahTgFYvp4ESjjaRKBH/YXAE3dDq2HS5NU6nqXzwrTK8776u2ZawLgmZh
-pD/6kRPkXfgsPeERnS+7ZW0TiOLqLtmRJOgcc/3KGmAOfsMtIVeCL5fdjWVNpypH
-Bx8n9dunxGpC8cs2+L8v9vFEkQJuBo+dShaUqjMWmuX85xbUBiSW+CBDv5XDeoRi
-N7S73ewnZbkuo+dxP85lk38z5Tg/EfcAW/qxcrPnpSqk4BXYyELmgn7mA2D5AiOF
-jgMkRkOfqh9PBd0bu9kANbLYXHilannJgL1ZMCMGTWPl/0Nl69a0Lnjnq48lMpva
-w+nG0P4sl1jZwPxr1zBD
-=g4fL
------END PGP SIGNATURE-----
-
---=-bcelWGSbb2MUY3+Pvtdx--
-
+  Luis
