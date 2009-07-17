@@ -1,118 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zbasel.fortytwo.ch ([193.138.215.60]:47290 "EHLO
-	zbasel.fortytwo.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbZG2Svp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 14:51:45 -0400
-From: Adrian von Bidder <avbidder@fortytwo.ch>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Subject: Re: ath5k connection loss (failed to wakeup the MAC Chip)
-Date: Wed, 29 Jul 2009 12:11:15 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200907280838.42541@fortytwo.ch> <40f31dec0907281653g63375736id57f547a8ba12cad@mail.gmail.com>
-In-Reply-To: <40f31dec0907281653g63375736id57f547a8ba12cad@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7058764.8rLeEex8sC";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200907291211.21133@fortytwo.ch>
+Received: from mga14.intel.com ([143.182.124.37]:12884 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934734AbZGQQa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/14] iwlagn: modify digital SVR for 1000
+Date: Fri, 17 Jul 2009 09:30:14 -0700
+Message-Id: <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7058764.8rLeEex8sC
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Hi,
+On 1000, there are two Switching Voltage Regulators (SVR). The first one
+apply digital voltage level (1.32V) for PCIe block and core. We need to
+use this regulator to solve a stability issue related to noisy DC2DC
+line in the silicon.
 
-On Wednesday 29 July 2009 01.53:18 Nick Kossifidis wrote:
-> 2009/7/28 Adrian von Bidder <avbidder@fortytwo.ch>:
-> > Heyho!
-> >
-> > (This is using kernel 2.6.31-rc3 as packaged by Debian)
-> >
-> > While taking a full backup of my laptop, I noticed that after a few
-> > 100M the ath5k can't connect to WLAN anymore.
->
-> Working on it, can you please post the part when ath5k loads ?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-prph.h |    5 ++++-
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
-$ dmesg | grep -5 ath5
-[   10.837434] usbcore: registered new interface driver uvcvideo
-[   10.837444] USB Video Class driver (v0.1.0)                 =20
-[   11.058396] Synaptics Touchpad, model: 1, fw: 7.2, id: 0x1c0b1, caps: 0x=
-d04771/0xa40000                                                            =
-         =20
-[   11.100259] ACPI: WMI: Mapper loaded                                    =
-    =20
-[   11.116172] input: SynPS/2 Synaptics TouchPad as /devices/platform/i8042=
-/serio2/input/input3                                                       =
-         =20
-[   11.152799] ath5k 0000:03:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ =
-18
-[   11.152843] ath5k 0000:03:00.0: setting latency timer to 64
-[   11.152938] ath5k 0000:03:00.0: registered as 'phy0'
-[   11.160210] acer-wmi: Acer Laptop ACPI-WMI Extras  =20
-[   11.160218] acer-wmi: Blacklisted hardware detected - not loading
-[   11.227537] ath: EEPROM regdomain: 0x65                         =20
-[   11.227546] ath: EEPROM indicates we should expect a direct regpair map
-[   11.227557] ath: Country alpha2 being used: 00                        =20
-=2D-
-[   13.449969] ACPI: Video Device [OVGA] (multi-head: yes  rom: yes  post: =
-no)
-[   13.500020] Clocksource tsc unstable (delta =3D -353758420 ns)          =
-    =20
-[   13.602489] ACPI: AC Adapter [ACAD] (on-line)                           =
-  =20
-[   13.602714] input: Lid Switch as /devices/LNXSYSTM:00/device:00/PNP0C0D:=
-00/input/input7                                                            =
-         =20
-[   13.872882] phy0: Selected rate control algorithm 'minstrel'            =
-    =20
-[   13.875055] Registered led device: ath5k-phy0::rx
-[   13.875106] Registered led device: ath5k-phy0::tx
-[   13.875116] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-[   14.047189] HDA Intel 0000:00:1b.0: PCI INT A -> GSI 16 (level, low) -> =
-IRQ 16                                                                     =
-         =20
-[   14.047271] HDA Intel 0000:00:1b.0: setting latency timer to 64         =
-    =20
-[   14.160144] ACPI: Lid Switch [LID0]                                     =
-    =20
-[   14.160386] input: Sleep Button as /devices/LNXSYSTM:00/device:00/PNP0C0=
-E:00/input/input8                                                          =
-         =20
-[   14.160502] ACPI: Sleep Button [SLPB]                                   =
-    =20
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 85e8bac..3f9da6e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -239,6 +239,13 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
+ 				APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS,
+ 				~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
+ 
++	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_1000) {
++		/* Setting digital SVR for 1000 card to 1.32V */
++		iwl_set_bits_mask_prph(priv, APMG_DIGITAL_SVR_REG,
++					APMG_SVR_DIGITAL_VOLTAGE_1_32,
++					~APMG_SVR_VOLTAGE_CONFIG_BIT_MSK);
++	}
++
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 3b9cac3..d393e8f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -80,6 +80,8 @@
+ #define APMG_RFKILL_REG			(APMG_BASE + 0x0014)
+ #define APMG_RTC_INT_STT_REG		(APMG_BASE + 0x001c)
+ #define APMG_RTC_INT_MSK_REG		(APMG_BASE + 0x0020)
++#define APMG_DIGITAL_SVR_REG		(APMG_BASE + 0x0058)
++#define APMG_ANALOG_SVR_REG		(APMG_BASE + 0x006C)
+ 
+ #define APMG_CLK_VAL_DMA_CLK_RQT	(0x00000200)
+ #define APMG_CLK_VAL_BSM_CLK_RQT	(0x00000800)
+@@ -91,7 +93,8 @@
+ #define APMG_PS_CTRL_VAL_PWR_SRC_VMAIN		(0x00000000)
+ #define APMG_PS_CTRL_VAL_PWR_SRC_MAX		(0x01000000) /* 3945 only */
+ #define APMG_PS_CTRL_VAL_PWR_SRC_VAUX		(0x02000000)
+-
++#define APMG_SVR_VOLTAGE_CONFIG_BIT_MSK	(0x000001E0) /* bit 8:5 */
++#define APMG_SVR_DIGITAL_VOLTAGE_1_32		(0x00000060)
+ 
+ #define APMG_PCIDEV_STT_VAL_L1_ACT_DIS		(0x00000800)
+ 
+-- 
+1.5.6.3
 
-(btw, in my case the laptop probably went through suspend to ram/resume=20
-before I started the backup.  Don't know if that has any influence.)
-
-cheers
-=2D- vbi
-
-cheers
-=2D- vbi
-
-=2D-=20
-featured product: ClamAV Antivirus - http://www.clamav.net/
-
-
---nextPart7058764.8rLeEex8sC
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: get my key from http://fortytwo.ch/gpg/92082481
-
-iKcEABECAGcFAkpwIERgGmh0dHA6Ly9mb3J0eXR3by5jaC9sZWdhbC9ncGcvZW1h
-aWwuMjAwMjA4MjI/dmVyc2lvbj0xLjUmbWQ1c3VtPTVkZmY4NjhkMTE4NDMyNzYw
-NzFiMjVlYjcwMDZkYTNlAAoJECqqZti935l6desAoID5px5fBx/achbxv48uPr66
-uydiAKC6Qd3THBFm8XjsX6nValmAO7G3LA==
-=zMSt
------END PGP SIGNATURE-----
-
---nextPart7058764.8rLeEex8sC--
