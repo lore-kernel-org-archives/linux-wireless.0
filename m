@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47153 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171AbZGKUwb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jul 2009 16:52:31 -0400
-Subject: Re: [PATCH v2] mac80211: cancel/restart all timers across
- suspend/resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andreas Schwab <schwab@linux-m68k.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <m2ab3bkm2d.fsf@igel.home>
-References: <1242391067.5799.53.camel@johannes.local>
-	 <1242553242.10005.76.camel@johannes.local> <m2hbxjky1q.fsf@igel.home>
-	 <1247334562.30647.111.camel@johannes.local>  <m2ab3bkm2d.fsf@igel.home>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-O1QKeAZc0ngHJuKYlHgF"
-Date: Sat, 11 Jul 2009 22:52:28 +0200
-Message-Id: <1247345548.30647.116.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:40544 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964881AbZGQQab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:31 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/14 w-t and 2.6.31] iwlagn: do not send key clear commands when rfkill enabled
+Date: Fri, 17 Jul 2009 09:30:18 -0700
+Message-Id: <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
---=-O1QKeAZc0ngHJuKYlHgF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Do all key clearing except sending sommands to device when rfkill
+enabled. When rfkill enabled the interface is brought down and will
+be brought back up correctly after rfkill is enabled again.
 
-On Sat, 2009-07-11 at 22:21 +0200, Andreas Schwab wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->=20
-> > On Sat, 2009-07-11 at 18:02 +0200, Andreas Schwab wrote:
-> >>=20
-> >> Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org> write=
-s:
-> >>=20
-> >> > We forgot to cancel all timers in mac80211 when suspending.
-> >> > In particular we forgot to deal with some things that can
-> >> > cause hardware reconfiguration -- while it is down.
-> >>=20
-> >> This is breaking suspend on my iBook.
-> >
-> > Yeah, bug 13337,
->=20
-> Thanks, I missed that one.
->=20
-> > but the fix at
-> > http://mid.gmane.org/8763dznnki.fsf@scholz.fias.uni-frankfurt.de works.
->=20
-> With that patch suspend works here too, but resume hangs halfway
-> through.
+Same change is not needed for iwl3945 as it ignores return code when
+sending key clearing command to device.
 
-Odd, do you get console output before it hangs so you could add printks
-to figure out where? Jan said that just fixed it for him.
+This fixes http://bugzilla.kernel.org/show_bug.cgi?id=13742
 
-johannes
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Tested-by: Frans Pop <elendil@planet.nl>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
---=-O1QKeAZc0ngHJuKYlHgF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKWPuIAAoJEODzc/N7+Qmay3QQAIMxIvBip7SrkAGAw+NHUA8t
-NsJdGXa0QDhfmbM0SFHazirN1JxDs4r+c2sohci4YRM5AMFxpIH6Kx32QRCiXKp0
-VL2tWm9YZ9FxiMqFL6ODtICMHKR8qiJxgkX++tj0zqyxcwtotPKsSIqzGMAsKbgz
-uvV2q3eMA9lc3qeIX/Gzyv9ety9DEvxV22T8hFxumZaLt8cPVEH7pNb6ugMmmrku
-WtSagk4LjIo6yuy8bz4JnnzyvfzXoQk4P1LEDFjvUKfqWpfcDJhjSFP23WoMrg1M
-zELzf+GpOWq59hZAOp2sVSdJVJJSA4GSCPpuvI2t1FceEkQv1zanGRTdvtV/cKKO
-I84wKHCU8lC1P6MyDNvHnECiagkz4ypnFLb3Dt54OBz7drdP0+h0EZ923mqNra8h
-+tJgISJQ7V4IrZQsfcyWF9XX8kbjSdYZI78nrKfh1QACq5I9AvjW2kMyryBOpQDd
-RB7OtQSVadue3YkktKoG2nc46yOr/2nJUhIp+tfbpBlHLV39llMCCv/WVvMYbuk0
-dV0z3aMD4JFZQw1ZU2Sbe0VAY8pkXnBgdMidosktehwRvPEjof3v0e5Hi3dnIViC
-Hjgks4v33R6S/ZNI5OlKneLawbwPlXJVlP86zEnz3gxeTOdeEAiST5u7m62AB5TL
-EOkX+i165YQ2igZIg1IG
-=I8xB
------END PGP SIGNATURE-----
-
---=-O1QKeAZc0ngHJuKYlHgF--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 2addf73..ffd5c61 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -566,6 +566,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags);
++	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
++		      keyconf->keyidx);
+ 
+ 	if (!test_and_clear_bit(keyconf->keyidx, &priv->ucode_key_table))
+ 		IWL_ERR(priv, "index %d not used in uCode key table.\n",
+@@ -573,6 +575,11 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+ 
+ 	priv->default_wep_key--;
+ 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
++	if (iwl_is_rfkill(priv)) {
++		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
+ 	ret = iwl_send_static_wepkey_cmd(priv, 1);
+ 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
+ 		      keyconf->keyidx, ret);
+@@ -853,6 +860,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+ 
++	if (iwl_is_rfkill(priv)) {
++		IWL_DEBUG_WEP(priv, "Not sending REPLY_ADD_STA command because RFKILL enabled. \n");
++		spin_unlock_irqrestore(&priv->sta_lock, flags);
++		return 0;
++	}
+ 	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+ 	spin_unlock_irqrestore(&priv->sta_lock, flags);
+ 	return ret;
+-- 
+1.5.6.3
 
