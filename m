@@ -1,50 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59722 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755960AbZGGCAO (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:47363 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbZGQS4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 22:00:14 -0400
-Message-Id: <20090707015708.702314416@sipsolutions.net>
-References: <20090707015604.369008211@sipsolutions.net>
-Date: Tue, 07 Jul 2009 03:56:08 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 17 Jul 2009 14:56:03 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [RFC PATCH v2 1/8] wl1251: remove fixed address support from spi
+	commands
+To: Bob Copeland <me@bobcopeland.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/9] cfg80211: warn again on spurious deauth
-Mime-Version: 1.0
+Date: Fri, 17 Jul 2009 21:47:48 +0300
+Message-ID: <20090717184747.25883.59949.stgit@tikku>
+In-Reply-To: <20090717184643.25883.95065.stgit@tikku>
+References: <20090717184643.25883.95065.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original code in mac80211 could send a deauth
-frame under certain circumstances even if nothing
-had ever requested an authentication. This has been
-fixed with the rework there, so cfg80211 can now
-warn again about spurious events to catch possible
-future drivers or mac80211 regressions.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The fixed addresses are not used in wl1251, only in wl1271. So it can
+be safely removed.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- net/wireless/mlme.c |    6 ------
- 1 file changed, 6 deletions(-)
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-07-07 03:37:04.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2009-07-07 03:37:05.000000000 +0200
-@@ -122,15 +122,9 @@ void cfg80211_send_deauth(struct net_dev
- 			break;
- 		}
- 	}
--/*
-- * mac80211 currently triggers this warning,
-- * so disable for now (it's harmless, just
-- * means that we got a spurious event)
+ drivers/net/wireless/wl12xx/wl1251_spi.c |   26 ++++++++------------------
+ drivers/net/wireless/wl12xx/wl1251_spi.h |   18 ++++++------------
+ 2 files changed, 14 insertions(+), 30 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index c5da79d..c2b813f 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -255,8 +255,7 @@ int wl1251_set_partition(struct wl1251 *wl,
+ 	return 0;
+ }
  
- 	WARN_ON(!done);
+-void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
+-		     size_t len, bool fixed)
++void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf, size_t len)
+ {
+ 	struct spi_transfer t[3];
+ 	struct spi_message m;
+@@ -271,9 +270,6 @@ void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
+ 	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+ 	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
  
-- */
+-	if (fixed)
+-		*cmd |= WSPI_CMD_FIXED;
 -
- 	if (wdev->sme_state == CFG80211_SME_CONNECTED) {
- 		u16 reason_code;
- 		bool from_ap;
-
--- 
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
+ 
+@@ -298,8 +294,7 @@ void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
+ 	wl1251_dump(DEBUG_SPI, "spi_read buf <- ", buf, len);
+ }
+ 
+-void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
+-		      size_t len, bool fixed)
++void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf, size_t len)
+ {
+ 	struct spi_transfer t[2];
+ 	struct spi_message m;
+@@ -312,9 +307,6 @@ void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
+ 	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+ 	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
+ 
+-	if (fixed)
+-		*cmd |= WSPI_CMD_FIXED;
+-
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
+ 
+@@ -339,7 +331,7 @@ void wl1251_spi_mem_read(struct wl1251 *wl, int addr, void *buf,
+ 
+ 	physical = wl1251_translate_mem_addr(wl, addr);
+ 
+-	wl1251_spi_read(wl, physical, buf, len, false);
++	wl1251_spi_read(wl, physical, buf, len);
+ }
+ 
+ void wl1251_spi_mem_write(struct wl1251 *wl, int addr, void *buf,
+@@ -349,27 +341,25 @@ void wl1251_spi_mem_write(struct wl1251 *wl, int addr, void *buf,
+ 
+ 	physical = wl1251_translate_mem_addr(wl, addr);
+ 
+-	wl1251_spi_write(wl, physical, buf, len, false);
++	wl1251_spi_write(wl, physical, buf, len);
+ }
+ 
+-void wl1251_spi_reg_read(struct wl1251 *wl, int addr, void *buf, size_t len,
+-			 bool fixed)
++void wl1251_spi_reg_read(struct wl1251 *wl, int addr, void *buf, size_t len)
+ {
+ 	int physical;
+ 
+ 	physical = wl1251_translate_reg_addr(wl, addr);
+ 
+-	wl1251_spi_read(wl, physical, buf, len, fixed);
++	wl1251_spi_read(wl, physical, buf, len);
+ }
+ 
+-void wl1251_spi_reg_write(struct wl1251 *wl, int addr, void *buf, size_t len,
+-			  bool fixed)
++void wl1251_spi_reg_write(struct wl1251 *wl, int addr, void *buf, size_t len)
+ {
+ 	int physical;
+ 
+ 	physical = wl1251_translate_reg_addr(wl, addr);
+ 
+-	wl1251_spi_write(wl, physical, buf, len, fixed);
++	wl1251_spi_write(wl, physical, buf, len);
+ }
+ 
+ u32 wl1251_mem_read32(struct wl1251 *wl, int addr)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.h b/drivers/net/wireless/wl12xx/wl1251_spi.h
+index 6e8daf4..7076352 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.h
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.h
+@@ -71,10 +71,8 @@
+ 
+ 
+ /* Raw target IO, address is not translated */
+-void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
+-		      size_t len, bool fixed);
+-void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
+-		     size_t len, bool fixed);
++void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf, size_t len);
++void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf, size_t len);
+ 
+ /* Memory target IO, address is tranlated to partition 0 */
+ void wl1251_spi_mem_read(struct wl1251 *wl, int addr, void *buf, size_t len);
+@@ -83,10 +81,8 @@ u32 wl1251_mem_read32(struct wl1251 *wl, int addr);
+ void wl1251_mem_write32(struct wl1251 *wl, int addr, u32 val);
+ 
+ /* Registers IO */
+-void wl1251_spi_reg_read(struct wl1251 *wl, int addr, void *buf, size_t len,
+-			 bool fixed);
+-void wl1251_spi_reg_write(struct wl1251 *wl, int addr, void *buf, size_t len,
+-			  bool fixed);
++void wl1251_spi_reg_read(struct wl1251 *wl, int addr, void *buf, size_t len);
++void wl1251_spi_reg_write(struct wl1251 *wl, int addr, void *buf, size_t len);
+ u32 wl1251_reg_read32(struct wl1251 *wl, int addr);
+ void wl1251_reg_write32(struct wl1251 *wl, int addr, u32 val);
+ 
+@@ -99,8 +95,7 @@ int wl1251_set_partition(struct wl1251 *wl,
+ 
+ static inline u32 wl1251_read32(struct wl1251 *wl, int addr)
+ {
+-	wl1251_spi_read(wl, addr, &wl->buffer_32,
+-			sizeof(wl->buffer_32), false);
++	wl1251_spi_read(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
+ 
+ 	return wl->buffer_32;
+ }
+@@ -108,8 +103,7 @@ static inline u32 wl1251_read32(struct wl1251 *wl, int addr)
+ static inline void wl1251_write32(struct wl1251 *wl, int addr, u32 val)
+ {
+ 	wl->buffer_32 = val;
+-	wl1251_spi_write(wl, addr, &wl->buffer_32,
+-			 sizeof(wl->buffer_32), false);
++	wl1251_spi_write(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
+ }
+ 
+ #endif /* __WL1251_SPI_H__ */
 
