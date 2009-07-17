@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:9607 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752086AbZGIRdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:33:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/6] iwlagn: fix minimum number of queues setting
-Date: Thu,  9 Jul 2009 10:33:41 -0700
-Message-Id: <1247160821-14989-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247160821-14989-6-git-send-email-reinette.chatre@intel.com>
-References: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
- <1247160821-14989-2-git-send-email-reinette.chatre@intel.com>
- <1247160821-14989-3-git-send-email-reinette.chatre@intel.com>
- <1247160821-14989-4-git-send-email-reinette.chatre@intel.com>
- <1247160821-14989-5-git-send-email-reinette.chatre@intel.com>
- <1247160821-14989-6-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:65167 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216AbZGQTEv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 15:04:51 -0400
+Received: by bwz28 with SMTP id 28so915756bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 12:04:49 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC PATCH v2 0/8] wl1251 sdio interface
+References: <20090717184643.25883.95065.stgit@tikku>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 17 Jul 2009 22:04:47 +0300
+In-Reply-To: <20090717184643.25883.95065.stgit@tikku> (Kalle Valo's message of "Fri\, 17 Jul 2009 21\:47\:39 +0300")
+Message-ID: <87r5wfp1v4.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-We need to provide a reasonable minimum that will result in a
-working setup if used. Set minimum to be 10 to provide for
-4 standard TX queues + 1 command queue + 2 (unused) HCCA queues +
-4 HT queues (one per AC).
+> Here is v2 of Bob's wl1251 sdio patches. I have now rebased them on
+> top of wl1251/wl1271 split patches. Only compile-tested because I
+> don't have working test setup right now (neither spi or sdio), but I
+> should have access to one in two weeks.
 
-We allow the user to change the number of queues used via a module
-parameter and use this minimum value to check if it is valid. Without
-this patch a user can select a value for the number of queues that
-will result in a failing setup.
+I forgot to mention that wl1251 most probably is still broken regards to
+bssid handling. I will fix this after my (current) vacation, unless
+someone else is faster. To get wl1251 temporarily working, this patch
+must be reverted:
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+    commit cc3ec8cb518534c1c593e5f2682710d33c903627
+    Author: Johannes Berg <johannes@sipsolutions.net>
+    Date:   Thu May 14 13:10:14 2009 +0200
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1a2fe37..b989d5c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -258,8 +258,10 @@ struct iwl_channel_info {
- #define IWL_TX_FIFO_HCCA_2	6
- #define IWL_TX_FIFO_NONE	7
- 
--/* Minimum number of queues. MAX_NUM is defined in hw specific files */
--#define IWL_MIN_NUM_QUEUES	4
-+/* Minimum number of queues. MAX_NUM is defined in hw specific files.
-+ * Set the minimum to accommodate the 4 standard TX queues, 1 command
-+ * queue, 2 (unused) HCCA queues, and 4 HT queues (one for each AC) */
-+#define IWL_MIN_NUM_QUEUES	10
- 
- /* Power management (not Tx power) structures */
- 
+    mac80211: fix managed mode BSSID handling
+    
+    Currently, we will ask the driver to configure right away
+    when somebody changes the desired BSSID. That's totally
+    strange because then we will configure the driver without
+    even knowing whether the BSS exists. Change this to only
+    configure the BSSID when associated, and configure a zero
+    BSSID when not associated.
+
+Oddly enough I can't find this patch anymore in wireless-testing, I
+could only find a revert. I don't know what happened to it.
+
 -- 
-1.5.6.3
-
+Kalle Valo
