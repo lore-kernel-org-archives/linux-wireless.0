@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f193.google.com ([209.85.221.193]:50741 "EHLO
-	mail-qy0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbZGIRC4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:02:56 -0400
-Received: by qyk31 with SMTP id 31so255686qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 10:02:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
-References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
-	<6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com>
-	<b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
-	<6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
-	<6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
-	<20090707030719.GC7199@hash.localnet> <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
-	<20090708114252.GG7199@hash.localnet> <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
-	<b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 9 Jul 2009 10:02:34 -0700
-Message-ID: <43e72e890907091002r2dd36efevbfbce06155beb7e5@mail.gmail.com>
-Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jasin Colegrove <j.wholesalesupply@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from main.gmane.org ([80.91.229.2]:47942 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934343AbZGQKAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 06:00:04 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1MRkEU-0007q4-SM
+	for linux-wireless@vger.kernel.org; Fri, 17 Jul 2009 10:00:02 +0000
+Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 10:00:02 +0000
+Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 10:00:02 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+Date: Fri, 17 Jul 2009 10:58:08 +0100
+Message-ID: <wftz1biqbz.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 9, 2009 at 9:55 AM, Bob Copeland<me@bobcopeland.com> wrote:
-> On Thu, Jul 9, 2009 at 12:42 PM, Jasin
-> Colegrove<j.wholesalesupply@gmail.com> wrote:
->>> BTW, can you (re?)post the "Atheros AR5212 chip found (MAC xxx,
->>> PHY xxxx)?"
->>>
->> What exact information do you want and where can I find it?
->
-> Run 'dmesg'; a string like the above is printed out when the module
-> loads.  In case there was something broken specifically for your
-> chipset, the mac/phy versions will help narrow it down.
->
->> $git bisect start v2.6.30-rc4 v2.6.29 -- drivers/net net/
->>
->> Is that what you where hinting at? I wasted a whole day trying to fix
->> errors in drivers/staging before I was told I could just disable
->> compilation of staging with one switch. Oh well...
->
-> Yes, that's what I meant.  And it does help to have a relatively
-> slimmed down .config, especially when bisecting. :\
+Pavel Roskin <proski@gnu.org> writes:
 
-I'd add net/mac80211 and net/wireless in there as well, just to be safe.
+> On Thu, 2009-07-16 at 18:01 +0100, Jon Fairbairn wrote:
+>
+> I cannot guarantee anything, but I think chances are very high.
 
- Luis
+OK, fair enough.
+
+>> The distro I'm using (fedora 11) has 2.6.29 -- will the relevant modules
+>> build for that, or would I have to build a whole 2.6.31?
+>
+> You can build compat-wireless, which includes the latest ath5k driver
+> backported from the wireless-testing kernel.  Alternatively, you can
+> build madwifi (be sure to use the trunk snapshot).
+
+Many thanks.  I'll go ahead and order one.
+
+-- 
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+
+
