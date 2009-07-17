@@ -1,75 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbZGaHnl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 03:43:41 -0400
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1249024097.7653.6.camel@maxim-laptop>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <1249024097.7653.6.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SBhPfznsD7UpAXeKCSea"
-Date: Fri, 31 Jul 2009 09:43:01 +0200
-Message-Id: <1249026181.29587.14.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:47318 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964882AbZGQQae (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 14/14] iwlwifi: change iwl_enable/disable_interrupts to "inline"
+Date: Fri, 17 Jul 2009 09:30:27 -0700
+Message-Id: <1247848227-24031-15-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-14-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-10-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-11-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-12-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-13-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-14-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
---=-SBhPfznsD7UpAXeKCSea
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+iwl_enable_interrupts is being called inside the interrupt,
+change from function call to inline
 
-On Fri, 2009-07-31 at 10:08 +0300, Maxim Levitsky wrote:
-> On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
-> > From: Reinette Chatre <reinette.chatre@intel.com>
-> >=20
-> > The connection monitor currently relies on probe requests paired
-> > with probe responses to ensure that a connection is alive. This is
-> > fragile in some environments where probe responses can get lost.
-> > When we receive beacons we can also consider the connection to be
-> > alive, so cancel connection poll instance when we receive a beacon.
-> >=20
-> > The debug message "cancelling probereq poll due to a received beacon"
-> > is removed as part of this change as this case is hit very often after
-> > the above change and debug log receives significant number of these mes=
-sages.
->=20
-> In my opinion this is the correct solution
-> I did plenty of wireless monitoring, and I see that nobody sends probe
-> requests at that rate (1 per second it seems). This is ridiculous.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   25 -------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 --
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |   21 +++++++++++++++++++++
+ 3 files changed, 21 insertions(+), 27 deletions(-)
 
-Fix it then. Offer an implementation of your superior solution. We've
-done pretty much exactly what you're all pointing out _forever_ in
-mac80211, ever since it was initially merged. Now that it's more
-explicit in the code, people are complaining?
-
-johannes
-
---=-SBhPfznsD7UpAXeKCSea
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcqCCAAoJEODzc/N7+Qma4H0QALaif+wUE1IEVj7pTCfxy9dH
-oAG4LNd/UYetxOJ0gfL9az133qL6qxEqBrZbEFmZb4YxeqzCfay0nixkZvULU6xo
-vFlHpFgaZTj+sjdYP1qEEX7P77VOTqu5L7dNHO1WWm1UVxY45a1ivoZCTg3YyiB8
-jIuM2Tfc3lcg1MiYrdgqs8UIxb6NBMMSfHCqEpRD5sh8YGrCPjyIpvA9ntSJcN7X
-m+tAu5LZ/a946ZTMJwZNkss7HvcHIE4FBcOD9lJ+DXo0gF1gZq04PP6rleWQFKaE
-YdM9nJ0wdxvf7c0/vbtAYvsjHaiDBQpxQ11Nu2Wt2eIST6m9t/sej4gxyxDYMmoG
-iW2H3KbFKaSaFBJI0i2e9b4+MGsV6dH/9D5or8V05efUrMRNOA60v90+nob9s81f
-9mUDFfOmt+PoQC30REjaT2Nnfs3VkzO1PIDa2D5GgAtxkSYl85NPN3YwkmVRX9gQ
-EEgTeP+PcQvHnkhOowyOnNq3NCwlsFODO7HbGKOP5dn8cmEq/hetBhQoC4kwr9+H
-VIhjef4YN4KS30pLVikHEfWQYHezfgHyz12nTzBdC3cu0qKUXasxvzIqugDX8VlY
-yY1dan2xbMjf+7RtsHnplmZQm7hHCC/BhoIe9zdjUwcBP/mA70g3ZmIfqpI0Hb3v
-sU41n9vGXWM8MjQywZ3p
-=LaJB
------END PGP SIGNATURE-----
-
---=-SBhPfznsD7UpAXeKCSea--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 6989cbc..ea68939 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1546,31 +1546,6 @@ void iwl_uninit_drv(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_uninit_drv);
+ 
+-
+-void iwl_disable_interrupts(struct iwl_priv *priv)
+-{
+-	clear_bit(STATUS_INT_ENABLED, &priv->status);
+-
+-	/* disable interrupts from uCode/NIC to host */
+-	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
+-
+-	/* acknowledge/clear/reset any interrupts still pending
+-	 * from uCode or flow handler (Rx/Tx DMA) */
+-	iwl_write32(priv, CSR_INT, 0xffffffff);
+-	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
+-	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
+-}
+-EXPORT_SYMBOL(iwl_disable_interrupts);
+-
+-void iwl_enable_interrupts(struct iwl_priv *priv)
+-{
+-	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
+-	set_bit(STATUS_INT_ENABLED, &priv->status);
+-	iwl_write32(priv, CSR_INT_MASK, priv->inta_mask);
+-}
+-EXPORT_SYMBOL(iwl_enable_interrupts);
+-
+-
+ #define ICT_COUNT (PAGE_SIZE/sizeof(u32))
+ 
+ /* Free dram table */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 018030b..d339336 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -458,8 +458,6 @@ int iwl_send_card_state(struct iwl_priv *priv, u32 flags,
+ /*****************************************************
+  * PCI						     *
+  *****************************************************/
+-void iwl_disable_interrupts(struct iwl_priv *priv);
+-void iwl_enable_interrupts(struct iwl_priv *priv);
+ irqreturn_t iwl_isr_legacy(int irq, void *data);
+ int iwl_reset_ict(struct iwl_priv *priv);
+ void iwl_disable_ict(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index a1328c3..bd0b12e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -145,4 +145,25 @@ static inline void iwl_stop_queue(struct iwl_priv *priv, u8 queue)
+ #define ieee80211_stop_queue DO_NOT_USE_ieee80211_stop_queue
+ #define ieee80211_wake_queue DO_NOT_USE_ieee80211_wake_queue
+ 
++static inline void iwl_disable_interrupts(struct iwl_priv *priv)
++{
++	clear_bit(STATUS_INT_ENABLED, &priv->status);
++
++	/* disable interrupts from uCode/NIC to host */
++	iwl_write32(priv, CSR_INT_MASK, 0x00000000);
++
++	/* acknowledge/clear/reset any interrupts still pending
++	 * from uCode or flow handler (Rx/Tx DMA) */
++	iwl_write32(priv, CSR_INT, 0xffffffff);
++	iwl_write32(priv, CSR_FH_INT_STATUS, 0xffffffff);
++	IWL_DEBUG_ISR(priv, "Disabled interrupts\n");
++}
++
++static inline void iwl_enable_interrupts(struct iwl_priv *priv)
++{
++	IWL_DEBUG_ISR(priv, "Enabling interrupts\n");
++	set_bit(STATUS_INT_ENABLED, &priv->status);
++	iwl_write32(priv, CSR_INT_MASK, priv->inta_mask);
++}
++
+ #endif				/* __iwl_helpers_h__ */
+-- 
+1.5.6.3
 
