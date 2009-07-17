@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42898 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751553AbZGTDq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 23:46:27 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 2/5] cfg80211: fix typo of IWEVASSOCRESPIE
-Date: Mon, 20 Jul 2009 11:47:44 +0800
-Message-Id: <1248061667-8614-3-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
-References: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
- <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:34002 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934521AbZGQMuE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 08:50:04 -0400
+Received: by bwz28 with SMTP id 28so710539bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 05:50:03 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT 0/5] mac80211: implement background scan
+Date: Fri, 17 Jul 2009 14:50:10 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
+References: <200907161104.41975.helmut.schaa@gmail.com> <1247779378.30529.46.camel@johannes.local> <200907162352.49020.helmut.schaa@gmail.com>
+In-Reply-To: <200907162352.49020.helmut.schaa@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907171450.10699.helmut.schaa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It should be IWEVASSOCREQIE instead.
+Am Donnerstag, 16. Juli 2009 schrieb Helmut Schaa:
+> Am Donnerstag, 16. Juli 2009 schrieb Johannes Berg:
+> > On Thu, 2009-07-16 at 11:04 +0200, Helmut Schaa wrote:
+> > 
+> > > So, it would be great if somebody could test the patches on other
+> > > hardware as well.
+> > 
+> > If you repost with the stuff we talked about fixed, I'll give them a
+> > spin, but for all I can tell they should be good to go in, it's a huge
+> > improvement and we can build on that.
+> 
+> Will do that soon. However, I still have an issue that sometimes
+> the connection is stuck and I'm still unsure if it is related to the
+> bg scan patches or something else :(
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/wireless/sme.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Ok, this is also reproducible without the bg scan patches by just using
+sw scan together with iwlagn. Sometimes (I still have no clue under which
+circumstances) just after a scan the connection is stuck while iwconfig
+still shows association and also the signal levels are still updated.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index e7a8851..82de2d9 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -341,7 +341,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 		if (req_ie && status == WLAN_STATUS_SUCCESS) {
- 			memset(&wrqu, 0, sizeof(wrqu));
- 			wrqu.data.length = req_ie_len;
--			wireless_send_event(dev, IWEVASSOCRESPIE, &wrqu, req_ie);
-+			wireless_send_event(dev, IWEVASSOCREQIE, &wrqu, req_ie);
- 		}
- 
- 		if (resp_ie && status == WLAN_STATUS_SUCCESS) {
-@@ -474,7 +474,7 @@ void __cfg80211_roamed(struct wireless_dev *wdev, const u8 *bssid,
- 	if (req_ie) {
- 		memset(&wrqu, 0, sizeof(wrqu));
- 		wrqu.data.length = req_ie_len;
--		wireless_send_event(wdev->netdev, IWEVASSOCRESPIE,
-+		wireless_send_event(wdev->netdev, IWEVASSOCREQIE,
- 				    &wrqu, req_ie);
- 	}
- 
--- 
-1.6.0.4
+Helmut
 
