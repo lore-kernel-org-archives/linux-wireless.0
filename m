@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38303 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932770AbZGPRRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 13:17:37 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 10:17:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bennyam Malavazi <bennyam.malavazi@atheros.com>,
-	Jouni Malinen <jouni.malinen@Atheros.com>
-Subject: [PATCH v2] ath9k: Tune ANI function processing on AP mode during ANI reset
-Date: Thu, 16 Jul 2009 10:17:35 -0700
-Message-ID: <1247764655-23304-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:33724 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934391AbZGQKuU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 06:50:20 -0400
+Received: by fxm18 with SMTP id 18so650260fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 03:50:18 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: [PATCH] cfg80211: don't optimise wext calls too much
+References: <1247737144.24433.11.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 17 Jul 2009 13:50:14 +0300
+In-Reply-To: <1247737144.24433.11.camel@johannes.local> (Johannes Berg's message of "Thu\, 16 Jul 2009 11\:39\:04 +0200")
+Message-ID: <87vdlrpord.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For AP mode we must tune ANI specially for 2 GHz and
-for 5 GHz. We mask in only the flags we want to toggle
-on ath9k_hw_ani_control() through the ah->ani_function
-bitmask, this will take care of ignoring changes during
-ANI reset which we were disabling before.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Testedy-by: Steven Luo <steven@steven676.net>
-Cc: Bennyam Malavazi <bennyam.malavazi@atheros.com>
-Cc: Jouni Malinen <jouni.malinen@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+> In the wext code I tried to not reconnect all the time
+> when the user wasn't really sure what they were doing,
+> like setting the BSSID back to the same value it was.
+> However, this optimisation should only be done while
+> associated so that setting the BSSID back to the same
+> value that it was actually triggers a new association
+> if not currently associated. To achieve, that, put the
+> relevant code into the !IDLE case instead.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I had messed up an e-mail address on the commit log, here its fixed.
-The actual patch is the same. Seems that shiny new ergonomic keyboard
-helps with the hands but won't actually type for you.
+At least this patch cured my resume problems I reported earlier[1]. It
+will take few days to test the dropping from network case, but I'm sure
+this patch will help with that problem as well. If not, I'll report
+about the issue. Thanks for fixing this.
 
- drivers/net/wireless/ath/ath9k/ani.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Tested-by: Kalle Valo <kalle.valo@iki.fi>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 1aeafb5..aad259b 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -478,6 +478,18 @@ void ath9k_ani_reset(struct ath_hw *ah)
- 			"Reset ANI state opmode %u\n", ah->opmode);
- 		ah->stats.ast_ani_reset++;
- 
-+		if (ah->opmode == NL80211_IFTYPE_AP) {
-+			/*
-+			 * ath9k_hw_ani_control() will only process items set on
-+			 * ah->ani_function
-+			 */
-+			if (IS_CHAN_2GHZ(chan))
-+				ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
-+						    ATH9K_ANI_FIRSTEP_LEVEL);
-+			else
-+				ah->ani_function = 0;
-+		}
-+
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_NOISE_IMMUNITY_LEVEL, 0);
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
+[1] http://www.spinics.net/lists/linux-wireless/msg35797.html
+
 -- 
-1.6.3.3
-
+Kalle Valo
