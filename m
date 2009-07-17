@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41492 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbZG0TL0 (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:46056 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934171AbZGQIBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 15:11:26 -0400
-Subject: Re: [PATCH 3/3] ath9k: move workqueue cancels to stop callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-In-Reply-To: <1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
-References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-	 <1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fBBQU98btGgo1pW9/xY3"
-Date: Mon, 27 Jul 2009 21:10:55 +0200
-Message-Id: <1248721855.32365.2.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 17 Jul 2009 04:01:00 -0400
+Message-ID: <4A602FBA.2010808@canonical.com>
+Date: Fri, 17 Jul 2009 10:00:58 +0200
+From: Stefan Bader <stefan.bader@canonical.com>
+MIME-Version: 1.0
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Manoj Iyer <manoj.iyer@canonical.com>,
+	kernel-team@lists.ubuntu.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [KARMIC] review these for rt2x00 (adds rt2800pci)
+References: <43e72e890907161615h507e9c59r421d23d22ff05459@mail.gmail.com> <a32f33a40907170011n38367961i54a26c50124241c2@mail.gmail.com>
+In-Reply-To: <a32f33a40907170011n38367961i54a26c50124241c2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ivo Van Doorn wrote:
+> On Fri, Jul 17, 2009 at 1:15 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+>> On Thu, Jul 16, 2009 at 9:56 AM, Stefan Bader<stefan.bader@canonical.com> wrote:
+>>> At least this seems to be material for 3 or 4 patches
+>>> - adapt the rfkill stuff
+>>> - some documentation update
+>>> - add the new pci version of the 2800 (with that rt2x00soc lib
+>>>   which might be another patch)
+>>> - and some fixes...
+>> Not only that but this driver is not yet merged upstream, there should
+>> be a good reason for that.
+>>
+>> Ivo, what's the status on rt2800pci? Some users have been asking about it.
+> 
+> The status is that it is not functioning correctly, during boot it
+> will print out
+> tons of errors about the device not being ready, and afterward it cannot scan,
+> connect or do anything useful.
+> 
+> And I think those problems can be considered enough reasons for not merging
+> the driver upstream yet. ;)
+> 
+> Ivo
 
---=-fBBQU98btGgo1pW9/xY3
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I would say so. :) Assuming there is a bit of truth in those claims of that 
+tarball working better than the current kernel code, we might take away all the 
+new driver bloat and see what remains (which might be the part Ivo has anyways 
+in wireless testing...)
 
-On Mon, 2009-07-27 at 11:53 -0700, Luis R. Rodriguez wrote:
-> We should be cancelling our work at the stop callback since
-> we are borrowing the mac80211 workqueue for our work. As it
-> stands mac80211 expects this for suspend purposes.
->=20
-> The ath9k specific virtual wiphy stuff need only be
-> cancelled only when the we have no secondary virtual wiphys.
+Stefan
 
-inverted logic here?
+-- 
 
-johannes
+When all other means of communication fail, try words!
 
---=-fBBQU98btGgo1pW9/xY3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbfu8AAoJEODzc/N7+QmaS5YQAKsuUbV4KvJB7dcgK8meiwe6
-mleI8PytU1VJtwRQ82pnPnIFQJFWz1u38Uz3ID0v3Nl0VXh5b0ys5d9Weuz8KN+h
-ysbiyGhESTZAwBcU7xwIUsu2c2rpEJcofFPn0AbDoFnkTxso4tqtyDsa0Afpdyu1
-l7B6uefId4wnpXmx7PCFs1vv8MsllfBsT5FJz9OMne4DEaXnlXnKcS5NYa7TJ8xg
-TVnsNmOPx9uCw1PUt47JwsLk5WUVWpSlgWn4yjpWmSpdBycJM9rBB5FUm0juyh9m
-OqgS4+6U4xpwuP+3nc2L9ySp4xsWG0+yQA54tkrMtRXlK8v66v36QDugi3BT0ZNu
-taq5CUsUwRbS5gDUHVr2ZymNcAxOD3e8Wy4tNfdAQDcx3+yU2JvVvlpZLu6T4trW
-jIWKuCubCnvvjjznsY5G/vPljBvWZWA3RxzZq8BEPBHQY4/f+qnTHGWIk6lHpV7x
-3BoVgvvMYp5jCpDaws0tgVD2tr5yzaX/wQYk7VOL8PkIGsnDUHBS6A60WnzOmhp3
-+TmhWG1I5K3szs4lt5YetdF8tNfzUnvXqjFOQNMBdNU29zUPnAX2HCGJbN26wF+D
-6NsKb6FlfYxJ/ThE8nVnRb40H/zR4fXHKZTTl9y2vQsMEd9ShgrjRSrWFoEaHwW/
-JckfWkN6a6nOV7zg+iot
-=1VgR
------END PGP SIGNATURE-----
-
---=-fBBQU98btGgo1pW9/xY3--
 
