@@ -1,63 +1,618 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:65102 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752108AbZGIR5a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:57:30 -0400
-Received: by fxm18 with SMTP id 18so354735fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 10:57:28 -0700 (PDT)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Alexander Wenzel <wenzel@fgan.de>
-Subject: Re: Problem with p54 driver and ibss mode
-Date: Thu, 9 Jul 2009 21:57:20 +0400
-Cc: linux-wireless@vger.kernel.org
-References: <4A55DB91.2070305@fgan.de> <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com> <4A560E4B.6080209@fgan.de>
-In-Reply-To: <4A560E4B.6080209@fgan.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200907092157.21784.jcmvbkbc@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:12884 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934733AbZGQQaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:30:30 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/14] iwlwifi: Handle new firmware file with ucode build number in header
+Date: Fri, 17 Jul 2009 09:30:16 -0700
+Message-Id: <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+ <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-В сообщении от Thursday 09 July 2009 Alexander Wenzel написал(a):
-> Hi!
-> >> I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
-> >> to work on a Nokia N810... So far, without any success.
-> >> [ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
-> > As far as I can see, this is check that incoming STA and your STA have
-> > different MAC addresses. If you don't set up MAC manually on both
-> > devices and make it unique, chances high that they are equal.
-> 
-> You saved my day :D Finally it works...! Thanks for the hint.
-> 
-> [  214.478668] wlan0: Selected IBSS BSSID 56:97:1a:24:11:6c based on configured SSID
-> 
-> # iw dev wlan0 station dump
-> Station 00:02:ee:c0:ff:ee (on wlan0)
-> 	inactive time:	429 ms
-> 	rx bytes:	8964
-> 	tx bytes:	408
-> 	signal:  	55 dBm
-> 	tx bitrate:	1.0 MBit/s
-> 
-> I just checked the other N810 devices and every device has
-> the same mac address. And here we go... [p54spi_eeprom.h:39]
-> 0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
-> 
-> The original kernel with default os shows the correct address.
-> When booting a different os with the with the original or custom
-> kernel it shows the 'coffee' address.
-> So is there a way to let the kernel receive and set the
-> correct mac address of the wlan device?
-> I guess my problem is this line:
-> [ 3685.320800] cx3110x spi2.0: loading default eeprom...
+From: Jay Sternberg <jay.e.sternberg@intel.com>
 
-You're right. I guess that easiest way to deal with it is to save blob from p54spi_eeprom.h into a file
-3826.eeprom in the same directory as 3826.arm and fix MAC address in it, according to comments in p54spi_eeprom.h
+Adding new API version to account for change to ucode file format.  New
+header includes the build number of the ucode.  This build number is the
+SVN revision thus allowing for exact correlation to the code that
+generated it.
 
-These data for sure must reside on /dev/mtdblk1 partition, but they're probably somehow coded/obfuscated.
-I couldn't find anything similar to MAC of my own n810 there.
+The header adds the build number so that older ucode images can also be
+enhanced to include the build in the future.
 
-Thanks.
--- Max
+some cleanup in iwl_read_ucode needed to ensure old header not used and
+reduce unnecessary references through pointer with the data is already
+in heap variable.
+
+Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   40 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   39 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   51 +++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   55 +++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   12 ++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   31 +++++++++++----
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   45 ++++++++++++----------
+ 8 files changed, 224 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 1227ed2..14a47c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2786,11 +2786,50 @@ static int iwl3945_load_bsm(struct iwl_priv *priv)
+ 	return 0;
+ }
+ 
++#define IWL3945_UCODE_GET(item)						\
++static u32 iwl3945_ucode_get_##item(const struct iwl_ucode_header *ucode,\
++				    u32 api_ver)			\
++{									\
++	return le32_to_cpu(ucode->u.v1.item);				\
++}
++
++static u32 iwl3945_ucode_get_header_size(u32 api_ver)
++{
++	return UCODE_HEADER_SIZE(1);
++}
++static u32 iwl3945_ucode_get_build(const struct iwl_ucode_header *ucode,
++				   u32 api_ver)
++{
++	return 0;
++}
++static u8 *iwl3945_ucode_get_data(const struct iwl_ucode_header *ucode,
++				  u32 api_ver)
++{
++	return (u8 *) ucode->u.v1.data;
++}
++
++IWL3945_UCODE_GET(inst_size);
++IWL3945_UCODE_GET(data_size);
++IWL3945_UCODE_GET(init_size);
++IWL3945_UCODE_GET(init_data_size);
++IWL3945_UCODE_GET(boot_size);
++
+ static struct iwl_hcmd_ops iwl3945_hcmd = {
+ 	.rxon_assoc = iwl3945_send_rxon_assoc,
+ 	.commit_rxon = iwl3945_commit_rxon,
+ };
+ 
++static struct iwl_ucode_ops iwl3945_ucode = {
++	.get_header_size = iwl3945_ucode_get_header_size,
++	.get_build = iwl3945_ucode_get_build,
++	.get_inst_size = iwl3945_ucode_get_inst_size,
++	.get_data_size = iwl3945_ucode_get_data_size,
++	.get_init_size = iwl3945_ucode_get_init_size,
++	.get_init_data_size = iwl3945_ucode_get_init_data_size,
++	.get_boot_size = iwl3945_ucode_get_boot_size,
++	.get_data = iwl3945_ucode_get_data,
++};
++
+ static struct iwl_lib_ops iwl3945_lib = {
+ 	.txq_attach_buf_to_tfd = iwl3945_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = iwl3945_hw_txq_free_tfd,
+@@ -2831,6 +2870,7 @@ static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+ };
+ 
+ static struct iwl_ops iwl3945_ops = {
++	.ucode = &iwl3945_ucode,
+ 	.lib = &iwl3945_lib,
+ 	.hcmd = &iwl3945_hcmd,
+ 	.utils = &iwl3945_hcmd_utils,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index edbb0bf..f4eb683 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2221,12 +2221,50 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_work_sync(&priv->txpower_work);
+ }
+ 
++#define IWL4965_UCODE_GET(item)						\
++static u32 iwl4965_ucode_get_##item(const struct iwl_ucode_header *ucode,\
++				    u32 api_ver)			\
++{									\
++	return le32_to_cpu(ucode->u.v1.item);				\
++}
++
++static u32 iwl4965_ucode_get_header_size(u32 api_ver)
++{
++	return UCODE_HEADER_SIZE(1);
++}
++static u32 iwl4965_ucode_get_build(const struct iwl_ucode_header *ucode,
++				   u32 api_ver)
++{
++	return 0;
++}
++static u8 *iwl4965_ucode_get_data(const struct iwl_ucode_header *ucode,
++				  u32 api_ver)
++{
++	return (u8 *) ucode->u.v1.data;
++}
++
++IWL4965_UCODE_GET(inst_size);
++IWL4965_UCODE_GET(data_size);
++IWL4965_UCODE_GET(init_size);
++IWL4965_UCODE_GET(init_data_size);
++IWL4965_UCODE_GET(boot_size);
++
+ static struct iwl_hcmd_ops iwl4965_hcmd = {
+ 	.rxon_assoc = iwl4965_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+ 	.set_rxon_chain = iwl_set_rxon_chain,
+ };
+ 
++static struct iwl_ucode_ops iwl4965_ucode = {
++	.get_header_size = iwl4965_ucode_get_header_size,
++	.get_build = iwl4965_ucode_get_build,
++	.get_inst_size = iwl4965_ucode_get_inst_size,
++	.get_data_size = iwl4965_ucode_get_data_size,
++	.get_init_size = iwl4965_ucode_get_init_size,
++	.get_init_data_size = iwl4965_ucode_get_init_data_size,
++	.get_boot_size = iwl4965_ucode_get_boot_size,
++	.get_data = iwl4965_ucode_get_data,
++};
+ static struct iwl_hcmd_utils_ops iwl4965_hcmd_utils = {
+ 	.get_hcmd_size = iwl4965_get_hcmd_size,
+ 	.build_addsta_hcmd = iwl4965_build_addsta_hcmd,
+@@ -2287,6 +2325,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ };
+ 
+ static struct iwl_ops iwl4965_ops = {
++	.ucode = &iwl4965_ucode,
+ 	.lib = &iwl4965_lib,
+ 	.hcmd = &iwl4965_hcmd,
+ 	.utils = &iwl4965_hcmd_utils,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 3f9da6e..74103cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1456,6 +1456,44 @@ int iwl5000_calc_rssi(struct iwl_priv *priv,
+ 	return max_rssi - agc - IWL49_RSSI_OFFSET;
+ }
+ 
++#define IWL5000_UCODE_GET(item)						\
++static u32 iwl5000_ucode_get_##item(const struct iwl_ucode_header *ucode,\
++				    u32 api_ver)			\
++{									\
++	if (api_ver <= 2)						\
++		return le32_to_cpu(ucode->u.v1.item);			\
++	return le32_to_cpu(ucode->u.v2.item);				\
++}
++
++static u32 iwl5000_ucode_get_header_size(u32 api_ver)
++{
++	if (api_ver <= 2)
++		return UCODE_HEADER_SIZE(1);
++	return UCODE_HEADER_SIZE(2);
++}
++
++static u32 iwl5000_ucode_get_build(const struct iwl_ucode_header *ucode,
++				   u32 api_ver)
++{
++	if (api_ver <= 2)
++		return 0;
++	return le32_to_cpu(ucode->u.v2.build);
++}
++
++static u8 *iwl5000_ucode_get_data(const struct iwl_ucode_header *ucode,
++				  u32 api_ver)
++{
++	if (api_ver <= 2)
++		return (u8 *) ucode->u.v1.data;
++	return (u8 *) ucode->u.v2.data;
++}
++
++IWL5000_UCODE_GET(inst_size);
++IWL5000_UCODE_GET(data_size);
++IWL5000_UCODE_GET(init_size);
++IWL5000_UCODE_GET(init_data_size);
++IWL5000_UCODE_GET(boot_size);
++
+ struct iwl_hcmd_ops iwl5000_hcmd = {
+ 	.rxon_assoc = iwl5000_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+@@ -1471,6 +1509,17 @@ struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
+ 	.calc_rssi = iwl5000_calc_rssi,
+ };
+ 
++struct iwl_ucode_ops iwl5000_ucode = {
++	.get_header_size = iwl5000_ucode_get_header_size,
++	.get_build = iwl5000_ucode_get_build,
++	.get_inst_size = iwl5000_ucode_get_inst_size,
++	.get_data_size = iwl5000_ucode_get_data_size,
++	.get_init_size = iwl5000_ucode_get_init_size,
++	.get_init_data_size = iwl5000_ucode_get_init_data_size,
++	.get_boot_size = iwl5000_ucode_get_boot_size,
++	.get_data = iwl5000_ucode_get_data,
++};
++
+ struct iwl_lib_ops iwl5000_lib = {
+ 	.set_hw_params = iwl5000_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
+@@ -1572,12 +1621,14 @@ static struct iwl_lib_ops iwl5150_lib = {
+ };
+ 
+ struct iwl_ops iwl5000_ops = {
++	.ucode = &iwl5000_ucode,
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl5000_hcmd_utils,
+ };
+ 
+ static struct iwl_ops iwl5150_ops = {
++	.ucode = &iwl5000_ucode,
+ 	.lib = &iwl5150_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl5000_hcmd_utils,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index bd438d8..26c5d4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -46,8 +46,8 @@
+ #include "iwl-5000-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL6000_UCODE_API_MAX 2
+-#define IWL6050_UCODE_API_MAX 2
++#define IWL6000_UCODE_API_MAX 3
++#define IWL6050_UCODE_API_MAX 3
+ 
+ /* Lowest firmware API version supported */
+ #define IWL6000_UCODE_API_MIN 1
+@@ -69,6 +69,7 @@ static struct iwl_hcmd_utils_ops iwl6000_hcmd_utils = {
+ };
+ 
+ static struct iwl_ops iwl6000_ops = {
++	.ucode = &iwl5000_ucode,
+ 	.lib = &iwl5000_lib,
+ 	.hcmd = &iwl5000_hcmd,
+ 	.utils = &iwl6000_hcmd_utils,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ad50022..6b874da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1284,7 +1284,7 @@ static void iwl_nic_start(struct iwl_priv *priv)
+  */
+ static int iwl_read_ucode(struct iwl_priv *priv)
+ {
+-	struct iwl_ucode *ucode;
++	struct iwl_ucode_header *ucode;
+ 	int ret = -EINVAL, index;
+ 	const struct firmware *ucode_raw;
+ 	const char *name_pre = priv->cfg->fw_name_pre;
+@@ -1293,7 +1293,8 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	char buf[25];
+ 	u8 *src;
+ 	size_t len;
+-	u32 api_ver, inst_size, data_size, init_size, init_data_size, boot_size;
++	u32 api_ver, build;
++	u32 inst_size, data_size, init_size, init_data_size, boot_size;
+ 
+ 	/* Ask kernel firmware_class module to get the boot firmware off disk.
+ 	 * request_firmware() is synchronous, file is in memory on return. */
+@@ -1323,23 +1324,26 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	if (ret < 0)
+ 		goto error;
+ 
+-	/* Make sure that we got at least our header! */
+-	if (ucode_raw->size < sizeof(*ucode)) {
++	/* Make sure that we got at least the v1 header! */
++	if (ucode_raw->size < priv->cfg->ops->ucode->get_header_size(1)) {
+ 		IWL_ERR(priv, "File size way too small!\n");
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+ 
+ 	/* Data from ucode file:  header followed by uCode images */
+-	ucode = (void *)ucode_raw->data;
++	ucode = (struct iwl_ucode_header *)ucode_raw->data;
+ 
+ 	priv->ucode_ver = le32_to_cpu(ucode->ver);
+ 	api_ver = IWL_UCODE_API(priv->ucode_ver);
+-	inst_size = le32_to_cpu(ucode->inst_size);
+-	data_size = le32_to_cpu(ucode->data_size);
+-	init_size = le32_to_cpu(ucode->init_size);
+-	init_data_size = le32_to_cpu(ucode->init_data_size);
+-	boot_size = le32_to_cpu(ucode->boot_size);
++	build = priv->cfg->ops->ucode->get_build(ucode, api_ver);
++	inst_size = priv->cfg->ops->ucode->get_inst_size(ucode, api_ver);
++	data_size = priv->cfg->ops->ucode->get_data_size(ucode, api_ver);
++	init_size = priv->cfg->ops->ucode->get_init_size(ucode, api_ver);
++	init_data_size =
++		priv->cfg->ops->ucode->get_init_data_size(ucode, api_ver);
++	boot_size = priv->cfg->ops->ucode->get_boot_size(ucode, api_ver);
++	src = priv->cfg->ops->ucode->get_data(ucode, api_ver);
+ 
+ 	/* api_ver should match the api version forming part of the
+ 	 * firmware filename ... but we don't check for that and only rely
+@@ -1365,6 +1369,9 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	       IWL_UCODE_API(priv->ucode_ver),
+ 	       IWL_UCODE_SERIAL(priv->ucode_ver));
+ 
++	if (build)
++		IWL_DEBUG_INFO(priv, "Build %u\n", build);
++
+ 	IWL_DEBUG_INFO(priv, "f/w package hdr ucode version raw = 0x%x\n",
+ 		       priv->ucode_ver);
+ 	IWL_DEBUG_INFO(priv, "f/w package hdr runtime inst size = %u\n",
+@@ -1379,12 +1386,14 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 		       boot_size);
+ 
+ 	/* Verify size of file vs. image size info in file's header */
+-	if (ucode_raw->size < sizeof(*ucode) +
++	if (ucode_raw->size !=
++		priv->cfg->ops->ucode->get_header_size(api_ver) +
+ 		inst_size + data_size + init_size +
+ 		init_data_size + boot_size) {
+ 
+-		IWL_DEBUG_INFO(priv, "uCode file size %d too small\n",
+-			       (int)ucode_raw->size);
++		IWL_DEBUG_INFO(priv,
++			"uCode file size %d does not match expected size\n",
++			(int)ucode_raw->size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+@@ -1464,42 +1473,42 @@ static int iwl_read_ucode(struct iwl_priv *priv)
+ 	/* Copy images into buffers for card's bus-master reads ... */
+ 
+ 	/* Runtime instructions (first block of data in file) */
+-	src = &ucode->data[0];
+-	len = priv->ucode_code.len;
++	len = inst_size;
+ 	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode instr len %Zd\n", len);
+ 	memcpy(priv->ucode_code.v_addr, src, len);
++	src += len;
++
+ 	IWL_DEBUG_INFO(priv, "uCode instr buf vaddr = 0x%p, paddr = 0x%08x\n",
+ 		priv->ucode_code.v_addr, (u32)priv->ucode_code.p_addr);
+ 
+ 	/* Runtime data (2nd block)
+ 	 * NOTE:  Copy into backup buffer will be done in iwl_up()  */
+-	src = &ucode->data[inst_size];
+-	len = priv->ucode_data.len;
++	len = data_size;
+ 	IWL_DEBUG_INFO(priv, "Copying (but not loading) uCode data len %Zd\n", len);
+ 	memcpy(priv->ucode_data.v_addr, src, len);
+ 	memcpy(priv->ucode_data_backup.v_addr, src, len);
++	src += len;
+ 
+ 	/* Initialization instructions (3rd block) */
+ 	if (init_size) {
+-		src = &ucode->data[inst_size + data_size];
+-		len = priv->ucode_init.len;
++		len = init_size;
+ 		IWL_DEBUG_INFO(priv, "Copying (but not loading) init instr len %Zd\n",
+ 				len);
+ 		memcpy(priv->ucode_init.v_addr, src, len);
++		src += len;
+ 	}
+ 
+ 	/* Initialization data (4th block) */
+ 	if (init_data_size) {
+-		src = &ucode->data[inst_size + data_size + init_size];
+-		len = priv->ucode_init_data.len;
++		len = init_data_size;
+ 		IWL_DEBUG_INFO(priv, "Copying (but not loading) init data len %Zd\n",
+ 			       len);
+ 		memcpy(priv->ucode_init_data.v_addr, src, len);
++		src += len;
+ 	}
+ 
+ 	/* Bootstrap instructions (5th block) */
+-	src = &ucode->data[inst_size + data_size + init_size + init_data_size];
+-	len = priv->ucode_boot.len;
++	len = boot_size;
+ 	IWL_DEBUG_INFO(priv, "Copying (but not loading) boot instr len %Zd\n", len);
+ 	memcpy(priv->ucode_boot.v_addr, src, len);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index a658410..6127687 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -116,6 +116,17 @@ struct iwl_temp_ops {
+ 	void (*set_ct_kill)(struct iwl_priv *priv);
+ };
+ 
++struct iwl_ucode_ops {
++	u32 (*get_header_size)(u32);
++	u32 (*get_build)(const struct iwl_ucode_header *, u32);
++	u32 (*get_inst_size)(const struct iwl_ucode_header *, u32);
++	u32 (*get_data_size)(const struct iwl_ucode_header *, u32);
++	u32 (*get_init_size)(const struct iwl_ucode_header *, u32);
++	u32 (*get_init_data_size)(const struct iwl_ucode_header *, u32);
++	u32 (*get_boot_size)(const struct iwl_ucode_header *, u32);
++	u8 * (*get_data)(const struct iwl_ucode_header *, u32);
++};
++
+ struct iwl_lib_ops {
+ 	/* set hw dependent parameters */
+ 	int (*set_hw_params)(struct iwl_priv *priv);
+@@ -171,6 +182,7 @@ struct iwl_lib_ops {
+ };
+ 
+ struct iwl_ops {
++	const struct iwl_ucode_ops *ucode;
+ 	const struct iwl_lib_ops *lib;
+ 	const struct iwl_hcmd_ops *hcmd;
+ 	const struct iwl_hcmd_utils_ops *utils;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index b989d5c..f4afd0c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -66,6 +66,7 @@ extern struct iwl_cfg iwl1000_bgn_cfg;
+ /* shared structures from iwl-5000.c */
+ extern struct iwl_mod_params iwl50_mod_params;
+ extern struct iwl_ops iwl5000_ops;
++extern struct iwl_ucode_ops iwl5000_ucode;
+ extern struct iwl_lib_ops iwl5000_lib;
+ extern struct iwl_hcmd_ops iwl5000_hcmd;
+ extern struct iwl_hcmd_utils_ops iwl5000_hcmd_utils;
+@@ -525,15 +526,29 @@ struct fw_desc {
+ };
+ 
+ /* uCode file layout */
+-struct iwl_ucode {
+-	__le32 ver;		/* major/minor/API/serial */
+-	__le32 inst_size;	/* bytes of runtime instructions */
+-	__le32 data_size;	/* bytes of runtime data */
+-	__le32 init_size;	/* bytes of initialization instructions */
+-	__le32 init_data_size;	/* bytes of initialization data */
+-	__le32 boot_size;	/* bytes of bootstrap instructions */
+-	u8 data[0];		/* data in same order as "size" elements */
++struct iwl_ucode_header {
++	__le32 ver;	/* major/minor/API/serial */
++	union {
++		struct {
++			__le32 inst_size;	/* bytes of runtime code */
++			__le32 data_size;	/* bytes of runtime data */
++			__le32 init_size;	/* bytes of init code */
++			__le32 init_data_size;	/* bytes of init data */
++			__le32 boot_size;	/* bytes of bootstrap code */
++			u8 data[0];		/* in same order as sizes */
++		} v1;
++		struct {
++			__le32 build;		/* build number */
++			__le32 inst_size;	/* bytes of runtime code */
++			__le32 data_size;	/* bytes of runtime data */
++			__le32 init_size;	/* bytes of init code */
++			__le32 init_data_size;	/* bytes of init data */
++			__le32 boot_size;	/* bytes of bootstrap code */
++			u8 data[0];		/* in same order as sizes */
++		} v2;
++	} u;
+ };
++#define UCODE_HEADER_SIZE(ver) ((ver) == 1 ? 24 : 28)
+ 
+ struct iwl4965_ibss_seq {
+ 	u8 mac[ETH_ALEN];
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index c9b3ea9..bd6a067 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2041,7 +2041,7 @@ static void iwl3945_nic_start(struct iwl_priv *priv)
+  */
+ static int iwl3945_read_ucode(struct iwl_priv *priv)
+ {
+-	struct iwl_ucode *ucode;
++	const struct iwl_ucode_header *ucode;
+ 	int ret = -EINVAL, index;
+ 	const struct firmware *ucode_raw;
+ 	/* firmware file name contains uCode/driver compatibility version */
+@@ -2082,22 +2082,24 @@ static int iwl3945_read_ucode(struct iwl_priv *priv)
+ 		goto error;
+ 
+ 	/* Make sure that we got at least our header! */
+-	if (ucode_raw->size < sizeof(*ucode)) {
++	if (ucode_raw->size <  priv->cfg->ops->ucode->get_header_size(1)) {
+ 		IWL_ERR(priv, "File size way too small!\n");
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+ 
+ 	/* Data from ucode file:  header followed by uCode images */
+-	ucode = (void *)ucode_raw->data;
++	ucode = (struct iwl_ucode_header *)ucode_raw->data;
+ 
+ 	priv->ucode_ver = le32_to_cpu(ucode->ver);
+ 	api_ver = IWL_UCODE_API(priv->ucode_ver);
+-	inst_size = le32_to_cpu(ucode->inst_size);
+-	data_size = le32_to_cpu(ucode->data_size);
+-	init_size = le32_to_cpu(ucode->init_size);
+-	init_data_size = le32_to_cpu(ucode->init_data_size);
+-	boot_size = le32_to_cpu(ucode->boot_size);
++	inst_size = priv->cfg->ops->ucode->get_inst_size(ucode, api_ver);
++	data_size = priv->cfg->ops->ucode->get_data_size(ucode, api_ver);
++	init_size = priv->cfg->ops->ucode->get_init_size(ucode, api_ver);
++	init_data_size =
++		priv->cfg->ops->ucode->get_init_data_size(ucode, api_ver);
++	boot_size = priv->cfg->ops->ucode->get_boot_size(ucode, api_ver);
++	src = priv->cfg->ops->ucode->get_data(ucode, api_ver);
+ 
+ 	/* api_ver should match the api version forming part of the
+ 	 * firmware filename ... but we don't check for that and only rely
+@@ -2138,12 +2140,13 @@ static int iwl3945_read_ucode(struct iwl_priv *priv)
+ 
+ 
+ 	/* Verify size of file vs. image size info in file's header */
+-	if (ucode_raw->size < sizeof(*ucode) +
++	if (ucode_raw->size != priv->cfg->ops->ucode->get_header_size(api_ver) +
+ 		inst_size + data_size + init_size +
+ 		init_data_size + boot_size) {
+ 
+-		IWL_DEBUG_INFO(priv, "uCode file size %zd too small\n",
+-			       ucode_raw->size);
++		IWL_DEBUG_INFO(priv,
++			"uCode file size %zd does not match expected size\n",
++			ucode_raw->size);
+ 		ret = -EINVAL;
+ 		goto err_release;
+ 	}
+@@ -2226,44 +2229,44 @@ static int iwl3945_read_ucode(struct iwl_priv *priv)
+ 	/* Copy images into buffers for card's bus-master reads ... */
+ 
+ 	/* Runtime instructions (first block of data in file) */
+-	src = &ucode->data[0];
+-	len = priv->ucode_code.len;
++	len = inst_size;
+ 	IWL_DEBUG_INFO(priv,
+ 		"Copying (but not loading) uCode instr len %zd\n", len);
+ 	memcpy(priv->ucode_code.v_addr, src, len);
++	src += len;
++
+ 	IWL_DEBUG_INFO(priv, "uCode instr buf vaddr = 0x%p, paddr = 0x%08x\n",
+ 		priv->ucode_code.v_addr, (u32)priv->ucode_code.p_addr);
+ 
+ 	/* Runtime data (2nd block)
+ 	 * NOTE:  Copy into backup buffer will be done in iwl3945_up()  */
+-	src = &ucode->data[inst_size];
+-	len = priv->ucode_data.len;
++	len = data_size;
+ 	IWL_DEBUG_INFO(priv,
+ 		"Copying (but not loading) uCode data len %zd\n", len);
+ 	memcpy(priv->ucode_data.v_addr, src, len);
+ 	memcpy(priv->ucode_data_backup.v_addr, src, len);
++	src += len;
+ 
+ 	/* Initialization instructions (3rd block) */
+ 	if (init_size) {
+-		src = &ucode->data[inst_size + data_size];
+-		len = priv->ucode_init.len;
++		len = init_size;
+ 		IWL_DEBUG_INFO(priv,
+ 			"Copying (but not loading) init instr len %zd\n", len);
+ 		memcpy(priv->ucode_init.v_addr, src, len);
++		src += len;
+ 	}
+ 
+ 	/* Initialization data (4th block) */
+ 	if (init_data_size) {
+-		src = &ucode->data[inst_size + data_size + init_size];
+-		len = priv->ucode_init_data.len;
++		len = init_data_size;
+ 		IWL_DEBUG_INFO(priv,
+ 			"Copying (but not loading) init data len %zd\n", len);
+ 		memcpy(priv->ucode_init_data.v_addr, src, len);
++		src += len;
+ 	}
+ 
+ 	/* Bootstrap instructions (5th block) */
+-	src = &ucode->data[inst_size + data_size + init_size + init_data_size];
+-	len = priv->ucode_boot.len;
++	len = boot_size;
+ 	IWL_DEBUG_INFO(priv,
+ 		"Copying (but not loading) boot instr len %zd\n", len);
+ 	memcpy(priv->ucode_boot.v_addr, src, len);
+-- 
+1.5.6.3
+
