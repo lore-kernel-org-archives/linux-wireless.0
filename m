@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31181 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754098AbZG0SxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 14:53:10 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 11:53:12 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/3] ath9k: move cancel_delayed_work_sync() out of ath_deinit_leds()
-Date: Mon, 27 Jul 2009 11:53:03 -0700
-Message-ID: <1248720784-15671-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-pz0-f197.google.com ([209.85.222.197]:43799 "EHLO
+	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934750AbZGQQzN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jul 2009 12:55:13 -0400
+Received: by pzk35 with SMTP id 35so703326pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 09:55:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <43e72e890907170952v20677c7fr50204df952228d53@mail.gmail.com>
+References: <43e72e890907161810k51e3830bqe3283539f19e2fd2@mail.gmail.com>
+	<1247848427.8139.4386.camel@localhost.localdomain> <43e72e890907170952v20677c7fr50204df952228d53@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 17 Jul 2009 09:54:53 -0700
+Message-ID: <43e72e890907170954y20375636s7dad8fd972406310@mail.gmail.com>
+Subject: Re: Using GeoClue to send a Linux wireless regulatory hint
+To: Bastien Nocera <hadess@hadess.net>
+Cc: GeoClue <geoclue@lists.freedesktop.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>, desrt@desrt.ca,
+	Dan Winship <danw@gnome.org>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	till.kamppeter@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do this as we'll be moving the cancel elsewhere later.
+On Fri, Jul 17, 2009 at 9:52 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+> It just reads the country from timezone file, I've pasted the script
+> below inline in case you are curious.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dfcd8d9..dbd5cfd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1057,7 +1057,6 @@ static void ath_unregister_led(struct ath_led *led)
- 
- static void ath_deinit_leds(struct ath_softc *sc)
- {
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
- 	ath_unregister_led(&sc->assoc_led);
- 	sc->sc_flags &= ~SC_OP_LED_ASSOCIATED;
- 	ath_unregister_led(&sc->tx_led);
-@@ -1114,6 +1113,7 @@ static void ath_init_leds(struct ath_softc *sc)
- 	return;
- 
- fail:
-+	cancel_delayed_work_sync(&sc->ath_led_blink_work);
- 	ath_deinit_leds(sc);
- }
- 
-@@ -1252,11 +1252,13 @@ void ath_detach(struct ath_softc *sc)
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach ATH hw\n");
- 
--	ath_deinit_leds(sc);
-+	cancel_delayed_work_sync(&sc->ath_led_blink_work);
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_delayed_work_sync(&sc->wiphy_work);
- 	cancel_work_sync(&sc->chan_work);
- 
-+	ath_deinit_leds(sc);
-+
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
- 		if (aphy == NULL)
--- 
-1.6.0.4
+Oh and here is the script used by Fedora (thanks to John):
 
+#!/bin/sh
+
+REGDOMAIN=/etc/sysconfig/regdomain
+CLOCK=/etc/sysconfig/clock
+
+if [ -f $REGDOMAIN ]
+then
+        # This should set COUNTRY
+        . $REGDOMAIN
+        iw reg set $COUNTRY
+        exit
+fi
+
+if [ -f $CLOCK ]
+then
+        # This should set ZONE
+        . $CLOCK
+else
+        echo "Timezone information not found!  Unable to set regulatory domain."
+        exit
+fi
+
+if [ -z "$ZONE" ]
+then
+        echo "Timezone information not set!  Unable to set regulatory domain."
+        exit
+fi
+
+COOKED_ZONE=$(echo $ZONE | sed -e 's/ /_/')
+
+COUNTRY=$(grep $COOKED_ZONE /usr/share/zoneinfo/zone.tab | awk '{ print $1 }')
+
+if [ -z "$COUNTRY" ]
+then
+        echo "Could not determine country!  Unable to set regulatory domain."
+        exit
+fi
+
+iw reg set $COUNTRY
