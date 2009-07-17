@@ -1,28 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f184.google.com ([209.85.210.184]:43258 "EHLO
-	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932941AbZGPTEM (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:24191 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932899AbZGQGF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 15:04:12 -0400
-Received: by yxe14 with SMTP id 14so547261yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 12:04:11 -0700 (PDT)
+	Fri, 17 Jul 2009 02:05:56 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org, Joel Roth <joelz@pobox.com>
+Subject: Re: ath5k and Atheros AR242x - No scan results
+Date: Fri, 17 Jul 2009 08:06:23 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>
+References: <20090630170916.GB5137@sprite> <1247734019.19467.0.camel@johannes.local> <20090716100743.GC3867@sprite>
+In-Reply-To: <20090716100743.GC3867@sprite>
 MIME-Version: 1.0
-Date: Thu, 16 Jul 2009 15:04:11 -0400
-Message-ID: <9e4733910907161204x441c21b9n22530800682d363@mail.gmail.com>
-Subject: Cross compiling crda and SSL word size
-From: Jon Smirl <jonsmirl@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907170806.23728.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When cross compiling crda the Makefile asks the python system what the
-word size is. This gets the word size from the host. Is there a way to
-ask the word size using gcc? In my environment the Makefile is
-automatically using the correct gcc cross compiler.
+> 1. kernel and driver setup - use compat-wireless
+>
+> 2. set wireless interface to UP
+>
+> 	ifconfig <interface> up
+>
+> 3. find available networks using
+>
+> 	iw dev <interface> scan
+>  or
+> 	iwlist <interface> scan
 
-My host is 64b and target is 32b.
+And maybe here the tools could emit "interface <interface> isn't 
+up" as a more specfic error message ?!?
 
 -- 
-Jon Smirl
-jonsmirl@gmail.com
+http://www.holgerschurig.de
