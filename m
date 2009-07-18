@@ -1,72 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbZGXOta (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:45171 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615AbZGRVTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 10:49:30 -0400
-Subject: Re: Generic events for wake up from S1-S4
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: ykzhao <yakui.zhao@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Pavel Machek <pavel@ucw.cz>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	pm list <linux-pm@lists.linux-foundation.org>
-In-Reply-To: <20090724133903.GA18827@khazad-dum.debian.net>
-References: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
-	 <20090723195114.GR28158@elf.ucw.cz>
-	 <20090723201050.GD19369@khazad-dum.debian.net>
-	 <200907232328.03566.rjw@sisk.pl>
-	 <1248396826.3556.26.camel@localhost.localdomain>
-	 <20090724133903.GA18827@khazad-dum.debian.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-k3uMWwkqwgmLBnwDG77h"
-Date: Fri, 24 Jul 2009 16:49:16 +0200
-Message-Id: <1248446956.32151.0.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 18 Jul 2009 17:19:37 -0400
+Received: by gxk9 with SMTP id 9so2779280gxk.13
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 14:19:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A61E436.9060808@lwfinger.net>
+References: <4A611FC0.9040507@lwfinger.net>
+	 <200907181433.47985.chunkeey@web.de> <4A61E436.9060808@lwfinger.net>
+Date: Sat, 18 Jul 2009 17:19:36 -0400
+Message-ID: <b6c5339f0907181419h28b84166s72ba9386f2833c61@mail.gmail.com>
+Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111) with
+	p54usb
+From: Bob Copeland <me@bobcopeland.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Jul 18, 2009 at 11:03 AM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> Christian Lamparter wrote:
+>> On Saturday 18 July 2009 03:05:04 Larry Finger wrote:
+>>> Johannes and Christian,
+>>>
+>>> I am getting a WARN_ON from mac80211 in the location stated in the
+>>> subject. I put in some test prints and got the following:
+>>>
+>>> sband->n_bitrates 8, Band 1, supp_rates 0x0
+>> hmm, so something decides to talk to a 5GHz network here?
+>> But the AP doesn't have any available rates in that band!?
+>
+> Ah, band 1 is 5GHz, not 2.4. There are no 802.11a AP's in my neighborhood.
+>
+>> If my memory serves my right some people have triggered the same WARN_ON
+>> with the ath5k driver as well...
+>> unfortunately, I didn't follow the thread and now I can't find it anymore.
+>>
+>> (btw: is your b43 11a capable as well?)
+>
+> Yes it is, but that section is software crippled.
+>
+> Thanks for the patch. I'll let you know what happens.
 
---=-k3uMWwkqwgmLBnwDG77h
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In the ath5k case as well, I'm willing to bet it has something to do with dual
+band operation.  IIRC at least some instances of this in the past were due to
+getting the rate after the band was changed, e.g. due to scanning, and the peer
+of course didn't support any rates on that band.
 
-On Fri, 2009-07-24 at 10:39 -0300, Henrique de Moraes Holschuh wrote:
-
-> ACPI notifications are hard to extend, I think.  Please correct me if I a=
-m
-> wrong.
-
-ACPI is the wrong place anyway, since it's fundamentally platform
-dependent. Unlike the rest of suspend and wake functionality.
-
-johannes
-
---=-k3uMWwkqwgmLBnwDG77h
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKacnoAAoJEODzc/N7+QmaSScP/R7Y3kpqY/fbBkNKBopqkkpE
-eEmGWiYd31VOMMVlcyjQYCogkTc1m7u5PDou7s3pFyqS+Aq8ypFbCsYKuoZRzFFg
-69lUr7hLyyHBF7Bb/CwoXAVsoSqdwUvCG0eHLK86KjYnzYurhd//oJq/yXzZbQfz
-XmzoUZJk6cFLR4cZ8ZYsPIHfdJi7k3wFulcl1CGRqBvdJt0JdR1wz8c7M5ieMDJN
-TER0JsXzkuuPd6i4eqNhOi47y8BeC5JrTXcw5RitxnRFwdd5mAvRpf43eTkdWnZq
-y2AiJ0wfSYeTNXVZM5Fc9wOpzWYKcK3BD1YaRtFad5lYS5CK8njCX/yI3yl4PI2g
-+H7x5Ur/YikUIHtTg70qNGj/HQ7XoeRqOGIVPP2uo5EJlBWgVrwlGvLLdrzB5eO1
-ejhW4mMQo01T0EFz/E0L1l/ptSRE7GOcXuub258Md8SCX8qxHilFVSebRGP/GreC
-voc4gKMOlVE+yXvyBEAcJgz6O5YU/f1HHrRRtLU2JzI9KVO/mVc7fBGsXNU/TIuK
-WK9JW9BdrzVjshk6HjP9SheOjGCPlEZVeN9dXUbAHiJW3sErOo8m6OKo66UDAiDd
-MZvfqvIRz/qfNGxMXSR9l4mfskzg/fkDxkuR1uf0rdjnwi4bgzV82J+9ZErabd3J
-CIYyGQg0Nta9kejlVpoc
-=92Uq
------END PGP SIGNATURE-----
-
---=-k3uMWwkqwgmLBnwDG77h--
-
+-- 
+Bob Copeland %% www.bobcopeland.com
