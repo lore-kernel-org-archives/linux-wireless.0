@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:57652 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbZGIQzV (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:61065 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbZGRU0c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 12:55:21 -0400
-Received: by yxe26 with SMTP id 26so447889yxe.33
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 09:55:20 -0700 (PDT)
+	Sat, 18 Jul 2009 16:26:32 -0400
+Received: by pzk32 with SMTP id 32so70000pzk.33
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 13:26:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
-References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com>
-	 <6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com>
-	 <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com>
-	 <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com>
-	 <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
-	 <20090707030719.GC7199@hash.localnet>
-	 <6c354a1a0907072358u7408d865h5b32c587f63f39d@mail.gmail.com>
-	 <20090708114252.GG7199@hash.localnet>
-	 <6c354a1a0907090942o66c4e1b8ue2c952cf7ed7bf9a@mail.gmail.com>
-Date: Thu, 9 Jul 2009 12:55:20 -0400
-Message-ID: <b6c5339f0907090955v7b99a7ebq26e7cc67ab2493f5@mail.gmail.com>
-Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
-From: Bob Copeland <me@bobcopeland.com>
-To: Jasin Colegrove <j.wholesalesupply@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090718103756.GA11381@elf.ucw.cz>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+	<20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+	<43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+	<20090718103756.GA11381@elf.ucw.cz>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 18 Jul 2009 13:02:52 -0700
+Message-ID: <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
+Subject: Re: Generic events for wake up from S1-S4
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 9, 2009 at 12:42 PM, Jasin
-Colegrove<j.wholesalesupply@gmail.com> wrote:
->> BTW, can you (re?)post the "Atheros AR5212 chip found (MAC xxx,
->> PHY xxxx)?"
+On Sat, Jul 18, 2009 at 3:37 AM, Pavel Machek<pavel@ucw.cz> wrote:
+> On Wed 2009-07-15 11:00:07, Luis R. Rodriguez wrote:
+>> On Wed, Jul 15, 2009 at 8:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+>> > On Tue, Jul 14, 2009 at 4:53 PM, Pavel Machek<pavel@ucw.cz> wrote:
+>> >> On Tue 2009-07-14 15:11:45, Luis R. Rodriguez wrote:
+>> >>> I'm working on Wake-on-Wireless support for wireless right now [1].
+>> >>> Upon wake up I wanted to inform the kernel of the event which caused
+>> >>> the wake up but am not clear if there is a generic API for this. Mind
+>> >>> you, for WoW we'll need at least some AC power to the card so we'll
+>> >>> need to at least be in S3-Hot so we'll only need events for that for
+>> >>> now.
+>> >>>
+>> >>> Do we have some generic infrastructure to gather reasons for wake up
+>> >>> from S1-S4 and pass this to userspace yet?
+>> >>
+>> >> I do not think generic api exists...
 >>
-> What exact information do you want and where can I find it?
-
-Run 'dmesg'; a string like the above is printed out when the module
-loads.  In case there was something broken specifically for your
-chipset, the mac/phy versions will help narrow it down.
-
-> $git bisect start v2.6.30-rc4 v2.6.29 -- drivers/net net/
+>> Going back to this topic -- any suggestions? Will a generic netlink
+>> family be OK? Or perhaps easier a udev event for some suitable
+>> existing parent ?
 >
-> Is that what you where hinting at? I wasted a whole day trying to fix
-> errors in drivers/staging before I was told I could just disable
-> compilation of staging with one switch. Oh well...
+> Is "who woke me" information even relevant? Yes, it may be interesting
+> enough for printk, but... What will userspace do with that information?
 
-Yes, that's what I meant.  And it does help to have a relatively
-slimmed down .config, especially when bisecting. :\
+Splashy event notification thingies?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I was just trying to avoid verbose debug info for WoW upon wakeup and
+figured it be nice to report back through a generic interface.
+
+> Imagine WoW packet comes, 5msec later WoL packet comes, 5msec later
+> user opens the lid. You report WoW as wakeup reason, but it is
+> inherently "racy".
+
+Hm yeah, but I doubt someone will do that, generally we'd get one wake
+up event. Can't we just report the first one and ignore the rest?
+
+> What about simply reporting "wake event happened on this device" and
+> doing that for all the devices?
+
+That's fine too. Just think it would be nice to be more specific if possible.
+
+  Luis
