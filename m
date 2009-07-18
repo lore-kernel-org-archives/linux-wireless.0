@@ -1,80 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756684AbZGNWhg (ORCPT
+Received: from fmailhost02.isp.att.net ([204.127.217.102]:40375 "EHLO
+	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbZGRPCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 18:37:36 -0400
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4A5D0374.5040702@mandriva.org>
-References: <4A5D0374.5040702@mandriva.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zdYPj3whRoWXrMSDf0Ks"
-Date: Wed, 15 Jul 2009 00:37:04 +0200
-Message-Id: <1247611024.1796.21.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 18 Jul 2009 11:02:54 -0400
+Message-ID: <4A61E436.9060808@lwfinger.net>
+Date: Sat, 18 Jul 2009 10:03:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111) with
+ p54usb
+References: <4A611FC0.9040507@lwfinger.net> <200907181433.47985.chunkeey@web.de>
+In-Reply-To: <200907181433.47985.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Christian Lamparter wrote:
+> On Saturday 18 July 2009 03:05:04 Larry Finger wrote:
+>> Johannes and Christian,
+>>
+>> I am getting a WARN_ON from mac80211 in the location stated in the
+>> subject. I put in some test prints and got the following:
+>>
+>> sband->n_bitrates 8, Band 1, supp_rates 0x0
+> hmm, so something decides to talk to a 5GHz network here?
+> But the AP doesn't have any available rates in that band!?
 
---=-zdYPj3whRoWXrMSDf0Ks
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ah, band 1 is 5GHz, not 2.4. There are no 802.11a AP's in my neighborhood.
 
-On Wed, 2009-07-15 at 01:15 +0300, Thomas Backlund wrote:
-> Hi,
-> (please cc me on replies)
->=20
-> before I start to try and figure this out, I thought of asking here if=20
-> it rings any bells...
->=20
-> Distribution: Mandriva Cooker
-> Arch: x86_64.
->=20
-> NIC: 04:00.0 Network controller [0280]: Intel Corporation PRO/Wireless=20
-> 4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
->=20
-> ucode version: 228.61.2.24
->=20
-> wpa_supplicant version: 0.6.9
-> crda version: 1.1.0
-> wireless-regdb version: 2009.04.17
->=20
-> Running a 2.6.29.6 based kernel works with iwlagn
-> Running a 2.6.30.1 based kernel works with iwlagn
->=20
-> Running a 2.6.31-rc3 based kernel gets me this:
->=20
-> --- cut ---
-> Bringing up interface wlan0:  RTNETLINK answers: Unknown error 132
-> RTNETLINK answers: Unknown error 132
+> If my memory serves my right some people have triggered the same WARN_ON
+> with the ath5k driver as well...
+> unfortunately, I didn't follow the thread and now I can't find it anymore.
+>  
+> (btw: is your b43 11a capable as well?)
 
-press your rfkill button.
+Yes it is, but that section is software crippled.
 
-johannes
+Thanks for the patch. I'll let you know what happens.
 
---=-zdYPj3whRoWXrMSDf0Ks
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXQiNAAoJEODzc/N7+QmaOQYP+wYhvyk/4Cxa5imuWUsHuaQ/
-bdSGiLCAnSlY6Rh+B3w/BKSs1oJ2eGH+Im4AoYaLrbrWCepqcgILfzQmmfMoqokO
-KLSX1CXI3Hwu2GZPDXQ8mBjGhyehqVflOm9GPp9ifmao0CmmwDd4f8S9pgD2s0Fo
-VoQ866X+a6UHFybkzrv67Bu4c1CCHZ3KGD6sTQyhjf3rVrDZwWYuwDSTX3ENPz4m
-FzYy8BYta0b7V85gVKBX4d8JBj8rkNJJywgZoyZrw/ssIgD1nI6NRiyYOGXtcgBC
-IW3nBkFDjCC4iw6eYP60DsUbdHU7JCb5V67FJpf9oBslQrfW8xEzFCWWhEfLBSj1
-TQu7P3ExZsHuRnGQhIPugpny1/514LMR9bWtwTA3L45usKQaCCF3a139bvRnVBEP
-QJvV5fmb7SsLQJpnZyOOa+JaBu/JCGqBAGSuAGWz/HR6Mwff6d8Qz26iJN85EgiE
-eazhzIK7Bzw657V224i8EkwJNI+v2WZqvf4dof0EO9WYpLg5S5S5qADdxNbwe83h
-M6M31tDAINXzPgZ00uhKcVG8YjH2ZKDRFnwvKxczpJMFLNKx/5DEOceISQMw0lGy
-ecfK0jH6PmJHPCQ8kVcce36u5Hd31CbbmvAkJHG+HSnTEbjRD19fc5ecdIb4oupy
-XBpulUU8DGaVszyWYwHG
-=fuoL
------END PGP SIGNATURE-----
-
---=-zdYPj3whRoWXrMSDf0Ks--
-
+Larry
