@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40544 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964881AbZGQQab (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:31 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/14 w-t and 2.6.31] iwlagn: do not send key clear commands when rfkill enabled
-Date: Fri, 17 Jul 2009 09:30:18 -0700
-Message-Id: <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58306 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbZGRKiF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jul 2009 06:38:05 -0400
+Date: Sat, 18 Jul 2009 12:37:56 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090718103756.GA11381@elf.ucw.cz>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com> <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Wed 2009-07-15 11:00:07, Luis R. Rodriguez wrote:
+> On Wed, Jul 15, 2009 at 8:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> > On Tue, Jul 14, 2009 at 4:53 PM, Pavel Machek<pavel@ucw.cz> wrote:
+> >> On Tue 2009-07-14 15:11:45, Luis R. Rodriguez wrote:
+> >>> I'm working on Wake-on-Wireless support for wireless right now [1].
+> >>> Upon wake up I wanted to inform the kernel of the event which caused
+> >>> the wake up but am not clear if there is a generic API for this. Mind
+> >>> you, for WoW we'll need at least some AC power to the card so we'll
+> >>> need to at least be in S3-Hot so we'll only need events for that for
+> >>> now.
+> >>>
+> >>> Do we have some generic infrastructure to gather reasons for wake up
+> >>> from S1-S4 and pass this to userspace yet?
+> >>
+> >> I do not think generic api exists...
+> 
+> Going back to this topic -- any suggestions? Will a generic netlink
+> family be OK? Or perhaps easier a udev event for some suitable
+> existing parent ?
 
-Do all key clearing except sending sommands to device when rfkill
-enabled. When rfkill enabled the interface is brought down and will
-be brought back up correctly after rfkill is enabled again.
+Is "who woke me" information even relevant? Yes, it may be interesting
+enough for printk, but... What will userspace do with that information?
 
-Same change is not needed for iwl3945 as it ignores return code when
-sending key clearing command to device.
+Imagine WoW packet comes, 5msec later WoL packet comes, 5msec later
+user opens the lid. You report WoW as wakeup reason, but it is
+inherently "racy".
 
-This fixes http://bugzilla.kernel.org/show_bug.cgi?id=13742
+What about simply reporting "wake event happened on this device" and
+doing that for all the devices?
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Tested-by: Frans Pop <elendil@planet.nl>
----
- drivers/net/wireless/iwlwifi/iwl-sta.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2addf73..ffd5c61 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -566,6 +566,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
-+	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
-+		      keyconf->keyidx);
- 
- 	if (!test_and_clear_bit(keyconf->keyidx, &priv->ucode_key_table))
- 		IWL_ERR(priv, "index %d not used in uCode key table.\n",
-@@ -573,6 +575,11 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 
- 	priv->default_wep_key--;
- 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
-+	if (iwl_is_rfkill(priv)) {
-+		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return 0;
-+	}
- 	ret = iwl_send_static_wepkey_cmd(priv, 1);
- 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
- 		      keyconf->keyidx, ret);
-@@ -853,6 +860,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
-+	if (iwl_is_rfkill(priv)) {
-+		IWL_DEBUG_WEP(priv, "Not sending REPLY_ADD_STA command because RFKILL enabled. \n");
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return 0;
-+	}
- 	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 	return ret;
+									Pavel
 -- 
-1.5.6.3
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
