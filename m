@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:59029 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbZGaTfP convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56425 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982AbZGRRkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 15:35:15 -0400
-Received: by ewy10 with SMTP id 10so1752289ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 12:35:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1249067385.20276.16.camel@mj>
-References: <20090731181020.GE7963@makis>
-	 <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
-	 <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-	 <1249067385.20276.16.camel@mj>
-Date: Fri, 31 Jul 2009 22:35:14 +0300
-Message-ID: <40f31dec0907311235g63c10e53obec06ba542d942cd@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, jirislaby@gmail.com,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+	Sat, 18 Jul 2009 13:40:08 -0400
+Subject: Re: Rfkill rewrite
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A61EE43.4060003@tuffmail.co.uk>
+References: <4A61EE43.4060003@tuffmail.co.uk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Esg4R7hDs1DWePUF7ak0"
+Date: Sat, 18 Jul 2009 19:40:02 +0200
+Message-Id: <1247938802.18391.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Pavel Roskin <proski@gnu.org>:
-> On Fri, 2009-07-31 at 21:25 +0300, Nick Kossifidis wrote:
->
->> a) We don't need a timer for this, there is no need for accuracy
->>     even with round_jiffies i think this is a waste of resources.
->>     Also we don't need to run calibration if we are idle (no interrupts).
->
-> It doesn't sound right to me.
->
-> Can it be that the device gets so miscalibrated during the silence that
-> it won't be able to receive signal once it's there?  Say, the device is
-> set to channel 1 but it actually listens to channel 3, and there are
-> some weak beacons on channel 1.
->
 
-Nope calibration deals mostly with noise immunity, it calculates the
-noise floor and fixes QAM constellation. It's not related to the synthesizer
-so it's not related to the channel frequency.
+--=-Esg4R7hDs1DWePUF7ak0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> And then there is an issue of the frequency straying outside the
-> permitted spectrum.  Perhaps the transmission will trigger interrupts
-> and thus recalibration, but in case of scanning, the first probe
-> requests could be on wrong frequencies.
->
+On Sat, 2009-07-18 at 16:46 +0100, Alan Jenkins wrote:
 
-On each reset we trigger calibration so no worries there.
+> It seems my GCC has a stronger definition of "must" than you do :-).
+> I can't get rid of the warning by casting it to void.  So I'm not sure
+> __must_check is really appropriate here.
 
+Heh, my gcc agrees with you :)
+I'm happy to remove it -- want to send a patch?
 
+johannes
 
+--=-Esg4R7hDs1DWePUF7ak0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKYgjvAAoJEODzc/N7+QmaHUAP/2LeBkvN36K7REwAQkMeg1mf
+1m2W/HA8qrWK0j8EkDuQAMibxB4W9nLYmquTW1CFSFxFuvR+kTKT+cWK/2vJFIyO
+haDy85HQY3f3kS8L/8vAp2NuCO/D5ns2g2IHnQrzNN3YOvrHL0eec9Ys461zvaEX
++BD7v5oVOYdtd/nL3YpkVhgsu7/lxBIsGnQfBvlLMtZb4RSfOMs/Q09qyvv2pvlA
+BAhYh88nbAAWfwjJAoQTl4LeIPo1u9AVqBPaIfoLHezjAvJ2hQ6rdKW9gYoflyPb
+eA9zpsyfIjy+SmuZf1gEdzG2B2iqt7KfHUoog86nKCGG6QZ3DVATZXyM5WGjBNXU
+igVlA/YlLVSXcIEKcXfANC4xBt6VzhFee2aDLquB5/ILyHL98uPq6KPb2WMtV7sP
+L0SSH404VeyyWXE2To/QRbQ6BsOBNybKHVwtZCREBXwjnC5n//7944yPFsFiVWkE
+zqg+rvkFLosGINtkm0ztd+hqEpaaXxgpCcGFz+xnkDmzwQTsIG6Gh+UiQ7BokuZL
+0zs6+ssL1JhfLW83jHgPj/lCr75Il1Y/ucCmkpCqTrrk62sibHF1b0jl2NuWMa1E
+ajgHKLaqE7ymw8f4c88ja7AqALZLT0xrpKFFezsq3s9L62d3y9OVcaq0BxhXCs5R
+MHihSNPFqckf+569A0zk
+=fo7d
+-----END PGP SIGNATURE-----
+
+--=-Esg4R7hDs1DWePUF7ak0--
+
