@@ -1,161 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28682 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367AbZG3Ra4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 13:30:56 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 10:30:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 3/3] cfg80211: enable country IE support to all cfg80211 drivers
-Date: Thu, 30 Jul 2009 10:30:54 -0700
-Message-ID: <1248975054-8638-1-git-send-email-lrodriguez@atheros.com>
+Received: from ey-out-2122.google.com ([74.125.78.26]:56606 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647AbZGRSV4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jul 2009 14:21:56 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so365701eyd.37
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 11:21:54 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: [PATCH] rt2x00: Don't alter rt2x00dev->default_ant
+Date: Sat, 18 Jul 2009 20:21:52 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200907182021.52268.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the bss is always set now once we are connected, if the
-bss has its own information element we refer to it and pass that
-instead of relying on mac80211's parsing.
+From: Lars Ericsson <Lars_Ericsson@telia.com>
 
-Now all cfg80211 drivers get country IE support, automatically.
+rt2x00dev->default_ant should be initialized once by the driver,
+and should not be changed afterwards. Because rt2x00lib_config_antenna()
+was using a reference to the struct antenna_setup it actually had the oppurtunity
+to change the default antenna setting and it actually did that during the validation.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Instead of passing a pointer to antenna_setup the entire structure should be copied.
+
+Signed-off-by: Lars Ericsson <Lars_Ericsson@telia.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-
-Fixes comment for ieee80211_bss_get_ie() usage.
-
- include/net/cfg80211.h |   14 --------------
- net/mac80211/mlme.c    |    6 +-----
- net/wireless/reg.c     |    1 -
- net/wireless/reg.h     |   15 +++++++++++++++
- net/wireless/sme.c     |   16 ++++++++++++++++
- 5 files changed, 32 insertions(+), 20 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e1b9235..fa72997 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1514,20 +1514,6 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb);
- extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- 
- /**
-- * regulatory_hint_11d - hints a country IE as a regulatory domain
-- * @wiphy: the wireless device giving the hint (used only for reporting
-- *	conflicts)
-- * @country_ie: pointer to the country IE
-- * @country_ie_len: length of the country IE
-- *
-- * We will intersect the rd with the what CRDA tells us should apply
-- * for the alpha2 this country IE belongs to, this prevents APs from
-- * sending us incorrect or outdated information against a country.
-- */
--extern void regulatory_hint_11d(struct wiphy *wiphy,
--				u8 *country_ie,
--				u8 country_ie_len);
--/**
-  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
-  * @wiphy: the wireless device we want to process the regulatory domain on
-  * @regd: the custom regulatory domain to use for this wiphy
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0779ba1..5ff1496 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1846,12 +1846,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 					       bssid, ap_ht_cap_flags);
- 	}
- 
-+	/* Note: country IE parsing is done for us by cfg80211 */
- 	if (elems.country_elem) {
--		/* Note we are only reviewing this on beacons
--		 * for the BSSID we are associated to */
--		regulatory_hint_11d(local->hw.wiphy,
--			elems.country_elem, elems.country_elem_len);
--
- 		/* TODO: IBSS also needs this */
- 		if (elems.pwr_constr_elem)
- 			ieee80211_handle_pwr_constr(sdata,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 14e0c87..06abd7a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1911,7 +1911,6 @@ free_rd_out:
- out:
- 	mutex_unlock(&reg_mutex);
- }
--EXPORT_SYMBOL(regulatory_hint_11d);
- 
- static bool freq_is_chan_12_13_14(u16 freq)
- {
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index e37829a..662a9da 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -36,4 +36,19 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
- 					struct ieee80211_channel *beacon_chan,
- 					gfp_t gfp);
- 
-+/**
-+ * regulatory_hint_11d - hints a country IE as a regulatory domain
-+ * @wiphy: the wireless device giving the hint (used only for reporting
-+ *	conflicts)
-+ * @country_ie: pointer to the country IE
-+ * @country_ie_len: length of the country IE
-+ *
-+ * We will intersect the rd with the what CRDA tells us should apply
-+ * for the alpha2 this country IE belongs to, this prevents APs from
-+ * sending us incorrect or outdated information against a country.
-+ */
-+void regulatory_hint_11d(struct wiphy *wiphy,
-+			 u8 *country_ie,
-+			 u8 country_ie_len);
-+
- #endif  /* __NET_WIRELESS_REG_H */
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 3728d2b..bc0fb7d 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -13,6 +13,7 @@
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
- #include "nl80211.h"
-+#include "reg.h"
- 
- struct cfg80211_conn {
- 	struct cfg80211_connect_params params;
-@@ -320,6 +321,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       struct cfg80211_bss *bss)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	u8 *country_ie;
- #ifdef CONFIG_WIRELESS_EXT
- 	union iwreq_data wrqu;
- #endif
-@@ -401,6 +403,20 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 
- 	wdev->sme_state = CFG80211_SME_CONNECTED;
- 	cfg80211_upload_connect_keys(wdev);
-+
-+	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
-+
-+	if (!country_ie)
-+		return;
-+
-+	/*
-+	 * ieee80211_bss_get_ie() ensures we can access:
-+	 * - country_ie + 2, the start of the country ie data, and
-+	 * - and country_ie[1] which is the IE length
-+	 */
-+	regulatory_hint_11d(wdev->wiphy,
-+			    country_ie + 2,
-+			    country_ie[1]);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index c6e0bcf..3845316 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -124,7 +124,7 @@ enum antenna rt2x00lib_config_antenna_check(enum antenna current_ant,
  }
  
- void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
--- 
-1.6.0.4
-
+ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+-			      struct antenna_setup *ant)
++			      struct antenna_setup ant)
+ {
+ 	struct antenna_setup *def = &rt2x00dev->default_ant;
+ 	struct antenna_setup *active = &rt2x00dev->link.ant.active;
+@@ -138,10 +138,10 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	 * might have caused that we restore back to the already
+ 	 * active setting. If that has happened we can quit.
+ 	 */
+-	ant->rx = rt2x00lib_config_antenna_check(ant->rx, def->rx);
+-	ant->tx = rt2x00lib_config_antenna_check(ant->tx, def->tx);
++	ant.rx = rt2x00lib_config_antenna_check(ant.rx, def->rx);
++	ant.tx = rt2x00lib_config_antenna_check(ant.tx, def->tx);
+ 
+-	if (ant->rx == active->rx && ant->tx == active->tx)
++	if (ant.rx == active->rx && ant.tx == active->tx)
+ 		return;
+ 
+ 	/*
+@@ -156,11 +156,11 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 	 * The latter is required since we need to recalibrate the
+ 	 * noise-sensitivity ratio for the new setup.
+ 	 */
+-	rt2x00dev->ops->lib->config_ant(rt2x00dev, ant);
++	rt2x00dev->ops->lib->config_ant(rt2x00dev, &ant);
+ 
+ 	rt2x00link_reset_tuner(rt2x00dev, true);
+ 
+-	memcpy(active, ant, sizeof(*ant));
++	memcpy(active, &ant, sizeof(ant));
+ 
+ 	if (test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON_LINK);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 2c3c239..c0aa2e6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -88,7 +88,7 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 			  struct rt2x00_intf *intf,
+ 			  struct ieee80211_bss_conf *conf);
+ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+-			      struct antenna_setup *ant);
++			      struct antenna_setup ant);
+ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 		      struct ieee80211_conf *conf,
+ 		      const unsigned int changed_flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index 3257075..7991568 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -173,7 +173,7 @@ static void rt2x00lib_antenna_diversity_sample(struct rt2x00_dev *rt2x00dev)
+ 	if (ant->flags & ANTENNA_TX_DIVERSITY)
+ 		new_ant.tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
+ 
+-	rt2x00lib_config_antenna(rt2x00dev, &new_ant);
++	rt2x00lib_config_antenna(rt2x00dev, new_ant);
+ }
+ 
+ static void rt2x00lib_antenna_diversity_eval(struct rt2x00_dev *rt2x00dev)
+@@ -213,7 +213,7 @@ static void rt2x00lib_antenna_diversity_eval(struct rt2x00_dev *rt2x00dev)
+ 	if (ant->flags & ANTENNA_TX_DIVERSITY)
+ 		new_ant.tx = (new_ant.tx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
+ 
+-	rt2x00lib_config_antenna(rt2x00dev, &new_ant);
++	rt2x00lib_config_antenna(rt2x00dev, new_ant);
+ }
+ 
+ static void rt2x00lib_antenna_diversity(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 54fd2e8..8e8e46c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -378,7 +378,7 @@ int rt2x00mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		 */
+ 		if (changed & IEEE80211_CONF_CHANGE_RADIO_ENABLED)
+ 			rt2x00lib_config_antenna(rt2x00dev,
+-						 &rt2x00dev->default_ant);
++						 rt2x00dev->default_ant);
+ 
+ 		/* Turn RX back on */
+ 		rt2x00lib_toggle_rx(rt2x00dev, STATE_RADIO_RX_ON);
