@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:54687 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756536AbZGPPEI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 11:04:08 -0400
+Received: from c60.cesmail.net ([216.154.195.49]:59702 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753764AbZGRWMP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jul 2009 18:12:15 -0400
+Subject: [PATCH] ath5k: fix values for bus error bits in ISR2
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Sat, 18 Jul 2009 18:12:12 -0400
+Message-ID: <20090718221212.10818.52921.stgit@mj.roinet.com>
 MIME-Version: 1.0
-In-Reply-To: <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
-References: <1247522953-12702-1-git-send-email-tomas.winkler@intel.com>
-	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA8388BB@pdsmsx502.ccr.corp.intel.com>
-	 <AFAB8585072C7E48BC5C6F9C87F9B79703BA839300@pdsmsx502.ccr.corp.intel.com>
-Date: Thu, 16 Jul 2009 18:04:04 +0300
-Message-ID: <1ba2fa240907160804g18b1a215w3161c9682db7b35@mail.gmail.com>
-Subject: Re: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
-From: Tomas Winkler <tomasw@gmail.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>
-Cc: "drzeus-list@drzeus.cx" <drzeus-list@drzeus.cx>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 3:23 PM, Zhu, Yi <yi.zhu@intel.com> wrote:
->
-> > Subject: RE: [PATCH] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
->
-> BTW, subject should be "iwmc3200".
+The new values are taken from the recently open sourced Atheros HAL.
+Correctness is also confirmed by the users with access to Atheros
+documentation.
 
-Thanks. I'll address all comments although I'm not sure how to split
-the patch since adding SDIO_VENDOR_ID_INTEL to sdio_ids.h it affects
-all the drivers anyhow, so I'm suggesting to route it through netdev.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/ath/ath5k/reg.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks
-Tomas
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index 6809b54..9ebe188 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -339,9 +339,9 @@
+ #define AR5K_SISR2		0x008c			/* Register Address [5211+] */
+ #define AR5K_SISR2_QCU_TXURN	0x000003ff	/* Mask for QCU_TXURN */
+ #define	AR5K_SISR2_QCU_TXURN_S	0
+-#define	AR5K_SISR2_MCABT	0x00100000	/* Master Cycle Abort */
+-#define	AR5K_SISR2_SSERR	0x00200000	/* Signaled System Error */
+-#define	AR5K_SISR2_DPERR	0x00400000	/* Bus parity error */
++#define	AR5K_SISR2_MCABT	0x00010000	/* Master Cycle Abort */
++#define	AR5K_SISR2_SSERR	0x00020000	/* Signaled System Error */
++#define	AR5K_SISR2_DPERR	0x00040000	/* Bus parity error */
+ #define	AR5K_SISR2_TIM		0x01000000	/* [5212+] */
+ #define	AR5K_SISR2_CAB_END	0x02000000	/* [5212+] */
+ #define	AR5K_SISR2_DTIM_SYNC	0x04000000	/* DTIM sync lost [5212+] */
