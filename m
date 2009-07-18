@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:61352 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754859AbZG2BUe (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45090 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751272AbZGRX4R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:20:34 -0400
-Date: Tue, 28 Jul 2009 20:21:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Work around mac80211 race condition that may
- transmit one packet after queue is stopped
-Message-ID: <4a6fa3fe.kYeW+HADItDIXTLm%Larry.Finger@lwfinger.net>
+	Sat, 18 Jul 2009 19:56:17 -0400
+Date: Sat, 18 Jul 2009 20:56:10 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090718235609.GC25343@khazad-dum.debian.net>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+ <20090714235332.GA1552@ucw.cz>
+ <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+ <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+ <20090718103756.GA11381@elf.ucw.cz>
+ <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
-mac80211 has a bug that allows a call to the TX routine after the queues have
-been stopped. This situation will only occur under extreme stress. Although
-b43 does not crash when this condition occurs, it does generate a WARN_ON and
-also logs a queue overrun message. This patch recognizes b43 is not at fault
-and logs a message only when the most verbose debugging mode is enabled. In
-the unlikely event that the queue is not stopped when the DMA queue becomes
-full, then a warning is issued.
+On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
+> Hm yeah, but I doubt someone will do that, generally we'd get one wake
+> up event. Can't we just report the first one and ignore the rest?
 
-During testing of this patch with one output stream running repeated tcpperf
-writes and a second running a flood ping, this routine was entered with
-the DMA ring stopped about once per hour. The condition where the DMA queue is
-full but the ring has not been stopped has never been seen by me.
+Well, I'd say keeping it simple is best, here.  What if you ignore the more
+interesting wakeup events by chance (and it is really up to userspace to
+know what it considers interesting...)?  IMHO, just issue as many
+notifications as needed, let userspace filter it if it wants.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+But if you guys are talking about something really generic, shouldn't it
+also provide the important "why" along with the "who"?
 
-John,
+Even for the most common cases, the "why" is useful: userspace may well want
+to run special routines when it wakes up because of WoL and WoW (instead of
+a key press, lid open or mouse movement...).
 
-This patch is 2.6.32 material.
+When you factor in wakeups caused by platform alarms, well, the "why"
+becomes even more interesting.
 
-Larry
----
+> > What about simply reporting "wake event happened on this device" and
+> > doing that for all the devices?
+> 
+> That's fine too. Just think it would be nice to be more specific if possible.
 
-Index: wireless-testing/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/dma.c
-+++ wireless-testing/drivers/net/wireless/b43/dma.c
-@@ -1334,13 +1334,23 @@ int b43_dma_tx(struct b43_wldev *dev, st
- 	spin_lock_irqsave(&ring->lock, flags);
- 
- 	B43_WARN_ON(!ring->tx);
--	/* Check if the queue was stopped in mac80211,
--	 * but we got called nevertheless.
--	 * That would be a mac80211 bug. */
--	B43_WARN_ON(ring->stopped);
-+
-+	if (unlikely(ring->stopped)) {
-+		/* We get here only because of a bug in mac80211.
-+		 * Because of a race, one packet may be queued after
-+		 * the queue is stopped, thus we got called when we shouldn't.
-+		 * For now, just refuse the transmit. */
-+		if (b43_debug(dev, B43_DBG_DMAVERBOSE))
-+			b43err(dev->wl, "Packet after queue stopped\n");
-+		err = -ENOSPC;
-+		goto out_unlock;
-+	}
- 
- 	if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
--		b43warn(dev->wl, "DMA queue overflow\n");
-+		/* If we get here, we have a real error with the queue
-+		 * full, but queues not stopped. */
-+		b43err(dev->wl, "DMA queue overflow\n");
-+		WARN_ON(1);
- 		err = -ENOSPC;
- 		goto out_unlock;
- 	}
+A generic way for a device (of any sort, not just network devices!) to
+report that they just issued a system wakeup message, as well as the reason
+it did that seems like a good way to do it to me.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
