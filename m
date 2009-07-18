@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48179 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752860AbZGaSuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:50:08 -0400
-Message-ID: <4A733CDE.4060801@gmx.de>
-Date: Fri, 31 Jul 2009 20:50:06 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from fmmailgate02.web.de ([217.72.192.227]:33137 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928AbZGRWdA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jul 2009 18:33:00 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111) with p54usb
+Date: Sun, 19 Jul 2009 00:32:57 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4A611FC0.9040507@lwfinger.net> <4A61E436.9060808@lwfinger.net> <b6c5339f0907181419h28b84166s72ba9386f2833c61@mail.gmail.com>
+In-Reply-To: <b6c5339f0907181419h28b84166s72ba9386f2833c61@mail.gmail.com>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] compat-2.6:  Makefile: fixed test expressions for target
- install
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>
-In-Reply-To: <1248990136.10154.10.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907190032.58156.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/30/2009 11:42 PM, Pavel Roskin wrote:
-> On Thu, 2009-07-30 at 23:25 +0200, Joerg Albert wrote:
->> This removes the two errors of [ with target "install"
->>
->> make[1]: Leaving directory `/home/joerg/src/linux-2.6.30'
->> [: 9: missing ]
->> [: 9: missing ]
->> depmod will prefer updates/ over kernel/ -- OK!
+On Saturday 18 July 2009 23:19:36 Bob Copeland wrote:
+> On Sat, Jul 18, 2009 at 11:03 AM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> > Christian Lamparter wrote:
+> >> On Saturday 18 July 2009 03:05:04 Larry Finger wrote:
+> >>> Johannes and Christian,
+> >>>
+> >>> I am getting a WARN_ON from mac80211 in the location stated in the
+> >>> subject. I put in some test prints and got the following:
+> >>>
+> >>> sband->n_bitrates 8, Band 1, supp_rates 0x0
+> >> hmm, so something decides to talk to a 5GHz network here?
+> >> But the AP doesn't have any available rates in that band!?
+> >
+> > Ah, band 1 is 5GHz, not 2.4. There are no 802.11a AP's in my neighborhood.
+> >
+> >> If my memory serves my right some people have triggered the same WARN_ON
+> >> with the ath5k driver as well...
+> >> unfortunately, I didn't follow the thread and now I can't find it anymore.
+> >>
+> >> (btw: is your b43 11a capable as well?)
+> >
+> > Yes it is, but that section is software crippled.
+> >
+> > Thanks for the patch. I'll let you know what happens.
 > 
-> I believe "-a" in test is not very portable.  I remember getting
-> complaints about it.  I believe the built-in test command in bash 1.x
-> doesn't have it.  I'd rather stick with && and || written properly.
+> In the ath5k case as well, I'm willing to bet it has something to do with dual
+> band operation.  IIRC at least some instances of this in the past were due to
+> getting the rate after the band was changed, e.g. due to scanning, and the peer
+> of course didn't support any rates on that band.
 > 
-> "-a" and -o" are currently only used in the clean target and in the
-> maintenance scripts, so they probably don't get enough testing on
-> systems with old bash.
+well, ieee80211_sta_monitor_work - which probes the AP every now and then -
+didn't check if we're scanning.
+The attached diff survives a non-stop scanning without throwing the WARN in
+rate_lowest_index once.
 
-Bash 3.2.39 seems to have a problem with &&, while [[ ... ]] accept it:
+However, I'm not so sure about the locking for hw_scanning and sw_scanning.
+It looks like only scan.c manipulates them under the scan mutex.
+But then, do we need locking for a single threaded workqueue? guess not.
+---
+Larry,
 
-joerg@thinkpad:~$ echo $BASH_VERSION
-3.2.39(1)-release
-joerg@thinkpad:~$ if [ -z "" && -z "" ]; then echo "both empty"; fi
-bash: [: missing `]'
-joerg@thinkpad:~$ if [ -z "" -a -z "" ]; then echo "both empty"; fi
-both empty
-joerg@thinkpad:~$ if [[ -z "" && -z "" ]]; then echo "both empty"; fi
-both empty
-joerg@thinkpad:~$
-
-If the link for the man page of bash v1 on http://wwwbs.informatik.htw-dresden.de/fbs/bash/old.bash.html is correct,
-that version supported -a in test.
-Unfortunately [[ ... ]] was introduced after bash v1 (2.02 AFAIR).
+here's another _fix_ which might even fix the problem after all ;-)
 
 Regards,
-Joerg.
+	Chr
+---
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 18dad22..4833e7c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2210,6 +2210,9 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     u.mgd.monitor_work);
+ 
++	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
++		return;
++
+ 	ieee80211_mgd_probe_ap(sdata, false);
+ }
+ 
