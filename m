@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38356 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756470AbZGMQRq (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:40816 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbZGRSUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 12:17:46 -0400
-Subject: Re: [RFC/RFT] rtl8187: Fix for kernel oops when unloading with
- LEDs enabled
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: netrolller.3d@gmail.com,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4a5b563e.AuhPXmHA0dUFYtzx%Larry.Finger@lwfinger.net>
-References: <4a5b563e.AuhPXmHA0dUFYtzx%Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-La8BKVfGcq5197EMfxwG"
-Date: Mon, 13 Jul 2009 18:16:52 +0200
-Message-Id: <1247501812.4166.24.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 18 Jul 2009 14:20:22 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so365598eyd.37
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 11:20:21 -0700 (PDT)
+Message-ID: <4A621264.4030102@tuffmail.co.uk>
+Date: Sat, 18 Jul 2009 19:20:20 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] rfkill: remove too-strict __must_check
+References: <4A61EE43.4060003@tuffmail.co.uk> <1247938802.18391.0.camel@johannes.local>
+In-Reply-To: <1247938802.18391.0.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Some drivers don't need the return value of rfkill_set_hw_state(),
+so it should not be marked as __must_check.
 
---=-La8BKVfGcq5197EMfxwG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ include/linux/rfkill.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Mon, 2009-07-13 at 10:43 -0500, Larry Finger wrote:
-> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
-> may oops when the module is unloaded as the workqueue for led_on was
-> not being cancelled. To prevent interference between cfg80211 and rtl8187=
-,
-> a separate workqueue has also been established.
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index f3d5812..1020290 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -238,7 +238,7 @@ void rfkill_destroy(struct rfkill *rfkill);
+  * should be blocked) so that drivers need not keep track of the soft
+  * block state -- which they might not be able to.
+  */
+-bool __must_check rfkill_set_hw_state(struct rfkill *rfkill, bool blocked);
++bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked);
+ 
+ /**
+  * rfkill_set_sw_state - Set the internal rfkill software block state
+-- 
+1.6.3.2
 
-It doesn't seem like a separate workqueue should be necessary -- why is
-it? Might make more sense to fix cfg80211 or mac80211 instead.
 
-johannes
-
---=-La8BKVfGcq5197EMfxwG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKW13xAAoJEODzc/N7+QmakxQP/juo1YPcJSfVawFLlRWDNNhp
-HC7jqGOdBQJ2s0RHmLksm8fvXFM/XxCYuVK5CIo/HQJNWIdyU5lvn19PDMk0NO5f
-5q/16qVtE0mIDnymxdNV7AaLuv+UoyEMRlO8+oD+X2+0IpZS8JOZPKLTJnAON4UV
-jlA65FRjd5hE9RNTy0hjRZam7wlm04mRnLucQBqLTOBot03CQ6l6MKvNKOG0BDvR
-TG3y9sH+YVLkEC6IuedAY08Tez+RyYbWorptx+RaH9MRRrcx3CiS9EHDFEFQ6gLP
-Yu/pD8X/rUF1llTSku7LJ0N13zbgN/onWmRsx/cP7cgMCinOYql3G8eyKL3uaXCR
-mE14glAQV12MQ69qF87+57k0uccrAGIhf8fmI/qUFLAvIGbylznwjF5mYeP3veuX
-gIUxeE8QnvdeLCUatHfANLSLDf1HR0T2hCOW1dUxP7iBMHrQ/LJObjOQ+brQHj3c
-t5AuAG0qb8jO9V+cVNHwxFCLXFPFHF2mPG9mT6wmqgaxcfTUcedoz7Ci2UuMx1BC
-gRsWacf4jApoZvoWJPm9mmQO9g2mesir09zOsT12vaItb1UsheEzpPpSvJVVfm6U
-96V9FYj8NQYOxSwTS3L+WLRYC/dneKChKYH34LxH9egZvZ+Upa2YGI0YM/p16Eqi
-9GD40v2+tGczIhLT33eD
-=+qgf
------END PGP SIGNATURE-----
-
---=-La8BKVfGcq5197EMfxwG--
 
