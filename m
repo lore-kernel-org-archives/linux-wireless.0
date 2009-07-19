@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:56866 "EHLO
-	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753865AbZGGTZu (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:51640 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430AbZGSVar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 15:25:50 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.31-rc2: Reported regressions from 2.6.30
-Date: Tue, 7 Jul 2009 21:25:45 +0200
-Cc: linux-kernel@vger.kernel.org, bunk@kernel.org,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	kernel-testers@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <35kKlbXMqWN.A.RXD.D0oUKB@chimera>
-In-reply-To: <35kKlbXMqWN.A.RXD.D0oUKB@chimera>
+	Sun, 19 Jul 2009 17:30:47 -0400
+Received: by gxk9 with SMTP id 9so3367485gxk.13
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2009 14:30:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907072125.47762.elendil@planet.nl>
+In-Reply-To: <20090718221212.10818.52921.stgit@mj.roinet.com>
+References: <20090718221212.10818.52921.stgit@mj.roinet.com>
+Date: Sun, 19 Jul 2009 17:30:47 -0400
+Message-ID: <b6c5339f0907191430jc68da1ao12b304d65974a5eb@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: fix values for bus error bits in ISR2
+From: Bob Copeland <me@bobcopeland.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If you know of any other unresolved regressions from 2.6.30, please let
-> me know either and I'll add them to the list.
+On Sat, Jul 18, 2009 at 6:12 PM, Pavel Roskin<proski@gnu.org> wrote:
+> The new values are taken from the recently open sourced Atheros HAL.
+> Correctness is also confirmed by the users with access to Atheros
+> documentation.
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-Please add: http://lkml.org/lkml/2009/6/29/88
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
-Reinette Chatre is handling the bug and posted a patch in 
-http://lkml.org/lkml/2009/6/30/224
+Thanks!
 
-Thanks,
-FJP
+-- 
+Bob Copeland %% www.bobcopeland.com
