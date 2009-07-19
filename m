@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:40984 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbZGST0R (ORCPT
+Received: from viefep11-int.chello.at ([62.179.121.31]:53090 "EHLO
+	viefep11-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754261AbZGSNmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 15:26:17 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] p54spi: fix potential null deref in p54spi.c
-Date: Sun, 19 Jul 2009 21:26:13 +0200
-Cc: Max Filippov <jcmvbkbc@gmail.com>,
-	Dan Carpenter <error27@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <alpine.DEB.2.00.0907171607280.12306@bicker>
-In-Reply-To: <alpine.DEB.2.00.0907171607280.12306@bicker>
+	Sun, 19 Jul 2009 09:42:07 -0400
+Received: from edge05.upc.biz ([192.168.13.212]) by viefep11-int.chello.at
+          (InterMail vM.7.09.01.00 201-2219-108-20080618) with ESMTP
+          id <20090719134201.LUEI27079.viefep11-int.chello.at@edge05.upc.biz>
+          for <linux-wireless@vger.kernel.org>;
+          Sun, 19 Jul 2009 15:42:01 +0200
+Message-ID: <ABEC48F218774102B9939CE6F5F5F856@Emiel>
+From: "Emiel Bruijntjes" <emiel@bruijntjes.net>
+To: <linux-wireless@vger.kernel.org>
+Subject: Enabling and disabling Atheros AR9258 wireless card
+Date: Sun, 19 Jul 2009 15:41:38 +0200
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907192126.13207.chunkeey@web.de>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <error27@gmail.com>
 
-Fix a potential NULL dereference bug during 
-error handling in p54spi_probe.
+Hi,
 
-This bug was discovered by smatch:
-(http://repo.or.cz/w/smatch.git).
+I hope this is the right channel to report a bug/feature-request.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-On Sunday 19 July 2009 13:53:57 Dan Carpenter wrote:
+My laptop (Toshiba NB200) uses a Atheros AR9285 wireless card. Wireless is 
+currently disabled, and the wireless LED is off. This is the default factory 
+setting. There is no way to enable the wireless module from Linux. On 
+Windows, the Fn/F8 key combination enables and disables the wireless module, 
+and turns on or off the LED. On Linux however, this isn't working.
 
-> We can't use dev_err() becuase "priv" is NULL.
-yep, but that's my fault and not Micheal's.
+The advice that I read on discussion forums on the web was to boot Windows, 
+turn on wireless, and then boot Linux again (see http://tjmcgrew.com/). It 
+is - as far as I know - not possible to use the Atheros AR9285 wireless card 
+on a Linux computer, without running Windows first to enable it. This is not 
+very good.
 
-> Found by smatch (http://repo.or.cz/w/smatch.git).
-> regards,
-> dan carpenter
-what about this alternative?
-it retains the dev_err by simply moving to the spi_device *spi
-which comes from spi-subsystem and is initialized?
+To sum up:
+- From Linux it is not possible to enable/disable the Atheros AR9285 
+wireless card, and to turn on and off the wireless LED.
+- This should be fixed as the wireless card is disabled by default, and it 
+is thus impossible to use it on a system without installing and running 
+Windows first.
 
-Regards,
-	Chr
----
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index d5f181a..eef5329 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -600,7 +600,7 @@ static int __devinit p54spi_probe(struct spi_device *spi)
- 
- 	hw = p54_init_common(sizeof(*priv));
- 	if (!hw) {
--		dev_err(&priv->spi->dev, "could not alloc ieee80211_hw");
-+		dev_err(&spi->dev, "could not alloc ieee80211_hw");
- 		return -ENOMEM;
- 	}
- 
-
+Emiel Bruijntjes 
 
