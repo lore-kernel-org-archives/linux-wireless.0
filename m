@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36571 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752706AbZG2Vui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 17:50:38 -0400
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248903902.8925.1.camel@johannes.local>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <1248903902.8925.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Wed, 29 Jul 2009 14:50:38 -0700
-Message-Id: <1248904238.1216.1019.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-yx0-f184.google.com ([209.85.210.184]:49145 "EHLO
+	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbZGSMvv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jul 2009 08:51:51 -0400
+Received: by yxe14 with SMTP id 14so2912186yxe.33
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2009 05:51:50 -0700 (PDT)
+Date: Sun, 19 Jul 2009 14:53:39 +0300 (EAT)
+From: Dan Carpenter <error27@gmail.com>
+To: yi.zhu@intel.com
+cc: linux-wireless@vger.kernel.org
+Subject: iwmc3200wifi: using freed memory in iwm_hal_send_target_cmd()
+Message-ID: <alpine.DEB.2.00.0907171555200.12306@bicker>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-29 at 14:45 -0700, Johannes Berg wrote:
-> On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
-> > From: Reinette Chatre <reinette.chatre@intel.com>
-> > 
-> > The connection monitor currently relies on probe requests paired
-> > with probe responses to ensure that a connection is alive. This is
-> > fragile in some environments where probe responses can get lost.
-> > When we receive beacons we can also consider the connection to be
-> > alive, so cancel connection poll instance when we receive a beacon.
-> > 
-> > The debug message "cancelling probereq poll due to a received beacon"
-> > is removed as part of this change as this case is hit very often after
-> > the above change and debug log receives significant number of these messages.
-> 
-> Not doing that was actually intentional -- we want to know whether or
-> not the connection is working both ways, not just whether we can receive
-> frames. This can certainly be improved, but I'm not sure this is the
-> best approach.
+Hello,
 
-I'd be happy to try out other approaches because my connection is
-dropping every few minutes. 
+I found this with a source code checker (http://repo.or.cz/w/smatch.git).
 
-Reinette
+We free "cmd" on line 390 and then dereference it on line 396.  I don't 
+know what we should return in that case or I would have sent a patch.  
+Sorry.
 
+drivers/net/wireless/iwmc3200wifi/hal.c
+   390          if (!udma_cmd->resp)
+   391                  kfree(cmd);
+   392  
+   393          if (ret < 0)
+   394                  return ret;
+   395  
+   396          return cmd->seq_num;
 
+regards,
+dan carpenter
