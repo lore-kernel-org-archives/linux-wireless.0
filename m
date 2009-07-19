@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:40069 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753886AbZGHNcx (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:40984 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750804AbZGST0R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 09:32:53 -0400
-Date: Wed, 08 Jul 2009 08:33:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chunkeey@web.de, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, rjw@sisk.pl, davem@davemloft.net
-Subject: [PATCH] p54: Fix for Bugzilla #13725 - tx refused but queue
- active
-Message-ID: <4a54a00e.f/eBx8U+poa0aDtQ%Larry.Finger@lwfinger.net>
+	Sun, 19 Jul 2009 15:26:17 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] p54spi: fix potential null deref in p54spi.c
+Date: Sun, 19 Jul 2009 21:26:13 +0200
+Cc: Max Filippov <jcmvbkbc@gmail.com>,
+	Dan Carpenter <error27@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <alpine.DEB.2.00.0907171607280.12306@bicker>
+In-Reply-To: <alpine.DEB.2.00.0907171607280.12306@bicker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907192126.13207.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the mainline kernel, p54usb will fail because the TX queue length can
-become < 0. This problem has been reported as Bugzilla #13725. The failure
-is expressed by the following message in the logs:
+From: Dan Carpenter <error27@gmail.com>
 
-WARNING: at net/mac80211/tx.c:1325 ieee80211_tx+0x23c/0x298 [mac80211]()
-Hardware name: HP Pavilion dv2700 Notebook PC
-tx refused but queue active
+Fix a potential NULL dereference bug during 
+error handling in p54spi_probe.
 
-This problem has been recently observed in the wireless-testing tree, where
-a full solution is being tested. That fix is too invasive for 2.6.31-rcX,
-but the simple change supplied here will prevent the failure.
+This bug was discovered by smatch:
+(http://repo.or.cz/w/smatch.git).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
+On Sunday 19 July 2009 13:53:57 Dan Carpenter wrote:
 
-John,
+> We can't use dev_err() becuase "priv" is NULL.
+yep, but that's my fault and not Micheal's.
 
-This patch should be sent to mainline. As stated above, it should not be
-applied to wireless-testing.
+> Found by smatch (http://repo.or.cz/w/smatch.git).
+> regards,
+> dan carpenter
+what about this alternative?
+it retains the dev_err by simply moving to the spi_device *spi
+which comes from spi-subsystem and is initialized?
 
-Thanks,
-
-Larry
+Regards,
+	Chr
 ---
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index d5f181a..eef5329 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -600,7 +600,7 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+ 
+ 	hw = p54_init_common(sizeof(*priv));
+ 	if (!hw) {
+-		dev_err(&priv->spi->dev, "could not alloc ieee80211_hw");
++		dev_err(&spi->dev, "could not alloc ieee80211_hw");
+ 		return -ENOMEM;
+ 	}
+ 
 
-Index: linux-2.6/drivers/net/wireless/p54/p54common.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/p54/p54common.c
-+++ linux-2.6/drivers/net/wireless/p54/p54common.c
-@@ -912,13 +912,14 @@ static void p54_rx_frame_sent(struct iee
- 		}
- 
- 		__skb_unlink(entry, &priv->tx_queue);
--		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 
- 		frame_len = entry->len;
- 		entry_hdr = (struct p54_hdr *) entry->data;
- 		entry_data = (struct p54_tx_data *) entry_hdr->data;
--		priv->tx_stats[entry_data->hw_queue].len--;
-+		if (priv->tx_stats[entry_data->hw_queue].len)
-+			priv->tx_stats[entry_data->hw_queue].len--;
- 		priv->stats.dot11ACKFailureCount += payload->tries - 1;
-+		spin_unlock_irqrestore(&priv->tx_queue.lock, flags);
- 
- 		/*
- 		 * Frames in P54_QUEUE_FWSCAN and P54_QUEUE_BEACON are
 
----
