@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57833 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755060AbZG2BbU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 21:31:20 -0400
-Subject: Re: 31-rc3-mmotm0716 - wonky wireless statistics..
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <5934.1248814870@turing-police.cc.vt.edu>
-References: <5934.1248814870@turing-police.cc.vt.edu>
-Content-Type: text/plain
-Date: Wed, 29 Jul 2009 09:31:18 +0800
-Message-Id: <1248831078.3747.1117.camel@debian>
-Mime-Version: 1.0
+Received: from fmailhost01.isp.att.net ([204.127.217.101]:45500 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754357AbZGSOgt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jul 2009 10:36:49 -0400
+Message-ID: <4A632F9C.8080207@lwfinger.net>
+Date: Sun, 19 Jul 2009 09:37:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111) with
+ p54usb
+References: <4A611FC0.9040507@lwfinger.net> <4A61E436.9060808@lwfinger.net> <b6c5339f0907181419h28b84166s72ba9386f2833c61@mail.gmail.com> <200907190032.58156.chunkeey@web.de>
+In-Reply-To: <200907190032.58156.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-29 at 05:01 +0800, Valdis.Kletnieks@vt.edu wrote:
-> Dell Latitude D820 laptop, lspci reports the network card as:
+Christian Lamparter wrote:
+> well, ieee80211_sta_monitor_work - which probes the AP every now and then -
+> didn't check if we're scanning.
+> The attached diff survives a non-stop scanning without throwing the WARN in
+> rate_lowest_index once.
 > 
-> 0c:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Netwo           rk Connection (rev 02)
+> However, I'm not so sure about the locking for hw_scanning and sw_scanning.
+> It looks like only scan.c manipulates them under the scan mutex.
+> But then, do we need locking for a single threaded workqueue? guess not.
+> ---
+> Larry,
 > 
-> iwlwifi driver in use, card associated via wpa_supplicant but not being
-> actively used
+> here's another _fix_ which might even fix the problem after all ;-)
 > 
-> # iwconfig
-> wlan0     IEEE 802.11abg  ESSID:"VT-Wireless"  
->           Mode:Managed  Frequency:2.447 GHz  Access Point: 00:11:20:A4:4C:10   
->           Bit Rate=54 Mb/s   Tx-Power=15 dBm   
->           Retry  long limit:7   RTS thr:off   Fragment thr:off
->           Encryption key:<lopped out> [2]
->           Link Quality=62/70  Signal level=-48 dBm  
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-> # cat /proc/net/wireless
-> Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
->  face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
->  wlan0: 0000   63.  -47.  -256        0      0      0      0      0        0
->  wlan1: 0000    0     0     0        0      0      0      0      0        0
->  wlan2: 0000    0     0     0        0      0      0      0      0        0
-> 
-> Where did that -256 for "noise" come from?  It ends up confusing the
-> gkrellm-wifi plugin, it reports a S/N of 219dB ;)
+> Regards,
+> 	Chr
+> ---
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 18dad22..4833e7c 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2210,6 +2210,9 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
+>  		container_of(work, struct ieee80211_sub_if_data,
+>  			     u.mgd.monitor_work);
+>  
+> +	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
+> +		return;
+> +
+>  	ieee80211_mgd_probe_ap(sdata, false);
+>  }
 
-This should be related to http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=fdb897ea5c77836f890033d563336ab0c94c9222
-
-But I don't think this is an ABI broken. User space should parse the
-trailing '.' to see if a field is updated or not because there are cards
-not capable to report hardware noise level anyway. Johannes?
+Yes - this patch gets rid of the warnings.
 
 Thanks,
--yi
+
+Larry
 
