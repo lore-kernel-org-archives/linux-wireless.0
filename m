@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57134 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34775 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754975AbZGGVmD (ORCPT
+	with ESMTP id S1751963AbZGTKhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 17:42:03 -0400
-Subject: [PATCH] cfg80211: fix race in giwrate
+	Mon, 20 Jul 2009 06:37:25 -0400
+Subject: Re: [PATCH 3/5] iwmc3200wifi: use cfg80211_connect_result to send
+ req/resp IE
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 07 Jul 2009 23:41:27 +0200
-Message-Id: <1247002887.4755.48.camel@johannes.local>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1248061667-8614-4-git-send-email-yi.zhu@intel.com>
+References: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
+	 <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
+	 <1248061667-8614-3-git-send-email-yi.zhu@intel.com>
+	 <1248061667-8614-4-git-send-email-yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kuQlBAaatQ8jQ2FarqWO"
+Date: Mon, 20 Jul 2009 12:37:21 +0200
+Message-Id: <1248086241.14765.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_wext_giwrate doesn't lock the wdev, so it
-cannot access current_bss race-free. Also, there's
-little point in trying to ask the driver for an AP
-that it never told us about, so avoid that case.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-compat.c |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+--=-kuQlBAaatQ8jQ2FarqWO
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-07 23:39:01.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-07-07 23:39:11.000000000 +0200
-@@ -1127,7 +1127,7 @@ int cfg80211_wext_giwrate(struct net_dev
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	/* we are under RTNL - globally locked - so can use a static struct */
- 	static struct station_info sinfo;
--	u8 *addr;
-+	u8 addr[ETH_ALEN];
- 	int err;
- 
- 	if (wdev->iftype != NL80211_IFTYPE_STATION)
-@@ -1136,12 +1136,15 @@ int cfg80211_wext_giwrate(struct net_dev
- 	if (!rdev->ops->get_station)
- 		return -EOPNOTSUPP;
- 
-+	err = 0;
-+	wdev_lock(wdev);
- 	if (wdev->current_bss)
--		addr = wdev->current_bss->pub.bssid;
--	else if (wdev->wext.connect.bssid)
--		addr = wdev->wext.connect.bssid;
-+		memcpy(addr, wdev->current_bss->pub.bssid, ETH_ALEN);
- 	else
--		return -EOPNOTSUPP;
-+		err = -EOPNOTSUPP;
-+	wdev_unlock(wdev);
-+	if (err)
-+		return err;
- 
- 	err = rdev->ops->get_station(&rdev->wiphy, dev, addr, &sinfo);
- 	if (err)
+On Mon, 2009-07-20 at 11:47 +0800, Zhu Yi wrote:
+> cfg80211_connect_result() let us specify associate request and
+> response IEs as parameters after we are connected. We use this
+> capability instead of doing it ourselves with WEXT.
 
+I think with this, you can now remove
+
+        select WIRELESS_EXT
+
+from your Kconfig.
+
+johannes
+
+--=-kuQlBAaatQ8jQ2FarqWO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKZEjdAAoJEODzc/N7+QmaChcP/jaVPQ2lx9GcfSTT0zn7v6sx
+LWKSeS4LJwcvFcUfGlIFAgL9guvrhXj+Odxhf6WvCH1Cq2jh+oaynM4uisJ9tT8V
+B4E3Qmk6O9Ub1k96ox7iziX6hCSU1p0j8Q7/SuBuLrtpLaHwwiuLRvPAGXI5WxdC
+4Rt4ZYnpTh7Aw7z+iVS/DxR1i5WkPGspNbgTmgUMBzrvnMyjvq78T5pwdu5524B+
+AAcjc8cxTOGldi6waF4blevqIsc4QQGdaMs7ubP6DSICtnrSNye5H2dueAhjVUGR
+c/xSCYG4ErF2W8qVue+PkZqhKLwcxtNG8rp/VMNMOnmrJ8dgKvtCQvRtwNluZiCt
+Ydj1yi25ctpN9OndBWe+mRAc1h1Wrw2rkG1rYFitDegp6Sm3+0Rw3gULgU6FA+tr
+ZY2SUhEkAZPnj5dx/o+Np4DdmbNM0kzEABgxawM/u8CcJyaPoid21rCzasggR1Yg
+9vOGUtzcYd30aXDYdpuY0jP9VKz0XcayLuCPTUdRZ7oOTFqOfSRJZbh9B2FP9m/H
+6h5crJ7E76OJLZVGv7M9WayrCHy83I7V5Cqc1ZopZpHteULpQmqdURbyQUlKRvDL
+bC5ko1Iny0p4f6eiOaz1OuBabXeB5l6dzjGY1o2j9Edr4DF8QsZUg+fYrrB+Nluk
+2f5UVAriZOiQlvZ2f6by
+=6/q1
+-----END PGP SIGNATURE-----
+
+--=-kuQlBAaatQ8jQ2FarqWO--
 
