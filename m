@@ -1,59 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out9.libero.it ([212.52.84.109]:58640 "EHLO
-	cp-out9.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076AbZGWVuD convert rfc822-to-8bit (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:57688 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751583AbZGTXww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 17:50:03 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: WARNING: at net/mac80211/tx.c:561
-Date: Thu, 23 Jul 2009 23:47:43 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-wireless@vger.kernel.org
-References: <200907230051.57201.rossi.f@inwind.it> <43e72e890907231119s5e992c91r2225f6ea77543dc8@mail.gmail.com> <43e72e890907231123w7267c022yc33f4aad63e3a3fd@mail.gmail.com>
-In-Reply-To: <43e72e890907231123w7267c022yc33f4aad63e3a3fd@mail.gmail.com>
+	Mon, 20 Jul 2009 19:52:52 -0400
+Message-ID: <4A650331.9020409@redfish-solutions.com>
+Date: Mon, 20 Jul 2009 16:52:17 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Message-Id: <200907232347.44096.rossi.f@inwind.it>
-Content-Type: text/plain;
-  charset="utf-8"
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> 	<4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet> 	<4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet> 	<4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+In-Reply-To: <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 July 2009, Luis R. Rodriguez wrote:
+Luis R. Rodriguez wrote:
+> On Mon, Jul 20, 2009 at 12:16 PM, Philip A.
+> Prindeville<philipp_subx@redfish-solutions.com> wrote:
+>> Bob Copeland wrote:
+>>> On Sun, Jul 19, 2009 at 08:05:47PM -0700, Philip A. Prindeville wrote:
+>>>> Actually, it's saying:
+>>>>
+>>>> filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
+>>>> depends:        mac80211,cfg80211
+>>>>
+>>>> And the 0.6.0 version number matches ath5k/base.c in the compat-wireless
+>>>> sources as well.
+>>> Yeah, ignore the module version number, no one ever changes it.
+>>>
+>>>> Not seeing the dependency on "ath", which is strange.  Is that common code
+>>>> that's shared in 2.6.30 for the Atheros drivers?
+>>> In 2.6.31, yes.
+>>>
+>>>>> The fix was merged after 2.6.30, IIRC, but it should definitely be in
+>>>>> compat-wireless.  Also check your modules directory for an old ath5k.ko
+>>>>> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
+>>> See above, the fix was post-2.6.30, however compat-wireless should have
+>>> it.  The module should now be in drivers/net/wireless/ath/ath5k, not
+>>> drivers/net/wireless/ath5k.
+>>>
+>> I'm using the tarball out of:
+>>
+>> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30
+>>
+>> perhaps I should be using a different one?  I tried 2.6.31-rc1, but it doesn't build against 2.6.27.
+> 
+> I have to fix this, will do so in a bit, will also update it to
+> account for the new rc3.
+> 
+>   Luis
 
-> >> Please try this patch:
-> >>
-> >> From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >> Subject: [PATCH] mac80211: do not trigger beacon work if scanning
-> >>
-> >> We were issues probe requests to the associated AP on the wrong
-> >> band. This leads to finding not bitrate. We should not be doing
-> >> this, so prevent the timer from stuffing beacon loss work on
-> >> the mac80211 workqueue.
-> >>
-> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >> ---
-> >>  net/mac80211/mlme.c |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> >> index 523c0d9..e90992e 100644
-> >> --- a/net/mac80211/mlme.c
-> >> +++ b/net/mac80211/mlme.c
-> >> @@ -2187,7 +2187,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned
-> >> long data) (struct ieee80211_sub_if_data *) data;
-> >>        struct ieee80211_local *local = sdata->local;
-> >>
-> >> -       if (local->quiescing)
-> >> +       if (local->quiescing || local->sw_scanning ||
-> >> local->hw_scanning) return;
-> >
-> > Heh no wait, this is very wrong.
->
-> Never mind, please do try it. If we are scanning we should not be
-> sending probe requests through a timer. That clarifies what I mean and
-> I should add that to the commit log. But please do try it.
+Well, while waiting for a "blessed" (or at least, 'stable') tarball to be pushed out, I tried running 2009-06-30, and I'm seeing a lot of:
 
-Patch applied, now the warning is disappeared!
+mgmt::proberesp cb
+Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
+STA 00:21:29:69:3e:a0 sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+...
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) ACK
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) ACK
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+STA 00:21:29:69:3e:a0 sent probe request for our SSID
+Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
+MGMT (TX callback) ACK
+mgmt::proberesp cb
+STA 00:21:29:69:3e:a0 sent probe request for our SSID
+MGMT (TX callback) fail
+mgmt::proberesp cb
 
-Fabio
+
+
+00:21:29:69:3e:a0 is a PC running Vista SP2.
+
+00:21:e9:6e:a7:4f is an iPhone running 3.0.
+
+The iPhone should be scanning for available networks, but it's also been explicitly configured with this particular AP (and SSID).
+
+Is this a known issue?
+
+-Philip
