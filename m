@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:47456 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbZGaS1w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:27:52 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so612821eyd.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:27:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890907311120r76d3db6et91128ccbc3a90c63@mail.gmail.com>
-References: <20090731180238.GA7963@makis>
-	 <43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
-	 <40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
-	 <43e72e890907311120r76d3db6et91128ccbc3a90c63@mail.gmail.com>
-Date: Fri, 31 Jul 2009 21:27:51 +0300
-Message-ID: <40f31dec0907311127o4bc4de73u1b4b5dfeb66d55b9@mail.gmail.com>
-Subject: Re: [PATCH 1/4]: Check EEPROM before tweaking SERDES
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:30088 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752648AbZGTILg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2009 04:11:36 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] cfg80211: avoid setting default_key if add_key fails
+Date: Mon, 20 Jul 2009 16:12:57 +0800
+Message-Id: <1248077577-7295-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Fri, Jul 31, 2009 at 11:18 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
->> 2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
->>>
->>> Can the changes for the code be done before the move, or after so that
->>> way the actual code changes to the section can be easily readable?
->>>
->>
->> Since we use EEPROM infos we must move this after eeprom initialization.
->
-> Yes, but my point is a move can be done in one patch, changes to that
-> code in a separate patch, to help understand what is going on during
-> patch review.
->
->  Luis
->
+In cfg80211_upload_connect_keys(), we call add_key, set_default_key
+and set_default_mgmt_key (if applicable) one by one. If one of these
+operations fails, we should stop calling the following functions.
+Because if the key is not added successfully, we should not set it as
+default key anyway.
 
-I think this will pollute the logs, it's a very simple change and commented.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/wireless/util.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4bab380..ba387d8 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -546,13 +546,17 @@ void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
+ 		if (!wdev->connect_keys->params[i].cipher)
+ 			continue;
+ 		if (rdev->ops->add_key(wdev->wiphy, dev, i, NULL,
+-					&wdev->connect_keys->params[i]))
++					&wdev->connect_keys->params[i])) {
+ 			printk(KERN_ERR "%s: failed to set key %d\n",
+ 				dev->name, i);
++			continue;
++		}
+ 		if (wdev->connect_keys->def == i)
+-			if (rdev->ops->set_default_key(wdev->wiphy, dev, i))
++			if (rdev->ops->set_default_key(wdev->wiphy, dev, i)) {
+ 				printk(KERN_ERR "%s: failed to set defkey %d\n",
+ 					dev->name, i);
++				continue;
++			}
+ 		if (wdev->connect_keys->defmgmt == i)
+ 			if (rdev->ops->set_default_mgmt_key(wdev->wiphy, dev, i))
+ 				printk(KERN_ERR "%s: failed to set mgtdef %d\n",
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.0.4
+
