@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:36755 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbZGaSjc convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f173.google.com ([209.85.221.173]:56631 "EHLO
+	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477AbZGTQRY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:39:32 -0400
-Received: by ewy10 with SMTP id 10so1718903ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:39:32 -0700 (PDT)
+	Mon, 20 Jul 2009 12:17:24 -0400
+Received: by mail-qy0-f173.google.com with SMTP id 3so173272qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 09:17:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890907311114k5a049c08jfa40a3ed45e9afed@mail.gmail.com>
-References: <20090731180805.GD7963@makis>
-	 <43e72e890907311114k5a049c08jfa40a3ed45e9afed@mail.gmail.com>
-Date: Fri, 31 Jul 2009 21:39:31 +0300
-Message-ID: <40f31dec0907311139le0f279bl54bc897d1c716582@mail.gmail.com>
-Subject: Re: [PATCH 3/4] ath5k: Wakeup fixes
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
+In-Reply-To: <200907181948.54594.chunkeey@web.de>
+References: <4A611FC0.9040507@lwfinger.net> <4A61E436.9060808@lwfinger.net>
+	<200907181808.05142.chunkeey@web.de> <200907181948.54594.chunkeey@web.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 20 Jul 2009 09:17:04 -0700
+Message-ID: <43e72e890907200917r5472f4c8kaaa78e0529ae617c@mail.gmail.com>
+Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111)
+To: Christian Lamparter <chunkeey@web.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Fri, Jul 31, 2009 at 11:08 AM, Nick
-> Kossifidis<mick@madwifi-project.org> wrote:
->>  * Don't put chip to full sleep because there are problems during
->>   wakeup. Instead hold MAC/Baseband on warm reset state via a new
->>   function ath5k_hw_on_hold.
->>
->>  * Durring attach preserve pcicfg bits when enabling pci core
->>   sw retry fix.
->>
->>  * Minor cleanups
+On Sat, Jul 18, 2009 at 10:48 AM, Christian Lamparter<chunkeey@web.de> wrote:
+> On Saturday 18 July 2009 18:08:04 Christian Lamparter wrote:
+>> On Saturday 18 July 2009 17:03:18 Larry Finger wrote:
+>> > Thanks for the patch. I'll let you know what happens.
+>> I have my doubts. Do you still have the WARN_ON dump?
+>> or at least which of the two functions are listed in the dump?
+>> - rate_control_get_rate
+>> - rate_control_rate_init <- unlikely/really surprising
 >
-> Can you address these changes separately? I see you tend to itemize
-> the things you change, even when you just make one change. Please
-> consider addressing one change per commit and just ensure the why is
-> crystal clear.
+> found a similar WARNINGs on kerneloops:
+> http://www.kerneloops.org/raw.php?rawid=449304&msgid=
+> but the user has ath5k.
 >
->  Luis
+> and there's more: iwlagn used to have this issue, but they fixed it.
+> ---
+> commit c338ba3ca5bef2df2082d9e8d336ff7b2880c326
+> Author: Abbas, Mohamed <mohamed.abbas@intel.com>
+> Date:   Wed Jan 21 10:58:02 2009 -0800
 >
+>    iwlwifi: fix rs_get_rate WARN_ON()
+>
+>    In ieee80211_sta structure there is u64 supp_rates[IEEE80211_NUM_BANDS]
+>    this is filled with all support rate from assoc_resp.  If we associate
+>    with G-band AP only supp_rates of G-band will be set the other band
+>    supp_rates will be set to 0. If the user type this command
+>    this will cause mac80211 to set to new channel, mac80211
+>    does not disassociate in setting new channel, so the active
+>    band is now A-band. then in handling the new essid mac80211 will
+>    kick in the assoc steps which involve sending disassociation frame.
+>    in this mac80211 will WARN_ON sta->supp_rates[A_BAND] == 0.
 
-Cleanup doesn't count as a change, the only real change is the first one.
-I 'm trying not to pollute the logs. This patch fixes an issue reported when
-card doesn't wake up.
+I revert this patch in my rate control cleanup series, the real issue
+was underneath the hood in mac80211 and should no longer be present.
+It was caused by scans being issued with the assumption a valid rate
+will be found on a different band for the target sta entry (the AP).
+In my patch, "mac80211: drop frames for sta with no valid rate" we
+simply drop these frames now and warn whenever such attempts are being
+made within mac80211.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+  Luis
