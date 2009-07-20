@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f197.google.com ([209.85.222.197]:63069 "EHLO
-	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964868AbZGQQKu (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:51546 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750982AbZGTDGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:10:50 -0400
-Received: by pzk35 with SMTP id 35so683448pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 09:10:50 -0700 (PDT)
+	Sun, 19 Jul 2009 23:06:17 -0400
+Message-ID: <4A63DF0B.4010801@redfish-solutions.com>
+Date: Sun, 19 Jul 2009 20:05:47 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890907170417s7aae2c5di6a2381908ee8d85e@mail.gmail.com>
-References: <43e72e890907161810k51e3830bqe3283539f19e2fd2@mail.gmail.com>
-	<3ace41890907170417s7aae2c5di6a2381908ee8d85e@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 17 Jul 2009 09:10:30 -0700
-Message-ID: <43e72e890907170910j88b466ej381046bf7df001c2@mail.gmail.com>
-Subject: Re: Using GeoClue to send a Linux wireless regulatory hint
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: GeoClue <geoclue@lists.freedesktop.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	till.kamppeter@gmail.com, desrt@desrt.ca,
-	Dan Winship <danw@gnome.org>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet>
+In-Reply-To: <20090719203150.GA9972@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 17, 2009 at 4:17 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
-> I thought the reason for using GeoClue is to cater for frequent
-> travellers who can cross timezone
+Bob Copeland wrote:
+> On Sun, Jul 19, 2009 at 10:55:16AM -0700, Philip A. Prindeville wrote:
+>> Bob Copeland wrote:
+>>> On Fri, Jul 17, 2009 at 9:27 PM, Philip A.
+>>>> + iw dev wlan0 interface add ap0 type managed
+>>>> + ip link set ap0 up
+>>>> + iw dev ap0 connect xxxx
+>>>> command failed: Operation not supported (-95)
+>>> Why are you adding another interface?  Should be able to use "iw dev wlan0..."
+>> Because I might want to run two access points (two SSIDs, anyway) on the same
+>> radio...  one with WEP on one VLAN (for Wifi SIP handsets), and one with
+>> WPA-PSK2 on another VLAN (for laptops, etc).
+> 
+> Hmm, I don't know if it matters, but you were creating it as a managed
+> interface.  Anyway I don't believe ath5k supports that yet - ath9k might.
+> Someone on ath5k-devel was porting the ath9k virtual wiphy stuff to
+> ath5k but I haven't heard anything recently.
+> 
+>> But, if you think there's still a doubt, what to look for in the modinfo?
+> 
+> If it says "depends: mac80211,cfg80211,ath" then it is probably the right
+> one.  It just sounds like this bug:
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=12315
 
-No, you use it for whatever you want. For wireless we want it to get
-the country so the user does not have to bother with setting the
-regulatory domain themselves.
+Actually, it's saying:
 
-> (and not neccesarily reset their
-> laptop's computer/clock for it)?
+filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
+version:        0.6.0 (EXPERIMENTAL)
+license:        Dual BSD/GPL
+description:    Support for 5xxx series of Atheros 802.11 wireless LAN cards.
+author:         Nick Kossifidis
+author:         Jiri Slaby
+srcversion:     E33724BC42EBC4E7E7714E1
+...
+depends:        mac80211,cfg80211
+vermagic:       2.6.27.26-astlinux preempt mod_unload modversions GEODE
+parm:           nohwcrypt:Disable hardware encryption. (int)
 
-That seems to be just one use for GeoClue.
+"nohwcrypt" is present in the 2.6.30 wireless-compat sources but not in the 2.6.27 drivers, so I'm pretty sure we're looking at the right ones.
 
-> So it is orthogonal to one-off static
-> setup where the computer mostly stay in the same country/location.
+And the 0.6.0 version number matches ath5k/base.c in the compat-wireless sources as well.
 
-Sure, a static computer still can use location information and I won't
-get into the use cases for that outside the scope of wireless. As far
-as distributions are concerned it would still be nice to provide the
-country the user is in to the kernel even for statically placed
-computers and not have the user set this.
+Not seeing the dependency on "ath", which is strange.  Is that common code that's shared in 2.6.30 for the Atheros drivers?
 
-The idea is to just automate informing the kernel of your country and
-using the best resources possible to do this.
+> The fix was merged after 2.6.30, IIRC, but it should definitely be in
+> compat-wireless.  Also check your modules directory for an old ath5k.ko
+> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
+> 
+> HTH!
+> 
 
-> Is
-> there an iw/cfg80211 interface/field for regulatory info?
-
-
-Yes. See iw documentation about this [1], wpa_supplicant also has
-support for this as well.
-
-[1] http://wireless.kernel.org/en/users/Documentation/iw#Updating_your_regulatory_domain
-
-> AFAIK there isn't in wext,
-
-No and there won't be.
-
-> but that's on its way out and probably not important...
-
-Wireless extensions is not going to be removed, we just stop advancing
-it and now that we have a good replacement API (cfg80211) we push
-driver developers to use it for new drivers to be merged.
-
-  Luis
