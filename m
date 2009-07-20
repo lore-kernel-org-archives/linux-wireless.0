@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45503 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:15985 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752493AbZGVRvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 13:51:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:51:51 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<sfalpha@gmail.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Michael Green <michael.green@atheros.com>,
-	David Quan <david.quan@atheros.com>
-Subject: [PATCH] wireless-regdb: TH gets 5 GHz enabled as of new regulatory rules
-Date: Wed, 22 Jul 2009 10:51:48 -0700
-Message-ID: <1248285108-10059-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1752050AbZGTMAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2009 08:00:31 -0400
+Subject: [PATCH v2] ath5k: fix values for bus error bits in ISR2
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
 Content-Type: text/plain
+Date: Mon, 20 Jul 2009 08:00:30 -0400
+Message-Id: <1248091230.13859.9.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Phattanon Duangdara reported the National Telecommunication
-Commisions of Thailand has announced new regulatory rules
-about 5GHz for RLAN last year.
+The new values are taken from the recently open sourced Atheros HAL.
+Correctness is also confirmed by the users with access to Atheros
+documentation.
 
-I have verified this matches our documentation internally
-at Atheros.
-
-Reference in Thai Language:
-http://www.ratchakitcha.soc.go.th/DATA/PDF/2551/E/042/64.PDF
-
-Cc: Michael Green <michael.green@atheros.com>
-Cc: David Quan <david.quan@atheros.com>
-Reported-by: Phattanon Duangdara <sfalpha@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- db.txt |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Now with the masks.  Pointed out by Brett Wright <Brett.Wright@elprotech.com>
 
-diff --git a/db.txt b/db.txt
-index fad098d..01536d6 100644
---- a/db.txt
-+++ b/db.txt
-@@ -534,7 +534,11 @@ country TW:
- 	(5735 - 5815 @ 40), (3, 30)
- 
- country TH:
--	(2402 - 2482 @ 40), (N/A, 20)
-+	(2402 - 2482 @ 20), (N/A, 20)
-+	(5170 - 5250 @ 20), (3, 17)
-+	(5250 - 5330 @ 20), (3, 20), DFS
-+	(5490 - 5710 @ 20), (3, 20), DFS
-+	(5735 - 5835 @ 20), (3, 30)
- 
- country TT:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ drivers/net/wireless/ath/ath5k/reg.h |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
+index 6809b54..debad07 100644
+--- a/drivers/net/wireless/ath/ath5k/reg.h
++++ b/drivers/net/wireless/ath/ath5k/reg.h
+@@ -339,9 +339,9 @@
+ #define AR5K_SISR2		0x008c			/* Register Address [5211+] */
+ #define AR5K_SISR2_QCU_TXURN	0x000003ff	/* Mask for QCU_TXURN */
+ #define	AR5K_SISR2_QCU_TXURN_S	0
+-#define	AR5K_SISR2_MCABT	0x00100000	/* Master Cycle Abort */
+-#define	AR5K_SISR2_SSERR	0x00200000	/* Signaled System Error */
+-#define	AR5K_SISR2_DPERR	0x00400000	/* Bus parity error */
++#define	AR5K_SISR2_MCABT	0x00010000	/* Master Cycle Abort */
++#define	AR5K_SISR2_SSERR	0x00020000	/* Signaled System Error */
++#define	AR5K_SISR2_DPERR	0x00040000	/* Bus parity error */
+ #define	AR5K_SISR2_TIM		0x01000000	/* [5212+] */
+ #define	AR5K_SISR2_CAB_END	0x02000000	/* [5212+] */
+ #define	AR5K_SISR2_DTIM_SYNC	0x04000000	/* DTIM sync lost [5212+] */
+@@ -430,9 +430,9 @@
+ #define AR5K_SIMR2		0x00ac			/* Register Address [5211+] */
+ #define AR5K_SIMR2_QCU_TXURN	0x000003ff	/* Mask for QCU_TXURN */
+ #define AR5K_SIMR2_QCU_TXURN_S	0
+-#define	AR5K_SIMR2_MCABT	0x00100000	/* Master Cycle Abort */
+-#define	AR5K_SIMR2_SSERR	0x00200000	/* Signaled System Error */
+-#define	AR5K_SIMR2_DPERR	0x00400000	/* Bus parity error */
++#define	AR5K_SIMR2_MCABT	0x00010000	/* Master Cycle Abort */
++#define	AR5K_SIMR2_SSERR	0x00020000	/* Signaled System Error */
++#define	AR5K_SIMR2_DPERR	0x00040000	/* Bus parity error */
+ #define	AR5K_SIMR2_TIM		0x01000000	/* [5212+] */
+ #define	AR5K_SIMR2_CAB_END	0x02000000	/* [5212+] */
+ #define	AR5K_SIMR2_DTIM_SYNC	0x04000000	/* DTIM Sync lost [5212+] */
+
 -- 
-1.6.3.3
-
+Regards,
+Pavel Roskin
