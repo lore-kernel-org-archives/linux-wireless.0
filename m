@@ -1,114 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:59446 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933620AbZGPXn4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 19:43:56 -0400
-Received: by gxk9 with SMTP id 9so864090gxk.13
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 16:43:55 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:49339 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751108AbZGTPcw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2009 11:32:52 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 08:32:52 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Stephen Chen <stephen.chen@atheros.com>,
+	David Quan <david.quan@atheros.com>,
+	Tony Yang <tony.yang@atheros.com>
+Subject: [PATCH] ath: add support for special 0x8000 regulatory domain
+Date: Mon, 20 Jul 2009 08:32:47 -0700
+Message-ID: <1248103967-5320-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4A5FB957.80407@mandriva.org>
-References: <4A5D0374.5040702@mandriva.org> <1247611024.1796.21.camel@johannes.local>
-	<4A5D0A7F.5090108@mandriva.org> <1247672725.17896.1974.camel@rc-desk>
-	<4A5FA52D.7030701@mandriva.org> <1247782731.31442.3.camel@johannes.local>
-	<1247783433.31442.11.camel@johannes.local> <4A5FB957.80407@mandriva.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 16:43:34 -0700
-Message-ID: <43e72e890907161643v28a621e7ne29ec1e032e0ae95@mail.gmail.com>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6 to
-	2.6.31-rc3
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 4:35 PM, Thomas Backlund<tmb@mandriva.org> wrote:
-> Johannes Berg skrev:
->>
->> On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
->>
->>>> And pressing it again gets this:
->>>> [root@tmb-laptop rfkill]# ./rfkill list
->>>> 0: acer-wireless: Wireless LAN
->>>>        Soft blocked: no
->>>>        Hard blocked: no
->>>> 1: acer-bluetooth: Bluetooth
->>>>        Soft blocked: yes
->>>>        Hard blocked: no
->>>> 2: phy0: Wireless LAN
->>>>        Soft blocked: yes
->>>>        Hard blocked: no
->>>>
->>>> And after that I cant get wireless back until I again do a:
->>>> ./rfkill unblock 2
->>>> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
->>>
->>> Right. This is bad. The button press shouldn't have affected the
->>> soft-state of the rfkill #2.
->>>
->>>> Applying this patch:
->>>> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
->>>> sent by Alan Jenkins does not help this issue either...
->>>>
->>>> Any  suggestions how to fix the rfkill ?
->>>
->>> I'll poke at the acer code to see what it's doing wrong...
->>
->> Can't see anything wrong. I wonder if the button you have sends both the
->> ACPI event _and_ an input event.
->>
->> Can you try this patch and tell us what happens?
->>
->
-> pressing rfkill when I have a working wireless gets this:
->
-> Jul 17 02:24:35 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
-> REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting
-> RXON_ASSOC (-5)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
-> REPLY_ADD_STA: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key (0,
-> 00:19:5b:51:dc:27) from hardware (-5)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending
-> REPLY_ADD_STA: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key (1,
-> ff:ff:ff:ff:ff:ff) from hardware (-5)
-> Jul 17 02:24:35 tmb-laptop dhclient: receive_packet failed on wlan0: Network
-> is down
-> Jul 17 02:24:35 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
-> Jul 17 02:24:36 tmb-laptop ifplugd(wlan0)[1790]: Link beat lost.
->
->
-> After that I only get (when pressing rfkill several times...):
-> Jul 17 02:30:16 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:30:16 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
->
-> Jul 17 02:30:28 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:30:28 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
->
-> Jul 17 02:30:31 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:30:31 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
->
-> Jul 17 02:30:45 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:30:45 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
->
-> Jul 17 02:32:23 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:32:23 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [0]
->
-> And no wireless network...
->
-> Issuing ./rfkill unblock 2 gets the wireless back
-> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::radio
-> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::assoc
-> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::RX
-> Jul 17 02:32:48 tmb-laptop klogd: Registered led device: iwl-phy0::TX
-> Jul 17 02:33:00 tmb-laptop ifplugd(wlan0)[1790]: Link beat detected.
+Two users of ar9170 devices have now reported their cards
+have been programmed with a regulatory domain of 0x8000.
+This is not a valid regulatory domain as such these users were
+unable to use these devices. Since this doesn't seem to be
+a device EEPROM corruption we must treat it specially. It
+may have been possible the manufacturer intended to use 0x0
+as the regulatory domain and that would ultimately yield
+to US but since we cannot get confirmationf or this we
+default this special case to one of our world regulatory
+domains, specifically 0x64.
 
-I think we're missing two rfkill defines for compat. Give me a second to review.
+Reported-by: DavidFreeman on #linux-wireless
+Reported-by: Joerg Albert <jal2@gmx.de>
+Cc: Christian Lamparter <chunkeey@web.de>,
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Cc: David Quan <david.quan@atheros.com>
+Cc: Tony Yang <tony.yang@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/regd.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index f37c832..077bcc1 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -474,6 +474,21 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
+ 	return 0;
+ }
+ 
++/*
++ * Some users have reported their EEPROM programmed with
++ * 0x8000 set, this is not a supported regulatory domain
++ * but since we have more than one user with it we need
++ * a solution for them. We default to 0x64, which is the
++ * default Atheros world regulatory domain.
++ */
++static void ath_regd_sanitize(struct ath_regulatory *reg)
++{
++	if (reg->current_rd != COUNTRY_ERD_FLAG)
++		return;
++	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
++	reg->current_rd = 0x64;
++}
++
+ int
+ ath_regd_init(struct ath_regulatory *reg,
+ 	      struct wiphy *wiphy,
+@@ -486,6 +501,8 @@ ath_regd_init(struct ath_regulatory *reg,
+ 	if (!reg)
+ 		return -EINVAL;
+ 
++	ath_regd_sanitize(reg);
++
+ 	printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
+ 
+ 	if (!ath_regd_is_eeprom_valid(reg)) {
+-- 
+1.6.3.3
+
