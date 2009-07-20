@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4006 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754942AbZGMUFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:05:33 -0400
-Message-ID: <4A5B9388.4030208@tpi.com>
-Date: Mon, 13 Jul 2009 14:05:28 -0600
-From: Tim Gardner <timg@tpi.com>
-Reply-To: timg@tpi.com
+Received: from mail-qy0-f173.google.com ([209.85.221.173]:41702 "EHLO
+	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602AbZGTQfI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jul 2009 12:35:08 -0400
+Received: by qyk3 with SMTP id 3so188293qyk.33
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 09:35:06 -0700 (PDT)
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: "Zhu, Yi" <yi.zhu@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
-References: <20090713190803.9A70BF8D2C@sepang.rtg.net> <1247515401.17896.1630.camel@rc-desk>
-In-Reply-To: <1247515401.17896.1630.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <ABEC48F218774102B9939CE6F5F5F856@Emiel>
+References: <ABEC48F218774102B9939CE6F5F5F856@Emiel>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 20 Jul 2009 09:34:46 -0700
+Message-ID: <43e72e890907200934o319e20d2y825592207b75b0f4@mail.gmail.com>
+Subject: Re: Enabling and disabling Atheros AR9258 wireless card
+To: Emiel Bruijntjes <emiel@bruijntjes.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre wrote:
-> Hi Tim,
-> 
-> On Mon, 2009-07-13 at 12:08 -0700, Tim Gardner wrote:
->> From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
->> From: Tim Gardner <tim.gardner@canonical.com>
->> Date: Mon, 13 Jul 2009 12:53:32 -0600
->> Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
->>
->> Added a missing parameter in the macro invocation to correct a
->> compile error when CONFIG_IWLWIFI_DEBUG is enabled.
->>
->> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
->> ---
->>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> index 2564288..67332fb 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
->> @@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
->>  	}
->>  
->>  	if (scan->channel_count == 0) {
->> -		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
->> +		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
->>  		goto done;
->>  	}
->>  
-> 
-> On which code did you base this patch?
-> 
-> Reinette
-> 
-> 
+On Sun, Jul 19, 2009 at 6:41 AM, Emiel Bruijntjes<emiel@bruijntjes.net> wrote:
+>
+> Hi,
+>
+> I hope this is the right channel to report a bug/feature-request.
+>
+> My laptop (Toshiba NB200) uses a Atheros AR9285 wireless card. Wireless is
+> currently disabled, and the wireless LED is off. This is the default factory
+> setting. There is no way to enable the wireless module from Linux. On
+> Windows, the Fn/F8 key combination enables and disables the wireless module,
+> and turns on or off the LED. On Linux however, this isn't working.
+>
+> The advice that I read on discussion forums on the web was to boot Windows,
+> turn on wireless, and then boot Linux again (see http://tjmcgrew.com/). It
+> is - as far as I know - not possible to use the Atheros AR9285 wireless card
+> on a Linux computer, without running Windows first to enable it. This is not
+> very good.
 
-Head of Linus' tree, but I see that its already fixed in
-wireless-testing. I guess I pulled the trigger too soon.
+That would mean no one could use ath9k with AR9285 but that is
+obviously not the case.
 
-rtg
--- 
-Tim Gardner timg@tpi.com www.tpi.com
-OR 503-601-0234 x102 MT 406-443-5357
+You are generalizing your issue to everyone and making wide assumptions.
+
+> To sum up:
+> - From Linux it is not possible to enable/disable the Atheros AR9285
+> wireless card, and to turn on and off the wireless LED.
+> - This should be fixed as the wireless card is disabled by default, and it
+> is thus impossible to use it on a system without installing and running
+> Windows first.
+
+You probably just need the proper rfkill module to enable your device.
+Whether your rfkill triggers are supported is another question. For
+that you may want to try out the latest kernel and use a tree where
+rfkill was recently re-implemented.
+
+Please try building wireless-testing:
+
+http://wireless.kernel.org/en/developers/Documentation/git-guide
+
+or compat-wireless:
+
+http://wireless.kernel.org/en/users/Download/
+
+  Luis
