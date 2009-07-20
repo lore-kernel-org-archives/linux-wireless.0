@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:16427 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbZGIHLM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 03:11:12 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [regression] ath5k: Overrides regulatory domain set for cfg80211
-Date: Thu, 9 Jul 2009 09:11:07 +0200
-Cc: Frans Pop <elendil@planet.nl>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, netdev@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <200907082340.07787.elendil@planet.nl> <43e72e890907081508n6fa5781an1dcbda078efc5379@mail.gmail.com> <200907090311.40205.elendil@planet.nl>
-In-Reply-To: <200907090311.40205.elendil@planet.nl>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907090911.07648.hs4233@mail.mn-solutions.de>
+Received: from mga09.intel.com ([134.134.136.24]:42898 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbZGTDq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jul 2009 23:46:26 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 1/5] cfg80211: set_default_key only for WEP
+Date: Mon, 20 Jul 2009 11:47:43 +0800
+Message-Id: <1248061667-8614-2-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
+References: <1248061667-8614-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> For Debian iw is available in testing/unstable, but not in
-> stable.
+We invoke the cfg80211 set_default_key callback only for WEP key
+configuring.
 
-Make an effort to get it into backports.org ....   and AFAIK, 
-Kernel 2.6.30xxx isn't in Debian stable either. So by using a 
-different kernel you've moved away from a purely "Debian stable" 
-setup anyway.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/wireless/wext-compat.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index aa80c0c..c63e10e 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -531,7 +531,8 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 			wdev->wext.keys->data[idx];
+ 	}
+ 
+-	if (params->cipher != WLAN_CIPHER_SUITE_AES_CMAC &&
++	if ((params->cipher == WLAN_CIPHER_SUITE_WEP40 ||
++	     params->cipher == WLAN_CIPHER_SUITE_WEP104) &&
+ 	    (tx_key || (!addr && wdev->wext.default_key == -1))) {
+ 		if (wdev->current_bss)
+ 			err = rdev->ops->set_default_key(&rdev->wiphy,
 -- 
-http://www.holgerschurig.de
+1.6.0.4
+
