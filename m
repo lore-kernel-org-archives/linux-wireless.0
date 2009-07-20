@@ -1,90 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:64506 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbZGMHCw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 03:02:52 -0400
-Received: by fxm18 with SMTP id 18so1993750fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 00:02:50 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: iwl3945 dropping from network
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 13 Jul 2009 10:02:48 +0300
-Message-ID: <87r5wl5alj.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:60138 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464AbZGTCJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jul 2009 22:09:34 -0400
+Subject: Re: iwmc3200wifi: using freed memory in iwm_hal_send_target_cmd()
+From: Zhu Yi <yi.zhu@intel.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.0907171555200.12306@bicker>
+References: <alpine.DEB.2.00.0907171555200.12306@bicker>
+Content-Type: text/plain
+Date: Mon, 20 Jul 2009 10:09:32 +0800
+Message-Id: <1248055772.3747.0.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good morning,
+On Sun, 2009-07-19 at 19:53 +0800, Dan Carpenter wrote:
+> Hello,
+> 
+> I found this with a source code checker (http://repo.or.cz/w/smatch.git).
+> 
+> We free "cmd" on line 390 and then dereference it on line 396.  I don't 
+> know what we should return in that case or I would have sent a patch.  
+> Sorry.
+> 
+> drivers/net/wireless/iwmc3200wifi/hal.c
+>    390          if (!udma_cmd->resp)
+>    391                  kfree(cmd);
+>    392  
+>    393          if (ret < 0)
+>    394                  return ret;
+>    395  
+>    396          return cmd->seq_num;
 
-during the weekend I have noticed that my iwl3945 is dropping from
-network and wpa_supplicant can't connect to the network anymore, only
-'wpa_action wlan0 stop' (which essentially quits wpa_supplicant) and
-'ifup wlan0' (which starts wpa_supplicant, debian is weird here) makes
-it work again. I think I'm seeing similar behaviour also when I resume.
+Good catch! I'll send out a patch later.
 
-I'm using debian unstable on Lenovo x60s with wpa_supplicant 0.6.9-3, so
-the old wext interface is used. wpa_supplicant isn't updated since May
-which points that this a problem in the wireless-testing kernel.
+Thanks,
+-yi
 
-Here's one log from a situation when the connection suddenly dropped:
-
-[201075.582192] phy0: device now idle
-[201076.828989] phy0: device no longer idle - in use
-[201076.828997] wlan0: direct probe to AP 00:12:17:e7:98:de (try 1)
-[201076.831575] wlan0 direct probe responded
-[201076.831580] wlan0: authenticate with AP 00:12:17:e7:98:de (try 1)
-[201076.833491] wlan0: authenticated
-[201077.028069] wlan0: associate with AP 00:12:17:e7:98:de (try 1)
-[201077.030283] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x411
-status=0 aid=2)
-[201077.030289] wlan0: associated
-[201077.030296] phy0: Allocated STA 00:12:17:e7:98:de
-[201077.030303] phy0: Inserted STA 00:12:17:e7:98:de
-[201077.032506] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[208063.200059] No probe response from AP 00:12:17:e7:98:de after 200ms,
-disconnecting.
-[208063.200081] phy0: device now idle
-[208063.200092] phy0: Removed STA 00:12:17:e7:98:de
-[208063.212054] phy0: Destroyed STA 00:12:17:e7:98:de
-[208063.312201] phy0: device no longer idle - scanning
-[208063.466419] phy0: device now idle
-[208063.598042] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[208063.598069] phy0: device no longer idle - in use
-[208063.598077] wlan0: direct probe to AP 00:12:17:e7:98:de (try 1)
-[208063.599984] wlan0 direct probe responded
-[208063.599990] wlan0: authenticate with AP 00:12:17:e7:98:de (try 1)
-[208063.601910] wlan0: authenticated
-[208063.800044] wlan0: associate with AP 00:12:17:e7:98:de (try 1)
-[208063.802201] wlan0: RX AssocResp from 00:12:17:e7:98:de (capab=0x411
-status=0 aid=2)
-[208063.802207] wlan0: associated
-[208063.802214] phy0: Allocated STA 00:12:17:e7:98:de
-[208063.802221] phy0: Inserted STA 00:12:17:e7:98:de
-[208063.804275] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[208066.200048] No probe response from AP 00:12:17:e7:98:de after 200ms,
-disconnecting.
-[208066.200073] phy0: device now idle
-[208066.200083] phy0: Removed STA 00:12:17:e7:98:de
-[208066.212060] phy0: Destroyed STA 00:12:17:e7:98:de
-[208066.312311] phy0: device no longer idle - scanning
-[208068.903824] phy0: device now idle
-[208073.908401] phy0: device no longer idle - scanning
-[208076.517689] phy0: device now idle
-[208081.519682] phy0: device no longer idle - scanning
-[208084.106036] phy0: device now idle
-[208089.107114] phy0: device no longer idle - scanning
-[208091.693636] phy0: device now idle
-[208096.699172] phy0: device no longer idle - scanning
-[208099.285510] phy0: device now idle
-[208104.291055] phy0: device no longer idle - scanning
-[208106.900124] phy0: device now idle
-[208111.904403] phy0: device no longer idle - scanning
-[208114.513533] phy0: device now idle
-[208119.519072] phy0: device no longer idle - scanning
-[208122.106209] phy0: device now idle
-
--- 
-Kalle Valo
