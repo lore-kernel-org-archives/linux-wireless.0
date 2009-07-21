@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52559 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:59303 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753953AbZG2VUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 17:20:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 14:20:55 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 1/2] at76c50x-usb: remove unneeded flush_workqueue() at usb disconnect
-Date: Wed, 29 Jul 2009 14:20:41 -0700
-Message-ID: <1248902442-14621-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1750807AbZGUNpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2009 09:45:42 -0400
+Subject: Re: SDIO Stack and Device Support
+From: Dan Williams <dcbw@redhat.com>
+To: Robert Emanuele <rob@emanuele.us>
+Cc: Jonathan Cameron <Jonathan.Cameron@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <9f53b4330907171620u5fd71e69t862f582a05251f0@mail.gmail.com>
+References: <9f53b4330907161718ydbac090k2afc7a749fc9f6f2@mail.gmail.com>
+	 <4A604246.5060204@gmail.com>
+	 <9f53b4330907171620u5fd71e69t862f582a05251f0@mail.gmail.com>
 Content-Type: text/plain
+Date: Tue, 21 Jul 2009 09:46:11 -0400
+Message-Id: <1248183971.6558.11.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver only uses the mac80211 workqueue and mac80211 requires us to
-cancel all work at driver stop. Since we now have the cancels in the right
-places at stop() we really don't need to flush the mac80211 workqueue so
-remove it.
+On Fri, 2009-07-17 at 16:20 -0700, Robert Emanuele wrote:
+> This support for these wireless chips in the mainline kernel is great.
+>  Originally I was looking at wireless SDIO cards from Spectec and
+> Silex.  What manufacturers use the libertas/Marvell chipsets in SDIO
+> Cards?  (or are they only available as modules?)
 
-Cc: Kalle Valo <kalle.valo@iki.fi>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/at76c50x-usb.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Wi2Wi makes SDIO boards based off the 8686.  I don't offhand know of
+consumer-type  dongles or SDIO cards that you can get that contain the
+libertas chips, they are usually repackaged as more embedded-type
+modules.  But if you look around for 8686 or 8385 you can find them.
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index f46e2b3..aff09a1 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -2298,10 +2298,8 @@ static void at76_delete_device(struct at76_priv *priv)
- 
- 	tasklet_kill(&priv->rx_tasklet);
- 
--	if (priv->mac80211_registered) {
--		flush_workqueue(priv->hw->workqueue);
-+	if (priv->mac80211_registered)
- 		ieee80211_unregister_hw(priv->hw);
--	}
- 
- 	if (priv->tx_urb) {
- 		usb_kill_urb(priv->tx_urb);
--- 
-1.6.0.4
+Dan
+
+> Thank you,
+> 
+> Rob
+> 
+> On Fri, Jul 17, 2009 at 2:20 AM, Jonathan
+> Cameron<Jonathan.Cameron@gmail.com> wrote:
+> > Robert Emanuele wrote:
+> >> Greetings all,
+> >>
+> >> I'm trying to find out more information about the status of an SDIO
+> >> stack and SDIO devices in the kernel.  I see under drivers/mmc/ some
+> >> SDIO support.
+> >>
+> >> I'm evaluating the potential of getting a Wireless SDIO card to work
+> >> with the 2.6 kernel.  So far all I see in the kernel is support for an
+> >> SDIO UART.  There is a patch on sourceforge for an SDIO stack and
+> >> drivers from Atheros but that is for 2.6.18.  Is there current support
+> >> for other SDIO wireless devices in the kernel?
+> >>
+> > There is pretty good support for the Marvell chips (sd8686 etc) in the
+> > mainline
+> > kernel. Take a look under drivers/net/wireless/libertas/
+> >
+> > I've also copied in the linux-wireless list.
+> >
+> >
+> >
+> >
+> >
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
