@@ -1,281 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34624 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755913AbZG0KDb (ORCPT
+Received: from mail-yx0-f202.google.com ([209.85.210.202]:62434 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755503AbZGUXZI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 06:03:31 -0400
-Message-Id: <20090727100243.989767282@sipsolutions.net>
-References: <20090727100149.839649874@sipsolutions.net>
-Date: Mon, 27 Jul 2009 12:01:52 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] cfg80211: combine IWESSID handlers
-Mime-Version: 1.0
+	Tue, 21 Jul 2009 19:25:08 -0400
+Received: by yxe40 with SMTP id 40so858120yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 16:25:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A6620B9.4@redfish-solutions.com>
+References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com>
+	<4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet>
+	<4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet>
+	<4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+	<4A650331.9020409@redfish-solutions.com> <4A6620B9.4@redfish-solutions.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 21 Jul 2009 16:24:46 -0700
+Message-ID: <43e72e890907211624p2c951b74p84a39eb2696d1722@mail.gmail.com>
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we now have handlers IWESSID for all modes, we can
-combine them into one.
+On Tue, Jul 21, 2009 at 1:10 PM, Philip A.
+Prindeville<philipp_subx@redfish-solutions.com> wrote:
+> Philip A. Prindeville wrote:
+>> Luis R. Rodriguez wrote:
+>>
+>>> On Mon, Jul 20, 2009 at 12:16 PM, Philip A.
+>>> Prindeville<philipp_subx@redfish-solutions.com> wrote:
+>>>
+>>>> Bob Copeland wrote:
+>>>>
+>>>>> On Sun, Jul 19, 2009 at 08:05:47PM -0700, Philip A. Prindeville wrote:
+>>>>>
+>>>>>> Actually, it's saying:
+>>>>>>
+>>>>>> filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
+>>>>>> depends:        mac80211,cfg80211
+>>>>>>
+>>>>>> And the 0.6.0 version number matches ath5k/base.c in the compat-wireless
+>>>>>> sources as well.
+>>>>>>
+>>>>> Yeah, ignore the module version number, no one ever changes it.
+>>>>>
+>>>>>
+>>>>>> Not seeing the dependency on "ath", which is strange.  Is that common code
+>>>>>> that's shared in 2.6.30 for the Atheros drivers?
+>>>>>>
+>>>>> In 2.6.31, yes.
+>>>>>
+>>>>>
+>>>>>>> The fix was merged after 2.6.30, IIRC, but it should definitely be in
+>>>>>>> compat-wireless.  Also check your modules directory for an old ath5k.ko
+>>>>>>> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
+>>>>>>>
+>>>>> See above, the fix was post-2.6.30, however compat-wireless should have
+>>>>> it.  The module should now be in drivers/net/wireless/ath/ath5k, not
+>>>>> drivers/net/wireless/ath5k.
+>>>>>
+>>>>>
+>>>> I'm using the tarball out of:
+>>>>
+>>>> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30
+>>>>
+>>>> perhaps I should be using a different one?  I tried 2.6.31-rc1, but it doesn't build against 2.6.27.
+>>>>
+>>> I have to fix this, will do so in a bit, will also update it to
+>>> account for the new rc3.
+>>>
+>>>   Luis
+>>>
+>>
+>> Well, while waiting for a "blessed" (or at least, 'stable') tarball to be pushed out, I tried running 2009-06-30, and I'm seeing a lot of:
+>>
+>> mgmt::proberesp cb
+>> Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
+>> STA 00:21:29:69:3e:a0 sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> ...
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) ACK
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) ACK
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> STA 00:21:e9:6e:a7:4f sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> Probe Request from 00:21:e9:6e:a7:4f for broadcast SSID ignored
+>> STA 00:21:29:69:3e:a0 sent probe request for our SSID
+>> Probe Request from 00:21:29:69:3e:a0 for broadcast SSID ignored
+>> MGMT (TX callback) ACK
+>> mgmt::proberesp cb
+>> STA 00:21:29:69:3e:a0 sent probe request for our SSID
+>> MGMT (TX callback) fail
+>> mgmt::proberesp cb
+>>
+>>
+>>
+>> 00:21:29:69:3e:a0 is a PC running Vista SP2.
+>>
+>> 00:21:e9:6e:a7:4f is an iPhone running 3.0.
+>>
+>> The iPhone should be scanning for available networks, but it's also been explicitly configured with this particular AP (and SSID).
+>>
+>> Is this a known issue?
+>>
+>> -Philip
+>>
+>
+> A little progress:  I build 2009-07-10 with 2.6.27.26, and I can get the
+> Vista box to associate, but not an iPhone running 3.0...
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/iwmc3200wifi/wext.c |   36 +------------------------------
- include/net/cfg80211.h                   |   20 +++++------------
- net/mac80211/wext.c                      |   35 +-----------------------------
- net/wireless/ibss.c                      |    4 ---
- net/wireless/wext-compat.c               |   34 +++++++++++++++++++++++++++++
- net/wireless/wext-compat.h               |   12 ++++++++++
- net/wireless/wext-sme.c                  |    4 ---
- 7 files changed, 56 insertions(+), 89 deletions(-)
+BTW new shiny compat-wireless is out based on John's latest merge from today.
 
---- wireless-testing.orig/include/net/cfg80211.h	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-07-25 10:44:28.000000000 +0200
-@@ -1595,19 +1595,6 @@ int cfg80211_wext_siwmlme(struct net_dev
- int cfg80211_wext_giwrange(struct net_device *dev,
- 			   struct iw_request_info *info,
- 			   struct iw_point *data, char *extra);
--int cfg80211_ibss_wext_siwessid(struct net_device *dev,
--				struct iw_request_info *info,
--				struct iw_point *data, char *ssid);
--int cfg80211_ibss_wext_giwessid(struct net_device *dev,
--				struct iw_request_info *info,
--				struct iw_point *data, char *ssid);
--
--int cfg80211_mgd_wext_siwessid(struct net_device *dev,
--			       struct iw_request_info *info,
--			       struct iw_point *data, char *ssid);
--int cfg80211_mgd_wext_giwessid(struct net_device *dev,
--			       struct iw_request_info *info,
--			       struct iw_point *data, char *ssid);
- int cfg80211_wext_siwgenie(struct net_device *dev,
- 			   struct iw_request_info *info,
- 			   struct iw_point *data, char *extra);
-@@ -1624,7 +1611,12 @@ int cfg80211_wext_siwfreq(struct net_dev
- int cfg80211_wext_giwfreq(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  struct iw_freq *freq, char *extra);
--
-+int cfg80211_wext_siwessid(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *ssid);
-+int cfg80211_wext_giwessid(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *ssid);
- int cfg80211_wext_siwrate(struct net_device *dev,
- 			  struct iw_request_info *info,
- 			  struct iw_param *rate, char *extra);
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-07-25 10:44:28.000000000 +0200
-@@ -1363,3 +1363,37 @@ int cfg80211_wext_giwap(struct net_devic
- 	}
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_giwap);
-+
-+int cfg80211_wext_siwessid(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *ssid)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_ADHOC:
-+		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
-+	case NL80211_IFTYPE_STATION:
-+		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_siwessid);
-+
-+int cfg80211_wext_giwessid(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *ssid)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_ADHOC:
-+		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
-+	case NL80211_IFTYPE_STATION:
-+		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
---- wireless-testing.orig/net/wireless/wext-compat.h	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.h	2009-07-25 10:44:28.000000000 +0200
-@@ -13,6 +13,12 @@ int cfg80211_ibss_wext_siwap(struct net_
- int cfg80211_ibss_wext_giwap(struct net_device *dev,
- 			     struct iw_request_info *info,
- 			     struct sockaddr *ap_addr, char *extra);
-+int cfg80211_ibss_wext_siwessid(struct net_device *dev,
-+				struct iw_request_info *info,
-+				struct iw_point *data, char *ssid);
-+int cfg80211_ibss_wext_giwessid(struct net_device *dev,
-+				struct iw_request_info *info,
-+				struct iw_point *data, char *ssid);
- 
- int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
- 			      struct iw_request_info *info,
-@@ -26,6 +32,12 @@ int cfg80211_mgd_wext_siwap(struct net_d
- int cfg80211_mgd_wext_giwap(struct net_device *dev,
- 			    struct iw_request_info *info,
- 			    struct sockaddr *ap_addr, char *extra);
-+int cfg80211_mgd_wext_siwessid(struct net_device *dev,
-+			       struct iw_request_info *info,
-+			       struct iw_point *data, char *ssid);
-+int cfg80211_mgd_wext_giwessid(struct net_device *dev,
-+			       struct iw_request_info *info,
-+			       struct iw_point *data, char *ssid);
- 
- struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
- 					     struct iw_freq *freq);
---- wireless-testing.orig/net/mac80211/wext.c	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/net/mac80211/wext.c	2009-07-25 10:44:28.000000000 +0200
-@@ -27,37 +27,6 @@
- #include "aes_ccm.h"
- 
- 
--static int ieee80211_ioctl_siwessid(struct net_device *dev,
--				    struct iw_request_info *info,
--				    struct iw_point *data, char *ssid)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
--	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
--		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
--
--	return -EOPNOTSUPP;
--}
--
--
--static int ieee80211_ioctl_giwessid(struct net_device *dev,
--				    struct iw_request_info *info,
--				    struct iw_point *data, char *ssid)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
--	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
--	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
--		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
--
--	return -EOPNOTSUPP;
--}
--
- 
- /* Structures to export the Wireless Handlers */
- 
-@@ -89,8 +58,8 @@ static const iw_handler ieee80211_handle
- 	(iw_handler) NULL,				/* SIOCGIWAPLIST */
- 	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
- 	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
--	(iw_handler) ieee80211_ioctl_siwessid,		/* SIOCSIWESSID */
--	(iw_handler) ieee80211_ioctl_giwessid,		/* SIOCGIWESSID */
-+	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
-+	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
- 	(iw_handler) NULL,				/* SIOCSIWNICKN */
- 	(iw_handler) NULL,				/* SIOCGIWNICKN */
- 	(iw_handler) NULL,				/* -- hole -- */
---- wireless-testing.orig/net/wireless/wext-sme.c	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/net/wireless/wext-sme.c	2009-07-25 10:44:28.000000000 +0200
-@@ -192,8 +192,6 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 	cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
- 	return err;
- }
--/* temporary symbol - mark GPL - in the future the handler won't be */
--EXPORT_SYMBOL_GPL(cfg80211_mgd_wext_siwessid);
- 
- int cfg80211_mgd_wext_giwessid(struct net_device *dev,
- 			       struct iw_request_info *info,
-@@ -218,8 +216,6 @@ int cfg80211_mgd_wext_giwessid(struct ne
- 
- 	return 0;
- }
--/* temporary symbol - mark GPL - in the future the handler won't be */
--EXPORT_SYMBOL_GPL(cfg80211_mgd_wext_giwessid);
- 
- int cfg80211_mgd_wext_siwap(struct net_device *dev,
- 			    struct iw_request_info *info,
---- wireless-testing.orig/net/wireless/ibss.c	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/net/wireless/ibss.c	2009-07-25 10:44:28.000000000 +0200
-@@ -381,8 +381,6 @@ int cfg80211_ibss_wext_siwessid(struct n
- 
- 	return err;
- }
--/* temporary symbol - mark GPL - in the future the handler won't be */
--EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_siwessid);
- 
- int cfg80211_ibss_wext_giwessid(struct net_device *dev,
- 				struct iw_request_info *info,
-@@ -410,8 +408,6 @@ int cfg80211_ibss_wext_giwessid(struct n
- 
- 	return 0;
- }
--/* temporary symbol - mark GPL - in the future the handler won't be */
--EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_giwessid);
- 
- int cfg80211_ibss_wext_siwap(struct net_device *dev,
- 			     struct iw_request_info *info,
---- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/wext.c	2009-07-25 10:44:27.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwmc3200wifi/wext.c	2009-07-25 10:44:28.000000000 +0200
-@@ -27,38 +27,6 @@
- #include "iwm.h"
- #include "commands.h"
- 
--static int iwm_wext_siwessid(struct net_device *dev,
--			     struct iw_request_info *info,
--			     struct iw_point *data, char *ssid)
--{
--	struct iwm_priv *iwm = ndev_to_iwm(dev);
--
--	switch (iwm->conf.mode) {
--	case UMAC_MODE_IBSS:
--		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
--	case UMAC_MODE_BSS:
--		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
--	default:
--		return -EOPNOTSUPP;
--	}
--}
--
--static int iwm_wext_giwessid(struct net_device *dev,
--			     struct iw_request_info *info,
--			     struct iw_point *data, char *ssid)
--{
--	struct iwm_priv *iwm = ndev_to_iwm(dev);
--
--	switch (iwm->conf.mode) {
--	case UMAC_MODE_IBSS:
--		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
--	case UMAC_MODE_BSS:
--		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
--	default:
--		return -EOPNOTSUPP;
--	}
--}
--
- static const iw_handler iwm_handlers[] =
- {
- 	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
-@@ -87,8 +55,8 @@ static const iw_handler iwm_handlers[] =
- 	(iw_handler) NULL,				/* SIOCGIWAPLIST */
- 	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
- 	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
--	(iw_handler) iwm_wext_siwessid,			/* SIOCSIWESSID */
--	(iw_handler) iwm_wext_giwessid,			/* SIOCGIWESSID */
-+	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
-+	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
- 	(iw_handler) NULL,				/* SIOCSIWNICKN */
- 	(iw_handler) NULL,				/* SIOCGIWNICKN */
- 	(iw_handler) NULL,				/* -- hole -- */
-
--- 
-
+> I have traces if anyone is interested.
+>
+> -Philip
+>
+>
