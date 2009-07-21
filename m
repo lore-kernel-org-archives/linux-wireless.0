@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56369 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925AbZG1Hh6 (ORCPT
+Received: from mail-yx0-f202.google.com ([209.85.210.202]:51241 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974AbZGUX0Z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 03:37:58 -0400
-Subject: Re: [RFC] cfg80211: send country ie processing on the reg_work
- struct
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248744593-6597-1-git-send-email-lrodriguez@atheros.com>
-References: <1248744593-6597-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZIXM/NMkZlt0sUqlkq0e"
-Date: Tue, 28 Jul 2009 09:37:26 +0200
-Message-Id: <1248766646.8113.3.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 21 Jul 2009 19:26:25 -0400
+Received: by yxe40 with SMTP id 40so859375yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 16:26:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com>
+	<4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet>
+	<4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet>
+	<4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 21 Jul 2009 16:26:05 -0700
+Message-ID: <43e72e890907211626y5d4dff08m2c10669636d00044@mail.gmail.com>
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 20, 2009 at 12:47 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Mon, Jul 20, 2009 at 12:16 PM, Philip A.
+> Prindeville<philipp_subx@redfish-solutions.com> wrote:
+>> Bob Copeland wrote:
+>>> On Sun, Jul 19, 2009 at 08:05:47PM -0700, Philip A. Prindeville wrote:
+>>>> Actually, it's saying:
+>>>>
+>>>> filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
+>>>> depends:        mac80211,cfg80211
+>>>>
+>>>> And the 0.6.0 version number matches ath5k/base.c in the compat-wireless
+>>>> sources as well.
+>>>
+>>> Yeah, ignore the module version number, no one ever changes it.
+>>>
+>>>> Not seeing the dependency on "ath", which is strange.  Is that common code
+>>>> that's shared in 2.6.30 for the Atheros drivers?
+>>>
+>>> In 2.6.31, yes.
+>>>
+>>>>> The fix was merged after 2.6.30, IIRC, but it should definitely be in
+>>>>> compat-wireless.  Also check your modules directory for an old ath5k.ko
+>>>>> sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
+>>>
+>>> See above, the fix was post-2.6.30, however compat-wireless should have
+>>> it.  The module should now be in drivers/net/wireless/ath/ath5k, not
+>>> drivers/net/wireless/ath5k.
+>>>
+>>
+>> I'm using the tarball out of:
+>>
+>> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.30
+>>
+>> perhaps I should be using a different one?  I tried 2.6.31-rc1, but it doesn't build against 2.6.27.
+>
+> I have to fix this, will do so in a bit, will also update it to
+> account for the new rc3.
 
---=-ZIXM/NMkZlt0sUqlkq0e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Updated:
 
-On Mon, 2009-07-27 at 18:29 -0700, Luis R. Rodriguez wrote:
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->=20
-> Did this in a flash, so just want to see if this is you like this
-> approach. Of course a lot of cleaning can be done here but ignore that
-> for now (like the fact that beacon hint doesn't really process IEs,
-> and the functions names used here).
->=20
-> This just compiles for me, never tested it.
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.31/compat-wireless-2.6.31-rc3.tar.bz2
 
-Looks ok, but I don't see why you need this type enum?
-
-> + * enum beacon_hint_type - type of regulatory beacon hint
-
-I mean -- if the beacon was received we could just process it as before,
-and if it also has a country IE we can just process that additionally?
-Why bother doing both separately?
-
-Also, I would have allocated the struct and the space for the IE
-together, but that really doesn't matter :)
-
-johannes
-
---=-ZIXM/NMkZlt0sUqlkq0e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbqqxAAoJEODzc/N7+Qma4WsQAM609te4sIBIPhxpgmpv9haL
-WJ+r7Fob8ebpXfhVfI5a4QR6OE50eSWfxWQQBWLoGqVZbb+nHW73I3PhzhZZ2qZ5
-3vFy/O+TtrNSxhKxu1dKcTWkKhDo6Yjv7hjTzFZweYsUY/AeLTNdasJtGSkqm92l
-P3ilQwA83js1lYhSgFcJgdOrKoJ5ebiXYnHa7w8FfV4ibbZU1rnLaxwR2fSm9BVq
-cqleLIKl2p3Ai8OaFA1mRHlsM8jH5kwgLjwmruNWqYwUweGvHziDUMAozOmeHCpZ
-kzBBkIOsdj/aVPyZACOutyyVFYgTiv9nIf2hBt2xzAsEEdtcVjXbymfNXigRa5LF
-5TJApxAVWYhxEb7N60fiqebYkg+37FoavyUTGS4Q0oPIsFHkoFP5ZYOaLp+ssQZX
-S5nBz2Rpae+A4K4mXoR3zTWE0RfbMdlsKNffyhoRWkdGuKGyHDJK2xEJg/QIPCRm
-jO433URt7XckWVpaCo5OWFySJVXYjWzDzHuMA9zPQ3ScirzdyC6SFIlEjGH/Isrn
-ldqe08N8l3s5AROFKMEztFO0v3lwzkRhxDpncpaafxBcXmCwXDQUngkI3ZR8lFMa
-/YulaDHLSi+ZQtCGiqgkRwa+0fuHzhqptJ5q9UBcXAvWE0pM+/xAnyjUSXP4/gvu
-MyhAqXHePb9Xa4iMaiMm
-=4t/l
------END PGP SIGNATURE-----
-
---=-ZIXM/NMkZlt0sUqlkq0e--
-
+  Luis
