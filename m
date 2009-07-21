@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from promwad.com ([83.149.69.23]:33500 "EHLO promwad.com"
+Received: from mga09.intel.com ([134.134.136.24]:37965 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753663AbZGWJWW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 05:22:22 -0400
-Received: from mail.promwad.com ([195.222.85.229] helo=intranet.promwad.com)
-	by promwad.com with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.63)
-	(envelope-from <ivan.kuten@promwad.com>)
-	id 1MTuVJ-0002Vs-Cv
-	for linux-wireless@vger.kernel.org; Thu, 23 Jul 2009 12:22:21 +0300
-Received: from [192.168.10.140]
-	by intranet.promwad.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <ivan.kuten@promwad.com>)
-	id 1MTuVF-0003yk-N2
-	for linux-wireless@vger.kernel.org; Thu, 23 Jul 2009 12:22:17 +0300
-Message-ID: <4A682BBD.90101@promwad.com>
-Date: Thu, 23 Jul 2009 12:22:05 +0300
-From: Ivan Kuten <ivan.kuten@promwad.com>
-Reply-To: ivan.kuten@promwad.com
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: WPA2, compat-wireless-2.6.31-rc3, kernel 2.6.28 - rtl8187 - association
- works but no ping
-Content-Type: text/plain; charset=UTF-8
+	id S1753564AbZGUUKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2009 16:10:45 -0400
+Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
+From: reinette chatre <reinette.chatre@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jirislaby@gmail.com" <jirislaby@gmail.com>,
+	"luciano.coelho@nokia.com" <luciano.coelho@nokia.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1248206362.31365.292.camel@Joe-Laptop.home>
+References: <20090721191136.22374.69017.stgit@tikku>
+	 <20090721191154.22374.17349.stgit@tikku>
+	 <1248204540.31365.275.camel@Joe-Laptop.home>
+	 <87ocrdsu9f.fsf@litku.valot.fi>
+	 <1248206362.31365.292.camel@Joe-Laptop.home>
+Content-Type: text/plain
+Date: Tue, 21 Jul 2009 13:10:45 -0700
+Message-Id: <1248207045.17896.2695.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2009-07-21 at 12:59 -0700, Joe Perches wrote:
+> On Tue, 2009-07-21 at 22:36 +0300, Kalle Valo wrote:
+> > Also in the future we might share some of the code between
+> > 1251 and 1271. Any tips for this?
+> 
+> Sorry, no.
+> 
+> There are a couple of examples of multiple maintainers
+> for wireless drivers in a single directory.
+> 
+> ipw2x00 and rtl818x
+> 
+> ipw2xx has shared files, rtl818x does not.
+> ipw2xx does not claim a "maintainer" for the
+> shared files.  That's probably not important.
+> 
+> Maybe the maintainers for ipw2xx might give
+> some more useful information (cc'd). It turns
+> out they are the same people though.
 
-I'm testing rtl8187 on Blackfin platform (linux-2.6.28)
-compat-wireless-2.6.31-rc3
-driver rtl8187
-wpa_supplicant-0.6.5
+I do not have anything useful to add here. As you note the same people
+are listed for for both drivers under ipw2x00 so we do not have the same
+problem.
 
-Sympthoms:
-Association works but no ping in WPA2(AES)
-Association works and ping is working with WPA(TKIP)
-
-This is probably not a wpa_supplicant and it's config problem
-because it's working (WPA2-AES and WPA-TKIP) on 2.6.28 with corresponding configs.
-
-Any suggestions how to track down the problem?
-
-Best regards,
-Ivan
-
-
-
+Reinette
 
 
