@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44340 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756972AbZGMUOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:14:15 -0400
-Subject: Re: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
-From: reinette chatre <reinette.chatre@intel.com>
-To: "timg@tpi.com" <timg@tpi.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A5B9388.4030208@tpi.com>
-References: <20090713190803.9A70BF8D2C@sepang.rtg.net>
-	 <1247515401.17896.1630.camel@rc-desk>  <4A5B9388.4030208@tpi.com>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 13:14:14 -0700
-Message-Id: <1247516054.17896.1634.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail.highlandsun.com ([70.87.222.79]:53039 "EHLO
+	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754389AbZGUVBC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jul 2009 17:01:02 -0400
+Message-ID: <4A662C8C.9030702@highlandsun.com>
+Date: Tue, 21 Jul 2009 14:01:00 -0700
+From: Howard Chu <hyc@highlandsun.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k rfkill behavior
+References: <4A65122B.2040500@highlandsun.com> <200907211327.03954.chunkeey@web.de>
+In-Reply-To: <200907211327.03954.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tim,
+Christian Lamparter wrote:
+> On Tuesday 21 July 2009 02:56:11 Howard Chu wrote:
+>> I'm currently running 2.6.31-rc2 and noticed an annoying change in rfkill
+>> behavior now; I can no longer toggle the state by echoing 0/1 into
+>> sys/class/rfkill/rfkillX/state, it says write operation not permitted. I
+>> haven't found any posts online related to this change in behavior, can anyone
+>> point me to an explanation/rationale? The only way to change the state now
+>> appears to be by using the wifi toggle switch on the laptop.
+>
+> http://lkml.org/lkml/2009/7/10/339
+>
+> but no need to patch the kernel (again):
+> the legacy iwconfig tool can let you do the same:
+>
+> iwconfig wlanX txpower off
+> and if you want it back:
+> iwconfig wlanX txpower auto
 
-On Mon, 2009-07-13 at 13:05 -0700, Tim Gardner wrote:
-> reinette chatre wrote:
-> > Hi Tim,
-> > 
-> > On Mon, 2009-07-13 at 12:08 -0700, Tim Gardner wrote:
-> >> From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
-> >> From: Tim Gardner <tim.gardner@canonical.com>
-> >> Date: Mon, 13 Jul 2009 12:53:32 -0600
-> >> Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
-> >>
-> >> Added a missing parameter in the macro invocation to correct a
-> >> compile error when CONFIG_IWLWIFI_DEBUG is enabled.
-> >>
-> >> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> >> ---
-> >>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >> index 2564288..67332fb 100644
-> >> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> >> @@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
-> >>  	}
-> >>  
-> >>  	if (scan->channel_count == 0) {
-> >> -		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
-> >> +		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
-> >>  		goto done;
-> >>  	}
-> >>  
-> > 
-> > On which code did you base this patch?
-> > 
-> > Reinette
-> > 
-> > 
-> 
-> Head of Linus' tree, but I see that its already fixed in
-> wireless-testing. I guess I pulled the trigger too soon.
+Ah, not quite. I want the bluetooth off and the wifi on; if I hit the toggle 
+switch which turns them both off, iwconfig is unable to turn the wifi back on, 
+and there is no other command which turns off only the bluetooth.
 
-I just pulled the latest from Linus but cannot see this problem. We also
-do not have anything related to this pending for 2.6.31.
+The above patch works fine, thanks again.
 
-Reinette
-
-
+-- 
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
