@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753624AbZGXSP2 (ORCPT
+Received: from mail.highlandsun.com ([70.87.222.79]:60416 "EHLO
+	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753999AbZGUBYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:15:28 -0400
-Subject: Re: [PATCH] mac80211: add helper to add to the mac80211 workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Lennert Buytenhek <buytenh@marvell.com>,
-	Daniel Drake <ddrake@brontes3d.com>
-In-Reply-To: <1248458909-15338-1-git-send-email-lrodriguez@atheros.com>
-References: <1248458909-15338-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ESHtrvFkcYtDuV9t2GWl"
-Date: Fri, 24 Jul 2009 20:15:24 +0200
-Message-Id: <1248459325.32151.32.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 20 Jul 2009 21:24:23 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by mail.highlandsun.com (Postfix) with ESMTP id 4C72510F96
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2009 20:56:11 -0400 (EDT)
+Message-ID: <4A65122B.2040500@highlandsun.com>
+Date: Mon, 20 Jul 2009 17:56:11 -0700
+From: Howard Chu <hyc@highlandsun.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: ath9k rfkill behavior
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I'm currently running 2.6.31-rc2 and noticed an annoying change in rfkill 
+behavior now; I can no longer toggle the state by echoing 0/1 into 
+sys/class/rfkill/rfkillX/state, it says write operation not permitted. I 
+haven't found any posts online related to this change in behavior, can anyone 
+point me to an explanation/rationale? The only way to change the state now 
+appears to be by using the wifi toggle switch on the laptop.
 
---=-ESHtrvFkcYtDuV9t2GWl
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This is particularly obnoxious on recent HP Pavilion laptops, because there's 
+a single button/LED and it affects both the bluetooth and the wifi 
+transmitters. I never use bluetooth and I want that turned off, but I want to 
+keep the wifi enabled. I used to be able to do this by explicitly echoing 0 
+into the bluetooth rfkill/state but not any more. Even with the bluetooth 
+software disabled, powertop shows it's still eating power+cycles on my USB 
+controller unless I zero its rfkill state.
 
-On Fri, 2009-07-24 at 14:08 -0400, Luis R. Rodriguez wrote:
-> We add a mac80211 helper for adding work onto the mac80211
-> workqueue. We then add a warning if we are suspended. At that
-> point drivers nor mac80211 should have queued work, drivers
-> and mac80211 should ensure the workqueue will remain clair
-> until resume.
->=20
-> We make use of the helper now in mac80211 and on all mac80211
-> drivers. If you see a warning because of this patch during
-> the suspend <--> resume cycle it means suspend is busted for
-> your driver or mac80211 and it needs to be fixed.
-
-Looks good to me.
-
-johannes
-
---=-ESHtrvFkcYtDuV9t2GWl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKafo5AAoJEODzc/N7+QmalOoQAJpYA+1t9BKIjpvktQH4PSHb
-TLxaulIyz1SsnNQ21Ydr1H6TDpRFLjhbLuoTP1vR39wNE1sq2iG4gDgiKOwMK25H
-5M4Fw5Aj9rEIhcZ+ah+SZzsOuoSaDCHeBAH7pNcajTpV8hbxSXrrMuAhnEFf1rx0
-3uxgCaC0lEOsFOfOzbcHhLLtbd+OO+NNFw6PbyEGPBZfmNgPS80iVk8lGG7Z6XyS
-z8G7EizU7eT58gmYjbCG/uIYI4LZr5Y3VVgQV4bR9gJ8UGIeR+MGHhPiuryuRore
-Pzte+zunEhwU+nbhbbCPGiYsgQhZQnHrp9s+0EGHdJK1YFS/arjBszo1Txut4vPc
-dDyuRxkzV0Tp1AX+10usvM1itHfsiiDmvSCUG0ch3IbH15kl3JBnB/H/TGp03qY5
-rco2lwIqXMMTbvbiykUqG/vSkhm54wytpN1RJ92ENXqKLkQEWw6X1B9MVRyXQJ+B
-CyD95ui4CM5ij6IULvWNGK/sh2swf0mTK0uKEE4n7/hFh06z48AuoLML0KJLk8QH
-aMXpXDusmWqoeC/2Y2tD45Z5FfFZJL7pQVbqZUyFG5zGmDO82qkB5TqnavlT5rr1
-WMrAGp6AkRlj/dqfUHvkeXkv3PehyrgRBZXeOoFiXzNBHflQiMxUeh0oqnuI5wiO
-E29MTGTAa/nN0YVatHRF
-=YpoZ
------END PGP SIGNATURE-----
-
---=-ESHtrvFkcYtDuV9t2GWl--
-
+Also, when I press the toggle switch, the bluetooth device unregisters itself 
+and disappears from the rfkill directory, while the wifi entry remains, but 
+its state reads as "2" instead of 0 or 1. When it gets into this state, 
+further toggling of the button doesn't reactivate it (though it continues to 
+toggle the bluetooth on and off), and a reboot is required to re-enable the 
+wifi. What is state "2" ?
+-- 
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
