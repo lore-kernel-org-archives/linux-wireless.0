@@ -1,80 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58172 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756014AbZGOAO3 (ORCPT
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:2134 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755854AbZGUUAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 06/21] ath9k: remove unused stepdown when looking for the next rate
-Date: Tue, 14 Jul 2009 20:13:58 -0400
-Message-Id: <1247616853-11221-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 21 Jul 2009 16:00:50 -0400
+Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, luciano.coelho@nokia.com,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+In-Reply-To: <87ocrdsu9f.fsf@litku.valot.fi>
+References: <20090721191136.22374.69017.stgit@tikku>
+	 <20090721191154.22374.17349.stgit@tikku>
+	 <1248204540.31365.275.camel@Joe-Laptop.home>
+	 <87ocrdsu9f.fsf@litku.valot.fi>
+Content-Type: text/plain
+Date: Tue, 21 Jul 2009 12:59:22 -0700
+Message-Id: <1248206362.31365.292.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used, remove this.
+On Tue, 2009-07-21 at 22:36 +0300, Kalle Valo wrote:
+> Joe Perches <joe@perches.com> writes:
+> 
+> >> +F:	drivers/net/wireless/wl12xx/wl1251*
+> >
+> > Not that I'm asking you to maintain more than you want to,
+> > but why not:
+> >
+> > F:	drivers/net/wireless/wl12xx/
+> 
+> Just because Luciano will soon publish wl1271 driver (which will use
+> wl1271_ prefix) and he will be maintaining that part, no other reason.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   21 ++++++++-------------
- 1 files changed, 8 insertions(+), 13 deletions(-)
+Ah, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 7b37b27..64cb697 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -817,19 +817,14 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- static u8 ath_rc_rate_getidx(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
- 			     const struct ath_rate_table *rate_table,
--			     u8 rix, u16 stepdown)
-+			     u8 rix)
- {
--	u32 j;
- 	u8 nextindex = 0;
--
--	for (j = stepdown; j > 0; j--) {
--		if (ath_rc_get_nextlowervalid_txrate(rate_table,
--					ath_rc_priv, rix, &nextindex))
--			rix = nextindex;
--		else
--			break;
--	}
--	return rix;
-+	if (ath_rc_get_nextlowervalid_txrate(rate_table,
-+					     ath_rc_priv, rix, &nextindex))
-+		return nextindex;
-+	else
-+		return rix;
- }
- 
- static void ath_rc_ratefind(struct ath_softc *sc,
-@@ -871,7 +866,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		 * after the probe rate
- 		 */
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1);
-+					  rate_table, nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -889,7 +884,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 			try_per_rate = 4;
- 
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1);
-+					  rate_table, nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
--- 
-1.6.0.6
+> But what should we do with the shared Makefile and Kconfig?
+
+Those files change slowly and generally without conflicts
+so MAINTAINERS entries aren't an issue.
+
+> Also in the future we might share some of the code between
+> 1251 and 1271. Any tips for this?
+
+Sorry, no.
+
+There are a couple of examples of multiple maintainers
+for wireless drivers in a single directory.
+
+ipw2x00 and rtl818x
+
+ipw2xx has shared files, rtl818x does not.
+ipw2xx does not claim a "maintainer" for the
+shared files.  That's probably not important.
+
+Maybe the maintainers for ipw2xx might give
+some more useful information (cc'd). It turns
+out they are the same people though.
+
+As well, the file patterns for rtl818x need
+updating.  Thanks for making me check.
+
+cheers, Joe
 
