@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42338 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755973AbZGOAO3 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.152]:22519 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755945AbZGUTgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 14/21] mac80211: make minstrel/pid RC use ieee80211_is_data(fc)
-Date: Tue, 14 Jul 2009 20:14:06 -0400
-Message-Id: <1247616853-11221-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 21 Jul 2009 15:36:54 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so777456fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 12:36:51 -0700 (PDT)
+To: Joe Perches <joe@perches.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	jirislaby@gmail.com, luciano.coelho@nokia.com
+Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
+References: <20090721191136.22374.69017.stgit@tikku>
+	<20090721191154.22374.17349.stgit@tikku>
+	<1248204540.31365.275.camel@Joe-Laptop.home>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 21 Jul 2009 22:36:44 +0300
+In-Reply-To: <1248204540.31365.275.camel@Joe-Laptop.home> (Joe Perches's message of "Tue\, 21 Jul 2009 12\:29\:00 -0700")
+Message-ID: <87ocrdsu9f.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Felix Fietkau <nbd@openwrt.org>
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/rc80211_minstrel.c |    7 +++----
- net/mac80211/rc80211_pid_algo.c |    7 +++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+Joe Perches <joe@perches.com> writes:
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 37771ab..5bdce0c 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -75,12 +75,11 @@ use_low_rate(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	u16 fc;
-+	__le16 fc;
- 
--	fc = le16_to_cpu(hdr->frame_control);
-+	fc = hdr->frame_control;
- 
--	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) ||
--		(fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA);
-+	return ((info->flags & IEEE80211_TX_CTL_NO_ACK) || !ieee80211_is_data(fc));
- }
- 
- 
-diff --git a/net/mac80211/rc80211_pid_algo.c b/net/mac80211/rc80211_pid_algo.c
-index a0bef76..5496077 100644
---- a/net/mac80211/rc80211_pid_algo.c
-+++ b/net/mac80211/rc80211_pid_algo.c
-@@ -280,7 +280,7 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct rc_pid_sta_info *spinfo = priv_sta;
- 	int rateidx;
--	u16 fc;
-+	__le16 fc;
- 
- 	if (txrc->rts)
- 		info->control.rates[0].count =
-@@ -290,9 +290,8 @@ rate_control_pid_get_rate(void *priv, struct ieee80211_sta *sta,
- 			txrc->hw->conf.short_frame_max_tx_count;
- 
- 	/* Send management frames and NO_ACK data using lowest rate. */
--	fc = le16_to_cpu(hdr->frame_control);
--	if (!sta || !spinfo ||
--	    (fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
-+	fc = hdr->frame_control;
-+	if (!sta || !spinfo || !ieee80211_is_data(fc) ||
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK) {
- 		info->control.rates[0].idx = rate_lowest_index(sband, sta);
- 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+>> +F:	drivers/net/wireless/wl12xx/wl1251*
+>
+> Not that I'm asking you to maintain more than you want to,
+> but why not:
+>
+> F:	drivers/net/wireless/wl12xx/
+
+Just because Luciano will soon publish wl1271 driver (which will use
+wl1271_ prefix) and he will be maintaining that part, no other reason.
+
+But what should we do with the shared Makefile and Kconfig? Also in the
+future we might share some of the code between 1251 and 1271. Any tips
+for this?
+
 -- 
-1.6.0.6
-
+Kalle Valo
