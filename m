@@ -1,37 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f228.google.com ([209.85.218.228]:41891 "EHLO
-	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbZGPJEi (ORCPT
+Received: from mail-pz0-f192.google.com ([209.85.222.192]:63368 "EHLO
+	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752376AbZGVQVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:04:38 -0400
-Received: by bwz28 with SMTP id 28so1916113bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 02:04:36 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [RFC/RFT 0/5] mac80211: implement background scan
-Date: Thu, 16 Jul 2009 11:04:41 +0200
+	Wed, 22 Jul 2009 12:21:19 -0400
+Received: by pzk30 with SMTP id 30so5676pzk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 09:21:19 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907161104.41975.helmut.schaa@gmail.com>
+In-Reply-To: <200907192126.13207.chunkeey@web.de>
+References: <alpine.DEB.2.00.0907171607280.12306@bicker>
+	 <200907192126.13207.chunkeey@web.de>
+Date: Wed, 22 Jul 2009 15:40:56 +0100
+Message-ID: <a63d67fe0907220740o5b16dc0ne04bc9265d3570bc@mail.gmail.com>
+Subject: Re: [PATCH v2] p54spi: fix potential null deref in p54spi.c
+From: Dan Carpenter <error27@gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+Cc: linux-wireless@vger.kernel.org, Max Filippov <jcmvbkbc@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Great.
 
-this patch series implements basic background scanning in mac80211
-by interrupting the scan after each scanned channel to allow RX/TX.
+Acked-by: Dan Carpenter <error27@gmail.com>
 
-I only tested the patches on current wireless-testing with iwlagn
-in sw-scan mode and it works fine already. One thing I noticed but
-seems to be unrelated is: in sw-scan mode the connection sometimes
-stalls and no data is transferred anymore although the connection is
-still available and I found no way to recover it without setting
-it up again.
+regards,
+dan carpenter
 
-So, it would be great if somebody could test the patches on other
-hardware as well.
-
-Thanks a lot,
-Helmut
+On 7/19/09, Christian Lamparter <chunkeey@web.de> wrote:
+> From: Dan Carpenter <error27@gmail.com>
+>
+> Fix a potential NULL dereference bug during
+> error handling in p54spi_probe.
+>
+> This bug was discovered by smatch:
+> (http://repo.or.cz/w/smatch.git).
+>
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
+> On Sunday 19 July 2009 13:53:57 Dan Carpenter wrote:
+>
+>> We can't use dev_err() becuase "priv" is NULL.
+> yep, but that's my fault and not Micheal's.
+>
+>> Found by smatch (http://repo.or.cz/w/smatch.git).
+>> regards,
+>> dan carpenter
+> what about this alternative?
+> it retains the dev_err by simply moving to the spi_device *spi
+> which comes from spi-subsystem and is initialized?
+>
+> Regards,
+> 	Chr
+> ---
+> diff --git a/drivers/net/wireless/p54/p54spi.c
+> b/drivers/net/wireless/p54/p54spi.c
+> index d5f181a..eef5329 100644
+> --- a/drivers/net/wireless/p54/p54spi.c
+> +++ b/drivers/net/wireless/p54/p54spi.c
+> @@ -600,7 +600,7 @@ static int __devinit p54spi_probe(struct spi_device
+> *spi)
+>
+>  	hw = p54_init_common(sizeof(*priv));
+>  	if (!hw) {
+> -		dev_err(&priv->spi->dev, "could not alloc ieee80211_hw");
+> +		dev_err(&spi->dev, "could not alloc ieee80211_hw");
+>  		return -ENOMEM;
+>  	}
+>
+>
+>
+>
