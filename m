@@ -1,34 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f184.google.com ([209.85.210.184]:41728 "EHLO
-	mail-yx0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756191AbZGNWMJ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50014
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751424AbZGVST0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 18:12:09 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 14 Jul 2009 15:11:45 -0700
-Message-ID: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
-Subject: Generic events for wake up from S1-S4
-To: linux-kernel@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Jul 2009 14:19:26 -0400
+Date: Wed, 22 Jul 2009 11:19:31 -0700 (PDT)
+Message-Id: <20090722.111931.158562638.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-07-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090722174756.GI5276@tuxdriver.com>
+References: <20090722174756.GI5276@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm working on Wake-on-Wireless support for wireless right now [1].
-Upon wake up I wanted to inform the kernel of the event which caused
-the wake up but am not clear if there is a generic API for this. Mind
-you, for WoW we'll need at least some AC power to the card so we'll
-need to at least be in S3-Hot so we'll only need events for that for
-now.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 22 Jul 2009 13:47:56 -0400
 
-Do we have some generic infrastructure to gather reasons for wake up
-from S1-S4 and pass this to userspace yet?
+> Here is a collection of fixes intended for 2.6.31.  I think they mostly
+> speak for themselves and are uncontroversial.
+> 
+> Please let me know if there are problems!
 
-[1] http://wireless.kernel.org/en/users/Documentation/WoW
-
-  Luis
+Pulled, thanks a lot John.
