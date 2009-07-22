@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:65176 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754939AbZGHVtn (ORCPT
+Received: from mail-yx0-f202.google.com ([209.85.210.202]:35075 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbZGVBtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 17:49:43 -0400
+	Tue, 21 Jul 2009 21:49:55 -0400
+Received: by yxe40 with SMTP id 40so991879yxe.33
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 18:49:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A54FB81.30302@gmail.com>
-References: <4A54FB81.30302@gmail.com>
-Date: Wed, 8 Jul 2009 22:49:41 +0100
-Message-ID: <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
-Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Przemyslaw Kulczycki <azrael@autocom.pl>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 21 Jul 2009 18:49:34 -0700
+Message-ID: <43e72e890907211849h373a07dcxc6361c1aeb2f20ff@mail.gmail.com>
+Subject: WoW patches - if anyone is up for following up with them
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 8, 2009 at 9:03 PM, Marcin Slusarz<marcin.slusarz@gmail.com> wrote:
-> Different revisions of WUSB54GC-EU use different chipsets -
-> v2 uses rtl8187, but v3 uses Ralink RT3070.
->
-> Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
-> Cc: Przemyslaw Kulczycki <azrael@autocom.pl>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Linux wireless <linux-wireless@vger.kernel.org>
-> ---
->  drivers/net/wireless/Kconfig |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index 5bc00db..7d5902d 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -431,7 +431,7 @@ config RTL8187
->          ASUS P5B Deluxe
->          Toshiba Satellite Pro series of laptops
->          Asus Wireless Link
-> -         Linksys WUSB54GC-EU
-> +         Linksys WUSB54GC-EU v2
+I won't have time to finish testing this series and getting it merged
+as I need to focus on another driver, I ran into some last issues
+where I was seeing the nullfunc frames only be issued if I send a WOL
+packet first, not sure what's up with that. Some other issues are the
 
-Is there a v1, and what does it use?
+ath9k: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000 != 0x00000000
+ath9k: RX failed to go idle in 10 ms RXSM=0xdeadbeef
 
->
->          Thanks to Realtek for their support!
->
-> --
-> 1.6.3.3
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+after resume (not sure if this was caused by the WoW patches or what)
+and the mac80211 WARN on the workqueue running local->suspended is
+already true.
+
+I probably won't get to these for a long long while (until I need WoW
+for another driver), so in case someone is interesting in this, please
+feel free to take them on and work on them.
+
+You'll need two things:
+
+* wireless-testing patches:
+
+http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
+
+This has johannes's netns patches since his nl80211 cmd is going in
+first and then the WoW patches. I've stuffed some documentation on the
+patch file itself to help anyone wishing to push that further,
+including examples on how to get the pattern stuff initially done.
+
+* http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.patch
+
+You'll need this to enable WoW. Keep in mind based on feedback you
+*need* to be associated to an AP to enable WoW.
+
+  Luis
