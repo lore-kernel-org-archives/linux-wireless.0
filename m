@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:40347 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbZGIS44 convert rfc822-to-8bit (ORCPT
+Received: from cp-out8.libero.it ([212.52.84.108]:35724 "EHLO
+	cp-out8.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754756AbZGVWyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 14:56:56 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: Problem with p54 driver and ibss mode
-Date: Thu, 9 Jul 2009 20:56:52 +0200
-Cc: Alexander Wenzel <wenzel@fgan.de>, linux-wireless@vger.kernel.org
-References: <4A55DB91.2070305@fgan.de> <4A560E4B.6080209@fgan.de> <200907092157.21784.jcmvbkbc@gmail.com>
-In-Reply-To: <200907092157.21784.jcmvbkbc@gmail.com>
+	Wed, 22 Jul 2009 18:54:11 -0400
+Received: from pcfabio.home.lan (151.48.46.16) by cp-out8.libero.it (8.5.107)
+        id 4A5EF75100AEE23E for linux-wireless@vger.kernel.org; Thu, 23 Jul 2009 00:54:09 +0200
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: WARNING: at net/mac80211/tx.c:561
+Date: Thu, 23 Jul 2009 00:51:56 +0200
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200907092056.53055.chunkeey@web.de>
+Message-Id: <200907230051.57201.rossi.f@inwind.it>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 09 July 2009 19:57:20 Max Filippov wrote:
-> В сообщении от Thursday 09 July 2009 Alexander Wenzel написал(a):
-^^
+I'm using the last wireless-testing.git and I have experienced the following 
+WARNING:
 
-> > Hi!
-> > >> I'm trying to get the latest p54 wireless drivers (ad-hoc mode)
-> > >> to work on a Nokia N810... So far, without any success.
-> > >> [ 3905.535125] WARNING: at /home/wen/work/NokiaN810/compat-wireless-2009-07-09/net/mac80211/sta_info.c:339 sta_info_insert+0x7c/0x15c [mac80211]()
-> > > As far as I can see, this is check that incoming STA and your STA have
-> > > different MAC addresses. If you don't set up MAC manually on both
-> > > devices and make it unique, chances high that they are equal.
-> > 
-> > You saved my day :D Finally it works...! Thanks for the hint.
-> > 
-> > [  214.478668] wlan0: Selected IBSS BSSID 56:97:1a:24:11:6c based on configured SSID
-> > 
-> > # iw dev wlan0 station dump
-> > Station 00:02:ee:c0:ff:ee (on wlan0)
-> > 	inactive time:	429 ms
-> > 	rx bytes:	8964
-> > 	tx bytes:	408
-> > 	signal:  	55 dBm
-> > 	tx bitrate:	1.0 MBit/s
-> > 
-> > I just checked the other N810 devices and every device has
-> > the same mac address. And here we go... [p54spi_eeprom.h:39]
-> > 0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
-> > 
-> > The original kernel with default os shows the correct address.
-> > When booting a different os with the with the original or custom
-> > kernel it shows the 'coffee' address.
-> > So is there a way to let the kernel receive and set the
-> > correct mac address of the wlan device?
-> > I guess my problem is this line:
-> > [ 3685.320800] cx3110x spi2.0: loading default eeprom...
-> 
-> You're right. I guess that easiest way to deal with it is to save blob from p54spi_eeprom.h into a file
-> 3826.eeprom in the same directory as 3826.arm and fix MAC address in it, according to comments in p54spi_eeprom.h
-> 
-> These data for sure must reside on /dev/mtdblk1 partition, but they're probably somehow coded/obfuscated.
-> I couldn't find anything similar to MAC of my own n810 there.
-well, this is c0ffee comes from nokia's stlc45xx-driver.
-Unfortunately, they don't say how to get the device eeprom from the mtdblk1
-partition. However, they certainly provide a tool stlc45xx-cal
-(available at: http://stlc45xx.garage.maemo.org/ ) which can be used 
-to locate the eeprom's calibration data.
+ WARNING: at net/mac80211/tx.c:561 ieee80211_tx_h_rate_ctrl+0x3d1/0x470 
+[mac80211]()
+ Hardware name: System Name
+ wlan0: Dropped data frame as no usable bitrate found while scanning and 
+associated. Target station: 00:0c:f6:xx:xx:xx on 5 GHz band
+ Modules linked in: ath5k mac80211 ath cfg80211
+ Pid: 1270, comm: phy0 Tainted: G        W  2.6.31-rc3-wl #140
+ Call Trace:
+  [<e1aaa0a1>] ? ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]
+  [<e1aaa0a1>] ? ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]
+  [<c101d37c>] warn_slowpath_common+0x7c/0xa0
+  [<e1aaa0a1>] ? ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]
+  [<c101d3e6>] warn_slowpath_fmt+0x26/0x30
+  [<e1aaa0a1>] ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]
+  [<e1af8afb>] ? ath5k_hw_reset_tx_queue+0x51b/0x830 [ath5k]
+  [<e1aa8aa5>] ? ieee80211_tx_prepare+0x105/0x320 [mac80211]
+  [<e1aaa489>] invoke_tx_handlers+0x69/0xf0 [mac80211]
+  [<e1aaa64f>] ieee80211_tx+0x5f/0x1f0 [mac80211]
+  [<c139f940>] ? skb_release_data+0x50/0x90
+  [<c139fa83>] ? pskb_expand_head+0x103/0x190
+  [<e1aaa8e5>] ieee80211_xmit+0x105/0x270 [mac80211]
+  [<e1aaaa9e>] ieee80211_tx_skb+0x4e/0x60 [mac80211]
+  [<e1aad7a2>] ieee80211_send_probe_req+0x112/0x180 [mac80211]
+  [<c1017168>] ? dequeue_task+0x48/0x90
+  [<c101e11b>] ? printk+0x1b/0x20
+  [<e1a9ea9a>] ieee80211_mgd_probe_ap+0x11a/0x150 [mac80211]
+  [<e1a9eb12>] ieee80211_beacon_loss_work+0x12/0x20 [mac80211]
+  [<c102c75c>] worker_thread+0xec/0x1c0
+  [<c1454b7d>] ? schedule+0x18d/0x370
+  [<e1a9eb00>] ? ieee80211_beacon_loss_work+0x0/0x20 [mac80211]
+  [<c102f740>] ? autoremove_wake_function+0x0/0x40
+  [<c102c670>] ? worker_thread+0x0/0x1c0
+  [<c102f494>] kthread+0x74/0x80
+  [<c102f420>] ? kthread+0x0/0x80
+  [<c10032d3>] kernel_thread_helper+0x7/0x14
+ ---[ end trace a5a80f7488aa4974 ]---
 
-and by the way. If there is no mac field inside the eeprom image,
-the driver will generate a random one all the time...
+I have a 802.11abg wireless NIC and I'm currently using a 802.11g access 
+point.
 
-Regards,
-	Chr
+Fabio
