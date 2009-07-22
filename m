@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:52325 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650AbZGUTL7 (ORCPT
+Received: from emita2.mittwald.de ([85.199.173.189]:54951 "EHLO
+	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755916AbZGVJCY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 15:11:59 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, jirislaby@gmail.com
-Date: Tue, 21 Jul 2009 22:11:55 +0300
-Message-ID: <20090721191154.22374.17349.stgit@tikku>
-In-Reply-To: <20090721191136.22374.69017.stgit@tikku>
-References: <20090721191136.22374.69017.stgit@tikku>
+	Wed, 22 Jul 2009 05:02:24 -0400
+Received: from mx51.mymxserver.com (mail5103.mittwald.de [172.16.51.3])
+	by emita2.mittwald.de (Postfix) with ESMTP id A52CD5FD0B1
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:54:49 +0200 (CEST)
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: "Lars Ericsson" <Lars_Ericsson@telia.com>
+Subject: Re: Slow roaming in mac80211 (2.6.30).
+Date: Wed, 22 Jul 2009 10:55:48 +0200
+Cc: "'Johannes Berg'" <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, hostap@shmoo.com
+References: <1B3FCF72EBBC44A39F5A80B8FFBF6402@gotws1589>
+In-Reply-To: <1B3FCF72EBBC44A39F5A80B8FFBF6402@gotws1589>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907221055.48791.h.schurig@mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+> For .26 I have made a few patches to fix minor issues related
+> to roaming.
 
-Add myself as the maintainer for wl1251 driver.
+It might be worthwile for you to publish this code, even it it's 
+for an ancient kernel. You can post that to the mailing list and 
+mark them as "RFC" instead of "PATCH" in the subject line.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- MAINTAINERS |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 18c3f0c..12be899 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6462,6 +6462,15 @@ M:	mitr@volny.cz
- S:	Maintained
- F:	drivers/input/misc/wistron_btns.c
- 
-+WL1251 WIRELESS DRIVER
-+P:	Kalle Valo
-+M:	kalle.valo@nokia.com
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-+S:	Maintained
-+F:	drivers/net/wireless/wl12xx/wl1251*
-+
- WL3501 WIRELESS PCMCIA CARD DRIVER
- P:	Arnaldo Carvalho de Melo
- M:	acme@ghostprotocols.net
+Some people are currently working on roaming support, e.g. 
+Helmut. Your patches/findings might give some input or ideas.
 
