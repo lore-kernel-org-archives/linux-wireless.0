@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4875 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbZGNB7E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 21:59:04 -0400
-Date: Mon, 13 Jul 2009 21:57:39 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: proski@gnu.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.31] ath5k: temporarily disable crypto for AP mode
-Message-ID: <20090714015739.GA28490@hash.localnet>
-MIME-Version: 1.0
+Received: from main.gmane.org ([80.91.229.2]:38699 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753997AbZGVMMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 08:12:19 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MTagE-0005cE-1i
+	for linux-wireless@vger.kernel.org; Wed, 22 Jul 2009 12:12:18 +0000
+Received: from bdz194.neoplus.adsl.tpnet.pl ([83.28.11.194])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 12:12:18 +0000
+Received: from kamil.dzida by bdz194.neoplus.adsl.tpnet.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 12:12:18 +0000
+To: linux-wireless@vger.kernel.org
+From: Kamil Dzida <kamil.dzida@gmail.com>
+Subject: Re: AR5523 driver - old Atheros USB
+Date: Wed, 22 Jul 2009 12:12:07 +0000 (UTC)
+Message-ID: <loom.20090722T115236-65@post.gmane.org>
+References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com>  <20090721210422.GA24285@lst.de>  <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com>  <20090721214219.GA25392@lst.de>  <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com>  <928354.18240.qm@web56107.mail.re3.yahoo.com>  <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com>  <4A66A482.6050401@erley.org> <loom.20090722T074629-659@post.gmane.org> <3ace41890907220348i367a2b02had02f05af3ab3d4f@mail.gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Roskin reported some issues with using AP mode without
-nohwcrypt=1.  Most likely this is similar to the problem fixed
-some time ago in ath9k by 3f53dd64f192450cb331c0fecfc26ca952fb242f,
-"ath9k: Fix hw crypto configuration for TKIP in AP mode."
+Hin-Tak Leung <hintak.leung@...> writes:
 
-That only affects TKIP but it's easiest to just disable that and
-WEP too until we get a proper fix in.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+> I like to see the spec, even though I don't have a device (yet).
+> 
+> Hin-Tak
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Pavel, this ok with you for now?
+If you are asking me then sorry but I am not connected in any way with OpenBSD
+and I do not have any hardware specifications :(
+You should ask Atheros through Luis and also Damien Bergamini of OpenBSD.
 
- drivers/net/wireless/ath/ath5k/base.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Anyway I just realized that the partial Linux driver is actually a port of
+OpenBSD driver with firmware extracted from Windows driver!
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 20ba6fa..7db32ce 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2980,6 +2980,9 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (modparam_nohwcrypt)
- 		return -EOPNOTSUPP;
- 
-+	if (sc->opmode == NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
-+
- 	switch (key->alg) {
- 	case ALG_WEP:
- 	case ALG_TKIP:
--- 
-1.6.2.5
+I hope that it is O.K. to have ISC licensed driver in GPL licensed kernel.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Kamil
 
