@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([204.127.217.102]:40375 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069AbZGRPCy (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55726 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752376AbZGVQZN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 11:02:54 -0400
-Message-ID: <4A61E436.9060808@lwfinger.net>
-Date: Sat, 18 Jul 2009 10:03:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: WARN_ON at minstrel_get_rate (include/net/mac80211.h:2111) with
- p54usb
-References: <4A611FC0.9040507@lwfinger.net> <200907181433.47985.chunkeey@web.de>
-In-Reply-To: <200907181433.47985.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 22 Jul 2009 12:25:13 -0400
+Subject: Re: wireless-testing regression: iwl3945 scan fails
+From: Marcel Holtmann <marcel@holtmann.org>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1248278121.17896.2728.camel@rc-desk>
+References: <87k521s2wa.fsf@litku.valot.fi>  <87fxcosron.fsf@litku.valot.fi>
+	 <1248278121.17896.2728.camel@rc-desk>
+Content-Type: text/plain
+Date: Wed, 22 Jul 2009 18:24:31 +0200
+Message-Id: <1248279871.28545.126.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Saturday 18 July 2009 03:05:04 Larry Finger wrote:
->> Johannes and Christian,
->>
->> I am getting a WARN_ON from mac80211 in the location stated in the
->> subject. I put in some test prints and got the following:
->>
->> sband->n_bitrates 8, Band 1, supp_rates 0x0
-> hmm, so something decides to talk to a 5GHz network here?
-> But the AP doesn't have any available rates in that band!?
+Hi Reinette,
 
-Ah, band 1 is 5GHz, not 2.4. There are no 802.11a AP's in my neighborhood.
+> > > I just upgraded to rc3-wl (commit 225b6807) and my iwl3945 doesn't work
+> > > anymore, even scan fails. I don't have time to investigate this right
+> > > now, but I'll try to find some time during the evening.
+> > 
+> > I have looked at this now a bit and I don't think this is an iwl3945
+> > problem. Scanning seems to stall in some situations and iwl3945 doesn't
+> > even receive the scan command. 
+> 
+> The patches we sent recently did undergo testing under various scenarios
+> using wpa_supplicant. We have not done this testing after the
+> 2.6.31-rc3-wl merge (yesterday) though. I just did a quick test on my
+> 3945 using iwconfig to associate and it was able to do so on A and G
+> bands. Looks like I need to do some wpa_supplicant testing.
 
-> If my memory serves my right some people have triggered the same WARN_ON
-> with the ath5k driver as well...
-> unfortunately, I didn't follow the thread and now I can't find it anymore.
->  
-> (btw: is your b43 11a capable as well?)
+can also at least get an IP address via DHCP and do some packet
+transfer. I made the experience that DHCP works and then we get
+disconnected seconds later.
 
-Yes it is, but that section is software crippled.
+Regards
 
-Thanks for the patch. I'll let you know what happens.
+Marcel
 
-Larry
+
