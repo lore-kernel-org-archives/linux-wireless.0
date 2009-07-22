@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44098 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753575AbZGGBm6 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3965 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756497AbZGVD2h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 21:42:58 -0400
-Subject: [PATCH] mac80211_hwsim: avoid NULL access
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 07 Jul 2009 03:43:02 +0200
-Message-Id: <1246930982.26030.0.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 21 Jul 2009 23:28:37 -0400
+Date: Tue, 21 Jul 2009 23:28:02 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+Message-ID: <20090722032802.GB13742@hash.localnet>
+References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet> <4A63DF0B.4010801@redfish-solutions.com> <20090720115244.GC9972@hash.localnet> <4A64C283.6090205@redfish-solutions.com> <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com> <4A650331.9020409@redfish-solutions.com> <4A6620B9.4@redfish-solutions.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A6620B9.4@redfish-solutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a race condition -- started can be set to true
-before channel is set due to the way mac80211 callbacks
-currently work (->start should probably pass the channel
-we would like to have initially). For now simply add a
-check to hwsim to avoid dereferencing the NULL channel
-pointer.
+On Tue, Jul 21, 2009 at 01:10:33PM -0700, Philip A. Prindeville wrote:
+> A little progress:  I build 2009-07-10 with 2.6.27.26, and I can get the
+> Vista box to associate, but not an iPhone running 3.0...
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/mac80211_hwsim.c |    1 +
- 1 file changed, 1 insertion(+)
+Yeah there's a bug, I can replicate it and am trying to track it
+down right now.
 
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2009-07-07 03:29:38.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2009-07-07 03:37:02.000000000 +0200
-@@ -427,6 +427,7 @@ static bool mac80211_hwsim_tx_frame(stru
- 			continue;
- 
- 		if (!data2->started || !hwsim_ps_rx_ok(data2, skb) ||
-+		    !data->channel || !data2->channel ||
- 		    data->channel->center_freq != data2->channel->center_freq ||
- 		    !(data->group & data2->group))
- 			continue;
-
+-- 
+Bob Copeland %% www.bobcopeland.com
 
