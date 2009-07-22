@@ -1,31 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f193.google.com ([209.85.221.193]:49732 "EHLO
-	mail-qy0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755296AbZGGWfI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60544 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbZGVPax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 18:35:08 -0400
-Received: by qyk31 with SMTP id 31so5051042qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 15:35:06 -0700 (PDT)
+	Wed, 22 Jul 2009 11:30:53 -0400
+Date: Wed, 22 Jul 2009 11:22:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Add init values for AR9287 based chipsets.
+Message-ID: <20090722152200.GE5276@tuxdriver.com>
+References: <20090715031731.GC4613@myhost>
 MIME-Version: 1.0
-From: Ramesh <rramesh1@gmail.com>
-Date: Tue, 7 Jul 2009 15:29:44 -0700
-Message-ID: <c9d168940907071529ya155f38v92c6677162766b3c@mail.gmail.com>
-Subject: Question on UAPSD support on b43
-To: Linux-Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20090715031731.GC4613@myhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Jul 15, 2009 at 08:47:31AM +0530, Vivek Natarajan wrote:
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/initvals.h | 1544 +++++++++++++++++++++++++++++
+>  1 files changed, 1544 insertions(+), 0 deletions(-)
 
-I am a newbie to linux-wireless. I have a linux image built based on
-the latest source wireless-testing.git, I would like to understand /
-study the current U-APSD support on the station side - I have a linux
-box running hostAPD for the AP and a b43 based mini-pci on a laptop
-for the station. I am not sure of the U-APSD support in the firmware
-for the b43 device - Is anyone aware of the power save support on the
-b43 firmware? If not much support is available - could someone suggest
-an alternative device for the station side?
+This didn't apply after all the rebased patches from Luis.  It looked
+deceptively simple to move it, but my "Spidey sense" told me I should
+ask you to rebase and resend.  "ath9k: Add support for AR9287 based
+chipsets." didn't apply without this, so could you rebase/resend that
+one as well?
 
-Thanks
-Ramesh
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
