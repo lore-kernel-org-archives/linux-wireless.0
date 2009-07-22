@@ -1,33 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:34174 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754965AbZGCHOI (ORCPT
+Received: from demeter.kernel.org ([140.211.167.39]:60090 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbZGVAL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 03:14:08 -0400
-Message-ID: <4A4DB01E.2030408@informatik.uni-kl.de>
-Date: Fri, 03 Jul 2009 09:15:42 +0200
-From: Reiner Herrmann <r_herrma@informatik.uni-kl.de>
-MIME-Version: 1.0
+	Tue, 21 Jul 2009 20:11:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n6M0BOtA018155
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 00:11:24 GMT
+Received: (from root@localhost)
+	by demeter.kernel.org (8.14.2/8.14.2/Submit) id n6M0BOHN018154
+	for linux-wireless@vger.kernel.org; Wed, 22 Jul 2009 00:11:24 GMT
+Date: Wed, 22 Jul 2009 00:11:24 +0000
+From: root <patchwork-linux-wireless@patchwork.kernel.org>
 To: linux-wireless@vger.kernel.org
-Subject: mac80211: Force beacon update?
-Content-Type: text/plain; charset=ISO-8859-1
+Message-ID: <20090722001124.GA18152@demeter.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I want to attach a custom IE to beacons, but some drivers (like b43)
-are fetching their beacons via ieee80211_beacon_get() only once and
-retransmit this beacon every time.
-Some other drivers (like mac80211_hwsim, ath9k) are calling it
-before every beacon transmission.
-
-Is there a general way to make all drivers generate new beacons instead
-of caching them or would I have to adapt them?
-If adapting drivers is the only way, do you have any suggestions on
-how to do that?
-
-Thank you for your answers.
-
-Regards,
-  Reiner
+subscribe linux-wireless
