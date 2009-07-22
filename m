@@ -1,48 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server1.wserver.cz ([82.113.45.157]:45739 "EHLO
-	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756351AbZGNUhQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 16:37:16 -0400
-From: Jiri Slaby <jirislaby@gmail.com>
-To: linville@tuxdriver.com
-Cc: luciano.coelho@nokia.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH v2] wireless: wl12xx, fix lock imbalance
-Date: Tue, 14 Jul 2009 22:37:13 +0200
-Message-Id: <1247603833-10862-1-git-send-email-jirislaby@gmail.com>
+Received: from ffm.saftware.de ([83.141.3.46]:56125 "EHLO ffm.saftware.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751479AbZGVUPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 16:15:38 -0400
+Message-ID: <4A677126.3040907@linuxtv.org>
+Date: Wed, 22 Jul 2009 22:05:58 +0200
+From: Andreas Oberritter <obi@linuxtv.org>
+MIME-Version: 1.0
+To: johannes@sipsolutions.net
+CC: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: fix autoloading of crypto modules for WEP
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add omitted mutex_unlock to one of wl12xx_op_start fail paths (when
-wl12xx_chip_wakeup fails).
+If at least one of arc4 and ecb is built as a module, then autoloading
+of the algorithm fails, because crypto_alloc_blkcipher tries to
+request the module "ecb(arc4)", which does not exist.
 
-[v2]
-Power off the device, because:
-\= cite from http://marc.info/?l=linux-kernel&m=124755028209880&w=2
-If the chip cannot be booted, why should it remain powered on?
-In some rare cases, the chip might fail to initialize, but can
-recover if powered off and on again, so turning it off at this
-point is the right thing to do. =/
+This patch was made against 2.6.30, but should apply cleanly on top of
+the wireless-2.6 git tree.
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Andreas Oberritter <obi@linuxtv.org>
+
 ---
- drivers/net/wireless/wl12xx/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/wep.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 603d611..d30683c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -336,7 +336,7 @@ static int wl12xx_op_start(struct ieee80211_hw *hw)
- 
- 	ret = wl12xx_chip_wakeup(wl);
- 	if (ret < 0)
--		return ret;
-+		goto out;
- 
- 	ret = wl->chip.op_boot(wl);
- 	if (ret < 0)
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index ef73105..78e9119 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -29,6 +29,17 @@ int ieee80211_wep_init(struct ieee80211_local *local)
+ 	/* start WEP IV from a random value */
+ 	get_random_bytes(&local->wep_iv, WEP_IV_LEN);
+
++	/*
++	 * crypto_alloc_blkcipher() will request the
++	 * module "ecb(arc4)", which does not exist.
++	 */
++#ifdef CONFIG_CRYPTO_ARC4_MODULE
++	request_module("arc4");
++#endif
++#ifdef CONFIG_CRYPTO_ECB_MODULE
++	request_module("ecb");
++#endif
++
+ 	local->wep_tx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(local->wep_tx_tfm))
 -- 
-1.6.3.2
+1.6.0.4
 
