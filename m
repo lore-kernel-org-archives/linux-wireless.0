@@ -1,29 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f180.google.com ([209.85.222.180]:40427 "EHLO
-	mail-pz0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbZGVNP1 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:54061 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbZGVF1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 09:15:27 -0400
-Received: by pzk10 with SMTP id 10so18459pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 06:15:27 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 22 Jul 2009 20:07:21 +0700
-Message-ID: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
-Subject: Update for regulatory database on 5GHz band for Thailand (TH)
-From: Phattanon Duangdara <sfalpha@gmail.com>
+	Wed, 22 Jul 2009 01:27:54 -0400
+Received: by fxm18 with SMTP id 18so3016628fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 22:27:53 -0700 (PDT)
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: reinette.chatre@intel.com
+Subject: wireless-testing regression: iwl3945 scan fails
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 22 Jul 2009 08:27:49 +0300
+Message-ID: <87k521s2wa.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-National Telecommunication Commisions of Thailand has announce new
-regulatory about 5GHz for RLAN last year.
+Good morning,
 
-But I found that Linux Wireless Regulatory Database not get updated.
+I just upgraded to rc3-wl (commit 225b6807) and my iwl3945 doesn't work
+anymore, even scan fails. I don't have time to investigate this right
+now, but I'll try to find some time during the evening.
 
-Reference in Thai Language:
-http://www.ratchakitcha.soc.go.th/DATA/PDF/2551/E/042/64.PDF
-(Partly in english and reference to ITU/FCC documents, I think it
-quite easy to understand)
-
-How can this get update on Regulatory Database ?
+-- 
+Kalle Valo
