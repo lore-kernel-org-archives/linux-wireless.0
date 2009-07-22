@@ -1,56 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f197.google.com ([209.85.222.197]:50544 "EHLO
-	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865AbZGMUOH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48996 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754491AbZGVMpy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:14:07 -0400
-Received: by pzk35 with SMTP id 35so1010885pzk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 13:14:07 -0700 (PDT)
-From: Mackenzie Morgan <macoafi@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: iwlagn 0000:03:00.0: Can not allocate SKB buffers
-Date: Mon, 13 Jul 2009 16:13:51 -0400
+	Wed, 22 Jul 2009 08:45:54 -0400
+Date: Wed, 22 Jul 2009 08:38:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kamil Dzida <kamil.dzida@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: AR5523 driver - old Atheros USB
+Message-ID: <20090722123808.GC3927@tuxdriver.com>
+References: <20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> <20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> <928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com> <4A66A482.6050401@erley.org> <loom.20090722T074629-659@post.gmane.org> <3ace41890907220348i367a2b02had02f05af3ab3d4f@mail.gmail.com> <loom.20090722T115236-65@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1288259.OmONIKHvYH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <200907131614.02132.macoafi@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <loom.20090722T115236-65@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1288259.OmONIKHvYH
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Wed, Jul 22, 2009 at 12:12:07PM +0000, Kamil Dzida wrote:
 
-I have the error listed in the subject repeating over and over in my syslog=
-=2E =20
-Ubuntu's kernel team has daily builds of Linus's tree, and I'm using today'=
-s=20
-(13 July 2009) on amd64.  top is also showing iwlagn with very high CPU usa=
-ge. =20
-I'm wondering if these are known issues.
+> I hope that it is O.K. to have ISC licensed driver in GPL licensed kernel.
 
-I have an Intel 4965 with SSID 8086:1100, and I'm using 802.11g with WPA2 a=
-t=20
-the moment (in case that's relevant).
+It is.
 
-=2D-=20
-Mackenzie Morgan
-http://ubuntulinuxtipstricks.blogspot.com
-apt-get moo
-
---nextPart1288259.OmONIKHvYH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEABECAAYFAkpblYAACgkQojm3DbyNMmkRlQCgmL5VDoC1JWVy7C7iWG3ycEvm
-27AAoN0T4Wk52ZHW0/fmyalhCMcEs7L4
-=PB4x
------END PGP SIGNATURE-----
-
---nextPart1288259.OmONIKHvYH--
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
