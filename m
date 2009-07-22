@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:35792 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbZGQS4j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 14:56:39 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [RFC PATCH v2 0/8] wl1251 sdio interface
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2009 21:47:39 +0300
-Message-ID: <20090717184643.25883.95065.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:45983 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbZGVR50 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 13:57:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:57:27 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2] wireless-regb: make db2bin.py use new hashlib for sha1
+Date: Wed, 22 Jul 2009 10:57:23 -0700
+Message-ID: <1248285443-10890-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is v2 of Bob's wl1251 sdio patches. I have now rebased them on
-top of wl1251/wl1271 split patches. Only compile-tested because I
-don't have working test setup right now (neither spi or sdio), but I
-should have access to one in two weeks.
+Python now complains about sha module as its deprecated:
 
-We should get the patches into wireless-testing soon because there is
-quite a lot of interest for wl1251 sdio support, sdio is more widely
-used than spi. I would like to get the patches into 2.6.32 if at all
-possible.
+./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-mcgrof.key.priv.pem
+./db2bin.py:5: DeprecationWarning: the sha module is deprecated; use the hashlib module instead
+  import sha
 
-v2:
-o rebase to current wireless-testing (after wl1251/wl1271 split)
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
 
-Bob Copeland (7):
-      wl1251: add sdio support
-      wl1251: split spi interface into separate module
-      wl1251: move module probe methods into spi.c
-      wl1251: make wl1251_set_partition bus agnostic
-      wl1251: introduce wl1251_if_operations struct
-      wl1251: use wiphy_dev instead of wl->spi->dev
-      wl1251: separate bus i/o code into io.c
+Don't pass along my regulatory.bin changes..
 
-Kalle Valo (1):
-      wl1251: remove fixed address support from spi commands
+ db2bin.py |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-
- drivers/net/wireless/wl12xx/Kconfig        |   28 ++-
- drivers/net/wireless/wl12xx/Makefile       |    5 
- drivers/net/wireless/wl12xx/wl1251.h       |   14 +
- drivers/net/wireless/wl12xx/wl1251_acx.c   |    3 
- drivers/net/wireless/wl12xx/wl1251_boot.c  |    1 
- drivers/net/wireless/wl12xx/wl1251_cmd.c   |   11 -
- drivers/net/wireless/wl12xx/wl1251_event.c |    4 
- drivers/net/wireless/wl12xx/wl1251_io.c    |  181 ++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_io.h    |   64 ++++++
- drivers/net/wireless/wl12xx/wl1251_main.c  |  162 +++------------
- drivers/net/wireless/wl12xx/wl1251_ops.c   |    5 
- drivers/net/wireless/wl12xx/wl1251_ps.c    |    3 
- drivers/net/wireless/wl12xx/wl1251_rx.c    |    7 -
- drivers/net/wireless/wl12xx/wl1251_sdio.c  |  188 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_spi.c   |  310 +++++++++++-----------------
- drivers/net/wireless/wl12xx/wl1251_spi.h   |   54 -----
- drivers/net/wireless/wl12xx/wl1251_tx.c    |   62 +++---
- 17 files changed, 678 insertions(+), 424 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl1251_io.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1251_io.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1251_sdio.c
+diff --git a/db2bin.py b/db2bin.py
+index e783b3a..23d3ee2 100755
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -2,7 +2,7 @@
+ 
+ from cStringIO import StringIO
+ import struct
+-import sha
++import hashlib
+ from dbparse import DBParser
+ import sys
+ 
+@@ -127,13 +127,13 @@ if len(sys.argv) > 3:
+ 
+     # determine signature length
+     key = RSA.load_key(sys.argv[3])
+-    hash = sha.new()
++    hash = hashlib.sha1()
+     hash.update(output.getvalue())
+     sig = key.sign(hash.digest())
+     # write it to file
+     siglen.set(len(sig))
+     # sign again
+-    hash = sha.new()
++    hash = hashlib.sha1()
+     hash.update(output.getvalue())
+     sig = key.sign(hash.digest())
+ 
+-- 
+1.6.3.3
 
