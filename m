@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:40887 "EHLO mx2.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:21534 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752927AbZGFRaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 13:30:05 -0400
-Subject: Re: BUG REPORT: libertas causing kernel lockups
-From: Dan Williams <dcbw@redhat.com>
-To: Alexander Barinov <alex.barinov@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090705125933.5a9f7ce4@dream>
-References: <20090704130346.01b2e869@dream>
-	 <1246704102.16770.71.camel@johannes.local>  <20090705125933.5a9f7ce4@dream>
+	id S1753493AbZGVQia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 12:38:30 -0400
+Subject: Re: wireless-testing regression: iwl3945 scan fails
+From: reinette chatre <reinette.chatre@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1248279871.28545.126.camel@violet>
+References: <87k521s2wa.fsf@litku.valot.fi>  <87fxcosron.fsf@litku.valot.fi>
+	 <1248278121.17896.2728.camel@rc-desk>  <1248279871.28545.126.camel@violet>
 Content-Type: text/plain
-Date: Mon, 06 Jul 2009 13:29:55 -0400
-Message-Id: <1246901395.21990.1.camel@localhost.localdomain>
+Date: Wed, 22 Jul 2009 09:38:30 -0700
+Message-Id: <1248280710.17896.2739.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-07-05 at 12:59 +0400, Alexander Barinov wrote:
-> On Sat, 04 Jul 2009 12:41:42 +0200
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Sat, 2009-07-04 at 13:03 +0400, Alexander Barinov wrote:
-> > > The initial symptom of the bug was system lockup when executing
-> > > 'ifdown eth0' with 'BUG: scheduling while atomic'. Trying to
-> > > understand the cause of the bug and find a workaround I was able to
-> > > find an easier way to reproduce it. By executing
-> > > 'cat /proc/net/wireless' I get the same bug:
-> > This should have been fixed by
-> > 87057825824973f29cf2f37cff1e549170b2d7e6. For some reason everybody
-> > seems to have assumed that get_wireless_stats can sleep, which before
-> > that commit it could _not_.
+Hi Marcel,
+
+On Wed, 2009-07-22 at 09:24 -0700, Marcel Holtmann wrote:
+> Hi Reinette,
 > 
-> The patch you have mentioned was not directly applicable to 2.6.30
-> kernel so I pulled wireless-testing git tree and compiled it. This
-> deteriorated the situation further - now after executing
-> 'cat /proc/net/wireless' I get kernel lockup without any further
-> messages.
+> > > > I just upgraded to rc3-wl (commit 225b6807) and my iwl3945 doesn't work
+> > > > anymore, even scan fails. I don't have time to investigate this right
+> > > > now, but I'll try to find some time during the evening.
+> > > 
+> > > I have looked at this now a bit and I don't think this is an iwl3945
+> > > problem. Scanning seems to stall in some situations and iwl3945 doesn't
+> > > even receive the scan command. 
+> > 
+> > The patches we sent recently did undergo testing under various scenarios
+> > using wpa_supplicant. We have not done this testing after the
+> > 2.6.31-rc3-wl merge (yesterday) though. I just did a quick test on my
+> > 3945 using iwconfig to associate and it was able to do so on A and G
+> > bands. Looks like I need to do some wpa_supplicant testing.
+> 
+> can also at least get an IP address via DHCP and do some packet
+> transfer. I made the experience that DHCP works and then we get
+> disconnected seconds later.
 
-Can you get anything at all out of the kernel on that?  2.6.29.5 with
-quite recent wireless-testing libertas driver works fine with sd8686 on
-my machine (hp 2530p laptop with a Ricoh controller).  Can you post your
-backport of that patch too?
+I have seen this for a long time now. I am using wpa_supplicant to
+connect to a WPA2 network using a 5100 device and get disconnected very
+regularly (starts with "CTRL-EVENT-DISCONNECTED - Disconnect event -
+remove keys" which is caused by a missing probe response from the AP).
+In these cases wpa_supplicant is able to reconnect. This behavior is
+also present in 2.6.31-rc3-wl from yesterday.
 
-Dan
+Do you not get reconnected after you get disconnected?
 
+Reinette
 
