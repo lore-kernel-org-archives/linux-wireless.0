@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:58226 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838AbZGFUUt (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:31362 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401AbZGVNco convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 16:20:49 -0400
-Received: by fxm18 with SMTP id 18so4413350fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 13:20:52 -0700 (PDT)
+	Wed, 22 Jul 2009 09:32:44 -0400
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: Phattanon Duangdara <sfalpha@gmail.com>
+Subject: Re: Update for regulatory database on 5GHz band for Thailand (TH)
+Date: Wed, 22 Jul 2009 15:33:51 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
+In-Reply-To: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1246900337.20908.15.camel@johannes.local>
-References: <f76a32050907061006k3bed082fg3428a50370b0889b@mail.gmail.com>
-	 <1246900337.20908.15.camel@johannes.local>
-Date: Mon, 6 Jul 2009 22:20:51 +0200
-Message-ID: <f76a32050907061320n18f3c4c9j4d5589c9c9e45c02@mail.gmail.com>
-Subject: Re: rt73 in AP mode: PS frames buffered but missing TIM bit?
-From: Stefan Steuerwald <salsasepp@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907221533.51459.h.schurig@mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/6 Johannes Berg <johannes@sipsolutions.net>
->
-> On Mon, 2009-07-06 at 19:06 +0200, Stefan Steuerwald wrote:
-> >
-> > Summary:
-> > - I suspect a missing TIM bit when using rt73 in AP mode with my
-> > powersaving iPod Touch.
-> > - Despite frames being buffered no TIM bit is getting set (I thought
-> > it should), station stays asleep.
->
-> Sounds like a driver problem, it must not be reacting to set_tim()
-> properly.
->
-> johannes
+> Reference in Thai Language:
+> http://www.ratchakitcha.soc.go.th/DATA/PDF/2551/E/042/64.PDF
+> (Partly in english and reference to ITU/FCC documents, I think
+> it quite easy to understand)
 
-Looking at rt73usb.c:2242, there isn't any initializer for .set_tim .
-Plausible explanation.
-It may be totally beyond me to just implement it. Let me find someone
-to ask nicely ;-) ...
+While I find your writing aesthetically pleasing, I'd not dare to 
+extract regulatory data out of a document where I can only read 
+here and there something. I'm not sure if others are more brave 
+than me :-)
+
+Could you describe what exactly changed?
+
+-- 
+M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
+Holger Schurig
+Raiffeisenstr. 10
+61191 Rosbach
+Tel: 06003/9141-15          Fax 06003/9141-49
+http://www.mn-solutions.de/
+
+Handelsregister Friedberg, HRB 5903
+Geschäftsführer: P.Schrittenlocher
