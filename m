@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:61065 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753674AbZGRU0c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 16:26:32 -0400
-Received: by pzk32 with SMTP id 32so70000pzk.33
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2009 13:26:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090718103756.GA11381@elf.ucw.cz>
-References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
-	<20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
-	<43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
-	<20090718103756.GA11381@elf.ucw.cz>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 18 Jul 2009 13:02:52 -0700
-Message-ID: <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
-Subject: Re: Generic events for wake up from S1-S4
-To: Pavel Machek <pavel@ucw.cz>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40889 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752251AbZGVUh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 16:37:56 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] [compat-2.6] Move usb_unpoison_anchored_urbs to compat-2.6.29.h
+Date: Wed, 22 Jul 2009 22:37:48 +0200
+Message-Id: <1248295068-26942-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1248295068-26942-1-git-send-email-hauke@hauke-m.de>
+References: <1248295068-26942-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 18, 2009 at 3:37 AM, Pavel Machek<pavel@ucw.cz> wrote:
-> On Wed 2009-07-15 11:00:07, Luis R. Rodriguez wrote:
->> On Wed, Jul 15, 2009 at 8:51 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> > On Tue, Jul 14, 2009 at 4:53 PM, Pavel Machek<pavel@ucw.cz> wrote:
->> >> On Tue 2009-07-14 15:11:45, Luis R. Rodriguez wrote:
->> >>> I'm working on Wake-on-Wireless support for wireless right now [1].
->> >>> Upon wake up I wanted to inform the kernel of the event which caused
->> >>> the wake up but am not clear if there is a generic API for this. Mind
->> >>> you, for WoW we'll need at least some AC power to the card so we'll
->> >>> need to at least be in S3-Hot so we'll only need events for that for
->> >>> now.
->> >>>
->> >>> Do we have some generic infrastructure to gather reasons for wake up
->> >>> from S1-S4 and pass this to userspace yet?
->> >>
->> >> I do not think generic api exists...
->>
->> Going back to this topic -- any suggestions? Will a generic netlink
->> family be OK? Or perhaps easier a udev event for some suitable
->> existing parent ?
->
-> Is "who woke me" information even relevant? Yes, it may be interesting
-> enough for printk, but... What will userspace do with that information?
+The declaration of usb_unpoison_anchored_urbs was introduced in kernel 2.6.29.
 
-Splashy event notification thingies?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.h |    1 -
+ compat/compat-2.6.29.h |    3 +++
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-I was just trying to avoid verbose debug info for WoW upon wakeup and
-figured it be nice to report back through a generic interface.
+diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
+index 9bc1231..40b5320 100644
+--- a/compat/compat-2.6.28.h
++++ b/compat/compat-2.6.28.h
+@@ -37,7 +37,6 @@ extern void usb_unpoison_urb(struct urb *urb);
+ #if 0
+ extern void usb_poison_anchored_urbs(struct usb_anchor *anchor);
+ #endif
+-extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
+ 
+ extern struct urb *usb_get_from_anchor(struct usb_anchor *anchor);
+ extern void usb_scuttle_anchored_urbs(struct usb_anchor *anchor);
+diff --git a/compat/compat-2.6.29.h b/compat/compat-2.6.29.h
+index f4086e9..8ea43cb 100644
+--- a/compat/compat-2.6.29.h
++++ b/compat/compat-2.6.29.h
+@@ -8,6 +8,7 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+ 
+ #include <linux/skbuff.h>
++#include <linux/usb.h>
+ 
+ /**
+  *	skb_queue_is_first - check if skb is the first entry in the queue
+@@ -40,6 +41,8 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
+ 	return skb->prev;
+ }
+ 
++extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /*  LINUX_26_29_COMPAT_H */
+-- 
+1.6.2.1
 
-> Imagine WoW packet comes, 5msec later WoL packet comes, 5msec later
-> user opens the lid. You report WoW as wakeup reason, but it is
-> inherently "racy".
-
-Hm yeah, but I doubt someone will do that, generally we'd get one wake
-up event. Can't we just report the first one and ignore the rest?
-
-> What about simply reporting "wake event happened on this device" and
-> doing that for all the devices?
-
-That's fine too. Just think it would be nice to be more specific if possible.
-
-  Luis
