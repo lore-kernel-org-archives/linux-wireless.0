@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320AbZGASen (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 14:34:43 -0400
-Subject: Re: Compiling wpa_supplicant?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jon Loeliger <jdl@bigfootnetworks.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246467053.11632.13.camel@jdl-desktop>
-References: <1246467053.11632.13.camel@jdl-desktop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LfSEdL/zsnm3GEjdVSSV"
-Date: Wed, 01 Jul 2009 20:34:31 +0200
-Message-Id: <1246473271.8154.5.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:45503 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752493AbZGVRvu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 13:51:50 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:51:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<sfalpha@gmail.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Green <michael.green@atheros.com>,
+	David Quan <david.quan@atheros.com>
+Subject: [PATCH] wireless-regdb: TH gets 5 GHz enabled as of new regulatory rules
+Date: Wed, 22 Jul 2009 10:51:48 -0700
+Message-ID: <1248285108-10059-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Phattanon Duangdara reported the National Telecommunication
+Commisions of Thailand has announced new regulatory rules
+about 5GHz for RLAN last year.
 
---=-LfSEdL/zsnm3GEjdVSSV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have verified this matches our documentation internally
+at Atheros.
 
-On Wed, 2009-07-01 at 11:50 -0500, Jon Loeliger wrote:
+Reference in Thai Language:
+http://www.ratchakitcha.soc.go.th/DATA/PDF/2551/E/042/64.PDF
 
-> Is there a version of hostapd/wpa_suppliant that is more
-> up-to-date WRT libnl-2.0?  Or should I just use the wext
-> driver for now?
+Cc: Michael Green <michael.green@atheros.com>
+Cc: David Quan <david.quan@atheros.com>
+Reported-by: Phattanon Duangdara <sfalpha@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ db.txt |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-I would suggest you compile against a released version of libnl, namely
-1.1 :) Otherwise, you can rip the compat code out off iw and stick it
-into wpa_supplicant/hostapd.
-
-johannes
-
---=-LfSEdL/zsnm3GEjdVSSV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKS6wyAAoJEODzc/N7+QmaOWUQAMixYPtadcHFXYt/TscBA+OB
-Mx5RIyBn+2F7E55gFh/aQ51iww173Lc2dmsKAQmmF8tc48q962uSkTF3ajILfgpY
-pH+QmhsXlPviVO5/hlAdwm/w+00wMhN/2vxx6oOV27r7KK37woGsotqCQn1v3aRs
-G4kwuNfD619NXvgazZ+VRmceF4F/WtAffPcTCZ9Q+6dtV4JL66sMxY0xASkagso1
-DvjAX9Uaox1OMFC0KWsPmkPfTzXsseZwBdMZmxCy+AgiNnW0Zg8SAr3328q+OoWk
-q1VBlw8ATxwf3VFm/967+YtAREZ7dqjmub7MnijCKVtEkoE7KpwMyld1atj6FKm4
-wL/nWMEqzelqUq/6vV75EN9VC4rn6gyWQ1AUT3cyG01gkpwvWedjwVCtX0CATtYJ
-MTP4cfdL9FACenoSKoNzoCuwbT8o+P6LTpvkRwp4LyIV+Sxl6wvZae7j60i16vsI
-kznAGFqB4hI2VrD13mAG5Ff7aA8mkjL85mp4Ynp3JsFjIUWqb3zh0ZhuuY8+HaTR
-zRBQlDe/TigI99e3BmDR8E6ixQGjWhuRlyG9ptvGYQ9vUXj3oE7dyn/rrprJ3ddL
-wfUuv+UoRumRuWfAhGCJHPJz/oYf8pGB5pgcwU0xLYo1hjF79ITC08QYp+Lui/ZU
-G24Z++64TnULHBglrC3i
-=RWnF
------END PGP SIGNATURE-----
-
---=-LfSEdL/zsnm3GEjdVSSV--
+diff --git a/db.txt b/db.txt
+index fad098d..01536d6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -534,7 +534,11 @@ country TW:
+ 	(5735 - 5815 @ 40), (3, 30)
+ 
+ country TH:
+-	(2402 - 2482 @ 40), (N/A, 20)
++	(2402 - 2482 @ 20), (N/A, 20)
++	(5170 - 5250 @ 20), (3, 17)
++	(5250 - 5330 @ 20), (3, 20), DFS
++	(5490 - 5710 @ 20), (3, 20), DFS
++	(5735 - 5835 @ 20), (3, 30)
+ 
+ country TT:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-- 
+1.6.3.3
 
