@@ -1,78 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:38786 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbZG3QvJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525AbZGVMpy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 12:51:09 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 02/10] rndis_wlan: stop workers on rndis_wlan_stop() and
-	restore on rndis_wlan_reset()
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Thu, 30 Jul 2009 19:41:26 +0300
-Message-ID: <20090730164126.28317.20258.stgit@fate.lan>
-In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
-References: <20090730164120.28317.53313.stgit@fate.lan>
+	Wed, 22 Jul 2009 08:45:54 -0400
+Date: Wed, 22 Jul 2009 08:37:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kamil Dzida <kamil.dzida@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: AR5523 driver - old Atheros USB
+Message-ID: <20090722123727.GB3927@tuxdriver.com>
+References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com> <20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> <20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> <928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com> <4A66A482.6050401@erley.org> <loom.20090722T074629-659@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <loom.20090722T074629-659@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver doesn't need to poll statistics/link status when stopped.
+On Wed, Jul 22, 2009 at 08:00:28AM +0000, Kamil Dzida wrote:
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+> It seems that OpenBSD has driver for AR5523 (AR5005UG and AR5005UX) upstream. I
+> doubt that they would like to share their code with Linux - like dual licensing
+> GPL/BSD.
 
- drivers/net/wireless/rndis_wlan.c |   23 +++++++++++++++++++----
- 1 files changed, 19 insertions(+), 4 deletions(-)
+At the risk of starting another flame war with insane people, I'll
+point-out that dual licensing is not necessary.  The BSD licensed
+code is completely available to us.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 76c5ec6..3c7c620 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2457,9 +2457,6 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 	disassociate(usbdev, 1);
- 	netif_carrier_off(usbdev->net);
- 
--	queue_delayed_work(priv->workqueue, &priv->stats_work,
--		round_jiffies_relative(STATS_UPDATE_JIFFIES));
--
- 	return 0;
- 
- fail:
-@@ -2499,15 +2496,33 @@ static void rndis_wlan_unbind(struct usbnet *usbdev, struct usb_interface *intf)
- 
- static int rndis_wlan_reset(struct usbnet *usbdev)
- {
-+	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+
- 	devdbg(usbdev, "rndis_wlan_reset");
-+
-+	queue_delayed_work(priv->workqueue, &priv->stats_work,
-+		round_jiffies_relative(STATS_UPDATE_JIFFIES));
-+
- 	return deauthenticate(usbdev);
- }
- 
- 
- static int rndis_wlan_stop(struct usbnet *usbdev)
- {
-+	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	int retval;
-+
- 	devdbg(usbdev, "rndis_wlan_stop");
--	return disassociate(usbdev, 0);
-+
-+	retval = disassociate(usbdev, 0);
-+
-+	priv->work_pending = 0;
-+	cancel_delayed_work_sync(&priv->stats_work);
-+	cancel_delayed_work_sync(&priv->scan_work);
-+	cancel_work_sync(&priv->work);
-+	flush_workqueue(priv->workqueue);
-+
-+	return retval;
- }
- 
- 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
