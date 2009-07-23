@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:48899 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754154AbZGASMU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 14:12:20 -0400
-Received: by gxk26 with SMTP id 26so1674183gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 11:12:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A4BA21F.1070101@gmail.com>
-References: <1246388712.4949.52.camel@localhost> <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
-	<1246396179.4949.76.camel@localhost> <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-	<1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 1 Jul 2009 11:12:03 -0700
-Message-ID: <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
-Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with
-	staging/wlan-ng driver.
-To: Dave <kilroyd@googlemail.com>
-Cc: Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:21663 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753618AbZGWQcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 12:32:06 -0400
+Subject: Re: any controller working in AP mode ?
+From: Pavel Roskin <proski@gnu.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Ram kumar <ramkumar.research@gmail.com>,
+	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200907230846.17683.hs4233@mail.mn-solutions.de>
+References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
+	 <1247843954.25608.62.camel@mj> <1248277682.8929.0.camel@mj>
+	 <200907230846.17683.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
+Date: Thu, 23 Jul 2009 12:32:04 -0400
+Message-Id: <1248366724.2661.9.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 1, 2009 at 10:51 AM, Dave<kilroyd@googlemail.com> wrote:
-> Karl Relton wrote:
->> On Tue, 2009-06-30 at 14:58 -0700, Luis R. Rodriguez wrote:
->>> Why all the srec->binary conversion? Doesn't this waste space on
->>> people's firmware directories?
->>>
->> Yes, technically it does. The srec file is ~185KB, a binary image would
->> be ~64KB.
->>
->> The reason it was left is that the driver has to do some runtime
->> plugging of data into the image, so pre-compilation would have meant
->> inventing both a compiler tool and an intermediate format for the driver
->> to read and process. Putting all the srec processing in the driver was
->> more expedient (just meant porting existing userspace code into driver
->> space).
->
-> I can't find the wlan_ng request_firmware call in my wireless-testing
-> tree (week or so old). Is that new?
->
-> From what I can tell the wlan_ng, hostap and orinoco drivers all program
-> firmware that has the same basic format. Hostap doesn't use
-> request_firmware, and gives userspace the control over the write
-> sequence. orinoco places a very simple header in front of the binary image.
->
-> Do we really want to add srec processing to the driver (or even the kernel)?
->
-> It would be nice if the FW image was in the same format for orinoco and
-> wlan_ng, as the prism firmware ought to work on non-USB prism cards, and
-> we should be able to make orinoco use it.
+On Thu, 2009-07-23 at 08:46 +0200, Holger Schurig wrote: 
+> > Web search for 1286:1fab doesn't find anything useful other
+> > than recommendations to use ndiswrapper.
+> 
+> It might be some 802.11n (marketing speak "Top Dog") thingy ???
 
-I never got the wlan_ng stuff.. Anyway now it is under
-drivers/staging/wlan-ng. I was under the impression it targeted some
-devices not covered by hostapd or orinoco, is that no the case?
+That's very unlikely.  ZEW2502 is advertised as 802.11b/g and it's dirt
+cheap ($20).  Besides, its ID 1286:1fab suggests that it's probably a
+predecessor of 1286:2001 that is supported by the kernel drivers.
 
-  Luis
+In case it matters, its FCC ID is T58331GU2006M1.  Some sites say its
+chipset is "Marvell 88W8338 + 88W8010", see e.g.
+http://www.xpcgear.com/zew2502.html
+
+I modified both libertas drivers to support that ID.  usb8xxx asks for
+usb8388.bin.  After I installed that firmware, usb8xxx started panicking
+with so many messages that the interesting part scrolls from the screen.
+I could try to capture that with a serial console.  It's clearly not the
+right way to react to bad hardware.
+
+As for libertas_tf_usb, it does something strange.  It registers a phy
+that only supports monitor mode.  No network device is registered.  I
+can add it using iw.  If I try to bring the interface up, the driver
+requests lbtf_usb.bin.  Whether that file is present of not, ifconfig
+hangs, and all subsequent network commands on other terminals hang too.
+
+Apparently, error handling in libertas drivers needs some improvement,
+regardless of whether ZEW2502 is a potentially supported device.
+
+The device is supported by ndiswrapper with the x86_64 WinXP driver.
+Scanning works, but wpa_supplicant fails.  That's just to verify that
+the device is functional.
+
+-- 
+Regards,
+Pavel Roskin
