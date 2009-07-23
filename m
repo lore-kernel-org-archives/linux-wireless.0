@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:20250 "EHLO
-	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362AbZG1SRC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 14:17:02 -0400
-Date: Tue, 28 Jul 2009 11:15:52 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>, julia@diku.dk,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Add networking wireless drivers section
-Message-Id: <20090728111552.528a2c9a.randy.dunlap@oracle.com>
-In-Reply-To: <1248804397.18284.5.camel@Joe-Laptop.home>
-References: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
-	<20090728.103044.179053537.davem@davemloft.net>
-	<1248804397.18284.5.camel@Joe-Laptop.home>
+Received: from c60.cesmail.net ([216.154.195.49]:33184 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752178AbZGWWj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 18:39:27 -0400
+Subject: Re: any controller working in AP mode ?
+From: Pavel Roskin <proski@gnu.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Ram kumar <ramkumar.research@gmail.com>,
+	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1248366724.2661.9.camel@mj>
+References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
+	 <1247843954.25608.62.camel@mj> <1248277682.8929.0.camel@mj>
+	 <200907230846.17683.hs4233@mail.mn-solutions.de>
+	 <1248366724.2661.9.camel@mj>
+Content-Type: text/plain
+Date: Thu, 23 Jul 2009 18:39:25 -0400
+Message-Id: <1248388765.2661.154.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 28 Jul 2009 11:06:37 -0700 Joe Perches wrote:
+On Thu, 2009-07-23 at 12:32 -0400, Pavel Roskin wrote:
 
-> On Tue, 2009-07-28 at 10:30 -0700, David Miller wrote:
-> > Wireless patches need to be CC:'d to linux-wireless so that
-> > John Linville can notice and pick them up
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index ebc2691..0574aad 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -4186,6 +4186,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
->  S:	Odd Fixes
->  F:	drivers/net/
->  
-> +NETWORKING WIRELESS DRIVERS
-> +L:	linux-wireless@vger.kernel.org
-> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-> +S:	Odd Fixes
-> +F:	drivers/net/wireless/
-> +
+> In case it matters, its FCC ID is T58331GU2006M1.  Some sites say its
+> chipset is "Marvell 88W8338 + 88W8010", see e.g.
+> http://www.xpcgear.com/zew2502.html
 
-Already have this:
+I've cracked it open.  The big chips are Marvell 88W8338-BDK1 and
+Marvell 88W8010-NNB.  Thus, the above site is correct.
 
-NETWORKING [WIRELESS]
-P:	John W. Linville
-M:	linville@tuxdriver.com
-L:	linux-wireless@vger.kernel.org
-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-S:	Maintained
-F:	net/wireless/
-F:	include/net/ieee80211*
-F:	include/linux/wireless.h
+libertas and libertastf support 88W8388, which must be newer than
+88W8338.
 
-
----
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
+-- 
+Regards,
+Pavel Roskin
