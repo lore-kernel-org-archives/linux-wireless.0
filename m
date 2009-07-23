@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:50143 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbZGaSMN convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432AbZGWOuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:12:13 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so610518eyd.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:12:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890907311107h56add3d9i9d7e825f55c8c40d@mail.gmail.com>
-References: <20090731180556.GC7963@makis>
-	 <43e72e890907311107h56add3d9i9d7e825f55c8c40d@mail.gmail.com>
-Date: Fri, 31 Jul 2009 21:12:12 +0300
-Message-ID: <40f31dec0907311112v7e463a1m4e5e39152e6fea01@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 2/4] ath5k: Linear PCDAC code fixes
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 23 Jul 2009 10:50:54 -0400
+Subject: [PATCH v2] mac80211: fix mlme timeouts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Alban Browaeys <prahal@yahoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248357941.17088.2.camel@johannes.local>
+References: <1248357941.17088.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 23 Jul 2009 16:50:16 +0200
+Message-Id: <1248360616.24145.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Fri, Jul 31, 2009 at 11:05 AM, Nick
-> Kossifidis<mick@madwifi-project.org> wrote:
->>  * Set correct xpd curve indices for high/low gain curves during
->>   rfbuffer setup on RF5112B with both calibration curves available.
->>
->>  * Don't return zero min power when we have the same pcdac value
->>   twice because it breaks interpolation. Instead return the right
->>   x barrier as we do when we have equal power levels for 2 different
->>   pcdac values.
->> ---
->>  drivers/net/wireless/ath/ath5k/phy.c |   24 +++++++++++++++++-------
->>  1 files changed, 17 insertions(+), 7 deletions(-)
->
-> Missing SOB
->
->  Luis
+Subject: mac80211: fix mlme timeouts
 
-Grrr, sorry ppl, resending...
+When a new MLME work is created, its timeout is initialised
+to 0. This is wrong, it could then be thought of as having
+an actual timeout in the future (time_is_after_jiffies() can
+return true). Instead, it should be initialised to jiffies
+so that it will run right away as soon as the mlme work is
+executed.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Luciano Roth Coelho <luciano.coelho@nokia.com>
+Reported-by: Alban Browaeys <prahal@yahoo.com>
+---
+the assignment on probe response is, at least, unnecessary.
+
+ net/mac80211/mlme.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2009-07-23 16:04:33.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2009-07-23 16:49:19.000000000 +0200
+@@ -2374,6 +2374,7 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 
+ 	wk->state = IEEE80211_MGD_STATE_PROBE;
+ 	wk->auth_alg = auth_alg;
++	wk->timeout = jiffies; /* run right away */
+ 
+ 	/*
+ 	 * XXX: if still associated need to tell AP that we're going
+@@ -2445,6 +2446,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 
+ 	wk->state = IEEE80211_MGD_STATE_ASSOC;
+ 	wk->tries = 0;
++	wk->timeout = jiffies; /* run right away */
+ 
+ 	if (req->use_mfp) {
+ 		ifmgd->mfp = IEEE80211_MFP_REQUIRED;
 
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
