@@ -1,60 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57241 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219AbZGWKgR (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:47855 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752411AbZGWUKx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 06:36:17 -0400
-Subject: Re: [PATCH] mac80211: Add a few 802.11n defines for AMPDU
- parameters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <19048.13563.475455.554327@localhost.localdomain>
-References: <19048.13563.475455.554327@localhost.localdomain>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SEM9VqQ3flByftek43Vc"
-Date: Thu, 23 Jul 2009 12:35:40 +0200
-Message-Id: <1248345340.19121.18.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 23 Jul 2009 16:10:53 -0400
+Date: Thu, 23 Jul 2009 17:10:50 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723201050.GD19369@khazad-dum.debian.net>
+References: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+ <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+ <20090718103756.GA11381@elf.ucw.cz>
+ <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
+ <20090718235609.GC25343@khazad-dum.debian.net>
+ <20090723145757.GB28158@elf.ucw.cz>
+ <20090723185720.GB19369@khazad-dum.debian.net>
+ <20090723191330.GQ28158@elf.ucw.cz>
+ <20090723194522.GC19369@khazad-dum.debian.net>
+ <20090723195114.GR28158@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090723195114.GR28158@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 23 Jul 2009, Pavel Machek wrote:
+> On Thu 2009-07-23 16:45:22, Henrique de Moraes Holschuh wrote:
+> > On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > > > Note that the "why" is unreliable by design. Network driver will
+> > > > > ignore WoL during run-time, right?
+> > > > 
+> > > > "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> > > > reliable as "who"...
+> > > 
+> > > See above. The wakeup events race with each other.
+> > 
+> > We deliver them all.  It is that simple.  The rest is up to userspace.
+> 
+> Ok, but then we should not be talking about wake up events,
+> but... events.
+> 
+> Like "lid opened", "wake packet came", ... . And deliver them even
+> when they happen during run-time. That's okay with me.
 
---=-SEM9VqQ3flByftek43Vc
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well, we *already* deliver "lid opened" when the lid is opened, regardless
+of it waking up the computer or not.  But we are missing a way to deliver
+other classes of wakeup events.
 
-On Thu, 2009-07-23 at 15:31 +0530, Sujith wrote:
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
->  include/linux/ieee80211.h |   25 +++++++++++++++++++++++++
->  1 files changed, 25 insertions(+), 0 deletions(-)
+I know of at least these (incomplete list):
 
-not really mac80211, but anyway
+1. network-initiated wakeup
+   a. wired
+   b. wireless
+   c. long-range wireless
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+2. platform health/condition alarms
+   a. battery alarm (two levels, warning and emergency)
+   b. thermal alarm (two levels, warning and emergency)
+   (we need these as generic alarms, not just reason-for-wakeup)
 
-johannes
+3. device (or device tree) hotplug/hotunplug
+   a. hotunplug request or notification
+      (we deliver the request/notification, but we don't know we should
+      go back to sleep, so all we are missing is the reason-for-wakeup
+      event)
 
---=-SEM9VqQ3flByftek43Vc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+4. management
+   a. wake-up/power on clock
+   b. remote management command (IMPI, etc)
+   c. intrusion alarm
+   d. theft alarm
 
------BEGIN PGP SIGNATURE-----
+None of those have a standard interface to notify userspace of the reason of
+the wake up AFAIK.  Many of these want a generic event interface to be
+delivered not just as reason-for-wakeup, but also as runtime events.
 
-iQIcBAABAgAGBQJKaDz5AAoJEODzc/N7+QmavLQP/0a8ERkxmoEafU39j2ZbfieD
-Y+ByWxq7GUcno7hp/0eOxxqRGnsWaI98kXoUCqWEho20Zb1TVY//SFATpOiRYq3S
-jlShLwnednuIzeDeBSsdyI1xQZOR4oaNBqQWPUh9RLAxSvHSNiTg2e5x2kXD4ONK
-hVQXDX/prR5FtcBK5Wvs6I0EidjJlHFxsPn0oBwgsRTheE80JpSfPvo72sUxjkDq
-4GMiK7pI/zuDL99BuLKm7O1LDbrfGR9rsIQWDhZ7M12GYoXzGY+Ow7X0oDFOW50i
-8xHwO/OKN+M0MBHkMFTA4DNHAarL7aJYG+x1jpkmGlyYgAUVKGuHv9Yx7bTQV352
-n+bcKdLXx2tmkPX+ijgDhezHB4t4PpHFKDUEqTl9w6ksAIOacsL2bWs5buDJr3v5
-/WQuArkka4Rm4hcs9wrPJA4OFuZhudxX0aR2S3barWmEToV9w9TXa9MMfPgmLm/h
-anqMp1HGEY24DNCs3Czvkx82B5R+yZ6Fz67du13451259bo+XsgIIOjdihF2KHRF
-qgflyY89J1oEOXzcyO2jslKgxo5PJcW7+W+qsmNMFm4J4WIej2o5/rYV99k4wI6k
-i+DFywXrNPfWUIqGGgRkzhh26NBV7OfKqPVTS6ug2yQcu8mfyYvWa7yngJm/9vj7
-IThPiShwkzyJgXTYSwjh
-=OxPV
------END PGP SIGNATURE-----
+And I guess we should also tell userspace what state we are waking up from
+(S5 clean state, S5/S4 hibernation, S3), sometimes it matters.
 
---=-SEM9VqQ3flByftek43Vc--
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
