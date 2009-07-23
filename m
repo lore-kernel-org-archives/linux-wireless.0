@@ -1,109 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51190 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766AbZGSIxu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 04:53:50 -0400
-Subject: Re: [PATCH] acer-wmi: fix rfkill conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Troy Moure <twmoure@szypr.net>, linux-wireless@vger.kernel.org
-In-Reply-To: <4A62DDDC.5090100@tuffmail.co.uk>
-References: <alpine.LFD.2.00.0906171135080.3376@troy-laptop>
-	 <4A62DDDC.5090100@tuffmail.co.uk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yCo5wsN6+7R1xKIwui1S"
-Date: Sun, 19 Jul 2009 10:53:38 +0200
-Message-Id: <1247993618.4204.3.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:30284 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753911AbZGWKCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 06:02:37 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:02:38 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19048.13629.94762.506456@localhost.localdomain>
+Date: Thu, 23 Jul 2009 15:32:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/6] ath9k: Cleanup return values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cleanup aggregation start/stop function interfaces.
 
---=-yCo5wsN6+7R1xKIwui1S
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    6 +++---
+ drivers/net/wireless/ath/ath9k/main.c  |   14 +++-----------
+ drivers/net/wireless/ath/ath9k/xmit.c  |   25 +++++++++----------------
+ 3 files changed, 15 insertions(+), 30 deletions(-)
 
-On Sun, 2009-07-19 at 09:48 +0100, Alan Jenkins wrote:
-> On 6/17/09, Troy Moure <twmoure@szypr.net> wrote:
-> > Commit 19d337dff95cbf76ed ("rfkill: rewrite") incorrectly reversed
-> > the meaning of 'state' in acer_rfkill_update() when it changed
-> > rfkill_force_state() to rfkill_set_sw_state().  Fix it.
-> >
-> > Signed-off-by: Troy Moure <twmoure@szypr.net>
-> > ---
-> > This fixes the rfkill switch on my Acer laptop, which was behaving
-> > backwards (the state reported in the logs was the opposite of the
-> > state indicated by the LED).
->=20
-> I think there's another reversal error that you didn't notice :-).  I
-> found that acer-wmi disables the wireless when it is loaded.
-
-Ahrg.
-
-> The core tries to initialize the wireless to enabled, but the polarity
-> is wrong in acer_rfkill_set().  It ends up disabling the wireless
-> instead.
->=20
-> Here's a patch for it.
-
-I really should go back and audit it again, but every instance takes me
-about 5 minutes to do the (not state !=3D unblocked) thing in my
-head ... :/
-
-Thanks!
-
-johannes
-
-> --->
-> From 75953366b4958a77019729662a997f5d361a7529 Mon Sep 17 00:00:00 2001
-> From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Date: Sun, 19 Jul 2009 09:29:21 +0100
-> Subject: [PATCH] acer-wmi: fix rfkill conversion
->=20
-> Fix another polarity error introduced by the rfkill rewrite,
-> this time in acer_rfkill_set().
->=20
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> ---
->  drivers/platform/x86/acer-wmi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/platform/x86/acer-wmi.c b/drivers/platform/x86/acer-=
-wmi.c
-> index be2fd6f..fb45f5e 100644
-> --- a/drivers/platform/x86/acer-wmi.c
-> +++ b/drivers/platform/x86/acer-wmi.c
-> @@ -973,7 +973,7 @@ static int acer_rfkill_set(void *data, bool blocked)
->  {
->  	acpi_status status;
->  	u32 cap =3D (unsigned long)data;
-> -	status =3D set_u32(!!blocked, cap);
-> +	status =3D set_u32(!blocked, cap);
->  	if (ACPI_FAILURE(status))
->  		return -ENODEV;
->  	return 0;
-
---=-yCo5wsN6+7R1xKIwui1S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKYt8OAAoJEODzc/N7+QmaryEP/0dz47eYn28F3MfHamsxwfCS
-fBsdh6s03b9j51IxPaI2X35n+kdUdeWF5lD7mTJFU1WrqFCzI8Q18bZT+7Q+fhgc
-2WyQS0I/0Ko/T4zWmk+3sERCDAV4PggsgA/FbKPqnNcBoAPQ7DPThwdU7Wm5SjNC
-mvi5WmPyYah4NGAo7ujVZnjCFYZ6WFD52yurzZ6RXzhoBIY7aDL3pks72mF4QaMY
-JgybWOPmRijQfMtjfHzvQydaQqWURkWGFDLoIYl048Un4CENJaB/UiLU2Z0KiqN9
-Fl8r+rl4EMFt7oyBw0l51kwunYxyAQ5EkylYEjwYSf9JhPWY/DBQQRCra0OBCgn9
-iQjZqTvyc8MQFeiieZEU2QZFC4DAyFCvKmyeOnOyHyxwNZdy4XX1ZeHUmyWQGi45
-npqP/nT4DMTsZJX3vYqTVEtNRz2W9NF6Qye3Xr2eK1O3aPW2/EwVcdky9tLF64dd
-pkJlwIQA8ZXdKjiFXrzlT/5dJP5EcqHItAkgWOpoEbBl+3gT98c67/FqMqjgfVKl
-nAEg8fPvV7CsEREOKyjpiRzpJfWN4r1hftKrYdMXsR5UNE8DhZeqp5/KNZxb5Q0Y
-bdHnEELCsyqillRGyAXPL4XaBdeRB7lUx69GC1HouFJoC3hYFuuaI/Qwsjfr6ZUI
-hE6TGE1BBjdW1mPX2x47
-=8Yqp
------END PGP SIGNATURE-----
-
---=-yCo5wsN6+7R1xKIwui1S--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d3c1633..9d01d99 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -362,9 +362,9 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ void ath_tx_tasklet(struct ath_softc *sc);
+ void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb);
+ bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno);
+-int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+-		      u16 tid, u16 *ssn);
+-int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
++void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
++		       u16 tid, u16 *ssn);
++void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ 
+ /********/
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fb84dd8..f2fa333 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2671,19 +2671,11 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 	case IEEE80211_AMPDU_RX_STOP:
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+-		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
+-		if (ret < 0)
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to start TX aggregation\n");
+-		else
+-			ieee80211_start_tx_ba_cb_irqsafe(hw, sta->addr, tid);
++		ath_tx_aggr_start(sc, sta, tid, ssn);
++		ieee80211_start_tx_ba_cb_irqsafe(hw, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP:
+-		ret = ath_tx_aggr_stop(sc, sta, tid);
+-		if (ret < 0)
+-			DPRINTF(sc, ATH_DBG_FATAL,
+-				"Unable to stop TX aggregation\n");
+-
++		ath_tx_aggr_stop(sc, sta, tid);
+ 		ieee80211_stop_tx_ba_cb_irqsafe(hw, sta->addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 8a8d7ed..fd07aa1 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -701,25 +701,20 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		 status != ATH_AGGR_BAW_CLOSED);
+ }
+ 
+-int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+-		      u16 tid, u16 *ssn)
++void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
++		       u16 tid, u16 *ssn)
+ {
+ 	struct ath_atx_tid *txtid;
+ 	struct ath_node *an;
+ 
+ 	an = (struct ath_node *)sta->drv_priv;
+-
+-	if (sc->sc_flags & SC_OP_TXAGGR) {
+-		txtid = ATH_AN_2_TID(an, tid);
+-		txtid->state |= AGGR_ADDBA_PROGRESS;
+-		ath_tx_pause_tid(sc, txtid);
+-		*ssn = txtid->seq_start;
+-	}
+-
+-	return 0;
++	txtid = ATH_AN_2_TID(an, tid);
++	txtid->state |= AGGR_ADDBA_PROGRESS;
++	ath_tx_pause_tid(sc, txtid);
++	*ssn = txtid->seq_start;
+ }
+ 
+-int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
++void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ {
+ 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+ 	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
+@@ -729,11 +724,11 @@ int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 	INIT_LIST_HEAD(&bf_head);
+ 
+ 	if (txtid->state & AGGR_CLEANUP)
+-		return 0;
++		return;
+ 
+ 	if (!(txtid->state & AGGR_ADDBA_COMPLETE)) {
+ 		txtid->state &= ~AGGR_ADDBA_PROGRESS;
+-		return 0;
++		return;
+ 	}
+ 
+ 	ath_tx_pause_tid(sc, txtid);
+@@ -762,8 +757,6 @@ int ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 		txtid->state &= ~AGGR_ADDBA_COMPLETE;
+ 		ath_tx_flush_tid(sc, txtid);
+ 	}
+-
+-	return 0;
+ }
+ 
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+-- 
+1.6.3.3
 
