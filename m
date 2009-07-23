@@ -1,85 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:35433 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728AbZGHRCx convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:38343 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbZGWKNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 13:02:53 -0400
-Received: by yxe26 with SMTP id 26so8137767yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jul 2009 10:02:52 -0700 (PDT)
+	Thu, 23 Jul 2009 06:13:40 -0400
+Received: by mail-fx0-f218.google.com with SMTP id 18so715131fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:13:40 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 2/7] mac80211: advance the state machine immediately if no
+	delay is needed
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Thu, 23 Jul 2009 12:13:48 +0200
+Message-ID: <20090723101348.5147.92831.stgit@localhost.localdomain>
+In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1247049613.4755.65.camel@johannes.local>
-References: <1247032403-8312-1-git-send-email-javier@cozybit.com>
-	 <1247049613.4755.65.camel@johannes.local>
-Date: Wed, 8 Jul 2009 10:02:50 -0700
-Message-ID: <445f43ac0907081002i50c23aeelc2e52d6082f7c9af@mail.gmail.com>
-Subject: Re: [PATCH] Assign next hop address to pending mesh frames once the
-	path is resolved.
-From: Javier Cardona <javier@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Instead of queueing the scan work again without delay just process the
+next state immediately.
+    
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-On Wed, Jul 8, 2009 at 3:40 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-07-07 at 22:53 -0700, Javier Cardona wrote:
->> Regression.  Frames transmitted when a mesh path was wating to be resolved were
->> being transmitted with an invalid Receiver Address.
->
->> -     rcu_assign_pointer(mpath->next_hop, sta);
->> +     struct sk_buff *skb, *skb_first = NULL;
->> +     struct ieee80211_hdr *hdr;
->> +
->> +     rcu_read_lock();
->> +     mpath->next_hop = sta;
->> +
->> +     while ((skb = skb_dequeue(&mpath->frame_queue)) != skb_first) {
->> +             if (!skb_first)
->> +                     skb_first = skb;
->> +             hdr = (struct ieee80211_hdr *) skb->data;
->> +             memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
->> +             skb_queue_tail(&mpath->frame_queue, skb);
->> +     }
->> +     if (skb_first)
->> +             skb_queue_tail(&mpath->frame_queue, skb_first);
->> +
->> +     rcu_read_unlock();
->
-> Since skb queues have a locks, why use rcu too?
+ net/mac80211/scan.c |   24 +++++++++++++++---------
+ 1 files changed, 15 insertions(+), 9 deletions(-)
 
-The some mpath members are rcu protected.  I thought I had to extend
-the rcu section to cover both mpath->next_hop and mpath->frame_queue.
-But now I see that the latter does not need protection, so I'll revert
-that to just rcu_assign_pointer(mpath->next_hop, sta);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 71500f1..db122e4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -587,15 +587,21 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	switch (local->scan_state) {
+-	case SCAN_SET_CHANNEL:
+-		if (ieee80211_scan_state_set_channel(local, &next_delay))
+-			return;
+-		break;
+-	case SCAN_SEND_PROBE:
+-		ieee80211_scan_state_send_probe(local, &next_delay);
+-		break;
+-	}
++	/*
++	 * as long as no delay is required advance immediately
++	 * without scheduling a new work
++	 */
++	do {
++		switch (local->scan_state) {
++		case SCAN_SET_CHANNEL:
++			if (ieee80211_scan_state_set_channel(local, &next_delay))
++				return;
++			break;
++		case SCAN_SEND_PROBE:
++			ieee80211_scan_state_send_probe(local, &next_delay);
++			break;
++		}
++	} while (next_delay == 0);
+ 
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+ 			   next_delay);
 
-> Also I think you should probably use a different pattern -- this looks
-> prone to breakage, maybe something like
->
->        sk_buff_head tmpq;
->        unsigned long flags;
->
->        __skb_queue_head_init(&tmpq);
->
->        spin_lock_irqsave(&frame_queue->lock);
->
->        while (skb = __skb_dequeue(&frame_queue)) {
->                hdr = (struct ieee80211_hdr *) skb->data;
->                memcpy(hdr->addr1, sta->sta.addr, ETH_ALEN);
->                __skb_queue_tail(&tmpq, skb);
->        }
->
->        skb_queue_splice(&tmpq, frame_queue);
->        spin_unlock_irqrestore(&frame_queue->lock);
-
-Oh, nice, cleaner and less locking. v2 will follow shortly.
-
-Thanks!
-
-Javier
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
