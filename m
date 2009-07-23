@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24578 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754743AbZGPJdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:33:14 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 09/10] cfg80211: remove WARN_ON in __cfg80211_sme_scan_done
-Date: Thu, 16 Jul 2009 17:34:14 +0800
-Message-Id: <1247736854-6760-10-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1247736854-6760-9-git-send-email-yi.zhu@intel.com>
-References: <1247736854-6760-1-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-2-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-3-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-4-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-5-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-6-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-7-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-8-git-send-email-yi.zhu@intel.com>
- <1247736854-6760-9-git-send-email-yi.zhu@intel.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52933 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658AbZGWO6D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 10:58:03 -0400
+Date: Thu, 23 Jul 2009 16:57:57 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723145757.GB28158@elf.ucw.cz>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com> <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090718235609.GC25343@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_sme_scan_done() can be called (by fullmac cards) with
-wdev->conn == NULL when CFG80211_SME_CONNECTING. We quit silently
-instead of WARN_ON in this case.
+On Sat 2009-07-18 20:56:10, Henrique de Moraes Holschuh wrote:
+> On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
+> > Hm yeah, but I doubt someone will do that, generally we'd get one wake
+> > up event. Can't we just report the first one and ignore the rest?
+> 
+> Well, I'd say keeping it simple is best, here.  What if you ignore the more
+> interesting wakeup events by chance (and it is really up to userspace to
+> know what it considers interesting...)?  IMHO, just issue as many
+> notifications as needed, let userspace filter it if it wants.
+> 
+> But if you guys are talking about something really generic, shouldn't it
+> also provide the important "why" along with the "who"?
+> 
+> Even for the most common cases, the "why" is useful: userspace may well want
+> to run special routines when it wakes up because of WoL and WoW (instead of
+> a key press, lid open or mouse movement...).
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/wireless/sme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+What special routines?
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 10ed366..e7a8851 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -227,7 +227,7 @@ static void __cfg80211_sme_scan_done(struct net_device *dev)
- 	if (wdev->sme_state != CFG80211_SME_CONNECTING)
- 		return;
- 
--	if (WARN_ON(!wdev->conn))
-+	if (!wdev->conn)
- 		return;
- 
- 	if (wdev->conn->state != CFG80211_CONN_SCANNING &&
+Note that the "why" is unreliable by design. Network driver will
+ignore WoL during run-time, right?
+									Pavel
 -- 
-1.6.0.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
