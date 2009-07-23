@@ -1,480 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:54946 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbZGQS4Q (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:35299 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZGWKNs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 14:56:16 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [RFC PATCH v2 6/8] wl1251: move module probe methods into spi.c
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2009 21:48:28 +0300
-Message-ID: <20090717184827.25883.44200.stgit@tikku>
-In-Reply-To: <20090717184643.25883.95065.stgit@tikku>
-References: <20090717184643.25883.95065.stgit@tikku>
+	Thu, 23 Jul 2009 06:13:48 -0400
+Received: by mail-bw0-f228.google.com with SMTP id 28so709536bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:13:47 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 3/7] mac80211: introduce a new scan state "decision"
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Thu, 23 Jul 2009 12:13:56 +0200
+Message-ID: <20090723101355.5147.26099.stgit@localhost.localdomain>
+In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
-
-This change moves all of the spi specific code from main.c into
-spi.c.  The module initialization code also moves, but common
-code for initializing mac80211 etc. stays in main.c, as this will
-eventually form a common library module also used by wl1251_sdio.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Introduce a new scan state "decision" which is entered after
+every completed scan operation and decides about the next steps.
+At first the decision is in any case to scan the next channel.
+This shouldn't introduce any functional changes.
+    
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
 
- drivers/net/wireless/wl12xx/wl1251.h      |    7 +
- drivers/net/wireless/wl12xx/wl1251_acx.c  |    1 
- drivers/net/wireless/wl12xx/wl1251_cmd.c  |    1 
- drivers/net/wireless/wl12xx/wl1251_main.c |  148 ++++-------------------------
- drivers/net/wireless/wl12xx/wl1251_spi.c  |  125 ++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_tx.c   |    1 
- 6 files changed, 151 insertions(+), 132 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/scan.c        |   40 ++++++++++++++++++++++++++--------------
+ 2 files changed, 27 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index 284bb50..df4c06d 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -292,7 +292,7 @@ struct wl1251 {
- 	bool mac80211_registered;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6a01771..4166418 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -678,7 +678,7 @@ struct ieee80211_local {
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
  
- 	struct spi_device *spi;
--	struct wl1251_if_operations *if_ops;
-+	const struct wl1251_if_operations *if_ops;
- 
- 	void (*set_power)(bool enable);
- 	int irq;
-@@ -404,6 +404,11 @@ struct wl1251 {
- int wl1251_plt_start(struct wl1251 *wl);
- int wl1251_plt_stop(struct wl1251 *wl);
- 
-+irqreturn_t wl1251_irq(int irq, void *cookie);
-+struct ieee80211_hw *wl1251_alloc_hw(void);
-+int wl1251_free_hw(struct wl1251 *wl);
-+int wl1251_init_ieee80211(struct wl1251 *wl);
-+
- #define DEFAULT_HW_GEN_MODULATION_TYPE    CCK_LONG /* Long Preamble */
- #define DEFAULT_HW_GEN_TX_RATE          RATE_2MBPS
- #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
-index b89fa23..b07747d 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
-@@ -2,7 +2,6 @@
- 
- #include <linux/module.h>
- #include <linux/crc7.h>
--#include <linux/spi/spi.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-index 2c30c70..dfbf681 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-@@ -2,7 +2,6 @@
- 
- #include <linux/module.h>
- #include <linux/crc7.h>
--#include <linux/spi/spi.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 238b4a8..62b84fc 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -26,17 +26,15 @@
- #include <linux/firmware.h>
- #include <linux/delay.h>
- #include <linux/irq.h>
--#include <linux/spi/spi.h>
- #include <linux/crc32.h>
- #include <linux/etherdevice.h>
--#include <linux/spi/wl12xx.h>
- 
- #include "wl1251.h"
- #include "wl12xx_80211.h"
- #include "reg.h"
- #include "wl1251_ops.h"
- #include "wl1251_io.h"
--#include "wl1251_spi.h"
-+#include "wl1251_cmd.h"
- #include "wl1251_event.h"
- #include "wl1251_tx.h"
- #include "wl1251_rx.h"
-@@ -59,7 +57,7 @@ static void wl1251_power_on(struct wl1251 *wl)
- 	wl->set_power(true);
- }
- 
--static irqreturn_t wl1251_irq(int irq, void *cookie)
-+irqreturn_t wl1251_irq(int irq, void *cookie)
- {
- 	struct wl1251 *wl;
- 
-@@ -1224,8 +1222,10 @@ static int wl1251_register_hw(struct wl1251 *wl)
- 	return 0;
- }
- 
--static int wl1251_init_ieee80211(struct wl1251 *wl)
-+int wl1251_init_ieee80211(struct wl1251 *wl)
- {
-+	int ret;
-+
- 	/* The tx descriptor buffer and the TKIP space */
- 	wl->hw->extra_tx_headroom = sizeof(struct tx_double_buffer_desc)
- 		+ WL1251_TKIP_IV_SPACE;
-@@ -1241,41 +1241,37 @@ static int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
- 
--	SET_IEEE80211_DEV(wl->hw, &wl->spi->dev);
-+	ret = wl1251_register_hw(wl);
-+	if (ret)
-+		goto out;
- 
--	return 0;
--}
-+	wl1251_debugfs_init(wl);
-+	wl1251_notice("initialized");
- 
--extern struct wl1251_if_operations wl1251_spi_ops;
-+	ret = 0;
-+
-+out:
-+	return ret;
-+}
- 
- #define WL1251_DEFAULT_CHANNEL 1
--static int __devinit wl1251_probe(struct spi_device *spi)
-+struct ieee80211_hw *wl1251_alloc_hw(void)
- {
--	struct wl12xx_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
--	int ret, i;
-+	int i;
- 	static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
- 
--	pdata = spi->dev.platform_data;
--	if (!pdata) {
--		wl1251_error("no platform data");
--		return -ENODEV;
--	}
--
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1251_ops);
- 	if (!hw) {
- 		wl1251_error("could not alloc ieee80211_hw");
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
+-	enum { SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
++	enum { SCAN_DECISION, SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+ 	enum nl80211_channel_type oper_channel_type;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index db122e4..48f910a 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -376,7 +376,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
  	}
+ 	mutex_unlock(&local->iflist_mtx);
  
- 	wl = hw->priv;
- 	memset(wl, 0, sizeof(*wl));
+-	local->scan_state = SCAN_SET_CHANNEL;
++	local->scan_state = SCAN_DECISION;
+ 	local->scan_channel_idx = 0;
  
- 	wl->hw = hw;
--	dev_set_drvdata(&spi->dev, wl);
--	wl->spi = spi;
--	wl->if_ops = &wl1251_spi_ops;
+ 	spin_lock_bh(&local->filter_lock);
+@@ -474,18 +474,27 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	return rc;
+ }
  
- 	wl->data_in_count = 0;
- 
-@@ -1323,74 +1319,15 @@ static int __devinit wl1251_probe(struct spi_device *spi)
- 	wl->rx_descriptor = kmalloc(sizeof(*wl->rx_descriptor), GFP_KERNEL);
- 	if (!wl->rx_descriptor) {
- 		wl1251_error("could not allocate memory for rx descriptor");
--		ret = -ENOMEM;
--		goto out_free;
-+		ieee80211_free_hw(hw);
-+		return ERR_PTR(-ENOMEM);
+-static int ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+-					    unsigned long *next_delay)
++static int ieee80211_scan_state_decision(struct ieee80211_local *local,
++					 unsigned long *next_delay)
+ {
+-	int skip;
+-	struct ieee80211_channel *chan;
+-	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+-
+ 	/* if no more bands/channels left, complete scan */
+ 	if (local->scan_channel_idx >= local->scan_req->n_channels) {
+ 		ieee80211_scan_completed(&local->hw, false);
+ 		return 1;
  	}
- 
--	/* This is the only SPI value that we need to set here, the rest
--	 * comes from the board-peripherals file */
--	spi->bits_per_word = 32;
--
--	ret = spi_setup(spi);
--	if (ret < 0) {
--		wl1251_error("spi_setup failed");
--		goto out_free;
--	}
--
--	wl->set_power = pdata->set_power;
--	if (!wl->set_power) {
--		wl1251_error("set power function missing in platform data");
--		ret = -ENODEV;
--		goto out_free;
--	}
--
--	wl->irq = spi->irq;
--	if (wl->irq < 0) {
--		wl1251_error("irq missing in platform data");
--		ret = -ENODEV;
--		goto out_free;
--	}
--
--	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
--	if (ret < 0) {
--		wl1251_error("request_irq() failed: %d", ret);
--		goto out_free;
--	}
--
--	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
--
--	disable_irq(wl->irq);
--
--	ret = wl1251_init_ieee80211(wl);
--	if (ret)
--		goto out_irq;
--
--	ret = wl1251_register_hw(wl);
--	if (ret)
--		goto out_irq;
--
--	wl1251_debugfs_init(wl);
--
--	wl1251_notice("initialized");
--
--	return 0;
--
-- out_irq:
--	free_irq(wl->irq, wl);
--
-- out_free:
--	kfree(wl->rx_descriptor);
--	wl->rx_descriptor = NULL;
--
--	ieee80211_free_hw(hw);
--
--	return ret;
-+	return hw;
- }
- 
--static int __devexit wl1251_remove(struct spi_device *spi)
-+int wl1251_free_hw(struct wl1251 *wl)
- {
--	struct wl1251 *wl = dev_get_drvdata(&spi->dev);
--
- 	ieee80211_unregister_hw(wl->hw);
- 
- 	wl1251_debugfs_exit(wl);
-@@ -1410,44 +1347,3 @@ static int __devexit wl1251_remove(struct spi_device *spi)
- 
- 	return 0;
- }
--
--
--static struct spi_driver wl1251_spi_driver = {
--	.driver = {
--		/* FIXME: use wl12xx name to not break the user space */
--		.name		= "wl12xx",
--		.bus		= &spi_bus_type,
--		.owner		= THIS_MODULE,
--	},
--
--	.probe		= wl1251_probe,
--	.remove		= __devexit_p(wl1251_remove),
--};
--
--static int __init wl1251_init(void)
--{
--	int ret;
--
--	ret = spi_register_driver(&wl1251_spi_driver);
--	if (ret < 0) {
--		wl1251_error("failed to register spi driver: %d", ret);
--		goto out;
--	}
--
--out:
--	return ret;
--}
--
--static void __exit wl1251_exit(void)
--{
--	spi_unregister_driver(&wl1251_spi_driver);
--
--	wl1251_notice("unloaded");
--}
--
--module_init(wl1251_init);
--module_exit(wl1251_exit);
--
--MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>, "
--		"Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index ceb237b..13e7a72 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -21,9 +21,11 @@
-  *
-  */
- 
-+#include <linux/irq.h>
- #include <linux/module.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
-+#include <linux/spi/wl12xx.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-@@ -55,7 +57,7 @@ static void wl1251_spi_reset(struct wl1251 *wl)
- 	wl1251_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- }
- 
--static void wl1251_spi_init(struct wl1251 *wl)
-+static void wl1251_spi_wake(struct wl1251 *wl)
- {
- 	u8 crc[WSPI_INIT_CMD_CRC_LEN], *cmd;
- 	struct spi_transfer t;
-@@ -112,7 +114,7 @@ static void wl1251_spi_init(struct wl1251 *wl)
- static void wl1251_spi_reset_wake(struct wl1251 *wl)
- {
- 	wl1251_spi_reset(wl);
--	wl1251_spi_init(wl);
-+	wl1251_spi_wake(wl);
- }
- 
- static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
-@@ -191,3 +193,122 @@ const struct wl1251_if_operations wl1251_spi_ops = {
- 	.write = wl1251_spi_write,
- 	.reset = wl1251_spi_reset_wake,
- };
 +
-+static int __devinit wl1251_spi_probe(struct spi_device *spi)
-+{
-+	struct wl12xx_platform_data *pdata;
-+	struct ieee80211_hw *hw;
-+	struct wl1251 *wl;
-+	int ret;
-+
-+	pdata = spi->dev.platform_data;
-+	if (!pdata) {
-+		wl1251_error("no platform data");
-+		return -ENODEV;
-+	}
-+
-+	hw = wl1251_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	SET_IEEE80211_DEV(hw, &spi->dev);
-+	dev_set_drvdata(&spi->dev, wl);
-+	wl->spi = spi;
-+	wl->if_ops = &wl1251_spi_ops;
-+
-+	/* This is the only SPI value that we need to set here, the rest
-+	 * comes from the board-peripherals file */
-+	spi->bits_per_word = 32;
-+
-+	ret = spi_setup(spi);
-+	if (ret < 0) {
-+		wl1251_error("spi_setup failed");
-+		goto out_free;
-+	}
-+
-+	wl->set_power = pdata->set_power;
-+	if (!wl->set_power) {
-+		wl1251_error("set power function missing in platform data");
-+		return -ENODEV;
-+	}
-+
-+	wl->irq = spi->irq;
-+	if (wl->irq < 0) {
-+		wl1251_error("irq missing in platform data");
-+		return -ENODEV;
-+	}
-+
-+	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
-+	if (ret < 0) {
-+		wl1251_error("request_irq() failed: %d", ret);
-+		goto out_free;
-+	}
-+
-+	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
-+
-+	disable_irq(wl->irq);
-+
-+	ret = wl1251_init_ieee80211(wl);
-+	if (ret)
-+		goto out_irq;
-+
-+	return 0;
-+
-+ out_irq:
-+	free_irq(wl->irq, wl);
-+
-+ out_free:
-+	ieee80211_free_hw(hw);
-+
-+	return ret;
-+}
-+
-+static int __devexit wl1251_spi_remove(struct spi_device *spi)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(&spi->dev);
-+
-+	wl1251_free_hw(wl);
-+
++	*next_delay = 0;
++	local->scan_state = SCAN_SET_CHANNEL;
 +	return 0;
 +}
 +
-+static struct spi_driver wl1251_spi_driver = {
-+	.driver = {
-+		.name		= "wl12xx",
-+		.bus		= &spi_bus_type,
-+		.owner		= THIS_MODULE,
-+	},
-+
-+	.probe		= wl1251_spi_probe,
-+	.remove		= __devexit_p(wl1251_spi_remove),
-+};
-+
-+static int __init wl1251_spi_init(void)
++static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
++					     unsigned long *next_delay)
 +{
-+	int ret;
++	int skip;
++	struct ieee80211_channel *chan;
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
 +
-+	ret = spi_register_driver(&wl1251_spi_driver);
-+	if (ret < 0) {
-+		wl1251_error("failed to register spi driver: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	return ret;
-+}
-+
-+static void __exit wl1251_spi_exit(void)
-+{
-+	spi_unregister_driver(&wl1251_spi_driver);
-+
-+	wl1251_notice("unloaded");
-+}
-+
-+module_init(wl1251_spi_init);
-+module_exit(wl1251_spi_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
-index 7ddc9a3..f20bab6 100644
---- a/drivers/net/wireless/wl12xx/wl1251_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
-@@ -27,7 +27,6 @@
+ 	skip = 0;
+ 	chan = local->scan_req->channels[local->scan_channel_idx];
  
- #include "wl1251.h"
- #include "reg.h"
--#include "wl1251_spi.h"
- #include "wl1251_tx.h"
- #include "wl1251_ps.h"
- #include "wl1251_io.h"
+@@ -505,7 +514,7 @@ static int ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	local->scan_channel_idx++;
+ 
+ 	if (skip)
+-		return 0;
++		return;
+ 
+ 	/*
+ 	 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
+@@ -520,13 +529,13 @@ static int ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    !local->scan_req->n_ssids) {
+ 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+-		return 0;
++		local->scan_state = SCAN_DECISION;
++		return;
+ 	}
+ 
++	/* active scan, send probes */
+ 	*next_delay = IEEE80211_PROBE_DELAY;
+ 	local->scan_state = SCAN_SEND_PROBE;
+-
+-	return 0;
+ }
+ 
+ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+@@ -547,7 +556,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 	 * on the channel.
+ 	 */
+ 	*next_delay = IEEE80211_CHANNEL_TIME;
+-	local->scan_state = SCAN_SET_CHANNEL;
++	local->scan_state = SCAN_DECISION;
+ }
+ 
+ void ieee80211_scan_work(struct work_struct *work)
+@@ -593,10 +602,13 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	 */
+ 	do {
+ 		switch (local->scan_state) {
+-		case SCAN_SET_CHANNEL:
+-			if (ieee80211_scan_state_set_channel(local, &next_delay))
++		case SCAN_DECISION:
++			if (ieee80211_scan_state_decision(local, &next_delay))
+ 				return;
+ 			break;
++		case SCAN_SET_CHANNEL:
++			ieee80211_scan_state_set_channel(local, &next_delay);
++			break;
+ 		case SCAN_SEND_PROBE:
+ 			ieee80211_scan_state_send_probe(local, &next_delay);
+ 			break;
 
