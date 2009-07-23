@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:53526 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbZGVBFL (ORCPT
+Received: from rhun.apana.org.au ([64.62.148.172]:39052 "EHLO
+	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751079AbZGWMTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 21:05:11 -0400
-Received: by gxk9 with SMTP id 9so6008784gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 18:05:11 -0700 (PDT)
+	Thu, 23 Jul 2009 08:19:18 -0400
+Date: Thu, 23 Jul 2009 20:19:07 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Andreas Oberritter <obi@linuxtv.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix autoloading of crypto modules for WEP
+Message-ID: <20090723121907.GA13839@gondor.apana.org.au>
+References: <4A677126.3040907@linuxtv.org> <1248294007.19121.9.camel@johannes.local> <20090723004046.GA8201@gondor.apana.org.au> <4A684BF4.9080802@linuxtv.org>
 MIME-Version: 1.0
-In-Reply-To: <928354.18240.qm@web56107.mail.re3.yahoo.com>
-References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com>
-	<20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com>
-	<20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com>
-	<928354.18240.qm@web56107.mail.re3.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 21 Jul 2009 18:04:51 -0700
-Message-ID: <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com>
-Subject: Re: AR5523 driver - old Atheros USB
-To: Purushotham Nayak <nayak_purushotham@yahoo.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A684BF4.9080802@linuxtv.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 21, 2009 at 6:03 PM, Purushotham
-Nayak<nayak_purushotham@yahoo.com> wrote:
->
-> Hi,
->
-> I'm interested in working on this. I just posted to the Linux driver project a few days ago if I could work on the atheros USB devices. Please let me also know the USB device that uses the AR5523.
+On Thu, Jul 23, 2009 at 01:39:32PM +0200, Andreas Oberritter wrote:
+> 
+> http://git.opendreambox.org/?p=obi/linux.git;a=shortlog;h=refs/heads/linux-dm8000-2.6.30
+> 
+> I've attached my config file for you.
 
-Dan recently purchased one of these devices. Dan any pointers?
+Thanks.
 
-  Luis
+Please try
+
+	modprobe tcrypt mode=16
+
+That should do exactly the same thing as the wireless module
+and load ecb(arc4).  If that succeeds, please try loading the
+wireless module by hand to see if the failure only occurs during
+the boot process.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
