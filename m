@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54787 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755379AbZGMLXo (ORCPT
+Received: from cp-out7.libero.it ([212.52.84.107]:59581 "EHLO
+	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651AbZGWRbY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 07:23:44 -0400
-Subject: [PATCH] mac80211: cancel the connection monitor timers/work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 13:23:39 +0200
-Message-Id: <1247484220.4166.2.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 23 Jul 2009 13:31:24 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: WARNING: at net/mac80211/tx.c:561
+Date: Thu, 23 Jul 2009 19:28:44 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200907230051.57201.rossi.f@inwind.it> <200907231907.47751.rossi.f@inwind.it> <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
+In-Reply-To: <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200907231928.44337.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In "mac80211: monitor the connection" I forgot to
-add code to cancel the new timers & work when the
-interface is brought down, which isn't a problem
-if you just bring it down, but _is_ a problem when
-you destroy the interface. Correct this lapse.
+On Thursday 23 July 2009, Luis R. Rodriguez wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Fixes http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2044
+> On Thu, Jul 23, 2009 at 10:07 AM, Fabio Rossi<rossi.f@inwind.it> wrote:
+> > On Thursday 23 July 2009, Luis R. Rodriguez wrote:
+> >> On Wed, Jul 22, 2009 at 3:51 PM, Fabio Rossi<rossi.f@inwind.it> wrote:
+> >> > I'm using the last wireless-testing.git and I have experienced the
+> >> > following WARNING:
+> >> >
+> >> >  WARNING: at net/mac80211/tx.c:561
+> >> > ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]()
+> >>
+> >> Please try a git pull
+> >
+> > I was already working with the latest release:
+> >  v2.6.31-rc3-28452-g5bfcdb0
+> > so I confirm that I get the warning quite often (every 15 seconds).
+>
+> What channel is your AP on?
+> Is your AP 00:0c:f6:xx:xx:xx ?
 
- net/mac80211/iface.c |    8 +++++---
- net/mac80211/mlme.c  |    3 +++
- 2 files changed, 8 insertions(+), 3 deletions(-)
+Yes, that is my AP configured on channel 8 (Frequency 2.447 GHz):
 
---- wireless-testing.orig/net/mac80211/iface.c	2009-07-13 13:02:51.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-07-13 13:02:53.000000000 +0200
-@@ -451,16 +451,18 @@ static int ieee80211_stop(struct net_dev
- 	case NL80211_IFTYPE_STATION:
- 		del_timer_sync(&sdata->u.mgd.chswitch_timer);
- 		del_timer_sync(&sdata->u.mgd.timer);
-+		del_timer_sync(&sdata->u.mgd.conn_mon_timer);
-+		del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
- 		/*
--		 * If the timer fired while we waited for it, it will have
--		 * requeued the work. Now the work will be running again
-+		 * If any of the timers fired while we waited for it, it will
-+		 * have queued its work. Now the work will be running again
- 		 * but will not rearm the timer again because it checks
- 		 * whether the interface is running, which, at this point,
- 		 * it no longer is.
- 		 */
- 		cancel_work_sync(&sdata->u.mgd.work);
- 		cancel_work_sync(&sdata->u.mgd.chswitch_work);
--
-+		cancel_work_sync(&sdata->u.mgd.monitor_work);
- 		cancel_work_sync(&sdata->u.mgd.beacon_loss_work);
- 
- 		/*
---- wireless-testing.orig/net/mac80211/mlme.c	2009-07-13 13:02:51.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-07-13 13:02:53.000000000 +0200
-@@ -1163,6 +1163,9 @@ static void ieee80211_mgd_probe_ap(struc
- 	const u8 *ssid;
- 	bool already = false;
- 
-+	if (!netif_running(sdata->dev))
-+		return;
-+
- 	mutex_lock(&ifmgd->mtx);
- 
- 	if (!ifmgd->associated)
+          Cell 05 - Address: 00:0C:F6:xx:xx:xx
+                    Channel:8
+                    Frequency:2.447 GHz (Channel 8)
+                    Quality=48/70  Signal level=-62 dBm
+                    Encryption key:on
+                    ESSID:""
+                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
+                    Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
+                              36 Mb/s; 48 Mb/s; 54 Mb/s
+                    Mode:Master
+                    Extra:tsf=000000007803aa0c
+                    Extra: Last beacon: 4352ms ago
+                    IE: Unknown: 0000
+                    IE: Unknown: 010482848B96
+                    IE: Unknown: 030108
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 2A0104
+                    IE: Unknown: 32080C1218243048606C
+                    IE: Unknown: DD07000C4301000000
 
 
+Fabio
