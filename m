@@ -1,104 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58385 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756800AbZGOARP (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57254 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbZGWKh0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:17:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 9/9] ath9k: serialize ath9k_ps_{wakeup,restore} calls
-Date: Tue, 14 Jul 2009 20:17:15 -0400
-Message-Id: <1247617035-15402-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 23 Jul 2009 06:37:26 -0400
+Subject: Re: [PATCH 2/7] mac80211: advance the state machine immediately if
+ no delay is needed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090723101348.5147.92831.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
+	 <20090723101348.5147.92831.stgit@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-82tTJ/nQiV3cRktdyYPu"
+Date: Thu, 23 Jul 2009 12:36:27 +0200
+Message-Id: <1248345387.19121.20.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
 
-These functions are changing the power mode of the chip, but this may
-have unpredictable effects, if another code are trying to set the power
-mode via 'ath9k_hw_setpower' in the same time from another context.
+--=-82tTJ/nQiV3cRktdyYPu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c    |   42 ++++++++++++++++++++++----------
- 2 files changed, 30 insertions(+), 14 deletions(-)
+On Thu, 2009-07-23 at 12:13 +0200, Helmut Schaa wrote:
+> Instead of queueing the scan work again without delay just process the
+> next state immediately.
+>    =20
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8b38c0a..1576812 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -576,7 +576,7 @@ struct ath_softc {
- 	u32 keymax;
- 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
- 	u8 splitmic;
--	atomic_t ps_usecount;
-+	unsigned long ps_usecount;
- 	enum ath9k_int imask;
- 	enum ath9k_ht_extprotspacing ht_extprotspacing;
- 	enum ath9k_ht_macmode tx_chan_width;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index df278fd..b9d1a13 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2777,23 +2777,39 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 
- void ath9k_ps_wakeup(struct ath_softc *sc)
- {
--	if (atomic_inc_return(&sc->ps_usecount) == 1)
--		if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
--			sc->sc_ah->restore_mode = sc->sc_ah->power_mode;
--			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
--		}
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	if (++sc->ps_usecount != 1)
-+		goto unlock;
-+
-+	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE) {
-+		sc->sc_ah->restore_mode = sc->sc_ah->power_mode;
-+		ath9k_hw_setpower_nolock(sc->sc_ah, ATH9K_PM_AWAKE);
-+	}
-+
-+ unlock:
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- }
- 
- void ath9k_ps_restore(struct ath_softc *sc)
- {
--	if (atomic_dec_and_test(&sc->ps_usecount))
--		if ((sc->hw->conf.flags & IEEE80211_CONF_PS) &&
--		    !(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
--				      SC_OP_WAIT_FOR_CAB |
--				      SC_OP_WAIT_FOR_PSPOLL_DATA |
--				      SC_OP_WAIT_FOR_TX_ACK)))
--			ath9k_hw_setpower(sc->sc_ah,
--					  sc->sc_ah->restore_mode);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sc->sc_pm_lock, flags);
-+	if (--sc->ps_usecount != 0)
-+		goto unlock;
-+
-+	if ((sc->hw->conf.flags & IEEE80211_CONF_PS) &&
-+		!(sc->sc_flags & (SC_OP_WAIT_FOR_BEACON |
-+				SC_OP_WAIT_FOR_CAB |
-+				SC_OP_WAIT_FOR_PSPOLL_DATA |
-+				SC_OP_WAIT_FOR_TX_ACK)))
-+		ath9k_hw_setpower_nolock(sc->sc_ah,
-+				      sc->sc_ah->restore_mode);
-+
-+ unlock:
-+	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- }
- 
- /*
--- 
-1.6.0.6
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>=20
+>  net/mac80211/scan.c |   24 +++++++++++++++---------
+>  1 files changed, 15 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 71500f1..db122e4 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -587,15 +587,21 @@ void ieee80211_scan_work(struct work_struct *work)
+>  		return;
+>  	}
+> =20
+> -	switch (local->scan_state) {
+> -	case SCAN_SET_CHANNEL:
+> -		if (ieee80211_scan_state_set_channel(local, &next_delay))
+> -			return;
+> -		break;
+> -	case SCAN_SEND_PROBE:
+> -		ieee80211_scan_state_send_probe(local, &next_delay);
+> -		break;
+> -	}
+> +	/*
+> +	 * as long as no delay is required advance immediately
+> +	 * without scheduling a new work
+> +	 */
+> +	do {
+> +		switch (local->scan_state) {
+> +		case SCAN_SET_CHANNEL:
+> +			if (ieee80211_scan_state_set_channel(local, &next_delay))
+> +				return;
+> +			break;
+> +		case SCAN_SEND_PROBE:
+> +			ieee80211_scan_state_send_probe(local, &next_delay);
+> +			break;
+> +		}
+> +	} while (next_delay =3D=3D 0);
+> =20
+>  	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+>  			   next_delay);
+>=20
+>=20
+
+--=-82tTJ/nQiV3cRktdyYPu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaD0oAAoJEODzc/N7+QmaLyMP/jnE4V2jCkIPa3Ih1yMq9PDu
+6IiV/XblJGXj6Hfm1Lj4dHhzSJ1JtwbY9z+XiQXStI0eP32Lcxbcl2Dhhk9wYddu
+8ki/JV5s6WomXI1QyN9AK9V4HsCI0NbjSFYyG7JChi4hEraWTWd1QaeJ1QBBL2AE
+rwoYnPClBynqL8+yB/Sa2LxntihWwBiNE4vfqf714w3dtmSb44nHJdef+RQI6Pdf
+k3PQWarWLZAuJTF3EXS+zXz/SqSbkEWFrwTdZV73eq/aFY+zDgr0ol0tpf8zYHYs
+m2CY58qrU36ZhZZantOftvaSRoEHbWH59pNs/MiN0Dg5I6v4cEatYKyAlLoIpjQB
+80h5WaW2E1cSRvZKvg/5K/N15q+QRPFvU1glUo8G5L57beMSE+N37kscqIGx5VHM
+9O4DZUbk8rXtoeXrllD+UBqcaug2mm6aLsuG+DlxPvFoAZIidir7FvoNoKJs6S+u
+gW/CCzf8m9sg7Ctpv9k1lbVPnmyXfl45NUSY2vbs61WAyQcmDpL/1TH/OVhovtQc
+yNuTwTOSuFr1VsVv8+P9HIB8toBLuEwkX14f2HxLuxDwe0Y+ncjrgbdaiV5+Nvvs
+7n40IZDCqoW88l0+svsYoLnsOpdmFSNQGynO9s9K7OmuSIy5+4dKp+k/S0Z7GcAB
+TZHtHWmADOhJBoxBRtBr
+=lf0n
+-----END PGP SIGNATURE-----
+
+--=-82tTJ/nQiV3cRktdyYPu--
 
