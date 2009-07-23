@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39820 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751145AbZGCKKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 06:10:32 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: minstrel: avoid accessing negative indices in rix_to_ndx()
-Date: Fri, 3 Jul 2009 12:10:29 +0200
-Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.org,
-	linux-wireless@vger.kernel.org, kalle.valo@nokia.com,
-	vidhya.govindan@nokia.com, nbd@openwrt.org
-References: <1246598708-5594-1-git-send-email-luciano.coelho@nokia.com> <1246609742.16770.54.camel@johannes.local>
-In-Reply-To: <1246609742.16770.54.camel@johannes.local>
+Received: from wa-out-1112.google.com ([209.85.146.180]:11147 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbZGWH5t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 03:57:49 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so117800wah.21
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 00:57:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907031210.29648.mb@bu3sch.de>
+In-Reply-To: <43e72e890907220941j70f5ca98g5af9d9372eeef2e@mail.gmail.com>
+References: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com>
+	 <20090722131957.GA5276@tuxdriver.com>
+	 <f7de31c0907220704x5000854bq652b09bf5b6bfc3c@mail.gmail.com>
+	 <43e72e890907220916n6a5c76d3ydbfc0233f86e3546@mail.gmail.com>
+	 <15B47C78534E094AA9A41F58FB8D74F30147BE67876F@SC1EXMB-MBCL.global.atheros.com>
+	 <43e72e890907220941j70f5ca98g5af9d9372eeef2e@mail.gmail.com>
+Date: Thu, 23 Jul 2009 14:57:49 +0700
+Message-ID: <f7de31c0907230057yb7fe603u1cdfb1583132ae58@mail.gmail.com>
+Subject: Re: Update for regulatory database on 5GHz band for Thailand (TH)
+From: Phattanon Duangdara <sfalpha@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 03 July 2009 10:29:02 Johannes Berg wrote:
-> On Fri, 2009-07-03 at 08:25 +0300, Luciano Coelho wrote:
-> > If rix is not found in mi->r[], i will become -1 after the loop.  This value
-> > is eventually used to access arrays, so we were accessing arrays with a
-> > negative index, which is obviously not what we want to do.  This patch fixes
-> > this potential problem.
-> 
-> This seems odd -- are you or are you not saying that this can happen in
-> normal operation?
-> 
-> > @@ -66,7 +66,7 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
-> >  	for (i = rix; i >= 0; i--)
-> >  		if (mi->r[i].rix == rix)
-> >  			break;
-> > -	WARN_ON(mi->r[i].rix != rix);
-> > +	WARN_ON(i < 0);
-> >  	return i;
-> 
-> If it can, this warning seems wrong.
+On Wed, Jul 22, 2009 at 11:41 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Wed, Jul 22, 2009 at 9:27 AM, David Quan<David.Quan@atheros.com> wrote:
+>> I am not sure what the question is here.
+>> Our windows driver already have 5G turn on for Thailand.
+>> Are you stating that it is not on the Linux Ath9K?
+>
+> David, just a heads up, a public list is being CC'd here.
+>
+> In the db.txt (from wireless-regdb) we currently have TH mapped as:
+>
+> country TH:
+>        (2402 - 2482 @ 40), (N/A, 20)
+>
+> This came from the regpair TH was mapped to, which does differ from
+> FCC3_WORLD. TH was mapped to NULL1_WORLD which explains the lack of 5
+> GHz on TH on db.txt.
+>
+>> In Windows code, it is Thailand is mapped to FCC3_WORLD.
+>
+> OK this needs to be updated and the regulatory database as well. Only
+> these countries map to FCC3_WORLD currently in ath.ko (the shared
+> module between ath5k, ath9k and ar9170):
+>
+>        {CTRY_BRAZIL, FCC3_WORLD, "BR"},
+>        {CTRY_SOUTH_AFRICA, FCC3_WORLD, "ZA"},
+>        {CTRY_SRI_LANKA, FCC3_WORLD, "LK"},
+>
+> To get TH to map to FCC3_WORLD we need a one line change to ath.ko
+> code and to the public db.txt to change to use the same regulatory
+> information as "BR", "ZA", and "LK":
+>
+> country TH:
+>        (2402 - 2482 @ 20), (N/A, 20)
+>        (5170 - 5250 @ 20), (3, 17)
+>        (5250 - 5330 @ 20), (3, 20), DFS
+>        (5490 - 5710 @ 20), (3, 20), DFS
+>        (5735 - 5835 @ 20), (3, 30)
+>
+> I'll send the respective patch if you ACK TH should map to the above.
+>
+>  Luis
 
-Well, the old WARN_ON seems wrong anyway, because it accesses the array
-out of bounds. In case the loop did not find the entry, the warn on will look like this:
+Yes, And some of windows drivers already enable 5GHz for Thailand.
+So please update for us.
 
-WARN_ON(mi->r[-1].rix != rix);
-
-So I do think it's correct to replace the WARN_ON with WARN_ON(i < 0), if this can't
-happen in normal operation. If it can happen in normal op, the warning should be removed
-and the callers of rix_to_ndx() need to be checked.
-
--- 
-Greetings, Michael.
+Thanks,
+Phattanon
