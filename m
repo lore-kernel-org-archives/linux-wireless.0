@@ -1,32 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47261 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756973AbZGGPAv (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49247 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908AbZGWSMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 11:00:51 -0400
-Date: Tue, 7 Jul 2009 10:48:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Ross <dave@antacs.com>
-Cc: Valentin Manea <linux-wireless@mrs.ro>,
-	linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and broadcast frames
-Message-ID: <20090707144851.GA2768@tuxdriver.com>
-References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com> <4A4B056B.9000602@mrs.ro> <43e72e890907011033r52c4256dtecf603f56213a825@mail.gmail.com> <4A530131.9050207@mrs.ro> <4A532D3C.5060601@antacs.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4A532D3C.5060601@antacs.com>
+	Thu, 23 Jul 2009 14:12:19 -0400
+Subject: Re: rfkill blocking is sticky on virtual instances
+From: Marcel Holtmann <marcel@holtmann.org>
+To: tim.gardner@canonical.com
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <4A68982E.2070101@canonical.com>
+References: <4A687AAB.8070306@canonical.com>
+	 <4A68982E.2070101@canonical.com>
+Content-Type: text/plain
+Date: Thu, 23 Jul 2009 20:11:32 +0200
+Message-Id: <1248372692.28545.127.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 07, 2009 at 09:10:52PM +1000, David Ross wrote:
-> Actually it is required to be a mutual BASIC rate (not extended rates) -  
-> not necessarily the "lowest possible" - David.
+Hi Tim,
 
-True, but FWIW I think all of our rate scaling algorithms choose the
-lowest rate.
+> > It seems that enabling soft blocking on virtual instances of rfkill is
+> > sticky. For example (using 2.6.31-rc4),
+> > 
+> > rtg@lanai:~$ uname -r
+> > 2.6.31-4-generic
+> > rtg@lanai:~$ rfkill list
+> > 0: dell-wifi: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: no
+> > 1: phy0: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: no
+> > rtg@lanai:~$ sudo rfkill block all
+> > [sudo] password for rtg:
+> > rtg@lanai:~$ rfkill list
+> > 0: dell-wifi: Wireless LAN
+> > 	Soft blocked: yes
+> > 	Hard blocked: no
+> > 1: phy0: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: yes
+> > rtg@lanai:~$ sudo rfkill unblock all
+> > rtg@lanai:~$ rfkill list
+> > 0: dell-wifi: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: yes
+> > 1: phy0: Wireless LAN
+> > 	Soft blocked: no
+> > 	Hard blocked: no
+> > 
+> > Shouldn't I be able to unblock everything at one fell swoop? As long as
+> > dell-wifi remains hard blocked, wireless will not reconnect. I've
+> > observed this behavior on both iwl3945 as well as iwlagn. Dunno if its
+> > driver specific, but I suspect not because I see similar behaviors on
+> > platforms with bluetooth.
+> > 
+> > rtg
+> 
+> So, Johannes pointed out that 'all' was not a valid option to
+> block/unblock (doh!). Since that is something I think a lot of folks
+> would like to be able to do, I've added support for blocking by wireless
+> type as well as 'all'.
+> 
+> Please pull:
+> 
+> The following changes since commit 2c3cbb3ae38dd6100ca03d7060b1a0704311d18b:
+>   Johannes Berg (1):
+>         bump version to 0.1
+> 
+> are available in the git repository at:
+> 
+>   git://kernel.ubuntu.com/rtg/rfkill master
+> 
+> Tim Gardner (3):
+>       Added a utility function to acquire a list of events.
+>       Added rfkill_block_all()
+>       Added support for block/unblock wireless types.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+do you mind sending the actual patches. I like to review them.
+
+Regards
+
+Marcel
+
+
