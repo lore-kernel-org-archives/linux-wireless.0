@@ -1,87 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbZG3H6P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 03:58:15 -0400
-Subject: Re: [RFT] cfg80211: enable country IE support to all cfg80211
- drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248915719-6208-1-git-send-email-lrodriguez@atheros.com>
-References: <1248915719-6208-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CVhXs3INGUzoJ5lRNvB7"
-Date: Thu, 30 Jul 2009 09:57:42 +0200
-Message-Id: <1248940662.8925.6.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:13981 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752323AbZGWXht (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 19:37:49 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 16:37:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <rossi.f@inwind.it>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] mac80211: fix MLME issuing of probe requests while scanning
+Date: Thu, 23 Jul 2009 16:37:47 -0700
+Message-ID: <1248392267-32086-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We were issuing probe requests to the associated AP on the wrong
+band by having our beacon timer loss trigger while we are scanning.
+When we would scan the timer could hit and force us to send a
+probe request to the AP but with a chance we'd be on the wrong band.
 
---=-CVhXs3INGUzoJ5lRNvB7
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+This leads to finding no usable bitrate but we should not get so
+far on the xmit path. We should not be trying to send these probe
+request frames so prevent ieee80211_mgd_probe_ap() from sending
+these.
 
-On Wed, 2009-07-29 at 18:01 -0700, Luis R. Rodriguez wrote:
-> Since the bss is always set now once we are connected, if the
-> bss has its own information element we refer to it and pass that
-> instead of relying on mac80211's parsing.
->=20
-> Now all cfg80211 drivers get country IE support, automatically.
->=20
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->=20
-> Johill, I think this is what you wanted in the end, I tested it and
-> I get no country IE hint going through :( I could debug further but I'm
-> done for now and gotta work on some other stuff, not sure when I can
-> get back to this.
+As it turns out all callers of ieee80211_mgd_probe_ap() need this
+check so we just move the scan check there. This means we can remove
+the recenlty added check during ieee80211_sta_monitor_work().
 
-Well, you've made a critical mistake:
+Additionally we now fix a race condition added by the patch
+"mac80211: do not monitor the connection while scanning" which
+had the same check in ieee80211_sta_conn_mon_timer(). The race
+happens because the timer routine *does* a valid check for
+scanning but after it queues work into the mac80211 workqueue
+the work callback can kick off with scanning enabled and cause
+the same issue we were trying to avoid.
 
-+       regulatory_hint_11d(wdev->wiphy,
-+                           bss->information_elements,
-+                           bss->len_information_elements);
+The more appropriate solution would be to disable the respective
+timers during scan and re-enable them after scan but requires more
+complex code and testing.
 
-needs to be
+Cc: Christian Lamparter <chunkeey@web.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Fabio Rossi <rossi.f@inwind.it>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-	const u8 *country_ie
-
-	country_ie =3D ieee80211_bss_get_ie(&bss->pub, WLAN_EID_COUNTRY);
-	if (country_ie)
-		regulatory_hint_11d(wdev->wiphy,
-				    country_ie + 2,
-				    country_ie[1]);
-
-
-It's rather likely that it doesn't come first, so whatever is in
-information_elements first would end up not looking like a country IE or
-having the right length, so the _11d function would just throw it out.
-
-
-johannes
-
---=-CVhXs3INGUzoJ5lRNvB7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcVJyAAoJEODzc/N7+Qmahz4P/0tOrt+hXKVBkx/tYoySkMOw
-j76QNgo5sbN0TkbkWIm2NBasHrnUX9JHVAUcKfRrW2g3zqYWQa1Qb+iFLa1opEqi
-3IIRKoLNtMSgmzkptoYGWUX8x1bEZl6iak7pCREnvGUMNOvkih0LmJw3G55fQQrc
-2WYY7JnekoeyLd6W9fv50RwCYU8cIDL0enOn3lXCvJdwdKP4ru27xOecR9+XBOw8
-49zQhmXiT6nHl7gyhUa+7N9Xv0ve2b//EryboYqdvz2xEX1xpLhw7W0mDzEycl1M
-JumL/OhO3IDH6AUQwGQ7SJ6vuiOqetU4S+u3DsgD0uj/GBsSp/SPawUiJG2MWNzP
-d6ziR+f1lEVHgVOfGxtrrN6FbJras1PwUiLNrDwqtrhVMPDKJEG8YMKzUWNhe0XG
-ym63nez4vj5WR3oDwJpEOZo/WIqEJHBTtej9J/Q6l6Fv8bj9i3knd7196v2UebwC
-G/3l+PWAtaCydD+kRY6VaB7oXZZLlxplOu83QrwTiVGRPhwOJkO+3N03+ZKw8foH
-pYJLPGUvL7WpIfjHJq509HGBjvbQRHz2V4o5wRFKnAXpIoq06sNwe5ukXi0xzPeg
-UIM8ha4g89txv1ycXdU1JUxYu7eeWor4jlWK4JmYIhdL3Tu4yX57t7dcHpwPRYmP
-HSZeUm0ZJ7mveazzht94
-=+XTr
------END PGP SIGNATURE-----
-
---=-CVhXs3INGUzoJ5lRNvB7--
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 523c0d9..db0b4b2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1166,6 +1166,9 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (!netif_running(sdata->dev))
+ 		return;
+ 
++	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
++		return;
++
+ 	mutex_lock(&ifmgd->mtx);
+ 
+ 	if (!ifmgd->associated)
+@@ -2213,9 +2216,6 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_sub_if_data,
+ 			     u.mgd.monitor_work);
+ 
+-	if (sdata->local->sw_scanning || sdata->local->hw_scanning)
+-		return;
+-
+ 	ieee80211_mgd_probe_ap(sdata, false);
+ }
+ 
+-- 
+1.6.3.3
 
