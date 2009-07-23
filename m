@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52528 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbZGaJSs (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:63981 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753400AbZGWXVn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 05:18:48 -0400
-Subject: [PATCH] cfg80211: lower dynamic PS timeout to 100ms
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 11:18:13 +0200
-Message-Id: <1249031893.29587.63.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 23 Jul 2009 19:21:43 -0400
+Received: by gxk9 with SMTP id 9so2351894gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 16:21:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1248389978.10342.1.camel@johannes.local>
+References: <1248389377-30379-1-git-send-email-lrodriguez@atheros.com>
+	<1248389904.10342.0.camel@johannes.local> <1248389978.10342.1.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 23 Jul 2009 16:21:21 -0700
+Message-ID: <43e72e890907231621l35bc0f82n79b91bd5bda25dcc@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: do not trigger beacon loss work if scanning
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rossi.f@inwind.it
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default of 500ms is pretty high, and leads
-to the device being awake at least 50% of the
-time under such light traffic conditions as a
-simple 1 second interval ping. Reduce to just
-100ms -- it should have a similar effect while
-providing a better sleep time.
+On Thu, Jul 23, 2009 at 3:59 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-07-24 at 00:58 +0200, Johannes Berg wrote:
+>
+>> > @@ -2187,7 +2187,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
+>> >             (struct ieee80211_sub_if_data *) data;
+>> >     struct ieee80211_local *local = sdata->local;
+>> >
+>> > -   if (local->quiescing)
+>> > +   if (local->quiescing || local->sw_scanning || local->hw_scanning)
+>>
+>> I'd rather have  that check in ieee80211_mgd_probe_ap itself, so it's
+>> much closer to the source of the problem.
+>
+> And, incidentally, not racy then.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+And wouldn't it be even better to just disable the timers before
+scanning and re-enabling after scanning?
 
---- wireless-testing.orig/net/wireless/core.c	2009-07-31 11:15:32.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-07-31 11:15:40.000000000 +0200
-@@ -673,7 +673,7 @@ static int cfg80211_netdev_notifier_call
- 		wdev->wext.default_mgmt_key = -1;
- 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
- 		wdev->wext.ps = CONFIG_CFG80211_DEFAULT_PS_VALUE;
--		wdev->wext.ps_timeout = 500;
-+		wdev->wext.ps_timeout = 100;
- 		if (rdev->ops->set_power_mgmt)
- 			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
- 						      wdev->wext.ps,
-
-
+  Luis
