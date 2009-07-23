@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:39012 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665AbZG1H51 (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:43236 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751782AbZGWTpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 03:57:27 -0400
-Received: by mail-ew0-f226.google.com with SMTP id 26so3767834ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 00:57:27 -0700 (PDT)
-Message-ID: <4A6EB00D.5010401@gmail.com>
-Date: Tue, 28 Jul 2009 10:00:13 +0200
-From: Roel Kluin <roel.kluin@gmail.com>
+	Thu, 23 Jul 2009 15:45:25 -0400
+Date: Thu, 23 Jul 2009 16:45:22 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723194522.GC19369@khazad-dum.debian.net>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+ <20090714235332.GA1552@ucw.cz>
+ <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+ <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+ <20090718103756.GA11381@elf.ucw.cz>
+ <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
+ <20090718235609.GC25343@khazad-dum.debian.net>
+ <20090723145757.GB28158@elf.ucw.cz>
+ <20090723185720.GB19369@khazad-dum.debian.net>
+ <20090723191330.GQ28158@elf.ucw.cz>
 MIME-Version: 1.0
-To: dcbw@redhat.com, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] libertas: Read buffer overflow
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090723191330.GQ28158@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several arrays were read before checking whether the index was within
-bounds. ARRAY_SIZE() should be used to determine the size of arrays.
+On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > Note that the "why" is unreliable by design. Network driver will
+> > > ignore WoL during run-time, right?
+> > 
+> > "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> > reliable as "who"...
+> 
+> See above. The wakeup events race with each other.
 
-rates->rates has an arraysize of 1, so calling get_common_rates()
-with a rates_size of MAX_RATES (14) was causing reads out of bounds.
+We deliver them all.  It is that simple.  The rest is up to userspace.
 
-Since ratesize is at most MAX_RATES, tmp_size can increment at most
-to MAX_RATES * ARRAY_SIZE(lbs_bg_rates), so that should be the number
-of elements of tmp[].
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Please review.
-
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index b9b3741..7dfbb0c 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -1,6 +1,7 @@
- /* Copyright (C) 2006, Red Hat, Inc. */
- 
- #include <linux/types.h>
-+#include <linux/kernel.h>
- #include <linux/etherdevice.h>
- #include <linux/ieee80211.h>
- #include <linux/if_arp.h>
-@@ -43,14 +44,14 @@ static int get_common_rates(struct lbs_private *priv,
- 	u16 *rates_size)
- {
- 	u8 *card_rates = lbs_bg_rates;
--	size_t num_card_rates = sizeof(lbs_bg_rates);
-+	size_t num_card_rates = ARRAY_SIZE(lbs_bg_rates);
- 	int ret = 0, i, j;
--	u8 tmp[30];
-+	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
- 	size_t tmp_size = 0;
- 
- 	/* For each rate in card_rates that exists in rate1, copy to tmp */
--	for (i = 0; card_rates[i] && (i < num_card_rates); i++) {
--		for (j = 0; rates[j] && (j < *rates_size); j++) {
-+	for (i = 0; i < num_card_rates && card_rates[i]; i++) {
-+		for (j = 0; j < *rates_size && rates[j]; j++) {
- 			if (rates[j] == card_rates[i])
- 				tmp[tmp_size++] = card_rates[i];
- 		}
-@@ -322,7 +323,7 @@ static int lbs_associate(struct lbs_private *priv,
- 	rates = (struct mrvl_ie_rates_param_set *) pos;
- 	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
- 	memcpy(&rates->rates, &bss->rates, MAX_RATES);
--	tmplen = MAX_RATES;
-+	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
- 	if (get_common_rates(priv, rates->rates, &tmplen)) {
- 		ret = -1;
- 		goto done;
-@@ -598,7 +599,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
- 
- 	/* Copy Data rates from the rates recorded in scan response */
- 	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
--	ratesize = min_t(u16, sizeof(cmd.bss.rates), MAX_RATES);
-+	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
- 	memcpy(cmd.bss.rates, bss->rates, ratesize);
- 	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
- 		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.
-");
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
