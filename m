@@ -1,100 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58176 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756094AbZGOAO3 (ORCPT
+Received: from mail-qy0-f173.google.com ([209.85.221.173]:55765 "EHLO
+	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbZGWGBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 05/21] ath9k: remove unused min rate calculation code
-Date: Tue, 14 Jul 2009 20:13:57 -0400
-Message-Id: <1247616853-11221-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 23 Jul 2009 02:01:00 -0400
+Received: by qyk3 with SMTP id 3so986184qyk.33
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 23:01:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890907222244x50bb7c0vb5ac6e6f0cfaea44@mail.gmail.com>
+References: <20090723052735.GA5943@myhost.users.atheros.com>
+	 <43e72e890907222244x50bb7c0vb5ac6e6f0cfaea44@mail.gmail.com>
+Date: Thu, 23 Jul 2009 11:30:59 +0530
+Message-ID: <8e92b4100907222300v43e375b1k4e089b5615b08ea@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath9k: Add init values for AR9287 based chipsets.
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used, and when we need to get the lowest rate
-we should simply use mac80211's own rate_lowest_index(sband, sta).
+On Thu, Jul 23, 2009 at 11:14 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Wed, Jul 22, 2009 at 10:27 PM, Vivek Natarajan<vivek.natraj@gmail.com> wrote:
+>> static const u_int32_t ar9287PciePhy_AWOW_9287_1_0[][2] = {
+>
+> Unused? and if so, #ifdef CONFIG_PM them ?
+Shall I remove them now? and then if WoW comes in, we can include these.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   33 +++++++++------------------------
- 1 files changed, 9 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a23b66b..7b37b27 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -817,28 +817,17 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- static u8 ath_rc_rate_getidx(struct ath_softc *sc,
- 			     struct ath_rate_priv *ath_rc_priv,
- 			     const struct ath_rate_table *rate_table,
--			     u8 rix, u16 stepdown,
--			     u16 min_rate)
-+			     u8 rix, u16 stepdown)
- {
- 	u32 j;
- 	u8 nextindex = 0;
- 
--	if (min_rate) {
--		for (j = RATE_TABLE_SIZE; j > 0; j--) {
--			if (ath_rc_get_nextlowervalid_txrate(rate_table,
--						ath_rc_priv, rix, &nextindex))
--				rix = nextindex;
--			else
--				break;
--		}
--	} else {
--		for (j = stepdown; j > 0; j--) {
--			if (ath_rc_get_nextlowervalid_txrate(rate_table,
--						ath_rc_priv, rix, &nextindex))
--				rix = nextindex;
--			else
--				break;
--		}
-+	for (j = stepdown; j > 0; j--) {
-+		if (ath_rc_get_nextlowervalid_txrate(rate_table,
-+					ath_rc_priv, rix, &nextindex))
-+			rix = nextindex;
-+		else
-+			break;
- 	}
- 	return rix;
- }
-@@ -882,7 +871,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		 * after the probe rate
- 		 */
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1, 0);
-+					  rate_table, nrix, 1);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -895,16 +884,12 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 
- 	/* Fill in the other rates for multirate retry */
- 	for ( ; i < 4; i++) {
--		u8 min_rate;
--
- 		/* Use twice the number of tries for the last MRR segment. */
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		min_rate = (((i + 1) == 4) && 0);
--
- 		nrix = ath_rc_rate_getidx(sc, ath_rc_priv,
--					  rate_table, nrix, 1, min_rate);
-+					  rate_table, nrix, 1);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
--- 
-1.6.0.6
-
+Vivek.
