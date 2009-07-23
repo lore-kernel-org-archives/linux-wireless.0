@@ -1,151 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:50039 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223AbZGJSnA (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44211 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752400AbZGWTNh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 14:43:00 -0400
-Received: by ewy26 with SMTP id 26so1303716ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 11:42:58 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Implement set_tim callback for all drivers
-Date: Fri, 10 Jul 2009 20:42:55 +0200
-Cc: Stefan Steuerwald <salsasepp@googlemail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+	Thu, 23 Jul 2009 15:13:37 -0400
+Date: Thu, 23 Jul 2009 21:13:30 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723191330.GQ28158@elf.ucw.cz>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com> <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net> <20090723145757.GB28158@elf.ucw.cz> <20090723185720.GB19369@khazad-dum.debian.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907102042.56110.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090723185720.GB19369@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stefan Steuerwald <salsasepp@googlemail.com>
+On Thu 2009-07-23 15:57:20, Henrique de Moraes Holschuh wrote:
+> On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > On Sat 2009-07-18 20:56:10, Henrique de Moraes Holschuh wrote:
+> > > On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
+> > > > Hm yeah, but I doubt someone will do that, generally we'd get one wake
+> > > > up event. Can't we just report the first one and ignore the rest?
+> > > 
+> > > Well, I'd say keeping it simple is best, here.  What if you ignore the more
+> > > interesting wakeup events by chance (and it is really up to userspace to
+> > > know what it considers interesting...)?  IMHO, just issue as many
+> > > notifications as needed, let userspace filter it if it wants.
+> > > 
+> > > But if you guys are talking about something really generic, shouldn't it
+> > > also provide the important "why" along with the "who"?
+> > > 
+> > > Even for the most common cases, the "why" is useful: userspace may well want
+> > > to run special routines when it wakes up because of WoL and WoW (instead of
+> > > a key press, lid open or mouse movement...).
+> > 
+> > What special routines?
+> 
+> Starting a remote maintenance shell is a common usage scenario on corporate
+> environments.
 
-Implement set_tim callback for all rt2x00 drivers, this makes the
-device wake up powersaving stations properly while in AP mode.
+But... You want to start maintenance shell not on wakeup from WoL, but
+on receiving the magic packet. If you hit the keyboard before to wake
+up the machine, and the magic packet still comes, you still want the
+remote maintenance shell.
 
-The only way to update the beacon is by simply calling mac80211 and
-requesting the new beacon. This means the set_tim() event is mostly the
-same as a beacon_done() event which was already defined in rt2x00lib.
+> Besides, it is a generic wakeup notification we're talking about, isn't it?
+> I have some that have nothing to do with WoW or WoL:
+> 
+> 1. Thermal alarm
+> 2. Battery alarm
+> 3. Hotunplug request (bay/dock): umount stuff, cleanly undock, then go back
+> to sleep (optional)
 
-Signed-off-by: Stefan Steuerwald <salsasepp@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index d8035e3..30185ad 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1561,6 +1561,7 @@ static const struct ieee80211_ops rt2400pci_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt2400pci_conf_tx,
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index c123e28..3b31715 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1860,6 +1860,7 @@ static const struct ieee80211_ops rt2500pci_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
- 	.conf_tx		= rt2x00mac_conf_tx,
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 795706d..27e80d0 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1894,6 +1894,7 @@ static const struct ieee80211_ops rt2500usb_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 372c632..5a675a6 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -3053,6 +3053,7 @@ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.get_tkip_seq		= rt2800pci_get_tkip_seq,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index a204e66..66e001c 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -2786,6 +2786,7 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.get_tkip_seq		= rt2800usb_get_tkip_seq,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index de3f13a..8a2a425 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -969,6 +969,8 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
- 				unsigned int changed_flags,
- 				unsigned int *total_flags,
- 				int mc_count, struct dev_addr_list *mc_list);
-+int rt2x00mac_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
-+		      bool set);
- #ifdef CONFIG_RT2X00_LIB_CRYPTO
- int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		      struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index b7e0ddd..3425984 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -454,6 +454,16 @@ static void memcpy_tkip(struct rt2x00lib_crypto *crypto, u8 *key, u8 key_len)
- 		       sizeof(crypto->rx_mic));
- }
- 
-+int rt2x00mac_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
-+		      bool set)
-+{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+
-+	rt2x00lib_beacondone(rt2x00dev);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rt2x00mac_set_tim);
-+
- int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		      struct ieee80211_vif *vif, struct ieee80211_sta *sta,
- 		      struct ieee80211_key_conf *key)
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 8a49d99..b435c14 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2716,6 +2716,7 @@ static const struct ieee80211_ops rt61pci_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index ad2898c..4f9b177 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2241,6 +2241,7 @@ static const struct ieee80211_ops rt73usb_mac80211_ops = {
- 	.remove_interface	= rt2x00mac_remove_interface,
- 	.config			= rt2x00mac_config,
- 	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_tim		= rt2x00mac_set_tim,
- 	.set_key		= rt2x00mac_set_key,
- 	.get_stats		= rt2x00mac_get_stats,
- 	.bss_info_changed	= rt2x00mac_bss_info_changed,
+Well, battery&thermal alarms would certainly be useful. (And yes, I
+believe it is a bug in ACPI that we don't printk on battery critical).
+
+> > Note that the "why" is unreliable by design. Network driver will
+> > ignore WoL during run-time, right?
+> 
+> "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> reliable as "who"...
+
+See above. The wakeup events race with each other.
+
+> If the WoW/WoL device doesn't know why it woke up the system, it uses the
+> generic reason for network devices (I don't even know if a network device
+> has more than one reason for wakeup).  If a different device wakes the
+> system, it might know why and provide that reason.  And if it doesn't know
+> it woke up the system, it sends no notification at all.
+
+See above.
+
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
