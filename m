@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60166 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbZG3Cjy (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.24]:33680 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbZGWTEJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 22:39:54 -0400
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1248903902.8925.1.camel@johannes.local>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <1248903902.8925.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 04:39:51 +0200
-Message-Id: <1248921591.28545.256.camel@violet>
-Mime-Version: 1.0
+	Thu, 23 Jul 2009 15:04:09 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so645242qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 12:04:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1248375280.22109.33.camel@mountain.triplerocks.net>
+References: <1248290605.4717.76.camel@mountain.triplerocks.net>
+	<43e72e890907221230m53109c3eqf388a2d987d8cdda@mail.gmail.com>
+	<1248375280.22109.33.camel@mountain.triplerocks.net>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Thu, 23 Jul 2009 12:03:48 -0700
+Message-ID: <43e72e890907231203m2b9d576eh2f990817007f07d9@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless-old: Fix problem with TX on amd64
+To: Gao Lei <lei.alvin.gao@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Tony Espy <espy@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Thu, Jul 23, 2009 at 11:54 AM, Gao Lei<lei.alvin.gao@gmail.com> wrote:
+> On Wed, 2009-07-22 at 12:30 -0700, Luis R. Rodriguez wrote:
+>> On Wed, Jul 22, 2009 at 12:23 PM, Gao Lei wrote:
+>> > On amd64, the `ieee80211_tx_info' struct takes 56 bytes, thus cannot fit
+>> > into skb's control buffer.
+>>
+>> Thanks, what kernel is this against BTW? Just so you know we should be
+>> able to bring down compat-wireless down to 2.6.21 and maybe even
+>> further now that we no longer are using the master netdev, which used
+>> the multiqueue support added as of 2.6.27. Last I checked
+>> compat-wireless now compiles on 2.6.25, but I never actually tried
+>> loading it as I'm on ext4. So if you are on 2.6.25 or 2.6.26 you may
+>> want to try out compat-wireless directly and see if to works. If you
+>> are on 2.6.21..2.6.24 you can try adding backport support. I've added
+>> a few files already for older kernel support based on our old
+>> compat-wireless-old effort, so only the new stuff that mac80211 makes
+>> use of should require backporting.
+>>
+>>   Luis
+>
+> Hi,
+>
+> I am using kernel 2.6.26. Just tested compat-wireless and yes it works!
+> Here the TX info struct takes exactly 48 bytes so it can fit well into
+> the control buffer.
+>
+> Btw, I came up with the 'iwlagn: Unknown symbol iwl4965_agn_cfg' issue
+> though (actually also in compat-wireless-old). Strange as it seems
+> there're already some treatments there. Will look at it later.
 
-> > The connection monitor currently relies on probe requests paired
-> > with probe responses to ensure that a connection is alive. This is
-> > fragile in some environments where probe responses can get lost.
-> > When we receive beacons we can also consider the connection to be
-> > alive, so cancel connection poll instance when we receive a beacon.
-> > 
-> > The debug message "cancelling probereq poll due to a received beacon"
-> > is removed as part of this change as this case is hit very often after
-> > the above change and debug log receives significant number of these messages.
-> 
-> Not doing that was actually intentional -- we want to know whether or
-> not the connection is working both ways, not just whether we can receive
-> frames. This can certainly be improved, but I'm not sure this is the
-> best approach.
+May be a real issue. You can try wireless-testing directly and see if
+it happens there.
 
-this patch might be a band-aid and needs improvement or a total
-different solution, but it does help my disconnect problems. It makes my
-connection fully stable again. So it is not a wrong approach in general,
-because otherwise I have to be always close to me AP. And then using
-WiFi is bloody pointless since I could just put an Ethernet cable into
-the wall socket directly.
+> While it's great to see compat-wireless working for more old kernels, I
+> wonder if compat-wireless-old is still actively maintained?
 
-Regards
+Well sure its maintained, its just deprecated now as we can backport
+compat-wireless. The issue we had with compat-wireless-old is lack of
+interest from developers to support it as no one cared for old drivers
+and that old kernels.
 
-Marcel
+> Asking this
+> because currently most of the documentations still describe it as
+> 'compat-wireless-old for <= 2.6.26 and compat-wireless for >= 2.6.27',
+> and I was probably not the only amd64 user reading that. :)
 
+Well so a few things:
 
+1) We hadn't announced compat-wireless was available for older kernels
+now. This was really because we had no testers.
+2) you are the first to report success with 2.6.26 so that's a plus,
+so now you can go ahead and update the documentation (its a wiki after
+all) to mention this
+3) If someone reports success with 2.6.25 then we bring the
+documentation down to 2.6.25 and so on
+
+  Luis
