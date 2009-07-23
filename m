@@ -1,68 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44091 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755287AbZGGBkx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 21:40:53 -0400
-Subject: Re: [PATCH v2] Fix regression in mesh forwarding path.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: javier@cozybit.com
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Andrey Yurovsky <andrey@cozybit.com>
-In-Reply-To: <1246929954-15282-1-git-send-email-javier@cozybit.com>
-References: <1246928780.4652.10.camel@johannes.local>
-	 <1246929954-15282-1-git-send-email-javier@cozybit.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Zp126mAf5W2newuoC/k1"
-Date: Tue, 07 Jul 2009 03:40:56 +0200
-Message-Id: <1246930856.4652.11.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:30288 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753906AbZGWKCo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 06:02:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:02:45 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19048.13633.548084.579577@localhost.localdomain>
+Date: Thu, 23 Jul 2009 15:32:41 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/6] ath9k: Remove a few redundant variables/macros
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/xmit.c  |   24 ++++++++++--------------
+ 2 files changed, 10 insertions(+), 15 deletions(-)
 
---=-Zp126mAf5W2newuoC/k1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-07-06 at 18:25 -0700, javier@cozybit.com wrote:
->=20
->         while ((skb =3D skb_dequeue(&mpath->frame_queue)) &&
->                         (mpath->flags & MESH_PATH_ACTIVE))
-> -               dev_queue_xmit(skb);
-> +               ieee80211_add_pending_skb(mpath->sdata->local, skb);
->  }
-
-?
-
-Hmm, now I'm confused, why not just do
-
-if (mpath->flags & MESH_PATH_ACTIVE)
-	ieee80211_add_pending_skbs(mpath->sdata->local,
-				   &mpath->frame_queue);
-?
-
-johannes
-
---=-Zp126mAf5W2newuoC/k1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKUqekAAoJEODzc/N7+QmaBYMQALOXA7rHrnHiotOm2OpQ9UB6
-GoU8H3Di9Tk/yAkmlLNZ+VzrsDfZzJM7QEwTG5Lg8lbqEGze700A7i/0sSdkKDTs
-EDsWHqKHUpQcwDAhj3rDYf6ChvLI0wS68DBQm2qGiWza9L6rZ/QAjinT0WD8LTRY
-2BjTyhxDaGAUPVAOP7LybkTAg8M8xVS//lWACbTdMNCIBrDV+bDg1AFfy5Fjazpz
-6eQFW4fiU5FHXdPEd49b53/7CHD08JnzGnoUa7s4kDlnjjlxY9yT26FBw9tMMTJY
-xvoiqKHb/HOyLe7Me+Zfc8oARJLEkckZwCtdGOQ15Y0lRYDT4TYbJlmItb/fl7zR
-IJ1PZcol9sXvemIILhBIRF+1mpFKOSsh0QoGpp/fb/nBkq8M8FIHMTPiEC9NDLo6
-7PurH21vXOLtWxYhM4d/mhDcfd9gOBqfC4f8ag6iXIDmeEDMBHLb6TF2oknAp2dp
-QTMl6CcB0W4YuomPm+jAIdXQ3WslMMVikeKOl57dl4XZv8L34W3WZoON5wc/HoxC
-n2oapiBhEICy52Z/fSNHqeuoUcygN7HYViCtrSrJEdt+EcDkYdhuXQGzzpgoK5W0
-S14QytNGaVgJkiSt645U7suW/N5FxLZrq9oBiJXS9JSFzrlPOGWaEpD4r9rrxtOl
-ZVBWHI/+tJKDcVJtlVbY
-=TFQO
------END PGP SIGNATURE-----
-
---=-Zp126mAf5W2newuoC/k1--
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9d01d99..e94e8f9 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -190,7 +190,6 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ #define ATH_AGGR_MIN_QDEPTH        2
+ #define ATH_AMPDU_SUBFRAME_DEFAULT 32
+ #define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
+-#define ATH_AMPDU_LIMIT_DEFAULT    ATH_AMPDU_LIMIT_MAX
+ 
+ #define IEEE80211_SEQ_SEQ_SHIFT    4
+ #define IEEE80211_SEQ_MAX          4096
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index fd07aa1..b7806e2 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -458,7 +458,7 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ieee80211_tx_rate *rates;
+ 	struct ath_tx_info_priv *tx_info_priv;
+ 	u32 max_4ms_framelen, frmlen;
+-	u16 aggr_limit, legacy = 0, maxampdu;
++	u16 aggr_limit, legacy = 0;
+ 	int i;
+ 
+ 	skb = bf->bf_mpdu;
+@@ -493,16 +493,15 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE || legacy)
+ 		return 0;
+ 
+-	aggr_limit = min(max_4ms_framelen, (u32)ATH_AMPDU_LIMIT_DEFAULT);
++	aggr_limit = min(max_4ms_framelen, (u32)ATH_AMPDU_LIMIT_MAX);
+ 
+ 	/*
+ 	 * h/w can accept aggregates upto 16 bit lengths (65535).
+ 	 * The IE, however can hold upto 65536, which shows up here
+ 	 * as zero. Ignore 65536 since we  are constrained by hw.
+ 	 */
+-	maxampdu = tid->an->maxampdu;
+-	if (maxampdu)
+-		aggr_limit = min(aggr_limit, maxampdu);
++	if (tid->an->maxampdu)
++		aggr_limit = min(aggr_limit, tid->an->maxampdu);
+ 
+ 	return aggr_limit;
+ }
+@@ -510,7 +509,6 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
+ /*
+  * Returns the number of delimiters to be added to
+  * meet the minimum required mpdudensity.
+- * caller should make sure that the rate is HT rate .
+  */
+ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 				  struct ath_buf *bf, u16 frmlen)
+@@ -518,7 +516,7 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	const struct ath_rate_table *rt = sc->cur_rate_table;
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	u32 nsymbits, nsymbols, mpdudensity;
++	u32 nsymbits, nsymbols;
+ 	u16 minlen;
+ 	u8 rc, flags, rix;
+ 	int width, half_gi, ndelim, mindelim;
+@@ -540,14 +538,12 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	 * on highest rate in rate series (i.e. first rate) to determine
+ 	 * required minimum length for subframe. Take into account
+ 	 * whether high rate is 20 or 40Mhz and half or full GI.
+-	 */
+-	mpdudensity = tid->an->mpdudensity;
+-
+-	/*
++	 *
+ 	 * If there is no mpdu density restriction, no further calculation
+ 	 * is needed.
+ 	 */
+-	if (mpdudensity == 0)
++
++	if (tid->an->mpdudensity == 0)
+ 		return ndelim;
+ 
+ 	rix = tx_info->control.rates[0].idx;
+@@ -557,9 +553,9 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	half_gi = (flags & IEEE80211_TX_RC_SHORT_GI) ? 1 : 0;
+ 
+ 	if (half_gi)
+-		nsymbols = NUM_SYMBOLS_PER_USEC_HALFGI(mpdudensity);
++		nsymbols = NUM_SYMBOLS_PER_USEC_HALFGI(tid->an->mpdudensity);
+ 	else
+-		nsymbols = NUM_SYMBOLS_PER_USEC(mpdudensity);
++		nsymbols = NUM_SYMBOLS_PER_USEC(tid->an->mpdudensity);
+ 
+ 	if (nsymbols == 0)
+ 		nsymbols = 1;
+-- 
+1.6.3.3
 
