@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1459 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754203AbZGUBre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 21:47:34 -0400
-Subject: Re: [PATCH] cfg80211: avoid setting default_key if add_key fails
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248086067.4204.6.camel@johannes.local>
-References: <1248077577-7295-1-git-send-email-yi.zhu@intel.com>
-	 <1248086067.4204.6.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 21 Jul 2009 09:47:33 +0800
-Message-Id: <1248140853.3747.39.camel@debian>
+Received: from xc.sipsolutions.net ([83.246.72.84]:47840 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbZGWSAD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 14:00:03 -0400
+Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
+ way
+From: Johannes Berg <johannes@sipsolutions.net>
+To: ivan.kuten@promwad.com
+Cc: linux-wireless@vger.kernel.org,
+	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+In-Reply-To: <4A68A465.6020501@promwad.com>
+References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
+	 <1245150895.8623.3.camel@johannes.local>  <4A475F82.9040007@promwad.com>
+	 <1246262320.5947.3.camel@johannes.local>  <4A68A465.6020501@promwad.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LuIxMwf6E38sGSKyeFFt"
+Date: Thu, 23 Jul 2009 19:59:31 +0200
+Message-Id: <1248371971.634.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-20 at 18:34 +0800, Johannes Berg wrote:
-> On Mon, 2009-07-20 at 16:12 +0800, Zhu Yi wrote:
-> > In cfg80211_upload_connect_keys(), we call add_key, set_default_key
-> > and set_default_mgmt_key (if applicable) one by one. If one of these
-> > operations fails, we should stop calling the following functions.
-> > Because if the key is not added successfully, we should not set it as
-> > default key anyway.
-> 
-> Should we even disconnect again in that case?
 
-Yeah, if one key setting is failed, it might not be worth trying others.
-This is true for iwmc3200wifi. But I cannot speak for other drivers. How
-about merge this patch first? This is clearly a bug because the firmware
-confused when it is told to set a key as default but never existed.
+--=-LuIxMwf6E38sGSKyeFFt
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
--yi
+On Thu, 2009-07-23 at 20:56 +0300, Ivan Kuten wrote:
+> > On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
+> >> Hello,
+> >>
+> >> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unalig=
+ned allocations
+> >> for creq->ssids and creq->channels. Should it be something like that?
+> >=20
+> > Seems alright, but there is more than one instance of this, maybe you
+> > can make a function to allocate a scan request properly and have it be
+> > called from all the places it's needed.
+> >=20
+> > johannes
+> >=20
+>=20
+> Hello Johannes,
+> Can you point to that multiple scan allocations? I see only one kzalloc
+> with followed possible alignment violation - it's in cfg80211_wext_siwsca=
+n in scan.c
 
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-> > ---
-> >  net/wireless/util.c |    8 ++++++--
-> >  1 files changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/net/wireless/util.c b/net/wireless/util.c
-> > index 4bab380..ba387d8 100644
-> > --- a/net/wireless/util.c
-> > +++ b/net/wireless/util.c
-> > @@ -546,13 +546,17 @@ void cfg80211_upload_connect_keys(struct wireless_dev *wdev)
-> >  		if (!wdev->connect_keys->params[i].cipher)
-> >  			continue;
-> >  		if (rdev->ops->add_key(wdev->wiphy, dev, i, NULL,
-> > -					&wdev->connect_keys->params[i]))
-> > +					&wdev->connect_keys->params[i])) {
-> >  			printk(KERN_ERR "%s: failed to set key %d\n",
-> >  				dev->name, i);
-> > +			continue;
-> > +		}
-> >  		if (wdev->connect_keys->def == i)
-> > -			if (rdev->ops->set_default_key(wdev->wiphy, dev, i))
-> > +			if (rdev->ops->set_default_key(wdev->wiphy, dev, i)) {
-> >  				printk(KERN_ERR "%s: failed to set defkey %d\n",
-> >  					dev->name, i);
-> > +				continue;
-> > +			}
-> >  		if (wdev->connect_keys->defmgmt == i)
-> >  			if (rdev->ops->set_default_mgmt_key(wdev->wiphy, dev, i))
-> >  				printk(KERN_ERR "%s: failed to set mgtdef %d\n",
+I'm sure there's one in nl80211.c too
+
+johannes
+
+--=-LuIxMwf6E38sGSKyeFFt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaKT+AAoJEODzc/N7+Qma1iwQAKUzbR6uio5zv0aTmXaYnaRm
+wAAUeSpb4pIckU+zwbtIcmU0YV9nJQNlV8LpK+s2E0vl+HjVmFkUQoO2umX9HDeD
+XFLSnk5pnu4Ew9IKt2yZ1sSnOFn7IJNfgkqWnrOeyKArb4EWpTii6Gz9Zu/Yzteu
+07/X3rqpR2BTEU0nFx0spRtRMmZLYB8mBEEHy37hE5CXsop7w7QNptLqFHv0Xip9
+lBgiO9NpDMQeCDEE11hXzUlpYkCPFB/3HDejxCiCfV1i74Yn2w/dLbiq+D2mOGgr
+u9MB5HvrRZEGon806UMuUOSxWiF92b3uYV+btObyxBPGIuMoTRR+AWFYtm08cpRN
+uAAYqm2/b53fyNrXLjJ+J5gZ38UTrpS+LCQ1qgs3qF/x9ivqY5I9blVq16SbPY02
+NRiaXhCVFTkaZj79gjQ9Gv8YsWaWVu4YF59ZWZFwdggftzSq/SlE33QXwigWob6i
+KfR+lenrNgVBn5PM8/0vnqLgusbYaJZn4wPSI/VHzpRvx/wVwtmmonIzpuVk9S3a
+LUjq6AzKFC+KD3Lc954DX5l27A2YUxcUwpNEzYLoElGl72yIBI5/c8aoqPHJ4gZR
+TpOvYxuZYAsYsQnhJB5AGRLaeao4dXDZoCay/Xa7iNRr1d4F1NRC65r1vLdpHcup
+t1c2FT0cBOMeU2ILANdo
+=589I
+-----END PGP SIGNATURE-----
+
+--=-LuIxMwf6E38sGSKyeFFt--
 
