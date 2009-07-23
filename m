@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:45267 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbZGWUe1 (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 16:34:27 -0400
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Subject: Re: Generic events for wake up from S1-S4
-In-Reply-To: Your message of "Thu, 23 Jul 2009 21:51:14 +0200."
-             <20090723195114.GR28158@elf.ucw.cz>
-From: Valdis.Kletnieks@vt.edu
-References: <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net> <20090723145757.GB28158@elf.ucw.cz> <20090723185720.GB19369@khazad-dum.debian.net> <20090723191330.GQ28158@elf.ucw.cz> <20090723194522.GC19369@khazad-dum.debian.net>
-            <20090723195114.GR28158@elf.ucw.cz>
+Received: from xc.sipsolutions.net ([83.246.72.84]:57275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbZGWKit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 06:38:49 -0400
+Subject: Re: [PATCH 4/7] mac80211: Replace {sw, hw}_scanning variables with
+ a bitfield
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090723101403.5147.55273.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
+	 <20090723101403.5147.55273.stgit@localhost.localdomain>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-uPx5c/UC+E42Ga8A8GZK"
+Date: Thu, 23 Jul 2009 12:38:17 +0200
+Message-Id: <1248345497.19121.22.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1248381087_2742P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Thu, 23 Jul 2009 16:31:27 -0400
-Message-ID: <8233.1248381087@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1248381087_2742P
-Content-Type: text/plain; charset=us-ascii
 
-On Thu, 23 Jul 2009 21:51:14 +0200, Pavel Machek said:
+--=-uPx5c/UC+E42Ga8A8GZK
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Ok, but then we should not be talking about wake up events,
-> but... events.
-> 
-> Like "lid opened", "wake packet came", ... . And deliver them even
-> when they happen during run-time. That's okay with me.
+On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
+> Use a bitfield to store the current scan mode instead of two boolean
+> variables {sw,hw}_scanning. This patch does not introduce functional
+> changes but allows us to enhance the scan flags later (for example
+> for background scanning).
 
-That's actually a sane thing to do - for instance, one of the main uses
-of "wake on LAN" in many environments is to wake up a box to do software
-upgrades.  And if we're already up-and-running, and we "know" (from site
-policy) that a W-o-L packet is only sent because IT is pushing updates,
-it may make a lot of sense to catch a "wake packet" event, and go ahead
-and start the software updater *anyhow* (with suitable notification/confirm
-dialog to the poor guy still working on that presentation at 2AM, of course :)
+> +			if (test_bit(SCAN_SW_SCANNING, &local->scanning))
 
---==_Exmh_1248381087_2742P
-Content-Type: application/pgp-signature
+Do we actually need atomic bitops?
+
+johannes
+
+--=-uPx5c/UC+E42Ga8A8GZK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
 
-iD8DBQFKaMifcC3lWbTT17ARAu2sAKDA/dboEFbNyilO81vl+K2+2FRfNQCg5Atz
-FLf3vt4cWbfP7B3BYfIvNAc=
-=YQtg
+iQIcBAABAgAGBQJKaD2WAAoJEODzc/N7+Qma+N8QAL+UfshrBdTreR5syYoUvdT0
+NrDcdHCXkudd3SbwvNTjdv4Ar6JfqNe8Fy6dcr95LmpvHh6745tih+c/EBoApVKo
+DHGpnHVYf1UCT6O3b4qiBLnpettGlW//PZNflYaY0mMPEF4pkaiAPxmpbcLfcY0i
+HZK3vTXB28oq0283J4/MmrSzac2tpmZD7lHpiBJqZtkxQ4Hy9ibSfQhT+kRxG3Jk
+0VSNAiH4O2YQdYrQB0rSDsBYmNHzIRaNMCZ5Cjm4o8SCi3JYgiO0xQj59JQHOrV0
+43JCdNMefG4weH/x4V0DMvV7gMMzZGplrVCoLtdy2fMjsfUjELdJJkxxYRYUCvrw
+epOTvl7wf6llwCAFuqUnUuxd7rgucQrem1JBDNz/Z+uxjOLztT1/glDms6vX0GtI
+w/4tDV66pyQMMAkGstP/FX4fg6ws8qYYdMULHm5X6gq/uEWZE/hpXGkp6xdSk5uR
+ct0BAly4aW3T9Yfm10z6SkYVYsSwLUFZSne0YlWxnReHjclo+e1j2ISs6JaaAD8w
+W1lvW/rvmU9BON41BAEJxv0YcxMHl+dZbdHU6vLY/CkkBiWXnY5cADnve7uuW853
+t8Sqvty1aNSeWx7FAAqY3fix54khrPYIY1o8il51NkespyerKz+l12d05S4Lr/LV
++EUdLbGS500THHoCFN50
+=YUbr
 -----END PGP SIGNATURE-----
 
---==_Exmh_1248381087_2742P--
+--=-uPx5c/UC+E42Ga8A8GZK--
+
