@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1372 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751097AbZG0Oru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 10:47:50 -0400
-To: mjg@redhat.com
-Subject: [PATCH] dell-laptop: Fix rfkill state setting
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Message-Id: <20090727144747.E7F4EF891B@sepang.rtg.net>
-Date: Mon, 27 Jul 2009 08:47:47 -0600 (MDT)
-From: timg@tpi.com (Tim Gardner)
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44828 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162AbZGWTvV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 15:51:21 -0400
+Date: Thu, 23 Jul 2009 21:51:14 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723195114.GR28158@elf.ucw.cz>
+References: <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net> <20090723145757.GB28158@elf.ucw.cz> <20090723185720.GB19369@khazad-dum.debian.net> <20090723191330.GQ28158@elf.ucw.cz> <20090723194522.GC19369@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090723194522.GC19369@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew,
+On Thu 2009-07-23 16:45:22, Henrique de Moraes Holschuh wrote:
+> On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > > Note that the "why" is unreliable by design. Network driver will
+> > > > ignore WoL during run-time, right?
+> > > 
+> > > "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> > > reliable as "who"...
+> > 
+> > See above. The wakeup events race with each other.
+> 
+> We deliver them all.  It is that simple.  The rest is up to userspace.
 
-I think the rfkill state change logic is inverted. I've tried the original
-code on 3 different Dell models. Once 'rfkill block all' is run, then you
-can never unblock 'dell-wifi: Wireless LAN'. With this change you can get
-it unblocked, but you need to run 'rfkill unblock all' twice (which is
-likely an issue with rfkill).
+Ok, but then we should not be talking about wake up events,
+but... events.
 
-rtg
-
->From 778aec563a251418e455d63f711aab1c936bff73 Mon Sep 17 00:00:00 2001
-From: Tim Gardner <tim.gardner@canonical.com>
-Date: Mon, 27 Jul 2009 08:30:54 -0600
-Subject: [PATCH] UBUNTU: [Upstream] dell-laptop: Fix rfkill state setting.
-
-rfkill enable/disable transitions are predicated on the state of the
-external hardware switch, i.e., if the external switch is in the on position,
-then no rfkill state transitions are allowed.
-
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/platform/x86/dell-laptop.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
-index 74909c4..cf40c4e 100644
---- a/drivers/platform/x86/dell-laptop.c
-+++ b/drivers/platform/x86/dell-laptop.c
-@@ -197,8 +197,11 @@ static void dell_rfkill_query(struct rfkill *rfkill, void *data)
- 	dell_send_request(&buffer, 17, 11);
- 	status = buffer.output[1];
- 
--	if (status & BIT(bit))
--		rfkill_set_hw_state(rfkill, !!(status & BIT(16)));
-+	/*
-+	 * Don't change state unless the read-only HW rfkill switch is disabled.
-+	 */
-+	if (status & BIT(16))
-+		rfkill_set_hw_state(rfkill, !!(status & BIT(bit)));
- }
- 
- static const struct rfkill_ops dell_rfkill_ops = {
+Like "lid opened", "wake packet came", ... . And deliver them even
+when they happen during run-time. That's okay with me.
+									Pavel
 -- 
-1.6.2.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
