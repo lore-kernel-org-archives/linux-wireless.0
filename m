@@ -1,71 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:59583 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363AbZG3SQn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 14:16:43 -0400
-Date: Thu, 30 Jul 2009 11:13:17 -0700
-From: Greg KH <greg@kroah.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mike Galbraith <efault@gmx.de>, linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless] rt2870sta BUGs on shutdown,
- 2.6.30.2->git.today+git.wireless.today
-Message-ID: <20090730181317.GA27543@kroah.com>
-References: <1248945770.7910.24.camel@marge.simson.net>
- <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
- <200907301517.57811.bzolnier@gmail.com>
- <200907301852.28172.IvDoorn@gmail.com>
- <1248973862.22552.4.camel@johannes.local>
- <20090730172657.GA8266@kroah.com>
- <1248977083.24886.4.camel@localhost.localdomain>
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:47475 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbZGWKua (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 06:50:30 -0400
+Received: by bwz28 with SMTP id 28so726949bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:50:29 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 7/7] cfg80211: increase scan result expire time
+Date: Thu, 23 Jul 2009 12:50:36 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20090723100732.5147.73989.stgit@localhost.localdomain> <20090723101428.5147.53956.stgit@localhost.localdomain> <1248345595.19121.25.camel@johannes.local>
+In-Reply-To: <1248345595.19121.25.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1248977083.24886.4.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907231250.37025.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 02:04:43PM -0400, Dan Williams wrote:
-> On Thu, 2009-07-30 at 10:26 -0700, Greg KH wrote:
-> > On Thu, Jul 30, 2009 at 07:11:02PM +0200, Johannes Berg wrote:
-> > > On Thu, 2009-07-30 at 18:52 +0200, Ivo van Doorn wrote:
-> > > 
-> > > > [some text expressing his frustration]
-> > > 
-> > > This is exactly why I was against staging all the time. Now suddenly
-> > > "The Crap" seems like a viable alternative. WAKE UP PEOPLE. The code is
-> > > not useful. Just look at the code that Mike pasted into his email. That
-> > > alone should be enough to send cold shivers down your spine!
-> > 
-> > Hm, "useful" is in the eye of the beholder.
-> > 
-> > There is no driver in the mainline kernel tree for this device, so a
-> > "normal" user has no chance of getting it working, right?  That's why
-> > -staging is working, there is a semi-working driver, and most
-> > importantly, people willing to help out getting it working better.
-> > 
-> > The combination of the two is what works here.
-> > 
-> > So please, I understand your frustration on a lack of people helping out
-> > with out-of-tree wireless drivers that don't quite work properly, but
-> > please, that has NOTHING to do with the staging drivers.
-> > 
-> > Meanwhile, I'm off on the driver-devel list helping Mike fix this
-> > problem, which seems simple enough to solve...
+Am Donnerstag, 23. Juli 2009 schrieb Johannes Berg:
+> On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
+> > Using background scanning in mac80211 the time a scan needs to
+> > finish can exceed 10 seconds. Hence, increase the scan results
+> > expire time to 15 seconds which should be sufficient.
+> >     
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 > 
-> Except that the energy you're now investing in fixing this could have
-> gone into rt2x00, and we would come out ahead in the end.  Instead, the
-> energy is sapped away by something that will *never* be mainlined.
+> Heh.
 
-On the contrary, I would have never spent any time working on rt2x00 :)
+;)
 
-And are you trying to tell people _what_ to work on here?  That's a
-slippery slope...
+Maybe we could later use a dynamic expire time based on the time
+the last scan took or something similar. But for now 15 seconds
+should suffice.
 
-thanks,
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> johannes
+> 
+> > ---
+> > 
+> >  net/wireless/scan.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> > index 4ad8b4b..0850b98 100644
+> > --- a/net/wireless/scan.c
+> > +++ b/net/wireless/scan.c
+> > @@ -15,7 +15,7 @@
+> >  #include "core.h"
+> >  #include "nl80211.h"
+> >  
+> > -#define IEEE80211_SCAN_RESULT_EXPIRE	(10 * HZ)
+> > +#define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
+> >  
+> >  void __cfg80211_scan_done(struct work_struct *wk)
+> >  {
+> > 
+> > 
+> 
 
-greg k-h
+
