@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from anchor-post-3.mail.demon.net ([195.173.77.134]:45599 "EHLO
-	anchor-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751779AbZGJVgL (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:54343 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751658AbZGWUdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 17:36:11 -0400
-Date: Fri, 10 Jul 2009 22:09:33 +0100
-From: Darren Salt <linux@youmustbejoking.demon.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	acpi4asus-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-Message-ID: <507E47A184%linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <1247254899.21972.9.camel@johannes.local>
-References: <4A5716AA.5000903@ph.tum.de>
- <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
- <4A5743AB.6090303@ph.tum.de>
- <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
- <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
- <1247254899.21972.9.camel@johannes.local>
+	Thu, 23 Jul 2009 16:33:42 -0400
+Received: by gxk9 with SMTP id 9so2167557gxk.13
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 13:33:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A68C821.7060208@redfish-solutions.com>
+References: <4A612514.4050708@redfish-solutions.com>
+	 <4A63DF0B.4010801@redfish-solutions.com>
+	 <20090720115244.GC9972@hash.localnet>
+	 <4A64C283.6090205@redfish-solutions.com>
+	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+	 <4A650331.9020409@redfish-solutions.com>
+	 <4A6620B9.4@redfish-solutions.com>
+	 <20090723112428.GC13742@hash.localnet>
+	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>
+	 <4A68C821.7060208@redfish-solutions.com>
+Date: Thu, 23 Jul 2009 16:33:41 -0400
+Message-ID: <b6c5339f0907231333x1eda7a30s238801d0983292f5@mail.gmail.com>
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+From: Bob Copeland <me@bobcopeland.com>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I demand that Johannes Berg may or may not have written...
+On Thu, Jul 23, 2009 at 4:29 PM, Philip A.
+Prindeville<philipp_subx@redfish-solutions.com> wrote:
 
-> Apparently there actually _are_ tools that try to set this in sysfs even
-> though it wasn't supposed to be used this way without claiming first.
+> Getting closer :-)
+>
+> ath5k_tx_processq(sc, &sc->txqs[i]);
 
-Then it should have been documented as such. I don't see anything about this
-in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
-statement that "Kernel handles events", which isn't exactly helpful :-\
+Yeah I spotted it on my next compile but then didn't want to send
+yet-another-email... Oh well :)  Thanks!
 
-> Guess what: now that I've cleaned it all up it doesn't matter and we can
-> simply allow setting the soft-block state in sysfs.
 
-:-)
-
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> *shrug*, I don't like it, but whatever...
-
-I do. It means that we have a nice simple text-based interface for use in
-scripts (for now), and a binary interface which is better suited to the likes
-of desktop applications.
-
-> Please test & report.
-
-With the patch applied, Bluetooth toggling is working again, so you get to
-add this:
-
-Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-
-[snip]
 -- 
-| Darren Salt            | linux at youmustbejoking | nr. Ashington, | Doon
-| using Debian GNU/Linux | or ds    ,demon,co,uk    | Northumberland | Army
-| + Output *more* particulate pollutants.      BUFFER AGAINST GLOBAL WARMING.
-
-For sale: one complete set of hen's teeth.
+Bob Copeland %% www.bobcopeland.com
