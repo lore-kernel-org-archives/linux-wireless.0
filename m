@@ -1,111 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37606 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751666AbZGLL0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 07:26:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] [compat-2.6] Fixes kernel panic with kernel 2.6.28 while scanning.
-Date: Sun, 12 Jul 2009 13:26:06 +0200
-Message-Id: <1247397966-1374-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1247397966-1374-1-git-send-email-hauke@hauke-m.de>
-References: <1247397966-1374-1-git-send-email-hauke@hauke-m.de>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:59876 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269AbZGWJfd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 05:35:33 -0400
+Message-ID: <4A682EE3.9010407@openwrt.org>
+Date: Thu, 23 Jul 2009 11:35:31 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath9k: wake up the chip for PS config changes
+References: <1248338052-10435-1-git-send-email-juhosg@openwrt.org> <20090723084442.GB9186@vasanth-laptop>
+In-Reply-To: <20090723084442.GB9186@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This Problem was introduced with 50334349aa7f6fba1002739bf08481fcf1fb0761
-The Patch is based on http://osdir.com/ml/linux-wireless/2009-04/msg01085.html
+Vasanthakumar Thiagarajan írta:
+> On Thu, Jul 23, 2009 at 02:04:11PM +0530, Gabor Juhos wrote:
+>> If we are in NETWORK_SLEEP state, calling of 'ath9k_hw_setrxabort' in
+>> 'ath9k_config' will fail with the following error:
+>>
+>> ath9k: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000 != 0x00000000
+>> ath9k: RX failed to go idle in 10 ms RXSM=0xdeadbeef
+>>
+>> Fix it by waking up the chip, and set 'ps_restore_mode' directly instead
+>> of calling the 'ath9k_hw_setpower' routine..
+>>
+>> The problem is reported by Luis:
+>> http://article.gmane.org/gmane.linux.kernel.wireless.general/34363
+>>
+>> Changes-licensed-under: ISC
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>> ---
+>>         if (changed & IEEE80211_CONF_CHANGE_PS) {
+>> +               ath9k_ps_wakeup(sc);
+> 
+> This seems to be a workaround. chip should not be sleeping when
+> mac80211 thinks it is awake.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat.diff |   72 +++++++++------------------------------------------
- 1 files changed, 13 insertions(+), 59 deletions(-)
+Hm, first I thought this is a bug in ath9k:
 
-diff --git a/compat/compat.diff b/compat/compat.diff
-index 6214f4a..9b73788 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -817,66 +817,20 @@
-  #include <linux/workqueue.h>
-  #include <net/genetlink.h>
-  #include <net/cfg80211.h>
--@@ -113,7 +117,9 @@
-- 	unsigned long ts;
-- 	struct kref ref;
-- 	atomic_t hold;
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-- 	bool ies_allocated;
--+#endif
-- 
-- 	/* must be last because of priv member */
-- 	struct cfg80211_bss pub;
----- a/net/wireless/scan.c	2009-07-07 13:34:00.746682337 -0700
--+++ b/net/wireless/scan.c	2009-07-07 13:34:01.727705768 -0700
--@@ -88,10 +88,12 @@
-- 	bss = container_of(ref, struct cfg80211_internal_bss, ref);
-- 	if (bss->pub.free_priv)
-- 		bss->pub.free_priv(&bss->pub);
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-- 
-- 	if (bss->ies_allocated)
-- 		kfree(bss->pub.information_elements);
-- 
--+#endif
-- 	BUG_ON(atomic_read(&bss->hold));
-- 
-- 	kfree(bss);
--@@ -397,12 +399,25 @@
-- 
-- 	found = rb_find_bss(dev, res);
-- 
---	if (found) {
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
--+        if (found) {
--+#else 
--+        if (found && overwrite) {
--+                list_replace(&found->list, &res->list);
--+                rb_replace_node(&found->rbn, &res->rbn,
--+                                &dev->bss_tree);
--+                /* XXX: workaround */
--+                res->hold = found->hold;
--+                kref_put(&found->ref, bss_release);
--+                found = res;
--+        } else if (found) {
--+#endif
-- 		found->pub.beacon_interval = res->pub.beacon_interval;
-- 		found->pub.tsf = res->pub.tsf;
-- 		found->pub.signal = res->pub.signal;
-- 		found->pub.capability = res->pub.capability;
-- 		found->ts = res->ts;
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-- 
-- 		/* overwrite IEs */
-- 		if (overwrite) {
--@@ -430,6 +445,7 @@
-- 			}
-- 		}
-- 
-+--- a/net/wireless/scan.c
-++++ b/net/wireless/scan.c
-+@@ -409,7 +409,11 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
-+ 			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
-+ 			size_t ielen = res->pub.len_information_elements;
-+ 
-++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,28)
-++			if (0) {
-++#else
-+ 			if (!found->ies_allocated && ksize(found) >= used + ielen) {
- +#endif
-- 		kref_put(&res->ref, bss_release);
-- 	} else {
-- 		/* this "consumes" the reference */
-+ 				memcpy(found->pub.information_elements,
-+ 				       res->pub.information_elements, ielen);
-+ 				found->pub.len_information_elements = ielen;
- --- a/drivers/net/wireless/Makefile	2009-07-06 12:53:07.479194884 -0700
- +++ b/drivers/net/wireless/Makefile	2009-07-06 12:54:42.026195576 -0700
- @@ -5,43 +5,16 @@
--- 
-1.6.2.1
+ath9k: AWAKE -> NETWORK SLEEP
+ath9k: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000 != 0x00000000
+ath9k: RX failed to go idle in 10 ms RXSM=0xdeadbeef
+ath9k: NETWORK SLEEP -> NETWORK SLEEP
+
+You are righ probably, this can happen when mac80211 tells us to enter PS mode,
+even if we are in it currently. Although I have no idea yet how this may happen.
+
+Gabor
 
