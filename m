@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:20808 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932455AbZGPQJf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:09:35 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so82112qwh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:09:34 -0700 (PDT)
+Received: from ogre.sisk.pl ([217.79.144.158]:47641 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753661AbZGWV1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 17:27:37 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: Generic events for wake up from S1-S4
+Date: Thu, 23 Jul 2009 23:27:59 +0200
+Cc: Pavel Machek <pavel@ucw.cz>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>
+References: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <20090723195114.GR28158@elf.ucw.cz> <20090723201050.GD19369@khazad-dum.debian.net>
+In-Reply-To: <20090723201050.GD19369@khazad-dum.debian.net>
 MIME-Version: 1.0
-In-Reply-To: <200907161138.58874.helmut.schaa@gmail.com>
-References: <200907161138.58874.helmut.schaa@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 09:09:14 -0700
-Message-ID: <43e72e890907160909t6bc5809ued28581e1a7a668f@mail.gmail.com>
-Subject: Re: Further improvements to the software scan implementation
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200907232328.03566.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding David Quan and Michael Green, my reply in-line below.
+On Thursday 23 July 2009, Henrique de Moraes Holschuh wrote:
+> On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > On Thu 2009-07-23 16:45:22, Henrique de Moraes Holschuh wrote:
+> > > On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > > > > Note that the "why" is unreliable by design. Network driver will
+> > > > > > ignore WoL during run-time, right?
+> > > > > 
+> > > > > "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> > > > > reliable as "who"...
+> > > > 
+> > > > See above. The wakeup events race with each other.
+> > > 
+> > > We deliver them all.  It is that simple.  The rest is up to userspace.
+> > 
+> > Ok, but then we should not be talking about wake up events,
+> > but... events.
+> > 
+> > Like "lid opened", "wake packet came", ... . And deliver them even
+> > when they happen during run-time. That's okay with me.
+> 
+> Well, we *already* deliver "lid opened" when the lid is opened, regardless
+> of it waking up the computer or not.  But we are missing a way to deliver
+> other classes of wakeup events.
+> 
+> I know of at least these (incomplete list):
+> 
+> 1. network-initiated wakeup
+>    a. wired
+>    b. wireless
+>    c. long-range wireless
+> 
+> 2. platform health/condition alarms
+>    a. battery alarm (two levels, warning and emergency)
+>    b. thermal alarm (two levels, warning and emergency)
+>    (we need these as generic alarms, not just reason-for-wakeup)
+> 
+> 3. device (or device tree) hotplug/hotunplug
+>    a. hotunplug request or notification
+>       (we deliver the request/notification, but we don't know we should
+>       go back to sleep, so all we are missing is the reason-for-wakeup
+>       event)
+> 
+> 4. management
+>    a. wake-up/power on clock
+>    b. remote management command (IMPI, etc)
+>    c. intrusion alarm
+>    d. theft alarm
+> 
+> None of those have a standard interface to notify userspace of the reason of
+> the wake up AFAIK.  Many of these want a generic event interface to be
+> delivered not just as reason-for-wakeup, but also as runtime events.
+> 
+> And I guess we should also tell userspace what state we are waking up from
+> (S5 clean state, S5/S4 hibernation, S3), sometimes it matters.
 
-On Thu, Jul 16, 2009 at 2:38 AM, Helmut
-Schaa<helmut.schaa@googlemail.com> wrote:
-> Hi,
->
-> as already discussed with Johannes we can further optimize the scan
-> implementation by allowing (on an active channel) to send probes as
-> soon as any other frame is received (and updated the NAV) instead of
-> ever waiting 30ms.
->
-> Another optimization I thought of while reading [1] would be to take the
-> same approach as Intel in their ucode. If a frame is received while
-> scanning a passive channel switch to active scan mode and send out probes.
-> That should allow us to shorten the time needed to stay on that channel.
-> Luis, do you think this is ok in regard to regulatory restrictions?
+Agreed, and same for the above.
 
-Good question. We already enable active scanning if a beacon is
-received from an AP and are world roaming. We do this in mac80211
-through a beacon regulatory hint to the wireless core --
-regulatory_hint_found_beacon(). The assumption of the beacon
-regulatory hint is that APs *must* be compliant, and some cards world
-roam therefore only allowing passive scan on some channels, when you
-receive a beacon from an AP on a non-DFS channel or channel 12-14 it
-is safe to assume you can actively scan and beacon on that same
-channel. Reason for the passive scan flag to exist is for a way to
-enable some cards to world roam on some channels. Because all APs must
-beacon and since we will lift this passive scan flag during an initial
-scan I am inclined to believe we shouldn't bother with processing
-other 802.11 frames. So in summary I'd suggest to not do this because:
+So, what in your opinion would be the best way to expose this information?
 
-1) We already have the beacons during an initial scan
-2) We'd have to figure out a way to ensure the frame was indeed from an AP
-
-  Luis
-
-> Thanks,
-> Helmut
->
-> [1] http://sourceforge.net/mailarchive/forum.php?thread_name=200907061428.55840.jung%40ecos.de&forum_name=ipw3945-devel
->
+Rafael
