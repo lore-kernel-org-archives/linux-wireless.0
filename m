@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:64463 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627AbZGYU76 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 16:59:58 -0400
-Received: by ewy26 with SMTP id 26so2428129ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 13:59:58 -0700 (PDT)
-Message-ID: <4A6B72E8.3060500@gmail.com>
-Date: Sat, 25 Jul 2009 23:02:32 +0200
-From: Roel Kluin <roel.kluin@gmail.com>
+Received: from promwad.com ([83.149.69.23]:33500 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753663AbZGWJWW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 05:22:22 -0400
+Received: from mail.promwad.com ([195.222.85.229] helo=intranet.promwad.com)
+	by promwad.com with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1MTuVJ-0002Vs-Cv
+	for linux-wireless@vger.kernel.org; Thu, 23 Jul 2009 12:22:21 +0300
+Received: from [192.168.10.140]
+	by intranet.promwad.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <ivan.kuten@promwad.com>)
+	id 1MTuVF-0003yk-N2
+	for linux-wireless@vger.kernel.org; Thu, 23 Jul 2009 12:22:17 +0300
+Message-ID: <4A682BBD.90101@promwad.com>
+Date: Thu, 23 Jul 2009 12:22:05 +0300
+From: Ivan Kuten <ivan.kuten@promwad.com>
+Reply-To: ivan.kuten@promwad.com
 MIME-Version: 1.0
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] airo: Buffer overflow
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: WPA2, compat-wireless-2.6.31-rc3, kernel 2.6.28 - rtl8187 - association
+ works but no ping
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSID_rid has space for only 3 ssids. 
-txPowerLevels[i] is read before the bounds check for i
+Hello,
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index c70604f..8ce5e4c 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -5918,20 +5918,19 @@ static int airo_set_essid(struct net_device *dev,
- 	readSsidRid(local, &SSID_rid);
- 
- 	/* Check if we asked for `any' */
--	if(dwrq->flags == 0) {
-+	if (dwrq->flags == 0) {
- 		/* Just send an empty SSID list */
- 		memset(&SSID_rid, 0, sizeof(SSID_rid));
- 	} else {
--		int	index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
-+		unsigned index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
- 
- 		/* Check the size of the string */
--		if(dwrq->length > IW_ESSID_MAX_SIZE) {
-+		if (dwrq->length > IW_ESSID_MAX_SIZE)
- 			return -E2BIG ;
--		}
-+
- 		/* Check if index is valid */
--		if((index < 0) || (index >= 4)) {
-+		if (index >= ARRAY_SIZE(SSID_rid.ssids))
- 			return -EINVAL;
--		}
- 
- 		/* Set the SSID */
- 		memset(SSID_rid.ssids[index].ssid, 0,
-@@ -6819,7 +6818,7 @@ static int airo_set_txpow(struct net_device *dev,
- 		return -EINVAL;
- 	}
- 	clear_bit (FLAG_RADIO_OFF, &local->flags);
--	for (i = 0; cap_rid.txPowerLevels[i] && (i < 8); i++)
-+	for (i = 0; i < 8 && cap_rid.txPowerLevels[i]; i++)
- 		if (v == cap_rid.txPowerLevels[i]) {
- 			readConfigRid(local, 1);
- 			local->config.txPower = v;
+I'm testing rtl8187 on Blackfin platform (linux-2.6.28)
+compat-wireless-2.6.31-rc3
+driver rtl8187
+wpa_supplicant-0.6.5
+
+Sympthoms:
+Association works but no ping in WPA2(AES)
+Association works and ping is working with WPA(TKIP)
+
+This is probably not a wpa_supplicant and it's config problem
+because it's working (WPA2-AES and WPA-TKIP) on 2.6.28 with corresponding configs.
+
+Any suggestions how to track down the problem?
+
+Best regards,
+Ivan
+
+
+
+
+
