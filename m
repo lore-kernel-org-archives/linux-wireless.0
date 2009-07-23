@@ -1,40 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56228 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbZGJPPz (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60692 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbZGWLBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 11:15:55 -0400
-Date: Fri, 10 Jul 2009 11:06:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Celejar <celejar@gmail.com>
-Subject: Re: Fwd: 4318 misbehaving with bleeding edge kernels
-Message-ID: <20090710150602.GB2825@tuxdriver.com>
-References: <200907101131.41781.mb@bu3sch.de> <1247237986.3210.10.camel@mj>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1247237986.3210.10.camel@mj>
+	Thu, 23 Jul 2009 07:01:19 -0400
+Subject: Re: [PATCH 7/7] cfg80211: increase scan result expire time
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200907231250.37025.helmut.schaa@googlemail.com>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
+	 <20090723101428.5147.53956.stgit@localhost.localdomain>
+	 <1248345595.19121.25.camel@johannes.local>
+	 <200907231250.37025.helmut.schaa@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4TkRkn2F4ZJgPg8LZvyY"
+Date: Thu, 23 Jul 2009 13:00:47 +0200
+Message-Id: <1248346847.11510.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 10, 2009 at 10:59:46AM -0400, Pavel Roskin wrote:
-> On Fri, 2009-07-10 at 11:31 +0200, Michael Buesch wrote:
-> 
-> > I have a 4318 (rev 02), which has been working fine with b43.
-> > Recently, with 2.6.31-rc2 kernels from the wireless-testing git repo,
-> > I've been having trouble.  Sometimes the card simply fails to associate
-> > after doing 'iwconfig eth0 essid xxxx'.  It doesn't even seem to try;
-> > i.e., when it does associate, I see log entries like these:
-> 
-> I believe is that the ESSID support in the wext compatibility layer is
-> seriously broken.  It's not shown originally at all.  Once it's set, it
-> cannot be changed.
 
-What kernel are you using?  I don't see this behavior...
+--=-4TkRkn2F4ZJgPg8LZvyY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+On Thu, 2009-07-23 at 12:50 +0200, Helmut Schaa wrote:
+> Am Donnerstag, 23. Juli 2009 schrieb Johannes Berg:
+> > On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
+> > > Using background scanning in mac80211 the time a scan needs to
+> > > finish can exceed 10 seconds. Hence, increase the scan results
+> > > expire time to 15 seconds which should be sufficient.
+> > >    =20
+> > > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> >=20
+> > Heh.
+>=20
+> ;)
+>=20
+> Maybe we could later use a dynamic expire time based on the time
+> the last scan took or something similar. But for now 15 seconds
+> should suffice.
+
+Since we tell (or if we don't, should) userspace when that was last
+seen, I guess we could just increase this more anyway. But ultimately it
+doesn't matter all that much since people are just using wpa_supplicant
+and keeping a copy in userspace.
+
+johannes
+
+--=-4TkRkn2F4ZJgPg8LZvyY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaELcAAoJEODzc/N7+QmaS7IP/1paDrGaWuYQ9tMhVPawakTR
+cYN1zqruQY3af+5Lb4FnOIXiLsOw7p/wd3I7+U+1PPwhE1KrTuD0qHMxocqXP8pr
+BcdpHYxQDjZEBp3n8M1WKLPYZL8t9MsX0sKmEUonjLgCK9SJ470XMXXWrLBLpc0b
+etKrLzYPhvkySGstEqzUxykeNSHxmJNseiP8bwlthH+jqEPFI4uYxyRC9png8yDK
+d7Mt9T/qWvNyq7MzDED7uq/PtOOiFq/cYFLip24A7Dkha8awodcrTEcNtrbKbywZ
+DkBZDZH8VK4zofiqy38ZAS+TBGjyZM9cQbGKQR3nhZqUOyqpQew+iGOHF5KoqTo8
+Yw6H3UqrLOE2WmlD3Kf3BBQWY//4hA9qrAAIJYNbkDDN5WQhNMTxxhLANXb2rLnL
+C0Pc6PYpVvNQlIUt+4OBBQKCQL3wJnxO2bnlEDcUY2cN+I27jxMol3BouMXwZDwn
+cMoq8vvhUqN42QXO3LTaYlG09Dht4Htwt7OqcweurxVv1juvIPq08QKSG3r9MhJz
+QGdfmFM+eGGzxS4WzVGPFzhbisblYLt+uxESFiLxNqzojtyIJ/zxbyfTK0fF8Ysn
+zrqvJo0pSRO7nsSEW8+iTML/6VI20canAFG/Uzf+nW3Oqps07y2fiI2txCQr0gmQ
+XmWWIjiKluvxzmPJYslt
+=WuLj
+-----END PGP SIGNATURE-----
+
+--=-4TkRkn2F4ZJgPg8LZvyY--
+
