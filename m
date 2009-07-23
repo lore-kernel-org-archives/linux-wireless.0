@@ -1,61 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39324 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbZGPOQL (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:35637 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549AbZGWIeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 10:16:11 -0400
-Subject: Re: Further improvements to the software scan implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <mcgrof@gmail.com>
-In-Reply-To: <200907161138.58874.helmut.schaa@gmail.com>
-References: <200907161138.58874.helmut.schaa@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JE7fXOWyqWLiKyIDPgUo"
-Date: Thu, 16 Jul 2009 16:15:39 +0200
-Message-Id: <1247753739.30529.22.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 23 Jul 2009 04:34:14 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/2] ath9k: get rid of unnecessary setpower calls
+Date: Thu, 23 Jul 2009 10:34:12 +0200
+Message-Id: <1248338052-10435-2-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1248338052-10435-1-git-send-email-juhosg@openwrt.org>
+References: <1248338052-10435-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We are using setpower routines regardless of the current power mode.
+Don't bother the hardware, if it is not necessary.
 
---=-JE7fXOWyqWLiKyIDPgUo
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-On Thu, 2009-07-16 at 11:38 +0200, Helmut Schaa wrote:
-
-> Another optimization I thought of while reading [1] would be to take the
-> same approach as Intel in their ucode. If a frame is received while
-> scanning a passive channel switch to active scan mode and send out probes=
-.
-> That should allow us to shorten the time needed to stay on that channel.
-> Luis, do you think this is ok in regard to regulatory restrictions?
-
-One problem I could see with that is the TX power to use.
-
-johannes
-
---=-JE7fXOWyqWLiKyIDPgUo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXzYHAAoJEODzc/N7+QmabL8P/A4KAGJ+DUCa26YLrlaoAror
-3xzqm+JcbIcchoztS7xuLigNkWUzYrIzwJVQTbF2Kf1kaMwil14CtsfFpN3QEBRr
-8SC22YHkxXriCe+Ca1O6BLs5IEZskqymsSIyoKioUYOJUgiJs5kdieov2zFznngC
-jqYM7HyKdTHfJzkD2HkAxA5q669ePB88OyatVgelSIcenBIvLWqz5h9iTNkWdjHX
-O/rIqaB4JlJljVocqpKUEIXY89BO02QPgWQ0Jq/HQghM/0iH5yxNoUxbLJlgp48N
-InOGlHjrJB7B6UHDiL6I6fQ58upqOuG13uTxrP2NzqzCUaLLVNp/hPeZSOrFYo01
-FYIomz+YpQe02CZrr2pQKglQI/5VmM8d8yhsDjBaSi/64egoiNpoKQAQKshYgn0T
-M8V5yoy2NxN+oOCWMSq9zGPe8gi8xdoNW+91Tbaz3ew9VRiFSJyS6YxIRI7+YdG8
-yy+p3ox7EyhS3kwU65Fw4LoyOprfcgBz7vFSnBGs3O0CUTzE31GRWZSkhSDGOhy0
-0hGB4ODW3aml/S2vEiPFPZAUtftGB20ekNm1hCvtg2ck+QupBLaQIk2x+IC3OjL8
-O68h/xf7f8c17WgxUGE7rYZFrOzzE8V9LYK4Su69lYX1tUljbfbox73AVrhg+FOk
-R2HV1H/1/pPdfJie2enO
-=NZt6
------END PGP SIGNATURE-----
-
---=-JE7fXOWyqWLiKyIDPgUo--
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 53dfc6d..d958a0e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -475,6 +475,8 @@ static struct ath_hw *ath9k_hw_newstate(u16 devid, struct ath_softc *sc,
+ 
+ 	ah->gbeacon_rate = 0;
+ 
++	ah->power_mode = ATH9K_PM_UNDEFINED;
++
+ 	return ah;
+ }
+ 
+@@ -2739,6 +2741,9 @@ static bool ath9k_hw_setpower_nolock(struct ath_hw *ah,
+ 		"UNDEFINED"
+ 	};
+ 
++	if (ah->power_mode == mode)
++		return status;
++
+ 	DPRINTF(ah->ah_sc, ATH_DBG_RESET, "%s -> %s\n",
+ 		modes[ah->power_mode], modes[mode]);
+ 
+@@ -2783,8 +2788,7 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
+ 	if (++sc->ps_usecount != 1)
+ 		goto unlock;
+ 
+-	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
+-		ath9k_hw_setpower_nolock(sc->sc_ah, ATH9K_PM_AWAKE);
++	ath9k_hw_setpower_nolock(sc->sc_ah, ATH9K_PM_AWAKE);
+ 
+  unlock:
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+-- 
+1.5.3.2
 
