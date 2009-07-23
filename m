@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40893 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752312AbZGVUh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 16:37:56 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] [compat-2.6] Add missing import.
-Date: Wed, 22 Jul 2009 22:37:47 +0200
-Message-Id: <1248295068-26942-1-git-send-email-hauke@hauke-m.de>
+Received: from mx51.mymxserver.com ([85.199.173.110]:1960 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbZGWIah (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 04:30:37 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: Update for regulatory database on 5GHz band for Thailand (TH)
+Date: Thu, 23 Jul 2009 10:31:48 +0200
+Cc: David Quan <David.Quan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@atheros.com>
+References: <f7de31c0907220607v3266710co5640389fc0ccbc22@mail.gmail.com> <15B47C78534E094AA9A41F58FB8D74F30147BE67876F@SC1EXMB-MBCL.global.atheros.com> <43e72e890907220941j70f5ca98g5af9d9372eeef2e@mail.gmail.com>
+In-Reply-To: <43e72e890907220941j70f5ca98g5af9d9372eeef2e@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200907231031.48801.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This import was missing in 3615cdf6a700ca02cd14118a7d84ed0065a6e1c1
+>         (5170 - 5250 @ 20), (3, 17)
+>         (5250 - 5330 @ 20), (3, 20), DFS
 
-It is not needed now, but it will be soon.
+Is it an error to have the same frequency listed twice (once in 
+the "from" column, once in the "till" column?  And if yes, does 
+frequency 5250 get's assigned "(3, 17)" or "(3, 20), DFS" ???
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+If it's an error, then maybe the regdb-compiler should emit a 
+warning about this.
 
-diff --git a/compat/compat.h b/compat/compat.h
-index c5ed4ff..05612b2 100644
---- a/compat/compat.h
-+++ b/compat/compat.h
-@@ -20,5 +20,6 @@
- #include <net/compat-2.6.29.h>
- #include <net/compat-2.6.30.h>
- #include <net/compat-2.6.31.h>
-+#include <net/compat-2.6.32.h>
- 
- #endif /* LINUX_26_COMPAT_H */
 -- 
-1.6.2.1
-
+http://www.holgerschurig.de
