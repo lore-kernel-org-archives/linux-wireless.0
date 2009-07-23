@@ -1,35 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47989 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752491AbZGaTDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 15:03:16 -0400
-Message-ID: <4A733FF1.7050301@gmx.de>
-Date: Fri, 31 Jul 2009 21:03:13 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: Mladen Horvat <acid-burn@opendreambox.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: zd1211rw with MIPS architecture: mysterious behavior with zd1211b
- and AL2230/AL2230S RF Chip
-References: <loom.20090731T125828-710@post.gmane.org>
-In-Reply-To: <loom.20090731T125828-710@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:46406 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbZGWJzJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 05:55:09 -0400
+Subject: RE: Slow roaming in mac80211 (2.6.30).
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lars Ericsson <Lars_Ericsson@telia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <2E12E93FA1AB41BDA5C8A7292FCAC884@gotws1589>
+References: <2E12E93FA1AB41BDA5C8A7292FCAC884@gotws1589>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LCJyvfFq7+w9Jb1VayTl"
+Date: Thu, 23 Jul 2009 11:54:35 +0200
+Message-Id: <1248342875.19121.17.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2009 03:11 PM, Mladen Horvat wrote:
 
-> the same stick runs flawless on a x86 pc with kernel 2.6.30.
-> as i said, also on the same machine with kernel 2.6.12 and the vendor driver
-> this stick works without problems.
-> 
-> perhaps someone has an idea ?
+--=-LCJyvfFq7+w9Jb1VayTl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Just a wild guess, if your target runs MIPS in big endian: a missing endian conversion in the zd1211rw driver?
-Wasn't USB little-endian based?
+Lars,
 
-If the stick runs on the same MIPS target with 2.6.12 and vendor driver, it shouldn't be a USB 1.1 vs. 2.0
-problem - I guess the stick is a high speed device, as the zd1211b supports 802.11g.
+> I have further investigated the roaming issues and found two problems.
 
-Regards,
-Joerg.
+Thanks!
+
+> First ieee80211_rx_mgmt_deauth() and ieee80211_rx_mgmt_disassoc()
+> sets a retry state at the same time as they tells the wpa_supplicant
+> that the AP is gone.
+>=20
+> Patch lae-mac80211-rm-direct-probe.patch addresses this problem.
+
+Hmm. I can see that being a problem, we might get away with just
+removing the whole retry block. Ultimately though, I don't think it's a
+-stable issue.
+
+> Second problem address the auto scan function in
+> ieee80211_sta_config_auth().  When an incomplete AP information is
+> found, it start a new scan. This scan will delay the actions taken by
+> the wpa_supplicant for the scan period.
+>=20
+> Patch lae-mac80211-rm-extra-scan-request.patch addresses this problem.
+
+I don't think this is correct, it will only work properly with
+wpa_supplicant I think. Not really sure though.
+
+> > I would suggest you just use wpa_supplicant -Dnl80211, which=20
+> > should help
+> > a lot with this kind of things.
+>=20
+> I need to patch the kernel for this, rigth ?
+> Where can I get appropriate patches?
+
+No, you don't need to patch the kernel, you just need to use a git (?)
+version of wpa_supplicant.
+
+johannes
+
+--=-LCJyvfFq7+w9Jb1VayTl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaDNWAAoJEODzc/N7+Qmai4QQAKOcPzIfDNQvh8dJIvIcMZXY
+a8bZE8gkvj/8wTvBGVS2FcLnu2BxvwLaVVxoWc79/WqLdxS5FH5yVbuM8UZ7Atzo
+rmkLusUHYKw39UhUcBZ7Tk0g4b44l4HgzCHcd+hpIhH5WDpxhyHf6iKtN+eW8pam
+j7gQyuOcbPeNfX5J9DPUJ1IluW2YO5Wxq6bfnDPCU9I80ii8AHTlZqE0SbUef6dz
+hRDBHxeCeY2yL/umU1uqGDpzj8y/R7dirjfdPrXHoRUKmc/d9r74l7vjuvewZ0+k
+7mo1hfB1UDDO+/+TYklGnb4luf/VX0VmXmws2oorBZADXDU1nde/57dOGBsWiQRq
+Zgrmmjfu4NbTBCoFnB8dZdG7eVYKWanoCgHiPkyTG6FAqZqWIMHEouni2Co67Ao2
+y4DJknEfVwqmhmcvDws9/u8p/nCq08fVaJzMiFOduAjv3fghSN8sai/N85gToV3v
+1cQXGikMusm7KMpFa+r9QQgtL9s0+BxnCRu/KEWsAPt0hyVZvf4PjLefpgVpzHza
+6iwsK1FsFR378KjJ36QTpEkGsscCgmyay0kEAseNH0Tn2D1XRvWcr4mdONcoIXaY
+mnLcYOtDcLqFtdfIzDuExIcx8n4ivDH+iq2z9Vk/BYy4fh2YHAkDLtWzudApofX/
+J9e2ACnjkfvpRUvwIq+O
+=c93k
+-----END PGP SIGNATURE-----
+
+--=-LCJyvfFq7+w9Jb1VayTl--
+
