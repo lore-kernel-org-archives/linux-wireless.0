@@ -1,157 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:41676 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028AbZGGSDp (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:54990 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219AbZGWKs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 14:03:45 -0400
-Received: by pzk31 with SMTP id 31so3140949pzk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 11:03:44 -0700 (PDT)
-From: javier@cozybit.com
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, johannes@sipsolutions.net,
-	Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH v5] Fix regression in mesh forwarding path.
-Date: Tue,  7 Jul 2009 10:55:03 -0700
-Message-Id: <1246989303-19462-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <20090707170307.GC2768@tuxdriver.com>
-References: <20090707170307.GC2768@tuxdriver.com>
+	Thu, 23 Jul 2009 06:48:28 -0400
+Received: by fxm18 with SMTP id 18so731559fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:48:27 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 5/7] mac80211: implement basic background scanning
+Date: Thu, 23 Jul 2009 12:48:36 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20090723100732.5147.73989.stgit@localhost.localdomain> <20090723101411.5147.78380.stgit@localhost.localdomain> <1248345547.19121.23.camel@johannes.local>
+In-Reply-To: <1248345547.19121.23.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907231248.36825.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
+Am Donnerstag, 23. Juli 2009 schrieb Johannes Berg:
+> On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
+> > Introduce a new scan flag "SCAN_BG_SCANNING" which basically tells us
+> > that we are currently scanning but may as well be on the operating channel
+> > to RX/TX data whereas "SCAN_SW_SCANNING" tells us that we are currently
+> > on a different channel for scanning. While "SCAN_BG_SCANNING" is set
+> > during the whole scan "SCAN_SW_SCANNING" is set when leaving the operating
+> > channel and unset when coming back.
+> 
+> I think you got that description wrong :)
 
-The removal of the master netdev broke the mesh forwarding path.  This patch
-fixes it by using the new internal 'pending' queue.
+Argh, yes. Should I respin the whole series?
 
-As a result of this change, mesh forwarding no longer does the inefficient
-802.11 -> 802.3 -> 802.11 conversion that was done before.
+> > + * @SCAN_SW_SCANNING: We're currently in the process of scanning but may as
+> > + *	well be on the operating channel
+> > + * @SCAN_HW_SCANNING: The hardware is scanning for us, we have no way to
+> > + *	determine if we are on the operating channel or not
+> > + * @SCAN_OFF_CHANNEL: We're off our operating channel for scanning,
+> > + *	gets only set in conjunction with SCAN_SW_SCANNING
+> 
+> johannes
+> 
 
-[Changes since v1]
-Suggested by Johannes:
- - Select queue before adding to mpath queue
- - ieee80211_add_pending_skb -> ieee80211_add_pending_skbs
- - Remove unnecessary header wme.h
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mesh_hwmp.c    |    3 ++-
- net/mac80211/mesh_pathtbl.c |    8 +++-----
- net/mac80211/rx.c           |   17 +++++++++++++++--
- net/mac80211/tx.c           |    3 ---
- 4 files changed, 20 insertions(+), 11 deletions(-)
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f49ef28..c31fe79 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -784,7 +784,6 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		mesh_path_add(dst_addr, sdata);
- 		mpath = mesh_path_lookup(dst_addr, sdata);
- 		if (!mpath) {
--			dev_kfree_skb(skb);
- 			sdata->u.mesh.mshstats.dropped_frames_no_route++;
- 			err = -ENOSPC;
- 			goto endlookup;
-@@ -804,6 +803,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		memcpy(hdr->addr1, mpath->next_hop->sta.addr,
- 				ETH_ALEN);
- 	} else {
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		if (!(mpath->flags & MESH_PATH_RESOLVING)) {
- 			/* Start discovery only if it is not running yet */
- 			mesh_queue_preq(mpath, PREQ_Q_F_START);
-@@ -815,6 +815,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 			skb_unlink(skb_to_free, &mpath->frame_queue);
- 		}
- 
-+		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		skb_queue_tail(&mpath->frame_queue, skb);
- 		if (skb_to_free)
- 			mesh_path_discard_frame(skb_to_free, sdata);
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 3c72557..ae98766 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -478,11 +478,9 @@ enddel:
-  */
- void mesh_path_tx_pending(struct mesh_path *mpath)
- {
--	struct sk_buff *skb;
--
--	while ((skb = skb_dequeue(&mpath->frame_queue)) &&
--			(mpath->flags & MESH_PATH_ACTIVE))
--		dev_queue_xmit(skb);
-+	if (mpath->flags & MESH_PATH_ACTIVE)
-+		ieee80211_add_pending_skbs(mpath->sdata->local,
-+				&mpath->frame_queue);
- }
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9601b22..9d1dcaf 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1485,10 +1485,12 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	unsigned int hdrlen;
- 	struct sk_buff *skb = rx->skb, *fwd_skb;
- 	struct ieee80211_local *local = rx->local;
-+	struct ieee80211_sub_if_data *sdata;
- 
- 	hdr = (struct ieee80211_hdr *) skb->data;
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	mesh_hdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
-+	sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 
- 	if (!ieee80211_is_data(hdr->frame_control))
- 		return RX_CONTINUE;
-@@ -1498,10 +1500,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 		return RX_DROP_MONITOR;
- 
- 	if (mesh_hdr->flags & MESH_FLAGS_AE_A5_A6){
--		struct ieee80211_sub_if_data *sdata;
- 		struct mesh_path *mppath;
- 
--		sdata = IEEE80211_DEV_TO_SUB_IF(rx->dev);
- 		rcu_read_lock();
- 		mppath = mpp_path_lookup(mesh_hdr->eaddr2, sdata);
- 		if (!mppath) {
-@@ -1547,6 +1547,19 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			fwd_skb->iif = rx->dev->ifindex;
- 			ieee80211_select_queue(local, fwd_skb);
-+			if (is_multicast_ether_addr(fwd_hdr->addr3))
-+				memcpy(fwd_hdr->addr1, fwd_hdr->addr3,
-+						ETH_ALEN);
-+			else {
-+				int err = mesh_nexthop_lookup(fwd_skb, sdata);
-+				/* Failed to immediately resolve next hop:
-+				 * fwded frame was dropped or will be added
-+				 * later to the pending skb queue.  */
-+				if (err)
-+					return RX_DROP_MONITOR;
-+			}
-+			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
-+						     fwded_frames);
- 			ieee80211_add_pending_skb(local, fwd_skb);
- 		}
- 	}
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 66d9a42..969a4b2 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1399,9 +1399,6 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 				dev_put(sdata->dev);
- 				return;
- 			}
--		if (memcmp(sdata->dev->dev_addr, hdr->addr4, ETH_ALEN) != 0)
--			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
--						     fwded_frames);
- 	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
- 		int hdrlen;
- 		u16 len_rthdr;
--- 
-1.5.4.3
 
