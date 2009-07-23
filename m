@@ -1,84 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45557 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752878AbZGVRwW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 13:52:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2009 10:52:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] wireless-regb: make db2bin.py use new hashlib for sha1
-Date: Wed, 22 Jul 2009 10:52:20 -0700
-Message-ID: <1248285140-10140-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:38343 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927AbZGWKNe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 06:13:34 -0400
+Received: by fxm18 with SMTP id 18so715131fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:13:32 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/7] mac80211: refactor the scan code
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Thu, 23 Jul 2009 12:13:41 +0200
+Message-ID: <20090723101340.5147.17700.stgit@localhost.localdomain>
+In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Python now complains about sha module as its deprecated:
+Move the processing of each scan state into its own functions for better
+readability. This patch does not introduce functional changes.
 
-./db2bin.py regulatory.bin db.txt ~/.wireless-regdb-mcgrof.key.priv.pem
-./db2bin.py:5: DeprecationWarning: the sha module is deprecated; use the hashlib module instead
-  import sha
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- db2bin.py      |    6 +++---
- regulatory.bin |  Bin 3084 -> 3084 bytes
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/db2bin.py b/db2bin.py
-index e783b3a..23d3ee2 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -2,7 +2,7 @@
- 
- from cStringIO import StringIO
- import struct
--import sha
-+import hashlib
- from dbparse import DBParser
- import sys
- 
-@@ -127,13 +127,13 @@ if len(sys.argv) > 3:
- 
-     # determine signature length
-     key = RSA.load_key(sys.argv[3])
--    hash = sha.new()
-+    hash = hashlib.sha1()
-     hash.update(output.getvalue())
-     sig = key.sign(hash.digest())
-     # write it to file
-     siglen.set(len(sig))
-     # sign again
--    hash = sha.new()
-+    hash = hashlib.sha1()
-     hash.update(output.getvalue())
-     sig = key.sign(hash.digest())
- 
-diff --git a/regulatory.bin b/regulatory.bin
-index 43797b58453482f01b66050e8bf3905242fd057b..6128687a742cf85f1a39def772cc30dd330e5723 100644
-GIT binary patch
-delta 273
-zcmV+s0q*{c7>pROq6z{A43ne^Xn(*WB)7iO3CS>`!(@G$Lz!m<D*d~E$cm-?G$4JG
-zlQ7$|U4nwxskc@T;^&b-26aSNf9O~_4OpX63fw{)N*Pf=4}sj1;y)XEqaw$#lVp-B
-z357?vVFd%Xl>!@!$WF;lX_>T&D8sQ0(lprReH4=Bcb=7jTB054r(|Lnz<;Kk{$>V4
-zG#)UDNAA*fgKVbPE6G_vSXhDoHgn})ywQ`Bz-SFgPv#S=C<B-FXMKA2BlNpuTt`L?
-z)x83hKG?htDH!)09BuV~&j(ShcDLgTt3Puin+0D<O~P8UKb_yGT5$7vjst#k_C<r6
-Xe8-M~z&q>}jG#)+zmIlU_X5WP*Mxuh
+ net/mac80211/scan.c |  136 +++++++++++++++++++++++++++++----------------------
+ 1 files changed, 78 insertions(+), 58 deletions(-)
 
-delta 273
-zcmV+s0q*{c7>pROq6z{Bl#`?iXn#;swzPB}=h4)L-^~xBz2}pe;8EET#jZtE*8H3k
-zXj)vVHXPR-uQZMzlf@W6S={@A#vJjZtpg@jD}+zKI6DS+GdJNQ?i;!n=ZKWtY>miL
-z@U~l;%l7Pt2R+>_RBl-2_6KBM62F&m3;+SIjWY)EP9A8g(&I=;gZe0mH-DO&d)b4J
-zRlqyy#|hjK421&i7oK+fJ~2iH?Rt2_iu^|H(dha^Ei{m=y%aEnk$tw#YtaG3bIdi7
-z$^x{m;*=7+Qf<K%y4{MNS&!be0H>Y7R0%9MixLB1wp?ADW&&N6+f}b~OtpVpFRLtX
-Xv^M30B4gmTdF0UEV~?_e@&czA=`Dq-
-
--- 
-1.6.3.3
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 7482065..71500f1 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -474,13 +474,87 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	return rc;
+ }
+ 
++static int ieee80211_scan_state_set_channel(struct ieee80211_local *local,
++					    unsigned long *next_delay)
++{
++	int skip;
++	struct ieee80211_channel *chan;
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
++
++	/* if no more bands/channels left, complete scan */
++	if (local->scan_channel_idx >= local->scan_req->n_channels) {
++		ieee80211_scan_completed(&local->hw, false);
++		return 1;
++	}
++	skip = 0;
++	chan = local->scan_req->channels[local->scan_channel_idx];
++
++	if (chan->flags & IEEE80211_CHAN_DISABLED ||
++	    (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
++	     chan->flags & IEEE80211_CHAN_NO_IBSS))
++		skip = 1;
++
++	if (!skip) {
++		local->scan_channel = chan;
++		if (ieee80211_hw_config(local,
++					IEEE80211_CONF_CHANGE_CHANNEL))
++			skip = 1;
++	}
++
++	/* advance state machine to next channel/band */
++	local->scan_channel_idx++;
++
++	if (skip)
++		return 0;
++
++	/*
++	 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
++	 * (which unfortunately doesn't say _why_ step a) is done,
++	 * but it waits for the probe delay or until a frame is
++	 * received - and the received frame would update the NAV).
++	 * For now, we do not support waiting until a frame is
++	 * received.
++	 *
++	 * In any case, it is not necessary for a passive scan.
++	 */
++	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
++	    !local->scan_req->n_ssids) {
++		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
++		return 0;
++	}
++
++	*next_delay = IEEE80211_PROBE_DELAY;
++	local->scan_state = SCAN_SEND_PROBE;
++
++	return 0;
++}
++
++static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
++					    unsigned long *next_delay)
++{
++	int i;
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
++
++	for (i = 0; i < local->scan_req->n_ssids; i++)
++		ieee80211_send_probe_req(
++			sdata, NULL,
++			local->scan_req->ssids[i].ssid,
++			local->scan_req->ssids[i].ssid_len,
++			local->scan_req->ie, local->scan_req->ie_len);
++
++	/*
++	 * After sending probe requests, wait for probe responses
++	 * on the channel.
++	 */
++	*next_delay = IEEE80211_CHANNEL_TIME;
++	local->scan_state = SCAN_SET_CHANNEL;
++}
++
+ void ieee80211_scan_work(struct work_struct *work)
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, scan_work.work);
+ 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+-	struct ieee80211_channel *chan;
+-	int skip, i;
+ 	unsigned long next_delay = 0;
+ 
+ 	mutex_lock(&local->scan_mtx);
+@@ -515,65 +589,11 @@ void ieee80211_scan_work(struct work_struct *work)
+ 
+ 	switch (local->scan_state) {
+ 	case SCAN_SET_CHANNEL:
+-		/* if no more bands/channels left, complete scan */
+-		if (local->scan_channel_idx >= local->scan_req->n_channels) {
+-			ieee80211_scan_completed(&local->hw, false);
++		if (ieee80211_scan_state_set_channel(local, &next_delay))
+ 			return;
+-		}
+-		skip = 0;
+-		chan = local->scan_req->channels[local->scan_channel_idx];
+-
+-		if (chan->flags & IEEE80211_CHAN_DISABLED ||
+-		    (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
+-		     chan->flags & IEEE80211_CHAN_NO_IBSS))
+-			skip = 1;
+-
+-		if (!skip) {
+-			local->scan_channel = chan;
+-			if (ieee80211_hw_config(local,
+-						IEEE80211_CONF_CHANGE_CHANNEL))
+-				skip = 1;
+-		}
+-
+-		/* advance state machine to next channel/band */
+-		local->scan_channel_idx++;
+-
+-		if (skip)
+-			break;
+-
+-		/*
+-		 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
+-		 * (which unfortunately doesn't say _why_ step a) is done,
+-		 * but it waits for the probe delay or until a frame is
+-		 * received - and the received frame would update the NAV).
+-		 * For now, we do not support waiting until a frame is
+-		 * received.
+-		 *
+-		 * In any case, it is not necessary for a passive scan.
+-		 */
+-		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+-		    !local->scan_req->n_ssids) {
+-			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+-			break;
+-		}
+-
+-		next_delay = IEEE80211_PROBE_DELAY;
+-		local->scan_state = SCAN_SEND_PROBE;
+ 		break;
+ 	case SCAN_SEND_PROBE:
+-		for (i = 0; i < local->scan_req->n_ssids; i++)
+-			ieee80211_send_probe_req(
+-				sdata, NULL,
+-				local->scan_req->ssids[i].ssid,
+-				local->scan_req->ssids[i].ssid_len,
+-				local->scan_req->ie, local->scan_req->ie_len);
+-
+-		/*
+-		 * After sending probe requests, wait for probe responses
+-		 * on the channel.
+-		 */
+-		next_delay = IEEE80211_CHANNEL_TIME;
+-		local->scan_state = SCAN_SET_CHANNEL;
++		ieee80211_scan_state_send_probe(local, &next_delay);
+ 		break;
+ 	}
+ 
 
