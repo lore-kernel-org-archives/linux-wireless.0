@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:15046 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755306AbZGOPWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 11:22:51 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2009 08:22:52 -0700
-Date: Wed, 15 Jul 2009 08:22:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 4/5] mac80211: add WoW support
-Message-ID: <20090715152250.GD5682@mosca>
-References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
- <1247617320-20163-5-git-send-email-lrodriguez@atheros.com>
- <1247659055.2477.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1247659055.2477.0.camel@johannes.local>
+Received: from xc.sipsolutions.net ([83.246.72.84]:33805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbZGWXAJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 19:00:09 -0400
+Subject: Re: [PATCH] mac80211: do not trigger beacon loss work if scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	rossi.f@inwind.it
+In-Reply-To: <1248389904.10342.0.camel@johannes.local>
+References: <1248389377-30379-1-git-send-email-lrodriguez@atheros.com>
+	 <1248389904.10342.0.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tCcX2cVRkqhsXH+WLZ1+"
+Date: Fri, 24 Jul 2009 00:59:38 +0200
+Message-Id: <1248389978.10342.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 15, 2009 at 04:57:35AM -0700, Johannes Berg wrote:
-> On Tue, 2009-07-14 at 20:21 -0400, Luis R. Rodriguez wrote:
-> > If we're associated and have not already gone into PS mode
-> > we ensure send a nullfunc frame before going to suspend. Upon
-> > resume we ensure we restore PS mode if it was enabled and inform
-> > the driver accordingly, also notify the AP we're awake.
-> > 
-> > WoW requires the radio to be left on during suspend, to do this
-> > we inform drivers of the requested wow triggers on the mac80211
-> > stop callback.
-> 
-> I don't think this patch would work if ath9k unprogrammed the hardware
-> correctly in ->remove_interface(), since you don't seem to skip that
-> call.
 
-We just stop ANI in remove interface and reclaim beacon resources.
-As per documentation it seems we are not correctly removing the MAC
-address in ath9k for the removed interface to stop sending ACKs back.
-I'd rather see that as a separate patch fix, but you do have a point.
-As is right now though this doesn't affect WoW.
+--=-tCcX2cVRkqhsXH+WLZ1+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Fri, 2009-07-24 at 00:58 +0200, Johannes Berg wrote:
+
+> > @@ -2187,7 +2187,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned =
+long data)
+> >  		(struct ieee80211_sub_if_data *) data;
+> >  	struct ieee80211_local *local =3D sdata->local;
+> > =20
+> > -	if (local->quiescing)
+> > +	if (local->quiescing || local->sw_scanning || local->hw_scanning)
+>=20
+> I'd rather have  that check in ieee80211_mgd_probe_ap itself, so it's
+> much closer to the source of the problem.
+
+And, incidentally, not racy then.
+
+johannes
+
+--=-tCcX2cVRkqhsXH+WLZ1+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaOtWAAoJEODzc/N7+QmaTaUQAKydAC/CqNQZl+0jEAqiksml
+NT4ccnxSihBdf26Bk7j+S8hm4A9LXNzaa/vdMTOJQrZYuCsvmZ1gZS3uLZqvwN2x
+cMejHdu+mqtEdYbQjYPhHGugQvBj2gf0V7IYMGHpA1kAz0ch2Ppk+COUkKYzX+IS
+egkUI6MBarm5QAegpwSW02qKVjpwoWyp+WIh/GsspZ9O6A75u+UUWaz9pdtuRcv/
+RVv7DqBmS59wVckh2M1XJppZguNlx57I8zN7JdANLW1kKVr6FPVMM0ex5U2iyVlb
+0C7u7rVQZMwGfPPCdQL73qPQA2u3AfJ8sDC2eH3l1jhh/vf1ZcBmKb8OOwOFa+Jj
+LiNVHN+Mab+nO8ubmMCSK573RNkmdMNqC7yOoW+butNkCoXO9vUv0zs1Iv7QU6PY
+RV85d/vg2iJ/k9vQQArRViB4MWxTGvC4Qf2Wq/frrPdj99yWj+AzKGZH1KRUJTel
+J267L6GlKP2tS+747Q97fsniiVNjxusnSk/Xefa5v1o5JvCu8z+N+u1dJhqzu487
+Sh8kdjtryHBLizA4Ng4PUr6ik5ShQ5lSJa/M2MAYV3P5u7rvUsL4EBpee/4I/hMi
+7nYXRWZX+dGbYJGVLKDLaduDYJikFk7FQvv0Zguu3q2CzwLy/AaID3orKHOfK1U2
+qVuLBsOJfBRGet52xnbT
+=N4r8
+-----END PGP SIGNATURE-----
+
+--=-tCcX2cVRkqhsXH+WLZ1+--
+
