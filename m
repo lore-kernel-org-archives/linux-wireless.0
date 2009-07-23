@@ -1,389 +1,293 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:56751 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751688AbZG3QvX (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:35299 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbZGWKOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 12:51:23 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 10/10] rndis_wlan: rework key handling
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Date: Thu, 30 Jul 2009 19:42:08 +0300
-Message-ID: <20090730164208.28317.64301.stgit@fate.lan>
-In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
-References: <20090730164120.28317.53313.stgit@fate.lan>
+	Thu, 23 Jul 2009 06:14:04 -0400
+Received: by mail-bw0-f228.google.com with SMTP id 28so709536bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 03:14:04 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 5/7] mac80211: implement basic background scanning
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Thu, 23 Jul 2009 12:14:12 +0200
+Message-ID: <20090723101411.5147.78380.stgit@localhost.localdomain>
+In-Reply-To: <20090723100732.5147.73989.stgit@localhost.localdomain>
+References: <20090723100732.5147.73989.stgit@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Organize key data in private structure better and store WPA keys, so
-they can be restored as WEP keys.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Introduce a new scan flag "SCAN_BG_SCANNING" which basically tells us
+that we are currently scanning but may as well be on the operating channel
+to RX/TX data whereas "SCAN_SW_SCANNING" tells us that we are currently
+on a different channel for scanning. While "SCAN_BG_SCANNING" is set
+during the whole scan "SCAN_SW_SCANNING" is set when leaving the operating
+channel and unset when coming back.
+    
+Introduce two new scan states "SCAN_LEAVE_OPER_CHANNEL" and
+"SCAN_ENTER_OPER_CHANNEL" which basically implement the functionality we
+need to leave the operating channel (send a nullfunc to the AP and stop
+the queues) and enter it again (send a nullfunc to the AP and start the
+queues again).
+    
+Enhance the scan state "SCAN_DECISION" to switch back to the operating
+channel after each scanned channel. In the future it sould be simple
+to enhance the decision state to scan as much channels in a row as the
+qos latency allows us.
+    
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
 
- drivers/net/wireless/rndis_wlan.c |  188 ++++++++++++++++++++++++++++---------
- 1 files changed, 142 insertions(+), 46 deletions(-)
+ net/mac80211/ieee80211_i.h |   36 +++++++++++++-
+ net/mac80211/rx.c          |    6 ++
+ net/mac80211/scan.c        |  117 +++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/tx.c          |    2 -
+ 4 files changed, 148 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 3d92b77..828dc18 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -413,6 +413,15 @@ static const struct ieee80211_rate rndis_rates[] = {
- 	{ .bitrate = 540 }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 783a125..efda19e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -570,9 +570,41 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
  };
  
-+struct rndis_wlan_encr_key {
-+	int len;
-+	int cipher;
-+	u8 material[32];
-+	u8 bssid[ETH_ALEN];
-+	bool pairwise;
-+	bool tx_key;
++/**
++ * mac80211 scan flags - currently active scan mode
++ *
++ * @SCAN_SW_SCANNING: We're currently in the process of scanning but may as
++ *	well be on the operating channel
++ * @SCAN_HW_SCANNING: The hardware is scanning for us, we have no way to
++ *	determine if we are on the operating channel or not
++ * @SCAN_OFF_CHANNEL: We're off our operating channel for scanning,
++ *	gets only set in conjunction with SCAN_SW_SCANNING
++ */
+ enum {
+ 	SCAN_SW_SCANNING,
+-	SCAN_HW_SCANNING
++	SCAN_HW_SCANNING,
++	SCAN_OFF_CHANNEL,
 +};
 +
- /* RNDIS device private data */
- struct rndis_wlan_private {
- 	struct usbnet *usbdev;
-@@ -456,9 +465,7 @@ struct rndis_wlan_private {
++/**
++ * enum mac80211_scan_state - scan state machine states
++ *
++ * @SCAN_DECISION: Main entry point to the scan state machine, this state
++ *	determines if we should keep on scanning or switch back to the
++ *	operating channel
++ * @SCAN_SET_CHANNEL: Set the next channel to be scanned
++ * @SCAN_SEND_PROBE: Send probe requests and wait for probe responses
++ * @SCAN_LEAVE_OPER_CHANNEL: Leave the operating channel, notify the AP
++ *	about us leaving the channel and stop all associated STA interfaces
++ * @SCAN_ENTER_OPER_CHANNEL: Enter the operating channel again, notify the
++ *	AP about us being back and restart all associated STA interfaces
++ */
++enum mac80211_scan_state {
++	SCAN_DECISION,
++	SCAN_SET_CHANNEL,
++	SCAN_SEND_PROBE,
++	SCAN_LEAVE_OPER_CHANNEL,
++	SCAN_ENTER_OPER_CHANNEL,
+ };
  
- 	/* encryption stuff */
- 	int  encr_tx_key_index;
--	char encr_keys[4][32];
--	int  encr_key_len[4];
--	char encr_key_wpa[4];
-+	struct rndis_wlan_encr_key encr_keys[4];
- 	int  wpa_version;
- 	int  wpa_keymgmt;
- 	int  wpa_authalg;
-@@ -525,6 +532,15 @@ static u32 get_bcm4320_power_dbm(struct rndis_wlan_private *priv)
- }
+ struct ieee80211_local {
+@@ -683,7 +715,7 @@ struct ieee80211_local {
+ 	int scan_channel_idx;
+ 	int scan_ies_len;
  
+-	enum { SCAN_DECISION, SCAN_SET_CHANNEL, SCAN_SEND_PROBE } scan_state;
++	enum mac80211_scan_state scan_state;
+ 	struct delayed_work scan_work;
+ 	struct ieee80211_sub_if_data *scan_sdata;
+ 	enum nl80211_channel_type oper_channel_type;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b1bebc1..dd192b3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -421,7 +421,8 @@ ieee80211_rx_h_passive_scan(struct ieee80211_rx_data *rx)
+ 	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning)))
+ 		return ieee80211_scan_rx(rx->sdata, skb);
  
-+static bool is_wpa_key(struct rndis_wlan_private *priv, int idx)
-+{
-+	int cipher = priv->encr_keys[idx].cipher;
-+
-+	return (cipher == WLAN_CIPHER_SUITE_CCMP ||
-+		cipher == WLAN_CIPHER_SUITE_TKIP);
-+}
-+
-+
- #ifdef DEBUG
- static const char *oid_to_string(__le32 oid)
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning))) {
++	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning) &&
++		     (rx->flags & IEEE80211_RX_IN_SCAN))) {
+ 		/* drop all the other packets during a software scan anyway */
+ 		if (ieee80211_scan_rx(rx->sdata, skb) != RX_QUEUED)
+ 			dev_kfree_skb(skb);
+@@ -2136,7 +2137,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 		return;
+ 	}
+ 
+-	if (unlikely(local->scanning))
++	if (unlikely(test_bit(SCAN_HW_SCANNING, &local->scanning) ||
++		     test_bit(SCAN_OFF_CHANNEL, &local->scanning)))
+ 		rx.flags |= IEEE80211_RX_IN_SCAN;
+ 
+ 	ieee80211_parse_qos(&rx);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 4233c3d..d56b9da 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -365,12 +365,11 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 			ieee80211_bss_info_change_notify(
+ 				sdata, BSS_CHANGED_BEACON_ENABLED);
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+-			if (sdata->u.mgd.associated) {
+-				netif_tx_stop_all_queues(sdata->dev);
+-				ieee80211_scan_ps_enable(sdata);
+-			}
+-		} else
++		/*
++		 * only handle non-STA interfaces here, STA interfaces
++		 * are handled in the scan state machine
++		 */
++		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 			netif_tx_stop_all_queues(sdata->dev);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+@@ -474,17 +473,113 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 					 unsigned long *next_delay)
  {
-@@ -895,8 +911,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
- /*
-  * common functions
-  */
--static int
--add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index);
-+static void restore_keys(struct usbnet *usbdev);
+-	/* if no more bands/channels left, complete scan */
++	bool associated = false;
++	struct ieee80211_sub_if_data *sdata;
++
++	/* if no more bands/channels left, complete scan and advance to the idle state */
+ 	if (local->scan_channel_idx >= local->scan_req->n_channels) {
+ 		ieee80211_scan_completed(&local->hw, false);
+ 		return 1;
+ 	}
  
- static int get_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
- {
-@@ -1115,7 +1130,7 @@ static int set_infra_mode(struct usbnet *usbdev, int mode)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	__le32 tmp;
--	int ret, i;
-+	int ret;
- 
- 	devdbg(usbdev, "set_infra_mode: infra_mode=0x%x", priv->infra_mode);
- 
-@@ -1130,14 +1145,7 @@ static int set_infra_mode(struct usbnet *usbdev, int mode)
- 	/* NDIS drivers clear keys when infrastructure mode is
- 	 * changed. But Linux tools assume otherwise. So set the
- 	 * keys */
--	if (priv->wpa_keymgmt == 0 ||
--		priv->wpa_keymgmt == IW_AUTH_KEY_MGMT_802_1X) {
--		for (i = 0; i < 4; i++) {
--			if (priv->encr_key_len[i] > 0 && !priv->encr_key_wpa[i])
--				add_wep_key(usbdev, priv->encr_keys[i],
--						priv->encr_key_len[i], i);
--		}
--	}
-+	restore_keys(usbdev);
- 
- 	priv->infra_mode = mode;
++	/* check if at least one STA interface is associated */
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!netif_running(sdata->dev))
++			continue;
++
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			if (sdata->u.mgd.associated) {
++				associated = true;
++				break;
++			}
++		}
++	}
++	mutex_unlock(&local->iflist_mtx);
++
++	if (local->scan_channel) {
++		/*
++		 * we're currently scanning a different channel, let's
++		 * switch back to the operating channel now if at least
++		 * one interface is associated. Otherwise just scan the
++		 * next channel
++		 */
++		if (associated)
++			local->scan_state = SCAN_ENTER_OPER_CHANNEL;
++		else
++			local->scan_state = SCAN_SET_CHANNEL;
++	} else {
++		/*
++		 * we're on the operating channel currently, let's
++		 * leave that channel now to scan another one
++		 */
++		local->scan_state = SCAN_LEAVE_OPER_CHANNEL;
++	}
++
+ 	*next_delay = 0;
+-	local->scan_state = SCAN_SET_CHANNEL;
  	return 0;
-@@ -1204,11 +1212,16 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	struct ndis_80211_wep_key ndis_key;
--	int ret;
-+	int cipher, ret;
- 
--	if (key_len <= 0 || key_len > 32 || index < 0 || index >= 4)
-+	if ((key_len != 5 || key_len != 13) || index < 0 || index > 3)
- 		return -EINVAL;
- 
-+	if (key_len == 5)
-+		cipher = WLAN_CIPHER_SUITE_WEP40;
-+	else
-+		cipher = WLAN_CIPHER_SUITE_WEP104;
-+
- 	memset(&ndis_key, 0, sizeof(ndis_key));
- 
- 	ndis_key.size = cpu_to_le32(sizeof(ndis_key));
-@@ -1233,30 +1246,44 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
- 		return ret;
- 	}
- 
--	priv->encr_key_len[index] = key_len;
--	priv->encr_key_wpa[index] = 0;
--	memcpy(&priv->encr_keys[index], key, key_len);
-+	priv->encr_keys[index].len = key_len;
-+	priv->encr_keys[index].cipher = cipher;
-+	memcpy(&priv->encr_keys[index].material, key, key_len);
-+	memset(&priv->encr_keys[index].bssid, 0xff, ETH_ALEN);
- 
- 	return 0;
  }
  
- 
- static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
--			int index, const struct sockaddr *addr,
--			const u8 *rx_seq, int alg, int flags)
-+			int index, const u8 *addr, const u8 *rx_seq, int cipher,
-+			int flags)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	struct ndis_80211_key ndis_key;
-+	bool is_addr_ok;
- 	int ret;
- 
--	if (index < 0 || index >= 4)
-+	if (index < 0 || index >= 4) {
-+		devdbg(usbdev, "add_wpa_key: index out of range (%i)", index);
- 		return -EINVAL;
--	if (key_len > sizeof(ndis_key.material) || key_len < 0)
-+	}
-+	if (key_len > sizeof(ndis_key.material) || key_len < 0) {
-+		devdbg(usbdev, "add_wpa_key: key length out of range (%i)",
-+			key_len);
- 		return -EINVAL;
--	if ((flags & NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ) && !rx_seq)
-+	}
-+	if ((flags & NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ) && !rx_seq) {
-+		devdbg(usbdev, "add_wpa_key: recv seq flag without buffer");
- 		return -EINVAL;
--	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !addr)
-+	}
-+	is_addr_ok = addr && memcmp(addr, zero_bssid, ETH_ALEN) != 0 &&
-+			memcmp(addr, ffff_bssid, ETH_ALEN) != 0;
-+	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !is_addr_ok) {
-+		devdbg(usbdev, "add_wpa_key: pairwise but bssid invalid (%pM)",
-+			addr);
- 		return -EINVAL;
-+	}
- 
- 	devdbg(usbdev, "add_wpa_key(%i): flags:%i%i%i", index,
- 			!!(flags & NDIS_80211_ADDKEY_TRANSMIT_KEY),
-@@ -1270,7 +1297,7 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
- 	ndis_key.length = cpu_to_le32(key_len);
- 	ndis_key.index = cpu_to_le32(index) | flags;
- 
--	if (alg == IW_ENCODE_ALG_TKIP && key_len == 32) {
-+	if (cipher == WLAN_CIPHER_SUITE_TKIP && key_len == 32) {
- 		/* wpa_supplicant gives us the Michael MIC RX/TX keys in
- 		 * different order than NDIS spec, so swap the order here. */
- 		memcpy(ndis_key.material, key, 16);
-@@ -1284,7 +1311,7 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
- 
- 	if (flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) {
- 		/* pairwise key */
--		memcpy(ndis_key.bssid, addr->sa_data, ETH_ALEN);
-+		memcpy(ndis_key.bssid, addr, ETH_ALEN);
- 	} else {
- 		/* group key */
- 		if (priv->infra_mode == NDIS_80211_INFRA_ADHOC)
-@@ -1299,8 +1326,14 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
- 	if (ret != 0)
- 		return ret;
- 
--	priv->encr_key_len[index] = key_len;
--	priv->encr_key_wpa[index] = 1;
-+	memset(&priv->encr_keys[index], 0, sizeof(priv->encr_keys[index]));
-+	priv->encr_keys[index].len = key_len;
-+	priv->encr_keys[index].cipher = cipher;
-+	memcpy(&priv->encr_keys[index].material, key, key_len);
-+	if (flags & NDIS_80211_ADDKEY_PAIRWISE_KEY)
-+		memcpy(&priv->encr_keys[index].bssid, ndis_key.bssid, ETH_ALEN);
-+	else
-+		memset(&priv->encr_keys[index].bssid, 0xff, ETH_ALEN);
- 
- 	if (flags & NDIS_80211_ADDKEY_TRANSMIT_KEY)
- 		priv->encr_tx_key_index = index;
-@@ -1309,25 +1342,74 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
- }
- 
- 
-+static int restore_key(struct usbnet *usbdev, int key_idx)
++static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
++						    unsigned long *next_delay)
 +{
-+	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	struct rndis_wlan_encr_key key;
-+	int flags;
++	struct ieee80211_sub_if_data *sdata;
 +
-+	key = priv->encr_keys[key_idx];
++	/*
++	 * notify the AP about us leaving the channel and stop all STA interfaces
++	 */
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!netif_running(sdata->dev))
++			continue;
 +
-+	devdbg(usbdev, "restore_key: %i:%s:%i", key_idx,
-+		is_wpa_key(priv, key_idx) ? "wpa" : "wep",
-+		key.len);
-+
-+	if (key.len == 0)
-+		return 0;
-+
-+	if (is_wpa_key(priv, key_idx)) {
-+		flags = 0;
-+
-+		/*if (priv->encr_tx_key_index == key_idx)
-+			flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;*/
-+
-+		if (memcmp(key.bssid, zero_bssid, ETH_ALEN) != 0 &&
-+				memcmp(key.bssid, ffff_bssid, ETH_ALEN) != 0)
-+			flags |= NDIS_80211_ADDKEY_PAIRWISE_KEY;
-+
-+		return add_wpa_key(usbdev, key.material, key.len, key_idx,
-+					key.bssid, NULL, key.cipher, flags);
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			netif_tx_stop_all_queues(sdata->dev);
++			if (sdata->u.mgd.associated)
++				ieee80211_scan_ps_enable(sdata);
++		}
 +	}
++	mutex_unlock(&local->iflist_mtx);
 +
-+	return add_wep_key(usbdev, key.material, key.len, key_idx);
++	__set_bit(SCAN_OFF_CHANNEL, &local->scanning);
++
++	/* advance to the next channel to be scanned */
++	*next_delay = HZ / 10;
++	local->scan_state = SCAN_SET_CHANNEL;
 +}
 +
-+
-+static void restore_keys(struct usbnet *usbdev)
++static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *local,
++						    unsigned long *next_delay)
 +{
-+	int i;
++	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
 +
-+	for (i = 0; i < 4; i++)
-+		restore_key(usbdev, i);
-+}
++	/* switch back to the operating channel */
++	local->scan_channel = NULL;
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
 +
++	/*
++	 * notify the AP about us being back and restart all STA interfaces
++	 */
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!netif_running(sdata->dev))
++			continue;
 +
-+static void clear_key(struct rndis_wlan_private *priv, int idx)
-+{
-+	memset(&priv->encr_keys[idx], 0, sizeof(priv->encr_keys[idx]));
-+}
-+
-+
- /* remove_key is for both wep and wpa */
- static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
- 	struct ndis_80211_remove_key remove_key;
- 	__le32 keyindex;
-+	bool is_wpa;
- 	int ret;
- 
--	if (priv->encr_key_len[index] == 0)
-+	if (priv->encr_keys[index].len == 0)
- 		return 0;
- 
--	priv->encr_key_len[index] = 0;
--	priv->encr_key_wpa[index] = 0;
--	memset(&priv->encr_keys[index], 0, sizeof(priv->encr_keys[index]));
-+	is_wpa = is_wpa_key(priv, index);
- 
--	if (priv->wpa_cipher_pair == IW_AUTH_CIPHER_TKIP ||
--	    priv->wpa_cipher_pair == IW_AUTH_CIPHER_CCMP ||
--	    priv->wpa_cipher_group == IW_AUTH_CIPHER_TKIP ||
--	    priv->wpa_cipher_group == IW_AUTH_CIPHER_CCMP) {
-+	devdbg(usbdev, "remove_key: %i:%s:%i", index, is_wpa ? "wpa" : "wep",
-+		priv->encr_keys[index].len);
-+
-+	clear_key(priv, index);
-+
-+	if (is_wpa) {
- 		remove_key.size = cpu_to_le32(sizeof(remove_key));
- 		remove_key.index = cpu_to_le32(index);
- 		if (bssid) {
-@@ -1871,8 +1953,9 @@ static int rndis_iw_set_encode(struct net_device *dev,
- {
- 	struct usbnet *usbdev = netdev_priv(dev);
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
-+	struct rndis_wlan_encr_key key;
- 	int ret, index, key_len;
--	u8 *key;
-+	u8 *keybuf;
- 
- 	index = (wrqu->encoding.flags & IW_ENCODE_INDEX);
- 
-@@ -1907,17 +1990,18 @@ static int rndis_iw_set_encode(struct net_device *dev,
- 
- 	if (wrqu->data.length > 0) {
- 		key_len = wrqu->data.length;
--		key = extra;
-+		keybuf = extra;
- 	} else {
- 		/* must be set as tx key */
--		if (priv->encr_key_len[index] == 0)
-+		if (priv->encr_keys[index].len == 0)
- 			return -EINVAL;
--		key_len = priv->encr_key_len[index];
- 		key = priv->encr_keys[index];
-+		key_len = key.len;
-+		keybuf = key.material;
- 		priv->encr_tx_key_index = index;
- 	}
- 
--	if (add_wep_key(usbdev, key, key_len, index) != 0)
-+	if (add_wep_key(usbdev, keybuf, key_len, index) != 0)
- 		return -EINVAL;
- 
- 	if (index == priv->encr_tx_key_index)
-@@ -1934,7 +2018,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
- 	struct usbnet *usbdev = netdev_priv(dev);
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
--	int keyidx, flags;
-+	int keyidx, flags, cipher;
- 
- 	keyidx = wrqu->encoding.flags & IW_ENCODE_INDEX;
- 
-@@ -1944,8 +2028,10 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	else
- 		keyidx = priv->encr_tx_key_index;
- 
--	if (keyidx < 0 || keyidx >= 4)
-+	if (keyidx < 0 || keyidx >= 4) {
-+		devwarn(usbdev, "encryption index out of range (%u)", keyidx);
- 		return -EINVAL;
++		/* Tell AP we're back */
++		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++			if (sdata->u.mgd.associated)
++				ieee80211_scan_ps_disable(sdata);
++			netif_tx_wake_all_queues(sdata->dev);
++		}
 +	}
- 
- 	if (ext->alg == WPA_ALG_WEP) {
- 		if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
-@@ -1953,10 +2039,19 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 		return add_wep_key(usbdev, ext->key, ext->key_len, keyidx);
- 	}
- 
-+	cipher = -1;
-+	if (ext->alg == IW_ENCODE_ALG_TKIP)
-+		cipher = WLAN_CIPHER_SUITE_TKIP;
-+	else if (ext->alg == IW_ENCODE_ALG_CCMP)
-+		cipher = WLAN_CIPHER_SUITE_CCMP;
++	mutex_unlock(&local->iflist_mtx);
 +
- 	if ((wrqu->encoding.flags & IW_ENCODE_DISABLED) ||
- 	    ext->alg == IW_ENCODE_ALG_NONE || ext->key_len == 0)
- 		return remove_key(usbdev, keyidx, NULL);
- 
-+	if (cipher == -1)
-+		return -EOPNOTSUPP;
++	__clear_bit(SCAN_OFF_CHANNEL, &local->scanning);
 +
- 	flags = 0;
- 	if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID)
- 		flags |= NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ;
-@@ -1965,8 +2060,9 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- 	if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
- 		flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;
++	*next_delay = HZ / 5;
++	local->scan_state = SCAN_DECISION;
++}
++
+ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 					     unsigned long *next_delay)
+ {
+@@ -609,6 +704,12 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		case SCAN_SEND_PROBE:
+ 			ieee80211_scan_state_send_probe(local, &next_delay);
+ 			break;
++		case SCAN_LEAVE_OPER_CHANNEL:
++			ieee80211_scan_state_leave_oper_channel(local, &next_delay);
++			break;
++		case SCAN_ENTER_OPER_CHANNEL:
++			ieee80211_scan_state_enter_oper_channel(local, &next_delay);
++			break;
+ 		}
+ 	} while (next_delay == 0);
  
--	return add_wpa_key(usbdev, ext->key, ext->key_len, keyidx, &ext->addr,
--				ext->rx_seq, ext->alg, flags);
-+	return add_wpa_key(usbdev, ext->key, ext->key_len, keyidx,
-+				(u8 *)&ext->addr.sa_data, ext->rx_seq, cipher,
-+				flags);
- }
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 61739ab..275bc15 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -192,7 +192,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
+ 		return TX_CONTINUE;
  
- 
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
++	if (unlikely(test_bit(SCAN_OFF_CHANNEL, &tx->local->scanning)) &&
+ 	    !ieee80211_is_probe_req(hdr->frame_control) &&
+ 	    !ieee80211_is_nullfunc(hdr->frame_control))
+ 		/*
 
