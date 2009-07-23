@@ -1,51 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:41672 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752505AbZG3KFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 06:05:30 -0400
-Subject: Re: [wireless] rt2870sta BUGs on shutdown,
- 2.6.30.2->git.today+git.wireless.today
-From: Mike Galbraith <efault@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1248947740.8925.12.camel@johannes.local>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-	 <1248947740.8925.12.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 12:05:26 +0200
-Message-Id: <1248948326.8823.4.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:49956 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751288AbZGWAG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jul 2009 20:06:59 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: davem@davemloft.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH V2] imwc3200: move iwmc3200 SDIO ids to sdio_ids.h
+Date: Thu, 23 Jul 2009 03:06:56 +0300
+Message-Id: <1248307616-30631-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 11:55 +0200, Johannes Berg wrote:
-> On Thu, 2009-07-30 at 11:44 +0200, Mike Galbraith wrote:
-> > On Thu, 2009-07-30 at 11:29 +0200, Johannes Berg wrote:
-> > > On Thu, 2009-07-30 at 11:22 +0200, Mike Galbraith wrote:
-> > > 
-> > > > drivers/staging/rt2870/../rt2860/sta_ioctl.c
-> > > 
-> > > Sorry, but that '/staging/' thing in there means we cannot support this.
-> > > If you must, take your query to the staging list,
-> > > devel@driverdev.osuosl.org (according to MAINTAINERS).
-> > 
-> > Forwarded, thanks.
-> > 
-> > ....hm.  Does "If you must" mean reports aren't welcome?
-> 
-> To be honest, I don't know. I'd rather see people use the rt2x00 code
-> instead of spending time cleaning up that mess (the code you've pasted
-> was pretty bad!). But you may or may not find somebody who cares about
-> that, just rather unlikely on this list.
+1. add intel's sdio vendor id to sdio_ids.h
+2. move iwmc3200 sdio devices' ids to sdio_ids.h
 
-Understood (and yeah, the source is.. not pretty).  Sorry for the noise.
+Cc:inaky.perez-gonzalez@intel.com
+Cc:cindy.h.kao@intel.com
+Cc:yi.zhu@intel.com
+Cc:drzeus-list@drzeus.cx
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+V2:
+1.Fixed indentation and typos
+2.Added also GPS
+ drivers/net/wimax/i2400m/sdio.c          |   12 +++++-------
+ drivers/net/wireless/iwmc3200wifi/sdio.c |    4 +++-
+ drivers/net/wireless/iwmc3200wifi/sdio.h |    3 ---
+ include/linux/mmc/sdio_ids.h             |    6 ++++++
+ 4 files changed, 14 insertions(+), 11 deletions(-)
 
-WRT rt2x00 with this adapter, I tried it, was a nogo.  If I find time,
-I'll reconfigure/report.
+diff --git a/drivers/net/wimax/i2400m/sdio.c b/drivers/net/wimax/i2400m/sdio.c
+index 2538825..ea7b290 100644
+--- a/drivers/net/wimax/i2400m/sdio.c
++++ b/drivers/net/wimax/i2400m/sdio.c
+@@ -58,6 +58,7 @@
+  */
+ 
+ #include <linux/debugfs.h>
++#include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sdio_func.h>
+ #include "i2400m-sdio.h"
+@@ -501,15 +502,12 @@ void i2400ms_remove(struct sdio_func *func)
+ 	d_fnend(3, dev, "SDIO func %p\n", func);
+ }
+ 
+-enum {
+-	I2400MS_INTEL_VID = 0x89,
+-};
+-
+ static
+ const struct sdio_device_id i2400ms_sdio_ids[] = {
+-	/* Intel: i2400m WiMAX over SDIO */
+-	{ SDIO_DEVICE(I2400MS_INTEL_VID, 0x1402) },
+-	{ }, 			/* end: all zeroes */
++	/* Intel: i2400m WiMAX (iwmc3200) over SDIO */
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL,
++		      SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX) },
++	{ /* end: all zeroes */ },
+ };
+ MODULE_DEVICE_TABLE(sdio, i2400ms_sdio_ids);
+ 
+diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.c b/drivers/net/wireless/iwmc3200wifi/sdio.c
+index b93f620..8b1de84 100644
+--- a/drivers/net/wireless/iwmc3200wifi/sdio.c
++++ b/drivers/net/wireless/iwmc3200wifi/sdio.c
+@@ -65,6 +65,7 @@
+ #include <linux/kernel.h>
+ #include <linux/netdevice.h>
+ #include <linux/debugfs.h>
++#include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sdio_func.h>
+ 
+@@ -492,7 +493,8 @@ static void iwm_sdio_remove(struct sdio_func *func)
+ }
+ 
+ static const struct sdio_device_id iwm_sdio_ids[] = {
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL, SDIO_DEVICE_ID_IWM) },
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_INTEL,
++		      SDIO_DEVICE_ID_INTEL_IWMC3200WIFI) },
+ 	{ /* end: all zeroes */	},
+ };
+ MODULE_DEVICE_TABLE(sdio, iwm_sdio_ids);
+diff --git a/drivers/net/wireless/iwmc3200wifi/sdio.h b/drivers/net/wireless/iwmc3200wifi/sdio.h
+index b3c156b..aab6b68 100644
+--- a/drivers/net/wireless/iwmc3200wifi/sdio.h
++++ b/drivers/net/wireless/iwmc3200wifi/sdio.h
+@@ -39,9 +39,6 @@
+ #ifndef __IWM_SDIO_H__
+ #define __IWM_SDIO_H__
+ 
+-#define SDIO_VENDOR_ID_INTEL 0x89
+-#define SDIO_DEVICE_ID_IWM   0x1403
+-
+ #define IWM_SDIO_DATA_ADDR           0x0
+ #define IWM_SDIO_INTR_ENABLE_ADDR    0x14
+ #define IWM_SDIO_INTR_STATUS_ADDR    0x13
+diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+index 39751c8..2dbfb5a 100644
+--- a/include/linux/mmc/sdio_ids.h
++++ b/include/linux/mmc/sdio_ids.h
+@@ -22,6 +22,12 @@
+ /*
+  * Vendors and devices.  Sort key: vendor first, device next.
+  */
++#define SDIO_VENDOR_ID_INTEL			0x0089
++#define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
++#define SDIO_DEVICE_ID_INTEL_IWMC3200WIFI	0x1403
++#define SDIO_DEVICE_ID_INTEL_IWMC3200TOP	0x1404
++#define SDIO_DEVICE_ID_INTEL_IWMC3200GPS	0x1405
++#define SDIO_DEVICE_ID_INTEL_IWMC3200BT		0x1406
+ 
+ #define SDIO_VENDOR_ID_MARVELL			0x02df
+ #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
+-- 
+1.6.0.6
 
-	-Mike (outta here;)
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
