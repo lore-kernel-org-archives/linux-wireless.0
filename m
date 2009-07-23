@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36449 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754432AbZGNSLu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 14:11:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2009 11:11:50 -0700
-Date: Tue, 14 Jul 2009 11:11:48 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Steven Luo <steven@steven676.net>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Bennyam Malavazi <Bennyam.Malavazi@Atheros.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>,
-	"Vasanth@venema.h4ckr.net" <Vasanth@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix enabling OFDM weak signal
- detection
-Message-ID: <20090714181148.GE25788@mosca>
-References: <20090709211221.GA4854@steven676.net>
- <43e72e890907101102i29352c6bq9e511663e2c3a986@mail.gmail.com>
- <20090714180348.GD25788@mosca>
+Received: from qw-out-2122.google.com ([74.125.92.27]:58322 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbZGWRVm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 13:21:42 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so603691qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 10:21:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090714180348.GD25788@mosca>
+In-Reply-To: <200907231907.47751.rossi.f@inwind.it>
+References: <200907230051.57201.rossi.f@inwind.it> <43e72e890907221556r75256f76yde07109d2af78e28@mail.gmail.com>
+	<200907231907.47751.rossi.f@inwind.it>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 23 Jul 2009 10:21:21 -0700
+Message-ID: <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/tx.c:561
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 14, 2009 at 11:03:48AM -0700, Luis Rodriguez wrote:
-> On Fri, Jul 10, 2009 at 11:02:58AM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Jul 9, 2009 at 2:12 PM, Steven Luo<steven@steven676.net> wrote:
-> > > From: Steven Luo <steven@steven676.net>
-> > >
-> > > It seems that OFDM weak signal detection should be enabled after an ANI
-> > > state reset, as indicated by the initial setting of ofdmWeakSigDetectOff
-> > > and what the open Atheros HAL does.  Unfortunately, the reversed sense
-> > > of ofdmWeakSigDetectOff (true if weak signal detection is NOT enabled)
-> > > seems to have resulted in a mixup here, causing weak signal detection to
-> > > be disabled.
-> > >
-> > > This patch significantly improves reception and throughput from distant
-> > > stations for my AR5416-based AP running compat-wireless 2009-06-25.
-> > >
-> > > Signed-off-by: Steven Luo <steven@steven676.net>
-> > > Cc: stable@kernel.org
-> > > ---
-> >
-> > NACK for now, please give us a chance to review this -- this may
-> > actually be correct.
-> 
-> Please try this patch instead, I've only compile tested this.
+On Thu, Jul 23, 2009 at 10:07 AM, Fabio Rossi<rossi.f@inwind.it> wrote:
+> On Thursday 23 July 2009, Luis R. Rodriguez wrote:
+>
+>> On Wed, Jul 22, 2009 at 3:51 PM, Fabio Rossi<rossi.f@inwind.it> wrote:
+>> > I'm using the last wireless-testing.git and I have experienced the
+>> > following WARNING:
+>> >
+>> >  WARNING: at net/mac80211/tx.c:561 ieee80211_tx_h_rate_ctrl+0x3d1/0x470
+>> > [mac80211]()
+>>
+>> Please try a git pull
+>
+> I was already working with the latest release:
+>  v2.6.31-rc3-28452-g5bfcdb0
+> so I confirm that I get the warning quite often (every 15 seconds).
 
-Now without the double AP check :)
+What channel is your AP on?
+Is your AP 00:0c:f6:xx:xx:xx ?
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: Tune ANI function processing on AP mode during ANI reset
-
-For AP mode we must tune ANI specially for 2 GHz and
-for 5 GHz. We mask in only the flags we want to toggle
-on ath9k_hw_ani_control() through the ah->ani_function
-bitmask, this will take care of ignoring changes during
-ANI reset which we were disabling before.
-
-Reported-by: Steven Luo <steven@steven676.net>
-Cc: Bennyam Malavazi <Bennyam.Malavazi@Atheros.com
-Cc: Jouni Malinen <Jouni.Malinen@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -478,6 +478,18 @@ void ath9k_ani_reset(struct ath_hw *ah)
- 			"Reset ANI state opmode %u\n", ah->opmode);
- 		ah->stats.ast_ani_reset++;
- 
-+		if (ah->opmode == NL80211_IFTYPE_AP) {
-+			/*
-+			 * ath9k_hw_ani_control() will only process items set on
-+			 * ah->ani_function
-+			 */
-+			if (IS_CHAN_2GHZ(chan))
-+				ah->ani_function = (ATH9K_ANI_SPUR_IMMUNITY_LEVEL |
-+						    ATH9K_ANI_FIRSTEP_LEVEL);
-+			else
-+				ah->ani_function = 0;
-+		}
-+
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_NOISE_IMMUNITY_LEVEL, 0);
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_SPUR_IMMUNITY_LEVEL, 0);
- 		ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL, 0);
--- 
-1.6.3.3
-
+  Luis
