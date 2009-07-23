@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:2959 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779AbZG0Pes (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 11:34:48 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Pavel Roskin <proski@gnu.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248683249.19945.29.camel@johannes.local>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
-	 <1248683249.19945.29.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 27 Jul 2009 11:34:46 -0400
-Message-Id: <1248708886.2688.4.camel@mj>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59130 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063AbZGWSOU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 14:14:20 -0400
+Subject: Re: rfkill blocking is sticky on virtual instances
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: tim.gardner@canonical.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248372692.28545.127.camel@violet>
+References: <4A687AAB.8070306@canonical.com>
+	 <4A68982E.2070101@canonical.com>  <1248372692.28545.127.camel@violet>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-aHcjddFlaDDMiOq4rhJ7"
+Date: Thu, 23 Jul 2009 20:13:49 +0200
+Message-Id: <1248372829.1218.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-27 at 10:27 +0200, Johannes Berg wrote:
-> Thanks Pavel,
-> 
-> > >  		while (!skb_queue_empty(&local->pending[i])) {
-> > >  			struct sk_buff *skb = __skb_dequeue(&local->pending[i]);
-> > > +			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> > > +			struct ieee80211_sub_if_data *sdata;
-> > > +
-> > > +			sdata = vif_to_sdata(info->control.vif);
-> > > +			dev_hold(sdata->dev);
-> > 
-> > I'm getting a panic at this point if I run hostapd on ath9k and a
-> > Windows client tries to authenticate with a wrong WPA key.
-> > 
-> > Debugging shows that sdata->dev is NULL.
-> 
-> I suspect 'sdata' is already pointing to something bogus, since it's the
-> result of a container_of().
-> 
-> Can you try with the sanity checking patch I'm about to send?
 
-If you mean "verify info->control.vif is not NULL", it makes no
-difference for me.  No BUG is triggered.  info->control.vif is never
-NULL in ieee80211_tx_pending(), but sdata->dev is NULL the second time
-ieee80211_tx_pending() is called.  Just skipping that case doesn't help,
-I still get a panic in that function after about 10 calls.
+--=-aHcjddFlaDDMiOq4rhJ7
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Regards,
-Pavel Roskin
+On Thu, 2009-07-23 at 20:11 +0200, Marcel Holtmann wrote:
+
+> > Tim Gardner (3):
+> >       Added a utility function to acquire a list of events.
+> >       Added rfkill_block_all()
+> >       Added support for block/unblock wireless types.
+>=20
+> do you mind sending the actual patches. I like to review them.
+
+I already merged them, reverted the first, and made it use the
+CHANGE_ALL functionality.
+
+johannes
+
+--=-aHcjddFlaDDMiOq4rhJ7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaKhaAAoJEODzc/N7+QmaHg8P/2a18N3o2is1+64476sYtiqb
+Jf3zo4fOp2rSDoLwXr9C20qoIzTdDRJK4qTRC0zV9U4oIEeES0d+/1JjQ8xvUEzy
+3yWAg/7O8Zorvs1n57FLsxbhIPTDlzH7nLrFPWtu9sqUyiJLreeJdBGAdE5nI0ie
+Tb8yowPKHRd1pf4As5n5u1OS2/sk6y76MsMzeq7xWCltI5q5b116mCazW6ZDRFOW
+c2whsEG5F2XquKWdeEHAzxcv9SYQRH7RMtR8LFuCmGJ1qgQ5QCGKCQnlXn87QTL1
+CaR/D+IumY0ImeTbs+HFmsh85LmpVfe2PYePGes2gS8t2a2kHc7znpnSwddG1u30
+Lw7kobI3kpSUdkyJk2IZdvkv73ZRGshFgvgX3z7/KwGL52y4Iq+xjyywNIarcawL
+QxKbwtzLElbmHJ/HXIm2p26FpL1L9yufQY1NxEmd+F8V+lP5F8OJFR4kvqehbZ7B
+k2xOrT2LAM/uT3wZR1pB0TJPTaoPd8LcKzKKBVtj8jPS8ITb3Nb4M54OhHq6+pLl
+8eXtTOvzFLAUg0UZTOdkDo45RAGSptUB+tKV9zrLaV9eflDkvEpGiOGUzV7Z52tp
+Xui8Gq24ygofX4RFlJTJBl9OyJ6UwWoZrOXw3urNA2Rgp+IDuufVebqA8qRH/VvV
+llfvRT6s2cVByR8nW8WK
+=yS6u
+-----END PGP SIGNATURE-----
+
+--=-aHcjddFlaDDMiOq4rhJ7--
+
