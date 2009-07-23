@@ -1,115 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:43169 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752551AbZGBM3R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2009 08:29:17 -0400
-Subject: Re: [PATCH hostap/wpa_supplicant] Allow wpa_supplicant to use
- libnl-2.0
-From: Dan Williams <dcbw@redhat.com>
-To: Jon Loeliger <jdl@bigfootnetworks.com>
-Cc: jouni.malinen@atheros.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246481949.11632.36.camel@jdl-desktop>
-References: <1246481949.11632.36.camel@jdl-desktop>
-Content-Type: text/plain
-Date: Thu, 02 Jul 2009 08:29:15 -0400
-Message-Id: <1246537755.16543.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:38290 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754231AbZGWS5Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 14:57:25 -0400
+Date: Thu, 23 Jul 2009 15:57:20 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Subject: Re: Generic events for wake up from S1-S4
+Message-ID: <20090723185720.GB19369@khazad-dum.debian.net>
+References: <43e72e890907141511h70a0a987g57cb26e23e5824a9@mail.gmail.com>
+ <20090714235332.GA1552@ucw.cz>
+ <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+ <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com>
+ <20090718103756.GA11381@elf.ucw.cz>
+ <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com>
+ <20090718235609.GC25343@khazad-dum.debian.net>
+ <20090723145757.GB28158@elf.ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090723145757.GB28158@elf.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-01 at 15:59 -0500, Jon Loeliger wrote:
-> Introduce CONFIG_LIBNL20 .config parameter and propogate
-> that as a CFLAG in the Makefile.
+On Thu, 23 Jul 2009, Pavel Machek wrote:
+> On Sat 2009-07-18 20:56:10, Henrique de Moraes Holschuh wrote:
+> > On Sat, 18 Jul 2009, Luis R. Rodriguez wrote:
+> > > Hm yeah, but I doubt someone will do that, generally we'd get one wake
+> > > up event. Can't we just report the first one and ignore the rest?
+> > 
+> > Well, I'd say keeping it simple is best, here.  What if you ignore the more
+> > interesting wakeup events by chance (and it is really up to userspace to
+> > know what it considers interesting...)?  IMHO, just issue as many
+> > notifications as needed, let userspace filter it if it wants.
+> > 
+> > But if you guys are talking about something really generic, shouldn't it
+> > also provide the important "why" along with the "who"?
+> > 
+> > Even for the most common cases, the "why" is useful: userspace may well want
+> > to run special routines when it wakes up because of WoL and WoW (instead of
+> > a key press, lid open or mouse movement...).
 > 
-> Add forward-compatibility code to allow the existing code
-> to also use libnl-2.0.
-> 
-> Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+> What special routines?
 
-You might actually want to post this to the hostap/wpa_supplicant
-mailing list instead.  While developers involved in both projects are
-subscribed to both lists, linux-wireless isn't the right place for
-patches against hostap and wpa_supplicant.
+Starting a remote maintenance shell is a common usage scenario on corporate
+environments.
 
-http://lists.shmoo.com/mailman/listinfo/hostap
+Besides, it is a generic wakeup notification we're talking about, isn't it?
+I have some that have nothing to do with WoW or WoL:
 
-Dan
+1. Thermal alarm
+2. Battery alarm
+3. Hotunplug request (bay/dock): umount stuff, cleanly undock, then go back
+to sleep (optional)
 
-> ---
-> 
-> This patch applies to:
->     git://w1.fi/srv/git/hostap-06.git
->     fa4e296f542af01da135d997358d6d45a32dd59e
-> 
-> Also, I suspect that this define:
-> 
->     +#define nl_handle nl_sock
-> 
-> may need to be added to the hostapd side as well, but
-> I'm not using that and haven't investigated or tested that.
-> 
-> jdl
-> 
-> 
->  src/drivers/driver_nl80211.c |   17 +++++++++++++++++
->  wpa_supplicant/Makefile      |    4 ++++
->  2 files changed, 21 insertions(+), 0 deletions(-)
-> 
-> diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-> index a7b351a..66288f6 100644
-> --- a/src/drivers/driver_nl80211.c
-> +++ b/src/drivers/driver_nl80211.c
-> @@ -47,6 +47,15 @@
->  #endif
->  
-> 
-> +#ifdef CONFIG_LIBNL20
-> +/* libnl 2.0 compatibility code */
-> +
-> +#define nl_handle nl_sock
-> +#define nl_handle_alloc_cb nl_socket_alloc_cb
-> +#define nl_handle_destroy nl_socket_free
-> +#endif /* CONFIG_LIBNL20 */
-> +
-> +
->  struct wpa_driver_nl80211_data {
->  	void *ctx;
->  	int wext_event_sock;
-> @@ -1441,12 +1450,20 @@ static void * wpa_driver_nl80211_init(void *ctx, const char *ifname)
->  		goto err3;
->  	}
->  
-> +#ifdef CONFIG_LIBNL20
-> +	if (genl_ctrl_alloc_cache(drv->nl_handle, &drv->nl_cache) < 0) {
-> +	    wpa_printf(MSG_ERROR, "nl80211: Failed to allocate generic "
-> +			   "netlink cache");
-> +		goto err3;
-> +	}
-> +#else
->  	drv->nl_cache = genl_ctrl_alloc_cache(drv->nl_handle);
->  	if (drv->nl_cache == NULL) {
->  		wpa_printf(MSG_ERROR, "nl80211: Failed to allocate generic "
->  			   "netlink cache");
->  		goto err3;
->  	}
-> +#endif
->  
->  	drv->nl80211 = genl_ctrl_search_by_name(drv->nl_cache, "nl80211");
->  	if (drv->nl80211 == NULL) {
-> diff --git a/wpa_supplicant/Makefile b/wpa_supplicant/Makefile
-> index 45d6ada..fa43a0c 100644
-> --- a/wpa_supplicant/Makefile
-> +++ b/wpa_supplicant/Makefile
-> @@ -135,6 +135,10 @@ ifdef CONFIG_DRIVER_NL80211
->  CFLAGS += -DCONFIG_DRIVER_NL80211
->  OBJS_d += ../src/drivers/driver_nl80211.o
->  LIBS += -lnl
-> +ifdef CONFIG_LIBNL20
-> +LIBS += -lnl-genl
-> +CFLAGS += -DCONFIG_LIBNL20
-> +endif
->  ifdef CONFIG_CLIENT_MLME
->  OBJS_d += ../src/drivers/radiotap.o
->  endif
+I already support them in thinkpad-acpi, but all I can do is issue a printk
+and set some crap values in sysfs for userspace to query right now (I didn't
+want to create yet another non-generic event interface).
 
+> Note that the "why" is unreliable by design. Network driver will
+> ignore WoL during run-time, right?
+
+"Why" is unrealible?  I don't follow your reasoning.  It should be as
+reliable as "who"...
+
+If the WoW/WoL device doesn't know why it woke up the system, it uses the
+generic reason for network devices (I don't even know if a network device
+has more than one reason for wakeup).  If a different device wakes the
+system, it might know why and provide that reason.  And if it doesn't know
+it woke up the system, it sends no notification at all.
+
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
