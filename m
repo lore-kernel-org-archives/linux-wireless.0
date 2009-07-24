@@ -1,157 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35453 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217AbZGaVUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 17:20:05 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: gregor kowski <gregor.kowski@gmail.com>
-Subject: Re: [RESEND] [PATCHv3] b43 add harware tkip
-Date: Fri, 31 Jul 2009 23:20:00 +0200
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com> <83a869cd0907311400g2e94f217g3f4aefc64681e0b5@mail.gmail.com>
-In-Reply-To: <83a869cd0907311400g2e94f217g3f4aefc64681e0b5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907312320.02171.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:48872 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216AbZGXQYh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 12:24:37 -0400
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <wfmy6u6opl.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers>
+	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
+	 <1247775641.6841.16.camel@mj> <wfzlau7co1.fsf@calligramme.charmers>
+	 <1248449030.21715.23.camel@mj> <1248449371.32151.23.camel@johannes.local>
+	 <1248450733.21715.26.camel@mj> <1248451197.32151.26.camel@johannes.local>
+	 <1248451440.21715.27.camel@mj> <1248451757.32151.27.camel@johannes.local>
+	 <wfmy6u6opl.fsf@calligramme.charmers>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7bJ5VaLvpiRGANVGAFeD"
+Date: Fri, 24 Jul 2009 18:24:35 +0200
+Message-Id: <1248452675.32151.31.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 31 July 2009 23:00:01 gregor kowski wrote:
-> Update v3 : add a module parameter to enable hw tkip, Coding style
-> fix, locking fix
-> Update v2 : work with qos, implement dump key, fix an issue with setting
-> random value on tkip key clear.
-> PS : this depends on "b43 : remove old kidx API" and "remove wrong
-> probe_resp_plcp write"
-> 
-> This add hardware tkip for b43.
-> 
-> Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-> 
-> Index: linux-2.6/drivers/net/wireless/b43/dma.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/net/wireless/b43/dma.c	2009-07-31
-> 20:51:10.000000000 +0000
-> +++ linux-2.6/drivers/net/wireless/b43/dma.c	2009-07-31 20:54:06.000000000 +0000
-> @@ -1188,7 +1188,7 @@
->  	header = &(ring->txhdr_cache[(slot / TX_SLOTS_PER_FRAME) * hdrsize]);
->  	cookie = generate_cookie(ring, slot);
->  	err = b43_generate_txhdr(ring->dev, header,
-> -				 skb->data, skb->len, info, cookie);
-> +				 skb, info, cookie);
->  	if (unlikely(err)) {
->  		ring->current_slot = old_top_slot;
->  		ring->used_slots = old_used_slots;
-> Index: linux-2.6/drivers/net/wireless/b43/main.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/net/wireless/b43/main.c	2009-07-31
-> 20:51:10.000000000 +0000
-> +++ linux-2.6/drivers/net/wireless/b43/main.c	2009-07-31
-> 20:56:10.000000000 +0000
-> @@ -80,6 +80,10 @@
->  module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
->  MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-> 
-> +static int modparam_hwtkip;
-> +module_param_named(hwtkip, modparam_hwtkip, int, 0444);
-> +MODULE_PARM_DESC(hwtkip, "Enable hardware tkip.");
-> +
->  static int modparam_qos = 1;
->  module_param_named(qos, modparam_qos, int, 0444);
->  MODULE_PARM_DESC(qos, "Enable QOS support (default on)");
-> @@ -836,6 +840,76 @@
->  	}
->  }
-> 
-> +/* The ucode will use phase1 key with TEK key to decrypt rx packets.
-> + * When a packet is received, the iv32 is checked.
-> + * - if it doesn't the packet is returned without modification (and software
-> + *   decryption can be done). That's what happen when iv16 wrap.
-> + * - if it does, the rc4 key is computed, and decryption is tried.
-> + *   Either it will success and B43_RX_MAC_DEC is returned,
-> + *   either it fails and B43_RX_MAC_DEC|B43_RX_MAC_DECERR is returned
-> + *   and the packet is not usable (it got modified by the ucode).
-> + * So in order to never have B43_RX_MAC_DECERR, we should provide
-> + * a iv32 and phase1key that match. Because we drop packets in case of
-> + * B43_RX_MAC_DECERR, if we have a correct iv32 but a wrong phase1key, all
-> + * packets will be lost without higher layer knowing (ie no resync possible
-> + * until next wrap).
-> + *
-> + * NOTE : this should support 50 key like RCMTA because
-> + * (B43_SHM_SH_KEYIDXBLOCK - B43_SHM_SH_TKIPTSCTTAK)/14 = 50
-> + */
-> +static void rx_tkip_phase1_write(struct b43_wldev *dev, u8 index, u32 iv32,
-> +		u16 *phase1key)
-> +{
-> +	unsigned int i;
-> +	u32 offset;
-> +	const u8 per_sta_keys_start = 4;
 
-Can we add an empty line here before the code begins?
+--=-7bJ5VaLvpiRGANVGAFeD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> +	if (!modparam_hwtkip)
-> +		return;
-> +
-> +	B43_WARN_ON(index < per_sta_keys_start);
-> +	/* We have four default TX/ RX keys.
-> +	 * Physical mac 0 is mapped to physical key 4.
-> +	 * So we must adjust the index here.
-> +	 */
-> +	index -= per_sta_keys_start;
-> +
-> +	if (b43_debug(dev, B43_DBG_KEYS)) {
-> +		b43dbg(dev->wl, "rx_tkip_phase1_write : idx 0x%x, iv32 0x%x\n",
-> +				index, iv32);
-> +	}
-> +	/* Write the key to the  RX tkip shared mem */
-> +	offset = B43_SHM_SH_TKIPTSCTTAK + index * (10 + 4);
-> +	for (i = 0; i < 10; i += 2) {
-> +		b43_shm_write16(dev, B43_SHM_SHARED, offset + i,
-> +				phase1key ? phase1key[i / 2] : 0);
-> +	}
-> +	b43_shm_write16(dev, B43_SHM_SHARED, offset + i, iv32);
-> +	b43_shm_write16(dev, B43_SHM_SHARED, offset + i + 2, iv32 >> 16);
-> +}
-> +
-> +static void b43_op_update_tkip_key(struct ieee80211_hw *hw,
-> +			struct ieee80211_key_conf *keyconf, const u8 *addr,
-> +			u32 iv32, u16 *phase1key)
-> +{
-> +	struct b43_wl *wl = hw_to_b43_wl(hw);
-> +	struct b43_wldev *dev;
-> +	int index = keyconf->hw_key_idx;
-> +
+On Fri, 2009-07-24 at 17:16 +0100, Jon Fairbairn wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> > I also added a short overview over the form factors on the page:
+> > http://wireless.kernel.org/en/users/Devices/PCI.
+>=20
+> That's really good!
 
-I'd add
+And quick too, thanks Pavel!
 
-	if (B43_WARN_ON(!modparam_hwtkip))
-		return;
+> (In the "asking for the moon on a stick" department, it would be handy
+> to have a table somewhere with "supported features" and "form factor"
+> dropdowns, so that I could have selected "AP" and "PCIe" and get the
+> card I now have ;-)
 
-here, because it's a cheap way to detect possible mac80211 bugs.
-Mac80211 should not ever call this function, if we reject all tkip keys. But if
-it does (due to a bug), this cheap check will prevent keymac trashing and keep the
-device working.
+I wondered about that, but the list really gets too wide, and it's
+really a driver rather than device property whether it supports AP or
+not.
 
-> +	mutex_lock(&wl->mutex);
-> +
-> +	dev = wl->current_dev;
-> +	if (!dev || b43_status(dev) < B43_STAT_INITIALIZED)
-> +		goto out_unlock;
-> +
-> +	keymac_write(dev, index, NULL);	/* First zero out mac to avoid race */
-> +
-> +	rx_tkip_phase1_write(dev, index, iv32, phase1key);
-> +	keymac_write(dev, index, addr);
-> +
-> +out_unlock:
-> +	mutex_unlock(&wl->mutex);
-> +}
-> +
+Then of course, there's also band/11n streams/... information that you
+might want.
 
+I'm starting to think we should remove all the numbers (pci vendor,
+product, subvendor, subsystem) in favour of more interesting information
+like that.
 
-The rest of the patch looks very good.
+However, as far as AP is concerned, how about we just add a little help
+text that explains that you should look on the Drivers page to see
+whether it supports what you need, and then select by driver? We could
+make the driver table better to allow filtering.
 
+johannes
 
--- 
-Greetings, Michael.
+--=-7bJ5VaLvpiRGANVGAFeD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKaeBAAAoJEODzc/N7+QmahJwP/iEfzTs7ffLzoCOeMOcFlTRZ
+gK84I6m7tBcHqy9PvqPURGhgzGmcIQQtR/yFLdVRn3iGS62zbDfSIF0WBKPpHTQ3
+A0BfqQVvN4eavahAigMDkI1ffqOhhl3qdv460cYhubV7JlbBc3mNn+BPLy0emFTr
+Qgv2PQmE3RWn1zvnit1jP7DSrlvpgbWV5/MxxiCmapnzeei0jnfO5rJhmLlzpnbb
+ElP98EcDy4NPUL9jEt66ve2Fhla47E5bPxp4nw+UIwpjUe/P3VMQ1GIRMr+oYJkW
+18WiqVqBWOP7JkTD3F7J+uBEyKX8wZtYlk4X5CoAv8ikSx98fTptCCNL+Qz4Swad
+DQXwfFrTTVK0w9mk5EA9fxhEWnVRdn8ZAvECUMU0oSqlBluYr4p4r+wl5hxN0HW3
+uXI+0TmHVsqW2NNHP2K7OA3n9Bwp8K7hJfPbTIA5Bu32Ulx71UGdEYtk//KFwGpJ
+NpxCpoVafDwc374bxzP0q4LxBy5kNbobd++4p6hZmEw3/pSxwC8uK32zklIlYmGB
+bdC3H9VAIMceVtm/0M3Gix24i7PpUy+C8F7exf1VlFFACUpQxRQXRGgSDcE6U5hb
+ymc2U71Z+0NH1lOEpUswExIjhtHTTpS+U77+DXLyH33oRBP9ZXe43EK6kbXw7O3/
+lp3h+aglz9oSWtaUfbej
+=kLuv
+-----END PGP SIGNATURE-----
+
+--=-7bJ5VaLvpiRGANVGAFeD--
+
