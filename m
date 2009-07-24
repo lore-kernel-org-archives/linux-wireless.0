@@ -1,57 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:60556 "EHLO mx2.redhat.com"
+Received: from promwad.com ([83.149.69.23]:59785 "EHLO promwad.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756769AbZGMUvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:51:53 -0400
-Subject: Re: nl80211 and wext interoperability
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1247512484.30003.0.camel@johannes.local>
-References: <1247139797.2144.27.camel@johannes.local>
-	 <43e72e890907091053s59ed356er22c59944efec9a01@mail.gmail.com>
-	 <1247163342.22527.2.camel@johannes.local>
-	 <1247507618.4369.11.camel@localhost.localdomain>
-	 <1247507677.4166.27.camel@johannes.local>
-	 <1247512206.4369.67.camel@localhost.localdomain>
-	 <1247512484.30003.0.camel@johannes.local>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 16:52:05 -0400
-Message-Id: <1247518325.4369.132.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1752618AbZGXQku (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 12:40:50 -0400
+Message-ID: <4A69E3F3.60403@promwad.com>
+Date: Fri, 24 Jul 2009 19:40:19 +0300
+From: Ivan Kuten <ivan.kuten@promwad.com>
+Reply-To: ivan.kuten@promwad.com
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: WPA2, compat-wireless-2.6.31-rc3, kernel 2.6.28 - rtl8187 -
+ association works but no ping
+References: <4A682BBD.90101@promwad.com>	<43e72e890907230917w226c4697v41f907623e5f7d8@mail.gmail.com> 	<4A696D33.8050606@promwad.com>	<43e72e890907240824n5bcff378m1278eb948055a9a5@mail.gmail.com> 	<4A69D8C6.9040103@promwad.com> <43e72e890907240923h41408c99qfe48e4224149cb2d@mail.gmail.com>
+In-Reply-To: <43e72e890907240923h41408c99qfe48e4224149cb2d@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-13 at 21:14 +0200, Johannes Berg wrote:
-> On Mon, 2009-07-13 at 15:10 -0400, Dan Williams wrote:
-> > On Mon, 2009-07-13 at 19:54 +0200, Johannes Berg wrote:
-> > > On Mon, 2009-07-13 at 13:53 -0400, Dan Williams wrote:
-> > > 
-> > > > Mainly because there's no way to tell WEXT drivers to "stop whatever
-> > > > you're doing and just be idle"...
-> > > > 
-> > > > The supplicant clears out the keys on TERM anyway, and in some cases
-> > > > (iwlagn) the driver will keep trying to reassociate internally
-> > > 
-> > > Seems unlikely, ITYM ipw?
-> > 
-> > Nope.  I saw this behavior with iwlagn (both 3945 and 4965) when I was
-> > doing all that hidden stuff back in April with 2.6.27 kernels.  Might be
-> > different in very recent kernels?
+> On Fri, Jul 24, 2009 at 8:52 AM, Ivan Kuten<ivan.kuten@promwad.com> wrote:
+>> No Network Manager.
+>> Just:
+>> wpa_supplicant -Dwext -iwlan0 -c /home/ACORP.conf -dd &
+>> /sbin/udhcpc -n -q -i wlan0 -s /bin/default.script
 > 
-> That doesn't sound right, to the best of my knowledge the _driver_ has
-> no chance to try to associate, and mac80211 didn't.
+> How did you get the eth0 IP? ps -ef?
+> 
+>   Luis
+> 
+> 
+> 
 
-For some reason it did.  I can't figure out why it would keep doing so,
-but the supplicant was dead, and the driver would try to reassociate
-every time the AP kicked it off wtih "AP denied association (code=13)"
-becuase the supplicant already cleared the keys and IEs but not the
-SSID.
+in rc script it's ifconfig eth0 192.168.5.1
+it's the same behaviour without eth0. I'm using eth0 for netconsole because
+a lot of debug printks over slow UART bring kernel to crash.
 
-All because we can't tell WEXT to just stop doing anything and sit
-there.
+I can't neither dhcp nor ping via wlan0. but association is ok.
 
-Dan
+It is a Blackfin board with busybox, not a desktop PC with NetworkManager stuff.
 
+here is ps - nothing special:
+  PID  Uid        VSZ Stat Command
+    1 root        588 S   /init
+    2 root            SW< [kthreadd]
+    3 root            SW< [ksoftirqd/0]
+    4 root            SW< [events/0]
+    5 root            SW< [khelper]
+   60 root            SW< [kblockd/0]
+   74 root            SW< [khubd]
+   93 root            SW  [pdflush]
+   94 root            SW  [pdflush]
+   95 root            SW< [kswapd0]
+  101 root            SW< [mediabox2fb]
+  162 root            SW< [mtdblockd]
+  164 root            SW< [bfin-spi.0]
+  179 root            SW< [uwbd]
+  184 root            SW< [wusbd]
+  209 root            SWN [jffs2_gcd_mtd2]
+  214 root        864 R   -/bin/sh
+  215 root        496 S   /bin/watchdogd -f -s
+  217 root        764 S   /sbin/syslogd -n
+  220 root        772 S   /sbin/klogd -n
+  230 root            SW< [bf537_trackball]
+  234 root        500 S   netsettings_updater
+  236 root        504 S   /bin/Apek
+  241 root        512 S   /bin/keyhandler
+  283 root            SW< [phy0]
+  303 root       1776 S   wpa_supplicant -Dwext -iwlan0 -c /home/ACORP.conf -dd
+  334 root        768 R   ps -ef
+
+The question is how to verify is it kernel or wpa_supplicant bug or some timing issue.
+
+Regards,
+Ivan
 
