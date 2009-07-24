@@ -1,51 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38486 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171AbZGAVvz (ORCPT
+Received: from mail-qy0-f196.google.com ([209.85.221.196]:58771 "EHLO
+	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715AbZGXPYu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 17:51:55 -0400
-Subject: Re: Insist on cfg80211 for new drivers?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave <kilroyd@googlemail.com>,
-	Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20090701193657.GD3473@tuxdriver.com>
-References: <1246388712.4949.52.camel@localhost>
-	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
-	 <1246396179.4949.76.camel@localhost>
-	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-	 <1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
-	 <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
-	 <1246473300.30522.10.camel@localhost.localdomain>
-	 <20090701193657.GD3473@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 14:52:03 -0700
-Message-Id: <1246485123.12994.168.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Fri, 24 Jul 2009 11:24:50 -0400
+Received: by qyk34 with SMTP id 34so279698qyk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 08:24:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A696D33.8050606@promwad.com>
+References: <4A682BBD.90101@promwad.com> <43e72e890907230917w226c4697v41f907623e5f7d8@mail.gmail.com>
+	<4A696D33.8050606@promwad.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 24 Jul 2009 08:24:28 -0700
+Message-ID: <43e72e890907240824n5bcff378m1278eb948055a9a5@mail.gmail.com>
+Subject: Re: WPA2, compat-wireless-2.6.31-rc3, kernel 2.6.28 - rtl8187 -
+	association works but no ping
+To: ivan.kuten@promwad.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Jul 24, 2009 at 1:13 AM, Ivan Kuten<ivan.kuten@promwad.com> wrote:
+>> On Thu, Jul 23, 2009 at 2:22 AM, Ivan Kuten<ivan.kuten@promwad.com> wrote:
+>>> compat-wireless-2.6.31-rc3
+>>
+>> compat-wireless-2.6.31-rc4 is out, please try that.
+>>
+>>   Luis
+>>
+>
+> Here is what I get for compat-wireless-2.6.31-rc4:
+>
+>
+> <6>cfg80211: Using static regulatory domain info
+> <6>cfg80211: Regulatory domain: US
+> <6>     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> <6>     (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+> <6>     (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> <6>     (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> <6>     (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> <6>     (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+> <6>     (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+> <6>usb 1-1: new high speed USB device using isp1761 and address 2
+> <6>cfg80211: Calling CRDA for country: US
+> <6>usbcore: registered new interface driver rtl8187
+> <6>usb 1-1: configuration #1 chosen from 1 choice
+> <6>hub 1-1:1.0: USB hub found
+> <6>hub 1-1:1.0: 3 ports detected
+> <6>usb 1-1.1: new high speed USB device using isp1761 and address 3
+> <6>usb 1-1.1: configuration #1 chosen from 1 choice
+> <7>phy0: Selected rate control algorithm 'minstrel'
+> <6>phy0: hwaddr 00277080, RTL8187vB (default) V1 + rtl8225z2
+> <7>phy0: device now idle
+> <7>phy0: device no longer idle - scanning
+> <7>phy0: device now idle
+> <7>phy0: device no longer idle - in use
+> <7>wlan0: authenticate with AP 01a4b568
+> <7>wlan0: authenticated
+> <7>wlan0: associate with AP 01a4b568
+> <7>wlan0: RX AssocResp from 003e101a (capab=0x411 status=0 aid=2)
+> <7>wlan0: associated
+> <7>phy0: Allocated STA 002fbfc4
+> <7>phy0: Inserted STA 002fbfc4
+> <7>wlan0: switched to short slot time (BSSID=01a4b568)
 
-> > That's really all I
-> > care about, I don't want another WEXT-based driver accepted; I want all
-> > the new ones using cfg80211.
-> 
-> Now there is a discussion we should have had in Berlin...is it time
-> to insist on cfg80211-based configuration for all new drivers?
+This looks peachy.
 
-there is really nothing much to discuss on this topic. The plan is to
-deprecate WEXT, that simple. So if the driver has no cfg80211 support,
-then it will not be included. Period.
+> iwconfig output:
+>
+> lo        no wireless extensions.
+>
+> eth0      no wireless extensions.
+>
+> wmaster0  no wireless extensions.
+>
+> wlan0     IEEE 802.11bg  ESSID:"ACORP"
+>          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:02:72:74:AC:85
+>          Bit Rate=1 Mb/s   Tx-Power=27 dBm
+>          Retry  long limit:7   RTS thr:off   Fragment thr:off
+>          Encryption key:2BAC-63B9-5D99-CF9A-4D39-079F-BB55-5D39 [2]
+>          Power Management:off
+>          Link Quality=61/70  Signal level=-49 dBm
+>          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+>
+>
+> ifconfig:
+>
+> eth0      Link encap:Ethernet  HWaddr 02:80:AD:20:31:EB
+>          inet addr:192.168.5.1  Bcast:192.168.5.255  Mask:255.255.255.0
+>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>          RX packets:40 errors:0 dropped:0 overruns:0 frame:0
+>          TX packets:188 errors:0 dropped:0 overruns:0 carrier:0
+>          collisions:0 txqueuelen:1000
+>          RX bytes:4077 (3.9 KiB)  TX bytes:17012 (16.6 KiB)
 
-Send such drivers off to staging and let them have their 6 month. Then
-we either remove them again or they got ported to cfg80211.
+Note an IP address on eth0, most likely you have a default route using
+eht0 as well. Check with 'ip route'.
 
-Regards
+> wlan0     Link encap:Ethernet  HWaddr 00:12:0E:98:67:FC
+>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>          RX packets:2 errors:0 dropped:0 overruns:0 frame:0
+>          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+>          collisions:0 txqueuelen:1000
+>          RX bytes:304 (304.0 B)  TX bytes:3932 (3.8 KiB)
+>
+> wmaster0  Link encap:UNSPEC  HWaddr 00-12-0E-98-67-FC-00-00-00-00-00-00-00-00-00-00
+>          UP RUNNING  MTU:0  Metric:1
+>          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>          collisions:0 txqueuelen:1000
+>          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>
+> Neither dhcp nor setting static IP for wlan0 - no ping.
 
-Marcel
+Do you have Network Manager on? Please read:
 
+http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
 
+Specifically the section that describes getting 'iw event -t' log and
+Network Manager.
+
+  Luis
