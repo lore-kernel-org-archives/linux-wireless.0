@@ -1,76 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8644 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:54313 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752187AbZG0I3C convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 04:29:02 -0400
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-To: "Zhu, Yi" <yi.zhu@intel.com>, Roel Kluin <roel.kluin@gmail.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-Date: Mon, 27 Jul 2009 11:28:56 +0300
-Subject: RE: [PATCH] iwlwifi: Read outside array bounds
-Message-ID: <6F5C1D715B2DA5498A628E6B9C124F040141D0B0DC@hasmsx504.ger.corp.intel.com>
-References: <4A6B7A67.9070906@gmail.com> <1248658905.3747.97.camel@debian>
-In-Reply-To: <1248658905.3747.97.camel@debian>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1751032AbZGXAxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jul 2009 20:53:20 -0400
+Subject: Re: Generic events for wake up from S1-S4
+From: ykzhao <yakui.zhao@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	Pavel Machek <pavel@ucw.cz>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>
+In-Reply-To: <200907232328.03566.rjw@sisk.pl>
+References: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+	 <20090723195114.GR28158@elf.ucw.cz>
+	 <20090723201050.GD19369@khazad-dum.debian.net>
+	 <200907232328.03566.rjw@sisk.pl>
+Content-Type: text/plain
+Date: Fri, 24 Jul 2009 08:53:46 +0800
+Message-Id: <1248396826.3556.26.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Zhu, Yi
-> Sent: Monday, July 27, 2009 4:42 AM
-> To: Roel Kluin; Winkler, Tomas; Chatre, Reinette
-> Cc: linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net;
-> Andrew Morton
-> Subject: Re: [PATCH] iwlwifi: Read outside array bounds
+On Fri, 2009-07-24 at 05:27 +0800, Rafael J. Wysocki wrote:
+> On Thursday 23 July 2009, Henrique de Moraes Holschuh wrote:
+> > On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > On Thu 2009-07-23 16:45:22, Henrique de Moraes Holschuh wrote:
+> > > > On Thu, 23 Jul 2009, Pavel Machek wrote:
+> > > > > > > Note that the "why" is unreliable by design. Network driver will
+> > > > > > > ignore WoL during run-time, right?
+> > > > > > 
+> > > > > > "Why" is unrealible?  I don't follow your reasoning.  It should be as
+> > > > > > reliable as "who"...
+> > > > > 
+> > > > > See above. The wakeup events race with each other.
+> > > > 
+> > > > We deliver them all.  It is that simple.  The rest is up to userspace.
+> > > 
+> > > Ok, but then we should not be talking about wake up events,
+> > > but... events.
+> > > 
+> > > Like "lid opened", "wake packet came", ... . And deliver them even
+> > > when they happen during run-time. That's okay with me.
+> > 
+> > Well, we *already* deliver "lid opened" when the lid is opened, regardless
+> > of it waking up the computer or not.  But we are missing a way to deliver
+> > other classes of wakeup events.
+> > 
+> > I know of at least these (incomplete list):
+> > 
+> > 1. network-initiated wakeup
+> >    a. wired
+> >    b. wireless
+> >    c. long-range wireless
+> > 
+> > 2. platform health/condition alarms
+> >    a. battery alarm (two levels, warning and emergency)
+> >    b. thermal alarm (two levels, warning and emergency)
+> >    (we need these as generic alarms, not just reason-for-wakeup)
+> > 
+> > 3. device (or device tree) hotplug/hotunplug
+> >    a. hotunplug request or notification
+> >       (we deliver the request/notification, but we don't know we should
+> >       go back to sleep, so all we are missing is the reason-for-wakeup
+> >       event)
+> > 
+> > 4. management
+> >    a. wake-up/power on clock
+> >    b. remote management command (IMPI, etc)
+> >    c. intrusion alarm
+> >    d. theft alarm
+> > 
+> > None of those have a standard interface to notify userspace of the reason of
+> > the wake up AFAIK.  Many of these want a generic event interface to be
+> > delivered not just as reason-for-wakeup, but also as runtime events.
+> > 
+> > And I guess we should also tell userspace what state we are waking up from
+> > (S5 clean state, S5/S4 hibernation, S3), sometimes it matters.
 > 
-> On Sun, 2009-07-26 at 05:34 +0800, Roel Kluin wrote:
-> > tid is bounded (above) by the size of default_tid_to_tx_fifo (17
-> elements), but
-> > the size of priv->stations[].tid[] is MAX_TID_COUNT (9) elements.
+> Agreed, and same for the above.
 > 
-> I think MAX_TID_COUNT should be defined as 16 or 17. Tomas?
->
+> So, what in your opinion would be the best way to expose this information?
+Maybe we should firstly define what event should be delivered to user
+space when it is resumed from S1--S4.
 
-In general it's 16. In practice we use only 8.
-Tomas
+And another issue who is in charge of sending the event? By the specific
+device or ACPI notification?
 
- 
-> Thanks,
-> -yi
+Thanks.
 > 
-> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > ---
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> > index 85ae7a6..e9441c6 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-> > @@ -1170,6 +1170,8 @@ int iwl_tx_agg_start(struct iwl_priv *priv,
-> const u8 *ra, u16 tid, u16 *ssn)
-> >  		IWL_ERR(priv, "Start AGG on invalid station
-> > ");
-> >  		return -ENXIO;
-> >  	}
-> > +	if (unlikely(tid >= MAX_TID_COUNT))
-> > +		return -EINVAL;
-> >
-> >  	if (priv->stations[sta_id].tid[tid].agg.state != IWL_AGG_OFF) {
-> >  		IWL_ERR(priv, "Start AGG when state is not IWL_AGG_OFF !
-> > ");
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+> Rafael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
