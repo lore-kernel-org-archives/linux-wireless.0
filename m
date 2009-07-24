@@ -1,7 +1,7 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23614 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:23612 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063AbZGXSNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	id S1753493AbZGXSNP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
 	Fri, 24 Jul 2009 14:13:15 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
@@ -9,9 +9,9 @@ Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/14] iwlwifi: critical temperature enter/exit condition
-Date: Fri, 24 Jul 2009 11:13:01 -0700
-Message-Id: <1248459194-10239-3-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 03/14] iwlwifi: Thermal Throttling Management - Part 1
+Date: Fri, 24 Jul 2009 11:13:02 -0700
+Message-Id: <1248459194-10239-4-git-send-email-reinette.chatre@intel.com>
 In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
 References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -19,532 +19,473 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-If advance thermal throttling is used the driver need to pass both
-"enter" and "exit" temperature to uCode.
+Part 1 of Thermal Throttling Management -
 
-Using different critical temperature threshold for legacy and advance
-thermal throttling management based on the type of thermal throttling
-method is used except 1000.
-For 1000, it use advance thermal throttling critical temperature
-threshold, but with legacy thermal management implementation until ucode
-has the necessary implementations in place.
+Thermal Throttling feature is used to put NIC into low power state when
+driver detect the Radio temperature reach pre-defined threshold
+
+Two Thermal Throttling Management Methods; this patch introduce the
+Legacy Thermal Management:
+   IWL_TI_0: normal temperature, system power state
+   IWL_TI_1: high temperature detect, low power state
+   IWL_TI_2: higher temperature detected, lower power state
+   IWL_TI_CT_KILL: critical temperature detected, lowest power state
+
+Once get into CT_KILL state, uCode go into sleep, driver will stop all
+the active queues, then move to IWL_TI_CT_KILL state; also set up 5
+seconds timer to toggle CSR flag, uCode wake up upon CSR flag change,
+then measure the temperature.
+If temperature is above CT_KILL exit threshold, uCode go backto sleep;
+if temperature is below CT_KILL exit threshold, uCode send Card State
+Notification response with appropriate CT_KILL status flag, and uCode
+remain awake, Driver receive Card State Notification Response and update
+the card temperature to the CT_KILL exit threshold.
 
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c     |   76 ++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   44 ++++++++--------
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   59 ++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    7 +++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   22 +++++++-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   34 ++++++++++++-
- 7 files changed, 217 insertions(+), 28 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   19 +--
+ drivers/net/wireless/iwlwifi/iwl-core.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c |  249 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-power.h |   42 +++++
+ 6 files changed, 301 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index a899be9..80a2818 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -55,13 +55,87 @@
- #define _IWL1000_MODULE_FIRMWARE(api) IWL1000_FW_PRE #api ".ucode"
- #define IWL1000_MODULE_FIRMWARE(api) _IWL1000_MODULE_FIRMWARE(api)
- 
-+
-+/*
-+ * For 1000, use advance thermal throttling critical temperature threshold,
-+ * but legacy thermal management implementation for now.
-+ * This is for the reason of 1000 uCode using advance thermal throttling API
-+ * but not implement ct_kill_exit based on ct_kill exit temperature
-+ * so the thermal throttling will still based on legacy thermal throttling
-+ * management.
-+ * The code here need to be modified once 1000 uCode has the advanced thermal
-+ * throttling algorithm in place
-+ */
-+static void iwl1000_set_ct_threshold(struct iwl_priv *priv)
-+{
-+	/* want Celsius */
-+	priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD_LEGACY;
-+	priv->hw_params.ct_kill_exit_threshold = CT_KILL_EXIT_THRESHOLD;
-+}
-+
-+static struct iwl_lib_ops iwl1000_lib = {
-+	.set_hw_params = iwl5000_hw_set_hw_params,
-+	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
-+	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
-+	.txq_set_sched = iwl5000_txq_set_sched,
-+	.txq_agg_enable = iwl5000_txq_agg_enable,
-+	.txq_agg_disable = iwl5000_txq_agg_disable,
-+	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
-+	.txq_free_tfd = iwl_hw_txq_free_tfd,
-+	.txq_init = iwl_hw_tx_queue_init,
-+	.rx_handler_setup = iwl5000_rx_handler_setup,
-+	.setup_deferred_work = iwl5000_setup_deferred_work,
-+	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
-+	.load_ucode = iwl5000_load_ucode,
-+	.init_alive_start = iwl5000_init_alive_start,
-+	.alive_notify = iwl5000_alive_notify,
-+	.send_tx_power = iwl5000_send_tx_power,
-+	.update_chain_flags = iwl_update_chain_flags,
-+	.apm_ops = {
-+		.init =	iwl5000_apm_init,
-+		.reset = iwl5000_apm_reset,
-+		.stop = iwl5000_apm_stop,
-+		.config = iwl5000_nic_config,
-+		.set_pwr_src = iwl_set_pwr_src,
-+	},
-+	.eeprom_ops = {
-+		.regulatory_bands = {
-+			EEPROM_5000_REG_BAND_1_CHANNELS,
-+			EEPROM_5000_REG_BAND_2_CHANNELS,
-+			EEPROM_5000_REG_BAND_3_CHANNELS,
-+			EEPROM_5000_REG_BAND_4_CHANNELS,
-+			EEPROM_5000_REG_BAND_5_CHANNELS,
-+			EEPROM_5000_REG_BAND_24_FAT_CHANNELS,
-+			EEPROM_5000_REG_BAND_52_FAT_CHANNELS
-+		},
-+		.verify_signature  = iwlcore_eeprom_verify_signature,
-+		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
-+		.release_semaphore = iwlcore_eeprom_release_semaphore,
-+		.calib_version	= iwl5000_eeprom_calib_version,
-+		.query_addr = iwl5000_eeprom_query_addr,
-+	},
-+	.post_associate = iwl_post_associate,
-+	.isr = iwl_isr_ict,
-+	.config_ap = iwl_config_ap,
-+	.temp_ops = {
-+		.temperature = iwl5000_temperature,
-+		.set_ct_kill = iwl1000_set_ct_threshold,
-+	 },
-+};
-+
-+static struct iwl_ops iwl1000_ops = {
-+	.lib = &iwl1000_lib,
-+	.hcmd = &iwl5000_hcmd,
-+	.utils = &iwl5000_hcmd_utils,
-+};
-+
- struct iwl_cfg iwl1000_bgn_cfg = {
- 	.name = "1000 Series BGN",
- 	.fw_name_pre = IWL1000_FW_PRE,
- 	.ucode_api_max = IWL1000_UCODE_API_MAX,
- 	.ucode_api_min = IWL1000_UCODE_API_MIN,
- 	.sku = IWL_SKU_G|IWL_SKU_N,
--	.ops = &iwl5000_ops,
-+	.ops = &iwl1000_ops,
- 	.eeprom_size = IWL_5000_EEPROM_IMG_SIZE,
- 	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
 diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index c30a1b9..23925bd 100644
+index 23925bd..6702148 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -776,7 +776,8 @@ static struct iwl_sensitivity_ranges iwl4965_sensitivity = {
- static void iwl4965_set_ct_threshold(struct iwl_priv *priv)
- {
- 	/* want Kelvin */
--	priv->hw_params.ct_kill_threshold = CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD);
-+	priv->hw_params.ct_kill_threshold =
-+		CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
- }
+@@ -1797,6 +1797,7 @@ static void iwl4965_temperature_calib(struct iwl_priv *priv)
+ 	}
  
- /**
+ 	priv->temperature = temp;
++	iwl_tt_handler(priv);
+ 	set_bit(STATUS_TEMPERATURE, &priv->status);
+ 
+ 	if (!priv->disable_tx_power_cal &&
 diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 702db07..076acb1 100644
+index 076acb1..ddd64fe 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-5000.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -91,7 +91,7 @@ static int iwl5000_apm_stop_master(struct iwl_priv *priv)
- }
- 
- 
--static int iwl5000_apm_init(struct iwl_priv *priv)
-+int iwl5000_apm_init(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -137,7 +137,7 @@ static int iwl5000_apm_init(struct iwl_priv *priv)
- }
- 
- /* FIXME: this is identical to 4965 */
--static void iwl5000_apm_stop(struct iwl_priv *priv)
-+void iwl5000_apm_stop(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 
-@@ -156,7 +156,7 @@ static void iwl5000_apm_stop(struct iwl_priv *priv)
- }
- 
- 
--static int iwl5000_apm_reset(struct iwl_priv *priv)
-+int iwl5000_apm_reset(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -198,7 +198,7 @@ out:
- }
- 
- 
--static void iwl5000_nic_config(struct iwl_priv *priv)
-+void iwl5000_nic_config(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 	u16 radio_cfg;
-@@ -290,7 +290,7 @@ static u32 eeprom_indirect_address(const struct iwl_priv *priv, u32 address)
- 	return (address & ADDRESS_MSK) + (offset << 1);
- }
- 
--static u16 iwl5000_eeprom_calib_version(struct iwl_priv *priv)
-+u16 iwl5000_eeprom_calib_version(struct iwl_priv *priv)
- {
- 	struct iwl_eeprom_calib_hdr {
- 		u8 version;
-@@ -436,7 +436,7 @@ static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
- 	.nrg_th_ofdm = 95,
- };
- 
--static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
-+const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- 					   size_t offset)
- {
- 	u32 address = eeprom_indirect_address(priv, offset);
-@@ -447,7 +447,7 @@ static const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
- static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
- {
- 	const s32 volt2temp_coef = IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF;
--	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD) -
-+	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY) -
- 			iwl_temp_calib_to_offset(priv);
- 
- 	priv->hw_params.ct_kill_threshold = threshold * volt2temp_coef;
-@@ -456,7 +456,7 @@ static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
- static void iwl5000_set_ct_threshold(struct iwl_priv *priv)
- {
- 	/* want Celsius */
--	priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
-+	priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD_LEGACY;
- }
- 
- /*
-@@ -631,7 +631,7 @@ static int iwl5000_load_given_ucode(struct iwl_priv *priv,
- 	return ret;
- }
- 
--static int iwl5000_load_ucode(struct iwl_priv *priv)
-+int iwl5000_load_ucode(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -658,7 +658,7 @@ static int iwl5000_load_ucode(struct iwl_priv *priv)
- 	return ret;
- }
- 
--static void iwl5000_init_alive_start(struct iwl_priv *priv)
-+void iwl5000_init_alive_start(struct iwl_priv *priv)
- {
- 	int ret = 0;
- 
-@@ -734,7 +734,7 @@ static int iwl5000_send_wimax_coex(struct iwl_priv *priv)
- 				sizeof(coex_cmd), &coex_cmd);
- }
- 
--static int iwl5000_alive_notify(struct iwl_priv *priv)
-+int iwl5000_alive_notify(struct iwl_priv *priv)
- {
- 	u32 a;
- 	unsigned long flags;
-@@ -821,7 +821,7 @@ static int iwl5000_alive_notify(struct iwl_priv *priv)
- 	return 0;
- }
- 
--static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
-+int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	if ((priv->cfg->mod_params->num_of_queues > IWL50_NUM_QUEUES) ||
- 	    (priv->cfg->mod_params->num_of_queues < IWL_MIN_NUM_QUEUES)) {
-@@ -892,7 +892,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- /**
-  * iwl5000_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
-  */
--static void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
-+void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 					    struct iwl_tx_queue *txq,
- 					    u16 byte_cnt)
- {
-@@ -932,7 +932,7 @@ static void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
- 			tfd_offset[TFD_QUEUE_SIZE_MAX + write_ptr] = bc_ent;
- }
- 
--static void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
-+void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
- 					   struct iwl_tx_queue *txq)
- {
- 	struct iwl5000_scd_bc_tbl *scd_bc_tbl = priv->scd_bc_tbls.addr;
-@@ -987,7 +987,7 @@ static void iwl5000_tx_queue_stop_scheduler(struct iwl_priv *priv, u16 txq_id)
- 		(1 << IWL50_SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN));
- }
- 
--static int iwl5000_txq_agg_enable(struct iwl_priv *priv, int txq_id,
-+int iwl5000_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- 				  int tx_fifo, int sta_id, int tid, u16 ssn_idx)
- {
- 	unsigned long flags;
-@@ -1048,7 +1048,7 @@ static int iwl5000_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- 	return 0;
- }
- 
--static int iwl5000_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
-+int iwl5000_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
- 				   u16 ssn_idx, u8 tx_fifo)
- {
- 	if ((IWL50_FIRST_AMPDU_QUEUE > txq_id) ||
-@@ -1091,7 +1091,7 @@ u16 iwl5000_build_addsta_hcmd(const struct iwl_addsta_cmd *cmd, u8 *data)
-  * Activate/Deactivate Tx DMA/FIFO channels according tx fifos mask
-  * must be called under priv->lock and mac access
-  */
--static void iwl5000_txq_set_sched(struct iwl_priv *priv, u32 mask)
-+void iwl5000_txq_set_sched(struct iwl_priv *priv, u32 mask)
- {
- 	iwl_write_prph(priv, IWL50_SCD_TXFACT, mask);
- }
-@@ -1312,13 +1312,13 @@ u16 iwl5000_get_hcmd_size(u8 cmd_id, u16 len)
- 	return len;
- }
- 
--static void iwl5000_setup_deferred_work(struct iwl_priv *priv)
-+void iwl5000_setup_deferred_work(struct iwl_priv *priv)
- {
- 	/* in 5000 the tx power calibration is done in uCode */
- 	priv->disable_tx_power_cal = 1;
- }
- 
--static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
-+void iwl5000_rx_handler_setup(struct iwl_priv *priv)
- {
- 	/* init calibration handlers */
- 	priv->rx_handlers[CALIBRATION_RES_NOTIFICATION] =
-@@ -1329,7 +1329,7 @@ static void iwl5000_rx_handler_setup(struct iwl_priv *priv)
- }
- 
- 
--static int iwl5000_hw_valid_rtc_data_addr(u32 addr)
-+int iwl5000_hw_valid_rtc_data_addr(u32 addr)
- {
- 	return (addr >= IWL50_RTC_DATA_LOWER_BOUND) &&
- 		(addr < IWL50_RTC_DATA_UPPER_BOUND);
-@@ -1381,7 +1381,7 @@ static int iwl5000_send_rxon_assoc(struct iwl_priv *priv)
- 
- 	return ret;
- }
--static int  iwl5000_send_tx_power(struct iwl_priv *priv)
-+int  iwl5000_send_tx_power(struct iwl_priv *priv)
- {
- 	struct iwl5000_tx_power_dbm_cmd tx_power_cmd;
- 	u8 tx_ant_cfg_cmd;
-@@ -1401,7 +1401,7 @@ static int  iwl5000_send_tx_power(struct iwl_priv *priv)
- 				       NULL);
- }
- 
--static void iwl5000_temperature(struct iwl_priv *priv)
-+void iwl5000_temperature(struct iwl_priv *priv)
+@@ -1405,6 +1405,7 @@ void iwl5000_temperature(struct iwl_priv *priv)
  {
  	/* store temperature from statistics (in Celsius) */
  	priv->temperature = le32_to_cpu(priv->statistics.general.temperature);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 26c5d4a..59ff735 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -61,6 +61,63 @@
- #define _IWL6050_MODULE_FIRMWARE(api) IWL6050_FW_PRE #api ".ucode"
- #define IWL6050_MODULE_FIRMWARE(api) _IWL6050_MODULE_FIRMWARE(api)
++	iwl_tt_handler(priv);
+ }
  
-+static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
-+{
-+	/* want Celsius */
-+	priv->hw_params.ct_kill_threshold = CT_KILL_THRESHOLD;
-+	priv->hw_params.ct_kill_exit_threshold = CT_KILL_EXIT_THRESHOLD;
-+}
-+
-+static struct iwl_lib_ops iwl6000_lib = {
-+	.set_hw_params = iwl5000_hw_set_hw_params,
-+	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
-+	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
-+	.txq_set_sched = iwl5000_txq_set_sched,
-+	.txq_agg_enable = iwl5000_txq_agg_enable,
-+	.txq_agg_disable = iwl5000_txq_agg_disable,
-+	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
-+	.txq_free_tfd = iwl_hw_txq_free_tfd,
-+	.txq_init = iwl_hw_tx_queue_init,
-+	.rx_handler_setup = iwl5000_rx_handler_setup,
-+	.setup_deferred_work = iwl5000_setup_deferred_work,
-+	.is_valid_rtc_data_addr = iwl5000_hw_valid_rtc_data_addr,
-+	.load_ucode = iwl5000_load_ucode,
-+	.init_alive_start = iwl5000_init_alive_start,
-+	.alive_notify = iwl5000_alive_notify,
-+	.send_tx_power = iwl5000_send_tx_power,
-+	.update_chain_flags = iwl_update_chain_flags,
-+	.apm_ops = {
-+		.init =	iwl5000_apm_init,
-+		.reset = iwl5000_apm_reset,
-+		.stop = iwl5000_apm_stop,
-+		.config = iwl5000_nic_config,
-+		.set_pwr_src = iwl_set_pwr_src,
-+	},
-+	.eeprom_ops = {
-+		.regulatory_bands = {
-+			EEPROM_5000_REG_BAND_1_CHANNELS,
-+			EEPROM_5000_REG_BAND_2_CHANNELS,
-+			EEPROM_5000_REG_BAND_3_CHANNELS,
-+			EEPROM_5000_REG_BAND_4_CHANNELS,
-+			EEPROM_5000_REG_BAND_5_CHANNELS,
-+			EEPROM_5000_REG_BAND_24_FAT_CHANNELS,
-+			EEPROM_5000_REG_BAND_52_FAT_CHANNELS
-+		},
-+		.verify_signature  = iwlcore_eeprom_verify_signature,
-+		.acquire_semaphore = iwlcore_eeprom_acquire_semaphore,
-+		.release_semaphore = iwlcore_eeprom_release_semaphore,
-+		.calib_version	= iwl5000_eeprom_calib_version,
-+		.query_addr = iwl5000_eeprom_query_addr,
-+	},
-+	.post_associate = iwl_post_associate,
-+	.isr = iwl_isr_ict,
-+	.config_ap = iwl_config_ap,
-+	.temp_ops = {
-+		.temperature = iwl5000_temperature,
-+		.set_ct_kill = iwl6000_set_ct_threshold,
-+	 },
-+};
-+
- static struct iwl_hcmd_utils_ops iwl6000_hcmd_utils = {
- 	.get_hcmd_size = iwl5000_get_hcmd_size,
- 	.build_addsta_hcmd = iwl5000_build_addsta_hcmd,
-@@ -70,7 +127,7 @@ static struct iwl_hcmd_utils_ops iwl6000_hcmd_utils = {
+ static void iwl5150_temperature(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 44c7f23..23ae991 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -637,7 +637,6 @@ static void iwl_rx_card_state_notif(struct iwl_priv *priv,
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 	u32 flags = le32_to_cpu(pkt->u.card_state_notif.flags);
+ 	unsigned long status = priv->status;
+-	unsigned long reg_flags;
  
- static struct iwl_ops iwl6000_ops = {
- 	.ucode = &iwl5000_ucode,
--	.lib = &iwl5000_lib,
-+	.lib = &iwl6000_lib,
- 	.hcmd = &iwl5000_hcmd,
- 	.utils = &iwl6000_hcmd_utils,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index ebb2fbc..39ede57 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2413,6 +2413,13 @@ struct iwl_ct_kill_config {
- 	__le32   critical_temperature_R;
- }  __attribute__ ((packed));
+ 	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s\n",
+ 			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
+@@ -657,19 +656,12 @@ static void iwl_rx_card_state_notif(struct iwl_priv *priv,
+ 				    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
+ 			iwl_write_direct32(priv, HBUS_TARG_MBX_C,
+ 					HBUS_TARG_MBX_C_REG_BIT_CMD_BLOCKED);
+-
+-		}
+-
+-		if (flags & RF_CARD_DISABLED) {
+-			iwl_write32(priv, CSR_UCODE_DRV_GP1_SET,
+-				    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
+-			iwl_read32(priv, CSR_UCODE_DRV_GP1);
+-			spin_lock_irqsave(&priv->reg_lock, reg_flags);
+-			if (!iwl_grab_nic_access(priv))
+-				iwl_release_nic_access(priv);
+-			spin_unlock_irqrestore(&priv->reg_lock, reg_flags);
+ 		}
++		if (flags & RF_CARD_DISABLED)
++			iwl_tt_enter_ct_kill(priv);
+ 	}
++	if (!(flags & RF_CARD_DISABLED))
++		iwl_tt_exit_ct_kill(priv);
  
-+/* 1000, and 6x00 */
-+struct iwl_ct_kill_throttling_config {
-+	__le32   critical_temperature_exit;
-+	__le32   reserved;
-+	__le32   critical_temperature_enter;
-+}  __attribute__ ((packed));
+ 	if (flags & HW_CARD_DISABLED)
+ 		set_bit(STATUS_RF_KILL_HW, &priv->status);
+@@ -3015,6 +3007,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		test_bit(STATUS_RF_KILL_HW, &priv->status));
+ 
+ 	iwl_power_initialize(priv);
++	iwl_tt_initialize(priv);
+ 	return 0;
+ 
+  out_remove_sysfs:
+@@ -3067,6 +3060,8 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 		iwl_down(priv);
+ 	}
+ 
++	iwl_tt_exit(priv);
 +
- /******************************************************************************
-  * (8)
-  * Scan Commands, Responses, Notifications:
+ 	/* make sure we flush any pending irq or
+ 	 * tasklet for the driver
+ 	 */
 diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6aea026..5ef3c37 100644
+index 5ef3c37..d8aeb24 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-core.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2224,6 +2224,7 @@ EXPORT_SYMBOL(iwl_verify_ucode);
- void iwl_rf_kill_ct_config(struct iwl_priv *priv)
- {
- 	struct iwl_ct_kill_config cmd;
-+	struct iwl_ct_kill_throttling_config adv_cmd;
- 	unsigned long flags;
- 	int ret = 0;
- 
-@@ -2232,9 +2233,26 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+@@ -2232,6 +2232,7 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ 	iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
  		    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
  	spin_unlock_irqrestore(&priv->lock, flags);
++	priv->power_data.ct_kill_toggle = false;
  
--	cmd.critical_temperature_R =
--		cpu_to_le32(priv->hw_params.ct_kill_threshold);
-+	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
-+	case CSR_HW_REV_TYPE_1000:
-+	case CSR_HW_REV_TYPE_6x00:
-+	case CSR_HW_REV_TYPE_6x50:
-+		adv_cmd.critical_temperature_enter =
-+			cpu_to_le32(priv->hw_params.ct_kill_threshold);
-+		adv_cmd.critical_temperature_exit =
-+			cpu_to_le32(priv->hw_params.ct_kill_exit_threshold);
-+
-+		ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
-+				       sizeof(adv_cmd), &adv_cmd);
-+		break;
-+	default:
-+		cmd.critical_temperature_R =
-+			cpu_to_le32(priv->hw_params.ct_kill_threshold);
+ 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
+ 	case CSR_HW_REV_TYPE_1000:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index f2ea3f0..d7fdb58 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -36,6 +36,7 @@
+ #include "iwl-eeprom.h"
+ #include "iwl-dev.h"
+ #include "iwl-core.h"
++#include "iwl-io.h"
+ #include "iwl-commands.h"
+ #include "iwl-debug.h"
+ #include "iwl-power.h"
+@@ -211,6 +212,7 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+ {
+ 	struct iwl_power_mgr *setting = &(priv->power_data);
+ 	int ret = 0;
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
+ 	u16 uninitialized_var(final_mode);
+ 	bool update_chains;
  
-+		ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
-+				       sizeof(cmd), &cmd);
-+		break;
+@@ -223,6 +225,10 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+ 	if (setting->power_disabled)
+ 		final_mode = IWL_POWER_MODE_CAM;
+ 
++	if (tt->state >= IWL_TI_1) {
++		/* TT power setting overwrite user & system power setting */
++		final_mode = tt->tt_power_mode;
 +	}
- 	ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
- 			       sizeof(cmd), &cmd);
- 	if (ret)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 0751891..cddf173 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -63,6 +63,8 @@ extern struct iwl_cfg iwl6050_2agn_cfg;
- extern struct iwl_cfg iwl6050_3agn_cfg;
- extern struct iwl_cfg iwl1000_bgn_cfg;
+ 	if (iwl_is_ready_rf(priv) &&
+ 	    ((setting->power_mode != final_mode) || force)) {
+ 		struct iwl_powertable_cmd cmd;
+@@ -267,6 +273,249 @@ int iwl_power_set_user_mode(struct iwl_priv *priv, u16 mode)
+ }
+ EXPORT_SYMBOL(iwl_power_set_user_mode);
  
-+struct iwl_tx_queue;
++#define CT_KILL_EXIT_DURATION (5)	/* 5 seconds duration */
 +
- /* shared structures from iwl-5000.c */
- extern struct iwl_mod_params iwl50_mod_params;
- extern struct iwl_ops iwl5000_ops;
-@@ -79,9 +81,37 @@ extern void iwl5000_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
- 				    __le32 *tx_flags);
- extern int iwl5000_calc_rssi(struct iwl_priv *priv,
- 			     struct iwl_rx_phy_res *rx_resp);
-+extern int iwl5000_apm_init(struct iwl_priv *priv);
-+extern void iwl5000_apm_stop(struct iwl_priv *priv);
-+extern int iwl5000_apm_reset(struct iwl_priv *priv);
-+extern void iwl5000_nic_config(struct iwl_priv *priv);
-+extern u16 iwl5000_eeprom_calib_version(struct iwl_priv *priv);
-+extern const u8 *iwl5000_eeprom_query_addr(const struct iwl_priv *priv,
-+				    size_t offset);
-+extern void iwl5000_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
-+					    struct iwl_tx_queue *txq,
-+					    u16 byte_cnt);
-+extern void iwl5000_txq_inval_byte_cnt_tbl(struct iwl_priv *priv,
-+				    struct iwl_tx_queue *txq);
-+extern int iwl5000_load_ucode(struct iwl_priv *priv);
-+extern void iwl5000_init_alive_start(struct iwl_priv *priv);
-+extern int iwl5000_alive_notify(struct iwl_priv *priv);
-+extern int iwl5000_hw_set_hw_params(struct iwl_priv *priv);
-+extern int iwl5000_txq_agg_enable(struct iwl_priv *priv, int txq_id,
-+			   int tx_fifo, int sta_id, int tid, u16 ssn_idx);
-+extern int iwl5000_txq_agg_disable(struct iwl_priv *priv, u16 txq_id,
-+			    u16 ssn_idx, u8 tx_fifo);
-+extern void iwl5000_txq_set_sched(struct iwl_priv *priv, u32 mask);
-+extern void iwl5000_setup_deferred_work(struct iwl_priv *priv);
-+extern void iwl5000_rx_handler_setup(struct iwl_priv *priv);
-+extern int iwl5000_hw_valid_rtc_data_addr(u32 addr);
-+extern int iwl5000_send_tx_power(struct iwl_priv *priv);
-+extern void iwl5000_temperature(struct iwl_priv *priv);
++/*
++ * toggle the bit to wake up uCode and check the temperature
++ * if the temperature is below CT, uCode will stay awake and send card
++ * state notification with CT_KILL bit clear to inform Thermal Throttling
++ * Management to change state. Otherwise, uCode will go back to sleep
++ * without doing anything, driver should continue the 5 seconds timer
++ * to wake up uCode for temperature check until temperature drop below CT
++ */
++static void iwl_tt_check_exit_ct_kill(unsigned long data)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)data;
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++	unsigned long flags;
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	if (tt->state == IWL_TI_CT_KILL) {
++		if (priv->power_data.ct_kill_toggle) {
++			iwl_write32(priv, CSR_UCODE_DRV_GP1_CLR,
++				    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
++			priv->power_data.ct_kill_toggle = false;
++		} else {
++			iwl_write32(priv, CSR_UCODE_DRV_GP1_SET,
++				    CSR_UCODE_DRV_GP1_REG_BIT_CT_KILL_EXIT);
++			priv->power_data.ct_kill_toggle = true;
++		}
++		iwl_read32(priv, CSR_UCODE_DRV_GP1);
++		spin_lock_irqsave(&priv->reg_lock, flags);
++		if (!iwl_grab_nic_access(priv))
++			iwl_release_nic_access(priv);
++		spin_unlock_irqrestore(&priv->reg_lock, flags);
++
++		/* Reschedule the ct_kill timer to occur in
++		 * CT_KILL_EXIT_DURATION seconds to ensure we get a
++		 * thermal update */
++		mod_timer(&priv->power_data.ct_kill_exit_tm, jiffies +
++			  CT_KILL_EXIT_DURATION * HZ);
++	}
++}
++
++static void iwl_perform_ct_kill_task(struct iwl_priv *priv,
++			   bool stop)
++{
++	if (stop) {
++		IWL_DEBUG_POWER(priv, "Stop all queues\n");
++		if (priv->mac80211_registered)
++			ieee80211_stop_queues(priv->hw);
++		IWL_DEBUG_POWER(priv,
++				"Schedule 5 seconds CT_KILL Timer\n");
++		mod_timer(&priv->power_data.ct_kill_exit_tm, jiffies +
++			  CT_KILL_EXIT_DURATION * HZ);
++	} else {
++		IWL_DEBUG_POWER(priv, "Wake all queues\n");
++		if (priv->mac80211_registered)
++			ieee80211_wake_queues(priv->hw);
++	}
++}
++
++#define IWL_MINIMAL_POWER_THRESHOLD		(CT_KILL_THRESHOLD_LEGACY)
++#define IWL_REDUCED_PERFORMANCE_THRESHOLD_2	(100)
++#define IWL_REDUCED_PERFORMANCE_THRESHOLD_1	(90)
++
++/*
++ * Legacy thermal throttling
++ * 1) Avoid NIC destruction due to high temperatures
++ *	Chip will identify dangerously high temperatures that can
++ *	harm the device and will power down
++ * 2) Avoid the NIC power down due to high temperature
++ *	Throttle early enough to lower the power consumption before
++ *	drastic steps are needed
++ */
++static void iwl_legacy_tt_handler(struct iwl_priv *priv, s32 temp)
++{
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++	enum iwl_tt_state new_state;
++	struct iwl_power_mgr *setting = &priv->power_data;
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++	if ((tt->tt_previous_temp) &&
++	    (temp > tt->tt_previous_temp) &&
++	    ((temp - tt->tt_previous_temp) >
++	    IWL_TT_INCREASE_MARGIN)) {
++		IWL_DEBUG_POWER(priv,
++			"Temperature increase %d degree Celsius\n",
++			(temp - tt->tt_previous_temp));
++	}
++#endif
++	/* in Celsius */
++	if (temp >= IWL_MINIMAL_POWER_THRESHOLD)
++		new_state = IWL_TI_CT_KILL;
++	else if (temp >= IWL_REDUCED_PERFORMANCE_THRESHOLD_2)
++		new_state = IWL_TI_2;
++	else if (temp >= IWL_REDUCED_PERFORMANCE_THRESHOLD_1)
++		new_state = IWL_TI_1;
++	else
++		new_state = IWL_TI_0;
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++	tt->tt_previous_temp = temp;
++#endif
++	if (tt->state != new_state) {
++		if (tt->state == IWL_TI_0) {
++			tt->sys_power_mode = setting->power_mode;
++			IWL_DEBUG_POWER(priv, "current power mode: %u\n",
++				setting->power_mode);
++		}
++		switch (new_state) {
++		case IWL_TI_0:
++			/* when system ready to go back to IWL_TI_0 state
++			 * using system power mode instead of TT power mode
++			 * revert back to the orginal power mode which was saved
++			 * before enter Thermal Throttling state
++			 * update priv->power_data.user_power_setting to the
++			 * required power mode to make sure
++			 * iwl_power_update_mode() will update power correctly.
++			 */
++			priv->power_data.user_power_setting =
++				tt->sys_power_mode;
++			tt->tt_power_mode = tt->sys_power_mode;
++			break;
++		case IWL_TI_1:
++			tt->tt_power_mode = IWL_POWER_INDEX_3;
++			break;
++		case IWL_TI_2:
++			tt->tt_power_mode = IWL_POWER_INDEX_4;
++			break;
++		default:
++			tt->tt_power_mode = IWL_POWER_INDEX_5;
++			break;
++		}
++		if (iwl_power_update_mode(priv, true)) {
++			/* TT state not updated
++			 * try again during next temperature read
++			 */
++			IWL_ERR(priv, "Cannot update power mode, "
++					"TT state not updated\n");
++		} else {
++			if (new_state == IWL_TI_CT_KILL)
++				iwl_perform_ct_kill_task(priv, true);
++			else if (tt->state == IWL_TI_CT_KILL &&
++				 new_state != IWL_TI_CT_KILL)
++				iwl_perform_ct_kill_task(priv, false);
++			tt->state = new_state;
++			IWL_DEBUG_POWER(priv, "Temperature state changed %u\n",
++					tt->state);
++			IWL_DEBUG_POWER(priv, "Power Index change to %u\n",
++					tt->tt_power_mode);
++		}
++	}
++}
++
++/* Card State Notification indicated reach critical temperature
++ * if PSP not enable, no Thermal Throttling function will be performed
++ * just set the GP1 bit to acknowledge the event
++ * otherwise, go into IWL_TI_CT_KILL state
++ * since Card State Notification will not provide any temperature reading
++ * so just pass the CT_KILL temperature to iwl_legacy_tt_handler()
++ */
++void iwl_tt_enter_ct_kill(struct iwl_priv *priv)
++{
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	if (tt->state != IWL_TI_CT_KILL) {
++		IWL_ERR(priv, "Device reached critical temperature "
++			      "- ucode going to sleep!\n");
++		iwl_legacy_tt_handler(priv, IWL_MINIMAL_POWER_THRESHOLD);
++	}
++}
++EXPORT_SYMBOL(iwl_tt_enter_ct_kill);
++
++/* Card State Notification indicated out of critical temperature
++ * since Card State Notification will not provide any temperature reading
++ * so pass the IWL_REDUCED_PERFORMANCE_THRESHOLD_2 temperature
++ * to iwl_legacy_tt_handler() to get out of IWL_CT_KILL state
++ */
++void iwl_tt_exit_ct_kill(struct iwl_priv *priv)
++{
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	/* stop ct_kill_exit_tm timer */
++	del_timer_sync(&priv->power_data.ct_kill_exit_tm);
++
++	if (tt->state == IWL_TI_CT_KILL) {
++		IWL_ERR(priv,
++			"Device temperature below critical"
++			"- ucode awake!\n");
++		iwl_legacy_tt_handler(priv,
++			IWL_REDUCED_PERFORMANCE_THRESHOLD_2);
++	}
++}
++EXPORT_SYMBOL(iwl_tt_exit_ct_kill);
++
++void iwl_tt_handler(struct iwl_priv *priv)
++{
++	s32 temp = priv->temperature; /* degrees CELSIUS except 4965 */
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_4965)
++		temp = KELVIN_TO_CELSIUS(priv->temperature);
++
++	iwl_legacy_tt_handler(priv, temp);
++}
++EXPORT_SYMBOL(iwl_tt_handler);
++
++/* Thermal throttling initialization
++ */
++void iwl_tt_initialize(struct iwl_priv *priv)
++{
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++	struct iwl_power_mgr *setting = &priv->power_data;
++
++	IWL_DEBUG_POWER(priv, "Initialize Thermal Throttling \n");
++
++	memset(tt, 0, sizeof(struct iwl_tt_mgmt));
++
++	tt->state = IWL_TI_0;
++	tt->sys_power_mode = setting->power_mode;
++	tt->tt_power_mode = tt->sys_power_mode;
++	init_timer(&priv->power_data.ct_kill_exit_tm);
++	priv->power_data.ct_kill_exit_tm.data = (unsigned long)priv;
++	priv->power_data.ct_kill_exit_tm.function = iwl_tt_check_exit_ct_kill;
++}
++EXPORT_SYMBOL(iwl_tt_initialize);
++
++/* cleanup thermal throttling management related memory and timer */
++void iwl_tt_exit(struct iwl_priv *priv)
++{
++	/* stop ct_kill_exit_tm timer if activated */
++	del_timer_sync(&priv->power_data.ct_kill_exit_tm);
++}
++EXPORT_SYMBOL(iwl_tt_exit);
++
+ /* initialize to default */
+ void iwl_power_initialize(struct iwl_priv *priv)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
+index 37ba3bb..7bb10d4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.h
++++ b/drivers/net/wireless/iwlwifi/iwl-power.h
+@@ -33,6 +33,38 @@
  
- /* CT-KILL constants */
--#define CT_KILL_THRESHOLD	110 /* in Celsius */
-+#define CT_KILL_THRESHOLD_LEGACY   110 /* in Celsius */
-+#define CT_KILL_THRESHOLD	   114 /* in Celsius */
-+#define CT_KILL_EXIT_THRESHOLD     95  /* in Celsius */
+ struct iwl_priv;
  
- /* Default noise level to report when noise measurement is not available.
-  *   This may be because we're:
-@@ -630,6 +660,8 @@ struct iwl_hw_params {
- 	u32 max_data_size;
- 	u32 max_bsm_size;
- 	u32 ct_kill_threshold; /* value in hw-dependent units */
-+	u32 ct_kill_exit_threshold; /* value in hw-dependent units */
-+				    /* for 1000, 6000 series and up */
- 	u32 calib_init_cfg;
- 	const struct iwl_sensitivity_ranges *sens;
++#define IWL_TT_INCREASE_MARGIN	5
++
++/* Thermal Throttling State Machine states */
++enum  iwl_tt_state {
++	IWL_TI_0,	/* normal temperature, system power state */
++	IWL_TI_1,	/* high temperature detect, low power state */
++	IWL_TI_2,	/* higher temperature detected, lower power state */
++	IWL_TI_CT_KILL, /* critical temperature detected, lowest power state */
++	IWL_TI_STATE_MAX
++};
++
++/**
++ * struct iwl_tt_mgnt - Thermal Throttling Management structure
++ * @state:          current Thermal Throttling state
++ * @tt_power_mode:  Thermal Throttling power mode index
++ *		    being used to set power level when
++ * 		    when thermal throttling state != IWL_TI_0
++ *		    the tt_power_mode should set to different
++ *		    power mode based on the current tt state
++ * @sys_power_mode: previous system power mode
++ *                  before transition into TT state
++ * @tt_previous_temperature: last measured temperature
++ */
++struct iwl_tt_mgmt {
++	enum iwl_tt_state state;
++	u8 tt_power_mode;
++	u8 sys_power_mode;
++#ifdef CONFIG_IWLWIFI_DEBUG
++	s32 tt_previous_temp;
++#endif
++};
++
+ enum {
+ 	IWL_POWER_MODE_CAM, /* Continuously Aware Mode, always on */
+ 	IWL_POWER_INDEX_1,
+@@ -59,10 +91,20 @@ struct iwl_power_mgr {
+ 	u8 power_mode;
+ 	u8 user_power_setting; /* set by user through sysfs */
+ 	u8 power_disabled; /* set by mac80211's CONF_PS */
++	struct iwl_tt_mgmt tt; /* Thermal Throttling Management */
++	bool ct_kill_toggle;   /* use to toggle the CSR bit when
++				* checking uCode temperature
++				*/
++	struct timer_list ct_kill_exit_tm;
  };
+ 
+ int iwl_power_update_mode(struct iwl_priv *priv, bool force);
+ int iwl_power_set_user_mode(struct iwl_priv *priv, u16 mode);
++void iwl_tt_enter_ct_kill(struct iwl_priv *priv);
++void iwl_tt_exit_ct_kill(struct iwl_priv *priv);
++void iwl_tt_handler(struct iwl_priv *priv);
++void iwl_tt_initialize(struct iwl_priv *priv);
++void iwl_tt_exit(struct iwl_priv *priv);
+ void iwl_power_initialize(struct iwl_priv *priv);
+ 
+ #endif  /* __iwl_power_setting_h__ */
 -- 
 1.5.6.3
 
