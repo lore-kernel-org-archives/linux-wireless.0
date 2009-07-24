@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:40046 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961AbZGaSsg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:48:36 -0400
-Received: by yxe5 with SMTP id 5so293387yxe.33
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:48:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-References: <20090731181020.GE7963@makis> <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
-	<40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 31 Jul 2009 11:48:16 -0700
-Message-ID: <43e72e890907311148i3e5a302cg2efb713df706c103@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+Received: from main.gmane.org ([80.91.229.2]:41530 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752063AbZGXHj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 03:39:29 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MUFNI-0002Hg-Es
+	for linux-wireless@vger.kernel.org; Fri, 24 Jul 2009 07:39:28 +0000
+Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 07:39:28 +0000
+Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 07:39:28 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+Date: Fri, 24 Jul 2009 08:39:10 +0100
+Message-ID: <wfzlau7co1.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 11:25 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
-> 2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
->> On Fri, Jul 31, 2009 at 11:10 AM, Nick
->> Kossifidis<mick@madwifi-project.org> wrote:
->>>  * Get rid of calibration timer, instead use a software interrupt
->>>   to schedule the calibration tasklet.
->>
->> An example of itemizing one change. Explain the why, not the how.
->>
+Pavel Roskin <proski@gnu.org> writes:
+
+> On Thu, 2009-07-16 at 18:01 +0100, Jon Fairbairn wrote:
+>> The distro I'm using (fedora 11) has 2.6.29 -- will the relevant modules
+>> build for that, or would I have to build a whole 2.6.31?
 >
-> We 've discussed this with various people on wireless summit.
+> You can build compat-wireless, which includes the latest ath5k driver
+> backported from the wireless-testing kernel.  Alternatively, you can
+> build madwifi (be sure to use the trunk snapshot).
 
-Not everyone attended.
+OK! I bought one and with compat-wireless-2009-07-20 + hostapd 0.6.9 it
+seems to work. I haven't done much testing yet, but I can certainly
+connect to it from an eee pc 901 and from a Macbook Air (and from my IBM
+X30 so long as I don't use WPA).
 
-> a) We don't need a timer for this, there is no need for accuracy
->    even with round_jiffies i think this is a waste of resources.
->    Also we don't need to run calibration if we are idle (no interrupts).
->
-> b) When we add ANI support we 'll just extend the poll function
->    and calibration tasklet and handle all periodic phy calibration
->    on one place (much cleaner).
->
-> c) Having calibration on a tasklet is better since during calibration
->    we can't transmit or receive (antennas are detached to measure
->    noise floor), previously calibration could run in parallel with tx/rx
->    and interfere (packet loss).
+For reference: The box says "abit airpace wifi", "pci-e wi-fi card",
+"WLP01WCG121095 V0.0B" (on a sticker; this is the only place on the
+outside of the box that mentions WPL01), "EAN 4 710933 354359", "UPC 8
+43323 00028 5"
 
-It seems this good explanation can be mangled into the commit log entry.
+lspci -nn says
+04:00.0 Ethernet controller [0200]: Atheros Communications Inc. AR242x
+           802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
 
-  Luis
+Does that want to go on the wiki? (I can't access it right now:
+http://wireless.kernel.org/en/users/Devices * Connection to 83.246.72.84
+Failed )
+
+-- 
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+
+
