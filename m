@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:65498 "EHLO mail.atheros.com"
+Received: from main.gmane.org ([80.91.229.2]:35319 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754901AbZG3Aqg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 20:46:36 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 17:46:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/2] cfg80211: use goto out on 11d reg hint failure
-Date: Wed, 29 Jul 2009 17:46:31 -0700
-Message-ID: <1248914792-6010-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248914792-6010-1-git-send-email-lrodriguez@atheros.com>
-References: <1248914792-6010-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752695AbZGXPlJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 11:41:09 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MUMtN-0005LZ-Bw
+	for linux-wireless@vger.kernel.org; Fri, 24 Jul 2009 15:41:05 +0000
+Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 15:41:05 +0000
+Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 15:41:05 +0000
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+Date: Fri, 24 Jul 2009 16:40:54 +0100
+Message-ID: <wfvdli6qd5.fsf@calligramme.charmers>
+References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj> <wfzlau7co1.fsf@calligramme.charmers> <1248449030.21715.23.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This does not change functionality.
+Pavel Roskin <proski@gnu.org> writes:
+> I assume the subvendor/subsystem ID is 147b:1033, as reported elsewhere
+> and as "lspci -vnn" would show.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+Ah, sorry, yes:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index fb40428..2d1d183 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1774,10 +1774,8 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 
- 	mutex_lock(&cfg80211_mutex);
- 
--	if (unlikely(!last_request)) {
--		mutex_unlock(&cfg80211_mutex);
--		return;
--	}
-+	if (unlikely(!last_request))
-+		goto out;
- 
- 	/* IE len must be evenly divisible by 2 */
- 	if (country_ie_len & 0x01)
+lspci -vnn -s 04:00.0
+04:00.0 Ethernet controller [0200]: \
+         Atheros Communications Inc. AR242x \
+         802.11abg Wireless PCI Express Adapter [168c:001c] (rev 01)
+	Subsystem: ABIT Computer Corp. AirPace Wi-Fi [147b:1033]
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	Memory at fbff0000 (64-bit, non-prefetchable) [size=64K]
+	Capabilities: <access denied>
+	Kernel driver in use: ath5k
+	Kernel modules: ath5k
+
 -- 
-1.6.0.4
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+
 
