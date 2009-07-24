@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbZGBTgG (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:60604 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751847AbZGXJ2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2009 15:36:06 -0400
-Subject: Re: [PATCH] orinoco: fix printk format specifier for size_t
- arguments
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1246562805-9785-1-git-send-email-kilroyd@googlemail.com>
-References: <1246562805-9785-1-git-send-email-kilroyd@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EFBaYrhp6e3+qwSRmThL"
-Date: Thu, 02 Jul 2009 21:36:10 +0200
-Message-Id: <1246563370.16770.49.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 24 Jul 2009 05:28:14 -0400
+Received: by bwz28 with SMTP id 28so1314817bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 02:28:14 -0700 (PDT)
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: wireless-testing regression: iwl3945 scan fails
+References: <87k521s2wa.fsf@litku.valot.fi> <87fxcosron.fsf@litku.valot.fi>
+	<1248278121.17896.2728.camel@rc-desk>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 24 Jul 2009 12:28:10 +0300
+In-Reply-To: <1248278121.17896.2728.camel@rc-desk> (reinette chatre's message of "Wed\, 22 Jul 2009 08\:55\:21 -0700")
+Message-ID: <874ot2sa51.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+reinette chatre <reinette.chatre@intel.com> writes:
 
---=-EFBaYrhp6e3+qwSRmThL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> Hi Kalle,
 
-On Thu, 2009-07-02 at 20:26 +0100, David Kilroy wrote:
-> This addresses the following compile warnings on 64-bit platforms.
->=20
-> drivers/net/wireless/orinoco/scan.c: In function 'orinoco_add_hostscan_re=
-sults':
-> drivers/net/wireless/orinoco/scan.c:194: warning: format '%d' expects typ=
-e 'int', but argument 3 has type 'size_t'
-> drivers/net/wireless/orinoco/scan.c:211: warning: format '%d' expects typ=
-e 'int', but argument 3 has type 'size_t'
-> drivers/net/wireless/orinoco/scan.c:211: warning: format '%d' expects typ=
-e 'int', but argument 4 has type 'size_t'
->=20
-> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
-> ---
->=20
-> Thanks to Johannes for pointing this out.
+Hi Reinette,
 
-Thanks for the fix!
+>> I have looked at this now a bit and I don't think this is an iwl3945
+>> problem. Scanning seems to stall in some situations and iwl3945 doesn't
+>> even receive the scan command. 
+>
+> The patches we sent recently did undergo testing under various scenarios
+> using wpa_supplicant. We have not done this testing after the
+> 2.6.31-rc3-wl merge (yesterday) though. I just did a quick test on my
+> 3945 using iwconfig to associate and it was able to do so on A and G
+> bands. Looks like I need to do some wpa_supplicant testing.
 
-johannes
+This odd problem might happen only in my setup.
 
---=-EFBaYrhp6e3+qwSRmThL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+>> Also I have been able to reproduce the problem once with iw. For some
+>> strange reason I have had to reboot my laptop to reproduce this,
+>> unloading all wireless related modules (expect rfkill which I can't
+>> unload due to dependencies) is not enough.
+>
+> Are you saying that this problem occurs always with wpa_supplicant and
+> sometimes with iw?
 
------BEGIN PGP SIGNATURE-----
+I did some more testing and I can now reproduce this with iw as well. I
+just need to reboot my laptop to reproduce it. I'll debug this more on a
+rainy day.
 
-iQIcBAABAgAGBQJKTQwlAAoJEODzc/N7+Qma1RYQALuebJhUh7zuRpZ20Yvg94UE
-dg2Y48FYLBxovP68YDzSF+h8BO5UgROIZak40jDxNDtu1IqqR6hkGdw8d7cDgJ6z
-6JVspNSdvg7Gk+WgeqQDunW4YcuIHaIVMHINPT9QD6ye15pX2YOi8ytztg88TSCX
-obeAkoX/pGp1CiDg5MpbSUPLgF0ZKNoO2uM8VmJ7LVW6GdCVU/WXVGz5HS0GaLP0
-5JGY8EiCJwWvNjn6SnnnxoBOTBKeu+QwpLergM4t890kz5J2Me04TmvYWhjcrWrg
-1M8/t9Jy7ttgWbPpmALHdkjRDk7Z+ywyr4mKQHg2vZaqNOGJ/0ZOITrENPi2T6fH
-IZmuOv+kjcAIO4eYUYnB1GfhRqrDFtV4C9YUoIJGEc1tTCC7Rh/fGM7aqjYPkqmA
-HnIYCB5kVUxfuUycMm91QJg60y6t3P3GHISUkuYGEdEbY/my24ErYuP2ek2l8kik
-saYTtz+p06vzhS14IR5pv5hSq5ahWeXI1BdPyVAkQceYr7MP32+pTsjYrc6H/rnU
-RqKXZBWWJgoWPfyekbv8EWpfX7g6rY6u2bHzIqgF3R8oOxmY0OaVUsOoc6ojwPGC
-UiNw/FPoc1lwANwf0t+mgHtnN/WsqMknrlPrA/mpRKLV6WF2EVi80gDzav7MfNgU
-zq3zs7OOcF3xqk7/Hh3P
-=DYCk
------END PGP SIGNATURE-----
-
---=-EFBaYrhp6e3+qwSRmThL--
-
+-- 
+Kalle Valo
