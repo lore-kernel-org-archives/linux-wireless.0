@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933032AbZGPX7T (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:57285 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbZGXJUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 19:59:19 -0400
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A5FB944.90709@mandriva.org>
-References: <4A5D0374.5040702@mandriva.org>
-	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>
-	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>
-	 <1247782731.31442.3.camel@johannes.local>  <4A5FB944.90709@mandriva.org>
-Content-Type: text/plain
-Date: Fri, 17 Jul 2009 01:58:48 +0200
-Message-Id: <1247788728.1055.15.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 24 Jul 2009 05:20:03 -0400
+Received: by bwz28 with SMTP id 28so1311376bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 02:20:02 -0700 (PDT)
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: Joe Perches <joe@perches.com>,
+	"linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jirislaby\@gmail.com" <jirislaby@gmail.com>
+Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
+References: <20090721191136.22374.69017.stgit@tikku>
+	<20090721191154.22374.17349.stgit@tikku>
+	<1248204540.31365.275.camel@Joe-Laptop.home>
+	<87ocrdsu9f.fsf@litku.valot.fi> <4A661C4B.5070803@nokia.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 24 Jul 2009 12:19:58 +0300
+In-Reply-To: <4A661C4B.5070803@nokia.com> (Luciano Coelho's message of "Tue\, 21 Jul 2009 22\:51\:39 +0300")
+Message-ID: <878wiesaip.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-17 at 02:35 +0300, Thomas Backlund wrote:
+Luciano Coelho <luciano.coelho@nokia.com> writes:
 
-> > So far so good. Your platform's soft-switch is wired to the card's hard
-> > kill line. Mind trying
-> > 
-> > 	./rfkill unblock 0
-> > 
-> > (or whatever ID the acer-wireless has) at this point to see what
-> > happens? I would hope it goes back to the working state.
-> > 
-> 
-> Nothing happends...
-> 
-> It does not change anything on either acer-wireless or phy0
+> I think we have to choose one maintainer for the shared files (= you!
+> ;).  So we could have something like this for your part:
+>
+> F:   drivers/net/wireless/wl12xx/*
+> X:   drivers/net/wireless/wl12xx/wl1271*
+>
+> Of course this doesn't apply yet, because there is no wl1271* at the
+> moment (hopefully there will be very soon).  So, for now I think you
+> could have just the F line.  And when I add my maintainer's block
+> there, I can add the X line to your part at the same time... How does
+> that sound?
 
-Humm. Can you try this?
+Sounds good to me. I'm too lazy to send a new patch right now, but can
+you change the entry accordingly when you submit 1271 code?
 
-johannes
-
---- wireless-testing.orig/drivers/platform/x86/acer-wmi.c	2009-07-17 00:19:20.000000000 +0200
-+++ wireless-testing/drivers/platform/x86/acer-wmi.c	2009-07-17 01:58:11.000000000 +0200
-@@ -973,7 +973,7 @@ static int acer_rfkill_set(void *data, b
- {
- 	acpi_status status;
- 	u32 cap = (unsigned long)data;
--	status = set_u32(!!blocked, cap);
-+	status = set_u32(!blocked, cap);
- 	if (ACPI_FAILURE(status))
- 		return -ENODEV;
- 	return 0;
-
-
+-- 
+Kalle Valo
