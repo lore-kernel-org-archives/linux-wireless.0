@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:46701 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932549AbZGPQjg convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51143 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbZGXP3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:39:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <1247734381-20718-1-git-send-email-klto@zhaw.ch>
-References: <1247734381-20718-1-git-send-email-klto@zhaw.ch>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 16 Jul 2009 09:39:15 -0700
-Message-ID: <43e72e890907160939m1b1a90c5ye1a1d27be1843714@mail.gmail.com>
-Subject: Re: [PATCH 2/8] ar9170: Remove unused DECLARE_MAC_BUF
-To: Tobias Klauser <klto@zhaw.ch>
-Cc: chunkeey@web.de, linville@tuxdriver.com, johannes@sipsolutions.net,
-	yi.zhu@intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 24 Jul 2009 11:29:34 -0400
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1248449030.21715.23.camel@mj>
+References: <wfljmpm4xl.fsf@calligramme.charmers>
+	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
+	 <1247775641.6841.16.camel@mj>   <wfzlau7co1.fsf@calligramme.charmers>
+	 <1248449030.21715.23.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cPLdGZOzu4YxrLFYNsff"
+Date: Fri, 24 Jul 2009 17:29:31 +0200
+Message-Id: <1248449371.32151.23.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 1:53 AM, Tobias Klauser<klto@zhaw.ch> wrote:
-> Is not needed anymore because of the %pM printk conversion specifier.
->
-> Signed-off-by: Tobias Klauser <klto@zhaw.ch>
-> ---
->  drivers/net/wireless/ath/ar9170/main.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
 
-This is already patched by Johannes through the patch titled:
+--=-cPLdGZOzu4YxrLFYNsff
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[PATCH] wireless: remove print_mac uses
+[ah, sorry about the private mail, only saw this now]
 
-Please see and resubmit if there is anything missing:
+On Fri, 2009-07-24 at 11:23 -0400, Pavel Roskin wrote:
 
-http://marc.info/?l=linux-wireless&m=124767211929848&w=2
+> I tried to add a link for PCI Express devices, but I don't have
+> permissions to reorganize the Wiki to have a separate table. =20
 
- Luis
+It needs some extra code.
+
+> From the
+> users' perspective, PCI and PCI Express are different busses and should
+> be listed separately.
+
+I'm not sure. The ID spaces are the same really, and users really don't
+distinguish that much, for them PCI-E is just the new PCI technology
+with a different form factor. Kinda like mini-pci vs. pci.
+
+johannes
+
+--=-cPLdGZOzu4YxrLFYNsff
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKadNYAAoJEODzc/N7+QmaQNkQAKmQZaPMYYzh9DUd8cLPB1J3
+qRCU52zt8I4Qv2fpFAcf+MfZYDeNoSzVhKX3rivsb67af3nM21eiUsuf7nClMSpj
+SiRCccZC56cAS4GYPCo3/TJjk8hrq6nR1LSj0iYfRa0PGw8B/e9ajZ8O5KGoIIq5
+YVxwEBNOG2kH4/99vJj+W9Rfu16zxIxq+XKQ+d2nm9jWpVnIw9oiduJqGoCh0BPV
+0xPhJRDT2GbinPVJwFBjbuPIJ/1o+dXq5h7LsLXJi0nAoWA3OGyanyGN1fjTHUhi
+jeEevmljkgjS87K1qEhxgelTTuDFikvam+mmEDCEzTdwXBDHwzC31fedBLUNniQ6
+1SXLf5zBXxEyC6tf8KPV3MDJxjS2rurv/lX9oB4i8Cw5uE/7LfeAb30IjPsqv6Rj
+40zWlrqfSAoLnUlk1tpBM0ORJD+Nm6ZeFNtD0IP5UkZEcDYw7fRwfbJOUiWCk/XQ
+gY0FuMyTlAwHaG9u6PEe6+Y/vG0qjy3o2eNkGAsOKA0Lp2s5rh1VsTPd0IN6s0t0
+ffjnbQ22PI/Sa3/S0D09tN6Kua0MNZ3V9zRvDsiOqhIrAwq+IKdbpAjcBvXNeyAp
+vkoVyCY8SCRWKBMrYdksnJ6F8H61z0IolvwXicjsR2BsD/eJoJ+cDKZw3JAth2Ez
+/wgSUTVSsiU/loxQw2kU
+=lrGp
+-----END PGP SIGNATURE-----
+
+--=-cPLdGZOzu4YxrLFYNsff--
+
