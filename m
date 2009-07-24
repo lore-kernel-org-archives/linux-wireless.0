@@ -1,46 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:36186 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753258AbZGITtl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 15:49:41 -0400
-Received: by bwz25 with SMTP id 25so416905bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 12:49:39 -0700 (PDT)
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, stable@kernel.org
-Subject: Re: [PATCH 2/6 2.6.31 and w-t] iwlwifi: only show active power level via sysfs
-References: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
-	<1247160821-14989-2-git-send-email-reinette.chatre@intel.com>
-	<1247160821-14989-3-git-send-email-reinette.chatre@intel.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 09 Jul 2009 22:49:35 +0300
-In-Reply-To: <1247160821-14989-3-git-send-email-reinette.chatre@intel.com> (Reinette Chatre's message of "Thu\,  9 Jul 2009 10\:33\:37 -0700")
-Message-ID: <87zlbdprg0.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:23612 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753112AbZGXSNO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 14:13:14 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/14] iwlwifi: revert to active table when rate is not valid
+Date: Fri, 24 Jul 2009 11:13:00 -0700
+Message-Id: <1248459194-10239-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette Chatre <reinette.chatre@intel.com> writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> From: Reinette Chatre <reinette.chatre@intel.com>
->
-> This changes the power_level file to adhere to the "one value
-> per file" sysfs rule. The user will know which power level was
-> requested as it will be the number just written to this file. It
-> is thus not necessary to create a new sysfs file for this value.
->
-> In addition it fixes a problem where powertop's parsing expects
-> this value to be the first value in this file without any descriptions.
+When performing rate scaling, if detected that the new rate
+index is invalid, clear the search_better_tbl flag
+so it will not be stuck in the loop.
 
-In the future we need to drop all the driver private interfaces and use
-nl80211/wext instead[1]. As this patch shows, they just create problems
-for us. I recommend deprecating the file in question as soon as possible
-and instead start using proper interfaces.
+Since the search table is already set up in uCode,
+we need to empty out the the search table;
+revert back to the "active" rate and throughput info.
+Also pass the "active" table setup to uCode to make
+sure the rate scale is functioning correctly.
 
-[1] Even though nl80211 is lacking power save support, but that will be
-    fixed soon. Use wext for now.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   37 +++++++++++++++++++++++++----
+ 1 files changed, 32 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 6328041..40207da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2003,6 +2003,25 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta)
+ }
+ 
+ /*
++ * setup rate table in uCode
++ * return rate_n_flags as used in the table
++ */
++static u32 rs_update_rate_tbl(struct iwl_priv *priv,
++				struct iwl_lq_sta *lq_sta,
++				struct iwl_scale_tbl_info *tbl,
++				int index, u8 is_green)
++{
++	u32 rate;
++
++	/* Update uCode's rate table. */
++	rate = rate_n_flags_from_tbl(priv, tbl, index, is_green);
++	rs_fill_link_cmd(priv, lq_sta, rate);
++	iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
++
++	return rate;
++}
++
++/*
+  * Do rate scaling and search for new modulation mode.
+  */
+ static void rs_rate_scale_perform(struct iwl_priv *priv,
+@@ -2098,6 +2117,16 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 
+ 	if (!((1 << index) & rate_scale_index_msk)) {
+ 		IWL_ERR(priv, "Current Rate is not valid\n");
++		if (lq_sta->search_better_tbl) {
++			/* revert to active table if search table is not valid*/
++			tbl->lq_type = LQ_NONE;
++			lq_sta->search_better_tbl = 0;
++			tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
++			/* get "active" rate info */
++			index = iwl_hwrate_to_plcp_idx(tbl->current_rate);
++			rate = rs_update_rate_tbl(priv, lq_sta,
++						  tbl, index, is_green);
++		}
+ 		return;
+ 	}
+ 
+@@ -2308,11 +2337,9 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 
+ lq_update:
+ 	/* Replace uCode's rate table for the destination station. */
+-	if (update_lq) {
+-		rate = rate_n_flags_from_tbl(priv, tbl, index, is_green);
+-		rs_fill_link_cmd(priv, lq_sta, rate);
+-		iwl_send_lq_cmd(priv, &lq_sta->lq, CMD_ASYNC);
+-	}
++	if (update_lq)
++		rate = rs_update_rate_tbl(priv, lq_sta,
++					  tbl, index, is_green);
+ 
+ 	/* Should we stay with this modulation mode, or search for a new one? */
+ 	rs_stay_in_table(lq_sta);
 -- 
-Kalle Valo
+1.5.6.3
+
