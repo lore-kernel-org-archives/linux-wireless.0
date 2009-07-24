@@ -1,54 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:40678 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627AbZGGQwN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 12:52:13 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so929115fga.17
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 09:52:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1246984369.28570.42.camel@localhost.localdomain>
-References: <5135d20a0907070928o19322c3waf41a7b59d4b309e@mail.gmail.com>
-	 <1246984369.28570.42.camel@localhost.localdomain>
-Date: Wed, 8 Jul 2009 00:52:10 +0800
-Message-ID: <5135d20a0907070952o18465a2epaac6de932f037632@mail.gmail.com>
-Subject: Re: a question about marvell sd8686's wmm_config_change event
-From: fengzeheng <zehengfeng@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:23615 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753112AbZGXSNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 14:13:16 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 05/14] iwlwifi: Thermal Throttling debugfs function
+Date: Fri, 24 Jul 2009 11:13:04 -0700
+Message-Id: <1248459194-10239-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If this event happen, then packet lost appear. However , I just send
-80kbps udp stream using Iperf....
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-will 80kbps cause firmware's wmm queue full or change wmm setting?
+Add debugfs function to display current thermal throttling status for
+both Legacy and Advance Thermal Throttling Management
 
-2009/7/8 Dan Williams <dcbw@redhat.com>:
-> On Wed, 2009-07-08 at 00:28 +0800, fengzeheng wrote:
->> hi, dan and all
->>      My wireless card sd8686 reports that wmm_config_change about
->> every 2 seconds though wmm's setting in AP's beacons don't change.
->> seems that driver receive MACREG_INT_CODE_WMM_STATUS_CHANGE event from
->> firmware every 2 seconds. And according
->> to firmware spec v5.1  this event generated when firmware monitors a
->> change in wmm state. This is a result of an ap change in the wmm
->> parameter ie or a change in the operational state of one of the AC
->> queues. However ,  I can't find any change of AP's wme settings in
->> beacon from the sniffer packets. So why does firmware send this event?
->> thanks for your any comments.
->
-> It's probably something in the internal firmware's WMM queues then, not
-> something from the AP's IEs.  Is the event causing a problem?
->
-> Dan
->
->
->
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   38 ++++++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+), 0 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 9faf0c2..609a681 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -84,6 +84,7 @@ struct iwl_debugfs {
+ 		struct dentry *file_status;
+ 		struct dentry *file_interrupt;
+ 		struct dentry *file_qos;
++		struct dentry *file_thermal_throttling;
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 		struct dentry *file_led;
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 0ab3463..748dc31 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -618,6 +618,41 @@ static ssize_t iwl_dbgfs_led_read(struct file *file, char __user *user_buf,
+ }
+ #endif
+ 
++static ssize_t iwl_dbgfs_thermal_throttling_read(struct file *file,
++				char __user *user_buf,
++				size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
++	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
++	struct iwl_tt_restriction *restriction;
++	char buf[100];
++	int pos = 0;
++	const size_t bufsz = sizeof(buf);
++	ssize_t ret;
++
++	pos += scnprintf(buf + pos, bufsz - pos,
++			"Thermal Throttling Mode: %s\n",
++			(priv->power_data.adv_tt)
++			? "Advance" : "Legacy");
++	pos += scnprintf(buf + pos, bufsz - pos,
++			"Thermal Throttling State: %d\n",
++			tt->state);
++	if (priv->power_data.adv_tt) {
++		restriction = tt->restriction + tt->state;
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"Tx mode: %d\n",
++				restriction->tx_stream);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"Rx mode: %d\n",
++				restriction->rx_stream);
++		pos += scnprintf(buf + pos, bufsz - pos,
++				"HT mode: %d\n",
++				restriction->is_ht);
++	}
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++	return ret;
++}
++
+ DEBUGFS_READ_WRITE_FILE_OPS(sram);
+ DEBUGFS_WRITE_FILE_OPS(log_event);
+ DEBUGFS_READ_FILE_OPS(nvm);
+@@ -631,6 +666,7 @@ DEBUGFS_READ_FILE_OPS(qos);
+ #ifdef CONFIG_IWLWIFI_LEDS
+ DEBUGFS_READ_FILE_OPS(led);
+ #endif
++DEBUGFS_READ_FILE_OPS(thermal_throttling);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -671,6 +707,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	DEBUGFS_ADD_FILE(led, data);
+ #endif
++	DEBUGFS_ADD_FILE(thermal_throttling, data);
+ 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
+ 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
+ 			 &priv->disable_chain_noise_cal);
+@@ -709,6 +746,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_led);
+ #endif
++	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_thermal_throttling);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dir_data);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_sensitivity);
+ 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_chain_noise);
 -- 
-Best Regards
-Fzh
+1.5.6.3
+
