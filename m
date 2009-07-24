@@ -1,73 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53667 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbZGYIbf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44898 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753617AbZGXSp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 04:31:35 -0400
-Subject: Re: wireless-testing regression: iwl3945 scan fails
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87skglqpb0.fsf@litku.valot.fi>
-References: <87k521s2wa.fsf@litku.valot.fi> <87fxcosron.fsf@litku.valot.fi>
-	 <1248278121.17896.2728.camel@rc-desk> <874ot2sa51.fsf@litku.valot.fi>
-	 <87skglqpb0.fsf@litku.valot.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y1cr15o9nu8aaiHgeIeH"
-Date: Sat, 25 Jul 2009 10:31:32 +0200
-Message-Id: <1248510692.32151.46.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 24 Jul 2009 14:45:57 -0400
+Date: Fri, 24 Jul 2009 14:35:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/6] ath9k: Add debug counters for TX
+Message-ID: <20090724183502.GA2711@tuxdriver.com>
+References: <19048.13623.675052.94639@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <19048.13623.675052.94639@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 23, 2009 at 03:32:31PM +0530, Sujith wrote:
+> Location: ath9k/phy#/xmit
+> 
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 
---=-Y1cr15o9nu8aaiHgeIeH
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Eeek!
 
-On Sat, 2009-07-25 at 08:55 +0300, Kalle Valo wrote:
-> Kalle Valo <kalle.valo@iki.fi> writes:
->=20
-> > reinette chatre <reinette.chatre@intel.com> writes:
-> >
-> >> Are you saying that this problem occurs always with wpa_supplicant and
-> >> sometimes with iw?
-> >
-> > I did some more testing and I can now reproduce this with iw as well. I
-> > just need to reboot my laptop to reproduce it. I'll debug this more on =
-a
-> > rainy day.
->=20
-> This is getting very odd, I cannot reproduce the problem anymore with
-> rc4-wl. Just to be safe, I rebooted back to rc3-wl and I was immediately
-> able to reproduce it. To summarise, rc2-wl and rc4-wl were ok and only
-> rc3-wl is broken. So something fixed this, I just don't know what.
+  CC [M]  drivers/net/wireless/ath/ath9k/hw.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/hw.c:21:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/eeprom.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/eeprom.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/mac.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/mac.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/calib.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/calib.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/ani.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/ani.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/phy.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/phy.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/beacon.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/beacon.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/main.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/main.c:19:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/recv.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/recv.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/xmit.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/xmit.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/xmit.c: In function ‘ath_tx_complete_buf’:
+drivers/net/wireless/ath/ath9k/xmit.c:1838: warning: passing argument 2 of ‘ath_debug_stat_tx’ from incompatible pointer type
+drivers/net/wireless/ath/ath9k/debug.h:199: note: expected ‘struct ath_txq *’ but argument is of type ‘struct ath_txq *’
+drivers/net/wireless/ath/ath9k/xmit.c:1838: warning: passing argument 3 of ‘ath_debug_stat_tx’ from incompatible pointer type
+drivers/net/wireless/ath/ath9k/debug.h:199: note: expected ‘struct ath_buf *’ but argument is of type ‘struct ath_buf *’
+  CC [M]  drivers/net/wireless/ath/ath9k/virtual.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/virtual.c:18:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/rc.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/rc.c:19:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
+  CC [M]  drivers/net/wireless/ath/ath9k/pci.o
+In file included from drivers/net/wireless/ath/ath9k/ath9k.h:28,
+                 from drivers/net/wireless/ath/ath9k/pci.c:20:
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_buf’ declared inside parameter list
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: its scope is only this definition or declaration, which is probably not what you want
+drivers/net/wireless/ath/ath9k/debug.h:201: warning: ‘struct ath_txq’ declared inside parameter list
 
-That makes sense though, I posted a fix for at least a similar problem
-that only happened right after bootup ;)
-
-johannes
-
---=-Y1cr15o9nu8aaiHgeIeH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKasLhAAoJEODzc/N7+QmaZYwP/3Pw1/jNI2XipfaZYMtMOcxu
-t9COotZyLmNojx57gTkCl4rTvWVsJIt4RGn3Z4QSbjZh9S0LWvPiGRocry0jIZJM
-F2GcuCYhl9nAxezo9BXjJsj+lvksatHw9Rpd1e3Y9GinDNtuyJp+Bo5xB2JNRPrN
-13Iv9A+jGMG8/i2nISCrF6ZLQLLenqCyg6aZPb8N2CQS5E+ZetlPdMAewDPOPtS0
-wjcwMuYRQ8BAs83HdONu5qXtM4GqIgjgt7uALWDf5v/dVKZeaSRxU/E/0JndLYBI
-wEF9IPXXXMIzDa1ufNORJOGMZw+utsBOXmmCsX6iWdnTTn5RaokoaUhaC5hzkBsL
-iJd1fscLEpL+MtbVTc+DbOXke7HoYVL4XbAC8Q0exgOY9j5/2B1awzFERlwvXnxF
-EWfa4o8GgAq5e5NdjVkHQCWriMWG9cUg0PIidBvVvIkXzHLGjYsamH/iQt2aXrHo
-LB1QQjC/aFfvfHpN9aFasxorX9cUioZ8NldPmdYRRBxIufhGgctPuw9hDlm6GtEU
-4uv1d3gT7g8d8BMTqYdsRQiVxfDjm29na5e9je9LmG7ZNiRcjJnM4kjDFAyS08GB
-1X+/IRFrMqWAz77t9GDafCS/hTmYR1SgWuPsny4s14QECAFdZS7gfH7aZVW6cXdn
-nmradGoKBtkIGnf7AfuY
-=QJBr
------END PGP SIGNATURE-----
-
---=-Y1cr15o9nu8aaiHgeIeH--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
