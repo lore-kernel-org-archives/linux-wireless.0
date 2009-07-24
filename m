@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:44959 "EHLO
-	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753027AbZGAU5Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 16:57:24 -0400
-Subject: Re: Compiling wpa_supplicant?
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1246473271.8154.5.camel@johannes.local>
-References: <1246467053.11632.13.camel@jdl-desktop>
-	 <1246473271.8154.5.camel@johannes.local>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 15:57:28 -0500
-Message-Id: <1246481848.11632.33.camel@jdl-desktop>
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:23614 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753814AbZGXSNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 14:13:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Pavel Machek <pavel@ucw.cz>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/14] iwlwifi: fix LED config option
+Date: Fri, 24 Jul 2009 11:13:10 -0700
+Message-Id: <1248459194-10239-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-01 at 20:34 +0200, Johannes Berg wrote:
-> On Wed, 2009-07-01 at 11:50 -0500, Jon Loeliger wrote:
-> 
-> > Is there a version of hostapd/wpa_suppliant that is more
-> > up-to-date WRT libnl-2.0?  Or should I just use the wext
-> > driver for now?
-> 
-> I would suggest you compile against a released version of libnl, namely
-> 1.1 :)
+From: Pavel Machek <pavel@ucw.cz>
 
-I was afraid someone would say something like that... :-)
-And since that seems to be effort in the wrong direction,
-I was even more afraid someone would say something like:
+IWLWIFI_LEDS option should certainly have help comment, and should
+default to y.
 
-> Otherwise, you can rip the compat code out off iw and stick it
-> into wpa_supplicant/hostapd.
+Signed-off-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-So I did something like that.  Patch to follow.
-
-> johannes
-
-Thanks,
-jdl
-
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index e092af0..99310c0 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -9,6 +9,9 @@ config IWLWIFI
+ config IWLWIFI_LEDS
+ 	bool "Enable LED support in iwlagn and iwl3945 drivers"
+ 	depends on IWLWIFI
++	default y
++	---help---
++	  Select this if you want LED support.
+ 
+ config IWLWIFI_SPECTRUM_MEASUREMENT
+ 	bool "Enable Spectrum Measurement in iwlagn driver"
+-- 
+1.5.6.3
 
