@@ -1,75 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:47840 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbZGWSAD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 14:00:03 -0400
-Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
- way
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ivan.kuten@promwad.com
-Cc: linux-wireless@vger.kernel.org,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
-In-Reply-To: <4A68A465.6020501@promwad.com>
-References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>
-	 <1245150895.8623.3.camel@johannes.local>  <4A475F82.9040007@promwad.com>
-	 <1246262320.5947.3.camel@johannes.local>  <4A68A465.6020501@promwad.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LuIxMwf6E38sGSKyeFFt"
-Date: Thu, 23 Jul 2009 19:59:31 +0200
-Message-Id: <1248371971.634.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from promwad.com ([83.149.69.23]:47028 "EHLO promwad.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752832AbZGXPw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 11:52:59 -0400
+Message-ID: <4A69D8C6.9040103@promwad.com>
+Date: Fri, 24 Jul 2009 18:52:38 +0300
+From: Ivan Kuten <ivan.kuten@promwad.com>
+Reply-To: ivan.kuten@promwad.com
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: WPA2, compat-wireless-2.6.31-rc3, kernel 2.6.28 - rtl8187 -
+ association works but no ping
+References: <4A682BBD.90101@promwad.com>	<43e72e890907230917w226c4697v41f907623e5f7d8@mail.gmail.com> 	<4A696D33.8050606@promwad.com> <43e72e890907240824n5bcff378m1278eb948055a9a5@mail.gmail.com>
+In-Reply-To: <43e72e890907240824n5bcff378m1278eb948055a9a5@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>> ifconfig:
+>>
+>> eth0      Link encap:Ethernet  HWaddr 02:80:AD:20:31:EB
+>>          inet addr:192.168.5.1  Bcast:192.168.5.255  Mask:255.255.255.0
+>>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>>          RX packets:40 errors:0 dropped:0 overruns:0 frame:0
+>>          TX packets:188 errors:0 dropped:0 overruns:0 carrier:0
+>>          collisions:0 txqueuelen:1000
+>>          RX bytes:4077 (3.9 KiB)  TX bytes:17012 (16.6 KiB)
+> 
+> Note an IP address on eth0, most likely you have a default route using
+> eht0 as well. Check with 'ip route'.
+> 
 
---=-LuIxMwf6E38sGSKyeFFt
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+No default route. eth0 only for netconsole.
+I'm doing udhcpc on wlan0.
+Another thing is that WPA-TKIP is working. The problem only with CCMP.
+I posted also in wpa_supplicant list with detailed wpa_supplicant log:
+http://lists.shmoo.com/pipermail/hostap/2009-July/020026.html
 
-On Thu, 2009-07-23 at 20:56 +0300, Ivan Kuten wrote:
-> > On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
-> >> Hello,
-> >>
-> >> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unalig=
-ned allocations
-> >> for creq->ssids and creq->channels. Should it be something like that?
-> >=20
-> > Seems alright, but there is more than one instance of this, maybe you
-> > can make a function to allocate a scan request properly and have it be
-> > called from all the places it's needed.
-> >=20
-> > johannes
-> >=20
->=20
-> Hello Johannes,
-> Can you point to that multiple scan allocations? I see only one kzalloc
-> with followed possible alignment violation - it's in cfg80211_wext_siwsca=
-n in scan.c
+>> wlan0     Link encap:Ethernet  HWaddr 00:12:0E:98:67:FC
+>>          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>>          RX packets:2 errors:0 dropped:0 overruns:0 frame:0
+>>          TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+>>          collisions:0 txqueuelen:1000
+>>          RX bytes:304 (304.0 B)  TX bytes:3932 (3.8 KiB)
+>>
+>> wmaster0  Link encap:UNSPEC  HWaddr 00-12-0E-98-67-FC-00-00-00-00-00-00-00-00-00-00
+>>          UP RUNNING  MTU:0  Metric:1
+>>          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>>          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>>          collisions:0 txqueuelen:1000
+>>          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>>
+>> Neither dhcp nor setting static IP for wlan0 - no ping.
+> 
+> Do you have Network Manager on? Please read:
+> 
 
-I'm sure there's one in nl80211.c too
+No Network Manager.
+Just:
+wpa_supplicant -Dwext -iwlan0 -c /home/ACORP.conf -dd &
+/sbin/udhcpc -n -q -i wlan0 -s /bin/default.script
 
-johannes
+> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+> 
+> Specifically the section that describes getting 'iw event -t' log and
+> Network Manager.
+> 
 
---=-LuIxMwf6E38sGSKyeFFt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I'll try with iw event -t.
+Is it possible to check via debugfs something like number of received unencrypted packets?
 
------BEGIN PGP SIGNATURE-----
+Regards,
+Ivan
 
-iQIcBAABAgAGBQJKaKT+AAoJEODzc/N7+Qma1iwQAKUzbR6uio5zv0aTmXaYnaRm
-wAAUeSpb4pIckU+zwbtIcmU0YV9nJQNlV8LpK+s2E0vl+HjVmFkUQoO2umX9HDeD
-XFLSnk5pnu4Ew9IKt2yZ1sSnOFn7IJNfgkqWnrOeyKArb4EWpTii6Gz9Zu/Yzteu
-07/X3rqpR2BTEU0nFx0spRtRMmZLYB8mBEEHy37hE5CXsop7w7QNptLqFHv0Xip9
-lBgiO9NpDMQeCDEE11hXzUlpYkCPFB/3HDejxCiCfV1i74Yn2w/dLbiq+D2mOGgr
-u9MB5HvrRZEGon806UMuUOSxWiF92b3uYV+btObyxBPGIuMoTRR+AWFYtm08cpRN
-uAAYqm2/b53fyNrXLjJ+J5gZ38UTrpS+LCQ1qgs3qF/x9ivqY5I9blVq16SbPY02
-NRiaXhCVFTkaZj79gjQ9Gv8YsWaWVu4YF59ZWZFwdggftzSq/SlE33QXwigWob6i
-KfR+lenrNgVBn5PM8/0vnqLgusbYaJZn4wPSI/VHzpRvx/wVwtmmonIzpuVk9S3a
-LUjq6AzKFC+KD3Lc954DX5l27A2YUxcUwpNEzYLoElGl72yIBI5/c8aoqPHJ4gZR
-TpOvYxuZYAsYsQnhJB5AGRLaeao4dXDZoCay/Xa7iNRr1d4F1NRC65r1vLdpHcup
-t1c2FT0cBOMeU2ILANdo
-=589I
------END PGP SIGNATURE-----
 
---=-LuIxMwf6E38sGSKyeFFt--
 
