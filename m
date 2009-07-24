@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37965 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753564AbZGUUKp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 16:10:45 -0400
-Subject: Re: [PATCH 3/3] MAINTAINERS: add wl1251 wireless driver
-From: reinette chatre <reinette.chatre@intel.com>
-To: Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"jirislaby@gmail.com" <jirislaby@gmail.com>,
-	"luciano.coelho@nokia.com" <luciano.coelho@nokia.com>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1248206362.31365.292.camel@Joe-Laptop.home>
-References: <20090721191136.22374.69017.stgit@tikku>
-	 <20090721191154.22374.17349.stgit@tikku>
-	 <1248204540.31365.275.camel@Joe-Laptop.home>
-	 <87ocrdsu9f.fsf@litku.valot.fi>
-	 <1248206362.31365.292.camel@Joe-Laptop.home>
-Content-Type: text/plain
-Date: Tue, 21 Jul 2009 13:10:45 -0700
-Message-Id: <1248207045.17896.2695.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:32902 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552AbZGXN6t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 09:58:49 -0400
+Received: by gxk9 with SMTP id 9so3107294gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 06:58:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A68E80C.808@redfish-solutions.com>
+References: <4A612514.4050708@redfish-solutions.com>
+	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
+	 <4A650331.9020409@redfish-solutions.com>
+	 <4A6620B9.4@redfish-solutions.com>
+	 <20090723112428.GC13742@hash.localnet>
+	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>
+	 <4A68C821.7060208@redfish-solutions.com>
+	 <4A68DBDE.7060504@redfish-solutions.com>
+	 <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>
+	 <4A68E80C.808@redfish-solutions.com>
+Date: Fri, 24 Jul 2009 09:58:48 -0400
+Message-ID: <b6c5339f0907240658o38f4ee76t2de8a071cd2f37f4@mail.gmail.com>
+Subject: Re: Using compat-wireless w/ 2.6.27.26
+From: Bob Copeland <me@bobcopeland.com>
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-07-21 at 12:59 -0700, Joe Perches wrote:
-> On Tue, 2009-07-21 at 22:36 +0300, Kalle Valo wrote:
-> > Also in the future we might share some of the code between
-> > 1251 and 1271. Any tips for this?
-> 
-> Sorry, no.
-> 
-> There are a couple of examples of multiple maintainers
-> for wireless drivers in a single directory.
-> 
-> ipw2x00 and rtl818x
-> 
-> ipw2xx has shared files, rtl818x does not.
-> ipw2xx does not claim a "maintainer" for the
-> shared files.  That's probably not important.
-> 
-> Maybe the maintainers for ipw2xx might give
-> some more useful information (cc'd). It turns
-> out they are the same people though.
+On Thu, Jul 23, 2009 at 6:45 PM, Philip A.
+Prindeville<philipp_subx@redfish-solutions.com> wrote:
+> Bob Copeland wrote:
+>> On Thu, Jul 23, 2009 at 5:53 PM, Philip A.
+>> Prindeville<philipp_subx@redfish-solutions.com> wrote:
+>>>> Getting closer :-)
+>>>>
+>>>> ath5k_tx_processq(sc, &sc->txqs[i]);
+>>>>
+>>> Didn't work with rc4:
+>>
+>> What did you apply against?  It's supposed to be against
+>> wireless-testing (or, at worst, latest compat-wireless).
+>>
+>>> BUG: unable to handle kernel NULL pointer dereference at 00000000
+>>> IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
+>>
 
-I do not have anything useful to add here. As you note the same people
-are listed for for both drivers under ipw2x00 so we do not have the same
-problem.
+> This was against compat-wireless-2.6.31-rc4.
+>
+> Alas, I already blew away the build directory...
 
-Reinette
+I think you need to use the unstable compat-wireless snapshots;
+I have a feeling that the above doesn't have all of the tx queues.
 
+Check out ath5k.h, the txq array in struct ath5k_softc should have
+NUM_TX_QUEUES entries, an earlier version only had 2.
 
+Although your compiler generates rather different code from mine
+(different config or whatever), it looks like the oops happened
+in the list_for_each_entry(... txq->q ...) -- but I don't see how
+that can happen in my copy, since txq[i].q is initialized at the
+same time as txq[i].setup.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
