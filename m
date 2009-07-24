@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f196.google.com ([209.85.221.196]:45590 "EHLO
-	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756021AbZG2UaX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 16:30:23 -0400
-Received: by qyk34 with SMTP id 34so256181qyk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 13:30:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <40f31dec0907291306q7e19c9fdib7e9a6dcab89ac21@mail.gmail.com>
-References: <1248877744-7273-1-git-send-email-me@bobcopeland.com>
-	 <1248877744-7273-2-git-send-email-me@bobcopeland.com>
-	 <40f31dec0907291306q7e19c9fdib7e9a6dcab89ac21@mail.gmail.com>
-Date: Wed, 29 Jul 2009 16:30:22 -0400
-Message-ID: <b6c5339f0907291330r11b3b2dbg8ff8833a955021b8@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 2/2] ath5k: fix CAB queue operation
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com, jirislaby@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:64602 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752615AbZGXQED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 12:04:03 -0400
+Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1248451197.32151.26.camel@johannes.local>
+References: <wfljmpm4xl.fsf@calligramme.charmers>
+	 <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers>
+	 <1247775641.6841.16.camel@mj>   <wfzlau7co1.fsf@calligramme.charmers>
+	 <1248449030.21715.23.camel@mj>  <1248449371.32151.23.camel@johannes.local>
+	 <1248450733.21715.26.camel@mj>  <1248451197.32151.26.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 24 Jul 2009 12:04:00 -0400
+Message-Id: <1248451440.21715.27.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 29, 2009 at 4:06 PM, Nick Kossifidis<mickflemm@gmail.com> wrote:
-> 2009/7/29 Bob Copeland <me@bobcopeland.com>:
+On Fri, 2009-07-24 at 17:59 +0200, Johannes Berg wrote:
+> On Fri, 2009-07-24 at 11:52 -0400, Pavel Roskin wrote:
+> > On Fri, 2009-07-24 at 17:29 +0200, Johannes Berg wrote:
+> > 
+> > > > From the
+> > > > users' perspective, PCI and PCI Express are different busses and should
+> > > > be listed separately.
+> > > 
+> > > I'm not sure. The ID spaces are the same really, and users really don't
+> > > distinguish that much, for them PCI-E is just the new PCI technology
+> > > with a different form factor. Kinda like mini-pci vs. pci.
+> > 
+> > We can have "form factors": PCI, CardBus, MiniPCI, PCIe and PCI
+> > ExpressCard.
+> 
+> I've done that and adjusted a few of the b43 entries, go check it out :)
 
-> I think we are doing the wrong thing, CAB queue is supposed to fire
-> after beacon queue. Ath9k fires up cab queue and beacon queue at the
-> same time and uses ready time to hold cab queue for a fixed interval.
-> Try to remove the readytime stuff from cab queue and i guess it'll
-> work fine (now we fire it after the beacon queue AND wait for a beacon
-> transmition period).
-
-Yeah I was getting almost no delivery of buffered frames without that
-change, but I didn't check the delivery time to see if they were too
-late, which they probably are.
-
-So you are saying keep BCN_SENT_GT, but remove this:
-
-	ath5k_hw_reg_write(ah, ((AR5K_TUNE_BEACON_INTERVAL -
-		(AR5K_TUNE_SW_BEACON_RESP -
-		AR5K_TUNE_DMA_BEACON_RESP) -
-		AR5K_TUNE_ADDITIONAL_SWBA_BACKOFF) * 1024) |
-		AR5K_QCU_RDYTIMECFG_ENABLE,
-		AR5K_QUEUE_RDYTIMECFG(queue));
-
-I'll give it ago.  Maybe split that part out because the process tx
-queue fix is obvious enough.
-
-(Now I see that the similar-to-above-stuff from madwifi is only compat
-code and also uses a readyTime like ath9k.  Ah.)
+Thanks!  I'll update what I know.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Regards,
+Pavel Roskin
