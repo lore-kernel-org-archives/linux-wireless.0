@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10297 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752158AbZGWWtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 18:49:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 15:49:40 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <rossi.f@inwind.it>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] mac80211: do not trigger beacon loss work if scanning
-Date: Thu, 23 Jul 2009 15:49:37 -0700
-Message-ID: <1248389377-30379-1-git-send-email-lrodriguez@atheros.com>
+Received: from qw-out-2122.google.com ([74.125.92.24]:39437 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178AbZGXP0K convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 11:26:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20090724133903.GA18827@khazad-dum.debian.net>
+References: <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com>
+	<20090723195114.GR28158@elf.ucw.cz> <20090723201050.GD19369@khazad-dum.debian.net>
+	<200907232328.03566.rjw@sisk.pl> <1248396826.3556.26.camel@localhost.localdomain>
+	<20090724133903.GA18827@khazad-dum.debian.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 24 Jul 2009 08:25:49 -0700
+Message-ID: <43e72e890907240825l2181297ejb4e1b55ff5e811ef@mail.gmail.com>
+Subject: Re: Generic events for wake up from S1-S4
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: ykzhao <yakui.zhao@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Pavel Machek <pavel@ucw.cz>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were issues probe requests to the associated AP on the wrong
-band by having our beacon timer loss trigger while we are scanning.
-When we would scan the timer could hit and force us to send a
-probe request to the AP but with a chance we'd be on the wrong band.
+On Fri, Jul 24, 2009 at 6:39 AM, Henrique de Moraes
+Holschuh<hmh@hmh.eng.br> wrote:
+> On Fri, 24 Jul 2009, ykzhao wrote:
+>> > > Well, we *already* deliver "lid opened" when the lid is opened, regardless
+>> > > of it waking up the computer or not.  But we are missing a way to deliver
+>> > > other classes of wakeup events.
+>> > >
+>> > > I know of at least these (incomplete list):
+>> > >
+>> > > 1. network-initiated wakeup
+>> > >    a. wired
+>> > >    b. wireless
+>> > >    c. long-range wireless
+>> > >
+>> > > 2. platform health/condition alarms
+>> > >    a. battery alarm (two levels, warning and emergency)
+>> > >    b. thermal alarm (two levels, warning and emergency)
+>> > >    (we need these as generic alarms, not just reason-for-wakeup)
+>> > >
+>> > > 3. device (or device tree) hotplug/hotunplug
+>> > >    a. hotunplug request or notification
+>> > >       (we deliver the request/notification, but we don't know we should
+>> > >       go back to sleep, so all we are missing is the reason-for-wakeup
+>> > >       event)
+>> > >
+>> > > 4. management
+>> > >    a. wake-up/power on clock
+>> > >    b. remote management command (IMPI, etc)
+>> > >    c. intrusion alarm
+>> > >    d. theft alarm
+>> > >
+>> > > None of those have a standard interface to notify userspace of the reason of
+>> > > the wake up AFAIK.  Many of these want a generic event interface to be
+>> > > delivered not just as reason-for-wakeup, but also as runtime events.
+>> > >
+>> > > And I guess we should also tell userspace what state we are waking up from
+>> > > (S5 clean state, S5/S4 hibernation, S3), sometimes it matters.
+>> >
+>> > Agreed, and same for the above.
+>> >
+>> > So, what in your opinion would be the best way to expose this information?
+>
+> Frankly?  It needs to be an easy-to-extend ABI, and the only one that cames
+> to mind right now are uevents.
 
-This leads to finding no usable bitrate but we should not get so
-far on the xmit path. We should not be trying to send these probe
-request frames so prevent the timer from stuffing beacon loss work
-on the mac80211 workqueue when scanning.
+That sounds like a great idea.
 
-Tested-by: Fabio Rossi <rossi.f@inwind.it>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 523c0d9..e90992e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2187,7 +2187,7 @@ static void ieee80211_sta_bcn_mon_timer(unsigned long data)
- 		(struct ieee80211_sub_if_data *) data;
- 	struct ieee80211_local *local = sdata->local;
- 
--	if (local->quiescing)
-+	if (local->quiescing || local->sw_scanning || local->hw_scanning)
- 		return;
- 
- 	queue_work(sdata->local->hw.workqueue,
--- 
-1.6.3.3
-
+  Luis
