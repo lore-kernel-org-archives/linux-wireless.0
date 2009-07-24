@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:59060 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752665AbZGYNG2 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44917 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbZGXSP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 09:06:28 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so244068fga.17
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 06:06:27 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH] mac80211: fix oops in ieee80211_scan_state_set_channel()
-Date: Sat, 25 Jul 2009 15:06:34 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <20090725051801.2965.76768.stgit@ct.roinet.com>
-In-Reply-To: <20090725051801.2965.76768.stgit@ct.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907251506.34943.helmut.schaa@googlemail.com>
+	Fri, 24 Jul 2009 14:15:28 -0400
+Subject: Re: [PATCH] mac80211: add helper to add to the mac80211 workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Lennert Buytenhek <buytenh@marvell.com>,
+	Daniel Drake <ddrake@brontes3d.com>
+In-Reply-To: <1248458909-15338-1-git-send-email-lrodriguez@atheros.com>
+References: <1248458909-15338-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ESHtrvFkcYtDuV9t2GWl"
+Date: Fri, 24 Jul 2009 20:15:24 +0200
+Message-Id: <1248459325.32151.32.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 25. Juli 2009 schrieb Pavel Roskin:
-> Move check for the final value of local->scan_channel_idx from
-> ieee80211_scan_state_decision() to ieee80211_scan_state_set_channel().
-> 
-> Stop the state machine in ieee80211_scan_work() by checking
-> local->scanning.  Don't return a value from
-> ieee80211_scan_state_decision().
 
-Hmm, I'd prefer to keep the decision state as entry and exit point to
-the scan state machine. The patch below should also fix this issue
-by returning back to the decision state after every skipped channel.
+--=-ESHtrvFkcYtDuV9t2GWl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-In the long run I would like to move the channel selection also to
-the decision state in order to implement various improvements (like
-scanning multiple channels in a row or reordering the channel list).
+On Fri, 2009-07-24 at 14:08 -0400, Luis R. Rodriguez wrote:
+> We add a mac80211 helper for adding work onto the mac80211
+> workqueue. We then add a warning if we are suspended. At that
+> point drivers nor mac80211 should have queued work, drivers
+> and mac80211 should ensure the workqueue will remain clair
+> until resume.
+>=20
+> We make use of the helper now in mac80211 and on all mac80211
+> drivers. If you see a warning because of this patch during
+> the suspend <--> resume cycle it means suspend is busted for
+> your driver or mac80211 and it needs to be fixed.
 
-I was in the meantime able to reproduce the oops by setting an other
-regulatory domain. Pavel, Larry, does this patch help you as well? 
+Looks good to me.
 
-Thanks,
-Helmut
+johannes
 
----
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index b376775..147772a 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -605,8 +605,11 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	/* advance state machine to next channel/band */
- 	local->scan_channel_idx++;
- 
--	if (skip)
-+	if (skip) {
-+		/* if we skip this channel return to the decision state */
-+		local->next_scan_state = SCAN_DECISION;
- 		return;
-+	}
- 
- 	/*
- 	 * Probe delay is used to update the NAV, cf. 11.1.3.2.2
+--=-ESHtrvFkcYtDuV9t2GWl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKafo5AAoJEODzc/N7+QmalOoQAJpYA+1t9BKIjpvktQH4PSHb
+TLxaulIyz1SsnNQ21Ydr1H6TDpRFLjhbLuoTP1vR39wNE1sq2iG4gDgiKOwMK25H
+5M4Fw5Aj9rEIhcZ+ah+SZzsOuoSaDCHeBAH7pNcajTpV8hbxSXrrMuAhnEFf1rx0
+3uxgCaC0lEOsFOfOzbcHhLLtbd+OO+NNFw6PbyEGPBZfmNgPS80iVk8lGG7Z6XyS
+z8G7EizU7eT58gmYjbCG/uIYI4LZr5Y3VVgQV4bR9gJ8UGIeR+MGHhPiuryuRore
+Pzte+zunEhwU+nbhbbCPGiYsgQhZQnHrp9s+0EGHdJK1YFS/arjBszo1Txut4vPc
+dDyuRxkzV0Tp1AX+10usvM1itHfsiiDmvSCUG0ch3IbH15kl3JBnB/H/TGp03qY5
+rco2lwIqXMMTbvbiykUqG/vSkhm54wytpN1RJ92ENXqKLkQEWw6X1B9MVRyXQJ+B
+CyD95ui4CM5ij6IULvWNGK/sh2swf0mTK0uKEE4n7/hFh06z48AuoLML0KJLk8QH
+aMXpXDusmWqoeC/2Y2tD45Z5FfFZJL7pQVbqZUyFG5zGmDO82qkB5TqnavlT5rr1
+WMrAGp6AkRlj/dqfUHvkeXkv3PehyrgRBZXeOoFiXzNBHflQiMxUeh0oqnuI5wiO
+E29MTGTAa/nN0YVatHRF
+=YpoZ
+-----END PGP SIGNATURE-----
+
+--=-ESHtrvFkcYtDuV9t2GWl--
+
