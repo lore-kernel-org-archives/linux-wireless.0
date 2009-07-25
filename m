@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13522 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751579AbZG0GgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 02:36:18 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2009 23:36:19 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:48321 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414AbZGYVSt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 17:18:49 -0400
+Received: by ewy26 with SMTP id 26so2433113ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 14:18:48 -0700 (PDT)
+Message-ID: <4A6B7752.1080405@gmail.com>
+Date: Sat, 25 Jul 2009 23:21:22 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19053.19167.815594.919495@localhost.localdomain>
-Date: Mon, 27 Jul 2009 12:06:15 +0530
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/6] ath9k: Add debug counters for TX
-In-Reply-To: <20090724183502.GA2711@tuxdriver.com>
-References: <19048.13623.675052.94639@localhost.localdomain>
-	<20090724183502.GA2711@tuxdriver.com>
+To: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] ath9k: Read outside array bounds
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Thu, Jul 23, 2009 at 03:32:31PM +0530, Sujith wrote:
-> > Location: ath9k/phy#/xmit
-> >
-> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> 
-> Eeek!
-> 
+Incorrect limits leads to reads outside array bounds.
 
-Sorry, I didn't compile-test with DEBUG turned off.
-Will send a v2.
-
-Sujith
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a2fda70..ce0e86c 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -460,7 +460,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
+ 		integer = swab32(eep->modalHeader.antCtrlCommon);
+ 		eep->modalHeader.antCtrlCommon = integer;
+ 
+-		for (i = 0; i < AR5416_MAX_CHAINS; i++) {
++		for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
+ 			integer = swab32(eep->modalHeader.antCtrlChain[i]);
+ 			eep->modalHeader.antCtrlChain[i] = integer;
+ 		}
+@@ -914,7 +914,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
+ 			ctlMode, numCtlModes, isHt40CtlMode,
+ 			(pCtlMode[ctlMode] & EXT_ADDITIVE));
+ 
+-		for (i = 0; (i < AR5416_NUM_CTLS) &&
++		for (i = 0; (i < AR5416_EEP4K_NUM_CTLS) &&
+ 				pEepData->ctlIndex[i]; i++) {
+ 			DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
+ 				"  LOOP-Ctlidx %d: cfgCtl 0x%2.2x "
