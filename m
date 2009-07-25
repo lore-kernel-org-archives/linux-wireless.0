@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60648 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbZGaTE1 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54821 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665AbZGYNIT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 15:04:27 -0400
-Message-ID: <4A733FFD.60407@candelatech.com>
-Date: Fri, 31 Jul 2009 12:03:25 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Subject: Re: [ath5k-devel] [PATCH 3/4] ath5k: Wakeup fixes
-References: <20090731180805.GD7963@makis>
-In-Reply-To: <20090731180805.GD7963@makis>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 25 Jul 2009 09:08:19 -0400
+Subject: Re: [PATCH] mac80211: fix receiving deauth
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1248515916.19945.1.camel@johannes.local>
+References: <1248515916.19945.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Sat, 25 Jul 2009 15:07:25 +0200
+Message-Id: <1248527245.28545.162.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2009 11:08 AM, Nick Kossifidis wrote:
->   * Don't put chip to full sleep because there are problems during
->     wakeup. Instead hold MAC/Baseband on warm reset state via a new
->     function ath5k_hw_on_hold.
->
->   * Durring attach preserve pcicfg bits when enabling pci core
->     sw retry fix.
->
->   * Minor cleanups
+Hi Johannes,
 
-I patched just this patch (not your other 3) into 2.6.31-rc4 and it seems
-to fix the wakeup problems I was seeing on module unload/load.
+> Marcel reported a warning, which quite obviously comes
+> from an oversight in the code handling deauth frames,
+> and which resulted in multiple follow-up warnings due
+> to this missing handling. This patch adds the missing
+> deauth handling (telling cfg80211 about it) and also
+> removes the follow-up warnings since they could happen
+> due to races even if nothing is wrong. I've explained
+> the races in the comments.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Reported-by: Marcel Holtmann <marcel@holtmann.org>
 
-Thanks,
-Ben
+so me current wireless-testing tree now contains the tree from today
+with the oops fix from Luiz, your lockdep fix, Reinette's iwlwifi
+updates and this one. No oopses so far and my connection to the AP stays
+stable. No immediate disconnects anymore. Everything looks good again.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Tested-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
+
 
