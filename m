@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:58322 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbZGWRVm convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:60889 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbZGYSeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 13:21:42 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so603691qwh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 10:21:41 -0700 (PDT)
+	Sat, 25 Jul 2009 14:34:17 -0400
+Received: by fxm18 with SMTP id 18so1948650fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 11:34:16 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH] mac80211: fix oops in ieee80211_scan_state_set_channel()
+Date: Sat, 25 Jul 2009 20:34:20 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20090725051801.2965.76768.stgit@ct.roinet.com> <1248541636.2554.12.camel@ct> <200907252015.07010.helmut.schaa@googlemail.com>
+In-Reply-To: <200907252015.07010.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <200907231907.47751.rossi.f@inwind.it>
-References: <200907230051.57201.rossi.f@inwind.it> <43e72e890907221556r75256f76yde07109d2af78e28@mail.gmail.com>
-	<200907231907.47751.rossi.f@inwind.it>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 23 Jul 2009 10:21:21 -0700
-Message-ID: <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/tx.c:561
-To: Fabio Rossi <rossi.f@inwind.it>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907252034.21003.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 10:07 AM, Fabio Rossi<rossi.f@inwind.it> wrote:
-> On Thursday 23 July 2009, Luis R. Rodriguez wrote:
->
->> On Wed, Jul 22, 2009 at 3:51 PM, Fabio Rossi<rossi.f@inwind.it> wrote:
->> > I'm using the last wireless-testing.git and I have experienced the
->> > following WARNING:
->> >
->> >  WARNING: at net/mac80211/tx.c:561 ieee80211_tx_h_rate_ctrl+0x3d1/0x470
->> > [mac80211]()
->>
->> Please try a git pull
->
-> I was already working with the latest release:
->  v2.6.31-rc3-28452-g5bfcdb0
-> so I confirm that I get the warning quite often (every 15 seconds).
+Am Samstag, 25. Juli 2009 schrieb Helmut Schaa:
+> Am Samstag, 25. Juli 2009 schrieb Pavel Roskin:
+> > Lack of SCAN_DONE in mac80211_scan_state.  We exit scanning through the
+> > "entry point".
+> 
+> I also thought of a separate state SCAN_DONE or something similar but
+> dropped that idea as the only thing this state would have to do is the
+> call to ieee80211_scan_completed. So, once the scan is finished we
+> just stay in SCAN_DECISION as long as the scan state machine gets poked
+> again by a start_scan call.
 
-What channel is your AP on?
-Is your AP 00:0c:f6:xx:xx:xx ?
+Maybe we should add a state SCAN_IDLE which is entered after the scan
+finished just for consistency?
 
-  Luis
+Helmut
