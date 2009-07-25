@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60065 "EHLO c60.cesmail.net"
+Received: from ogre.sisk.pl ([217.79.144.158]:55418 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755176AbZG2UHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 16:07:13 -0400
-Subject: [PATCH] rt2x00dev: cancel all work on disconnect
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com
-From: Pavel Roskin <proski@gnu.org>
-Cc: Michael Buesch <mb@bu3sch.de>
-Date: Wed, 29 Jul 2009 16:07:11 -0400
-Message-ID: <20090729200711.3784.16212.stgit@mj.roinet.com>
+	id S1752135AbZGYU4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 16:56:13 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [Acpi4asus-user] [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
+Date: Sat, 25 Jul 2009 22:56:43 +0200
+Cc: acpi4asus-user@lists.sourceforge.net,
+	Darren Salt <linux@youmustbejoking.demon.co.uk>,
+	debian-eeepc-devel@lists.alioth.debian.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
+	Corentin Chary <corentin.chary@gmail.com>
+References: <4A5716AA.5000903@ph.tum.de> <507E47A184%linux@youmustbejoking.demon.co.uk> <1247262952.26071.1.camel@johannes.local>
+In-Reply-To: <1247262952.26071.1.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <200907252256.44570.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+On Friday 10 July 2009, Johannes Berg wrote:
+> On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
+> > I demand that Johannes Berg may or may not have written...
+> > 
+> > > Apparently there actually _are_ tools that try to set this in sysfs even
+> > > though it wasn't supposed to be used this way without claiming first.
+> > 
+> > Then it should have been documented as such. I don't see anything about this
+> > in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
+> > statement that "Kernel handles events", which isn't exactly helpful :-\
+> 
+> Oh, it's not just that rfkill was horrible, the documentation matched :)
+> All the SHOUTING in it about what you must and must not do but nothing
+> actually helpful :)
+> 
+> > > *shrug*, I don't like it, but whatever...
+> > 
+> > I do. It means that we have a nice simple text-based interface for use in
+> > scripts (for now), and a binary interface which is better suited to the likes
+> > of desktop applications.
+> 
+> Indeed, and as long as you expect to only use soft toggle... problem is
+> that you won't know whether it's soft-toggled or not while it's
+> hard-blocked (off)!
+> 
+> > > Please test & report.
+> > 
+> > With the patch applied, Bluetooth toggling is working again, so you get to
+> > add this:
+> > 
+> > Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
+> 
+> Ok, John, please pick up the patch.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 658a63b..66b303b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -888,6 +888,13 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 
- 	/*
-+	 * Cancel all work.
-+	 */
-+	rt2x00link_stop_tuner(rt2x00dev);
-+	cancel_work_sync(&rt2x00dev->filter_work);
-+	cancel_work_sync(&rt2x00dev->intf_work);
-+
-+	/*
- 	 * Disable radio.
- 	 */
- 	rt2x00lib_disable_radio(rt2x00dev);
+Is there anything going on with the patch?
+
+Surely it's not in -rc4.
+
+Rafael
