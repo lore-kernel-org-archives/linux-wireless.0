@@ -1,121 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50222 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860AbZGaS5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:57:41 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John W Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Fix unaligned 32bit SHM-shared access
-Date: Fri, 31 Jul 2009 20:51:41 +0200
-Cc: bcm43xx-dev@lists.berlios.de,
-	wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907312051.41457.mb@bu3sch.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:56619 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbZGYArf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Jul 2009 20:47:35 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: cancel xmit poll work at stop() callback
+Date: Fri, 24 Jul 2009 20:47:33 -0400
+Message-Id: <1248482853-17032-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
+References: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes unaligned 32bit SHM-shared read/write access.
-The low and high 16 bits were swapped.
-It also adds a testcase for this to the chipaccess validation.
+We forgot to cancel this work at the stop() callback.
 
-(Thanks to Albert Herranz for tracking down this bug.)
+------------[ cut here ]------------
+WARNING: at net/mac80211/util.c:511 ieee80211_queue_delayed_work+0x3a/0x40 [mac80211]()
+Hardware name: 6460DWU
+queueing ieee80211 work while going to suspend
+Modules linked in: <-- snip -->
+Pid: 5124, comm: phy0 Tainted: G        W  2.6.31-rc3-wl #4
+Call Trace:
+ [<ffffffffa03adcda>] ? ieee80211_queue_delayed_work+0x3a/0x40 [mac80211]
+ [<ffffffff810552b8>] warn_slowpath_common+0x78/0xd0
+ [<ffffffff81055394>] warn_slowpath_fmt+0x64/0x70
+ [<ffffffff814ed2c9>] ? thread_return+0x3e/0x635
+ [<ffffffffa03adcda>] ieee80211_queue_delayed_work+0x3a/0x40 [mac80211]
+ [<ffffffffa0297690>] ath_tx_complete_poll_work+0xc0/0x100 [ath9k]
+ [<ffffffffa02975d0>] ? ath_tx_complete_poll_work+0x0/0x100 [ath9k]
+ [<ffffffff81069b68>] worker_thread+0x178/0x260
+ [<ffffffff8106ecc0>] ? autoremove_wake_function+0x0/0x40
+ [<ffffffff810699f0>] ? worker_thread+0x0/0x260
+ [<ffffffff8106e89e>] kthread+0x9e/0xb0
+ [<ffffffff8101302a>] child_rip+0xa/0x20
+ [<ffffffff8106e800>] ? kthread+0x0/0xb0
+ [<ffffffff81013020>] ? child_rip+0x0/0x20
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-This patch does _not_ need to be pushed as a bugfix, because we currently
-do not use unaligned 32bit SHM-shared access.
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-07-31 20:36:18.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-07-31 20:42:48.000000000 +0200
-@@ -392,15 +392,14 @@ u32 __b43_shm_read32(struct b43_wldev *d
- 	if (routing == B43_SHM_SHARED) {
- 		B43_WARN_ON(offset & 0x0001);
- 		if (offset & 0x0003) {
- 			/* Unaligned access */
- 			b43_shm_control_word(dev, routing, offset >> 2);
- 			ret = b43_read16(dev, B43_MMIO_SHM_DATA_UNALIGNED);
--			ret <<= 16;
- 			b43_shm_control_word(dev, routing, (offset >> 2) + 1);
--			ret |= b43_read16(dev, B43_MMIO_SHM_DATA);
-+			ret |= ((u32)b43_read16(dev, B43_MMIO_SHM_DATA)) << 16;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3eb3032..fff89cc 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2100,6 +2100,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
  
- 			goto out;
- 		}
- 		offset >>= 2;
- 	}
- 	b43_shm_control_word(dev, routing, offset);
-@@ -461,15 +460,16 @@ void __b43_shm_write32(struct b43_wldev 
- 	if (routing == B43_SHM_SHARED) {
- 		B43_WARN_ON(offset & 0x0001);
- 		if (offset & 0x0003) {
- 			/* Unaligned access */
- 			b43_shm_control_word(dev, routing, offset >> 2);
- 			b43_write16(dev, B43_MMIO_SHM_DATA_UNALIGNED,
--				    (value >> 16) & 0xffff);
-+				    value & 0xFFFF);
- 			b43_shm_control_word(dev, routing, (offset >> 2) + 1);
--			b43_write16(dev, B43_MMIO_SHM_DATA, value & 0xffff);
-+			b43_write16(dev, B43_MMIO_SHM_DATA,
-+				    (value >> 16) & 0xFFFF);
- 			return;
- 		}
- 		offset >>= 2;
- 	}
- 	b43_shm_control_word(dev, routing, offset);
- 	b43_write32(dev, B43_MMIO_SHM_DATA, value);
-@@ -2928,25 +2928,42 @@ static void b43_periodic_tasks_setup(str
- 	queue_delayed_work(dev->wl->hw->workqueue, work, 0);
- }
+ 	mutex_lock(&sc->mutex);
  
- /* Check if communication with the device works correctly. */
- static int b43_validate_chipaccess(struct b43_wldev *dev)
- {
--	u32 v, backup;
-+	u32 v, backup0, backup4;
- 
--	backup = b43_shm_read32(dev, B43_SHM_SHARED, 0);
-+	backup0 = b43_shm_read32(dev, B43_SHM_SHARED, 0);
-+	backup4 = b43_shm_read32(dev, B43_SHM_SHARED, 4);
- 
- 	/* Check for read/write and endianness problems. */
- 	b43_shm_write32(dev, B43_SHM_SHARED, 0, 0x55AAAA55);
- 	if (b43_shm_read32(dev, B43_SHM_SHARED, 0) != 0x55AAAA55)
- 		goto error;
- 	b43_shm_write32(dev, B43_SHM_SHARED, 0, 0xAA5555AA);
- 	if (b43_shm_read32(dev, B43_SHM_SHARED, 0) != 0xAA5555AA)
- 		goto error;
- 
--	b43_shm_write32(dev, B43_SHM_SHARED, 0, backup);
-+	/* Check if unaligned 32bit SHM_SHARED access works properly.
-+	 * However, don't bail out on failure, because it's noncritical. */
-+	b43_shm_write16(dev, B43_SHM_SHARED, 0, 0x1122);
-+	b43_shm_write16(dev, B43_SHM_SHARED, 2, 0x3344);
-+	b43_shm_write16(dev, B43_SHM_SHARED, 4, 0x5566);
-+	b43_shm_write16(dev, B43_SHM_SHARED, 6, 0x7788);
-+	if (b43_shm_read32(dev, B43_SHM_SHARED, 2) != 0x55663344)
-+		b43warn(dev->wl, "Unaligned 32bit SHM read access is broken\n");
-+	b43_shm_write32(dev, B43_SHM_SHARED, 2, 0xAABBCCDD);
-+	if (b43_shm_read16(dev, B43_SHM_SHARED, 0) != 0x1122 ||
-+	    b43_shm_read16(dev, B43_SHM_SHARED, 2) != 0xCCDD ||
-+	    b43_shm_read16(dev, B43_SHM_SHARED, 4) != 0xAABB ||
-+	    b43_shm_read16(dev, B43_SHM_SHARED, 6) != 0x7788)
-+		b43warn(dev->wl, "Unaligned 32bit SHM write access is broken\n");
++	cancel_delayed_work_sync(&sc->tx_complete_work);
 +
-+	b43_shm_write32(dev, B43_SHM_SHARED, 0, backup0);
-+	b43_shm_write32(dev, B43_SHM_SHARED, 4, backup4);
- 
- 	if ((dev->dev->id.revision >= 3) && (dev->dev->id.revision <= 10)) {
- 		/* The 32bit register shadows the two 16bit registers
- 		 * with update sideeffects. Validate this. */
- 		b43_write16(dev, B43_MMIO_TSF_CFP_START, 0xAAAA);
- 		b43_write32(dev, B43_MMIO_TSF_CFP_START, 0xCCCCBBBB);
-
+ 	if (ath9k_wiphy_started(sc)) {
+ 		mutex_unlock(&sc->mutex);
+ 		return; /* another wiphy still in use */
 -- 
-Greetings, Michael.
+1.6.0.4
+
