@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:40624 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbZGUJKV (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:47777 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626AbZGYMXJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 05:10:21 -0400
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linville@tuxdriver.com, luciano.coelho@nokia.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] wireless: wl12xx, fix lock imbalance
-References: <1247603833-10862-1-git-send-email-jirislaby@gmail.com>
-	<87eish56zj.fsf@litku.valot.fi> <4A64E199.70501@gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 21 Jul 2009 12:10:14 +0300
-In-Reply-To: <4A64E199.70501@gmail.com> (Jiri Slaby's message of "Mon\, 20 Jul 2009 23\:28\:57 +0200")
-Message-ID: <877hy2qu4p.fsf@litku.valot.fi>
+	Sat, 25 Jul 2009 08:23:09 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so595782eyd.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 05:23:08 -0700 (PDT)
+Date: Sat, 25 Jul 2009 15:22:59 +0300 (EAT)
+From: Dan Carpenter <error27@gmail.com>
+To: samuel.ortiz@intel.com, yi.zhu@intel.com
+cc: linux-wireless@vger.kernel.org
+Subject: [patch] wireless: ERR_PTR vs null
+Message-ID: <alpine.DEB.2.00.0907241000250.11771@bicker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jiri Slaby <jirislaby@gmail.com> writes:
+iwm_wdev_alloc() returns an ERR_PTR on failure and not null.  It also 
+prints its own dev_err() message so I removed that as well.
 
-> But currently I'm confused by wl1251_plt_start and wl1251_plt_stop.
-> They take a lock but doesn't unlock it at all. Neither their callies.
-> Is it hidden somewhere deeper?
+Compile tested only.  Sorry.  
+Found by smatch (http://repo.or.cz/w/smatch.git).
 
-I guess that's a bug which creeped in when I ported the patches from our
-internal tree. I'll just remove plt start/stop functions altogether,
-they need to ported to the new nl80211 test mode interface anyway.
+regards,
+dan carpenter
 
-Oh damn, I just noticed that I added wl1251_netlink.c accidentally to
-wireless-testing tree. It should definitely not be there, instead we
-need to use nl80211 test command interface. I'll send a patch to remove
-the private netlink stuff soon. John, sorry about this.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
--- 
-Kalle Valo
+--- orig/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-24 09:56:49.000000000 +0300
++++ devel/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-24 09:57:31.000000000 +0300
+@@ -106,10 +106,8 @@
+ 	int ret = 0;
+ 
+ 	wdev = iwm_wdev_alloc(sizeof_bus, dev);
+-	if (!wdev) {
+-		dev_err(dev, "no memory for wireless device instance\n");
+-		return ERR_PTR(-ENOMEM);
+-	}
++	if (IS_ERR(wdev))
++		return wdev;
+ 
+ 	iwm = wdev_to_iwm(wdev);
+ 	iwm->bus_ops = if_ops;
