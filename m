@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37435 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755408AbZG0W3y (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:55852 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750865AbZGYSPA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 18:29:54 -0400
-Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-In-Reply-To: <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JfPvVusWdb/N82GQu96+"
-Date: Tue, 28 Jul 2009 00:29:20 +0200
-Message-Id: <1248733760.7015.0.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 25 Jul 2009 14:15:00 -0400
+Received: by fxm18 with SMTP id 18so1943780fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 11:14:58 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH] mac80211: fix oops in ieee80211_scan_state_set_channel()
+Date: Sat, 25 Jul 2009 20:15:06 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <20090725051801.2965.76768.stgit@ct.roinet.com> <200907251506.34943.helmut.schaa@googlemail.com> <1248541636.2554.12.camel@ct>
+In-Reply-To: <1248541636.2554.12.camel@ct>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907252015.07010.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Samstag, 25. Juli 2009 schrieb Pavel Roskin:
+> On Sat, 2009-07-25 at 15:06 +0200, Helmut Schaa wrote:
+> 
+> > Hmm, I'd prefer to keep the decision state as entry and exit point to
+> > the scan state machine. The patch below should also fix this issue
+> > by returning back to the decision state after every skipped channel.
+> 
+> The patch is working and I'm fine with it. 
 
---=-JfPvVusWdb/N82GQu96+
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Great, thanks a lot.
 
-On Fri, 2009-07-24 at 11:13 -0700, Reinette Chatre wrote:
+> We should fix that in the 
+> tree as soon as possible, or it will stand in the way of bisection.
 
->  /**
-> + * struct iwl_tt_restriction - Thermal Throttling restriction table used
-> + *		by advance thermal throttling management
-> + *		based on the current thermal throttling state, determine
-> + *		number of tx/rx streams; and the status of HT operation
-> + * @tx_stream: number of tx stream allowed
-> + * @is_ht: ht enable/disable
-> + * @rx_stream: number of rx stream allowed
-> + */
+Yes, you're right.
 
-This kernel-doc, and some others, are really botched btw -- the bit
-after 'struct foo - ' really needs to be a single line only, you can put
-longer descriptions after the parameters.
+> I forgot to mention that the oops was happening in x86_64 with rt61pci
+> and US regulatory domain.  The device only works in the 2.4 GHz range.
+> 
+> > In the long run I would like to move the channel selection also to
+> > the decision state in order to implement various improvements (like
+> > scanning multiple channels in a row or reordering the channel list).
+> 
+> I don't know the code enough, but two things surprised me:
+> 
+> Lack of SCAN_DONE in mac80211_scan_state.  We exit scanning through the
+> "entry point".
 
-johannes
+I also thought of a separate state SCAN_DONE or something similar but
+dropped that idea as the only thing this state would have to do is the
+call to ieee80211_scan_completed. So, once the scan is finished we
+just stay in SCAN_DECISION as long as the scan state machine gets poked
+again by a start_scan call.
 
---=-JfPvVusWdb/N82GQu96+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> Use of "unsigned long" for bitwise fields, such as queue_stop_reasons
+> and scanning.  This reminds me of the good old days where long was
+> always 32 bit, but int wasn't.  I think "unsigned int" should be enough,
+> and you can annotate it with __bitwise to make sparse catch some
+> misuses.
 
------BEGIN PGP SIGNATURE-----
+No objections :)
 
-iQIcBAABAgAGBQJKbio7AAoJEODzc/N7+Qma4igQAMFNkPCfmAeIZT7nzM72zIaA
-1I6WjyGsihPA8KhKz/dnojPQGAxOylSm6JsnbiEZV1mw5XJA8TW84ueKkwFAFNFu
-LojyWW7+z/totNQWi9sKaiXVhGQz6FTVeGpeXZZKI9zZ1Rw8w6CSKDbWm35Qcl/O
-zhFhltz000ya8232KuDcKouBzHVE3+67KyG0QmlkrbWqSgpk3swJxe2bXfDLaCjC
-VJ1DJfgNBBIJkk1YSp1L2N1/eKh35fbcoKxCP/21IeJb2G3F3N/5fSJ85XHndhLX
-qH3XtnzwjfwEWuTOmbRIjneb4CPFwbzglx4rQlebbKuWkMmPFe9IbFtvIC/9/feD
-b9AnVCqWAFpp/zodgrb1n4xmVNeQlLMLUOA8yq1TP3Vn6Hkd1NKnIsn2+fyQ5TBP
-3AyfcbCPRXkb0XrCzuLUI1jDNAdTlNK1B1u1kL8wfHajimnkj8UObGMDqQQv6YTZ
-Gds343sg8wKCz3qS+JmR3a2Q8U+QkOqBfE15/8qJC692wIolkZxcdAQzu2tgsvAk
-H347akXwBoKxW0IPAQR5F0sd1jbPzIHqJtN2uYzSaNZGEoyoU5odBEiwOYnOSCC4
-kauIRzt5w5E5rjrat5JC8d7341xZoL4zOvIcyYQkdA4i8OF/DFS97/HtD+8t9L3y
-x+8qx6rSXXtbtylKeX1s
-=SoxU
------END PGP SIGNATURE-----
-
---=-JfPvVusWdb/N82GQu96+--
-
+Helmut
