@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f190.google.com ([209.85.221.190]:56172 "EHLO
-	mail-qy0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932816AbZGPULr convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f192.google.com ([209.85.222.192]:40692 "EHLO
+	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324AbZGYAvO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 16:11:47 -0400
-Received: by qyk28 with SMTP id 28so121594qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 13:11:46 -0700 (PDT)
+	Fri, 24 Jul 2009 20:51:14 -0400
+Received: by pzk30 with SMTP id 30so1275420pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 17:51:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200907162032.00777.marek.vasut@gmail.com>
-References: <200907162032.00777.marek.vasut@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 13:11:26 -0700
-Message-ID: <43e72e890907161311m99e454v7daf9c58a340ae77@mail.gmail.com>
-Subject: Re: [PATCH] handle broken V4 fw region code shift
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	libertas-dev@lists.infradead.org
+In-Reply-To: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
+References: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 24 Jul 2009 17:50:54 -0700
+Message-ID: <43e72e890907241750ic05b0e1t81df6ef95c7fb0d8@mail.gmail.com>
+Subject: Re: [PATCH] mac80211/drivers: add new mac80211 workqueue API
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 11:32 AM, Marek Vasut<marek.vasut@gmail.com> wrote:
-> Dne Čt 16. července 2009 20:21:30 Dan Williams napsal(a):
->> On Thu, 2009-07-16 at 19:40 +0200, Marek Vasut wrote:
->> > Hi,
->> >
->> > please consider applying/commenting on the following trivial fix. The
->> > description is in the patch. Thanks.
->>
->> Please CC to linux-wireless@vger.kernel and I'll ack there so Linville
->> will pick it up.  Any patch that you consider appropriate for actual
->> inclusion at the time you send it is better on linux-wireless.
->> libertas-dev should really be only for hardware/firmware discussions and
->> not-yet-ready patches.
->>
->> Thanks!
->> Dan
->
-> Done, thanks! :-)
-> (sorry for sending it twice, I missed the address was incomplete in your mail)
->
+Forgot to specify the order. The order is:
 
-Please resend inline
+1/3 mac80211: redefine usage of the mac80211 workqueue
+2/3 mac80211: do not queue work after suspend in the dynamic ps timer
+3/3 ath9k: cancel xmit poll work at stop() callback
 
- Luis
+  Luis
