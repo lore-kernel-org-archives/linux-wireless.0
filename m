@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44828 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752162AbZGWTvV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbZGYIbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 15:51:21 -0400
-Date: Thu, 23 Jul 2009 21:51:14 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Subject: Re: Generic events for wake up from S1-S4
-Message-ID: <20090723195114.GR28158@elf.ucw.cz>
-References: <20090714235332.GA1552@ucw.cz> <43e72e890907150851m69cd2de6lfb71596fbfac30e6@mail.gmail.com> <43e72e890907151100j37feb30av7281d09960ca5db2@mail.gmail.com> <20090718103756.GA11381@elf.ucw.cz> <43e72e890907181302j600506d5oc208167206c44745@mail.gmail.com> <20090718235609.GC25343@khazad-dum.debian.net> <20090723145757.GB28158@elf.ucw.cz> <20090723185720.GB19369@khazad-dum.debian.net> <20090723191330.GQ28158@elf.ucw.cz> <20090723194522.GC19369@khazad-dum.debian.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090723194522.GC19369@khazad-dum.debian.net>
+	Sat, 25 Jul 2009 04:31:35 -0400
+Subject: Re: wireless-testing regression: iwl3945 scan fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87skglqpb0.fsf@litku.valot.fi>
+References: <87k521s2wa.fsf@litku.valot.fi> <87fxcosron.fsf@litku.valot.fi>
+	 <1248278121.17896.2728.camel@rc-desk> <874ot2sa51.fsf@litku.valot.fi>
+	 <87skglqpb0.fsf@litku.valot.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y1cr15o9nu8aaiHgeIeH"
+Date: Sat, 25 Jul 2009 10:31:32 +0200
+Message-Id: <1248510692.32151.46.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 2009-07-23 16:45:22, Henrique de Moraes Holschuh wrote:
-> On Thu, 23 Jul 2009, Pavel Machek wrote:
-> > > > Note that the "why" is unreliable by design. Network driver will
-> > > > ignore WoL during run-time, right?
-> > > 
-> > > "Why" is unrealible?  I don't follow your reasoning.  It should be as
-> > > reliable as "who"...
-> > 
-> > See above. The wakeup events race with each other.
-> 
-> We deliver them all.  It is that simple.  The rest is up to userspace.
 
-Ok, but then we should not be talking about wake up events,
-but... events.
+--=-Y1cr15o9nu8aaiHgeIeH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Like "lid opened", "wake packet came", ... . And deliver them even
-when they happen during run-time. That's okay with me.
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+On Sat, 2009-07-25 at 08:55 +0300, Kalle Valo wrote:
+> Kalle Valo <kalle.valo@iki.fi> writes:
+>=20
+> > reinette chatre <reinette.chatre@intel.com> writes:
+> >
+> >> Are you saying that this problem occurs always with wpa_supplicant and
+> >> sometimes with iw?
+> >
+> > I did some more testing and I can now reproduce this with iw as well. I
+> > just need to reboot my laptop to reproduce it. I'll debug this more on =
+a
+> > rainy day.
+>=20
+> This is getting very odd, I cannot reproduce the problem anymore with
+> rc4-wl. Just to be safe, I rebooted back to rc3-wl and I was immediately
+> able to reproduce it. To summarise, rc2-wl and rc4-wl were ok and only
+> rc3-wl is broken. So something fixed this, I just don't know what.
+
+That makes sense though, I posted a fix for at least a similar problem
+that only happened right after bootup ;)
+
+johannes
+
+--=-Y1cr15o9nu8aaiHgeIeH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKasLhAAoJEODzc/N7+QmaZYwP/3Pw1/jNI2XipfaZYMtMOcxu
+t9COotZyLmNojx57gTkCl4rTvWVsJIt4RGn3Z4QSbjZh9S0LWvPiGRocry0jIZJM
+F2GcuCYhl9nAxezo9BXjJsj+lvksatHw9Rpd1e3Y9GinDNtuyJp+Bo5xB2JNRPrN
+13Iv9A+jGMG8/i2nISCrF6ZLQLLenqCyg6aZPb8N2CQS5E+ZetlPdMAewDPOPtS0
+wjcwMuYRQ8BAs83HdONu5qXtM4GqIgjgt7uALWDf5v/dVKZeaSRxU/E/0JndLYBI
+wEF9IPXXXMIzDa1ufNORJOGMZw+utsBOXmmCsX6iWdnTTn5RaokoaUhaC5hzkBsL
+iJd1fscLEpL+MtbVTc+DbOXke7HoYVL4XbAC8Q0exgOY9j5/2B1awzFERlwvXnxF
+EWfa4o8GgAq5e5NdjVkHQCWriMWG9cUg0PIidBvVvIkXzHLGjYsamH/iQt2aXrHo
+LB1QQjC/aFfvfHpN9aFasxorX9cUioZ8NldPmdYRRBxIufhGgctPuw9hDlm6GtEU
+4uv1d3gT7g8d8BMTqYdsRQiVxfDjm29na5e9je9LmG7ZNiRcjJnM4kjDFAyS08GB
+1X+/IRFrMqWAz77t9GDafCS/hTmYR1SgWuPsny4s14QECAFdZS7gfH7aZVW6cXdn
+nmradGoKBtkIGnf7AfuY
+=QJBr
+-----END PGP SIGNATURE-----
+
+--=-Y1cr15o9nu8aaiHgeIeH--
+
