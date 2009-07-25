@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:51345 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755110AbZGGUhN (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:31051 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799AbZGYQJe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 16:37:13 -0400
-Received: by bwz25 with SMTP id 25so2344274bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2009 13:37:12 -0700 (PDT)
-Date: Wed, 8 Jul 2009 00:37:34 +0400
-From: Alexander Barinov <alex.barinov@gmail.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: BUG REPORT: libertas causing kernel lockups
-Message-ID: <20090708003734.0d57b389@dream>
-In-Reply-To: <200907070859.39413.hs4233@mail.mn-solutions.de>
-References: <20090704130346.01b2e869@dream>
-	<200907070859.39413.hs4233@mail.mn-solutions.de>
+	Sat, 25 Jul 2009 12:09:34 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so600927fga.17
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 09:09:34 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: add missing parameter clearing
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <1248533676.19945.2.camel@johannes.local>
+References: <1248533676.19945.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Sat, 25 Jul 2009 19:09:28 +0300
+Message-Id: <1248538168.5338.4.camel@maxim-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 7 Jul 2009 08:59:39 +0200
-Holger Schurig <hs4233@mail.mn-solutions.de> wrote:
-> > By executing 'cat /proc/net/wireless' I get the same bug:
-> 
-> I haven't tested your exact but, but I've the following in my 
-> mind, back from about 1 year ago when I did lots of libertas and 
-> libertas_cs work:
-> 
-> Access wireless stats made the libertas driver (in wext.c) issue 
-> a command towards the firmware in the hardware. I think it was 
-> the command to get the current SNR/RSSI/whatever.
-> 
-> The libertas command-response-cycle does sleep, so you could 
-> trigger a bug. I once had a patch (and I think I posted that 
-> patch). The patch lied, by providing the last SNR/RSSI/whatever, 
-> and issueing a "get SNR/RSSI/whatever" in the background, just 
-> storing the result. So just one "cat /proc/net/wireless" returns 
-> bogus, but a continues command returns "valid" info, e.g. when 
-> doing "watch iwconfig eth1".
+On Sat, 2009-07-25 at 16:54 +0200, Johannes Berg wrote:
+> Jouni and Maxim reported an oops when using wpa_supplicant -Dnl80211,
+> which seems to be due to random data being contained in the crypto
+> settings for the assoc() command. This seems to be due to the missing
+> memset here, so add it -- it's certainly missing but I'm not 100%
+> certain that it will fix the problem.
+Indeed this fixes it.
+Although the NM still reports zero as signal level, and I see 
 
-Sorry for asking a potentially stupid question as I am no way a
-wireless hardware expert, but can this bug be caused by wrong firmware
-version?
+[  417.210115] No probe response from AP 00:1b:9e:d8:77:02 after 200ms,
+disconnecting.
+[  419.363655] wlan0: direct probe to AP 00:1b:9e:d8:77:02 (try 1)
+[  419.369285] wlan0 direct probe responded
+[  419.369292] wlan0: authenticate with AP 00:1b:9e:d8:77:02 (try 1)
+[  419.371189] wlan0: authenticated
+[  419.371513] wlan0: associate with AP 00:1b:9e:d8:77:02 (try 1)
+[  419.374094] wlan0: RX AssocResp from 00:1b:9e:d8:77:02 (capab=0x411
+status=0 aid=3)
 
-BTW, it is really hard to find a patch you are talking about in the
-archive. Could you please give some clues on the key words to search
-(besides your name and "patch", of cause)?
+Although it isn't visible any more.
+
+Did wext compatibility layer got partially removed?
+iwconfig does show now much
+
+The last use of it, is to set tx power and bitrate, as this doesn't seem
+to be implemented in iw.
+
+
+Also NM applet doesn't show my network as connected. When I attempted to
+connect it freezed the system.
+
+Best regards,
+	Maxim  Levitsky
+
+
+
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/wireless/nl80211.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> --- wireless-testing.orig/net/wireless/nl80211.c	2009-07-25 16:50:39.000000000 +0200
+> +++ wireless-testing/net/wireless/nl80211.c	2009-07-25 16:51:00.000000000 +0200
+> @@ -3385,6 +3385,8 @@ static int nl80211_crypto_settings(struc
+>  				   struct cfg80211_crypto_settings *settings,
+>  				   int cipher_limit)
+>  {
+> +	memset(settings, 0, sizeof(*settings));
+> +
+>  	settings->control_port = info->attrs[NL80211_ATTR_CONTROL_PORT];
+>  
+>  	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
+> 
+> 
+
