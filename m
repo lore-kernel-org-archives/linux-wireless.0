@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailguard.fgan.de ([128.7.3.5]:53812 "EHLO mailguard.fgan.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750873AbZGJKaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 06:30:03 -0400
-Message-ID: <4A571822.90308@fgan.de>
-Date: Fri, 10 Jul 2009 12:29:54 +0200
-From: Alexander Wenzel <wenzel@fgan.de>
-MIME-Version: 1.0
-To: Max Filippov <jcmvbkbc@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problem with p54 driver and ibss mode
-References: <4A55DB91.2070305@fgan.de> <73aaf0dd0907090620i752b7f9cq60563f8e22c02d75@mail.gmail.com> <4A560E4B.6080209@fgan.de> <200907092157.21784.jcmvbkbc@gmail.com>
-In-Reply-To: <200907092157.21784.jcmvbkbc@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from senator.holtmann.net ([87.106.208.187]:53273 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208AbZGYOLY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 10:11:24 -0400
+Subject: Re: [PATCH] mac80211: fix receiving deauth
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1248527245.28545.162.camel@violet>
+References: <1248515916.19945.1.camel@johannes.local>
+	 <1248527245.28545.162.camel@violet>
+Content-Type: text/plain
+Date: Sat, 25 Jul 2009 16:10:30 +0200
+Message-Id: <1248531030.28545.164.camel@violet>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there...
+Hi Johannes,
 
->> I just checked the other N810 devices and every device has
->> the same mac address. And here we go... [p54spi_eeprom.h:39]
->> 0x00, 0x02, 0xee, 0xc0, 0xff, 0xee,
+> > Marcel reported a warning, which quite obviously comes
+> > from an oversight in the code handling deauth frames,
+> > and which resulted in multiple follow-up warnings due
+> > to this missing handling. This patch adds the missing
+> > deauth handling (telling cfg80211 about it) and also
+> > removes the follow-up warnings since they could happen
+> > due to races even if nothing is wrong. I've explained
+> > the races in the comments.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > Reported-by: Marcel Holtmann <marcel@holtmann.org>
+> 
+> so me current wireless-testing tree now contains the tree from today
+> with the oops fix from Luiz, your lockdep fix, Reinette's iwlwifi
+> updates and this one. No oopses so far and my connection to the AP stays
+> stable. No immediate disconnects anymore. Everything looks good again.
 
->> So is there a way to let the kernel receive and set the
->> correct mac address of the wlan device?
->> I guess my problem is this line:
->> [ 3685.320800] cx3110x spi2.0: loading default eeprom...
-> You're right. I guess that easiest way to deal with it is to save blob from p54spi_eeprom.h into a file
-> 3826.eeprom in the same directory as 3826.arm and fix MAC address in it, according to comments in p54spi_eeprom.h
+while this fixes the oops and helps with my connect/disconnect issues I
+have seen, it doesn't fully fix them. As soon as the AP is something
+like more than 5m or 10m away, it connects, disconnects, re-connects
+etc. all over again :(
 
-[ 2675.558532] cx3110x spi2.0: firmware: requesting 3826.eeprom
-[ 2675.625579] cx3110x spi2.0: loading user eeprom...
-[ 2675.625671] phy0: hwaddr 00:1d:6e:9c:**:**, MAC:isl3820 RF:Longbow
+Regards
 
-Ok, p54 with user eeprom and manually inserted mac address works fine.
-So, a part of the problem is somehow "fixed"... Thanks.
+Marcel
 
-Regards,
-AleX
--- 
-**********************************************
-Dipl.-Inform. (FH) Alexander Wenzel
-Forschungsgesellschaft fuer
-Angewandte Naturwissenschaften e. V. (FGAN)
-Neuenahrer Str. 20, 53343 Wachtberg, Germany
-Tel.  : 0049 (0)228 9435-263
-Fax   : 0049 (0)228 9435-685
-E-Mail: wenzel@fgan.de
-Web   : http://www.fgan.de/
-**********************************************
-Sitz der Gesellschaft: Bonn
-Registergericht: Amtsgericht Bonn VR 2530
-Vorstand: Prof. Dr. Maurus Tacke (komm. Vors.)
-          Prof. Dr. Joachim Ender (Stellv.)
+
