@@ -1,235 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48150 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753097AbZGLU03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jul 2009 16:26:29 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, juhosg@openwrt.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3 v2] [compat-2.6] Update compat.diff for master-2009-07-10
-Date: Sun, 12 Jul 2009 22:26:22 +0200
-Message-Id: <1247430382-16918-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <4A5A2C26.90902@openwrt.org>
-References: <4A5A2C26.90902@openwrt.org>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59012 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbZGYIyy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 04:54:54 -0400
+Subject: Re: [PATCH] mac80211: fix oops in
+ ieee80211_scan_state_set_channel()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+In-Reply-To: <20090725051801.2965.76768.stgit@ct.roinet.com>
+References: <20090725051801.2965.76768.stgit@ct.roinet.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1Yc9mfkmNZ4R43oJtKxG"
+Date: Sat, 25 Jul 2009 10:54:55 +0200
+Message-Id: <1248512095.32151.50.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now compiling with kernel at least 2.6.26 to 2.6.30.
-MAC80211_DRIVER_API_TRACER is only working with kernel >= 2.6.30.
 
-v2: Fixed typo
+--=-1Yc9mfkmNZ4R43oJtKxG
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.28.c |   53 +++++++++++++++++++++++++++++++++++++++++++
- compat/compat-2.6.28.h |   59 ++++++++++++++++++++++++++++++++++++++++++++++++
- compat/compat-2.6.30.h |    9 ++++++-
- compat/compat.diff     |   25 ++++++++++++++++++--
- 4 files changed, 142 insertions(+), 4 deletions(-)
+On Sat, 2009-07-25 at 01:18 -0400, Pavel Roskin wrote:
+> Move check for the final value of local->scan_channel_idx from
+> ieee80211_scan_state_decision() to ieee80211_scan_state_set_channel().
+>=20
+> Stop the state machine in ieee80211_scan_work() by checking
+> local->scanning.  Don't return a value from
+> ieee80211_scan_state_decision().
 
-diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
-index 53856d0..7abd50d 100644
---- a/compat/compat-2.6.28.c
-+++ b/compat/compat-2.6.28.c
-@@ -28,4 +28,57 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- }
- EXPORT_SYMBOL_GPL(pci_ioremap_bar);
- 
-+static unsigned long round_jiffies_common(unsigned long j, int cpu,
-+		bool force_up)
-+{
-+	int rem;
-+	unsigned long original = j;
-+
-+	/*
-+	 * We don't want all cpus firing their timers at once hitting the
-+	 * same lock or cachelines, so we skew each extra cpu with an extra
-+	 * 3 jiffies. This 3 jiffies came originally from the mm/ code which
-+	 * already did this.
-+	 * The skew is done by adding 3*cpunr, then round, then subtract this
-+	 * extra offset again.
-+	 */
-+	j += cpu * 3;
-+
-+	rem = j % HZ;
-+
-+	/*
-+	 * If the target jiffie is just after a whole second (which can happen
-+	 * due to delays of the timer irq, long irq off times etc etc) then
-+	 * we should round down to the whole second, not up. Use 1/4th second
-+	 * as cutoff for this rounding as an extreme upper bound for this.
-+	 * But never round down if @force_up is set.
-+	 */
-+	if (rem < HZ/4 && !force_up) /* round down */
-+		j = j - rem;
-+	else /* round up */
-+		j = j - rem + HZ;
-+
-+	/* now that we have rounded, subtract the extra skew again */
-+	j -= cpu * 3;
-+
-+	if (j <= jiffies) /* rounding ate our timeout entirely; */
-+		return original;
-+	return j;
-+}
-+
-+/**
-+ * round_jiffies_up - function to round jiffies up to a full second
-+ * @j: the time in (absolute) jiffies that should be rounded
-+ *
-+ * This is the same as round_jiffies() except that it will never
-+ * round down.  This is useful for timeouts for which the exact time
-+ * of firing does not matter too much, as long as they don't fire too
-+ * early.
-+ */
-+unsigned long round_jiffies_up(unsigned long j)
-+{
-+	return round_jiffies_common(j, raw_smp_processor_id(), true);
-+}
-+EXPORT_SYMBOL_GPL(round_jiffies_up);
-+
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
-diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
-index cb956b7..6f7760e 100644
---- a/compat/compat-2.6.28.h
-+++ b/compat/compat-2.6.28.h
-@@ -92,6 +92,20 @@ static inline void __skb_queue_splice(const struct sk_buff_head *list,
- }
- 
- /**
-+ *	skb_queue_splice - join two skb lists, this is designed for stacks
-+ *	@list: the new list to add
-+ *	@head: the place to add it in the first list
-+ */
-+static inline void skb_queue_splice(const struct sk_buff_head *list,
-+				    struct sk_buff_head *head)
-+{
-+	if (!skb_queue_empty(list)) {
-+		__skb_queue_splice(list, (struct sk_buff *) head, head->next);
-+		head->qlen += list->qlen;
-+	}
-+}
-+
-+/**
-  *	skb_queue_splice_tail - join two skb lists and reinitialise the emptied list
-  *	@list: the new list to add
-  *	@head: the place to add it in the first list
-@@ -109,6 +123,51 @@ static inline void skb_queue_splice_tail_init(struct sk_buff_head *list,
- 	}
- } /* From include/linux/skbuff.h */
- 
-+struct module;
-+struct tracepoint;
-+
-+struct tracepoint {
-+	const char *name;		/* Tracepoint name */
-+	int state;			/* State. */
-+	void **funcs;
-+} __attribute__((aligned(32)));		/*
-+					 * Aligned on 32 bytes because it is
-+					 * globally visible and gcc happily
-+					 * align these on the structure size.
-+					 * Keep in sync with vmlinux.lds.h.
-+					 */
-+
-+#ifndef DECLARE_TRACE
-+
-+#define TP_PROTO(args...)	args
-+#define TP_ARGS(args...)		args
-+
-+#define DECLARE_TRACE(name, proto, args)				\
-+	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
-+	{ }								\
-+	static inline void trace_##name(proto)				\
-+	{ }								\
-+	static inline int register_trace_##name(void (*probe)(proto))	\
-+	{								\
-+		return -ENOSYS;						\
-+	}								\
-+	static inline int unregister_trace_##name(void (*probe)(proto))	\
-+	{								\
-+		return -ENOSYS;						\
-+	}
-+
-+#define DEFINE_TRACE(name)
-+#define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
-+#define EXPORT_TRACEPOINT_SYMBOL(name)
-+
-+static inline void tracepoint_update_probe_range(struct tracepoint *begin,
-+	struct tracepoint *end)
-+{ }
-+
-+#endif
-+
-+unsigned long round_jiffies_up(unsigned long j);
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
- 
- #endif /* LINUX_26_28_COMPAT_H */
-diff --git a/compat/compat-2.6.30.h b/compat/compat-2.6.30.h
-index 112cf19..6a7c8fb 100644
---- a/compat/compat-2.6.30.h
-+++ b/compat/compat-2.6.30.h
-@@ -6,7 +6,14 @@
- #include <linux/compat_autoconf.h>
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
--/* Nothing ! */
-+
-+#ifndef TP_PROTO
-+#define TP_PROTO(args...)	TPPROTO(args)
-+#endif
-+#ifndef TP_ARGS
-+#define TP_ARGS(args...)	TPARGS(args)
-+#endif
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)) */
- 
- #endif /* LINUX_26_30_COMPAT_H */
-diff --git a/compat/compat.diff b/compat/compat.diff
-index 4c5c8d6..c6bf602 100644
---- a/compat/compat.diff
-+++ b/compat/compat.diff
-@@ -413,9 +413,9 @@
-  	rtap_dev->ml_priv = priv;
-  	SET_NETDEV_DEV(rtap_dev, priv->dev->dev.parent);
-  
----- a/drivers/net/wireless/mac80211_hwsim.c	2009-07-08 23:32:17.001186494 -0700
--+++ b/drivers/net/wireless/mac80211_hwsim.c	2009-07-08 23:32:17.065187158 -0700
--@@ -813,16 +813,22 @@
-+--- a/drivers/net/wireless/mac80211_hwsim.c
-++++ b/drivers/net/wireless/mac80211_hwsim.c
-+@@ -814,16 +814,22 @@ static struct device_driver mac80211_hwsim_driver = {
-  	.name = "mac80211_hwsim"
-  };
-  
-@@ -521,6 +521,25 @@
-  
-  
-  /*
-+--- a/net/mac80211/driver-trace.h
-++++ b/net/mac80211/driver-trace.h
-+@@ -1,7 +1,9 @@
-+ #if !defined(__MAC80211_DRIVER_TRACE) || defined(TRACE_HEADER_MULTI_READ)
-+ #define __MAC80211_DRIVER_TRACE
-+ 
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-+ #include <linux/tracepoint.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-+ #include <net/mac80211.h>
-+ #include "ieee80211_i.h"
-+ 
-+@@ -645,4 +647,6 @@ TRACE_EVENT(drv_ampdu_action,
-+ #define TRACE_INCLUDE_PATH .
-+ #undef TRACE_INCLUDE_FILE
-+ #define TRACE_INCLUDE_FILE driver-trace
-++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
-+ #include <trace/define_trace.h>
-++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
- --- a/net/mac80211/iface.c	2009-07-08 15:46:16.452255410 -0700
- +++ b/net/mac80211/iface.c	2009-07-08 15:46:06.060257895 -0700
- @@ -643,6 +643,7 @@
--- 
-1.6.2.1
+Helmut, can you please take a look at this? I'm not entirely sure what's
+going on.
+
+johannes
+
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  net/mac80211/scan.c |   22 +++++++++++-----------
+>  1 files changed, 11 insertions(+), 11 deletions(-)
+>=20
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index b376775..8b5a4a3 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -470,18 +470,12 @@ static int __ieee80211_start_scan(struct ieee80211_=
+sub_if_data *sdata,
+>  	return rc;
+>  }
+> =20
+> -static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+> -					 unsigned long *next_delay)
+> +static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+> +					  unsigned long *next_delay)
+>  {
+>  	bool associated =3D false;
+>  	struct ieee80211_sub_if_data *sdata;
+> =20
+> -	/* if no more bands/channels left, complete scan and advance to the idl=
+e state */
+> -	if (local->scan_channel_idx >=3D local->scan_req->n_channels) {
+> -		ieee80211_scan_completed(&local->hw, false);
+> -		return 1;
+> -	}
+> -
+>  	/* check if at least one STA interface is associated */
+>  	mutex_lock(&local->iflist_mtx);
+>  	list_for_each_entry(sdata, &local->interfaces, list) {
+> @@ -517,7 +511,6 @@ static int ieee80211_scan_state_decision(struct ieee8=
+0211_local *local,
+>  	}
+> =20
+>  	*next_delay =3D 0;
+> -	return 0;
+>  }
+> =20
+>  static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_loc=
+al *local,
+> @@ -587,6 +580,12 @@ static void ieee80211_scan_state_set_channel(struct =
+ieee80211_local *local,
+>  	struct ieee80211_channel *chan;
+>  	struct ieee80211_sub_if_data *sdata =3D local->scan_sdata;
+> =20
+> +	/* if no more bands/channels left, complete scan and advance to the idl=
+e state */
+> +	if (local->scan_channel_idx >=3D local->scan_req->n_channels) {
+> +		ieee80211_scan_completed(&local->hw, false);
+> +		return;
+> +	}
+> +
+>  	skip =3D 0;
+>  	chan =3D local->scan_req->channels[local->scan_channel_idx];
+> =20
+> @@ -695,8 +694,7 @@ void ieee80211_scan_work(struct work_struct *work)
+>  	do {
+>  		switch (local->next_scan_state) {
+>  		case SCAN_DECISION:
+> -			if (ieee80211_scan_state_decision(local, &next_delay))
+> -				return;
+> +			ieee80211_scan_state_decision(local, &next_delay);
+>  			break;
+>  		case SCAN_SET_CHANNEL:
+>  			ieee80211_scan_state_set_channel(local, &next_delay);
+> @@ -711,6 +709,8 @@ void ieee80211_scan_work(struct work_struct *work)
+>  			ieee80211_scan_state_enter_oper_channel(local, &next_delay);
+>  			break;
+>  		}
+> +		if (!local->scanning)
+> +			return;
+>  	} while (next_delay =3D=3D 0);
+> =20
+>  	queue_delayed_work(local->hw.workqueue, &local->scan_work,
+>=20
+
+--=-1Yc9mfkmNZ4R43oJtKxG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKashcAAoJEODzc/N7+QmaeEUP/2HrhZM4mnle4G32Xm1Jxa3T
+f/P98DqnE/msYjm6I03uolWJEx+Qx46f+Iqj3MQiHR9HLe9Nhu5KvUjcUtrNGjEY
+Ym9+vQgYAvCdRWw1dJkOB0uc4LoQ/aECAIkhuhytbaMDNGa0ByrLD+WYp0++3uYX
+VxYM6FeJwHGUacLYYCdwhCjvouj/oVHFrzJZIjGQ6SnfclEeeAYqYRXfDTz3vCpb
+eDTDreyk2M5CG9JZmFLPHGUb6cAkAYpm5AHm7+EPPEG+Hk+FaVFZPSpYW3t6yuUa
+kZtC6UGO9Mwtvmm76wHtLeQQTEM5hJSmOtIDtZbm0T1CVggulU+9HI4vfjK4o0EA
+gnrbP9zDWrVU1+Ystpfv34padYUbfv7xDSWUowEzbkXDLlK5o6eHColls4s9xi/U
+SBWR79UHaCVb/RJd/yfAsOG+6QOofDL6yBV2kI7gymaocBICTYq9ph6tQd86Uxxk
+0CXL6q+8x+Ci75NrkJ9GLxmuhOSRvcdaYMpiuVGbelQsIf/A1meLyPd84DQ5jAe5
+Vv0H6mS/zolaOw+j2vRX8QydjztVxusboyQq4KEjzkQ1O2sNX95OoBRCkGrmNEbL
+f3r2skjqUycqyhDXT7XxXJlXN48khWXM1k/PTs/p0R02hQyufMMWdEmV/ekgughg
+ZTHDajF3WF93yPjBq+CE
+=vOlt
+-----END PGP SIGNATURE-----
+
+--=-1Yc9mfkmNZ4R43oJtKxG--
 
