@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:33238 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbZGAUki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 16:40:38 -0400
-Received: by fxm18 with SMTP id 18so1071071fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 13:40:39 -0700 (PDT)
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave <kilroyd@googlemail.com>,
-	Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Insist on cfg80211 for new drivers?
-References: <1246388712.4949.52.camel@localhost>
-	<43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
-	<1246396179.4949.76.camel@localhost>
-	<43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-	<1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com>
-	<43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com>
-	<1246473300.30522.10.camel@localhost.localdomain>
-	<20090701193657.GD3473@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 01 Jul 2009 23:40:37 +0300
-In-Reply-To: <20090701193657.GD3473@tuxdriver.com> (John W. Linville's message of "Wed\, 1 Jul 2009 15\:36\:57 -0400")
-Message-ID: <87ljn8t9ve.fsf@litku.valot.fi>
+Received: from c60.cesmail.net ([216.154.195.49]:45945 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751367AbZGYFSH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 01:18:07 -0400
+Subject: [PATCH] mac80211: fix oops in ieee80211_scan_state_set_channel()
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+From: Pavel Roskin <proski@gnu.org>
+Date: Sat, 25 Jul 2009 01:18:01 -0400
+Message-ID: <20090725051801.2965.76768.stgit@ct.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Move check for the final value of local->scan_channel_idx from
+ieee80211_scan_state_decision() to ieee80211_scan_state_set_channel().
 
-> On Wed, Jul 01, 2009 at 02:35:00PM -0400, Dan Williams wrote:
->
->> That's really all I
->> care about, I don't want another WEXT-based driver accepted; I want all
->> the new ones using cfg80211.
->
-> Now there is a discussion we should have had in Berlin...
+Stop the state machine in ieee80211_scan_work() by checking
+local->scanning.  Don't return a value from
+ieee80211_scan_state_decision().
 
-Yes, we missed this one.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ net/mac80211/scan.c |   22 +++++++++++-----------
+ 1 files changed, 11 insertions(+), 11 deletions(-)
 
-> is it time to insist on cfg80211-based configuration for all new
-> drivers?
-
-I vote for yes. In my books wext is depreceated and its use should be
-avoided. After Johannes' excellent work we need to start pushing the use
-of cfg80211 and nl80211.
-
--- 
-Kalle Valo
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b376775..8b5a4a3 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -470,18 +470,12 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	return rc;
+ }
+ 
+-static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+-					 unsigned long *next_delay)
++static void ieee80211_scan_state_decision(struct ieee80211_local *local,
++					  unsigned long *next_delay)
+ {
+ 	bool associated = false;
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+-	/* if no more bands/channels left, complete scan and advance to the idle state */
+-	if (local->scan_channel_idx >= local->scan_req->n_channels) {
+-		ieee80211_scan_completed(&local->hw, false);
+-		return 1;
+-	}
+-
+ 	/* check if at least one STA interface is associated */
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -517,7 +511,6 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	}
+ 
+ 	*next_delay = 0;
+-	return 0;
+ }
+ 
+ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
+@@ -587,6 +580,12 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	struct ieee80211_channel *chan;
+ 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+ 
++	/* if no more bands/channels left, complete scan and advance to the idle state */
++	if (local->scan_channel_idx >= local->scan_req->n_channels) {
++		ieee80211_scan_completed(&local->hw, false);
++		return;
++	}
++
+ 	skip = 0;
+ 	chan = local->scan_req->channels[local->scan_channel_idx];
+ 
+@@ -695,8 +694,7 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	do {
+ 		switch (local->next_scan_state) {
+ 		case SCAN_DECISION:
+-			if (ieee80211_scan_state_decision(local, &next_delay))
+-				return;
++			ieee80211_scan_state_decision(local, &next_delay);
+ 			break;
+ 		case SCAN_SET_CHANNEL:
+ 			ieee80211_scan_state_set_channel(local, &next_delay);
+@@ -711,6 +709,8 @@ void ieee80211_scan_work(struct work_struct *work)
+ 			ieee80211_scan_state_enter_oper_channel(local, &next_delay);
+ 			break;
+ 		}
++		if (!local->scanning)
++			return;
+ 	} while (next_delay == 0);
+ 
+ 	queue_delayed_work(local->hw.workqueue, &local->scan_work,
