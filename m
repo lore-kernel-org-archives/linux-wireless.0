@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57041 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752829AbZGaSwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:52:35 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] [compat-2.6] Fix building on 2.6.31
-Date: Fri, 31 Jul 2009 20:52:29 +0200
-Message-Id: <1249066349-24956-1-git-send-email-hauke@hauke-m.de>
+Received: from fmailhost01.isp.att.net ([204.127.217.101]:63868 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbZGYQRT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 12:17:19 -0400
+Message-ID: <4A6B3027.7080200@lwfinger.net>
+Date: Sat, 25 Jul 2009 11:17:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix an oops in ieee80211_scan_state_set_channel
+References: <200907251725.52084.helmut.schaa@googlemail.com>
+In-Reply-To: <200907251725.52084.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The netdevice.h header file should be loaded before dev_change_net_namespace is overwritten.
+Helmut Schaa wrote:
+> Fix an oops in ieee80211_scan_state_set_channel which was triggered
+> if the last scanned channel was skipped (for example due to regulatory
+> restrictions) by returning to the decision state after each skipped
+> channel.
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.32.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Better late than never, but this patch does fix the problem for me.
 
-diff --git a/compat/compat-2.6.32.h b/compat/compat-2.6.32.h
-index 4f5d0c7..f7081f2 100644
---- a/compat/compat-2.6.32.h
-+++ b/compat/compat-2.6.32.h
-@@ -7,6 +7,8 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32))
- 
-+#include <linux/netdevice.h>
-+
- #define SDIO_VENDOR_ID_INTEL			0x0089
- #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
- #define SDIO_DEVICE_ID_INTEL_IWMC3200WIFI	0x1403
--- 
-1.6.2.1
+Larry
 
