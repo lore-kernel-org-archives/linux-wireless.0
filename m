@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.174]:18342 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbZGJTEa convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f192.google.com ([209.85.222.192]:60025 "EHLO
+	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563AbZGYAG2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 15:04:30 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so316820wfd.4
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jul 2009 12:04:30 -0700 (PDT)
+	Fri, 24 Jul 2009 20:06:28 -0400
+Received: by pzk30 with SMTP id 30so1264659pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 17:06:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090710185150.GF2825@tuxdriver.com>
-References: <20090707170307.GC2768@tuxdriver.com>
-	 <1246989303-19462-1-git-send-email-javier@cozybit.com>
-	 <20090710185150.GF2825@tuxdriver.com>
-Date: Fri, 10 Jul 2009 12:04:30 -0700
-Message-ID: <45e8e6c40907101204g17e66df2vb89243989d297561@mail.gmail.com>
-Subject: Re: [PATCH v5] mac80211: Fix regression in mesh forwarding path.
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: javier@cozybit.com, linux-wireless@vger.kernel.org,
-	devel@lists.open80211s.org, johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1248459325.32151.32.camel@johannes.local>
+References: <1248458909-15338-1-git-send-email-lrodriguez@atheros.com>
+	<1248459325.32151.32.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 24 Jul 2009 17:06:09 -0700
+Message-ID: <43e72e890907241706s4c2e0df5jfe143b56536bf629@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: add helper to add to the mac80211 workqueue
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Lennert Buytenhek <buytenh@marvell.com>,
+	Daniel Drake <ddrake@brontes3d.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 10, 2009 at 11:51 AM, John W.
-Linville<linville@tuxdriver.com> wrote:
-> On Tue, Jul 07, 2009 at 10:55:03AM -0700, javier@cozybit.com wrote:
->> From: Javier Cardona <javier@cozybit.com>
+On Fri, Jul 24, 2009 at 11:15 AM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-07-24 at 14:08 -0400, Luis R. Rodriguez wrote:
+>> We add a mac80211 helper for adding work onto the mac80211
+>> workqueue. We then add a warning if we are suspended. At that
+>> point drivers nor mac80211 should have queued work, drivers
+>> and mac80211 should ensure the workqueue will remain clair
+>> until resume.
 >>
->> The removal of the master netdev broke the mesh forwarding path.  This patch
->> fixes it by using the new internal 'pending' queue.
->>
->> As a result of this change, mesh forwarding no longer does the inefficient
->> 802.11 -> 802.3 -> 802.11 conversion that was done before.
->>
->> [Changes since v1]
->> Suggested by Johannes:
->>  - Select queue before adding to mpath queue
->>  - ieee80211_add_pending_skb -> ieee80211_add_pending_skbs
->>  - Remove unnecessary header wme.h
->>
->> Signed-off-by: Javier Cardona <javier@cozybit.com>
->> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
->> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+>> We make use of the helper now in mac80211 and on all mac80211
+>> drivers. If you see a warning because of this patch during
+>> the suspend <--> resume cycle it means suspend is busted for
+>> your driver or mac80211 and it needs to be fixed.
 >
-> What tree are you basing this on?
+> Looks good to me.
 
-wireless-testing, the latest (re-spun) version applied on top of
-commit 5ac0fb5e5044cb578fb352dc65def1a46a2a21aa
+Except I forgot about delayed queing, flushing. I will repost and
+consider all the other things.
+
+  Luis
