@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.221.181]:52181 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbZG0TS7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 15:18:59 -0400
-Received: by qyk11 with SMTP id 11so963957qyk.33
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 12:18:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1248721855.32365.2.camel@johannes.local>
-References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-	<1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
-	<1248721855.32365.2.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 27 Jul 2009 12:18:39 -0700
-Message-ID: <43e72e890907271218w74e9f13dj209c2e5213584180@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ath9k: move workqueue cancels to stop callback
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:37700 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751522AbZGYVwh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 17:52:37 -0400
+Subject: Re: [BUG] Current head of wireless testing unusable
+From: Pavel Roskin <proski@gnu.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1248531054.15242.16.camel@maxim-laptop>
+References: <1248531054.15242.16.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Sat, 25 Jul 2009 17:52:35 -0400
+Message-Id: <1248558755.11389.21.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 27, 2009 at 12:10 PM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-07-27 at 11:53 -0700, Luis R. Rodriguez wrote:
->> We should be cancelling our work at the stop callback since
->> we are borrowing the mac80211 workqueue for our work. As it
->> stands mac80211 expects this for suspend purposes.
->>
->> The ath9k specific virtual wiphy stuff need only be
->> cancelled only when the we have no secondary virtual wiphys.
->
-> inverted logic here?
+On Sat, 2009-07-25 at 17:10 +0300, Maxim Levitsky wrote:
+> I probably should work more to did these bugs out myself, but anyway I
+> want to let you know what I currently see.
+> 
+> First system oopses just after NM starts up, happens always, and after
+> planting few test points bug happens somewhere in following lines. 
 
-Nope, ie the sc->num_sec_wiphy wil be decremented on device removal.
-As long as there is some secondary wiphy it means we need our internal
-scheduler working and work is being queued. So upon suspend we'll
-iterate over all interfaces and remove them unless you have WoW
-enabled (eventually), the last interface drv_stop() then would ensure
-to clear the virtual scheduler work.
+We are discussing a bug in the scan state machine in another thread,
+which could have nasty consequences in not caught.  And I don't quite
+understand why my system was catching it immediately, maybe because I'm
+using gcc 4.4, which has array bounds checking.
 
-  Luis
+I have also seen two oopses in the code unrelated to wireless
+networking, one of which lead to my .bash_history becoming empty.
+
+So please be extra careful.  It would be great if somebody could test
+the current kernel extensively with kmemcheck an other options and
+bisect the bad commit, whether it's wireless related or not.
+
+-- 
+Regards,
+Pavel Roskin
