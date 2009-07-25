@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:20504 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307AbZG0Uan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 16:30:43 -0400
-Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
-From: Pavel Roskin <proski@gnu.org>
-To: chris2553@googlemail.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200907272122.11290.chris2553@googlemail.com>
-References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-	 <200907272035.41193.chris2553@googlemail.com> <1248725279.7440.8.camel@mj>
-	 <200907272122.11290.chris2553@googlemail.com>
-Content-Type: text/plain
-Date: Mon, 27 Jul 2009 16:30:41 -0400
-Message-Id: <1248726641.7440.11.camel@mj>
-Mime-Version: 1.0
+Received: from fg-out-1718.google.com ([72.14.220.154]:36464 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753846AbZGYFzy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jul 2009 01:55:54 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so212451fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 22:55:52 -0700 (PDT)
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: wireless-testing regression: iwl3945 scan fails
+References: <87k521s2wa.fsf@litku.valot.fi> <87fxcosron.fsf@litku.valot.fi>
+	<1248278121.17896.2728.camel@rc-desk> <874ot2sa51.fsf@litku.valot.fi>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 25 Jul 2009 08:55:47 +0300
+In-Reply-To: <874ot2sa51.fsf@litku.valot.fi> (Kalle Valo's message of "Fri\, 24 Jul 2009 12\:28\:10 +0300")
+Message-ID: <87skglqpb0.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-07-27 at 21:22 +0100, Chris Clayton wrote:
+Kalle Valo <kalle.valo@iki.fi> writes:
 
-> I think I'll just configure MAC80211 power saving off or use the ath5k
-> card that I also own.
+> reinette chatre <reinette.chatre@intel.com> writes:
+>
+>> Are you saying that this problem occurs always with wpa_supplicant and
+>> sometimes with iw?
+>
+> I did some more testing and I can now reproduce this with iw as well. I
+> just need to reboot my laptop to reproduce it. I'll debug this more on a
+> rainy day.
 
-OK, it's unfortunate but understandable.  I'll keep this in mind in case
-I have a chance to do a extensive testing for rt61pci.  I'm using a PCI
-card that cannot be removed to easily.
+This is getting very odd, I cannot reproduce the problem anymore with
+rc4-wl. Just to be safe, I rebooted back to rc3-wl and I was immediately
+able to reproduce it. To summarise, rc2-wl and rc4-wl were ok and only
+rc3-wl is broken. So something fixed this, I just don't know what.
 
 -- 
-Regards,
-Pavel Roskin
+Kalle Valo
