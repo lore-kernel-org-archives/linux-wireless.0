@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.210.202]:35075 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753283AbZGVBtz (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:56621 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754963AbZGYArg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 21:49:55 -0400
-Received: by yxe40 with SMTP id 40so991879yxe.33
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 18:49:54 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 21 Jul 2009 18:49:34 -0700
-Message-ID: <43e72e890907211849h373a07dcxc6361c1aeb2f20ff@mail.gmail.com>
-Subject: WoW patches - if anyone is up for following up with them
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 24 Jul 2009 20:47:36 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211/drivers: add new mac80211 workqueue API
+Date: Fri, 24 Jul 2009 20:47:30 -0400
+Message-Id: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I won't have time to finish testing this series and getting it merged
-as I need to focus on another driver, I ran into some last issues
-where I was seeing the nullfunc frames only be issued if I send a WOL
-packet first, not sure what's up with that. Some other issues are the
+This set move the mac80211 workqueue struct privately into mac80211
+and exposes it only through helpers. We do this to aid proper suspend
+support, these could eventually be extended for further sanity
+checkings or considerations.
 
-ath9k: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000 != 0x00000000
-ath9k: RX failed to go idle in 10 ms RXSM=0xdeadbeef
+We also fix two initial warnings we hit with this, one on mac80211, the
+other on ath9k.
 
-after resume (not sure if this was caused by the WoW patches or what)
-and the mac80211 WARN on the workqueue running local->suspended is
-already true.
+Luis R. Rodriguez (3):
+  mac80211: redefine usage of the mac80211 workqueue
+  mac80211: do not queue work after suspend in the dynamic ps timer
+  ath9k: cancel xmit poll work at stop() callback
 
-I probably won't get to these for a long long while (until I need WoW
-for another driver), so in case someone is interesting in this, please
-feel free to take them on and work on them.
+ drivers/net/wireless/at76c50x-usb.c         |   12 +++---
+ drivers/net/wireless/ath/ar9170/led.c       |   11 +++--
+ drivers/net/wireless/ath/ar9170/main.c      |   28 +++++++-----
+ drivers/net/wireless/ath/ath9k/main.c       |   17 ++++---
+ drivers/net/wireless/ath/ath9k/virtual.c    |   17 ++++----
+ drivers/net/wireless/ath/ath9k/xmit.c       |    2 +-
+ drivers/net/wireless/b43/main.c             |    8 ++--
+ drivers/net/wireless/b43/phy_common.c       |    2 +-
+ drivers/net/wireless/b43/pio.c              |    2 +-
+ drivers/net/wireless/b43legacy/main.c       |    8 ++--
+ drivers/net/wireless/p54/led.c              |    5 +-
+ drivers/net/wireless/p54/main.c             |    2 +-
+ drivers/net/wireless/p54/p54spi.c           |    4 +-
+ drivers/net/wireless/p54/txrx.c             |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c     |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00link.c    |    8 ++--
+ drivers/net/wireless/rt2x00/rt2x00mac.c     |    2 +-
+ drivers/net/wireless/rtl818x/rtl8187_dev.c  |    2 +-
+ drivers/net/wireless/rtl818x/rtl8187_leds.c |   10 ++--
+ include/net/mac80211.h                      |   61 +++++++++++++++++++++++----
+ net/mac80211/ibss.c                         |    6 +-
+ net/mac80211/ieee80211_i.h                  |    6 +++
+ net/mac80211/iface.c                        |    4 +-
+ net/mac80211/main.c                         |    8 ++--
+ net/mac80211/mesh.c                         |   10 ++--
+ net/mac80211/mesh_hwmp.c                    |    4 +-
+ net/mac80211/mlme.c                         |   50 ++++++++++------------
+ net/mac80211/pm.c                           |    4 +-
+ net/mac80211/scan.c                         |    8 ++--
+ net/mac80211/tx.c                           |    2 +-
+ net/mac80211/util.c                         |   49 +++++++++++++++++++++
+ 31 files changed, 231 insertions(+), 125 deletions(-)
 
-You'll need two things:
-
-* wireless-testing patches:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
-
-This has johannes's netns patches since his nl80211 cmd is going in
-first and then the WoW patches. I've stuffed some documentation on the
-patch file itself to help anyone wishing to push that further,
-including examples on how to get the pattern stuff initially done.
-
-* http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.patch
-
-You'll need this to enable WoW. Keep in mind based on feedback you
-*need* to be associated to an AP to enable WoW.
-
-  Luis
