@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f192.google.com ([209.85.222.192]:40692 "EHLO
-	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324AbZGYAvO convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47587
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753840AbZGZRCI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 20:51:14 -0400
-Received: by pzk30 with SMTP id 30so1275420pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2009 17:51:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
-References: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 24 Jul 2009 17:50:54 -0700
-Message-ID: <43e72e890907241750ic05b0e1t81df6ef95c7fb0d8@mail.gmail.com>
-Subject: Re: [PATCH] mac80211/drivers: add new mac80211 workqueue API
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 26 Jul 2009 13:02:08 -0400
+Date: Sun, 26 Jul 2009 10:02:14 -0700 (PDT)
+Message-Id: <20090726.100214.125172881.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2009-07-24
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090724193625.GB2711@tuxdriver.com>
+References: <20090724193625.GB2711@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forgot to specify the order. The order is:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 24 Jul 2009 15:36:25 -0400
 
-1/3 mac80211: redefine usage of the mac80211 workqueue
-2/3 mac80211: do not queue work after suspend in the dynamic ps timer
-3/3 ath9k: cancel xmit poll work at stop() callback
+> Here is the latest huge round of wireless patches intended for 2.6.32.
+> It hits all the usual areas (i.e. drivers, mac80211, and cfg80211) with
+> patches from all the usual suspects.  This includes the reworking of
+> mac80211 to eliminate the confusing "master netdev".
+> 
+> FWIW, my laptop has been happy with it.  Most of the bits here have been
+> in -next for at least a few days.
+> 
+> Please let me know if there are problems!
 
-  Luis
+Pulled, thanks a lot John!
+
+Please try to resolve the regression reports that I saw posted against
+wireless-testing on the same day you sent this pull request.
