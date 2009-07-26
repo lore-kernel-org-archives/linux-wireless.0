@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f197.google.com ([209.85.222.197]:43799 "EHLO
-	mail-pz0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934750AbZGQQzN (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:48514 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975AbZGZVdK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:55:13 -0400
-Received: by pzk35 with SMTP id 35so703326pzk.33
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 09:55:13 -0700 (PDT)
+	Sun, 26 Jul 2009 17:33:10 -0400
 MIME-Version: 1.0
-In-Reply-To: <43e72e890907170952v20677c7fr50204df952228d53@mail.gmail.com>
-References: <43e72e890907161810k51e3830bqe3283539f19e2fd2@mail.gmail.com>
-	<1247848427.8139.4386.camel@localhost.localdomain> <43e72e890907170952v20677c7fr50204df952228d53@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 17 Jul 2009 09:54:53 -0700
-Message-ID: <43e72e890907170954y20375636s7dad8fd972406310@mail.gmail.com>
-Subject: Re: Using GeoClue to send a Linux wireless regulatory hint
-To: Bastien Nocera <hadess@hadess.net>
-Cc: GeoClue <geoclue@lists.freedesktop.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>, desrt@desrt.ca,
-	Dan Winship <danw@gnome.org>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	till.kamppeter@gmail.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1248639013.32168.15.camel@mj>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <c6b1100b0907140404h4fdbe419p8443da43350f3520@mail.gmail.com>
+	 <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
+	 <c6b1100b0907261215l71ada148y8a15f6595d939192@mail.gmail.com>
+	 <1248639013.32168.15.camel@mj>
+Date: Sun, 26 Jul 2009 22:33:08 +0100
+Message-ID: <c6b1100b0907261433s5f069f8ck26861cef5239ef98@mail.gmail.com>
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Chris Clayton <chris2553@googlemail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 17, 2009 at 9:52 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+Thanks for the reply, Pavel.
 
-> It just reads the country from timezone file, I've pasted the script
-> below inline in case you are curious.
+2009/7/26 Pavel Roskin <proski@gnu.org>:
+> On Sun, 2009-07-26 at 20:15 +0100, Chris Clayton wrote:
+>
+>> One more data point. I wondered whether the freeze would "time out" if
+>> I just left the laptop frozen, but my testing shows that it probably
+>> does not (or if it does it takes more than 27 minutes to do so.
+>
+> I suggest that you run it on the text console after "dmesg -n 8", so
+> that all kernel messages are seen.
+>
+> I'm using rt61pci with wireless-testing, and I don't see any freezes.
 
-Oh and here is the script used by Fedora (thanks to John):
+Do you have CONFIG_MAC80211_DEFAULT_PS enabled? I have just built and
+installed -rc4 with this option disabled and it has survived almost 20
+ minutes so far without a freeze. No previous kernel  in the 2.6.31
+series has survived more than 5 minutes without freezing, so this
+looks promising.
+>
+>> I've also tried to bisect again, but, as last time, once I got to the
+>> batch of network-related changes that went into -rc1, I get a series
+>> of kernels that build but either won't boot or have inoperable
+>> wireless networking.
+>
+> You can use "git bisect skip" to skip those revisions.
+>
+> You can specify the paths in "git bisect start" so that only changes to
+> the interesting places (like drivers/net wireless, net/mac80211 and
+> net/wireless) are considered when calculating the next commit.  This
+> will probably help you avoid the bad place.
+>
 
-#!/bin/sh
+ Thanks for those tips. I'll note them in my "useful stuff I might
+forget" notebook and then try to find time over the next few weeks to
+get to grips with the power of git.
 
-REGDOMAIN=/etc/sysconfig/regdomain
-CLOCK=/etc/sysconfig/clock
+Chris
 
-if [ -f $REGDOMAIN ]
-then
-        # This should set COUNTRY
-        . $REGDOMAIN
-        iw reg set $COUNTRY
-        exit
-fi
 
-if [ -f $CLOCK ]
-then
-        # This should set ZONE
-        . $CLOCK
-else
-        echo "Timezone information not found!  Unable to set regulatory domain."
-        exit
-fi
-
-if [ -z "$ZONE" ]
-then
-        echo "Timezone information not set!  Unable to set regulatory domain."
-        exit
-fi
-
-COOKED_ZONE=$(echo $ZONE | sed -e 's/ /_/')
-
-COUNTRY=$(grep $COOKED_ZONE /usr/share/zoneinfo/zone.tab | awk '{ print $1 }')
-
-if [ -z "$COUNTRY" ]
-then
-        echo "Could not determine country!  Unable to set regulatory domain."
-        exit
-fi
-
-iw reg set $COUNTRY
+-- 
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samuel
+Johnson
