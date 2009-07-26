@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:52218 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757830AbZGHVkK (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:53709 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbZGZGeo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 17:40:10 -0400
-From: Frans Pop <elendil@planet.nl>
-To: linux-wireless@vger.kernel.org
-Subject: [regression] ath5k: Overrides regulatory domain set for cfg80211
-Date: Wed, 8 Jul 2009 23:40:06 +0200
-Cc: netdev@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Sun, 26 Jul 2009 02:34:44 -0400
+Received: by bwz28 with SMTP id 28so2063787bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 23:34:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907082340.07787.elendil@planet.nl>
+In-Reply-To: <1248585928.28545.166.camel@violet>
+References: <1248531054.15242.16.camel@maxim-laptop>
+	 <1248558755.11389.21.camel@mj> <1248561109.4753.9.camel@maxim-laptop>
+	 <1248562407.7314.1.camel@maxim-laptop>
+	 <1248585928.28545.166.camel@violet>
+Date: Sat, 25 Jul 2009 23:34:43 -0700
+Message-ID: <bcd1ba70907252334y2fd88cf0i4fe812f4fd686c8e@mail.gmail.com>
+Subject: Re: [ipw3945-devel] [BUG] Current head of wireless testing unusable
+From: John Ranson <ranson@analager.net>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In /etc/modprobe.d I have a file containing:
-options cfg80211 ieee80211_regdom=EU
+Hi Maxim and Marcel,
 
-During boot this results in:
-<snip>
-cfg80211: Using static regulatory domain info
-cfg80211: Regulatory domain: EU
-	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-	(2402000 KHz - 2482000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-	(5490000 KHz - 5710000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-cfg80211: Calling CRDA for country: EU
-</snip>
+On Sat, Jul 25, 2009 at 10:25 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+> Hi Maxim,
+>
+>> > > > I probably should work more to did these bugs out myself, but anyway I
+>> > > > want to let you know what I currently see.
+>> > > >
+>> > > > First system oopses just after NM starts up, happens always, and after
+>> > > > planting few test points bug happens somewhere in following lines.
+>> > >
+>> > > We are discussing a bug in the scan state machine in another thread,
+>> > > which could have nasty consequences in not caught.  And I don't quite
+>> > > understand why my system was catching it immediately, maybe because I'm
+>> > > using gcc 4.4, which has array bounds checking.
+>> > Yea, there are two patches with same title for this, I applied the
+>> > newer.
+>> >
+>> > Currently thanks to Johannes Berg, the patch
+>> > [PATCH] nl80211: add missing parameter clearing
+>> > Fixes this nasty oops, now wireless more or less works, but plenty of
+>> > problems still, first it oopses on reconnect as inilialized from
+>> > wpa_supplicant, second iwconfig misses most of its settings, and
+>> > probably thus NM think signal level is zero. If I switch to good old
+>> > wext in wpa_supplicant, it works just fine and none of above problems
+>> > present (I recheck this again to be sure)
+>> Except very frequent reconnects,
+>> "[  919.250097] No probe response from AP 00:1b:9e:d8:77:02 after 200ms, disconnecting."
+>
+> I have the same issue with my Intel 5350 card and if the signal strength
+> of the AP gets a little bit weaker.
+>
 
-But with 2.6.31-rc2 I then get (the lines marked with "!" are not there 
-with .30):
-<snip>
-  ath5k 0000:02:00.0: enabling device (0000 -> 0002)
-  ath5k 0000:02:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-  ath5k 0000:02:00.0: registered as 'phy0'
-! ath: EEPROM regdomain: 0x30
-! ath: EEPROM indicates we should expect a direct regpair map
-! ath: Country alpha2 being used: AM
-! ath: Regpair used: 0x30
-  phy0: Selected rate control algorithm 'minstrel'
-  ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-  ath5k phy0: RF2112B 2GHz radio found (0x46)
-! cfg80211: Calling CRDA for country: AM
-</snip>
+I also am seeing this frequently, and I'm sitting about six feet from
+my access point. I don't think that it's necessarily related to signal
+strength.
 
-So it looks as if ath5k has started to override the regdomain I want.
-
-Cheers,
-FJP
+John
