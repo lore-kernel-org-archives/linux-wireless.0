@@ -1,111 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from promwad.com ([83.149.69.23]:48785 "EHLO promwad.com"
+Received: from c60.cesmail.net ([216.154.195.49]:12518 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753398AbZGWR5O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 13:57:14 -0400
-Message-ID: <4A68A465.6020501@promwad.com>
-Date: Thu, 23 Jul 2009 20:56:53 +0300
-From: Ivan Kuten <ivan.kuten@promwad.com>
-Reply-To: ivan.kuten@promwad.com
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
-Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
- way
-References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com>	<1245150895.8623.3.camel@johannes.local>  <4A475F82.9040007@promwad.com> <1246262320.5947.3.camel@johannes.local>
-In-Reply-To: <1246262320.5947.3.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+	id S1752917AbZGZUKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Jul 2009 16:10:17 -0400
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Pavel Roskin <proski@gnu.org>
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linville@tuxdriver.com
+In-Reply-To: <c6b1100b0907261215l71ada148y8a15f6595d939192@mail.gmail.com>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <c6b1100b0907140404h4fdbe419p8443da43350f3520@mail.gmail.com>
+	 <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
+	 <c6b1100b0907261215l71ada148y8a15f6595d939192@mail.gmail.com>
+Content-Type: text/plain
+Date: Sun, 26 Jul 2009 16:10:13 -0400
+Message-Id: <1248639013.32168.15.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
->> Hello,
->>
->> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unaligned allocations
->> for creq->ssids and creq->channels. Should it be something like that?
-> 
-> Seems alright, but there is more than one instance of this, maybe you
-> can make a function to allocate a scan request properly and have it be
-> called from all the places it's needed.
-> 
-> johannes
-> 
+On Sun, 2009-07-26 at 20:15 +0100, Chris Clayton wrote:
 
-Hello Johannes,
-Can you point to that multiple scan allocations? I see only one kzalloc
-with followed possible alignment violation - it's in cfg80211_wext_siwscan in scan.c
+> One more data point. I wondered whether the freeze would "time out" if
+> I just left the laptop frozen, but my testing shows that it probably
+> does not (or if it does it takes more than 27 minutes to do so.
 
+I suggest that you run it on the text console after "dmesg -n 8", so
+that all kernel messages are seen.
+
+I'm using rt61pci with wireless-testing, and I don't see any freezes.
+
+> I've also tried to bisect again, but, as last time, once I got to the
+> batch of network-related changes that went into -rc1, I get a series
+> of kernels that build but either won't boot or have inoperable
+> wireless networking.
+
+You can use "git bisect skip" to skip those revisions.
+
+You can specify the paths in "git bisect start" so that only changes to
+the interesting places (like drivers/net wireless, net/mac80211 and
+net/wireless) are considered when calculating the next commit.  This
+will probably help you avoid the bad place.
+
+Also, please try the current wireless-testing.  The problem may be fixed
+there.
+
+> Finally, since I haven't had a single reply to the regression report I
+> posted almost two weeks ago, I now give up. I'll switch to using the
+> card supported by the ath5k driver.
+
+Perhaps there was not enough material for others to comment on, and
+nobody was experiencing anything similar.
+
+If I had such problem, I would try to bisect it, but I cannot reproduce
+it.
+
+-- 
 Regards,
-Ivan
-
-
->> Modified: trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless/scan.c
->> ==============================================================================
->> --- trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless/scan.c (original)
->> +++ trunk/uClinux-dist-2008R1-RC8/compat-wireless-2009-06-11/net/wireless/scan.c Fri Jun 26 14:00:52 2009
->> @@ -619,7 +619,7 @@
->>  		if (wiphy->bands[band])
->>  			n_channels += wiphy->bands[band]->n_channels;
->>
->> -	creq = kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
->> +	creq = kzalloc(roundup(sizeof(*creq), 4) + roundup(sizeof(struct cfg80211_ssid), 4) +
->>  		       n_channels * sizeof(void *),
->>  		       GFP_ATOMIC);
->>  	if (!creq) {
->> @@ -629,8 +629,8 @@
->>
->>  	creq->wiphy = wiphy;
->>  	creq->ifidx = dev->ifindex;
->> -	creq->ssids = (void *)(creq + 1);
->> -	creq->channels = (void *)(creq->ssids + 1);
->> +	creq->ssids = (void *)creq + roundup(sizeof(*creq), 4);
->> +	creq->channels = (void *)creq->ssids + roundup(sizeof(*creq->ssids), 4);
->>  	creq->n_channels = n_channels;
->>  	creq->n_ssids = 1;
->>
->> Regards,
->> Ivan
->>
->>> On Tue, 2009-06-16 at 13:54 +0300, Yauhen Kharuzhy wrote:
->>>> When we try to run RTL8187 driver on AD BlackFin platform, we got
->>>> messages from kernel about unaligned memory access at
->>>> compare_ether_addr() calls.
->>>>
->>>> Replacing of compare_ether_addr() by memcmp() fixes this problem.
->>> This shouldn't be necessary. Which operand is unaligned?
->>>
->>>> --- a/net/mac80211/ibss.c
->>>> +++ b/net/mac80211/ibss.c
->>>> @@ -395,7 +395,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
->>>>  		return NULL;
->>>>  	}
->>>>  
->>>> -	if (compare_ether_addr(bssid, sdata->u.ibss.bssid))
->>>> +	if (memcmp(bssid, sdata->u.ibss.bssid, ETH_ALEN))
->>>>  		return NULL;
->>> So in this case it seems that it is possible that u.ibss.bssid is not
->>> aligned, consider fixing by doing
->>>
->>> --- ieee80211_i.h
->>> +++ ieee80211_i.h
->>> -	u8 bssid[ETH_ALEN];
->>> +	u8 bssid[ETH_ALEN] __align(2);
->>>
->>> or so instead.
->>>  
->>>> --- a/net/wireless/scan.c
->>>> +++ b/net/wireless/scan.c
->>>> @@ -134,7 +134,7 @@ static bool is_bss(struct cfg80211_bss *a,
->>>>  {
->>>>  	const u8 *ssidie;
->>>>  
->>>> -	if (bssid && compare_ether_addr(a->bssid, bssid))
->>>> +	if (bssid && memcmp(a->bssid, bssid, ETH_ALEN))
->>> Since a->bssid is after a pointer I can't see how it would be unaligned,
->>> and bssid should be unaligned only if the call trace shows it's coming
->>> from the above u.ibss.bssid.
->>>
->>> johannes
->>
-
+Pavel Roskin
