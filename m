@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40978 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758170AbZGGQPv (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:60999 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814AbZGZClG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 12:15:51 -0400
-Date: Tue, 7 Jul 2009 12:04:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] p54: fix beacon template dtim IE corruption
-Message-ID: <20090707160431.GB2768@tuxdriver.com>
-References: <200907041824.07655.chunkeey@web.de>
+	Sat, 25 Jul 2009 22:41:06 -0400
+Received: by bwz28 with SMTP id 28so2030087bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 19:41:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200907041824.07655.chunkeey@web.de>
+In-Reply-To: <43e72e890907160913i40c8341fo13b75b38b2700055@mail.gmail.com>
+References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
+	 <1247673740.17896.1983.camel@rc-desk>
+	 <1247674310.10754.19.camel@johannes.local>
+	 <43e72e890907150925p51c1a019r95266cbdc1e762e4@mail.gmail.com>
+	 <bcd1ba70907152058m14249f40gf0ebff1620e56674@mail.gmail.com>
+	 <43e72e890907160913i40c8341fo13b75b38b2700055@mail.gmail.com>
+Date: Sat, 25 Jul 2009 19:41:04 -0700
+Message-ID: <bcd1ba70907251941w725c2e6l77870a3157f48d17@mail.gmail.com>
+Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
+From: John Ranson <ranson@analager.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 04, 2009 at 06:24:07PM +0200, Christian Lamparter wrote:
-> This patch fixes a regression that sneaked in with 
-> "[PATCH] p54: re-enable power save feature".
-> When p54_beacon_format_ie_tim was divided up
-> and rewritten to use skb_* macros.
-
-I don't seem to have any record of that patch, and this one doesn't
-apply after the reorganization series from Larry (which is strange,
-since this file didn't seem to exist before that series)...
+Running wireless testing directly fixed this issue.
 
 John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+
+On Thu, Jul 16, 2009 at 9:13 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Wed, Jul 15, 2009 at 8:58 PM, John Ranson<ranson@analager.net> wrote:
+>> The release is master-2009-07-08-3-g3615cdf
+>>
+>> /sys/class/ieee80211/ is empty
+>>
+>> I'm running Gentoo on an Lenovo R61. I don't think that there is
+>> anything too special about my configuration.
+>>
+>> Is there any more information that I can provide that will help debug?
+>
+> You can try wireless-testing directly:
+>
+> http://wireless.kernel.org/en/developers/Documentation/git-guide
+>
+>  Luis
+>
