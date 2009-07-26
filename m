@@ -1,50 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52136 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200AbZGHNAz (ORCPT
+Received: from mail-yx0-f198.google.com ([209.85.210.198]:63554 "EHLO
+	mail-yx0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459AbZGZIGm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 09:00:55 -0400
-Date: Wed, 8 Jul 2009 08:57:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Valentin Manea <linux-wireless@mrs.ro>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	David Ross <dave@antacs.com>, linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and broadcast frames
-Message-ID: <20090708125727.GC4253@tuxdriver.com>
-References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com> <4A4B056B.9000602@mrs.ro> <43e72e890907011033r52c4256dtecf603f56213a825@mail.gmail.com> <4A530131.9050207@mrs.ro> <4A532D3C.5060601@antacs.com> <20090707144851.GA2768@tuxdriver.com> <43e72e890907070915y5fd131b7l6aa845a0785f8c76@mail.gmail.com> <4A544B15.8030106@mrs.ro>
+	Sun, 26 Jul 2009 04:06:42 -0400
+Received: by yxe36 with SMTP id 36so1577205yxe.33
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2009 01:06:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4A544B15.8030106@mrs.ro>
+In-Reply-To: <1248510909.32151.48.camel@johannes.local>
+References: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
+	<1248482853-17032-2-git-send-email-lrodriguez@atheros.com>
+	<1248510909.32151.48.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 26 Jul 2009 01:06:22 -0700
+Message-ID: <43e72e890907260106h1ad9cdd6i9dc22e3bfece86d8@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: redefine usage of the mac80211 workqueue
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Dan Williams <dcbw@redhat.com>,
+	Lennert Buytenhek <buytenh@marvell.com>,
+	Daniel Drake <ddrake@brontes3d.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 08, 2009 at 10:30:29AM +0300, Valentin Manea wrote:
->
->
-> On 07/07/2009 07:15 PM, Luis R. Rodriguez wrote:
->> On Tue, Jul 7, 2009 at 7:48 AM, John W. Linville<linville@tuxdriver.com>  wrote:
->>> On Tue, Jul 07, 2009 at 09:10:52PM +1000, David Ross wrote:
->>>> Actually it is required to be a mutual BASIC rate (not extended rates) -
->>>> not necessarily the "lowest possible" - David.
->>> True, but FWIW I think all of our rate scaling algorithms choose the
->>> lowest rate.
+On Sat, Jul 25, 2009 at 1:35 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-07-24 at 20:47 -0400, Luis R. Rodriguez wrote:
+>> The mac80211 workqueue exists to enable mac80211 and drivers
+>> to queue their own work on a single threaded workqueue. mac80211
+>> takes care to flush the workqueue during suspend but we never
+>> really had requirements on drivers for how they should use
+>> the workqueue in consideration for suspend.
 >>
->> And then iwlwifi and ath9k have their own rate control algo, and at
->> least ath9k uses the lowest valid rate IIRC.
+>> We extend mac80211 to document how the mac80211 workqueue should
+>> be used, how it should not be used and finally move raw access to
+>> the workqueue to mac80211 only. Drivers and mac80211 use helpers
+>> to queue work and flush the mac80211 workqueue:
 >>
->>    Luis
+>>   * ieee80211_queue_work()
+>>   * ieee80211_queue_delayed_work()
+>>   * ieee80211_flush_workqueue()
 >
->
->   I've found the code in ath9k and you are right, it always chooses the  
-> lowest rate.
->   So, basically to transmit multicast frames at a better bitrate I have  
-> to hack the rate control algorithm, right?
+> I would prefer to have wait_on_work()
 
-Yes.  Feel free to suggest patches for all of the available (i.e. both
-generic and device-dependent) algorithms as well.
+That's currently static.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			�Viva Honduras Libre!
+> and/or cancel_work_sync() instead
+> of flushing?
+
+That's fine but currently drivers are issuing flush_workqueue() directly.
+
+> It's often preferable due to locking constraints to
+> cancel_work_sync() instead of flush_workqueue(). Do people really need
+> flush_workqueue()?
+
+Yeah good point, so I see 2 users of flush_workqueue, one in at76 and
+another on ar9170.
+
+at76: at76_delete_device()
+
+This is used at usb disconnect and probe failure. cancel_work_sync()
+definitely seems more appropriate.
+
+ar9170: ar9170_op_stop()
+
+same here, but seems we could add the flush on mac80211 prior to
+calling the drv_stop() currently we call it after.
+
+  Luis
