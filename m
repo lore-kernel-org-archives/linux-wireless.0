@@ -1,78 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60444 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbZG3Pc2 (ORCPT
+Received: from mail-bw0-f228.google.com ([209.85.218.228]:37746 "EHLO
+	mail-bw0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbZGZTPV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 11:32:28 -0400
-Subject: Re: [RFC PATCH] mac80211: FIF_PSPOLL filter flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Igor Perminov <igor.perminov@inbox.ru>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248966336.29068.178.camel@sunlight>
-References: <1248962000.29068.170.camel@sunlight>
-	 <1248963525.16129.2.camel@johannes.local>
-	 <1248966336.29068.178.camel@sunlight>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Wh8J+6qNgjy+RT04jt/e"
-Date: Thu, 30 Jul 2009 17:31:57 +0200
-Message-Id: <1248967917.16129.3.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 26 Jul 2009 15:15:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <c6b1100b0907140404h4fdbe419p8443da43350f3520@mail.gmail.com>
+	 <c6b1100b0907210439jf67d886s3125dafa5f4d3928@mail.gmail.com>
+Date: Sun, 26 Jul 2009 20:15:19 +0100
+Message-ID: <c6b1100b0907261215l71ada148y8a15f6595d939192@mail.gmail.com>
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Chris Clayton <chris2553@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/7/21 Chris Clayton <chris2553@googlemail.com>:
+> 2009/7/14 Chris Clayton <chris2553@googlemail.com>:
+> <snip>
+>
+>> I've updated to 2.6.31-rc3 this morning and done some more testing.
+>> I'm now convinced that the rt61pci driver is somehow involved in
+>> locking up the laptop. With the (Belkin) rt61 card inserted, the
+>> machine will lock up even if I am doing nothing (no web browsing,
+>> email or anything else at all) except running this script in a console
+>> window:
+>>
+>> i=0
+>> while true; do
+>>        let i++
+>>        echo -n "$i "
+>>        sleep 1
+>> done
+>>
+>> In the tests I have done so far, the counter has never gone beyond 240
+>> before the machine locked. With the (no-name) ath5k card inserted I
+>> can use the laptop for normal web browsing, email, etc with no
+>> problems - the counter in the script above gets to over 2000.
+>>
+>
+> The freeze still happens with 2.6.31-rc3-git5, but I've been doing
+> some more fact-finding.
+>
+> Running the script shown above and with the rt61-based card inserted,
+> I can freeze the laptop even if I am doing nothing else on the laptop.
+> When the freeze occurs, the laptop is effectively dead, no response to
+> mouse movement or keyboard input and no response to pings from
+> another machine on my network. However, if I eject the card, the
+> laptop comes to life again. The key presses from when the laptop was
+> frozen appear on screen and pings from another machine are responded
+> to. The script continues to run and display the counter. I then
+> reinsert the card and everything appears OK until the laptop freezes
+> again a minute or two later. During a test run this morning the
+> machine froze at (from the output of the script) 80, 235, 369, 538 and
+> 672. Each time, ejecting the card brought the machine back to life.
+>
+> Trying the same test with the ath5k-based card inserted resulted in
+> the script getting to 2300 without the laptop freezing, at which point
+> I stopped the script.
+>
 
---=-Wh8J+6qNgjy+RT04jt/e
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+One more data point. I wondered whether the freeze would "time out" if
+I just left the laptop frozen, but my testing shows that it probably
+does not (or if it does it takes more than 27 minutes to do so.
 
-On Thu, 2009-07-30 at 19:05 +0400, Igor Perminov wrote:
-> > > @@ -497,6 +509,13 @@ static int ieee80211_stop(struct net_device *dev=
-)
-> > >  		}
-> > >  		/* fall through */
-> > >  	default:
-> > > +		if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
-> >=20
-> > I'd probably put this after a
-> > 	case NL80211_IFTYPE_AP:
-> > label but you need the if () anyway ... hmm I guess we really should
-> > clean up this code and split it into two switch statements...
->=20
-> And may be do it above?
->=20
-> 	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
-> 		atomic_dec(&local->iff_allmultis);
->=20
-> 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
-> 		atomic_dec(&local->iff_promiscs);
->=20
-> +	if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP)
-> +		local->fif_pspoll--;
-> +
+I've also tried to bisect again, but, as last time, once I got to the
+batch of network-related changes that went into -rc1, I get a series
+of kernels that build but either won't boot or have inoperable
+wireless networking.
 
-Looks good, yeah, also saves another configure_filter call.
+Finally, since I haven't had a single reply to the regression report I
+posted almost two weeks ago, I now give up. I'll switch to using the
+card supported by the ath5k driver.
 
-johannes
+<snip>
 
---=-Wh8J+6qNgjy+RT04jt/e
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcbzqAAoJEODzc/N7+QmaqzEQAJTHUL2aLPzsbnrzk71X4yp4
-oWw2UKBu4Po/Bv7qRUn4Nz/GFErcy2qWAysi3I6SmtDUu2d3K/eKq0lAW5TO4iGV
-cp7eIEXYyxjPwAGnkTzw+XIUW3srfly98mEMHQT6QBONe6hXQDa7rKpEbzLlQyQR
-KshpT5fojtTYuqp4wvjf3OUnJ1dvDb68tbQv8Ajeb6JNaQq4lEOeewn0LqPT3Dvs
-d8+pViYkbURcNdtVDlT2pp4Xb3mbJNiKS6eTwDo45Ibme0HFhfxz0is9TFFLCu9G
-2hgkE/07FDbxmAkRevsUEI/W3WSqviO2huhAJzO3aJBuPDC/d4Srlx+ZsYTCMRmV
-I9n5Uf0fOCuR6SjjYHdRNcaxAn5uPB3IsvmTMHBoGq6AAQvJt+Gei/wqsGclMI4t
-U468+aFd+4COL6XEEmvsqLc7SlIdd29uSXeU8FjtvmhuMrTm3W5wMH4ZgPwYfZ6C
-TqzWCyxUI98OkKVNYBU/C7mR1jGtmRO4+/sg1ef5wKe9MkWRbZ6lBkT26tNPWxl0
-m8noMF9gYJxO+EXHJWTCpJuOaDTD+LX4TDv6dvqCfYdLEfXe2zKrpqmIbwF5edVl
-v9j3ftFRBKO+MWzNnc7OAsJYu4UUAXemHvZerwZzI3FJ9RkiT9t/m0X4KhFlDkvs
-RUGfFTJpOklrNV6t2pF4
-=YPwj
------END PGP SIGNATURE-----
-
---=-Wh8J+6qNgjy+RT04jt/e--
-
+Chris
+-- 
+No, Sir; there is nothing which has yet been contrived by man, by
+which so much happiness is produced as by a good tavern or inn -
+Doctor Samuel Johnson
