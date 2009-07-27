@@ -1,97 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out11.libero.it ([212.52.84.111]:46497 "EHLO
-	cp-out11.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757206AbZGMWDd (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbZG0PK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 18:03:33 -0400
-Received: from pcfabio.home.lan (151.48.52.216) by cp-out11.libero.it (8.5.107)
-        id 4A5A72EE00370128 for linux-wireless@vger.kernel.org; Mon, 13 Jul 2009 23:57:31 +0200
-From: Fabio Rossi <rossi.f@inwind.it>
-To: linux-wireless@vger.kernel.org
-Subject: p54pci: problems during initialization
-Date: Sat, 11 Jul 2009 20:06:44 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200907112006.45731.rossi.f@inwind.it>
+	Mon, 27 Jul 2009 11:10:58 -0400
+Subject: Re: [PATCH] dell-laptop: Fix rfkill state setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Gardner <timg@tpi.com>
+Cc: mjg@redhat.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090727144747.E7F4EF891B@sepang.rtg.net>
+References: <20090727144747.E7F4EF891B@sepang.rtg.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MtwlRJFtkbhy0UfulYQy"
+Date: Mon, 27 Jul 2009 17:10:18 +0200
+Message-Id: <1248707418.8500.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a PCMCIA card (3com 3CRWE154G72 v2) which has problems during the 
-device initialization phase. I'm using the current wireless.git and the 
-firmware included with the working Windows driver (extracted by fwextract).
 
-Sometimes I'm able to get the card working but most of times it doesn't 
-complete the initialization. When it works dmesg reports:
+--=-MtwlRJFtkbhy0UfulYQy
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-pcmcia_socket pcmcia_socket0: pccard: CardBus card inserted into slot 0
-pci 0000:03:00.0: reg 10 32bit mmio: [0x000000-0x001fff]
-pci 0000:03:00.0: supports D1 D2
-pci 0000:03:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:03:00.0: PME# disabled
-p54pci 0000:03:00.0: enabling device (0000 -> 0002)
-p54pci 0000:03:00.0: PCI INT A -> Link[LNKD] -> GSI 11 (level, low) -> IRQ 11
-p54pci 0000:03:00.0: setting latency timer to 64
-p54pci 0000:03:00.0: firmware: requesting isl3886pci
-phy11: p54 detected a LM86 firmware
-phy11: FW rev 2.5.2.0 - Softmac protocol 3.0
-phy11: you are using an obsolete firmware. visit 
-http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 
-2.6.28"!
-phy11: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
-phy11: hwaddr 00:0e:6a:xx:xx:xx, MAC:isl3890 RF:Frisbee
-phy11: Selected rate control algorithm 'minstrel'
-Registered led device: p54-phy11::assoc
-Registered led device: p54-phy11::tx
-Registered led device: p54-phy11::rx
-Registered led device: p54-phy11::radio
-p54pci 0000:03:00.0: is registered as 'phy11'
+On Mon, 2009-07-27 at 08:47 -0600, Tim Gardner wrote:
+> Matthew,
+>=20
+> I think the rfkill state change logic is inverted. I've tried the origina=
+l
+> code on 3 different Dell models. Once 'rfkill block all' is run, then you
+> can never unblock 'dell-wifi: Wireless LAN'. With this change you can get
+> it unblocked, but you need to run 'rfkill unblock all' twice (which is
+> likely an issue with rfkill).
+>=20
+> rtg
+>=20
+> From 778aec563a251418e455d63f711aab1c936bff73 Mon Sep 17 00:00:00 2001
+> From: Tim Gardner <tim.gardner@canonical.com>
+> Date: Mon, 27 Jul 2009 08:30:54 -0600
+> Subject: [PATCH] UBUNTU: [Upstream] dell-laptop: Fix rfkill state setting=
+.
+>=20
+> rfkill enable/disable transitions are predicated on the state of the
+> external hardware switch, i.e., if the external switch is in the on posit=
+ion,
+> then no rfkill state transitions are allowed.
+>=20
+> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+> ---
+>  drivers/platform/x86/dell-laptop.c |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/de=
+ll-laptop.c
+> index 74909c4..cf40c4e 100644
+> --- a/drivers/platform/x86/dell-laptop.c
+> +++ b/drivers/platform/x86/dell-laptop.c
+> @@ -197,8 +197,11 @@ static void dell_rfkill_query(struct rfkill *rfkill,=
+ void *data)
+>  	dell_send_request(&buffer, 17, 11);
+>  	status =3D buffer.output[1];
+> =20
+> -	if (status & BIT(bit))
+> -		rfkill_set_hw_state(rfkill, !!(status & BIT(16)));
+> +	/*
+> +	 * Don't change state unless the read-only HW rfkill switch is disabled=
+.
+> +	 */
+> +	if (status & BIT(16))
+> +		rfkill_set_hw_state(rfkill, !!(status & BIT(bit)));
 
-When it doesn't work I read:
+Hmm. The previous code was
 
-pcmcia_socket pcmcia_socket0: pccard: CardBus card inserted into slot 0
-pci 0000:03:00.0: reg 10 32bit mmio: [0x000000-0x001fff]
-pci 0000:03:00.0: supports D1 D2
-pci 0000:03:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:03:00.0: PME# disabled
-p54pci 0000:03:00.0: enabling device (0000 -> 0002)
-p54pci 0000:03:00.0: PCI INT A -> Link[LNKD] -> GSI 11 (level, low) -> IRQ 11
-p54pci 0000:03:00.0: setting latency timer to 64
-p54pci 0000:03:00.0: firmware: requesting isl3886pci
-phy10: p54 detected a LM86 firmware
-phy10: FW rev 2.5.2.0 - Softmac protocol 3.0
-phy10: you are using an obsolete firmware. visit 
-http://wireless.kernel.org/en/users/Drivers/p54 and grab one for "kernel >= 
-2.6.28"!
-phy10: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:no
-phy10: device does not respond!
-p54pci 0000:03:00.0: PCI INT A disabled
-p54pci: probe of 0000:03:00.0 failed with error -16
-pcmcia_socket pcmcia_socket0: pccard: card ejected from slot 0
+-       if (status & (1<<16))
+-               new_state =3D RFKILL_STATE_SOFT_BLOCKED;
+-
+-       if (status & (1<<bit))
+-               *state =3D new_state;
+-       else
+-               *state =3D RFKILL_STATE_UNBLOCKED;
+-
+-       return 0;
 
-It seems there is a problem inside the function p54_read_eeprom().
+where new_state was initialised to RFKILL_STATE_HARD_BLOCKED.
 
-I have also tried with other firmwares available here
-  http://daemonizer.de/prism54/prism54-fw/
-with the following results:
+So doesn't that mean that 1<<bit is the hard-block bit? Or was the
+previous code just bogus, but happened to work since rfkill didn't
+separate the hard/soft kill concepts?
 
-2.3.2.0.arm - same behaviour
-2.4.2.0.arm - same behaviour
-2.4.6.0.arm - same behaviour
-2.4.8.0.arm - same behaviour
-2.4.11.0.arm - same behaviour
-2.4.12.0.arm - same behaviour
-2.5.2.0.arm - same behaviour
-2.5.3.0.arm - same behaviour
-2.5.6.0.arm - same behaviour
-2.7.0.0.arm - same behaviour
-2.12.0.0.arm - same behaviour
-2.13.1.0.arm - same behaviour
-2.13.8.0.arm - cannot boot firmware, probe error -110
-2.13.12.0.arm - cannot boot firmware, probe error -110
-2.17.2.0.arm - cannot boot firmware, probe error -110
+johannes
 
+--=-MtwlRJFtkbhy0UfulYQy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Any clue?
+-----BEGIN PGP SIGNATURE-----
 
-Fabio
+iQIcBAABAgAGBQJKbcNVAAoJEODzc/N7+QmabhgQALpyP/Nz4s6XQXCwJ48GSUKa
+r9xmuzVJAFgOKCRK6tOTXDqyt00T2EWsI8n/eLaa6n0rvJ8tfmor9p474iVOKIKQ
+LGXJP9wdMyHVjuoc8M3oD61KPbOncLXS8mIcjZo4leeiZcXfyonUpy1Edy/uE13A
+epQWfKA9wQ3ruXJ4aYlU5mF5VGUosV0xcA3gaipCIqL4eMJbKsPahRIXp/fQCHwG
+kNZGCYRb5woMT/izcVJkejcNLDkAaExNJU2XWIkHxA3/AEOU2uh6u3tRn2yBMn7+
+XTKI6D36HHW0w3ELVYE2/21snErO2z2n0+qG/B4RWZPPU9363CeY0Uh0SfTns3vH
+jttPyu0Iv/vKN9aoi1d0aq7mseqKFha3HrOWrG+pvOdt7hxnKQDPmo8umxDzYQpk
+sDnz9UFmOOyO1+0Rk+MEGk4wkxgTmf0RUmH/0bvSha//VDTpoe0n12wCG3VerVJS
+aFXwfcSse96vnljyyxTaA27+BpgX/9s4f4C3ivCI6xUb+qxF9mJzYHG9VoYrbiut
+3CrfdM3iNo/fM5Nq5qiEQCRZ/ba6dpVvzWucXeY44gJuIJQJO6yIs8acKlj2/8Xn
+xS4UT75pHF4wvsjn5MWVZca2yXQV7kmypY3uILtC513QelgnItHKB0LdYPjsMEQE
+OPOQ1NAJqYpFJ5QMHmgS
+=Onqp
+-----END PGP SIGNATURE-----
+
+--=-MtwlRJFtkbhy0UfulYQy--
+
