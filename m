@@ -1,51 +1,41 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([193.131.176.58]:45664 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759056AbZGGV3j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 17:29:39 -0400
-Subject: Re: Possible memory leak in net/wireless/scan.c
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1246986768.4755.43.camel@johannes.local>
-References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-	 <1246986768.4755.43.camel@johannes.local>
-Content-Type: text/plain
-Date: Tue, 07 Jul 2009 22:29:28 +0100
-Message-Id: <1247002168.5710.1.camel@pc1117.cambridge.arm.com>
-Mime-Version: 1.0
-Sender: linux-wireless-owner@vger.kernel.org
+Return-path: <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <43e72e890907271241m7ccf386aj97097bb715e32658@mail.gmail.com>
+References: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
+	<1248721724.32365.1.camel@johannes.local> <43e72e890907271241m7ccf386aj97097bb715e32658@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 27 Jul 2009 22:22:09 +0200
+Message-ID: <69e28c910907271322x6c6ea95cr1cd1d310bf0ebe9b@mail.gmail.com>
+Subject: Re: [PATCH v2] mac80211: redefine usage of the mac80211 workqueue
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-07-07 at 19:12 +0200, Johannes Berg wrote:
-> On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
-> 
-> > diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> > index e95b638..f8e71b3 100644
-> > --- a/net/wireless/scan.c
-> > +++ b/net/wireless/scan.c
-> > @@ -366,7 +366,6 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
-> >  	found = rb_find_bss(dev, res);
-> >  
-> >  	if (found) {
-> > -		kref_get(&found->ref);
-> >  		found->pub.beacon_interval = res->pub.beacon_interval;
-> >  		found->pub.tsf = res->pub.tsf;
-> >  		found->pub.signal = res->pub.signal;
-> > 
-> > I'll try this later today to see if it fixes the leak. If that's not
-> > correct, I'll post more information about the content of the reported
-> > object (in general, it shouldn't be on any valid list or rb tree since
-> > kmemleak can't find it).
-> 
-> I have already sent that exact patch.
+On Mon, Jul 27, 2009 at 9:41 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> On Mon, Jul 27, 2009 at 12:08 PM, Johannes
+> Berg<johannes@sipsolutions.net> wrote:
+>> On Mon, 2009-07-27 at 11:59 -0700, Luis R. Rodriguez wrote:
+>>
+>>> +EXPORT_SYMBOL_GPL(ieee80211_queue_work);
+>>
+>> Do we really want to allow these as _GPL only? Most things are not _GPL
+>> but usable by anyone, which of course isn't too useful since mac80211
+>> changes all the time :)
+>
+> Well I don't see why not.
+>
+> =A0Luis
 
-OK. I can now confirm that it fixes the memory leak.
+Do we want to prevent non-GPL drivers from using mac80211? That's
+actually counter-productive, as it reduces the chance of a
+manufacturer ever releasing a useful, kernel-includable driver. (Most
+manufacturers initially develop non-GPL drivers, which hopefully end
+up getting released under the GPL after community persuasion. If we
+make mac80211 GPL-only, that prevents any internal driver based on
+mac80211 from getting written.)
 
-Thanks.
-
--- 
-Catalin
-
+--=20
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
