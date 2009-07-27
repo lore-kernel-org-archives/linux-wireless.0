@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:54936 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbZGQS4P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 14:56:15 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [RFC PATCH v2 3/8] wl1251: use wiphy_dev instead of wl->spi->dev
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 17 Jul 2009 21:48:04 +0300
-Message-ID: <20090717184804.25883.48996.stgit@tikku>
-In-Reply-To: <20090717184643.25883.95065.stgit@tikku>
-References: <20090717184643.25883.95065.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:18882 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752714AbZG0Pi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 11:38:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 08:38:27 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] mac80211: do not queue work after suspend in the dynamic ps timer
+Date: Mon, 27 Jul 2009 08:38:25 -0700
+Message-ID: <1248709105-12722-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
-
-Remove a dependency on the bus-specific struct device by using wiphy_dev
-when requesting firmware.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ net/mac80211/mlme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/wl1251_main.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 2967e19..d9c5d8a 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -75,9 +75,10 @@ static irqreturn_t wl1251_irq(int irq, void *cookie)
- static int wl1251_fetch_firmware(struct wl1251 *wl)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f60a831..ee83125 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -760,7 +760,7 @@ void ieee80211_dynamic_ps_timer(unsigned long data)
  {
- 	const struct firmware *fw;
-+	struct device *dev = wiphy_dev(wl->hw->wiphy);
- 	int ret;
+ 	struct ieee80211_local *local = (void *) data;
  
--	ret = request_firmware(&fw, wl->chip.fw_filename, &wl->spi->dev);
-+	ret = request_firmware(&fw, wl->chip.fw_filename, dev);
+-	if (local->quiescing)
++	if (local->quiescing || local->suspended)
+ 		return;
  
- 	if (ret < 0) {
- 		wl1251_error("could not get firmware: %d", ret);
-@@ -113,9 +114,10 @@ out:
- static int wl1251_fetch_nvs(struct wl1251 *wl)
- {
- 	const struct firmware *fw;
-+	struct device *dev = wiphy_dev(wl->hw->wiphy);
- 	int ret;
- 
--	ret = request_firmware(&fw, wl->chip.nvs_filename, &wl->spi->dev);
-+	ret = request_firmware(&fw, wl->chip.nvs_filename, dev);
- 
- 	if (ret < 0) {
- 		wl1251_error("could not get nvs file: %d", ret);
+ 	queue_work(local->hw.workqueue, &local->dynamic_ps_enable_work);
+-- 
+1.6.3.3
 
