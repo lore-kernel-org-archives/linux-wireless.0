@@ -1,88 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46154 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754553AbZGJJb5 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51823 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbZG0QFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 05:31:57 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: 4318 misbehaving with bleeding edge kernels
-Date: Fri, 10 Jul 2009 11:31:41 +0200
-Cc: bcm43xx-dev@lists.berlios.de, Celejar <celejar@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain; charset=US-ASCII
-Message-Id: <200907101131.41781.mb@bu3sch.de>
+	Mon, 27 Jul 2009 12:05:10 -0400
+Subject: Re: Possible BUG where mac80211 fails to stop queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A6DCE0E.3010103@lwfinger.net>
+References: <4A6CDE26.3000409@lwfinger.net>
+	 <1248684480.19945.45.camel@johannes.local>  <4A6DCE0E.3010103@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LcF2SaMRsTNUpa9wYGP0"
+Date: Mon, 27 Jul 2009 18:04:36 +0200
+Message-Id: <1248710676.8500.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-----------  Forwarded Message  ----------
+--=-LcF2SaMRsTNUpa9wYGP0
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Subject: 4318 misbehaving with bleeding edge kernels
-Date: Friday 10 July 2009
-From: Celejar <celejar@gmail.com>
-To: bcm43xx-dev <bcm43xx-dev@lists.berlios.de>
+On Mon, 2009-07-27 at 10:55 -0500, Larry Finger wrote:
 
-Hi,
+> > I've also seen it under extreme stress on Intel hardware, cf.
+> > http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497
+>=20
+> Fortunately, the b43 coding was robust enough to prevent queue
+> overrun, thus we just end up with a warning.
 
-I have a 4318 (rev 02), which has been working fine with b43.
-Recently, with 2.6.31-rc2 kernels from the wireless-testing git repo,
-I've been having trouble.  Sometimes the card simply fails to associate
-after doing 'iwconfig eth0 essid xxxx'.  It doesn't even seem to try;
-i.e., when it does associate, I see log entries like these:
+Right. iwlwifi wasn't so lucky.
 
-Jul 10 02:25:19 lizzie kernel: [  318.302652] eth0: direct probe to AP 00:1a:70:f5:76:7e (try 1)
-Jul 10 02:25:19 lizzie kernel: [  318.310396] eth0 direct probe responded
-Jul 10 02:25:19 lizzie kernel: [  318.310401] eth0: authenticate with AP 00:1a:70:f5:76:7e (try 1)
-Jul 10 02:25:19 lizzie kernel: [  318.312273] eth0: authenticated
-Jul 10 02:25:19 lizzie kernel: [  318.510040] eth0: associate with AP 00:1a:70:f5:76:7e (try 1)
-Jul 10 02:25:19 lizzie kernel: [  318.511947] eth0: RX AssocResp from 00:1a:70:f5:76:7e (capab=0x401 status=0 aid=1)
-Jul 10 02:25:19 lizzie kernel: [  318.511952] eth0: associated
-Jul 10 02:25:19 lizzie kernel: [  318.513218] ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+> > Are you seeing this multiple times? I don't think you have fragmentatio=
+n
+> > on, do you? At least I didn't and still saw the problem, which seemed a
+> > bit strange, but I really couldn't see any other way for it to happen.
+>=20
+> When it occurs, I get just a single warning. Fragmentation was not on.
 
-but often I see nothing in the logs at all, and iwconfig shows
-"Not-associated".  I just keep repeating the 'iwconfig eth0 essid xxxx'
-command until it finally takes, and then the connection seems to behave
-normally.  When the card is not functioning, trying 'iwlist eth0 scan'
-initially gives:
+> I will prepare a patch that acknowledges that mac80211 might send one
+> extra fragment after the queues are stopped and only issue a warning
+> if we get more than one.
 
-~# iwlist eth0 scan
-eth0      Failed to read scan data : Resource temporarily unavailable
+Sounds reasonable. You could even change the threshold from 2 to 4 and
+enqueue the frame anyway, if still >=3D 2 slots free, I guess.
 
-and subsequent invocations, when the card is still not working, gives:
+However, I think I've seen this happen more than once, which really
+makes me think there's a bug in mac80211 too, but I haven't been able to
+find that bug if any.
 
-~# iwlist eth0 scan
-eth0      Interface doesn't support scanning : Device or resource busy
+johannes
 
-When the card resumes functioning, scanning works correctly.
+--=-LcF2SaMRsTNUpa9wYGP0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-I have tried both the old and new firmware, with similar results.  Any
-ideas?
+-----BEGIN PGP SIGNATURE-----
 
->From lspci -v:
+iQIcBAABAgAGBQJKbdARAAoJEODzc/N7+QmaG1IP/ieUOf+pi+8d+OWzduo7n+5S
+z9ndFYQQpXQIz3rbdqs5UGWFjmUSaR9TVrR+ewF6iwCBpsW5z6dTEO0wJxgEprzD
+L0p5TfXw2HdK3Q9VXQPcPhOmDGgmRnb94gkg2txrTDVvOFD4B5OhgGqWZRBMQuBB
++/bCnwkGOoupDszn0JoH03i/Q9RNLASdMyoec17qJF0V+UnTo+KE3i1CDIzldate
+4Lc1rKThXiSISloo2FcLAgsu+QV5I5wNqIyHy6iEUF8YSpsai9CSywwB35dqdMen
+RHUNg0LgW2He7GOorP1NmT1F4daLXyEZ77ZQ3W3dFD6vWUK4E9rb3C5lmnKKeSzS
+ERWMAFCnyaqVYxlOM1nm9P5DqTdCTSEMH1ux0f3FlNoK80eGX7Ubo/Zpu5qpALGl
+7uMJgfGtdADw6rcsGqgilTBMYg1h/wHhMqn6o0z/zbF2T5Y5lzGxuhVZYMxijk1G
+FSvSDHjDvygY2OQUKoG8YNvDP8Q78D1iBeh4cKUKoVgxJA/zpgaSmqePMNMPSjbT
+1U+Ijh+DPvmXYOcHpnXUxist9ltbSiuDcgdUvXm6h9x3LghlLY1hM4BM5XHdxujc
+27+BvlRMJjgAQdtAJw0FMiY/rltk14eHICnbL8bZxD1XncD3cuepMiINZaRHCO3l
+IQN82GlP86tbKQNB+NQz
+=gPUG
+-----END PGP SIGNATURE-----
 
-06:02.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
-	Subsystem: AMBIT Microsystem Corp. TravelMate 2410
-	Flags: bus master, fast devsel, latency 64, IRQ 22
-	Memory at d0002000 (32-bit, non-prefetchable) [size=8K]
-	Kernel driver in use: b43-pci-bridge
+--=-LcF2SaMRsTNUpa9wYGP0--
 
-uname -a:
-
-Linux lizzie 2.6.31-rc2-wl-lizzie-27873-ga483c23-dirty #4 Thu Jul 9 19:13:30 EDT 2009 i686 GNU/Linux
-
-Celejar
---
-mailmin.sourceforge.net - remote access via secure (OpenPGP) email
-ssuds.sourceforge.net - A Simple Sudoku Solver and Generator
-
-_______________________________________________
-Bcm43xx-dev mailing list
-Bcm43xx-dev@lists.berlios.de
-https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
-
-
--------------------------------------------------------
-
--- 
-Greetings, Michael.
