@@ -1,115 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:56158 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754899AbZGAK7B (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41492 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553AbZG0TL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 06:59:01 -0400
-Received: by bwz25 with SMTP id 25so428005bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 03:59:03 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Some thoughts about background scanning
-Date: Wed, 1 Jul 2009 12:59:02 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200907011003.49857.helmut.schaa@gmail.com> <1246441038.4131.12.camel@johannes.local>
-In-Reply-To: <1246441038.4131.12.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907011259.02946.helmut.schaa@gmail.com>
+	Mon, 27 Jul 2009 15:11:26 -0400
+Subject: Re: [PATCH 3/3] ath9k: move workqueue cancels to stop callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+In-Reply-To: <1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
+References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
+	 <1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fBBQU98btGgo1pW9/xY3"
+Date: Mon, 27 Jul 2009 21:10:55 +0200
+Message-Id: <1248721855.32365.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 1. Juli 2009 schrieb Johannes Berg:
-> > My current approach is quite easy but works well: Extend the scan state
-> > machine with a new state (OPERATION) which restores the channel and the
-> > correct filter flags and notifies the AP that we're back. 
-> 
-> Makes sense. You can optimise scanning for the _current_ channel by a
-> combination of OPERATION and scanning, leaving the filter flags at the
-> scan version, and sending the probe requests. In fact, if you scan that
-> channel first, you can avoid IEEE80211_PROBE_DELAY since the NAV should
-> be known on that channel.
-> 
-> Tangentially related, we can also move into SCAN_SEND_PROBE _before_
-> IEEE80211_PROBE_DELAY has passed, if we receive a frame (which means NAV
-> update).
 
-Correct, that would be another minor optimzation.
+--=-fBBQU98btGgo1pW9/xY3
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> > The state
-> > machine moves there after every scanned channel. The result is that
-> > the complete scan can take quite some time, something a round 15 seconds.
-> 
-> That doesn't sound too bad. How long are you staying on the operational
-> channel though?
+On Mon, 2009-07-27 at 11:53 -0700, Luis R. Rodriguez wrote:
+> We should be cancelling our work at the stop callback since
+> we are borrowing the mac80211 workqueue for our work. As it
+> stands mac80211 expects this for suspend purposes.
+>=20
+> The ath9k specific virtual wiphy stuff need only be
+> cancelled only when the we have no secondary virtual wiphys.
 
-I used the beacon interval of the currently associated AP (100ms here).
-Hence, we can be sure that we receive at least one beacon from that AP
-and would notice if the AP is gone in the meantime. Of course that can
-be optimized by the approach I described in the last mail by proceeding
-with the scan once we receive a beacon without TIM bit set.
+inverted logic here?
 
-> > Scanning multiple channels before switching back would allow us to
-> > reduce the amount of time the scan takes. So, what I'd like to have is
-> > integration with pm_qos in order to determine how much channels may be
-> > scanned at once before we have to switch back. Shouldn't be that
-> > difficult ;) 
-> 
-> You might be able to use local->hw.conf.max_sleep_period from
-> ieee80211_recalc_ps? Or probably better move the calculation into a 
-> helper function since it needs to work across all managed interfaces, if
-> there are multiple.
+johannes
 
-Yep. Already thought about that one. It only needs minor adjustments (for
-example it is only available if powersave is done within mac80211).
+--=-fBBQU98btGgo1pW9/xY3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-[...]
+-----BEGIN PGP SIGNATURE-----
 
-> > Advantages:
-> > 
-> > We could split the actual scan algorithm out of the scan state machine,
-> > for example if pm_qos allows us to stay away for 150ms we could reorder
-> > the channels to scan one active channel followed by one passive channel
-> > before switching back to the operating channel. Should allow us to use
-> > all sorts of insane optimizations.
-> 
-> :)
-> It might be better to have even more states, e.g. make the list look
-> like this:
->  - SWITCH_TO 2412 MHz
->  - NAV_WAIT max 33ms
->  - SEND_PROBES
->  - WAIT_PROBES
->  - SWITCH_TO (operation channel)
->  - OPERATION
-> ...
-> 
-> That way we can short-circuit the NAV_WAIT on receiving a frame, for
-> example. We don't receive all frames, of course, so it would be useful
-> to have some driver assistance for that at some point too.
+iQIcBAABAgAGBQJKbfu8AAoJEODzc/N7+QmaS5YQAKsuUbV4KvJB7dcgK8meiwe6
+mleI8PytU1VJtwRQ82pnPnIFQJFWz1u38Uz3ID0v3Nl0VXh5b0ys5d9Weuz8KN+h
+ysbiyGhESTZAwBcU7xwIUsu2c2rpEJcofFPn0AbDoFnkTxso4tqtyDsa0Afpdyu1
+l7B6uefId4wnpXmx7PCFs1vv8MsllfBsT5FJz9OMne4DEaXnlXnKcS5NYa7TJ8xg
+TVnsNmOPx9uCw1PUt47JwsLk5WUVWpSlgWn4yjpWmSpdBycJM9rBB5FUm0juyh9m
+OqgS4+6U4xpwuP+3nc2L9ySp4xsWG0+yQA54tkrMtRXlK8v66v36QDugi3BT0ZNu
+taq5CUsUwRbS5gDUHVr2ZymNcAxOD3e8Wy4tNfdAQDcx3+yU2JvVvlpZLu6T4trW
+jIWKuCubCnvvjjznsY5G/vPljBvWZWA3RxzZq8BEPBHQY4/f+qnTHGWIk6lHpV7x
+3BoVgvvMYp5jCpDaws0tgVD2tr5yzaX/wQYk7VOL8PkIGsnDUHBS6A60WnzOmhp3
++TmhWG1I5K3szs4lt5YetdF8tNfzUnvXqjFOQNMBdNU29zUPnAX2HCGJbN26wF+D
+6NsKb6FlfYxJ/ThE8nVnRb40H/zR4fXHKZTTl9y2vQsMEd9ShgrjRSrWFoEaHwW/
+JckfWkN6a6nOV7zg+iot
+=1VgR
+-----END PGP SIGNATURE-----
 
-Yeah, cool idea. Have to think about which states make sense and which
-don't.
-
-> > In some cases we might shorten the pre-computed values. For example if
-> > we switch back to the operating channel and receive a beacon without
-> > TIM being set for our association and our TX queue is empty we might
-> > immediately proceed with the scan without having to stay on the channel
-> > for the full amount of time. Not sure if we can do this properly without
-> > recomputing the whole table (depends on the actual algorithm used).
-> 
-> I think short-circuiting states should be possible from the outside for
-> the NAV wait too.
-
-Agreed.
-
-> > Does that kind of approach sound useful? Is it overkill?
-> 
-> Seems useful to me :)
-
-Great, thanks. I'll look into it some more.
-
-Helmut
+--=-fBBQU98btGgo1pW9/xY3--
 
