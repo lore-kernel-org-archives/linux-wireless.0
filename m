@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42936 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755231AbZGJNSQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57791 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033AbZG0SqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 09:18:16 -0400
-Subject: [PATCH] mac80211: mesh: fix two small problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 10 Jul 2009 11:39:26 +0200
-Message-Id: <1247218766.1905.20.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 27 Jul 2009 14:46:03 -0400
+Date: Mon, 27 Jul 2009 14:43:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Subject: Re: [PATCH v2 12/14] iwlwifi: debugFs to enable/disable HT40
+	support
+Message-ID: <20090727184339.GA8823@tuxdriver.com>
+References: <1248705439.23314.24.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1248705439.23314.24.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1) there's a spin_lock() that needs to be spin_lock_bh()
-2) action frames of size 24 might cause an out-of-bounds
-   memory access (for the 25th byte only, so no big deal)
+On Mon, Jul 27, 2009 at 07:37:19AM -0700, Guy, Wey-Yi wrote:
+> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> 
+> Add debugfs file to enable/disable HT40(40MHz) channel support.
+> By default, 40MHz is supported if AP can support the function.
+> 
+> By echo "1" to "disable_ht40_mode" file, iwlwifi driver will disable the
+> 40MHz support and only allow 20MHz channel.
+> 
+> Because the information exchange happen during association time,
+> so enable/disable fat channel only can be performed when it is not
+> associated with AP.
+> 
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+> v2: namene change from "fat" to "HT40"
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/mesh.c      |    5 ++++-
- net/mac80211/mesh_hwmp.c |    6 +++---
- 2 files changed, 7 insertions(+), 4 deletions(-)
+This doesn't seem to apply whether or not I revert "iwlwifi: debugFs
+to enable/disable 40MHz channel support" before trying...  What did
+you base it upon?
 
---- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2009-07-10 11:03:05.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh_hwmp.c	2009-07-10 11:03:18.000000000 +0200
-@@ -686,11 +686,11 @@ void mesh_path_start_discovery(struct ie
- 	u8 ttl, dst_flags;
- 	u32 lifetime;
- 
--	spin_lock(&ifmsh->mesh_preq_queue_lock);
-+	spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
- 	if (!ifmsh->preq_queue_len ||
- 		time_before(jiffies, ifmsh->last_preq +
- 				min_preq_int_jiff(sdata))) {
--		spin_unlock(&ifmsh->mesh_preq_queue_lock);
-+		spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
- 		return;
- 	}
- 
-@@ -698,7 +698,7 @@ void mesh_path_start_discovery(struct ie
- 			struct mesh_preq_queue, list);
- 	list_del(&preq_node->list);
- 	--ifmsh->preq_queue_len;
--	spin_unlock(&ifmsh->mesh_preq_queue_lock);
-+	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
- 
- 	rcu_read_lock();
- 	mpath = mesh_path_lookup(preq_node->dst, sdata);
---- wireless-testing.orig/net/mac80211/mesh.c	2009-07-10 11:20:36.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh.c	2009-07-10 11:20:44.000000000 +0200
-@@ -685,9 +685,12 @@ ieee80211_mesh_rx_mgmt(struct ieee80211_
- 	fc = le16_to_cpu(mgmt->frame_control);
- 
- 	switch (fc & IEEE80211_FCTL_STYPE) {
-+	case IEEE80211_STYPE_ACTION:
-+		if (skb->len < IEEE80211_MIN_ACTION_SIZE)
-+			return RX_DROP_MONITOR;
-+		/* fall through */
- 	case IEEE80211_STYPE_PROBE_RESP:
- 	case IEEE80211_STYPE_BEACON:
--	case IEEE80211_STYPE_ACTION:
- 		skb_queue_tail(&ifmsh->skb_queue, skb);
- 		queue_work(local->hw.workqueue, &ifmsh->work);
- 		return RX_QUEUED;
+For the record, if you repost this please assume that I will revert
+"iwlwifi: debugFs to enable/disable 40MHz channel support" before
+applying this one.  Alternatively, feel free to post a patch that
+merely changes the references from "fat" to "ht40" or whatever on
+top of the other patch.
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
