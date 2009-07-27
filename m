@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40412 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbZG3To2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 15:44:28 -0400
-Subject: [PATCH] mac80211: fix powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from c60.cesmail.net ([216.154.195.49]:53193 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbZG0QMC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 12:12:02 -0400
+Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248710568.8500.7.camel@johannes.local>
+References: <20090713223333.042733013@sipsolutions.net>
+	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
+	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
+	 <1248710387.8500.5.camel@johannes.local>
+	 <1248710568.8500.7.camel@johannes.local>
 Content-Type: text/plain
-Date: Thu, 30 Jul 2009 21:43:55 +0200
-Message-Id: <1248983035.10971.3.camel@johannes.local>
+Date: Mon, 27 Jul 2009 12:12:00 -0400
+Message-Id: <1248711120.6965.6.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the recent MLME rework I did broke powersave
-because the ps_sdata isn't assigned at the right time,
-and the work item wasn't removed from the list before
-calling ieee80211_recalc_ps(). To be more specific,
-this broke the case where you'd enabled PS before
-associating, either automatically or with iwconfig.
+On Mon, 2009-07-27 at 18:02 +0200, Johannes Berg wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Oops.
+> Actually, you're using ath5k, right? So we can see what
+> info->control.vif points to after ath5k has used the skb, because
+> apparently it's a valid pointer at least, just not a real vif pointer
+> any more.
 
- net/mac80211/mlme.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+I'm using ath9k.
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-07-27 22:35:02.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-07-30 21:23:52.000000000 +0200
-@@ -916,12 +916,9 @@ static void ieee80211_set_associated(str
+Here's something interesting I have found.  sdata->dev is valid if
+info->flags is 0x14091 and not valid if it's 0x12091.
+
+0x4000 is IEEE80211_TX_INTFL_NEED_TXPROCESSING and 0x2000 is
+IEEE80211_TX_INTFL_RCALGO.
+
+This patch prevents any panics.  Moreover, I get a connection with the 
+correct PSK.
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 75604cd..dd1fa8b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1889,6 +1889,9 @@ void ieee80211_tx_pending(unsigned long data)
+ 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 			struct ieee80211_sub_if_data *sdata;
  
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
- 
--	/* will be same as sdata */
--	if (local->ps_sdata) {
--		mutex_lock(&local->iflist_mtx);
--		ieee80211_recalc_ps(local, -1);
--		mutex_unlock(&local->iflist_mtx);
--	}
-+	mutex_lock(&local->iflist_mtx);
-+	ieee80211_recalc_ps(local, -1);
-+	mutex_unlock(&local->iflist_mtx);
- 
- 	netif_tx_start_all_queues(sdata->dev);
- 	netif_carrier_on(sdata->dev);
-@@ -1570,6 +1567,9 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
- 					       wk->bss->cbss.bssid,
- 					       ap_ht_cap_flags);
- 
-+        /* delete work item -- must be before set_associated for PS */
-+	list_del(&wk->list);
++			if (!(info->flags & IEEE80211_TX_INTFL_NEED_TXPROCESSING))
++				continue;
 +
- 	/* set AID and assoc capability,
- 	 * ieee80211_set_associated() will tell the driver */
- 	bss_conf->aid = aid;
-@@ -1583,7 +1583,6 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
- 	ieee80211_sta_rx_notify(sdata, (struct ieee80211_hdr *)mgmt);
- 	mod_beacon_timer(sdata);
- 
--	list_del(&wk->list);
- 	kfree(wk);
- 	return RX_MGMT_CFG80211_ASSOC;
- }
+ 			if (WARN_ON(!info->control.vif)) {
+ 				kfree_skb(skb);
+ 				continue;
 
 
+
+-- 
+Regards,
+Pavel Roskin
