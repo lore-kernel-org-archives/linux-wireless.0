@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:3384 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756971AbZGMULj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:11:39 -0400
-To: yi.zhu@intel.com
-Subject: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
-Cc: ipw3945-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-Message-Id: <20090713190803.9A70BF8D2C@sepang.rtg.net>
-Date: Mon, 13 Jul 2009 13:08:03 -0600 (MDT)
-From: timg@tpi.com (Tim Gardner)
+Received: from cavan.codon.org.uk ([93.93.128.6]:48752 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbZG0Oxv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 10:53:51 -0400
+Date: Mon, 27 Jul 2009 15:53:49 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Tim Gardner <timg@tpi.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] dell-laptop: Fix rfkill state setting
+Message-ID: <20090727145349.GA7227@srcf.ucam.org>
+References: <20090727144747.E7F4EF891B@sepang.rtg.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090727144747.E7F4EF891B@sepang.rtg.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
-From: Tim Gardner <tim.gardner@canonical.com>
-Date: Mon, 13 Jul 2009 12:53:32 -0600
-Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
+On Mon, Jul 27, 2009 at 08:47:47AM -0600, Tim Gardner wrote:
+> Matthew,
+> 
+> I think the rfkill state change logic is inverted. I've tried the original
+> code on 3 different Dell models. Once 'rfkill block all' is run, then you
+> can never unblock 'dell-wifi: Wireless LAN'. With this change you can get
+> it unblocked, but you need to run 'rfkill unblock all' twice (which is
+> likely an issue with rfkill).
 
-Added a missing parameter in the macro invocation to correct a
-compile error when CONFIG_IWLWIFI_DEBUG is enabled.
+Yes, there's clearly an issue of some sort here. I'll dig out a Dell and 
+test this, but it looks good.
 
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 2564288..67332fb 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
- 	}
- 
- 	if (scan->channel_count == 0) {
--		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
-+		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
- 		goto done;
- 	}
- 
 -- 
-1.6.3.3
-
+Matthew Garrett | mjg59@srcf.ucam.org
