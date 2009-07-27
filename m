@@ -1,29 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:31397 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbZGWGpH (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:35304 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbZG0Mnc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 02:45:07 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: any controller working in AP mode ?
-Date: Thu, 23 Jul 2009 08:46:17 +0200
-Cc: Ram kumar <ramkumar.research@gmail.com>,
-	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com> <1247843954.25608.62.camel@mj> <1248277682.8929.0.camel@mj>
-In-Reply-To: <1248277682.8929.0.camel@mj>
+	Mon, 27 Jul 2009 08:43:32 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so812385fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 05:43:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200907230846.17683.hs4233@mail.mn-solutions.de>
+Date: Mon, 27 Jul 2009 14:43:31 +0200
+Message-ID: <6ed49abf0907270543r7d8630bdu68177e9be6f6ae9c@mail.gmail.com>
+Subject: hostapd and mac80211
+From: Sibel Demirkol <sibel.demirkol@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Web search for 1286:1fab doesn't find anything useful other
-> than recommendations to use ndiswrapper.
-
-It might be some 802.11n (marketing speak "Top Dog") thingy ???
-
--- 
-http://www.holgerschurig.de
+Hi,
+I am not a Linux expert and I have difficulty to understand the
+message passing from kernel space to user space.
+I use a PC Engines WRAP board and ath9k chip as an AP. I wanted to use
+openWRT to install my packages and 2.6.28 kernel.
+What I have difficulty to understand is, once a message received with
+interrupt handler at ath9k driver, it is passed to mac80211 package
+for mac processing (As I understood)? Then if I use hostapd for
+example, how is it passed the message to hostapd deamon from mac80211
+stack? I know about nl80211 link class and cfg80211.. But could you
+explain me where the code lies for these message passings?
