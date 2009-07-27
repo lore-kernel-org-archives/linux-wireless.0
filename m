@@ -1,56 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35710 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbZGYMq7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44880 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755233AbZG0Idb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 08:46:59 -0400
-Subject: Re: [patch] wireless: ERR_PTR vs null
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Carpenter <error27@gmail.com>
-Cc: samuel.ortiz@intel.com, yi.zhu@intel.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <alpine.DEB.2.00.0907241000250.11771@bicker>
-References: <alpine.DEB.2.00.0907241000250.11771@bicker>
+	Mon, 27 Jul 2009 04:33:31 -0400
+Subject: [PATCH] mac80211: verify info->control.vif is not NULL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
-Date: Sat, 25 Jul 2009 14:46:05 +0200
-Message-Id: <1248525965.28545.158.camel@violet>
+Date: Mon, 27 Jul 2009 10:33:31 +0200
+Message-Id: <1248683611.19945.32.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+When enqueuing packets on the internal packet queue, we
+need to ensure that we have a valid vif pointer since
+that is required since the net namespace work. Add some
+assertions to verify this, but also don't crash is for
+some reason we don't end up with a vif pointer -- warn
+and drop the packet in all these cases.
 
-> iwm_wdev_alloc() returns an ERR_PTR on failure and not null.  It also 
-> prints its own dev_err() message so I removed that as well.
-> 
-> Compile tested only.  Sorry.  
-> Found by smatch (http://repo.or.cz/w/smatch.git).
-> 
-> regards,
-> dan carpenter
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
-> --- orig/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-24 09:56:49.000000000 +0300
-> +++ devel/drivers/net/wireless/iwmc3200wifi/netdev.c	2009-07-24 09:57:31.000000000 +0300
-> @@ -106,10 +106,8 @@
->  	int ret = 0;
->  
->  	wdev = iwm_wdev_alloc(sizeof_bus, dev);
-> -	if (!wdev) {
-> -		dev_err(dev, "no memory for wireless device instance\n");
-> -		return ERR_PTR(-ENOMEM);
-> -	}
-> +	if (IS_ERR(wdev))
-> +		return wdev;
->  
->  	iwm = wdev_to_iwm(wdev);
->  	iwm->bus_ops = if_ops;
+Since this code touches a number of hotpaths, it is
+intended to be temporary, or maybe configurable in the
+future, at least the bit that is in the path that gets
+hit for every packet, ieee80211_tx_pending().
 
-I just quickly double-checked with the code. Patch looks good.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c   |    5 +++++
+ net/mac80211/util.c |   13 +++++++++++++
+ 2 files changed, 18 insertions(+)
 
-Regards
-
-Marcel
+--- wireless-testing.orig/net/mac80211/util.c	2009-07-27 10:24:01.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2009-07-27 10:25:14.000000000 +0200
+@@ -336,6 +336,12 @@ void ieee80211_add_pending_skb(struct ie
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	unsigned long flags;
+ 	int queue = skb_get_queue_mapping(skb);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++	if (WARN_ON(!info->control.vif)) {
++		kfree(skb);
++		return;
++	}
+ 
+ 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 	__ieee80211_stop_queue(hw, queue, IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+@@ -358,6 +364,13 @@ int ieee80211_add_pending_skbs(struct ie
+ 			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+ 
+ 	while ((skb = skb_dequeue(skbs))) {
++		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++
++		if (WARN_ON(!info->control.vif)) {
++			kfree(skb);
++			continue;
++		}
++
+ 		ret++;
+ 		queue = skb_get_queue_mapping(skb);
+ 		__skb_queue_tail(&local->pending[queue], skb);
+--- wireless-testing.orig/net/mac80211/tx.c	2009-07-27 10:23:12.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-07-27 10:26:55.000000000 +0200
+@@ -1889,6 +1889,11 @@ void ieee80211_tx_pending(unsigned long 
+ 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 			struct ieee80211_sub_if_data *sdata;
+ 
++			if (WARN_ON(!info->control.vif)) {
++				kfree_skb(skb);
++				continue;
++			}
++
+ 			sdata = vif_to_sdata(info->control.vif);
+ 			dev_hold(sdata->dev);
+ 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
 
 
