@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40153 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753002AbZGNUy7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 16:54:59 -0400
-Date: Tue, 14 Jul 2009 15:55:16 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
- enabled
-Message-ID: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:60481 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752936AbZG0XwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 19:52:12 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:52:13 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] atheros: few kconfig cleanups
+Date: Mon, 27 Jul 2009 16:52:05 -0700
+Message-ID: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
-may oops when the module is unloaded as the workqueue for led_on was
-not being cancelled.
+Just few kconfig cleanups.
 
-This patch fixes the problem reported in
-http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
+Luis R. Rodriguez (5):
+  ath: depend on cfg80211
+  ath: simplify kconfig dependency and add documentation
+  ath: use menuconfig to put ath stuff in its own page
+  ath5k: remove EXPERIMENTAL marker
+  ar9170: remove EXPERIMENTAL marker
 
-Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
----
+ drivers/net/wireless/ath/Kconfig        |   21 ++++++++++++++++++---
+ drivers/net/wireless/ath/ar9170/Kconfig |    4 ++--
+ drivers/net/wireless/ath/ath5k/Kconfig  |    3 +--
+ drivers/net/wireless/ath/ath9k/Kconfig  |    1 -
+ 4 files changed, 21 insertions(+), 8 deletions(-)
 
-V2 - Do not create a new workqueue.
-
-John,
-
-This patch is 2.6.31 material. To the best of my knowledge, a formal bug
-report was never filed; however, it was reported in the reference given above.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-@@ -208,11 +208,12 @@ void rtl8187_leds_exit(struct ieee80211_
- {
- 	struct rtl8187_priv *priv = dev->priv;
- 
--	rtl8187_unregister_led(&priv->led_tx);
- 	/* turn the LED off before exiting */
- 	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
- 	cancel_delayed_work_sync(&priv->led_off);
-+	cancel_delayed_work_sync(&priv->led_on);
- 	rtl8187_unregister_led(&priv->led_rx);
-+	rtl8187_unregister_led(&priv->led_tx);
- }
- #endif /* def CONFIG_RTL8187_LED */
- 
