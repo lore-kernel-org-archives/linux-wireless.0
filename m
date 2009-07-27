@@ -1,80 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37246 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:54863 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbZG2HV4 (ORCPT
+	with ESMTP id S1755169AbZG0I12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 03:21:56 -0400
-Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+	Mon, 27 Jul 2009 04:27:28 -0400
+Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: chris2553@googlemail.com
-Cc: Luis Correia <luis.f.correia@gmail.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-In-Reply-To: <200907290803.46110.chris2553@googlemail.com>
-References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
-	 <c6b1100b0907280634j4610d077rb30f1f571aac7f36@mail.gmail.com>
-	 <efe7343f0907280638i12b0bb4bq237ca4f6376eb1fe@mail.gmail.com>
-	 <200907290803.46110.chris2553@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-c93nGGrhfZ20y/ky5gYM"
-Date: Wed, 29 Jul 2009 09:21:17 +0200
-Message-Id: <1248852077.13742.14.camel@johannes.local>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248653082.3106.7.camel@mj>
+References: <20090713223333.042733013@sipsolutions.net>
+	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-bcelWGSbb2MUY3+Pvtdx"
+Date: Mon, 27 Jul 2009 10:27:29 +0200
+Message-Id: <1248683249.19945.29.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-c93nGGrhfZ20y/ky5gYM
+--=-bcelWGSbb2MUY3+Pvtdx
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2009-07-29 at 08:03 +0100, Chris Clayton wrote:
+Thanks Pavel,
 
-> 3. Once power-saving kicks in, the machine cannot be contacted from anoth=
-er machine on the network -=20
-> pings are not responded to, for example. Is this the intended behaviour?
+> >  		while (!skb_queue_empty(&local->pending[i])) {
+> >  			struct sk_buff *skb =3D __skb_dequeue(&local->pending[i]);
+> > +			struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
+> > +			struct ieee80211_sub_if_data *sdata;
+> > +
+> > +			sdata =3D vif_to_sdata(info->control.vif);
+> > +			dev_hold(sdata->dev);
+>=20
+> I'm getting a panic at this point if I run hostapd on ath9k and a
+> Windows client tries to authenticate with a wrong WPA key.
+>=20
+> Debugging shows that sdata->dev is NULL.
 
-No. The device is supposed to listen to beacons, check if there's
-traffic pending and retrieve it. So sounds like a device problem unless
-your AP is broken.
+I suspect 'sdata' is already pointing to something bogus, since it's the
+result of a container_of().
 
-> 4. Are there any plans to be able to switch power-saving on/off on a driv=
-er-by-driver basis. It=20
-> seems to me, although I'm happy to be corrected, that it is either on or =
-off for a given kernel,=20
-> depending on CONFIG_MAC80211_DEFAULT_PS. But, if like me, someone has two=
- cards (one at home and one=20
-> at work, for example), one that works fine with PS and one that doesn't, =
-they have to set PS off=20
-> for their kernel, or have two kernels. Could PS be {en,dis}abled by, say,=
- a module parameter or a=20
-> sysfs switch?
-
-iwconfig wlan0 power off
-
-(yeah, looks weird, but power means "power saving")
+Can you try with the sanity checking patch I'm about to send?
 
 johannes
 
---=-c93nGGrhfZ20y/ky5gYM
+--=-bcelWGSbb2MUY3+Pvtdx
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKb/hpAAoJEODzc/N7+Qma1tEQALsmujoOg7dggfZG0u+bg+nC
-Q9GQXmOxe+trrZ+V6AiD3TnqRiHjyxnAM73bIvE4b6y4phzx3IIbOJgd64ysaTqx
-wdqKpMOMr9hG5vea8FtMQyk8RQzb/esvDybcfURWQxIWsSgVtLseV6Y40BlaZLor
-S97c+t2XRhMpMbnRrjP4zoXTTfFIQa7z0d1wJdgbP7A3Yy0c1GRi0RXXLcp0T7Fd
-RvfxMPQWuJhSRynMSEZHvxg7MCtGYXy17Ywb2aMTjA1s/TLBgl2SnljYjM1mR79C
-41n6BpiGRMWdHL+Dxi4LeYljjJYjOzfoSqljnU16ngIiweIno1LVVI67hshVJNs2
-CeIBI8FICUOZR+fiHHN6VKjvY4llEzQNwfh3Ye1CLTwvbc9iMxym3oPHjn6mBLo5
-el/9KCmZNOJ+un28/ImWE3OzUZJWK/fUeZcS/C1mokyc/KtWE++7TeOJO1oO6dia
-+Y0I6QdEPe9iZ3h2/2bbMQDg0QFLYN8L4n3yGRa8eUSpHtbqLHQ29kL7gt9+0p+s
-MXLBRUwzQc31v2ECVkXMidLX1kCgnQs8xSCpzGYiPIPq5proRXSfEOssabgK9vRv
-zp7s1KQOlqYm5ZorLEwQwJCW4lrtGAnSXPC1LDYQxCqrWoeyTU6c30syjA8B4ba2
-/VS627IzXakh14NY/SCo
-=IOB0
+iQIcBAABAgAGBQJKbWTuAAoJEODzc/N7+QmaRYAQAI5FX4ElS0ZSYowSZ/vxKzMl
+X33AvPo4jdrxjWx1FxiRplSNTTKWpdH7HslbBktQEHKxWFQ4fcnXADQe8dFpDMuP
+ShularGDlQEI0pzqKbAVS7jvb2+V14EH2W7/ud5gOClqQCDq1DTZbT/C60jvzzud
+sWTQXM6y1N7lXfSCncMbCRs3UZPYhK09EFDGy5w9e93SK6U+6i1UqojIv8zIe/aO
+epU3d7RJOwMAwPhRPjGRkG+S4Nf4WWjYWY2F4xxwTxtWcKNMKp3oV4iimKMkP5uJ
+RV6dNiChIvsAsZdnMVB+KRlb1+dTrXmXre+SILbsKonM7VO1V6gdKqzleUmF1eKN
+LjS6aJeZahTgFYvp4ESjjaRKBH/YXAE3dDq2HS5NU6nqXzwrTK8776u2ZawLgmZh
+pD/6kRPkXfgsPeERnS+7ZW0TiOLqLtmRJOgcc/3KGmAOfsMtIVeCL5fdjWVNpypH
+Bx8n9dunxGpC8cs2+L8v9vFEkQJuBo+dShaUqjMWmuX85xbUBiSW+CBDv5XDeoRi
+N7S73ewnZbkuo+dxP85lk38z5Tg/EfcAW/qxcrPnpSqk4BXYyELmgn7mA2D5AiOF
+jgMkRkOfqh9PBd0bu9kANbLYXHilannJgL1ZMCMGTWPl/0Nl69a0Lnjnq48lMpva
+w+nG0P4sl1jZwPxr1zBD
+=g4fL
 -----END PGP SIGNATURE-----
 
---=-c93nGGrhfZ20y/ky5gYM--
+--=-bcelWGSbb2MUY3+Pvtdx--
 
