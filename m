@@ -1,160 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f185.google.com ([209.85.216.185]:35418 "EHLO
-	mail-px0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbZGMIGx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 04:06:53 -0400
-Received: by pxi15 with SMTP id 15so436494pxi.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 01:06:52 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:31181 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754098AbZG0SxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 14:53:10 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 11:53:12 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/3] ath9k: move cancel_delayed_work_sync() out of ath_deinit_leds()
+Date: Mon, 27 Jul 2009 11:53:03 -0700
+Message-ID: <1248720784-15671-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
+References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Date: Mon, 13 Jul 2009 15:59:32 +0800
-Message-ID: <a7e4b4120907130059i30fd78a2r36aa645d8eb8f2f2@mail.gmail.com>
-Subject: Problem of zd1211 firmware in the 2.6.23 kernel arm board
-From: liu jianwei <ljw725@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
- I am using zd1211rw in the linux 2.6.23 kernel in the S3C2410 arm
-board, but now I have this firmware problem:
+We do this as we'll be moving the cancel elsewhere later.
 
-usb 1-2: Could not load firmware file zd1211/zd1211b_ub. Error number -2
-zd1211rw 1-2:1.0: couldn't load firmware. Error number -2
-ifconfig: SIOCSIFFLAGS: No such file or directory
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-I have tried udev
-adding
- SUBSYSTEM=="firmware", ACTION=="add", RUN+="/lib/udev/firmware.sh"
-to the  55-lfs.rules under "/etc/udev/rules.d/"
-but this  55-lfs.rules did not exist originally, we copy it from the
-udev website.
-(It is copied to the bottom.)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index dfcd8d9..dbd5cfd 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1057,7 +1057,6 @@ static void ath_unregister_led(struct ath_led *led)
+ 
+ static void ath_deinit_leds(struct ath_softc *sc)
+ {
+-	cancel_delayed_work_sync(&sc->ath_led_blink_work);
+ 	ath_unregister_led(&sc->assoc_led);
+ 	sc->sc_flags &= ~SC_OP_LED_ASSOCIATED;
+ 	ath_unregister_led(&sc->tx_led);
+@@ -1114,6 +1113,7 @@ static void ath_init_leds(struct ath_softc *sc)
+ 	return;
+ 
+ fail:
++	cancel_delayed_work_sync(&sc->ath_led_blink_work);
+ 	ath_deinit_leds(sc);
+ }
+ 
+@@ -1252,11 +1252,13 @@ void ath_detach(struct ath_softc *sc)
+ 
+ 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach ATH hw\n");
+ 
+-	ath_deinit_leds(sc);
++	cancel_delayed_work_sync(&sc->ath_led_blink_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->wiphy_work);
+ 	cancel_work_sync(&sc->chan_work);
+ 
++	ath_deinit_leds(sc);
++
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (aphy == NULL)
+-- 
+1.6.0.4
 
-
-but it doesn't work. And it seems the firmare.sh file was not excuted.
-(because err "sth" in it does not print out)
-Do anyone know how to fix this in the 2.6.23 version kernel. I saw
-some one make it work very easily in the later version kernel like
-2.6.28. but we can not use those versions.
-
-Thanks for any reply and hint!
-
-Best wishes,
-Jianwei
-
-
-
-
-#################################################33
-# /etc/udev/rules.d/55-lfs.rules: Rule definitions for LFS.
-
-# Core kernel devices
-
-# override both of these
-KERNEL=="random",   MODE="0444"
-KERNEL=="urandom",  MODE="0444"
-
-KERNEL=="aio",      MODE="0444"
-KERNEL=="kmsg",     MODE="0600"
-KERNEL=="rtc",      MODE="0666"
-
-# Comms devices
-
-KERNEL=="rfcomm[0-9]*",     GROUP="uucp"
-KERNEL=="ippp[0-9]*",       GROUP="uucp"
-KERNEL=="isdn[0-9]*",       GROUP="uucp"
-KERNEL=="isdnctrl[0-9]*",   GROUP="uucp"
-KERNEL=="capi",             NAME="capi20",  SYMLINK+="isdn/capi20"
-KERNEL=="capi?*",           NAME="capi/%n", GROUP="uucp"
-KERNEL=="dcbri[0-9]*",      GROUP="uucp"
-
-# ALSA devices go in their own subdirectory
-
-KERNEL=="controlC[0-9]*",        GROUP="audio",  NAME="snd/%k"
-KERNEL=="hwC[0-9]*D[0-9]*",      GROUP="audio",  NAME="snd/%k"
-KERNEL=="pcmC[0-9]*D[0-9]*[cp]", GROUP="audio",  NAME="snd/%k"
-KERNEL=="midiC[0-9]*D[0-9]*",    GROUP="audio",  NAME="snd/%k"
-KERNEL=="timer",                 GROUP="audio",  NAME="snd/%k"
-KERNEL=="seq",                   GROUP="audio",  NAME="snd/%k"
-
-# Sound devices
-
-KERNEL=="admmidi*",     GROUP="audio"
-KERNEL=="adsp*",        GROUP="audio"
-KERNEL=="aload*",       GROUP="audio"
-KERNEL=="amidi*",       GROUP="audio"
-KERNEL=="amixer*",      GROUP="audio"
-KERNEL=="audio*",       GROUP="audio"
-KERNEL=="dmfm*",        GROUP="audio"
-KERNEL=="dmmidi*",      GROUP="audio"
-KERNEL=="dsp*",         GROUP="audio"
-KERNEL=="midi*",        GROUP="audio"
-KERNEL=="mixer*",       GROUP="audio"
-KERNEL=="music",        GROUP="audio"
-KERNEL=="sequencer*",   GROUP="audio"
-
-# Input devices
-
-# override MODE on these four
-KERNEL=="mice",     MODE="0644",    SYMLINK+="mouse"
-KERNEL=="mouse*",   MODE="0644"
-KERNEL=="event*",   MODE="0644"
-KERNEL=="ts*",      MODE="0644"
-
-KERNEL=="psaux",    MODE="0644"
-KERNEL=="js",       MODE="0644"
-KERNEL=="djs",      MODE="0644"
-
-# USB devices go in their own subdirectory
-
-KERNEL=="hiddev*",          NAME="usb/%k"
-KERNEL=="legousbtower*",    NAME="usb/%k"
-KERNEL=="dabusb*",          NAME="usb/%k"
-SUBSYSTEMS=="usb", KERNEL=="lp[0-9]*", NAME="usb/%k"
-#SUBSYSTEMS=="firmware", ACTION="add",RUN+="/lib/udev/firmware.sh"
-
-SUBSYSTEM=="firmware", ACTION="add",RUN+="firmware.agent"
-
-# DRI devices are managed by the X server, so prevent udev from creating them
-
-KERNEL=="card*",    OPTIONS+="ignore_device"
-
-# Video devices
-
-KERNEL=="fb[0-9]*",     GROUP="video"
-KERNEL=="video[0-9]*",  GROUP="video"
-KERNEL=="radio[0-9]*",  GROUP="video"
-KERNEL=="vbi[0-9]*",    GROUP="video"
-KERNEL=="vtx[0-9]*",    GROUP="video"
-
-# DVB devices
-
-SUBSYSTEM=="dvb", GROUP="video"
-
-# Storage/memory devices
-
-# override: make group-writable
-SUBSYSTEM=="block", MODE="0660"
-
-# dmsetup and lvm2 related programs create devicemapper devices so we prevent
-# udev from creating them
-
-KERNEL=="dm-*",             OPTIONS+="ignore_device"
-
-# Tape devices
-
-# override all these
-KERNEL=="ht[0-9]*",     GROUP="tape"
-KERNEL=="nht[0-9]*",    GROUP="tape"
-KERNEL=="pt[0-9]*",     GROUP="tape"
-KERNEL=="npt[0-9]*",    GROUP="tape"
-KERNEL=="st[0-9]*",     GROUP="tape"
-KERNEL=="nst[0-9]*",    GROUP="tape"
-
-# Override floppy devices
-KERNEL=="fd[0-9]",    GROUP="floppy"
-KERNEL=="fd[0-9]", ACTION=="add", ATTRS{cmos}=="?*",
-RUN+="create_floppy_devices -c -t $attr{cmos} -m %M -M 0660 -G floppy
-$root/%k"
