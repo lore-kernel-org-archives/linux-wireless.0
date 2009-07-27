@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.highlandsun.com ([70.87.222.79]:53039 "EHLO
-	mail.highlandsun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389AbZGUVBC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 17:01:02 -0400
-Message-ID: <4A662C8C.9030702@highlandsun.com>
-Date: Tue, 21 Jul 2009 14:01:00 -0700
-From: Howard Chu <hyc@highlandsun.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k rfkill behavior
-References: <4A65122B.2040500@highlandsun.com> <200907211327.03954.chunkeey@web.de>
-In-Reply-To: <200907211327.03954.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:48641 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbZG0QkW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 12:40:22 -0400
+Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248711120.6965.6.camel@mj>
+References: <20090713223333.042733013@sipsolutions.net>
+	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
+	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
+	 <1248710387.8500.5.camel@johannes.local>
+	 <1248710568.8500.7.camel@johannes.local>  <1248711120.6965.6.camel@mj>
+Content-Type: text/plain
+Date: Mon, 27 Jul 2009 12:40:21 -0400
+Message-Id: <1248712821.11808.6.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> On Tuesday 21 July 2009 02:56:11 Howard Chu wrote:
->> I'm currently running 2.6.31-rc2 and noticed an annoying change in rfkill
->> behavior now; I can no longer toggle the state by echoing 0/1 into
->> sys/class/rfkill/rfkillX/state, it says write operation not permitted. I
->> haven't found any posts online related to this change in behavior, can anyone
->> point me to an explanation/rationale? The only way to change the state now
->> appears to be by using the wifi toggle switch on the laptop.
->
-> http://lkml.org/lkml/2009/7/10/339
->
-> but no need to patch the kernel (again):
-> the legacy iwconfig tool can let you do the same:
->
-> iwconfig wlanX txpower off
-> and if you want it back:
-> iwconfig wlanX txpower auto
+On Mon, 2009-07-27 at 12:12 -0400, Pavel Roskin wrote:
+> +			if (!(info->flags & IEEE80211_TX_INTFL_NEED_TXPROCESSING))
+> +				continue;
 
-Ah, not quite. I want the bluetooth off and the wifi on; if I hit the toggle 
-switch which turns them both off, iwconfig is unable to turn the wifi back on, 
-and there is no other command which turns off only the bluetooth.
+P.S. ieee80211_tx_pending_skb() actually checks
+IEEE80211_TX_INTFL_NEED_TXPROCESSING and doesn't use sdata in that case.
 
-The above patch works fine, thanks again.
+Perhaps we could use skb->dev instead of sdata->dev in that case.
+
+Also, the existence of ieee80211_tx_pending_skb() doesn't seem justified
+in its present form.  It's a piece of ieee80211_tx_pending() that
+calculates the same variables and does the checks that the caller should
+be doing.  I would just integrate it into ieee80211_tx_pending().  If
+the result is too complex, we could split it in a more logical way.
 
 -- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+Regards,
+Pavel Roskin
