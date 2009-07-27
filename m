@@ -1,116 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23615 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:60486 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753112AbZGXSNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:13:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/14] iwlwifi: Thermal Throttling debugfs function
-Date: Fri, 24 Jul 2009 11:13:04 -0700
-Message-Id: <1248459194-10239-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+	id S1754668AbZG0XwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 19:52:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:52:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath: simplify kconfig dependency and add documentation
+Date: Mon, 27 Jul 2009 16:52:07 -0700
+Message-ID: <1248738730-4003-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
+References: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Make atheros wireless drivers visible when you select
+"Atheros wirless drivers". Adds links to ath.ko page,
+and Atheros drivers page on the wiki.
 
-Add debugfs function to display current thermal throttling status for
-both Legacy and Advance Thermal Throttling Management
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   38 ++++++++++++++++++++++++++++
- 2 files changed, 39 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/Kconfig        |   18 ++++++++++++++++--
+ drivers/net/wireless/ath/ar9170/Kconfig |    1 -
+ drivers/net/wireless/ath/ath5k/Kconfig  |    1 -
+ drivers/net/wireless/ath/ath9k/Kconfig  |    1 -
+ 4 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 9faf0c2..609a681 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -84,6 +84,7 @@ struct iwl_debugfs {
- 		struct dentry *file_status;
- 		struct dentry *file_interrupt;
- 		struct dentry *file_qos;
-+		struct dentry *file_thermal_throttling;
- #ifdef CONFIG_IWLWIFI_LEDS
- 		struct dentry *file_led;
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 0ab3463..748dc31 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -618,6 +618,41 @@ static ssize_t iwl_dbgfs_led_read(struct file *file, char __user *user_buf,
- }
- #endif
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 6bed009..f27f3a7 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -2,9 +2,23 @@ config ATH_COMMON
+ 	tristate "Atheros Wireless Cards"
+ 	depends on WLAN_80211
+ 	depends on CFG80211
+-	depends on ATH5K || ATH9K || AR9170_USB
++	---help---
++	  This will enable the support for the Atheros wireless drivers.
++	  ath5k, ath9k and ar9170 drivers share some common code, this option
++	  enables the common ath.ko module which currently shares just common
++	  regulatory EEPROM helpers but will likely be extended later to share
++	  more between modules.
  
-+static ssize_t iwl_dbgfs_thermal_throttling_read(struct file *file,
-+				char __user *user_buf,
-+				size_t count, loff_t *ppos)
-+{
-+	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	struct iwl_tt_mgmt *tt = &priv->power_data.tt;
-+	struct iwl_tt_restriction *restriction;
-+	char buf[100];
-+	int pos = 0;
-+	const size_t bufsz = sizeof(buf);
-+	ssize_t ret;
++	  For more information and documentation on this module you can visit:
 +
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			"Thermal Throttling Mode: %s\n",
-+			(priv->power_data.adv_tt)
-+			? "Advance" : "Legacy");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			"Thermal Throttling State: %d\n",
-+			tt->state);
-+	if (priv->power_data.adv_tt) {
-+		restriction = tt->restriction + tt->state;
-+		pos += scnprintf(buf + pos, bufsz - pos,
-+				"Tx mode: %d\n",
-+				restriction->tx_stream);
-+		pos += scnprintf(buf + pos, bufsz - pos,
-+				"Rx mode: %d\n",
-+				restriction->rx_stream);
-+		pos += scnprintf(buf + pos, bufsz - pos,
-+				"HT mode: %d\n",
-+				restriction->is_ht);
-+	}
-+	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+	return ret;
-+}
++	  http://wireless.kernel.org/en/users/Drivers/ath
 +
- DEBUGFS_READ_WRITE_FILE_OPS(sram);
- DEBUGFS_WRITE_FILE_OPS(log_event);
- DEBUGFS_READ_FILE_OPS(nvm);
-@@ -631,6 +666,7 @@ DEBUGFS_READ_FILE_OPS(qos);
- #ifdef CONFIG_IWLWIFI_LEDS
- DEBUGFS_READ_FILE_OPS(led);
- #endif
-+DEBUGFS_READ_FILE_OPS(thermal_throttling);
++	  For information on all Atheros wireless drivers visit:
++
++	  http://wireless.kernel.org/en/users/Drivers/Atheros
++
++if ATH_COMMON
+ source "drivers/net/wireless/ath/ath5k/Kconfig"
+ source "drivers/net/wireless/ath/ath9k/Kconfig"
+ source "drivers/net/wireless/ath/ar9170/Kconfig"
+-
++endif
+diff --git a/drivers/net/wireless/ath/ar9170/Kconfig b/drivers/net/wireless/ath/ar9170/Kconfig
+index b99e326..de4281f 100644
+--- a/drivers/net/wireless/ath/ar9170/Kconfig
++++ b/drivers/net/wireless/ath/ar9170/Kconfig
+@@ -2,7 +2,6 @@ config AR9170_USB
+ 	tristate "Atheros AR9170 802.11n USB support"
+ 	depends on USB && MAC80211 && WLAN_80211 && EXPERIMENTAL
+ 	select FW_LOADER
+-	select ATH_COMMON
+ 	help
+ 	  This is a driver for the Atheros "otus" 802.11n USB devices.
  
- /*
-  * Create the debugfs files and directories
-@@ -671,6 +707,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- #ifdef CONFIG_IWLWIFI_LEDS
- 	DEBUGFS_ADD_FILE(led, data);
- #endif
-+	DEBUGFS_ADD_FILE(thermal_throttling, data);
- 	DEBUGFS_ADD_BOOL(disable_sensitivity, rf, &priv->disable_sens_cal);
- 	DEBUGFS_ADD_BOOL(disable_chain_noise, rf,
- 			 &priv->disable_chain_noise_cal);
-@@ -709,6 +746,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #ifdef CONFIG_IWLWIFI_LEDS
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_led);
- #endif
-+	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_data_files.file_thermal_throttling);
- 	DEBUGFS_REMOVE(priv->dbgfs->dir_data);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_sensitivity);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_rf_files.file_disable_chain_noise);
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index daf0c83..9b07eef 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,7 +1,6 @@
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+ 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
+-	select ATH_COMMON
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 0f4a6d8..2cb72f8 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -1,7 +1,6 @@
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on PCI && MAC80211 && WLAN_80211
+-	select ATH_COMMON
+ 	select MAC80211_LEDS
+ 	select LEDS_CLASS
+ 	select NEW_LEDS
 -- 
-1.5.6.3
+1.6.0.4
 
