@@ -1,98 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:54348 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756799AbZGCTBO convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307AbZG0TJS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jul 2009 15:01:14 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: two endian fixes
-Date: Fri, 3 Jul 2009 21:01:15 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Max Filippov <jcmvbkbc@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200907032101.15855.chunkeey@web.de>
+	Mon, 27 Jul 2009 15:09:18 -0400
+Subject: Re: [PATCH v2] mac80211: redefine usage of the mac80211 workqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
+References: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-HI153z6DzS/1WdDoz72N"
+Date: Mon, 27 Jul 2009 21:08:44 +0200
+Message-Id: <1248721724.32365.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes all CHECK_ENDIAN complains:
 
-1. p54/fwio.c:296:6: warning: restricted __le32 degrades to integer
-    p54/fwio.c:296:6: warning: restricted __le32 degrades to integer
+--=-HI153z6DzS/1WdDoz72N
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-2. p54/p54spi.c:172:32: warning: incorrect type in initializer
-   p54spi.c:172:32:    expected restricted __le32 [usertype] buffer
-   p54/p54spi.c:172:32:    got unsigned int
+On Mon, 2009-07-27 at 11:59 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-Max,
+> +EXPORT_SYMBOL_GPL(ieee80211_queue_work);
 
-drivers/net/wireless/p54/p54spi.c:115: warning: ‘p54spi_read16’ defined but not used
+Do we really want to allow these as _GPL only? Most things are not _GPL
+but usable by anyone, which of course isn't too useful since mac80211
+changes all the time :)
 
-looks like this function can be nuked, or do you have plans with it?
----
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index 9bff43d..349375f 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -292,8 +292,9 @@ int p54_tx_cancel(struct p54_common *priv, __le32 req_id)
- {
- 	struct sk_buff *skb;
- 	struct p54_txcancel *cancel;
-+	u32 _req_id = le32_to_cpu(req_id);
- 
--	if (unlikely(req_id < priv->rx_start || req_id > priv->rx_end))
-+	if (unlikely(_req_id < priv->rx_start || _req_id > priv->rx_end))
- 		return -EINVAL;
- 
- 	skb = p54_alloc_skb(priv, P54_HDR_FLAG_CONTROL_OPSET, sizeof(*cancel),
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index 7ef191a..9b347ce 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -164,12 +164,12 @@ static const struct p54spi_spi_reg p54spi_registers_array[] =
- 	{ SPI_ADRS_DMA_WRITE_BASE,	32, "DMA_RD_BASE " }
- };
- 
--static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, __le32 bits)
-+static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, u32 bits)
- {
- 	int i;
- 
- 	for (i = 0; i < 2000; i++) {
--		__le32 buffer = p54spi_read32(priv, reg);
-+		u32 buffer = p54spi_read32(priv, reg);
- 		if ((buffer & bits) == bits)
- 			return 1;
- 	}
-@@ -179,8 +179,7 @@ static int p54spi_wait_bit(struct p54s_priv *priv, u16 reg, __le32 bits)
- static int p54spi_spi_write_dma(struct p54s_priv *priv, __le32 base,
- 				const void *buf, size_t len)
- {
--	if (!p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL,
--			     cpu_to_le32(HOST_ALLOWED))) {
-+	if (!p54spi_wait_bit(priv, SPI_ADRS_DMA_WRITE_CTRL, HOST_ALLOWED)) {
- 		dev_err(&priv->spi->dev, "spi_write_dma not allowed "
- 			"to DMA write.\n");
- 		return -EAGAIN;
-@@ -333,7 +332,7 @@ static int p54spi_wakeup(struct p54s_priv *priv)
- 
- 	/* And wait for the READY interrupt */
- 	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
--			     cpu_to_le32(SPI_HOST_INT_READY))) {
-+			     SPI_HOST_INT_READY)) {
- 		dev_err(&priv->spi->dev, "INT_READY timeout\n");
- 		return -EBUSY;
- 	}
-@@ -444,7 +443,7 @@ static int p54spi_tx_frame(struct p54s_priv *priv, struct sk_buff *skb)
- 		goto out;
- 
- 	if (!p54spi_wait_bit(priv, SPI_ADRS_HOST_INTERRUPTS,
--			     cpu_to_le32(SPI_HOST_INT_WR_READY))) {
-+			     SPI_HOST_INT_WR_READY)) {
- 		dev_err(&priv->spi->dev, "WR_READY timeout\n");
- 		ret = -EAGAIN;
- 		goto out;
+johannes
+
+--=-HI153z6DzS/1WdDoz72N
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKbfs5AAoJEODzc/N7+Qma2gcQANGwxtrf7oEtSNryBox0AzRo
+75d66lrvJ4Mp7vM6oV1901kMlqcSevFIqnv4A3tXB2tI7PeSfHmmxJy5IUIkxi+Q
+QK89I/ldGfAqeKCHOsLJGO2/JgRrb92Ll7xknhlnDWXDukdiIkN1d6mgoKPHSrqj
+BZ0QggmDPvwRZKcdJWAmZFj03B5LXlvGGD7zYakJZrRxsuPbWiqe54Cm0nyFuO3H
+wijAxtq+RDzH/4IrJgfzonRsBqNXO9ULYwNKFHSNVZ0CVlxlPkVjg2edQnVmFNTG
+ZEXh6uD7qqywDiBdgfKS7A4585+U+i6yFv9aRDfDgNKhCa329WwexmTl2xPHpVMQ
+UhCZ749Wt1gEfIe3007vz4S8vMK6MRS5QCrXu6FLZW7C6XYLYb7zqYEv1QiXNVk6
+vmbhQos9U2FOi3EA0PRyvfzRSKD+9cQjG7PpMGt4XLmZV5OiuGx3IUfBqoDRnn+x
+rn3rL00+pBXWsPZyTvCIOsEJtGiMxbEPPVQzrOE6VDCRjMtbq7HOCOxdShAN+1/d
+OpCvpIc0eVjWcVnoYz6YLD1r/YwBT2+lxbOAZeY02eIJMvdlNoPLXT9RlGy9jwWk
+oZMx1XM+KejhGA6oKb2ZduwNAA8RCnGYmmQBY6rGExQ6apXZKLoNUQhmu7qEAqR2
+fr61fGbmIm2UYupy1YCQ
+=yQKf
+-----END PGP SIGNATURE-----
+
+--=-HI153z6DzS/1WdDoz72N--
+
