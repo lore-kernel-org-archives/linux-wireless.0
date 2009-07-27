@@ -1,68 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57884 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932089AbZGOQXr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 12:23:47 -0400
-Subject: Re: Unable to load iwlagn module: Failed to register hw (error -17)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: John Ranson <ranson@analager.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1247674573.17896.1989.camel@rc-desk>
-References: <bcd1ba70907142125y35c78cf5v251953eafede0e74@mail.gmail.com>
-	 <1247673740.17896.1983.camel@rc-desk>
-	 <1247674310.10754.19.camel@johannes.local>
-	 <1247674573.17896.1989.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0HsDu6NYuIEFLOjgsJdx"
-Date: Wed, 15 Jul 2009 18:21:20 +0200
-Message-Id: <1247674880.10754.22.camel@johannes.local>
+Received: from c60.cesmail.net ([216.154.195.49]:20504 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751307AbZG0Uan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 16:30:43 -0400
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Pavel Roskin <proski@gnu.org>
+To: chris2553@googlemail.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200907272122.11290.chris2553@googlemail.com>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <200907272035.41193.chris2553@googlemail.com> <1248725279.7440.8.camel@mj>
+	 <200907272122.11290.chris2553@googlemail.com>
+Content-Type: text/plain
+Date: Mon, 27 Jul 2009 16:30:41 -0400
+Message-Id: <1248726641.7440.11.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2009-07-27 at 21:22 +0100, Chris Clayton wrote:
 
---=-0HsDu6NYuIEFLOjgsJdx
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> I think I'll just configure MAC80211 power saving off or use the ath5k
+> card that I also own.
 
-On Wed, 2009-07-15 at 09:16 -0700, reinette chatre wrote:
+OK, it's unfortunate but understandable.  I'll keep this in mind in case
+I have a chance to do a extensive testing for rt61pci.  I'm using a PCI
+card that cannot be removed to easily.
 
-> > -EEXIST should only happen if something has already claimed something i=
-n
-> > sysfs, but not with netdevs (i.e. wlan0 would just be renamed to wlan1)
-> > and phy0 is numbered all the time so that can't be it either. I don't
-> > know.
->=20
-> fyi ... I based my response on register_netdevice() being able to return
-> -EEXIST at the time it checks for the existence of "name".
-
-Yes, it does that, but we don't ask it for a fixed name -- we allocate
-"wlan%d" and in the same rtnl-locked section register it, so we should
-always get a new number and be able to register that number.
-
-johannes
-
---=-0HsDu6NYuIEFLOjgsJdx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKXgH9AAoJEODzc/N7+Qma4DAP/jxQIsoCN4YISdXHlUP/+RT9
-1wysxmiQrGm6HQiy4zfnjJT0Dsa0HwKvsHswmkLamaW5karvT1yQxk1O53dGOpFq
-Clcugv10uWisI+oONtGb12q8liqpQw3Fz8tjnR8fKixdZxL28nSCRl3BcxvTYe5v
-BMqJdzjspOWS6F/rG4xQWHeqsWYyr1aj74IoGpCglL0/ygsL7KjU4eteGPuab7QN
-G2lJGsyAJQT1tSrlbz6q55q0YbjkdVTs6WclX+7BmQAqAoJLVM907pdYsujWmW0e
-bmDTMoBhNefOGxoIGeHwLeqPr2fHl5KUZ2u3NgmbXi4LHXaXn8sAFqdMQfrgg7sV
-d1bYB4yf1kpw44nMwl8RuvxdxIyHuluXZBMy8lTKzKNs+W5YFlQwlu/wECqChSau
-TMo0RwI27+lc6zJIgoUFv0X6AJJtUmjIs+LrzXHfnC1w7sjZmmasPukcmGGw63Iw
-AfrfJts3u5IR9w8aq27iOuJX1S3Qg+JEvd8S+VLgjj5Hv7UkzfYDoKfrsoekMQ21
-ktC62F4RjcdxVUBkNZJOy+qrlDpf9jLFzTus53WQBtJKmdysooJwDm+JhEP6/gEi
-KVfmhXz1ttcu2cR9eiHygSJ9RutIB91cCFSJjTzDEyc5sP7ETfHSxMj+PnODs+Ds
-VTQwWhruZdycs62lIaRK
-=utxw
------END PGP SIGNATURE-----
-
---=-0HsDu6NYuIEFLOjgsJdx--
-
+-- 
+Regards,
+Pavel Roskin
