@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52578 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755739AbZGOAWB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:22:01 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/5] ath9k: do not stop the queues in driver stop
-Date: Tue, 14 Jul 2009 20:21:56 -0400
-Message-Id: <1247617320-20163-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617320-20163-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:13522 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751579AbZG0GgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 02:36:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2009 23:36:19 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19053.19167.815594.919495@localhost.localdomain>
+Date: Mon, 27 Jul 2009 12:06:15 +0530
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/6] ath9k: Add debug counters for TX
+In-Reply-To: <20090724183502.GA2711@tuxdriver.com>
+References: <19048.13623.675052.94639@localhost.localdomain>
+	<20090724183502.GA2711@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 will have disabled the queues for us when
-needed.
+John W. Linville wrote:
+> On Thu, Jul 23, 2009 at 03:32:31PM +0530, Sujith wrote:
+> > Location: ath9k/phy#/xmit
+> >
+> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> 
+> Eeek!
+> 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Sorry, I didn't compile-test with DEBUG turned off.
+Will send a v2.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index d14f8c9..907434a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2101,8 +2101,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 
--	ieee80211_stop_queues(hw);
--
- 	if (ath9k_wiphy_started(sc)) {
- 		mutex_unlock(&sc->mutex);
- 		return; /* another wiphy still in use */
--- 
-1.6.0.6
-
+Sujith
