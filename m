@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f221.google.com ([209.85.218.221]:49658 "EHLO
-	mail-bw0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734AbZG2FlW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 01:41:22 -0400
-Received: by bwz21 with SMTP id 21so475718bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 22:41:21 -0700 (PDT)
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] at76c50x-usb: cancel scan work at stop callback
-References: <1248720984-15922-1-git-send-email-lrodriguez@atheros.com>
-	<1248720984-15922-3-git-send-email-lrodriguez@atheros.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Wed, 29 Jul 2009 08:41:17 +0300
-In-Reply-To: <1248720984-15922-3-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Mon\, 27 Jul 2009 11\:56\:24 -0700")
-Message-ID: <87fxcgoxky.fsf@litku.valot.fi>
+Received: from mail.atheros.com ([12.36.123.2]:60497 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751178AbZG0XwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 19:52:24 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:52:25 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [PATCH] ar9170: remove EXPERIMENTAL marker
+Date: Mon, 27 Jul 2009 16:52:10 -0700
+Message-ID: <1248738730-4003-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
+References: <1248738730-4003-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@Atheros.com> writes:
+Cc: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ar9170/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> This should fix suspend as mac80211 expects all work queued
-> to the mac80211 workqueue to be canceled at driver stop().
->
-> Cc: Kalle Valo <kalle.valo@iki.fi>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-
-Indeed, the original implementation doesn't make any sense. Thanks for
-looking at at76c50x-usb.
-
-Acked-by: Kalle Valo <kalle.valo@iki.fi>
-
+diff --git a/drivers/net/wireless/ath/ar9170/Kconfig b/drivers/net/wireless/ath/ar9170/Kconfig
+index de4281f..05918f1 100644
+--- a/drivers/net/wireless/ath/ar9170/Kconfig
++++ b/drivers/net/wireless/ath/ar9170/Kconfig
+@@ -1,12 +1,13 @@
+ config AR9170_USB
+ 	tristate "Atheros AR9170 802.11n USB support"
+-	depends on USB && MAC80211 && WLAN_80211 && EXPERIMENTAL
++	depends on USB && MAC80211 && WLAN_80211
+ 	select FW_LOADER
+ 	help
+ 	  This is a driver for the Atheros "otus" 802.11n USB devices.
+ 
+ 	  These devices require additional firmware (2 files).
+ 	  For now, these files can be downloaded from here:
++
+ 	  http://wireless.kernel.org/en/users/Drivers/ar9170
+ 
+ 	  If you choose to build a module, it'll be called ar9170usb.
 -- 
-Kalle Valo
+1.6.0.4
+
