@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost02.isp.att.net ([204.127.217.102]:39753 "EHLO
-	fmailhost02.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754191AbZGWVvi (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:59179 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754340AbZG0Tl1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 17:51:38 -0400
-Message-ID: <4A68953E.5090305@lwfinger.net>
-Date: Thu, 23 Jul 2009 11:52:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 27 Jul 2009 15:41:27 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so1766967qwh.37
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 12:41:27 -0700 (PDT)
 MIME-Version: 1.0
-To: "Brian J. Mc Hugh" <bjmchugh@aya.yale.edu>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom b4318 PCI card
-References: <a23fe9cc0907231105r1fac505cle28df455b3fb7c55@mail.gmail.com>
-In-Reply-To: <a23fe9cc0907231105r1fac505cle28df455b3fb7c55@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1248721724.32365.1.camel@johannes.local>
+References: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
+	<1248721724.32365.1.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 27 Jul 2009 12:41:07 -0700
+Message-ID: <43e72e890907271241m7ccf386aj97097bb715e32658@mail.gmail.com>
+Subject: Re: [PATCH v2] mac80211: redefine usage of the mac80211 workqueue
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian J. Mc Hugh wrote:
-> Hi Larry,
->  
-> I have a Gateway Solo 9300 laptop with a Linksys WiFi card.
->  
-> WiFi used to work until I installed the latest stable Debian release (I
-> following the directions at
-> http://www.linuxwireless.org/en/users/Drivers/b43#fw-b43-new) .
->  
-> The card always receives signal from my router (iwlist wlan0 scan) but
-> it often fails to transmit signal to the router and I'm unable to
-> establish Internet connectivity (ifup wlan0).
->  
-> Any clues of how to fix this?
+On Mon, Jul 27, 2009 at 12:08 PM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-07-27 at 11:59 -0700, Luis R. Rodriguez wrote:
+>
+>> +EXPORT_SYMBOL_GPL(ieee80211_queue_work);
+>
+> Do we really want to allow these as _GPL only? Most things are not _GPL
+> but usable by anyone, which of course isn't too useful since mac80211
+> changes all the time :)
 
-Please post the output of 'dmesg | grep b43'.
+Well I don't see why not.
+
+  Luis
