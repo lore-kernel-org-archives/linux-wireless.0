@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:16718 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbZGHHsL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jul 2009 03:48:11 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: a question about marvell sd8686's wmm_config_change event
-Date: Wed, 8 Jul 2009 09:48:00 +0200
-Cc: fengzeheng <zehengfeng@gmail.com>, dcbw@redhat.com
-References: <5135d20a0907070928o19322c3waf41a7b59d4b309e@mail.gmail.com>
-In-Reply-To: <5135d20a0907070928o19322c3waf41a7b59d4b309e@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:57262 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752994AbZG0XU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 19:20:57 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 16:20:58 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>
+Subject: [PATCH] rt2x00: remove experimental on kconfig
+Date: Mon, 27 Jul 2009 16:20:54 -0700
+Message-ID: <1248736854-443-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907080948.00065.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 July 2009 18:28:47 fengzeheng wrote:
-> hi, dan and all
->      My wireless card sd8686 reports that wmm_config_change
-> about every 2 seconds though wmm's setting in AP's beacons
-> don't change. seems that driver receive
-> MACREG_INT_CODE_WMM_STATUS_CHANGE event from firmware every 2
-> seconds. And according
+These have been around for a while, if there are issues
+they should be reported.
 
-Hmm, if the firmware sends you a 
-MACREG_INT_CODE_WMM_STATUS_CHANGE but you're sure that the 
-beacons don't change, then the firmware seems to be buggy.
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-Not sure if Marvell got sane and opened up their support for 
-no-NDA-holders, but you could try and file a bug there.
+Ivo, is this fair to say? Was surprised to see rt2x00 marked
+as experimental still.
 
+ drivers/net/wireless/rt2x00/Kconfig |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-And we should look into the libertas driver if we always loose a 
-packet whenever we get a MACREG :-)
-
-Greetings, Holger
-
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index f970aa2..379da5c 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -1,8 +1,8 @@
+ menuconfig RT2X00
+ 	tristate "Ralink driver support"
+-	depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
++	depends on MAC80211 && WLAN_80211
+ 	---help---
+-	  This will enable the experimental support for the Ralink drivers,
++	  This will enable the support for the Ralink drivers,
+ 	  developed in the rt2x00 project <http://rt2x00.serialmonkey.com>.
+ 
+ 	  These drivers make use of the mac80211 stack.
 -- 
-http://www.holgerschurig.de
+1.6.3.3
+
