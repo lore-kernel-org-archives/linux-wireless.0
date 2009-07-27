@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43719 "EHLO mga02.intel.com"
+Received: from mx2.redhat.com ([66.187.237.31]:34768 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754116AbZG0Wqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 18:46:47 -0400
-Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <1248733760.7015.0.camel@johannes.local>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
-	 <1248733760.7015.0.camel@johannes.local>
+	id S1751202AbZG0RLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 13:11:48 -0400
+Subject: Re: [PATCH] airo: Buffer overflow
+From: Dan Williams <dcbw@redhat.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <4A6B72E8.3060500@gmail.com>
+References: <4A6B72E8.3060500@gmail.com>
 Content-Type: text/plain
-Date: Mon, 27 Jul 2009 15:46:47 -0700
-Message-Id: <1248734807.1216.619.camel@rc-desk>
+Date: Mon, 27 Jul 2009 13:12:26 -0400
+Message-Id: <1248714746.17189.17.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On Mon, 2009-07-27 at 15:29 -0700, Johannes Berg wrote:
-> On Fri, 2009-07-24 at 11:13 -0700, Reinette Chatre wrote:
+On Sat, 2009-07-25 at 23:02 +0200, Roel Kluin wrote:
+> SSID_rid has space for only 3 ssids. 
+> txPowerLevels[i] is read before the bounds check for i
 > 
-> >  /**
-> > + * struct iwl_tt_restriction - Thermal Throttling restriction table used
-> > + *		by advance thermal throttling management
-> > + *		based on the current thermal throttling state, determine
-> > + *		number of tx/rx streams; and the status of HT operation
-> > + * @tx_stream: number of tx stream allowed
-> > + * @is_ht: ht enable/disable
-> > + * @rx_stream: number of rx stream allowed
-> > + */
-> 
-> This kernel-doc, and some others, are really botched btw -- the bit
-> after 'struct foo - ' really needs to be a single line only, you can put
-> longer descriptions after the parameters.
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 
-Sorry for missing this. We are trying to be better with documentation
-and need to do more work in this area. This patch is currently in
-wireless-testing. I am not sure how to proceed here. If I send a cleanup
-patch on top of current wireless-testing it will only make sense to
-address other kernel-doc mishaps. As our driver has not been tested
-(afaik) to provide meaningful documentation when kernel-doc is used I am
-hesitant to take on this right now ... but it is something we have to
-address at some point.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Reinette
-
+> ---
+> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+> index c70604f..8ce5e4c 100644
+> --- a/drivers/net/wireless/airo.c
+> +++ b/drivers/net/wireless/airo.c
+> @@ -5918,20 +5918,19 @@ static int airo_set_essid(struct net_device *dev,
+>  	readSsidRid(local, &SSID_rid);
+>  
+>  	/* Check if we asked for `any' */
+> -	if(dwrq->flags == 0) {
+> +	if (dwrq->flags == 0) {
+>  		/* Just send an empty SSID list */
+>  		memset(&SSID_rid, 0, sizeof(SSID_rid));
+>  	} else {
+> -		int	index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+> +		unsigned index = (dwrq->flags & IW_ENCODE_INDEX) - 1;
+>  
+>  		/* Check the size of the string */
+> -		if(dwrq->length > IW_ESSID_MAX_SIZE) {
+> +		if (dwrq->length > IW_ESSID_MAX_SIZE)
+>  			return -E2BIG ;
+> -		}
+> +
+>  		/* Check if index is valid */
+> -		if((index < 0) || (index >= 4)) {
+> +		if (index >= ARRAY_SIZE(SSID_rid.ssids))
+>  			return -EINVAL;
+> -		}
+>  
+>  		/* Set the SSID */
+>  		memset(SSID_rid.ssids[index].ssid, 0,
+> @@ -6819,7 +6818,7 @@ static int airo_set_txpow(struct net_device *dev,
+>  		return -EINVAL;
+>  	}
+>  	clear_bit (FLAG_RADIO_OFF, &local->flags);
+> -	for (i = 0; cap_rid.txPowerLevels[i] && (i < 8); i++)
+> +	for (i = 0; i < 8 && cap_rid.txPowerLevels[i]; i++)
+>  		if (v == cap_rid.txPowerLevels[i]) {
+>  			readConfigRid(local, 1);
+>  			local->config.txPower = v;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
