@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60688 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:59327 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571AbZGWLAA (ORCPT
+	with ESMTP id S1750737AbZG0TI1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 07:00:00 -0400
-Subject: Re: [PATCH 5/7] mac80211: implement basic background scanning
+	Mon, 27 Jul 2009 15:08:27 -0400
+Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <200907231248.36825.helmut.schaa@googlemail.com>
-References: <20090723100732.5147.73989.stgit@localhost.localdomain>
-	 <20090723101411.5147.78380.stgit@localhost.localdomain>
-	 <1248345547.19121.23.camel@johannes.local>
-	 <200907231248.36825.helmut.schaa@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-u65D8IdjkT7umggO3xZR"
-Date: Thu, 23 Jul 2009 12:59:25 +0200
-Message-Id: <1248346765.11510.0.camel@johannes.local>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248721359.7440.2.camel@mj>
+References: <20090713223333.042733013@sipsolutions.net>
+	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
+	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
+	 <1248710387.8500.5.camel@johannes.local>
+	 <1248710568.8500.7.camel@johannes.local>  <1248711120.6965.6.camel@mj>
+	 <1248712821.11808.6.camel@mj>  <1248718929.13118.3.camel@johannes.local>
+	 <1248721359.7440.2.camel@mj>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6LRssp5zYsvsNPdx8pY1"
+Date: Mon, 27 Jul 2009 21:07:55 +0200
+Message-Id: <1248721675.32365.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-u65D8IdjkT7umggO3xZR
+--=-6LRssp5zYsvsNPdx8pY1
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-07-23 at 12:48 +0200, Helmut Schaa wrote:
-> Am Donnerstag, 23. Juli 2009 schrieb Johannes Berg:
-> > On Thu, 2009-07-23 at 12:14 +0200, Helmut Schaa wrote:
-> > > Introduce a new scan flag "SCAN_BG_SCANNING" which basically tells us
-> > > that we are currently scanning but may as well be on the operating ch=
-annel
-> > > to RX/TX data whereas "SCAN_SW_SCANNING" tells us that we are current=
-ly
-> > > on a different channel for scanning. While "SCAN_BG_SCANNING" is set
-> > > during the whole scan "SCAN_SW_SCANNING" is set when leaving the oper=
-ating
-> > > channel and unset when coming back.
-> >=20
-> > I think you got that description wrong :)
+On Mon, 2009-07-27 at 15:02 -0400, Pavel Roskin wrote:
+> On Mon, 2009-07-27 at 20:22 +0200, Johannes Berg wrote:
 >=20
-> Argh, yes. Should I respin the whole series?
+> > Nah, the bug is far more far-reaching, please see and try the patch
+> > below.
+>=20
+> Yes, it's working!  There are no crashes with correct and incorrect PSK.
 
-Not for all I care, just resend this one as a reply to it?
+Good to know, thanks.
+
+> I'm not very interested in making code look nicer if the real problem is
+> elsewhere.  I just assumed that the problem was where the panic
+> happened.
+
+Right, just wanted to point it out anyway.
 
 johannes
 
---=-u65D8IdjkT7umggO3xZR
+--=-6LRssp5zYsvsNPdx8pY1
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKaEKKAAoJEODzc/N7+Qma+BkP/3ZjoTBHUEfKS6BbTjYt4Qnm
-DNVOCG5rBWYUGFevAqkNbWoDkYuFoZT2JYkHYMjmesvwqaNGL30UMx7DJS5g5h5M
-rszJHlYBMMVVaXvCUOrc+aCguf535cavklCFfbd18PLT//wIK1MOZTrMOmC0Z/kh
-T6W6tAGPmwI4R4Lekuo/BY6wnbTx1Yf7teQTzFAsbiPO5O9bkKOZ0xDuNnb9MaJv
-4C2lwONauwS9bfi8ww+vmnMx7zcwnVUqjK8RWdlEFGbvuEEOzDG7IO8+Povaxk2+
-tRaH2jgLE43fooeysQpgKDfx8Hw/onoiWpHDwmO2+qQl2Lze23hVObPLMz7nX2+7
-JgWeDDpDH1vFUkCvfy2whwmSb3L/IAOJtN81SPtiZij3E57ZAzdwC1khlnlDBDmc
-nFijZoKvHmqIb/oEhoURQm1imaez0mUCjjquOPWi0EMDeXbheFBGs5BOl+0TYPz/
-xMbGz6YICHkVqbU1o5+snr46Ofg8kYdajpe1+Bzt0LOUvECLO+xxu2AdFNjHesy+
-YsIBBZ+l+Dz3Fhn6XCA92+rIFYNmwo9bCCQz/kEOWvYnfX/8RziTDgx5JcsyPb3m
-uAUt39bVUlpckklg0BFCaqLJSWikDzEGwZ0QyGDhxaa8ya7EfbiMx/LX797ncnSS
-rzTLVVXpnKwMtJtAyq9y
-=e3Ae
+iQIcBAABAgAGBQJKbfsGAAoJEODzc/N7+QmaxPIP/2thnPaV5GrtCVh2yJGBrDyP
+71co4tOdFPMJ6drkR8JPYY4K1sXbjiLy+7leHxJ+qjZV80MGPFoazLMT6eqyBKId
+/rqvfj0UJvuzCbO+ob3XkHo5Fw/nFjZEGw2MRvLR8af9E5vAud3uLVcnp95IZtH3
+dUyZwDndaR3Tm3U5avvTkucDTGE/vVksPUROoMGdFZEj7x3b+Fl8NIf/x6n2DqJD
+EjNtTfdACwoY2DF38GrQWZGUYgK/nKlxl4UzUJ0n4jkuQh14mjC7eEmQnhMOm3pj
+6qLTzSzdRWy5VPiQwdrTv9dHKTbUYOTXICMYOAfS4XA7eemoPySbLqrH+oWmHsi+
+X7M2nd3eSwImva04B/FjWIMMAoBBm4y+UgOwjtp29hEZ7s8uKDW1sz3Qssh3mZ2n
+ePo3094B94xxqVE+gkLYz2jLwVXKAVmZMVYEEjIwv2qmH20Xjg4Bu34CXOaGebl7
+vzWw3X+aUHQ/9mdTigtYUjhHtGU8j1nuVDge5hypLpNzC0zu5qExIfAVx/CuxcGH
+zqpmkSbsUCQmnuRevGa+fwrSiuyFFbDPVkTxGtbq/GgPE6x4pUwYiUW1FG5tuA3k
+j6hXjR3N0zuOjJhBrJRRqlhfa7cvrJtrM/Kbn798z5rPvQoNOMzMpulGNvXjfFY/
+PRaD0IPl9WUMyeBHOIL3
+=X+V4
 -----END PGP SIGNATURE-----
 
---=-u65D8IdjkT7umggO3xZR--
+--=-6LRssp5zYsvsNPdx8pY1--
 
