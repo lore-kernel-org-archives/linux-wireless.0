@@ -1,88 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39753 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618AbZGYWqC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 18:46:02 -0400
-Date: Sat, 25 Jul 2009 18:35:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	acpi4asus-user@lists.sourceforge.net,
-	Darren Salt <linux@youmustbejoking.demon.co.uk>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>
-Subject: Re: [Acpi4asus-user] [PATCH 2.6.31] rfkill: allow toggling soft
-	state in sysfs again
-Message-ID: <20090725223505.GA2729@tuxdriver.com>
-References: <4A5716AA.5000903@ph.tum.de> <507E47A184%linux@youmustbejoking.demon.co.uk> <1247262952.26071.1.camel@johannes.local> <200907252256.44570.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200907252256.44570.rjw@sisk.pl>
+Received: from mga03.intel.com ([143.182.124.21]:2940 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753352AbZG0WMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 18:12:16 -0400
+Subject: RE: [PATCH] iwlwifi: Read outside array bounds
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>, Roel Kluin <roel.kluin@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <6F5C1D715B2DA5498A628E6B9C124F040141D0B0DC@hasmsx504.ger.corp.intel.com>
+References: <4A6B7A67.9070906@gmail.com> <1248658905.3747.97.camel@debian>
+	 <6F5C1D715B2DA5498A628E6B9C124F040141D0B0DC@hasmsx504.ger.corp.intel.com>
+Content-Type: text/plain
+Date: Mon, 27 Jul 2009 15:12:15 -0700
+Message-Id: <1248732735.1216.565.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 25, 2009 at 10:56:43PM +0200, Rafael J. Wysocki wrote:
-> On Friday 10 July 2009, Johannes Berg wrote:
-> > On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
-> > > I demand that Johannes Berg may or may not have written...
-> > > 
-> > > > Apparently there actually _are_ tools that try to set this in sysfs even
-> > > > though it wasn't supposed to be used this way without claiming first.
-> > > 
-> > > Then it should have been documented as such. I don't see anything about this
-> > > in Documentation/rfkill.txt (as found in 2.6.30), other than a vague
-> > > statement that "Kernel handles events", which isn't exactly helpful :-\
-> > 
-> > Oh, it's not just that rfkill was horrible, the documentation matched :)
-> > All the SHOUTING in it about what you must and must not do but nothing
-> > actually helpful :)
-> > 
-> > > > *shrug*, I don't like it, but whatever...
-> > > 
-> > > I do. It means that we have a nice simple text-based interface for use in
-> > > scripts (for now), and a binary interface which is better suited to the likes
-> > > of desktop applications.
-> > 
-> > Indeed, and as long as you expect to only use soft toggle... problem is
-> > that you won't know whether it's soft-toggled or not while it's
-> > hard-blocked (off)!
-> > 
-> > > > Please test & report.
-> > > 
-> > > With the patch applied, Bluetooth toggling is working again, so you get to
-> > > add this:
-> > > 
-> > > Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-> > 
-> > Ok, John, please pick up the patch.
+On Mon, 2009-07-27 at 01:28 -0700, Winkler, Tomas wrote:
 > 
-> Is there anything going on with the patch?
+> > -----Original Message-----
+> > From: Zhu, Yi
+> > Sent: Monday, July 27, 2009 4:42 AM
+> > To: Roel Kluin; Winkler, Tomas; Chatre, Reinette
+> > Cc: linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net;
+> > Andrew Morton
+> > Subject: Re: [PATCH] iwlwifi: Read outside array bounds
+> > 
+> > On Sun, 2009-07-26 at 05:34 +0800, Roel Kluin wrote:
+> > > tid is bounded (above) by the size of default_tid_to_tx_fifo (17
+> > elements), but
+> > > the size of priv->stations[].tid[] is MAX_TID_COUNT (9) elements.
+> > 
+> > I think MAX_TID_COUNT should be defined as 16 or 17. Tomas?
+> >
 > 
-> Surely it's not in -rc4.
+> In general it's 16. In practice we use only 8.
 
-commit f54c142725ad2ba33c3ee627873cb6966bf05447
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Fri Jul 10 21:41:39 2009 +0200
+I think the above statement means that we are mostly using EDCA quality
+of service which only uses 8 tids. We do not currently use HCCA (and
+thus of course not the hybrid) which would cause more tids to be used.
 
-    rfkill: allow toggling soft state in sysfs again
-    
-    Apparently there actually _are_ tools that try to set
-    this in sysfs even though it wasn't supposed to be used
-    this way without claiming first. Guess what: now that
-    I've cleaned it all up it doesn't matter and we can
-    simply allow setting the soft-block state in sysfs.
-    
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Tested-By: Darren Salt <linux@youmustbejoking.demon.co.uk>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+A closer look at this flow to this function shows:
+rs_tl_turn_on_agg 
+->rs_tl_turn_on_agg_for_tid
+-->ieee80211_start_tx_ba_session
+--->iwl_mac_ampdu_action
+---->iwl_tx_agg_start
 
-Didn't make -rc4, should be in -rc5.
+>From what I can tell the tid is not modified from rs_tl_turn_on_agg to
+iwl_tx_agg_start and rs_tl_turn_on_agg will not call further with a
+value of tid larger than 7 due to its checking.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+I thus do not see that tid may be equal or larger than MAX_TID_COUNT at
+this point of checking. Even so, having this check will not do harm and
+will increase safety.
+
+This patch is already merged and that is ok, I just wanted to add this
+information to it.
+
+Reinette
+
+
+
