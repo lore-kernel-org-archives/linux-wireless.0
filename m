@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:57041 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751302AbZG3RJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 13:09:44 -0400
-Subject: Re: [wireless] rt2870sta BUGs on shutdown,
- 2.6.30.2->git.today+git.wireless.today
-From: Mike Galbraith <efault@gmx.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <200907301852.28172.IvDoorn@gmail.com>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
-	 <200907301517.57811.bzolnier@gmail.com>
-	 <200907301852.28172.IvDoorn@gmail.com>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 19:09:40 +0200
-Message-Id: <1248973780.7091.10.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51482 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111AbZG0PEt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 11:04:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ettl.martin@gmx.de, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ray_cs: remove bocus NULL check at head of ray_get_wireless_stats
+Date: Mon, 27 Jul 2009 11:02:49 -0400
+Message-Id: <1248706969-10435-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1248705282-9951-1-git-send-email-linville@tuxdriver.com>
+References: <1248705282-9951-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 18:52 +0200, Ivo van Doorn wrote:
-> I planned, and actually did write, a lengthy reply for this thread, when I completed the reply
-> I reconsidred and opted for this shorter reply. Every 2 or 3 months this discussion is started
-> again and I am f***ing tired of it, so excuse me but I am not going to throw myself into
-> this completely pointless discussion
-> 
-> What you are suggesting in your mail is something the rt2x00 project did for 5 years, we stopped
-> with that 4 months ago because it wasn't working out. Apparently you have more experience in this
-> matter so I hope you will find a way to make that solution work out.
-> 
-> If you want to maintain the legacy drivers then do it, start a new project and start maintaining
-> the code. I can forward you all the users with complains about the "good enough" drivers. It is
-> good to know that you apparently have the resources to maintain the old drivers. 
-> Most people who are helping with the rt2800pci/usb drivers lack the required time to boost the driver
-> into such a state it can be widely adopted. But every time it amazes me that the people who want
-> to develop and have the time to do it, all want to jump on the old Ralink code... Apparently there
-> is some appeal to maintaining crap rather then helping to ship out proper drivers to the users.
-> 
-> But I'll shut up now, as I said this discussion is held every few months, so perhaps that when
-> the discussion is started again in a couple of months I am more interested in a lengthy reply.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: Martin Ettl <ettl.martin@gmx.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Johannes points-out that the NULL check is mostly bogus given how
+netdev_priv is computed and how get_wireless_stats gets called...
 
-Hohum. Please remove me from CC for any further discussion.
+ drivers/net/wireless/ray_cs.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-	-Mike
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 698b11b..8fdea7f 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -1511,9 +1511,6 @@ static iw_stats *ray_get_wireless_stats(struct net_device *dev)
+ 	struct pcmcia_device *link = local->finder;
+ 	struct status __iomem *p = local->sram + STATUS_BASE;
+ 
+-	if (local == (ray_dev_t *) NULL)
+-		return (iw_stats *) NULL;
+-
+ 	local->wstats.status = local->card_status;
+ #ifdef WIRELESS_SPY
+ 	if ((local->spy_data.spy_number > 0)
+-- 
+1.6.2.5
 
