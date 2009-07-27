@@ -1,88 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36573 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:34624 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158AbZG3J6v (ORCPT
+	with ESMTP id S1755913AbZG0KDb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 05:58:51 -0400
-Subject: [PATCH] iwlwifi: don't export symbols not needed in other modules
+	Mon, 27 Jul 2009 06:03:31 -0400
+Message-Id: <20090727100243.989767282@sipsolutions.net>
+References: <20090727100149.839649874@sipsolutions.net>
+Date: Mon, 27 Jul 2009 12:01:52 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 11:58:16 +0200
-Message-Id: <1248947897.8925.13.camel@johannes.local>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] cfg80211: combine IWESSID handlers
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Even with the split into iwlcore/agn/3945 not all symbols
-that cross file boundaries are needed in other modules, a
-few are only used within iwlcore, for example.
+Since we now have handlers IWESSID for all modes, we can
+combine them into one.
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 ---
- drivers/net/wireless/iwlwifi/iwl-led.c  |    1 -
- drivers/net/wireless/iwlwifi/iwl-rx.c   |    1 -
- drivers/net/wireless/iwlwifi/iwl-sta.c  |    1 -
- 4 files changed, 6 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/wext.c |   36 +------------------------------
+ include/net/cfg80211.h                   |   20 +++++------------
+ net/mac80211/wext.c                      |   35 +-----------------------------
+ net/wireless/ibss.c                      |    4 ---
+ net/wireless/wext-compat.c               |   34 +++++++++++++++++++++++++++++
+ net/wireless/wext-compat.h               |   12 ++++++++++
+ net/wireless/wext-sme.c                  |    4 ---
+ 7 files changed, 56 insertions(+), 89 deletions(-)
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-07-30 11:42:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-07-30 11:51:28.000000000 +0200
-@@ -1139,7 +1139,6 @@ void iwl_set_flags_for_band(struct iwl_p
- 		priv->staging_rxon.flags &= ~RXON_FLG_CCK_MSK;
+--- wireless-testing.orig/include/net/cfg80211.h	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-07-25 10:44:28.000000000 +0200
+@@ -1595,19 +1595,6 @@ int cfg80211_wext_siwmlme(struct net_dev
+ int cfg80211_wext_giwrange(struct net_device *dev,
+ 			   struct iw_request_info *info,
+ 			   struct iw_point *data, char *extra);
+-int cfg80211_ibss_wext_siwessid(struct net_device *dev,
+-				struct iw_request_info *info,
+-				struct iw_point *data, char *ssid);
+-int cfg80211_ibss_wext_giwessid(struct net_device *dev,
+-				struct iw_request_info *info,
+-				struct iw_point *data, char *ssid);
+-
+-int cfg80211_mgd_wext_siwessid(struct net_device *dev,
+-			       struct iw_request_info *info,
+-			       struct iw_point *data, char *ssid);
+-int cfg80211_mgd_wext_giwessid(struct net_device *dev,
+-			       struct iw_request_info *info,
+-			       struct iw_point *data, char *ssid);
+ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 			   struct iw_request_info *info,
+ 			   struct iw_point *data, char *extra);
+@@ -1624,7 +1611,12 @@ int cfg80211_wext_siwfreq(struct net_dev
+ int cfg80211_wext_giwfreq(struct net_device *dev,
+ 			  struct iw_request_info *info,
+ 			  struct iw_freq *freq, char *extra);
+-
++int cfg80211_wext_siwessid(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *ssid);
++int cfg80211_wext_giwessid(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *ssid);
+ int cfg80211_wext_siwrate(struct net_device *dev,
+ 			  struct iw_request_info *info,
+ 			  struct iw_param *rate, char *extra);
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-07-25 10:44:28.000000000 +0200
+@@ -1363,3 +1363,37 @@ int cfg80211_wext_giwap(struct net_devic
  	}
  }
--EXPORT_SYMBOL(iwl_set_flags_for_band);
+ EXPORT_SYMBOL_GPL(cfg80211_wext_giwap);
++
++int cfg80211_wext_siwessid(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *ssid)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
++	case NL80211_IFTYPE_STATION:
++		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwessid);
++
++int cfg80211_wext_giwessid(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *ssid)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
++	case NL80211_IFTYPE_STATION:
++		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++EXPORT_SYMBOL_GPL(cfg80211_wext_giwessid);
+--- wireless-testing.orig/net/wireless/wext-compat.h	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.h	2009-07-25 10:44:28.000000000 +0200
+@@ -13,6 +13,12 @@ int cfg80211_ibss_wext_siwap(struct net_
+ int cfg80211_ibss_wext_giwap(struct net_device *dev,
+ 			     struct iw_request_info *info,
+ 			     struct sockaddr *ap_addr, char *extra);
++int cfg80211_ibss_wext_siwessid(struct net_device *dev,
++				struct iw_request_info *info,
++				struct iw_point *data, char *ssid);
++int cfg80211_ibss_wext_giwessid(struct net_device *dev,
++				struct iw_request_info *info,
++				struct iw_point *data, char *ssid);
  
- /*
-  * initialize rxon structure with default values from eeprom
-@@ -2289,7 +2288,6 @@ int iwl_send_card_state(struct iwl_priv 
+ int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
+ 			      struct iw_request_info *info,
+@@ -26,6 +32,12 @@ int cfg80211_mgd_wext_siwap(struct net_d
+ int cfg80211_mgd_wext_giwap(struct net_device *dev,
+ 			    struct iw_request_info *info,
+ 			    struct sockaddr *ap_addr, char *extra);
++int cfg80211_mgd_wext_siwessid(struct net_device *dev,
++			       struct iw_request_info *info,
++			       struct iw_point *data, char *ssid);
++int cfg80211_mgd_wext_giwessid(struct net_device *dev,
++			       struct iw_request_info *info,
++			       struct iw_point *data, char *ssid);
  
- 	return iwl_send_cmd(priv, &cmd);
+ struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
+ 					     struct iw_freq *freq);
+--- wireless-testing.orig/net/mac80211/wext.c	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/net/mac80211/wext.c	2009-07-25 10:44:28.000000000 +0200
+@@ -27,37 +27,6 @@
+ #include "aes_ccm.h"
+ 
+ 
+-static int ieee80211_ioctl_siwessid(struct net_device *dev,
+-				    struct iw_request_info *info,
+-				    struct iw_point *data, char *ssid)
+-{
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+-		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
+-	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+-		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
+-
+-	return -EOPNOTSUPP;
+-}
+-
+-
+-static int ieee80211_ioctl_giwessid(struct net_device *dev,
+-				    struct iw_request_info *info,
+-				    struct iw_point *data, char *ssid)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-
+-	if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+-		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
+-	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
+-		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
+-
+-	return -EOPNOTSUPP;
+-}
+-
+ 
+ /* Structures to export the Wireless Handlers */
+ 
+@@ -89,8 +58,8 @@ static const iw_handler ieee80211_handle
+ 	(iw_handler) NULL,				/* SIOCGIWAPLIST */
+ 	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
+ 	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
+-	(iw_handler) ieee80211_ioctl_siwessid,		/* SIOCSIWESSID */
+-	(iw_handler) ieee80211_ioctl_giwessid,		/* SIOCGIWESSID */
++	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
++	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
+ 	(iw_handler) NULL,				/* SIOCSIWNICKN */
+ 	(iw_handler) NULL,				/* SIOCGIWNICKN */
+ 	(iw_handler) NULL,				/* -- hole -- */
+--- wireless-testing.orig/net/wireless/wext-sme.c	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/net/wireless/wext-sme.c	2009-07-25 10:44:28.000000000 +0200
+@@ -192,8 +192,6 @@ int cfg80211_mgd_wext_siwessid(struct ne
+ 	cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
+ 	return err;
  }
--EXPORT_SYMBOL(iwl_send_card_state);
+-/* temporary symbol - mark GPL - in the future the handler won't be */
+-EXPORT_SYMBOL_GPL(cfg80211_mgd_wext_siwessid);
  
- void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
- 			   struct iwl_rx_mem_buffer *rxb)
-@@ -2333,7 +2331,6 @@ void iwl_clear_isr_stats(struct iwl_priv
+ int cfg80211_mgd_wext_giwessid(struct net_device *dev,
+ 			       struct iw_request_info *info,
+@@ -218,8 +216,6 @@ int cfg80211_mgd_wext_giwessid(struct ne
+ 
+ 	return 0;
+ }
+-/* temporary symbol - mark GPL - in the future the handler won't be */
+-EXPORT_SYMBOL_GPL(cfg80211_mgd_wext_giwessid);
+ 
+ int cfg80211_mgd_wext_siwap(struct net_device *dev,
+ 			    struct iw_request_info *info,
+--- wireless-testing.orig/net/wireless/ibss.c	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/net/wireless/ibss.c	2009-07-25 10:44:28.000000000 +0200
+@@ -381,8 +381,6 @@ int cfg80211_ibss_wext_siwessid(struct n
+ 
+ 	return err;
+ }
+-/* temporary symbol - mark GPL - in the future the handler won't be */
+-EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_siwessid);
+ 
+ int cfg80211_ibss_wext_giwessid(struct net_device *dev,
+ 				struct iw_request_info *info,
+@@ -410,8 +408,6 @@ int cfg80211_ibss_wext_giwessid(struct n
+ 
+ 	return 0;
+ }
+-/* temporary symbol - mark GPL - in the future the handler won't be */
+-EXPORT_SYMBOL_GPL(cfg80211_ibss_wext_giwessid);
+ 
+ int cfg80211_ibss_wext_siwap(struct net_device *dev,
+ 			     struct iw_request_info *info,
+--- wireless-testing.orig/drivers/net/wireless/iwmc3200wifi/wext.c	2009-07-25 10:44:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwmc3200wifi/wext.c	2009-07-25 10:44:28.000000000 +0200
+@@ -27,38 +27,6 @@
+ #include "iwm.h"
+ #include "commands.h"
+ 
+-static int iwm_wext_siwessid(struct net_device *dev,
+-			     struct iw_request_info *info,
+-			     struct iw_point *data, char *ssid)
+-{
+-	struct iwm_priv *iwm = ndev_to_iwm(dev);
+-
+-	switch (iwm->conf.mode) {
+-	case UMAC_MODE_IBSS:
+-		return cfg80211_ibss_wext_siwessid(dev, info, data, ssid);
+-	case UMAC_MODE_BSS:
+-		return cfg80211_mgd_wext_siwessid(dev, info, data, ssid);
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-}
+-
+-static int iwm_wext_giwessid(struct net_device *dev,
+-			     struct iw_request_info *info,
+-			     struct iw_point *data, char *ssid)
+-{
+-	struct iwm_priv *iwm = ndev_to_iwm(dev);
+-
+-	switch (iwm->conf.mode) {
+-	case UMAC_MODE_IBSS:
+-		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
+-	case UMAC_MODE_BSS:
+-		return cfg80211_mgd_wext_giwessid(dev, info, data, ssid);
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-}
+-
+ static const iw_handler iwm_handlers[] =
  {
- 	memset(&priv->isr_stats, 0, sizeof(priv->isr_stats));
- }
--EXPORT_SYMBOL(iwl_clear_isr_stats);
- 
- int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			   const struct ieee80211_tx_queue_params *params)
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-led.c	2009-07-30 11:42:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-led.c	2009-07-30 11:50:58.000000000 +0200
-@@ -335,7 +335,6 @@ void iwl_leds_background(struct iwl_priv
- 	priv->last_blink_time = jiffies;
- 	priv->last_blink_rate = blink_idx;
- }
--EXPORT_SYMBOL(iwl_leds_background);
- 
- /* Register all led handler */
- int iwl_leds_register(struct iwl_priv *priv)
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-rx.c	2009-07-30 11:42:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-rx.c	2009-07-30 11:51:15.000000000 +0200
-@@ -406,7 +406,6 @@ void iwl_rx_queue_reset(struct iwl_priv 
- 	rxq->free_count = 0;
- 	spin_unlock_irqrestore(&rxq->lock, flags);
- }
--EXPORT_SYMBOL(iwl_rx_queue_reset);
- 
- int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
- {
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-07-30 11:42:11.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-07-30 11:51:07.000000000 +0200
-@@ -464,7 +464,6 @@ out:
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 	return ret;
- }
--EXPORT_SYMBOL(iwl_remove_station);
- 
- /**
-  * iwl_clear_stations_table - Clear the driver's station table
+ 	(iw_handler) NULL,				/* SIOCSIWCOMMIT */
+@@ -87,8 +55,8 @@ static const iw_handler iwm_handlers[] =
+ 	(iw_handler) NULL,				/* SIOCGIWAPLIST */
+ 	(iw_handler) cfg80211_wext_siwscan,		/* SIOCSIWSCAN */
+ 	(iw_handler) cfg80211_wext_giwscan,		/* SIOCGIWSCAN */
+-	(iw_handler) iwm_wext_siwessid,			/* SIOCSIWESSID */
+-	(iw_handler) iwm_wext_giwessid,			/* SIOCGIWESSID */
++	(iw_handler) cfg80211_wext_siwessid,		/* SIOCSIWESSID */
++	(iw_handler) cfg80211_wext_giwessid,		/* SIOCGIWESSID */
+ 	(iw_handler) NULL,				/* SIOCSIWNICKN */
+ 	(iw_handler) NULL,				/* SIOCGIWNICKN */
+ 	(iw_handler) NULL,				/* -- hole -- */
 
+-- 
 
