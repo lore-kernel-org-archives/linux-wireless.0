@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49878 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751953AbZG3S6s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 14:58:48 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH] rt2x00dev: cancel all work on disconnect
-Date: Thu, 30 Jul 2009 20:58:30 +0200
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com
-References: <20090729200711.3784.16212.stgit@mj.roinet.com> <200907302045.15400.IvDoorn@gmail.com>
-In-Reply-To: <200907302045.15400.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907302058.30699.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37435 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755408AbZG0W3y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jul 2009 18:29:54 -0400
+Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+In-Reply-To: <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JfPvVusWdb/N82GQu96+"
+Date: Tue, 28 Jul 2009 00:29:20 +0200
+Message-Id: <1248733760.7015.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 30 July 2009 20:45:15 Ivo van Doorn wrote:
-> Hi,
-> 
-> I assume fixes the bug Michael reported on Linux-wireless yesterday?
 
-I didn't test that, yet, but the patch looks sane anyway.
+--=-JfPvVusWdb/N82GQu96+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The patch looks good, but I have some minor modification request:
-> 
-> On Wednesday 29 July 2009, Pavel Roskin wrote:
-> > Signed-off-by: Pavel Roskin <proski@gnu.org>
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2x00dev.c |    7 +++++++
-> >  1 files changed, 7 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > index 658a63b..66b303b 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > @@ -888,6 +888,13 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
-> >  	clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
-> >  
-> >  	/*
-> > +	 * Cancel all work.
-> > +	 */
-> > +	rt2x00link_stop_tuner(rt2x00dev);
-> 
-> This one isn't needed. rt2x00lib_disable_radio() is doing this.
-> 
-> > +	cancel_work_sync(&rt2x00dev->filter_work);
-> > +	cancel_work_sync(&rt2x00dev->intf_work);
-> 
-> Could you move these 2 until after the call to rt2x00lib_disable_radio()?
-> 
-> > +	/*
-> >  	 * Disable radio.
-> >  	 */
-> >  	rt2x00lib_disable_radio(rt2x00dev);
-> 
-> Thanks,
-> 
-> Ivo
-> 
-> 
+On Fri, 2009-07-24 at 11:13 -0700, Reinette Chatre wrote:
 
+>  /**
+> + * struct iwl_tt_restriction - Thermal Throttling restriction table used
+> + *		by advance thermal throttling management
+> + *		based on the current thermal throttling state, determine
+> + *		number of tx/rx streams; and the status of HT operation
+> + * @tx_stream: number of tx stream allowed
+> + * @is_ht: ht enable/disable
+> + * @rx_stream: number of rx stream allowed
+> + */
 
+This kernel-doc, and some others, are really botched btw -- the bit
+after 'struct foo - ' really needs to be a single line only, you can put
+longer descriptions after the parameters.
 
--- 
-Greetings, Michael.
+johannes
+
+--=-JfPvVusWdb/N82GQu96+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKbio7AAoJEODzc/N7+Qma4igQAMFNkPCfmAeIZT7nzM72zIaA
+1I6WjyGsihPA8KhKz/dnojPQGAxOylSm6JsnbiEZV1mw5XJA8TW84ueKkwFAFNFu
+LojyWW7+z/totNQWi9sKaiXVhGQz6FTVeGpeXZZKI9zZ1Rw8w6CSKDbWm35Qcl/O
+zhFhltz000ya8232KuDcKouBzHVE3+67KyG0QmlkrbWqSgpk3swJxe2bXfDLaCjC
+VJ1DJfgNBBIJkk1YSp1L2N1/eKh35fbcoKxCP/21IeJb2G3F3N/5fSJ85XHndhLX
+qH3XtnzwjfwEWuTOmbRIjneb4CPFwbzglx4rQlebbKuWkMmPFe9IbFtvIC/9/feD
+b9AnVCqWAFpp/zodgrb1n4xmVNeQlLMLUOA8yq1TP3Vn6Hkd1NKnIsn2+fyQ5TBP
+3AyfcbCPRXkb0XrCzuLUI1jDNAdTlNK1B1u1kL8wfHajimnkj8UObGMDqQQv6YTZ
+Gds343sg8wKCz3qS+JmR3a2Q8U+QkOqBfE15/8qJC692wIolkZxcdAQzu2tgsvAk
+H347akXwBoKxW0IPAQR5F0sd1jbPzIHqJtN2uYzSaNZGEoyoU5odBEiwOYnOSCC4
+kauIRzt5w5E5rjrat5JC8d7341xZoL4zOvIcyYQkdA4i8OF/DFS97/HtD+8t9L3y
+x+8qx6rSXXtbtylKeX1s
+=SoxU
+-----END PGP SIGNATURE-----
+
+--=-JfPvVusWdb/N82GQu96+--
+
