@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:57090 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbZGYHqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 03:46:18 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MUbxO-0006zY-A3
-	for linux-wireless@vger.kernel.org; Sat, 25 Jul 2009 07:46:14 +0000
-Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 07:46:14 +0000
-Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2009 07:46:14 +0000
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: Re: PCI express card that does AP mode? (abit wlp-01?)
-Date: Sat, 25 Jul 2009 08:46:03 +0100
-Message-ID: <wfiqhh6w90.fsf@calligramme.charmers>
-References: <wfljmpm4xl.fsf@calligramme.charmers> <1247762215.4235.21.camel@mj> <wf1vogmujw.fsf@calligramme.charmers> <1247775641.6841.16.camel@mj> <wfzlau7co1.fsf@calligramme.charmers> <1248449030.21715.23.camel@mj> <1248449371.32151.23.camel@johannes.local> <1248450733.21715.26.camel@mj> <1248451197.32151.26.camel@johannes.local> <1248451440.21715.27.camel@mj> <1248451757.32151.27.camel@johannes.local> <wfmy6u6opl.fsf@calligramme.charmers> <1248452675.32151.31.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:43911 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756059AbZG1XxU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 19:53:20 -0400
+Received: by ewy26 with SMTP id 26so449529ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 16:53:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200907280838.42541@fortytwo.ch>
+References: <200907280838.42541@fortytwo.ch>
+Date: Wed, 29 Jul 2009 02:53:18 +0300
+Message-ID: <40f31dec0907281653g63375736id57f547a8ba12cad@mail.gmail.com>
+Subject: Re: ath5k connection loss (failed to wakeup the MAC Chip)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Adrian von Bidder <avbidder@fortytwo.ch>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2009-07-24 at 17:16 +0100, Jon Fairbairn wrote:
->> (In the "asking for the moon on a stick" department, it would be handy
->> to have a table somewhere with "supported features" and "form factor"
->> dropdowns, so that I could have selected "AP" and "PCIe" and get the
->> card I now have ;-)
+2009/7/28 Adrian von Bidder <avbidder@fortytwo.ch>:
+> Heyho!
+>
+> (This is using kernel 2.6.31-rc3 as packaged by Debian)
+>
+> While taking a full backup of my laptop, I noticed that after a few 100M the
+> ath5k can't connect to WLAN anymore.
+>
 
 [...]
 
-> I'm starting to think we should remove all the numbers (pci vendor,
-> product, subvendor, subsystem) in favour of more interesting information
-> like that.
+> This only happens with bulk data transfers, and probably only when sending.
+> Downloading large dataset over WLAN is fine (I haven't tested it as much as
+> sending, though: downloads are mostly small, while the bulk sending happens
+> regularly during backup.)
+>
+> It is not related to how long the WLAN is up: I can work for days or weeks
+> (happened with earlier kernels as well) with this laptop, over
+> suspend/resume, and WLAN works fine.  It's only when I run backup that it
+> happens (always - but I since backups usually are incremental, they're often
+> small enough.  But once I do a full backup WLAN goes down.  So use cable for
+> those...)
+>
+> Is this known?  Can I get you more information?
+>
+> Hardware is Acer AOA 150.
+>
+> thanks
 
-That would be good -- I suspect that the number of people who understand
-the purpose of the ids is rather smaller than the number of people who
-just want wireless of some description (though the numeric stuff needs
-to be somewhere).
+Working on it, can you please post the part when ath5k loads ?
 
-> However, as far as AP is concerned, how about we just add a little help
-> text that explains that you should look on the Drivers page to see
-> whether it supports what you need, and then select by driver? We could
-> make the driver table better to allow filtering.
-
-That would be a help.  Mind you, I'm now a satisfied customer hoping he
-won't have to look for AP information for a while...
 
 -- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
-
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
