@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23615 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753801AbZGXSNS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:13:18 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 10/14] iwlwifi: Name fix for MPDU density for TX aggregation
-Date: Fri, 24 Jul 2009 11:13:09 -0700
-Message-Id: <1248459194-10239-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
-References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36691
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755473AbZG1Sdq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 14:33:46 -0400
+Date: Tue, 28 Jul 2009 11:33:53 -0700 (PDT)
+Message-Id: <20090728.113353.08715297.davem@davemloft.net>
+To: joe@perches.com
+Cc: linville@tuxdriver.com, julia@diku.dk, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Add networking wireless drivers section
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1248804397.18284.5.camel@Joe-Laptop.home>
+References: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
+	<20090728.103044.179053537.davem@davemloft.net>
+	<1248804397.18284.5.camel@Joe-Laptop.home>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Joe Perches <joe@perches.com>
+Date: Tue, 28 Jul 2009 11:06:37 -0700
 
-Fix incorrect name for HT MPDU Density.
-default set to 4 uSec
+> On Tue, 2009-07-28 at 10:30 -0700, David Miller wrote:
+>> Wireless patches need to be CC:'d to linux-wireless so that
+>> John Linville can notice and pick them up
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Reported-by: Sujith <Sujith.Manoharan@atheros.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 3ca188a..facbc3d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -491,8 +491,16 @@ union iwl_ht_rate_supp {
- };
- 
- #define CFG_HT_RX_AMPDU_FACTOR_DEF  (0x3)
--#define CFG_HT_MPDU_DENSITY_2USEC   (0x5)
--#define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_2USEC
-+
-+/*
-+ * Maximal MPDU density for TX aggregation
-+ * 4 - 2us density
-+ * 5 - 4us density
-+ * 6 - 8us density
-+ * 7 - 16us density
-+ */
-+#define CFG_HT_MPDU_DENSITY_4USEC   (0x5)
-+#define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_4USEC
- 
- struct iwl_ht_info {
- 	/* self configuration data */
--- 
-1.5.6.3
-
+Why not just create a plain "WIRELESS" umbrella entry
+that contains all of drivers/net/wireless, net/mac80211,
+and net/wireless?
