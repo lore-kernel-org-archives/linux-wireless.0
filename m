@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:53028 "EHLO
-	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753593AbZGAQut (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54294 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbZG1OBC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 12:50:49 -0400
-Subject: Compiling wpa_supplicant?
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 11:50:53 -0500
-Message-Id: <1246467053.11632.13.camel@jdl-desktop>
-Mime-Version: 1.0
+	Tue, 28 Jul 2009 10:01:02 -0400
+Date: Tue, 28 Jul 2009 09:57:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Greg Oliver <oliver.greg@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlagn - compat-wireless (5GHz) and fglrx modules
+Message-ID: <20090728135708.GA2687@tuxdriver.com>
+References: <1248784295.7020.2.camel@ghost-linux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1248784295.7020.2.camel@ghost-linux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Folks,
+On Tue, Jul 28, 2009 at 07:31:35AM -0500, Greg Oliver wrote:
 
-Has hostapd's wpa_supplicant code been brought up to a
-consistent standard with the current libnl?  In particular,
-I'm trying to compile wpa_supplicant to use driver_nl80211,
-but it is failing due to the use of the obsolete 'struct nl_handle'
-in src/driver/driver_nl80211.c, line 131 or so.
+> I am experiencing a very odd issue between the ilagn and fglrx modules.
+> I am writing here since the ubuntu devs are not supporting running
+> either modules (fglrx since I am not using their packages, or iwlagn
+> since I am using the compat-wireless frmo linux-wireless.org).
 
-I am using:
-    $ git remote -v
-    origin	git://w1.fi/srv/git/hostap-06.git
-    $ git rev-parse HEAD
-    fa4e296f542af01da135d997358d6d45a32dd59e
-and:
-    $ git remote -v
-    origin	git://git.kernel.org/pub/scm/libs/netlink/libnl.git
-    $ git rev-parse HEAD
-    ef8ba32e0ca7ac7bbbaf87f6fd7b197af18aed25
+I could be wrong, but I doubt you'll get a lot of attention
+here either.  It can be rather difficult to support running with
+closed-source modules, and we have no shortage of other issues needing
+our attention with fully open-source code.
 
-In libnl, I see this commit:
+Good luck!
 
-        commit b624b9ed936f4c23bc4f30d8dce34da49775dd15
-        Author: Thomas Graf <tgr@plip.localdomain>
-        Date:   Wed Dec 10 18:02:25 2008 +0100
-        
-            Remove obsoleted struct nl_handle definition
-
-Is there a version of hostapd/wpa_suppliant that is more
-up-to-date WRT libnl-2.0?  Or should I just use the wext
-driver for now?
-
-Thanks,
-jdl
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
