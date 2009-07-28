@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4612 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbZGTLxL (ORCPT
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:53591 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbZG1Qzu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jul 2009 07:53:11 -0400
-Date: Mon, 20 Jul 2009 07:52:44 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-Message-ID: <20090720115244.GC9972@hash.localnet>
-References: <4A612514.4050708@redfish-solutions.com> <b6c5339f0907190638jc1bdacbo801adcd39a1cf5@mail.gmail.com> <4A635E04.4050204@redfish-solutions.com> <20090719203150.GA9972@hash.localnet> <4A63DF0B.4010801@redfish-solutions.com>
+	Tue, 28 Jul 2009 12:55:50 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Ken Lewis <kennylewis@gmail.com>
+Subject: Re: [RT2X00] Linux-next tree next-20090725 and 20090727 FTBFS
+Date: Tue, 28 Jul 2009 18:55:47 +0200
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	linux-net@vger.kernel.org
+References: <5a44caba0907280935h59a22367la38382a0c9d388bf@mail.gmail.com>
+In-Reply-To: <5a44caba0907280935h59a22367la38382a0c9d388bf@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A63DF0B.4010801@redfish-solutions.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200907281855.47790.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 19, 2009 at 08:05:47PM -0700, Philip A. Prindeville wrote:
-> Actually, it's saying:
+Hi,
+
+> Kernel: arch/x86/boot/bzImage is ready  (#1)
+>   Building modules, stage 2.
+>   MODPOST 12 modules
+> ERROR: "rt2x00mac_set_tim" [drivers/net/wireless/rt2x00/rt2500pci.ko] undefined!
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
 > 
-> filename:       /lib/modules/2.6.27.26-astlinux/kernel/drivers/net/wireless/ath5k/ath5k.ko
-> depends:        mac80211,cfg80211
+> rt2x00mac_set_tim is used in rt2500pci.c and declared in rt2x00mac.c
+> within a section #IFDEF'd for CONFIG_RT2X00_LIB_CRYPTO.  I can get the
+> kernel modules to build -- the error reports a missing symbol due to
+> the definition of rt2x00mac_set_tim being IFDEFfed out, and excluding
+> rt2x00mac_set_tim builds the module successfully -- but can't confirm
+> whether it works due to a quirk of KDE, NetworkManager and my Linksys
+> router not cooperating.
 > 
-> And the 0.6.0 version number matches ath5k/base.c in the compat-wireless
-> sources as well.
+> In terms of the right fix: should rt2500pci depend (in KConfig) on
+> CONFIG_RT2X00_LIB_CRYPTO, or should rt2x00mac_set_tim be outside the
+> IFDEF?
 
-Yeah, ignore the module version number, no one ever changes it.
+well rt2x00mac_set_tim has nothing to do with CRYPTO so the function
+should simply be moved. I'll send a patch to fix this in a few minutes.
 
-> Not seeing the dependency on "ath", which is strange.  Is that common code
-> that's shared in 2.6.30 for the Atheros drivers?
-
-In 2.6.31, yes.
-
-> > The fix was merged after 2.6.30, IIRC, but it should definitely be in
-> > compat-wireless.  Also check your modules directory for an old ath5k.ko
-> > sitting in drivers/.../wireless/ath5k.  It should now be in ath/ath5k.
-
-See above, the fix was post-2.6.30, however compat-wireless should have
-it.  The module should now be in drivers/net/wireless/ath/ath5k, not
-drivers/net/wireless/ath5k.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Ivo
