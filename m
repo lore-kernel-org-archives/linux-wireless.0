@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29217 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751429AbZGMUDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 16:03:22 -0400
-Subject: Re: [PATCH] iwlwifi 3945: Fix IWL_SCAN compile error
-From: reinette chatre <reinette.chatre@intel.com>
-To: Tim Gardner <timg@tpi.com>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090713190803.9A70BF8D2C@sepang.rtg.net>
-References: <20090713190803.9A70BF8D2C@sepang.rtg.net>
-Content-Type: text/plain
-Date: Mon, 13 Jul 2009 13:03:21 -0700
-Message-Id: <1247515401.17896.1630.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-bw0-f221.google.com ([209.85.218.221]:47473 "EHLO
+	mail-bw0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753945AbZG1Nee (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 09:34:34 -0400
+Received: by bwz21 with SMTP id 21so19000bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 06:34:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <efe7343f0907280411y61e8a68dj500c2a74ad1af28a@mail.gmail.com>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <200907272035.41193.chris2553@googlemail.com>
+	 <1248725279.7440.8.camel@mj>
+	 <200907272122.11290.chris2553@googlemail.com>
+	 <1248726744.32365.4.camel@johannes.local>
+	 <c6b1100b0907280403x697d8816mfb5206e1fb93243a@mail.gmail.com>
+	 <efe7343f0907280411y61e8a68dj500c2a74ad1af28a@mail.gmail.com>
+Date: Tue, 28 Jul 2009 14:34:32 +0100
+Message-ID: <c6b1100b0907280634j4610d077rb30f1f571aac7f36@mail.gmail.com>
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Chris Clayton <chris2553@googlemail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tim,
+2009/7/28 Luis Correia <luis.f.correia@gmail.com>:
+> Hi Chris
 
-On Mon, 2009-07-13 at 12:08 -0700, Tim Gardner wrote:
-> From 2c7c806570ad72f5af2e778f2fe71aae7d727e02 Mon Sep 17 00:00:00 2001
-> From: Tim Gardner <tim.gardner@canonical.com>
-> Date: Mon, 13 Jul 2009 12:53:32 -0600
-> Subject: [PATCH] iwlwifi 3945: Fix IWL_DEBUG_SCAN compile
-> 
-> Added a missing parameter in the macro invocation to correct a
-> compile error when CONFIG_IWLWIFI_DEBUG is enabled.
-> 
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 2564288..67332fb 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -2962,7 +2962,7 @@ static void iwl3945_bg_request_scan(struct work_struct *data)
->  	}
->  
->  	if (scan->channel_count == 0) {
-> -		IWL_DEBUG_SCAN("channel count %d\n", scan->channel_count);
-> +		IWL_DEBUG_SCAN(priv,"channel count %d\n", scan->channel_count);
->  		goto done;
->  	}
->  
+> Can you do a very dumb test for me?
+>
+> Boot your laptop by adding 'irqpoll' to the kernel command line
+> options and see if the problem still occours.
+>
 
-On which code did you base this patch?
+Not so dumb a request, actually.  Running -rc4 with the irqpoll
+command line option, the laptop has just survived 30 minutes without a
+freeze. It can't survive more than 5 minutes without that option.
 
-Reinette
+Chris
+
+> Luis Correia
+> rt2x00 project admin
+>
 
 
+
+-- 
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samuel
+Johnson
