@@ -1,142 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59012 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164AbZGYIyy (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.235]:46263 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753922AbZG1Mbo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jul 2009 04:54:54 -0400
-Subject: Re: [PATCH] mac80211: fix oops in
- ieee80211_scan_state_set_channel()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-In-Reply-To: <20090725051801.2965.76768.stgit@ct.roinet.com>
-References: <20090725051801.2965.76768.stgit@ct.roinet.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-1Yc9mfkmNZ4R43oJtKxG"
-Date: Sat, 25 Jul 2009 10:54:55 +0200
-Message-Id: <1248512095.32151.50.camel@johannes.local>
+	Tue, 28 Jul 2009 08:31:44 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so762446rvb.5
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 05:31:44 -0700 (PDT)
+Subject: iwlagn - compat-wireless (5GHz) and fglrx modules
+From: Greg Oliver <oliver.greg@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 28 Jul 2009 07:31:35 -0500
+Message-Id: <1248784295.7020.2.camel@ghost-linux>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---=-1Yc9mfkmNZ4R43oJtKxG
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I am experiencing a very odd issue between the ilagn and fglrx modules.
+I am writing here since the ubuntu devs are not supporting running
+either modules (fglrx since I am not using their packages, or iwlagn
+since I am using the compat-wireless frmo linux-wireless.org).
 
-On Sat, 2009-07-25 at 01:18 -0400, Pavel Roskin wrote:
-> Move check for the final value of local->scan_channel_idx from
-> ieee80211_scan_state_decision() to ieee80211_scan_state_set_channel().
->=20
-> Stop the state machine in ieee80211_scan_work() by checking
-> local->scanning.  Don't return a value from
-> ieee80211_scan_state_decision().
+The results are very reproducible - here is what is happening:
 
-Helmut, can you please take a look at this? I'm not entirely sure what's
-going on.
+I can successfully use any version of compat-wireless with the OSS ATI
+video modules.  I can successfully run the closed source fglrx ATI
+module with the Ubuntu provided (albeit ancient) iwlagn and related
+modules.  Once I try to run the closed fglrx module alongside the
+compat-wireless packages from linux-wireless, ONLY the 5GHz channels
+(both wide and narrow) fail.  Association works, but debug outputs over
+and over:
 
-johannes
+[  470.128306] iwlagn 0000:04:00.0: ERROR: No TX rate available.
 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> ---
->  net/mac80211/scan.c |   22 +++++++++++-----------
->  1 files changed, 11 insertions(+), 11 deletions(-)
->=20
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index b376775..8b5a4a3 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -470,18 +470,12 @@ static int __ieee80211_start_scan(struct ieee80211_=
-sub_if_data *sdata,
->  	return rc;
->  }
-> =20
-> -static int ieee80211_scan_state_decision(struct ieee80211_local *local,
-> -					 unsigned long *next_delay)
-> +static void ieee80211_scan_state_decision(struct ieee80211_local *local,
-> +					  unsigned long *next_delay)
->  {
->  	bool associated =3D false;
->  	struct ieee80211_sub_if_data *sdata;
-> =20
-> -	/* if no more bands/channels left, complete scan and advance to the idl=
-e state */
-> -	if (local->scan_channel_idx >=3D local->scan_req->n_channels) {
-> -		ieee80211_scan_completed(&local->hw, false);
-> -		return 1;
-> -	}
-> -
->  	/* check if at least one STA interface is associated */
->  	mutex_lock(&local->iflist_mtx);
->  	list_for_each_entry(sdata, &local->interfaces, list) {
-> @@ -517,7 +511,6 @@ static int ieee80211_scan_state_decision(struct ieee8=
-0211_local *local,
->  	}
-> =20
->  	*next_delay =3D 0;
-> -	return 0;
->  }
-> =20
->  static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_loc=
-al *local,
-> @@ -587,6 +580,12 @@ static void ieee80211_scan_state_set_channel(struct =
-ieee80211_local *local,
->  	struct ieee80211_channel *chan;
->  	struct ieee80211_sub_if_data *sdata =3D local->scan_sdata;
-> =20
-> +	/* if no more bands/channels left, complete scan and advance to the idl=
-e state */
-> +	if (local->scan_channel_idx >=3D local->scan_req->n_channels) {
-> +		ieee80211_scan_completed(&local->hw, false);
-> +		return;
-> +	}
-> +
->  	skip =3D 0;
->  	chan =3D local->scan_req->channels[local->scan_channel_idx];
-> =20
-> @@ -695,8 +694,7 @@ void ieee80211_scan_work(struct work_struct *work)
->  	do {
->  		switch (local->next_scan_state) {
->  		case SCAN_DECISION:
-> -			if (ieee80211_scan_state_decision(local, &next_delay))
-> -				return;
-> +			ieee80211_scan_state_decision(local, &next_delay);
->  			break;
->  		case SCAN_SET_CHANNEL:
->  			ieee80211_scan_state_set_channel(local, &next_delay);
-> @@ -711,6 +709,8 @@ void ieee80211_scan_work(struct work_struct *work)
->  			ieee80211_scan_state_enter_oper_channel(local, &next_delay);
->  			break;
->  		}
-> +		if (!local->scanning)
-> +			return;
->  	} while (next_delay =3D=3D 0);
-> =20
->  	queue_delayed_work(local->hw.workqueue, &local->scan_work,
->=20
+over and over....  Switching to a 2.4 channel works like a champ, but
+the laptop in general is unstable and sometimes becomes unusable, and
+others kard kernel locks (blinking caps lock)..
 
---=-1Yc9mfkmNZ4R43oJtKxG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+I have tried All Ubuntu kernel PPA kernels as well as latest git and
+released compat-wireless relases with same effect, as well as all ATI
+catalyst drivers from 9.4 - 9.7.
 
------BEGIN PGP SIGNATURE-----
+Hardware invloved:
 
-iQIcBAABAgAGBQJKashcAAoJEODzc/N7+QmaeEUP/2HrhZM4mnle4G32Xm1Jxa3T
-f/P98DqnE/msYjm6I03uolWJEx+Qx46f+Iqj3MQiHR9HLe9Nhu5KvUjcUtrNGjEY
-Ym9+vQgYAvCdRWw1dJkOB0uc4LoQ/aECAIkhuhytbaMDNGa0ByrLD+WYp0++3uYX
-VxYM6FeJwHGUacLYYCdwhCjvouj/oVHFrzJZIjGQ6SnfclEeeAYqYRXfDTz3vCpb
-eDTDreyk2M5CG9JZmFLPHGUb6cAkAYpm5AHm7+EPPEG+Hk+FaVFZPSpYW3t6yuUa
-kZtC6UGO9Mwtvmm76wHtLeQQTEM5hJSmOtIDtZbm0T1CVggulU+9HI4vfjK4o0EA
-gnrbP9zDWrVU1+Ystpfv34padYUbfv7xDSWUowEzbkXDLlK5o6eHColls4s9xi/U
-SBWR79UHaCVb/RJd/yfAsOG+6QOofDL6yBV2kI7gymaocBICTYq9ph6tQd86Uxxk
-0CXL6q+8x+Ci75NrkJ9GLxmuhOSRvcdaYMpiuVGbelQsIf/A1meLyPd84DQ5jAe5
-Vv0H6mS/zolaOw+j2vRX8QydjztVxusboyQq4KEjzkQ1O2sNX95OoBRCkGrmNEbL
-f3r2skjqUycqyhDXT7XxXJlXN48khWXM1k/PTs/p0R02hQyufMMWdEmV/ekgughg
-ZTHDajF3WF93yPjBq+CE
-=vOlt
------END PGP SIGNATURE-----
+01:00.0 VGA compatible controller: ATI Technologies Inc Radeon Mobility
+HD 3670
+    Subsystem: Dell Device 0272
+    Flags: bus master, fast devsel, latency 0, IRQ 2296
+    Memory at d0000000 (32-bit, prefetchable) [size=256M]
+    I/O ports at 2000 [size=256]
+    Memory at cfef0000 (32-bit, non-prefetchable) [size=64K]
+    [virtual] Expansion ROM at cfe00000 [disabled] [size=128K]
+    Capabilities: <access denied>
+    Kernel driver in use: fglrx_pci
+    Kernel modules: fglrx
 
---=-1Yc9mfkmNZ4R43oJtKxG--
+04:00.0 Network controller: Intel Corporation PRO/Wireless 5300 AGN
+[Shiloh] Network Connection
+    Subsystem: Intel Corporation Device 1101
+    Flags: bus master, fast devsel, latency 0, IRQ 2297
+    Memory at f8000000 (64-bit, non-prefetchable) [size=8K]
+    Capabilities: <access denied>
+    Kernel driver in use: iwlagn
+    Kernel modules: iwlagn
+
+BAD Module combo:
+
+filename:       /lib/modules/2.6.28-13-generic/updates/dkms/fglrx.ko
+license:        Proprietary. (C) 2002 - ATI Technologies, Starnberg,
+GERMANY
+description:    ATI Fire GL
+author:         Fire GL - ATI Research GmbH, Germany
+srcversion:     2C2CE01E2172B42D35D1980
+alias:          pci:v00001002d000095CFsv*sd*bc*sc*i*
+alias:          pci:v00001002d000095CEsv*sd*bc*sc*i*
+alias:          pci:v00001002d000095CDsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009446sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009456sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009444sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000949Csv*sd*bc*sc*i*
+alias:          pci:v00001002d0000949Esv*sd*bc*sc*i*
+alias:          pci:v00001002d0000949Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009511sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Dsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Csv*sd*bc*sc*i*
+alias:          pci:v00001002d000095CCsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009447sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000944Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000940Asv*sd*bc*sc*i*
+alias:          pci:v00001002d0000940Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000940Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000946Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000946Asv*sd*bc*sc*i*
+alias:          pci:v00001002d0000947Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000947Asv*sd*bc*sc*i*
+alias:          pci:v00001002d000094A3sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009489sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000959Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009595sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000945Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000945Asv*sd*bc*sc*i*
+alias:          pci:v00001002d0000944Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000944Asv*sd*bc*sc*i*
+alias:          pci:v00001002d000094A1sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094A0sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009488sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009480sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009491sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009555sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009552sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009553sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009509sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009508sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009506sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009504sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009593sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009591sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C2sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C4sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Bsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009583sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009581sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C8sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094CBsv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C9sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009462sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009460sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009440sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000944Esv*sd*bc*sc*i*
+alias:          pci:v00001002d00009442sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009452sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000944Csv*sd*bc*sc*i*
+alias:          pci:v00001002d00009450sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094B1sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094B3sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094B5sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009495sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009490sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009498sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000948Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009487sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000954Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d0000954Esv*sd*bc*sc*i*
+alias:          pci:v00001002d00009542sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009541sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009540sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009517sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009519sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009515sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009500sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009507sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009501sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009505sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009597sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009596sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009599sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009598sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009590sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009589sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009588sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009580sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009587sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009586sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Esv*sd*bc*sc*i*
+alias:          pci:v00001002d0000958Asv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C6sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C9sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C7sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C5sv*sd*bc*sc*i*
+alias:          pci:v00001002d000095C0sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094CCsv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C6sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C5sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C4sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C3sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C1sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C7sv*sd*bc*sc*i*
+alias:          pci:v00001002d000094C0sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009443sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009441sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009451sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009513sv*sd*bc*sc*i*
+alias:          pci:v00001002d0000950Fsv*sd*bc*sc*i*
+alias:          pci:v00001002d00009405sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009403sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009402sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009401sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009400sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009714sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009713sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009712sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009711sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009710sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009616sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009615sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009614sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009613sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009612sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009611sv*sd*bc*sc*i*
+alias:          pci:v00001002d00009610sv*sd*bc*sc*i*
+depends:        
+vermagic:       2.6.28-13-generic SMP mod_unload modversions 
+parm:           firegl:charp
+
+
+filename:       /lib/modules/2.6.28-13-generic/updates/drivers/net/wireless/iwlwifi/iwlagn.ko
+alias:          iwl4965
+license:        GPL
+author:         Copyright(c) 2003-2009 Intel Corporation
+<ilw@linux.intel.com>
+version:        1.3.27ks
+description:    Intel(R) Wireless WiFi Link AGN driver for Linux
+firmware:       iwlwifi-4965-2.ucode
+firmware:       iwlwifi-5150-2.ucode
+firmware:       iwlwifi-5000-2.ucode
+firmware:       iwlwifi-6050-2.ucode
+firmware:       iwlwifi-6000-2.ucode
+srcversion:     B87DD476B37C73CA673C6F4
+alias:          pci:v00008086d00000084sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000083sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000089sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000088sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000087sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000086sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000085sv*sd*bc*sc*i*
+alias:          pci:v00008086d00000082sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004239sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004238sv*sd*bc*sc*i*
+alias:          pci:v00008086d0000422Csv*sd*bc*sc*i*
+alias:          pci:v00008086d0000422Bsv*sd*bc*sc*i*
+alias:          pci:v00008086d00000082sv*sd00001122bc*sc*i*
+alias:          pci:v00008086d00000085sv*sd00001112bc*sc*i*
+alias:          pci:v00008086d00000082sv*sd00001102bc*sc*i*
+alias:          pci:v00008086d0000423Dsv*sd*bc*sc*i*
+alias:          pci:v00008086d0000423Csv*sd*bc*sc*i*
+alias:          pci:v00008086d0000423Bsv*sd00001011bc*sc*i*
+alias:          pci:v00008086d0000423Asv*sd00001021bc*sc*i*
+alias:          pci:v00008086d0000423Asv*sd00001001bc*sc*i*
+alias:          pci:v00008086d00004237sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004236sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004235sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004237sv*sd00001216bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd00001326bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd00001306bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd00001206bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd00001305bc*sc*i*
+alias:          pci:v00008086d00004232sv*sd00001205bc*sc*i*
+alias:          pci:v00008086d00004230sv*sd*bc*sc*i*
+alias:          pci:v00008086d00004229sv*sd*bc*sc*i*
+depends:        iwlcore,mac80211,cfg80211
+vermagic:       2.6.28-13-generic SMP mod_unload modversions 
+parm:           swcrypto50:using software crypto engine (default 0
+[hardware])
+ (bool)
+parm:           debug50:50XX debug output mask (uint)
+parm:           queues_num50:number of hw queues in 50xx series (int)
+parm:           11n_disable50:disable 50XX 11n functionality (int)
+parm:           amsdu_size_8K50:enable 8K amsdu size in 50XX series
+(int)
+parm:           fw_restart50:restart firmware in case of error (int)
+parm:           antenna:select antenna (1=Main, 2=Aux, default 0 [both])
+(int)
+parm:           swcrypto:using crypto in software (default 0 [hardware])
+(int)
+parm:           debug:debug output mask (uint)
+parm:           disable_hw_scan:disable hardware scanning (default 0)
+(int)
+parm:           queues_num:number of hw queues. (int)
+parm:           11n_disable:disable 11n functionality (int)
+parm:           amsdu_size_8K:enable 8K amsdu size (int)
+parm:           fw_restart4965:restart firmware in case of error (int)
+
+[   18.189913] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux,
+1.3.27ks
+[   18.189915] iwlagn: Copyright(c) 2003-2009 Intel Corporation
+[   18.189993] iwlagn 0000:04:00.0: PCI INT A -> GSI 17 (level, low) ->
+IRQ 17
+[   18.190000] iwlagn 0000:04:00.0: setting latency timer to 64
+[   18.190061] iwlagn 0000:04:00.0: Detected Intel Wireless WiFi Link
+5300AGN REV=0x24
+[   18.227051] iwlagn 0000:04:00.0: Tunable channels: 13 802.11bg, 24
+802.11a channels
+[   18.227114] iwlagn 0000:04:00.0: irq 2297 for MSI/MSI-X
+[   18.270223] phy0: Selected rate control algorithm 'iwl-agn-rs'
+[   78.738523] iwlagn 0000:04:00.0: firmware: requesting
+iwlwifi-5000-2.ucode
+[   78.845574] iwlagn 0000:04:00.0: loaded firmware version 8.24.2.12
+[   79.026242] Registered led device: iwl-phy0::radio
+[   79.027598] Registered led device: iwl-phy0::assoc
+[   79.027624] Registered led device: iwl-phy0::RX
+[   79.027640] Registered led device: iwl-phy0::TX
+
+Easiest way to remedy is to simply remove the compat-wireless "extra"
+modules and reload the originals.
+
+Thanks, and I can provide any info needed to try to get somewhere with
+this.
+
+-Greg
 
