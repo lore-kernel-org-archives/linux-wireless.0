@@ -1,83 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from L01SLCSMTP02.calltower.com ([69.4.184.249]:38530 "EHLO
-	L01SLCSMTP02.calltower.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752297AbZGASug (ORCPT
+Received: from mail-ew0-f226.google.com ([209.85.219.226]:39012 "EHLO
+	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbZG1H51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 14:50:36 -0400
-Subject: Re: [Fwd: Re: [PATCH 4/5] Introduce separate HOST and TARGET
- compilation steps.]
-From: Jon Loeliger <jdl@bigfootnetworks.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890907011049w45508c9fpfabdddf36c28e99c@mail.gmail.com>
-References: <1246460365.11632.4.camel@jdl-desktop>
-	 <43e72e890907010959q15bde116ue796802e006e410f@mail.gmail.com>
-	 <1246468471.15757.12.camel@mj> <1246469405.11632.19.camel@jdl-desktop>
-	 <43e72e890907011035x77005470u6646d7feb941b9f7@mail.gmail.com>
-	 <1246470361.11632.23.camel@jdl-desktop>
-	 <43e72e890907011049w45508c9fpfabdddf36c28e99c@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 13:50:40 -0500
-Message-Id: <1246474240.11632.27.camel@jdl-desktop>
-Mime-Version: 1.0
+	Tue, 28 Jul 2009 03:57:27 -0400
+Received: by mail-ew0-f226.google.com with SMTP id 26so3767834ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 00:57:27 -0700 (PDT)
+Message-ID: <4A6EB00D.5010401@gmail.com>
+Date: Tue, 28 Jul 2009 10:00:13 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
+MIME-Version: 1.0
+To: dcbw@redhat.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] libertas: Read buffer overflow
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-07-01 at 10:49 -0700, Luis R. Rodriguez wrote:
-> On Wed, Jul 1, 2009 at 10:46 AM, Jon Loeliger<jdl@bigfootnetworks.com> wrote:
-> > On Wed, 2009-07-01 at 10:35 -0700, Luis R. Rodriguez wrote:
-> >> On Wed, Jul 1, 2009 at 10:30 AM, Jon Loeliger<jdl@bigfootnetworks.com> wrote:
-> >>
-> >> > Do you agree or disagree with me when I say that the regdbdump program
-> >> > might need to be compiled twice -- once for the host and once for the
-> >> > target?
-> >>
-> >> Why?
-> >
-> > The existing binary regulatory DB binary is verified on the host
-> > using these rules.  (This is from my version of the makefile, but
-> > they are there in the original too.):
-> >
-> >    all: host target $(REG_BIN) $(BUILD_ALL) verify
-> >
-> >    verify: $(REG_BIN) host/regdbdump
-> >        $(NQ) '  CHK  $(REG_BIN)'
-> >        $(Q)./host/regdbdump $(REG_BIN) >/dev/null
-> >
-> > That is, as part of the host build process, the regdbdump tool
-> > is run *on the host*.
-> 
-> This helps to understand a little better some of your intentions, may
-> be good to mention this as part of your patches. Hm, interesting... I
-> suppose we don't want to just disable this check then.
+Several arrays were read before checking whether the index was within
+bounds. ARRAY_SIZE() should be used to determine the size of arrays.
 
-Luis,
+rates->rates has an arraysize of 1, so calling get_common_rates()
+with a rates_size of MAX_RATES (14) was causing reads out of bounds.
 
-Shall I supply more or different information than what
-was in my git log message?:
+Since ratesize is at most MAX_RATES, tmp_size can increment at most
+to MAX_RATES * ARRAY_SIZE(lbs_bg_rates), so that should be the number
+of elements of tmp[].
 
-        The regdbdump tool is really a host executable that is used
-        during the build process.  It could also be installed and
-        used on the target, but two separate compilations are needed
-        to achieve that goal.
-        
-        Currently, regdbdump is only built for the target, and thus
-        cross-compilation of the tool is really feasible without
-        this patch (or one like it).
-        
-        Signed-off-by: Jon Loeliger <jdl@bigfootnetworks.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Please review.
 
-Though, we should s/feasible/infeasible/ there too. :-)
-
-> > Ultimately, the regdbdump utility may *also* be needed or
-> > wanted on the target too.
-> 
-> ACK.
-> 
->   Luis
-
-Thanks,
-jdl
-
-
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index b9b3741..7dfbb0c 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -1,6 +1,7 @@
+ /* Copyright (C) 2006, Red Hat, Inc. */
+ 
+ #include <linux/types.h>
++#include <linux/kernel.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
+ #include <linux/if_arp.h>
+@@ -43,14 +44,14 @@ static int get_common_rates(struct lbs_private *priv,
+ 	u16 *rates_size)
+ {
+ 	u8 *card_rates = lbs_bg_rates;
+-	size_t num_card_rates = sizeof(lbs_bg_rates);
++	size_t num_card_rates = ARRAY_SIZE(lbs_bg_rates);
+ 	int ret = 0, i, j;
+-	u8 tmp[30];
++	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
+ 	size_t tmp_size = 0;
+ 
+ 	/* For each rate in card_rates that exists in rate1, copy to tmp */
+-	for (i = 0; card_rates[i] && (i < num_card_rates); i++) {
+-		for (j = 0; rates[j] && (j < *rates_size); j++) {
++	for (i = 0; i < num_card_rates && card_rates[i]; i++) {
++		for (j = 0; j < *rates_size && rates[j]; j++) {
+ 			if (rates[j] == card_rates[i])
+ 				tmp[tmp_size++] = card_rates[i];
+ 		}
+@@ -322,7 +323,7 @@ static int lbs_associate(struct lbs_private *priv,
+ 	rates = (struct mrvl_ie_rates_param_set *) pos;
+ 	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
+ 	memcpy(&rates->rates, &bss->rates, MAX_RATES);
+-	tmplen = MAX_RATES;
++	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
+ 	if (get_common_rates(priv, rates->rates, &tmplen)) {
+ 		ret = -1;
+ 		goto done;
+@@ -598,7 +599,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
+ 
+ 	/* Copy Data rates from the rates recorded in scan response */
+ 	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
+-	ratesize = min_t(u16, sizeof(cmd.bss.rates), MAX_RATES);
++	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
+ 	memcpy(cmd.bss.rates, bss->rates, ratesize);
+ 	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
+ 		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.
+");
