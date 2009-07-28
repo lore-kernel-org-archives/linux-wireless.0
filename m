@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4887 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999AbZG2OaG (ORCPT
+Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:1304 "EHLO
+	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755373AbZG1S16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 10:30:06 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] ath5k: update PCU opmode whenever a new interface is added
-Date: Wed, 29 Jul 2009 10:29:03 -0400
-Message-Id: <1248877744-7273-1-git-send-email-me@bobcopeland.com>
+	Tue, 28 Jul 2009 14:27:58 -0400
+Subject: Re: [PATCH] MAINTAINERS: Add networking wireless drivers section
+From: Joe Perches <joe@perches.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>, julia@diku.dk,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20090728111552.528a2c9a.randy.dunlap@oracle.com>
+References: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
+	 <20090728.103044.179053537.davem@davemloft.net>
+	 <1248804397.18284.5.camel@Joe-Laptop.home>
+	 <20090728111552.528a2c9a.randy.dunlap@oracle.com>
+Content-Type: text/plain
+Date: Tue, 28 Jul 2009 11:27:07 -0700
+Message-Id: <1248805627.18284.11.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, we would store the operating mode at interface up time,
-but only update the PCU registers when the next reset happened.
-The result is that if beacon configuration (ops->bss_info_changed)
-happens before ops->config, we will program the wrong things into
-the timer registers.  Consequently, beacons won't work in AP mode
-until after a reset (channel change, scan etc.).
+On Tue, 2009-07-28 at 11:15 -0700, Randy Dunlap wrote:
+> On Tue, 28 Jul 2009 11:06:37 -0700 Joe Perches wrote:
+> > On Tue, 2009-07-28 at 10:30 -0700, David Miller wrote:
+> > > Wireless patches need to be CC:'d to linux-wireless so that
+> > > John Linville can notice and pick them up
+> > Signed-off-by: Joe Perches <joe@perches.com>
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index ebc2691..0574aad 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -4186,6 +4186,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
+> >  S:	Odd Fixes
+> >  F:	drivers/net/
+> >  
+> > +NETWORKING WIRELESS DRIVERS
+> > +L:	linux-wireless@vger.kernel.org
+> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+> > +S:	Odd Fixes
+> > +F:	drivers/net/wireless/
+> > +
+> 
+> Already have this:
+> 
+> NETWORKING [WIRELESS]
+> P:	John W. Linville
+> M:	linville@tuxdriver.com
+> L:	linux-wireless@vger.kernel.org
+> T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
+> S:	Maintained
+> F:	net/wireless/
+> F:	include/net/ieee80211*
+> F:	include/linux/wireless.h
 
-This is fragile anyway so just program the opmode as soon as
-mac80211 gives it to us.
+That section does not include drivers/net/wireless/
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+I believe John Linville isn't maintaining all the
+wireless drivers, he's acting as a gatekeeper in
+a similar role as DavidM for drivers/net/.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 7db32ce..55ee976 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1117,6 +1117,8 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 rfilt;
- 
-+	ah->ah_op_mode = sc->opmode;
-+
- 	/* configure rx filter */
- 	rfilt = sc->filter_flags;
- 	ath5k_hw_set_rx_filter(ah, rfilt);
-@@ -2768,6 +2770,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ath5k_hw_set_lladdr(sc->ah, conf->mac_addr);
-+	ath5k_mode_setup(sc);
- 
- 	ret = 0;
- end:
--- 
-1.6.2.5
+The patch above means scripts/get_maintainer.pl can
+use the linux-wireless@vger list email address for
+any change in driver/net/wireless/
 
 
