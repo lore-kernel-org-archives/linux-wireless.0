@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp103.mail.ukl.yahoo.com ([77.238.184.35]:23210 "HELO
-	smtp103.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753674AbZGRVel (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jul 2009 17:34:41 -0400
-Message-ID: <4A623E57.2030105@yahoo.co.uk>
-Date: Sat, 18 Jul 2009 22:27:51 +0100
-From: Rob <r0bjl@yahoo.co.uk>
-MIME-Version: 1.0
+Received: from mx44.mail.ru ([94.100.176.58]:54251 "EHLO mx44.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751798AbZG1M46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 08:56:58 -0400
+Received: from mx74.mail.ru (mx74.mail.ru [94.100.176.89])
+	by mx44.mail.ru (mPOP.Fallback_MX) with ESMTP id F12D2266CD4
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 16:37:17 +0400 (MSD)
+Received: from [62.176.9.130] (port=55064 helo=[192.168.1.199])
+	by mx74.mail.ru with asmtp
+	id 1MVlvB-00067s-00
+	for linux-wireless@vger.kernel.org; Tue, 28 Jul 2009 16:36:45 +0400
+Subject: rt2x00: rt73usb doesn't receive PS Poll frames in the AP mode
+From: Igor Perminov <igor.perminov@inbox.ru>
 To: linux-wireless@vger.kernel.org
-Subject: compat-wireless-2.6.31-rc1 build problem
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
+Date: Tue, 28 Jul 2009 16:36:43 +0400
+Message-Id: <1248784603.29068.44.camel@sunlight>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hope this is the correct place to report it.  I can't build the above
-with 2.6.27.23-0.1-default, gcc v4.3.2, openSUSE 11.1.
-compat-wireless-2.6.30 is ok however.
+Dear colleagues,
 
-  CC [M]  /compat-wireless-2.6.31-rc1/net/mac80211/main.o
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c: In function
-‘ieee80211_bss_info_change_notify’:
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:293: warning:
-‘beacon_int’ is deprecated (declared at
-/compat-wireless-2.6.31-rc1/include/net/mac80211.h:593)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c: In function
-‘ieee80211_alloc_hw’:
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:714: warning:
-‘radio_enabled’ is deprecated (declared at
-/compat-wireless-2.6.31-rc1/include/net/mac80211.h:599)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c: At top level:
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:758: error: variable
-‘ieee80211_master_ops’ has initializer but incomplete type
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:759: error: unknown
-field ‘ndo_start_xmit’ specified in initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:759: warning: excess
-elements in struct initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:759: warning: (near
-initialization for ‘ieee80211_master_ops’)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:760: error: unknown
-field ‘ndo_open’ specified in initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:760: warning: excess
-elements in struct initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:760: warning: (near
-initialization for ‘ieee80211_master_ops’)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:761: error: unknown
-field ‘ndo_stop’ specified in initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:761: warning: excess
-elements in struct initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:761: warning: (near
-initialization for ‘ieee80211_master_ops’)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:762: error: unknown
-field ‘ndo_set_multicast_list’ specified in initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:762: warning: excess
-elements in struct initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:762: warning: (near
-initialization for ‘ieee80211_master_ops’)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:763: error: unknown
-field ‘ndo_select_queue’ specified in initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:763: warning: excess
-elements in struct initializer
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:763: warning: (near
-initialization for ‘ieee80211_master_ops’)
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c: In function
-‘ieee80211_master_setup’:
-/compat-wireless-2.6.31-rc1/net/mac80211/main.c:769: error: ‘struct
-net_device’ has no member named ‘netdev_ops’
-make[5]: *** [/compat-wireless-2.6.31-rc1/net/mac80211/main.o] Error 1
-make[4]: *** [/compat-wireless-2.6.31-rc1/net/mac80211] Error 2
-make[3]: *** [_module_/compat-wireless-2.6.31-rc1] Error 2
-make[2]: *** [sub-make] Error 2
-make[1]: *** [all] Error 2
-make[1]: Leaving directory `/usr/src/linux-2.6.27.23-0.1-obj/i386/default'
-make: *** [modules] Error 2
+I've discovered that a rt73 usb wi-fi stick in the AP mode doesn't
+receive PS Poll frames from a station. The station sends a PS Poll
+frame, but the mac80211 stack doesn't see it.
+More details can be found here:
+http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=5486&start=10,
+issue #1.
+
+I've found that the FIF_CONTROL flag isn't passed to the rt2x00's
+configure_filter function (namely rt2x00mac_configure_filter) by the
+mac80211 stack even if the device is configured as an access point.
+So, the hardware is configured by the driver to filter out control
+frames according to the flags given.
+
+And here is my question: what would be the correct behaviour?
+A) The mac80211 stack should pass the FIF_CONTROL flag to the driver
+when the device is configured in the AP mode.
+B) The driver should configure the hardware to receive PS Poll frames by
+itself when the device is configured in the AP mode, even if the
+FIF_CONTROL flag isn't passed by the mac80211 stack.
+
+Best regards,
+Igor Perminov
+
+
