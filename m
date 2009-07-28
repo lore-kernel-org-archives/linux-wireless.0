@@ -1,226 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:44681 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751302AbZG3MMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 08:12:05 -0400
-Subject: [rt2800 doesn't authenticate (wpapsk/tkip)] Re: [wireless]
- rt2870sta BUGs on shutdown, 2.6.30.2->git.today+git.wireless.today
-From: Mike Galbraith <efault@gmx.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1248948326.8823.4.camel@marge.simson.net>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-	 <1248947740.8925.12.camel@johannes.local>
-	 <1248948326.8823.4.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 14:11:56 +0200
-Message-Id: <1248955916.7995.47.camel@marge.simson.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56358 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbZG1HeX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 03:34:23 -0400
+Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <1248734807.1216.619.camel@rc-desk>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
+	 <1248733760.7015.0.camel@johannes.local>
+	 <1248734807.1216.619.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ykWic2Drdlx9R2Hj54/q"
+Date: Tue, 28 Jul 2009 09:33:49 +0200
+Message-Id: <1248766429.8113.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 12:05 +0200, Mike Galbraith wrote:
-> On Thu, 2009-07-30 at 11:55 +0200, Johannes Berg wrote:
-> > On Thu, 2009-07-30 at 11:44 +0200, Mike Galbraith wrote:
-> > > On Thu, 2009-07-30 at 11:29 +0200, Johannes Berg wrote:
-> > > > On Thu, 2009-07-30 at 11:22 +0200, Mike Galbraith wrote:
-> > > > 
-> > > > > drivers/staging/rt2870/../rt2860/sta_ioctl.c
-> > > > 
-> > > > Sorry, but that '/staging/' thing in there means we cannot support this.
-> > > > If you must, take your query to the staging list,
-> > > > devel@driverdev.osuosl.org (according to MAINTAINERS).
-> > > 
-> > > Forwarded, thanks.
-> > > 
-> > > ....hm.  Does "If you must" mean reports aren't welcome?
-> > 
-> > To be honest, I don't know. I'd rather see people use the rt2x00 code
-> > instead of spending time cleaning up that mess (the code you've pasted
-> > was pretty bad!). But you may or may not find somebody who cares about
-> > that, just rather unlikely on this list.
-> 
-> Understood (and yeah, the source is.. not pretty).  Sorry for the noise.
-> 
-> WRT rt2x00 with this adapter, I tried it, was a nogo.  If I find time,
-> I'll reconfigure/report.
 
-This is nogo with rt2x00 driver fwiw.  Maybe some simple configuration
-thing, but I'm having no luck getting the bugger to work.
+--=-ykWic2Drdlx9R2Hj54/q
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[   12.942335] phy0: Selected rate control algorithm 'minstrel'
-[   12.942440] Registered led device: rt2800usb-phy0::radio
-[   12.955279] Registered led device: rt2800usb-phy0::assoc
-[   12.968003] Registered led device: rt2800usb-phy0::quality
-[   12.981183] usbcore: registered new interface driver rt2800usb
+On Mon, 2009-07-27 at 15:46 -0700, reinette chatre wrote:
 
-[   33.032056] rt2800usb 1-5:1.0: firmware: requesting rt2870.bin
-[   33.161552] input: rt2800usb as /devices/pci0000:00/0000:00:1a.7/usb1/1-5/1-5:1.0/input/input4
-[   33.347130] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   34.513078] eth0: no IPv6 routers present
-[   35.935289] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   35.937306] wlan0: authenticated
-[   35.937309] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   35.942551] wlan0: RX AssocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   35.942555] wlan0: associated
-[   35.950948] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[   37.314470] mtrr: base(0xd0000000) is not aligned on a size(0xff00000) boundary
-[   39.937271] wlan0: deauthenticated (Reason: 1)
-[   40.936521] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   40.939152] wlan0 direct probe responded
-[   40.939155] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   40.941145] wlan0: authenticated
-[   40.941148] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   40.945904] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   40.945909] wlan0: associated
-[   44.947499] wlan0: deauthenticated (Reason: 1)
-[   45.944034] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   45.946623] wlan0 direct probe responded
-[   45.946627] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   45.948744] wlan0: authenticated
-[   45.948747] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   45.953996] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   45.953999] wlan0: associated
-[   46.376015] wlan0: no IPv6 routers present
-[   49.947986] wlan0: deauthenticated (Reason: 1)
-[   50.944545] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   50.947230] wlan0 direct probe responded
-[   50.947234] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   50.949219] wlan0: authenticated
-[   50.949222] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   50.954473] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   50.954477] wlan0: associated
-[   54.958220] wlan0: deauthenticated (Reason: 1)
-[   55.956527] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   55.959137] wlan0 direct probe responded
-[   55.959140] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   55.961123] wlan0: authenticated
-[   55.961126] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   55.966502] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   55.966505] wlan0: associated
-[   59.968460] wlan0: deauthenticated (Reason: 1)
-[   60.968032] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   60.970625] wlan0 direct probe responded
-[   60.970628] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   60.972741] wlan0: authenticated
-[   60.972743] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   60.978499] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   60.978502] wlan0: associated
-[   64.978212] wlan0: deauthenticated (Reason: 1)
-[   65.976524] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   65.979117] wlan0 direct probe responded
-[   65.979119] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   65.981120] wlan0: authenticated
-[   65.981124] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   65.986501] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   65.986505] wlan0: associated
-[   69.988830] wlan0: deauthenticated (Reason: 1)
-[   70.988546] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   70.991121] wlan0 direct probe responded
-[   70.991124] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   70.993237] wlan0: authenticated
-[   70.993239] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   70.998494] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   70.998498] wlan0: associated
-[   74.998070] wlan0: deauthenticated (Reason: 1)
-[   75.996510] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   75.999123] wlan0 direct probe responded
-[   75.999127] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   76.001239] wlan0: authenticated
-[   76.001242] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   76.006745] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   76.006749] wlan0: associated
-[   80.007943] wlan0: deauthenticated (Reason: 1)
-[   81.008508] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   81.011115] wlan0 direct probe responded
-[   81.011118] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   81.013111] wlan0: authenticated
-[   81.013115] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   81.018494] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   81.018498] wlan0: associated
-[   85.017825] wlan0: deauthenticated (Reason: 1)
-[   86.016508] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[   86.019115] wlan0 direct probe responded
-[   86.019118] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   86.021230] wlan0: authenticated
-[   86.021233] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   86.026610] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   86.026613] wlan0: associated
-[   96.027614] wlan0: disassociating by local choice (reason=3)
-[   96.030483] wlan0: deauthenticated (Reason: 6)
-[   97.485736] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[   97.487617] wlan0: authenticated
-[   97.487620] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[   97.492871] wlan0: RX AssocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[   97.492875] wlan0: associated
-[  101.487940] wlan0: deauthenticated (Reason: 1)
-[  102.484011] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  102.486625] wlan0 direct probe responded
-[  102.486629] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  102.488742] wlan0: authenticated
-[  102.488746] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  102.493993] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  102.493996] wlan0: associated
-[  112.496478] wlan0: disassociating by local choice (reason=3)
-[  112.499359] wlan0: deauthenticated (Reason: 6)
-[  123.951239] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  123.953248] wlan0: authenticated
-[  123.953252] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  123.958499] wlan0: RX AssocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  123.958503] wlan0: associated
-[  127.957566] wlan0: deauthenticated (Reason: 1)
-[  128.956012] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  128.958616] wlan0 direct probe responded
-[  128.958619] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  128.960743] wlan0: authenticated
-[  128.960746] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  128.966121] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  128.966125] wlan0: associated
-[  132.967815] wlan0: deauthenticated (Reason: 1)
-[  133.964011] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  133.966613] wlan0 direct probe responded
-[  133.966616] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  133.968740] wlan0: authenticated
-[  133.968744] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  133.973868] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  133.973871] wlan0: associated
-[  137.967813] wlan0: deauthenticated (Reason: 1)
-[  138.964014] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  138.966613] wlan0 direct probe responded
-[  138.966616] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  138.968738] wlan0: authenticated
-[  138.968741] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  138.973996] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  138.973999] wlan0: associated
-[  142.967685] wlan0: deauthenticated (Reason: 1)
-[  143.964009] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  143.966609] wlan0 direct probe responded
-[  143.966612] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  143.968736] wlan0: authenticated
-[  143.968740] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  143.973988] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  143.973991] wlan0: associated
-[  147.967736] wlan0: deauthenticated (Reason: 1)
-[  148.964016] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  148.966607] wlan0 direct probe responded
-[  148.966609] wlan0: authenticate with AP 00:1a:4f:9a:d0:12
-[  148.968734] wlan0: authenticated
-[  148.968736] wlan0: associate with AP 00:1a:4f:9a:d0:12
-[  148.973983] wlan0: RX ReassocResp from 00:1a:4f:9a:d0:12 (capab=0x411 status=0 aid=1)
-[  148.973985] wlan0: associated
-[  152.967813] wlan0: deauthenticated (Reason: 1)
-[  153.964009] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  154.164015] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 2
-[  154.364015] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 3
-[  154.564009] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 timed out
-[  181.899242] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 1
-[  182.096012] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 2
-[  182.296011] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 try 3
-[  182.496011] wlan0: direct probe to AP 00:1a:4f:9a:d0:12 timed out
-[  200.602027] usbcore: deregistering interface driver rt2800usb
+> Sorry for missing this. We are trying to be better with documentation
+> and need to do more work in this area. This patch is currently in
+> wireless-testing. I am not sure how to proceed here. If I send a cleanup
+> patch on top of current wireless-testing it will only make sense to
+> address other kernel-doc mishaps. As our driver has not been tested
+> (afaik) to provide meaningful documentation when kernel-doc is used I am
+> hesitant to take on this right now ... but it is something we have to
+> address at some point.
 
+Yeah, I know it's not used, and I'm sure there's more -- I was just
+looking at the code trying to rebase a patch and this caught my eye.
+It's certainly not too important, but I wanted to point it out anyway if
+only to avoid that in the future :)
+
+johannes
+
+--=-ykWic2Drdlx9R2Hj54/q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKbqnZAAoJEODzc/N7+QmaWuIP/iIKh2rRC5EKIzPi1GAy7JGC
+tueXXKOBkQ9CpHWO9msJY4iGsr85sb4UcWQP+KXGbshUvmDJ2aMMDmw+VSqnMyIS
+7tl/KvtknTCroHqYVOy2S/dk3pMBcAsbcLPBmEsqNdu6y0mZtid2ciNuXwsd6xd2
+tw7uSqTXwrB+nCO9UVwuF6aNAUSIUid2BCjxuwejq7K8nCOuVG/i9J76TaV4fGZy
+itxbkqyEjlX9UYgMAFMHleNK7SPlNX0SwyrhIDTPUlPopiLfbwxDloeDy5IhWbo5
+fmR6HPOELBEe/fGNvI9LYN7pM0PbyOlCf/FpRtzjzwF1hD/N2OhhAQlZctaOzCUQ
+MFerXqUqQPO0bsnoU+8D3yT/M5qx6IDpSJYK2O/ASd6HO+Y7INv65yULhqCk9A9j
+tx+frz1AW18WfbNoCVMzz/rhIt+s/GiS5wDe+aVfQ0/SgFTqARUKB4hqnzcFGYjd
+mjiekrgo8Z0S2u9/AZ/yVbWpALx24dvwVa778xrHvdBVvWlTqax6bp7rJV/mTItH
+jTQfujTlcsO9BcY8cthYE8WNvFP+VhI5jCvqNBPZGJ48QRi+Rm0Tv8E5CzU64oTu
+rw5GvfJfBj0s/MFPMUUYvZ52fuHuLVrtPHvlEMRmyvk3mHzIRoRgJSEUltbI0KWc
+nI7Hfk+5q5V58ls+zIGV
+=m8Bv
+-----END PGP SIGNATURE-----
+
+--=-ykWic2Drdlx9R2Hj54/q--
 
