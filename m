@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:4420 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754855AbZG2NAQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 09:00:16 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id C5A2B14800D
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 15:00:15 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Z5xjzeyBsTgk for <linux-wireless@vger.kernel.org>;
-	Wed, 29 Jul 2009 15:00:15 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F9F0B.dip0.t-ipconnect.de [217.95.159.11])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 71112148006
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 15:00:14 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 2618F1E004F
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 15:00:05 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: BUG: ifdown doesn't notify cfg80211
-Date: Wed, 29 Jul 2009 14:59:55 +0200
-References: <200907291310.50121.hs4233@mail.mn-solutions.de> <200907291325.51598.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200907291325.51598.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907291459.55484.hs4233@mail.mn-solutions.de>
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:40114 "EHLO
+	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453AbZG1VBO (ORCPT
+	<RFC822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 17:01:14 -0400
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Zhu Yi <yi.zhu@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: 31-rc3-mmotm0716 - wonky wireless statistics..
+From: Valdis.Kletnieks@vt.edu
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1248814870_4259P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Tue, 28 Jul 2009 17:01:10 -0400
+Message-ID: <5934.1248814870@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> # iw dev eth1 connect -w MNHS key 0:11111
-> eth1 (phy #0): connected to 00:13:19:80:da:30
-> # ifconfig eth1 down
-> # ifconfig eth1 up
-> # iw dev eth1 connect -w MNHS key 0:11111
-> command failed: Operation already in progress (-114)
+--==_Exmh_1248814870_4259P
+Content-Type: text/plain; charset="us-ascii"
+Content-Id: <5914.1248814854.1@turing-police.cc.vt.edu>
 
-As Johannes pointed out on IRC, this happens only if you used
+Dell Latitude D820 laptop, lspci reports the network card as:
 
-iwconfig eth1 key s:11111
-iwconfig eth1 essid MNHS
+0c:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Netwo           rk Connection (rev 02)
 
-previously on the device. Seems that the CFG80211-configuration 
-doesn't delete the WEXT-configuration remnants. And as soon as 
-you "ifup" the device, it starts associating based on old WEXT 
-data, resulting in the busy.
+iwlwifi driver in use, card associated via wpa_supplicant but not being
+actively used
 
--- 
-http://www.holgerschurig.de
+# iwconfig
+wlan0     IEEE 802.11abg  ESSID:"VT-Wireless"  
+          Mode:Managed  Frequency:2.447 GHz  Access Point: 00:11:20:A4:4C:10   
+          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:<lopped out> [2]
+          Link Quality=62/70  Signal level=-48 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+# cat /proc/net/wireless
+Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
+ face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
+ wlan0: 0000   63.  -47.  -256        0      0      0      0      0        0
+ wlan1: 0000    0     0     0        0      0      0      0      0        0
+ wlan2: 0000    0     0     0        0      0      0      0      0        0
+
+Where did that -256 for "noise" come from?  It ends up confusing the
+gkrellm-wifi plugin, it reports a S/N of 219dB ;)
+
+
+
+--==_Exmh_1248814870_4259P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFKb2cWcC3lWbTT17ARAvBpAJ9go5v/W46n8FSib4lHLX/SlRk+MACeIzQj
+mesuP854E7Uj2aq+8IBWTOU=
+=O9/5
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1248814870_4259P--
