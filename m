@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42314 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752537AbZGOAOY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 17/21] ath9k: remove rate control wraper
-Date: Tue, 14 Jul 2009 20:14:09 -0400
-Message-Id: <1247616853-11221-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx34.mail.ru ([94.100.176.48]:16540 "EHLO mx34.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470AbZG1PiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 11:38:07 -0400
+Received: from [62.176.9.130] (port=32925 helo=[192.168.1.199])
+	by mx34.mail.ru with asmtp
+	id 1MVokg-000Pae-00
+	for linux-wireless@vger.kernel.org; Tue, 28 Jul 2009 19:38:06 +0400
+Subject: A station can't reconnect after it wakes up
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 28 Jul 2009 19:38:05 +0400
+Message-Id: <1248795485.29068.144.camel@sunlight>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the cleanup we just use get_rate as a wrapper, skip
-the wrapper.
+Dear colleagues,
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   23 +++++++----------------
- 1 files changed, 7 insertions(+), 16 deletions(-)
+I have an issue related to handling power-saving stations in mac80211
+(AP mode) or may be to hostapd. A station can't reconnect after it wakes
+up (see the link to the rt2x00 forum below, issue #4).
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 630fcf4..e66734c 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -786,10 +786,11 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	tx_info->control.rts_cts_rate_idx = cix;
- }
- 
--static void ath_rc_ratefind(struct ath_softc *sc,
--			    struct ath_rate_priv *ath_rc_priv,
--			    struct ieee80211_tx_rate_control *txrc)
-+static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
-+			 struct ieee80211_tx_rate_control *txrc)
- {
-+	struct ath_softc *sc = priv;
-+	struct ath_rate_priv *ath_rc_priv = priv_sta;
- 	const struct ath_rate_table *rate_table;
- 	struct sk_buff *skb = txrc->skb;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -799,6 +800,9 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	u8 try_per_rate, i = 0, rix, nrix;
- 	int is_probe = 0;
- 
-+	if (rate_control_send_low(sta, priv_sta, txrc))
-+		return;
-+
- 	/*
- 	 * For Multi Rate Retry we use a different number of
- 	 * retry attempt counts. This ends up looking like this:
-@@ -1515,19 +1519,6 @@ exit:
- 	kfree(tx_info_priv);
- }
- 
--static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
--			 struct ieee80211_tx_rate_control *txrc)
--{
--	struct ath_softc *sc = priv;
--	struct ath_rate_priv *ath_rc_priv = priv_sta;
--
--	if (rate_control_send_low(sta, priv_sta, txrc))
--		return;
--
--	/* Find tx rate for unicast frames */
--	ath_rc_ratefind(sc, ath_rc_priv, txrc);
--}
--
- static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
-                           struct ieee80211_sta *sta, void *priv_sta)
- {
--- 
-1.6.0.6
+AP: Linux box with D-Link DWA-110 USB Wi-Fi stick (rt73usb kernel
+driver), kernel 2.6.30 with some patches, hostapd 0.6.9.
+Station: Toshiba G900 PDA under Windows Mobile 6.0.
+
+The environment is described in details here:
+http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=5&t=5486&start=10
+
+Consider the following step-by-step:
+1. A station authenticates and associates with the AP and exchanges
+traffic.
+2. The station indicates to the AP that it is going to sleep.
+3. The station device goes to the stand-by mode (not only its wi-fi
+card, but the device itself).
+4. The station device wakes up and begins authentication with an
+Authentication management frame.
+This is the behavior of my PDA.
+
+The problem is the mac80211 stack remembers that the station has gone to
+sleep. So, the response frames from hostapd are buffered by mac80211.
+The station indicates in the Authentication frame that it isn't sleeping
+anymore. But the mac80211 stack analyzes sleep/wake transitions in
+_data_ frames only, but not in management ones. See
+ieee80211_rx_h_sta_process in net/mac80211/rx.c. A comment there notes:
+"Ignore doze->wake transitions that are indicated by non-data frames,
+the standard is unclear here".
+As the result, the station never receives the authentication response
+from the AP.
+
+The wireless-testing kernel seems to have this problem too.
+
+As a workaround I've added a code in hostapd, which forces the mac80211
+stack to "forget" the station just after receiving an authentication
+frame. After this change the station can reconnect successfully.
+
+And may be it would be better to analyze not only data frames, but also
+some of management ones in ieee80211_rx_h_sta_process?
+What does the standard tell here?
+
+Best regards,
+Igor Perminov
+
 
