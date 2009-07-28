@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:60059 "EHLO c60.cesmail.net"
+Received: from mx76.mail.ru ([94.100.176.91]:49177 "EHLO mx76.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752198AbZGVPsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 11:48:05 -0400
-Subject: Re: any controller working in AP mode ?
-From: Pavel Roskin <proski@gnu.org>
-To: Ram kumar <ramkumar.research@gmail.com>
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1247843954.25608.62.camel@mj>
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-	 <445f43ac0907151344q6d80ddeckc0c586b34d8ca7c5@mail.gmail.com>
-	 <6306c640907152338k4a5fb474h481d5adba97507b1@mail.gmail.com>
-	 <1247843954.25608.62.camel@mj>
+	id S1750786AbZG1OSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 10:18:00 -0400
+Subject: Re: rt2x00: rt73usb doesn't receive PS Poll frames in the AP mode
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248787142.8113.10.camel@johannes.local>
+References: <1248784603.29068.44.camel@sunlight>
+	 <1248787142.8113.10.camel@johannes.local>
 Content-Type: text/plain
-Date: Wed, 22 Jul 2009 11:48:02 -0400
-Message-Id: <1248277682.8929.0.camel@mj>
+Date: Tue, 28 Jul 2009 18:17:58 +0400
+Message-Id: <1248790678.29068.94.camel@sunlight>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-07-17 at 11:19 -0400, Pavel Roskin wrote:
-
-> > It would be very helpful if anyone can guide me,how to get the
-> > hardware for MARVELL 8388.
+> Hmm. Passing up *all* control frames wouldn't really be good -- think of
+> all the ACK frames. Do you have filters per frame type?
 > 
-> 5 minute search finds that Zonet ZEW2502 is what you need.  There is
-> only one driver for that device on the Zonet site, and it's clearly for
-> Marvell.
+> Maybe we should introduce a FIF_PSPOLL flag?
+> 
+> johannes
 
-Just for the record, it turns out the device is not supported, even
-though it's Marvell:
+As I see from the rt2x00 source code, older Ralink devices have common
+filter for all control frames. Newer devices (including rt73usb one) can
+filter ACK/CTS and other control frames separately. And the rt2800
+device has a separate filter for PS Poll frames.
 
-Bus 001 Device 005: ID 1286:1fab Marvell Semiconductor, Inc. 
+I agree, we should filter out the ACK frames where it is possible.
 
-Both libertas drivers support only 1286:2001 and 05a3:8388.
+And in case we introduce the FIF_PSPOLL flag, what the exact semantics
+will it have? When the FIF_CONTROL flag is passed to a driver, but the
+FIF_PSPOLL one isn't, should the driver filter out PS Poll frames (a) or
+not (b)?
 
-Web search for 1286:1fab doesn't find anything useful other than
-recommendations to use ndiswrapper.
+May be it would be better to take into account the FIF_PSPOLL flag when
+the FIF_CONTROL one isn't passed only (choice b) to be compatible with
+the current implementation? I.e. the device should receive PS Poll
+frames if either FIF_CONTROL or FIF_PSPOLL is passed (or both of them,
+of course).
 
-I should have checked the ID in the *.inf files against the kernel
-sources.
 
--- 
-Regards,
-Pavel Roskin
