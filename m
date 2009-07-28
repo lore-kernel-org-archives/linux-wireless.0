@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f173.google.com ([209.85.221.173]:55704 "EHLO
-	mail-qy0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111AbZGURHD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 13:07:03 -0400
-Received: by qyk3 with SMTP id 3so1018547qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2009 10:07:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <E1MTDop-0000kz-DX@sipsolutions.net>
-References: <E1MTDop-0000kz-DX@sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 21 Jul 2009 09:59:43 -0700
-Message-ID: <43e72e890907210959v6fc7f3b9p4c267b502c3ea7f@mail.gmail.com>
-Subject: Re: [ANN] rfkill: v0.1
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:5043 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910AbZG1Hrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 03:47:37 -0400
+Subject: Re: [PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+In-Reply-To: <1248766429.8113.1.camel@johannes.local>
+References: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+	 <1248459194-10239-5-git-send-email-reinette.chatre@intel.com>
+	 <1248733760.7015.0.camel@johannes.local>
+	 <1248734807.1216.619.camel@rc-desk>
+	 <1248766429.8113.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Tue, 28 Jul 2009 00:47:37 -0700
+Message-Id: <1248767257.1216.671.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 21, 2009 at 4:47 AM, <wireless@sipsolutions.net> wrote:
->
-> A new release of rfkill (v0.1) is available at:
->
-> http://wireless.kernel.org/download/rfkill/rfkill-0.1.tar.bz2
+On Tue, 2009-07-28 at 00:33 -0700, Johannes Berg wrote:
+> On Mon, 2009-07-27 at 15:46 -0700, reinette chatre wrote:
+> 
+> > Sorry for missing this. We are trying to be better with documentation
+> > and need to do more work in this area. This patch is currently in
+> > wireless-testing. I am not sure how to proceed here. If I send a cleanup
+> > patch on top of current wireless-testing it will only make sense to
+> > address other kernel-doc mishaps. As our driver has not been tested
+> > (afaik) to provide meaningful documentation when kernel-doc is used I am
+> > hesitant to take on this right now ... but it is something we have to
+> > address at some point.
+> 
+> Yeah, I know it's not used, and I'm sure there's more -- I was just
+> looking at the code trying to rebase a patch and this caught my eye.
+> It's certainly not too important, but I wanted to point it out anyway if
+> only to avoid that in the future :)
 
-Documentation available at:
+Point taken. Thank you very much.
 
-http://wireless.kernel.org/en/users/Documentation/rfkill
+Reinette
 
- Luis
+
+
