@@ -1,104 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42335 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755809AbZGOAO2 (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:4775 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500AbZG1Q2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Mohamed Abbas <mohamed.abbas@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/21] iwlwifi: remove rs_get_rate workaround
-Date: Tue, 14 Jul 2009 20:13:55 -0400
-Message-Id: <1247616853-11221-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 28 Jul 2009 12:28:02 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so42669eyd.37
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2009 09:28:01 -0700 (PDT)
+Message-ID: <4A6F270A.7030002@gmail.com>
+Date: Tue, 28 Jul 2009 17:27:54 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+CC: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	orinoco-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] orinoco: enable cfg80211 "set_channel" operation
+References: <200907281634.26104.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200907281634.26104.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the work around implemented for transmitting on
-an unsupported band on iwlwifi. This was added via the patch:
+Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-8e1856e82cb8f541e925738bebfbc473420cda68:
-iwlwifi: fix rs_get_rate WARN_ON()
+Cool.
 
-Cc: Mohamed Abbas <mohamed.abbas@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c |   12 ++----------
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c  |   11 +----------
- 2 files changed, 3 insertions(+), 20 deletions(-)
+> +	if (orinoco_lock(priv, &flags) != 0)
+> +		return -EBUSY;
+> +
+> +	priv->channel = channel;
+> +	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
+> +		/* Fast channel change - no commit if successful */
+> +		hermes_t *hw = &priv->hw;
+> +		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
+> +					    HERMES_TEST_SET_CHANNEL,
+> +					channel, NULL);
+> +	}
+> +	orinoco_unlock(priv, &flags);
+> +
+> +	return err;
+> +}
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-index 5eb538d..b23fd53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945-rs.c
-@@ -674,28 +674,20 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta,
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	u16 fc;
--	u16 rate_mask = 0;
-+	u16 rate_mask = sta ? sta->supp_rates[sband->band] : 0;
- 	s8 max_rate_idx = -1;
- 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	IWL_DEBUG_RATE(priv, "enter\n");
- 
--	if (sta)
--		rate_mask = sta->supp_rates[sband->band];
--
- 	/* Send management frames and NO_ACK data using lowest rate. */
- 	fc = le16_to_cpu(hdr->frame_control);
- 	if ((fc & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_DATA ||
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK ||
- 	    !sta || !priv_sta) {
- 		IWL_DEBUG_RATE(priv, "leave: No STA priv data to update!\n");
--		if (!rate_mask)
--			info->control.rates[0].idx =
--					rate_lowest_index(sband, NULL);
--		else
--			info->control.rates[0].idx =
--					rate_lowest_index(sband, sta);
-+		info->control.rates[0].idx = rate_lowest_index(sband, sta);
- 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
- 			info->control.rates[0].count = 1;
- 		return;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index ff20e50..3fea027 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2466,7 +2466,6 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 	int rate_idx;
--	u64 mask_bit = 0;
- 
- 	IWL_DEBUG_RATE_LIMIT(priv, "rate scale calculate new rate for skb\n");
- 
-@@ -2481,18 +2480,10 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 			lq_sta->max_rate_idx = -1;
- 	}
- 
--	if (sta)
--		mask_bit = sta->supp_rates[sband->band];
--
- 	/* Send management frames and NO_ACK data using lowest rate. */
- 	if (!ieee80211_is_data(hdr->frame_control) ||
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK || !sta || !lq_sta) {
--		if (!mask_bit)
--			info->control.rates[0].idx =
--					rate_lowest_index(sband, NULL);
--		else
--			info->control.rates[0].idx =
--					rate_lowest_index(sband, sta);
-+		info->control.rates[0].idx = rate_lowest_index(sband, sta);
- 		if (info->flags & IEEE80211_TX_CTL_NO_ACK)
- 			info->control.rates[0].count = 1;
- 		return;
--- 
-1.6.0.6
+Looks right for monitor mode (as you tested), but for ad-hoc the channel
+change would be delayed until the next SIOCSIWCOMMIT. Which for cfg80211
+is currently only on change_vif.
 
+Adding a call to orinoco_commit(priv) in the ad-hoc case should push the
+change to the card. I think we'll end up with this call in each of the
+orinoco cfg80211 functions. Otherwise we have to work out how to do the
+changes incrementally across the different hw/fw.
+
+You can also eliminate orinoco_ioctl_setfreq from wext.c with this change.
+
+
+Thanks,
+
+Dave.
