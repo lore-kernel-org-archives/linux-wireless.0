@@ -1,72 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.249]:29841 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612AbZG0WCZ convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49464 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754703AbZG1Q2x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 18:02:25 -0400
-Received: by an-out-0708.google.com with SMTP id d40so4825771and.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 15:02:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910907271322x6c6ea95cr1cd1d310bf0ebe9b@mail.gmail.com>
-References: <1248721179-16079-1-git-send-email-lrodriguez@atheros.com>
-	<1248721724.32365.1.camel@johannes.local> <43e72e890907271241m7ccf386aj97097bb715e32658@mail.gmail.com>
-	<69e28c910907271322x6c6ea95cr1cd1d310bf0ebe9b@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 27 Jul 2009 15:02:05 -0700
-Message-ID: <43e72e890907271502m1e54b648v6be373d586093e08@mail.gmail.com>
-Subject: Re: [PATCH v2] mac80211: redefine usage of the mac80211 workqueue
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 28 Jul 2009 12:28:53 -0400
+Subject: Re: WARNING: at net/mac80211/agg-tx.c:145
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A6F264E.70501@mandriva.org>
+References: <4A6F264E.70501@mandriva.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wt47ZHGvJSMYMkxi96o5"
+Date: Tue, 28 Jul 2009 18:28:20 +0200
+Message-Id: <1248798501.13742.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/27 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Mon, Jul 27, 2009 at 9:41 PM, Luis R.
-> Rodriguez<lrodriguez@atheros.com> wrote:
->> On Mon, Jul 27, 2009 at 12:08 PM, Johannes
->> Berg<johannes@sipsolutions.net> wrote:
->>> On Mon, 2009-07-27 at 11:59 -0700, Luis R. Rodriguez wrote:
->>>
->>>> +EXPORT_SYMBOL_GPL(ieee80211_queue_work);
->>>
->>> Do we really want to allow these as _GPL only? Most things are not _GPL
->>> but usable by anyone, which of course isn't too useful since mac80211
->>> changes all the time :)
->>
->> Well I don't see why not.
->>
->>  Luis
->
-> Do we want to prevent non-GPL
 
-You mean non-GPL-compatible.
+--=-wt47ZHGvJSMYMkxi96o5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> drivers from using mac80211?
+On Tue, 2009-07-28 at 19:24 +0300, Thomas Backlund wrote:
+> Hi,
+>=20
+> Is this known?
 
-This wouldn't prevent it -- this is just for stuffing work into the
-mac80211 workqueue. The way I was seeing this is we want to ensure
-suspend works properly, if we allow non-GPL-compatible drivers stuff
-work into the mac80211 workqueue suspend issues may pop up and the
-issues may be driver related, not mac80211 related. But I guess its
-better to see if crap vendor drivers are not following the APIs
-properly, I'll remove this.
+I think so. The problem is that on a hw restart the driver clears
+aggregation but mac80211 thinks the session is still up, I think.
 
-> That's
-> actually counter-productive, as it reduces the chance of a
-> manufacturer ever releasing a useful, kernel-includable driver. (Most
-> manufacturers initially develop non-GPL drivers, which hopefully end
-> up getting released under the GPL after community persuasion.
+johannes
 
-In my experience so far vendors tend to not write mac80211 drivers at
-all unless they are open, all known vendor drivers I know of use wext
-crap.
+> I got this today on a Intel 4965 with a 2.6.31-rc4 based kernel=20
+> configured with PREEMPT.
+>=20
+> Arch is x86_64 and firmware 228.61.2.24
+>=20
+> iwlagn 0000:04:00.0: Stopping AGG while state not IWL_AGG_ON
+> iwlagn 0000:04:00.0: queue number out of range: 0, must be 7 to 14
+> ------------[ cut here ]------------
+> WARNING: at net/mac80211/agg-tx.c:145=20
+> ___ieee80211_stop_tx_ba_session+0x91/0xa0 [mac80211]()
+> Hardware name: TravelMate 5720
+> Modules linked in: cryptd aes_x86_64 aes_generic af_packet ipv6 btusb=20
+> bluetooth firewire_ohci firewire_core arc4 ecb crc_itu_t tg3 serio_raw=20
+> sdhci_pci sdhci ohci1394 libphy ieee1394 iwlagn snd_hda_codec_realtek=20
+> sr_mod iwlcore sg snd_hda_intel snd_hda_codec acer_wmi iTCO_wdt=20
+> iTCO_vendor_support mac80211 snd_hwdep snd_seq_dummy snd_seq_oss=20
+> snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss led_class snd_pcm=20
+> snd_timer snd_mixer_oss snd cfg80211 soundcore i2c_i801 rfkill=20
+> snd_page_alloc binfmt_misc fuse ext3 jbd jfs pcmcia yenta_socket=20
+> rsrc_nonstatic pcmcia_core cpufreq_ondemand cpufreq_conservative=20
+> cpufreq_powersave acpi_cpufreq freq_table tifm_sd mmc_block mmc_core=20
+> tifm_7xx1 tifm_core nvram radeon uvcvideo nsc_ircc videodev v4l1_compat=20
+> ttm v4l2_compat_ioctl32 drm irda crc_ccitt i2c_algo_bit uhci_hcd=20
+> i2c_core ehci_hcd joydev evdev container battery usbcore video output=20
+> thermal processor button ac pcspkr rtc_cmos wmi ata_piix ahci libata=20
+> sd_mod scsi_mod crc_t10dif ext4 jbd2 crc16
+> Pid: 0, comm: swapper Not tainted 2.6.31-tmb-desktop-0.rc4.3mdv #1
+> Call Trace:
+>   <IRQ>  [<ffffffff81043818>] warn_slowpath_common+0x78/0xb0
+>   [<ffffffff8104385f>] warn_slowpath_null+0xf/0x20
+>   [<ffffffffa0445121>] ___ieee80211_stop_tx_ba_session+0x91/0xa0 [mac8021=
+1]
+>   [<ffffffffa0445326>] sta_addba_resp_timer_expired+0x56/0x90 [mac80211]
+>   [<ffffffffa04452d0>] ? sta_addba_resp_timer_expired+0x0/0x90 [mac80211]
+>   [<ffffffff8104e1ae>] run_timer_softirq+0x13e/0x210
+>   [<ffffffff8104912f>] __do_softirq+0xaf/0x140
+>   [<ffffffff8100fa2a>] ? timer_interrupt+0x1a/0x30
+>   [<ffffffff8100d06c>] call_softirq+0x1c/0x30
+>   [<ffffffff8100f075>] do_softirq+0x45/0x80
+>   [<ffffffff81049575>] irq_exit+0x95/0xa0
+>   [<ffffffff8100e600>] do_IRQ+0x70/0xe0
+>   [<ffffffff8100c8d3>] ret_from_intr+0x0/0xa
+>   <EOI>  [<ffffffffa00fa57a>] ? acpi_idle_enter_bm+0x26c/0x297 [processor=
+]
+>   [<ffffffffa00fa570>] ? acpi_idle_enter_bm+0x262/0x297 [processor]
+>   [<ffffffff81240efb>] ? cpuidle_idle_call+0x9b/0xf0
+>   [<ffffffff8100aa32>] ? cpu_idle+0x62/0xd0
+>   [<ffffffff812daa81>] ? rest_init+0x81/0x90
+>   [<ffffffff814b6acf>] ? start_kernel+0x356/0x361
+>   [<ffffffff814b6128>] ? x86_64_start_reservations+0x125/0x129
+>   [<ffffffff814b620d>] ? x86_64_start_kernel+0xe1/0xe8
+> ---[ end trace 60c73ee4e29d40fe ]---
+>=20
+>=20
+>=20
+> About 1 hour before this I had this in dmesg:
+>=20
+> iwlagn 0000:04:00.0: iwl_tx_agg_start on ra =3D 00:19:5b:51:dc:27 tid =3D=
+ 0
+> iwlagn 0000:04:00.0: Microcode HW error detected.  Restarting.
+>=20
+>=20
+>=20
+> --
+> Thomas
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
 
-> If we
-> make mac80211 GPL-only, that prevents any internal driver based on
-> mac80211 from getting written.)
+--=-wt47ZHGvJSMYMkxi96o5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-I'll remove this GPL_COMPATIBLE_ONLY thingy.
+-----BEGIN PGP SIGNATURE-----
 
-  Luis
+iQIcBAABAgAGBQJKbychAAoJEODzc/N7+QmaXWAQAK0EjefZY85K/0PQnR7c3rY5
+lBJ4o5gLuFDM1yJTe0AWSGR3etD2ZOrr0fTn5n3PWmTohVRFGHz+Lf8Zr802i4y6
+nyQT7M7oWGqDMUSCuRZuKL1rnOALrHbqIWLptTdpiUp1TfGwwUyOSQ7zjzsRANsi
+I09O45K1HqPcbFqwBPOuNNL7Ui0rrTC4R6xjyMfkum1cNIMjjDAWuVnyQC9pJ1cH
+G2KUURVLYtlIxvti3gvmFDP4cPtlwppYSuWB9/Gy/4N/q7FZJYOojb+n7otdmpHx
+tPj//aszSM4L8VSSehptuQyumy0hMm6w1T/egGbhjB6hC2Gt+rmP+mP1WfJq7CxO
+02ZAuitxKM6L5b20J/6JXfTPJkw7JkjA9xFDPloNNeB84UHlWZBiuTXlS+QHetnp
+VWmoxGxfBWupbCyBvvIfg9fP4V+inGihLDe3qQxTdxnnLKZ46+lH848sAf5SbTLi
+oaLwN8gxviHG9HYIJV4NDMVhPVpiLN2nRl0+Pwj6jJ3Ssd4dVaM9WHnPkIZGh6Ls
+HOF9jKDlu7u8QEZlbPcUfZikmDLHFW6mWnQ4xlw1K5EZ42vicuEv5hSNNTb/17wy
+ZsHVbWnF39rYNKSexlVcHrZrXP3CjeESOe1UwnvqRDqSY6Pq2zDqMgf1ryCB+hrf
+8W2tBUYs4RLDQMieM1nP
+=jQMc
+-----END PGP SIGNATURE-----
+
+--=-wt47ZHGvJSMYMkxi96o5--
+
