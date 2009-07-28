@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-150-144.gdrpmi.dsl-w.verizon.net ([71.115.150.144]:56865
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbZGVFlt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60155 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471AbZG1QcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jul 2009 01:41:49 -0400
-Message-ID: <4A66A482.6050401@erley.org>
-Date: Wed, 22 Jul 2009 01:32:50 -0400
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Purushotham Nayak <nayak_purushotham@yahoo.com>,
-	Christoph Hellwig <hch@lst.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: AR5523 driver - old Atheros USB
-References: <43e72e890907211209p5142047cjf821bc536c012f24@mail.gmail.com> 	<20090721210422.GA24285@lst.de> <43e72e890907211424j2c1eecdauf1d8279baec0f6f9@mail.gmail.com> 	<20090721214219.GA25392@lst.de> <43e72e890907211703y72ffe8cdv88ba9e3c59d1b76@mail.gmail.com> 	<928354.18240.qm@web56107.mail.re3.yahoo.com> <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com>
-In-Reply-To: <43e72e890907211804i1e1fa166y810caa95563bc695@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 28 Jul 2009 12:32:11 -0400
+Subject: Re: [PATCH] orinoco: enable cfg80211 "set_channel" operation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	orinoco-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1248798599.13742.2.camel@johannes.local>
+References: <200907281634.26104.hs4233@mail.mn-solutions.de>
+	 <4A6F270A.7030002@gmail.com>  <1248798599.13742.2.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/oSqc0advicgpyeFzJLd"
+Date: Tue, 28 Jul 2009 18:31:39 +0200
+Message-Id: <1248798699.13742.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Tue, Jul 21, 2009 at 6:03 PM, Purushotham
-> Nayak<nayak_purushotham@yahoo.com> wrote:
->> Hi,
->>
->> I'm interested in working on this. I just posted to the Linux driver project a few days ago if I could work on the atheros USB devices. Please let me also know the USB device that uses the AR5523.
-> 
-> Dan recently purchased one of these devices. Dan any pointers?
 
-I have a few WPN111 Refurbed devices that are AR5523 based.  Apparently
-there is a WPN111v2 that may or may not be otus supported, I can't confirm 
-that.  Based on pictures from google and the devices I own, the AR5523 ones
-are silver, and the Otus ones are white.  I'd be more than happy to test and
-do what I can to try to help, but my time is limited, so I'm not up for 
-taking the task onto my shoulders right now.
+--=-/oSqc0advicgpyeFzJLd
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pat
+On Tue, 2009-07-28 at 18:29 +0200, Johannes Berg wrote:
+> On Tue, 2009-07-28 at 17:27 +0100, Dave wrote:
+>=20
+> > Looks right for monitor mode (as you tested), but for ad-hoc the channe=
+l
+> > change would be delayed until the next SIOCSIWCOMMIT. Which for cfg8021=
+1
+> > is currently only on change_vif.
+>=20
+> You won't be getting this call for ad-hoc mode, because then the channel
+> is contained in the ibss_join() parameters.
+
+
+> > You can also eliminate orinoco_ioctl_setfreq from wext.c with this
+> > change.
+
+That also means you can't eliminate that, of course, since for connect()
+the channels is also contained in the parameters, and the set_freq isn't
+invoked.
+
+johannes
+
+--=-/oSqc0advicgpyeFzJLd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKbyfoAAoJEODzc/N7+QmarwsP/jmObLXdDeOtynkkjqe1Y6Hz
+Sujo9dI4H1vdPmksU7CE6VAomxDb0u10849+VgfH5aSbOd9mr3NJQ5gNQj16tl89
++O5vOympRMYPhudTotidlObVw2AIpkcNNlbrMvGvL6MMEGqQMslni0P2zm9PGGdl
+w+nGTnto+aQV89HvnpEbjnassmsJj1M4Y2J7ttqVUEJdWj9v6rmWRimpGQxsaGaw
+O2jG/9qnF+3Y/7bTWhUdqKIDgJariIYJ8hLLBd3jaOM7JGrNXPfBX5K9rMc2uYEd
+6kwvR7/NEtqtwIZnaFb4cmrpn1zYvHr3NE0Bif22MWgzI5wQenhoudZsWvvtiICf
+8xstUMmwHP5F9QmZCCVRqjfRB1RZ9B7E8wpva5viMFg3IeGZ4k6nTbzVE0Wl3gCB
+nXNdKEZPPn7JtWHDYF3N95XLckoHN9uTCIkbx71b5B9yJtJ0JQw1tt3V7pjcDaDP
+w1hCf0mIBjag9nfiq451U75lNBKnDl3F/6LkEsX7E6PmgCyuFSLp5Lfg7WBc8pnB
+LVNihr0ZogMBf+TUriAXSOChFcQSAuCHlS0S9HJfO+L4CfQIWmqmKCAO0nsHy6JD
+Zn6ntjgbj39ySKnrRSeWqZ0ThS2ZoTZ/nX0kY1NhjH/GChM9mU0Ar8/XXVwwTZx+
+ejqhfZTpKc2xutrf8a/Y
+=wnjg
+-----END PGP SIGNATURE-----
+
+--=-/oSqc0advicgpyeFzJLd--
 
