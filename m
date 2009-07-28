@@ -1,176 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56251 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537AbZGaAkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 20:40:17 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 17:40:18 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 4/4] cfg80211: enable country IE support to all cfg80211 drivers
-Date: Thu, 30 Jul 2009 17:38:09 -0700
-Message-ID: <1249000689-14970-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
-References: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46911
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753606AbZG1Rah (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 13:30:37 -0400
+Date: Tue, 28 Jul 2009 10:30:44 -0700 (PDT)
+Message-Id: <20090728.103044.179053537.davem@davemloft.net>
+To: julia@diku.dk
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/9] drivers/net/wireless: correct error-handling code
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
+References: <Pine.LNX.4.64.0907281753540.28189@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the bss is always set now once we are connected, if the
-bss has its own information element we refer to it and pass that
-instead of relying on mac80211's parsing.
+From: Julia Lawall <julia@diku.dk>
+Date: Tue, 28 Jul 2009 17:54:24 +0200 (CEST)
 
-Now all cfg80211 drivers get country IE support, automatically and
-we reduce the call overhead that we had on mac80211 which called this
-upon every beacon and instead now call this only upon a successfull
-connection by a STA on cfg80211.
+Wireless patches need to be CC:'d to linux-wireless so that
+John Linville can notice and pick them up.  Added...
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/cfg80211.h |   14 --------------
- net/mac80211/mlme.c    |    6 +-----
- net/wireless/reg.c     |    6 +-----
- net/wireless/reg.h     |   15 +++++++++++++++
- net/wireless/sme.c     |   16 ++++++++++++++++
- 5 files changed, 33 insertions(+), 24 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e1b9235..fa72997 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1514,20 +1514,6 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb);
- extern int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
- 
- /**
-- * regulatory_hint_11d - hints a country IE as a regulatory domain
-- * @wiphy: the wireless device giving the hint (used only for reporting
-- *	conflicts)
-- * @country_ie: pointer to the country IE
-- * @country_ie_len: length of the country IE
-- *
-- * We will intersect the rd with the what CRDA tells us should apply
-- * for the alpha2 this country IE belongs to, this prevents APs from
-- * sending us incorrect or outdated information against a country.
-- */
--extern void regulatory_hint_11d(struct wiphy *wiphy,
--				u8 *country_ie,
--				u8 country_ie_len);
--/**
-  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
-  * @wiphy: the wireless device we want to process the regulatory domain on
-  * @regd: the custom regulatory domain to use for this wiphy
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0779ba1..5ff1496 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1846,12 +1846,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 					       bssid, ap_ht_cap_flags);
- 	}
- 
-+	/* Note: country IE parsing is done for us by cfg80211 */
- 	if (elems.country_elem) {
--		/* Note we are only reviewing this on beacons
--		 * for the BSSID we are associated to */
--		regulatory_hint_11d(local->hw.wiphy,
--			elems.country_elem, elems.country_elem_len);
--
- 		/* TODO: IBSS also needs this */
- 		if (elems.pwr_constr_elem)
- 			ieee80211_handle_pwr_constr(sdata,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6ab56f0..b3ac0aa 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1822,10 +1822,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 		env = ENVIRON_OUTDOOR;
- 
- 	/*
--	 * We will run this for *every* beacon processed for the BSSID, so
--	 * we optimize an early check to exit out early if we don't have to
--	 * do anything
--	 *
-+	 * We will run this only upon a successful connection on cfg80211.
- 	 * We leave conflict resolution to the workqueue, where can hold
- 	 * cfg80211_mutex.
- 	 */
-@@ -1878,7 +1875,6 @@ free_rd_out:
- out:
- 	mutex_unlock(&reg_mutex);
- }
--EXPORT_SYMBOL(regulatory_hint_11d);
- 
- static bool freq_is_chan_12_13_14(u16 freq)
- {
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index e37829a..662a9da 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -36,4 +36,19 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
- 					struct ieee80211_channel *beacon_chan,
- 					gfp_t gfp);
- 
-+/**
-+ * regulatory_hint_11d - hints a country IE as a regulatory domain
-+ * @wiphy: the wireless device giving the hint (used only for reporting
-+ *	conflicts)
-+ * @country_ie: pointer to the country IE
-+ * @country_ie_len: length of the country IE
-+ *
-+ * We will intersect the rd with the what CRDA tells us should apply
-+ * for the alpha2 this country IE belongs to, this prevents APs from
-+ * sending us incorrect or outdated information against a country.
-+ */
-+void regulatory_hint_11d(struct wiphy *wiphy,
-+			 u8 *country_ie,
-+			 u8 country_ie_len);
-+
- #endif  /* __NET_WIRELESS_REG_H */
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 3728d2b..af91192 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -13,6 +13,7 @@
- #include <net/cfg80211.h>
- #include <net/rtnetlink.h>
- #include "nl80211.h"
-+#include "reg.h"
- 
- struct cfg80211_conn {
- 	struct cfg80211_connect_params params;
-@@ -320,6 +321,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       struct cfg80211_bss *bss)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	u8 *country_ie;
- #ifdef CONFIG_WIRELESS_EXT
- 	union iwreq_data wrqu;
- #endif
-@@ -401,6 +403,20 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 
- 	wdev->sme_state = CFG80211_SME_CONNECTED;
- 	cfg80211_upload_connect_keys(wdev);
-+
-+	country_ie = (u8 *) ieee80211_bss_get_ie(bss, WLAN_EID_COUNTRY);
-+
-+	if (!country_ie)
-+		return;
-+
-+	/*
-+	 * ieee80211_bss_get_ie() ensures we can access:
-+	 * - country_ie + 2, the start of the country ie data, and
-+	 * - and country_ie[1] which is the IE length
-+	 */
-+	regulatory_hint_11d(wdev->wiphy,
-+			    country_ie + 2,
-+			    country_ie[1]);
- }
- 
- void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
--- 
-1.6.3.3
-
+> From: Julia Lawall <julia@diku.dk>
+> 
+> iwm_wdev_alloc returns an ERR_PTR value in an error case instead of NULL.
+> 
+> A simplified version of the semantic match that finds this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @match exists@
+> expression x, E;
+> statement S1, S2;
+> @@
+> 
+> x = iwm_wdev_alloc(...)
+> ... when != x = E
+> (
+> *  if (x == NULL || ...) S1 else S2
+> |
+> *  if (x == NULL && ...) S1 else S2
+> )
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
+> ---
+>  drivers/net/wireless/iwmc3200wifi/netdev.c     |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwmc3200wifi/netdev.c b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> index bb71f8a..e1c6693 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/netdev.c
+> +++ b/drivers/net/wireless/iwmc3200wifi/netdev.c
+> @@ -99,7 +99,7 @@ void *iwm_if_alloc(int sizeof_bus, struct device *dev,
+>  	int ret = 0;
+>  
+>  	wdev = iwm_wdev_alloc(sizeof_bus, dev);
+> -	if (!wdev) {
+> +	if (IS_ERR(wdev)) {
+>  		dev_err(dev, "no memory for wireless device instance\n");
+>  		return ERR_PTR(-ENOMEM);
+>  	}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
