@@ -1,73 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46876 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbZGGRNX (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:49027 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165AbZG2Vxb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 13:13:23 -0400
-Subject: Re: Possible memory leak in net/wireless/scan.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-References: <1246986269.9451.105.camel@pc1117.cambridge.arm.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZJDHCJ3lgcmFKdy2GN8t"
-Date: Tue, 07 Jul 2009 19:12:48 +0200
-Message-Id: <1246986768.4755.43.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 29 Jul 2009 17:53:31 -0400
+Received: by gxk9 with SMTP id 9so1972149gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 14:53:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
+References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 29 Jul 2009 14:53:11 -0700
+Message-ID: <43e72e890907291453k444e2d06k864149ddcda8f351@mail.gmail.com>
+Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jul 29, 2009 at 2:45 PM, Linux
+Wireless<johannes@sipsolutions.net> wrote:
+> Dear Wiki user,
+>
+> You have subscribed to a wiki page or wiki category on "Linux Wireless" for change notification.
+>
+> The "en/users/Download" page has been changed by ReinetteChatre:
+> http://wireless.kernel.org/en/users/Download?action=diff&rev1=93&rev2=94
+>
+>  }}}
+>  '''Install''':
+>
+> - We use the updates/ directory so your distribution's drivers are left intact.
+> + We use the updates/ directory so your distribution's drivers are left intact. By default depmod will search this directory first, but if you find that it does not then check that your depmod.conf file lists the search order correctly with ''updates'' appearing first (before ''built-in'').
 
---=-ZJDHCJ3lgcmFKdy2GN8t
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hm, so compat-wireless now actually checks this for you and if its not
+there it adds it for you. Was there an issue with a particular user on
+this?
 
-On Tue, 2009-07-07 at 18:04 +0100, Catalin Marinas wrote:
-
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index e95b638..f8e71b3 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -366,7 +366,6 @@ cfg80211_bss_update(struct cfg80211_registered_device=
- *dev,
->  	found =3D rb_find_bss(dev, res);
-> =20
->  	if (found) {
-> -		kref_get(&found->ref);
->  		found->pub.beacon_interval =3D res->pub.beacon_interval;
->  		found->pub.tsf =3D res->pub.tsf;
->  		found->pub.signal =3D res->pub.signal;
->=20
-> I'll try this later today to see if it fixes the leak. If that's not
-> correct, I'll post more information about the content of the reported
-> object (in general, it shouldn't be on any valid list or rb tree since
-> kmemleak can't find it).
-
-I have already sent that exact patch.
-
-johannes
-
---=-ZJDHCJ3lgcmFKdy2GN8t
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKU4INAAoJEODzc/N7+QmajfYQAIu6MYu25AGXCuxS/IKlSDvI
-ZoRpakQBOI8SFSbRIlL2hViI0JS07Iqt2aJDVkEaADbXaeQOjn/XldNnT3NV/9IJ
-1O46SHw88xY0l5XhkJI4FsHtKMq4GBxe7SOwzQUjR8Hq5YMOwAQtpCB7IBXoqnJV
-KURZg8hqzpUqnVVGUAv2Z4Ec8nxO+849Xx0Tvx78+Y+8MYvjpMLJGhxmA7wyEslN
-/agneHENSOrLLXAQlelXpfT62Ws5BskYhoDC/lAxc1AClUWx+qp2yDqPVRe+LsWq
-GZTR+KLaMnS6PQjffkqPsIesG/85g0FUT9OqOXUlKN1SJC2a1MUn7C0Kc5AFWBSs
-nB4ouaBLvrd2chvAXj510OZ60unENwP/qssbEwlpKayI+4cStbt7khOz9unIxs0T
-UvjjbiL6dRViSBSS0nzu+2O+cZuPOy9N1XYx1efPjgQwufj9bBaBVX6A/EqOJyc0
-hrgp5R4Fi3yiDtLfIzqB5xrY2vUpflR2PUyoX6PXnB6iJNmjnMvZy3dqs3wZT4ks
-0nFZ4j1Trx3HAWTEHuwF7e6IQm5X8rfnFNWpF0tnZK8CWa8ekjmQIYi9qSGRQ49Y
-5SCmKajdcxkzDSA1cIKHkfExM7Mf+/We38td/l6RLMNtkGmwQMsDDKEYPx6wMip7
-EXGXns075cT8n4JwLDJ8
-=O/FR
------END PGP SIGNATURE-----
-
---=-ZJDHCJ3lgcmFKdy2GN8t--
-
+  Luis
