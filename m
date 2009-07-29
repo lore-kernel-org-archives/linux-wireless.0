@@ -1,81 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42321 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902AbZGOAO2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 08/21] ath9k: rename ath_rc_get_nextlowervalid_txrate()
-Date: Tue, 14 Jul 2009 20:14:00 -0400
-Message-Id: <1247616853-11221-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+Received: from bu3sch.de ([62.75.166.246]:59505 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048AbZG2JAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 05:00:11 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Work around mac80211 race condition that may transmit one packet after queue is stopped
+Date: Wed, 29 Jul 2009 11:00:05 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <4a6fa3fe.kYeW+HADItDIXTLm%Larry.Finger@lwfinger.net>
+In-Reply-To: <4a6fa3fe.kYeW+HADItDIXTLm%Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907291100.06108.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What this does is get us our next lower rate so call it that,
-ath_rc_get_lower_rix().
+On Wednesday 29 July 2009 03:21:02 Larry Finger wrote:
+> As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
+> mac80211 has a bug that allows a call to the TX routine after the queues have
+> been stopped. This situation will only occur under extreme stress. Although
+> b43 does not crash when this condition occurs, it does generate a WARN_ON and
+> also logs a queue overrun message. This patch recognizes b43 is not at fault
+> and logs a message only when the most verbose debugging mode is enabled. In
+> the unlikely event that the queue is not stopped when the DMA queue becomes
+> full, then a warning is issued.
+> 
+> During testing of this patch with one output stream running repeated tcpperf
+> writes and a second running a flood ping, this routine was entered with
+> the DMA ring stopped about once per hour. The condition where the DMA queue is
+> full but the ring has not been stopped has never been seen by me.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> This patch is 2.6.32 material.
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+ack
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 03e7df4..c8f800e 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -501,9 +501,9 @@ static int ath_rc_valid_phyrate(u32 phy, u32 capflag, int ignore_cw)
- }
- 
- static inline int
--ath_rc_get_nextlowervalid_txrate(const struct ath_rate_table *rate_table,
--				 struct ath_rate_priv *ath_rc_priv,
--				 u8 cur_valid_txrate, u8 *next_idx)
-+ath_rc_get_lower_rix(const struct ath_rate_table *rate_table,
-+		     struct ath_rate_priv *ath_rc_priv,
-+		     u8 cur_valid_txrate, u8 *next_idx)
- {
- 	int8_t i;
- 
-@@ -852,8 +852,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		/* Get the next tried/allowed rate. No RTS for the next series
- 		 * after the probe rate
- 		 */
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		ath_rc_rate_set_series(rate_table, &rates[i++], txrc,
- 				       try_per_rate, nrix, 0);
- 
-@@ -870,8 +869,7 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 		if (i + 1 == 4)
- 			try_per_rate = 4;
- 
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--						 rix, &nrix);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv, rix, &nrix);
- 		/* All other rates in the series have RTS enabled */
- 		ath_rc_rate_set_series(rate_table, &rates[i], txrc,
- 				       try_per_rate, nrix, 1);
-@@ -1156,8 +1154,8 @@ static void ath_rc_update_ht(struct ath_softc *sc,
- 	if (ath_rc_priv->state[tx_rate].per >= 55 && tx_rate > 0 &&
- 	    rate_table->info[tx_rate].ratekbps <=
- 	    rate_table->info[ath_rc_priv->rate_max_phy].ratekbps) {
--		ath_rc_get_nextlowervalid_txrate(rate_table, ath_rc_priv,
--				 (u8)tx_rate, &ath_rc_priv->rate_max_phy);
-+		ath_rc_get_lower_rix(rate_table, ath_rc_priv,
-+				     (u8)tx_rate, &ath_rc_priv->rate_max_phy);
- 
- 		/* Don't probe for a little while. */
- 		ath_rc_priv->probe_time = now_msec;
+> 
+> Larry
+> ---
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/dma.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c
+> +++ wireless-testing/drivers/net/wireless/b43/dma.c
+> @@ -1334,13 +1334,23 @@ int b43_dma_tx(struct b43_wldev *dev, st
+>  	spin_lock_irqsave(&ring->lock, flags);
+>  
+>  	B43_WARN_ON(!ring->tx);
+> -	/* Check if the queue was stopped in mac80211,
+> -	 * but we got called nevertheless.
+> -	 * That would be a mac80211 bug. */
+> -	B43_WARN_ON(ring->stopped);
+> +
+> +	if (unlikely(ring->stopped)) {
+> +		/* We get here only because of a bug in mac80211.
+> +		 * Because of a race, one packet may be queued after
+> +		 * the queue is stopped, thus we got called when we shouldn't.
+> +		 * For now, just refuse the transmit. */
+> +		if (b43_debug(dev, B43_DBG_DMAVERBOSE))
+> +			b43err(dev->wl, "Packet after queue stopped\n");
+> +		err = -ENOSPC;
+> +		goto out_unlock;
+> +	}
+>  
+>  	if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
+> -		b43warn(dev->wl, "DMA queue overflow\n");
+> +		/* If we get here, we have a real error with the queue
+> +		 * full, but queues not stopped. */
+> +		b43err(dev->wl, "DMA queue overflow\n");
+> +		WARN_ON(1);
+>  		err = -ENOSPC;
+>  		goto out_unlock;
+>  	}
+> 
+> 
+
+
+
 -- 
-1.6.0.6
-
+Greetings, Michael.
