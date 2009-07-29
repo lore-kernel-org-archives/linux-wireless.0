@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49775 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751831AbZGIRdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 13:33:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi driver updates 07/09/2009
-Date: Thu,  9 Jul 2009 10:33:35 -0700
-Message-Id: <1247160821-14989-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:62889 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbZG2TJ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 15:09:26 -0400
+Received: by ewy10 with SMTP id 10so213815ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 12:09:26 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 29 Jul 2009 20:09:26 +0100
+Message-ID: <2c8da8190907291209s73b39c26mca9c55e619164cc8@mail.gmail.com>
+Subject: Beacon loss - broadcom 4318
+From: =?ISO-8859-2?Q?J=EAdrek_Kaniewski?= <jedreky@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Hi, I thought I eventually got my wireless to work but it is not very
+reliable. So far I've noticed that it works during the night. It
+hardly ever works during the day. The message I get is the following :
 
-We include two fixes targeting 2.6.31. One is needed for powertop
-to be able to parse the sysfs information correctly. The second fix
-is needed to be able to transfer fragmented frames in certain
-environments. The rest of the series include a security fix and cleanup.
+wlan0: beacon loss from AP f5ccb638 - sending probe request
+wlan0: no probe response from AP f5ccb638 - disassociating
+SFW2-OUT-ERROR IN= OUT=wlan0 SRC=192.168.0.16 DST=193.186.32.251
+LEN=52 TOS=0x00 PREC=0x00 TTL=64 ID=42930 DF PROTO=TCP SPT=44714
+DPT=80 WINDOW=998 RES=0x00 ACK PSH FIN URGP=0 OPT
+(0101080A00076C6001CC5044)
+wlan0: authenticate with AP f5ccb638
+wlan0: authenticate with AP f5ccb638
+wlan0: authenticated
+wlan0: associate with AP f5ccb638
+wlan0: RX ReassocResp from f59a903e (capab=0x431 status=0 aid=2)
+wlan0: associated
+SFW2-OUT-ERROR IN= OUT=wlan0 SRC=192.168.0.16 DST=193.186.32.251
+LEN=52 TOS=0x00 PREC=0x00 TTL=64 ID=53851 DF PROTO=TCP SPT=44722
+DPT=80 WINDOW=1002 RES=0x00 ACK PSH FIN URGP=0 OPT
+(0101080A000773A001CC5048)
+wlan0: beacon loss from AP f5ccb638 - sending probe request
+wlan0: no probe response from AP f5ccb638 - disassociating
 
-I do not know if patch 3/6 (the security fix) can be considered as 2.6.31
-material. It does apply cleanly if you wish to take it.
+I googled and it seems that this problem is well known. However, I
+didn't manage to find any workarounds.
+Anyone could help ?
 
-[PATCH 1/6] iwlwifi: move show_qos to debugfs
-[PATCH 2/6 2.6.31 and w-t] iwlwifi: only show active power level via sysfs
-[PATCH 3/6] iwlwifi: fix permissions on debugfs files
-[PATCH 4/6 2.6.31 and w-t] iwlwifi: only update byte count table during aggregation
-[PATCH 5/6] iwl3945: cleanup number of queues settings
-[PATCH 6/6] iwlagn: fix minimum number of queues setting
-
-Thank you
-
-Reinette
-
+Cheers,
+Jed
