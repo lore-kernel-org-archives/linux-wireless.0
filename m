@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:59668 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459AbZGaQRH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 12:17:07 -0400
-Received: by fxm17 with SMTP id 17so1463985fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 09:17:07 -0700 (PDT)
-Subject: [PATCH 002/002] [MAC80211] Increase timeouts for station polling
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1249056817.20593.1.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 19:17:00 +0300
-Message-Id: <1249057021.20593.5.camel@maxim-laptop>
+Received: from main.gmane.org ([80.91.229.2]:45752 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754283AbZG2MIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 08:08:41 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1MW7xY-0006SF-DN
+	for linux-wireless@vger.kernel.org; Wed, 29 Jul 2009 12:08:40 +0000
+Received: from dslb-084-058-206-191.pools.arcor-ip.net ([84.58.206.191])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 12:08:40 +0000
+Received: from acid-burn by dslb-084-058-206-191.pools.arcor-ip.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 12:08:40 +0000
+To: linux-wireless@vger.kernel.org
+From: Mladen Horvat <acid-burn@opendreambox.org>
+Subject: Re: zd1211rw couldn't load firmware. Error number -145 with Kernel 2.6.30
+Date: Wed, 29 Jul 2009 12:08:28 +0000 (UTC)
+Message-ID: <loom.20090729T120228-576@post.gmane.org>
+References: <loom.20090729T111851-320@post.gmane.org> <200907291350.27426.hs4233@mail.mn-solutions.de>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 04976d22d45f26aa4b4dece5dd520e3347ac32d7 Mon Sep 17 00:00:00 2001
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-Date: Fri, 31 Jul 2009 18:54:23 +0300
-Subject: [PATCH] [MAC80211] Increase timeouts for station polling
+Holger Schurig <hs4233@...> writes:
 
-Do a probe request every 30 seconds, and wait for probe response, half a second
-This should lower the traffic that card sends, thus save power
-Wainting longer for response makes probe more robust against 'slow' access points
+> 
+> > [  415.271000] usb 1-1: upload_firmware() 
+> > firmware device id 0x4810 is equal to the actual device id
+> 
+> Looks like your firmware could be successfully loaded and checked 
+> by the driver.
+> 
+> > [  416.350000] usb 1-1: USB control request for firmware
+> > upload failed. Error number -145
+> 
+> Looks like an URB (USB request block) couldn't transferred to the 
+> device. As you speak about an embedded device: are you sure that 
+> your USB hardware works correctly?
+> 
 
-Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
----
- net/mac80211/mlme.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1d8640a..e4bb590 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -42,13 +42,13 @@
-  * Time the connection can be idle before we probe
-  * it to see if we can still talk to the AP.
-  */
--#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
-+#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
- /*
-  * Time we wait for a probe response after sending
-  * a probe request because of beacon loss or for
-  * checking the connection still works.
-  */
--#define IEEE80211_PROBE_WAIT		(HZ / 5)
-+#define IEEE80211_PROBE_WAIT		(HZ / 2)
- 
- #define TMR_RUNNING_TIMER	0
- #define TMR_RUNNING_CHANSW	1
--- 
-1.6.0.4
+Hello Holger,
+
+thanks for your fast answer.
+
+I hope to be sure that the usb hardware works correctly.
+As i said, the same stb only booted with a rt73usb wlan stick attached has no
+problems with the firmware upload and also wpa-supplicant connection and
+everything works on wlan0.  only problem are these two zd1211b usb sticks in the
+zd1211rw driver.
+
+the same stb running a kernel 2.6.12 and the original vendor driver 2.22.00
+works without problems..
+
+so i think i can exclude a hardware bug on the usb/stb side.
+
+Hope this helps. 
+If any other logs are needed i will provide them.
+
+
+Regards
+
+Mladen
 
 
 
