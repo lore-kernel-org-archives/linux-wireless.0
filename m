@@ -1,107 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18144 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:27323 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755278AbZGUQ3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jul 2009 12:29:08 -0400
-Subject: Re: [PATCH 2.6.31] iwlagn: fix minimum number of queues setting
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20090721154417.GB2721@tuxdriver.com>
-References: <1247848476-24185-1-git-send-email-reinette.chatre@intel.com>
-	 <20090721154417.GB2721@tuxdriver.com>
+	id S1753603AbZG2Jm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 05:42:58 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 02:42:59 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/3] ath9k: Remove unused ath9k_hw_intrget()
+Date: Wed, 29 Jul 2009 15:05:23 +0530
+Message-ID: <1248860123-12079-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1248860123-12079-2-git-send-email-vasanth@atheros.com>
+References: <1248860123-12079-1-git-send-email-vasanth@atheros.com>
+ <1248860123-12079-2-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 21 Jul 2009 09:29:07 -0700
-Message-Id: <1248193747.17896.2636.camel@rc-desk>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-On Tue, 2009-07-21 at 08:44 -0700, John W. Linville wrote:
-> When built against 2.6.31, I get this:
-> 
->   CC [M]  drivers/net/wireless/iwlwifi/iwl3945-base.o
-> In file included from drivers/net/wireless/iwlwifi/iwl3945-base.c:55:
-> drivers/net/wireless/iwlwifi/iwl-3945.h:115:1: warning: "IWL_MIN_NUM_QUEUES" redefined
-> In file included from drivers/net/wireless/iwlwifi/iwl-3945.h:48,
->                  from drivers/net/wireless/iwlwifi/iwl3945-base.c:55:
-
-I am very sorry. This patch will fix this.
-
-From: Reinette Chatre <reinette.chatre@intel.com>
-
-We need to provide a reasonable minimum that will result in a
-working setup if used. Set minimum to be 10 to provide for
-4 standard TX queues + 1 command queue + 2 (unused) HCCA queues +
-4 HT queues (one per AC).
-
-We allow the user to change the number of queues used via a module
-parameter and use this minimum value to check if it is valid. Without
-this patch a user can select a value for the number of queues that
-will result in a failing setup.
-
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Reviewed-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-This patch has already been submitted for wireless-testing, but we would
-like to include this fix into 2.6.31 also if possible.
+ drivers/net/wireless/ath/ath9k/hw.c |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.h |    1 -
+ 2 files changed, 0 insertions(+), 6 deletions(-)
 
-This fixes http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2011
-
- drivers/net/wireless/iwlwifi/iwl-dev.h |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1a2fe37..b989d5c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -258,8 +258,10 @@ struct iwl_channel_info {
- #define IWL_TX_FIFO_HCCA_2	6
- #define IWL_TX_FIFO_NONE	7
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 431854c..7a0a6ae 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3152,11 +3152,6 @@ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	return true;
+ }
  
--/* Minimum number of queues. MAX_NUM is defined in hw specific files */
--#define IWL_MIN_NUM_QUEUES	4
-+/* Minimum number of queues. MAX_NUM is defined in hw specific files.
-+ * Set the minimum to accommodate the 4 standard TX queues, 1 command
-+ * queue, 2 (unused) HCCA queues, and 4 HT queues (one for each AC) */
-+#define IWL_MIN_NUM_QUEUES	10
+-enum ath9k_int ath9k_hw_intrget(struct ath_hw *ah)
+-{
+-	return ah->mask_reg;
+-}
+-
+ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
+ {
+ 	u32 omask = ah->mask_reg;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2e196df..93a8930 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -612,7 +612,6 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore);
+ /* Interrupt Handling */
+ bool ath9k_hw_intrpend(struct ath_hw *ah);
+ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked);
+-enum ath9k_int ath9k_hw_intrget(struct ath_hw *ah);
+ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
  
- /* Power management (not Tx power) structures */
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index fbb3a57..2de6471 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -112,7 +112,7 @@ enum iwl3945_antenna {
- #define IWL_TX_FIFO_NONE	7
- 
- /* Minimum number of queues. MAX_NUM is defined in hw specific files */
--#define IWL_MIN_NUM_QUEUES	4
-+#define IWL39_MIN_NUM_QUEUES	4
- 
- #define IEEE80211_DATA_LEN              2304
- #define IEEE80211_4ADDR_LEN             30
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index cb9bd4c..b01fba3 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4020,10 +4020,10 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 
- 	if ((iwl3945_mod_params.num_of_queues > IWL39_MAX_NUM_QUEUES) ||
--	     (iwl3945_mod_params.num_of_queues < IWL_MIN_NUM_QUEUES)) {
-+	     (iwl3945_mod_params.num_of_queues < IWL39_MIN_NUM_QUEUES)) {
- 		IWL_ERR(priv,
- 			"invalid queues_num, should be between %d and %d\n",
--			IWL_MIN_NUM_QUEUES, IWL39_MAX_NUM_QUEUES);
-+			IWL39_MIN_NUM_QUEUES, IWL39_MAX_NUM_QUEUES);
- 		err = -EINVAL;
- 		goto out_ieee80211_free_hw;
- 	}
-
+ void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+-- 
+1.5.5.1
 
