@@ -1,68 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:31187 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:57833 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753571AbZG0SxN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 14:53:13 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2009 11:53:14 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/3] ath9k: move workqueue cancels to stop callback
-Date: Mon, 27 Jul 2009 11:53:04 -0700
-Message-ID: <1248720784-15671-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-References: <1248720784-15671-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1755060AbZG2BbU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jul 2009 21:31:20 -0400
+Subject: Re: 31-rc3-mmotm0716 - wonky wireless statistics..
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <5934.1248814870@turing-police.cc.vt.edu>
+References: <5934.1248814870@turing-police.cc.vt.edu>
 Content-Type: text/plain
+Date: Wed, 29 Jul 2009 09:31:18 +0800
+Message-Id: <1248831078.3747.1117.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should be cancelling our work at the stop callback since
-we are borrowing the mac80211 workqueue for our work. As it
-stands mac80211 expects this for suspend purposes.
+On Wed, 2009-07-29 at 05:01 +0800, Valdis.Kletnieks@vt.edu wrote:
+> Dell Latitude D820 laptop, lspci reports the network card as:
+> 
+> 0c:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Netwo           rk Connection (rev 02)
+> 
+> iwlwifi driver in use, card associated via wpa_supplicant but not being
+> actively used
+> 
+> # iwconfig
+> wlan0     IEEE 802.11abg  ESSID:"VT-Wireless"  
+>           Mode:Managed  Frequency:2.447 GHz  Access Point: 00:11:20:A4:4C:10   
+>           Bit Rate=54 Mb/s   Tx-Power=15 dBm   
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:<lopped out> [2]
+>           Link Quality=62/70  Signal level=-48 dBm  
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> # cat /proc/net/wireless
+> Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
+>  face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
+>  wlan0: 0000   63.  -47.  -256        0      0      0      0      0        0
+>  wlan1: 0000    0     0     0        0      0      0      0      0        0
+>  wlan2: 0000    0     0     0        0      0      0      0      0        0
+> 
+> Where did that -256 for "noise" come from?  It ends up confusing the
+> gkrellm-wifi plugin, it reports a S/N of 219dB ;)
 
-The ath9k specific virtual wiphy stuff need only be
-cancelled only when the we have no secondary virtual wiphys.
+This should be related to http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=fdb897ea5c77836f890033d563336ab0c94c9222
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+But I don't think this is an ABI broken. User space should parse the
+trailing '.' to see if a field is updated or not because there are cards
+not capable to report hardware noise level anyway. Johannes?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dbd5cfd..50d99d7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1252,11 +1252,6 @@ void ath_detach(struct ath_softc *sc)
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Detach ATH hw\n");
- 
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
--	cancel_delayed_work_sync(&sc->tx_complete_work);
--	cancel_delayed_work_sync(&sc->wiphy_work);
--	cancel_work_sync(&sc->chan_work);
--
- 	ath_deinit_leds(sc);
- 
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
-@@ -2092,6 +2087,14 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	aphy->state = ATH_WIPHY_INACTIVE;
- 
-+	cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+	cancel_delayed_work_sync(&sc->tx_complete_work);
-+
-+	if (!sc->num_sec_wiphy) {
-+		cancel_delayed_work_sync(&sc->wiphy_work);
-+		cancel_work_sync(&sc->chan_work);
-+	}
-+
- 	if (sc->sc_flags & SC_OP_INVALID) {
- 		DPRINTF(sc, ATH_DBG_ANY, "Device not present\n");
- 		return;
--- 
-1.6.0.4
+Thanks,
+-yi
 
