@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:58723 "EHLO ciao.gmane.org"
+Received: from mga01.intel.com ([192.55.52.88]:4357 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751867AbZGPICa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 04:02:30 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1MRLvB-0001uC-99
-	for linux-wireless@vger.kernel.org; Thu, 16 Jul 2009 08:02:29 +0000
-Received: from cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com ([82.16.102.110])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 08:02:29 +0000
-Received: from jon.fairbairn by cpc2-cmbg9-0-0-cust621.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 08:02:29 +0000
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: PCI express card that does AP mode? (abit wlp-01?)
-Date: Thu, 16 Jul 2009 09:02:14 +0100
-Message-ID: <wfljmpm4xl.fsf@calligramme.charmers>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1751120AbZG2Vcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 17:32:48 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH] mac80211: use beacons for connection monitoring
+Date: Wed, 29 Jul 2009 14:32:39 -0700
+Message-Id: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-A machine I want to set up as an AP has only PCI express slots free...
+The connection monitor currently relies on probe requests paired
+with probe responses to ensure that a connection is alive. This is
+fragile in some environments where probe responses can get lost.
+When we receive beacons we can also consider the connection to be
+alive, so cancel connection poll instance when we receive a beacon.
 
-I've tried looking at the wiki, but I can't easily find an inexpensive
-pci express card that will do AP mode. It's the usual problem: shops
-don't say what the PCI ids of the device are, and the quoted
-manufacturer isn't the manufacturer in the sense needed by the kernel.
+The debug message "cancelling probereq poll due to a received beacon"
+is removed as part of this change as this case is hit very often after
+the above change and debug log receives significant number of these messages.
 
-I've seen adverts for the Abit WLP-01, and elsewhere on the net seen
-implications that it's 168c:001c, which isn't listed at
-<http://wireless.kernel.org/en/users/Devices/PCI>, but
-<http://wireless.kernel.org/en/users/Drivers/ath5k> does list it and
-says AP mode not working, but mentions
-<http://madwifi-project.org/wiki/Compatibility/Abit>, which suggest AP
-mode works with madwifi. What's the current status?
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/mac80211/mlme.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-Alternatively, can anyone recommend a card?
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e3b3156..9cf6153 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1743,14 +1743,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (memcmp(bssid, mgmt->bssid, ETH_ALEN) != 0)
+ 		return;
+ 
+-	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
+-#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-		if (net_ratelimit()) {
+-			printk(KERN_DEBUG "%s: cancelling probereq poll due "
+-			       "to a received beacon\n", sdata->dev->name);
+-		}
+-#endif
+-		ifmgd->flags &= ~IEEE80211_STA_BEACON_POLL;
++	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
++			    IEEE80211_STA_CONNECTION_POLL)) {
++		ifmgd->flags &= ~(IEEE80211_STA_BEACON_POLL |
++				  IEEE80211_STA_CONNECTION_POLL);
+ 		mutex_lock(&local->iflist_mtx);
+ 		ieee80211_recalc_ps(local, -1);
+ 		mutex_unlock(&local->iflist_mtx);
 -- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
-
+1.5.6.3
 
