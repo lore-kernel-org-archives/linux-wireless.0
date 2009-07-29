@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42320 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543AbZGOAO1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:27 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/21] ath9k: downgrade assert in rc.c for invalid rate
-Date: Tue, 14 Jul 2009 20:13:54 -0400
-Message-Id: <1247616853-11221-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+Received: from web15808.mail.cnb.yahoo.com ([202.165.102.88]:31155 "HELO
+	web15808.mail.cnb.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751907AbZG2JYL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 05:24:11 -0400
+Message-ID: <109708.86209.qm@web15808.mail.cnb.yahoo.com>
+Date: Wed, 29 Jul 2009 17:24:09 +0800 (CST)
+From: gu gu <guatsheng@yahoo.com.cn>
+Subject: The problem of driver of rtl8187 wireless card
+To: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=gb2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The case where no vaid rate is found should not happen now
-but to help debugging and downgrade this to a warn.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
+Dear Sir,
+     Rencently,I do a job to transplant a wireless wifi-card connected by the USB,which was designed baseing the chip rtl8187 for ARM board.But in the process i have some trouble in writing the driver programe.
+     My linux kernel is Version-2.6.25.10,It is true that the kernel have the driver for the chip rtl8187 .When I connected the wifi card through the USB port ,the kernel can recoganize the card "Manufacturer_Realtek_RTL8187",So it's sure that the driver of RTL8187 is no problem.But when I ping it to the AP,the missing of datapackets and the delay are both terrible.and more , there is nothing accepted by the wireless router when i typed the "ping".
+so i think there is some bug exist in the driver for RTL8187 of kernel ,isn't it? (ps: I have set several parameter,such essid ,IP address...) 
+  So I download a "compat-wireless-2.6-old" packet.following the " Readme",i added the KLIB & KLIB_BUILD in the Makefile and "make" it.It is well to generate  some modules with the typing".o"! but has not compiled the file rtl8187 or generated a "rtl8187.o". 
+and so i wanna to know how to solve this problem. i need some help from u,
+Thank you for your attention!
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index ba06e78..d7f4030 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -741,10 +741,18 @@ static u8 ath_rc_ratefind_ht(struct ath_softc *sc,
- 	if (rate > (ath_rc_priv->rate_table_size - 1))
- 		rate = ath_rc_priv->rate_table_size - 1;
- 
--	ASSERT((rate_table->info[rate].valid &&
--		(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)) ||
--	       (rate_table->info[rate].valid_single_stream &&
--		!(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG)));
-+	if (rate_table->info[rate].valid &&
-+	    (ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG))
-+		return rate;
-+
-+	if (rate_table->info[rate].valid_single_stream &&
-+	    !(ath_rc_priv->ht_cap & WLAN_RC_DS_FLAG));
-+		return rate;
-+
-+	/* This should not happen */
-+	WARN_ON(1);
-+
-+	rate = ath_rc_priv->valid_rate_index[0];
- 
- 	return rate;
- }
--- 
-1.6.0.6
+Gu  C.L.
 
+
+      ___________________________________________________________ 
+  好玩贺卡等你发，邮箱贺卡全新上线！ 
+http://card.mail.cn.yahoo.com/
