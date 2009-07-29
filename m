@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:52393 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbZGDQYG (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:59995 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbZG2Pxg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 12:24:06 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: fix beacon template dtim IE corruption
-Date: Sat, 4 Jul 2009 18:24:07 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+	Wed, 29 Jul 2009 11:53:36 -0400
+Date: Wed, 29 Jul 2009 10:54:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH V2] b43: Work around mac80211 race condition that may
+ transmit one packet after queue is stopped
+Message-ID: <4a70709e.vHbkySjNME+wQsfz%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200907041824.07655.chunkeey@web.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a regression that sneaked in with 
-"[PATCH] p54: re-enable power save feature".
-When p54_beacon_format_ie_tim was divided up
-and rewritten to use skb_* macros.
+As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
+mac80211 has a bug that allows a call to the TX routine after the queues have
+been stopped. This situation will only occur under extreme stress. Although
+b43 does not crash when this condition occurs, it does generate a WARN_ON and
+also logs a queue overrun message. This patch recognizes b43 is not at fault
+and logs a message only when the most verbose debugging mode is enabled. In
+the unlikely event that the queue is not stopped when the DMA queue becomes
+full, then a warning is issued.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+During testing of this patch with one output stream running repeated tcpperf
+writes and a second running a flood ping, this routine was entered with
+the DMA ring stopped about once per hour. The condition where the DMA queue is
+full but the ring has not been stopped has never been seen by me.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 42abf34..c9a0545 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -111,10 +111,6 @@ static int p54_beacon_format_ie_tim(struct sk_buff *skb)
- 		return -EINVAL;
+
+John,
+
+This patch is 2.6.32 material.
+
+Larry
+---
+
+V2 - put WARN_ON in if statement.
+
+ dma.c |   21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c
++++ wireless-testing/drivers/net/wireless/b43/dma.c
+@@ -1334,13 +1334,22 @@ int b43_dma_tx(struct b43_wldev *dev, st
+ 	spin_lock_irqsave(&ring->lock, flags);
  
- 	memmove(tim, next, skb_tail_pointer(skb) - next);
--
--	if (dtim_len > 3)
--		skb_trim(skb, skb->len - (dtim_len - 3));
--
- 	tim = skb_tail_pointer(skb) - (dtim_len + 2);
+ 	B43_WARN_ON(!ring->tx);
+-	/* Check if the queue was stopped in mac80211,
+-	 * but we got called nevertheless.
+-	 * That would be a mac80211 bug. */
+-	B43_WARN_ON(ring->stopped);
  
- 	/* add the dummy at the end */
-@@ -123,6 +119,10 @@ static int p54_beacon_format_ie_tim(struct sk_buff *skb)
- 	tim[2] = 0;
- 	tim[3] = dtim_period;
- 	tim[4] = 0;
+-	if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
+-		b43warn(dev->wl, "DMA queue overflow\n");
++	if (unlikely(ring->stopped)) {
++		/* We get here only because of a bug in mac80211.
++		 * Because of a race, one packet may be queued after
++		 * the queue is stopped, thus we got called when we shouldn't.
++		 * For now, just refuse the transmit. */
++		if (b43_debug(dev, B43_DBG_DMAVERBOSE))
++			b43err(dev->wl, "Packet after queue stopped\n");
++		err = -ENOSPC;
++		goto out_unlock;
++	}
 +
-+	if (dtim_len > 3)
-+		skb_trim(skb, skb->len - (dtim_len - 3));
-+
- 	return 0;
- }
- 
++	if (unlikely(WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME))) {
++		/* If we get here, we have a real error with the queue
++		 * full, but queues not stopped. */
++		b43err(dev->wl, "DMA queue overflow\n");
+ 		err = -ENOSPC;
+ 		goto out_unlock;
+ 	}
