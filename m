@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:46898 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752456AbZGAQQc (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37246 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbZG2HV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 12:16:32 -0400
-Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with
- staging/wlan-ng driver.
-From: Karl Relton <karllinuxtest.relton@ntlworld.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-References: <1246388712.4949.52.camel@localhost>
-	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>
-	 <1246396179.4949.76.camel@localhost>
-	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 01 Jul 2009 17:16:31 +0100
-Message-Id: <1246464991.4331.18.camel@localhost>
+	Wed, 29 Jul 2009 03:21:56 -0400
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: chris2553@googlemail.com
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <200907290803.46110.chris2553@googlemail.com>
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	 <c6b1100b0907280634j4610d077rb30f1f571aac7f36@mail.gmail.com>
+	 <efe7343f0907280638i12b0bb4bq237ca4f6376eb1fe@mail.gmail.com>
+	 <200907290803.46110.chris2553@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-c93nGGrhfZ20y/ky5gYM"
+Date: Wed, 29 Jul 2009 09:21:17 +0200
+Message-Id: <1248852077.13742.14.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-06-30 at 14:58 -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 30, 2009 at 2:09 PM, Karl
-> Relton<karllinuxtest.relton@ntlworld.com> wrote:
-> > On Tue, 2009-06-30 at 12:17 -0700, Luis R. Rodriguez wrote:
-> >> On Tue, Jun 30, 2009 at 12:05 PM, Karl
-> >> Relton<karllinuxtest.relton@ntlworld.com> wrote:
-> >> > Signed-Off-By: Karl Relton
-> >> > Signed-Off-By: Mark S. Mathews
-> >>
-> >> The commit log is empty. Where is this driver? Is it in staging at
-> >> least? If so does this get users of the driver a usable firmware? What
-> >> is the future of the driver BTW?
-> >>
-> >
-> > Oops - put text in wrong part of patch documentation. I can move this up
-> > to the 'commit log' part.
-> >
-> > The driver is under 'staging' - maintained by Greg Koah-Hartman
-> >
-> > The firmware blob in 'srec' format for prism 2/3 usb adaptors.
-> > The driver will read the srec file using a standard request_firmware()
-> > call, and will convert it into the appropriate binary format and upload to
-> > the adaptor. Note the processing is left to the driver (rather than
-> > pre-compiling) because the driver needs to insert runtime data obtained from
-> > the adaptor into the blob. The appropriate insertion locations are conveyed
-> > by the srec format.
-> 
-> Why all the srec->binary conversion? Doesn't this waste space on
-> people's firmware directories?
-> 
-Yes, technically it does. The srec file is ~185KB, a binary image would
-be ~64KB.
 
-The reason it was left is that the driver has to do some runtime
-plugging of data into the image, so pre-compilation would have meant
-inventing both a compiler tool and an intermediate format for the driver
-to read and process. Putting all the srec processing in the driver was
-more expedient (just meant porting existing userspace code into driver
-space).
+--=-c93nGGrhfZ20y/ky5gYM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Karl
+On Wed, 2009-07-29 at 08:03 +0100, Chris Clayton wrote:
+
+> 3. Once power-saving kicks in, the machine cannot be contacted from anoth=
+er machine on the network -=20
+> pings are not responded to, for example. Is this the intended behaviour?
+
+No. The device is supposed to listen to beacons, check if there's
+traffic pending and retrieve it. So sounds like a device problem unless
+your AP is broken.
+
+> 4. Are there any plans to be able to switch power-saving on/off on a driv=
+er-by-driver basis. It=20
+> seems to me, although I'm happy to be corrected, that it is either on or =
+off for a given kernel,=20
+> depending on CONFIG_MAC80211_DEFAULT_PS. But, if like me, someone has two=
+ cards (one at home and one=20
+> at work, for example), one that works fine with PS and one that doesn't, =
+they have to set PS off=20
+> for their kernel, or have two kernels. Could PS be {en,dis}abled by, say,=
+ a module parameter or a=20
+> sysfs switch?
+
+iwconfig wlan0 power off
+
+(yeah, looks weird, but power means "power saving")
+
+johannes
+
+--=-c93nGGrhfZ20y/ky5gYM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKb/hpAAoJEODzc/N7+Qma1tEQALsmujoOg7dggfZG0u+bg+nC
+Q9GQXmOxe+trrZ+V6AiD3TnqRiHjyxnAM73bIvE4b6y4phzx3IIbOJgd64ysaTqx
+wdqKpMOMr9hG5vea8FtMQyk8RQzb/esvDybcfURWQxIWsSgVtLseV6Y40BlaZLor
+S97c+t2XRhMpMbnRrjP4zoXTTfFIQa7z0d1wJdgbP7A3Yy0c1GRi0RXXLcp0T7Fd
+RvfxMPQWuJhSRynMSEZHvxg7MCtGYXy17Ywb2aMTjA1s/TLBgl2SnljYjM1mR79C
+41n6BpiGRMWdHL+Dxi4LeYljjJYjOzfoSqljnU16ngIiweIno1LVVI67hshVJNs2
+CeIBI8FICUOZR+fiHHN6VKjvY4llEzQNwfh3Ye1CLTwvbc9iMxym3oPHjn6mBLo5
+el/9KCmZNOJ+un28/ImWE3OzUZJWK/fUeZcS/C1mokyc/KtWE++7TeOJO1oO6dia
++Y0I6QdEPe9iZ3h2/2bbMQDg0QFLYN8L4n3yGRa8eUSpHtbqLHQ29kL7gt9+0p+s
+MXLBRUwzQc31v2ECVkXMidLX1kCgnQs8xSCpzGYiPIPq5proRXSfEOssabgK9vRv
+zp7s1KQOlqYm5ZorLEwQwJCW4lrtGAnSXPC1LDYQxCqrWoeyTU6c30syjA8B4ba2
+/VS627IzXakh14NY/SCo
+=IOB0
+-----END PGP SIGNATURE-----
+
+--=-c93nGGrhfZ20y/ky5gYM--
 
