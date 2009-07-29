@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2855 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798AbZGGDHg (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:41523 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbZG2Hp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 23:07:36 -0400
-Date: Mon, 6 Jul 2009 23:07:19 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Jasin Colegrove <j.wholesalesupply@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: kernel .30 BROKE ATH5K with my AR5212 atheros.
-Message-ID: <20090707030719.GC7199@hash.localnet>
-References: <6c354a1a0906301524m389d49a9sfd812e1ea4740ff5@mail.gmail.com> <6c354a1a0906301550g70fbd9ddkecd09fc0e98dd1ef@mail.gmail.com> <b6c5339f0907020836n6162e8b8k3c1a7a24c335ac41@mail.gmail.com> <6c354a1a0907050513x3a3c91b3vb4b9de7196da1a14@mail.gmail.com> <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
+	Wed, 29 Jul 2009 03:45:27 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so158535fga.17
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 00:45:26 -0700 (PDT)
+To: chris2553@googlemail.com
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: 2.6.31-rc2: Possible regression in rt61pci driver
+References: <c6b1100b0907130127g3d4013c6n3264f79bd74bc9@mail.gmail.com>
+	<c6b1100b0907280634j4610d077rb30f1f571aac7f36@mail.gmail.com>
+	<efe7343f0907280638i12b0bb4bq237ca4f6376eb1fe@mail.gmail.com>
+	<200907290803.46110.chris2553@googlemail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 29 Jul 2009 10:45:21 +0300
+In-Reply-To: <200907290803.46110.chris2553@googlemail.com> (Chris Clayton's message of "Wed\, 29 Jul 2009 08\:03\:46 +0100")
+Message-ID: <87bpn4oru6.fsf@litku.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6c354a1a0907061835g438d65daw38b08b9d55081f43@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Colegrove<j.wholesalesupply@gmail.com> wrote:
-> > Thanks bob for the reply. I did not mean to shout, but someone else
-> > told me that I should make it very clear that I was not subscribed.
-> > But, now I am so it doesn't matter :)
+Chris Clayton <chris2553@sky.com> writes:
 
-No worries, but whoever said that is wrong as far as vger.kernel.org
-mailing lists go, as everyone just does reply-all.  (Also, top-posting
-is frowned upon.)
+> 4. Are there any plans to be able to switch power-saving on/off on a
+> driver-by-driver basis. It seems to me, although I'm happy to be
+> corrected, that it is either on or off for a given kernel, depending
+> on CONFIG_MAC80211_DEFAULT_PS.
 
-> I have found the bad commit.
-
-> $ git bisect good
-> 1e3e6e8fe2f422f75619b1110f78bb638ae905b9 is first bad commit
-> commit 1e3e6e8fe2f422f75619b1110f78bb638ae905b9
-> Author: Nick Kossifidis <mick@madwifi-project.org>
-> Date:   Mon Feb 9 06:15:42 2009 +0200
-> 
->     ath5k: Disable BMISS interrupts
-
-Hmm, so that's a pretty weird commit to end up with.  Can you
-now try whatever your baseline kernel was, with just this patch
-reverted and see if it works for you?
-
-We don't actually do anything with BMISS yet so the only thing it
-could do is slow down your computer.
-
-Another possibility is that something happened between that
-commit and your last good ath5k commit, elsewhere in the tree,
-so a bisect would need to be done over the whole tree instead of
-just the ath5k directory.
-
-A third possibility is the issue comes and goes, or is timing
-related, in which case bisection really isn't useful.
-
-> Do you still think it would be wise to file a bug report for this
-> issue. I have yet to try the latest compat-wireless.
-
-Give 2.6.30.1 a shot as it includes a couple of fixes, otherwise
-bugzilla is probably the best bet.
+mac80211 drivers can control power save with IEEE80211_HW_SUPPORTS_PS
+flag. Also it can runtime from user space with 'iwconfig wlan0 power
+off'. nl80211 interface is on my todo list.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+Kalle Valo
