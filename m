@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mrs.ro ([207.192.75.59]:49186 "EHLO li37-59.members.linode.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752574AbZGAGmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 02:42:51 -0400
-Message-ID: <4A4B056B.9000602@mrs.ro>
-Date: Wed, 01 Jul 2009 09:42:51 +0300
-From: Valentin Manea <linux-wireless@mrs.ro>
+Received: from an-out-0708.google.com ([209.85.132.241]:38777 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbZG2UpY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 16:45:24 -0400
+Received: by an-out-0708.google.com with SMTP id d40so1234064and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 13:45:24 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: mac80211 and broadcast frames
-References: <4A49EEC3.3060108@mrs.ro> <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
-In-Reply-To: <43e72e890906300920j1963ae07v800468db9a908a1@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20090729200036.GA10056@tuxdriver.com>
+References: <1248733291-10848-1-git-send-email-lrodriguez@atheros.com>
+	<20090729200036.GA10056@tuxdriver.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 29 Jul 2009 13:45:03 -0700
+Message-ID: <43e72e890907291345u5de674fem7b0769f52a7251c5@mail.gmail.com>
+Subject: Re: [PATCH v3] mac80211: redefine usage of the mac80211 workqueue
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 06/30/2009 07:20 PM, Luis R. Rodriguez wrote:
-> On Tue, Jun 30, 2009 at 3:53 AM, Valentin Manea<linux-wireless@mrs.ro>  wrote:
->> Hi,
+On Wed, Jul 29, 2009 at 1:00 PM, John W. Linville<linville@tuxdriver.com> wrote:
+> On Mon, Jul 27, 2009 at 03:21:31PM -0700, Luis R. Rodriguez wrote:
+>> The mac80211 workqueue exists to enable mac80211 and drivers
+>> to queue their own work on a single threaded workqueue. mac80211
+>> takes care to flush the workqueue during suspend but we never
+>> really had requirements on drivers for how they should use
+>> the workqueue in consideration for suspend.
 >>
->>    I've been working on a small project that basically sends broadcast UDP
->> frames from an Wireless AP to multiple clients. While I can send UDP frames
->> just fine from the AP to the client the only a few broadcast frames reach my
->> client. What is really puzzling is that on the client machine using tcpdump
->> I can see all the broadcast frames arriving, my application sees only a
->> small fraction of them.
+>> We extend mac80211 to document how the mac80211 workqueue should
+>> be used, how it should not be used and finally move raw access to
+>> the workqueue to mac80211 only. Drivers and mac80211 use helpers
+>> to queue work onto the mac80211 workqueue:
+>>
+>>   * ieee80211_queue_work()
+>>   * ieee80211_queue_delayed_work()
+>>
+>> These helpers will now warn if mac80211 already completed its
+>> suspend cycle and someone is trying to queue work. mac80211
+>> flushes the mac80211 workqueue prior to suspend a few times,
+>> but we haven't taken the care to ensure drivers won't add more
+>> work after suspend. To help with this we add a warning when
+>> someone tries to add work and mac80211 already completed the
+>> suspend cycle.
+>>
+>> Drivers should ensure they cancel any work or delayed work
+>> in the mac80211 stop() callback.
 >
-> Keep in mind when you use tcpdump it will modify the RX filters of the
-> device you use but if you say you see them on tcpdump and at the same
-> time do not see them on the application that seems fishy and non
-> driver related.
->
->    Luis
+> How are they supposed to do that after you've removed workqueue
+> from the ieee80211_hw structure?
 
-tcpdump doesn't affect the results at all, with or without it running 
-it's the same.
+They do not refer to the mac80211 workqueue for that, they can cancel
+work using cancel_work_sync(their_foo_work_struct).
 
-I have tried tracing the packets, I thought that maybe there is a 
-problem in the 80211 stack and for some reason they would be dropped but 
-as far as I can tell every packet is routed to the ip stack with the 
-correct protocol and pkt_type.
+> This breaks the compilation of
+> at76c50x-usb.c...
 
-One more strange thing, if I'm looking at netstat -s everything seems to 
-be normal, InBcastPkts is fine, also the number of incomming UDP packets.
+Strange, I thought I tested that, will retest,
 
-Any ideas where I could look? it just gets stranger and stranger.
-
-
-Thanks,
-Valentin
+  Luis
