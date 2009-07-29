@@ -1,77 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39706 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:55793 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751480AbZG3OTQ (ORCPT
+	with ESMTP id S1751907AbZG2JYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 10:19:16 -0400
-Subject: Re: [RFC PATCH] mac80211: FIF_PSPOLL filter flag
+	Wed, 29 Jul 2009 05:24:23 -0400
+Subject: [PATCH v2] cfg80211: keep track of current_bss for userspace SME
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Igor Perminov <igor.perminov@inbox.ru>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248962000.29068.170.camel@sunlight>
-References: <1248962000.29068.170.camel@sunlight>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KSIU7OVnBp9CU7GwVvcZ"
-Date: Thu, 30 Jul 2009 16:18:45 +0200
-Message-Id: <1248963525.16129.2.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248855029.13742.15.camel@johannes.local>
+References: <1248855029.13742.15.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 29 Jul 2009 11:23:49 +0200
+Message-Id: <1248859429.13742.86.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When a userspace SME is active, we're currently not
+keeping track of the BSS properly for reporting the
+current link and for internal use. Additionally, it
+looks like there is a possible BSS leak in that the
+BSS never gets removed from auth_bsses[]. To fix it,
+pass the BSS struct to __cfg80211_connect_result in
+this case.
 
---=-KSIU7OVnBp9CU7GwVvcZ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: hold already is a counter, so no race necessary
 
-On Thu, 2009-07-30 at 17:53 +0400, Igor Perminov wrote:
+ net/wireless/core.c |    3 ++-
+ net/wireless/core.h |    8 +++++++-
+ net/wireless/mlme.c |   38 ++++++++++++++++++++++++--------------
+ net/wireless/sme.c  |   35 ++++++++++++++++++-----------------
+ 4 files changed, 51 insertions(+), 33 deletions(-)
 
-> @@ -245,6 +247,14 @@ static int ieee80211_open(struct net_device *dev)
-> =20
->  			ieee80211_start_mesh(sdata);
->  		}
-> +		else if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
+--- wireless-testing.orig/net/wireless/core.c	2009-07-29 01:08:03.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-07-29 01:08:58.000000000 +0200
+@@ -314,7 +314,8 @@ static void cfg80211_process_events(stru
+ 				ev->cr.req_ie, ev->cr.req_ie_len,
+ 				ev->cr.resp_ie, ev->cr.resp_ie_len,
+ 				ev->cr.status,
+-				ev->cr.status == WLAN_STATUS_SUCCESS);
++				ev->cr.status == WLAN_STATUS_SUCCESS,
++				NULL);
+ 			break;
+ 		case EVENT_ROAMED:
+ 			__cfg80211_roamed(wdev, ev->rm.bssid,
+--- wireless-testing.orig/net/wireless/core.h	2009-07-29 01:08:03.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-07-29 10:17:21.000000000 +0200
+@@ -127,6 +127,11 @@ static inline struct cfg80211_internal_b
+ 	return container_of(pub, struct cfg80211_internal_bss, pub);
+ }
+ 
++static inline void cfg80211_ref_bss(struct cfg80211_internal_bss *bss)
++{
++	kref_get(&bss->ref);
++}
++
+ static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	atomic_inc(&bss->hold);
+@@ -323,7 +328,8 @@ void cfg80211_mlme_down(struct cfg80211_
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+-			       u16 status, bool wextev);
++			       u16 status, bool wextev,
++			       struct cfg80211_bss *bss);
+ 
+ /* SME */
+ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+--- wireless-testing.orig/net/wireless/mlme.c	2009-07-29 01:08:03.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2009-07-29 10:21:45.000000000 +0200
+@@ -61,7 +61,7 @@ void cfg80211_send_rx_assoc(struct net_d
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)buf;
+ 	u8 *ie = mgmt->u.assoc_resp.variable;
+ 	int i, ieoffs = offsetof(struct ieee80211_mgmt, u.assoc_resp.variable);
+-	bool done;
++	struct cfg80211_internal_bss *bss = NULL;
+ 
+ 	wdev_lock(wdev);
+ 
+@@ -69,22 +69,32 @@ void cfg80211_send_rx_assoc(struct net_d
+ 
+ 	nl80211_send_rx_assoc(rdev, dev, buf, len, GFP_KERNEL);
+ 
+-	__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, ie, len - ieoffs,
+-				  status_code,
+-				  status_code == WLAN_STATUS_SUCCESS);
+-
+ 	if (status_code == WLAN_STATUS_SUCCESS) {
+-		for (i = 0; wdev->current_bss && i < MAX_AUTH_BSSES; i++) {
+-			if (wdev->auth_bsses[i] == wdev->current_bss) {
+-				cfg80211_unhold_bss(wdev->auth_bsses[i]);
+-				cfg80211_put_bss(&wdev->auth_bsses[i]->pub);
++		for (i = 0; i < MAX_AUTH_BSSES; i++) {
++			if (!wdev->auth_bsses[i])
++				continue;
++			if (memcmp(wdev->auth_bsses[i]->pub.bssid, mgmt->bssid,
++				   ETH_ALEN) == 0) {
++				bss = wdev->auth_bsses[i];
+ 				wdev->auth_bsses[i] = NULL;
+-				done = true;
++				/* additional reference to drop hold */
++				cfg80211_ref_bss(bss);
+ 				break;
+ 			}
+ 		}
+ 
+-		WARN_ON(!done);
++		WARN_ON(!bss);
++	}
++
++	/* this consumes one bss reference (unless bss is NULL) */
++	__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, ie, len - ieoffs,
++				  status_code,
++				  status_code == WLAN_STATUS_SUCCESS,
++				  bss ? &bss->pub : NULL);
++	/* drop hold now, and also reference acquired above */
++	if (bss) {
++		cfg80211_unhold_bss(bss);
++		cfg80211_put_bss(&bss->pub);
+ 	}
+ 
+ 	wdev_unlock(wdev);
+@@ -144,7 +154,7 @@ static void __cfg80211_send_deauth(struc
+ 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
+ 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
+ 					  WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					  false);
++					  false, NULL);
+ 	}
+ }
+ 
+@@ -241,7 +251,7 @@ void cfg80211_send_auth_timeout(struct n
+ 	if (wdev->sme_state == CFG80211_SME_CONNECTING)
+ 		__cfg80211_connect_result(dev, addr, NULL, 0, NULL, 0,
+ 					  WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					  false);
++					  false, NULL);
+ 
+ 	for (i = 0; addr && i < MAX_AUTH_BSSES; i++) {
+ 		if (wdev->authtry_bsses[i] &&
+@@ -275,7 +285,7 @@ void cfg80211_send_assoc_timeout(struct 
+ 	if (wdev->sme_state == CFG80211_SME_CONNECTING)
+ 		__cfg80211_connect_result(dev, addr, NULL, 0, NULL, 0,
+ 					  WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					  false);
++					  false, NULL);
+ 
+ 	for (i = 0; addr && i < MAX_AUTH_BSSES; i++) {
+ 		if (wdev->auth_bsses[i] &&
+--- wireless-testing.orig/net/wireless/sme.c	2009-07-29 01:07:07.000000000 +0200
++++ wireless-testing/net/wireless/sme.c	2009-07-29 01:10:28.000000000 +0200
+@@ -182,7 +182,7 @@ void cfg80211_conn_work(struct work_stru
+ 					wdev->conn->params.bssid,
+ 					NULL, 0, NULL, 0,
+ 					WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					false);
++					false, NULL);
+ 		wdev_unlock(wdev);
+ 	}
+ 
+@@ -247,7 +247,7 @@ static void __cfg80211_sme_scan_done(str
+ 					wdev->conn->params.bssid,
+ 					NULL, 0, NULL, 0,
+ 					WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					false);
++					false, NULL);
+ 	}
+ }
+ 
+@@ -305,7 +305,7 @@ void cfg80211_sme_rx_auth(struct net_dev
+ 		schedule_work(&rdev->conn_work);
+ 	} else if (status_code != WLAN_STATUS_SUCCESS) {
+ 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
+-					  status_code, false);
++					  status_code, false, NULL);
+ 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING &&
+ 		 wdev->conn->state == CFG80211_CONN_AUTHENTICATING) {
+ 		wdev->conn->state = CFG80211_CONN_ASSOCIATE_NEXT;
+@@ -316,10 +316,10 @@ void cfg80211_sme_rx_auth(struct net_dev
+ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 			       const u8 *req_ie, size_t req_ie_len,
+ 			       const u8 *resp_ie, size_t resp_ie_len,
+-			       u16 status, bool wextev)
++			       u16 status, bool wextev,
++			       struct cfg80211_bss *bss)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+-	struct cfg80211_bss *bss;
+ #ifdef CONFIG_WIRELESS_EXT
+ 	union iwreq_data wrqu;
+ #endif
+@@ -361,6 +361,12 @@ void __cfg80211_connect_result(struct ne
+ 	}
+ #endif
+ 
++	if (wdev->current_bss) {
++		cfg80211_unhold_bss(wdev->current_bss);
++		cfg80211_put_bss(&wdev->current_bss->pub);
++		wdev->current_bss = NULL;
++	}
++
+ 	if (status == WLAN_STATUS_SUCCESS &&
+ 	    wdev->sme_state == CFG80211_SME_IDLE)
+ 		goto success;
+@@ -368,12 +374,6 @@ void __cfg80211_connect_result(struct ne
+ 	if (wdev->sme_state != CFG80211_SME_CONNECTING)
+ 		return;
+ 
+-	if (wdev->current_bss) {
+-		cfg80211_unhold_bss(wdev->current_bss);
+-		cfg80211_put_bss(&wdev->current_bss->pub);
+-		wdev->current_bss = NULL;
+-	}
+-
+ 	if (wdev->conn)
+ 		wdev->conn->state = CFG80211_CONN_IDLE;
+ 
+@@ -386,10 +386,12 @@ void __cfg80211_connect_result(struct ne
+ 		return;
+ 	}
+ 
+-	bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
+-			       wdev->ssid, wdev->ssid_len,
+-			       WLAN_CAPABILITY_ESS,
+-			       WLAN_CAPABILITY_ESS);
++ success:
++ 	if (!bss)
++		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
++				       wdev->ssid, wdev->ssid_len,
++				       WLAN_CAPABILITY_ESS,
++				       WLAN_CAPABILITY_ESS);
+ 
+ 	if (WARN_ON(!bss))
+ 		return;
+@@ -397,7 +399,6 @@ void __cfg80211_connect_result(struct ne
+ 	cfg80211_hold_bss(bss_from_pub(bss));
+ 	wdev->current_bss = bss_from_pub(bss);
+ 
+- success:
+ 	wdev->sme_state = CFG80211_SME_CONNECTED;
+ 	cfg80211_upload_connect_keys(wdev);
+ }
+@@ -788,7 +789,7 @@ int __cfg80211_disconnect(struct cfg8021
+ 	else if (wdev->sme_state == CFG80211_SME_CONNECTING)
+ 		__cfg80211_connect_result(dev, NULL, NULL, 0, NULL, 0,
+ 					  WLAN_STATUS_UNSPECIFIED_FAILURE,
+-					  wextev);
++					  wextev, NULL);
+ 
+ 	return 0;
+ }
 
-Put 'else if' on the same line as '}' please
-
-> +		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
-> +			local->fif_pspoll--;
->  			local->fif_control--;
-> +		}
-
-Yeah, that's exactly what I was thinking of :)
-
-> @@ -497,6 +509,13 @@ static int ieee80211_stop(struct net_device *dev)
->  		}
->  		/* fall through */
->  	default:
-> +		if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
-
-I'd probably put this after a
-	case NL80211_IFTYPE_AP:
-label but you need the if () anyway ... hmm I guess we really should
-clean up this code and split it into two switch statements...
-
-johannes
-
---=-KSIU7OVnBp9CU7GwVvcZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcau/AAoJEODzc/N7+Qma/fIQAJKg+cpEZq9ZsJ2E4nYMgpao
-76IV9Hh4j2Kk1vxc280eoXJSLv6UCsct2HIKWjEU0vXRnnsSmSUkHGqUs7cn/bc4
-OFDDWQbJFcC2HFRFi1/9A17f4W6hDjRaVRgacZe1qfkzFUVGFBEEvhgCWJoHuuTv
-bLl+Y2pARLHfbLE2oo2XG1e+gFdTWbjqhjqF4UFQk/MpEGf6azsCqazcoBwTG2Aw
-OaCpH/34ZwWFgYSl3I+yBu++7/WXVQsS3bChsRaqryT2cBAw2Gidmzt49Gx8pADG
-2lTniPQBPAEl6CfPKXJx+j/pWtWs3LsmeyCTdUAVjbnM2w1iETUIr0bX+ATx6H+I
-Y7cZscP6F/bpIJmCbaeCa5w9eP9j8b3NNwGCo4ZgV4MpuR/AkiDRR5hDVBtwXe/P
-P7F3elXR4vTAFgcob/pK2N0VtaUig9UZyZN8P1OtvZmRajDzexLnLWepJSK+NED8
-i0PcobndbgkVOvRaCMScWI3IVix6EFnT0cUEcIRdPEMHjhCGOQ/TknLchJjwO6xq
-rhAhZWmI0NGlkepmeYxmacGnwt3bizZsap/XvJ+QTnMAp77ZbVWOINL+Tdl762TU
-p3xetKY7rYp332l+dlfY/mXSqeS2QpxpdcF/zGzatXeK6VJX39w19dcaVGGj8Ihm
-fjtLCAr4LBVldCEwhji8
-=s5nH
------END PGP SIGNATURE-----
-
---=-KSIU7OVnBp9CU7GwVvcZ--
 
