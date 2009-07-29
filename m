@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23612 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752349AbZGXSNO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jul 2009 14:13:14 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/14] iwlwifi driver updates 07/24/2009
-Date: Fri, 24 Jul 2009 11:12:59 -0700
-Message-Id: <1248459194-10239-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:57844 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983AbZG2Q0I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 12:26:08 -0400
+Subject: Re: WARNING: at net/mac80211/agg-tx.c:145
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A707463.1000508@mandriva.org>
+References: <4A6F264E.70501@mandriva.org>
+	 <1248798501.13742.1.camel@johannes.local>  <4A707463.1000508@mandriva.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-61bcZHakQvgPOUA2yRnz"
+Date: Wed, 29 Jul 2009 18:25:34 +0200
+Message-Id: <1248884734.25614.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this series we introduce a new thermal throttling feature that places
-NIC in a lower power state with fewer activities when temperature reaches
-particular thresholds. We also include two fixes, one addresses a TX queue
-race between driver and mac80211 and the other fixes a null pointer access
-introduced by an earlier patch (which is not in 2.6.31). The TX queue race
-problem is present in v2.6.31 so we include a patch for that kernel also.
-The rest of this series is cleanup.
 
-[PATCH 01/14] iwlwifi: revert to active table when rate is not valid
-[PATCH 02/14] iwlwifi: critical temperature enter/exit condition
-[PATCH 03/14] iwlwifi: Thermal Throttling Management - Part 1
-[PATCH 04/14] iwlwifi: Thermal Throttling Management - part 2
-[PATCH 05/14] iwlwifi: Thermal Throttling debugfs function
-[PATCH 06/14] iwlwifi: fix up command sending
-[PATCH 07/14] iwlwifi: remove command callback return value
-[PATCH 08/14] iwlwifi: fix TX queue race
-[PATCH 09/14] iwlwifi: print packet contents in error case
-[PATCH 10/14] iwlwifi: Name fix for MPDU density for TX aggregation
-[PATCH 11/14] iwlwifi: fix LED config option
-[PATCH 12/14] iwlwifi: debugFs to enable/disable 40MHz channel support
-[PATCH 13/14] iwlagn: fix null pointer access during ucode load on 1000
-[PATCH 14/14] iwlagn: fix sparse warning when compiling without debug
+--=-61bcZHakQvgPOUA2yRnz
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-[PATCH v2.6.31] iwlwifi: fix TX queue race
+On Wed, 2009-07-29 at 19:10 +0300, Thomas Backlund wrote:
+> Johannes Berg skrev:
+> > On Tue, 2009-07-28 at 19:24 +0300, Thomas Backlund wrote:
+> >> Hi,
+> >>
+> >> Is this known?
+> >=20
+> > I think so. The problem is that on a hw restart the driver clears
+> > aggregation but mac80211 thinks the session is still up, I think.
+> >=20
+>=20
+>=20
+> ok, so is there any fixes to test...
 
-Thank you
+No. Just ignore the warning. It's mostly harmless.
 
-Reinette
+johannes
+
+--=-61bcZHakQvgPOUA2yRnz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKcHf6AAoJEODzc/N7+QmagssQALZmqxRx0DfBqBPL8+wIbOTp
+Y0F2h6jC8ZvWr3EcWMehSsN+pWj3J1Ty8ac5WnelQ5Jy40z94vk+/rliLwl5eJVW
+BZ1mRatXNySMZaRdF9q0gbl97O8t9bHmueH28PKjzszLbTCZiVuW05MhT/o/G6hO
+ssZ6D2zowaTp9Av4RGzNounHqnUTRrFhSSmW/lxEqQmhh/aQiqCbQIXY661rqCfi
+MOMG/lNw/hO3wcMTH9GstpXx6auzFHQP7CMy3+scByuozq7+7ae7kCtzIbiAs5BY
+gHnxAhuEirtMjSaxfPn0L1bsu4+Wyn3+YMTwyzWW3tFWkNkem0AHZcGimk7mAcr/
+JXZaMz8sCrwOijCtJmj8GWvlkvFpumxRsR+fILONHZE+4NFq4oTEQfEHMcpyNxIG
+2E8UsLTzMDbqrg6C+TCLJYytP3dltJeiQqUgwbBtU03eJbyyOdxR+eoLTsTSlqb1
+g4xKJL4LGk/Dl7iQ/Z5oP4ROWMX2kjNwpaEKr3Ma7LpPtpgtviP5o4YGRdERoiuf
+FtMZdG9Is+o8FMm610iuYgj59HPQd97J/E/eFe541ZMkf0FeaYPSa8pH6RD33pEw
+1XOfwFeJgdBpwgdR4L+MjaPVMu/auuOwBjo+Gm6RGIheRrwzoYgy7O2pdUXR+qAl
+HHL1glGvyfh5W7Wpoq1q
+=ozOB
+-----END PGP SIGNATURE-----
+
+--=-61bcZHakQvgPOUA2yRnz--
+
