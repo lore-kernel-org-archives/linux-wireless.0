@@ -1,63 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51793 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754145AbZGMHJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 03:09:19 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 00:09:19 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/3] ath9k: Handle tx desc shortage more appropriately
-Date: Mon, 13 Jul 2009 12:32:06 +0530
-Message-ID: <1247468527-5097-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1247468527-5097-1-git-send-email-vasanth@atheros.com>
-References: <1247468527-5097-1-git-send-email-vasanth@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:55704 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbZG2HQv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 03:16:51 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dave <kilroyd@googlemail.com>
+Subject: Re: [PATCH] orinoco: enable cfg80211 "set_channel" operation
+Date: Wed, 29 Jul 2009 09:16:31 +0200
+Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>,
+	orinoco-devel@lists.sourceforge.net,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200907281634.26104.hs4233@mail.mn-solutions.de> <4A6F270A.7030002@gmail.com>
+In-Reply-To: <4A6F270A.7030002@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907290916.31603.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update tx BA window and complete the frame as failed
-one if we can't clone the holding descriptor due to
-unavailability of descriptors.
+On Tuesday 28 July 2009 18:27:54 Dave wrote:
+> You can also eliminate orinoco_ioctl_setfreq from wext.c with
+> this change.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+You mean this ?!?
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 45eac35..cbeff1a 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -382,8 +382,23 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				struct ath_buf *tbf;
+--- linux-wl.orig/drivers/net/wireless/orinoco/wext.c
++++ linux-wl/drivers/net/wireless/orinoco/wext.c
+@@ -372,55 +372,6 @@
+ 	return 0;
+ }
  
- 				tbf = ath_clone_txbuf(sc, bf_last);
--				if (!tbf)
-+				/*
-+				 * Update tx baw and complete the frame with
-+				 * failed status if we run out of tx buf
-+				 */
-+				if (!tbf) {
-+					spin_lock_bh(&txq->axq_lock);
-+					ath_tx_update_baw(sc, tid,
-+							  bf->bf_seqno);
-+					spin_unlock_bh(&txq->axq_lock);
-+
-+					bf->bf_state.bf_type |= BUF_XRETRY;
-+					ath_tx_rc_status(bf, ds, nbad,
-+							 0, false);
-+					ath_tx_complete_buf(sc, bf, &bf_head,
-+							    0, 0);
- 					break;
-+				}
- 				ath9k_hw_cleartxdesc(sc->sc_ah, tbf->bf_desc);
- 				list_add_tail(&tbf->list, &bf_head);
- 			} else {
--- 
-1.5.5.1
+-static int orinoco_ioctl_setfreq(struct net_device *dev,
+-				 struct iw_request_info *info,
+-				 struct iw_freq *frq,
+-				 char *extra)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-	int chan = -1;
+-	unsigned long flags;
+-	int err = -EINPROGRESS;		/* Call commit handler */
+-
+-	/* In infrastructure mode the AP sets the channel */
+-	if (priv->iw_mode == NL80211_IFTYPE_STATION)
+-		return -EBUSY;
+-
+-	if ((frq->e == 0) && (frq->m <= 1000)) {
+-		/* Setting by channel number */
+-		chan = frq->m;
+-	} else {
+-		/* Setting by frequency */
+-		int denom = 1;
+-		int i;
+-
+-		/* Calculate denominator to rescale to MHz */
+-		for (i = 0; i < (6 - frq->e); i++)
+-			denom *= 10;
+-
+-		chan = ieee80211_freq_to_dsss_chan(frq->m / denom);
+-	}
+-
+-	if ((chan < 1) || (chan > NUM_CHANNELS) ||
+-	     !(priv->channel_mask & (1 << (chan-1))))
+-		return -EINVAL;
+-
+-	if (orinoco_lock(priv, &flags) != 0)
+-		return -EBUSY;
+-
+-	priv->channel = chan;
+-	if (priv->iw_mode == NL80211_IFTYPE_MONITOR) {
+-		/* Fast channel change - no commit if successful */
+-		hermes_t *hw = &priv->hw;
+-		err = hermes_docmd_wait(hw, HERMES_CMD_TEST |
+-					    HERMES_TEST_SET_CHANNEL,
+-					chan, NULL);
+-	}
+-	orinoco_unlock(priv, &flags);
+-
+-	return err;
+-}
+-
+ static int orinoco_ioctl_getfreq(struct net_device *dev,
+ 				 struct iw_request_info *info,
+ 				 struct iw_freq *frq,
+@@ -1481,7 +1432,6 @@
+ static const iw_handler	orinoco_handler[] = {
+ 	STD_IW_HANDLER(SIOCSIWCOMMIT,	orinoco_ioctl_commit),
+ 	STD_IW_HANDLER(SIOCGIWNAME,	cfg80211_wext_giwname),
+-	STD_IW_HANDLER(SIOCSIWFREQ,	orinoco_ioctl_setfreq),
+ 	STD_IW_HANDLER(SIOCGIWFREQ,	orinoco_ioctl_getfreq),
+ 	STD_IW_HANDLER(SIOCSIWMODE,	cfg80211_wext_siwmode),
+ 	STD_IW_HANDLER(SIOCGIWMODE,	cfg80211_wext_giwmode),
 
+I tried, but with then an "iwconfig eth1 channel 1" gave me an 
+error. I did not investigate this further.
+
+-- 
+http://www.holgerschurig.de
