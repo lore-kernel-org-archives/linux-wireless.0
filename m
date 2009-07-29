@@ -1,94 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33838 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383AbZGBMpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jul 2009 08:45:20 -0400
-Subject: Re: Insist on cfg80211 for new drivers?
-From: Dan Williams <dcbw@redhat.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>, Greg KH <greg@kroah.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dave <kilroyd@googlemail.com>,
-	Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <200907021307.17719.bzolnier@gmail.com>
-References: <1246396179.4949.76.camel@localhost>
-	 <20090701221359.GA2604@kroah.com>
-	 <1246486729.12994.176.camel@localhost.localdomain>
-	 <200907021307.17719.bzolnier@gmail.com>
-Content-Type: text/plain
-Date: Thu, 02 Jul 2009 08:44:48 -0400
-Message-Id: <1246538688.16543.5.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:43680 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbZG2VjX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jul 2009 17:39:23 -0400
+Message-ID: <4A70C17B.6090309@candelatech.com>
+Date: Wed, 29 Jul 2009 14:39:07 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Reinette Chatre <reinette.chatre@intel.com>
+CC: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
+References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-02 at 13:07 +0200, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> On Thursday 02 July 2009 00:18:49 Marcel Holtmann wrote:
-> > Hi Greg,
-> > 
-> > > > > >> > That's really all I
-> > > > > >> > care about, I don't want another WEXT-based driver accepted; I want all
-> > > > > >> > the new ones using cfg80211.
-> > > > > >>
-> > > > > >> Now there is a discussion we should have had in Berlin...is it time
-> > > > > >> to insist on cfg80211-based configuration for all new drivers?
-> > > > > >
-> > > > > > there is really nothing much to discuss on this topic. The plan is to
-> > > > > > deprecate WEXT, that simple. So if the driver has no cfg80211 support,
-> > > > > > then it will not be included. Period.
-> > > > > >
-> > > > > > Send such drivers off to staging and let them have their 6 month.  Then
-> > > > > > we either remove them again or they got ported to cfg80211.
-> > > > > 
-> > > > > 6 months only in staging ? Is this a rule now for staging?
-> > > > 
-> > > > that is what Greg mentioned to me. If there is no activity for 6 month
-> > > > and the driver is not getting anywhere, he going to drop it.
-> > > 
-> > > That is "within reason".  If a driver is still needed there, I'l
-> > > probably keep it, and will take each one on a case-by-case basis.
-> > 
-> > what do you mean "within reason". If the driver is just sitting there
-> > and no effort in making in upstream ready it is doing clearly more harm
-> > than any good. And I am not talking about removing some kernel version
-> > details or typedefs or coding style. Drivers with missing cfg80211 need
-> 
-> Well, most of those drivers need a major cleanup before porting..	
-> 
-> > active porting. And it is not that hard. See the orinoco one for an
-> > example.
-> 
-> Could you please provide some more pointers here, I don't see any such
-> changes in linux-next yet and I'm very interested in seeing a practical
-> example of such conversion (thanks!).
+On 07/29/2009 02:32 PM, Reinette Chatre wrote:
+> From: Reinette Chatre<reinette.chatre@intel.com>
+>
+> The connection monitor currently relies on probe requests paired
+> with probe responses to ensure that a connection is alive. This is
+> fragile in some environments where probe responses can get lost.
+> When we receive beacons we can also consider the connection to be
+> alive, so cancel connection poll instance when we receive a beacon.
 
-http://osdir.com/ml/linux-wireless/2009-06/msg01141.html
+I'm chasing a similar problem while working on virtual STA device
+support in ath5k.  I was also going to try sending up to 3 polls before
+giving up on the connection.  Does that seems like a valid thing to do?
 
-It's not in -next, it's in wireless-testing, which gets dumped to next
-periodically.  Wireless stuff happens first in wireless-testing, of
-course.
+I'll try using this patch as well to see if that helps.
 
-> > If we see developers committed to fixing it that is a different story,
-> > but a lot of drivers in staging are getting no attention all. So they
-> > are fully pointless and are not doing any good for Linux. We need to
-> > send the vendors a clear message that code drops of their crappy Windows
-> > code are not desired.
-> 
-> How's about sending a clear _positive_ message for a change?
-> 
-> Where one can find an up to date documentation for {mac,cfg,nl}80211 (not
-> just some random DocBook generated excerpts, I mean the real thing here,
-> with references to kernel versions when API changes were introduced, some
-> practical examples and exemplary drivers) and more importantly when one
-> can find the _porting_ guide for the older stacks?
+Thanks,
+Ben
 
-Johannes has done an much-better-than-average job of documenting
-cfg80211 and nl80211, which is more than I can say for many other
-subsystems.
-
-Dan
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
