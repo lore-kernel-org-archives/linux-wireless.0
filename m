@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f210.google.com ([209.85.219.210]:40300 "EHLO
-	mail-ew0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101AbZGARv1 (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:44787 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189AbZG2RiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 13:51:27 -0400
-Received: by ewy6 with SMTP id 6so1370234ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 10:51:29 -0700 (PDT)
-Message-ID: <4A4BA21F.1070101@gmail.com>
-Date: Wed, 01 Jul 2009 18:51:27 +0100
-From: Dave <kilroyd@googlemail.com>
+	Wed, 29 Jul 2009 13:38:09 -0400
+Message-ID: <4A7088FE.4000808@mandriva.org>
+Date: Wed, 29 Jul 2009 20:38:06 +0300
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-To: Karl Relton <karllinuxtest.relton@ntlworld.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>, dwmw2@infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Add prism 2/3 usb adaptor firmware for use with staging/wlan-ng
- driver.
-References: <1246388712.4949.52.camel@localhost>	 <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com>	 <1246396179.4949.76.camel@localhost>	 <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com> <1246464991.4331.18.camel@localhost>
-In-Reply-To: <1246464991.4331.18.camel@localhost>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at net/mac80211/agg-tx.c:145
+References: <4A6F264E.70501@mandriva.org>	 <1248798501.13742.1.camel@johannes.local>  <4A707463.1000508@mandriva.org> <1248884734.25614.2.camel@johannes.local>
+In-Reply-To: <1248884734.25614.2.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Karl Relton wrote:
-> On Tue, 2009-06-30 at 14:58 -0700, Luis R. Rodriguez wrote:
->> Why all the srec->binary conversion? Doesn't this waste space on
->> people's firmware directories?
+Johannes Berg skrev:
+> On Wed, 2009-07-29 at 19:10 +0300, Thomas Backlund wrote:
+>> Johannes Berg skrev:
+>>> On Tue, 2009-07-28 at 19:24 +0300, Thomas Backlund wrote:
+>>>> Hi,
+>>>>
+>>>> Is this known?
+>>> I think so. The problem is that on a hw restart the driver clears
+>>> aggregation but mac80211 thinks the session is still up, I think.
+>>>
 >>
-> Yes, technically it does. The srec file is ~185KB, a binary image would
-> be ~64KB.
+>> ok, so is there any fixes to test...
 > 
-> The reason it was left is that the driver has to do some runtime
-> plugging of data into the image, so pre-compilation would have meant
-> inventing both a compiler tool and an intermediate format for the driver
-> to read and process. Putting all the srec processing in the driver was
-> more expedient (just meant porting existing userspace code into driver
-> space).
-
-I can't find the wlan_ng request_firmware call in my wireless-testing
-tree (week or so old). Is that new?
-
->From what I can tell the wlan_ng, hostap and orinoco drivers all program
-firmware that has the same basic format. Hostap doesn't use
-request_firmware, and gives userspace the control over the write
-sequence. orinoco places a very simple header in front of the binary image.
-
-Do we really want to add srec processing to the driver (or even the kernel)?
-
-It would be nice if the FW image was in the same format for orinoco and
-wlan_ng, as the prism firmware ought to work on non-USB prism cards, and
-we should be able to make orinoco use it.
+> No. Just ignore the warning. It's mostly harmless.
 
 
-Regards,
+Not really, today when I hit it, and had to restart the network to get 
+my internet connection back :-(
 
-Dave.
+When I hit it last time, the network coped with it without problem...
+So is it the fw that should be fixed, or the code ?
+
+--
+Thomas
