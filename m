@@ -1,129 +1,389 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49464 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754703AbZG1Q2x (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:56751 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751688AbZG3QvX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 12:28:53 -0400
-Subject: Re: WARNING: at net/mac80211/agg-tx.c:145
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A6F264E.70501@mandriva.org>
-References: <4A6F264E.70501@mandriva.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wt47ZHGvJSMYMkxi96o5"
-Date: Tue, 28 Jul 2009 18:28:20 +0200
-Message-Id: <1248798501.13742.1.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 30 Jul 2009 12:51:23 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 10/10] rndis_wlan: rework key handling
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Thu, 30 Jul 2009 19:42:08 +0300
+Message-ID: <20090730164208.28317.64301.stgit@fate.lan>
+In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
+References: <20090730164120.28317.53313.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Organize key data in private structure better and store WPA keys, so
+they can be restored as WEP keys.
 
---=-wt47ZHGvJSMYMkxi96o5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-On Tue, 2009-07-28 at 19:24 +0300, Thomas Backlund wrote:
-> Hi,
->=20
-> Is this known?
+ drivers/net/wireless/rndis_wlan.c |  188 ++++++++++++++++++++++++++++---------
+ 1 files changed, 142 insertions(+), 46 deletions(-)
 
-I think so. The problem is that on a hw restart the driver clears
-aggregation but mac80211 thinks the session is still up, I think.
-
-johannes
-
-> I got this today on a Intel 4965 with a 2.6.31-rc4 based kernel=20
-> configured with PREEMPT.
->=20
-> Arch is x86_64 and firmware 228.61.2.24
->=20
-> iwlagn 0000:04:00.0: Stopping AGG while state not IWL_AGG_ON
-> iwlagn 0000:04:00.0: queue number out of range: 0, must be 7 to 14
-> ------------[ cut here ]------------
-> WARNING: at net/mac80211/agg-tx.c:145=20
-> ___ieee80211_stop_tx_ba_session+0x91/0xa0 [mac80211]()
-> Hardware name: TravelMate 5720
-> Modules linked in: cryptd aes_x86_64 aes_generic af_packet ipv6 btusb=20
-> bluetooth firewire_ohci firewire_core arc4 ecb crc_itu_t tg3 serio_raw=20
-> sdhci_pci sdhci ohci1394 libphy ieee1394 iwlagn snd_hda_codec_realtek=20
-> sr_mod iwlcore sg snd_hda_intel snd_hda_codec acer_wmi iTCO_wdt=20
-> iTCO_vendor_support mac80211 snd_hwdep snd_seq_dummy snd_seq_oss=20
-> snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss led_class snd_pcm=20
-> snd_timer snd_mixer_oss snd cfg80211 soundcore i2c_i801 rfkill=20
-> snd_page_alloc binfmt_misc fuse ext3 jbd jfs pcmcia yenta_socket=20
-> rsrc_nonstatic pcmcia_core cpufreq_ondemand cpufreq_conservative=20
-> cpufreq_powersave acpi_cpufreq freq_table tifm_sd mmc_block mmc_core=20
-> tifm_7xx1 tifm_core nvram radeon uvcvideo nsc_ircc videodev v4l1_compat=20
-> ttm v4l2_compat_ioctl32 drm irda crc_ccitt i2c_algo_bit uhci_hcd=20
-> i2c_core ehci_hcd joydev evdev container battery usbcore video output=20
-> thermal processor button ac pcspkr rtc_cmos wmi ata_piix ahci libata=20
-> sd_mod scsi_mod crc_t10dif ext4 jbd2 crc16
-> Pid: 0, comm: swapper Not tainted 2.6.31-tmb-desktop-0.rc4.3mdv #1
-> Call Trace:
->   <IRQ>  [<ffffffff81043818>] warn_slowpath_common+0x78/0xb0
->   [<ffffffff8104385f>] warn_slowpath_null+0xf/0x20
->   [<ffffffffa0445121>] ___ieee80211_stop_tx_ba_session+0x91/0xa0 [mac8021=
-1]
->   [<ffffffffa0445326>] sta_addba_resp_timer_expired+0x56/0x90 [mac80211]
->   [<ffffffffa04452d0>] ? sta_addba_resp_timer_expired+0x0/0x90 [mac80211]
->   [<ffffffff8104e1ae>] run_timer_softirq+0x13e/0x210
->   [<ffffffff8104912f>] __do_softirq+0xaf/0x140
->   [<ffffffff8100fa2a>] ? timer_interrupt+0x1a/0x30
->   [<ffffffff8100d06c>] call_softirq+0x1c/0x30
->   [<ffffffff8100f075>] do_softirq+0x45/0x80
->   [<ffffffff81049575>] irq_exit+0x95/0xa0
->   [<ffffffff8100e600>] do_IRQ+0x70/0xe0
->   [<ffffffff8100c8d3>] ret_from_intr+0x0/0xa
->   <EOI>  [<ffffffffa00fa57a>] ? acpi_idle_enter_bm+0x26c/0x297 [processor=
-]
->   [<ffffffffa00fa570>] ? acpi_idle_enter_bm+0x262/0x297 [processor]
->   [<ffffffff81240efb>] ? cpuidle_idle_call+0x9b/0xf0
->   [<ffffffff8100aa32>] ? cpu_idle+0x62/0xd0
->   [<ffffffff812daa81>] ? rest_init+0x81/0x90
->   [<ffffffff814b6acf>] ? start_kernel+0x356/0x361
->   [<ffffffff814b6128>] ? x86_64_start_reservations+0x125/0x129
->   [<ffffffff814b620d>] ? x86_64_start_kernel+0xe1/0xe8
-> ---[ end trace 60c73ee4e29d40fe ]---
->=20
->=20
->=20
-> About 1 hour before this I had this in dmesg:
->=20
-> iwlagn 0000:04:00.0: iwl_tx_agg_start on ra =3D 00:19:5b:51:dc:27 tid =3D=
- 0
-> iwlagn 0000:04:00.0: Microcode HW error detected.  Restarting.
->=20
->=20
->=20
-> --
-> Thomas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
---=-wt47ZHGvJSMYMkxi96o5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKbychAAoJEODzc/N7+QmaXWAQAK0EjefZY85K/0PQnR7c3rY5
-lBJ4o5gLuFDM1yJTe0AWSGR3etD2ZOrr0fTn5n3PWmTohVRFGHz+Lf8Zr802i4y6
-nyQT7M7oWGqDMUSCuRZuKL1rnOALrHbqIWLptTdpiUp1TfGwwUyOSQ7zjzsRANsi
-I09O45K1HqPcbFqwBPOuNNL7Ui0rrTC4R6xjyMfkum1cNIMjjDAWuVnyQC9pJ1cH
-G2KUURVLYtlIxvti3gvmFDP4cPtlwppYSuWB9/Gy/4N/q7FZJYOojb+n7otdmpHx
-tPj//aszSM4L8VSSehptuQyumy0hMm6w1T/egGbhjB6hC2Gt+rmP+mP1WfJq7CxO
-02ZAuitxKM6L5b20J/6JXfTPJkw7JkjA9xFDPloNNeB84UHlWZBiuTXlS+QHetnp
-VWmoxGxfBWupbCyBvvIfg9fP4V+inGihLDe3qQxTdxnnLKZ46+lH848sAf5SbTLi
-oaLwN8gxviHG9HYIJV4NDMVhPVpiLN2nRl0+Pwj6jJ3Ssd4dVaM9WHnPkIZGh6Ls
-HOF9jKDlu7u8QEZlbPcUfZikmDLHFW6mWnQ4xlw1K5EZ42vicuEv5hSNNTb/17wy
-ZsHVbWnF39rYNKSexlVcHrZrXP3CjeESOe1UwnvqRDqSY6Pq2zDqMgf1ryCB+hrf
-8W2tBUYs4RLDQMieM1nP
-=jQMc
------END PGP SIGNATURE-----
-
---=-wt47ZHGvJSMYMkxi96o5--
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 3d92b77..828dc18 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -413,6 +413,15 @@ static const struct ieee80211_rate rndis_rates[] = {
+ 	{ .bitrate = 540 }
+ };
+ 
++struct rndis_wlan_encr_key {
++	int len;
++	int cipher;
++	u8 material[32];
++	u8 bssid[ETH_ALEN];
++	bool pairwise;
++	bool tx_key;
++};
++
+ /* RNDIS device private data */
+ struct rndis_wlan_private {
+ 	struct usbnet *usbdev;
+@@ -456,9 +465,7 @@ struct rndis_wlan_private {
+ 
+ 	/* encryption stuff */
+ 	int  encr_tx_key_index;
+-	char encr_keys[4][32];
+-	int  encr_key_len[4];
+-	char encr_key_wpa[4];
++	struct rndis_wlan_encr_key encr_keys[4];
+ 	int  wpa_version;
+ 	int  wpa_keymgmt;
+ 	int  wpa_authalg;
+@@ -525,6 +532,15 @@ static u32 get_bcm4320_power_dbm(struct rndis_wlan_private *priv)
+ }
+ 
+ 
++static bool is_wpa_key(struct rndis_wlan_private *priv, int idx)
++{
++	int cipher = priv->encr_keys[idx].cipher;
++
++	return (cipher == WLAN_CIPHER_SUITE_CCMP ||
++		cipher == WLAN_CIPHER_SUITE_TKIP);
++}
++
++
+ #ifdef DEBUG
+ static const char *oid_to_string(__le32 oid)
+ {
+@@ -895,8 +911,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
+ /*
+  * common functions
+  */
+-static int
+-add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index);
++static void restore_keys(struct usbnet *usbdev);
+ 
+ static int get_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
+ {
+@@ -1115,7 +1130,7 @@ static int set_infra_mode(struct usbnet *usbdev, int mode)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	__le32 tmp;
+-	int ret, i;
++	int ret;
+ 
+ 	devdbg(usbdev, "set_infra_mode: infra_mode=0x%x", priv->infra_mode);
+ 
+@@ -1130,14 +1145,7 @@ static int set_infra_mode(struct usbnet *usbdev, int mode)
+ 	/* NDIS drivers clear keys when infrastructure mode is
+ 	 * changed. But Linux tools assume otherwise. So set the
+ 	 * keys */
+-	if (priv->wpa_keymgmt == 0 ||
+-		priv->wpa_keymgmt == IW_AUTH_KEY_MGMT_802_1X) {
+-		for (i = 0; i < 4; i++) {
+-			if (priv->encr_key_len[i] > 0 && !priv->encr_key_wpa[i])
+-				add_wep_key(usbdev, priv->encr_keys[i],
+-						priv->encr_key_len[i], i);
+-		}
+-	}
++	restore_keys(usbdev);
+ 
+ 	priv->infra_mode = mode;
+ 	return 0;
+@@ -1204,11 +1212,16 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ndis_80211_wep_key ndis_key;
+-	int ret;
++	int cipher, ret;
+ 
+-	if (key_len <= 0 || key_len > 32 || index < 0 || index >= 4)
++	if ((key_len != 5 || key_len != 13) || index < 0 || index > 3)
+ 		return -EINVAL;
+ 
++	if (key_len == 5)
++		cipher = WLAN_CIPHER_SUITE_WEP40;
++	else
++		cipher = WLAN_CIPHER_SUITE_WEP104;
++
+ 	memset(&ndis_key, 0, sizeof(ndis_key));
+ 
+ 	ndis_key.size = cpu_to_le32(sizeof(ndis_key));
+@@ -1233,30 +1246,44 @@ static int add_wep_key(struct usbnet *usbdev, char *key, int key_len, int index)
+ 		return ret;
+ 	}
+ 
+-	priv->encr_key_len[index] = key_len;
+-	priv->encr_key_wpa[index] = 0;
+-	memcpy(&priv->encr_keys[index], key, key_len);
++	priv->encr_keys[index].len = key_len;
++	priv->encr_keys[index].cipher = cipher;
++	memcpy(&priv->encr_keys[index].material, key, key_len);
++	memset(&priv->encr_keys[index].bssid, 0xff, ETH_ALEN);
+ 
+ 	return 0;
+ }
+ 
+ 
+ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+-			int index, const struct sockaddr *addr,
+-			const u8 *rx_seq, int alg, int flags)
++			int index, const u8 *addr, const u8 *rx_seq, int cipher,
++			int flags)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ndis_80211_key ndis_key;
++	bool is_addr_ok;
+ 	int ret;
+ 
+-	if (index < 0 || index >= 4)
++	if (index < 0 || index >= 4) {
++		devdbg(usbdev, "add_wpa_key: index out of range (%i)", index);
+ 		return -EINVAL;
+-	if (key_len > sizeof(ndis_key.material) || key_len < 0)
++	}
++	if (key_len > sizeof(ndis_key.material) || key_len < 0) {
++		devdbg(usbdev, "add_wpa_key: key length out of range (%i)",
++			key_len);
+ 		return -EINVAL;
+-	if ((flags & NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ) && !rx_seq)
++	}
++	if ((flags & NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ) && !rx_seq) {
++		devdbg(usbdev, "add_wpa_key: recv seq flag without buffer");
+ 		return -EINVAL;
+-	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !addr)
++	}
++	is_addr_ok = addr && memcmp(addr, zero_bssid, ETH_ALEN) != 0 &&
++			memcmp(addr, ffff_bssid, ETH_ALEN) != 0;
++	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !is_addr_ok) {
++		devdbg(usbdev, "add_wpa_key: pairwise but bssid invalid (%pM)",
++			addr);
+ 		return -EINVAL;
++	}
+ 
+ 	devdbg(usbdev, "add_wpa_key(%i): flags:%i%i%i", index,
+ 			!!(flags & NDIS_80211_ADDKEY_TRANSMIT_KEY),
+@@ -1270,7 +1297,7 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ 	ndis_key.length = cpu_to_le32(key_len);
+ 	ndis_key.index = cpu_to_le32(index) | flags;
+ 
+-	if (alg == IW_ENCODE_ALG_TKIP && key_len == 32) {
++	if (cipher == WLAN_CIPHER_SUITE_TKIP && key_len == 32) {
+ 		/* wpa_supplicant gives us the Michael MIC RX/TX keys in
+ 		 * different order than NDIS spec, so swap the order here. */
+ 		memcpy(ndis_key.material, key, 16);
+@@ -1284,7 +1311,7 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ 
+ 	if (flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) {
+ 		/* pairwise key */
+-		memcpy(ndis_key.bssid, addr->sa_data, ETH_ALEN);
++		memcpy(ndis_key.bssid, addr, ETH_ALEN);
+ 	} else {
+ 		/* group key */
+ 		if (priv->infra_mode == NDIS_80211_INFRA_ADHOC)
+@@ -1299,8 +1326,14 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ 	if (ret != 0)
+ 		return ret;
+ 
+-	priv->encr_key_len[index] = key_len;
+-	priv->encr_key_wpa[index] = 1;
++	memset(&priv->encr_keys[index], 0, sizeof(priv->encr_keys[index]));
++	priv->encr_keys[index].len = key_len;
++	priv->encr_keys[index].cipher = cipher;
++	memcpy(&priv->encr_keys[index].material, key, key_len);
++	if (flags & NDIS_80211_ADDKEY_PAIRWISE_KEY)
++		memcpy(&priv->encr_keys[index].bssid, ndis_key.bssid, ETH_ALEN);
++	else
++		memset(&priv->encr_keys[index].bssid, 0xff, ETH_ALEN);
+ 
+ 	if (flags & NDIS_80211_ADDKEY_TRANSMIT_KEY)
+ 		priv->encr_tx_key_index = index;
+@@ -1309,25 +1342,74 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ }
+ 
+ 
++static int restore_key(struct usbnet *usbdev, int key_idx)
++{
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	struct rndis_wlan_encr_key key;
++	int flags;
++
++	key = priv->encr_keys[key_idx];
++
++	devdbg(usbdev, "restore_key: %i:%s:%i", key_idx,
++		is_wpa_key(priv, key_idx) ? "wpa" : "wep",
++		key.len);
++
++	if (key.len == 0)
++		return 0;
++
++	if (is_wpa_key(priv, key_idx)) {
++		flags = 0;
++
++		/*if (priv->encr_tx_key_index == key_idx)
++			flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;*/
++
++		if (memcmp(key.bssid, zero_bssid, ETH_ALEN) != 0 &&
++				memcmp(key.bssid, ffff_bssid, ETH_ALEN) != 0)
++			flags |= NDIS_80211_ADDKEY_PAIRWISE_KEY;
++
++		return add_wpa_key(usbdev, key.material, key.len, key_idx,
++					key.bssid, NULL, key.cipher, flags);
++	}
++
++	return add_wep_key(usbdev, key.material, key.len, key_idx);
++}
++
++
++static void restore_keys(struct usbnet *usbdev)
++{
++	int i;
++
++	for (i = 0; i < 4; i++)
++		restore_key(usbdev, i);
++}
++
++
++static void clear_key(struct rndis_wlan_private *priv, int idx)
++{
++	memset(&priv->encr_keys[idx], 0, sizeof(priv->encr_keys[idx]));
++}
++
++
+ /* remove_key is for both wep and wpa */
+ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ndis_80211_remove_key remove_key;
+ 	__le32 keyindex;
++	bool is_wpa;
+ 	int ret;
+ 
+-	if (priv->encr_key_len[index] == 0)
++	if (priv->encr_keys[index].len == 0)
+ 		return 0;
+ 
+-	priv->encr_key_len[index] = 0;
+-	priv->encr_key_wpa[index] = 0;
+-	memset(&priv->encr_keys[index], 0, sizeof(priv->encr_keys[index]));
++	is_wpa = is_wpa_key(priv, index);
+ 
+-	if (priv->wpa_cipher_pair == IW_AUTH_CIPHER_TKIP ||
+-	    priv->wpa_cipher_pair == IW_AUTH_CIPHER_CCMP ||
+-	    priv->wpa_cipher_group == IW_AUTH_CIPHER_TKIP ||
+-	    priv->wpa_cipher_group == IW_AUTH_CIPHER_CCMP) {
++	devdbg(usbdev, "remove_key: %i:%s:%i", index, is_wpa ? "wpa" : "wep",
++		priv->encr_keys[index].len);
++
++	clear_key(priv, index);
++
++	if (is_wpa) {
+ 		remove_key.size = cpu_to_le32(sizeof(remove_key));
+ 		remove_key.index = cpu_to_le32(index);
+ 		if (bssid) {
+@@ -1871,8 +1953,9 @@ static int rndis_iw_set_encode(struct net_device *dev,
+ {
+ 	struct usbnet *usbdev = netdev_priv(dev);
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	struct rndis_wlan_encr_key key;
+ 	int ret, index, key_len;
+-	u8 *key;
++	u8 *keybuf;
+ 
+ 	index = (wrqu->encoding.flags & IW_ENCODE_INDEX);
+ 
+@@ -1907,17 +1990,18 @@ static int rndis_iw_set_encode(struct net_device *dev,
+ 
+ 	if (wrqu->data.length > 0) {
+ 		key_len = wrqu->data.length;
+-		key = extra;
++		keybuf = extra;
+ 	} else {
+ 		/* must be set as tx key */
+-		if (priv->encr_key_len[index] == 0)
++		if (priv->encr_keys[index].len == 0)
+ 			return -EINVAL;
+-		key_len = priv->encr_key_len[index];
+ 		key = priv->encr_keys[index];
++		key_len = key.len;
++		keybuf = key.material;
+ 		priv->encr_tx_key_index = index;
+ 	}
+ 
+-	if (add_wep_key(usbdev, key, key_len, index) != 0)
++	if (add_wep_key(usbdev, keybuf, key_len, index) != 0)
+ 		return -EINVAL;
+ 
+ 	if (index == priv->encr_tx_key_index)
+@@ -1934,7 +2018,7 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
+ 	struct usbnet *usbdev = netdev_priv(dev);
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+-	int keyidx, flags;
++	int keyidx, flags, cipher;
+ 
+ 	keyidx = wrqu->encoding.flags & IW_ENCODE_INDEX;
+ 
+@@ -1944,8 +2028,10 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 	else
+ 		keyidx = priv->encr_tx_key_index;
+ 
+-	if (keyidx < 0 || keyidx >= 4)
++	if (keyidx < 0 || keyidx >= 4) {
++		devwarn(usbdev, "encryption index out of range (%u)", keyidx);
+ 		return -EINVAL;
++	}
+ 
+ 	if (ext->alg == WPA_ALG_WEP) {
+ 		if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
+@@ -1953,10 +2039,19 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 		return add_wep_key(usbdev, ext->key, ext->key_len, keyidx);
+ 	}
+ 
++	cipher = -1;
++	if (ext->alg == IW_ENCODE_ALG_TKIP)
++		cipher = WLAN_CIPHER_SUITE_TKIP;
++	else if (ext->alg == IW_ENCODE_ALG_CCMP)
++		cipher = WLAN_CIPHER_SUITE_CCMP;
++
+ 	if ((wrqu->encoding.flags & IW_ENCODE_DISABLED) ||
+ 	    ext->alg == IW_ENCODE_ALG_NONE || ext->key_len == 0)
+ 		return remove_key(usbdev, keyidx, NULL);
+ 
++	if (cipher == -1)
++		return -EOPNOTSUPP;
++
+ 	flags = 0;
+ 	if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID)
+ 		flags |= NDIS_80211_ADDKEY_SET_INIT_RECV_SEQ;
+@@ -1965,8 +2060,9 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
+ 	if (ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY)
+ 		flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;
+ 
+-	return add_wpa_key(usbdev, ext->key, ext->key_len, keyidx, &ext->addr,
+-				ext->rx_seq, ext->alg, flags);
++	return add_wpa_key(usbdev, ext->key, ext->key_len, keyidx,
++				(u8 *)&ext->addr.sa_data, ext->rx_seq, cipher,
++				flags);
+ }
+ 
+ 
 
