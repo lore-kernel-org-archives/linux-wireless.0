@@ -1,116 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml110.kpnxchange.com ([195.121.3.14]:51497 "EHLO
-	CPSMTPM-EML110.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750873AbZGJLnQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 07:43:16 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [regression] ath5k: Overrides regulatory domain set for cfg80211
-Date: Fri, 10 Jul 2009 13:43:12 +0200
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <200907082340.07787.elendil@planet.nl> <200907090311.40205.elendil@planet.nl> <43e72e890907081907j279f48eep99e73cc2951dfdb@mail.gmail.com>
-In-Reply-To: <43e72e890907081907j279f48eep99e73cc2951dfdb@mail.gmail.com>
+Received: from mail-qy0-f196.google.com ([209.85.221.196]:43357 "EHLO
+	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbZG3Oxm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 10:53:42 -0400
+Received: by qyk34 with SMTP id 34so819933qyk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 07:53:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907101343.14113.elendil@planet.nl>
+In-Reply-To: <200907301631.50780.mb@bu3sch.de>
+References: <200907301631.50780.mb@bu3sch.de>
+Date: Thu, 30 Jul 2009 10:45:37 -0400
+Message-ID: <b6c5339f0907300745l3e7ec63eu9819503c4e7766bb@mail.gmail.com>
+Subject: Re: Ath5k/mac80211 triggers WARN_ON in kernel/softirq.c
+From: Bob Copeland <me@bobcopeland.com>
+To: Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks again for your elaborate explanation Louis.
+On Thu, Jul 30, 2009 at 10:31 AM, Michael Buesch<mb@bu3sch.de> wrote:
+> Ath5k from today's compat-wireless triggers the following WARNing
+> on hostapd startup.
+> [ 1669.799870] ------------[ cut here ]------------
+> [ 1669.799934] WARNING: at kernel/softirq.c:141 local_bh_enable_ip+0x8b/0xb0()
 
-On Thursday 09 July 2009, Luis R. Rodriguez wrote:
-> EU is a valid regulatory domain only when the relic option
-> CONFIG_WIRELESS_OLD_REGULATORY is used. When you use OLD_REG and "EU"
-> you get stuck to a statically defined regulatory domain in the kernel.
->
-> > Â [Now I specify NL and it gives me US; how's that an improvement?]
->
-> Since you are using OLD_REG the default is "US", that was the behavior
-> prior to the new regulatory code so its left as is. So that is by
-> design following the old crap regulatory code design.
->
-> > cfg80211: Calling CRDA for country: NL
-> > Â [no agent, so this does not actually change anything]
->
-> Users of OLD_REG who do not have new userspace should stick to using
-> the 3 static regulatory domains:
->
->   1) US *
->   2) JP
->   3) EU
+because ath5k calls ieee80211_beacon_get inside a spin_lock_irqsave()
+and this is WARN_ON_ONCE(in_irq() || irqs_disabled).
 
-Right, so the EU I had originally was correct after all :-)
+> [ 1669.799982] Hardware name:
+> [ 1669.800023] Modules linked in: ath5k mac80211 ath cfg80211
+> [ 1669.800192] Pid: 24862, comm: hostapd Not tainted 2.6.30.2 #3
+> [ 1669.800238] Call Trace:
+> [ 1669.800287]  [<ffffffff80248e3b>] ? local_bh_enable_ip+0x8b/0xb0
+> [ 1669.800340]  [<ffffffff802432f8>] warn_slowpath_common+0x78/0xd0
+> [ 1669.800391]  [<ffffffff8024335f>] warn_slowpath_null+0xf/0x20
+> [ 1669.800441]  [<ffffffff80248e3b>] local_bh_enable_ip+0x8b/0xb0
+> [ 1669.800493]  [<ffffffff807e0fef>] _spin_unlock_bh+0xf/0x20
+> [ 1669.800564]  [<ffffffffa0040b92>] ieee80211_beacon_get+0x2c2/0x2d0 [mac80211]
 
-> >> For further information please also read
-> >> Documentation/feature-removal-schedule.txt. Please use a valid
-> >> ISO-3166 alpha2 country code, I also advise to abandon the usage of
-> >> the ieee80211_regdom module parameter which we do eventually intend
-> >> on deprecating and if you know anyone using that please suggest the
-> >> same.
-> >
-> > As mentioned above I do not currently have the option of abandoning
-> > it.
->
-> Yes you do, but you don't seem to want to do anything beyond what your
-> distribution offers, which is different.
+I guess this is the first victim of spin_lock_bh conversion?
 
-You're right :-)
-However, I am also a Debian Developer and Debian may (just as we did for 
-Etch), at some point want to offer a newer kernel than the current .26 
-for stable (possibly .31). From that PoV it is important to ensure there 
-are no incompatibilities with what's in Debian stable.
-For that reason I am very conservative when it comes to installer newer or 
-backported versions of packages.
-
-> > That seems particularly bad in my case. For some weird reason this
-> > Trust PCMCIA card seems to have AM in its EEPROM, which is Armenia...
-> > The card was bought in the Netherlands (NL), which is also where I
-> > live.
->
-> Yeah the short story of that is Armenia and Netherlands both have the
-> same regulatory rules, the first alpha2 that matched the same group
-> was picked up, which just so happened to be Armenia. In the future it
-> will be easier if cards are just programmed with the alpha2 country
-> code or with a world regulatory domain code, and just abandon the
-> grouping idea. That is something we will have to look forward to
-> change and promote for future device. What counts for regulatory
-> purposes is your device is complaint. The alternative was to keep all
-> the regulatory information statically in the kernel for each
-> regulatory group for Atheros devices.
-
-Ah! I had no idea about that and I guess that this is the real issue here: 
-a simple usability problem. If I had seen the correct countrycode (NL 
-instead of AM), I probably never would have reported a regression. What 
-prompted my mail was that, from a user PoV, the country being selected 
-looked to be completely broken. How am I, as a simple user, supposed to 
-know that Armenia uses the same domain as the Netherlands and that what 
-the driver is doing is actually 100% correct (and even that my PCMCIA 
-card is not as broken as I thought)?
-
-Would it be possible to improve the info presented by the kernel? Maybe 
-print an extra line with a list of countries that use the selected reg 
-domain (depends I guess on what's the max. nr. of countries that share a 
-domain). Or at least indicate that the country code is a somewhat random 
-choice.
-
-> > I can to some extend understand respecting hardware settings for APs,
-> > but for a wireless NIC it seems a useless limitation.
->
-> You are right to a certain degree. The thing is wireless cards *can*
-> be used as APs on a regular desktops. Perhaps not with iwlagn, but
-> with ath5k and ath9k you can do AP, IBSS, Mesh, all of which actually
-> do start transmit with out any AP being around. For these cases you
-> *do* need to ensure proper regulatory compliance. And we haven't even
-> touched on DFS!
-
-Well, IIUC you do know what mode the card is being used in, so in theory 
-you could distinguish between them. I'm not pushing for that though.
-
-End conclusion is that there is no regression and no backwards 
-compatibility issue (which is good news), just a usability issue.
-
-Thanks,
-FJP
+-- 
+Bob Copeland %% www.bobcopeland.com
