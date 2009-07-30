@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58377 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756795AbZGOARP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:17:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 5/9] ath9k: Handle tx desc shortage more appropriately
-Date: Tue, 14 Jul 2009 20:17:11 -0400
-Message-Id: <1247617035-15402-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:57041 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751302AbZG3RJo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 13:09:44 -0400
+Subject: Re: [wireless] rt2870sta BUGs on shutdown,
+ 2.6.30.2->git.today+git.wireless.today
+From: Mike Galbraith <efault@gmx.de>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Luis Correia <luis.f.correia@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <200907301852.28172.IvDoorn@gmail.com>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
+	 <200907301517.57811.bzolnier@gmail.com>
+	 <200907301852.28172.IvDoorn@gmail.com>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 19:09:40 +0200
+Message-Id: <1248973780.7091.10.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+On Thu, 2009-07-30 at 18:52 +0200, Ivo van Doorn wrote:
+> I planned, and actually did write, a lengthy reply for this thread, when I completed the reply
+> I reconsidred and opted for this shorter reply. Every 2 or 3 months this discussion is started
+> again and I am f***ing tired of it, so excuse me but I am not going to throw myself into
+> this completely pointless discussion
+> 
+> What you are suggesting in your mail is something the rt2x00 project did for 5 years, we stopped
+> with that 4 months ago because it wasn't working out. Apparently you have more experience in this
+> matter so I hope you will find a way to make that solution work out.
+> 
+> If you want to maintain the legacy drivers then do it, start a new project and start maintaining
+> the code. I can forward you all the users with complains about the "good enough" drivers. It is
+> good to know that you apparently have the resources to maintain the old drivers. 
+> Most people who are helping with the rt2800pci/usb drivers lack the required time to boost the driver
+> into such a state it can be widely adopted. But every time it amazes me that the people who want
+> to develop and have the time to do it, all want to jump on the old Ralink code... Apparently there
+> is some appeal to maintaining crap rather then helping to ship out proper drivers to the users.
+> 
+> But I'll shut up now, as I said this discussion is held every few months, so perhaps that when
+> the discussion is started again in a couple of months I am more interested in a lengthy reply.
 
-Update tx BA window and complete the frame as failed
-one if we can't clone the holding descriptor due to
-unavailability of descriptors.
+Hohum. Please remove me from CC for any further discussion.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 24663ce..4ff155e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -382,8 +382,24 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				struct ath_buf *tbf;
- 
- 				tbf = ath_clone_txbuf(sc, bf_last);
--				if (!tbf)
-+				/*
-+				 * Update tx baw and complete the frame with
-+				 * failed status if we run out of tx buf
-+				 */
-+				if (!tbf) {
-+					spin_lock_bh(&txq->axq_lock);
-+					ath_tx_update_baw(sc, tid,
-+							  bf->bf_seqno);
-+					spin_unlock_bh(&txq->axq_lock);
-+
-+					bf->bf_state.bf_type |= BUF_XRETRY;
-+					ath_tx_rc_status(bf, ds, nbad,
-+							 0, false);
-+					ath_tx_complete_buf(sc, bf, &bf_head,
-+							    0, 0);
- 					break;
-+				}
-+
- 				ath9k_hw_cleartxdesc(sc->sc_ah, tbf->bf_desc);
- 				list_add_tail(&tbf->list, &bf_head);
- 			} else {
--- 
-1.6.0.6
+	-Mike
 
