@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:51451 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932946AbZGPSFt (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:38786 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbZG3QvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 14:05:49 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] p54: fix a fw crash caused by statistic feedback
-Date: Thu, 16 Jul 2009 20:05:41 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 30 Jul 2009 12:51:09 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 02/10] rndis_wlan: stop workers on rndis_wlan_stop() and
+	restore on rndis_wlan_reset()
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Thu, 30 Jul 2009 19:41:26 +0300
+Message-ID: <20090730164126.28317.20258.stgit@fate.lan>
+In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
+References: <20090730164120.28317.53313.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907162005.41841.chunkeey@web.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug which crawled into the tree with the split-up
-changes.
+Driver doesn't need to poll statistics/link status when stopped.
 
-The memory-manager wasn't aware of the statistic feedback
-extra_len space requirements and happily placed following frames
-into the allegedly free spots.
-
-Thanks fly out to Larry Finger for taking the time to 
-test all (permutations of) patches and theories all day long.
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index 349375f..efe47ec 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -686,6 +686,8 @@ int p54_upload_key(struct p54_common *priv, u8 algo, int slot, u8 idx, u8 len,
+
+ drivers/net/wireless/rndis_wlan.c |   23 +++++++++++++++++++----
+ 1 files changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 76c5ec6..3c7c620 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2457,9 +2457,6 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	disassociate(usbdev, 1);
+ 	netif_carrier_off(usbdev->net);
  
- int p54_fetch_statistics(struct p54_common *priv)
- {
-+	struct ieee80211_tx_info *txinfo;
-+	struct p54_tx_info *p54info;
- 	struct sk_buff *skb;
- 
- 	skb = p54_alloc_skb(priv, P54_HDR_FLAG_CONTROL,
-@@ -694,6 +696,20 @@ int p54_fetch_statistics(struct p54_common *priv)
- 	if (!skb)
- 		return -ENOMEM;
- 
-+	/*
-+	 * The statistic feedback causes some extra headaches here, if it
-+	 * is not to crash/corrupt the firmware data structures.
-+	 *
-+	 * Unlike all other Control Get OIDs we can not use helpers like
-+	 * skb_put to reserve the space for the data we're requesting.
-+	 * Instead the extra frame length -which will hold the results later-
-+	 * will only be told to the p54_assign_address, so that following
-+	 * frames won't be placed into the  allegedly empty area.
-+	 */
-+	txinfo = IEEE80211_SKB_CB(skb);
-+	p54info = (void *) txinfo->rate_driver_data;
-+	p54info->extra_len = sizeof(struct p54_statistics);
-+
- 	p54_tx(priv, skb);
+-	queue_delayed_work(priv->workqueue, &priv->stats_work,
+-		round_jiffies_relative(STATS_UPDATE_JIFFIES));
+-
  	return 0;
+ 
+ fail:
+@@ -2499,15 +2496,33 @@ static void rndis_wlan_unbind(struct usbnet *usbdev, struct usb_interface *intf)
+ 
+ static int rndis_wlan_reset(struct usbnet *usbdev)
+ {
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++
+ 	devdbg(usbdev, "rndis_wlan_reset");
++
++	queue_delayed_work(priv->workqueue, &priv->stats_work,
++		round_jiffies_relative(STATS_UPDATE_JIFFIES));
++
+ 	return deauthenticate(usbdev);
  }
+ 
+ 
+ static int rndis_wlan_stop(struct usbnet *usbdev)
+ {
++	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
++	int retval;
++
+ 	devdbg(usbdev, "rndis_wlan_stop");
+-	return disassociate(usbdev, 0);
++
++	retval = disassociate(usbdev, 0);
++
++	priv->work_pending = 0;
++	cancel_delayed_work_sync(&priv->stats_work);
++	cancel_delayed_work_sync(&priv->scan_work);
++	cancel_work_sync(&priv->work);
++	flush_workqueue(priv->workqueue);
++
++	return retval;
+ }
+ 
+ 
+
