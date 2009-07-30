@@ -1,147 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:50175 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbZGaQPK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 12:15:10 -0400
-Received: by mail-bw0-f219.google.com with SMTP id 19so1285215bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 09:15:10 -0700 (PDT)
-Subject: [PATCH 001/002] [MAC80211] Retry probe request few times
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1249056817.20593.1.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Fri, 31 Jul 2009 19:14:56 +0300
-Message-Id: <1249056896.20593.3.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from hermes.domdv.de ([193.102.202.1]:3438 "EHLO hermes.domdv.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169AbZG3OIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 10:08:50 -0400
+Message-ID: <4A71A6BE.20304@domdv.de>
+Date: Thu, 30 Jul 2009 15:57:18 +0200
+From: Andreas Steinmetz <ast@domdv.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: wireless-regdb entry for DE wrong
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 0bf5749f2878f9245b8fb1b64456386374205225 Mon Sep 17 00:00:00 2001
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-Date: Fri, 31 Jul 2009 18:54:12 +0300
-Subject: [PATCH] [MAC80211] Retry probe request few times
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Retry 5 times  (chosen arbitary ), before assuming
-that station is out of range.
+[please CC me as I'm not subscribed]
 
-Fixes frequent disassociations while connected to weak,
-and sometimes even strong access points.
+Error in regulatory database for country DE:
 
-Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   42 ++++++++++++++++++++++++++++++------------
- 2 files changed, 31 insertions(+), 12 deletions(-)
+The document
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index aec6853..bca7b60 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
- 	struct work_struct beacon_loss_work;
- 
- 	unsigned long probe_timeout;
-+	int probe_send_count;
- 
- 	struct mutex mtx;
- 	struct ieee80211_bss *associated;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ee83125..1d8640a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -31,6 +31,7 @@
- #define IEEE80211_AUTH_MAX_TRIES 3
- #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
- #define IEEE80211_ASSOC_MAX_TRIES 3
-+#define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-  * beacon loss detection timeout
-@@ -1156,11 +1157,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
- }
- 
-+static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	const u8 *ssid;
-+
-+	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
-+	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
-+				 ssid + 2, ssid[1], NULL, 0);
-+
-+	ifmgd->probe_send_count++;
-+	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-+	run_again(ifmgd, ifmgd->probe_timeout);
-+}
-+
- static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 				   bool beacon)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
--	const u8 *ssid;
- 	bool already = false;
- 
- 	if (!netif_running(sdata->dev))
-@@ -1203,18 +1217,12 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (already)
- 		goto out;
- 
--	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
--
- 	mutex_lock(&sdata->local->iflist_mtx);
- 	ieee80211_recalc_ps(sdata->local, -1);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
--	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
--	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
--				 ssid + 2, ssid[1], NULL, 0);
--
--	run_again(ifmgd, ifmgd->probe_timeout);
--
-+	ifmgd->probe_send_count = 0;
-+	ieee80211_mgd_probe_ap_send(sdata);
-  out:
- 	mutex_unlock(&ifmgd->mtx);
- }
-@@ -2072,17 +2080,27 @@ static void ieee80211_sta_work(struct work_struct *work)
- 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
-+		u8 bssid[ETH_ALEN];
-+
-+		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
--		else {
--			u8 bssid[ETH_ALEN];
-+
-+		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+			printk(KERN_DEBUG "No probe response from AP %pM"
-+				" after %dms, try %d\n", bssid,
-+				(1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				ifmgd->probe_send_count);
-+#endif
-+			ieee80211_mgd_probe_ap_send(sdata);
-+		} else {
- 			/*
- 			 * We actually lost the connection ... or did we?
- 			 * Let's make sure!
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
- 			printk(KERN_DEBUG "No probe response from AP %pM"
- 				" after %dms, disconnecting.\n",
- 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
--- 
-1.6.0.4
+http://www.bundesnetzagentur.de/media/archive/5009.pdf
 
+states that the frequency range from 5470 GHz to 5725 GHz can be used
+indoor and outdoor, thus the NO-OUTDOOR flag for this range is wrong.
 
+Quick and dirty translation of the relevant text from this document
+including the note:
 
+Usage indoor and outdoor. Transmission between within a plane and a
+location outside of a plane prohibited.
+- --
+Andreas Steinmetz                       SPAMmers use robotrap@domdv.de
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iD8DBQFKcaa+V/yW5kkAz4MRAscGAJ4wtUWV6kM8u3nFCstuUrcOD22ZpACgp7Yq
+Ipm98KWAFilOCEyannUCIsU=
+=t5GW
+-----END PGP SIGNATURE-----
