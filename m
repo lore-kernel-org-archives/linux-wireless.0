@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost04.isp.att.net ([207.115.11.54]:43134 "EHLO
-	fmailhost04.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbZGFBgs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jul 2009 21:36:48 -0400
-Message-ID: <4A51553B.9050204@lwfinger.net>
-Date: Sun, 05 Jul 2009 20:36:59 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-References: <200907040053.05654.chunkeey@web.de> <200907051559.32958.chunkeey@web.de> <4A50E7C5.4040309@lwfinger.net> <200907060005.55329.chunkeey@web.de>
-In-Reply-To: <200907060005.55329.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:29082 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751611AbZG3VmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 17:42:18 -0400
+Subject: Re: [PATCH] compat-2.6:  Makefile: fixed test expressions for
+ target install
+From: Pavel Roskin <proski@gnu.org>
+To: Joerg Albert <jal2@gmx.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A720FE4.4020301@gmx.de>
+References: <4A720FE4.4020301@gmx.de>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 17:42:16 -0400
+Message-Id: <1248990136.10154.10.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
+On Thu, 2009-07-30 at 23:25 +0200, Joerg Albert wrote:
+> This removes the two errors of [ with target "install"
+> 
+> make[1]: Leaving directory `/home/joerg/src/linux-2.6.30'
+> [: 9: missing ]
+> [: 9: missing ]
+> depmod will prefer updates/ over kernel/ -- OK!
 
-> hmm, can you please give this a go? (I hope this patch still applies...)
-> I'm curious if you can dump the tx_queue when p54_alloc_skb fail?
+I believe "-a" in test is not very portable.  I remember getting
+complaints about it.  I believe the built-in test command in bash 1.x
+doesn't have it.  I'd rather stick with && and || written properly.
 
-The patch applied with the aid of wiggle. Since adding it, I've had 7
-of the disassociation failures, but none of the queue len problems.
+"-a" and -o" are currently only used in the clean target and in the
+maintenance scripts, so they probably don't get enough testing on
+systems with old bash.
 
-I have modified every place that p54_alloc_skb() fails with a printk
-that tells why it failed and then calls p54_dump_tx_queue(), but I
-have not gotten to test it yet. I found an oops when 2.6.31-rc2 is
-booted that I'm bisecting right now.
-
-Larry
-
-
+-- 
+Regards,
+Pavel Roskin
