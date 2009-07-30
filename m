@@ -1,220 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53191 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387AbZG2VBB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 17:01:01 -0400
-Date: Wed, 29 Jul 2009 16:54:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2009-07-29
-Message-ID: <20090729205423.GC10056@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:34518 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752701AbZG3UMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 16:12:23 -0400
+Subject: Re: [PATCH 05/14 w-t and 2.6.31] iwlagn: do not send key clear
+ commands when rfkill enabled
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
+	 <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+	 <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
+	 <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
+	 <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
+	 <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 13:12:22 -0700
+Message-Id: <1248984742.1216.1101.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+John,
 
-Here is another batch of wireless bits intended for 2.6.32...  Once
-again, there is no particular theme to the bunch.  This does cover the
-usual round of driver updates for iwlwifi, ath9k, and others.  There are
-also some mac80211 and cfg80211 updates, including the final piece for
-cfg80211 to supplant wireless extensions -- hooray!
+This patch did not make it to Linus's repo. Could you please consider it
+for 2.6.31? We would like to have this patch in 2.6.31 because it fixes
+a regression that is tracked in
+http://bugzilla.kernel.org/show_bug.cgi?id=13742
 
-Please let me know if there are problems!
+Thank you
 
-John
+Reinette
 
-P.S.  There is a merge-test branch that contains sample merge conflict
-resolutions.  They are mostly simple.
+On Fri, 2009-07-17 at 09:30 -0700, Chatre, Reinette wrote:
+> From: Reinette Chatre <reinette.chatre@intel.com>
+> 
+> Do all key clearing except sending sommands to device when rfkill
+> enabled. When rfkill enabled the interface is brought down and will
+> be brought back up correctly after rfkill is enabled again.
+> 
+> Same change is not needed for iwl3945 as it ignores return code when
+> sending key clearing command to device.
+> 
+> This fixes http://bugzilla.kernel.org/show_bug.cgi?id=13742
+> 
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> Tested-by: Frans Pop <elendil@planet.nl>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-sta.c |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> index 2addf73..ffd5c61 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-sta.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+> @@ -566,6 +566,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+>  	unsigned long flags;
+>  
+>  	spin_lock_irqsave(&priv->sta_lock, flags);
+> +	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
+> +		      keyconf->keyidx);
+>  
+>  	if (!test_and_clear_bit(keyconf->keyidx, &priv->ucode_key_table))
+>  		IWL_ERR(priv, "index %d not used in uCode key table.\n",
+> @@ -573,6 +575,11 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
+>  
+>  	priv->default_wep_key--;
+>  	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
+> +	if (iwl_is_rfkill(priv)) {
+> +		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
+> +		spin_unlock_irqrestore(&priv->sta_lock, flags);
+> +		return 0;
+> +	}
+>  	ret = iwl_send_static_wepkey_cmd(priv, 1);
+>  	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
+>  		      keyconf->keyidx, ret);
+> @@ -853,6 +860,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+>  	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+>  	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+>  
+> +	if (iwl_is_rfkill(priv)) {
+> +		IWL_DEBUG_WEP(priv, "Not sending REPLY_ADD_STA command because RFKILL enabled. \n");
+> +		spin_unlock_irqrestore(&priv->sta_lock, flags);
+> +		return 0;
+> +	}
+>  	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+>  	spin_unlock_irqrestore(&priv->sta_lock, flags);
+>  	return ret;
 
----
-
-Individual patches are available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
-
----
-
-The following changes since commit 70034918930d2e5b68c09bced637228c50d9561a:
-  Stephen Rothwell (1):
-        net: fix multiple definitions of setup_w6692
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Alexander Beregalov (1):
-      ar9170: fix build error when !CONFIG_AR9170_LEDS
-
-Gabor Juhos (2):
-      ath9k: fix race with IEEE80211_CONF_PS checks
-      ath9k: get rid of unnecessary setpower calls
-
-Helmut Schaa (8):
-      mac80211: refactor the scan code
-      mac80211: advance the state machine immediately if no delay is needed
-      mac80211: introduce a new scan state "decision"
-      mac80211: Replace {sw, hw}_scanning variables with a bitfield
-      mac80211: implement basic background scanning
-      mac80211: rename scan_state to next_scan_state
-      cfg80211: increase scan result expire time
-      mac80211: fix an oops in ieee80211_scan_state_set_channel
-
-Johannes Berg (16):
-      mac80211: cooperate more with network namespaces
-      cfg80211: make aware of net namespaces
-      mac80211: allow using network namespaces
-      mac80211: fix mlme timeouts
-      mac80211: fix PS-poll response, race
-      iwlwifi: fix up command sending
-      iwlwifi: remove command callback return value
-      cfg80211: fix circular lock dependency (1)
-      mac80211: fix receiving deauth
-      nl80211: add missing parameter clearing
-      cfg80211: fix disassoc while not associated
-      mac80211: verify info->control.vif is not NULL
-      cfg80211: combine iwfreq implementations
-      cfg80211: combine IWAP handlers
-      cfg80211: combine IWESSID handlers
-      cfg80211: self-contained wext handling where possible
-
-John W. Linville (1):
-      ray_cs: remove bogus NULL check at head of ray_get_wireless_stats
-
-Lars Ericsson (1):
-      rt2x00: Don't alter rt2x00dev->default_ant
-
-Luis R. Rodriguez (4):
-      ath: map TH to FCC3_WORLD
-      mac80211: fix MLME issuing of probe requests while scanning
-      mac80211: fix oops due to missing private data
-      ath9k: remove unused ATH_PCI_VERSION
-
-Pavel Machek (1):
-      iwlwifi: fix LED config option
-
-Reinette Chatre (3):
-      iwlwifi: print packet contents in error case
-      iwlagn: fix null pointer access during ucode load on 1000
-      iwlagn: fix sparse warning when compiling without debug
-
-Sujith (7):
-      mac80211: Add a few 802.11n defines for AMPDU parameters
-      ath9k: Trivial fix in Kconfig
-      ath9k: Fix a sparse warning
-      ath9k: Remove redundant HT macros
-      ath9k: Cleanup return values
-      ath9k: Remove a few redundant variables/macros
-      ath9k: Add debug counters for TX
-
-Vivek Natarajan (2):
-      ath9k: Add init values for AR9287 based chipsets.
-      ath9k: Add support for AR9287 based chipsets.
-
-Wey-Yi Guy (7):
-      iwlwifi: revert to active table when rate is not valid
-      iwlwifi: critical temperature enter/exit condition
-      iwlwifi: Thermal Throttling Management - Part 1
-      iwlwifi: Thermal Throttling Management - part 2
-      iwlwifi: Thermal Throttling debugfs function
-      iwlwifi: Name fix for MPDU density for TX aggregation
-      iwlwifi: debugFs to enable/disable HT40 support
-
- drivers/net/wireless/ath/ar9170/main.c      |    2 +
- drivers/net/wireless/ath/ath9k/Kconfig      |    4 +-
- drivers/net/wireless/ath/ath9k/ath9k.h      |   11 +-
- drivers/net/wireless/ath/ath9k/calib.c      |   22 +-
- drivers/net/wireless/ath/ath9k/debug.c      |   85 ++
- drivers/net/wireless/ath/ath9k/debug.h      |   54 +
- drivers/net/wireless/ath/ath9k/eeprom.c     | 1203 +++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/eeprom.h     |  163 +++-
- drivers/net/wireless/ath/ath9k/hw.c         |  133 ++-
- drivers/net/wireless/ath/ath9k/hw.h         |    5 +-
- drivers/net/wireless/ath/ath9k/initvals.h   | 1516 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/main.c       |   35 +-
- drivers/net/wireless/ath/ath9k/pci.c        |    2 +
- drivers/net/wireless/ath/ath9k/phy.h        |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c       |   85 +-
- drivers/net/wireless/ath/regd_common.h      |    2 +-
- drivers/net/wireless/iwlwifi/Kconfig        |    3 +
- drivers/net/wireless/iwlwifi/iwl-1000.c     |   77 ++-
- drivers/net/wireless/iwlwifi/iwl-3945-led.c |   11 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   18 +-
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    9 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   45 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   59 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   85 ++-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   23 +-
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    4 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    7 +
- drivers/net/wireless/iwlwifi/iwl-core.c     |   35 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    6 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h    |    2 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |   84 ++
- drivers/net/wireless/iwlwifi/iwl-dev.h      |  116 ++-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |   63 +-
- drivers/net/wireless/iwlwifi/iwl-led.c      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-power.c    |  526 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-power.h    |   93 ++
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    8 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c      |   48 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c       |  100 ++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   20 +-
- drivers/net/wireless/iwmc3200wifi/Kconfig   |    1 -
- drivers/net/wireless/iwmc3200wifi/Makefile  |    2 +-
- drivers/net/wireless/iwmc3200wifi/iwm.h     |    2 -
- drivers/net/wireless/iwmc3200wifi/netdev.c  |    1 -
- drivers/net/wireless/iwmc3200wifi/wext.c    |  187 ----
- drivers/net/wireless/p54/txrx.c             |    2 +-
- drivers/net/wireless/ray_cs.c               |    3 -
- drivers/net/wireless/rt2x00/rt2x00config.c  |   12 +-
- drivers/net/wireless/rt2x00/rt2x00lib.h     |    2 +-
- drivers/net/wireless/rt2x00/rt2x00link.c    |    4 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c     |    2 +-
- include/linux/ieee80211.h                   |   25 +
- include/linux/nl80211.h                     |    9 +
- include/net/cfg80211.h                      |  104 +-
- include/net/mac80211.h                      |    4 +
- net/core/dev.c                              |    1 +
- net/mac80211/Kconfig                        |    1 -
- net/mac80211/Makefile                       |    1 -
- net/mac80211/cfg.c                          |   14 +-
- net/mac80211/ibss.c                         |    2 +-
- net/mac80211/ieee80211_i.h                  |   45 +-
- net/mac80211/iface.c                        |   22 +-
- net/mac80211/main.c                         |    3 +-
- net/mac80211/mesh.c                         |    2 +-
- net/mac80211/mlme.c                         |   35 +-
- net/mac80211/rx.c                           |   21 +-
- net/mac80211/scan.c                         |  304 ++++--
- net/mac80211/sta_info.h                     |   13 -
- net/mac80211/tx.c                           |  109 +--
- net/mac80211/util.c                         |   13 +
- net/mac80211/wext.c                         |  235 -----
- net/wireless/core.c                         |   78 ++-
- net/wireless/core.h                         |    8 +-
- net/wireless/ibss.c                         |   13 +-
- net/wireless/mlme.c                         |    8 +
- net/wireless/nl80211.c                      |  206 +++--
- net/wireless/scan.c                         |   25 +-
- net/wireless/sme.c                          |    5 +-
- net/wireless/wext-compat.c                  |  180 +++-
- net/wireless/wext-compat.h                  |   50 +
- net/wireless/wext-sme.c                     |   13 +-
- 82 files changed, 5381 insertions(+), 1159 deletions(-)
- delete mode 100644 drivers/net/wireless/iwmc3200wifi/wext.c
- delete mode 100644 net/mac80211/wext.c
- create mode 100644 net/wireless/wext-compat.h
-
-Omnibus patch is available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-07-29.patch.bz2
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
