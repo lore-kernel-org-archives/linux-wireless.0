@@ -1,96 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmailhost05.isp.att.net ([204.127.217.105]:34402 "EHLO
-	fmailhost05.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141AbZG2Pld (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56349 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927AbZG3R2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 11:41:33 -0400
-Message-ID: <4A706DCA.3060805@lwfinger.net>
-Date: Wed, 29 Jul 2009 10:42:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Work around mac80211 race condition that may 	transmit
- one packet after queue is stopped
-References: <4a6fa3fe.kYeW+HADItDIXTLm%Larry.Finger@lwfinger.net> <69e28c910907290543t7532bd07g2ffdc2a04973a6f8@mail.gmail.com>
-In-Reply-To: <69e28c910907290543t7532bd07g2ffdc2a04973a6f8@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 30 Jul 2009 13:28:22 -0400
+Subject: Re: [PATCH v2 1/3] cfg80211: use goto out on 11d reg hint failure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248974386-8168-2-git-send-email-lrodriguez@atheros.com>
+References: <1248974386-8168-1-git-send-email-lrodriguez@atheros.com>
+	 <1248974386-8168-2-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-W5BMEwxjaenlYrwQKk8U"
+Date: Thu, 30 Jul 2009 19:27:50 +0200
+Message-Id: <1248974870.23496.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> On Wed, Jul 29, 2009 at 3:21 AM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
->> As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
->> mac80211 has a bug that allows a call to the TX routine after the queues have
->> been stopped. This situation will only occur under extreme stress. Although
->> b43 does not crash when this condition occurs, it does generate a WARN_ON and
->> also logs a queue overrun message. This patch recognizes b43 is not at fault
->> and logs a message only when the most verbose debugging mode is enabled. In
->> the unlikely event that the queue is not stopped when the DMA queue becomes
->> full, then a warning is issued.
->>
->> During testing of this patch with one output stream running repeated tcpperf
->> writes and a second running a flood ping, this routine was entered with
->> the DMA ring stopped about once per hour. The condition where the DMA queue is
->> full but the ring has not been stopped has never been seen by me.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John,
->>
->> This patch is 2.6.32 material.
->>
->> Larry
->> ---
->>
->> Index: wireless-testing/drivers/net/wireless/b43/dma.c
->> ===================================================================
->> --- wireless-testing.orig/drivers/net/wireless/b43/dma.c
->> +++ wireless-testing/drivers/net/wireless/b43/dma.c
->> @@ -1334,13 +1334,23 @@ int b43_dma_tx(struct b43_wldev *dev, st
->>        spin_lock_irqsave(&ring->lock, flags);
->>
->>        B43_WARN_ON(!ring->tx);
->> -       /* Check if the queue was stopped in mac80211,
->> -        * but we got called nevertheless.
->> -        * That would be a mac80211 bug. */
->> -       B43_WARN_ON(ring->stopped);
->> +
->> +       if (unlikely(ring->stopped)) {
->> +               /* We get here only because of a bug in mac80211.
->> +                * Because of a race, one packet may be queued after
->> +                * the queue is stopped, thus we got called when we shouldn't.
->> +                * For now, just refuse the transmit. */
->> +               if (b43_debug(dev, B43_DBG_DMAVERBOSE))
->> +                       b43err(dev->wl, "Packet after queue stopped\n");
->> +               err = -ENOSPC;
->> +               goto out_unlock;
->> +       }
->>
->>        if (unlikely(free_slots(ring) < TX_SLOTS_PER_FRAME)) {
->> -               b43warn(dev->wl, "DMA queue overflow\n");
->> +               /* If we get here, we have a real error with the queue
->> +                * full, but queues not stopped. */
->> +               b43err(dev->wl, "DMA queue overflow\n");
->> +               WARN_ON(1);
-> 
-> Is this really the best way to do this? Any reason why not have the
-> WARN_ON in the if-condition?
 
-I did it this way because my preference is to see the text saying why
-there was a warning before the traceback part of the warning; however,
-as I do not expect to ever see this warning, I will resubmit. The
-argument for putting the WARN_ON in the if statement is that the size
-of the object code is decreased by 7 bytes and one line is removed
-from the source. The important thing is that the x86_64 code for the
-expected branch is exactly the same for the two cases.
+--=-W5BMEwxjaenlYrwQKk8U
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-One interesting thing is that gcc 4.3.2 for x86_64 does not seem to
-pay any attention to the "unlikely" hint. The compiled code is the
-same for "if(cond)" and "if(unlikely(cond))".
+On Thu, 2009-07-30 at 10:19 -0700, Luis R. Rodriguez wrote:
+> This does not change functionality.
+>=20
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Larry
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/wireless/reg.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index fb40428..2d1d183 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1774,10 +1774,8 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+> =20
+>  	mutex_lock(&cfg80211_mutex);
+> =20
+> -	if (unlikely(!last_request)) {
+> -		mutex_unlock(&cfg80211_mutex);
+> -		return;
+> -	}
+> +	if (unlikely(!last_request))
+> +		goto out;
+> =20
+>  	/* IE len must be evenly divisible by 2 */
+>  	if (country_ie_len & 0x01)
+
+
+--=-W5BMEwxjaenlYrwQKk8U
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKcdgSAAoJEODzc/N7+QmazHUP/2PCVmMqliy7oMNKuuZxPtqq
+CCh9fdXT515D0CcjPmHOJIJUC5AyVxv2M3ptAaFZ8tRhP6QtwXEsqgzWzLL3/d/Z
+uA8avbLIHN1eFl+wua5XjY8I3Ufxk6ms2zDYVEGDus4IGoAJS1AdHwkAQUhBmV0j
+0dgzQ72/hFo7xJNzvcRzd86Os+UR4P4EDokEnr5rv8r/Sc50s0ZgcJ8SFBO9bDL9
+bv54jUXH4LFBs5DTPNysDtXOH0RlEsJfqcuZ/em6jggTI8NC03hDo822v2pFt1Y8
+lqwuS92dOT/ruju/T+KQm2g5H3YXLEODHTcFP4TTW4DpAPJV6z0WRidTttzoILcL
+xfZCfYcJoPdOKFLqVBICfELgoH1EEBlllFDu56MHVvxtW/Xb3X24x7UeM7511X/w
+cHcdbZBl1zgsqPsy28WqCBHn19Kd4/WYqkq6ppk7gQ0460A+ZEfHXzKXpEF9Ic2b
+ze78y0tJnU07Tw+njVgRJTO9nohdF+KIBuJ1mzraPDVqXd3H7dqX4P9qCiPobTzq
+rbXRFS/YANKn2k7Dx/tEJRCbxzZinHopzWphOaj41UbA38Lz6D6YGGD8PL8P2i90
+E8ltpXyUOkxs8CmUz+ZtEJ0tVZG5vMjI1djx3scGmLGnjmDAz+9Ptpn5PlXZjZxP
+qbGK2LLGs54ub4QN/xDa
+=XnJG
+-----END PGP SIGNATURE-----
+
+--=-W5BMEwxjaenlYrwQKk8U--
+
