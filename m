@@ -1,149 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:53512 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752106AbZGPGPD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 02:15:03 -0400
-Date: Wed, 15 Jul 2009 20:14:57 -1000
-From: Joel Roth <joelz@pobox.com>
-To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-Subject: Re: ath5k and Atheros AR242x - No scan results
-Message-ID: <20090716061457.GA1576@sprite>
-Reply-To: Joel Roth <joelz@pobox.com>
-References: <20090630170916.GB5137@sprite> <20090712112340.GA3315@sprite>
- <40f31dec0907120808y45f575b6l6d83afd731e6d51@mail.gmail.com>
- <20090712203449.GA3058@sprite>
- <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
- <20090714065414.GA16708@sprite>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090714065414.GA16708@sprite>
+Received: from mga09.intel.com ([134.134.136.24]:46063 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbZG3S2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 14:28:03 -0400
+Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
+ modules
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248947897.8925.13.camel@johannes.local>
+References: <1248947897.8925.13.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 11:28:02 -0700
+Message-Id: <1248978482.1216.1087.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 13, 2009 at 10:08:52AM -0400, Bob Copeland wrote:
-> On Sun, Jul 12, 2009 at 4:34 PM, Joel Roth<joelz@pobox.com> wrote:
-> > Vista advised me to:
-> >
-> > 1) turn on the hardware wifi switch <blush>
-> >
-> > 2) use the hotkey combination to enable wifi
+Hi Johannes,
+
+On Thu, 2009-07-30 at 02:58 -0700, Johannes Berg wrote:
+> Even with the split into iwlcore/agn/3945 not all symbols
+> that cross file boundaries are needed in other modules, a
+> few are only used within iwlcore, for example.
+
+I think in this case we need to be explicit when talking about "need"
+and "used". Yes, some of these exported symbols are only used within a
+module and this needs to be fixed. At the same time, some of these may
+be needed outside, but are just not currently used. Examples of the
+latter are: iwl_remove_station, iwl_rx_ant_restriction, and
+iwl_send_card_state. I think this is especially important for
+iwl_remove_station and iwl_rx_ant_restriction because their partners
+(iwl_add_station and iwl_tx_ant_restriction) are exported and used and I
+think it will be clean if they are also, even if they are not currently
+used.
+
+I'm thus ok with the removal of symbols iwl_set_flags_for_band,
+iwl_clear_isr_stats, iwl_leds_background, and iwl_rx_queue_reset.
+
+
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-core.c |    3 ---
+>  drivers/net/wireless/iwlwifi/iwl-led.c  |    1 -
+>  drivers/net/wireless/iwlwifi/iwl-rx.c   |    1 -
+>  drivers/net/wireless/iwlwifi/iwl-sta.c  |    1 -
+>  4 files changed, 6 deletions(-)
 > 
-> It might be worth trying compat-wireless or 2.6.31-rcX.  Support
-> for reading the card's internal rfkill state was added in the
-> post-2.6.30 time-frame.
- 
-I installed compat-wireless against my 2.6.30.1 kernel,
-and also the iw command.
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-07-30 11:42:11.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-07-30 11:51:28.000000000 +0200
+> @@ -1139,7 +1139,6 @@ void iwl_set_flags_for_band(struct iwl_p
+>  		priv->staging_rxon.flags &= ~RXON_FLG_CCK_MSK;
+>  	}
+>  }
+> -EXPORT_SYMBOL(iwl_set_flags_for_band);
+>  
+>  /*
+>   * initialize rxon structure with default values from eeprom
+> @@ -2289,7 +2288,6 @@ int iwl_send_card_state(struct iwl_priv 
+>  
+>  	return iwl_send_cmd(priv, &cmd);
+>  }
+> -EXPORT_SYMBOL(iwl_send_card_state);
+>  
+>  void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
+>  			   struct iwl_rx_mem_buffer *rxb)
+> @@ -2333,7 +2331,6 @@ void iwl_clear_isr_stats(struct iwl_priv
+>  {
+>  	memset(&priv->isr_stats, 0, sizeof(priv->isr_stats));
+>  }
+> -EXPORT_SYMBOL(iwl_clear_isr_stats);
+>  
+>  int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+>  			   const struct ieee80211_tx_queue_params *params)
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-led.c	2009-07-30 11:42:11.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-led.c	2009-07-30 11:50:58.000000000 +0200
+> @@ -335,7 +335,6 @@ void iwl_leds_background(struct iwl_priv
+>  	priv->last_blink_time = jiffies;
+>  	priv->last_blink_rate = blink_idx;
+>  }
+> -EXPORT_SYMBOL(iwl_leds_background);
+>  
+>  /* Register all led handler */
+>  int iwl_leds_register(struct iwl_priv *priv)
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-rx.c	2009-07-30 11:42:11.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-rx.c	2009-07-30 11:51:15.000000000 +0200
+> @@ -406,7 +406,6 @@ void iwl_rx_queue_reset(struct iwl_priv 
+>  	rxq->free_count = 0;
+>  	spin_unlock_irqrestore(&rxq->lock, flags);
+>  }
+> -EXPORT_SYMBOL(iwl_rx_queue_reset);
+>  
+>  int iwl_rx_init(struct iwl_priv *priv, struct iwl_rx_queue *rxq)
+>  {
+> --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-07-30 11:42:11.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-sta.c	2009-07-30 11:51:07.000000000 +0200
+> @@ -464,7 +464,6 @@ out:
+>  	spin_unlock_irqrestore(&priv->sta_lock, flags);
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL(iwl_remove_station);
+>  
+>  /**
+>   * iwl_clear_stations_table - Clear the driver's station table
+> 
+> 
 
-I've read some docs, however I'm not sure what the next step should be. 
+Reinette
 
-My general idea is that I should be able to see a list of
-access points, however iwlist doesn't tell me anything new.
-
-# iwlist wlan0 ap
-
-wlan0     Interface doesn't have a list of Peers/Access-Points
-
-
-I'm appending some diagnostics.
-
-Here's what dmesg tells me after 'modprobe ath5k'
-
-[256888.841092] cfg80211: Using static regulatory domain info
-[256888.841098] cfg80211: Regulatory domain: US
-[256888.841101] 	(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[256888.841105] 	(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
-[256888.841109] 	(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-[256888.841112] 	(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-[256888.841116] 	(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-[256888.841119] 	(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-[256888.841123] 	(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-[256888.841134] cfg80211: Calling CRDA for country: US
-[256888.870476] ath5k 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[256888.870492] ath5k 0000:05:00.0: setting latency timer to 64
-[256888.870563] ath5k 0000:05:00.0: registered as 'phy0'
-[256888.943464] ath: EEPROM regdomain: 0x65
-[256888.943466] ath: EEPROM indicates we should expect a direct regpair map
-[256888.943471] ath: Country alpha2 being used: 00
-[256888.943474] ath: Regpair used: 0x65
-[256888.947007] phy0: Selected rate control algorithm 'minstrel'
-[256888.947904] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-
-
-# iw list
-
-
-Wiphy phy0
-	Band 1:
-		Frequencies:
-			* 2412 MHz [1] (20.0 dBm)
-			* 2417 MHz [2] (20.0 dBm)
-			* 2422 MHz [3] (20.0 dBm)
-			* 2427 MHz [4] (20.0 dBm)
-			* 2432 MHz [5] (20.0 dBm)
-			* 2437 MHz [6] (20.0 dBm)
-			* 2442 MHz [7] (20.0 dBm)
-			* 2447 MHz [8] (20.0 dBm)
-			* 2452 MHz [9] (20.0 dBm)
-			* 2457 MHz [10] (20.0 dBm)
-			* 2462 MHz [11] (20.0 dBm)
-			* 2467 MHz [12] (20.0 dBm) (passive scanning)
-			* 2472 MHz [13] (20.0 dBm) (passive scanning)
-			* 2484 MHz [14] (disabled)
-		Bitrates (non-HT):
-			* 1.0 Mbps
-			* 2.0 Mbps (short preamble supported)
-			* 5.5 Mbps (short preamble supported)
-			* 11.0 Mbps (short preamble supported)
-			* 6.0 Mbps
-			* 9.0 Mbps
-			* 12.0 Mbps
-			* 18.0 Mbps
-			* 24.0 Mbps
-			* 36.0 Mbps
-			* 48.0 Mbps
-			* 54.0 Mbps
-	max # scan SSIDs: 4
-	Supported interface modes:
-		 * IBSS
-		 * managed
-		 * AP
-		 * AP/VLAN
-		 * monitor
-		 * mesh point
-
-# iw wlan0 scan
-
-BSS 00:40:05:c5:4f:19 (on wlan0)
-        TSF: 5703065889 usec (0d, 01:35:03)
-        freq: 2412
-        beacon interval: 100
-        capability: ESS PBCC (0x0041)
-        signal: -92.00 dBm
-        SSID: default
-        Supported rates: 1.0* 2.0* 5.5* 11.0* 22.0 
-        DS Paramater set: channel 1
-BSS 00:16:b6:db:fd:78 (on wlan0)
-        TSF: 625899182784 usec (7d, 05:51:39)
-        freq: 2437
-        beacon interval: 100
-        capability: ESS ShortSlotTime (0x0401)
-        signal: -101.00 dBm
-        SSID: linksys
-        Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0
-54.0 
-        DS Paramater set: channel 6
-        ERP: Barker_Preamble_Mode
-        Extended supported rates: 6.0 9.0 12.0 48.0 
-
-# iw wlan0 info
-Interface wlan0
-        ifindex 6
-        type managed
-
-
-
-
--- 
-Joel Roth
