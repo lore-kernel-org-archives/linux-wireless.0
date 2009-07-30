@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:40114 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753453AbZG1VBO (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jul 2009 17:01:14 -0400
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Zhu Yi <yi.zhu@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: 31-rc3-mmotm0716 - wonky wireless statistics..
-From: Valdis.Kletnieks@vt.edu
+Received: from mail.gmx.net ([213.165.64.20]:55503 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751559AbZG3JpC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 05:45:02 -0400
+Subject: Re: [wireless] rt2870sta BUGs on shutdown,
+ 2.6.30.2->git.today+git.wireless.today
+From: Mike Galbraith <efault@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1248946195.8925.9.camel@johannes.local>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <1248946195.8925.9.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 11:44:59 +0200
+Message-Id: <1248947099.8396.6.camel@marge.simson.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1248814870_4259P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Tue, 28 Jul 2009 17:01:10 -0400
-Message-ID: <5934.1248814870@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1248814870_4259P
-Content-Type: text/plain; charset="us-ascii"
-Content-Id: <5914.1248814854.1@turing-police.cc.vt.edu>
+On Thu, 2009-07-30 at 11:29 +0200, Johannes Berg wrote:
+> On Thu, 2009-07-30 at 11:22 +0200, Mike Galbraith wrote:
+> 
+> > drivers/staging/rt2870/../rt2860/sta_ioctl.c
+> 
+> Sorry, but that '/staging/' thing in there means we cannot support this.
+> If you must, take your query to the staging list,
+> devel@driverdev.osuosl.org (according to MAINTAINERS).
 
-Dell Latitude D820 laptop, lspci reports the network card as:
+Forwarded, thanks.
 
-0c:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Netwo           rk Connection (rev 02)
+....hm.  Does "If you must" mean reports aren't welcome?
 
-iwlwifi driver in use, card associated via wpa_supplicant but not being
-actively used
+	-Mike
 
-# iwconfig
-wlan0     IEEE 802.11abg  ESSID:"VT-Wireless"  
-          Mode:Managed  Frequency:2.447 GHz  Access Point: 00:11:20:A4:4C:10   
-          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:<lopped out> [2]
-          Link Quality=62/70  Signal level=-48 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-# cat /proc/net/wireless
-Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
- face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
- wlan0: 0000   63.  -47.  -256        0      0      0      0      0        0
- wlan1: 0000    0     0     0        0      0      0      0      0        0
- wlan2: 0000    0     0     0        0      0      0      0      0        0
-
-Where did that -256 for "noise" come from?  It ends up confusing the
-gkrellm-wifi plugin, it reports a S/N of 219dB ;)
-
-
-
---==_Exmh_1248814870_4259P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFKb2cWcC3lWbTT17ARAvBpAJ9go5v/W46n8FSib4lHLX/SlRk+MACeIzQj
-mesuP854E7Uj2aq+8IBWTOU=
-=O9/5
------END PGP SIGNATURE-----
-
---==_Exmh_1248814870_4259P--
