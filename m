@@ -1,41 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:58095 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbZGDVYZ (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:59920 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbZG3QvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jul 2009 17:24:25 -0400
-Received: by bwz25 with SMTP id 25so42648bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jul 2009 14:24:27 -0700 (PDT)
-Message-ID: <4A4FC889.9000401@gmail.com>
-Date: Sat, 04 Jul 2009 23:24:25 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Thu, 30 Jul 2009 12:51:09 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 06/10] rndis_wlan: add rndis_set/query_oid debugging
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Thu, 30 Jul 2009 19:41:47 +0300
+Message-ID: <20090730164147.28317.76990.stgit@fate.lan>
+In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
+References: <20090730164120.28317.53313.stgit@fate.lan>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linville@tuxdriver.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 4/5] ath5k: do not release irq across suspend/resume
-References: <1246726795-3934-1-git-send-email-me@bobcopeland.com> <1246726795-3934-5-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1246726795-3934-5-git-send-email-me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/04/2009 06:59 PM, Bob Copeland wrote:
-> Paraphrasing Rafael J. Wysocki: "drivers should not release PCI IRQs
-> in suspend."  Doing so causes a warning during suspend/resume on some
-> platforms.
+Add better debugging for failed OID queries.
 
-Hmm, I added it because I was told an irq can change over suspend (or at
-least it could in the past). I think it's not true anymore, since we
-would have serious problems with the code all over the tree.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-I can't find where Rafael uttered those words above, do you have a link?
+ drivers/net/wireless/rndis_wlan.c |   86 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 84 insertions(+), 2 deletions(-)
 
-> Cc: Rafael J. Wysocki <rjw@sisk.pl>
-> Reported-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 974f724..f6dcbb1 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -100,7 +100,6 @@ MODULE_PARM_DESC(workaround_interval,
+ #define OID_GEN_RCV_ERROR			cpu_to_le32(0x00020104)
+ #define OID_GEN_RCV_NO_BUFFER			cpu_to_le32(0x00020105)
+ 
+-#define OID_802_3_PERMANENT_ADDRESS		cpu_to_le32(0x01010101)
+ #define OID_802_3_CURRENT_ADDRESS		cpu_to_le32(0x01010102)
+ #define OID_802_3_MULTICAST_LIST		cpu_to_le32(0x01010103)
+ #define OID_802_3_MAXIMUM_LIST_SIZE		cpu_to_le32(0x01010104)
+@@ -478,6 +477,68 @@ static u32 get_bcm4320_power_dbm(struct rndis_wlan_private *priv)
+ }
+ 
+ 
++#ifdef DEBUG
++static const char *oid_to_string(__le32 oid)
++{
++	switch (oid) {
++#define OID_STR(oid) case oid: return(#oid)
++		/* from rndis_host.h */
++		OID_STR(OID_802_3_PERMANENT_ADDRESS);
++		OID_STR(OID_GEN_MAXIMUM_FRAME_SIZE);
++		OID_STR(OID_GEN_CURRENT_PACKET_FILTER);
++		OID_STR(OID_GEN_PHYSICAL_MEDIUM);
++
++		/* from rndis_wlan.c */
++		OID_STR(OID_GEN_LINK_SPEED);
++		OID_STR(OID_GEN_RNDIS_CONFIG_PARAMETER);
++
++		OID_STR(OID_GEN_XMIT_OK);
++		OID_STR(OID_GEN_RCV_OK);
++		OID_STR(OID_GEN_XMIT_ERROR);
++		OID_STR(OID_GEN_RCV_ERROR);
++		OID_STR(OID_GEN_RCV_NO_BUFFER);
++
++		OID_STR(OID_802_3_CURRENT_ADDRESS);
++		OID_STR(OID_802_3_MULTICAST_LIST);
++		OID_STR(OID_802_3_MAXIMUM_LIST_SIZE);
++
++		OID_STR(OID_802_11_BSSID);
++		OID_STR(OID_802_11_SSID);
++		OID_STR(OID_802_11_INFRASTRUCTURE_MODE);
++		OID_STR(OID_802_11_ADD_WEP);
++		OID_STR(OID_802_11_REMOVE_WEP);
++		OID_STR(OID_802_11_DISASSOCIATE);
++		OID_STR(OID_802_11_AUTHENTICATION_MODE);
++		OID_STR(OID_802_11_PRIVACY_FILTER);
++		OID_STR(OID_802_11_BSSID_LIST_SCAN);
++		OID_STR(OID_802_11_ENCRYPTION_STATUS);
++		OID_STR(OID_802_11_ADD_KEY);
++		OID_STR(OID_802_11_REMOVE_KEY);
++		OID_STR(OID_802_11_ASSOCIATION_INFORMATION);
++		OID_STR(OID_802_11_PMKID);
++		OID_STR(OID_802_11_NETWORK_TYPES_SUPPORTED);
++		OID_STR(OID_802_11_NETWORK_TYPE_IN_USE);
++		OID_STR(OID_802_11_TX_POWER_LEVEL);
++		OID_STR(OID_802_11_RSSI);
++		OID_STR(OID_802_11_RSSI_TRIGGER);
++		OID_STR(OID_802_11_FRAGMENTATION_THRESHOLD);
++		OID_STR(OID_802_11_RTS_THRESHOLD);
++		OID_STR(OID_802_11_SUPPORTED_RATES);
++		OID_STR(OID_802_11_CONFIGURATION);
++		OID_STR(OID_802_11_BSSID_LIST);
++#undef OID_STR
++	}
++
++	return "?";
++}
++#else
++static const char *oid_to_string(__le32 oid)
++{
++	return "?";
++}
++#endif
++
++
+ /* translate error code */
+ static int rndis_error_status(__le32 rndis_status)
+ {
+@@ -533,11 +594,21 @@ static int rndis_query_oid(struct usbnet *dev, __le32 oid, void *data, int *len)
+ 	u.get->oid = oid;
+ 
+ 	ret = rndis_command(dev, u.header, buflen);
++	if (ret < 0)
++		devdbg(dev, "rndis_query_oid(%s): rndis_command() failed, %d "
++			"(%08x)", oid_to_string(oid), ret,
++			le32_to_cpu(u.get_c->status));
++
+ 	if (ret == 0) {
+ 		ret = le32_to_cpu(u.get_c->len);
+ 		*len = (*len > ret) ? ret : *len;
+ 		memcpy(data, u.buf + le32_to_cpu(u.get_c->offset) + 8, *len);
+ 		ret = rndis_error_status(u.get_c->status);
++
++		if (ret < 0)
++			devdbg(dev, "rndis_query_oid(%s): device returned "
++				"error,  0x%08x (%d)", oid_to_string(oid),
++				le32_to_cpu(u.get_c->status), ret);
+ 	}
+ 
+ 	mutex_unlock(&priv->command_lock);
+@@ -583,9 +654,20 @@ static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
+ 	memcpy(u.buf + sizeof(*u.set), data, len);
+ 
+ 	ret = rndis_command(dev, u.header, buflen);
+-	if (ret == 0)
++	if (ret < 0)
++		devdbg(dev, "rndis_set_oid(%s): rndis_command() failed, %d "
++			"(%08x)", oid_to_string(oid), ret,
++			le32_to_cpu(u.set_c->status));
++
++	if (ret == 0) {
+ 		ret = rndis_error_status(u.set_c->status);
+ 
++		if (ret < 0)
++			devdbg(dev, "rndis_set_oid(%s): device returned error, "
++				"0x%08x (%d)", oid_to_string(oid),
++				le32_to_cpu(u.set_c->status), ret);
++	}
++
+ 	mutex_unlock(&priv->command_lock);
+ 
+ 	if (u.buf != priv->command_buffer)
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-
-Thanks.
