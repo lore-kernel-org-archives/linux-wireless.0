@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f185.google.com ([209.85.216.185]:48958 "EHLO
-	mail-px0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757674AbZGMX57 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480AbZG3OTQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 19:57:59 -0400
-Received: by pxi15 with SMTP id 15so772692pxi.33
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 16:57:59 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] mac80211: use correct address for mesh Path Error
-Date: Mon, 13 Jul 2009 17:00:10 -0700
-Message-Id: <1247529610-21854-1-git-send-email-andrey@cozybit.com>
+	Thu, 30 Jul 2009 10:19:16 -0400
+Subject: Re: [RFC PATCH] mac80211: FIF_PSPOLL filter flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Igor Perminov <igor.perminov@inbox.ru>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248962000.29068.170.camel@sunlight>
+References: <1248962000.29068.170.camel@sunlight>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KSIU7OVnBp9CU7GwVvcZ"
+Date: Thu, 30 Jul 2009 16:18:45 +0200
+Message-Id: <1248963525.16129.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Javier Cardona <javier@cozybit.com>
 
-For forwarded frames, we save the precursor address in addr1 in case it
-needs to be used to send a Path Error.  mesh_path_discard_frame,
-however, was using addr2 instead of addr1 to send Path Error frames, so
-correct that and also make the comment regarding this more clear.
+--=-KSIU7OVnBp9CU7GwVvcZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+On Thu, 2009-07-30 at 17:53 +0400, Igor Perminov wrote:
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 1981af9..1ede8cb 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -507,8 +507,10 @@ void mesh_path_tx_pending(struct mesh_path *mpath)
-  * @skb: frame to discard
-  * @sdata: network subif the frame was to be sent through
-  *
-- * If the frame was beign forwarded from another MP, a PERR frame will be sent
-- * to the precursor.
-+ * If the frame was being forwarded from another MP, a PERR frame will be sent
-+ * to the precursor.  The precursor's address (i.e. the previous hop) was saved
-+ * in addr1 of the frame-to-be-forwarded, and would only be overwritten once
-+ * the destination is successfully resolved.
-  *
-  * Locking: the function must me called within a rcu_read_lock region
-  */
-@@ -523,7 +525,7 @@ void mesh_path_discard_frame(struct sk_buff *skb,
- 		u8 *ra, *da;
- 
- 		da = hdr->addr3;
--		ra = hdr->addr2;
-+		ra = hdr->addr1;
- 		mpath = mesh_path_lookup(da, sdata);
- 		if (mpath)
- 			dsn = ++mpath->dsn;
--- 
-1.5.6.3
+> @@ -245,6 +247,14 @@ static int ieee80211_open(struct net_device *dev)
+> =20
+>  			ieee80211_start_mesh(sdata);
+>  		}
+> +		else if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
+
+Put 'else if' on the same line as '}' please
+
+> +		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+> +			local->fif_pspoll--;
+>  			local->fif_control--;
+> +		}
+
+Yeah, that's exactly what I was thinking of :)
+
+> @@ -497,6 +509,13 @@ static int ieee80211_stop(struct net_device *dev)
+>  		}
+>  		/* fall through */
+>  	default:
+> +		if (sdata->vif.type =3D=3D NL80211_IFTYPE_AP) {
+
+I'd probably put this after a
+	case NL80211_IFTYPE_AP:
+label but you need the if () anyway ... hmm I guess we really should
+clean up this code and split it into two switch statements...
+
+johannes
+
+--=-KSIU7OVnBp9CU7GwVvcZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKcau/AAoJEODzc/N7+Qma/fIQAJKg+cpEZq9ZsJ2E4nYMgpao
+76IV9Hh4j2Kk1vxc280eoXJSLv6UCsct2HIKWjEU0vXRnnsSmSUkHGqUs7cn/bc4
+OFDDWQbJFcC2HFRFi1/9A17f4W6hDjRaVRgacZe1qfkzFUVGFBEEvhgCWJoHuuTv
+bLl+Y2pARLHfbLE2oo2XG1e+gFdTWbjqhjqF4UFQk/MpEGf6azsCqazcoBwTG2Aw
+OaCpH/34ZwWFgYSl3I+yBu++7/WXVQsS3bChsRaqryT2cBAw2Gidmzt49Gx8pADG
+2lTniPQBPAEl6CfPKXJx+j/pWtWs3LsmeyCTdUAVjbnM2w1iETUIr0bX+ATx6H+I
+Y7cZscP6F/bpIJmCbaeCa5w9eP9j8b3NNwGCo4ZgV4MpuR/AkiDRR5hDVBtwXe/P
+P7F3elXR4vTAFgcob/pK2N0VtaUig9UZyZN8P1OtvZmRajDzexLnLWepJSK+NED8
+i0PcobndbgkVOvRaCMScWI3IVix6EFnT0cUEcIRdPEMHjhCGOQ/TknLchJjwO6xq
+rhAhZWmI0NGlkepmeYxmacGnwt3bizZsap/XvJ+QTnMAp77ZbVWOINL+Tdl762TU
+p3xetKY7rYp332l+dlfY/mXSqeS2QpxpdcF/zGzatXeK6VJX39w19dcaVGGj8Ihm
+fjtLCAr4LBVldCEwhji8
+=s5nH
+-----END PGP SIGNATURE-----
+
+--=-KSIU7OVnBp9CU7GwVvcZ--
 
