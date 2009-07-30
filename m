@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:64348 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbZGQR57 convert rfc822-to-8bit (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:39378 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408AbZG3Qrf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 13:57:59 -0400
-Received: by gxk9 with SMTP id 9so1825825gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2009 10:57:59 -0700 (PDT)
+	Thu, 30 Jul 2009 12:47:35 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 03/10] rndis_wlan: clear cfg80211 scan on rndis_wlan_stop()
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Thu, 30 Jul 2009 19:41:31 +0300
+Message-ID: <20090730164131.28317.71430.stgit@fate.lan>
+In-Reply-To: <20090730164120.28317.53313.stgit@fate.lan>
+References: <20090730164120.28317.53313.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <1247843954.25608.62.camel@mj>
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-	 <445f43ac0907151344q6d80ddeckc0c586b34d8ca7c5@mail.gmail.com>
-	 <6306c640907152338k4a5fb474h481d5adba97507b1@mail.gmail.com>
-	 <1247843954.25608.62.camel@mj>
-Date: Fri, 17 Jul 2009 13:57:58 -0400
-Message-ID: <b6c5339f0907171057t5f4c4540n10209a69fc27e926@mail.gmail.com>
-Subject: Re: any controller working in AP mode ?
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Ram kumar <ramkumar.research@gmail.com>,
-	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 17, 2009 at 11:19 AM, Pavel Roskin<proski@gnu.org> wrote:
-> I did a quick test with rt73usb.  hostapd starts sucessfully, and a
-> client using ath5k can connect and transmit data.  A client using ath9k
-> can connect (wpa_supplicant enters state CONNECTED), but no data goes
-> through.  The same client connects fine to a normal AP (D-Link DIR-615).
+Scanning gets stuck if device is stopped when scan is active. Fix by
+clearing/aborting cfg80211 scan on rndis_wlan_stop().
 
-Sounds like the AP doesn't buffer frames properly -- ath9k does power
-saving but ath5k does not, yet.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
--- 
-Bob Copeland %% www.bobcopeland.com
+ drivers/net/wireless/rndis_wlan.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 3c7c620..dee0551 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1484,6 +1484,9 @@ static void rndis_get_scan_results(struct work_struct *work)
+ 
+ 	devdbg(usbdev, "get_scan_results");
+ 
++	if (!priv->scan_request)
++		return;
++
+ 	ret = rndis_check_bssid_list(usbdev);
+ 
+ 	cfg80211_scan_done(priv->scan_request, ret < 0);
+@@ -2522,6 +2525,11 @@ static int rndis_wlan_stop(struct usbnet *usbdev)
+ 	cancel_work_sync(&priv->work);
+ 	flush_workqueue(priv->workqueue);
+ 
++	if (priv->scan_request) {
++		cfg80211_scan_done(priv->scan_request, true);
++		priv->scan_request = NULL;
++	}
++
+ 	return retval;
+ }
+ 
+
