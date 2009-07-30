@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f226.google.com ([209.85.219.226]:62444 "EHLO
-	mail-ew0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbZGSIsc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jul 2009 04:48:32 -0400
-Received: by ewy26 with SMTP id 26so1704873ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2009 01:48:30 -0700 (PDT)
-Message-ID: <4A62DDDC.5090100@tuffmail.co.uk>
-Date: Sun, 19 Jul 2009 09:48:28 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from mail.gmx.net ([213.165.64.20]:36179 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752886AbZG3VZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 17:25:58 -0400
+Message-ID: <4A720FE4.4020301@gmx.de>
+Date: Thu, 30 Jul 2009 23:25:56 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Troy Moure <twmoure@szypr.net>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] acer-wmi: fix rfkill conversion
-References: <alpine.LFD.2.00.0906171135080.3376@troy-laptop>
-In-Reply-To: <alpine.LFD.2.00.0906171135080.3376@troy-laptop>
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat-2.6:  Makefile: fixed test expressions for target
+ install
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6/17/09, Troy Moure <twmoure@szypr.net> wrote:
-> Commit 19d337dff95cbf76ed ("rfkill: rewrite") incorrectly reversed
-> the meaning of 'state' in acer_rfkill_update() when it changed
-> rfkill_force_state() to rfkill_set_sw_state().  Fix it.
->
-> Signed-off-by: Troy Moure <twmoure@szypr.net>
-> ---
-> This fixes the rfkill switch on my Acer laptop, which was behaving
-> backwards (the state reported in the logs was the opposite of the
-> state indicated by the LED).
+This removes the two errors of [ with target "install"
 
-I think there's another reversal error that you didn't notice :-).  I found that acer-wmi disables the wireless when it is loaded.
+make[1]: Leaving directory `/home/joerg/src/linux-2.6.30'
+[: 9: missing ]
+[: 9: missing ]
+depmod will prefer updates/ over kernel/ -- OK!
 
-The core tries to initialize the wireless to enabled, but the polarity is wrong in acer_rfkill_set().  It ends up disabling the wireless instead.
 
-Here's a patch for it.
-
---->
->From 75953366b4958a77019729662a997f5d361a7529 Mon Sep 17 00:00:00 2001
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Date: Sun, 19 Jul 2009 09:29:21 +0100
-Subject: [PATCH] acer-wmi: fix rfkill conversion
-
-Fix another polarity error introduced by the rfkill rewrite,
-this time in acer_rfkill_set().
-
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Signed-off-by: Joerg Albert <jal2@gmx.de>
 ---
- drivers/platform/x86/acer-wmi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+  Makefile |    4 ++--
+  1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/platform/x86/acer-wmi.c b/drivers/platform/x86/acer-wmi.c
-index be2fd6f..fb45f5e 100644
---- a/drivers/platform/x86/acer-wmi.c
-+++ b/drivers/platform/x86/acer-wmi.c
-@@ -973,7 +973,7 @@ static int acer_rfkill_set(void *data, bool blocked)
- {
- 	acpi_status status;
- 	u32 cap = (unsigned long)data;
--	status = set_u32(!!blocked, cap);
-+	status = set_u32(!blocked, cap);
- 	if (ACPI_FAILURE(status))
- 		return -ENODEV;
- 	return 0;
+diff --git a/Makefile b/Makefile
+index 62eb5db..90279c9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -80,7 +80,7 @@ install-scripts:
+         @install scripts/athload        $(DESTDIR)/usr/sbin/
+         @install scripts/b43load        $(DESTDIR)/usr/sbin/
+         @install scripts/iwl-load       $(DESTDIR)/usr/sbin/
+-       @if [ ! -z $(MADWIFI) && -z "$(DESTDIR)" ]; then \
++       @if [ ! -z "$(MADWIFI)" -a -z "$(DESTDIR)" ]; then \
+                 echo ;\
+                 echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+                 echo "If you would like to enable it later you can run:"  ;\
+@@ -89,7 +89,7 @@ install-scripts:
+                 echo Running athenable ath5k...;\
+                 /usr/sbin/athenable ath5k ;\
+         fi
+-       @if [ ! -z $(OLD_IWL) && -z "$(DESTDIR)" ]; then \
++       @if [ ! -z "$(OLD_IWL)" -a -z "$(DESTDIR)" ]; then \
+                 echo ;\
+                 echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
+                 echo "If you would like to enable it later you can run:"  ;\
 -- 
-1.6.3.2
+1.6.0.4
