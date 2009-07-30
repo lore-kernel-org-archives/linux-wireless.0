@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:16552 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934691AbZGQPTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 11:19:17 -0400
-Subject: Re: any controller working in AP mode ?
-From: Pavel Roskin <proski@gnu.org>
-To: Ram kumar <ramkumar.research@gmail.com>
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <6306c640907152338k4a5fb474h481d5adba97507b1@mail.gmail.com>
-References: <6306c640907142221o27c257aaw12f73da8118376f@mail.gmail.com>
-	 <445f43ac0907151344q6d80ddeckc0c586b34d8ca7c5@mail.gmail.com>
-	 <6306c640907152338k4a5fb474h481d5adba97507b1@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 17 Jul 2009 11:19:14 -0400
-Message-Id: <1247843954.25608.62.camel@mj>
-Mime-Version: 1.0
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:37527 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356AbZG3Qwb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 12:52:31 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [wireless] rt2870sta BUGs on shutdown, 2.6.30.2->git.today+git.wireless.today
+Date: Thu, 30 Jul 2009 18:52:27 +0200
+Cc: Luis Correia <luis.f.correia@gmail.com>,
+	Mike Galbraith <efault@gmx.de>, linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <1248945770.7910.24.camel@marge.simson.net> <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com> <200907301517.57811.bzolnier@gmail.com>
+In-Reply-To: <200907301517.57811.bzolnier@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907301852.28172.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-16 at 12:08 +0530, Ram kumar wrote:
-> hi,
-> 
-> > The thin firmware that allows using the 8383 with mac80211 and
-> > implement an AP with hostapd is available here:
-> > http://dev.laptop.org/pub/firmware/libertas/thinfirm/
-> 
-> Thanks for the reply.It looks like currently there are only two
-> devices support AP mode with USB as an interface.
-> 
-> 1.MARVELL 8388.
-> 2.RALINK - RT73USB.
-> 
-> But in the linux wireless website it says RT73USB doesn't support AP
-> mode.I am assuming that site is not updated with recent
-> information,please correct me if i am wrong.
+I planned, and actually did write, a lengthy reply for this thread, when I completed the reply
+I reconsidred and opted for this shorter reply. Every 2 or 3 months this discussion is started
+again and I am f***ing tired of it, so excuse me but I am not going to throw myself into
+this completely pointless discussion
 
-It's hard to say if it's intentional or not.  rt2500usb is listed as
-having AP support, and it's closely related to rt73usb.
+What you are suggesting in your mail is something the rt2x00 project did for 5 years, we stopped
+with that 4 months ago because it wasn't working out. Apparently you have more experience in this
+matter so I hope you will find a way to make that solution work out.
 
-I did a quick test with rt73usb.  hostapd starts sucessfully, and a
-client using ath5k can connect and transmit data.  A client using ath9k
-can connect (wpa_supplicant enters state CONNECTED), but no data goes
-through.  The same client connects fine to a normal AP (D-Link DIR-615).
+If you want to maintain the legacy drivers then do it, start a new project and start maintaining
+the code. I can forward you all the users with complains about the "good enough" drivers. It is
+good to know that you apparently have the resources to maintain the old drivers. 
+Most people who are helping with the rt2800pci/usb drivers lack the required time to boost the driver
+into such a state it can be widely adopted. But every time it amazes me that the people who want
+to develop and have the time to do it, all want to jump on the old Ralink code... Apparently there
+is some appeal to maintaining crap rather then helping to ship out proper drivers to the users.
 
-I don't have time to debug that issue right now, but you get the idea.
-The AP mode can be enabled, but be prepared to some issues.
+But I'll shut up now, as I said this discussion is held every few months, so perhaps that when
+the discussion is started again in a couple of months I am more interested in a lengthy reply.
 
-> It would be very helpful if anyone can guide me,how to get the
-> hardware for MARVELL 8388.
-
-5 minute search finds that Zonet ZEW2502 is what you need.  There is
-only one driver for that device on the Zonet site, and it's clearly for
-Marvell.
-
--- 
-Regards,
-Pavel Roskin
+Ivo
