@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from anchor-post-1.mail.demon.net ([195.173.77.132]:39004 "EHLO
-	anchor-post-1.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756584AbZGJXl3 (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:58823 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbZG3FY3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jul 2009 19:41:29 -0400
-Date: Sat, 11 Jul 2009 00:09:26 +0100
-From: Darren Salt <linux@youmustbejoking.demon.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Thiemo Nagel <thiemo.nagel@ph.tum.de>,
-	Corentin Chary <corentin.chary@gmail.com>,
-	debian-eeepc-devel@lists.alioth.debian.org,
-	acpi4asus-user@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2.6.31] rfkill: allow toggling soft state in sysfs again
-Message-ID: <507E529B48%linux@youmustbejoking.demon.co.uk>
-In-Reply-To: <1247262952.26071.1.camel@johannes.local>
-References: <4A5716AA.5000903@ph.tum.de>
- <71cd59b00907100545v6f440a19xfc3668826eb1e509@mail.gmail.com>
- <4A5743AB.6090303@ph.tum.de>
- <71cd59b00907100646h5e0283fcyce5874cc4a19106b@mail.gmail.com>
- <4A575119.9070505@ph.tum.de> <507E3B9268%linux@youmustbejoking.demon.co.uk>
- <1247254899.21972.9.camel@johannes.local>
- <507E47A184%linux@youmustbejoking.demon.co.uk>
- <1247262952.26071.1.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 30 Jul 2009 01:24:29 -0400
+Received: by fxm28 with SMTP id 28so405815fxm.17
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 22:24:28 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248904238.1216.1019.camel@rc-desk>
+References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
+	 <1248903902.8925.1.camel@johannes.local>
+	 <1248904238.1216.1019.camel@rc-desk>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 08:24:23 +0300
+Message-Id: <1248931463.27010.2.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I demand that Johannes Berg may or may not have written...
+On Wed, 2009-07-29 at 14:50 -0700, reinette chatre wrote:
+> On Wed, 2009-07-29 at 14:45 -0700, Johannes Berg wrote:
+> > On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
+> > > From: Reinette Chatre <reinette.chatre@intel.com>
+> > > 
+> > > The connection monitor currently relies on probe requests paired
+> > > with probe responses to ensure that a connection is alive. This is
+> > > fragile in some environments where probe responses can get lost.
+> > > When we receive beacons we can also consider the connection to be
+> > > alive, so cancel connection poll instance when we receive a beacon.
+> > > 
+> > > The debug message "cancelling probereq poll due to a received beacon"
+> > > is removed as part of this change as this case is hit very often after
+> > > the above change and debug log receives significant number of these messages.
+> > 
+> > Not doing that was actually intentional -- we want to know whether or
+> > not the connection is working both ways, not just whether we can receive
+> > frames. This can certainly be improved, but I'm not sure this is the
+> > best approach.
+> 
+> I'd be happy to try out other approaches because my connection is
+> dropping every few minutes. 
 
-> On Fri, 2009-07-10 at 22:09 +0100, Darren Salt wrote:
->> I demand that Johannes Berg may or may not have written...
-[snip]
->>> *shrug*, I don't like it, but whatever...
->> I do. It means that we have a nice simple text-based interface for use in
->> scripts (for now), and a binary interface which is better suited to the
->> likes of desktop applications.
 
-> Indeed, and as long as you expect to only use soft toggle... problem is
-> that you won't know whether it's soft-toggled or not while it's
-> hard-blocked (off)!
+Mine too, and it even happens when I am a meter away from the AP.
+My device is 3945.
 
-Which is fine for eeepc-acpi-scripts and anything else which doesn't care
-about hard-blocking because the hardware doesn't do that.
+Best regards,
+	Maxim Levitsky
 
-eeepc-acpi-scripts should eventually use your rfkill utility, though. (I
-intend to make sure that it does so.)
 
-[snip]
--- 
-| Darren Salt            | linux at youmustbejoking | nr. Ashington, | Doon
-| using Debian GNU/Linux | or ds    ,demon,co,uk    | Northumberland | Army
-|   Kill all extremists!
-
-A large dog will have a surprising effect on your life.
