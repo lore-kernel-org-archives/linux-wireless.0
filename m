@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:59464 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933579AbZGPXfg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 19:35:36 -0400
-Message-ID: <4A5FB944.90709@mandriva.org>
-Date: Fri, 17 Jul 2009 02:35:32 +0300
-From: Thomas Backlund <tmb@mandriva.org>
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:52745 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849AbZG3Srp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 14:47:45 -0400
+Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
+ modules
+From: reinette chatre <reinette.chatre@intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org> <1247782731.31442.3.camel@johannes.local>
-In-Reply-To: <1247782731.31442.3.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248979011.23496.4.camel@johannes.local>
+References: <1248947897.8925.13.camel@johannes.local>
+	 <1248978482.1216.1087.camel@rc-desk>
+	 <1248979011.23496.4.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 11:47:45 -0700
+Message-Id: <1248979665.1216.1094.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg skrev:
-> On Fri, 2009-07-17 at 01:09 +0300, Thomas Backlund wrote:
+On Thu, 2009-07-30 at 11:36 -0700, Johannes Berg wrote:
+> On Thu, 2009-07-30 at 11:28 -0700, reinette chatre wrote:
+> > Hi Johannes,
+> > 
+> > On Thu, 2009-07-30 at 02:58 -0700, Johannes Berg wrote:
+> > > Even with the split into iwlcore/agn/3945 not all symbols
+> > > that cross file boundaries are needed in other modules, a
+> > > few are only used within iwlcore, for example.
+> > 
+> > I think in this case we need to be explicit when talking about "need"
+> > and "used". Yes, some of these exported symbols are only used within a
+> > module and this needs to be fixed. At the same time, some of these may
+> > be needed outside, but are just not currently used. Examples of the
+> > latter are: iwl_remove_station, iwl_rx_ant_restriction, and
+> > iwl_send_card_state. I think this is especially important for
+> > iwl_remove_station and iwl_rx_ant_restriction because their partners
+> > (iwl_add_station and iwl_tx_ant_restriction) are exported and used and I
+> > think it will be clean if they are also, even if they are not currently
+> > used.
 > 
->> Nope.
->> Nothing gets logged when I press the rfkill...
->>
->> I'd say that the rfkill rewrite killed my wireless :-(
->>
->> Bluetooth works at it whould, but not the wireless
->>
->> But now I have atleast found one way to get it working...
->>
->> I've built the rfkill utility, and with it I can get the wireless working...
+> But they can easily be exported when used. That's done even for
+> subsystem symbols, for instance some generic netlink stuff wasn't
+> exported until it was needed in wimax.
 > 
-> Thanks for the analysis!
-> 
->> Here is the output when wireless works:
->> [root@tmb-laptop rfkill]# ./rfkill list
->> 0: acer-wireless: Wireless LAN
->> 	Soft blocked: no
->> 	Hard blocked: no
->> 1: acer-bluetooth: Bluetooth
->> 	Soft blocked: yes
->> 	Hard blocked: no
->> 2: phy0: Wireless LAN
->> 	Soft blocked: no
->> 	Hard blocked: no
-> 
-> Makes sense that it works at this point :)
-> 
->> Pressing the rfkill button gets me this:
->> [root@tmb-laptop rfkill]# ./rfkill list
->> 0: acer-wireless: Wireless LAN
->> 	Soft blocked: yes
->> 	Hard blocked: no
->> 1: acer-bluetooth: Bluetooth
->> 	Soft blocked: yes
->> 	Hard blocked: no
->> 2: phy0: Wireless LAN
->> 	Soft blocked: no
->> 	Hard blocked: yes
-> 
-> So far so good. Your platform's soft-switch is wired to the card's hard
-> kill line. Mind trying
-> 
-> 	./rfkill unblock 0
-> 
-> (or whatever ID the acer-wireless has) at this point to see what
-> happens? I would hope it goes back to the working state.
-> 
+> Is there a problem with adding the export back whenever it's needed?
 
-Nothing happends...
+No. If this is what you want then I think you also need to remove
+iwl_rx_ant_restriction.
 
-It does not change anything on either acer-wireless or phy0
+Reinette
 
---
-Thomas
+
