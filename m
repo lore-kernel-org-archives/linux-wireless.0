@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out7.libero.it ([212.52.84.107]:59581 "EHLO
-	cp-out7.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752651AbZGWRbY convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:52180 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbZG3SsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 13:31:24 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: WARNING: at net/mac80211/tx.c:561
-Date: Thu, 23 Jul 2009 19:28:44 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200907230051.57201.rossi.f@inwind.it> <200907231907.47751.rossi.f@inwind.it> <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
-In-Reply-To: <43e72e890907231021m46139567s3de4ed4cc2812938@mail.gmail.com>
+	Thu, 30 Jul 2009 14:48:01 -0400
+Received: by ewy10 with SMTP id 10so989867ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 11:48:01 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [RFC PATCH] rt61pci: fix module reloading with power saving enabled
+Date: Thu, 30 Jul 2009 20:47:58 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+References: <1248846761.18329.20.camel@ct>
+In-Reply-To: <1248846761.18329.20.camel@ct>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200907231928.44337.rossi.f@inwind.it>
+  charset="iso-8859-15"
+Message-Id: <200907302047.58736.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 July 2009, Luis R. Rodriguez wrote:
+Hi,
 
-> On Thu, Jul 23, 2009 at 10:07 AM, Fabio Rossi<rossi.f@inwind.it> wrote:
-> > On Thursday 23 July 2009, Luis R. Rodriguez wrote:
-> >> On Wed, Jul 22, 2009 at 3:51 PM, Fabio Rossi<rossi.f@inwind.it> wrote:
-> >> > I'm using the last wireless-testing.git and I have experienced the
-> >> > following WARNING:
-> >> >
-> >> >  WARNING: at net/mac80211/tx.c:561
-> >> > ieee80211_tx_h_rate_ctrl+0x3d1/0x470 [mac80211]()
-> >>
-> >> Please try a git pull
-> >
-> > I was already working with the latest release:
-> >  v2.6.31-rc3-28452-g5bfcdb0
-> > so I confirm that I get the warning quite often (every 15 seconds).
->
-> What channel is your AP on?
-> Is your AP 00:0c:f6:xx:xx:xx ?
+On Wednesday 29 July 2009, Pavel Roskin wrote:
+> Unloading rt61pci can leave the device in such state that reloading
+> rt61pci would fail to reinitialize it.  Bogus data would be read from
+> the EEPROM and the RF version won't be recognized.  Only reboot would
+> return the device to a sane state.
+> 
+> It appears that it happens if rt61pci is unloaded while power saving is
+> active.  To initialize the device properly, SOFT_RESET_CSR should be set
+> to the same value as rt61pci_config_ps() uses to wake up the device.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+> 
+> I don't know what 0x00000007 is and I don't want to make up a name for
+> it.
 
-Yes, that is my AP configured on channel 8 (Frequency 2.447 GHz):
+I'll look it up in the specification document.
 
-          Cell 05 - Address: 00:0C:F6:xx:xx:xx
-                    Channel:8
-                    Frequency:2.447 GHz (Channel 8)
-                    Quality=48/70  Signal level=-62 dBm
-                    Encryption key:on
-                    ESSID:""
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s
-                    Bit Rates:6 Mb/s; 9 Mb/s; 12 Mb/s; 18 Mb/s; 24 Mb/s
-                              36 Mb/s; 48 Mb/s; 54 Mb/s
-                    Mode:Master
-                    Extra:tsf=000000007803aa0c
-                    Extra: Last beacon: 4352ms ago
-                    IE: Unknown: 0000
-                    IE: Unknown: 010482848B96
-                    IE: Unknown: 030108
-                    IE: Unknown: 050400010000
-                    IE: Unknown: 2A0104
-                    IE: Unknown: 32080C1218243048606C
-                    IE: Unknown: DD07000C4301000000
+> rt61pci_config_ps() does other things, but this is the minimal required
+> change.  If anyone has a specification for rt61, it should mention
+> SOFT_RESET_CSR and possibly other registers to be set before EEPROM may
+> be accessed.
+> 
+> Please note that unloading rt61pci (as well as rt73usb) can trigger an
+> oops or panic in sysfs code that I didn't have a chance to fix yet.
+> It's very elusive and manifests differently every time.  Fortunately
+> (for everyone not debugging it), it's rare.
+> 
+> 
+>  drivers/net/wireless/rt2x00/rt61pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+> index fb95b8c..f615fe6 100644
+> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+> @@ -2600,6 +2600,8 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	int retval;
+>  
+> +	rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
+> +
+>  	/*
+>  	 * Allocate eeprom data.
+>  	 */
 
+The only comment about the patch at this time is that it might require a nice comment. ;)
+I'll also think that perhaps a more generic approach is required where rt2x00lib forces
+PS to be disabled before probe_hw(), just in case other hardware also have these problems.
 
-Fabio
+Thanks,
+
+Ivo
+
