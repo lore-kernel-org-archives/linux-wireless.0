@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:17689 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756498AbZGIL67 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 07:58:59 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so34102fga.17
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jul 2009 04:58:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <f76a32050907082230r7b98c438ybf08d1a421717ad6@mail.gmail.com>
-References: <f76a32050907061006k3bed082fg3428a50370b0889b@mail.gmail.com>
-	 <1246900337.20908.15.camel@johannes.local>
-	 <f76a32050907061320n18f3c4c9j4d5589c9c9e45c02@mail.gmail.com>
-	 <f76a32050907082230r7b98c438ybf08d1a421717ad6@mail.gmail.com>
-Date: Thu, 9 Jul 2009 13:58:56 +0200
-Message-ID: <a32f33a40907090458j73b714d6w2fb0648d61beea08@mail.gmail.com>
-Subject: Re: rt73 in AP mode: PS frames buffered but missing TIM bit?
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stefan Steuerwald <salsasepp@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx71.mail.ru ([94.100.176.85]:57904 "EHLO mx71.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750952AbZG3PFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 11:05:37 -0400
+Subject: Re: [RFC PATCH] mac80211: FIF_PSPOLL filter flag
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1248963525.16129.2.camel@johannes.local>
+References: <1248962000.29068.170.camel@sunlight>
+	 <1248963525.16129.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 30 Jul 2009 19:05:36 +0400
+Message-Id: <1248966336.29068.178.camel@sunlight>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 9, 2009 at 7:30 AM, Stefan
-Steuerwald<salsasepp@googlemail.com> wrote:
->> > Sounds like a driver problem, it must not be reacting to set_tim()
->> > properly.
->> >
->> > johannes
->>
->> Looking at rt73usb.c:2242, there isn't any initializer for .set_tim .
->> Plausible explanation.
->> It may be totally beyond me to just implement it. Let me find someone
->> to ask nicely ;-) ...
->
-> I have an experimental patch working (sent for review to the rt2x00
-> mailing list).
-> I will report back here.
+> > @@ -497,6 +509,13 @@ static int ieee80211_stop(struct net_device *dev)
+> >  		}
+> >  		/* fall through */
+> >  	default:
+> > +		if (sdata->vif.type == NL80211_IFTYPE_AP) {
+> 
+> I'd probably put this after a
+> 	case NL80211_IFTYPE_AP:
+> label but you need the if () anyway ... hmm I guess we really should
+> clean up this code and split it into two switch statements...
 
-Are you sure you've send it already? Because I haven't seen anything yet.
+And may be do it above?
 
-Ivo
+	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
+		atomic_dec(&local->iff_allmultis);
+
+	if (sdata->flags & IEEE80211_SDATA_PROMISC)
+		atomic_dec(&local->iff_promiscs);
+
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		local->fif_pspoll--;
++
+	netif_addr_lock_bh(dev);
+	spin_lock_bh(&local->filter_lock);
+	__dev_addr_unsync(&local->mc_list, &local->mc_count,
+			  &dev->mc_list, &dev->mc_count);
+	ieee80211_configure_filter(local);
+	spin_unlock_bh(&local->filter_lock);
+	netif_addr_unlock_bh(dev);
+
+Igor
+
+
