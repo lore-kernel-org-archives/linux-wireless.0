@@ -1,86 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:33779 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754146AbZGGTZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 15:25:26 -0400
-Subject: Re: ath5k and ap mode
-From: Pavel Roskin <proski@gnu.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: tomek <paladyn11@gmail.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <b6c5339f0907070719l2db5aec3rc20160eabd41fd0a@mail.gmail.com>
-References: <1246959589.4686.1.camel@debian-tomek>
-	 <b6c5339f0907070719l2db5aec3rc20160eabd41fd0a@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 07 Jul 2009 15:25:23 -0400
-Message-Id: <1246994723.3393.14.camel@mj>
-Mime-Version: 1.0
+Received: from sypressi.dnainternet.net ([83.102.40.135]:43265 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751006AbZG3Qrf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 12:47:35 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 01/10] usbnet: allow "minidriver" to prevent urb unlinking on
+	usbnet_stop
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	David Brownell <dbrownell@users.sourceforge.net>
+Date: Thu, 30 Jul 2009 19:41:20 +0300
+Message-ID: <20090730164120.28317.53313.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-07-07 at 10:19 -0400, Bob Copeland wrote:
-> On Tue, Jul 7, 2009 at 5:39 AM, tomek<paladyn11@gmail.com> wrote:
-> > Hi.
-> >
-> > When ap-mode will working in driver ath5k?
-> 
-> It will be enabled in 2.6.31... whether it works then or not is
-> anyone's guess :)
+rndis_wlan devices freeze after running usbnet_stop several times. It appears
+that firmware freezes in state where it does not respond to any RNDIS commands
+and device have to be physically unplugged/replugged. This patch lets
+minidrivers to disable unlink_urbs on usbnet_stop through new info flag.
 
-I've just tested the mainline Linux git
-(git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git)
-and indeed, the AP support is there, so it will be in 2.6.31.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: David Brownell <dbrownell@users.sourceforge.net>
+---
 
-> (fyi, I'm currently waiting on some hw to arrive to do thorough
-> testing of ath5k AP mode; some people say it works for them, but I'm
-> still seeing some bugs here.)
+ drivers/net/usb/usbnet.c          |   32 ++++++++++++++++++--------------
+ drivers/net/wireless/rndis_wlan.c |    9 ++++++---
+ include/linux/usb/usbnet.h        |    1 +
+ 3 files changed, 25 insertions(+), 17 deletions(-)
 
-My testing shows that ath5k is very unreliable in the AP mode, unlike
-MadWifi.  Sometimes hostapd reports this:
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index 25e435c..af1fe46 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -601,21 +601,25 @@ int usbnet_stop (struct net_device *net)
+ 				info->description);
+ 	}
+ 
+-	// ensure there are no more active urbs
+-	add_wait_queue (&unlink_wakeup, &wait);
+-	dev->wait = &unlink_wakeup;
+-	temp = unlink_urbs (dev, &dev->txq) + unlink_urbs (dev, &dev->rxq);
+-
+-	// maybe wait for deletions to finish.
+-	while (!skb_queue_empty(&dev->rxq)
+-			&& !skb_queue_empty(&dev->txq)
+-			&& !skb_queue_empty(&dev->done)) {
+-		msleep(UNLINK_TIMEOUT_MS);
+-		if (netif_msg_ifdown (dev))
+-			devdbg (dev, "waited for %d urb completions", temp);
++	if (!(info->flags & FLAG_AVOID_UNLINK_URBS)) {
++		/* ensure there are no more active urbs */
++		add_wait_queue(&unlink_wakeup, &wait);
++		dev->wait = &unlink_wakeup;
++		temp = unlink_urbs(dev, &dev->txq) +
++			unlink_urbs(dev, &dev->rxq);
++
++		/* maybe wait for deletions to finish. */
++		while (!skb_queue_empty(&dev->rxq)
++				&& !skb_queue_empty(&dev->txq)
++				&& !skb_queue_empty(&dev->done)) {
++			msleep(UNLINK_TIMEOUT_MS);
++			if (netif_msg_ifdown(dev))
++				devdbg(dev, "waited for %d urb completions",
++					temp);
++		}
++		dev->wait = NULL;
++		remove_wait_queue(&unlink_wakeup, &wait);
+ 	}
+-	dev->wait = NULL;
+-	remove_wait_queue (&unlink_wakeup, &wait);
+ 
+ 	usb_kill_urb(dev->interrupt);
+ 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 09c0702..76c5ec6 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2513,7 +2513,8 @@ static int rndis_wlan_stop(struct usbnet *usbdev)
+ 
+ static const struct driver_info	bcm4320b_info = {
+ 	.description =	"Wireless RNDIS device, BCM4320b based",
+-	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT,
++	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT |
++				FLAG_AVOID_UNLINK_URBS,
+ 	.bind =		rndis_wlan_bind,
+ 	.unbind =	rndis_wlan_unbind,
+ 	.status =	rndis_status,
+@@ -2527,7 +2528,8 @@ static const struct driver_info	bcm4320b_info = {
+ 
+ static const struct driver_info	bcm4320a_info = {
+ 	.description =	"Wireless RNDIS device, BCM4320a based",
+-	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT,
++	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT |
++				FLAG_AVOID_UNLINK_URBS,
+ 	.bind =		rndis_wlan_bind,
+ 	.unbind =	rndis_wlan_unbind,
+ 	.status =	rndis_status,
+@@ -2541,7 +2543,8 @@ static const struct driver_info	bcm4320a_info = {
+ 
+ static const struct driver_info rndis_wlan_info = {
+ 	.description =	"Wireless RNDIS device",
+-	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT,
++	.flags =	FLAG_WLAN | FLAG_FRAMING_RN | FLAG_NO_SETINT |
++				FLAG_AVOID_UNLINK_URBS,
+ 	.bind =		rndis_wlan_bind,
+ 	.unbind =	rndis_wlan_unbind,
+ 	.status =	rndis_status,
+diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
+index 7c17b2e..c642f78 100644
+--- a/include/linux/usb/usbnet.h
++++ b/include/linux/usb/usbnet.h
+@@ -86,6 +86,7 @@ struct driver_info {
+ 
+ #define FLAG_FRAMING_AX 0x0040		/* AX88772/178 packets */
+ #define FLAG_WLAN	0x0080		/* use "wlan%d" names */
++#define FLAG_AVOID_UNLINK_URBS 0x0100	/* don't unlink urbs at usbnet_stop() */
+ 
+ 
+ 	/* init device ... can sleep, or cause probe() failure */
 
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: associated (aid 1)
-wlan3: STA 00:17:c4:3b:fc:88 WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
-wlan3: STA 00:17:c4:3b:fc:88 WPA: received EAPOL-Key 2/4 Pairwise with unexpected replay counter
-wlan3: STA 00:17:c4:3b:fc:88 RADIUS: starting accounting session 4A538811-00000003
-wlan3: STA 00:17:c4:3b:fc:88 WPA: pairwise key handshake completed (WPA)
-wlan3: STA 00:17:c4:3b:fc:88 WPA: received EAPOL-Key 4/4 Pairwise with unexpected replay counter
-wlan3: STA 00:17:c4:3b:fc:88 WPA: group key handshake completed (WPA)
-
-At other times, it prints stuff like this:
-
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: authenticated
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: associated (aid 1)
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: associated (aid 1)
-wlan3: STA 00:17:c4:3b:fc:88 IEEE 802.11: deauthenticated due to local deauth request
-
-wpa_supplicant on the client side reports strange messages too, for
-instance:
-
-Authentication with 00:00:00:00:00:00 timed out.
-
-or
-
-WPA: Countermeasures - dropped EAPOL request.
-
-I'm using WPA-PSK (WPA1 only) to simplify the configuration.  My
-impression is that we need a serious effort to weed out such problems.
-
-Also, I'm running the current wireless-testing.git on the client side,
-and it take some time for wpa_supplicant to start, as it reports:
-
-ioctl[SIOCSIWSCAN]: Device or resource busy
-Failed to initiate AP scan.
-
-It looks like the station spends too much time in the busy state.  It
-used to work better in the 2.6.30-rcX-wl days.
-
-That's not meant to be a bugreport, more like a summary of all issues
-I've seen.
-
--- 
-Regards,
-Pavel Roskin
