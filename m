@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:38829 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbZGFNSM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 09:18:12 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: fix queue stall due to underrun
-Date: Mon, 6 Jul 2009 15:18:13 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.36.123.2]:28216 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751429AbZG3RT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 13:19:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 10:19:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 1/3] cfg80211: use goto out on 11d reg hint failure
+Date: Thu, 30 Jul 2009 10:19:44 -0700
+Message-ID: <1248974386-8168-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1248974386-8168-1-git-send-email-lrodriguez@atheros.com>
+References: <1248974386-8168-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200907061518.13368.chunkeey@web.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger discovered a weird behavior under load.
-In essence, the queue's length count under runs,
-which in turn renders the associated ac queue unusable.
+This does not change functionality.
 
-Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index ea074a6..01eadb1 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -199,7 +199,7 @@ static int p54_tx_qos_accounting_alloc(struct p54_common *priv,
- 	queue = &priv->tx_stats[p54_queue];
+ net/wireless/reg.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fb40428..2d1d183 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1774,10 +1774,8 @@ void regulatory_hint_11d(struct wiphy *wiphy,
  
- 	spin_lock_irqsave(&priv->tx_stats_lock, flags);
--	if (unlikely(queue->len > queue->limit && IS_QOS_QUEUE(p54_queue))) {
-+	if (unlikely(queue->len >= queue->limit && IS_QOS_QUEUE(p54_queue))) {
- 		spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
- 		return -ENOSPC;
- 	}
-@@ -222,8 +222,11 @@ static void p54_tx_qos_accounting_free(struct p54_common *priv,
- 	if (skb && IS_DATA_FRAME(skb)) {
- 		struct p54_hdr *hdr = (void *) skb->data;
- 		struct p54_tx_data *data = (void *) hdr->data;
-+		unsigned long flags;
+ 	mutex_lock(&cfg80211_mutex);
  
-+		spin_lock_irqsave(&priv->tx_stats_lock, flags);
- 		priv->tx_stats[data->hw_queue].len--;
-+		spin_unlock_irqrestore(&priv->tx_stats_lock, flags);
- 	}
- 	p54_wake_queues(priv);
- }
-@@ -504,7 +507,6 @@ static void p54_rx_eeprom_readback(struct p54_common *priv,
+-	if (unlikely(!last_request)) {
+-		mutex_unlock(&cfg80211_mutex);
+-		return;
+-	}
++	if (unlikely(!last_request))
++		goto out;
  
- 	priv->eeprom = NULL;
- 	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
--	p54_tx_qos_accounting_free(priv, tmp);
- 	dev_kfree_skb_any(tmp);
- 	complete(&priv->eeprom_comp);
- }
-@@ -531,7 +533,6 @@ static void p54_rx_stats(struct p54_common *priv, struct sk_buff *skb)
- 	priv->noise = p54_rssi_to_dbm(priv, le32_to_cpu(stats->noise));
- 
- 	tmp = p54_find_and_unlink_skb(priv, hdr->req_id);
--	p54_tx_qos_accounting_free(priv, tmp);
- 	dev_kfree_skb_any(tmp);
- }
- 
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+-- 
+1.6.0.4
+
