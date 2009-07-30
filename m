@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36561 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051AbZG3J5I (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:48696 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbZG3Jge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 05:57:08 -0400
-Subject: Re: [wireless] rt2870sta BUGs on shutdown,
- 2.6.30.2->git.today+git.wireless.today
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mike Galbraith <efault@gmx.de>
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1248947099.8396.6.camel@marge.simson.net>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-R1PjQfvNwWiXGaIZHnnV"
-Date: Thu, 30 Jul 2009 11:55:40 +0200
-Message-Id: <1248947740.8925.12.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 30 Jul 2009 05:36:34 -0400
+Received: by bwz19 with SMTP id 19so467311bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 02:36:34 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
+Date: Thu, 30 Jul 2009 11:36:39 +0200
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com> <1248903902.8925.1.camel@johannes.local>
+In-Reply-To: <1248903902.8925.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200907301136.40274.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Mittwoch, 29. Juli 2009 schrieb Johannes Berg:
+> On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
+> > From: Reinette Chatre <reinette.chatre@intel.com>
+> > 
+> > The connection monitor currently relies on probe requests paired
+> > with probe responses to ensure that a connection is alive. This is
+> > fragile in some environments where probe responses can get lost.
+> > When we receive beacons we can also consider the connection to be
+> > alive, so cancel connection poll instance when we receive a beacon.
+> > 
+> > The debug message "cancelling probereq poll due to a received beacon"
+> > is removed as part of this change as this case is hit very often after
+> > the above change and debug log receives significant number of these messages.
+> 
+> Not doing that was actually intentional -- we want to know whether or
+> not the connection is working both ways, not just whether we can receive
+> frames. This can certainly be improved, but I'm not sure this is the
+> best approach.
 
---=-R1PjQfvNwWiXGaIZHnnV
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Just out of curiosity, do direct probe requests get ACKed?
 
-On Thu, 2009-07-30 at 11:44 +0200, Mike Galbraith wrote:
-> On Thu, 2009-07-30 at 11:29 +0200, Johannes Berg wrote:
-> > On Thu, 2009-07-30 at 11:22 +0200, Mike Galbraith wrote:
-> >=20
-> > > drivers/staging/rt2870/../rt2860/sta_ioctl.c
-> >=20
-> > Sorry, but that '/staging/' thing in there means we cannot support this=
-.
-> > If you must, take your query to the staging list,
-> > devel@driverdev.osuosl.org (according to MAINTAINERS).
->=20
-> Forwarded, thanks.
->=20
-> ....hm.  Does "If you must" mean reports aren't welcome?
+If not, the hardware wouldn't have a possibility to retry the frame and the
+probability of loosing a probe request frame would be much higher then of
+a data frame.
 
-To be honest, I don't know. I'd rather see people use the rt2x00 code
-instead of spending time cleaning up that mess (the code you've pasted
-was pretty bad!). But you may or may not find somebody who cares about
-that, just rather unlikely on this list.
-
-johannes
-
---=-R1PjQfvNwWiXGaIZHnnV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKcW4ZAAoJEODzc/N7+Qmaxa4P/iGy79A4gyhyk+R0EWF57X+I
-1VX3vTw7LClxkBnFS8aXiLNldnq1rD3tFkepsShc6osCq6iHGPDffAmAQcKkhxb/
-zUfc2f+QmVjagvpcm+CVDDXZDxlmAp9ViY8b66cPguxO19fZ0+4dbpVyScs5RI3a
-n1TNu6305Lk2+xyUVRLL1TrtCSq1D6FmlbVfF21XAMgDL2i9zULLEq+rrjbkWfEn
-SkIBM6WZZNGZKCEbe7xCFHlub8mwROjfDBshj9+ZW4JNZ5mEEqr8yX2Bk8xYuTnn
-n02t/d7dsAwBmR13N9LRG3BRXrnBriYIFtvwKLMF0PKpswT8LikKzVQmgeTXBrQU
-0DyIQTHJcev8cjJij2Dj88lLUpkSgbhPd759EKWjenmdsXGmrjbmnzkGgFC082Ou
-+OqVVhd70UKR4zXlndk1bwYNulLrNyUBson8xdW/P8ZiFKXdgHie/MWqvdR0f//F
-WWBtBfV7MSbGVWPWaugFO0QrdO3lTc/UAZokCnuarVhm3M/QbabRR0xwTx7sW4US
-AdUjkPBd1r5F2EBx+ZvYuj4b+vVDBzEujt4Iub5+3kEay7ycPLtRj4wrtV9xVqlc
-hUhcLSUQGcDpj2L58yfeEZIwN/vqxUO01GjrmnFpvUv8P1nAUsFvQsBbynjYisXe
-6idNtoxPWNDuxwdc7U2t
-=Jr1n
------END PGP SIGNATURE-----
-
---=-R1PjQfvNwWiXGaIZHnnV--
-
+Helmut
