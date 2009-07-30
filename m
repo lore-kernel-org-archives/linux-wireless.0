@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42327 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755590AbZGOAO2 (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:60976 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965AbZG3DgI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:14:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Subject: [PATCH 13/21] ath9k: remove unnecessary IEEE80211_TX_CTL_NO_ACK checks
-Date: Tue, 14 Jul 2009 20:14:05 -0400
-Message-Id: <1247616853-11221-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
-References: <1247616853-11221-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 29 Jul 2009 23:36:08 -0400
+Received: by bwz19 with SMTP id 19so347419bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 20:36:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <109708.86209.qm@web15808.mail.cnb.yahoo.com>
+References: <109708.86209.qm@web15808.mail.cnb.yahoo.com>
+Date: Thu, 30 Jul 2009 04:36:07 +0100
+Message-ID: <3ace41890907292036q7b9cb275uaeb01aff92e336e5@mail.gmail.com>
+Subject: Re: The problem of driver of rtl8187 wireless card
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: gu gu <guatsheng@yahoo.com.cn>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We check for this condition early on in our mac80211 get_rate()
-callback ath_get_rate(), so remove this check later down the path.
+2009/7/29 gu gu <guatsheng@yahoo.com.cn>:
+>
+> Dear Sir,
+>     Rencently,I do a job to transplant a wireless wifi-card connected by the USB,which was designed baseing the chip rtl8187 for ARM board.But in the process i have some trouble in writing the driver programe.
+>     My linux kernel is Version-2.6.25.10,It is true that the kernel have the driver for the chip rtl8187 .When I connected the wifi card through the USB port ,the kernel can recoganize the card "Manufacturer_Realtek_RTL8187",So it's sure that the driver of RTL8187 is no problem.But when I ping it to the AP,the missing of datapackets and the delay are both terrible.and more , there is nothing accepted by the wireless router when i typed the "ping".
+> so i think there is some bug exist in the driver for RTL8187 of kernel ,isn't it? (ps: I have set several parameter,such essid ,IP address...)
+>  So I download a "compat-wireless-2.6-old" packet.following the " Readme",i added the KLIB & KLIB_BUILD in the Makefile and "make" it.It is well to generate  some modules with the typing".o"! but has not compiled the file rtl8187 or generated a "rtl8187.o".
+> and so i wanna to know how to solve this problem. i need some help from u,
+> Thank you for your attention!
 
-Cc: Derek Smithies <derek@indranet.co.nz>
-Cc: Chittajit Mitra <Chittajit.Mitra@Atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 96d46d6..2c72901 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -777,7 +777,6 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
- 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
- 	 */
- 	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
--	    !(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
- 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
- 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
- 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
-@@ -882,9 +881,8 @@ static void ath_rc_ratefind(struct ath_softc *sc,
- 	 *
- 	 * FIXME: Fix duration
- 	 */
--	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK) &&
--	    (ieee80211_has_morefrags(fc) ||
--	     (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG))) {
-+	if (ieee80211_has_morefrags(fc) ||
-+	    (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG)) {
- 		rates[1].count = rates[2].count = rates[3].count = 0;
- 		rates[1].idx = rates[2].idx = rates[3].idx = 0;
- 		rates[0].count = ATH_TXMAXTRY;
--- 
-1.6.0.6
-
+yes, the rtl8187 driver earlier than 26.28/29 were a bit buggy. You
+should use compat-wireless, and 2.6 kernel modules are named *.ko. You
+should have a rtl8187.ko, and you need a few others (4-5 in total) as
+well. There were a reorg and rtl818x now has its own directory,
+compared to earlier kernel tree.
