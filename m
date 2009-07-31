@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54164 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754051AbZGFOat (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:58692 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbZGaUfv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 10:30:49 -0400
-Date: Mon, 6 Jul 2009 10:23:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Dave <kilroyd@googlemail.com>,
-	Karl Relton <karllinuxtest.relton@ntlworld.com>,
-	dwmw2@infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Insist on cfg80211 for new drivers?
-Message-ID: <20090706142356.GB2703@tuxdriver.com>
-References: <1246388712.4949.52.camel@localhost> <43e72e890906301217m2dec7bfaqea0472907531d21d@mail.gmail.com> <1246396179.4949.76.camel@localhost> <43e72e890906301458y197c5411yfb93ea0089ed49f3@mail.gmail.com> <1246464991.4331.18.camel@localhost> <4A4BA21F.1070101@gmail.com> <43e72e890907011112l220874bbu8db8808f666bbd4d@mail.gmail.com> <1246473300.30522.10.camel@localhost.localdomain> <20090701193657.GD3473@tuxdriver.com> <1246884761.20908.11.camel@johannes.local>
+	Fri, 31 Jul 2009 16:35:51 -0400
+Received: by fxm17 with SMTP id 17so1581600fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 13:35:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1246884761.20908.11.camel@johannes.local>
+Date: Fri, 31 Jul 2009 22:35:49 +0200
+Message-ID: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com>
+Subject: [PATCH] remove wrong probe_resp_plcp write
+From: gregor kowski <gregor.kowski@gmail.com>
+To: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 06, 2009 at 02:52:40PM +0200, Johannes Berg wrote:
-> On Wed, 2009-07-01 at 15:36 -0400, John W. Linville wrote:
-> > On Wed, Jul 01, 2009 at 02:35:00PM -0400, Dan Williams wrote:
-> > 
-> > > That's really all I
-> > > care about, I don't want another WEXT-based driver accepted; I want all
-> > > the new ones using cfg80211.
-> > 
-> > Now there is a discussion we should have had in Berlin...is it time
-> > to insist on cfg80211-based configuration for all new drivers?
-> 
-> Should we publish something like this:
-> http://wireless.kernel.org/wext-statement (don't want it indexed by
-> google yet so you need to log on to view it), for example on lwn? Just
-> so more application developers are also aware.
+The tkip hw support uncovered a bug in b43_write_probe_resp_template : it is
+writing at the wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This
+patch comments these writes.
 
-Yes, that seems fine to me.
+Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+Index: linux-2.6/drivers/net/wireless/b43/main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43/main.c	2009-07-31
+20:32:21.000000000 +0000
++++ linux-2.6/drivers/net/wireless/b43/main.c	2009-07-31
+20:32:28.000000000 +0000
+@@ -1505,10 +1505,13 @@
+ 	/* Looks like PLCP headers plus packet timings are stored for
+ 	 * all possible basic rates
+ 	 */
++	/* FIXME this is the wrong offset : it goes in tkip rx phase1 shm */
++#if 0
+ 	b43_write_probe_resp_plcp(dev, 0x31A, size, &b43_b_ratetable[0]);
+ 	b43_write_probe_resp_plcp(dev, 0x32C, size, &b43_b_ratetable[1]);
+ 	b43_write_probe_resp_plcp(dev, 0x33E, size, &b43_b_ratetable[2]);
+ 	b43_write_probe_resp_plcp(dev, 0x350, size, &b43_b_ratetable[3]);
++#endif
+
+ 	size = min((size_t) size, 0x200 - sizeof(struct b43_plcp_hdr6));
+ 	b43_write_template_common(dev, probe_resp_data,
