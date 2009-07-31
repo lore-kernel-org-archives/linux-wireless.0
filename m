@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f198.google.com ([209.85.210.198]:63554 "EHLO
-	mail-yx0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459AbZGZIGm convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45492 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbZGaH6m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jul 2009 04:06:42 -0400
-Received: by yxe36 with SMTP id 36so1577205yxe.33
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2009 01:06:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1248510909.32151.48.camel@johannes.local>
-References: <1248482853-17032-1-git-send-email-lrodriguez@atheros.com>
-	<1248482853-17032-2-git-send-email-lrodriguez@atheros.com>
-	<1248510909.32151.48.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 26 Jul 2009 01:06:22 -0700
-Message-ID: <43e72e890907260106h1ad9cdd6i9dc22e3bfece86d8@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: redefine usage of the mac80211 workqueue
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@web.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Lennert Buytenhek <buytenh@marvell.com>,
-	Daniel Drake <ddrake@brontes3d.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 31 Jul 2009 03:58:42 -0400
+Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1249026181.29587.14.camel@johannes.local>
+References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
+	 <1249024097.7653.6.camel@maxim-laptop>
+	 <1249026181.29587.14.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MDRdiwxXcPYoZOBd7wSH"
+Date: Fri, 31 Jul 2009 09:58:07 +0200
+Message-Id: <1249027087.29587.18.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 25, 2009 at 1:35 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-07-24 at 20:47 -0400, Luis R. Rodriguez wrote:
->> The mac80211 workqueue exists to enable mac80211 and drivers
->> to queue their own work on a single threaded workqueue. mac80211
->> takes care to flush the workqueue during suspend but we never
->> really had requirements on drivers for how they should use
->> the workqueue in consideration for suspend.
->>
->> We extend mac80211 to document how the mac80211 workqueue should
->> be used, how it should not be used and finally move raw access to
->> the workqueue to mac80211 only. Drivers and mac80211 use helpers
->> to queue work and flush the mac80211 workqueue:
->>
->>   * ieee80211_queue_work()
->>   * ieee80211_queue_delayed_work()
->>   * ieee80211_flush_workqueue()
->
-> I would prefer to have wait_on_work()
 
-That's currently static.
+--=-MDRdiwxXcPYoZOBd7wSH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> and/or cancel_work_sync() instead
-> of flushing?
+On Fri, 2009-07-31 at 09:43 +0200, Johannes Berg wrote:
 
-That's fine but currently drivers are issuing flush_workqueue() directly.
+> Fix it then. Offer an implementation of your superior solution.
 
-> It's often preferable due to locking constraints to
-> cancel_work_sync() instead of flush_workqueue(). Do people really need
-> flush_workqueue()?
+I just don't think that this patch is a solution because it means that
+we'll be connected to the AP forever, without knowing anything is wrong,
+if the AP can reach us but we can't reach the AP (maybe because we have
+a good Intel card with great sensitivity).
 
-Yeah good point, so I see 2 users of flush_workqueue, one in at76 and
-another on ar9170.
+Sure -- it's possible to factor in transmit status reports (but remember
+that not all hardware gives those reliably) or do things on a different
+schedule etc. But as long as nobody wants to really improve things I
+don't see why we should take the regression and _remove_ the current
+behaviour.
 
-at76: at76_delete_device()
+johannes
 
-This is used at usb disconnect and probe failure. cancel_work_sync()
-definitely seems more appropriate.
+--=-MDRdiwxXcPYoZOBd7wSH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-ar9170: ar9170_op_stop()
+-----BEGIN PGP SIGNATURE-----
 
-same here, but seems we could add the flush on mac80211 prior to
-calling the drv_stop() currently we call it after.
+iQIcBAABAgAGBQJKcqQKAAoJEODzc/N7+QmamJgP/1zj9+gpWM4WWU+eANXhGyDT
+XG7xUdNdMz1ADamyGPA/eyFP/2WEuY2/02W492nS5O0/OyocgrNlwVP5ShQHy1Wb
+JXI4KSfsSGrGYbcnLcXl6F1WHFPrXECfi5hk0y4UrdtZ2SifW/IvxTwCNsHMSE+e
+oBHSkjUXiBtjKCk32C3iGJ/UUd0dI40XSAgUkIUyouWBUqflLI/9T6Rh3+6hAHZK
+IAyxirT4ccqcu+UmrgbcbAuz5AmjcVlP2Wc6qRgZHNljSzJ9hOZKl728Q7+tEbQc
+7q7HoPrDW34UZ089CSP9s8p1rYGqXeidFj4wjun0PnIsQniyyZNjfNRK4AchzjY0
+NKuUWwKZz1ViC+mk1C2gYxwXr/mdIwiZjzlCjVVE1Utx1MF+m894pC+50IiRC1j0
+q8WDONBI28Qb7zFgVeFgKhh88R/sxg245CZOE2wiNn1bg9pRFO1u66iGekGKu+Me
+wsDUOWxwWNOk8bZE740eyYWdBNqayqbC+s3SzGo+6APnNIoHorVFRIRZ9A7fPqk+
+wNZZ7t+2lKoZ20+c1wpyWCgSi9wMOONhDLKUCSxA3auvn40EMjsnVnozziNeTPET
+XHB0/d5+tGo9NAA4qqvDc6z+9grnVKe2sjwIK6XFvBSMNUiWh8dk8lAgaWr9CSgz
+frM7yh73CQD38kEQw8UV
+=NQoC
+-----END PGP SIGNATURE-----
 
-  Luis
+--=-MDRdiwxXcPYoZOBd7wSH--
+
