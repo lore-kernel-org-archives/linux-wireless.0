@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36181 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752547AbZGGUlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jul 2009 16:41:16 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Frans Pop <elendil@planet.nl>
-Subject: Re: 2.6.31-rc2: Reported regressions from 2.6.30
-Date: Tue, 7 Jul 2009 22:41:52 +0200
-Cc: linux-kernel@vger.kernel.org, bunk@kernel.org,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	kernel-testers@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-References: <35kKlbXMqWN.A.RXD.D0oUKB@chimera> <200907072125.47762.elendil@planet.nl>
-In-Reply-To: <200907072125.47762.elendil@planet.nl>
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:62600 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbZGaPtw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 11:49:52 -0400
+Received: by gxk9 with SMTP id 9so3833048gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 08:49:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200907072241.53505.rjw@sisk.pl>
+In-Reply-To: <1249026324.29587.15.camel@johannes.local>
+References: <1249001028-15110-1-git-send-email-lrodriguez@atheros.com>
+	<1249026324.29587.15.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 31 Jul 2009 08:49:32 -0700
+Message-ID: <43e72e890907310849l3487b8a2p52302f6662a26f95@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix regression on beacon world roaming feature
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 07 July 2009, Frans Pop wrote:
-> > If you know of any other unresolved regressions from 2.6.30, please let
-> > me know either and I'll add them to the list.
-> 
-> Please add: http://lkml.org/lkml/2009/6/29/88
-> 
-> Reinette Chatre is handling the bug and posted a patch in 
-> http://lkml.org/lkml/2009/6/30/224
+On Fri, Jul 31, 2009 at 12:45 AM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-07-30 at 17:43 -0700, Luis R. Rodriguez wrote:
+>
+>> By doing so though we also disallowed beacon hints on devices
+>> registering their wiphy with custom world regulatory domains
+>> enabled, this happens to be currently ath5k, ath9k and ar9170.
+>> The passive scan and beacon restrictions on those devices would
+>> never be lifted even if we did find a beacon and the hardware did
+>> support such enhancements when world roaming.
+>
+> I dislike this solution, it just adds proliferation of possible
+> behaviours.
 
-Added as http://bugzilla.kernel.org/show_bug.cgi?id=13742.
+Agreed.
 
-Thanks,
-Rafael
+> Can't those devices
+
+Which devices?
+
+> just set the _flags_ in their reg
+> notifier,
+
+So if you mean devices that used custom reg stuff, the answer is no
+because the patch which introduced the regression would prevent the
+setting of the passive scan flag and beaconing restrictions so the
+reg_notifier would never notice the difference.
+
+If you mean iwlwifi devices then yes, this is possible but it also
+means a big change and I'd like to see this regression fixed on
+2.6.31.
+
+> and clear the corresponding bit in the orig_flags?
+
+iwlwifi would just have to touch flags, not orig_flags as orig_flags
+should not be touched.
+
+How about using the patch as is for now for wireless-testing and
+2.6.31, and then have iwlwifi write their own reg_notifier() ?
+
+  Luis
