@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:47318 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:18243 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964869AbZGQQaa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:30 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/14] iwlwifi: fix rx signal quality reporting in dmesg
-Date: Fri, 17 Jul 2009 09:30:15 -0700
-Message-Id: <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
+	id S1751506AbZGaTpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 15:45:16 -0400
+Subject: Re: [PATCH] iwlwifi: don't export symbols not needed in other
+ modules
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1248982009.23496.5.camel@johannes.local>
+References: <1248947897.8925.13.camel@johannes.local>
+	 <1248978482.1216.1087.camel@rc-desk>
+	 <1248979011.23496.4.camel@johannes.local>
+	 <1248979665.1216.1094.camel@rc-desk>
+	 <1248982009.23496.5.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 31 Jul 2009 12:45:15 -0700
+Message-Id: <1249069515.30019.228.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, 2009-07-30 at 12:26 -0700, Johannes Berg wrote:
+> On Thu, 2009-07-30 at 11:47 -0700, reinette chatre wrote:
+> 
+> > No. If this is what you want then I think you also need to remove
+> > iwl_rx_ant_restriction.
+> 
+> Hm, I missed that, I actually have removed as part of my powersave
+> patch.
 
-Fix quality incorrectly reported as signal strength value.
+now I see. 
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 66fe365..fc7edd1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -1065,7 +1065,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
- 		iwl_dbg_report_frame(priv, rx_start, len, header, 1);
- #endif
- 	IWL_DEBUG_STATS_LIMIT(priv, "Rssi %d, noise %d, qual %d, TSF %llu\n",
--		rx_status.signal, rx_status.noise, rx_status.signal,
-+		rx_status.signal, rx_status.noise, rx_status.qual,
- 		(unsigned long long)rx_status.mactime);
- 
- 	/*
--- 
-1.5.6.3
+Reinette
 
