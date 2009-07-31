@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.anarazel.de ([217.115.131.40]:49424 "EHLO smtp.anarazel.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751017AbZGJCKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 22:10:43 -0400
-From: Andres Freund <andres@anarazel.de>
-To: John Dykstra <john.dykstra1@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.31-rc2: Reported regressions from 2.6.30
-Date: Fri, 10 Jul 2009 04:10:37 +0200
-Cc: Eric Sesterhenn <eric.sesterhenn@lsexperts.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <35kKlbXMqWN.A.RXD.D0oUKB@chimera> <200907070325.51439.andres@anarazel.de> <1247190417.7306.2.camel@merlyn>
-In-Reply-To: <1247190417.7306.2.camel@merlyn>
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:40046 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961AbZGaSsg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 14:48:36 -0400
+Received: by yxe5 with SMTP id 5so293387yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:48:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <200907100410.37506.andres@anarazel.de>
+In-Reply-To: <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
+References: <20090731181020.GE7963@makis> <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
+	<40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 31 Jul 2009 11:48:16 -0700
+Message-ID: <43e72e890907311148i3e5a302cg2efb713df706c103@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John, Hi Rafael,
-
-On Friday 10 July 2009 03:46:57 John Dykstra wrote:
-> On Tue, 2009-07-07 at 03:25 +0200, Andres Freund wrote:
-> > There is also http://lkml.org/lkml/2009/6/30/398 : Soft-Lockup/Race
-> > in
-> > networking in 2.6.31-rc1+195 (possibly caused by netem)
+On Fri, Jul 31, 2009 at 11:25 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+> 2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
+>> On Fri, Jul 31, 2009 at 11:10 AM, Nick
+>> Kossifidis<mick@madwifi-project.org> wrote:
+>>>  * Get rid of calibration timer, instead use a software interrupt
+>>>   to schedule the calibration tasklet.
+>>
+>> An example of itemizing one change. Explain the why, not the how.
+>>
 >
-> There is some similarity between this soft lockup and the one reported
-> in http://www.spinics.net/lists/netdev/msg100957.html.  In both, the
-> process is doing both sends and receives on raw sockets.
-The issue turned out to be a hrtimer bug - i dont see anything like it in your 
-trace. If you still want to test the fix, its 
-de907e8432b08f2d5966c36e0747e97c0e596810 in -tip (or 
-http://lkml.org/lkml/2009/7/9/150)
+> We 've discussed this with various people on wireless summit.
 
-Rafael: In case youre reading this, I guess you can mark that bug as resolved.
+Not everyone attended.
 
-Andres
+> a) We don't need a timer for this, there is no need for accuracy
+>    even with round_jiffies i think this is a waste of resources.
+>    Also we don't need to run calibration if we are idle (no interrupts).
+>
+> b) When we add ANI support we 'll just extend the poll function
+>    and calibration tasklet and handle all periodic phy calibration
+>    on one place (much cleaner).
+>
+> c) Having calibration on a tasklet is better since during calibration
+>    we can't transmit or receive (antennas are detached to measure
+>    noise floor), previously calibration could run in parallel with tx/rx
+>    and interfere (packet loss).
+
+It seems this good explanation can be mangled into the commit log entry.
+
+  Luis
