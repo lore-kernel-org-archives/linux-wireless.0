@@ -1,79 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43827 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbZG0QDT (ORCPT
+Received: from mail-qy0-f196.google.com ([209.85.221.196]:62392 "EHLO
+	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbZGaBR2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jul 2009 12:03:19 -0400
-Subject: Re: [PATCH 1/3] mac80211: cooperate more with network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1248710387.8500.5.camel@johannes.local>
-References: <20090713223333.042733013@sipsolutions.net>
-	 <20090713223413.255405284@sipsolutions.net>  <1248653082.3106.7.camel@mj>
-	 <1248683249.19945.29.camel@johannes.local>  <1248708886.2688.4.camel@mj>
-	 <1248710387.8500.5.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-c2ci8SgBUWytnNCNZpCn"
-Date: Mon, 27 Jul 2009 18:02:48 +0200
-Message-Id: <1248710568.8500.7.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 30 Jul 2009 21:17:28 -0400
+Received: by qyk34 with SMTP id 34so1276423qyk.33
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 18:17:28 -0700 (PDT)
+Message-ID: <4A7246D0.1040200@gmail.com>
+Date: Thu, 30 Jul 2009 21:20:16 -0400
+From: Roman Macko <rmacko72@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
+References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net> 	<43e72e890907291453k444e2d06k864149ddcda8f351@mail.gmail.com> 	<1248904631.1216.1027.camel@rc-desk> <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com> 	<4A719C44.6050208@gmail.com> <43e72e890907300743nd3a80eck2153d01f4e99ddf9@mail.gmail.com> 	<4A71D172.1000306@gmail.com> <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
+In-Reply-To: <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Luis,
 
---=-c2ci8SgBUWytnNCNZpCn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I have version 3.6 of module-init-tools and this version reads 
+/etc/depmod.d directory too.
 
-On Mon, 2009-07-27 at 17:59 +0200, Johannes Berg wrote:
-> On Mon, 2009-07-27 at 11:34 -0400, Pavel Roskin wrote:
->=20
-> > If you mean "verify info->control.vif is not NULL", it makes no
-> > difference for me.  No BUG is triggered.  info->control.vif is never
-> > NULL in ieee80211_tx_pending(), but sdata->dev is NULL the second time
-> > ieee80211_tx_pending() is called.  Just skipping that case doesn't help=
-,
-> > I still get a panic in that function after about 10 calls.
->=20
-> Weird.
-> So where does it panic if you skip with sdata->dev =3D=3D NULL?
->=20
-> I don't see how sdata->dev can possibly be NULL. Hmm. Ok, I think we may
-> not be recycling things correctly. Is it possible that this is a frame
-> that was rejected by the device, or maybe a frame that was attempted to
-> transmit, but then got into software retransmit?
+But I wanted to understand how depmod reads config files, so I looked 
+into source codes (both version 3.6 and 3.10)
+and finally found out how it works.
 
-I have to leave now for an hour or two, but I'll review that code after
-I return. It's possible that this never happened before because skb->iif
-wasn't touched by drivers, but skb->cb is.
+Assume depmod is run without -C or --config option
 
-Actually, you're using ath5k, right? So we can see what
-info->control.vif points to after ath5k has used the skb, because
-apparently it's a valid pointer at least, just not a real vif pointer
-any more.
+Version 3.6 reads firstly /etc/depmod.conf file and then it reads config 
+files in directory /etc/depmod.d.
+Files in directory /etc/depmod.d are read and parsed in unpredictable 
+order by readdir function (this function uses
+raw directory structures of filesystem)
 
-johannes
+Version 3.10 reads /etc/depmod.conf firstly as well, but this config 
+file is considered as deprecated in this version
+and prints out warning about that. Then it reads config files in 
+directory /etc/depmod.d by readdir function as well, but before it starts
+to parse them, it sorts them accord to filename, so you know the order 
+in which they are going to be parsed
+and this is very improtant!!! This behavior should be from version 3.7
 
---=-c2ci8SgBUWytnNCNZpCn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+The same for both versions:
+1) List of directories to be searched is created from search commands 
+from all config files in order how particular
+search commands are found in config files (so order of parsed config 
+files is important). If no search command is found,
+updates directory is added before "built-in" directory.
 
------BEGIN PGP SIGNATURE-----
+2) As for override command, the last one found for particular module and 
+kernel in all config files wins,
+ so again the order of parsed config files is important.
 
-iQIcBAABAgAGBQJKbc+lAAoJEODzc/N7+QmaQbEP/R0xP0cT3NC3B4YHVALD55dP
-E9mCm0IqV1Z5cByw+hFLwS7Ue6GiR0Ol1Ss5bUJLh7bb2WTjPYLCemX+3+kJn0u+
-kBVKhBhnnDUW6uqnjumZZq27oByEBTCR3CUbsMuQUoZuXpTlrfd5yr4A5OlRtV1z
-lXx7PtGdh2e1jGgSdgHt24L3SSuNgty9tg7zoDBRnP3EceNvTtNwujfAuBOLd1Ym
-qAlqxxbsRgrUuw6Y2EaYmQ5qcZk3TcSu7M+Vpp05pMdbX0aGm6XapbJ5YjKQs5jb
-EPTOQeKnwiaXboFzEFjY7bd0v++3vyXFc+wtV9SKIIdeJP6N5Jd9h0FdqydSucku
-6gFbW1XbmEJ2IDO+niX1Fh0xtDr/ky2kRhx98ktPuGFRRuwZvNxiY6NYQSm10wG1
-1qn5EGhBJLqE2ToJyhnA0FXN154MeQY1xNxXMtEGKSfqO2Mv4jS09t0RO7Oeyzcv
-U9QGVXKMeI4wcHs1M2/eTOtPTMhsvIuDlKVBb4qYijnR3alktFPCblJ77DqsUID3
-5ruB63jeWbrxjeq1hBqhqrcHmZWSSCsg5PTaoNow8ieLTB8xTAtYPg4xcg459M8k
-ybHURfN1HtfDSgBxhaRS+rc8DXgh4vqrLQPkxXtzULgsuoNSzN9SDztBeZK0hr6D
-V4fWKBsofwwB8gVI/iw3
-=+nA/
------END PGP SIGNATURE-----
+ From this is evident, that both versions can work differently which 
+depends on the order of parsed config files from
+/etc/depmod.d directory that is different in both versions.
 
---=-c2ci8SgBUWytnNCNZpCn--
+So solution would be:
+1) if there is no search command in any of config files (in 
+/etc/depmod.conf  or those in /etc/depmod.d directory), do nothing.
+2) if there is a search command in any of config files and does not 
+contain updates directory before built-in add search command
+    "search updates" in
+   a) if system has version >=3.7, create config file in /etc/depmod.d 
+directory which name is alphabeticaly less than all you will find
+      in that directory
+   b) if system has version <=3.6 add search command "search updates" at 
+the begining of /etc/depmod.conf file
+
+But such adding of "search updates" can break depmod configuration in 
+some systems or it is not desirable to make search in
+updates directory at all. So maybe it would be better to use another 
+name for directory than updates
+
+Or it would be also interesting to use override command for all modules 
+compiled in compat-wireless
+and put it all to configuration file /etc/depmod.d/compat-wireless.conf 
+and not bothering with version of depmod nor
+finding the search command in all configuration files, e.g
+
+compat-wireless.conf
+======================================
+override iwlagn * updates/drivers/net/wireless/iwlwifi
+override iwlcore * updates/drivers/net/wireless/iwlwifi
+....
+....
+....
+======================================
+
+it can make problem only when some other config file in /etc/depmod.d 
+directory contains override command for
+any module from compat-wireless
+
+
+I hope this help you
+
+Regards
+
+Roman
+
+Luis R. Rodriguez wrote:
+> On Thu, Jul 30, 2009 at 9:59 AM, Roman Macko<rmacko72@gmail.com> wrote:
+>   
+>> Yes, I tested it. When you place that config file containing "search updates
+>> built-in" in /etc/depmod.d
+>> directory, it doesn't work.
+>>     
+>
+> OK you probably have an old version of depmod. depmod is provided by
+> module-init-tools, what version of module-init-tools do you have?
+>
+> I have 3.10 (as on Ubuntu Karmic)
+>
+>   
+>> You have to place it in global config file
+>> /etc/depmod.conf.
+>>     
+>
+> If this is an old depmod thing we will have to check the version of
+> depmod and do this for that case.
+>
+>   
+>> How depmod works with config files in /etc/depmod.d directory is a mystery
+>> for me.
+>>     
+>
+> Its not that tricky, the new version reads /etc/depmod.conf and if
+> that is not found then moves on to check /etc/depmod.d/* files.
+>
+>   
+>> I wasn't able to learn
+>> this from manual pages.
+>>     
+>
+> That's probably because your version doesn't use depmod.d dir.
+>
+>   
+>> And I tested another thing too. When some of config files (either global
+>> /etc/depmod.conf or one of those in /etc/depmod.d directory)
+>> doesn't contain search command ,
+>> everything works fine, according to manual page for depmod, using builtin
+>> search string "updates built-in" what  is
+>> what you need.
+>>     
+>
+> Right, built-in will use /lib/modules/$(uname -r)/kernel/ for modules,
+> chances are if no depmod.conf file or depmod.d dir is present default
+> may be to use built-in.
+>
+>   
+>> As soon as one of them (either global or one of those in
+>> /etc/depmod.d directory) contains search command,
+>> then depmod uses this one. It seems seach command in global config file
+>> (/etc/depmod.conf) has higher priory. But as I say
+>> I really don't know how depmod works with all config files.
+>>     
+>
+> I believe this is built-in by default, then read depmod.conf first, if
+> that is not present read depmod.d dir.
+>
+>   Luis
+>   
 
