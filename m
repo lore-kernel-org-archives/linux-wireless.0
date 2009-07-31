@@ -1,210 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:39983 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754339AbZGRB1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 21:27:53 -0400
-Message-ID: <4A612514.4050708@redfish-solutions.com>
-Date: Fri, 17 Jul 2009 18:27:48 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Received: from mail.atheros.com ([12.36.123.2]:56425 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750978AbZGaAnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 20:43:50 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 17:43:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH] cfg80211: fix regression on beacon world roaming feature
+Date: Thu, 30 Jul 2009 17:43:48 -0700
+Message-ID: <1249001028-15110-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Using compat-wireless w/ 2.6.27.26
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm the lead developer on the Astlinux project, which I might have
-mentioned in a previous posting.  This means that I have my hands in
-many pots, so I'm not an expert in the latest Linux kernel changes... be
-patient with me.  Hard to keep track of 200+ individual projects.
+A regression was added through patch a4ed90d6:
 
-I'm building 2.6.26.27 as I said for (amongst other things) an Alix 2D3
-(GeodeLX) with EMP-8602 (AR-5413) as a test platform.
+"cfg80211: respect API on orig_flags on channel for beacon hint"
 
-My kernel gets built with:
+We did indeed respect _orig flags but the intention was not clearly
+stated in the commit log. This patch fixes firmware issues picked
+up by iwlwifi when we lift passive scan of beaconing restrictions
+on channels its EEPROM has been configured to always enable.
 
-#
-# Wireless
-#
-CONFIG_CFG80211=m
-CONFIG_NL80211=y
-CONFIG_WIRELESS_EXT=y
-# CONFIG_WIRELESS_EXT_SYSFS is not set
-CONFIG_MAC80211=m
+By doing so though we also disallowed beacon hints on devices
+registering their wiphy with custom world regulatory domains
+enabled, this happens to be currently ath5k, ath9k and ar9170.
+The passive scan and beacon restrictions on those devices would
+never be lifted even if we did find a beacon and the hardware did
+support such enhancements when world roaming.
 
-#
-# Rate control algorithm selection
-#
-CONFIG_MAC80211_RC_PID=y
-CONFIG_MAC80211_RC_DEFAULT_PID=y
-CONFIG_MAC80211_RC_DEFAULT="pid"
-# CONFIG_MAC80211_MESH is not set
-CONFIG_MAC80211_LEDS=y
-# CONFIG_MAC80211_DEBUG_MENU is not set
-# CONFIG_IEEE80211 is not set
-CONFIG_RFKILL=m
-CONFIG_RFKILL_INPUT=m
-CONFIG_RFKILL_LEDS=y
-# CONFIG_NET_9P is not set
+Since Johannes indicates iwlwifi firmware cannot be changed to
+allow beacon hinting we set up a flag now to specifically allow
+drivers to disable beacon hints for devices which cannot use them.
 
+We enable the flag on iwlwifi to disable beacon hints and by default
+enable it for all other drivers. It should be noted beacon hints lift
+passive scan flags and beacon restrictions when we receive a beacon from
+an AP on any 5 GHz non-DFS channels, and channels 12-14 on the 2.4 GHz
+band. We don't bother with channels 1-11 as those channels are allowed
+world wide.
 
-I build compat-wireless-2.6.30 into /lib/modules/2.6.27.26-astlinux/kernel/... as a Kbuild.
+This should fix world roaming for ath5k, ath9k and ar9170, thereby
+improving scan time when we receive the first beacon from any AP,
+and also enabling beaconing operation (AP/IBSS/Mesh) on cards which
+would otherwise not be allowed to do so. Drivers not using custom
+regulatory stuff (wiphy_apply_custom_regulatory()) were not affected
+by this as the orig_flags for the channels would have been cleared
+upon wiphy registration.
 
-The system also has iw-0.9.15 and hostapd-0.6.9.
+I tested this with a world roaming ath5k card.
 
-All of this is fairly straightforward.
+Cc: Jouni Malinen <jouni.malinen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-On boot, our /etc/init.d scripts do the following:
+This issue affects 2.6.31, that's when the regression was introduced.
 
-+ modprobe ath5k
-ath5k phy0: Atheros AR5413 chip found (MAC: 0xa4, PHY: 0x61)
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 +++
+ include/net/cfg80211.h                      |    5 +++++
+ net/wireless/reg.c                          |    9 +++++----
+ net/wireless/reg.h                          |    3 ++-
+ 5 files changed, 18 insertions(+), 5 deletions(-)
 
-+ iw dev wlan0 interface add ap0 type managed
-+ ip link set ap0 up
-+ iw dev ap0 connect xxxx
-command failed: Operation not supported (-95)
-
-
-
-So doing some sanity checks by hand I get:
-
-pbx ~ # lsmod | head
-Module                  Size  Used by
-ath5k                 104772  0 
-mac80211              153304  1 ath5k
-cfg80211               54584  2 ath5k,mac80211
-binfmt_misc             7112  1 
-aes_i586                7456  0 
-aes_generic            28968  1 aes_i586
-lm90                   11944  0 
-hwmon                   2324  1 lm90
-scx200_acb              4356  0 
-pbx ~ # iw dev ap0 info
-Interface ap0
-	ifindex 9
-	type managed
-pbx ~ # iw phy phy0 info
-command failed: No buffer space available (-105)
-pbx ~ # 
-
-
-Not sure why the "phy ... info" command fails.
-
-pbx ~ # hostapd -v
-hostapd v0.6.9
-User space daemon for IEEE 802.11 AP management,
-IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
-Copyright (c) 2002-2009, Jouni Malinen <j@w1.fi> and contributors
-pbx ~ # cat /etc/hostapd.conf
-# automatically generated. do not edit!
-
-logger_syslog=-1
-logger_syslog_level=2
-logger_stdout=--1
-logger_stdout_level=2
-
-debug=0
-
-ctrl_interface_group=0
-
-# should this be per-ssid?
-macaddr_acl=0
-
-dump_file=/tmp/hostapd.dump
-
-# should this be an option?
-hw_mode=b
-
-bridge=br1
-interface=ap0
-driver=nl80211
-ssid=xxxxx
-channel=0
-
-auth_algs=1
-
-wpa_passphrase=yyyyy
-wpa=2
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-
-ignore_broadcast_ssid=1
-
-wpa_strict_rekey=1
-wpa_group_rekey=600
-wpa_gmk_rekey=14400
-
-pbx ~ # ip link show ap0
-9: ap0: <BROADCAST,MULTICAST> mtu 1500 qdisc pfifo_fast state DOWN qlen 1000
-    link/ether 00:02:6f:5a:d2:2b brd ff:ff:ff:ff:ff:ff
-pbx ~ # brctl show
-bridge name	bridge id		STP enabled	interfaces
-br1		8000.00026f5ad22b	no		ap0
-							eth0
-pbx ~ # 
-pbx ~ # hostapd -dddd -P /var/run/hostapd.pid /etc/hostapd.conf
-Configuration file: /etc/hostapd.conf
-Line 8: DEPRECATED: 'debug' configuration variable is not used anymore
-ctrl_interface_group=0
-Failed to set interface ap0 to master mode.
-nl80211 driver initialization failed.
-ap0: Unable to setup interface.
-ELOOP: remaining socket: sock=5 eloop_data=0x8098028 user_data=(nil) handler=0x806f503
-pbx ~ # 
-pbx ~ # ldd /usr/bin/hostapd
-	libnl.so.1 => /usr/lib/libnl.so.1 (0xb7f04000)
-	libcrypto.so.0.9.8 => /lib/libcrypto.so.0.9.8 (0xb7df8000)
-	libgcc_s.so.1 => /lib/libgcc_s.so.1 (0xb7def000)
-	libc.so.0 => /lib/libc.so.0 (0xb7da5000)
-	libm.so.0 => /lib/libm.so.0 (0xb7d97000)
-	libdl.so.0 => /lib/libdl.so.0 (0xb7d94000)
-	ld-uClibc.so.0 => /lib/ld-uClibc.so.0 (0xb7f3d000)
-pbx ~ # 
-
-
-And on the host that this was cross-compiled:
-
-[philipp@builder ~/kernel]$ cat build_i586/hostapd-0.6.9/hostapd/.config 
-CFLAGS+=-Os -Wall -Os -pipe -fomit-frame-pointer -march=k6-2 -fno-align-functions -fno-align-loops -fno-align-jumps -fno-align-labels 
-CFLAGS+= -DUSE_KERNEL_HEADERS -I/home/philipp/kernel/build_i586/linux-2.6.27.26-astlinux/include
-CONFIG_IEEE80211N=y
-CONFIG_DRIVER_NL80211=y
-CFLAGS+=-I/home/philipp/kernel/build_i586/staging_dir/usr/include
-LIBS+=-L/home/philipp/kernel/build_i586/root/usr/lib
-CONFIG_DRIVER_NONE=y
-CONFIG_DRIVER_WIRED=y
-CONFIG_IAPP=y
-CONFIG_RSN_PREAUTH=y
-CONFIG_PEERKEY=y
-CONFIG_EAP=y
-CONFIG_EAP_MD5=y
-CONFIG_EAP_MSCHAPV2=y
-CONFIG_EAP_GTC=y
-CONFIG_EAP_SIM=y
-CONFIG_EAP_AKA=y
-CONFIG_EAP_AKA_PRIME=y
-CONFIG_EAP_PAX=y
-CONFIG_EAP_PSK=y
-CONFIG_EAP_SAKE=y
-CONFIG_EAP_GPSK=y
-CONFIG_EAP_GPSK_SHA256=y
-CONFIG_EAP_IKEV2=y
-CONFIG_PKCS12=y
-CONFIG_IPV6=y
-CONFIG_IEEE80211R=y
-CONFIG_IEEE80211N=y
-[philipp@builder ~/kernel]$ 
-
-
-
-What am I missing?
-
-How should I go about debugging this?
-
-Thanks,
-
--Philip
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8570d56..071c05b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1600,6 +1600,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 
+ 	hw->wiphy->custom_regulatory = true;
+ 
++	/* Firmware does not support this */
++	hw->wiphy->disable_beacon_hints = true;
++
+ 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
+ 	/* we create the 802.11 header and a zero-length SSID element */
+ 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5ded898..ea051b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3905,6 +3905,9 @@ static int iwl3945_setup_mac(struct iwl_priv *priv)
+ 
+ 	hw->wiphy->custom_regulatory = true;
+ 
++	/* Firmware does not support this */
++	hw->wiphy->disable_beacon_hints = true;
++
+ 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX_3945;
+ 	/* we create the 802.11 header and a zero-length SSID element */
+ 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index fa72997..64df51d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1076,6 +1076,10 @@ struct cfg80211_ops {
+  * 	channels at a later time. This can be used for devices which do not
+  * 	have calibration information gauranteed for frequencies or settings
+  * 	outside of its regulatory domain.
++ * @disable_beacon_hints: enable this if your driver needs to ensure that
++ *	passive scan flags and beaconing flags may not be lifted by cfg80211
++ *	due to regulatory beacon hints. For more information on beacon
++ *	hints read the documenation for regulatory_hint_found_beacon()
+  * @reg_notifier: the driver's regulatory notification callback
+  * @regd: the driver's regulatory domain, if one was requested via
+  * 	the regulatory_hint() API. This can be used by the driver
+@@ -1104,6 +1108,7 @@ struct wiphy {
+ 
+ 	bool custom_regulatory;
+ 	bool strict_regulatory;
++	bool disable_beacon_hints;
+ 
+ 	bool netnsok;
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b3ac0aa..0f61ae6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1095,17 +1095,18 @@ static void handle_reg_beacon(struct wiphy *wiphy,
+ 
+ 	chan->beacon_found = true;
+ 
++	if (wiphy->disable_beacon_hints)
++		return;
++
+ 	chan_before.center_freq = chan->center_freq;
+ 	chan_before.flags = chan->flags;
+ 
+-	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
+-	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
++	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
+ 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
+ 		channel_changed = true;
+ 	}
+ 
+-	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
+-	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
++	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
+ 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
+ 		channel_changed = true;
+ 	}
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 662a9da..1471225 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -30,7 +30,8 @@ int set_regdom(const struct ieee80211_regdomain *rd);
+  * non-radar 5 GHz channels.
+  *
+  * Drivers do not need to call this, cfg80211 will do it for after a scan
+- * on a newly found BSS.
++ * on a newly found BSS. If you cannot make use of this feature you can
++ * set the wiphy->disable_beacon_hints to true.
+  */
+ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+ 					struct ieee80211_channel *beacon_chan,
+-- 
+1.6.3.3
 
