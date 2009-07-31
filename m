@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:55468 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750970AbZGaOV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 10:21:29 -0400
-Date: Fri, 31 Jul 2009 07:16:00 -0700
-From: Greg KH <greg@kroah.com>
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: RTL8192SE support status
-Message-ID: <20090731141600.GA28088@kroah.com>
-References: <200907311431.17043.bzolnier@gmail.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:50303 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359AbZGaNgf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 09:36:35 -0400
+Date: Fri, 31 Jul 2009 14:36:33 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Tim Gardner <timg@tpi.com>
+Cc: linux-acpi@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] dell-laptop: Fix rfkill state queries
+Message-ID: <20090731133633.GA3342@srcf.ucam.org>
+References: <1249007138-27354-1-git-send-email-mjg@redhat.com> <4A72EF60.1090501@tpi.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200907311431.17043.bzolnier@gmail.com>
+In-Reply-To: <4A72EF60.1090501@tpi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 02:31:16PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> I've been getting some private mail regarding the status of RTL8192SE
-> wireless chipset support (the chipset is used in some newer netbooks,
-> i.e. Medion Akoya E1312) so the current situation is:
-> 
-> * I'm not working on it and I don't know if/when the driver is coming.
-> 
-> * Realtek has been queried about the issue two weeks ago but we haven't
->   heard anything back yet.
-> 
-> * rtl8192su driver present in staging area of the kernel is for RTL8192SU
->   (USB version of the chipset) and never contained working/complete code
->   for RTL8192SE (PCI-E version of the chipset) so there is no point in
->   attempts of reverting some patches in hope that it will make the things
->   magically work (it won't, please save your time).
+On Fri, Jul 31, 2009 at 07:19:28AM -0600, Tim Gardner wrote:
 
-Thanks for letting us know, this helps out a lot.
+> This works on an Inspiron 1420 and XPS1330 as far as I was able to test.
+> The physical rfkill switch sets 'Hard blocked: yes' for 'phy0: Wireless
+> LAN', and everything returns to normal 'blocked: no' when the switch is
+> disabled. I was not able to figure out how to get BIT(16) cleared. Is
+> that a keyboard function? Anyways,
 
-greg k-h
+Might be Fn+F2.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
