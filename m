@@ -1,98 +1,329 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:54549 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754116AbZGWVyH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 17:54:07 -0400
-Message-ID: <4A68DBDE.7060504@redfish-solutions.com>
-Date: Thu, 23 Jul 2009 14:53:34 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:49969 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961AbZGaSdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 14:33:06 -0400
+Date: Fri, 31 Jul 2009 21:33:03 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
+	mcgrof@gmail.com, nbd@openwrt.org
+Subject: Re: [PATCH 3/4] ath5k: Wakeup fixes
+Message-ID: <20090731183303.GH7963@makis>
+References: <20090731180805.GD7963@makis>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-References: <4A612514.4050708@redfish-solutions.com>	 <4A635E04.4050204@redfish-solutions.com>	 <20090719203150.GA9972@hash.localnet>	 <4A63DF0B.4010801@redfish-solutions.com>	 <20090720115244.GC9972@hash.localnet>	 <4A64C283.6090205@redfish-solutions.com>	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>	 <4A650331.9020409@redfish-solutions.com>	 <4A6620B9.4@redfish-solutions.com>	 <20090723112428.GC13742@hash.localnet> <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com> <4A68C821.7060208@redfish-solutions.com>
-In-Reply-To: <4A68C821.7060208@redfish-solutions.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090731180805.GD7963@makis>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Philip A. Prindeville wrote:
-> Bob Copeland wrote:
->   
->> On Thu, Jul 23, 2009 at 7:24 AM, Bob Copeland<me@bobcopeland.com> wrote:
->>     
->>> -       ath5k_tx_processq(sc, sc->txq);
->>> +       for (i=0; i < AR5K_NUM_TX_QUEUES; i++) {
->>> +               if (!sc->txqs[i].setup)
->>> +                       continue;
->>> +               ath5k_tx_processq(sc, sc->txq);
->>>       
->> oops, should be:
->>
->> ath5k_tx_processq(sc, sc->txqs[i]);
->>
->>     
->>> +       }
->>>  }
->>>
->>>       
->
-> Getting closer :-)
->
-> ath5k_tx_processq(sc, &sc->txqs[i]);
->   
+ * Don't put chip to full sleep because there are problems during
+   wakeup. Instead hold MAC/Baseband on warm reset state via a new
+   function ath5k_hw_on_hold.
 
-Didn't work with rc4:
+ * Durring attach preserve pcicfg bits when enabling pci core
+   sw retry fix.
 
-BUG: unable to handle kernel NULL pointer dereference at 00000000
-IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
-*pde = 00000000 
-Oops: 0000 [#1] PREEMPT 
-Modules linked in: lm90 hwmon scx200_acb i2c_core bridge stp llc dummy ath5k mac80211 ath cfg80211 rfkill_backport dahdi_dummy dahdi sha512_generic sha256_generic deflate zlib_deflate arc4 ecb sha1_generic blowfish des_generic cbc cryptosoft cryptodev(P) ocf(P) geodewdt geode_rng geode_aes crypto_blkcipher via_rhine rtc
+ * Minor cleanups
 
-Pid: 1585, comm: hostapd Tainted: P          (2.6.27.26-astlinux #1)
-EIP: 0060:[<d0935658>] EFLAGS: 00010202 CPU: 0
-EIP is at ath5k_tasklet_tx+0x5e/0x27b [ath5k]
-EAX: c5712000 EBX: cf994000 ECX: 00000000 EDX: 00000000
-ESI: ffffff8d EDI: c5713d00 EBP: c5488920 ESP: c5713ccc
- DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-Process hostapd (pid: 1585, ti=c5712000 task=cf86a0a0 task.ti=c5712000)
-Stack: c5713cec c548bf9c c548bfb0 c548bfd0 c011a1d7 00000000 00000028 c548bfb0 
-       00000000 00000000 00000000 00000000 00000000 00000000 c039d214 0000000a 
-       00000009 c011a3f9 00000001 c011a111 00000046 c03473f4 00000000 c011a161 
-Call Trace:
- [<c011a1d7>] _local_bh_enable_ip+0x72/0x7c
- [<c011a3f9>] tasklet_action+0x3c/0x62
- [<c011a111>] __do_softirq+0x30/0x5e
- [<c011a161>] do_softirq+0x22/0x26
- [<c011a4fa>] irq_exit+0x25/0x33
- [<c0104a14>] do_IRQ+0x4d/0x5d
- [<c0103a1b>] common_interrupt+0x23/0x28
- [<c02445ec>] __sock_sendmsg+0x20/0x24
- [<c0245331>] sock_sendmsg+0x95/0xad
- [<c0125714>] autoremove_wake_function+0x0/0x2b
- [<c0125714>] autoremove_wake_function+0x0/0x2b
- [<c013aca6>] get_pageblock_flags_group+0xf/0x50
- [<c024b551>] verify_iovec+0x3e/0x6d
- [<c02454d6>] sys_sendmsg+0x18d/0x1ed
- [<c0245d72>] sys_recvmsg+0x144/0x1c6
- [<c0245de0>] sys_recvmsg+0x1b2/0x1c6
- [<c0113a7b>] __wake_up+0x1d/0x45
- [<c0113a93>] __wake_up+0x35/0x45
- [<c024dc8e>] dev_name_hash+0x13/0x42
- [<c024dc8e>] dev_name_hash+0x13/0x42
- [<c024dcec>] __dev_get_by_name+0x2f/0x39
- [<c011a1d7>] _local_bh_enable_ip+0x72/0x7c
- [<c0246dd0>] lock_sock_nested+0xb1/0xb8
- [<c011a1d7>] _local_bh_enable_ip+0x72/0x7c
- [<c0246377>] sys_socketcall+0x15b/0x193
- [<c0152703>] sys_close+0x75/0xc5
- [<c01038b6>] syscall_call+0x7/0xb
- =======================
-Code: 00 03 85 b0 36 00 00 8b 3c 24 fc 89 44 24 0c 31 c0 ab ab ab ab ab 89 e0 25 00 e0 ff ff ff 40 14 8b 54 24 0c 8b 52 08 89 54 24 14 <8b> 02 8b 54 24 0c 83 c2 08 89 44 24 1c 89 54 24 08 e9 96 01 00 
-EIP: [<d0935658>] ath5k_tasklet_tx+0x5e/0x27b [ath5k] SS:ESP 0068:c5713ccc
-Kernel panic - not syncing: Fatal exception in interrupt
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    1 +
+ drivers/net/wireless/ath/ath5k/attach.c |    4 +-
+ drivers/net/wireless/ath/ath5k/base.c   |   44 +++++----
+ drivers/net/wireless/ath/ath5k/reset.c  |  155 +++++++++++++++++++++++--------
+ 4 files changed, 141 insertions(+), 63 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 9137511..1047a6c 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1157,6 +1157,7 @@ extern void ath5k_unregister_leds(struct ath5k_softc *sc);
+ 
+ /* Reset Functions */
+ extern int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
++extern int ath5k_hw_on_hold(struct ath5k_hw *ah);
+ extern int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode, struct ieee80211_channel *channel, bool change_channel);
+ /* Power management functions */
+ extern int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode, bool set_chip, u16 sleep_duration);
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 6263065..65d438b 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -145,7 +145,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		goto err_free;
+ 
+ 	/* Bring device out of sleep and reset it's units */
+-	ret = ath5k_hw_nic_wakeup(ah, CHANNEL_B, true);
++	ret = ath5k_hw_nic_wakeup(ah, 0, true);
+ 	if (ret)
+ 		goto err_free;
+ 
+@@ -261,7 +261,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 
+ 	/* Enable pci core retry fix on Hainan (5213A) and later chips */
+ 	if (srev >= AR5K_SREV_AR5213A)
+-		ath5k_hw_reg_write(ah, AR5K_PCICFG_RETRY_FIX, AR5K_PCICFG);
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, AR5K_PCICFG_RETRY_FIX);
+ 
+ 	/*
+ 	 * Get card capabilities, calibration values etc
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7db32ce..b64731b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2448,27 +2448,29 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	ret = ath5k_stop_locked(sc);
+ 	if (ret == 0 && !test_bit(ATH_STAT_INVALID, sc->status)) {
+ 		/*
+-		 * Set the chip in full sleep mode.  Note that we are
+-		 * careful to do this only when bringing the interface
+-		 * completely to a stop.  When the chip is in this state
+-		 * it must be carefully woken up or references to
+-		 * registers in the PCI clock domain may freeze the bus
+-		 * (and system).  This varies by chip and is mostly an
+-		 * issue with newer parts that go to sleep more quickly.
+-		 */
+-		if (sc->ah->ah_mac_srev >= 0x78) {
+-			/*
+-			 * XXX
+-			 * don't put newer MAC revisions > 7.8 to sleep because
+-			 * of the above mentioned problems
+-			 */
+-			ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mac version > 7.8, "
+-				"not putting device to sleep\n");
+-		} else {
+-			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+-				"putting device to full sleep\n");
+-			ath5k_hw_set_power(sc->ah, AR5K_PM_FULL_SLEEP, true, 0);
+-		}
++		 * Don't set the card in full sleep mode!
++		 *
++		 * a) When the device is in this state it must be carefully
++		 * woken up or references to registers in the PCI clock
++		 * domain may freeze the bus (and system).  This varies
++		 * by chip and is mostly an issue with newer parts
++		 * (madwifi sources mentioned srev >= 0x78) that go to
++		 * sleep more quickly.
++		 *
++		 * b) On older chips full sleep results a weird behaviour
++		 * during wakeup. I tested various cards with srev < 0x78
++		 * and they don't wake up after module reload, a second
++		 * module reload is needed to bring the card up again.
++		 *
++		 * Until we figure out what's going on don't enable
++		 * full chip reset on any chip (this is what Legacy HAL
++		 * and Sam's HAL do anyway). Instead Perform a full reset
++		 * on the device (same as initial state after attach) and
++		 * leave it idle (keep MAC/BB on warm reset) */
++		ret = ath5k_hw_on_hold(sc->ah);
++
++		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
++				"putting device to sleep\n");
+ 	}
+ 	ath5k_txbuf_free(sc, sc->bbuf);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 86733fd..34e13c7 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -258,29 +258,35 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		if (!set_chip)
+ 			goto commit;
+ 
+-		/* Preserve sleep duration */
+ 		data = ath5k_hw_reg_read(ah, AR5K_SLEEP_CTL);
++
++		/* If card is down we 'll get 0xffff... so we
++		 * need to clean this up before we write the register
++		 */
+ 		if (data & 0xffc00000)
+ 			data = 0;
+ 		else
+-			data = data & 0xfffcffff;
++			/* Preserve sleep duration etc */
++			data = data & ~AR5K_SLEEP_CTL_SLE;
+ 
+-		ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
++		ath5k_hw_reg_write(ah, data | AR5K_SLEEP_CTL_SLE_WAKE,
++							AR5K_SLEEP_CTL);
+ 		udelay(15);
+ 
+-		for (i = 50; i > 0; i--) {
++		for (i = 200; i > 0; i--) {
+ 			/* Check if the chip did wake up */
+ 			if ((ath5k_hw_reg_read(ah, AR5K_PCICFG) &
+ 					AR5K_PCICFG_SPWR_DN) == 0)
+ 				break;
+ 
+ 			/* Wait a bit and retry */
+-			udelay(200);
+-			ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
++			udelay(50);
++			ath5k_hw_reg_write(ah, data | AR5K_SLEEP_CTL_SLE_WAKE,
++							AR5K_SLEEP_CTL);
+ 		}
+ 
+ 		/* Fail if the chip didn't wake up */
+-		if (i <= 0)
++		if (i == 0)
+ 			return -EIO;
+ 
+ 		break;
+@@ -296,6 +302,64 @@ commit:
+ }
+ 
+ /*
++ * Put device on hold
++ *
++ * Put MAC and Baseband on warm reset and
++ * keep that state (don't clean sleep control
++ * register). After this MAC and Baseband are
++ * disabled and a full reset is needed to come
++ * back. This way we save as much power as possible
++ * without puting the card on full sleep.
++ */
++int ath5k_hw_on_hold(struct ath5k_hw *ah)
++{
++	struct pci_dev *pdev = ah->ah_sc->pdev;
++	u32 bus_flags;
++	int ret;
++
++	/* Make sure device is awake */
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to wakeup the MAC Chip\n");
++		return ret;
++	}
++
++	/*
++	 * Put chipset on warm reset...
++	 *
++	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * results card to hang and always return 0xffff... so
++	 * we ingore that flag for PCI-E cards. On PCI cards
++	 * this flag gets cleared after 64 PCI clocks.
++	 */
++	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
++
++	if (ah->ah_version == AR5K_AR5210) {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
++			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
++			mdelay(2);
++	} else {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_BASEBAND | bus_flags);
++	}
++
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to put device on warm reset\n");
++		return -EIO;
++	}
++
++	/* ...wakeup again!*/
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to put device on hold\n");
++		return ret;
++	}
++
++	return ret;
++}
++
++/*
+  * Bring up MAC + PHY Chips and program PLL
+  * TODO: Half/Quarter rate support
+  */
+@@ -318,6 +382,50 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 		return ret;
+ 	}
+ 
++	/*
++	 * Put chipset on warm reset...
++	 *
++	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * results card to hang and always return 0xffff... so
++	 * we ingore that flag for PCI-E cards. On PCI cards
++	 * this flag gets cleared after 64 PCI clocks.
++	 */
++	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
++
++	if (ah->ah_version == AR5K_AR5210) {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
++			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
++			mdelay(2);
++	} else {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_BASEBAND | bus_flags);
++	}
++
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip\n");
++		return -EIO;
++	}
++
++	/* ...wakeup again!...*/
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
++		return ret;
++	}
++
++	/* ...clear reset control register and pull device out of
++	 * warm reset */
++	if (ath5k_hw_nic_reset(ah, 0)) {
++		ATH5K_ERR(ah->ah_sc, "failed to warm reset the MAC Chip\n");
++		return -EIO;
++	}
++
++	/* On initialization skip PLL programming since we don't have
++	 * a channel / mode set yet */
++	if (initial)
++		return 0;
++
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		/*
+ 		 * Get channel mode flags
+@@ -383,39 +491,6 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 					AR5K_PHY_TURBO);
+ 	}
+ 
+-	/* reseting PCI on PCI-E cards results card to hang
+-	 * and always return 0xffff... so we ingore that flag
+-	 * for PCI-E cards */
+-	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+-
+-	/* Reset chipset */
+-	if (ah->ah_version == AR5K_AR5210) {
+-		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+-			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
+-			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
+-			mdelay(2);
+-	} else {
+-		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+-			AR5K_RESET_CTL_BASEBAND | bus_flags);
+-	}
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip\n");
+-		return -EIO;
+-	}
+-
+-	/* ...wakeup again!*/
+-	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
+-		return ret;
+-	}
+-
+-	/* ...final warm reset */
+-	if (ath5k_hw_nic_reset(ah, 0)) {
+-		ATH5K_ERR(ah->ah_sc, "failed to warm reset the MAC Chip\n");
+-		return -EIO;
+-	}
+-
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 
+ 		/* ...update PLL if needed */
