@@ -1,31 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web15808.mail.cnb.yahoo.com ([202.165.102.88]:31155 "HELO
-	web15808.mail.cnb.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751907AbZG2JYL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 05:24:11 -0400
-Message-ID: <109708.86209.qm@web15808.mail.cnb.yahoo.com>
-Date: Wed, 29 Jul 2009 17:24:09 +0800 (CST)
-From: gu gu <guatsheng@yahoo.com.cn>
-Subject: The problem of driver of rtl8187 wireless card
-To: linux-wireless@vger.kernel.org
+Received: from mail.gmx.net ([213.165.64.20]:50649 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751095AbZGaSe4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 14:34:56 -0400
+Message-ID: <4A73394D.1070200@gmx.de>
+Date: Fri, 31 Jul 2009 20:34:53 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gb2312
+To: Bob Copeland <me@bobcopeland.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k: monitor mode needs channel change
+References: <4A72113F.8000604@gmx.de> <b6c5339f0907301505yde9e457k4ddc87b1c9120a84@mail.gmail.com>
+In-Reply-To: <b6c5339f0907301505yde9e457k4ddc87b1c9120a84@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 07/31/2009 12:05 AM, Bob Copeland wrote:
+> On Thu, Jul 30, 2009 at 5:31 PM, Joerg Albert<jal2@gmx.de> wrote:
+>> I currently need an extra trigger by changing the channel after
+>> "ifconfig up" to see any output in monitor mode from ath5k, e.g.
+> 
+> Does this (accidentally) fix it by chance?
+> 
+> http://patchwork.kernel.org/patch/38165/
+> 
+> It reloads the filters at ifup time.
 
-Dear Sir,
-     Rencently,I do a job to transplant a wireless wifi-card connected by the USB,which was designed baseing the chip rtl8187 for ARM board.But in the process i have some trouble in writing the driver programe.
-     My linux kernel is Version-2.6.25.10,It is true that the kernel have the driver for the chip rtl8187 .When I connected the wifi card through the USB port ,the kernel can recoganize the card "Manufacturer_Realtek_RTL8187",So it's sure that the driver of RTL8187 is no problem.But when I ping it to the AP,the missing of datapackets and the delay are both terrible.and more , there is nothing accepted by the wireless router when i typed the "ping".
-so i think there is some bug exist in the driver for RTL8187 of kernel ,isn't it? (ps: I have set several parameter,such essid ,IP address...) 
-  So I download a "compat-wireless-2.6-old" packet.following the " Readme",i added the KLIB & KLIB_BUILD in the Makefile and "make" it.It is well to generate  some modules with the typing".o"! but has not compiled the file rtl8187 or generated a "rtl8187.o". 
-and so i wanna to know how to solve this problem. i need some help from u,
-Thank you for your attention!
+No, unfortunately this patch was already part of my ath5k.
+I'll try to add some printk.
 
-Gu  C.L.
-
-
-      ___________________________________________________________ 
-  好玩贺卡等你发，邮箱贺卡全新上线！ 
-http://card.mail.cn.yahoo.com/
