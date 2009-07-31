@@ -1,122 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:34105 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756380AbZGIMkF (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:54289 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbZGaUFo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jul 2009 08:40:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <4A55D123.5090802@gmail.com>
-References: <4A54FB81.30302@gmail.com>
-	 <3ace41890907081449m3ad6c4fdt55781848eedaec1e@mail.gmail.com>
-	 <4A551B43.3020104@gmail.com>
-	 <3ace41890907082118h52764c98i7ebd9365bcd69b2c@mail.gmail.com>
-	 <4A5575C1.8090403@lwfinger.net>
-	 <3ace41890907090347m1f337731rb09b90327664ed5@mail.gmail.com>
-	 <4A55D123.5090802@gmail.com>
-Date: Thu, 9 Jul 2009 13:40:02 +0100
-Message-ID: <3ace41890907090540v6895e2bay8128c0d565a7a55f@mail.gmail.com>
-Subject: Re: [PATCH] wireless: fix supported cards for rtl8187
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Marcin Slusarz <marcin.slusarz@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Linux wireless <linux-wireless@vger.kernel.org>,
-	Przemyslaw Kulczycki <azrael@autocom.pl>,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 31 Jul 2009 16:05:44 -0400
+Received: by fxm17 with SMTP id 17so1568874fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 13:05:44 -0700 (PDT)
+Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
+ conection monitor
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1249068449.23662.17.camel@localhost.localdomain>
+References: <1249056817.20593.1.camel@maxim-laptop>
+	 <1249066338.30019.214.camel@rc-desk>
+	 <1249067293.19089.10.camel@maxim-laptop>
+	 <1249068449.23662.17.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 31 Jul 2009 23:05:39 +0300
+Message-Id: <1249070739.25620.11.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/9 Marcin Slusarz <marcin.slusarz@gmail.com>:
-> Hin-Tak Leung pisze:
->> 2009/7/9 Larry Finger <Larry.Finger@lwfinger.net>:
->>> Hin-Tak Leung wrote:
->>>> if they are not labelled v1/v2/v3 as such, it may be more
->>>> useful/informative to change to
->>>>
->>>>     [some variant of ] ... [(other variants are supported by the
->>>> rt2070/rt3070 modules)]
->>>>
->>>> instead of just adding [v2] to the end.
->>> I don't know about the box as I bought mine used on Ebay, but the
->>> label on the device clearly states that it is a WG111v2.
->>>
->>> Larry
->>>
->>>
->>
->> But that's  a Netgear WG111v2 ? We are talking about Linksys
->> WUSB54GC-EU and its v1/v2/v3 . I am just thinking that if it is for
->> informative purposes (for those who actually selectively build their
->> kernel modules), adding a bit more info, such as suggesting to use
->> rt73usb/rt2070/rt3070 modules, won't hurt.
->>
->> Incidentally I like to know a bit more about this patch - presumably
->> Marcin has such a device? I am also a little curious, as this commit
->> should be accompanied by a corresponding update in another Kconfig
->> which supports the device? I am not trying to be picky, but for an
->> informative (non-code-changing) patch, it can be more informative.
->
-> I have a v3 device and this driver does not support it.
-> Below is the commit which added the string my patch corrects.
-> I've sent yesterday another patch which adds support for WUSB54GC v3
-> to the rt3070 driver.
+On Fri, 2009-07-31 at 12:27 -0700, Marcel Holtmann wrote:
+> Hi Maxim,
+> 
+> > > > Hi, here is the updated version of these two patches that fix the
+> > > > $SUBJECT issue.
+> > > > 
+> > > > I attach these (in case mailer mangles them), and reply with patches.
+> > > > 
+> > > > Tested both with low quality signal, and beacon loss.
+> > > > Lack of TX is found, every 30 seconds now, and quite reliable.
+> > > > Lack of beacons, triggers probe like it did every 2 seconds.
+> > > 
+> > > Thanks!
+> > > 
+> > > I've been running with this for two hours now with no disconnects. This
+> > > is where before the patches I would get disconnected after a few
+> > > minutes. I did get two "No probe response from AP xx:xx:xx:xx:xx:xx
+> > > after 500ms, try 1" messages in my log.
+> > This is normal, or at least can be normal, I patched the driver to
+> > display this message, when there is a probe timeout, but instead of
+> > disconnect, it retries, currently 5 times, but this can be even further
+> > increased is necessarily.
+> > (these messages are only in logs when verbose mac debugging is enabled)
+> > 
+> > I don't know exactly why probes aren't answered, but I strongly suspect
+> > that my AP sometimes 'goes out to lunch' and then answers, since
+> > typically after a failed probe it sends many replies.
+> > (Or it could be some buffering done by iwl3945 microcode). I currently
+> > can't monitor the connection from outside, but as soon as I can I see
+> > whether the above is true. Nevertheless if signal quality isn't great,
+> > there are valid reasons for probe loss, and it shouldn't cause all the
+> > fuzz (and since I use WPA2, every reconnection causes whole WPA
+> > handshake to be preformed, and this takes at least 2 seconds, and if a
+> > reconnection happens each 5 seconds, it gets very very annoying, and
+> > almost unusable.
+> 
+> I am testing your patches and so far so good. Seems to be working
+> perfectly fine. I see this in the logs:
+> 
+> [41027.333419] wlan0: detected beacon loss from AP - sending probe request
+> [41027.389260] wlan0: cancelling probereq poll due to a received beacon
+> [41027.793518] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 1
+> [41028.292731] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 2
+> 
+> Need to watch out if this pattern emerges and if the beacon loss trigger
+> might give us an indication. Maybe the ucode is just not ready then.
+Here (on my system) I see no beacon losses at all, like I said there
+could be many reasons behind packet losses, and best way to mitigate
+them is to retry.
 
-Here is some info from Gabor (shouldn't this be reply-all rather than just me):
-------------------
-The v1 and v2 look identical (though the label on the device indicates
-the revision). The v3 looks completely different. They all have
-different USB IDs (v1 is stock RT73, v2 has a custom ID, while v3 is
-AFAIK stock RT2070).
-------------------
+Your logs indicate that beacons weren't recieved for 2 seconds, then
+mac80211 tried to send a probe, but a beacon is recieved before the
+probe answer, this probe is canceled (at least should be) then after a
+while, a probe request (same one?) is time outed, and retried twice,
+then finally answered.
 
-I guess to be informative, may I suggest adding '(for v1  see rt73usb,
-and v3 see rt3070)' or something similiar to the 'v2' change?
-It is fair customary in Kconfig to mention even alternative/competing
-drivers for the same device. And when you add v3 support to the rt3070
-driver, a reverse mention may be appropriate. (I guess I am spending
-far too long on this discussion - but I reckon, the purpose of a
-non-code-changing change is meant to be informative, so one might want
-to be as informative as appropriate without being too wordy...)
 
->
-> commit aeeab4ff06b8e29cfe2fe730ba626f7e2487ba03
-> Author: John W. Linville <linville@tuxdriver.com>
-> Date:   Wed May 27 09:21:57 2009 +0200
->
->    rtl8187: add USB ID for Linksys WUSB54GC-EU v2 USB wifi dongle
->
->    http://bugzilla.kernel.org/show_bug.cgi?id=13383
->
->    Reported-by: Przemyslaw Kulczycki <azrael@autocom.pl>
->    Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index 8a08235..3d94e7d 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -430,6 +430,7 @@ config RTL8187
->          ASUS P5B Deluxe
->          Toshiba Satellite Pro series of laptops
->          Asus Wireless Link
-> +         Linksys WUSB54GC-EU
->
->          Thanks to Realtek for their support!
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index bac6cfb..d51ba0a 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -71,6 +71,8 @@ static struct usb_device_id rtl8187_table[] __devinitdata = {
->        {USB_DEVICE(0x18E8, 0x6232), .driver_info = DEVICE_RTL8187},
->        /* AirLive */
->        {USB_DEVICE(0x1b75, 0x8187), .driver_info = DEVICE_RTL8187},
-> +       /* Linksys */
-> +       {USB_DEVICE(0x1737, 0x0073), .driver_info = DEVICE_RTL8187B},
->        {}
->  };
->
->
->
->
+Best regards,
+	Maxim Levitsky
+
+> 
+> Regards
+> 
+> Marcel
+> 
+> 
+
