@@ -1,61 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.245]:13009 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171AbZG2WEh convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:59233 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752712AbZGaNTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jul 2009 18:04:37 -0400
-Received: by an-out-0708.google.com with SMTP id d40so1278925and.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2009 15:04:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1248904631.1216.1027.camel@rc-desk>
-References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
-	<43e72e890907291453k444e2d06k864149ddcda8f351@mail.gmail.com>
-	<1248904631.1216.1027.camel@rc-desk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 29 Jul 2009 15:04:17 -0700
-Message-ID: <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com>
-Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
-To: reinette chatre <reinette.chatre@intel.com>, rmacko72@gmail.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 31 Jul 2009 09:19:46 -0400
+Received: by fxm17 with SMTP id 17so1362234fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 06:19:45 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1249026181.29587.14.camel@johannes.local>
+References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
+	 <1249024097.7653.6.camel@maxim-laptop>
+	 <1249026181.29587.14.camel@johannes.local>
+Content-Type: multipart/mixed; boundary="=-xzyXL1HBlQ4InjRGJPyY"
+Date: Fri, 31 Jul 2009 16:19:40 +0300
+Message-Id: <1249046380.6418.6.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 29, 2009 at 2:57 PM, reinette
-chatre<reinette.chatre@intel.com> wrote:
-> On Wed, 2009-07-29 at 14:53 -0700, Luis R. Rodriguez wrote:
->> On Wed, Jul 29, 2009 at 2:45 PM, Linux
->> Wireless<johannes@sipsolutions.net> wrote:
->> > Dear Wiki user,
->> >
->> > You have subscribed to a wiki page or wiki category on "Linux Wireless" for change notification.
->> >
->> > The "en/users/Download" page has been changed by ReinetteChatre:
->> > http://wireless.kernel.org/en/users/Download?action=diff&rev1=93&rev2=94
->> >
->> >  }}}
->> >  '''Install''':
->> >
->> > - We use the updates/ directory so your distribution's drivers are left intact.
->> > + We use the updates/ directory so your distribution's drivers are left intact. By default depmod will search this directory first, but if you find that it does not then check that your depmod.conf file lists the search order correctly with ''updates'' appearing first (before ''built-in'').
->>
->> Hm, so compat-wireless now actually checks this for you and if its not
->> there it adds it for you. Was there an issue with a particular user on
->> this?
->
-> Yes, a madriva user ran into this problem. See
-> http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2061#c6
 
-Roman, I added a little check for this, specifically since another
-user reported the same issue. Did you use bleeding edge
-compat-wireless?
+--=-xzyXL1HBlQ4InjRGJPyY
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-The script is in:
+On Fri, 2009-07-31 at 09:43 +0200, Johannes Berg wrote:
+> On Fri, 2009-07-31 at 10:08 +0300, Maxim Levitsky wrote:
+> > On Wed, 2009-07-29 at 14:32 -0700, Reinette Chatre wrote:
+> > > From: Reinette Chatre <reinette.chatre@intel.com>
+> > > 
+> > > The connection monitor currently relies on probe requests paired
+> > > with probe responses to ensure that a connection is alive. This is
+> > > fragile in some environments where probe responses can get lost.
+> > > When we receive beacons we can also consider the connection to be
+> > > alive, so cancel connection poll instance when we receive a beacon.
+> > > 
+> > > The debug message "cancelling probereq poll due to a received beacon"
+> > > is removed as part of this change as this case is hit very often after
+> > > the above change and debug log receives significant number of these messages.
+> > 
+> > In my opinion this is the correct solution
+> > I did plenty of wireless monitoring, and I see that nobody sends probe
+> > requests at that rate (1 per second it seems). This is ridiculous.
+> 
+> Fix it then. Offer an implementation of your superior solution. We've
+> done pretty much exactly what you're all pointing out _forever_ in
+> mac80211, ever since it was initially merged. Now that it's more
+> explicit in the code, people are complaining?
+> 
+> johannes
 
-scripts/check_depmod
 
-We run this at make install time.
+Here it is:
 
-Can you run that manually?
+First patch makes the probe requests be retried (and with it and only
+it, my connection is very stable, it never retries more that 3 times,
+and I set max retries to 5)
 
-  Luis
+Second patch, trivial one bumps up the timeouts (30 for ping, and 1/2
+for response, so device won't send out frames too often)
+
+I attach the patches, since I afraid my mailer would mangle them.
+
+Here they are in-line too:
+
+
+-------------------------------------------------------------------------------------------------
+
+[MAC80211] Retry probe request few times, before assuming that AP is out of range
+
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+
+Fixes very often reconnects while connected to nearby APs
+
+Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
+---
+
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   27 ++++++++++++++++++++++++---
+ 2 files changed, 25 insertions(+), 3 deletions(-)
+
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index aec6853..ac2489b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
+ 	struct work_struct beacon_loss_work;
+ 
+ 	unsigned long probe_timeout;
++	unsigned long probe_miss_count;
+ 
+ 	struct mutex mtx;
+ 	struct ieee80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ee83125..38ef7f2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -31,6 +31,7 @@
+ #define IEEE80211_AUTH_MAX_TRIES 3
+ #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+ #define IEEE80211_ASSOC_MAX_TRIES 3
++#define IEEE80211_ASSOC_RETRIES 5
+ 
+ /*
+  * beacon loss detection timeout
+@@ -1209,6 +1210,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_ps(sdata->local, -1);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
++	sdata->u.mgd.probe_miss_count = 0;
+ 	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
+ 	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
+ 				 ssid + 2, ssid[1], NULL, 0);
+@@ -2072,17 +2074,36 @@ static void ieee80211_sta_work(struct work_struct *work)
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+ 			    IEEE80211_STA_CONNECTION_POLL) &&
+ 	    ifmgd->associated) {
++
++		u8 bssid[ETH_ALEN];
++		const u8 *ssid;
++
++		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
++
+ 		if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+-		else {
+-			u8 bssid[ETH_ALEN];
++
++		else if (ifmgd->probe_miss_count < IEEE80211_ASSOC_RETRIES) {
++
++			printk(KERN_DEBUG "No probe response from AP %pM"
++				" after %dms, try %d\n", bssid,
++				(1000 * IEEE80211_PROBE_WAIT)/HZ,
++				(int)ifmgd->probe_miss_count);
++
++			ifmgd->probe_miss_count++;
++			ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
++			run_again(ifmgd, ifmgd->probe_timeout);
++
++			ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
++			ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
++				ssid + 2, ssid[1], NULL, 0);
++		} else {
+ 			/*
+ 			 * We actually lost the connection ... or did we?
+ 			 * Let's make sure!
+ 			 */
+ 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 					  IEEE80211_STA_BEACON_POLL);
+-			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
+ 			printk(KERN_DEBUG "No probe response from AP %pM"
+ 				" after %dms, disconnecting.\n",
+ 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
+
+
+
+
+
+------------------------------------------------------------------------------------------
+
+[MAC80211] Increase timeouts for AP polling
+
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+
+Do a poll every 30 seconds, and wait for response half a second
+
+Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+---
+
+ net/mac80211/mlme.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 38ef7f2..a8ab40c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -42,13 +42,13 @@
+  * Time the connection can be idle before we probe
+  * it to see if we can still talk to the AP.
+  */
+-#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
++#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
+ /*
+  * Time we wait for a probe response after sending
+  * a probe request because of beacon loss or for
+  * checking the connection still works.
+  */
+-#define IEEE80211_PROBE_WAIT		(HZ / 5)
++#define IEEE80211_PROBE_WAIT		(HZ / 2)
+ 
+ #define TMR_RUNNING_TIMER	0
+ #define TMR_RUNNING_CHANSW	1
+
+--=-xzyXL1HBlQ4InjRGJPyY
+Content-Disposition: attachment; filename="0001-mac80211-retry-probe-requests"
+Content-Type: text/plain; name="0001-mac80211-retry-probe-requests"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+[MAC80211] Retry probe request few times, before assuming that AP is out of range
+
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+
+Fixes very often reconnects while connected to nearby APs
+
+Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
+---
+
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   27 ++++++++++++++++++++++++---
+ 2 files changed, 25 insertions(+), 3 deletions(-)
+
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index aec6853..ac2489b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
+ 	struct work_struct beacon_loss_work;
+ 
+ 	unsigned long probe_timeout;
++	unsigned long probe_miss_count;
+ 
+ 	struct mutex mtx;
+ 	struct ieee80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ee83125..38ef7f2 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -31,6 +31,7 @@
+ #define IEEE80211_AUTH_MAX_TRIES 3
+ #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+ #define IEEE80211_ASSOC_MAX_TRIES 3
++#define IEEE80211_ASSOC_RETRIES 5
+ 
+ /*
+  * beacon loss detection timeout
+@@ -1209,6 +1210,7 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_ps(sdata->local, -1);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
++	sdata->u.mgd.probe_miss_count = 0;
+ 	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
+ 	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
+ 				 ssid + 2, ssid[1], NULL, 0);
+@@ -2072,17 +2074,36 @@ static void ieee80211_sta_work(struct work_struct *work)
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+ 			    IEEE80211_STA_CONNECTION_POLL) &&
+ 	    ifmgd->associated) {
++
++		u8 bssid[ETH_ALEN];
++		const u8 *ssid;
++
++		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
++
+ 		if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+-		else {
+-			u8 bssid[ETH_ALEN];
++
++		else if (ifmgd->probe_miss_count < IEEE80211_ASSOC_RETRIES) {
++
++			printk(KERN_DEBUG "No probe response from AP %pM"
++				" after %dms, try %d\n", bssid,
++				(1000 * IEEE80211_PROBE_WAIT)/HZ,
++				(int)ifmgd->probe_miss_count);
++
++			ifmgd->probe_miss_count++;
++			ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
++			run_again(ifmgd, ifmgd->probe_timeout);
++
++			ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
++			ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
++				ssid + 2, ssid[1], NULL, 0);
++		} else {
+ 			/*
+ 			 * We actually lost the connection ... or did we?
+ 			 * Let's make sure!
+ 			 */
+ 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 					  IEEE80211_STA_BEACON_POLL);
+-			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
+ 			printk(KERN_DEBUG "No probe response from AP %pM"
+ 				" after %dms, disconnecting.\n",
+ 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
+
+--=-xzyXL1HBlQ4InjRGJPyY
+Content-Disposition: attachment; filename="0002-mac80211-increase-timeouts-for"
+Content-Type: text/plain; name="0002-mac80211-increase-timeouts-for"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+[MAC80211] Increase timeouts for AP polling
+
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+
+Do a poll every 30 seconds, and wait for response half a second
+
+Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+---
+
+ net/mac80211/mlme.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 38ef7f2..a8ab40c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -42,13 +42,13 @@
+  * Time the connection can be idle before we probe
+  * it to see if we can still talk to the AP.
+  */
+-#define IEEE80211_CONNECTION_IDLE_TIME	(2 * HZ)
++#define IEEE80211_CONNECTION_IDLE_TIME	(30 * HZ)
+ /*
+  * Time we wait for a probe response after sending
+  * a probe request because of beacon loss or for
+  * checking the connection still works.
+  */
+-#define IEEE80211_PROBE_WAIT		(HZ / 5)
++#define IEEE80211_PROBE_WAIT		(HZ / 2)
+ 
+ #define TMR_RUNNING_TIMER	0
+ #define TMR_RUNNING_CHANSW	1
+
+--=-xzyXL1HBlQ4InjRGJPyY--
+
