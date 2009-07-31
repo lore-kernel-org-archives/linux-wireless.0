@@ -1,59 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:61179 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060AbZGARtb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jul 2009 13:49:31 -0400
-Received: by yxe26 with SMTP id 26so1493415yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2009 10:49:34 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:56235 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752228AbZGaAj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 20:39:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 17:40:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 2/4] cfg80211: do not iterate over rdev list on country IE hint
+Date: Thu, 30 Jul 2009 17:38:07 -0700
+Message-ID: <1249000689-14970-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
+References: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1246470361.11632.23.camel@jdl-desktop>
-References: <1246460365.11632.4.camel@jdl-desktop> <43e72e890907010959q15bde116ue796802e006e410f@mail.gmail.com>
-	<1246468471.15757.12.camel@mj> <1246469405.11632.19.camel@jdl-desktop>
-	<43e72e890907011035x77005470u6646d7feb941b9f7@mail.gmail.com>
-	<1246470361.11632.23.camel@jdl-desktop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 1 Jul 2009 10:49:14 -0700
-Message-ID: <43e72e890907011049w45508c9fpfabdddf36c28e99c@mail.gmail.com>
-Subject: Re: [Fwd: Re: [PATCH 4/5] Introduce separate HOST and TARGET
-	compilation steps.]
-To: Jon Loeliger <jdl@bigfootnetworks.com>
-Cc: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 1, 2009 at 10:46 AM, Jon Loeliger<jdl@bigfootnetworks.com> wrote:
-> On Wed, 2009-07-01 at 10:35 -0700, Luis R. Rodriguez wrote:
->> On Wed, Jul 1, 2009 at 10:30 AM, Jon Loeliger<jdl@bigfootnetworks.com> wrote:
->>
->> > Do you agree or disagree with me when I say that the regdbdump program
->> > might need to be compiled twice -- once for the host and once for the
->> > target?
->>
->> Why?
->
-> The existing binary regulatory DB binary is verified on the host
-> using these rules.  (This is from my version of the makefile, but
-> they are there in the original too.):
->
->    all: host target $(REG_BIN) $(BUILD_ALL) verify
->
->    verify: $(REG_BIN) host/regdbdump
->        $(NQ) '  CHK  $(REG_BIN)'
->        $(Q)./host/regdbdump $(REG_BIN) >/dev/null
->
-> That is, as part of the host build process, the regdbdump tool
-> is run *on the host*.
+Simplify the country IE hint code by just bailing out if
+a previous country IE has been issued. We currently just trust
+the first AP we connect to on any card. The idea was to perform
+conflict resolution within this routine but since we can no longer
+iterate over the registered device list here we leave conflict
+resolution to be dealt with at a later time on the workqueue.
 
-This helps to understand a little better some of your intentions, may
-be good to mention this as part of your patches. Hm, interesting... I
-suppose we don't want to just disable this check then.
+This code has no functional changes other than saving us an
+interation over the registered device list when a second card
+is connected, or you unplug and connect the same one, and a
+country IE is received. This would have been done upon every
+beacon received.
 
-> Ultimately, the regdbdump utility may *also* be needed or
-> wanted on the target too.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |   51 +++++++++------------------------------------------
+ 1 files changed, 9 insertions(+), 42 deletions(-)
 
-ACK.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2d1d183..f386981 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1762,6 +1762,10 @@ static bool reg_same_country_ie_hint(struct wiphy *wiphy,
+ 	return false;
+ }
+ 
++/*
++ * We hold wdev_lock() here so we cannot hold cfg80211_mutex() and
++ * therefore cannot iterate over the rdev list here.
++ */
+ void regulatory_hint_11d(struct wiphy *wiphy,
+ 			u8 *country_ie,
+ 			u8 country_ie_len)
+@@ -1804,51 +1808,14 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 	 * We will run this for *every* beacon processed for the BSSID, so
+ 	 * we optimize an early check to exit out early if we don't have to
+ 	 * do anything
++	 *
++	 * We leave conflict resolution to the workqueue, where can hold
++	 * cfg80211_mutex.
+ 	 */
+ 	if (likely(last_request->initiator ==
+ 	    NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-	    wiphy_idx_valid(last_request->wiphy_idx))) {
+-		struct cfg80211_registered_device *rdev_last_ie;
+-
+-		rdev_last_ie =
+-			cfg80211_rdev_by_wiphy_idx(last_request->wiphy_idx);
+-
+-		/*
+-		 * Lets keep this simple -- we trust the first AP
+-		 * after we intersect with CRDA
+-		 */
+-		if (likely(&rdev_last_ie->wiphy == wiphy)) {
+-			/*
+-			 * Ignore IEs coming in on this wiphy with
+-			 * the same alpha2 and environment cap
+-			 */
+-			if (likely(alpha2_equal(rdev_last_ie->country_ie_alpha2,
+-				  alpha2) &&
+-				  env == rdev_last_ie->env)) {
+-				goto out;
+-			}
+-			/*
+-			 * the wiphy moved on to another BSSID or the AP
+-			 * was reconfigured. XXX: We need to deal with the
+-			 * case where the user suspends and goes to goes
+-			 * to another country, and then gets IEs from an
+-			 * AP with different settings
+-			 */
+-			goto out;
+-		} else {
+-			/*
+-			 * Ignore IEs coming in on two separate wiphys with
+-			 * the same alpha2 and environment cap
+-			 */
+-			if (likely(alpha2_equal(rdev_last_ie->country_ie_alpha2,
+-				  alpha2) &&
+-				  env == rdev_last_ie->env)) {
+-				goto out;
+-			}
+-			/* We could potentially intersect though */
+-			goto out;
+-		}
+-	}
++	    wiphy_idx_valid(last_request->wiphy_idx)))
++		goto out;
+ 
+ 	rd = country_ie_2_rd(country_ie, country_ie_len, &checksum);
+ 	if (!rd)
+-- 
+1.6.3.3
 
-  Luis
