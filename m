@@ -1,53 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:57148 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbZGaSSH convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:50175 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbZGaQPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 14:18:07 -0400
-Received: by ewy10 with SMTP id 10so1706027ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:18:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
-References: <20090731180238.GA7963@makis>
-	 <43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
-Date: Fri, 31 Jul 2009 21:18:05 +0300
-Message-ID: <40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
-Subject: Re: [PATCH 1/4]: Check EEPROM before tweaking SERDES
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 31 Jul 2009 12:15:10 -0400
+Received: by mail-bw0-f219.google.com with SMTP id 19so1285215bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 09:15:10 -0700 (PDT)
+Subject: [PATCH 001/002] [MAC80211] Retry probe request few times
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1249056817.20593.1.camel@maxim-laptop>
+References: <1249056817.20593.1.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 31 Jul 2009 19:14:56 +0300
+Message-Id: <1249056896.20593.3.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
->
-> Can the changes for the code be done before the move, or after so that
-> way the actual code changes to the section can be easily readable?
->
+>From 0bf5749f2878f9245b8fb1b64456386374205225 Mon Sep 17 00:00:00 2001
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+Date: Fri, 31 Jul 2009 18:54:12 +0300
+Subject: [PATCH] [MAC80211] Retry probe request few times
 
-Since we use EEPROM infos we must move this after eeprom initialization.
+Retry 5 times  (chosen arbitary ), before assuming
+that station is out of range.
 
->
-> This is just comment-picky mind using this style for comments for > 1 lines?
->
-> /*
->  * foo bleh buh
->  * bar
->  * qwerty
->  */
->
->  Luis
+Fixes frequent disassociations while connected to weak,
+and sometimes even strong access points.
 
-I use it mostly on large functions (such as attach/reset) to mark sections, we
-don't execute a single command here but a bunch of reg writes. I find it easier
-to read this way.
+Signed-off-by: Maxim Levitky <maximlevitsky@gmail.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   42 ++++++++++++++++++++++++++++++------------
+ 2 files changed, 31 insertions(+), 12 deletions(-)
 
-
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index aec6853..bca7b60 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -280,6 +280,7 @@ struct ieee80211_if_managed {
+ 	struct work_struct beacon_loss_work;
+ 
+ 	unsigned long probe_timeout;
++	int probe_send_count;
+ 
+ 	struct mutex mtx;
+ 	struct ieee80211_bss *associated;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ee83125..1d8640a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -31,6 +31,7 @@
+ #define IEEE80211_AUTH_MAX_TRIES 3
+ #define IEEE80211_ASSOC_TIMEOUT (HZ / 5)
+ #define IEEE80211_ASSOC_MAX_TRIES 3
++#define IEEE80211_MAX_PROBE_TRIES 5
+ 
+ /*
+  * beacon loss detection timeout
+@@ -1156,11 +1157,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
+ }
+ 
++static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	const u8 *ssid;
++
++	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
++	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
++				 ssid + 2, ssid[1], NULL, 0);
++
++	ifmgd->probe_send_count++;
++	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
++	run_again(ifmgd, ifmgd->probe_timeout);
++}
++
+ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 				   bool beacon)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	const u8 *ssid;
+ 	bool already = false;
+ 
+ 	if (!netif_running(sdata->dev))
+@@ -1203,18 +1217,12 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (already)
+ 		goto out;
+ 
+-	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
+-
+ 	mutex_lock(&sdata->local->iflist_mtx);
+ 	ieee80211_recalc_ps(sdata->local, -1);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
+-	ssid = ieee80211_bss_get_ie(&ifmgd->associated->cbss, WLAN_EID_SSID);
+-	ieee80211_send_probe_req(sdata, ifmgd->associated->cbss.bssid,
+-				 ssid + 2, ssid[1], NULL, 0);
+-
+-	run_again(ifmgd, ifmgd->probe_timeout);
+-
++	ifmgd->probe_send_count = 0;
++	ieee80211_mgd_probe_ap_send(sdata);
+  out:
+ 	mutex_unlock(&ifmgd->mtx);
+ }
+@@ -2072,17 +2080,27 @@ static void ieee80211_sta_work(struct work_struct *work)
+ 	if (ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+ 			    IEEE80211_STA_CONNECTION_POLL) &&
+ 	    ifmgd->associated) {
++		u8 bssid[ETH_ALEN];
++
++		memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
+ 		if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+-		else {
+-			u8 bssid[ETH_ALEN];
++
++		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
++#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
++			printk(KERN_DEBUG "No probe response from AP %pM"
++				" after %dms, try %d\n", bssid,
++				(1000 * IEEE80211_PROBE_WAIT)/HZ,
++				ifmgd->probe_send_count);
++#endif
++			ieee80211_mgd_probe_ap_send(sdata);
++		} else {
+ 			/*
+ 			 * We actually lost the connection ... or did we?
+ 			 * Let's make sure!
+ 			 */
+ 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 					  IEEE80211_STA_BEACON_POLL);
+-			memcpy(bssid, ifmgd->associated->cbss.bssid, ETH_ALEN);
+ 			printk(KERN_DEBUG "No probe response from AP %pM"
+ 				" after %dms, disconnecting.\n",
+ 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.6.0.4
+
+
+
