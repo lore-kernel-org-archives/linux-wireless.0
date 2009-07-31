@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postfix.iai.uni-bonn.de ([131.220.8.4]:57411 "EHLO
-	postfix.iai.uni-bonn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbZGMGpM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jul 2009 02:45:12 -0400
-Received: from [10.0.1.10] (dslb-084-063-085-116.pools.arcor-ip.net [84.63.85.116])
-	by postfix.iai.uni-bonn.de (Postfix) with ESMTP id 5C2255C828
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Jul 2009 08:32:24 +0200 (MEST)
-	(envelope-from schneid5@cs.uni-bonn.de)
-	(envelope-to linux-wireless@vger.kernel.org) (1)
-	(internal use: ta=1, tu=1, te=1, am=P, au=schneid5)
-Message-Id: <0D620DB9-0DF4-41BB-8686-5BC910F88C79@cs.uni-bonn.de>
-From: Tim Schneider <schneid5@cs.uni-bonn.de>
-To: Linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Mime-Version: 1.0 (Apple Message framework v935.3)
-Subject: Reading the RSSI from a Kernel Module
-Date: Mon, 13 Jul 2009 08:32:23 +0200
+Received: from mail.atheros.com ([12.36.123.2]:56132 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751240AbZGaAj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jul 2009 20:39:27 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 17:39:28 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 1/4] cfg80211: use goto out on country IE reg hint failure
+Date: Thu, 30 Jul 2009 17:38:06 -0700
+Message-ID: <1249000689-14970-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
+References: <1249000689-14970-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This has no functional changes.
 
-I am trying to write a Kernel Module with an implementation of a new  
-TCP-Algorithm. Since I need to know the RSSI-Value (Received Signal  
-Strength indication) of the sent package, I extended the Pluggable  
-Congestion Control Mechanism by a new function which is called right  
-after the package is send. At that point, I need to read the RSSI-Value.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-I'm now trying to somehow access that value, but I can't figure out  
-how. I've come as far, that I found out about the Wirelless  
-Extensions, which seem to be very promising. In the header file the  
-author states, that this mechanism can be used by both user-space apps  
-and kernel modules. Unfortunately nobody seems to ever have used it in  
-kernel space, since I can't find any documentations about it. I've  
-already asked this question on the netdev mailing list. They told me,  
-that there is a new system  with a netlink based cfg80211/nl80211  
-interface in development right now , which is supposed to replace the  
-wireless extensions in the future. They also told me, that this would  
-probably be the correct mailing list for this kind of question.
-
-I would be very glad, if somebody could give me link to a page  
-containing informations about this topic, or even just a hint that  
-could help me.
-
-Thank you
-
-Tim Schneider
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fb40428..2d1d183 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1774,10 +1774,8 @@ void regulatory_hint_11d(struct wiphy *wiphy,
+ 
+ 	mutex_lock(&cfg80211_mutex);
+ 
+-	if (unlikely(!last_request)) {
+-		mutex_unlock(&cfg80211_mutex);
+-		return;
+-	}
++	if (unlikely(!last_request))
++		goto out;
+ 
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+-- 
+1.6.3.3
 
