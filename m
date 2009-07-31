@@ -1,216 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mbox2.netikka.net ([213.250.81.203]:60398 "EHLO
-	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933623AbZGPXvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 19:51:55 -0400
-Message-ID: <4A5FBD19.6000803@mandriva.org>
-Date: Fri, 17 Jul 2009 02:51:53 +0300
-From: Thomas Backlund <tmb@mandriva.org>
+Received: from snt0-omc4-s23.snt0.hotmail.com ([65.55.90.226]:42624 "EHLO
+	snt0-omc4-s23.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750970AbZGaO0J convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 10:26:09 -0400
+Message-ID: <SNT102-W488F134CE050C692A451DABD100@phx.gbl>
+From: Jack Lau <jackelectronics@hotmail.com>
+To: <proski@gnu.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
+Date: Fri, 31 Jul 2009 14:26:01 +0000
+In-Reply-To: <1248821338.5206.12.camel@mj>
+References: <BAY0-DP2-2945C3011C834624418944BD170@phx.gbl>
+	 <1248640816.32168.42.camel@mj>
+ 	 <BAY0-DP3-241EC0B1A0E15935251FCBBD150@phx.gbl>
+ <1248821338.5206.12.camel@mj>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: unable to bring up iwlagn wireless after update from 2.6.29.6
- to 2.6.31-rc3
-References: <4A5D0374.5040702@mandriva.org>	 <1247611024.1796.21.camel@johannes.local>  <4A5D0A7F.5090108@mandriva.org>	 <1247672725.17896.1974.camel@rc-desk>  <4A5FA52D.7030701@mandriva.org>	 <1247782731.31442.3.camel@johannes.local> <1247783433.31442.11.camel@johannes.local> <4A5FB957.80407@mandriva.org>
-In-Reply-To: <4A5FB957.80407@mandriva.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas Backlund skrev:
-> Johannes Berg skrev:
->> On Fri, 2009-07-17 at 00:18 +0200, Johannes Berg wrote:
->>
->>>> And pressing it again gets this:
->>>> [root@tmb-laptop rfkill]# ./rfkill list
->>>> 0: acer-wireless: Wireless LAN
->>>>     Soft blocked: no
->>>>     Hard blocked: no
->>>> 1: acer-bluetooth: Bluetooth
->>>>     Soft blocked: yes
->>>>     Hard blocked: no
->>>> 2: phy0: Wireless LAN
->>>>     Soft blocked: yes
->>>>     Hard blocked: no
->>>>
->>>> And after that I cant get wireless back until I again do a:
->>>> ./rfkill unblock 2
->>>> (works only when acer-wireless is no/no and Wireless LAN is yes/no)
->>> Right. This is bad. The button press shouldn't have affected the
->>> soft-state of the rfkill #2.
->>>
->>>> Applying this patch:
->>>> [PATCH] rfkill: fix rfkill_set_states() to set the hw state
->>>> sent by Alan Jenkins does not help this issue either...
->>>>
->>>> Any  suggestions how to fix the rfkill ?
->>> I'll poke at the acer code to see what it's doing wrong...
->>
->> Can't see anything wrong. I wonder if the button you have sends both the
->> ACPI event _and_ an input event.
->>
->> Can you try this patch and tell us what happens?
->>
-> 
-> pressing rfkill when I have a working wireless gets this:
-> 
-> Jul 17 02:24:35 tmb-laptop klogd: rfkill_schedule_toggle(1)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-> REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting 
-> RXON_ASSOC (-5)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-> REPLY_ADD_STA: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
-> (0, 00:19:5b:51:dc:27) from hardware (-5)
-> Jul 17 02:24:35 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-> REPLY_ADD_STA: enqueue_hcmd failed: -5
-> Jul 17 02:24:35 tmb-laptop klogd: mac80211-phy0: failed to remove key 
-> (1, ff:ff:ff:ff:ff:ff) from hardware (-5)
-> Jul 17 02:24:35 tmb-laptop dhclient: receive_packet failed on wlan0: 
-> Network is down
-> Jul 17 02:24:35 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
-> Jul 17 02:24:36 tmb-laptop ifplugd(wlan0)[1790]: Link beat lost.
-> 
-> 
 
+Dear Pavel,
+ 
+As a follow-up to yesterday's email that I have sent, I have also tried a different Linux distribution (Arch Linux), 64-bit instead of 32-bit and on a different machine dedicated for this test.
+ 
+I am still getting this crash!
+ 
+Regards,
+ 
+ 
+ 
+Jack
 
-And here is the above rfkill/ iwlagn error with "debug=0x01043fff":
-
-Jul 17 02:41:06 tmb-laptop klogd: rfkill_schedule_toggle(1)
-Jul 17 02:41:06 tmb-laptop klogd: __rfkill_handle_normal_op(1, 1) [1]
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-77, i = 75, REPLY_RX, 0xc3
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
-Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-38, tim=2957610510 
-usec, phy=0x33, chnl=8
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-77, i = 76, STATISTICS_NOTIFICATION, 0x9d
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
-Statistics notification received (480 vs 484).
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-79, i = 77, REPLY_RX, 0xc3
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
-Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-34, tim=2957712910 
-usec, phy=0x33, chnl=8
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-79, i = 78, STATISTICS_NOTIFICATION, 0x9d
-Jul 17 02:41:06 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
-Statistics notification received (480 vs 484).
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-81, i = 79, REPLY_RX, 0xc3
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_dbg_report_frame 
-Beacon: 0x0080, dst=0xff, src=0x27, len=228, rssi=-37, tim=2957815309 
-usec, phy=0x33, chnl=8
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-81, i = 80, STATISTICS_NOTIFICATION, 0x9d
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_statistics 
-Statistics notification received (480 vs 484).
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_rx_handle r = 
-82, i = 81, CARD_STATE_NOTIFICATION, 0xa1
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_mac_tx enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_tx_skb Dropping 
-- RF KILL
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_mac_tx leave
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
-leave - RF not ready
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
-leave - RF not ready
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
-leave - RF not ready
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_conf_tx 
-leave - RF not ready
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config enter 
-to channel 8 changed 0x100
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_set_rxon_chain 
-rx_chain=0x6806 active=2 idle=2
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config Not 
-re-sending same RXON configuration.
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config leave
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config enter 
-to channel 8 changed 0x40
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_set_rxon_chain 
-rx_chain=0x2806 active=2 idle=2
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
-sending command - RF KILL
-Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-REPLY_RXON_ASSOC: enqueue_hcmd failed: -5
-Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error setting 
-RXON_ASSOC (-5)
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_config leave
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-changes = 0x8F
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-BSSID 00:00:00:00:00:00
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-ERP_PREAMBLE 0
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-ERP_CTS 0
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-ASSOC 0
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_bss_info_changed 
-leave
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
-sending command - RF KILL
-Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-REPLY_ADD_STA: enqueue_hcmd failed: -5
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key 
-disable hwcrypto key
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key leave
-Jul 17 02:41:07 tmb-laptop klogd: mac80211-phy0: failed to remove key 
-(0, 00:19:5b:51:dc:27) from hardware (-5)
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: I iwl_configure_filter 
-Enter: changed: 0x0, total: 0x80000000
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_enqueue_hcmd Not 
-sending command - RF KILL
-Jul 17 02:41:07 tmb-laptop klogd: iwlagn 0000:04:00.0: Error sending 
-REPLY_ADD_STA: enqueue_hcmd failed: -5
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key 
-disable hwcrypto key
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_set_key leave
-Jul 17 02:41:07 tmb-laptop klogd: mac80211-phy0: failed to remove key 
-(2, ff:ff:ff:ff:ff:ff) from hardware (-5)
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
-iwl_mac_remove_interface enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
-iwl_mac_remove_interface leave
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_stop enter
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U __iwl_down iwlagn is 
-going down
-Jul 17 02:41:07 tmb-laptop dhclient: receive_packet failed on wlan0: 
-Network is down
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
-iwl4965_apm_stop_master stop master
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U 
-iwl_clear_free_frames 0 frames on pre-allocated heap on clear.
-Jul 17 02:41:07 tmb-laptop klogd: ieee80211 phy0: U iwl_mac_stop leave
-Jul 17 02:41:07 tmb-laptop ifplugd(wlan0)[27042]: Link beat lost.
-
-
-
-Oh, btw is this below a refcounting bug?
-For each time I unload & reload the iwlagn,
-the number in front of phy0 gets increased:
-
-[root@tmb-laptop rfkill]# ./rfkill list
-0: acer-wireless: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: acer-bluetooth: Bluetooth
-	Soft blocked: yes
-	Hard blocked: no
-5: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-
-
---
-Thomas
+----------------------------------------
+> Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
+> From: proski@gnu.org
+> To: jackelectronics@hotmail.com
+> CC: linux-wireless@vger.kernel.org
+> Date: Tue, 28 Jul 2009 18:48:58 -0400
+>
+> On Tue, 2009-07-28 at 21:21 +0000, Jack Lau wrote:
+>
+>>> I have enabled debugging in config.mk and installed it.
+>
+> I didn't suggest that. I think it's irrelevant. Only the setting
+> in .config is relevant.
+>
+> If you are using compat-wireless, I suggest that you try the current
+> kernel from wireless-testing. It was quite unstable a few days ago, but
+> it should be cleaned up by now. Since you are using the AP mode, you'll
+> need this patch, it's still not applied as of now:
+>
+> http://marc.info/?l=linux-wireless&m=124871936602667&w=2
+>
+> compat-wireless is great if everything is working, but if something is
+> broken, the first suspicion is that compat-wireless doesn't backport
+> something correctly.
+>
+>> The kernel already has debugging enabled as I have examined the
+>> source from Ubuntu.
+>
+> Please be specific what you found and where. I don't have Ubuntu
+> around, but others could correct you if you are looking in a wrong
+> place.
+>
+>>> When I load the gdb command, I just get no debugging symbols found
+>> and with the l command I just get no symbol file now.
+>
+> Please don't rephrase tell the error messages, especially if you don't
+> understand them fully. I cannot see from your words why there are no
+> debugging symbols.
+>
+> Also please don't top-post, as it makes it harder to quote the
+> discussion in a reasonable way.
+>
+> --
+> Regards,
+> Pavel Roskin
+_________________________________________________________________
+Celebrate a decade of Messenger with free winks, emoticons, display pics, and more.
+http://clk.atdmt.com/UKM/go/157562755/direct/01/
