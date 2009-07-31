@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:28332 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420AbZG3RWn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 13:22:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2009 10:22:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 0/3] wireless: fix 11d lockdep and move 11d hint to cfg80211
-Date: Thu, 30 Jul 2009 10:22:39 -0700
-Message-ID: <1248974562-8315-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:44611 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208AbZGaIkR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 04:40:17 -0400
+Subject: Re: [PATCH] Fix SPARC64 unaligned access in zd_mac_rx
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Patrick Simmons <linuxrocks123@netscape.net>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+In-Reply-To: <4A72A462.6060107@netscape.net>
+References: <4A72A462.6060107@netscape.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9i9oPL6E/Iv9JKOamvmN"
+Date: Fri, 31 Jul 2009 10:39:43 +0200
+Message-Id: <1249029583.29587.46.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This cures the lockdep warning, now with a mutex instead of a spin_lock
-to allow sleeping during the driver reg notifier, and we finish the
-move of the regulatory_hint_11d() to cfg80211. We also add some missing
-lock calls and remove the cfg80211 mutex usage from the driver custom
-regulatory settings wiphy_apply_custom_regulatory(). This caller is now
-used internally within cfg80211 automatically for all cfg80211 drivers.
 
-Luis R. Rodriguez (3):
-  cfg80211: use goto out on 11d reg hint failure
-  cfg80211: decouple regulatory variables from cfg80211_mutex
-  cfg80211: enable country IE support to all cfg80211 drivers
+--=-9i9oPL6E/Iv9JKOamvmN
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Sorry -- forgot to address John...
+On Fri, 2009-07-31 at 01:59 -0600, Patrick Simmons wrote:
+> I'm running zd1211rw on SPARC64 and was getting a lot of "unaligned=20
+> access" messages in dmesg.  I tracked the problem down to this line, and=20
+> changing the cast to a memcpy fixes the issue.
+> =20
+> -       fc =3D *(__le16 *)buffer;
+> +       memcpy(&fc,buffer,sizeof(__le16));
+>         need_padding =3D ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc)=
+;
 
- include/net/cfg80211.h |   14 ------------
- net/mac80211/mlme.c    |    6 +----
- net/wireless/core.c    |    4 +--
- net/wireless/reg.c     |   53 +++++++++++++++++++++++++++++++++++------------
- net/wireless/reg.h     |   15 +++++++++++++
- net/wireless/sme.c     |   16 ++++++++++++++
- 6 files changed, 72 insertions(+), 36 deletions(-)
+Please use get_unaligned instead.
+
+johannes
+
+--=-9i9oPL6E/Iv9JKOamvmN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKcq3KAAoJEODzc/N7+Qmac8sP/RXugzUGOkjgOsN2LV6nwJIx
+0v0/kuKR/u9ya5x52xzAKE+6JoewzmUAJfi+iea6UGXs0UcuSAo9jy67YjpCPOM1
+l9Q6SxNqEx9owDI576l/3ba91TNFofb8K07T14+vn7iMpEJhq6VKE9kYXTFQ+rdX
+CdW+JRcC4AdX9D1sdKJAWRsRxfvSjfJGswsseYambdVU8UyPDs627jlF9dlHIPWs
+4PrMDHOgrSJ/ieroHpDoL5txS/SDsW8EzIPe3Sjl24HfoyfYAn4nroufGLXVEeLE
+lGK9EThsupFf9N65y0l3mj7re3CqaXrWMRuTeb+CyVye8/Fhf7OwOShITErMefty
+LGyQYNB9EB34c97TRopO/xS0GMIGLTKKWSyxhr2Z7SQVGQcDy1B3OCEi8RFlxhC0
+ndCtcC5In9W6grbgPuVoc90mCGjXD/x/+SlwWgW7/eJAlWss8uKnEKZZJQPa4RSN
+1EcCBrKtAggNdeECLqJZoGbUOOKEhclMaWWCgWW6IffOWi+VrND08yxebWhSMoy4
+G8SntcdRoC5PatP6DWTm4Yj4IKljd/9YcxR4Xz2VN7/yIww+b3AfOhkGevQXqrFT
+8lhgVq/eEaoGTmTOE0ZyblebjI8oXXGK2f54IxQZny2a2zH2UxYy3xUq33cJyqj8
+S2e0+lFQa161GgVd3rIr
+=MdU3
+-----END PGP SIGNATURE-----
+
+--=-9i9oPL6E/Iv9JKOamvmN--
 
