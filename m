@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40544 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934737AbZGQQac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jul 2009 12:30:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/14] iwlwifi: checking unknown HW type
-Date: Fri, 17 Jul 2009 09:30:21 -0700
-Message-Id: <1247848227-24031-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
-References: <1247848227-24031-1-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-2-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-3-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-4-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-5-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-6-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-7-git-send-email-reinette.chatre@intel.com>
- <1247848227-24031-8-git-send-email-reinette.chatre@intel.com>
+Received: from mail-pz0-f200.google.com ([209.85.222.200]:45317 "EHLO
+	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbZGaSjU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 14:39:20 -0400
+Received: by pzk38 with SMTP id 38so1120652pzk.33
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:39:20 -0700 (PDT)
+From: Andrey Yurovsky <andrey@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: tharvey@irobot.com, dcbw@redhat.com,
+	Andrey Yurovsky <andrey@cozybit.com>
+Subject: [PATCH] libertas: check valid bits in SPI bus mode reg
+Date: Fri, 31 Jul 2009 11:35:19 -0700
+Message-Id: <1249065319-18643-1-git-send-email-andrey@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+The SPI driver writes to the bus mode register and performs a sanity
+check by reading back what we wrote, however only the lower four bits of
+that register are defined.  In some cases, the device side seems to set
+the higher bits, causing us to fail the sanity check unnecessarily.
+Check only the lower four bits instead.
 
-When deciding NVM type, if the HW type is unknown, report error and exit
-with -ENOENT. This check should prevent incorrect behavior by assuming
-the wrong NVM type.
+Thanks to John Goyette from Schick Technologies for pointing out the
+problem.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/if_spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 7d7554a..51eed72 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -159,6 +159,9 @@ static int iwlcore_get_nvm_type(struct iwl_priv *priv)
- 
- 	/* OTP only valid for CP/PP and after */
- 	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
-+	case CSR_HW_REV_TYPE_NONE:
-+		IWL_ERR(priv, "Unknown hardware type\n");
-+		return -ENOENT;
- 	case CSR_HW_REV_TYPE_3945:
- 	case CSR_HW_REV_TYPE_4965:
- 	case CSR_HW_REV_TYPE_5300:
-@@ -266,7 +269,8 @@ int iwl_eeprom_init(struct iwl_priv *priv)
- 	u32 otpgp;
- 
- 	priv->nvm_device_type = iwlcore_get_nvm_type(priv);
--
-+	if (priv->nvm_device_type == -ENOENT)
-+		return -ENOENT;
- 	/* allocate eeprom */
- 	if (priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 		priv->cfg->eeprom_size =
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 6564282..86263a9 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -376,7 +376,7 @@ static int spu_set_bus_mode(struct if_spi_card *card, u16 mode)
+ 	err = spu_read_u16(card, IF_SPI_SPU_BUS_MODE_REG, &rval);
+ 	if (err)
+ 		return err;
+-	if (rval != mode) {
++	if ((rval & 0xF) != mode) {
+ 		lbs_pr_err("Can't read bus mode register.\n");
+ 		return -EIO;
+ 	}
 -- 
 1.5.6.3
 
