@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:58499 "EHLO
-	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754650AbZHGRju (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:33641 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356AbZGaXg4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 13:39:50 -0400
-From: Frans Pop <elendil@planet.nl>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: ath5k - strange regulatory domain change
-Date: Fri, 7 Aug 2009 19:39:48 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Chris Clayton <chris2553@googlemail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com> <20090807151304.GE7545@tuxdriver.com> <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
-In-Reply-To: <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
+	Fri, 31 Jul 2009 19:36:56 -0400
+Received: by yxe5 with SMTP id 5so516858yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 16:36:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908071939.49627.elendil@planet.nl>
+In-Reply-To: <4A735FF8.7000503@gmail.com>
+References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
+	<1248904631.1216.1027.camel@rc-desk> <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com>
+	<4A719C44.6050208@gmail.com> <43e72e890907300743nd3a80eck2153d01f4e99ddf9@mail.gmail.com>
+	<4A71D172.1000306@gmail.com> <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
+	<4A7246D0.1040200@gmail.com> <43e72e890907301831ped2ea3wd5173b95be54f912@mail.gmail.com>
+	<4A735FF8.7000503@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 31 Jul 2009 16:36:36 -0700
+Message-ID: <43e72e890907311636v5a659dbapf6e740c9d1c1f317@mail.gmail.com>
+Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
+To: Roman Macko <rmacko72@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 August 2009, you wrote:
-> The way the EEPROM was programmed for this type of
-> regulatory domain was to give you a group number under which other
-> countries fall under. If you ended up getting a direct alpha2
-> programmed in the EEPROM instead you would still end up matching the
-> alpha2 to a group number. The group number leads you to a regulatory
-> domain that all those countries in that group number adhere to. So it
-> was a way to group up regulatory domain rules between countries. The
-> "CN" you see just so happens to be the alpha2 for the first country in
-> the same group regulatory domain group.
+On Fri, Jul 31, 2009 at 2:19 PM, Roman Macko<rmacko72@gmail.com> wrote:
+> Hi Luis,
 >
-> What we can do is to elaborate on that on the dmesg and also maybe
+> here is promised patch
 
-That would be very welcome.
+Patch applied, thanks!
 
-> pick the most common country on the group so it will tend to match the
-> country users are on.
-
-I think that would just be moving the problem from one group of users to 
-another, possibly only marginally smaller, group of users.
-
-As far as I can see the largest group is ETSI1_WORLD and contains 33 
-countries, followed by NULL1_WORLD (is that a real group?) with 22. 
-That's probably too many to list them all.
-OTOH, all other groups contain at most 7 countries, which could possibly 
-be listed.
-
-Probably the simplest option would be to just display some identification 
-of the domain group itself and point users to documentation which 
-explains what countries fall under what groups. That would at least avoid 
-the confusion caused by randomly picking a matching country.
-Variation could be to display the country if the group only contains one 
-country, but that could also be considered an inconsistent user 
-interface.
-
-Cheers,
-FJP
+  Luis
