@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f192.google.com ([209.85.222.192]:49678 "EHLO
-	mail-pz0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753900AbZGWWVu (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:54626 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbZGaT13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jul 2009 18:21:50 -0400
-Received: by pzk30 with SMTP id 30so705513pzk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2009 15:21:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A68DBDE.7060504@redfish-solutions.com>
-References: <4A612514.4050708@redfish-solutions.com>
-	 <20090720115244.GC9972@hash.localnet>
-	 <4A64C283.6090205@redfish-solutions.com>
-	 <43e72e890907201247x7df76b75wf6ba2bc2260dbf7a@mail.gmail.com>
-	 <4A650331.9020409@redfish-solutions.com>
-	 <4A6620B9.4@redfish-solutions.com>
-	 <20090723112428.GC13742@hash.localnet>
-	 <b6c5339f0907230459g75cef6eag1ad0caa7b1a631b8@mail.gmail.com>
-	 <4A68C821.7060208@redfish-solutions.com>
-	 <4A68DBDE.7060504@redfish-solutions.com>
-Date: Thu, 23 Jul 2009 18:21:50 -0400
-Message-ID: <b6c5339f0907231521v37b44d45t1852d0c5f97bc4fb@mail.gmail.com>
-Subject: Re: Using compat-wireless w/ 2.6.27.26
-From: Bob Copeland <me@bobcopeland.com>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 31 Jul 2009 15:27:29 -0400
+Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
+ conection monitor
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1249067293.19089.10.camel@maxim-laptop>
+References: <1249056817.20593.1.camel@maxim-laptop>
+	 <1249066338.30019.214.camel@rc-desk>
+	 <1249067293.19089.10.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Fri, 31 Jul 2009 12:27:29 -0700
+Message-Id: <1249068449.23662.17.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 5:53 PM, Philip A.
-Prindeville<philipp_subx@redfish-solutions.com> wrote:
->> Getting closer :-)
->>
->> ath5k_tx_processq(sc, &sc->txqs[i]);
->>
->
-> Didn't work with rc4:
+Hi Maxim,
 
-What did you apply against?  It's supposed to be against
-wireless-testing (or, at worst, latest compat-wireless).
+> > > Hi, here is the updated version of these two patches that fix the
+> > > $SUBJECT issue.
+> > > 
+> > > I attach these (in case mailer mangles them), and reply with patches.
+> > > 
+> > > Tested both with low quality signal, and beacon loss.
+> > > Lack of TX is found, every 30 seconds now, and quite reliable.
+> > > Lack of beacons, triggers probe like it did every 2 seconds.
+> > 
+> > Thanks!
+> > 
+> > I've been running with this for two hours now with no disconnects. This
+> > is where before the patches I would get disconnected after a few
+> > minutes. I did get two "No probe response from AP xx:xx:xx:xx:xx:xx
+> > after 500ms, try 1" messages in my log.
+> This is normal, or at least can be normal, I patched the driver to
+> display this message, when there is a probe timeout, but instead of
+> disconnect, it retries, currently 5 times, but this can be even further
+> increased is necessarily.
+> (these messages are only in logs when verbose mac debugging is enabled)
+> 
+> I don't know exactly why probes aren't answered, but I strongly suspect
+> that my AP sometimes 'goes out to lunch' and then answers, since
+> typically after a failed probe it sends many replies.
+> (Or it could be some buffering done by iwl3945 microcode). I currently
+> can't monitor the connection from outside, but as soon as I can I see
+> whether the above is true. Nevertheless if signal quality isn't great,
+> there are valid reasons for probe loss, and it shouldn't cause all the
+> fuzz (and since I use WPA2, every reconnection causes whole WPA
+> handshake to be preformed, and this takes at least 2 seconds, and if a
+> reconnection happens each 5 seconds, it gets very very annoying, and
+> almost unusable.
 
-> BUG: unable to handle kernel NULL pointer dereference at 00000000
-> IP: [<d0935658>] :ath5k:ath5k_tasklet_tx+0x5e/0x27b
+I am testing your patches and so far so good. Seems to be working
+perfectly fine. I see this in the logs:
 
-Can you run scripts/markup_oops.pl on that?
+[41027.333419] wlan0: detected beacon loss from AP - sending probe request
+[41027.389260] wlan0: cancelling probereq poll due to a received beacon
+[41027.793518] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 1
+[41028.292731] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 2
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Need to watch out if this pattern emerges and if the beacon loss trigger
+might give us an indication. Maybe the ucode is just not ready then.
+
+Regards
+
+Marcel
+
+
