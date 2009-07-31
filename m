@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f192.google.com ([209.85.221.192]:41358 "EHLO
-	mail-qy0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247AbZGPQa0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 12:30:26 -0400
-Received: by qyk30 with SMTP id 30so215086qyk.33
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2009 09:30:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200907161108.57436.helmut.schaa@gmail.com>
-References: <200907161104.41975.helmut.schaa@gmail.com> <200907161108.57436.helmut.schaa@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 16 Jul 2009 09:30:04 -0700
-Message-ID: <43e72e890907160930ra5111e1qac13701aed15974e@mail.gmail.com>
-Subject: Re: [RFC/RFT 4/5] mac80211: Replace {sw,hw}_scanning variables with a
-	bitfield
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx27.mail.ru ([94.100.176.41]:53909 "EHLO mx27.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751605AbZGaK7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 06:59:09 -0400
+Subject: Re: [RFC PATCH] rt2x00: FIF_PSPOLL filter flag support
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1249037282.2143.15.camel@sunlight>
+References: <1249037282.2143.15.camel@sunlight>
+Content-Type: text/plain
+Date: Fri, 31 Jul 2009 14:59:07 +0400
+Message-Id: <1249037947.2143.23.camel@sunlight>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 16, 2009 at 2:08 AM, Helmut
-Schaa<helmut.schaa@googlemail.com> wrote:
-> Use a bitfield to store the current scan mode instead of two boolean
-> variables {sw,hw}_scanning. This patch does not introduce functional
-> changes.
->
+On Fri, 31/07/2009 at 14:48 +0400, Igor Perminov wrote:
+> This patch implements FIF_PSPOLL filter flag support in rt2x00 drivers,
+> which has been introduced in mac80211 (see
+> http://marc.info/?l=linux-wireless&m=124897986330807&w=2).
 
-> +enum mac80211_scan_flag {
-> +       SCAN_SW_SCANNING = 1,
-> +       SCAN_HW_SCANNING = 2,
-> +};
-> +
+This patch implements support of FIF_PSPOLL for all drivers in
+drivers/net/wireless/rt2x00 directory. Including rt2400pci, rt2500pci
+and rt2500usb, which are not modified at all.
 
-But why is that needed? The commit log doesn't state that. We won't
-use both at the same time.
+I've tested the patch with rt73usb and rt2500usb sticks only.
+Unfortunately, I have no other kinds of Ralink hardware.
 
-  Luis
+Igor
+
