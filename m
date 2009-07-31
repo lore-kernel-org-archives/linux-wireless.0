@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from b-sasl-quonix.sasl.smtp.pobox.com ([208.72.237.35]:59067 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753839AbZGNGy2 (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:52862 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbZGaSU1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 02:54:28 -0400
-Date: Mon, 13 Jul 2009 20:54:14 -1000
-From: Joel Roth <joelz@pobox.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath5k and Atheros AR242x - No scan results
-Message-ID: <20090714065414.GA16708@sprite>
-Reply-To: Joel Roth <joelz@pobox.com>
-References: <20090630170916.GB5137@sprite> <20090712112340.GA3315@sprite>
- <40f31dec0907120808y45f575b6l6d83afd731e6d51@mail.gmail.com>
- <20090712203449.GA3058@sprite>
- <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
+	Fri, 31 Jul 2009 14:20:27 -0400
+Received: by gxk9 with SMTP id 9so3973403gxk.13
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 11:20:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b6c5339f0907130708h3996b274qdcc7d7f6056a188c@mail.gmail.com>
+In-Reply-To: <40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
+References: <20090731180238.GA7963@makis> <43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
+	<40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 31 Jul 2009 11:20:07 -0700
+Message-ID: <43e72e890907311120r76d3db6et91128ccbc3a90c63@mail.gmail.com>
+Subject: Re: [PATCH 1/4]: Check EEPROM before tweaking SERDES
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 13, 2009 at 10:08:52AM -0400, Bob Copeland wrote:
-> On Sun, Jul 12, 2009 at 4:34 PM, Joel Roth<joelz@pobox.com> wrote:
-> > Vista advised me to:
-> >
-> > 1) turn on the hardware wifi switch <blush>
-> >
-> > 2) use the hotkey combination to enable wifi
-> 
-> It might be worth trying compat-wireless or 2.6.31-rcX.  Support
-> for reading the card's internal rfkill state was added in the
-> post-2.6.30 time-frame.
- 
-Okay, I'll give this a go and report back. Thanks.
+On Fri, Jul 31, 2009 at 11:18 AM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+> 2009/7/31 Luis R. Rodriguez <mcgrof@gmail.com>:
+>>
+>> Can the changes for the code be done before the move, or after so that
+>> way the actual code changes to the section can be easily readable?
+>>
+>
+> Since we use EEPROM infos we must move this after eeprom initialization.
 
-> Bob Copeland %% www.bobcopeland.com
+Yes, but my point is a move can be done in one patch, changes to that
+code in a separate patch, to help understand what is going on during
+patch review.
 
--- 
-Joel Roth
+  Luis
