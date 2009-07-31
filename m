@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:45051 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363AbZG3RpX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jul 2009 13:45:23 -0400
-Subject: Re: [PATCH] mac80211: use beacons for connection monitoring
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1248949853.29062.3.camel@johannes.local>
-References: <1248903159-17024-1-git-send-email-reinette.chatre@intel.com>
-	 <4A70C17B.6090309@candelatech.com>
-	 <1248949853.29062.3.camel@johannes.local>
-Content-Type: text/plain
-Date: Thu, 30 Jul 2009 10:45:23 -0700
-Message-Id: <1248975923.1216.1074.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:46765 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbZGaTwo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 15:52:44 -0400
+Received: by ewy10 with SMTP id 10so1762108ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 12:52:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0907311211w4d810b23uc6ec8027924da647@mail.gmail.com>
+References: <20090731181020.GE7963@makis>
+	 <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
+	 <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
+	 <b6c5339f0907311211w4d810b23uc6ec8027924da647@mail.gmail.com>
+Date: Fri, 31 Jul 2009 22:52:42 +0300
+Message-ID: <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-07-30 at 03:30 -0700, Johannes Berg wrote:
-> On Wed, 2009-07-29 at 14:39 -0700, Ben Greear wrote:
-> > On 07/29/2009 02:32 PM, Reinette Chatre wrote:
-> > > From: Reinette Chatre<reinette.chatre@intel.com>
-> > >
-> > > The connection monitor currently relies on probe requests paired
-> > > with probe responses to ensure that a connection is alive. This is
-> > > fragile in some environments where probe responses can get lost.
-> > > When we receive beacons we can also consider the connection to be
-> > > alive, so cancel connection poll instance when we receive a beacon.
-> > 
-> > I'm chasing a similar problem while working on virtual STA device
-> > support in ath5k.  I was also going to try sending up to 3 polls before
-> > giving up on the connection.  Does that seems like a valid thing to do?
-> 
-> That seems somewhat better, yeah.
-> 
-> I suspect the real cause of the issue is something else though, like the
-> probe request not going out properly or the card being in a kind of
-> 'temporary lock-up' state where it's not really doing anything for the
-> time being -- I've never had a problem on any other (than iwlwifi)
-> hardware.
+2009/7/31 Bob Copeland <me@bobcopeland.com>:
+> On Fri, Jul 31, 2009 at 2:25 PM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+>>    Also we don't need to run calibration if we are idle (no interrupts).
+>
+> I think this is the big win right now...
+>
+>> c) Having calibration on a tasklet is better since during calibration
+>>    we can't transmit or receive (antennas are detached to measure
+>>    noise floor), previously calibration could run in parallel with tx/rx
+>>    and interfere (packet loss).
+>
+> This can still happen, no?  Two tasklets can run in parallel on
+> different processors, as long as they are different tasklets.
+>
+> In practice, this won't happen much because tasklets run on the
+> cpu that scheduled them, and irq affinity is such (at least on my
+> hardware) that it's almost always the same CPU.  But I think to
+> make the above true it needs to stop the queues etc when doing
+> calibration.
+>
 
-I captured the exchange when this problem occurs using a third system.
-The card does indeed try several times to send a probe request and they
-are making it out over the air. The AP never responds. 
+ACK, how do we do that ?
+ieee80211_stop_queues / ieee80211_wake_queues
 
-Is there perhaps anything in this exchange that can help us understand
-what is going on?
+> Also we are missing tasklet_kill()?
+>
 
-No.     Time        Source                Destination           Protocol Info
- 163883 401.891153  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=980, FN=0, Flags=........, SSID="XXX"
- 163885 401.891482  00:14:f2:XX:XX:XX     00:16:ea:XX:XX:XX     IEEE 802.11 Probe Response, SN=3557, FN=0, Flags=........, BI=100, SSID="XXX"
- 165523 404.884405  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=981, FN=0, Flags=........, SSID="XXX"
- 165525 404.885265  00:14:f2:XX:XX:XX     00:16:ea:XX:XX:XX     IEEE 802.11 Probe Response, SN=3827, FN=0, Flags=....R..., BI=100, SSID="XXX"
- 166981 407.884161  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=982, FN=0, Flags=........, SSID="XXX"
- 166983 407.884555  00:14:f2:XX:XX:XX     00:16:ea:XX:XX:XX     IEEE 802.11 Probe Response, SN=4034, FN=0, Flags=........, BI=100, SSID="XXX"
- 168133 410.884167  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=........, SSID="XXX"
- 168134 410.884430  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168135 410.884643  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168136 410.884904  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168137 410.885073  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168138 410.885330  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168139 410.885580  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168140 410.885769  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168141 410.886618  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168142 410.887087  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168143 410.887308  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168144 410.887532  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Probe Request, SN=983, FN=0, Flags=....R..., SSID="XXX"
- 168191 411.084889  00:16:ea:XX:XX:XX     00:14:f2:XX:XX:XX     IEEE 802.11 Deauthentication, SN=984, FN=0, Flags=........
+Yup, resending...
 
 
-Reinette
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
