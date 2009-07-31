@@ -1,61 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753586AbZGOJij (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:60454 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707AbZGaR3F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jul 2009 05:38:39 -0400
-Subject: Re: [PATCH v3] cfg80211: rework key operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1247647086.3695.48.camel@debian>
-References: <1247051586.4755.81.camel@johannes.local>
-	 <1247052613.12857.0.camel@johannes.local>
-	 <1247055774.24749.0.camel@johannes.local> <1247647086.3695.48.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KvTR+9R3U8YnWn5S6cUM"
-Date: Wed, 15 Jul 2009 11:37:46 +0200
-Message-Id: <1247650666.14973.0.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 31 Jul 2009 13:29:05 -0400
+Received: by yxe5 with SMTP id 5so225114yxe.33
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 10:29:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1249058611.6549.3.camel@johannes.local>
+References: <1249001028-15110-1-git-send-email-lrodriguez@atheros.com>
+	<1249026324.29587.15.camel@johannes.local> <43e72e890907310849l3487b8a2p52302f6662a26f95@mail.gmail.com>
+	<1249055782.20312.19.camel@johannes.local> <43e72e890907310903k65be4480j3279253281f2935e@mail.gmail.com>
+	<1249056713.25587.6.camel@johannes.local> <43e72e890907310932u4510fc6fwc0c3dab598036041@mail.gmail.com>
+	<1249058611.6549.3.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 31 Jul 2009 10:28:36 -0700
+Message-ID: <43e72e890907311028t5087b8bj9b685795e0528151@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix regression on beacon world roaming feature
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 31, 2009 at 9:43 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-07-31 at 09:32 -0700, Luis R. Rodriguez wrote:
+>
+>> Its not that simple. Consider the fact we build our own custom
+>> regulatory domain and stuff what is intended for each one of them. The
+>> _orig stuff is set upon channel registration so it is correct that
+>> we'd have to avoid setting the channel flags prior to wiphy
+>> registration. How you do that is left up to implementation. Since
+>> cfg80211 will set the channel *_orig params based on
+>> wiphy_registration() you're only option is to either prevent your
+>> wiphy being registered with the flags set or to reset the channel
+>> flags on the reg_notifier(). The later seems like the way to go but we
+>> currently do not call the reg_notifier() upon beacon hints -- we
+>> currently only call the reg_notifier() upon regulatory domain changes
+>> and upon wiphy registration. My point is both of these options require
+>> considerable changes for 2.6.31.
+>
+> Aha. So the problem really is that we don't have a reg notifier on
+> updates due to beacons.
 
---=-KvTR+9R3U8YnWn5S6cUM
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yeah, seems that's the core issue from the original implementation. We
+should have added that.
 
-On Wed, 2009-07-15 at 16:38 +0800, Zhu Yi wrote:
+>> > and set them in ath_reg_apply_beaconing_flags and
+>> > ath_reg_apply_active_scan_flags, changing the polarity?
+>> >
+>> > I mean, right now you tell cfg80211 you don't support it,
+>> > and then try
+>> > to support it anyhow.
+>>
+>> Not sure I follow, support what? The reg_notifier() is there for
+>> regulatory domain changes, we didn't call it upon beacon hints. We
+>> can, and I agree its the right approach, but not for 2.6.31.
+>
+> I'm thinking more in terms of iwlwifi here, for all intents and purposes
+> it doesn't support beaconing on channel N, so it only supports NO_IBSS
+> on that channel. Which is what it puts into flags before registration.
 
-> This breaks wireless-tools for WEP with fullmac cards because "iwconfig
-> key" doesn't send the AUTH command. Is it expected?
+Ah I see, well but remember also that devices may have custom world
+regulatory domains for which they can set the no-ibss/passive scan
+flags and then allow for it due to a beacon hint.
 
-I did expect it to break iwm because I couldn't make sense of the iwm
-code, unfortunately, sorry about that. But the key needed for
-authentication should be being passed to the connect() call too.
+>> > Instead, you could tell cfg80211 you _do_ support
+>> > it, and then not support them depending on the notifier? It seems like
+>> > that should work and not break cfg80211's assumption that you can never
+>> > ever support _more_ than registration flags (orig_flags).
+>>
+>> I'm not following at all, orig_flags do not tell cfg80211 the channel
+>> flags the device supports. Most devices set flag to 0 upon wiphy
+>> registration and therefore cfg80211 sets orig_flags to 0 as well
+>> during wiphy registration.
+>
+> Well ok, "supports" is a bad word since we're talking about
+> restrictions. But for iwlwifi the orig_flags _do_ tell cfg80211 the
+> channel restrictions that the device _requires_.
 
-johannes
+Oh ok, got it, yeah agreed, but its important to note we never
+documented nor was I aware we wanted to treat flags set prior to wiphy
+registration as capabilities. Truth is the device is actually capable
+of active scanning and beaconing on those channels but the design of
+the firmware doesn't allow for it.
 
---=-KvTR+9R3U8YnWn5S6cUM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> Your devices, however, do not _strictly_ _require_ those channel flags,
+> they just require them for compliance. Unlike iwlwifi which crashes when
+> you don't do it right :)
+>
+> So I think we're in agreement -- the proper solution would be to call
+> the reg notifier on beacon hints too.
 
------BEGIN PGP SIGNATURE-----
+Yeah, unless we want to just document an exception to the rules, but I
+do agree that seems like a slippery slope.
 
-iQIcBAABAgAGBQJKXaNkAAoJEODzc/N7+QmamTEP/A+Kbt5NBtoZS7x/63ajdrO9
-Zq82PPFTIJvUyXWqgrnAGqJaQIN49GyrHQq7P2X4DPAapw81moEjh/yrMvgIcDgu
-5+1aJihh+XrpjTzeqO6L3Xi+jvjsUsZHsdZbyL+aaT/SHngLyIiI1gNquoFjCvqG
-4LDh/oP27U4KfXvLu40UGMSVHA1sOOFw9wgMyGA+DSrb3rp0hcIrHB3Qqu0jQaVu
-sEbJj5zj0Ysd7yauEqWC+wxRUU5ZdOAiwz6OTbDf6iKyX6UEs7+CTl712IG6xlaA
-7pHbUSvy8JO/uDxFSXpmtrU9ode5WtJCqEqEQmlpkOMYdGv8gGRSrM6xWQd3C2lv
-wIY0gBEMOkckD0E53yXww98+vKIGS66dquOb/z3aqMcvd1kkfcQnRbvwnSLUXuJX
-VJjxOIh6/TZ3uM6Gp/tOTH8ppqU/aIFuphVBWB1rwC6V9EPAvOxNzq56Y6ODmNC7
-ZotsTMAhAB4EwuvTjmSjWSTUPjliuQJYkeMQt4rgeNN09PzmmOflq566Nj8a6rQZ
-iF5bBN2G84QB/wkHItD1LTmKX23eRWWQuYsXSwBpH15VSsIfMaA4c6jGSWNVMtC4
-IXMhfwB1oOupW3UWJULCqpoEzZ/q4EnQmfo0LbsvFHvNhU2bQiDlVIBDVIAZNhOi
-FFuHXq9Pf/mC0KBd7KCv
-=s4OG
------END PGP SIGNATURE-----
+> What we do for .31 I can't say I
+> really care,
 
---=-KvTR+9R3U8YnWn5S6cUM--
+OK, I do, please consider this patch for 2.6.31 and also on
+wireless-testing for now.
 
+>  how much work do you think this would be? It doesn't seem
+> all _that_ bad, at least for core changes?
+
+After some thinking the reg_notifier() does not seem to be the
+appropriate place for this. The reg_notifier() was designed to account
+for regulatory domain changes, not enhancements such as beacon hints.
+Consider the regulatory_request structure passed as the second
+argument to reg_notifier() and the currently supported types of
+regulatory domain changes, %REGDOM_SET_BY_*.
+
+What seems cleaner is to add a beacon_hint() notifier and use that at
+the end of handle_reg_beacon() so that we already give the driver the
+channel on which a beacon was received.
+
+If we really want to stick to using the reg_notifier() on ath.ko we'd
+need to make some changes to reg_notifier API, maybe consider a new
+struct for the beacon hint event, and then have ath.ko iterate over
+all channels and when a channel has chan->beacon_found lift the
+flags.. A beacon_hint() callback seems cleaner and to the point.
+
+  Luis
