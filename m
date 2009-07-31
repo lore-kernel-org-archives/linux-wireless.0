@@ -1,91 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58382 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756798AbZGOARP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jul 2009 20:17:15 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 7/9] ath9k: serialize ath9k_hw_setpower calls
-Date: Tue, 14 Jul 2009 20:17:13 -0400
-Message-Id: <1247617035-15402-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
-References: <1247617035-15402-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:48179 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752860AbZGaSuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 14:50:08 -0400
+Message-ID: <4A733CDE.4060801@gmx.de>
+Date: Fri, 31 Jul 2009 20:50:06 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: Pavel Roskin <proski@gnu.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] compat-2.6:  Makefile: fixed test expressions for target
+ install
+References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>
+In-Reply-To: <1248990136.10154.10.camel@mj>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On 07/30/2009 11:42 PM, Pavel Roskin wrote:
+> On Thu, 2009-07-30 at 23:25 +0200, Joerg Albert wrote:
+>> This removes the two errors of [ with target "install"
+>>
+>> make[1]: Leaving directory `/home/joerg/src/linux-2.6.30'
+>> [: 9: missing ]
+>> [: 9: missing ]
+>> depmod will prefer updates/ over kernel/ -- OK!
+> 
+> I believe "-a" in test is not very portable.  I remember getting
+> complaints about it.  I believe the built-in test command in bash 1.x
+> doesn't have it.  I'd rather stick with && and || written properly.
+> 
+> "-a" and -o" are currently only used in the clean target and in the
+> maintenance scripts, so they probably don't get enough testing on
+> systems with old bash.
 
-Because ath9k_setpower is called from various contexts, we have to
-protect it against concurrent calls.
+Bash 3.2.39 seems to have a problem with &&, while [[ ... ]] accept it:
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c    |   15 ++++++++++++++-
- drivers/net/wireless/ath/ath9k/main.c  |    1 +
- 3 files changed, 16 insertions(+), 1 deletions(-)
+joerg@thinkpad:~$ echo $BASH_VERSION
+3.2.39(1)-release
+joerg@thinkpad:~$ if [ -z "" && -z "" ]; then echo "both empty"; fi
+bash: [: missing `]'
+joerg@thinkpad:~$ if [ -z "" -a -z "" ]; then echo "both empty"; fi
+both empty
+joerg@thinkpad:~$ if [[ -z "" && -z "" ]]; then echo "both empty"; fi
+both empty
+joerg@thinkpad:~$
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 20bf4a7..b37eb59 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -559,6 +559,7 @@ struct ath_softc {
- 	spinlock_t sc_resetlock;
- 	spinlock_t sc_serial_rw;
- 	spinlock_t ani_lock;
-+	spinlock_t sc_pm_lock;
- 	struct mutex mutex;
- 
- 	u8 curbssid[ETH_ALEN];
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a115c8c..6740a6b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2728,7 +2728,8 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- 	return true;
- }
- 
--bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
-+static bool ath9k_hw_setpower_nolock(struct ath_hw *ah,
-+				     enum ath9k_power_mode mode)
- {
- 	int status = true, setChip = true;
- 	static const char *modes[] = {
-@@ -2762,6 +2763,18 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	return status;
- }
- 
-+bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
-+{
-+	unsigned long flags;
-+	bool ret;
-+
-+	spin_lock_irqsave(&ah->ah_sc->sc_pm_lock, flags);
-+	ret = ath9k_hw_setpower_nolock(ah, mode);
-+	spin_unlock_irqrestore(&ah->ah_sc->sc_pm_lock, flags);
-+
-+	return ret;
-+}
-+
- /*
-  * Helper for ASPM support.
-  *
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 90cecce..d14f8c9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1316,6 +1316,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	spin_lock_init(&sc->sc_resetlock);
- 	spin_lock_init(&sc->sc_serial_rw);
- 	spin_lock_init(&sc->ani_lock);
-+	spin_lock_init(&sc->sc_pm_lock);
- 	mutex_init(&sc->mutex);
- 	tasklet_init(&sc->intr_tq, ath9k_tasklet, (unsigned long)sc);
- 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
--- 
-1.6.0.6
+If the link for the man page of bash v1 on http://wwwbs.informatik.htw-dresden.de/fbs/bash/old.bash.html is correct,
+that version supported -a in test.
+Unfortunately [[ ... ]] was introduced after bash v1 (2.02 AFAIR).
 
+Regards,
+Joerg.
