@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.zhaw.ch ([160.85.104.51]:60156 "EHLO mx2.zhaw.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338AbZGPJAk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jul 2009 05:00:40 -0400
-From: Tobias Klauser <klto@zhaw.ch>
-To: linville@tuxdriver.com, IvDoorn@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: Tobias Klauser <klto@zhaw.ch>
-Subject: [PATCH 7/8] rt2x00: Use %pM conversion specifier
-Date: Thu, 16 Jul 2009 11:00:39 +0200
-Message-Id: <1247734839-21394-1-git-send-email-klto@zhaw.ch>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:36497 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbZGaVER (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 17:04:17 -0400
+Received: by fxm17 with SMTP id 17so1592525fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 14:04:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200907281808.35906.mb@bu3sch.de>
+References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com>
+	 <200907281808.35906.mb@bu3sch.de>
+Date: Fri, 31 Jul 2009 23:04:17 +0200
+Message-ID: <83a869cd0907311404o793c1733p43e936437a923340@mail.gmail.com>
+Subject: Re: [RESEND] [PATCHv2] b43 add harware tkip
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the %pM conversion specifier for printk instead of print_mac.
+Hi Michael,
 
-Signed-off-by: Tobias Klauser <klto@zhaw.ch>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+On 7/28/09, Michael Buesch <mb@bu3sch.de> wrote:
+>> This add hardware tkip for b43.
+>
+> First of all, I don't really want to support hw tkip on b43.
+> Broadcom removed the support for hw tkip from their drivers. I bet they
+> had a very good reason to do so.
+Did they remove it from the firmware or only the driver ?
+May be they remove it to support advanced stuff like multiple SSID ?
+Which version of the driver it is ?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 3756166..da84afb 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -2224,10 +2224,8 @@ static int rt2800usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
- 	if (!is_valid_ether_addr(mac)) {
--		DECLARE_MAC_BUF(macbuf);
--
- 		random_ether_addr(mac);
--		EEPROM(rt2x00dev, "MAC: %s\n", print_mac(macbuf, mac));
-+		EEPROM(rt2x00dev, "MAC: %pM\n", mac);
- 	}
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
--- 
-1.6.0.4
+> It's mapped to 4, because you removed the old API support.
+> (I'm not sure whether we want to remove that support, yet. Gimme some time
+> on it...)
+>
+Does the old API still useful ?
+Are there v4 firmware supporting old API ?
 
+
+Regards,
+
+Gregor
