@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f225.google.com ([209.85.218.225]:56800 "EHLO
-	mail-bw0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752428AbZGFNLJ (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:35301 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751944AbZGaMcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jul 2009 09:11:09 -0400
-Received: by bwz25 with SMTP id 25so1249487bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2009 06:11:11 -0700 (PDT)
+	Fri, 31 Jul 2009 08:32:11 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: linux-kernel@vger.kernel.org
+Subject: RTL8192SE support status
+Date: Fri, 31 Jul 2009 14:31:16 +0200
+Cc: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <200907040053.05654.chunkeey@web.de>
-References: <200907040053.05654.chunkeey@web.de>
-Date: Mon, 6 Jul 2009 17:11:11 +0400
-Message-ID: <73aaf0dd0907060611w5a288828h4c4728f52fe4e16c@mail.gmail.com>
-Subject: Re: [WIP] p54: deal with allocation failures in rx path
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <200907311431.17043.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This patch tries to address a long standing issue:
-> how to survive serve memory starvation situations,
-> without losing the device due to missing transfer-buffers.
 
-Christian, how does placement of skb allocation point make a
-difference? Anyway skb that carry data frame will be handed to the mac
-and replaced with new one. That is, this patch does not eliminate
-possibility of control frame loss due to insufficient memory.
-Maybe we'd better have separate reusable skb for control frames which
-is never handed out from the driver?
+Hi,
 
--- 
-Max
+I've been getting some private mail regarding the status of RTL8192SE
+wireless chipset support (the chipset is used in some newer netbooks,
+i.e. Medion Akoya E1312) so the current situation is:
+
+* I'm not working on it and I don't know if/when the driver is coming.
+
+* Realtek has been queried about the issue two weeks ago but we haven't
+  heard anything back yet.
+
+* rtl8192su driver present in staging area of the kernel is for RTL8192SU
+  (USB version of the chipset) and never contained working/complete code
+  for RTL8192SE (PCI-E version of the chipset) so there is no point in
+  attempts of reverting some patches in hope that it will make the things
+  magically work (it won't, please save your time).
+
+Thanks,
+Bart
