@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34815 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754734AbZHCTZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:23 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:24 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 20/24] ath9k: set ah to null after freeing
-Date: Mon, 3 Aug 2009 12:24:52 -0700
-Message-ID: <1249327496-24629-21-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from senator.holtmann.net ([87.106.208.187]:36780 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456AbZHAVsv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 17:48:51 -0400
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <20090801205445.GA23751@srcf.ucam.org>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	 <1249159133.3491.13.camel@localhost.localdomain>
+	 <20090801204534.GA23642@srcf.ucam.org>
+	 <1249159942.3491.21.camel@localhost.localdomain>
+	 <20090801205445.GA23751@srcf.ucam.org>
 Content-Type: text/plain
+Date: Sat, 01 Aug 2009 14:48:47 -0700
+Message-Id: <1249163327.3491.24.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Hi Matthew,
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6641fbe..633fe8b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1232,6 +1232,7 @@ void ath9k_hw_detach(struct ath_hw *ah)
- 	ath9k_hw_rf_free(ah);
- 	ath9k_hw_setpower(ah, ATH9K_PM_FULL_SLEEP);
- 	kfree(ah);
-+	ah = NULL;
- }
- 
- /*******/
--- 
-1.6.3.3
+> > actually if the key is clearly hardwired to WLAN, then it should not
+> > even show up as input event at all. This is one of the mis-concepts of
+> > the old RFKILL subsystem. No need to send an input event if the platform
+> > driver is going to rfkill that device anyway.
+> 
+> There's still a policy decision. Does it kill internal devices, or does 
+> it kill all attached wlan devices?
+> 
+> > Remember that in the end it is just a key and whatever the user does
+> > with it is users policy. So in summary it is up to the platform driver
+> > to emit the proper key. For some it might be still KEY_WLAN, for other
+> > it might be KEY_RFKILL. Sounds fair?
+> 
+> I agree on the technical side, but not the naming. KEY_WLAN is an 
+> rfkill-related key, so introducing KEY_RFKILL is potentially confusing. 
+> KEY_RFKILL_ALL isn't.
+
+why is it confusing? I don't understanding your argument here. I think
+the KEY_RFKILL_ALL is confusing is the user policy then only kills WiFi
+devices or toggles between various on/off combinations.
+
+Regards
+
+Marcel
+
 
