@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:44588 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752235AbZHITOA (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55451 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752208AbZHAUlV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 15:14:00 -0400
-Date: Sun, 9 Aug 2009 23:13:59 +0400
-From: Cyrill Gorcunov <gorcunov@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Roel Kluin <roel.kluin@gmail.com>, Daniel Mack <daniel@caiaq.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Libertas: Association request to the driver failed
-Message-ID: <20090809191359.GG4805@lenovo>
-References: <20090807191156.GS19257@buzzloop.caiaq.de> <20090809102417.GH13639@buzzloop.caiaq.de> <4A7EAED8.9090900@gmail.com> <200908091310.56919.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200908091310.56919.mb@bu3sch.de>
+	Sat, 1 Aug 2009 16:41:21 -0400
+Subject: Re: [PATCH 2/2] rfkill: Add support for KEY_RFKILL_ALL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Bastien Nocera <hadess@hadess.net>
+Cc: Matthew Garrett <mjg@redhat.com>, linux-input@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	dmitry.torokhov@gmail.com
+In-Reply-To: <1249158328.28327.10654.camel@localhost.localdomain>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	 <1249152859-14769-2-git-send-email-mjg@redhat.com>
+	 <1249158328.28327.10654.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 13:41:16 -0700
+Message-Id: <1249159276.3491.15.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Michael Buesch - Sun, Aug 09, 2009 at 01:10:56PM +0200]
-| On Sunday 09 August 2009 13:11:20 Roel Kluin wrote:
-| > @@ -43,21 +44,21 @@ static int get_common_rates(struct lbs_private *priv,
-| >  	u16 *rates_size)
-| >  {
-| >  	u8 *card_rates = lbs_bg_rates;
-| > -	size_t num_card_rates = sizeof(lbs_bg_rates);
-| >  	int ret = 0, i, j;
-| > -	u8 tmp[30];
-| > +	u8 tmp[*rates_size * ARRAY_SIZE(lbs_bg_rates)];
-| 
-| Is it a good idea to use dynamic stack arrays in the kernel?
-| What about kmalloc for dynamic allocations?
-| 
-| -- 
-| Greetings, Michael.
+Hi Bastien,
 
-I saw one pattern in trace code (not sure if it's
-still there) but personally don't like dynamic
-stack arrays (though at moment the max value
-being passed into routine is known maybe just
-use MAX_RATES instead of (*rates_size)?). Hmm?
+> > +               case KEY_RFKILL_ALL:
+> > +                       rfkill_schedule_toggle(RFKILL_TYPE_WLAN);
+> > +                       rfkill_schedule_toggle(RFKILL_TYPE_BLUETOOTH);
+> > +                       rfkill_schedule_toggle(RFKILL_TYPE_UWB);
+> > +                       rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
+> > +                       break;
+> 
+> RFKILL_TYPE_ALL?
 
-	-- Cyrill
+this should be RFKILL_TYPE_ALL indeed. Even if rfkill-input is going to
+be removed. For the time being it needs to toggle all. Especially since
+the example above already forgets RFKILL_TYPE_WWAN.
+
+Regards
+
+Marcel
+
+
