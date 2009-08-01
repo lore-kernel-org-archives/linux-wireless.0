@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103AbZHUISS (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:39986 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbZHANb2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 04:18:18 -0400
-Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rafael Laufer <rlaufer@cs.ucla.edu>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4A8DED03.2050502@cs.ucla.edu>
-References: <4A8DED03.2050502@cs.ucla.edu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gSQs2vxkJZF+6G5lWbPX"
-Date: Fri, 21 Aug 2009 10:18:15 +0200
-Message-Id: <1250842695.13872.5.camel@johannes.local>
-Mime-Version: 1.0
+	Sat, 1 Aug 2009 09:31:28 -0400
+Received: by ewy10 with SMTP id 10so2074266ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 06:31:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090801132253.GB15971@hash.localnet>
+References: <20090731181020.GE7963@makis>
+	 <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com>
+	 <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com>
+	 <b6c5339f0907311211w4d810b23uc6ec8027924da647@mail.gmail.com>
+	 <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
+	 <20090801132253.GB15971@hash.localnet>
+Date: Sat, 1 Aug 2009 16:31:27 +0300
+Message-ID: <40f31dec0908010631x84ddfcap99a871f3513cf22b@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/8/1 Bob Copeland <me@bobcopeland.com>:
+> On Fri, Jul 31, 2009 at 10:52:42PM +0300, Nick Kossifidis wrote:
+>> > make the above true it needs to stop the queues etc when doing
+>> > calibration.
+>>
+>> ACK, how do we do that ?
+>> ieee80211_stop_queues / ieee80211_wake_queues
+>
+> Yup.  And disabling (at least rx and swba) interrupts on the device
+> is also probably a good idea.
+>
 
---=-gSQs2vxkJZF+6G5lWbPX
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I thought about calling ath5k_hw_stop_rx_pcu but i don't think it's
+necessary i mean it won't receive anyway, why mess with pcu ?
 
-On Thu, 2009-08-20 at 17:40 -0700, Rafael Laufer wrote:
-> This patch implements the IEEE80211_RADIOTAP_RATE=20
-> option when parsing radiotap headers to allow rate=20
-> selection on a per-packet basis.
->=20
->=20
-> Signed-off-by: Rafael Laufer <rlaufer@cs.ucla.edu>
-> ---
->  Implementation of the IEEE80211_RADIOTAP_RATE=20
->  option when parsing radiotap headers to allow
->  rate selection on a per-packet basis.
->=20
->  net/mac80211/tx.c |   18 +++++++++++++++++-
->  1 files changed, 17 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 10a1099..41d636b 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -549,7 +549,10 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *t=
-x)
->  	 * If we're associated with the sta at this point we know we can at
->  	 * least send the frame at the lowest bit rate.
->  	 */
-> -	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
-> +
-> +	/* in monitor mode, we already have the rate from the radiotap header *=
-/
-> +	if (likely(!(info->flags & IEEE80211_TX_CTL_INJECTED)))
-> +		rate_control_get_rate(tx->sdata, tx->sta, &txrc);
 
-NAK, the rate is optional in the radiotap header, and if not given then
-regular rate control must be used.
 
-johannes
-
---=-gSQs2vxkJZF+6G5lWbPX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKjlhEAAoJEODzc/N7+QmaBwAP/3wzbirgHo8pQgtmqNoo/SR9
-oHOSeUYqgTWlK9LaR8P2XSGjax6F/aa3kQ6YLYBFlsst8Rj+jUuXDtlAiNj1baly
-G95GLLLifuRGd04a+o1B85IIMEd24Ozuc1QncZ5BLLzLb2OF4EE7tN+mebBO5lQ6
-9D3Xt0seFmx1WR/BEpcQJaBIINzzTV4QR1jZmBvHsLJdSRDlB01j4fQAz17/z520
-fZdGH7y+q776+dt15WNHHYYUGhNZ089NHlgaTXnEeztaJTTBF/u4L7IqweqU+XAS
-pSR7EhR7jb633DdI780qrBvPJCm266I0iaT55FqvnUyPZoz7XFI1G4pzRFw+m/6d
-AZ9jPxpWxvqs2gt6OorsGk8ozzGn9Zf3BKsHjeKrEgQ8oNS/aKELKs8kuXF9afK/
-6obq6Cu5l/SefvU/NhHvcatRX8rbm2nsLoqJwEiGn6XPfpnms2rsB2593zlHbBap
-YcIuYthznBYLFc9IGjXo/oe7WFQ/zqgjjiWK3ym3zYr5ZRMPGBN5Db0FOv9Gw2Cx
-6YdOZ7AA/Q6IBzzB6GcBF2h+KfgJoWX9B+sCIt462ktcWPSIXjXT0c5dtoeQoWGk
-aAnBvi+OXrvr9upiEJ4dMwXUlRaJpuCSiEHLKqmbvDQY/xUwqm4U0jKzah7oKTh3
-Klw85WHOcsjwK9d2lasa
-=8HJA
------END PGP SIGNATURE-----
-
---=-gSQs2vxkJZF+6G5lWbPX--
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
