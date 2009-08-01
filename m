@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:34787 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752081AbZHLTlz convert rfc822-to-8bit (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:40363 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbZHAUyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 15:41:55 -0400
-Date: Wed, 12 Aug 2009 12:41:50 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Multiple SSID
-Message-ID: <20090812124150.025b4538@nehalam>
-In-Reply-To: <43e72e890908121025p75b141b6o86c30518bf9de7ea@mail.gmail.com>
-References: <20090812100416.744dc5ba@nehalam>
-	<43e72e890908121025p75b141b6o86c30518bf9de7ea@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 1 Aug 2009 16:54:45 -0400
+Date: Sat, 1 Aug 2009 21:54:45 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+Message-ID: <20090801205445.GA23751@srcf.ucam.org>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com> <1249159133.3491.13.camel@localhost.localdomain> <20090801204534.GA23642@srcf.ucam.org> <1249159942.3491.21.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1249159942.3491.21.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 12 Aug 2009 10:25:34 -0700
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+On Sat, Aug 01, 2009 at 01:52:22PM -0700, Marcel Holtmann wrote:
 
-> On Wed, Aug 12, 2009 at 10:04 AM, Stephen
-> Hemminger<shemminger@vyatta.com> wrote:
-> > I have a dumb questions. How does one setup multiple SSID's with
-> > current (ie not madwifi) wireless API?
-> >
-> > 1. I assume need to run multiple instances of hostapd with different
-> >   config. Will that work?
-> 
-> Yes. But the next question is how to create new wlan%d AP interfaces.
-> That is answered below.
-> 
-> > 2. Since IP address is attached to device (wlan0), how can each SSID
-> >   have different IP address? Use vlan's?
-> 
-> The new 'iw' [2] utility could be used to create monitor interfaces or
-> ad-hoc interfaces for example. We decided to only allow you to create
-> an "AP" type of interface with a utility that handles the MLME in
-> userspace, such a utility is hostapd. You will need to use the nl80211
-> driver with hosatpd [2]. We have documented the supported wireless
-> modes in our wiki [3], I suppose that could use some updating.
-> 
-> Anyway I believe AP-enabled devices right now only support creating 1
-> AP interfface. I believe the exception to this right now is ath9k
-> through the private virtual interface stuff Jouni created, but to be
-> honest I have to go and review that to make sure you can create 2 APs.
-> 
-> Typically drivers (MadWifi) which supported multiple BSSs (therefore
-> with two SSIDs) would allow you to do this by creating BSSes on the
-> same channel. The ath9k virtual interface thing allows you to create
-> interfaces on *separate* channels, and provides its own scheduler,
-> which you can tune, for switching back and forth.
-> 
-> [1] http://wireless.kernel.org/en/users/Documentation/iw
-> [2] http://wireless.kernel.org/en/users/Documentation/hostapd
-> [3] http://wireless.kernel.org/en/users/Documentation/modes
+> actually if the key is clearly hardwired to WLAN, then it should not
+> even show up as input event at all. This is one of the mis-concepts of
+> the old RFKILL subsystem. No need to send an input event if the platform
+> driver is going to rfkill that device anyway.
 
-The existing API creates another entity 'phy0' which lives in
-yet another namespace, it is not a filesystem or a network device.
-The only way to enumerate these is the 'iw phy' which is okay,
-but does this work with hotplug (it doesn't go through udev?)
-and what about network namespaces?
+There's still a policy decision. Does it kill internal devices, or does 
+it kill all attached wlan devices?
+
+> Remember that in the end it is just a key and whatever the user does
+> with it is users policy. So in summary it is up to the platform driver
+> to emit the proper key. For some it might be still KEY_WLAN, for other
+> it might be KEY_RFKILL. Sounds fair?
+
+I agree on the technical side, but not the naming. KEY_WLAN is an 
+rfkill-related key, so introducing KEY_RFKILL is potentially confusing. 
+KEY_RFKILL_ALL isn't.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
