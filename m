@@ -1,44 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:40816 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557AbZHNETT (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:49975 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbZHAPZt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 00:19:19 -0400
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Valdis.Kletnieks@vt.edu, Andrew Morton <akpm@linux-foundation.org>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] mmotm0812 - something in linux-next killed iwl-3945.c
-References: <19728.1250182794@turing-police.cc.vt.edu>
-	<20090813172819.GD2647@tuxdriver.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 14 Aug 2009 07:19:17 +0300
-In-Reply-To: <20090813172819.GD2647@tuxdriver.com> (John W. Linville's message of "Thu\, 13 Aug 2009 13\:28\:19 -0400")
-Message-ID: <87zla3hvsq.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 1 Aug 2009 11:25:49 -0400
+Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
+ conection monitor
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1249070739.25620.11.camel@maxim-laptop>
+References: <1249056817.20593.1.camel@maxim-laptop>
+	 <1249066338.30019.214.camel@rc-desk>
+	 <1249067293.19089.10.camel@maxim-laptop>
+	 <1249068449.23662.17.camel@localhost.localdomain>
+	 <1249070739.25620.11.camel@maxim-laptop>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 08:25:45 -0700
+Message-Id: <1249140345.3491.5.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Hi Maxim,
 
-> On Thu, Aug 13, 2009 at 12:59:54PM -0400, Valdis.Kletnieks@vt.edu wrote:
->> Build bombs out:
->> 
->>   CC      drivers/net/wireless/iwlwifi/iwl-3945.o
->> drivers/net/wireless/iwlwifi/iwl-3945.c: In function 'iwl3945_pass_packet_to_mac80211':
->> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
+> > > > > Hi, here is the updated version of these two patches that fix the
+> > > > > $SUBJECT issue.
+> > > > > 
+> > > > > I attach these (in case mailer mangles them), and reply with patches.
+> > > > > 
+> > > > > Tested both with low quality signal, and beacon loss.
+> > > > > Lack of TX is found, every 30 seconds now, and quite reliable.
+> > > > > Lack of beacons, triggers probe like it did every 2 seconds.
+> > > > 
+> > > > Thanks!
+> > > > 
+> > > > I've been running with this for two hours now with no disconnects. This
+> > > > is where before the patches I would get disconnected after a few
+> > > > minutes. I did get two "No probe response from AP xx:xx:xx:xx:xx:xx
+> > > > after 500ms, try 1" messages in my log.
+> > > This is normal, or at least can be normal, I patched the driver to
+> > > display this message, when there is a probe timeout, but instead of
+> > > disconnect, it retries, currently 5 times, but this can be even further
+> > > increased is necessarily.
+> > > (these messages are only in logs when verbose mac debugging is enabled)
+> > > 
+> > > I don't know exactly why probes aren't answered, but I strongly suspect
+> > > that my AP sometimes 'goes out to lunch' and then answers, since
+> > > typically after a failed probe it sends many replies.
+> > > (Or it could be some buffering done by iwl3945 microcode). I currently
+> > > can't monitor the connection from outside, but as soon as I can I see
+> > > whether the above is true. Nevertheless if signal quality isn't great,
+> > > there are valid reasons for probe loss, and it shouldn't cause all the
+> > > fuzz (and since I use WPA2, every reconnection causes whole WPA
+> > > handshake to be preformed, and this takes at least 2 seconds, and if a
+> > > reconnection happens each 5 seconds, it gets very very annoying, and
+> > > almost unusable.
+> > 
+> > I am testing your patches and so far so good. Seems to be working
+> > perfectly fine. I see this in the logs:
+> > 
+> > [41027.333419] wlan0: detected beacon loss from AP - sending probe request
+> > [41027.389260] wlan0: cancelling probereq poll due to a received beacon
+> > [41027.793518] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 1
+> > [41028.292731] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 2
+> > 
+> > Need to watch out if this pattern emerges and if the beacon loss trigger
+> > might give us an indication. Maybe the ucode is just not ready then.
+> Here (on my system) I see no beacon losses at all, like I said there
+> could be many reasons behind packet losses, and best way to mitigate
+> them is to retry.
+> 
+> Your logs indicate that beacons weren't recieved for 2 seconds, then
+> mac80211 tried to send a probe, but a beacon is recieved before the
+> probe answer, this probe is canceled (at least should be) then after a
+> while, a probe request (same one?) is time outed, and retried twice,
+> then finally answered.
 
-[...]
+it looked related, but it wasn't at all. I have this running for over 24
+hours by now and the patches work perfectly fine. Today it saw for the
+first time a try 4 message. Otherwise it only had to try up to three
+times before it succeeded.
 
->> Sorry, don't have a linux-next git tree, so no 'git blame' for what did it.
->> Hopefully somebody recognizes their handiwork... ;)
->
-> I think this is the LEDS-related build failure, which already has a patch.
+Tested-by: Marcel Holtmann <marcel@holtmann.org>
 
-Correct. This patch fixes it:
+Regards
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=44f282ff0e3797555e9ac54d8a772b65f72e3702
+Marcel
 
--- 
-Kalle Valo
+
