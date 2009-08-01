@@ -1,199 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53456 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757411AbZHGKeC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:34:02 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 07/23] wl1251: split spi interface into separate module
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:33:34 +0300
-Message-ID: <20090807103334.31717.89927.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+Received: from venema.h4ckr.net ([217.24.1.135]:42225 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517AbZHAFqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 01:46:54 -0400
+Date: Sat, 1 Aug 2009 08:46:49 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
+	mcgrof@gmail.com, nbd@openwrt.org, proski@gnu.org
+Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
+Message-ID: <20090801054649.GA8390@makis>
+References: <20090731181020.GE7963@makis>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090731181020.GE7963@makis>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+ * Get rid of calibration timer, instead use a software interrupt
+   to schedule the calibration tasklet.
+    
+ a) We don't need a timer for this, there is no need for accuracy
+    even with round_jiffies i think this is a waste of resources.
+    Also we don't need to run calibration if we are idle (no
+    interrupts).
+    
+ b) When we add ANI support we 'll just extend the poll function
+    and calibration tasklet and handle all periodic phy calibration
+    on one place (much cleaner).
+    
+ c) Having calibration on a tasklet is better since during calibration
+    we can't transmit or receive (antennas are detached to measure
+    noise floor), previously calibration could run in parallel with
+    tx/rx and interfere (packet loss).
+    
+ v2: kill tasklet on stop_hw, stop/wake queues
 
-This creates a module called wl1251_spi.ko which contains just the
-SPI-specific code.  The core remains in the module wl1251.ko.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
+ drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++++++
+ drivers/net/wireless/ath/ath5k/base.c  |   36 +++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath5k/base.h  |    3 +-
+ drivers/net/wireless/ath/ath5k/phy.c   |   20 +++++++++++++++++
+ 4 files changed, 64 insertions(+), 11 deletions(-)
 
- drivers/net/wireless/wl12xx/Kconfig       |   17 ++++++++++++++---
- drivers/net/wireless/wl12xx/Makefile      |    4 +++-
- drivers/net/wireless/wl12xx/wl1251.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1251_main.c |    9 +++++++++
- drivers/net/wireless/wl12xx/wl1251_spi.c  |   17 +++++++++++------
- 5 files changed, 38 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 82a0f97..e47d076 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -7,12 +7,23 @@ menuconfig WL12XX
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 1047a6c..76cf5b2 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -919,6 +919,12 @@ enum ath5k_int {
+ 	AR5K_INT_NOCARD	= 0xffffffff
+ };
  
- config WL1251
- 	tristate "TI wl1251 support"
--	depends on WL12XX && SPI_MASTER && GENERIC_HARDIRQS
-+	depends on WL12XX && GENERIC_HARDIRQS
- 	select FW_LOADER
- 	select CRC7
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  TI wl1251 chipset.
- 
--	  If you choose to build a module, it'll be called wl1251. Say N if
--	  unsure.
-+	  If you choose to build a module, it'll be called wl1251. Say
-+	  N if unsure.
++/* Software interrupts used for calibration */
++enum ath5k_software_interrupt {
++	AR5K_SWI_FULL_CALIBRATION = 0x01,
++	AR5K_SWI_SHORT_CALIBRATION = 0x02,
++};
 +
-+config WL1251_SPI
-+	tristate "TI wl1251 SPI support"
-+	depends on WL1251 && SPI_MASTER
-+	---help---
-+	  This module adds support for the SPI interface of adapters using
-+	  TI wl1251 chipset.  Select this if your platform is using
-+	  the SPI bus.
+ /*
+  * Power management
+  */
+@@ -1123,6 +1129,15 @@ struct ath5k_hw {
+ 	/* noise floor from last periodic calibration */
+ 	s32			ah_noise_floor;
+ 
++	/* Calibration timestamp */
++	u32			ah_cal_tstamp;
 +
-+	  If you choose to build a module, it'll be called wl1251_spi.
-+	  Say N if unsure.
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index a978567..ebf623a 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -1,5 +1,7 @@
--wl1251-objs		= wl1251_main.o wl1251_spi.o wl1251_event.o \
-+wl1251-objs		= wl1251_main.o wl1251_event.o \
- 			  wl1251_tx.o wl1251_rx.o wl1251_ps.o wl1251_cmd.o \
- 			  wl1251_acx.o wl1251_boot.o wl1251_init.o \
- 			  wl1251_ops.o wl1251_debugfs.o wl1251_io.o
++	/* Calibration interval (secs) */
++	u8			ah_cal_intval;
 +
- obj-$(CONFIG_WL1251)	+= wl1251.o
-+obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index df4c06d..ebe2c70 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -291,7 +291,7 @@ struct wl1251 {
- 	struct ieee80211_hw *hw;
- 	bool mac80211_registered;
++	/* Software interrupt mask */
++	u8			ah_swi_mask;
++
+ 	/*
+ 	 * Function pointers
+ 	 */
+@@ -1276,6 +1291,7 @@ extern int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *chann
+ /* PHY calibration */
+ extern int ath5k_hw_phy_calibrate(struct ath5k_hw *ah, struct ieee80211_channel *channel);
+ extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
++extern void ath5k_hw_calibration_poll(struct ath5k_hw *ah);
+ /* Spur mitigation */
+ bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
+ 				struct ieee80211_channel *channel);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b64731b..d84ccad 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -59,7 +59,7 @@
+ #include "reg.h"
+ #include "debug.h"
  
--	struct spi_device *spi;
-+	void *if_priv;
- 	const struct wl1251_if_operations *if_ops;
+-static int ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
++static u8 ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
+ static int modparam_nohwcrypt;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+@@ -376,7 +376,7 @@ static int 	ath5k_stop_hw(struct ath5k_softc *sc);
+ static irqreturn_t ath5k_intr(int irq, void *dev_id);
+ static void 	ath5k_tasklet_reset(unsigned long data);
  
- 	void (*set_power)(bool enable);
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 74544e1..abe157a 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -69,6 +69,7 @@ irqreturn_t wl1251_irq(int irq, void *cookie)
+-static void 	ath5k_calibrate(unsigned long data);
++static void 	ath5k_tasklet_calibrate(unsigned long data);
  
+ /*
+  * Module init/exit functions
+@@ -799,8 +799,8 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
+ 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
+ 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
++	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
+ 	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
+-	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
+ 
+ 	ret = ath5k_eeprom_read_mac(ah, mac);
+ 	if (ret) {
+@@ -2366,7 +2366,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 	sc->curband = &sc->sbands[sc->curchan->band];
+ 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+-		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
++		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_SWI;
+ 	ret = ath5k_reset(sc, NULL);
+ 	if (ret)
+ 		goto done;
+@@ -2383,8 +2383,8 @@ ath5k_init(struct ath5k_softc *sc)
+ 	/* Set ack to be sent at low bit-rates */
+ 	ath5k_hw_set_ack_bitrate_high(ah, false);
+ 
+-	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
+-			msecs_to_jiffies(ath5k_calinterval * 1000)));
++	/* Set PHY calibration inteval */
++	ah->ah_cal_intval = ath5k_calinterval;
+ 
+ 	ret = 0;
+ done:
+@@ -2477,10 +2477,10 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	mmiowb();
+ 	mutex_unlock(&sc->lock);
+ 
+-	del_timer_sync(&sc->calib_tim);
+ 	tasklet_kill(&sc->rxtq);
+ 	tasklet_kill(&sc->txtq);
+ 	tasklet_kill(&sc->restq);
++	tasklet_kill(&sc->calib);
+ 	tasklet_kill(&sc->beacontq);
+ 
+ 	ath5k_rfkill_hw_stop(sc->ah);
+@@ -2536,6 +2536,9 @@ ath5k_intr(int irq, void *dev_id)
+ 			if (status & AR5K_INT_BMISS) {
+ 				/* TODO */
+ 			}
++			if (status & AR5K_INT_SWI) {
++				tasklet_schedule(&sc->calib);
++			}
+ 			if (status & AR5K_INT_MIB) {
+ 				/*
+ 				 * These stats are also used for ANI i think
+@@ -2552,6 +2555,8 @@ ath5k_intr(int irq, void *dev_id)
+ 	if (unlikely(!counter))
+ 		ATH5K_WARN(sc, "too many interrupts, giving up for now\n");
+ 
++	ath5k_hw_calibration_poll(ah);
++
  	return IRQ_HANDLED;
  }
-+EXPORT_SYMBOL_GPL(wl1251_irq);
  
- static int wl1251_fetch_firmware(struct wl1251 *wl)
+@@ -2568,11 +2573,19 @@ ath5k_tasklet_reset(unsigned long data)
+  * for temperature/environment changes.
+  */
+ static void
+-ath5k_calibrate(unsigned long data)
++ath5k_tasklet_calibrate(unsigned long data)
  {
-@@ -1198,6 +1199,7 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(wl1251_init_ieee80211);
+ 	struct ath5k_softc *sc = (void *)data;
+ 	struct ath5k_hw *ah = sc->ah;
  
- #define WL1251_DEFAULT_CHANNEL 1
- struct ieee80211_hw *wl1251_alloc_hw(void)
-@@ -1270,6 +1272,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 
- 	return hw;
- }
-+EXPORT_SYMBOL_GPL(wl1251_alloc_hw);
- 
- int wl1251_free_hw(struct wl1251 *wl)
- {
-@@ -1292,3 +1295,9 @@ int wl1251_free_hw(struct wl1251 *wl)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(wl1251_free_hw);
++	/* Only full calibration for now */
++	if (ah->ah_swi_mask != AR5K_SWI_FULL_CALIBRATION)
++		return;
 +
-+MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 13e7a72..5967317 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -31,6 +31,11 @@
- #include "reg.h"
- #include "wl1251_spi.h"
++	/* Stop queues so that calibration
++	 * doesn't interfere with tx */
++	ieee80211_stop_queues(sc->hw);
++
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_CALIBRATE, "channel %u/%x\n",
+ 		ieee80211_frequency_to_channel(sc->curchan->center_freq),
+ 		sc->curchan->hw_value);
+@@ -2590,8 +2603,11 @@ ath5k_calibrate(unsigned long data)
+ 			ieee80211_frequency_to_channel(
+ 				sc->curchan->center_freq));
  
-+static struct spi_device *wl_to_spi(struct wl1251 *wl)
+-	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
+-			msecs_to_jiffies(ath5k_calinterval * 1000)));
++	ah->ah_swi_mask = 0;
++
++	/* Wake queues */
++	ieee80211_wake_queues(sc->hw);
++
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 778e422..667bd9d 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -177,6 +177,8 @@ struct ath5k_softc {
+ 
+ 	struct ath5k_rfkill	rf_kill;
+ 
++	struct tasklet_struct	calib;		/* calibration tasklet */
++
+ 	spinlock_t		block;		/* protects beacon */
+ 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
+ 	struct ath5k_buf	*bbuf;		/* beacon buffer */
+@@ -187,7 +189,6 @@ struct ath5k_softc {
+ 	unsigned int		nexttbtt;	/* next beacon time in TU */
+ 	struct ath5k_txq	*cabq;		/* content after beacon */
+ 
+-	struct timer_list	calib_tim;	/* calibration timer */
+ 	int 			power_level;	/* Requested tx power in dbm */
+ 	bool			assoc;		/* assocate state */
+ 	bool			enable_beacon;	/* true if beacons are on */
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 6afba98..d30bc3b 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1104,6 +1104,26 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+   PHY calibration
+ \*****************/
+ 
++void
++ath5k_hw_calibration_poll(struct ath5k_hw *ah)
 +{
-+	return wl->if_priv;
++	u32 current_time = (jiffies / HZ);
++	u32 cal_intval = ah->ah_cal_intval;
++
++	if (!ah->ah_cal_tstamp)
++		ah->ah_cal_tstamp = current_time;
++
++	/* For now we always do full calibration
++	 * Mark software interrupt mask and fire software
++	 * interrupt (bit gets auto-cleared) */
++	if ((current_time - ah->ah_cal_tstamp) >= cal_intval) {
++		ah->ah_cal_tstamp = current_time;
++		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
++		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
++	}
++
 +}
 +
- static void wl1251_spi_reset(struct wl1251 *wl)
- {
- 	u8 *cmd;
-@@ -52,7 +57,7 @@ static void wl1251_spi_reset(struct wl1251 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- }
-@@ -106,7 +111,7 @@ static void wl1251_spi_wake(struct wl1251 *wl)
- 	t.len = WSPI_INIT_CMD_LEN;
- 	spi_message_add_tail(&t, &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
- }
-@@ -149,7 +154,7 @@ static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
- 	t[2].len = len;
- 	spi_message_add_tail(&t[2], &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	/* FIXME: check busy words */
- 
-@@ -182,13 +187,13 @@ static void wl1251_spi_write(struct wl1251 *wl, int addr, void *buf,
- 	t[1].len = len;
- 	spi_message_add_tail(&t[1], &m);
- 
--	spi_sync(wl->spi, &m);
-+	spi_sync(wl_to_spi(wl), &m);
- 
- 	wl1251_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
- 	wl1251_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
- }
- 
--const struct wl1251_if_operations wl1251_spi_ops = {
-+static const struct wl1251_if_operations wl1251_spi_ops = {
- 	.read = wl1251_spi_read,
- 	.write = wl1251_spi_write,
- 	.reset = wl1251_spi_reset_wake,
-@@ -215,7 +220,7 @@ static int __devinit wl1251_spi_probe(struct spi_device *spi)
- 
- 	SET_IEEE80211_DEV(hw, &spi->dev);
- 	dev_set_drvdata(&spi->dev, wl);
--	wl->spi = spi;
-+	wl->if_priv = spi;
- 	wl->if_ops = &wl1251_spi_ops;
- 
- 	/* This is the only SPI value that we need to set here, the rest
+ /**
+  * ath5k_hw_noise_floor_calibration - perform PHY noise floor calibration
+  *
 
