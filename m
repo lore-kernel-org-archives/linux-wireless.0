@@ -1,113 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33258 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752880AbZH0VAc (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3323 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbZHANXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:32 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 04/13] wl1271: Correct TKIP header space handling in TX path
-Date: Thu, 27 Aug 2009 23:59:58 +0300
-Message-Id: <1251406807-31495-5-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	Sat, 1 Aug 2009 09:23:47 -0400
+Date: Sat, 1 Aug 2009 09:22:53 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+Message-ID: <20090801132253.GB15971@hash.localnet>
+References: <20090731181020.GE7963@makis> <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com> <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com> <b6c5339f0907311211w4d810b23uc6ec8027924da647@mail.gmail.com> <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Fri, Jul 31, 2009 at 10:52:42PM +0300, Nick Kossifidis wrote:
+> > make the above true it needs to stop the queues etc when doing
+> > calibration.
+> 
+> ACK, how do we do that ?
+> ieee80211_stop_queues / ieee80211_wake_queues
 
-Correct the position to which TKIP header space is appended for TX
-packets.
+Yup.  And disabling (at least rx and swba) interrupts on the device
+is also probably a good idea.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    9 +++------
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   27 +++++++++++++++++----------
- 2 files changed, 20 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 7faa65f..4fb6138 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1161,12 +1161,9 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 
- static int wl1271_init_ieee80211(struct wl1271 *wl)
- {
--	/*
--	 * The tx descriptor buffer and the TKIP space.
--	 *
--	 * FIXME: add correct 1271 descriptor size
--	 */
--	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE;
-+	/* The tx descriptor buffer and the TKIP space. */
-+	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
-+		sizeof(struct wl1271_tx_hw_descr);
- 
- 	/* unit us */
- 	/* FIXME: find a proper value */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 162f026..1ad1bc3 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -92,6 +92,14 @@ static int wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
- 
- 	desc = (struct wl1271_tx_hw_descr *) skb->data;
- 
-+	/* relocate space for security header */
-+	if (extra) {
-+		void *framestart = skb->data + sizeof(*desc);
-+		u16 fc = *(u16 *)(framestart + extra);
-+		int hdrlen = ieee80211_hdrlen(fc);
-+		memmove(framestart, framestart + extra, hdrlen);
-+	}
-+
- 	/* configure packet life time */
- 	desc->start_time = jiffies_to_usecs(jiffies) - wl->time_offset;
- 	desc->life_time = TX_HW_MGMT_PKT_LIFETIME_TU;
-@@ -257,7 +265,6 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
--	u32 header_len;
- 	u16 seq;
- 	int id = result->id;
- 
-@@ -295,22 +302,22 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 		wl->tx_security_seq_32++;
- 	wl->tx_security_seq_16 = seq;
- 
--	/* get header len */
-+	/* remove private header from packet */
-+	skb_pull(skb, sizeof(struct wl1271_tx_hw_descr));
-+
-+	/* remove TKIP header space if present */
- 	if (info->control.hw_key &&
--	    info->control.hw_key->alg == ALG_TKIP)
--		header_len = WL1271_TKIP_IV_SPACE +
--			sizeof(struct wl1271_tx_hw_descr);
--	else
--		header_len = sizeof(struct wl1271_tx_hw_descr);
-+	    info->control.hw_key->alg == ALG_TKIP) {
-+		int hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+		memmove(skb->data + WL1271_TKIP_IV_SPACE, skb->data, hdrlen);
-+		skb_pull(skb, WL1271_TKIP_IV_SPACE);
-+	}
- 
- 	wl1271_debug(DEBUG_TX, "tx status id %u skb 0x%p failures %u rate 0x%x"
- 		     " status 0x%x",
- 		     result->id, skb, result->ack_failures,
- 		     result->rate_class_index, result->status);
- 
--	/* remove private header from packet */
--	skb_pull(skb, header_len);
--
- 	/* return the packet to the stack */
- 	ieee80211_tx_status(wl->hw, skb);
- 	wl->tx_frames[result->id] = NULL;
 -- 
-1.5.6.5
+Bob Copeland %% www.bobcopeland.com
 
