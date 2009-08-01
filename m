@@ -1,133 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55347 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:37087 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932213AbZHUOfT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 10:35:19 -0400
-Subject: [PATCH] libertas: clean up and clarify get_common_rates
-From: Dan Williams <dcbw@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Roel Kluin <roel.kluin@gmail.com>
-Content-Type: text/plain
-Date: Fri, 21 Aug 2009 09:35:20 -0500
-Message-Id: <1250865320.2220.0.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1750933AbZHAXgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 19:36:51 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 1/1] rfkill: add the GPS radio type
+Date: Sun,  2 Aug 2009 02:36:49 +0300
+Message-Id: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clarify what the heck the function is doing with better variable names
-and less indirection and better comments.  Also ensure callers use the
-proper minimum size, even though all rates arrays should be size
-MAX_RATES anyway.  Reverts part of Andrey's dynamic alloc patch since we
-don't really need it.  Also leaves the passed-in rates array alone on
-errors.
+Althoug GPS is a technology w/o transmitting radio
+and thus not a primary candidate for rfkill switch,
+rfkill gives unified interface point for devices with
+wireless technology.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+The input key is not supplied as it is too be deprecated.
 
+Cc: johannes@sipsolutions.net
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/linux/rfkill.h |    1 +
+ net/rfkill/core.c      |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-index e9b2731..bf16212 100644
---- a/drivers/net/wireless/libertas/assoc.c
-+++ b/drivers/net/wireless/libertas/assoc.c
-@@ -35,7 +35,8 @@ static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
-  *
-  *  @param priv     A pointer to struct lbs_private structure
-  *  @param rates       the buffer which keeps input and output
-- *  @param rates_size  the size of rate1 buffer; new size of buffer on return
-+ *  @param rates_size  the size of rates buffer; new size of buffer on return,
-+ *                     which will be less than or equal to original rates_size
-  *
-  *  @return            0 on success, or -1 on error
-  */
-@@ -43,46 +44,41 @@ static int get_common_rates(struct lbs_private *priv,
- 	u8 *rates,
- 	u16 *rates_size)
- {
--	u8 *card_rates = lbs_bg_rates;
- 	int i, j;
--	u8 *tmp;
--	size_t tmp_size = 0;
-+	u8 intersection[MAX_RATES];
-+	u16 intersection_size;
-+	u16 num_rates = 0;
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index 1020290..21ca51b 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -47,6 +47,7 @@ enum rfkill_type {
+ 	RFKILL_TYPE_UWB,
+ 	RFKILL_TYPE_WIMAX,
+ 	RFKILL_TYPE_WWAN,
++	RFKILL_TYPE_GPS,
+ 	NUM_RFKILL_TYPES,
+ };
  
--	tmp = kzalloc(MAX_RATES * ARRAY_SIZE(lbs_bg_rates), GFP_KERNEL);
--	if (!tmp)
--		return -1;
-+	intersection_size = min_t(u16, *rates_size, ARRAY_SIZE(intersection));
- 
--	/* For each rate in card_rates that exists in rate1, copy to tmp */
--	for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
--		for (j = 0; j < *rates_size && rates[j]; j++) {
--			if (rates[j] == card_rates[i])
--				tmp[tmp_size++] = card_rates[i];
--		}
--	}
-+	/* Allow each rate from 'rates' that is supported by the hardware */
-+	for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && lbs_bg_rates[i]; i++) {
-+		for (j = 0; j < intersection_size && rates[j]; j++) {
-+			if (rates[j] == lbs_bg_rates[i])
-+				intersection[num_rates++] = rates[j];
-+ 		}
-+ 	}
- 
- 	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
--	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
-+	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", lbs_bg_rates,
- 			ARRAY_SIZE(lbs_bg_rates));
--	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
-+	lbs_deb_hex(LBS_DEB_JOIN, "common rates", intersection, num_rates);
- 	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
- 
--	memset(rates, 0, *rates_size);
--	*rates_size = min_t(u16, tmp_size, *rates_size);
--	memcpy(rates, tmp, *rates_size);
--
- 	if (!priv->enablehwauto) {
--		for (i = 0; i < tmp_size; i++) {
--			if (tmp[i] == priv->cur_rate)
--				break;
--		}
--		if (i == tmp_size) {
--			lbs_pr_alert("Previously set fixed data rate %#x isn't "
--					"compatible with the network.\n",
--					priv->cur_rate);
--			return -1;
-+		for (i = 0; i < num_rates; i++) {
-+			if (intersection[i] == priv->cur_rate)
-+				goto done;
- 		}
-+		lbs_pr_alert("Previously set fixed data rate %#x isn't "
-+		       "compatible with the network.\n", priv->cur_rate);
-+		return -1;
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 044de1c..dbeaf29 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -589,11 +589,13 @@ static const char *rfkill_get_type_str(enum rfkill_type type)
+ 		return "wimax";
+ 	case RFKILL_TYPE_WWAN:
+ 		return "wwan";
++	case RFKILL_TYPE_GPS:
++		return "gps";
+ 	default:
+ 		BUG();
  	}
--	kfree(tmp);
-+
-+done:
-+	memset(rates, 0, *rates_size);
-+	*rates_size = num_rates;
-+	memcpy(rates, intersection, num_rates);
- 	return 0;
+ 
+-	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_WWAN + 1);
++	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_GPS + 1);
  }
  
-@@ -325,7 +321,7 @@ static int lbs_associate(struct lbs_private *priv,
- 
- 	rates = (struct mrvl_ie_rates_param_set *) pos;
- 	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
--	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
-+	tmplen = min_t(u16, ARRAY_SIZE(bss->rates), MAX_RATES);
- 	memcpy(&rates->rates, &bss->rates, tmplen);
- 	if (get_common_rates(priv, rates->rates, &tmplen)) {
- 		ret = -1;
-@@ -600,7 +596,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
- 
- 	/* Copy Data rates from the rates recorded in scan response */
- 	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
--	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
-+	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), ARRAY_SIZE (bss->rates));
- 	memcpy(cmd.bss.rates, bss->rates, ratesize);
- 	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
- 		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
+ static ssize_t rfkill_type_show(struct device *dev,
+-- 
+1.6.0.6
 
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
