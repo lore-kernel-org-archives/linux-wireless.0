@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:55031 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390AbZHUUt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:49:27 -0400
-Subject: Re: [PATCH v2] iwlwifi: Make injection of non-broadcast frames
- work again
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A8EEAF9.6020308@gmail.com>
-References: <4A8EEAF9.6020308@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 21 Aug 2009 13:49:27 -0700
-Message-Id: <1250887767.30019.14483.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:35264 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752177AbZHAWOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 18:14:36 -0400
+Message-ID: <4A74BE49.4090909@gmx.de>
+Date: Sun, 02 Aug 2009 00:14:33 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k: monitor mode needs channel change
+References: <4A72113F.8000604@gmx.de>	 <b6c5339f0907301505yde9e457k4ddc87b1c9120a84@mail.gmail.com>	 <4A73394D.1070200@gmx.de> <b6c5339f0907311140o7e92a74eqf3ad095ac8412281@mail.gmail.com>
+In-Reply-To: <b6c5339f0907311140o7e92a74eqf3ad095ac8412281@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-08-21 at 11:44 -0700, Gábor Stefanik wrote:
-> Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
-> ("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
-> broke injection of non-broadcast frames to unassociated stations
-> (causing a SYSASSERT for all such injected frames), due to injected
-> frames no longer automatically getting a broadcast station ID assigned.
-> This patch restores the old behavior, fixing the aforementioned
-> regression.
-> 
-> Also, consistently check for IEEE80211_TX_CTL_INJECTED instead of
-> iwl_is_monitor_mode in the TX path, as TX_CTL_INJECTED specifically
-> means that a given packet is coming from a monitor interface, while
-> iwl_is_monitor_mode only shows whether a monitor interface exists
-> on the device.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+On 07/31/2009 08:40 PM, Bob Copeland wrote:
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+> Hmm, well, probably a ath5k_reset() in add_interface would do the
+> trick.  Maybe there's some wrong assumption about when
+> configure_filter() is called.
 
-Thank you
+Adding ath5k_reset() to the end of ath5k_add_interface didn't help.
 
-Reinette
+Seems like in the case of
 
+ifconfig wlan0 down
+iwconfig wlan0 mode monitor channel 1
+ifconfig wlan0 up
 
+ath5k_chan_set() is called by ath5k_config() with sc->curchan == chan
+and it doesn't call ath5k_reset() - which I guess is needed
+to activate the new hw rx_filter.
+ath5k_config() gets parameter changed == 0xffffffff,
+i.e. CONF_CHANGE_CHANNEL is flagged.
+
+With the following
+
+iwconfig wlan0 channel 2
+
+ath_chan_set() gets called with
+sc->curchan->center_freq != chan->center_freq and
+ath5k_reset() is invoked.
+
+Patch follows.
+
+Regards,
+Joerg.
