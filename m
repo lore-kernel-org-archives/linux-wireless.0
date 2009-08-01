@@ -1,73 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:63267 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752483AbZHMRMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 13:12:07 -0400
-Subject: Re: [PATCH 2.6.30 v2] iwl3945: fix rfkill switch
-From: reinette chatre <reinette.chatre@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1250166548-2548-1-git-send-email-sgruszka@redhat.com>
-References: <1250166548-2548-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Thu, 13 Aug 2009 10:12:06 -0700
-Message-Id: <1250183526.30019.6225.camel@rc-desk>
-Mime-Version: 1.0
+Received: from rv-out-0506.google.com ([209.85.198.232]:20265 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158AbZHABeu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 31 Jul 2009 21:34:50 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so699273rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 18:34:50 -0700 (PDT)
+Message-ID: <4A739A44.8000702@lwfinger.net>
+Date: Fri, 31 Jul 2009 20:28:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jayant Sane <jayant_sane@hotmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Newbie question on 2.6.28-rc8-wl
+References: <BLU129-W39120C9D5D733AC53C210180DB0@phx.gbl> <496A27FA.5030508@lwfinger.net> <BLU129-W353904E1AB1EEE7AC28C7D80D80@phx.gbl>
+In-Reply-To: <BLU129-W353904E1AB1EEE7AC28C7D80D80@phx.gbl>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-13 at 05:29 -0700, Stanislaw Gruszka wrote:
-> Due to rfkill and iwlwifi mishmash of SW / HW killswitch representation,
-> we have race conditions which make unable turn wifi radio on, after enable
-> and disable again killswitch. I can observe this problem on my laptop
-> with iwl3945 device.
+Jayant Sane wrote:
 > 
-> In rfkill core HW switch and SW switch are separate 'states'. Device can
-> be only in one of 3 states: RFKILL_STATE_SOFT_BLOCKED, RFKILL_STATE_UNBLOCKED,
-> RFKILL_STATE_HARD_BLOCKED. Whereas in iwlwifi driver we have separate bits
-> STATUS_RF_KILL_HW and STATUS_RF_KILL_SW for HW and SW switches - radio can be
-> turned on, only if both bits are cleared.
+> Thank you.
 > 
-> In this particular race conditions, radio can not be turned on if in driver
-> STATUS_RF_KILL_SW bit is set, and rfkill core is in state
-> RFKILL_STATE_HARD_BLOCKED, because rfkill core is unable to call
-> rfkill->toggle_radio(). This situation can be entered in case:
+> Again pardon my ignorance here..
 > 
-> - killswitch is turned on
-> - rfkill core 'see' button change first and move to RFKILL_STATE_SOFT_BLOCKED
->   also call ->toggle_radio() and STATE_RF_KILL_SW in driver is set
-> - iwl3945 get info about button from hardware to set STATUS_RF_KILL_HW bit and
->   force rfkill to move to RFKILL_STATE_HARD_BLOCKED
-> - killsiwtch is turend off
-> - driver clear STATUS_RF_KILL_HW
-> - rfkill core is unable to clear STATUS_RF_KILL_SW in driver
+> It seems that I can either get 2.6.28-wl or 2.6.28-rc8 per your suggestions below but not 2.6.28-rc8-wl
 > 
-> Additionally call to rfkill_epo() when STATUS_RF_KILL_HW in driver is set
-> cause move to the same situation.
-> 
-> In 2.6.31 this problem is fixed due to _total_ rewrite of rfkill subsystem.
-> This is a quite small fix for 2.6.30.x in iwlwifi driver. We are changing
-> internal rfkill state to always have below relations true:
-> 
-> STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
-> STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
-> STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_HARD_BLOCKED
-> STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_UNBLOCKED
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> Patch was tested by me only with iwl3945 device.
+> And I know it is possible to have the kernel version reported as 2.6.28-rc8-wl.  How can I get that?
 
-Fortunately I have not encountered these race conditions on my system.
-Even so, I tested this on a 5100 system and it behaves as expected wrt
-rfkill.
+In the main directory, create a file named localversion-wireless with
+a line that says -wl
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
+If you did the steps I told you earlier, you have the same as
+2.6.28-rc8-wl, no matter what it says.
 
-Reinette
-
-
-
+Larry
