@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.232]:35210 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbZHIPMd (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:42665 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767AbZHAUw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 11:12:33 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so792593rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2009 08:12:34 -0700 (PDT)
-Message-ID: <4A7EE75E.30900@lwfinger.net>
-Date: Sun, 09 Aug 2009 10:12:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Deauthentications with p54usb
-References: <4A7C9383.2040705@lwfinger.net> <200908072350.26193.chunkeey@web.de>
-In-Reply-To: <200908072350.26193.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 1 Aug 2009 16:52:26 -0400
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <20090801204534.GA23642@srcf.ucam.org>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	 <1249159133.3491.13.camel@localhost.localdomain>
+	 <20090801204534.GA23642@srcf.ucam.org>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 13:52:22 -0700
+Message-Id: <1249159942.3491.21.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> 
-> reason 7 must be:
-> WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
-> 
-> and class 3 frames are (according to 802.11-2007 11.3.c)
-> 	- "normal" data frames
-> 	(- some MLMEs - probably not relevant )
-> 	- control frame:
-> 		=> especially: Power Save Poll.
-> 
-> your log doesn't hold any records about a disassoc event from the AP.
-> so, my first guess would be that you're hitting yet another
-> power saving related issue.  And as far as I know b43 does not do that yet.
-> So, can you please give the device another go without ps?
-> 
-> (BTW: mac80211 prints a debug text (if enabled in kconfig),
->  whenever the device goes or leaves the hibernation mode...
->  do you see any of those too?) 
+Hi Matthew,
 
-Once I got that debug mode set with PS enabled, I still got the deauth
-events, but no messages from mac80211. I may not have had the debug
-value set correctly. Turning off CONFIG_CFG80211_DEFAULT_PS stopped
-the messages, thus it certainly looks like a power saving event.
+> > actually I would prefer if we name this key KEY_RFKILL and not put the
+> > policy of ALL into the kernel. Since we wanna get rid of rfkill-input.
+> > That needs to be done in userspace and by users policy. If they wanna
+> > map that key to ALL then that is fine. If they just wanna toggle WiFi,
+> > then that is also fine. If the wanna have to popup some UI, that is also
+> > reasonable.
+> 
+> My reasoning was that this conceptually maps to a key that controls all 
+> of the radios in the system - whether a single press actually kills all 
+> of them or not is kind of irrelevent (having the simple policy in 
+> rfkill-input works fine for this, but userspace will obviously want 
+> something more cunning). My concern with KEY_RFKILL is that it it's not 
+> obvious that it refers to a specific type of key - ones that purely 
+> control wifi should still be KEY_WLAN, for instance.
 
-Larry
+actually if the key is clearly hardwired to WLAN, then it should not
+even show up as input event at all. This is one of the mis-concepts of
+the old RFKILL subsystem. No need to send an input event if the platform
+driver is going to rfkill that device anyway.
+
+If a key is clearly labeled as WLAN then it should emit only KEY_WLAN.
+And if it is just a generic key with some radio on it like FN-F5 on my
+ThinkPad, then it better just emits KEY_RFKILL and we let userspace (or
+rfkill-input do the policy).
+
+Remember that in the end it is just a key and whatever the user does
+with it is users policy. So in summary it is up to the platform driver
+to emit the proper key. For some it might be still KEY_WLAN, for other
+it might be KEY_RFKILL. Sounds fair?
+
+Regards
+
+Marcel
+
 
