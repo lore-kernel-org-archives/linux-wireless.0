@@ -1,92 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39357 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932824AbZHNU2X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:28:23 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 20/34] wireless: simplify WLAN_PRE80211 entries
-Date: Fri, 14 Aug 2009 16:25:45 -0400
-Message-Id: <1250281559-13041-21-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx2.redhat.com ([66.187.237.31]:35725 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752090AbZHAU3M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 16:29:12 -0400
+Subject: Re: [PATCH 2/2] rfkill: Add support for KEY_RFKILL_ALL
+From: Bastien Nocera <hadess@hadess.net>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <1249152859-14769-2-git-send-email-mjg@redhat.com>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	 <1249152859-14769-2-git-send-email-mjg@redhat.com>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 21:25:27 +0100
+Message-Id: <1249158328.28327.10654.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do simplify them by ifdef'ing on WLAN_PRE80211 for
-the WLAN_PRE80211 drivers, this removes the need to depend
-on WLAN_PRE80211 on each individual driver.
+On Sat, 2009-08-01 at 19:54 +0100, Matthew Garrett wrote:
+> 
+> +               case KEY_RFKILL_ALL:
+> +                       rfkill_schedule_toggle(RFKILL_TYPE_WLAN);
+> +                       rfkill_schedule_toggle(RFKILL_TYPE_BLUETOOTH);
+> +                       rfkill_schedule_toggle(RFKILL_TYPE_UWB);
+> +                       rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
+> +                       break;
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 583eddc..f340713 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -14,9 +14,11 @@ menuconfig WLAN_PRE80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
- 
-+if WLAN_PRE80211
-+
- config ARLAN
- 	tristate "Aironet Arlan 655 & IC2200 DS support"
--	depends on ISA && !64BIT && WLAN_PRE80211
-+	depends on ISA && !64BIT
- 	select WIRELESS_EXT
- 	---help---
- 	  Aironet makes Arlan, a class of wireless LAN adapters. These use the
-@@ -32,7 +34,7 @@ config ARLAN
- 
- config WAVELAN
- 	tristate "AT&T/Lucent old WaveLAN & DEC RoamAbout DS ISA support"
--	depends on ISA && WLAN_PRE80211
-+	depends on ISA
- 	select WIRELESS_EXT
- 	---help---
- 	  The Lucent WaveLAN (formerly NCR and AT&T; or DEC RoamAbout DS) is
-@@ -55,7 +57,7 @@ config WAVELAN
- 
- config PCMCIA_WAVELAN
- 	tristate "AT&T/Lucent old WaveLAN Pcmcia wireless support"
--	depends on PCMCIA && WLAN_PRE80211
-+	depends on PCMCIA
- 	select WIRELESS_EXT
- 	help
- 	  Say Y here if you intend to attach an AT&T/Lucent Wavelan PCMCIA
-@@ -67,7 +69,7 @@ config PCMCIA_WAVELAN
- 
- config STRIP
- 	tristate "STRIP (Metricom starmode radio IP)"
--	depends on INET && WLAN_PRE80211
-+	depends on INET
- 	select WIRELESS_EXT
- 	---help---
- 	  Say Y if you have a Metricom radio and intend to use Starmode Radio
-@@ -91,7 +93,7 @@ config STRIP
- 
- config PCMCIA_NETWAVE
- 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
--	depends on PCMCIA && WLAN_PRE80211
-+	depends on PCMCIA
- 	select WIRELESS_EXT
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA (PC-card)
-@@ -100,6 +102,8 @@ config PCMCIA_NETWAVE
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called netwave_cs.  If unsure, say N.
- 
-+endif # WLAN_PRE80211
-+
- menuconfig WLAN_80211
- 	bool "Wireless LAN (IEEE 802.11)"
- 	depends on NETDEVICES
--- 
-1.6.2.5
+RFKILL_TYPE_ALL?
 
