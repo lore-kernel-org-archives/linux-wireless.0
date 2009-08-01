@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:23772 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbZHaVS0 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:55441 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbZHAUi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 17:18:26 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so584691fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:18:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A9C3C59.5010305@lwfinger.net>
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-	<4A9C3C59.5010305@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 31 Aug 2009 23:18:08 +0200
-Message-ID: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 1 Aug 2009 16:38:58 -0400
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 13:38:53 -0700
+Message-Id: <1249159133.3491.13.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
-> Hin-Tak Leung wrote:
->>
->> I just took a look at the history - there aren't obvious bug fixes, a
->> bunch of work queue-related changes from you & Johannes; feature-wise,
->> Larry added LED blinking after 2.6.30, and Herton added rfkill support
->> quite recently after 2.6.31-rc7 . But no, there isn't any change that
->> would affect tx level beyond 2.6.31-rc7, I think.
->
-> Your analysis matches my recollection.
->
-> Apparently RealTek is supplying a closed-source driver for RTL8187B
-> these days. There are no sources for the B on their web site. In
-> addition, the one that Tobias loaded tainted his kernel.
->
-> Larry
+Hi Matthew,
 
-The driver is not actually closed-source; they just don't provide any
-drivers on their site anymore, instead they send their reference
-drivers to OEMs, expecting the OEMs to release their own versions
-(with sources - most vendors who do release Linux drivers in fact only
-release sources, without binaries). The reason for this appears to be
-that Realtek now encourages vendors to sell RTL81xx wireless chips
-with modified USB IDs. (Or are you seeing a binary-only driver on
-realtek.com.tw? That would definitely be a GPL violation, given that
-they use a modified version of the GPLed libipw stack.)
+> Most laptops have keys that are intended to toggle all device state, not
+> just wifi. These are currently generally mapped to KEY_WLAN. As a result,
+> rfkill will only kill or enable wifi in response to the key press. This
+> confuses users and can make it difficult for them to enable bluetooth
+> and wwan devices.
+> 
+> This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
+> system should toggle the state of all rfkillable devices.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+actually I would prefer if we name this key KEY_RFKILL and not put the
+policy of ALL into the kernel. Since we wanna get rid of rfkill-input.
+That needs to be done in userspace and by users policy. If they wanna
+map that key to ALL then that is fine. If they just wanna toggle WiFi,
+then that is also fine. If the wanna have to popup some UI, that is also
+reasonable.
+
+So just having a KEY_RFKILL is the better way here and policy free. You
+can still for the short term have rfkill-input map this to an ALL policy
+until we remove that piece and replace it with a proper userspace
+solution (which thanks to /dev/rfkill is now possible).
+
+Regards
+
+Marcel
+
+
