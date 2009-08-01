@@ -1,127 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:14754 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967AbZHSAEa (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:48851 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbZHAIbV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 20:04:30 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so862866eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 17:04:32 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 2/5] orinoco: add cfg80211 join_ibss and leave_ibss
-Date: Wed, 19 Aug 2009 01:04:10 +0100
-Message-Id: <1250640253-18434-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
-References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+	Sat, 1 Aug 2009 04:31:21 -0400
+Received: by ewy10 with SMTP id 10so1990544ewy.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 01:31:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1249115316.2007.0.camel@johannes.local>
+References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
+	 <4A73FA8D.5030804@gmail.com>
+	 <1249114918.26584.18.camel@johannes.local>
+	 <4A73FBBD.3070507@gmail.com> <1249115316.2007.0.camel@johannes.local>
+Date: Sat, 1 Aug 2009 11:31:20 +0300
+Message-ID: <40f31dec0908010131q678f03d2x4ba7b6d5d1b51ff5@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Basic ad-hoc support.
+2009/8/1 Johannes Berg <johannes@sipsolutions.net>:
+> On Sat, 2009-08-01 at 10:24 +0200, Jiri Slaby wrote:
+>> On 08/01/2009 10:21 AM, Johannes Berg wrote:
+>> > Actually, jiffies are unsigned long
+>>
+>> Yeah, this is what I meant. I agree I messed it up when I didn't write
+>> the unsigned explicitly. It might have been confusing, thanks for
+>> pointing out.
+>
+> And, in addition to what you said, the code shouldn't divide jiffies, it
+> should multiply the timeout, add it to the start time, and then use
+> time_is_after_jiffies() or so.
+>
+> johannes
+>
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/cfg.c  |   57 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/orinoco/main.c |   12 +++++++
- 2 files changed, 69 insertions(+), 0 deletions(-)
+Where can i find documentation on this ?
 
-diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
-index 09b38e9..253cb4e 100644
---- a/drivers/net/wireless/orinoco/cfg.c
-+++ b/drivers/net/wireless/orinoco/cfg.c
-@@ -438,10 +438,67 @@ static int orinoco_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	return err;
- }
- 
-+static int orinoco_join_ibss(struct wiphy *wiphy, struct net_device *dev,
-+			     struct cfg80211_ibss_params *params)
-+{
-+	struct orinoco_private *priv = wiphy_priv(wiphy);
-+	unsigned long lock;
-+	int err;
-+
-+	if (orinoco_lock(priv, &lock) != 0)
-+		return -EBUSY;
-+
-+	/* Setup the requested parameters in priv. If the card is not
-+	 * capable, then the driver will just ignore the settings that
-+	 * it can't do. */
-+
-+	err = __orinoco_connect(wiphy, params->channel, params->bssid,
-+				params->ssid, params->ssid_len);
-+	if (err)
-+		goto out;
-+
-+	/* Ignore information elements and beacon interval */
-+
-+	/* Enable cfg80211 notification */
-+	priv->connect_commanded = 1;
-+
-+	err = orinoco_commit(priv);
-+ out:
-+	orinoco_unlock(priv, &lock);
-+
-+	return err;
-+}
-+
-+static int orinoco_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-+{
-+	struct orinoco_private *priv = wiphy_priv(wiphy);
-+	unsigned long lock;
-+	int err;
-+
-+	if (orinoco_lock(priv, &lock) != 0)
-+		return -EBUSY;
-+
-+	/* Do we need to disassociate as well? */
-+
-+	memset(priv->desired_bssid, 0, ETH_ALEN);
-+	memset(priv->desired_essid, 0, sizeof(priv->desired_essid));
-+
-+	/* Disable cfg80211 notification */
-+	priv->connect_commanded = 0;
-+
-+	err = orinoco_commit(priv);
-+
-+	orinoco_unlock(priv, &lock);
-+
-+	return err;
-+}
-+
- const struct cfg80211_ops orinoco_cfg_ops = {
- 	.change_virtual_intf = orinoco_change_vif,
- 	.set_channel = orinoco_set_channel,
- 	.scan = orinoco_scan,
- 	.connect = orinoco_connect,
- 	.disconnect = orinoco_disconnect,
-+	.join_ibss = orinoco_join_ibss,
-+	.leave_ibss = orinoco_leave_ibss,
- };
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 5542173..78ef22e 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -1283,7 +1283,19 @@ static void orinoco_send_wevents(struct work_struct *work)
- 			break;
- 		}
- 		break;
-+
- 	case NL80211_IFTYPE_ADHOC:
-+		switch (linkstatus) {
-+		case HERMES_LINKSTATUS_CONNECTED:
-+		case HERMES_LINKSTATUS_AP_IN_RANGE:
-+			cfg80211_ibss_joined(priv->ndev, bssid, GFP_KERNEL);
-+			break;
-+
-+		default:
-+			break;
-+		}
-+		break;
-+
- 	case NL80211_IFTYPE_MONITOR:
- 	default:
- 		break;
+
+
 -- 
-1.6.3.3
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
