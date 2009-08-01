@@ -1,50 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:57369 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933782AbZHWTio (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 15:38:44 -0400
-Received: by ewy3 with SMTP id 3so1861747ewy.18
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 12:38:44 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:39229 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752177AbZHAWda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 18:33:30 -0400
+Message-ID: <4A74C2B6.3070407@gmx.de>
+Date: Sun, 02 Aug 2009 00:33:26 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890908221459j70e31c20ufa5ea03973a16e0a@mail.gmail.com>
-References: <200908220038.35564.herton@mandriva.com.br>
-	 <3ace41890908221459j70e31c20ufa5ea03973a16e0a@mail.gmail.com>
-Date: Sun, 23 Aug 2009 20:38:43 +0100
-Message-ID: <3ace41890908231238h32b85839qe74bce2852103402@mail.gmail.com>
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: fix missing output in monitor mode after ifconfig
+ up
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 22, 2009 at 10:59 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
-> On Sat, Aug 22, 2009 at 4:38 AM, Herton Ronaldo
-> Krzesinski<herton@mandriva.com.br> wrote:
->> This change implements rfkill support for RTL8187B and RTL8187L devices,
->> using new cfg80211 rfkill API.
->>
->> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
->
-> Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
->
-> Neat!
->
-> I ran a ping to the router while flicking the switch on and off, and
-> have 'ping: sendmsg: Network is unreachable' in the middle. dmesg also
-> shows
+Let ath5k_chan_set() call ath5k_reset() if ath5k_config() was told
+that the channel changed. This fixes the bug that we don't
+get any packets in monitor mode after:
 
-It appears that I wrote prematurely - flicking the switch with the
-patch seems to just do the equivalent of ifconfig down.
-(before the patch, the switch has no effect). However, NetworkManager
-soon notices the interface going down and ifup it again. So I have
-simply got a 30s to 1 minute disruption in connectivity.
+ifconfig wlan0 down
+iwconfig wlan0 mode monitor channel 1
+ifconfig wlan0 up
 
-Is this intentional? I thought it is supposed to actually switch off
-the hardware, or is this how the code supposed to work?
-Maybe some component needs to let NM knows not to reenanble the device.
+but they arrive after
 
-Hin-Tak
+iwconfig wlan0 channel 2
+
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+---
+  drivers/net/wireless/ath/ath5k/base.c |   17 +++++++++--------
+  1 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3a1c156..09ca89c 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -289,7 +289,8 @@ static unsigned int ath5k_copy_channels(struct ath5k_hw *ah,
+                                 unsigned int max);
+  static int     ath5k_setup_bands(struct ieee80211_hw *hw);
+  static int     ath5k_chan_set(struct ath5k_softc *sc,
+-                               struct ieee80211_channel *chan);
++                              struct ieee80211_channel *chan,
++                              int chan_changed);
+  static void    ath5k_setcurmode(struct ath5k_softc *sc,
+                                 unsigned int mode);
+  static void    ath5k_mode_setup(struct ath5k_softc *sc);
+@@ -1079,14 +1080,13 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+   * Called with sc->lock.
+   */
+  static int
+-ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
++ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan,
++              int chan_changed)
+  {
+-       ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
+-               sc->curchan->center_freq, chan->center_freq);
+-
+-       if (chan->center_freq != sc->curchan->center_freq ||
+-               chan->hw_value != sc->curchan->hw_value) {
++       ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz) chan_changed %x\n",
++                 sc->curchan->center_freq, chan->center_freq, chan_changed);
+
++       if (chan_changed) {
+                 /*
+                  * To switch channels clear any pending DMA operations;
+                  * wait long enough for the RX fifo to drain, reset the
+@@ -2811,7 +2811,8 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+
+         mutex_lock(&sc->lock);
+
+-       ret = ath5k_chan_set(sc, conf->channel);
++       ret = ath5k_chan_set(sc, conf->channel,
++                            changed & IEEE80211_CONF_CHANGE_CHANNEL);
+         if (ret < 0)
+                 goto unlock;
+
+-- 
+1.6.0.4
+
