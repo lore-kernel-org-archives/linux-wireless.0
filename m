@@ -1,90 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15445 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932597AbZHUVDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 17:03:50 -0400
-Subject: [PATCH 14/14 v2] MAINTAINERS: Update ipw2x00 and iwlwifi entries
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	Joe Perches <joe@perches.com>
-In-Reply-To: <1250888170.29546.106.camel@Joe-Laptop.home>
-References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
-	 <1250886867-4112-15-git-send-email-reinette.chatre@intel.com>
-	 <1250888170.29546.106.camel@Joe-Laptop.home>
-Content-Type: text/plain
-Date: Fri, 21 Aug 2009 14:03:51 -0700
-Message-Id: <1250888631.30019.14496.camel@rc-desk>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39068 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835AbZHAI2i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 04:28:38 -0400
+Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, proski@gnu.org
+In-Reply-To: <4A73FBBD.3070507@gmail.com>
+References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
+	 <4A73FA8D.5030804@gmail.com> <1249114918.26584.18.camel@johannes.local>
+	 <4A73FBBD.3070507@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-b4RBZgJMeX6ZANoNAMQ2"
+Date: Sat, 01 Aug 2009 10:28:36 +0200
+Message-Id: <1249115316.2007.0.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
 
-Update MAINTAINERS file to reflect current maintenance status of ipw2x00
-drivers. We remove James's name as he is not involved with this project
-anymore. We also update the Status to "Odd Fixes". This has been true for a
-while now, we have to make it official. There is also a new email address
-with which all relevant people can be reached. The same email address
-should be used for iwlwifi.
+--=-b4RBZgJMeX6ZANoNAMQ2
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Cc: James Ketrenos <jketreno@linux.intel.com>
-Acked-by: James Ketrenos <jketreno@linux.intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
-v2: Include full name "Intel Linux Wireless" for general mailing address.
+On Sat, 2009-08-01 at 10:24 +0200, Jiri Slaby wrote:
+> On 08/01/2009 10:21 AM, Johannes Berg wrote:
+> > Actually, jiffies are unsigned long
+>=20
+> Yeah, this is what I meant. I agree I messed it up when I didn't write
+> the unsigned explicitly. It might have been confusing, thanks for
+> pointing out.
 
- MAINTAINERS |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+And, in addition to what you said, the code shouldn't divide jiffies, it
+should multiply the timeout, add it to the start time, and then use
+time_is_after_jiffies() or so.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8d8d495..a8b8d28 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2653,25 +2653,21 @@ F:	drivers/net/ixgbe/
- 
- INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
- M:	Zhu Yi <yi.zhu@intel.com>
--M:	James Ketrenos <jketreno@linux.intel.com>
- M:	Reinette Chatre <reinette.chatre@intel.com>
-+M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--L:	ipw2100-devel@lists.sourceforge.net
--W:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
- W:	http://ipw2100.sourceforge.net
--S:	Supported
-+S:	Odd Fixes
- F:	Documentation/networking/README.ipw2100
- F:	drivers/net/wireless/ipw2x00/ipw2100.*
- 
- INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
- M:	Zhu Yi <yi.zhu@intel.com>
--M:	James Ketrenos <jketreno@linux.intel.com>
- M:	Reinette Chatre <reinette.chatre@intel.com>
-+M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--L:	ipw2100-devel@lists.sourceforge.net
--W:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
- W:	http://ipw2200.sourceforge.net
--S:	Supported
-+S:	Odd Fixes
- F:	Documentation/networking/README.ipw2200
- F:	drivers/net/wireless/ipw2x00/ipw2200.*
- 
-@@ -2688,8 +2684,8 @@ F:	include/linux/wimax/i2400m.h
- INTEL WIRELESS WIFI LINK (iwlwifi)
- M:	Zhu Yi <yi.zhu@intel.com>
- M:	Reinette Chatre <reinette.chatre@intel.com>
-+M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--L:	ipw3945-devel@lists.sourceforge.net
- W:	http://intellinuxwireless.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
- S:	Supported
--- 
-1.5.6.3
+johannes
 
+--=-b4RBZgJMeX6ZANoNAMQ2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKc/yxAAoJEODzc/N7+QmaI/8P/0NF2y8i6YJ8D5aJwAWhDqs5
+pYthE81046oUNQbiUGqxjX5zgRFqU7i2AAqny5RFRMbdQW8X72DPoygu4f88G1BL
+TmBogdqPJfixk5ZPEF0kgG39kv1Y17IgMwnnUBNF8NGoR6Cl44KNklUwmFm0MKgH
+NY5Dosl0ad9byr9IrzvIkM4I4nUfDy9JrdIIe60kOMMxp9DG3P4BujXqWQC+tlHi
+jrvA5KBVjY2uREip9nIPLAYvUyz/6lvESSjia8nrqOhH11ZP7E2ig5WYfEpDNuOi
+rAWQccdXJW7yHIVV2SPu6Y1Hy8WrmQYKse5ecueAlh5GytzaD/4JraooeIsF6QSp
+3yvc59/OiZpBPKVFc7sE+CGw10XYF5bR7Zux8O/73uJElYnmaOMU6xU1f6iu1kJH
++BSOlIslKoQrtRJBARP0TWMY+LPx0yKrVjeoQADTriKoug+i6qvqBcLI3crYpRfm
+sb97oOPTYv2iE7n1WVlyVpl/2fwUFjefmaU47SBldW9apQzHk3f8RiLw8OmQo1Vz
+zilO3khl5FLMciVrQxvoCdseMER9LqJkO+rhMvsBV4MrCofXE8clG5KHgE2EMTwK
+KIgdN7eBL79SQJPezYHn3hLIwBWzwlI2bMVl3UBxI5ilKqeWfSkjeouPGJm1dF7Y
+P4SgujbKu/UQUx37OLWW
+=Acoh
+-----END PGP SIGNATURE-----
+
+--=-b4RBZgJMeX6ZANoNAMQ2--
 
