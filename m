@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snt0-omc4-s34.snt0.hotmail.com ([65.55.90.237]:42124 "EHLO
-	snt0-omc4-s34.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751620AbZHBMzH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 08:55:07 -0400
-Message-ID: <SNT102-W3920579242C5261F6A86DBBD0E0@phx.gbl>
-From: Jack Lau <jackelectronics@hotmail.com>
-To: <proski@gnu.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
-Date: Sun, 2 Aug 2009 12:55:08 +0000
-In-Reply-To: <1248821338.5206.12.camel@mj>
-References: <BAY0-DP2-2945C3011C834624418944BD170@phx.gbl>
-	 <1248640816.32168.42.camel@mj>
-   	 <BAY0-DP3-241EC0B1A0E15935251FCBBD150@phx.gbl>
-   <1248821338.5206.12.camel@mj>  
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:35965 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbZHAIWG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 04:22:06 -0400
+Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	nbd@openwrt.org, proski@gnu.org
+In-Reply-To: <4A73FA8D.5030804@gmail.com>
+References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
+	 <4A73FA8D.5030804@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZYz7lrf6bC8/xN2tnXMa"
+Date: Sat, 01 Aug 2009 10:21:58 +0200
+Message-Id: <1249114918.26584.18.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+--=-ZYz7lrf6bC8/xN2tnXMa
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Pavel
+On Sat, 2009-08-01 at 10:19 +0200, Jiri Slaby wrote:
 
-> If you are using compat-wireless, I suggest that you try the current
-> kernel from wireless-testing. It was quite unstable a few days ago, but
-> it should be cleaned up by now. Since you are using the AP mode, you'll
-> need this patch, it's still not applied as of now:
->
-> http://marc.info/?l=linux-wireless&m=124871936602667&w=2
->
-> compat-wireless is great if everything is working, but if something is
-> broken, the first suspicion is that compat-wireless doesn't backport
-> something correctly.
+> > +	u32 current_time =3D (jiffies / HZ);
+>=20
+> jiffies are long. And they start from negative to catch such issues. You
+> were lucky and/or tested after 5 minutes of uptime ;).
 
-I have downloaded v2.6.31-rc4-29204-g6b3a8c9 and compiled it with debugging options mac80211 and ath9k enabled.
+Actually, jiffies are unsigned long, but wrap after 5 minutes of
+uptime :)
 
-> You can find where it happens if you kernel is compiled with the debug
-> information (CONFIG_DEBUG_INFO in .config). Load the mac80211 module in
-> gdb:
->
-> gdb /lib/modules/`uname -r`/kernel/net/mac80211/mac80211.ko
->
-> On the gdb prompt, run:
->
-> l *(ieee80211_agg_splice_packets+0x3d)
+johannes
 
-I have compiled the above kernel with debug enabled and the symbols are now present and shows me the lines of code concerned.
+--=-ZYz7lrf6bC8/xN2tnXMa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> Actually, ieee80211_agg_splice_packets is a short function. Perhaps you
-> could add debug print statements to find possible errors. For instance,
-> local->hw is used. It would crash if local is NULL. So you add before
-> that place:
->
-> printk("local = %p\n", local);
+-----BEGIN PGP SIGNATURE-----
 
-I have inserted the above printk just above and now prints out on kernel messages.
+iQIcBAABAgAGBQJKc/sjAAoJEODzc/N7+QmaJdUP/RDsW9279umdn2Gkc7NL7KlY
+KXFOQnUWo57axT9SF7tGV9WCUBtX6m9LXcDDCoeRMzG5bV7mUCKQWkmJIjrjLYHf
+BXShdjTYvTA+WnRechOmccjzHC0Q8Wt++vjUiFXXDcYuD5eZu2NGPUgfH5AI5Lcj
+6lyCm33MMlBL1UGHWrS7GD2pwWL7sQvww09UGxKjUblS82B/HYgSyCA8JGnOZqsC
+UwISKaThS5o6V2pT8baDX6Nh33ozxbsQ++O82NHLzvmxG0pN7Z0kdntKuJNxPubN
+KjpEPN27TXKXOjN7zF5hddmeEJrX4K4DlsQUxTILyaelUW3VtLAb37PfxunleCyP
+6n0W23YvOyhh/AV5gZp0S4B0687UZwYXl76NNVh/pDI1M+zAjwc08j9YqgZ4Xlg4
+aGbk7ZkD77wKVOW5qvwzmHoiXr2afwir2DjAmEnKPDJU/pPWFTl5gPjWIaHA1wz4
+yTWyk2zP9WgfZcIPcL4nbPt6cddUCjHpqw8kyxkdrR1Wwp7Qqs1gvCtJJdlfGSZp
+1h6ZCpR/Y8C77HGQMcY+K7pcfnVjHqHbVeUmYhrkNhW2/2KpuYsd7QaYWrSN03Zh
+Gvcy4Za/Z2aEvqPDIasTjBe0V0BwvTdnQowAqpGJhIa4kEJPzIuXE5zZ0EovKYBn
+HMHfxyl1OIa8jGDqwKT2
+=JSE8
+-----END PGP SIGNATURE-----
 
-> Likewise, check sta, sta->ampdu_mlme.tid_tx[tid] and local->pending. Or
-> just print the line numbers. You will see which printk is run last
-> before the crash.
+--=-ZYz7lrf6bC8/xN2tnXMa--
 
-I am not too sure what you mean by your first sentence. I have added just the one printk line as above.
-
-I now enclose log files of kernel messages from the start of the boot sessions right to the crash.
-
-Also, for some strange reason, the system does not crash when I do a killall on hostapd (I have set it automatically load on startup) and then reload it as detailed on the second log enclosed. This did not use to happen with earlier pre-compiled kernels packages from Ubuntu such as linux-image-2.6.31-4-generic and linux-image-2.6.28-14 where it used to crash all the time.
-
-Regards
-
-
-Jack
-_________________________________________________________________
-Windows Live Messenger: Thanks for 10 great years—enjoy free winks and emoticons.
-http://clk.atdmt.com/UKM/go/157562755/direct/01/
