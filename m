@@ -1,61 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45302 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbZHJSBI (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:60831 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbZHAIfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 14:01:08 -0400
-Date: Mon, 10 Aug 2009 13:57:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH 2.6.31] ar9170: fix read & write outside array bounds
-Message-ID: <20090810175755.GG2733@tuxdriver.com>
-References: <200908091424.09712.chunkeey@web.de>
+	Sat, 1 Aug 2009 04:35:37 -0400
+Received: by fxm17 with SMTP id 17so1754959fxm.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 01:35:35 -0700 (PDT)
+Message-ID: <4A73FE55.5020306@gmail.com>
+Date: Sat, 01 Aug 2009 10:35:33 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200908091424.09712.chunkeey@web.de>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>	 <4A73FA8D.5030804@gmail.com>	 <1249114918.26584.18.camel@johannes.local>	 <4A73FBBD.3070507@gmail.com> <1249115316.2007.0.camel@johannes.local> <40f31dec0908010131q678f03d2x4ba7b6d5d1b51ff5@mail.gmail.com>
+In-Reply-To: <40f31dec0908010131q678f03d2x4ba7b6d5d1b51ff5@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 09, 2009 at 02:24:09PM +0200, Christian Lamparter wrote:
-> From: Dan Carpenter <error27@gmail.com>
-> 
-> queue == __AR9170_NUM_TXQ would cause a bug on the next line.
-> 
-> found by Smatch ( http://repo.or.cz/w/smatch.git ).
-> 
-> Cc: stable@kernel.org
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> Signed-off-by: Christian Lamparter <chunkeey@web.de>
-> ---
-> diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-> index 4fc389a..ea8c941 100644
-> --- a/drivers/net/wireless/ath/ar9170/main.c
-> +++ b/drivers/net/wireless/ath/ar9170/main.c
-> @@ -2458,13 +2458,14 @@ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
->  	int ret;
->  
->  	mutex_lock(&ar->mutex);
-> -	if ((param) && !(queue > __AR9170_NUM_TXQ)) {
-> +	if (queue < __AR9170_NUM_TXQ) {
->  		memcpy(&ar->edcf[ar9170_qos_hwmap[queue]],
->  		       param, sizeof(*param));
->  
->  		ret = ar9170_set_qos(ar);
-> -	} else
-> +	} else {
->  		ret = -EINVAL;
-> +	}
->  
->  	mutex_unlock(&ar->mutex);
->  	return ret;
+On 08/01/2009 10:31 AM, Nick Kossifidis wrote:
+> 2009/8/1 Johannes Berg <johannes@sipsolutions.net>:
+>> time_is_after_jiffies() or so.
+...
+> Where can i find documentation on this ?
 
-The p54 version of this patch used hw->queues instead of a constant.
-Wouldn't that be better here?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I wouldn't say there is anything else than include/linux/jiffies.h.
