@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:40774 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbZHLNGr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 09:06:47 -0400
-Date: Wed, 12 Aug 2009 17:06:05 +0400
-From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sergey Lapin <slapin@ossfans.org>
-Subject: Re: [PATCH 1/2] mac802154: add a software MAC 802.15.4
- implementation
-Message-ID: <20090812130605.GA17169@doriath.ww600.siemens.net>
-References: <1249913800-10176-1-git-send-email-dbaryshkov@gmail.com>
- <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com>
- <1249914466.32614.13.camel@johannes.local>
- <20090811202304.GA6303@doriath.ww600.siemens.net>
- <1250023198.13529.69.camel@johannes.local>
+Received: from mgw2.diku.dk ([130.225.96.92]:54103 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752145AbZHATud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 15:50:33 -0400
+Date: Sat, 1 Aug 2009 21:50:31 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 4/5] drivers/net/wireless: Use DIV_ROUND_CLOSEST
+Message-ID: <Pine.LNX.4.64.0908012149570.25693@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250023198.13529.69.camel@johannes.local>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 11, 2009 at 10:39:58PM +0200, Johannes Berg wrote:
-> On Wed, 2009-08-12 at 00:23 +0400, Dmitry Eremin-Solenikov wrote:
-> 
-> > > That return value is strange.
-> > 
-> > The idea is that tx function can return info about errors during
-> > transmit (busy channel, no ACK, etc).
-> 
-> Well, TX functions don't usually wait for anything so busy channel or no
-> ack wouldn't be possible to return there but more like a TX status, and
-> I think people are more used to NETDEV_TX_OK etc. return values. But
-> it's your choice to make, obviously. If you want to return specific
-> information like that though I would recommend making an enum so you get
-> at least some type checking (and things like 'return -1' are more
-> obviously wrong).
+From: Julia Lawall <julia@diku.dk>
 
-Currently we do all the work from special worker threads, so it's
-possible for this callback to sleep. The error isn't yet propagated to
-upper layers (there is a huge TODO there), anyway.
+The kernel.h macro DIV_ROUND_CLOSEST performs the computation (x + d/2)/d
+but is perhaps more readable.
 
-> 
-> > > We've had no end to trouble with the master netdev, I suggest you look
-> > > into the current mac80211 code and see if you can get rid of it.
-> > 
-> > What troubles w/ master netdev did you have had? I do still see the
-> > master devices in mac80211. IIUC, it's planned to replace (from
-> > management point of view) the mdev with wiphy instance, isn't it?
-> 
-> Mostly the userspace API was a mess, and you can't actually _do_
-> anything with the master netdev. It also doesn't see all the frames,
-> only outgoing. It's very strange.
+The semantic patch that makes this change is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-We were using master netdevices for several purposes:
-1) ip link add link mwpanX type wpan, so that we have out-of-box support
-   for radio additions. That's really nice thing to have.
+// <smpl>
+@haskernel@
+@@
 
-2) for SOCK_RAW implementation that can be used to send raw packets
-   over-the-air/receive raw packets. I think we can use af_packet for
-   this, but I'm still not sure about packet injection.
+#include <linux/kernel.h>
 
-3) On the RX, we did send a clone of skb to the mdev and clones to slave
-   interfaces, thus overcoming your last argument.
+@depends on haskernel@
+expression x,__divisor;
+@@
 
-> The biggest problem is that it really clutters up the userspace API
-> since you can't do any netdev things with it, it's just a placeholder.
-> 
-> In addition to that, you can't put anything into skb->cb, then push the
-> frame to the master netdev, and expect things in skb->cb to still be
-> there when the frame arrives at the master netdev. Not sure you do that
-> (I hope not because that would be very buggy), but eventually you'll
-> probably find that you do want that, etc.
+- (((x) + ((__divisor) / 2)) / (__divisor))
++ DIV_ROUND_CLOSEST(x,__divisor)
+// </smpl>
 
-Hmm. It works for us. Could you please tell me more about the problems
-with skb->cb ?
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-> IMHO it's just better practise to not use it in situations like this
-> where it can't be really used as a netdev.
+---
+ drivers/net/wireless/strip.c        |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-We did use it as a netdev, however we can probably live without it.
-I'll rethink this interface.
-
--- 
-With best wishes
-Dmitry
-
+diff --git a/drivers/net/wireless/strip.c b/drivers/net/wireless/strip.c
+index 73300c2..8eabb56 100644
+--- a/drivers/net/wireless/strip.c
++++ b/drivers/net/wireless/strip.c
+@@ -1550,9 +1550,12 @@ static int strip_xmit(struct sk_buff *skb, struct net_device *dev)
+ 
+ 	if (time_after(jiffies, strip_info->pps_timer + HZ)) {
+ 		unsigned long t = jiffies - strip_info->pps_timer;
+-		unsigned long rx_pps_count = (strip_info->rx_pps_count * HZ * 8 + t / 2) / t;
+-		unsigned long tx_pps_count = (strip_info->tx_pps_count * HZ * 8 + t / 2) / t;
+-		unsigned long sx_pps_count = (strip_info->sx_pps_count * HZ * 8 + t / 2) / t;
++		unsigned long rx_pps_count =
++			DIV_ROUND_CLOSEST(strip_info->rx_pps_count*HZ*8, t);
++		unsigned long tx_pps_count =
++			DIV_ROUND_CLOSEST(strip_info->tx_pps_count*HZ*8, t);
++		unsigned long sx_pps_count =
++			DIV_ROUND_CLOSEST(strip_info->sx_pps_count*HZ*8, t);
+ 
+ 		strip_info->pps_timer = jiffies;
+ 		strip_info->rx_pps_count = 0;
