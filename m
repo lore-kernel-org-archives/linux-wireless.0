@@ -1,88 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6812 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753459AbZHZVgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 17:36:33 -0400
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>
-Date: Thu, 27 Aug 2009 00:36:28 +0300
-Subject: RE: [PATCH] rfkill: relicense header file
-Message-ID: <6F5C1D715B2DA5498A628E6B9C124F040144F9EA79@hasmsx504.ger.corp.intel.com>
-References: <1251303197.15619.29.camel@johannes.local>
-In-Reply-To: <1251303197.15619.29.camel@johannes.local>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:57017 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbZHBJKI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 05:10:08 -0400
 MIME-Version: 1.0
+In-Reply-To: <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <1248946195.8925.9.camel@johannes.local>
+	 <1248947099.8396.6.camel@marge.simson.net>
+	 <1248947740.8925.12.camel@johannes.local>
+	 <efe7343f0907300306o44d0e718p2880b7406a38fc6a@mail.gmail.com>
+Date: Sun, 2 Aug 2009 17:10:07 +0800
+Message-ID: <804dabb00908020210r72a9a9c3p5c6d906a7f6b53db@mail.gmail.com>
+Subject: Re: [wireless] rt2870sta BUGs on shutdown, 2.6.30.2->git.today+git.wireless.today
+From: Peter Teoh <htmldeveloper@gmail.com>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Mike Galbraith <efault@gmx.de>, linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBb
-bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFdlZG5lc2RheSwgQXVn
-dXN0IDI2LCAyMDA5IDc6MTMgUE0NCj4gVG86IEpvaG4gTGludmlsbGUNCj4gQ2M6IGxpbnV4LXdp
-cmVsZXNzOyBBbGFuIEplbmtpbnM7IEhlbnJpcXVlIGRlIE1vcmFlcyBIb2xzY2h1aDsgUGVyZXot
-DQo+IEdvbnphbGV6LCBJbmFreTsgSXZvIHZhbiBEb29ybjsgSmFzd2luZGVyIFNpbmdoIFJhanB1
-dDsgTWljaGFlbCBCdWVzY2g7DQo+IFdpbmtsZXIsIFRvbWFzDQo+IFN1YmplY3Q6IFtQQVRDSF0g
-cmZraWxsOiByZWxpY2Vuc2UgaGVhZGVyIGZpbGUNCj4gDQo+IFRoaXMgaGVhZGVyIGZpbGUgaXMg
-Y29waWVkIGludG8gdXNlcnNwYWNlIHRvb2xzIHRoYXQNCj4gbmVlZCBub3QgYmUgR1BMdjIgbGlj
-ZW5zZWQsIG1ha2UgdGhhdCBlYXNpZXIuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBC
-ZXJnIDxqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0Pg0KPiBDYzogQWxhbiBKZW5raW5zIDxhbGFu
-LWplbmtpbnNAdHVmZm1haWwuY28udWs+DQo+IENjOiBIZW5yaXF1ZSBkZSBNb3JhZXMgSG9sc2No
-dWggPGhtaEBobWguZW5nLmJyPg0KPiBDYzogScOxYWt5IFDDqXJlei1Hb256w6FsZXogPGluYWt5
-LnBlcmV6LWdvbnphbGV6QGludGVsLmNvbT4NCj4gQ2M6IEl2byB2YW4gRG9vcm4gPEl2RG9vcm5A
-Z21haWwuY29tPg0KPiBDYzogSmFzd2luZGVyIFNpbmdoIFJhanB1dCA8amFzd2luZGVyQGtlcm5l
-bC5vcmc+DQo+IENjOiBKb2huIFcuIExpbnZpbGxlIDxsaW52aWxsZUB0dXhkcml2ZXIuY29tPg0K
-PiBDYzogTWljaGFlbCBCdWVzY2ggPG1iQGJ1M3NjaC5kZT4NCj4gQ2M6IFRvbWFzIFdpbmtsZXIg
-PHRvbWFzLndpbmtsZXJAaW50ZWwuY29tPg0KPiAtLS0NCj4gTmVlZCBBQ0sgZnJvbSBldmVyeWJv
-ZHkgbGlzdGVkIHdobyBldmVyIHRvdWNoZWQgdGhpcw0KPiBmaWxlIGFjY29yZGluZyB0byBnaXQu
-IFBsZWFzZT8NCj4gDQo+ICBpbmNsdWRlL2xpbnV4L3Jma2lsbC5oIHwgICAyNSArKysrKysrKysr
-Ky0tLS0tLS0tLS0tLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMTQg
-ZGVsZXRpb25zKC0pDQo+IA0KPiAtLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL2luY2x1ZGUvbGlu
-dXgvcmZraWxsLmgJMjAwOS0wOC0yNg0KPiAxODowOTo1Ny4wMDAwMDAwMDAgKzAyMDANCj4gKysr
-IHdpcmVsZXNzLXRlc3RpbmcvaW5jbHVkZS9saW51eC9yZmtpbGwuaAkyMDA5LTA4LTI2DQo+IDE4
-OjEwOjUyLjAwMDAwMDAwMCArMDIwMA0KPiBAQCAtNiwyMCArNiwxNyBAQA0KPiAgICogQ29weXJp
-Z2h0IChDKSAyMDA3IERtaXRyeSBUb3Jva2hvdg0KPiAgICogQ29weXJpZ2h0IDIwMDkgSm9oYW5u
-ZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCj4gICAqDQo+IC0gKiBUaGlzIHBy
-b2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUgaXQgYW5kL29yIG1v
-ZGlmeQ0KPiAtICogaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMg
-TGljZW5zZSBhcyBwdWJsaXNoZWQgYnkNCj4gLSAqIHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRp
-b247IGVpdGhlciB2ZXJzaW9uIDIgb2YgdGhlIExpY2Vuc2UsIG9yDQo+IC0gKiAoYXQgeW91ciBv
-cHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLg0KPiAtICoNCj4gLSAqIFRoaXMgcHJvZ3JhbSBpcyBk
-aXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLA0KPiAtICogYnV0
-IFdJVEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkg
-b2YNCj4gLSAqIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIgUFVS
-UE9TRS4gU2VlIHRoZQ0KPiAtICogR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUg
-ZGV0YWlscy4NCj4gLSAqDQo+IC0gKiBZb3Ugc2hvdWxkIGhhdmUgcmVjZWl2ZWQgYSBjb3B5IG9m
-IHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZQ0KPiAtICogYWxvbmcgd2l0aCB0aGlzIHBy
-b2dyYW07IGlmIG5vdCwgd3JpdGUgdG8gdGhlDQo+IC0gKiBGcmVlIFNvZnR3YXJlIEZvdW5kYXRp
-b24sIEluYy4sDQo+IC0gKiA1OSBUZW1wbGUgUGxhY2UgLSBTdWl0ZSAzMzAsIEJvc3RvbiwgTUEg
-MDIxMTEtMTMwNywgVVNBLg0KPiArICogUGVybWlzc2lvbiB0byB1c2UsIGNvcHksIG1vZGlmeSwg
-YW5kL29yIGRpc3RyaWJ1dGUgdGhpcyBzb2Z0d2FyZSBmb3INCj4gYW55DQo+ICsgKiBwdXJwb3Nl
-IHdpdGggb3Igd2l0aG91dCBmZWUgaXMgaGVyZWJ5IGdyYW50ZWQsIHByb3ZpZGVkIHRoYXQgdGhl
-DQo+IGFib3ZlDQo+ICsgKiBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Npb24gbm90
-aWNlIGFwcGVhciBpbiBhbGwgY29waWVzLg0KPiArICoNCj4gKyAqIFRIRSBTT0ZUV0FSRSBJUyBQ
-Uk9WSURFRCAiQVMgSVMiIEFORCBUSEUgQVVUSE9SIERJU0NMQUlNUyBBTEwNCj4gV0FSUkFOVElF
-Uw0KPiArICogV0lUSCBSRUdBUkQgVE8gVEhJUyBTT0ZUV0FSRSBJTkNMVURJTkcgQUxMIElNUExJ
-RUQgV0FSUkFOVElFUyBPRg0KPiArICogTUVSQ0hBTlRBQklMSVRZIEFORCBGSVRORVNTLiBJTiBO
-TyBFVkVOVCBTSEFMTCBUSEUgQVVUSE9SIEJFIExJQUJMRQ0KPiBGT1INCj4gKyAqIEFOWSBTUEVD
-SUFMLCBESVJFQ1QsIElORElSRUNULCBPUiBDT05TRVFVRU5USUFMIERBTUFHRVMgT1IgQU5ZDQo+
-IERBTUFHRVMNCj4gKyAqIFdIQVRTT0VWRVIgUkVTVUxUSU5HIEZST00gTE9TUyBPRiBVU0UsIERB
-VEEgT1IgUFJPRklUUywgV0hFVEhFUiBJTg0KPiBBTg0KPiArICogQUNUSU9OIE9GIENPTlRSQUNU
-LCBORUdMSUdFTkNFIE9SIE9USEVSIFRPUlRJT1VTIEFDVElPTiwgQVJJU0lORyBPVVQNCj4gT0YN
-Cj4gKyAqIE9SIElOIENPTk5FQ1RJT04gV0lUSCBUSEUgVVNFIE9SIFBFUkZPUk1BTkNFIE9GIFRI
-SVMgU09GVFdBUkUuDQo+ICAgKi8NCj4gDQo+ICAjaW5jbHVkZSA8bGludXgvdHlwZXMuaD4NCj4g
-DQoNCg0KQWNrZWQtYnk6IFRvbWFzIFdpbmtsZXIgPHRvbWFzLndpbmtsZXJAaW50ZWwuY29tPg0K
-DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0KSW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5k
-IGFueSBhdHRhY2htZW50cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRo
-ZSBzb2xlIHVzZSBvZiB0aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRp
-c3RyaWJ1dGlvbgpieSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBu
-b3QgdGhlIGludGVuZGVkCnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQg
-ZGVsZXRlIGFsbCBjb3BpZXMuCg==
+On 7/30/09, Luis Correia <luis.f.correia@gmail.com> wrote:
+> Hi Mike,
+>
+> On Thu, Jul 30, 2009 at 10:55, Johannes Berg<johannes@sipsolutions.net> wrote:
+> > On Thu, 2009-07-30 at 11:44 +0200, Mike Galbraith wrote:
+> >> On Thu, 2009-07-30 at 11:29 +0200, Johannes Berg wrote:
+> >> > On Thu, 2009-07-30 at 11:22 +0200, Mike Galbraith wrote:
+> >> >
+> >> > > drivers/staging/rt2870/../rt2860/sta_ioctl.c
+> >> >
+> >> > Sorry, but that '/staging/' thing in there means we cannot support this.
+> >> > If you must, take your query to the staging list,
+> >> > devel@driverdev.osuosl.org (according to MAINTAINERS).
+> >>
+> >> Forwarded, thanks.
+> >>
+> >> ....hm.  Does "If you must" mean reports aren't welcome?
+> >
+> > To be honest, I don't know. I'd rather see people use the rt2x00 code
+> > instead of spending time cleaning up that mess (the code you've pasted
+> > was pretty bad!). But you may or may not find somebody who cares about
+> > that, just rather unlikely on this list.
+>
+> What is appreciated is people with time to compare both code paths,
+> and report some inconsistancies, specially about card initialization
+> and general handling.
+>
+> To be hones, we, the rt2x00 team, find Ralink's code to be very
+> difficult to follow, and combersome most of the times.
+>
 
+This is very true, I had too many questions about the different
+symbols, and task vs pid variations  etc etc....and so many macro
+usage :-)....
+But thank you for all the efforts of debugging!!!!
+
+
+
+
+
+-- 
+Regards,
+Peter Teoh
