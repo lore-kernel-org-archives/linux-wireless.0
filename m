@@ -1,87 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:18412 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbZHKTVV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 15:21:21 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, linux-next@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
-Subject: [PATCH v2] wl1271: fix compiler warnings on 64 bit archs
-Date: Tue, 11 Aug 2009 22:20:25 +0300
-Message-Id: <1250018425-32610-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail.gmx.net ([213.165.64.20]:60897 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752144AbZHBHvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 03:51:00 -0400
+Message-ID: <4A754562.8000107@gmx.de>
+Date: Sun, 02 Aug 2009 09:50:58 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath5k: fix missing output in monitor mode after	ifconfig
+ up
+References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet>
+In-Reply-To: <20090802032019.GA25339@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were a few warnings when compiling the wl1271 driver on 64 bit
-architectures.  This was due to size mismatch of integers.
+Let ath5k_chan_set() always call ath5k_reset().
+This fixes the bug that we don't
+get any packets in monitor mode after:
 
-This commit fixes the following warnings:
+ifconfig wlan0 down
+iwconfig wlan0 mode monitor channel 1
+ifconfig wlan0 up
 
-drivers/net/wireless/wl12xx/wl1271_main.c: In function 'wl1271_irq_work':
-drivers/net/wireless/wl12xx/wl1271_main.c:184: warning: large integer implicitly truncated to unsigned type
-drivers/net/wireless/wl12xx/wl1271_boot.c: In function 'wl1271_boot_upload_firmware_chunk':
-drivers/net/wireless/wl12xx/wl1271_boot.c:103: warning: format '%d' expects type 'int', but argument 2 has type 'size_t'
-drivers/net/wireless/wl12xx/wl1271_boot.c:150: warning: format '%d' expects type 'int', but argument 2 has type 'size_t'
-drivers/net/wireless/wl12xx/wl1271_boot.c: In function 'wl1271_boot_enable_interrupts':
-drivers/net/wireless/wl12xx/wl1271_boot.c:278: warning: large integer implicitly truncated to unsigned type
+but they arrive after
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+iwconfig wlan0 channel 2
+
+Signed-off-by: Joerg Albert <jal2@gmx.de>
 ---
- drivers/net/wireless/wl12xx/wl1271_boot.c |    9 +++++----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
+  drivers/net/wireless/ath/ath5k/base.c |   35 ++++++++++++++------------------
+  1 files changed, 15 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 4c22f25..8228ef4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -100,8 +100,8 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 
- 	wl1271_debug(DEBUG_BOOT, "starting firmware upload");
- 
--	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d", fw_data_len,
--		CHUNK_SIZE);
-+	wl1271_debug(DEBUG_BOOT, "fw_data_len %zd chunk_size %d",
-+		     fw_data_len, CHUNK_SIZE);
- 
- 
- 	if ((fw_data_len % 4) != 0) {
-@@ -147,7 +147,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 	/* 10.4 upload the last chunk */
- 	addr = dest + chunk_num * CHUNK_SIZE;
- 	p = buf + chunk_num * CHUNK_SIZE;
--	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%d B) 0x%p to 0x%x",
-+	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%zd B) 0x%p to 0x%x",
- 		     fw_data_len % CHUNK_SIZE, p, addr);
- 	wl1271_spi_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
- 
-@@ -275,7 +275,8 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- static void wl1271_boot_enable_interrupts(struct wl1271 *wl)
- {
- 	enable_irq(wl->irq);
--	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(WL1271_INTR_MASK));
-+	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
-+			   WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_reg_write32(wl, HI_CFG, HI_CFG_DEF_VAL);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 3bb45ce..4102d59 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -181,7 +181,8 @@ static void wl1271_irq_work(struct work_struct *work)
- 	} while (intr && --ctr);
- 
- out_sleep:
--	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(WL1271_INTR_MASK));
-+	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
-+			   WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3a1c156..5d50285 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1071,10 +1071,9 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
+  }
+
+  /*
+- * Set/change channels.  If the channel is really being changed,
+- * it's done by reseting the chip.  To accomplish this we must
+- * first cleanup any pending DMA, then restart stuff after a la
+- * ath5k_init.
++ * Set/change channels. We always reset the chip.
++ * To accomplish this we must first cleanup any pending DMA,
++ * then restart stuff after a la  ath5k_init.
+   *
+   * Called with sc->lock.
+   */
+@@ -1084,19 +1083,13 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+         ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
+                 sc->curchan->center_freq, chan->center_freq);
+
+-       if (chan->center_freq != sc->curchan->center_freq ||
+-               chan->hw_value != sc->curchan->hw_value) {
+-
+-               /*
+-                * To switch channels clear any pending DMA operations;
+-                * wait long enough for the RX fifo to drain, reset the
+-                * hardware at the new frequency, and then re-enable
+-                * the relevant bits of the h/w.
+-                */
+-               return ath5k_reset(sc, chan);
+-       }
+-
+-       return 0;
++       /*
++        * To switch channels clear any pending DMA operations;
++        * wait long enough for the RX fifo to drain, reset the
++        * hardware at the new frequency, and then re-enable
++        * the relevant bits of the h/w.
++        */
++       return ath5k_reset(sc, chan);
+  }
+
+  static void
+@@ -2811,9 +2804,11 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+
+         mutex_lock(&sc->lock);
+
+-       ret = ath5k_chan_set(sc, conf->channel);
+-       if (ret < 0)
+-               goto unlock;
++       if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++               ret = ath5k_chan_set(sc, conf->channel);
++               if (ret < 0)
++                       goto unlock;
++       }
+
+         if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
+         (sc->power_level != conf->power_level)) {
 -- 
 1.6.0.4
 
