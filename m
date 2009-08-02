@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:54096 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753976AbZHOMMj (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.239]:25270 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753964AbZHBWUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2009 08:12:39 -0400
-Received: by fxm11 with SMTP id 11so1572794fxm.39
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2009 05:12:39 -0700 (PDT)
+	Sun, 2 Aug 2009 18:20:06 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so923189rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 15:20:07 -0700 (PDT)
+Message-ID: <4A761134.3010807@lwfinger.net>
+Date: Sun, 02 Aug 2009 17:20:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1250283993.4411.1.camel@johannes.local>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	<1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
-	<1250283993.4411.1.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 15 Aug 2009 14:12:19 +0200
-Message-ID: <69e28c910908150512o68c51875j2dc644e9c5ce3359@mail.gmail.com>
-Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH] b43: implement baseband init for LP-PHY <= rev1
+References: <4A760DF5.6050504@gmail.com>
+In-Reply-To: <4A760DF5.6050504@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2009 at 11:06 PM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
->> We can now remove that comment about mac80211 requiring
->> cfg80211 and do that for the user.
->
-> "now"? What changed to make this possible?
->
-> NAK this change, because with it, it's possible to select
-> mac80211 = Y
-> -> cfg80211 = Y
-> while rfkill = M
->
-> which will break the kernel build.
->
-> johannes
->
+Gábor Stefanik wrote:
+> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
+> boardflags_hi values to defines.
+> Implement b43_phy_copy for easier copying between registers, as needed
+> by LP-PHY init.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: Larry Finger <larry.finger@lwfinger.net>
 
-Why not make cfg80211 select rfkill?
+Your mailer mangled the white space and wrapped long lines in the patch.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Larry
