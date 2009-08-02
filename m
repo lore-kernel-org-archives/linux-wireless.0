@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1-g21.free.fr ([212.27.42.1]:56576 "EHLO smtp1-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751631AbZHQUqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 16:46:31 -0400
-Message-ID: <4A89C19E.6080906@free.fr>
-Date: Mon, 17 Aug 2009 22:46:22 +0200
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Received: from mail.gmx.net ([213.165.64.20]:54158 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754307AbZHBW2L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 18:28:11 -0400
+Message-ID: <4A7612F8.80802@gmx.de>
+Date: Mon, 03 Aug 2009 00:28:08 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] [PATCH 4/7] rt2x00: Set SKBDESC_L2_PADDED in RX
- path
-References: <200908171853.24256.IvDoorn@gmail.com>	<200908171853.57397.IvDoorn@gmail.com>	<200908171854.19205.IvDoorn@gmail.com> <200908171854.50790.IvDoorn@gmail.com>
-In-Reply-To: <200908171854.50790.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ar9170usb crashes during iwconfig for ad-hoc mode
+References: <4A759341.1090006@gmx.de>
+In-Reply-To: <4A759341.1090006@gmx.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Ivo van Doorn a écrit :
-> When the RX descriptor indicates the frame was L2 padded,
-> the SKBDESC_L2_PADDED flag should be set to make sure the
-> L2 padding is removed before it is send to mac80211.
->
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index c82474e..6de2eda 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -2163,8 +2163,10 @@ static void rt2800usb_fill_rxdone(struct
-queue_entry *entry,
->      if (rt2x00_get_field32(rxd0, RXD_W0_MY_BSS))
->          rxdesc->dev_flags |= RXDONE_MY_BSS;
+On 08/02/2009 03:23 PM, Joerg Albert wrote:
+> After
+>     ifconfig wlan1 down
+>     iwconfig wlan1 mode managed essid huhu
+>     ifconfig wlan1 up
+>     ifconfig wlan1 down
+>     iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
 > 
-> -    if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD))
-> +    if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD)) {
->          rxdesc->dev_flags |= RXDONE_L2PAD;
-> +        skbdesc->flags |= SKBDESC_L2_PADDED;
-> +    }
+> ar9170 crashes (see below for the syslog).
 > 
->      if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
->          rxdesc->flags |= RX_FLAG_SHORT_GI;
-I have tested this patch as well and it looks correct. However, during
-my test, the hardware does not set L2PAD flag, even if padding is
-present (for some frames). I did the same test with the rt2870sta
-driver from Ralink and the L2PAD was indeed set.
+> It seems like ar9170_op_bss_info_changed() is called with ar->vif == NULL
+> (i.e. ((struct ar9170 *)hw->priv)->vif == NULL), while parameter vif != 
+> NULL and
+> changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED) is non-zero.
+> ar->vif is passed unchecked to ieee80211_beacon_get().
+> 
+> Is this something ar9170 is supposed to handle or a bug in 
+> cfg80211/mac80211?
+> Is a driver's *bss_info_changed proc called while the netdev is closed?
 
-Ivo : what happens during your tests?
-
-Regards,
-Benoit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkqJwZkACgkQOR6EySwP7oLcEACcDDUaE5oeOhF8CsC1hdg6cKQ6
-7K4An2DKy76bVP2CpfhOJePGNrSWDI2v
-=3ymH
------END PGP SIGNATURE-----
-
+It looks like ar->vif is set to NULL by ar9170_remove_interface() and the one call
+of ar9170_op_bss_info_changed() when ad-hoc is configured has changed==BSS_CHANGED_BEACON_ENABLED
+with bss_info->enable_beacon == 0.
+So it's a bug in the ar9170. I'll try to post a patch.
