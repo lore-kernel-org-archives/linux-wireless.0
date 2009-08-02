@@ -1,126 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback-out2.mxes.net ([216.86.168.191]:52688 "EHLO
-	fallback-in2.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752561AbZHSOMG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 10:12:06 -0400
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-To: mjg@redhat.com
-Cc: marcel@holtmann.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: [PATCH 3/5] dell-laptop: create a platform device as a parent for the rfkill devices etc.
-Date: Wed, 19 Aug 2009 15:06:49 +0100
-Message-Id: <1250690811-21203-3-git-send-email-alan-jenkins@tuffmail.co.uk>
-In-Reply-To: <4A8C0623.8030808@tuffmail.co.uk>
-References: <4A8C0623.8030808@tuffmail.co.uk>
+Received: from mail.gmx.net ([213.165.64.20]:42841 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751987AbZHBHgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 03:36:16 -0400
+Message-ID: <4A7541ED.2090309@gmx.de>
+Date: Sun, 02 Aug 2009 09:36:13 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath5k: fix missing output in monitor mode after	ifconfig
+ up
+References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet>
+In-Reply-To: <20090802032019.GA25339@hash.localnet>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dell-laptop may not need to export any sysfs files, but it should still
-create a platform device as a parent for the rfkill and backlight
-devices.  Otherwise sysfs will display these as "virtual" devices,
-with no connection to either physical hardware or the dell-laptop
-module.
+On 08/02/2009 05:20 AM, Bob Copeland wrote:
+> On Sun, Aug 02, 2009 at 12:33:26AM +0200, Joerg Albert wrote:
+>> Let ath5k_chan_set() call ath5k_reset() if ath5k_config() was told
+>> that the channel changed. This fixes the bug that we don't
+>> get any packets in monitor mode after:
+> 
+> Cool, thanks for the patch.  Just a couple of comments:
+> 
+>> +                              int chan_changed);
+> 
+> Should use bool for that.
+> 
+>> -       ret = ath5k_chan_set(sc, conf->channel);
+>> +       ret = ath5k_chan_set(sc, conf->channel,
+>> +                            changed & IEEE80211_CONF_CHANGE_CHANNEL);
+> 
+> Since this is the only place ath5k_chan_set is called, how about changing
+> ath5k_chan_set to unconditionally do a reset, and put the test outside?
+> 
+> i.e.:
+> 
+>         if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
+>                 ath5k_chan_set(sc, conf->channel);
 
-Apparently this is useful for hardware detection.
+Good idea. I'll redo the patch.
 
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
----
- drivers/platform/x86/dell-laptop.c |   38 ++++++++++++++++++++++++++++++++---
- 1 files changed, 34 insertions(+), 4 deletions(-)
+BTW, it assumes that IEEE80211_CONF_CHANGE_CHANNEL is set even if only chan->hw_value has changed,
+e.g. by switching from A to TurboA on the same channel. AFAIK TurboX isn't currently supported by ath5k.
 
-diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
-index 8fbff38..a13a9f7 100644
---- a/drivers/platform/x86/dell-laptop.c
-+++ b/drivers/platform/x86/dell-laptop.c
-@@ -58,6 +58,14 @@ static int da_command_code;
- static int da_num_tokens;
- static struct calling_interface_token *da_tokens;
- 
-+static struct platform_driver platform_driver = {
-+	.driver = {
-+		.name = "dell-laptop",
-+		.owner = THIS_MODULE,
-+	}
-+};
-+
-+static struct platform_device *platform_device;
- static struct backlight_device *dell_backlight_device;
- static struct rfkill *wifi_rfkill;
- static struct rfkill *bluetooth_rfkill;
-@@ -217,7 +225,8 @@ static int dell_setup_rfkill(void)
- 	status = buffer.output[1];
- 
- 	if ((status & (1<<2|1<<8)) == (1<<2|1<<8)) {
--		wifi_rfkill = rfkill_alloc("dell-wifi", NULL, RFKILL_TYPE_WLAN,
-+		wifi_rfkill = rfkill_alloc("dell-wifi", &platform_device->dev,
-+					   RFKILL_TYPE_WLAN,
- 					   &dell_rfkill_ops, (void *) 1);
- 		if (!wifi_rfkill) {
- 			ret = -ENOMEM;
-@@ -229,7 +238,8 @@ static int dell_setup_rfkill(void)
- 	}
- 
- 	if ((status & (1<<3|1<<9)) == (1<<3|1<<9)) {
--		bluetooth_rfkill = rfkill_alloc("dell-bluetooth", NULL,
-+		bluetooth_rfkill = rfkill_alloc("dell-bluetooth",
-+						&platform_device->dev,
- 						RFKILL_TYPE_BLUETOOTH,
- 						&dell_rfkill_ops, (void *) 2);
- 		if (!bluetooth_rfkill) {
-@@ -242,7 +252,9 @@ static int dell_setup_rfkill(void)
- 	}
- 
- 	if ((status & (1<<4|1<<10)) == (1<<4|1<<10)) {
--		wwan_rfkill = rfkill_alloc("dell-wwan", NULL, RFKILL_TYPE_WWAN,
-+		wwan_rfkill = rfkill_alloc("dell-wwan",
-+					   &platform_device->dev,
-+					   RFKILL_TYPE_WWAN,
- 					   &dell_rfkill_ops, (void *) 3);
- 		if (!wwan_rfkill) {
- 			ret = -ENOMEM;
-@@ -342,6 +354,18 @@ static int __init dell_init(void)
- 		return -ENODEV;
- 	}
- 
-+	ret = platform_driver_register(&platform_driver);
-+	if (ret)
-+		goto fail_platform_driver;
-+	platform_device = platform_device_alloc("dell-laptop", -1);
-+	if (!platform_device) {
-+		ret = -ENOMEM;
-+		goto fail_platform_device1;
-+	}
-+	ret = platform_device_add(platform_device);
-+	if (ret)
-+		goto fail_platform_device2;
-+
- 	ret = dell_setup_rfkill();
- 
- 	if (ret) {
-@@ -368,7 +392,7 @@ static int __init dell_init(void)
- 	if (max_intensity) {
- 		dell_backlight_device = backlight_device_register(
- 			"dell_backlight",
--			NULL, NULL,
-+			&platform_device->dev, NULL,
- 			&dell_ops);
- 
- 		if (IS_ERR(dell_backlight_device)) {
-@@ -388,6 +412,12 @@ static int __init dell_init(void)
- fail_backlight:
- 	dell_cleanup_rfkill();
- fail_rfkill:
-+	platform_device_del(platform_device);
-+fail_platform_device2:
-+	platform_device_put(platform_device);
-+fail_platform_device1:
-+	platform_driver_unregister(&platform_driver);
-+fail_platform_driver:
- 	kfree(da_tokens);
- 	return ret;
- }
--- 
-1.6.3.2
-
+Regards,
+Jörg.
