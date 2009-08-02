@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756652AbZHQDKc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2009 23:10:32 -0400
-Received: from wireless by sipsolutions.net with local (Exim 4.69)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1McscB-0004xM-M5
-	for linux-wireless@vger.kernel.org; Mon, 17 Aug 2009 05:10:31 +0200
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] iw: v0.9.16
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1McscB-0004xM-M5@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Mon, 17 Aug 2009 05:10:31 +0200
+Received: from c60.cesmail.net ([216.154.195.49]:5760 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750934AbZHBSaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 14:30:19 -0400
+Subject: [PATCH 2/2] rt2x00: cancel all work on disconnect
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com
+From: Pavel Roskin <proski@gnu.org>
+Date: Sun, 02 Aug 2009 14:30:15 -0400
+Message-ID: <20090802183015.16766.56837.stgit@ct.roinet.com>
+In-Reply-To: <20090802183002.16766.4142.stgit@ct.roinet.com>
+References: <20090802183002.16766.4142.stgit@ct.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-A new release of iw (v0.9.16) is available at:
-
-http://wireless.kernel.org/download/iw/iw-0.9.16.tar.bz2
-
-SHA1 sum: e224b6698802498569854b475ae532d41ddbd719
-
-Here is the short log of the changes included in this 
-release:
-
-Johannes Berg -  0.9.16
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 658a63b..b4c696d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -893,6 +893,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00lib_disable_radio(rt2x00dev);
+ 
+ 	/*
++	 * Stop all work.
++	 */
++	cancel_work_sync(&rt2x00dev->filter_work);
++	cancel_work_sync(&rt2x00dev->intf_work);
++
++	/*
+ 	 * Uninitialize device.
+ 	 */
+ 	rt2x00lib_uninitialize(rt2x00dev);
