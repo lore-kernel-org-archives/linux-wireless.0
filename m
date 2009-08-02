@@ -1,101 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f215.google.com ([209.85.218.215]:52638 "EHLO
-	mail-bw0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932168AbZHGO5b convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:53755 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbZHBFte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 10:57:31 -0400
+	Sun, 2 Aug 2009 01:49:34 -0400
+Received: by bwz19 with SMTP id 19so1910468bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 22:49:33 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090807134803.GA7545@tuxdriver.com>
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
-	 <200908071324.45269.elendil@planet.nl>
-	 <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com>
-	 <20090807134803.GA7545@tuxdriver.com>
-Date: Fri, 7 Aug 2009 15:57:30 +0100
-Message-ID: <c6b1100b0908070757t7b973180s17959e0f46347d5d@mail.gmail.com>
-Subject: Re: ath5k - strange regulatory domain change
-From: Chris Clayton <chris2553@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Frans Pop <elendil@planet.nl>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1249171448.3491.32.camel@localhost.localdomain>
+References: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
+	 <1249171448.3491.32.camel@localhost.localdomain>
+Date: Sun, 2 Aug 2009 08:49:33 +0300
+Message-ID: <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
+Subject: Re: [PATCH 1/1] rfkill: add the GPS radio type
+From: Tomas Winkler <tomasw@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-2009/8/7 John W. Linville <linville@tuxdriver.com>:
-> On Fri, Aug 07, 2009 at 01:56:43PM +0100, Chris Clayton wrote:
->> Thanks Frans,
->>
->> 2009/8/7 Frans Pop <elendil@planet.nl>:
->> > Chris Clayton wrote:
->> >> Because of some problems with my Belkin Wireless G card  (model
->> >> F5D7010) and the rt61pci driver, I've started to use a "no-name" card
->> >> that is supported by the ath5k driver.
->> >>
->> >> A problem is that I have come across is that for some reason the CN
->> >> regulatory domain is being set automatically. This doesn't happen with
->> >> the Belkin (rt61) card. I have the following line in
->> >> /etc/modprobe.d/modprobe.conf to set the regulatory domain to GB:
->> >>
->> >> options cfg80211 ieee80211_regdom=GB
->> >
->> > This issue has already been discussed extensively (after I reported it).
->> > Please see the following thread: http://lkml.org/lkml/2009/7/8/421. It
->> > contains a lot of information from the wireless maintainers.
->> >
->>
->> To sum this up then (as I understand things):
->>
->> 1. I am the system administrator (root);
->> 2. I am using a valid (albeit deprecated from 2.6.31) method to tell
->> the wireless infrastructure that I want the regulatory domain set to
->> GB;
->> 3. GB is a valid code; and
->> 4. the wireless infrastructure sets the regulatory domain to CN.
->> 5. in 2.6.30, the wireless infrastructure does what I (the root user)
->> tell it to do.
->>
->> That's a regression in my book. Oh well! I do have the iw and crda
->> applications installed, so I've taken that route of setting the
->> regulatory domain to GB.
+On Sun, Aug 2, 2009 at 3:04 AM, Marcel Holtmann<marcel@holtmann.org> wrote:
+> Hi Tomas,
 >
-> Are you actually getting the wrong regulatory rules enforced?  Or are
-> you merely bothered that it is reporting "CN" instead of "GB"?
+>> Althoug GPS is a technology w/o transmitting radio
+>> and thus not a primary candidate for rfkill switch,
+>> rfkill gives unified interface point for devices with
+>> wireless technology.
+>>
+>> The input key is not supplied as it is too be deprecated.
+>>
+>> Cc: johannes@sipsolutions.net
+>> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 >
+> we don't have a GPS subsystem, but even without it, I think this is a
+> good thing to have.
 
-I'm not sure whether it's wrong or not. To these dmesg snippets from
-my original post look wrong because one of the frequency ranges listed
-for CN is outside those listed for GB and one of the CN max_eirp
-entries is not preent in the GB list. Whether that is OK or not I
-don't know and can't find (lay user) documentation to tell me.
+GPS devices are usually serial devices.
 
-cfg80211: Regulatory domain changed to country: GB
-        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-        (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-
-cfg80211: Regulatory domain changed to country: CN
-        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-        (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-        (5735000 KHz - 5835000 KHz @ 40000 KHz), (N/A, 3000 mBm)
-
-
-Thanks
-
-Chris
-
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+> Acked-by: Marcel Holtmann <marcel@holtmann.org>
 >
+> Please also send a patch updating the rfkill userspace utility.
 
-
-
--- 
-No, Sir; there is nothing which has yet been contrived by man, by which
-so much happiness is produced as by a good tavern or inn - Doctor Samuel
-Johnson
+On the way....
+Tomas
