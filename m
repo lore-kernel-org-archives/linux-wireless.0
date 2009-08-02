@@ -1,102 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60897 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752144AbZHBHvA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 03:51:00 -0400
-Message-ID: <4A754562.8000107@gmx.de>
-Date: Sun, 02 Aug 2009 09:50:58 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath5k: fix missing output in monitor mode after	ifconfig
- up
-References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet>
-In-Reply-To: <20090802032019.GA25339@hash.localnet>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:58373 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbZHBHza (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 03:55:30 -0400
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>, linux-input@vger.kernel.org,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+In-Reply-To: <20090801222537.GA24262@srcf.ucam.org>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	 <1249159133.3491.13.camel@localhost.localdomain>
+	 <20090801204534.GA23642@srcf.ucam.org>
+	 <1249159942.3491.21.camel@localhost.localdomain>
+	 <20090801205445.GA23751@srcf.ucam.org>
+	 <1249163327.3491.24.camel@localhost.localdomain>
+	 <20090801215130.GA24201@srcf.ucam.org>
+	 <1249164685.3491.28.camel@localhost.localdomain>
+	 <20090801222537.GA24262@srcf.ucam.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-alDXr3y+oR/B3u2AOlO+"
+Date: Sun, 02 Aug 2009 09:55:26 +0200
+Message-Id: <1249199726.2007.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let ath5k_chan_set() always call ath5k_reset().
-This fixes the bug that we don't
-get any packets in monitor mode after:
 
-ifconfig wlan0 down
-iwconfig wlan0 mode monitor channel 1
-ifconfig wlan0 up
+--=-alDXr3y+oR/B3u2AOlO+
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-but they arrive after
+On Sat, 2009-08-01 at 23:25 +0100, Matthew Garrett wrote:
+> On Sat, Aug 01, 2009 at 03:11:25PM -0700, Marcel Holtmann wrote:
+>=20
+> > and that is what it should NOT imply. The policy if it applies to all
+> > internal devices, all devices in general or just WiFi or Bluetooth for
+> > example is up to the user.
+> >=20
+> > We are NOT going to have any kind of RFKILL policy in the kernel in the
+> > future. We will remove rfkill-input once we have a proper userspace
+> > solution (aka rfkilld or similar).
+>=20
+> We seem to be talking at cross purposes here. My objection to the name=20
+> KEY_RFKILL is that it gives no indication what it's meant to be or why=20
+> it's different to KEY_WLAN. KEY_RFKILL implies that it's the only input=20
+> component that an rfkill policy agent needs to listen to, which isn't=20
+> the case.
 
-iwconfig wlan0 channel 2
+Heh, yeah, I can kinda agree with both of you.
 
-Signed-off-by: Joerg Albert <jal2@gmx.de>
----
-  drivers/net/wireless/ath/ath5k/base.c |   35 ++++++++++++++------------------
-  1 files changed, 15 insertions(+), 20 deletions(-)
+We really should've named KEY_WLAN KEY_RFKILL_WLAN instead, etc, and
+then both versions would be less ambiguous.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3a1c156..5d50285 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1071,10 +1071,9 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
-  }
+AFAIU, Marcel's argument is that policy might not be "ALL", but cycling
+through technology combinations, and your (Matthew's) argument is that
+just naming it without the _ALL would imply that KEY_WLAN could be
+related to something other than rfkill.
 
-  /*
-- * Set/change channels.  If the channel is really being changed,
-- * it's done by reseting the chip.  To accomplish this we must
-- * first cleanup any pending DMA, then restart stuff after a la
-- * ath5k_init.
-+ * Set/change channels. We always reset the chip.
-+ * To accomplish this we must first cleanup any pending DMA,
-+ * then restart stuff after a la  ath5k_init.
-   *
-   * Called with sc->lock.
-   */
-@@ -1084,19 +1083,13 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
-         ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
-                 sc->curchan->center_freq, chan->center_freq);
+Can we name it KEY_RFKILL, and add a comment to the header file about
+what it is? I.e. a "technology-independent RF toggle button" or so?
 
--       if (chan->center_freq != sc->curchan->center_freq ||
--               chan->hw_value != sc->curchan->hw_value) {
--
--               /*
--                * To switch channels clear any pending DMA operations;
--                * wait long enough for the RX fifo to drain, reset the
--                * hardware at the new frequency, and then re-enable
--                * the relevant bits of the h/w.
--                */
--               return ath5k_reset(sc, chan);
--       }
--
--       return 0;
-+       /*
-+        * To switch channels clear any pending DMA operations;
-+        * wait long enough for the RX fifo to drain, reset the
-+        * hardware at the new frequency, and then re-enable
-+        * the relevant bits of the h/w.
-+        */
-+       return ath5k_reset(sc, chan);
-  }
+johannes
 
-  static void
-@@ -2811,9 +2804,11 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+--=-alDXr3y+oR/B3u2AOlO+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-         mutex_lock(&sc->lock);
+-----BEGIN PGP SIGNATURE-----
 
--       ret = ath5k_chan_set(sc, conf->channel);
--       if (ret < 0)
--               goto unlock;
-+       if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+               ret = ath5k_chan_set(sc, conf->channel);
-+               if (ret < 0)
-+                       goto unlock;
-+       }
+iQIcBAABAgAGBQJKdUZrAAoJEODzc/N7+Qma+D0QAMHsVG+1tkHfWLquoyPoae+1
+rnSJR7J3qm7AuS/Ur6DiIKKcrJctUKONUzuwMEYirPow3pGteMj2naY8z+FICcY5
+ji0EbHZ6ZArjuF8NATFf+36ntWq7ARJ1Qe/e2BTJie69VXm9RM1eKJ9s33I1MTbp
+pCjjcUGfKdZPo3KTThDZm2mJni7fvWLVXS7QcUp2W4pnShC7cToVhqZ6mhYVQQ64
+kKHtGnNnb5x0x+tRgbJ873CWfse/ZjxUD6053QtPwvTsvdiXXIfddVCf15onCKFW
+6wXMEsP3SeFyfKAvAigjSDLqVjddXANvlkJTu6x/Lks9oSW7etRkBpXX3Mz4kybH
+EQ/YPsvWZ5djgTNXtgjJ8zlmn9IrDTyhcrcaE5Vw4j4Gv4QJvW1NrsReQOmV72UX
+pj1j+5V/UC6If54CnK04nEFI7jeBwj751quYnLQztryZxl+uG861CUpc1dt7sT8N
+X+mv6TmqgVN9RgMQmRll7lv9qEQE+ntMCD69K96d7Y7L16NBRKxkEc8SCguAAvvs
+sjlox+BbOpx6/pjHZnIIGbBDsAOdWdeLwb/ZYpMbchxY65m+oY00ilOuR7uncQj5
+zwpuAsi1iuc8WLQAP9M33mcgwHlHB1nV4PZn6bWC75oC3e+zCyer0jeebJG6pjSV
+QuCMt6Y54xs8I0M86RpR
+=iU6E
+-----END PGP SIGNATURE-----
 
-         if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
-         (sc->power_level != conf->power_level)) {
--- 
-1.6.0.4
+--=-alDXr3y+oR/B3u2AOlO+--
 
