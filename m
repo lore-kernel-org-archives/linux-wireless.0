@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:46781 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934048AbZHWNdn convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:53500 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112AbZHBQ20 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 09:33:43 -0400
-Received: by fxm17 with SMTP id 17so1087319fxm.37
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 06:33:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908231530.04236.mb@bu3sch.de>
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
-	<200908231455.51140.mb@bu3sch.de> <69e28c910908230624s1600a9d4k3918875551bfbf4d@mail.gmail.com>
-	<200908231530.04236.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 23 Aug 2009 15:33:23 +0200
-Message-ID: <69e28c910908230633x4023c173y35e3864d4239895c@mail.gmail.com>
-Subject: Re: Abour linux driver supports BCM4325
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	feng tian <feng.of.tian@gmail.com>,
+	Sun, 2 Aug 2009 12:28:26 -0400
+Subject: Re: [PATCH 1/1] rfkill: add the GPS radio type
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Tomas Winkler <tomasw@gmail.com>, linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1249199143.2007.2.camel@johannes.local>
+References: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
+	 <1249171448.3491.32.camel@localhost.localdomain>
+	 <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
+	 <1249199143.2007.2.camel@johannes.local>
+Content-Type: text/plain
+Date: Sun, 02 Aug 2009 09:28:23 -0700
+Message-Id: <1249230503.3491.43.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/23 Michael Buesch <mb@bu3sch.de>:
-> On Sunday 23 August 2009 15:24:29 Gábor Stefanik wrote:
->> Not necessarily true in this case - an important 4325-specific routine
->> (SSB PMU recalibration) is still missing. (And I don't tink I'm
->> familiar enough with ssb to do that, unfortunately.)
->
-> I can do that later. It's a fairly simple routine (to me knowing the code :).
->
-> --
-> Greetings, Michael.
->
+Hi Johannes,
 
-Thanks!
+> > > we don't have a GPS subsystem, but even without it, I think this is a
+> > > good thing to have.
+> > 
+> > GPS devices are usually serial devices.
+> 
+> Yeah, this is interesting -- do we want something like /dev/urfkill
+> (cf. /dev/uinput), so that gpsd or whatever is controlling the GPS (same
+> applies for 3G) can be controlled with rfkill?
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+on one hand I think urfkill might be needed, on the other hand I think
+we should not do it at all. Currently I would think it is better to
+force the RFKILL integration in the kernel so that we have proper
+subsystem integration, or platform RFKILL switches or in cases like GPS
+and WWAN/3G it will be driver integration. For 3G we already have the
+hso.ko driver which has a killswitch and we just need to fix the other
+ones. I am actually looking into it, if this is possible without an AT
+parser inside the kernel.
+
+So the GPS world is evolving right now and that everybody implements
+them as kernel-tty-passthrough pseudo driver and then a binary only
+daemon and then gpsd/gypsy on top of it will only survive for certain
+amount of time. The binary component will not get wide acceptance. And
+even if the binary only userspace component stays, we might still need a
+proper GPS subsystem since using TTY as pure transport is holding us
+back. Could be that AF_GPS would have been a way better choice. This
+will sort itself out over time.
+
+Regards
+
+Marcel
+
+
