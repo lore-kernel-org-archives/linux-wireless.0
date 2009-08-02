@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s26.blu0.hotmail.com ([65.55.111.101]:45769 "EHLO
-	blu0-omc2-s26.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755425AbZHDMim convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 08:38:42 -0400
-Message-ID: <BLU134-W8EEC7C3FE7F910BCD41E5CC0C0@phx.gbl>
-From: sawant paresh <sawantparesh@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: support for pmkid candidate list and roaming
-Date: Tue, 4 Aug 2009 18:08:43 +0530
-Content-Type: text/plain; charset="Windows-1252"
+Received: from cavan.codon.org.uk ([93.93.128.6]:44474 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbZHBBPr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 21:15:47 -0400
+Date: Sun, 2 Aug 2009 02:15:45 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
+Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
+Message-ID: <20090802011545.GA25618@srcf.ucam.org>
+References: <1249152859-14769-1-git-send-email-mjg@redhat.com> <20090802010557.GA11073@khazad-dum.debian.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090802010557.GA11073@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Aug 01, 2009 at 10:05:57PM -0300, Henrique de Moraes Holschuh wrote:
+> On Sat, 01 Aug 2009, Matthew Garrett wrote:
+> > This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
+> > system should toggle the state of all rfkillable devices.
+> 
+> What should happen when you press it?  Toggle state, or the same as EV_SW
+> SW_RFKILL_ALL OFF (i.e. radios off, killing active) ?
 
-Hi,
+rfkill-input should toggle, userspace policy can be anything.
 
-I want to know if mac80211 subsystem supports following -
-
-1.
-Given that the user space station application is connected to some AP
-with SSID, and there is another AP with same SSID around in the radio
-range, then does mac80211 subsystem be able to send an event
-notification to user space?
-
-
-2. Can mac80211 subsystem perform dissociate with current AP due to
-weak signal and connect to another with same SSID and better signal
-strength, and let the user space know about the new association?
-
-
-Thanks
-
-- Paresh
-_________________________________________________________________
-One stop at MSN India to catch up with what’s hot in the world around you today
-http://in.msn.com
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
