@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:33960 "EHLO
-	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755550AbZHUONi (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.238]:49975 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277AbZHBByQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 10:13:38 -0400
-Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
- by mta-2.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0KOQ00MZ9CURGK40@mta-2.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Fri, 21 Aug 2009 16:13:39 +0200 (CEST)
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-Subject: [PATCH] mac80211: Remove unnused throughput field from minstrel_rate.
-Date: Fri, 21 Aug 2009 16:11:30 +0200
-Message-id: <1250863890-28690-1-git-send-email-hannemann@nets.rwth-aachen.de>
+	Sat, 1 Aug 2009 21:54:16 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so820986rvb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 18:54:15 -0700 (PDT)
+Message-ID: <4A74F1E3.8050502@lwfinger.net>
+Date: Sat, 01 Aug 2009 20:54:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Regression since 2.6.31-rc3-wl
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I noticed that the throughput field of the minstrel_rate struct is never used,
-so remove it.
+When I tested 2.6.31-rc4-wl on my old i386 laptop that uses ifup to
+control the network, wireless did not work. The problem was bisected
+to the following:
 
-Signed-off-by: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
----
- net/mac80211/rc80211_minstrel.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+commit f1b3c87b70287ded1338fb03a0a714d185041a96
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Tue Jul 7 03:56:05 2009 +0200
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 869fe0e..38bf416 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -33,7 +33,6 @@ struct minstrel_rate {
- 
- 	/* per-rate throughput */
- 	u32 cur_tp;
--	u32 throughput;
- 
- 	u64 succ_hist;
- 	u64 att_hist;
--- 
-1.5.4
+    cfg80211: fix netdev down problem
 
+    We shouldn't be looking at the ssid_len for non-IBSS,
+    and for IBSS we should also return an error on trying
+    to leave an IBSS while not in or joining an IBSS.
+
+    This fixes an issue where we wouldn't disconnect() on
+    an interface being taken down since there's no SSID
+    configured this way.
+
+The patch cannot be reverted as net/wireless.ibss.c has changed.
+Reverting the first hunk that modifies net/wireless/core.c does not
+make the system work.
+
+Larry
