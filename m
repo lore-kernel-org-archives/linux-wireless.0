@@ -1,259 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:42225 "EHLO venema.h4ckr.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517AbZHAFqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 01:46:54 -0400
-Date: Sat, 1 Aug 2009 08:46:49 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org, proski@gnu.org
-Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
-Message-ID: <20090801054649.GA8390@makis>
-References: <20090731181020.GE7963@makis>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090731181020.GE7963@makis>
+Received: from xc.sipsolutions.net ([83.246.72.84]:52202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbZHBJdU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 05:33:20 -0400
+Subject: Re: Unsupported PHY on B43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <efe7343f0908020226n4b693defv38546a6f8aa1cfd9@mail.gmail.com>
+References: <efe7343f0908020214m6d8b2518n51d4264943ce273a@mail.gmail.com>
+	 <1249204732.2007.49.camel@johannes.local>
+	 <efe7343f0908020226n4b693defv38546a6f8aa1cfd9@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V+35PhHXVUO30qzsBRi8"
+Date: Sun, 02 Aug 2009 11:33:17 +0200
+Message-Id: <1249205597.2007.50.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Get rid of calibration timer, instead use a software interrupt
-   to schedule the calibration tasklet.
-    
- a) We don't need a timer for this, there is no need for accuracy
-    even with round_jiffies i think this is a waste of resources.
-    Also we don't need to run calibration if we are idle (no
-    interrupts).
-    
- b) When we add ANI support we 'll just extend the poll function
-    and calibration tasklet and handle all periodic phy calibration
-    on one place (much cleaner).
-    
- c) Having calibration on a tasklet is better since during calibration
-    we can't transmit or receive (antennas are detached to measure
-    noise floor), previously calibration could run in parallel with
-    tx/rx and interfere (packet loss).
-    
- v2: kill tasklet on stop_hw, stop/wake queues
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+--=-V+35PhHXVUO30qzsBRi8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
----
- drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++++++
- drivers/net/wireless/ath/ath5k/base.c  |   36 +++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath5k/base.h  |    3 +-
- drivers/net/wireless/ath/ath5k/phy.c   |   20 +++++++++++++++++
- 4 files changed, 64 insertions(+), 11 deletions(-)
+On Sun, 2009-08-02 at 10:26 +0100, Luis Correia wrote:
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 1047a6c..76cf5b2 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -919,6 +919,12 @@ enum ath5k_int {
- 	AR5K_INT_NOCARD	= 0xffffffff
- };
- 
-+/* Software interrupts used for calibration */
-+enum ath5k_software_interrupt {
-+	AR5K_SWI_FULL_CALIBRATION = 0x01,
-+	AR5K_SWI_SHORT_CALIBRATION = 0x02,
-+};
-+
- /*
-  * Power management
-  */
-@@ -1123,6 +1129,15 @@ struct ath5k_hw {
- 	/* noise floor from last periodic calibration */
- 	s32			ah_noise_floor;
- 
-+	/* Calibration timestamp */
-+	u32			ah_cal_tstamp;
-+
-+	/* Calibration interval (secs) */
-+	u8			ah_cal_intval;
-+
-+	/* Software interrupt mask */
-+	u8			ah_swi_mask;
-+
- 	/*
- 	 * Function pointers
- 	 */
-@@ -1276,6 +1291,7 @@ extern int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *chann
- /* PHY calibration */
- extern int ath5k_hw_phy_calibrate(struct ath5k_hw *ah, struct ieee80211_channel *channel);
- extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
-+extern void ath5k_hw_calibration_poll(struct ath5k_hw *ah);
- /* Spur mitigation */
- bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
- 				struct ieee80211_channel *channel);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index b64731b..d84ccad 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -59,7 +59,7 @@
- #include "reg.h"
- #include "debug.h"
- 
--static int ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
-+static u8 ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
- static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-@@ -376,7 +376,7 @@ static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
- 
--static void 	ath5k_calibrate(unsigned long data);
-+static void 	ath5k_tasklet_calibrate(unsigned long data);
- 
- /*
-  * Module init/exit functions
-@@ -799,8 +799,8 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
- 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
-+	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
- 	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
--	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
- 
- 	ret = ath5k_eeprom_read_mac(ah, mac);
- 	if (ret) {
-@@ -2366,7 +2366,7 @@ ath5k_init(struct ath5k_softc *sc)
- 	sc->curband = &sc->sbands[sc->curchan->band];
- 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
- 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
--		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
-+		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_SWI;
- 	ret = ath5k_reset(sc, NULL);
- 	if (ret)
- 		goto done;
-@@ -2383,8 +2383,8 @@ ath5k_init(struct ath5k_softc *sc)
- 	/* Set ack to be sent at low bit-rates */
- 	ath5k_hw_set_ack_bitrate_high(ah, false);
- 
--	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
--			msecs_to_jiffies(ath5k_calinterval * 1000)));
-+	/* Set PHY calibration inteval */
-+	ah->ah_cal_intval = ath5k_calinterval;
- 
- 	ret = 0;
- done:
-@@ -2477,10 +2477,10 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 	mmiowb();
- 	mutex_unlock(&sc->lock);
- 
--	del_timer_sync(&sc->calib_tim);
- 	tasklet_kill(&sc->rxtq);
- 	tasklet_kill(&sc->txtq);
- 	tasklet_kill(&sc->restq);
-+	tasklet_kill(&sc->calib);
- 	tasklet_kill(&sc->beacontq);
- 
- 	ath5k_rfkill_hw_stop(sc->ah);
-@@ -2536,6 +2536,9 @@ ath5k_intr(int irq, void *dev_id)
- 			if (status & AR5K_INT_BMISS) {
- 				/* TODO */
- 			}
-+			if (status & AR5K_INT_SWI) {
-+				tasklet_schedule(&sc->calib);
-+			}
- 			if (status & AR5K_INT_MIB) {
- 				/*
- 				 * These stats are also used for ANI i think
-@@ -2552,6 +2555,8 @@ ath5k_intr(int irq, void *dev_id)
- 	if (unlikely(!counter))
- 		ATH5K_WARN(sc, "too many interrupts, giving up for now\n");
- 
-+	ath5k_hw_calibration_poll(ah);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -2568,11 +2573,19 @@ ath5k_tasklet_reset(unsigned long data)
-  * for temperature/environment changes.
-  */
- static void
--ath5k_calibrate(unsigned long data)
-+ath5k_tasklet_calibrate(unsigned long data)
- {
- 	struct ath5k_softc *sc = (void *)data;
- 	struct ath5k_hw *ah = sc->ah;
- 
-+	/* Only full calibration for now */
-+	if (ah->ah_swi_mask != AR5K_SWI_FULL_CALIBRATION)
-+		return;
-+
-+	/* Stop queues so that calibration
-+	 * doesn't interfere with tx */
-+	ieee80211_stop_queues(sc->hw);
-+
- 	ATH5K_DBG(sc, ATH5K_DEBUG_CALIBRATE, "channel %u/%x\n",
- 		ieee80211_frequency_to_channel(sc->curchan->center_freq),
- 		sc->curchan->hw_value);
-@@ -2590,8 +2603,11 @@ ath5k_calibrate(unsigned long data)
- 			ieee80211_frequency_to_channel(
- 				sc->curchan->center_freq));
- 
--	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
--			msecs_to_jiffies(ath5k_calinterval * 1000)));
-+	ah->ah_swi_mask = 0;
-+
-+	/* Wake queues */
-+	ieee80211_wake_queues(sc->hw);
-+
- }
- 
- 
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 778e422..667bd9d 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -177,6 +177,8 @@ struct ath5k_softc {
- 
- 	struct ath5k_rfkill	rf_kill;
- 
-+	struct tasklet_struct	calib;		/* calibration tasklet */
-+
- 	spinlock_t		block;		/* protects beacon */
- 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
- 	struct ath5k_buf	*bbuf;		/* beacon buffer */
-@@ -187,7 +189,6 @@ struct ath5k_softc {
- 	unsigned int		nexttbtt;	/* next beacon time in TU */
- 	struct ath5k_txq	*cabq;		/* content after beacon */
- 
--	struct timer_list	calib_tim;	/* calibration timer */
- 	int 			power_level;	/* Requested tx power in dbm */
- 	bool			assoc;		/* assocate state */
- 	bool			enable_beacon;	/* true if beacons are on */
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 6afba98..d30bc3b 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1104,6 +1104,26 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
-   PHY calibration
- \*****************/
- 
-+void
-+ath5k_hw_calibration_poll(struct ath5k_hw *ah)
-+{
-+	u32 current_time = (jiffies / HZ);
-+	u32 cal_intval = ah->ah_cal_intval;
-+
-+	if (!ah->ah_cal_tstamp)
-+		ah->ah_cal_tstamp = current_time;
-+
-+	/* For now we always do full calibration
-+	 * Mark software interrupt mask and fire software
-+	 * interrupt (bit gets auto-cleared) */
-+	if ((current_time - ah->ah_cal_tstamp) >= cal_intval) {
-+		ah->ah_cal_tstamp = current_time;
-+		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
-+	}
-+
-+}
-+
- /**
-  * ath5k_hw_noise_floor_calibration - perform PHY noise floor calibration
-  *
+> > This is an 11n phy.
+>=20
+> Great, an 11n device with only two antennas (they are usually three).
+
+Oh, it depends on the configuration -- maybe they used a cheaper device
+with fewer chains.
+
+> >> I'm available to test drivers, patches, git kernels, the whole lot.
+> >
+> > There's nothing available beyond what you have.
+>=20
+> Bummer, I guess I'll have to wait then.
+
+Don't hold your breath -- nobody's working on it. I also really want it
+working, but since nobody seems even interested in writing the driver,
+we've halted the reverse engineering effort.
+
+johannes
+
+--=-V+35PhHXVUO30qzsBRi8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKdV1aAAoJEODzc/N7+QmagV0P/RN8t2AhB9bNCM6RF/lWIHQU
+/rWmxa3DdXSdHfct4E8CReuIhdlrAf7eOMhcAueGbLHTOjRKBBaF/k5AzUqlNZud
+a64JULBcFuFnkQEq1aAd3Z3L3ORuq1A+2oq/4HbvxrkVX5tbhjA+U3zSyD+YLDfp
+ydqWvUbIsSC8RQb4bmdFOlNrtAKkwJ2P9Bgb2rYhk79twe6SERe14snjFPar+Wh/
+rGEjRGOGJAlsSPRb7lJvIePgeLy6bgWEqg1NzO9noSURZuqsHrIpX95r0h4yezts
+ZGmU74tiD7rdwJUMcndkASeCW1P9HE3YQ0KjLMZKL/X773NCD8ULxnieKysQg87x
+jvaoAwTUr6yStltTeUVqg6HFEgIDBQ2fAFwKIIzvaqgJLWzLFca/d9M13oVId59t
+mvK9uTPuHzgtPclXvxec+KcHrPrPDdj7Mat6Hl3Uanxp9xL5yl1noiFX8zko46aF
+M8qyvt1tk/tIVxf5GfrUR9MjmEg+NI8B770V/iEmGKS4UrCkTC9j2q3SMT0q3s0R
++ZZOVou/3xPhEkimfAgflPqM95Y8Sie7lOnTdLtVU+gUt+FWfQmROn/86O/jei6J
+GU3WATwfhUocORnWPlbXrnS6MUUS3IzAaXNaQB+nilW6jhAtDvQsOGJYSQox2ELb
+8ZhK2yJWf1U0ewgSlBdq
+=wDIa
+-----END PGP SIGNATURE-----
+
+--=-V+35PhHXVUO30qzsBRi8--
 
