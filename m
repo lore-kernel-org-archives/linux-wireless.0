@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:62167 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753579AbZHBXbu convert rfc822-to-8bit (ORCPT
+Received: from imo-m22.mx.aol.com ([64.12.137.3]:37834 "EHLO
+	imo-m22.mail.aol.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751946AbZHBI4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 19:31:50 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so400824fga.17
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 16:31:49 -0700 (PDT)
+	Sun, 2 Aug 2009 04:56:51 -0400
+Message-ID: <4A755264.60201@netscape.net>
+Date: Sun, 02 Aug 2009 02:46:28 -0600
+From: Patrick Simmons <linuxrocks123@netscape.net>
 MIME-Version: 1.0
-In-Reply-To: <4A76210C.4040209@gmail.com>
-References: <4A76210C.4040209@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 3 Aug 2009 01:31:29 +0200
-Message-ID: <69e28c910908021631g256560c8q364674b6e907f235@mail.gmail.com>
-Subject: Re: [PATCH V2] b43: implement baseband init for LP-PHY <= rev1
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	dsd@gentoo.org, kune@deine-taler.de,
+	Patrick Simmons <linuxrocks123@netscape.net>
+Subject: [PATCH] zd1211rw: fix unaligned access in zd_mac_rx
+References: <1249029583.29587.46.camel@johannes.local>	 <20090731.222350.254918321.davem@davemloft.net>	 <200908011240.17229.mb@bu3sch.de>	 <20090801.091207.217317135.davem@davemloft.net>	 <4A74EEB2.6040400@netscape.net> <1249199441.2007.7.camel@johannes.local>
+In-Reply-To: <1249199441.2007.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 3, 2009 at 1:28 AM, Gábor Stefanik<netrolller.3d@gmail.com> wrote:
-> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert boardflags_hi
-> values to defines.
-> Implement b43_phy_copy for easier copying between registers, as needed by
-> LP-PHY init.
->
-> Signed-off-by: Gábor Stefanik<netrolller.3d@gmail.com>
-> Cc: Michael Buesch<mb@bu3sch.de>
-> Cc: Larry Finger<larry.finger@lwfinger.net>
-> ---
-> V2:
-> -Reversed argument order for b43_phy_copy.
-> -Named all registers, no more magic numbers.
-> -Whitespace errors hopefully fixed (I hope my mailer doesn't re-introduce
-> them...)
+Fix an unaligned memory access in the zd_mac_rx function of zd1211rw 
+that causes problems on SPARC64.
 
-Phew! No more whitespace corruption, it seems... looks like
-Thunderbird doesn't like the Linux coding style. :-)
+Signed-off-by: Patrick Simmons <linuxrocks123@netscape.net>
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -694,7 +694,7 @@
+                        && !mac->pass_ctrl)
+                return 0;
+
+-       fc = *(__le16 *)buffer;
++       fc = get_unaligned((__le16*)buffer);
+        need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
+
+        skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
