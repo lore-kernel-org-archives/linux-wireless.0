@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:59140 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933191AbZHVV7c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 17:59:32 -0400
-Received: by ewy3 with SMTP id 3so1478292ewy.18
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 14:59:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908220038.35564.herton@mandriva.com.br>
-References: <200908220038.35564.herton@mandriva.com.br>
-Date: Sat, 22 Aug 2009 22:59:33 +0100
-Message-ID: <3ace41890908221459j70e31c20ufa5ea03973a16e0a@mail.gmail.com>
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:31188 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbZHBESl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 00:18:41 -0400
+Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
+From: Pavel Roskin <proski@gnu.org>
+To: Jack Lau <jackelectronics@hotmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <SNT102-W3823D5AFC70CB052684837BD110@phx.gbl>
+References: <BAY0-DP2-2945C3011C834624418944BD170@phx.gbl>
+	 <1248640816.32168.42.camel@mj>
+	 <BAY0-DP3-241EC0B1A0E15935251FCBBD150@phx.gbl>
+	 <1248821338.5206.12.camel@mj> <SNT102-W3823D5AFC70CB052684837BD110@phx.gbl>
+Content-Type: text/plain
+Date: Sun, 02 Aug 2009 00:18:32 -0400
+Message-Id: <1249186712.2428.7.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 22, 2009 at 4:38 AM, Herton Ronaldo
-Krzesinski<herton@mandriva.com.br> wrote:
-> This change implements rfkill support for RTL8187B and RTL8187L devices,
-> using new cfg80211 rfkill API.
->
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+On Sat, 2009-08-01 at 10:03 +0000, Jack Lau wrote:
+> Dear Pavel
+>  
+> I have now taken the time to gather as many logs as possible.
 
-Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+...
 
-Neat!
+> > Also please don't top-post, as it makes it harder to quote the
+> > discussion in a reasonable way.
 
-I ran a ping to the router while flicking the switch on and off, and
-have 'ping: sendmsg: Network is unreachable' in the middle. dmesg also
-shows
+Please read what you are quoting.  Until then, it makes no sense for me
+to participate in this thread.
 
-rtl8187: wireless radio switch turned off
-wlan2: deauthenticating by local choice (reason=3)
-rtl8187: wireless radio switch turned on
-
-etc. Work as advertised.
-
-Well done!
-
-Hin-Tak
+-- 
+Regards,
+Pavel Roskin
