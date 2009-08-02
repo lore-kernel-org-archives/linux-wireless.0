@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:44592 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934378AbZHENjE (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:17561 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753936AbZHBWYt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 09:39:04 -0400
-Received: by vws2 with SMTP id 2so72666vws.4
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 06:39:04 -0700 (PDT)
+	Sun, 2 Aug 2009 18:24:49 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so918461fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 15:24:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87hbwoniog.fsf@litku.valot.fi>
-References: <20090804033908.GA1903@hash.localnet>
-	 <87hbwoniog.fsf@litku.valot.fi>
-Date: Wed, 5 Aug 2009 09:39:04 -0400
-Message-ID: <b6c5339f0908050639p6da79e1cq7c7688c283d793a3@mail.gmail.com>
-Subject: Re: [PATCH] wl12xx: make irq handling interface specific
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A7610AE.5000908@gmail.com>
+References: <4A7610AE.5000908@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 3 Aug 2009 00:24:29 +0200
+Message-ID: <69e28c910908021524r1bf8d0a3s3cab303ff9fc6c0b@mail.gmail.com>
+Subject: Re: [PATCH RESEND] b43: implement baseband init for LP-PHY <= rev1
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 4, 2009 at 3:26 AM, Kalle Valo<kalle.valo@iki.fi> wrote:
-> Thanks, this looks good and I'll take it.
+2009/8/3 Gábor Stefanik <netrolller.3d@gmail.com>:
+> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
+> boardflags_hi values to defines.
+> Implement b43_phy_copy for easier copying between registers, as needed
+> by LP-PHY init.
+>
+> Signed-off-by: Gábor Stefanik<netrolller.3d@gmail.com>
+> Cc: Michael Buesch<mb@bu3sch.de>
+> Cc: Larry Finger<larry.finger@lwfinger.net>
+> ---
+>
 
-Actually let me send a v2 in a just a minute or two.  There's a
-prototype mismatch compiler warning to fix.
+Looks like this one survived.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
