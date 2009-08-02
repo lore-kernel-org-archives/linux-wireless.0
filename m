@@ -1,81 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:57014 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837AbZHFJGU (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:41816 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753679AbZHBWfk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 05:06:20 -0400
-Subject: Re: [PATCH] cfg80211: fix disassociation warning due to misuse of
- wdev->current_bss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <20090806085242.23637.82992.stgit@ct.roinet.com>
-References: <20090806085242.23637.82992.stgit@ct.roinet.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8Bk4+4nB0nVPGxZY3sck"
-Date: Thu, 06 Aug 2009 11:06:14 +0200
-Message-Id: <1249549574.4852.17.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 2 Aug 2009 18:35:40 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH RESEND] b43: implement baseband init for LP-PHY <= rev1
+Date: Mon, 3 Aug 2009 00:35:37 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+References: <4A7610AE.5000908@gmail.com>
+In-Reply-To: <4A7610AE.5000908@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908030035.37285.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-8Bk4+4nB0nVPGxZY3sck
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2009-08-06 at 04:52 -0400, Pavel Roskin wrote:
-> WARN_ON was triggered at mlme.c:213 when dissociating from an AP.
->=20
-> wdev->current_bss->pub.bssid should be used in place of
-> wdev->current_bss for BSSID comparison.
-
-Oh wow, good catch, thanks.
-
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+On Monday 03 August 2009 00:18:22 Gábor Stefanik wrote:
+> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
+> boardflags_hi values to defines.
+> Implement b43_phy_copy for easier copying between registers, as needed
+> by LP-PHY init.
+> 
+> Signed-off-by: Gábor Stefanik<netrolller.3d@gmail.com>
+> Cc: Michael Buesch<mb@bu3sch.de>
+> Cc: Larry Finger<larry.finger@lwfinger.net>
 > ---
->  net/wireless/mlme.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-> index 525e8e2..b44b6c0 100644
-> --- a/net/wireless/mlme.c
-> +++ b/net/wireless/mlme.c
-> @@ -198,7 +198,7 @@ static void __cfg80211_send_disassoc(struct net_devic=
-e *dev,
->  		return;
-> =20
->  	if (wdev->current_bss &&
-> -	    memcmp(wdev->current_bss, bssid, ETH_ALEN) =3D=3D 0) {
-> +	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) =3D=3D 0) {
->  		for (i =3D 0; i < MAX_AUTH_BSSES; i++) {
->  			if (wdev->authtry_bsses[i] || wdev->auth_bsses[i])
->  				continue;
->=20
+> 
+> Hopefully this mail will survive the trip through the arcane world of Gmail's servers...
+> 
+> If this very-very-very-long line (including	a	few	tab	characters) doesn't get mangled, chances are that the mail didn't get mangled. More text to make this line even longer.
+> 
+>   b43.h        |   11 ++++++
+>   phy_common.c |    7 ++++
+>   phy_lp.c     |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>   phy_lp.h     |    8 +++-
+>   phy_n.c      |    3 +
+>   5 files changed, 120 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> index 4e8ad84..41ca727 100644
+> --- a/drivers/net/wireless/b43/b43.h
+> +++ b/drivers/net/wireless/b43/b43.h
+> @@ -142,6 +142,17 @@
+>   #define B43_BFL_BTCMOD			0x4000	/* BFL_BTCOEXIST is given in alternate GPIOs */
+>   #define B43_BFL_ALTIQ			0x8000	/* alternate I/Q settings */
+> 
+> +/* SPROM boardflags_hi values */
+> +#define B43_BFH_NOPA			0x0001	/* has no PA */
+> +#define B43_BFH_RSSIINV			0x0002	/* RSSI uses positive slope (not TSSI) */
+> +#define B43_BFH_PAREF			0x0004	/* uses the PARef LDO */
+> +#define B43_BFH_3TSWITCH		0x0008	/* uses a triple throw switch shared
+> +						 * with bluetooth */
+> +#define B43_BFH_PHASESHIFT		0x0010	/* can support phase shifter */
+> +#define B43_BFH_BUCKBOOST		0x0020	/* has buck/booster */
+> +#define B43_BFH_FEM_BT			0x0040	/* has FEM and switch to share antenna
+> +						 * with bluetooth */
+> +
+>   /* GPIO register offset, in both ChipCommon and PCI core. */
+>   #define B43_GPIO_CONTROL		0x6c
+> 
+> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+> index e176b6e..999e0bd 100644
+> --- a/drivers/net/wireless/b43/phy_common.c
+> +++ b/drivers/net/wireless/b43/phy_common.c
+> @@ -240,6 +240,13 @@ void b43_phy_write(struct b43_wldev *dev, u16 reg, u16 value)
+>   	dev->phy.ops->phy_write(dev, reg, value);
+>   }
+> 
+> +void b43_phy_copy(struct b43_wldev *dev, u16 srcreg, u16 destreg)
+> +{
+> +	assert_mac_suspended(dev);
+> +	dev->phy.ops->phy_write(dev, destreg,
+> +		dev->phy.ops->phy_read(dev, srcreg));
+> +}
+
+Hm, can you reverse the srcreg/destreg order?
+All C-standard copy functions use func(dest, src).
+I think we should stick with it.
+
+> +
+>   void b43_phy_mask(struct b43_wldev *dev, u16 offset, u16 mask)
+>   {
+>   	b43_phy_write(dev, offset,
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index 58e319d..dbaa2e4 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -66,7 +66,100 @@ static void lpphy_table_init(struct b43_wldev *dev)
+> 
+>   static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>   {
+> -	B43_WARN_ON(1);//TODO rev<  2 not supported, yet.
+> +	struct ssb_bus *bus = dev->dev->bus;
+> +	struct b43_phy_lp *lpphy = dev->phy.lp;
+> +	u16 tmp, tmp2;
+> +
+> +	if (dev->phy.rev == 1&&
+                             ^
+> +	   (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)) {
+                                    ^
+whitespaces
 
 
---=-8Bk4+4nB0nVPGxZY3sck
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0x3F00, 0x0900);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0B00);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0400);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0B00);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_5, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_5, 0xC0FF, 0x0900);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_6, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_6, 0xC0FF, 0x0B00);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_7, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_7, 0xC0FF, 0x0900);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_8, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_8, 0xC0FF, 0x0B00);
+> +	} else if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ ||
+> +		  (bus->boardinfo.type == 0x048A) || ((dev->phy.rev == 0)&&
+                                                                         ^
+whitespace
 
------BEGIN PGP SIGNATURE-----
+> +		  (bus->sprom.boardflags_lo&  B43_BFL_FEM))) {
+                                           ^
+whitespace
 
-iQIcBAABAgAGBQJKep0DAAoJEODzc/N7+QmaQvEP/0GIDg2uLE5nuz7Wwv7BH3Ho
-EgL/2rg04h1jaCbOMMUtODvr0A/i/tZyjsYCQ39l5nIYf98PX9Mvc10RFcB9oeN9
-IGlAHPbJeUc9dLcwjmbMwqwi3svSNyIOsGBUdo6jrHh6WCWb/gK/Iy6wTPk+PqN+
-jujiVA+WGtfwYQcFGWlTrgFrQbKda/out0N6Hne2ibvVECVk8gjvUY8wKondudW2
-HHJwaOLdEE63yoecoQf07oP8NFTVbzWHNRYoog2aaW1c28JnoOS23jds2nLzZHtk
-10GmUhinWFtOLFQWCd96xqVM8op92LJhWMr6ME3aMds48GqBXGzGfDxTJcnlZr5z
-xeehpengKwnYAQ/kigqxHWL3fRVuwCLepH+82DMsr0r98lgtCoekB5KQwpRYC+z9
-/OxRv4siL1Q1T1zBn0so76eADl5KW+XcEVziJ+2HIXBPDB+gVCPfRklSoddOk6jM
-NsREwUWwgTNhy14DWquVtr4LgQlmuKLBe/Vq1j22LTJJ8To4TVIh0hbQQeR9bOcF
-QZRlhOVOyIVdlXtg6EDcrBwHNNuTWD4EEL/QVWSXHh4RHwAKHi8lvojw4XIdOhUM
-YznnsD5A6m2DY8heULAloQMwyU9QAkRjyPXN2pDqZr0CTB9C4vEuIhzhMwy5rCyz
-BAoLLL8xIEtrGlp7egLz
-=3wKg
------END PGP SIGNATURE-----
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x0001);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0400);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x0001);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0500);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0002);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0800);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0002);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0A00);
+> +	} else if (dev->phy.rev == 1 ||
+> +		  (bus->sprom.boardflags_lo&  B43_BFL_FEM)) {
+                                           ^
+whitespace
 
---=-8Bk4+4nB0nVPGxZY3sck--
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x0004);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0800);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x0004);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0C00);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0002);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0100);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0002);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0300);
+> +	} else {
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0900);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x000A);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0B00);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0006);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0500);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0006);
+> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0700);
+> +	}
+> +	if (dev->phy.rev == 1) {
+> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_1, B43_LPPHY_TR_LOOKUP_5);
+> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_2, B43_LPPHY_TR_LOOKUP_6);
+> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_3, B43_LPPHY_TR_LOOKUP_7);
+> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_4, B43_LPPHY_TR_LOOKUP_8);
 
+(Reverse them, if you reverse the meaning of b43_phy_copy())
+
+> +	}
+> +	if (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)&&
+> +	   (bus->chip_id == 0x5354)&&
+
+Lots of whitespace needed here...
+
+> +	   (bus->chip_package == SSB_CHIPPACK_BCM4712S)) {
+> +		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0006);
+> +		b43_phy_write(dev, B43_LPPHY_GPIO_SELECT, 0x0005);
+> +		b43_phy_write(dev, B43_LPPHY_GPIO_OUTEN, 0xFFFF);
+> +		b43_hf_write(dev, b43_hf_read | 0x0800ULL<<  32);
+                                            ^^           ^  ^
+b43_hf_read is not called. You OR the function pointer.
+And whitespace at the wrong spot.
+
+> +	}
+> +	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+> +		b43_phy_set(dev, B43_LPPHY_LP_PHY_CTL, 0x8000);
+> +		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0040);
+> +		b43_phy_maskset(dev, B43_LPPHY_MINPWR_LEVEL, 0x00FF, 0xA400);
+> +		b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xF0FF, 0x0B00);
+> +		b43_phy_maskset(dev, 0x030, 0xFFF8, 0x0007);
+
+Any chance to define a name for the register?
+Even if it's just B43_LPPHY_030 or something like that.
+
+> +		b43_phy_maskset(dev, B43_LPPHY_DSSS_CONFIRM_CNT, 0xFFF8, 0x0003);
+> +		b43_phy_maskset(dev, B43_LPPHY_DSSS_CONFIRM_CNT, 0xFFC7, 0x0020);
+> +		b43_phy_mask(dev, B43_LPPHY_IDLEAFTERPKTRXTO, 0x00FF);
+> +	} else { /* 5GHz */
+> +		b43_phy_mask(dev, 0x448, 0x7FFF);
+> +		b43_phy_mask(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFBF);
+> +	}
+> +	if (dev->phy.rev == 1) {
+> +		tmp = b43_read(dev, B43_LPPHY_CLIPCTRTHRESH);
+> +		tmp2 = (tmp&  0x03E0)>>  5
+> +		tmp2 |= tmp<<  5;
+> +		b43_phy_write(dev, 0x4C3, tmp2);
+> +		tmp = b43_read(dev, B43_LPPHY_OFDMSYNCTHRESH0);
+> +		tmp2 = (tmp&  0x1F00)>>  8
+> +		tmp2 |= tmp<<  5;
+> +		b43_phy_write(dev, 0x4C4, tmp2);
+> +		tmp = b43_read(dev, B43_LPPHY_VERYLOWGAINDB);
+> +		tmp2 = tmp&  0x00FF
+> +		tmp2 |= tmp<<  8;
+> +		b43_phy_write(dev, 0x4C5, tmp2);
+
+Lots of whitespace problems in this code block.
+And please define the registers. Even if you just assign numeric names (like above).
+(hint: also use the B43_PHY_OFDM() macro)
+
+> +	}
+>   }
+> 
+>   static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
+> diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
+> index 18370b4..d0e67e4 100644
+> --- a/drivers/net/wireless/b43/phy_lp.h
+> +++ b/drivers/net/wireless/b43/phy_lp.h
+> @@ -273,12 +273,16 @@
+>   #define B43_LPPHY_AFE_DDFS_POINTER_INIT		B43_PHY_OFDM(0xB8) /* AFE DDFS pointer init */
+>   #define B43_LPPHY_AFE_DDFS_INCR_INIT		B43_PHY_OFDM(0xB9) /* AFE DDFS incr init */
+>   #define B43_LPPHY_MRCNOISEREDUCTION		B43_PHY_OFDM(0xBA) /* mrcNoiseReduction */
+> -#define B43_LPPHY_TRLOOKUP3			B43_PHY_OFDM(0xBB) /* TRLookup3 */
+> -#define B43_LPPHY_TRLOOKUP4			B43_PHY_OFDM(0xBC) /* TRLookup4 */
+> +#define B43_LPPHY_TR_LOOKUP_3			B43_PHY_OFDM(0xBB) /* TR Lookup 3 */
+> +#define B43_LPPHY_TR_LOOKUP_4			B43_PHY_OFDM(0xBC) /* TR Lookup 4 */
+>   #define B43_LPPHY_RADAR_FIFO_STAT		B43_PHY_OFDM(0xBD) /* Radar FIFO Status */
+>   #define B43_LPPHY_GPIO_OUTEN			B43_PHY_OFDM(0xBE) /* GPIO Out enable */
+>   #define B43_LPPHY_GPIO_SELECT			B43_PHY_OFDM(0xBF) /* GPIO Select */
+>   #define B43_LPPHY_GPIO_OUT			B43_PHY_OFDM(0xC0) /* GPIO Out */
+> +#define B43_LPPHY_TR_LOOKUP_5			B43_PHY_OFDM(0xC7) /* TR Lookup 5 */
+> +#define B43_LPPHY_TR_LOOKUP_6			B43_PHY_OFDM(0xC8) /* TR Lookup 6 */
+> +#define B43_LPPHY_TR_LOOKUP_7			B43_PHY_OFDM(0xC9) /* TR Lookup 7 */
+> +#define B43_LPPHY_TR_LOOKUP_8			B43_PHY_OFDM(0xCA) /* TR Lookup 8 */
+> 
+> 
+> 
+> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+> index 8bcfda5..14ad95a 100644
+> --- a/drivers/net/wireless/b43/phy_n.c
+> +++ b/drivers/net/wireless/b43/phy_n.c
+> @@ -137,7 +137,8 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+> 
+>   	b43_radio_mask(dev, B2055_MASTER1, 0xFFF3);
+>   	msleep(1);
+> -	if ((sprom->revision != 4) || !(sprom->boardflags_hi&  0x0002)) {
+> +	if ((sprom->revision != 4) ||
+> +	   !(sprom->boardflags_hi&  B43_BFH_RSSIINV)) {
+                                 ^
+whitespace
+
+>   		if ((binfo->vendor != PCI_VENDOR_ID_BROADCOM) ||
+>   		    (binfo->type != 0x46D) ||
+>   		    (binfo->rev<  0x41)) {
+> 
+> 
+> 
+> 
+
+
+
+-- 
+Greetings, Michael.
