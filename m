@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35874 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750823AbZHJTC2 convert rfc822-to-8bit (ORCPT
+Received: from imr-ma06.mx.aol.com ([64.12.78.142]:58890 "EHLO
+	imr-ma06.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751693AbZHBIbP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:02:28 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH V2] b43: Update LP-PHY rev2+ baseband init to match the specs
-Date: Mon, 10 Aug 2009 21:02:26 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A806D82.4010606@gmail.com>
-In-Reply-To: <4A806D82.4010606@gmail.com>
+	Sun, 2 Aug 2009 04:31:15 -0400
+Message-ID: <4A754D31.7010709@netscape.net>
+Date: Sun, 02 Aug 2009 02:24:17 -0600
+From: Patrick Simmons <linuxrocks123@netscape.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908102102.26416.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: David Miller <davem@davemloft.net>, mb@bu3sch.de,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
+Subject: Re: [PATCH] Fix SPARC64 unaligned access in zd_mac_rx
+References: <1249029583.29587.46.camel@johannes.local>	 <20090731.222350.254918321.davem@davemloft.net>	 <200908011240.17229.mb@bu3sch.de>	 <20090801.091207.217317135.davem@davemloft.net>	 <4A74EEB2.6040400@netscape.net> <1249199441.2007.7.camel@johannes.local>
+In-Reply-To: <1249199441.2007.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 August 2009 20:57:06 Gábor Stefanik wrote:
-> The rev2+ BB init spec has changed behind us, and thus the code is
-> no longer up to date. Update the code to match the current specs.
-> Also implement save/restore dig filt state, as required by the
-> new specification.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> V2: use ARRAY_SIZE for loop counts.
+Johannes Berg wrote:
+> Now the code is completely incorrect -- you're now loading the lower 16
+> bits of the 'buffer' _pointer_ into the variable as an unaligned load.
+>
+> It really needs to be
+>
+> fc = get_unaligned((__le16 *)buffer);
+>
+> I think.
+>
+> johannes
+>   
 
-ack
+It does look wrong, now that I look at it further, but I'm pretty sure 
+that what was happening was that only the lower 8 bits of the 
+dereferenced value were being accessed.  What's odd is that it works on 
+my machine, though.  Whatever.  Your version is clearer, in any case.
 
--- 
-Greetings, Michael.
+What follows is hopefully the last version of this patch.
+
+Signed-off-by: Patrick Simmons <linuxrocks123@netscape.net>
+
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -694,7 +694,7 @@
+                        && !mac->pass_ctrl)
+                return 0;
+ 
+-       fc = *(__le16 *)buffer;
++       fc = get_unaligned((__le16*)buffer);
+        need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
+ 
+        skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
+
+--Patrick
+
