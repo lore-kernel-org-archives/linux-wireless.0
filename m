@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:60758 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbZHAUpf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41430 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133AbZHBHps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 16:45:35 -0400
-Date: Sat, 1 Aug 2009 21:45:34 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
-Message-ID: <20090801204534.GA23642@srcf.ucam.org>
-References: <1249152859-14769-1-git-send-email-mjg@redhat.com> <1249159133.3491.13.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1249159133.3491.13.camel@localhost.localdomain>
+	Sun, 2 Aug 2009 03:45:48 -0400
+Subject: Re: [PATCH 1/1] rfkill: add the GPS radio type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
+References: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
+	 <1249171448.3491.32.camel@localhost.localdomain>
+	 <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2dqEVKMjHwJ19EgHU41y"
+Date: Sun, 02 Aug 2009 09:45:43 +0200
+Message-Id: <1249199143.2007.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 01, 2009 at 01:38:53PM -0700, Marcel Holtmann wrote:
 
-> actually I would prefer if we name this key KEY_RFKILL and not put the
-> policy of ALL into the kernel. Since we wanna get rid of rfkill-input.
-> That needs to be done in userspace and by users policy. If they wanna
-> map that key to ALL then that is fine. If they just wanna toggle WiFi,
-> then that is also fine. If the wanna have to popup some UI, that is also
-> reasonable.
+--=-2dqEVKMjHwJ19EgHU41y
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-My reasoning was that this conceptually maps to a key that controls all 
-of the radios in the system - whether a single press actually kills all 
-of them or not is kind of irrelevent (having the simple policy in 
-rfkill-input works fine for this, but userspace will obviously want 
-something more cunning). My concern with KEY_RFKILL is that it it's not 
-obvious that it refers to a specific type of key - ones that purely 
-control wifi should still be KEY_WLAN, for instance.
+On Sun, 2009-08-02 at 08:49 +0300, Tomas Winkler wrote:
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+> > we don't have a GPS subsystem, but even without it, I think this is a
+> > good thing to have.
+>=20
+> GPS devices are usually serial devices.
+
+Yeah, this is interesting -- do we want something like /dev/urfkill
+(cf. /dev/uinput), so that gpsd or whatever is controlling the GPS (same
+applies for 3G) can be controlled with rfkill?
+
+johannes
+
+--=-2dqEVKMjHwJ19EgHU41y
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKdUQbAAoJEODzc/N7+QmaHakQAJ8MRsCtp01GCDyUubCtZvZY
+jfTcB3PHGUUQtvuckq6Z8sZQBYwc9/8qcFP7cD/02RcWIn8JYgMHmL/lENAMM3zB
+f9FT2+qZzw4frxHUI1FENiaaMwUAyd0aOGn3pKHuBNbDaRNvrD2lPciBZe1A3uw9
+PI7u71IvU5gr3SA6bdXifb8TTA+tfcUGBA0UV8ikhnNV8pVK+aH9UPzcFNkQFh4z
+HP1FGfvvYc4SZdVXb66nhYS8v9mgNWtaSrWY0GjS28jIN2mhKD88SBD4SF6RX9Ju
+YY47srkzKUgm8vk+AykpF5jQet9A27v5QNGYcgM7Ry7R9hVY+AU20UiqIS2bWWsu
+N96X1U8u/34DqFClBRCsA60XXG5JFxd2AXMghEfFY94S3xIUoELtEMtO6c5AcOOe
+JiP9tsAzcwPWi/Q+OQHgkqC2K5iS2oBVdcIsHe06jqL6WA91jo62c53qdC41iQG7
+Zu9CwoMdBOiWfmpf1bLj//3S1nbI4a12THHbE/szjt1sZInTBXEdm7X4gW5KqJAO
+N3gP/ORb3BuPzTGTAjCPoyUEionvkbiJJPMklrNJw9fN/8nVj19okcEoYULIvAlw
+EmkWiSix4cJZZcWBNHH9S2Cj/EWITx0/BxQYy3hyUt8mA4kYqydlIBSvzAHTo0c0
+hSYLSYw45ZmSBusfo/eo
+=C5AM
+-----END PGP SIGNATURE-----
+
+--=-2dqEVKMjHwJ19EgHU41y--
+
