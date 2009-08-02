@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47343 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012AbZHGPqE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 11:46:04 -0400
-Date: Fri, 7 Aug 2009 11:36:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@web.de>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] p54: implement rfkill
-Message-ID: <20090807153602.GG7545@tuxdriver.com>
-References: <200907192354.15349.chunkeey@web.de>
+Received: from c60.cesmail.net ([216.154.195.49]:33255 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751387AbZHBSaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 14:30:10 -0400
+Subject: [PATCH 1/2] rt61pci: fix module reloading
+To: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com
+From: Pavel Roskin <proski@gnu.org>
+Date: Sun, 02 Aug 2009 14:30:02 -0400
+Message-ID: <20090802183002.16766.4142.stgit@ct.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <200907192354.15349.chunkeey@web.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 19, 2009 at 11:54:15PM +0200, Christian Lamparter wrote:
-> This patch gets rid of the deprecated radio_enabled
-> 
-> fwio.c: In function ‘p54_setup_mac’:
-> fwio.c:323: warning: ‘radio_enabled’ is deprecated (declared at include/net/mac80211.h:607)
+Unloading rt61pci can leave the device in such state that reloading
+rt61pci would fail to reinitialize it.  Bogus data would be read from
+the EEPROM and the RF version won't be recognized.
 
-Anyone had a chance to test this?  And report the results to Christian?
+It appears that unloading rt61pci with power saving enabled would have
+such effect.  To initialize the device properly, SOFT_RESET_CSR should
+be set to the same value as rt61pci_config_ps() uses to wake up the
+device.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index fb95b8c..e20dd74 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2601,6 +2601,11 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	int retval;
+ 
+ 	/*
++	 * Disable power saving.
++	 */
++	rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
++
++	/*
+ 	 * Allocate eeprom data.
+ 	 */
+ 	retval = rt61pci_validate_eeprom(rt2x00dev);
