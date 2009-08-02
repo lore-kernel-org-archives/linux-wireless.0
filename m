@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:44588 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476AbZHXW3n convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 18:29:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com>
-References: <1251149659-32212-1-git-send-email-tomas.winkler@intel.com>
-	<43e72e890908241436o5f30cfe6xa7bdda8b25ac082@mail.gmail.com>
-	<1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 24 Aug 2009 15:29:24 -0700
-Message-ID: <43e72e890908241529m3fb29676pa52a9db44029c52f@mail.gmail.com>
-Subject: Re: [PATCH 1/1] iwmc3200: add more SDIO device ids
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.gmx.net ([213.165.64.20]:35314 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751036AbZHBGrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 02:47:24 -0400
+Subject: Re: rt2800usb: memory corruption?
+From: Mike Galbraith <efault@gmx.de>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1249194546.7634.4.camel@marge.simson.net>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <1248946195.8925.9.camel@johannes.local>
+	 <1248947099.8396.6.camel@marge.simson.net>
+	 <1248947740.8925.12.camel@johannes.local>
+	 <1248948326.8823.4.camel@marge.simson.net>
+	 <1248955916.7995.47.camel@marge.simson.net>
+	 <1249104348.7146.60.camel@marge.simson.net>
+	 <1249124154.8236.5.camel@marge.simson.net>  <1249172514.3043.7.camel@ct>
+	 <1249190209.7486.4.camel@marge.simson.net>
+	 <1249194546.7634.4.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Sun, 02 Aug 2009 08:47:21 +0200
+Message-Id: <1249195641.23166.12.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 24, 2009 at 3:20 PM, Tomas Winkler<tomasw@gmail.com> wrote:
-> On Tue, Aug 25, 2009 at 12:36 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Mon, Aug 24, 2009 at 2:34 PM, Tomas Winkler<tomas.winkler@intel.com> wrote:
->>> add WiFi BGN SKU and WiMAX 2.4GHz SKU device ids
->>>
->>> Cc:inaky.perez-gonzalez@intel.com
->>> Cc:cindy.h.kao@intel.com
->>> Cc:yi.zhu@intel.com
->>> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->>
->> Since it seems we are preferring to not do this for PCI for cases
->> where the ID will only be used for 1 device perhaps its best to remove
->> all those ids and stuff them directly into the intel driver itself
->> that will use it.
->>
-> I don't have strong opinion about it but this is the current habit
-> IIRC there was a mail thread that explicitly asked to move SDIO IDs
-> there,  of course I cannot locate it right now :(
 
-Sure, understood, whoever maintains this should decide.
+P.S.  I'm no longer considering moving box away from router (and if I
+ever do, I'll use repeater instead), so wireless connectivity via this
+adapter is a dead issue here.  Since I have the hw though, if anyone
+wants patches tested, feel free to holler, and I'll give them a spin.
 
-  Luis
+	-Mike
+
