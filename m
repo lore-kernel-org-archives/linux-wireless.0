@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:40717 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758218AbZHQXdV convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:62167 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbZHBXbu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 19:33:21 -0400
-Received: by ewy10 with SMTP id 10so3395889ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 16:33:21 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 4/7] rt2x00: Set SKBDESC_L2_PADDED in RX path
-Date: Tue, 18 Aug 2009 01:33:19 +0200
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908171853.24256.IvDoorn@gmail.com> <200908171854.50790.IvDoorn@gmail.com> <4A89C19E.6080906@free.fr>
-In-Reply-To: <4A89C19E.6080906@free.fr>
+	Sun, 2 Aug 2009 19:31:50 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so400824fga.17
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 16:31:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908180133.19541.IvDoorn@gmail.com>
+In-Reply-To: <4A76210C.4040209@gmail.com>
+References: <4A76210C.4040209@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 3 Aug 2009 01:31:29 +0200
+Message-ID: <69e28c910908021631g256560c8q364674b6e907f235@mail.gmail.com>
+Subject: Re: [PATCH V2] b43: implement baseband init for LP-PHY <= rev1
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 17 August 2009, Benoit PAPILLAULT wrote:
-> Ivo van Doorn a écrit :
-> > When the RX descriptor indicates the frame was L2 padded,
-> > the SKBDESC_L2_PADDED flag should be set to make sure the
-> > L2 padding is removed before it is send to mac80211.
-> >
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2800usb.c |    4 +++-
-> >  1 files changed, 3 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-> b/drivers/net/wireless/rt2x00/rt2800usb.c
-> > index c82474e..6de2eda 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> > @@ -2163,8 +2163,10 @@ static void rt2800usb_fill_rxdone(struct
-> queue_entry *entry,
-> >      if (rt2x00_get_field32(rxd0, RXD_W0_MY_BSS))
-> >          rxdesc->dev_flags |= RXDONE_MY_BSS;
-> >
-> > -    if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD))
-> > +    if (rt2x00_get_field32(rxd0, RXD_W0_L2PAD)) {
-> >          rxdesc->dev_flags |= RXDONE_L2PAD;
-> > +        skbdesc->flags |= SKBDESC_L2_PADDED;
-> > +    }
-> >
-> >      if (rt2x00_get_field32(rxwi1, RXWI_W1_SHORT_GI))
-> >          rxdesc->flags |= RX_FLAG_SHORT_GI;
-> I have tested this patch as well and it looks correct. However, during
-> my test, the hardware does not set L2PAD flag, even if padding is
-> present (for some frames). I did the same test with the rt2870sta
-> driver from Ralink and the L2PAD was indeed set.
+On Mon, Aug 3, 2009 at 1:28 AM, Gábor Stefanik<netrolller.3d@gmail.com> wrote:
+> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert boardflags_hi
+> values to defines.
+> Implement b43_phy_copy for easier copying between registers, as needed by
+> LP-PHY init.
+>
+> Signed-off-by: Gábor Stefanik<netrolller.3d@gmail.com>
+> Cc: Michael Buesch<mb@bu3sch.de>
+> Cc: Larry Finger<larry.finger@lwfinger.net>
+> ---
+> V2:
+> -Reversed argument order for b43_phy_copy.
+> -Named all registers, no more magic numbers.
+> -Whitespace errors hopefully fixed (I hope my mailer doesn't re-introduce
+> them...)
 
-But when the flag is set, it is being set correctly?
-Perhaps we can just set the flag at all times, because rt2x00lib
-checks how much padding is required anyway. Unless of course
-the device doesn't always add L2 padding when it actually should have.
+Phew! No more whitespace corruption, it seems... looks like
+Thunderbird doesn't like the Linux coding style. :-)
 
-> Ivo : what happens during your tests?
-
-Tests?
-
-I don't really have time to perform any testing, so all patches are
-only checked by me for 'code correctness'.
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
