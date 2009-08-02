@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:61347 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757123AbZHNUVO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:21:14 -0400
-Received: by fxm11 with SMTP id 11so1373094fxm.39
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 13:21:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908142217.40004.mb@bu3sch.de>
-References: <4A854FDF.5020208@gmail.com> <200908142217.40004.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 14 Aug 2009 22:20:55 +0200
-Message-ID: <69e28c910908141320x12e6988emc2bbdbb5fe1cecbe@mail.gmail.com>
-Subject: Re: [PATCH] b43: Add LP-PHY firmware loading support
-To: Michael Buesch <mb@bu3sch.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:53814 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750846AbZHBAWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 1 Aug 2009 20:22:04 -0400
+Subject: Re: rt2800usb: memory corruption?
+From: Pavel Roskin <proski@gnu.org>
+To: Mike Galbraith <efault@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1249124154.8236.5.camel@marge.simson.net>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <1248946195.8925.9.camel@johannes.local>
+	 <1248947099.8396.6.camel@marge.simson.net>
+	 <1248947740.8925.12.camel@johannes.local>
+	 <1248948326.8823.4.camel@marge.simson.net>
+	 <1248955916.7995.47.camel@marge.simson.net>
+	 <1249104348.7146.60.camel@marge.simson.net>
+	 <1249124154.8236.5.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Sat, 01 Aug 2009 20:21:54 -0400
+Message-Id: <1249172514.3043.7.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/14 Michael Buesch <mb@bu3sch.de>:
-> On Friday 14 August 2009 13:51:59 Gábor Stefanik wrote:
->> Add support for loading LP-PHY firmware to b43_try_request_fw.
->>
->> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
->
-> ack
-> --
-> Greetings, Michael.
->
+On Sat, 2009-08-01 at 12:55 +0200, Mike Galbraith wrote:
 
-This version is broken - ack "v3 this time really" instead.
+> Enabled slub/pagealloc debugging.  First down/rmmod said...
+
+I suggest that you try kmemcheck.  It's very slow, but it finds memory
+problems when they occur, not when it's too late.
+
+You may want to disable kmemleak and framebuffer support and make sure
+that X doesn't start, at it will be too slow.  Slub debugging might
+conflict with kmemcheck, so it's better to disable it.
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
