@@ -1,63 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37818 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932440AbZHUQpR (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:56459 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbZHBDca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 12:45:17 -0400
-Date: Fri, 21 Aug 2009 12:43:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
-	again
-Message-ID: <20090821164335.GB8532@tuxdriver.com>
-References: <4A8DC955.9060100@gmail.com> <1250872433.30019.14430.camel@rc-desk>
+	Sat, 1 Aug 2009 23:32:30 -0400
+Date: Sat, 01 Aug 2009 22:32:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Work around mac80211 race condition
+Message-ID: <4a7508e0.l3Jz6c5c8JgW9wQm%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1250872433.30019.14430.camel@rc-desk>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 21, 2009 at 09:33:53AM -0700, reinette chatre wrote:
-> Hi Gábor,
-> 
-> On Thu, 2009-08-20 at 15:08 -0700, Gábor Stefanik wrote:
-> > Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
-> > ("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
-> > broke injection of non-broadcast frames to unassociated stations
-> > (causing a SYSASSERT for all such injected frames), due to injected
-> > frames no longer automatically getting a broadcast station ID assigned,
-> > and instead ending up with invalid station IDs.
-> > This patch restores the old behavior, fixing the aforementioned
-> > regression.
-> 
-> The patch you are quoting cannot be the culprit here. As that commit
-> message indicates we never set NL80211_IFTYPE_MONITOR for the interface
-> type, so when that code removed the test for this interface type in
-> iwl_get_sta_id it essentially removed dead code.
->  
-> >  	/* If this frame is broadcast or management, use broadcast station id */
-> > -	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
-> > +	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
-> > +	    iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
-> >  		return priv->hw_params.bcast_sta_id;
-> 
-> I think my comment ties in with what Johannes said. When we are
-> associated (whether in station, adhoc, or AP mode) we want this function
-> to return the correct station ID. We also know that an interface can be
-> in monitor mode while it is in any of these other modes. When this
-> happens we do not want to return the broadcast station id ... we still
-> want to return the station id. Your patch changes this behavior and will
-> in this case always return the broadcast station id.
+As shown in http://thread.gmane.org/gmane.linux.kernel.wireless.general/36497,
+mac80211 has a bug that allows a call to the TX routine after the queues have
+been stopped. This situation will only occur under extreme stress. Although
+b43legacy does not crash when this condition occurs, it does generate a WARN_ON
+and also logs a queue overrun message. This patch recognizes b43legacy is not
+at fault and logs a message only when the most verbose debugging mode is
+enabled. In the unlikely event that the queue is not stopped when the DMA
+queue becomes full, then a warning is issued.
+    
+This patch is based on the one used by b43.
+   
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Dropping on the basis of this.  Please repost when/if this is resolved.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Index: wireless-testing/drivers/net/wireless/b43legacy/dma.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43legacy/dma.c
++++ wireless-testing/drivers/net/wireless/b43legacy/dma.c
+@@ -1366,15 +1366,25 @@ int b43legacy_dma_tx(struct b43legacy_wl
+ 	ring = priority_to_txring(dev, skb_get_queue_mapping(skb));
+ 	spin_lock_irqsave(&ring->lock, flags);
+ 	B43legacy_WARN_ON(!ring->tx);
+-	if (unlikely(free_slots(ring) < SLOTS_PER_PACKET)) {
+-		b43legacywarn(dev->wl, "DMA queue overflow\n");
++
++	if (unlikely(ring->stopped)) {
++		/* We get here only because of a bug in mac80211.
++		 * Because of a race, one packet may be queued after
++		 * the queue is stopped, thus we got called when we shouldn't.
++		 * For now, just refuse the transmit. */
++		if (b43legacy_debug(dev, B43legacy_DBG_DMAVERBOSE))
++			b43legacyerr(dev->wl, "Packet after queue stopped\n");
++		err = -ENOSPC;
++		goto out_unlock;
++	}
++
++	if (unlikely(WARN_ON(free_slots(ring) < SLOTS_PER_PACKET))) {
++		/* If we get here, we have a real error with the queue
++		 * full, but queues not stopped. */
++		b43legacyerr(dev->wl, "DMA queue overflow\n");
+ 		err = -ENOSPC;
+ 		goto out_unlock;
+ 	}
+-	/* Check if the queue was stopped in mac80211,
+-	 * but we got called nevertheless.
+-	 * That would be a mac80211 bug. */
+-	B43legacy_BUG_ON(ring->stopped);
+ 
+ 	err = dma_tx_fragment(ring, skb);
+ 	if (unlikely(err == -ENOKEY)) {
