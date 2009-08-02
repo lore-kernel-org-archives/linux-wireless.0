@@ -1,248 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:14754 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306AbZHSAEm (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33812 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752139AbZHBJS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 20:04:42 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so862866eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 17:04:43 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 5/5] cfg80211: scan before connect if we don't have the bss
-Date: Wed, 19 Aug 2009 01:04:13 +0100
-Message-Id: <1250640253-18434-6-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
-References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+	Sun, 2 Aug 2009 05:18:58 -0400
+Subject: Re: Unsupported PHY on B43
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <efe7343f0908020214m6d8b2518n51d4264943ce273a@mail.gmail.com>
+References: <efe7343f0908020214m6d8b2518n51d4264943ce273a@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-MCo28bfCgkxTqUmARs28"
+Date: Sun, 02 Aug 2009 11:18:52 +0200
+Message-Id: <1249204732.2007.49.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The connect_result callback relies on cfg80211 having the bss
-information (via beacons/probes). For a fullmac driver, this information
-is only likely to be present after a scan. Userspace is not guaranteed
-to scan before connecting (e.g. wpa_supplicant ap_scan=2 in wext mode),
-so before calling ->connect do an explicit ->scan if we don't have the
-bss in our list.
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- net/wireless/sme.c |  150 ++++++++++++++++++++++++++++++++++++++--------------
- 1 files changed, 110 insertions(+), 40 deletions(-)
+--=-MCo28bfCgkxTqUmARs28
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 9ddc00e..6dc7981 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -26,11 +26,13 @@ struct cfg80211_conn {
- 		CFG80211_CONN_AUTHENTICATING,
- 		CFG80211_CONN_ASSOCIATE_NEXT,
- 		CFG80211_CONN_ASSOCIATING,
-+		CFG80211_CONN_DELAYED_CONNECT,
- 	} state;
- 	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 	u8 *ie;
- 	size_t ie_len;
- 	bool auto_auth, prev_bssid_valid;
-+	bool connect_after_scan;
- };
- 
- 
-@@ -148,6 +150,19 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
- 					       NULL, 0,
- 					       WLAN_REASON_DEAUTH_LEAVING);
- 		return err;
-+	case CFG80211_CONN_DELAYED_CONNECT:
-+		BUG_ON(!rdev->ops->connect);
-+		err = rdev->ops->connect(&rdev->wiphy, wdev->netdev,
-+					 &wdev->conn->params);
-+		kfree(wdev->conn->ie);
-+		kfree(wdev->conn);
-+		wdev->conn = NULL;
-+		if (err) {
-+			wdev->connect_keys = NULL;
-+			wdev->sme_state = CFG80211_SME_IDLE;
-+			wdev->ssid_len = 0;
-+		}
-+		return err;
- 	default:
- 		return 0;
- 	}
-@@ -234,6 +249,12 @@ static void __cfg80211_sme_scan_done(struct net_device *dev)
- 	    wdev->conn->state != CFG80211_CONN_SCAN_AGAIN)
- 		return;
- 
-+	if (wdev->conn->connect_after_scan) {
-+		wdev->conn->state = CFG80211_CONN_DELAYED_CONNECT;
-+		schedule_work(&rdev->conn_work);
-+		return;
-+	}
-+
- 	if (!cfg80211_get_conn_bss(wdev)) {
- 		/* not found */
- 		if (wdev->conn->state == CFG80211_CONN_SCAN_AGAIN)
-@@ -655,6 +676,52 @@ void cfg80211_disconnected(struct net_device *dev, u16 reason,
- }
- EXPORT_SYMBOL(cfg80211_disconnected);
- 
-+static int cfg80211_conn_clone(struct wireless_dev *wdev,
-+			       struct cfg80211_connect_params *connect)
-+{
-+	if (WARN_ON(wdev->conn))
-+		return -EINPROGRESS;
-+
-+	wdev->conn = kzalloc(sizeof(*wdev->conn), GFP_KERNEL);
-+	if (!wdev->conn)
-+		return -ENOMEM;
-+
-+	memcpy(&wdev->conn->params, connect, sizeof(*connect));
-+	if (connect->bssid) {
-+		wdev->conn->params.bssid = wdev->conn->bssid;
-+		memcpy(wdev->conn->bssid, connect->bssid, ETH_ALEN);
-+	}
-+
-+	if (connect->ie) {
-+		wdev->conn->ie = kmemdup(connect->ie, connect->ie_len,
-+					 GFP_KERNEL);
-+		wdev->conn->params.ie = wdev->conn->ie;
-+		if (!wdev->conn->ie) {
-+			kfree(wdev->conn);
-+			wdev->conn = NULL;
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	if (connect->auth_type == NL80211_AUTHTYPE_AUTOMATIC) {
-+		wdev->conn->auto_auth = true;
-+		/* start with open system ... should mostly work */
-+		wdev->conn->params.auth_type =
-+			NL80211_AUTHTYPE_OPEN_SYSTEM;
-+	} else {
-+		wdev->conn->auto_auth = false;
-+	}
-+
-+	memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
-+	wdev->ssid_len = connect->ssid_len;
-+	wdev->conn->params.ssid = wdev->ssid;
-+	wdev->conn->params.ssid_len = connect->ssid_len;
-+
-+	wdev->conn->connect_after_scan = false;
-+
-+	return 0;
-+}
-+
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev,
- 		       struct cfg80211_connect_params *connect,
-@@ -710,46 +777,12 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		if (!rdev->ops->auth || !rdev->ops->assoc)
- 			return -EOPNOTSUPP;
- 
--		if (WARN_ON(wdev->conn))
--			return -EINPROGRESS;
--
--		wdev->conn = kzalloc(sizeof(*wdev->conn), GFP_KERNEL);
--		if (!wdev->conn)
--			return -ENOMEM;
--
- 		/*
- 		 * Copy all parameters, and treat explicitly IEs, BSSID, SSID.
- 		 */
--		memcpy(&wdev->conn->params, connect, sizeof(*connect));
--		if (connect->bssid) {
--			wdev->conn->params.bssid = wdev->conn->bssid;
--			memcpy(wdev->conn->bssid, connect->bssid, ETH_ALEN);
--		}
--
--		if (connect->ie) {
--			wdev->conn->ie = kmemdup(connect->ie, connect->ie_len,
--						GFP_KERNEL);
--			wdev->conn->params.ie = wdev->conn->ie;
--			if (!wdev->conn->ie) {
--				kfree(wdev->conn);
--				wdev->conn = NULL;
--				return -ENOMEM;
--			}
--		}
--
--		if (connect->auth_type == NL80211_AUTHTYPE_AUTOMATIC) {
--			wdev->conn->auto_auth = true;
--			/* start with open system ... should mostly work */
--			wdev->conn->params.auth_type =
--				NL80211_AUTHTYPE_OPEN_SYSTEM;
--		} else {
--			wdev->conn->auto_auth = false;
--		}
--
--		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
--		wdev->ssid_len = connect->ssid_len;
--		wdev->conn->params.ssid = wdev->ssid;
--		wdev->conn->params.ssid_len = connect->ssid_len;
-+		err = cfg80211_conn_clone(wdev, connect);
-+		if (err)
-+			return err;
- 
- 		/* don't care about result -- but fill bssid & channel */
- 		if (!wdev->conn->params.bssid || !wdev->conn->params.channel)
-@@ -791,18 +824,55 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 
- 		return err;
- 	} else {
-+		struct cfg80211_bss *bss;
-+
- 		wdev->sme_state = CFG80211_SME_CONNECTING;
- 		wdev->connect_keys = connkeys;
-+
-+		bss = cfg80211_get_bss(wdev->wiphy, NULL, connect->bssid,
-+				       connect->ssid, connect->ssid_len,
-+				       WLAN_CAPABILITY_ESS,
-+				       WLAN_CAPABILITY_ESS);
-+		if (!bss) {
-+			/* We don't have a matching BSS.
-+			 *
-+			 * This means __connect_result will fail,
-+			 * unless the driver provides scan results
-+			 * between now and then. So do an explicit
-+			 * scan, and try connect later.
-+			 */
-+			err = cfg80211_conn_clone(wdev, connect);
-+			if (!err) {
-+				wdev->conn->connect_after_scan = true;
-+				err = cfg80211_conn_scan(wdev);
-+
-+				if (!err)
-+					return 0;
-+			}
-+
-+			/* Failed to clone (or scan), so we can't
-+			 * delay the connect. Free everything up and
-+			 * go ahead with the connect */
-+			if (wdev->conn)
-+				kfree(wdev->conn->ie);
-+			kfree(wdev->conn);
-+			wdev->conn = NULL;
-+
-+		} else {
-+			cfg80211_put_bss(bss);
-+
-+			memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
-+			wdev->ssid_len = connect->ssid_len;
-+		}
-+
- 		err = rdev->ops->connect(&rdev->wiphy, dev, connect);
- 		if (err) {
- 			wdev->connect_keys = NULL;
- 			wdev->sme_state = CFG80211_SME_IDLE;
-+			wdev->ssid_len = 0;
- 			return err;
- 		}
- 
--		memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
--		wdev->ssid_len = connect->ssid_len;
--
- 		return 0;
- 	}
- }
--- 
-1.6.3.3
+On Sun, 2009-08-02 at 10:14 +0100, Luis Correia wrote:
+
+> b43-phy1: Broadcom 4322 WLAN found (core revision 16)
+> b43-phy1 ERROR: FOUND UNSUPPORTED PHY (Analog 8, Type 4, Revision 4)
+> b43: probe of ssb0:0 failed with error -95
+> Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
+
+This is an 11n phy.
+
+> I'm available to test drivers, patches, git kernels, the whole lot.
+
+There's nothing available beyond what you have.
+
+johannes
+
+--=-MCo28bfCgkxTqUmARs28
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKdVn2AAoJEODzc/N7+QmalO4P/iWd+E++JRJRhR+re6hBUK6R
+6soraVWh/7oln7y00m8I3VzqBKTnnNGDOrDx+F9VPkySffL4YKo9KqmE8po+E19J
+4sb0lSOtiR6OG1so1zI8vG3GpAfpjV2RkVEa7xClvHDhhgftvQVkjzU7N+3uYrpT
+uDFwtwDQsROiz+AVVwHhUmkX51PaYd96o8OPTA8HPB1bvhpclruyC7t8GHqnaOcx
+cFNuBfXqx4+mzfXKA9iWGgL67aUNGSNWAeIbq9bVrvfMzca4KAiVmSVVWXDmNb1a
+5NqSIkGk9FvqzgsAm9Id+zLfUtHXazZ0uY84UI7XmrUhrT4ndpQtX7TiAmSP6kk5
+6/cFSQDTrzGkakZ3xfXgL84z3bn0aqM1YUsPq69N2cUqjmlHZaA7MHCRW2iSruKK
+miEkfWU6NrTB3QiYLPnMWnWmc04GzB2boR7oEdGD/IrIe34wp6724Aftm8uHyT2q
+TzCLl/Vtoz76tgzO7cNLjipTeuRoMAdwjBFzG6Hns8vjTR/cJ4WeYgSPdv8PHJo3
+8JYiiRciKAQXSXPlhz305VRYpuoq37A6crXda40uNolOoEVjxX1yw6tbfhqcWEMH
+Gq8xcA0BWCdakKI/5ohpPoBkVlFoVUFFgmEL9Nxi1hTFcgU6dSQaBCvoUgv18ZBI
+GWfN38aGhChi/S5McDnN
+=euoM
+-----END PGP SIGNATURE-----
+
+--=-MCo28bfCgkxTqUmARs28--
 
