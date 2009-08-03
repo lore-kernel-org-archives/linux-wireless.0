@@ -1,51 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:38253 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbZHLSP3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 14:15:29 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so67731rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:15:31 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Woo <xinhua_wu@realsil.com.cn>,
-	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 2/2] mac80211: Fix invalid length passed to IE parser for PLINK CONFIRM frames
-Date: Wed, 12 Aug 2009 11:03:44 -0700
-Message-Id: <1250100224-23832-3-git-send-email-javier@cozybit.com>
-In-Reply-To: <1250100224-23832-2-git-send-email-javier@cozybit.com>
-References: <4A82639F.6000908@realsil.com.cn>
- <1250100224-23832-1-git-send-email-javier@cozybit.com>
- <1250100224-23832-2-git-send-email-javier@cozybit.com>
+Received: from mail.atheros.com ([12.36.123.2]:34788 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754622AbZHCTZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:25:03 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 05/24] ath9k: move devid cache setting to ath_init()
+Date: Mon, 3 Aug 2009 12:24:37 -0700
+Message-ID: <1249327496-24629-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woo <xinhua_wu@realsil.com.cn>
+This lets us trim one argument off of hw initializer routines.
 
-The length of the fixed portion of plink confirm frames is 4 bytes longer than
-the other plink_action frames.  This path corrects an error in the length
-adjustment done for these type of frames.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/mesh_plink.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c   |   15 ++++++---------
+ drivers/net/wireless/ath/ath9k/hw.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c |    3 ++-
+ 3 files changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7c49c95..3575fe3 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -415,7 +415,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
- 	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
- 		baseaddr += 4;
--		baselen -= 4;
-+		baselen += 4;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index fcefea8..ff2875b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -437,16 +437,14 @@ static void ath9k_hw_set_defaults(struct ath_hw *ah)
+ 		ah->config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
+ 
+-static void ath9k_hw_newstate(u16 devid,
+-			      struct ath_hw *ah)
++static void ath9k_hw_newstate(struct ath_hw *ah)
+ {
+ 	ah->hw_version.magic = AR5416_MAGIC;
+ 	ah->regulatory.country_code = CTRY_DEFAULT;
+-	ah->hw_version.devid = devid;
+ 	ah->hw_version.subvendorid = 0;
+ 
+ 	ah->ah_flags = 0;
+-	if ((devid == AR5416_AR9100_DEVID))
++	if (ah->hw_version.devid == AR5416_AR9100_DEVID)
+ 		ah->hw_version.macVersion = AR_SREV_VERSION_9100;
+ 	if (!AR_SREV_9100(ah))
+ 		ah->ah_flags = AH_USE_EEPROM;
+@@ -611,13 +609,12 @@ static int ath9k_hw_post_attach(struct ath_hw *ah)
+ }
+ 
+ static int ath9k_hw_do_attach(struct ath_hw *ah,
+-			      u16 devid,
+ 			      struct ath_softc *sc)
+ {
+ 	int r;
+ 	u32 i, j;
+ 
+-	ath9k_hw_newstate(devid, ah);
++	ath9k_hw_newstate(ah);
+ 	ath9k_hw_set_defaults(ah);
+ 
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+@@ -1186,9 +1183,9 @@ void ath9k_hw_detach(struct ath_hw *ah)
+ 	kfree(ah);
+ }
+ 
+-int ath9k_hw_attach(struct ath_hw *ah, u16 devid, struct ath_softc *sc)
++int ath9k_hw_attach(struct ath_hw *ah, struct ath_softc *sc)
+ {
+-	switch (devid) {
++	switch (ah->hw_version.devid) {
+ 	case AR5416_DEVID_PCI:
+ 	case AR5416_DEVID_PCIE:
+ 	case AR5416_AR9100_DEVID:
+@@ -1198,7 +1195,7 @@ int ath9k_hw_attach(struct ath_hw *ah, u16 devid, struct ath_softc *sc)
+ 	case AR9285_DEVID_PCIE:
+ 	case AR5416_DEVID_AR9287_PCI:
+ 	case AR5416_DEVID_AR9287_PCIE:
+-		return ath9k_hw_do_attach(ah, devid, sc);
++		return ath9k_hw_do_attach(ah, sc);
+ 	default:
+ 		break;
  	}
- 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
- 	if (!elems.peer_link) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 4a0d5f2..c769dd6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -544,7 +544,7 @@ struct ath_hw {
+ /* Attach, Detach, Reset */
+ const char *ath9k_hw_probe(u16 vendorid, u16 devid);
+ void ath9k_hw_detach(struct ath_hw *ah);
+-int ath9k_hw_attach(struct ath_hw *ah, u16 devid, struct ath_softc *sc);
++int ath9k_hw_attach(struct ath_hw *ah, struct ath_softc *sc);
+ void ath9k_hw_rfdetach(struct ath_hw *ah);
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   bool bChannelChange);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c2b9974..fa2c230 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1331,8 +1331,9 @@ static int ath_init(u16 devid, struct ath_softc *sc)
+ 	}
+ 
+ 	ah->ah_sc = sc;
++	ah->hw_version.devid = devid;
+ 
+-	r = ath9k_hw_attach(ah, devid, sc);
++	r = ath9k_hw_attach(ah, sc);
+ 	if (r) {
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Unable to attach hardware; "
 -- 
-1.5.4.3
+1.6.3.3
 
