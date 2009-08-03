@@ -1,107 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:23125 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932108AbZHQQ4a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 12:56:30 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so711134eye.37
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:32 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 7/7] rt2x00: Add support for retry rates
-Date: Mon, 17 Aug 2009 18:56:10 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>
-References: <200908171853.24256.IvDoorn@gmail.com> <200908171855.15390.IvDoorn@gmail.com> <200908171855.40486.IvDoorn@gmail.com>
-In-Reply-To: <200908171855.40486.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:34783 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754332AbZHCTY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:24:59 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 02/24] ath9k: use a switch for revising supported hw mac revisions
+Date: Mon, 3 Aug 2009 12:24:34 -0700
+Message-ID: <1249327496-24629-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908171856.10503.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benoit PAPILLAULT <benoit.papillault@free.fr>
+This makes adding new hw revisions a one line change here.
 
-rt2800pci can handle different retry rates,
-it will always step 1 rate down after a failed
-transmission so creating the retry rate list
-for mac80211 is quite simple.
-
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c   |   22 +++++++++++++++++-----
- drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
- 2 files changed, 19 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index b6676c6..9ab70e4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -220,7 +220,8 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
- 	unsigned int header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
--	u8 rate_idx, rate_flags;
-+	u8 rate_idx, rate_flags, retry_rates;
-+	unsigned int i;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e0bc4c5..8228f41 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -662,13 +662,16 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
+ 	DPRINTF(sc, ATH_DBG_RESET, "serialize_regmode is %d\n",
+ 		ah->config.serialize_regmode);
  
- 	/*
- 	 * Unmap the skb.
-@@ -259,16 +260,27 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 
- 	rate_idx = skbdesc->tx_rate_idx;
- 	rate_flags = skbdesc->tx_rate_flags;
-+	retry_rates = test_bit(TXDONE_FALLBACK, &txdesc->flags) ?
-+	    (txdesc->retry + 1) : 1;
- 
- 	/*
- 	 * Initialize TX status
- 	 */
- 	memset(&tx_info->status, 0, sizeof(tx_info->status));
- 	tx_info->status.ack_signal = 0;
--	tx_info->status.rates[0].idx = rate_idx;
--	tx_info->status.rates[0].flags = rate_flags;
--	tx_info->status.rates[0].count = txdesc->retry + 1;
--	tx_info->status.rates[1].idx = -1; /* terminate */
-+
-+	/*
-+	 * Frame was send with retries, hardware tried
-+	 * different rates to send out the frame, at each
-+	 * retry it lowered the rate 1 step.
-+	 */
-+	for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
-+		tx_info->status.rates[i].idx = rate_idx - i;
-+		tx_info->status.rates[i].flags = rate_flags;
-+		tx_info->status.rates[i].count = 1;
-+	}
-+	if (i < (IEEE80211_TX_MAX_RATES -1))
-+		tx_info->status.rates[i].idx = -1; /* terminate */
- 
- 	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 		if (test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 47d175a..a5591fb 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -214,6 +214,7 @@ struct rxdone_entry_desc {
-  *
-  * @TXDONE_UNKNOWN: Hardware could not determine success of transmission.
-  * @TXDONE_SUCCESS: Frame was successfully send
-+ * @TXDONE_FALLBACK: Frame was successfully send using a fallback rate.
-  * @TXDONE_FAILURE: Frame was not successfully send
-  * @TXDONE_EXCESSIVE_RETRY: In addition to &TXDONE_FAILURE, the
-  *	frame transmission failed due to excessive retries.
-@@ -221,6 +222,7 @@ struct rxdone_entry_desc {
- enum txdone_entry_desc_flags {
- 	TXDONE_UNKNOWN,
- 	TXDONE_SUCCESS,
-+	TXDONE_FALLBACK,
- 	TXDONE_FAILURE,
- 	TXDONE_EXCESSIVE_RETRY,
- };
+-	if ((ah->hw_version.macVersion != AR_SREV_VERSION_5416_PCI) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_5416_PCIE) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_9160) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_9100) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_9280) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_9285) &&
+-	    (ah->hw_version.macVersion != AR_SREV_VERSION_9287)) {
++	switch (ah->hw_version.macVersion) {
++	case AR_SREV_VERSION_5416_PCI:
++	case AR_SREV_VERSION_5416_PCIE:
++	case AR_SREV_VERSION_9160:
++	case AR_SREV_VERSION_9100:
++	case AR_SREV_VERSION_9280:
++	case AR_SREV_VERSION_9285:
++	case AR_SREV_VERSION_9287:
++		break;
++	default:
+ 		DPRINTF(sc, ATH_DBG_FATAL,
+ 			"Mac Chip Rev 0x%02x.%x is not supported by "
+ 			"this driver\n", ah->hw_version.macVersion,
 -- 
-1.6.4
+1.6.3.3
 
