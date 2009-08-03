@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lirone.symas.net ([64.71.152.235]:39378 "EHLO lirone.symas.net"
+Received: from mga01.intel.com ([192.55.52.88]:55498 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753640AbZHND1o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 23:27:44 -0400
-Received: from [76.91.220.157] (helo=[192.168.1.20])
-	by lirone.symas.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <hyc@symas.com>)
-	id 1Mbn4L-0004bZ-MN
-	for linux-wireless@vger.kernel.org; Thu, 13 Aug 2009 20:03:05 -0700
-Message-ID: <4A84D3E4.5050406@symas.com>
-Date: Thu, 13 Aug 2009 20:03:00 -0700
-From: Howard Chu <hyc@symas.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: compat-wireless-2009-08-13 ath9k timeouts
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1752230AbZHCGf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 02:35:29 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH 2/3] iwmc3200wifi: set WEP key static flag correctly
+Date: Mon,  3 Aug 2009 14:37:02 +0800
+Message-Id: <1249281423-26435-3-git-send-email-yi.zhu@intel.com>
+In-Reply-To: <1249281423-26435-2-git-send-email-yi.zhu@intel.com>
+References: <1249281423-26435-1-git-send-email-yi.zhu@intel.com>
+ <1249281423-26435-2-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just built this on my 2.6.31-rc5 kernel. Using the driver results in a flood of
+We should only set the static_key flag for open and legacy
+authentication types. It should not be set for 802.1X and TKIP.
 
-[   78.598403] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.599508] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.600500] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.600833] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.600833] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.600833] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
-[   78.601378] ath9k: AR_INTR_SYNC_LOCAL_TIMEOUT
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/commands.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-in dmesg, and throughput is extremely slow. Surprising that there are multiple 
-messages in a single time tick.
-
-I also tried with the ath9k driver from wireless-testing, as of commit 
-3fbf09eb3916 and got the same result.
-
+diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
+index 0d66370..6b36260 100644
+--- a/drivers/net/wireless/iwmc3200wifi/commands.c
++++ b/drivers/net/wireless/iwmc3200wifi/commands.c
+@@ -596,6 +596,8 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 	key_idx = key->hdr.key_idx;
+ 
+ 	if (!remove) {
++		u8 auth_type = iwm->umac_profile->sec.auth_type;
++
+ 		IWM_DBG_WEXT(iwm, DBG, "key_idx:%d\n", key_idx);
+ 		IWM_DBG_WEXT(iwm, DBG, "key_len:%d\n", key_len);
+ 		IWM_DBG_WEXT(iwm, DBG, "MAC:%pM, idx:%d, multicast:%d\n",
+@@ -618,7 +620,9 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 			memcpy(&wep40->key_hdr, key_hdr,
+ 			       sizeof(struct iwm_umac_key_hdr));
+ 			memcpy(wep40->key, key_data, key_len);
+-			wep40->static_key = 1;
++			wep40->static_key =
++				!!((auth_type != UMAC_AUTH_TYPE_8021X) &&
++				   (auth_type != UMAC_AUTH_TYPE_RSNA_PSK));
+ 
+ 			cmd_size = sizeof(struct iwm_umac_key_wep40);
+ 			break;
+@@ -632,7 +636,9 @@ int iwm_set_key(struct iwm_priv *iwm, bool remove, struct iwm_key *key)
+ 			memcpy(&wep104->key_hdr, key_hdr,
+ 			       sizeof(struct iwm_umac_key_hdr));
+ 			memcpy(wep104->key, key_data, key_len);
+-			wep104->static_key = 1;
++			wep104->static_key =
++				!!((auth_type != UMAC_AUTH_TYPE_8021X) &&
++				   (auth_type != UMAC_AUTH_TYPE_RSNA_PSK));
+ 
+ 			cmd_size = sizeof(struct iwm_umac_key_wep104);
+ 			break;
 -- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+1.6.0.4
+
