@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36283 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756347AbZHFSqz (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:51350 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074AbZHCU2r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:46:55 -0400
-Message-Id: <20090806184234.476962720@sipsolutions.net>
-References: <20090806184131.114246687@sipsolutions.net>
-Date: Thu, 06 Aug 2009 20:41:34 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 3/3] cfg80211: fix SME association after disassociation
-Mime-Version: 1.0
+	Mon, 3 Aug 2009 16:28:47 -0400
+Received: by yxe5 with SMTP id 5so2291991yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 13:28:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1249329503.5652.9.camel@mj>
+References: <1249328027-24865-1-git-send-email-lrodriguez@atheros.com>
+	<1249329503.5652.9.camel@mj>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 3 Aug 2009 13:28:26 -0700
+Message-ID: <43e72e890908031328g18afdb2mcee0a4d8f8d58fce@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 08/24] ath9k: pass only one argument to hw
+	attach
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an AP disassociates us, we currently go into a weird
-state because the SME doesn't handle authenticated but not
-associated well unless it's within its own state machine,
-it can't recover from that. However, it shouldn't need to,
-since we don't do any decisions in it really -- so when we
-get disconnected, simply deauthenticate too.
+On Mon, Aug 3, 2009 at 12:58 PM, Pavel Roskin<proski@gnu.org> wrote:
+> On Mon, 2009-08-03 at 12:33 -0700, Luis R. Rodriguez wrote:
+>> The softc is cached and set within the ath_hw struct.
+>
+> That's not meant to criticize this particular patch, but what's the
+> point in distinguishing sc from ah these days?  I believe "ah" used to
+> refer to the closed part of the sc structure that was only touched by
+> Atheros HAL, hence the name.
+>
+> Since there is no HAL anymore, ah should disappear.
 
-Reported-by: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/sme.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+I started looking to do this but stopped for a few reasons.
 
---- wireless-testing.orig/net/wireless/sme.c	2009-08-06 20:40:09.000000000 +0200
-+++ wireless-testing/net/wireless/sme.c	2009-08-06 20:40:19.000000000 +0200
-@@ -570,10 +570,30 @@ void __cfg80211_disconnected(struct net_
- 	wdev->ssid_len = 0;
- 
- 	if (wdev->conn) {
-+		const u8 *bssid;
-+		int ret;
-+
- 		kfree(wdev->conn->ie);
- 		wdev->conn->ie = NULL;
- 		kfree(wdev->conn);
- 		wdev->conn = NULL;
-+
-+		/*
-+		 * If this disconnect was due to a disassoc, we
-+		 * we might still have an auth BSS around. For
-+		 * the userspace SME that's currently expected,
-+		 * but for the kernel SME (nl80211 CONNECT or
-+		 * wireless extensions) we want to clear up all
-+		 * state.
-+		 */
-+		for (i = 0; i < MAX_AUTH_BSSES; i++) {
-+			if (!wdev->auth_bsses[i])
-+				continue;
-+			bssid = wdev->auth_bsses[i]->pub.bssid;
-+			ret = __cfg80211_mlme_deauth(rdev, dev, bssid, NULL, 0,
-+						WLAN_REASON_DEAUTH_LEAVING);
-+			WARN(ret, "deauth failed: %d\n", ret);
-+		}
- 	}
- 
- 	nl80211_send_disconnected(rdev, dev, reason, ie, ie_len, from_ap);
+1) It seems softc still serves some good purpose to us:
+   a) Rate control stuff
+   b) Place holder for timers, spin_locks, etc
+   c) Configuration knobs not yet available on upper layers (tx/rx
+chainmask is one, for example)
+2) ath9k virtual wiphy stuff
 
--- 
+Rate control is one chapter in itself, but the general idea is to get
+proper HT support added to mac80211 rate control API and to one rate
+control algorithm, say minstrel. To really accomplish this we should
+strive to allow users to select between the private driver rate
+control algorithm or minstrel on ath9k.
 
+I don't see a point to move timers/spinlocks to hw related structs, at
+least yet.
+
+We then should see what knobs we can make generic or not.
+
+Virtual wiphy is very specific to ath9k so far, some serious work is
+required to see if we can move some of this up later.
+
+> As the first step, ah should be allocated as part of sc.  Then ah and sc
+> should stop pointing to each other.  Instead, macros based on offsetof
+> should be used.  Then ah should be dissolved and replaced with sc
+> throughout the code.
+
+That sounds reasonable.
+
+> That's probably a good task for an aspiring kernel hacker, as it
+> requires little specialized knowledge.
+
+Patches welcomed.
+
+  Luis
