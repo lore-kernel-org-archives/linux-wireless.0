@@ -1,236 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:5673 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbZHRV7b (ORCPT
+Received: from mail-yw0-f177.google.com ([209.85.211.177]:41033 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932261AbZHCPGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 17:59:31 -0400
-Message-ID: <4A8B246D.7050004@dell.com>
-Date: Tue, 18 Aug 2009 17:00:13 -0500
-From: Mario Limonciello <mario_limonciello@dell.com>
+	Mon, 3 Aug 2009 11:06:17 -0400
+Received: by ywh7 with SMTP id 7so4050259ywh.21
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 08:06:17 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Alan Jenkins <sourcejedi.lkml@googlemail.com>
-CC: Marcel Holtmann <marcel@holtmann.org>, cezary.jackiewicz@gmail.com,
-	linux-acpi@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
-References: <4A89E768.7010207@dell.com>	 <1250558643.30166.109.camel@localhost.localdomain>	 <9b2b86520908180044l72cb8642j6256e246662f7971@mail.gmail.com>	 <9b2b86520908180752k66feda09rf9034a96ac6ef470@mail.gmail.com>	 <4A8AE459.8060102@dell.com>	 <9b2b86520908181408v5f7875b6sea31d8d95cc08c0b@mail.gmail.com> <1250631063.16393.14.camel@johannes.local>
-In-Reply-To: <1250631063.16393.14.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig437FC89B86322BCC59133E83"
+In-Reply-To: <efe7343f0908020237k61fa7656s458cee0217b46c69@mail.gmail.com>
+References: <efe7343f0908020214m6d8b2518n51d4264943ce273a@mail.gmail.com>
+	<1249204732.2007.49.camel@johannes.local> <efe7343f0908020226n4b693defv38546a6f8aa1cfd9@mail.gmail.com>
+	<1249205597.2007.50.camel@johannes.local> <efe7343f0908020237k61fa7656s458cee0217b46c69@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 3 Aug 2009 08:05:57 -0700
+Message-ID: <43e72e890908030805l57399345w668ccd2cacbb8198@mail.gmail.com>
+Subject: Re: Unsupported PHY on B43
+To: Luis Correia <luis.f.correia@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig437FC89B86322BCC59133E83
-Content-Type: multipart/mixed;
- boundary="------------030208070404050209000705"
-
-This is a multi-part message in MIME format.
---------------030208070404050209000705
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hi Guys:
-
-Johannes Berg wrote:
-> Hi everyone,
+On Sun, Aug 2, 2009 at 2:37 AM, Luis Correia<luis.f.correia@gmail.com> wrote:
+> On Sun, Aug 2, 2009 at 10:33, Johannes Berg<johannes@sipsolutions.net> wrote:
+>> On Sun, 2009-08-02 at 10:26 +0100, Luis Correia wrote:
+>>
+>>> > This is an 11n phy.
+>>>
+>>> Great, an 11n device with only two antennas (they are usually three).
+>>
+>> Oh, it depends on the configuration -- maybe they used a cheaper device
+>> with fewer chains.
 >
-> That's a bit strange indeed, but I haven't seen the rest of the code.
+> yes, it even is a half-height minipci-express card, the first one I've
+> seen so far.
+
+11n does not require three antennas. It really depends on the number
+of streams you have and the chain configuration. As a matter of fact
+you can use 11n with 1 stream and only use the lower MCS rates.
+
+>>> >> I'm available to test drivers, patches, git kernels, the whole lot.
+>>> >
+>>> > There's nothing available beyond what you have.
+>>>
+>>> Bummer, I guess I'll have to wait then.
+>>
+>> Don't hold your breath -- nobody's working on it. I also really want it
+>> working, but since nobody seems even interested in writing the driver,
+>> we've halted the reverse engineering effort.
 >
-> Does the 'soft block' bit change based on user input, like pressing a
-> button?
->
-> If not, you shouldn't poll that bit at all, but just set it based on
-> what rfkill gives you as the return value of set_hw_state().
->
->  =20
-No it doesn't, so i've followed your advice in an updated patch, Thanks.
+> 11n is doomed on Linux :(
 
+No its not.
 
-Alan Jenkins wrote:
-
-> ... but you *do* need to unregister wifi_rfkill here, before you go on
-> to destroy it.
->
-> +err_wifi:
-> +	rfkill_destroy(wifi_rfkill);
-> +
-> +	return ret;
-> +}
->
-> Regards
-> Alan
->  =20
-I think I've addressed this properly now and only go through each of the =
-error handlers as necessary.
-
---=20
-Mario Limonciello
-*Dell | Linux Engineering*
-mario_limonciello@dell.com
-
---------------030208070404050209000705
-Content-Type: text/x-patch;
- name="02_add_rfkill_support.diff"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline;
- filename="02_add_rfkill_support.diff"
-
---- compal-laptop.c.old	2009-08-18 05:23:39.668669312 -0500
-+++ compal-laptop.c	2009-08-18 05:49:00.098015155 -0500
-@@ -52,6 +52,7 @@
- #include <linux/backlight.h>
- #include <linux/platform_device.h>
- #include <linux/autoconf.h>
-+#include <linux/rfkill.h>
-=20
- #define COMPAL_DRIVER_VERSION "0.2.6"
-=20
-@@ -64,6 +65,10 @@
- #define WLAN_MASK	0x01
- #define BT_MASK 	0x02
-=20
-+static struct rfkill *wifi_rfkill;
-+static struct rfkill *bt_rfkill;
-+static struct platform_device *compal_device;
-+
- static int force;
- module_param(force, bool, 0);
- MODULE_PARM_DESC(force, "Force driver load, ignore DMI data");
-@@ -89,6 +94,84 @@
- 	return (int) result;
- }
-=20
-+static void compal_rfkill_poll(struct rfkill *rfkill, void *data)
-+{
-+	unsigned long radio =3D (unsigned long) data;
-+	u8 result;
-+	bool hw_blocked;
-+	bool sw_blocked;
-+
-+	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
-+
-+	hw_blocked =3D !(result & (KILLSWITCH_MASK | radio));
-+	sw_blocked =3D rfkill_set_hw_state(rfkill, hw_blocked);
-+
-+	rfkill_set_sw_state(rfkill, sw_blocked);
-+}
-+
-+static int compal_rfkill_set(void *data, bool blocked)
-+{
-+	unsigned long radio =3D (unsigned long) data;
-+	u8 result, value;
-+
-+	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
-+
-+	if ((result & KILLSWITCH_MASK) =3D=3D 0)
-+		return -EINVAL;
-+
-+	if (!blocked)
-+		value =3D (u8) (result | radio);
-+	else
-+		value =3D (u8) (result & ~radio);
-+	ec_write(COMPAL_EC_COMMAND_WIRELESS, value);
-+
-+	return 0;
-+}
-+
-+static const struct rfkill_ops compal_rfkill_ops =3D {
-+	.poll =3D compal_rfkill_poll,
-+	.set_block =3D compal_rfkill_set,
-+};
-+
-+static int setup_rfkill(void)
-+{
-+	int ret;
-+
-+	wifi_rfkill =3D rfkill_alloc("compal-wifi", &compal_device->dev,=20
-+				RFKILL_TYPE_WLAN, &compal_rfkill_ops,=20
-+				(void *) WLAN_MASK);
-+	if (!wifi_rfkill)
-+		return -ENOMEM;
-+
-+	ret =3D rfkill_register(wifi_rfkill);
-+	if (ret)
-+		goto err_wifi;
-+
-+	bt_rfkill =3D rfkill_alloc("compal-bluetooth", &compal_device->dev,=20
-+				RFKILL_TYPE_BLUETOOTH, &compal_rfkill_ops,=20
-+				(void *) BT_MASK);
-+	if (!bt_rfkill) {
-+		ret =3D -ENOMEM;
-+		goto err_allocate_bt;
-+	}
-+	ret =3D rfkill_register(bt_rfkill);
-+	if (ret)
-+		goto err_register_bt;
-+
-+	return 0;
-+
-+err_register_bt:
-+	rfkill_destroy(bt_rfkill);
-+
-+err_allocate_bt:
-+	rfkill_unregister(wifi_rfkill);
-+
-+err_wifi:
-+	rfkill_destroy(wifi_rfkill);
-+
-+	return ret;
-+}
-+
- static int set_wlan_state(int state)
- {
- 	u8 result, value;
-@@ -258,8 +341,6 @@
- 	}
- };
-=20
--static struct platform_device *compal_device;
--
- /* Initialization */
-=20
- static int dmi_check_cb(const struct dmi_system_id *id)
-@@ -397,6 +478,10 @@
- 	if (ret)
- 		goto fail_platform_device2;
-=20
-+	ret =3D setup_rfkill();
-+	if (ret)
-+		printk(KERN_WARNING "compal-laptop: Unable to setup rfkill\n");
-+
- 	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
- 		" successfully loaded.\n");
-=20
-@@ -428,6 +513,10 @@
- 	platform_device_unregister(compal_device);
- 	platform_driver_unregister(&compal_driver);
- 	backlight_device_unregister(compalbl_device);
-+	rfkill_unregister(wifi_rfkill);
-+	rfkill_destroy(wifi_rfkill);
-+	rfkill_unregister(bt_rfkill);
-+	rfkill_destroy(bt_rfkill);
-=20
- 	printk(KERN_INFO "compal-laptop: driver unloaded.\n");
- }
-
---------------030208070404050209000705--
-
---------------enig437FC89B86322BCC59133E83
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkqLJG0ACgkQ2CrZjkA73YumIwCeIkDC2Uc3YyxTGd4icVOLFuXR
-MIsAnRfG0qnWnU7a8gXhjVKhihjhpxmP
-=XAFV
------END PGP SIGNATURE-----
-
---------------enig437FC89B86322BCC59133E83--
+  Luis
