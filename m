@@ -1,62 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44509 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630AbZHXOpM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 10:45:12 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1MfanJ-0003m5-Q1
-	for linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 10:45:13 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n7OEaMjA010784
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 10:36:22 -0400
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id n7OEaMjX010782
-	for linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 10:36:22 -0400
-Date: Mon, 24 Aug 2009 10:36:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: [davem@davemloft.net: consider 2.6.31 a done deal...]
-Message-ID: <20090824143622.GC8998@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:32315 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750698AbZHCAoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 2 Aug 2009 20:44:08 -0400
+Subject: Re: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing
+ kfree
+From: Zhu Yi <yi.zhu@intel.com>
+To: Julia Lawall <julia@diku.dk>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
+References: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
+Content-Type: text/plain
+Date: Mon, 03 Aug 2009 08:44:06 +0800
+Message-Id: <1249260246.4069.26.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI...obviously, this goes for wireless fixes for 2.6.31 as well...
+On Sat, 2009-08-01 at 16:54 +0800, Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Error handling code following a kzalloc should free the allocated data.
+> 
+> The semantic match that finds the problem is as follows:
+> (http://www.emn.fr/x-info/coccinelle/)
+> 
+> // <smpl>
+> @r exists@
+> local idexpression x;
+> statement S;
+> expression E;
+> identifier f,f1,l;
+> position p1,p2;
+> expression *ptr != NULL;
+> @@
+> 
+> x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+> ...
+> if (x == NULL) S
+> <... when != x
+>      when != if (...) { <+...x...+> }
+> (
+> x->f1 = E
+> |
+>  (x->f1 == NULL || ...)
+> |
+>  f(...,x->f1,...)
+> )
+> ...>
+> (
+>  return \(0\|<+...x...+>\|ptr\);
+> |
+>  return@p2 ...;
+> )
+> 
+> @script:python@
+> p1 << r.p1;
+> p2 << r.p2;
+> @@
+> 
+> print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> index 7707a26..c2106d0 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> @@ -320,6 +320,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+>  	ptr = priv->eeprom;
+>  	if (!ptr) {
+>  		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
+> +		kfree(buf);
+>  		return -ENOMEM;
+>  	}
+>  	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
 
------ Forwarded message from David Miller <davem@davemloft.net> -----
+Probably moving !priv->eeprom check prior to buf kzalloc is better.
 
-> Date: Sun, 23 Aug 2009 23:21:11 -0700 (PDT)
-> From: David Miller <davem@davemloft.net>
-> To: netdev@vger.kernel.org
-> Subject: consider 2.6.31 a done deal...
-> X-Mailer: Mew version 6.2.51 on Emacs 22.1 / Mule 5.0 (SAKAKI)
-> 
-> 
-> At least that should be your mindset when you submit changes
-> at this point.  With the net-2.6 pull request I just sent to
-> Linus, I really don't want to see anything submitted for
-> net-2.6 unless it is EARTH SHATTERING.
-> 
-> And chances are, the "super important" bug fix you might have for your
-> driver is absolutely not EARTH SHATTERING.
-> 
-> So don't even try to slip it by me.  Ok? :-)
-> 
-> net-next-2.6 submissions, on the other hand, are very highly
-> encouraged :-)
-> 
-> Thanks!
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Thanks,
+-yi
 
------ End forwarded message -----
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
