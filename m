@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37045 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbZHIP6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 11:58:37 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] rtl818x: Add some documentation to the TX desc flags
-Date: Sun, 9 Aug 2009 17:57:30 +0200
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200908091757.31010.mb@bu3sch.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41398 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbZHCTBA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:01:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Martin Ettl <ettl.martin@gmx.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: avoid memory leak in iwl_dbgfs_nvm_read
+Date: Mon,  3 Aug 2009 14:49:48 -0400
+Message-Id: <1249325388-6496-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some TX desc flags docs.
-
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Reported-by: Martin Ettl <ettl.martin@gmx.de>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-It's incomplete. Just the ones I could easily figure out by myself...
-
-
- drivers/net/wireless/rtl818x/rtl818x.h |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl818x.h
-+++ wireless-testing/drivers/net/wireless/rtl818x/rtl818x.h
-@@ -187,22 +187,32 @@ struct rtl818x_csr {
- } __attribute__((packed));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 11e08c0..6525e41 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -318,7 +318,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+ 	ptr = priv->eeprom;
+ 	if (!ptr) {
+ 		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto out;
+ 	}
+ 	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
+ 			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
+@@ -333,6 +334,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+ 	}
  
- struct rtl818x_rf_ops {
- 	char *name;
- 	void (*init)(struct ieee80211_hw *);
- 	void (*stop)(struct ieee80211_hw *);
- 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
- 	void (*conf_erp)(struct ieee80211_hw *, struct ieee80211_bss_conf *);
- };
- 
--/* Tx/Rx flags are common between RTL818X chips */
--
-+/**
-+ * enum rtl818x_tx_desc_flags - Tx/Rx flags are common between RTL818X chips
-+ *
-+ * @RTL818X_TX_DESC_FLAG_NO_ENC: Disable hardware based encryption.
-+ * @RTL818X_TX_DESC_FLAG_TX_OK: TX frame was ACKed.
-+ * @RTL818X_TX_DESC_FLAG_SPLCP: Use short preamble.
-+ * @RTL818X_TX_DESC_FLAG_MOREFRAG: More fragments follow.
-+ * @RTL818X_TX_DESC_FLAG_CTS: Use CTS-to-self protection.
-+ * @RTL818X_TX_DESC_FLAG_RTS: Use RTS/CTS protection.
-+ * @RTL818X_TX_DESC_FLAG_LS: Last segment of the frame.
-+ * @RTL818X_TX_DESC_FLAG_FS: First segment of the frame.
-+ */
- enum rtl818x_tx_desc_flags {
- 	RTL818X_TX_DESC_FLAG_NO_ENC	= (1 << 15),
- 	RTL818X_TX_DESC_FLAG_TX_OK	= (1 << 15),
- 	RTL818X_TX_DESC_FLAG_SPLCP	= (1 << 16),
- 	RTL818X_TX_DESC_FLAG_RX_UNDER	= (1 << 16),
- 	RTL818X_TX_DESC_FLAG_MOREFRAG	= (1 << 17),
- 	RTL818X_TX_DESC_FLAG_CTS	= (1 << 18),
- 	RTL818X_TX_DESC_FLAG_RTS	= (1 << 23),
- 	RTL818X_TX_DESC_FLAG_LS		= (1 << 28),
- 	RTL818X_TX_DESC_FLAG_FS		= (1 << 29),
-
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++
++out:
+ 	kfree(buf);
+ 	return ret;
+ }
 -- 
-Greetings, Michael.
+1.6.2.5
+
