@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coruscant.huijgen.tk ([84.245.31.19]:28367 "EHLO
-	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756640AbZHNMWr (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:45392 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441AbZHCIrz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 08:22:47 -0400
-Message-ID: <4A855483.8070208@huijgen.tk>
-Date: Fri, 14 Aug 2009 14:11:47 +0200
-From: Mark Huijgen <mark.sf.net@huijgen.tk>
-MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH] b43: Add LP-PHY firmware loading support
-References: <4A854FDF.5020208@gmail.com>
-In-Reply-To: <4A854FDF.5020208@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 3 Aug 2009 04:47:55 -0400
+Subject: Re: ar9170usb crashes during iwconfig for ad-hoc mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joerg Albert <jal2@gmx.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249289084.2007.54.camel@johannes.local>
+References: <4A759341.1090006@gmx.de>  <4A7612F8.80802@gmx.de>
+	 <1249289084.2007.54.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mjwbgvGaI8S6iU0y/oWu"
+Date: Mon, 03 Aug 2009 10:47:54 +0200
+Message-Id: <1249289274.4561.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Missing break in initval case switches, see below.
 
-Gábor Stefanik wrote:
-> Add support for loading LP-PHY firmware to b43_try_request_fw.
->
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> For anyone hoping that the channel switch patches will make their LP card work - this is also definitely required.
->
-> Mark, this doesn't fix your problem specifically, but it will be needed after your problem is fixed.
->
->  drivers/net/wireless/b43/main.c |   24 +++++++++++++++++++++++-
->  1 files changed, 23 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index fbcbe4f..1e657fe 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
->  		filename = "ucode5";
->  	else if ((rev >= 11) && (rev <= 12))
->  		filename = "ucode11";
-> -	else if (rev >= 13)
-> +	else if (rev == 13)
->  		filename = "ucode13";
-> +	else if (rev == 14)
-> +		filename = "ucode14";
-> +	else if (rev >= 15)
-> +		filename = "ucode15";
->  	else
->  		goto err_no_ucode;
->  	err = b43_do_request_fw(ctx, filename, &fw->ucode);
-> @@ -2111,6 +2115,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
->  		else
->  			goto err_no_initvals;
->  		break;
-> +	case B43_PHYTYPE_LP:
-> +		if (rev == 13)
-> +			filename = "lp0initvals13";
-> +		else if (rev == 14)
-> +			filename = "lp0initvals14";
-> +		else if (rev >= 15)
-> +			filename = "lp0initvals15";
-> +		else
-> +			goto err_no_initvals;
->   
-break;
->  	default:
->  		goto err_no_initvals;
->  	}
-> @@ -2145,6 +2158,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
->  		else
->  			goto err_no_initvals;
->  		break;
-> +	case B43_PHYTYPE_LP:
-> +		if (rev == 13)
-> +			filename = "lp0bsinitvals13";
-> +		else if (rev == 14)
-> +			filename = "lp0bsinitvals14";
-> +		else if (rev >= 15)
-> +			filename = "lp0bsinitvals15";
-> +		else
-> +			goto err_no_initvals;
->   
-break;
->  	default:
->  		goto err_no_initvals;
->  	}
->   
+--=-mjwbgvGaI8S6iU0y/oWu
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-08-03 at 10:44 +0200, Johannes Berg wrote:
+
+> > >     ifconfig wlan1 down
+> > >     iwconfig wlan1 mode managed essid huhu
+> > >     ifconfig wlan1 up
+> > >     ifconfig wlan1 down
+> > >     iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
+
+> No, it's a bug in cfg80211 :)
+
+But it's not making sense to me. I'll have to try to reproduce it. In
+any case, we shouldn't be calling in to mac80211 from cfg80211 while the
+interface is down.
+
+johannes
+
+--=-mjwbgvGaI8S6iU0y/oWu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKdqQ2AAoJEODzc/N7+Qma5WUQAKl5VsfbdRXJn681M352BedU
+6wDW15CnkA6ZHSG57liIqK6YoF2eCLFwk1dhWW0+pxl/hwr35PghsZpjMk8LhBwD
+bJYTfykAk7PnfwNLbqpOWiXYmDUef4i4OIy4LNDlLoJXuj4qXWa1237oXItxy4JL
+eJRGKgzu9RB/cV4VClU76QiB+FtrnZ8+0EBchgl5/uzQND5+Fa5R6KJW9x4M/+0r
+sFgX9p43cW7fY3m9WHlTTBJeleqVFlONFWrOLtgqvRi8+/zeb/4mHlhsNeTeNC/F
+CZ2H7oyA4X9/vWNKxDpzjYV4l1EOzLhih6ZHhjEoK3GKw6kJC6vxDHljHvfzRM1B
+KTCeNvE9KhXdFNmA02epdLXNKu2kugOEdCHI7W82P62xtLArIHkqk2nKuOdqovyj
+esVTgZeaGKmlyXtktH96G6UxRFHlaTExz9AMDC08rh4ZWUxJ7qAXMfYf6YoC3vuo
+l0oHv0AUzNxKFBw9F1NWZ9Nn+TBaPZwuTYuZQiTrKotuu8pBapwGMVXU+fLO/m2/
+Ik8wp/3rnFhcYF2iBn9QGj1eIcqS0gFuCXMLVJGPD5wq6kTsPdbQkut+csTbryBE
+Uvw2cS8Je/MXep1hBlYEOs3RSq7a+E8SY1XaDQTK58/jV+CpU6cbnVpA67crvZY8
+tZnvGUmxT9nNGT12EBTT
+=Yga2
+-----END PGP SIGNATURE-----
+
+--=-mjwbgvGaI8S6iU0y/oWu--
 
