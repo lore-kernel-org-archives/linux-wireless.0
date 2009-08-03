@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53686 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934068AbZHHMie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 08:38:34 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/7] [compat-2.6] Remove wext building
-Date: Sat,  8 Aug 2009 14:38:14 +0200
-Message-Id: <1249735096-27071-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
-References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.gmx.net ([213.165.64.20]:39428 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754997AbZHCMgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 08:36:44 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Date: Mon, 03 Aug 2009 14:36:42 +0200
+From: "Joerg Albert" <jal2@gmx.de>
+In-Reply-To: <1249289274.4561.0.camel@johannes.local>
+Message-ID: <20090803123642.242160@gmx.net>
+MIME-Version: 1.0
+References: <4A759341.1090006@gmx.de>  <4A7612F8.80802@gmx.de>	
+ <1249289084.2007.54.camel@johannes.local>
+ <1249289274.4561.0.camel@johannes.local>
+Subject: Re: ar9170usb crashes during iwconfig for ad-hoc mode
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wext can not be build as a module. We do not need to build it,
-so remove it from the Makefile.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/patches/99-change-makefiles.patch |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/compat/patches/99-change-makefiles.patch b/compat/patches/99-change-makefiles.patch
-index 19e5d1d..b5a0f10 100644
---- a/compat/patches/99-change-makefiles.patch
-+++ b/compat/patches/99-change-makefiles.patch
-@@ -84,3 +84,10 @@ only the wireless stuff.
-  obj-$(CONFIG_LIBERTAS)		+= libertas/
-  
-  obj-$(CONFIG_LIBERTAS_THINFIRM)	+= libertas_tf/
-+--- a/net/wireless/Makefile
-++++ b/net/wireless/Makefile
-+@@ -1,4 +1,3 @@
-+-obj-$(CONFIG_WIRELESS_EXT) += wext.o
-+ obj-$(CONFIG_CFG80211) += cfg80211.o
-+ obj-$(CONFIG_LIB80211) += lib80211.o
-+ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib80211_crypt_wep.o
+> On Mon, 2009-08-03 at 10:44 +0200, Johannes Berg wrote:
+> 
+> > > >     ifconfig wlan1 down
+> > > >     iwconfig wlan1 mode managed essid huhu
+> > > >     ifconfig wlan1 up
+> > > >     ifconfig wlan1 down
+> > > >     iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
+> 
+> > No, it's a bug in cfg80211 :)
+> 
+> But it's not making sense to me. I'll have to try to reproduce it. In
+> any case, we shouldn't be calling in to mac80211 from cfg80211 while the
+> interface is down.
+
+I guess this is caused by the call to __cfg80211_leave_ibss()
+in  net/wireless/ibss.c::cfg80211_ibss_wext_siwfreq() trying to
+disable the beacon via net/mac80211::ieee80211_ibss_leave().
 -- 
-1.6.2.1
-
+Neu: GMX Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
+für nur 19,99 Euro/mtl.!* http://portal.gmx.net/de/go/dsl02
