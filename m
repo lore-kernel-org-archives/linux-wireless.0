@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:49975 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbZHBByQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35339 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754004AbZHCTqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 21:54:16 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so820986rvb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 18:54:15 -0700 (PDT)
-Message-ID: <4A74F1E3.8050502@lwfinger.net>
-Date: Sat, 01 Aug 2009 20:54:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 3 Aug 2009 15:46:00 -0400
+Date: Mon, 3 Aug 2009 15:40:02 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Martin Ettl <ettl.martin@gmx.de>
+Subject: Re: [PATCH] iwlwifi: avoid memory leak in iwl_dbgfs_nvm_read
+Message-ID: <20090803194002.GC11441@tuxdriver.com>
+References: <1249325388-6496-1-git-send-email-linville@tuxdriver.com> <1249326492.30019.4277.camel@rc-desk>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Regression since 2.6.31-rc3-wl
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1249326492.30019.4277.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When I tested 2.6.31-rc4-wl on my old i386 laptop that uses ifup to
-control the network, wireless did not work. The problem was bisected
-to the following:
+On Mon, Aug 03, 2009 at 12:08:12PM -0700, reinette chatre wrote:
+> On Mon, 2009-08-03 at 11:49 -0700, John W. Linville wrote:
+> > Reported-by: Martin Ettl <ettl.martin@gmx.de>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-debugfs.c |    5 ++++-
+> >  1 files changed, 4 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > index 11e08c0..6525e41 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > @@ -318,7 +318,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+> >  	ptr = priv->eeprom;
+> >  	if (!ptr) {
+> >  		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
+> > -		return -ENOMEM;
+> > +		ret = -ENOMEM;
+> > +		goto out;
+> >  	}
+> >  	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
+> >  			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
+> > @@ -333,6 +334,8 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+> >  	}
+> >  
+> >  	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+> > +
+> > +out:
+> >  	kfree(buf);
+> >  	return ret;
+> >  }
+> 
+> There was another patch also that was acked by Zhu Yi. See
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/37032
 
-commit f1b3c87b70287ded1338fb03a0a714d185041a96
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Tue Jul 7 03:56:05 2009 +0200
+Yes, I see that now -- perhaps Martin will take-up Julia's habit of
+posting patches himself... :-)
 
-    cfg80211: fix netdev down problem
-
-    We shouldn't be looking at the ssid_len for non-IBSS,
-    and for IBSS we should also return an error on trying
-    to leave an IBSS while not in or joining an IBSS.
-
-    This fixes an issue where we wouldn't disconnect() on
-    an interface being taken down since there's no SSID
-    configured this way.
-
-The patch cannot be reverted as net/wireless.ibss.c has changed.
-Reverting the first hunk that modifies net/wireless/core.c does not
-make the system work.
-
-Larry
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
