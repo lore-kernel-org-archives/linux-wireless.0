@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51938 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667AbZHZQOH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 12:14:07 -0400
-Subject: [PATCH] rfkill: relicense header file
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	=?ISO-8859-1?Q?I=F1aky_P=E9rez-Gonz=E1lez?=
-	<inaky.perez-gonzalez@intel.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 Aug 2009 18:13:17 +0200
-Message-Id: <1251303197.15619.29.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:36267 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754641AbZHCTsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:48:20 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:48:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 10/24] ath9k: rename ath9k_hw_newstate() to ath9k_hw_init_defaults()
+Date: Mon, 3 Aug 2009 12:48:20 -0700
+Message-ID: <1249328900-25430-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This header file is copied into userspace tools that
-need not be GPLv2 licensed, make that easier.
+This reflects better what we are actually doing there.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-Need ACK from everybody listed who ever touched this
-file according to git. Please?
 
- include/linux/rfkill.h |   25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+Resend try #2
 
---- wireless-testing.orig/include/linux/rfkill.h	2009-08-26 18:09:57.000000000 +0200
-+++ wireless-testing/include/linux/rfkill.h	2009-08-26 18:10:52.000000000 +0200
-@@ -6,20 +6,17 @@
-  * Copyright (C) 2007 Dmitry Torokhov
-  * Copyright 2009 Johannes Berg <johannes@sipsolutions.net>
-  *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4f3d7bf..6aee570 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -437,7 +437,7 @@ static void ath9k_hw_set_defaults(struct ath_hw *ah)
+ 		ah->config.serialize_regmode = SER_REG_MODE_AUTO;
+ }
  
- #include <linux/types.h>
-
+-static void ath9k_hw_newstate(struct ath_hw *ah)
++static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ {
+ 	ah->hw_version.magic = AR5416_MAGIC;
+ 	ah->regulatory.country_code = CTRY_DEFAULT;
+@@ -654,7 +654,7 @@ int ath9k_hw_attach(struct ath_hw *ah)
+ 		goto bad;
+ 	}
+ 
+-	ath9k_hw_newstate(ah);
++	ath9k_hw_init_defaults(ah);
+ 	ath9k_hw_set_defaults(ah);
+ 
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+-- 
+1.6.3.3
 
