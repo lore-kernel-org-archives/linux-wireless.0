@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:56323 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757515AbZHGOXr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 10:23:47 -0400
-Subject: [PATCH] mac80211: explain TX retry and status
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: nbd <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:49435 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752443AbZHCVI1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 17:08:27 -0400
+Subject: Re: iwlagn: possible regressions from 2.6.29 in 2.6.30
+From: reinette chatre <reinette.chatre@intel.com>
+To: Paul Collins <paul@burly.ondioline.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87tz1thrzk.fsf@bulky.wgtn.ondioline.org>
+References: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
+	 <1246378651.17896.523.camel@rc-desk>	<87k52t9ynp.fsf@jenny.ondioline.org>
+	 <87tz1thrzk.fsf@bulky.wgtn.ondioline.org>
 Content-Type: text/plain
-Date: Fri, 07 Aug 2009 16:23:43 +0200
-Message-Id: <1249655023.7194.4.camel@johannes.local>
+Date: Mon, 03 Aug 2009 14:08:13 -0700
+Message-Id: <1249333693.30019.4285.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some more documentation including an example so that
-it's clearer what should be done for TX retries.
+Paul,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/mac80211.h |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Hi Paul,
 
---- wireless-testing.orig/include/net/mac80211.h	2009-08-07 16:18:15.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2009-08-07 16:22:21.000000000 +0200
-@@ -338,6 +338,21 @@ enum mac80211_rate_control_flags {
-  *
-  * When used for transmit status reporting, the driver should
-  * always report the rate along with the flags it used.
-+ *
-+ * &struct ieee80211_tx_info contains an array of these structs
-+ * in the control information, and it will be filled by the rate
-+ * control algorithm according to what should be sent. For example,
-+ * if this array contains, in the format { <idx>, <count> } the
-+ * information
-+ *    { 3, 2 }, { 2, 2 }, { 1, 4 }, { -1, 0 }, { -1, 0 }
-+ * then this means that the frame should be transmitted
-+ * up to twice at rate 3, up to twice at rate 2, and up to four
-+ * times at rate 1 if it doesn't get acknowledged. Say it gets
-+ * acknowledged by the peer after the fifth attempt, the status
-+ * information should then contain
-+ *   { 3, 2 }, { 2, 2 }, { 1, 1 }, { -1, 0 } ...
-+ * since it was transmitted twice at rate 3, twice at rate 2
-+ * and once at rate 1 after which we received an acknowledgement.
-  */
- struct ieee80211_tx_rate {
- 	s8 idx;
+On Fri, 2009-07-03 at 23:39 -0700, Paul Collins wrote:
+> Paul Collins <paul@burly.ondioline.org> writes:
+> 
+> > reinette chatre <reinette.chatre@intel.com> writes:
+> >>> When I say "packets > 250 bytes" I mean 250-byte packets as claimed by
+> >>> "ping -s 222 mygateway":
+> >>> 
+> >>>         PING cornelius.lan (10.2.4.1) 222(250) bytes of data.
+> >>> 
+> >>> The above will work, but "ping -s 223 cornelius" yields no replies.
+> >>
+> >> Are you saying this works before suspend, but not after resume? What do
+> >> you usually do to get this working again?
+> >
+> > Yes, normally it works great; I can ping with packet sizes up to the
+> > MTU.  However, after suspend/resume and reassociation, "ping -s 223" or
+> > greater does not work.  I get replies with "-s 222" or less,
+> > i.e. packets of 250 bytes or less.
+> >
+> > To get it working again I do "ifdown wlan0" followed by "ifup wlan0",
+> > which does the equivalent of "ip set link wlan0 down/up" and applying
+> > the network configuration.
+> >
+> > I will give the patch a shot when I get home.
+> 
+> I thought at first that the patch had moved the problem from reliably
+> reproducible to intermittently reproducible, but it looks like it was
+> simply intermittently reproducible the whole time.  So, no change with
+> the patch applied.
+
+We have not yet been able to look into this issue - could you please
+submit a bug at intellinuxwireless.org/bugzilla so that we can track it
+there? 
+
+Thank you
+
+Reinette
 
 
