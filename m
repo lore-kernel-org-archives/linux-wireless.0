@@ -1,62 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:35948 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbZHRXlj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 19:41:39 -0400
+Received: from ogre.sisk.pl ([217.79.144.158]:42285 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754629AbZHCPgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 11:36:16 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.31-rc5: Reported regressions from 2.6.30
+Date: Mon, 3 Aug 2009 17:36:29 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Mikael Pettersson <mikpe@it.uu.se>
+References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+In-Reply-To: <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <69e28c910908181329r4b6b7cc8w3c9c0d79dda3730c@mail.gmail.com>
-References: <69e28c910908181329r4b6b7cc8w3c9c0d79dda3730c@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 18 Aug 2009 16:41:20 -0700
-Message-ID: <43e72e890908181641s2455e7f1me9b4d3bc277f197e@mail.gmail.com>
-Subject: Re: [ANN] b43 LP-PHY support (BCM4310/4312/4315) now ready for
-	testing!
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908031736.30745.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/18 Gábor Stefanik <netrolller.3d@gmail.com>:
-> Hello World!
->
-> Great news for Broadcom BCM4310/4312/4315 (PCI 14e4:4315) users:
-> LP-PHY support is now at the point where it can be tested for functionality!
+On Monday 03 August 2009, Linus Torvalds wrote:
+> 
+> On Sun, 2 Aug 2009, Rafael J. Wysocki wrote:
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13896
+> > Subject		: 2.6.31-rc4 broke expect and gcc's testsuite
+> > Submitter	: Mikael Pettersson <mikpe@it.uu.se>
+> > Date		: 2009-07-29 11:00 (5 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124885806406520&w=4
+> 
+> I bet this is the same tty bug that got fixed by Ogawa in commit 
+> e043e42bdb. -rc5 has that fix. Mikael?
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13842
+> > Subject		: Oops when writing to /sys/block/ram0/queue/max_sectors_kb
+> > Submitter	: Jens Rosenboom <jens@mcbone.net>
+> > Date		: 2009-07-23 15:30 (11 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124836574403032&w=4
+> 
+> Commit a4e7d46407d73f35d217013b363b79a8f8eafcaa fixed this one.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13826
+> > Subject		: thinkpad boots with backlight low
+> > Submitter	: Pavel Machek <pavel@ucw.cz>
+> > Date		: 2009-07-15 15:13 (19 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124756359126830&w=4
+> > Handled-By	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> 
+> This should be commit 59fe4fe34d7afdf63208124f313be9056feaa2f4.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13815
+> > Subject		: emacs -nw compilation doesn't show the error message
+> > Submitter	: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> > Date		: 2009-07-23 06:22 (11 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d945cb9cce20ac7143c2de8d88b187f62db99bdc
+> 
+> Same old pty bug, same fix: commit e043e42bdb.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13813
+> > Subject		: Hangups in n_tty_read()
+> > Submitter	: Johannes Weiner <hannes@cmpxchg.org>
+> > Date		: 2009-07-16 18:48 (18 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124777019920579&w=4
+> 
+> Hmm. Worth testing that same fix, although the symptoms here are not 
+> exactly the same.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13812
+> > Subject		: Ooops on uplug
+> > Submitter	: Daniel Mack <daniel@caiaq.de>
+> > Date		: 2009-07-20 17:51 (14 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124811234302786&w=4
+> > Handled-By	: Alan Stern <stern@rowland.harvard.edu>
+> > 		  Alan Cox <alan@linux.intel.com>
+> 
+> Commit c56d3000861 should fix this.
+> 
+> > Regressions with patches
+> > ------------------------
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13891
+> > Subject		: PCI resources allocation problem on HP nx6325
+> > Submitter	: Rafael J. Wysocki <rjw@sisk.pl>
+> > Date		: 2009-08-02 13:37 (1 days old)
+> > Handled-By	: Linus Torvalds <torvalds@linux-foundation.org>
+> > Patch		: http://patchwork.kernel.org/patch/38774/
+> 
+> Ok, this is committed as 79896cf42f6a96d7e14f2dc3473443d68d74031d.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13825
+> > Subject		: eeepc-laptop: fix hot-unplug on resume
+> > Submitter	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> > Date		: 2009-06-29 13:12 (35 days old)
+> > References	: http://lkml.org/lkml/2009/6/29/150
+> > Handled-By	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> > Patch		: http://patchwork.kernel.org/patch/32926/
+> 
+> commit 7334546a52c6764df120459509b1f803a073eacc
 
-Hey great stuff :)
+Thanks a lot!
 
-> There are still problems with channel switching (a few patches ago,
-> only 802.11b/g channels 7 and 8 were working - no tests have been
-> performed since then) & TX is untested, but Larry has reported that he
-> can get scan results from channels 7 and 8. He doesn't have any AP on
-> these channels, so can't test if association works, but it should be
-> working too. It's also possible that recent patches have fixed the
-> channel switching bug, as the codepaths for channel switching have
-> been touched extensively, probably fixing a major miscalculation issue
-> ("Qdiv roundup" was completely wrong).
->
-> So, go ahead, give it a try, and let's rock!
->
-> Note that the code in wireless-testing is enough to start testing,
-> however it's recommended that you apply the following 2 pending fixes:
-> http://marc.info/?l=linux-wireless&m=125061590101156&w=2 and
-> http://marc.info/?l=linux-wireless&m=125062611720517&w=2
->
-> Tomorrow's compat-wireless tarball, together with the above patches,
-> should also be good for testing. Not sure about today's tarball.
+All closed except for http://bugzilla.kernel.org/show_bug.cgi?id=13813.
 
-Except CONFIG_B43_PHY_LP was not enabled on compat-wireless. But now
-it is. I kicked the cronjob and enabled CONFIG_B43_PHY_LP on
-config.mk, please report any issues.
-
-http://wireless.kernel.org/en/users/Download/
-
-BTW I think it would be nice for those users looking only for b43 for
-us to update scripts/driver-select to have b43 as just one driver
-option. Should be easy to add but I don't have time right now. Patch
-is greatly welcomed though.
-
-  Luis
+Best,
+Rafael
