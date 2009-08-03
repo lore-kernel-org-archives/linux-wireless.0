@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:38110 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932599AbZHDPSl convert rfc822-to-8bit (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:9816 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035AbZHCRys (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 11:18:41 -0400
-Received: by vws2 with SMTP id 2so1425367vws.4
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 08:18:40 -0700 (PDT)
+	Mon, 3 Aug 2009 13:54:48 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so987450eyd.37
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 10:54:47 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090731180238.GA7963@makis>
-References: <20090731180238.GA7963@makis>
-Date: Tue, 4 Aug 2009 11:18:37 -0400
-Message-ID: <b6c5339f0908040818w20de62aex2d89650e09b06502@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/4]: Check EEPROM before tweaking SERDES
-From: Bob Copeland <bcopeland@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1249115316.2007.0.camel@johannes.local>
+References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
+	 <4A73FA8D.5030804@gmail.com>
+	 <1249114918.26584.18.camel@johannes.local>
+	 <4A73FBBD.3070507@gmail.com> <1249115316.2007.0.camel@johannes.local>
+Date: Mon, 3 Aug 2009 20:54:47 +0300
+Message-ID: <40f31dec0908031054m3b8231fdrf36f363702218116@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 2:02 PM, Nick
-Kossifidis<mick@madwifi-project.org> wrote:
-> +       /* Check if PCIE_OFFSET points to PCIE_SERDES_SECTION
-> +        * and enable serdes programming if needed.
-> +        *
-> +        * XXX: Serdes values seem to be fixed so
-> +        * no need to read them here, we write them
-> +        * during ath5k_hw_attach */
-> +       AR5K_EEPROM_READ(AR5K_EEPROM_PCIE_OFFSET, val);
-> +       ee->ee_serdes = (val == AR5K_EEPROM_PCIE_SERDES_SECTION) ?
-> +                                                       true : false;
+2009/8/1 Johannes Berg <johannes@sipsolutions.net>:
+> On Sat, 2009-08-01 at 10:24 +0200, Jiri Slaby wrote:
+>> On 08/01/2009 10:21 AM, Johannes Berg wrote:
+>> > Actually, jiffies are unsigned long
+>>
+>> Yeah, this is what I meant. I agree I messed it up when I didn't write
+>> the unsigned explicitly. It might have been confusing, thanks for
+>> pointing out.
+>
+> And, in addition to what you said, the code shouldn't divide jiffies, it
+> should multiply the timeout, add it to the start time, and then use
+> time_is_after_jiffies() or so.
+>
+> johannes
 
-Minor nit, can just be:
+ACK will resend asap ;-)
 
-> +       ee->ee_serdes = (val == AR5K_EEPROM_PCIE_SERDES_SECTION);
 
-Just a matter of taste though, so:
-
-Acked-by: Bob Copeland <me@bobcopeland.com>
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
