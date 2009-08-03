@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33662 "EHLO ds10.mine.nu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754213AbZHTUpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 16:45:43 -0400
-Message-ID: <4A8DB5F4.8060809@openwrt.org>
-Date: Thu, 20 Aug 2009 22:45:40 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-yw0-f177.google.com ([209.85.211.177]:38232 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbZHCPRA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 11:17:00 -0400
 MIME-Version: 1.0
-To: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Minstrel's definition of best throughput
-References: <4A8D5A48.5070809@nets.rwth-aachen.de>
-In-Reply-To: <4A8D5A48.5070809@nets.rwth-aachen.de>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <upey9ZSfnaF.A.-oE.rpgdKB@chimera>
+References: <upey9ZSfnaF.A.-oE.rpgdKB@chimera>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 3 Aug 2009 08:16:39 -0700
+Message-ID: <43e72e890908030816n187cda20keda2c9ba1b15a89c@mail.gmail.com>
+Subject: Re: 2.6.31-rc5: Reported regressions 2.6.29 -> 2.6.30
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, rootkit85@yahoo.it
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Hannemann wrote:
-> Hi,
-> 
-> while watching the rc_stats of minstrel, I noticed
-> that minstrel does not choose the rate with best throughput.
-> For example, I often see something like this:
-> 
-> rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
->      1         0.8       89.1      100.0          0(  0)       1490        2257
->      2         1.8       95.3      100.0          0(  0)         13          15
->      5.5       4.8       95.5      100.0          0(  0)         17          22
->   P 11         9.4       98.5      100.0          0(  0)       1532        2195
->      6         5.4       95.6      100.0          0(  0)         28          88
->      9         8.1       96.2      100.0          0(  0)        143         431
->     12         8.7       78.8      100.0          0(  0)        209         814
->     18        12.3       75.8      100.0          0(  0)        302        2416
->     24        18.3       86.2      100.0          0(  0)       5765        9196
->     36         2.6       85.2      100.0          0(  0)     736813      886517
-> T   48        14.7       97.4      100.0          2(  2)    3433862     4411674
->  t  54         8.5       73.3      100.0          0(  0)    1488241     2180261
-> 
-> 
-> Why did minstrel chose the 48M rate, and not 24M for the best throughput rate?
-The table looks weird. Maybe there's a race between the update of the
-table and the display through debugfs. Either way, 48M is definitely the
-best throughput rate based on the ewma prob, but the calculated
-throughput value looks a bit off.
+Here are the wireless ones:
 
-> Also "this prob" seems fishy to me, its always 100...
-"this prob" refers to the current interval, not the value after EWMA, so
-it's always calculated from this succ/attempt and 100.0 makes sense here.
+On Sun, Aug 2, 2009 at 12:06 PM, Rafael J. Wysocki<rjw@sisk.pl> wrote:
 
-> Another thing: I noticed that the througput field in minstrel_rate is never used?
-> Should I send a patch, removing it? Or does anyone remember why it was there
-> in the first place?
-I think you can remove it. I think initially I planned on calculating
-both the EWMA throughput and the one from the measurement interval, but
-didn't do that, because it's not displayed anywhere and would serve no
-other purpose.
+> Unresolved regressions
+> ----------------------
+>
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13898
+> Subject         : Intel 3945ABG - problems on 2.6.30.X
+> Submitter       : dienet <dienet@poczta.fm>
+> Date            : 2009-07-31 15:17 (3 days old)
+> References      : http://marc.info/?l=linux-kernel&m=124905346729959&w=4
 
-- Felix
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13638
+> Subject         : rt2870 driver is broken for (some) cards
+> Submitter       : jakob gruber <jakob.gruber@kabelnet.at>
+> Date            : 2009-06-27 17:33 (37 days old)
+
+
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13581
+> Subject         : ath9k doesn't work with newer kernels
+> Submitter       : Matteo <rootkit85@yahoo.it>
+> Date            : 2009-06-19 12:04 (45 days old)
+
+Issue looks more like a the user has rfkill enabled rather than a
+driver issue. Waiting on user feedback since 2009-07-27.
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13362
+> Subject         : rt2x00: slow wifi with correct basic rate bitmap
+> Submitter       : Alejandro Riveira <ariveira@gmail.com>
+> Date            : 2009-05-22 13:32 (73 days old)
+
+
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13337
+> Subject         : [post 2.6.29 regression] hang during suspend of b44/b43 modules
+> Submitter       : Tomas Janousek <tomi@nomi.cz>
+> Date            : 2009-05-18 10:59 (77 days old)
+> Handled-By      : Johannes Berg <johannes@sipsolutions.net>
+> Patch           : http://patchwork.kernel.org/patch/37837/
+
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13319
+> Subject         : Page allocation failures with b43 and p54usb
+> Submitter       : Larry Finger <Larry.Finger@lwfinger.net>
+> Date            : 2009-04-29 21:01 (96 days old)
+> References      : http://marc.info/?l=linux-kernel&m=124103897101088&w=4
+>                  http://lkml.org/lkml/2009/6/7/136
+>                  http://lkml.org/lkml/2009/7/26/213
+> Handled-By      : Johannes Berg <johannes@sipsolutions.net>
+>                  David Rientjes <rientjes@google.com>
+> Patch           : http://patchwork.kernel.org/patch/37655/
