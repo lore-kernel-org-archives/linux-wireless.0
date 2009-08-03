@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n8.bullet.re3.yahoo.com ([68.142.237.93]:24317 "HELO
-	n8.bullet.re3.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756496AbZHZNdj convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:43976 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754849AbZHCNJ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 09:33:39 -0400
-Message-ID: <850984.89698.qm@web23108.mail.ird.yahoo.com>
-Date: Wed, 26 Aug 2009 13:33:39 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-To: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Mon, 3 Aug 2009 09:09:57 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "Joerg Albert" <jal2@gmx.de>
+Subject: Re: ar9170usb crashes during iwconfig for ad-hoc mode
+Date: Mon, 3 Aug 2009 15:09:54 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <1251277063.10667.10.camel@johannes.local>
+References: <4A759341.1090006@gmx.de> <1249289274.4561.0.camel@johannes.local> <20090803123642.242160@gmx.net>
+In-Reply-To: <20090803123642.242160@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_jGudK0RXrett0jO"
+Message-Id: <200908031509.55277.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Wed, 26/8/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+--Boundary-00=_jGudK0RXrett0jO
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> On Wed, 2009-08-26 at 03:43 +0100,
-> Hin-Tak Leung wrote:
+On Monday 03 August 2009 14:36:42 Joerg Albert wrote:
 > 
-> > The rfkill event hard just goes 1 and 0 whenever I
-> slide the switch,
-> > regardless of what NM does . e.g. NM set to disable
-> networking has no
-> > effect on the 1/0 switch (it happens just depending on
-> the slide
-> > switch and nothing else), and nothing changes when NM
-> noticed
-> > rfkill'ed if down & decided to if'up and
-> reassociate.
+> > On Mon, 2009-08-03 at 10:44 +0200, Johannes Berg wrote:
+> > 
+> > > > >     ifconfig wlan1 down
+> > > > >     iwconfig wlan1 mode managed essid huhu
+> > > > >     ifconfig wlan1 up
+> > > > >     ifconfig wlan1 down
+> > > > >     iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
+> > 
+> > > No, it's a bug in cfg80211 :)
+> > 
+> > But it's not making sense to me. I'll have to try to reproduce it. In
+> > any case, we shouldn't be calling in to mac80211 from cfg80211 while the
+> > interface is down.
 > 
-> Right, I just wanted to make sure the switch could be
-> correctly read
-> while the interface is down.
-> 
-> > Basically the rfkill event state just depends on the
-> slide switch,
-> > regardless of NM (if it is set to enable wireless
-> networking, it just
-> > if up the device again; if it is set to disable, it
-> just stayed
-> > disable & the device stay down, but the event
-> state continues to
-> > respond to the slide switch).
-> 
-> Ok. But this isn't making a lot of sense to me, since
-> cfg80211 should
-> refuse to UP the device when it's rfkilled.
-> 
-> Or wait ... are you using compat-wireless?
+> I guess this is caused by the call to __cfg80211_leave_ibss()
+> in  net/wireless/ibss.c::cfg80211_ibss_wext_siwfreq() trying to
+> disable the beacon via net/mac80211::ieee80211_ibss_leave().
+what about this? (only compiled so far, don't have the device here...)
 
-Yes, I am. I mentioned this and did wonder if the _backport/ part in /sys/class is important.
+Regards,
+	Chr
 
-Hin-Tak
+--Boundary-00=_jGudK0RXrett0jO
+Content-Type: text/x-patch;
+  charset="iso-8859-1";
+  name="bss-beacon.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="bss-beacon.diff"
 
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 099ed3c..9c97ad7 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2177,7 +2177,7 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 	}
+ 
+-	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
++	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+ 		err = ar9170_update_beacon(ar);
+ 		if (err)
+ 			goto out;
 
-      
-
+--Boundary-00=_jGudK0RXrett0jO--
