@@ -1,34 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:57397 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751520AbZHMRUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 13:20:54 -0400
-Subject: Re: Roaming behavior
-From: Dan Williams <dcbw@redhat.com>
-To: David Seira <davidseira@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20090813T094313-518@post.gmane.org>
-References: <loom.20090811T124332-602@post.gmane.org>
-	 <20090811135915.GC2684@tuxdriver.com> <1250003481.4185.7.camel@solid2>
-	 <200908120907.18501.hs4233@mail.mn-solutions.de>
-	 <1250061248.13529.94.camel@johannes.local>
-	 <loom.20090813T094313-518@post.gmane.org>
-Content-Type: text/plain
-Date: Thu, 13 Aug 2009 12:20:50 -0500
-Message-Id: <1250184050.5896.28.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:61519 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932068AbZHCU3q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 16:29:46 -0400
+Received: by gxk9 with SMTP id 9so6148999gxk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 13:29:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090803195816.GG18639@mail.wantstofly.org>
+References: <20090803195816.GG18639@mail.wantstofly.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 3 Aug 2009 13:29:26 -0700
+Message-ID: <43e72e890908031329p7afcc94bg7d101a41041b46b2@mail.gmail.com>
+Subject: Re: [PATCH 0/5] various mwl8k bugfixes
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nico@cam.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-13 at 09:44 +0000, David Seira wrote:
-> 
-> 
-> But I haven't installed wpa_supplicant, I don't need it. In which files is
-> roaming behavior implemented?
+On Mon, Aug 3, 2009 at 12:58 PM, Lennert
+Buytenhek<buytenh@wantstofly.org> wrote:
+> This patch series fixes a couple of potential crashes and hangs in
+> mwl8k, and some other misbehaviour.  They are against current linus
+> tree, which is 2.6.31-rc5 plus some.  Please consider applying.
 
-wpa_supplicant is the defacto wifi control program for Linux.  Yes, it
-doesn't more than WPA.  Yes, it can be used for open and WEP networks.
-If you don't use it, you'll just end up rewriting a large chunk of it.
+BTW mind adding a MAINTAINERS entry for this driver?
 
-Dan
-
+  Luis
