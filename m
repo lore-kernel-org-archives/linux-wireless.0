@@ -1,24 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:44693 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752798AbZHQVNF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 17:13:05 -0400
-Received: by pxi34 with SMTP id 34so1390761pxi.4
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 14:13:07 -0700 (PDT)
+Received: from mgw2.diku.dk ([130.225.96.92]:45590 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658AbZHCJJT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 05:09:19 -0400
+Date: Mon, 3 Aug 2009 11:09:14 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing
+ kfree
+In-Reply-To: <1249260246.4069.26.camel@debian>
+Message-ID: <Pine.LNX.4.64.0908031109020.8435@pc-004.diku.dk>
+References: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
+ <1249260246.4069.26.camel@debian>
 MIME-Version: 1.0
-Date: Mon, 17 Aug 2009 14:13:06 -0700
-Message-ID: <45e8e6c40908171413s72d8a245vfab18283ae85eecf@mail.gmail.com>
-Subject: status of AP mode in iwlwifi?
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi folks.  What's the status of AP mode in iwlwifi?  I used it some
-time in the past but I see that it's disabled in wireless-testing now.
- Is there an issue with AP mode in this driver?  Can it be re-enabled?
- Thanks,
+On Mon, 3 Aug 2009, Zhu Yi wrote:
 
-  -Andrey
+> On Sat, 2009-08-01 at 16:54 +0800, Julia Lawall wrote:
+> > From: Julia Lawall <julia@diku.dk>
+> > 
+> > Error handling code following a kzalloc should free the allocated data.
+> > 
+> > The semantic match that finds the problem is as follows:
+> > (http://www.emn.fr/x-info/coccinelle/)
+> > 
+> > // <smpl>
+> > @r exists@
+> > local idexpression x;
+> > statement S;
+> > expression E;
+> > identifier f,f1,l;
+> > position p1,p2;
+> > expression *ptr != NULL;
+> > @@
+> > 
+> > x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+> > ...
+> > if (x == NULL) S
+> > <... when != x
+> >      when != if (...) { <+...x...+> }
+> > (
+> > x->f1 = E
+> > |
+> >  (x->f1 == NULL || ...)
+> > |
+> >  f(...,x->f1,...)
+> > )
+> > ...>
+> > (
+> >  return \(0\|<+...x...+>\|ptr\);
+> > |
+> >  return@p2 ...;
+> > )
+> > 
+> > @script:python@
+> > p1 << r.p1;
+> > p2 << r.p2;
+> > @@
+> > 
+> > print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
+> > // </smpl>
+> > 
+> > Signed-off-by: Julia Lawall <julia@diku.dk>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > index 7707a26..c2106d0 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+> > @@ -320,6 +320,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+> >  	ptr = priv->eeprom;
+> >  	if (!ptr) {
+> >  		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
+> > +		kfree(buf);
+> >  		return -ENOMEM;
+> >  	}
+> >  	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
+> 
+> Probably moving !priv->eeprom check prior to buf kzalloc is better.
+
+OK, I will do that instead.
+
+julia
