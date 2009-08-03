@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:17727 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753394AbZHGWl7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 18:41:59 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 14/16] iwlwifi: display correct critical temperature infomation
-Date: Fri,  7 Aug 2009 15:41:50 -0700
-Message-Id: <1249684912-22936-15-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1249684912-22936-1-git-send-email-reinette.chatre@intel.com>
-References: <1249684912-22936-1-git-send-email-reinette.chatre@intel.com>
+Received: from xi.wantstofly.org ([80.101.37.227]:47409 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755113AbZHCT7J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:59:09 -0400
+Date: Mon, 3 Aug 2009 21:59:09 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: nico@cam.org
+Subject: [PATCH 5/5] mwl8k: prevent module unload hang
+Message-ID: <20090803195909.GL18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+We need to unregister our ieee80211_hw before resetting the chip, as
+the former causes firmware commands to be issued which will time out
+once the chip has been reset.
 
-Do not send CT KILL config command twice and correct critical
-temperature informatiom in dmesg
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Acked-by: Nicolas Pitre <nico@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mwl8k.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 44d01a2..36c6e16 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2227,6 +2227,15 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 4890f8f..4fc1271 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -3743,6 +3743,8 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
  
- 		ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
- 				       sizeof(adv_cmd), &adv_cmd);
-+		if (ret)
-+			IWL_ERR(priv, "REPLY_CT_KILL_CONFIG_CMD failed\n");
-+		else
-+			IWL_DEBUG_INFO(priv, "REPLY_CT_KILL_CONFIG_CMD "
-+					"succeeded, "
-+					"critical temperature enter is %d,"
-+					"exit is %d\n",
-+				       priv->hw_params.ct_kill_threshold,
-+				       priv->hw_params.ct_kill_exit_threshold);
- 		break;
- 	default:
- 		cmd.critical_temperature_R =
-@@ -2234,16 +2243,15 @@ void iwl_rf_kill_ct_config(struct iwl_priv *priv)
+ 	ieee80211_stop_queues(hw);
  
- 		ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
- 				       sizeof(cmd), &cmd);
-+		if (ret)
-+			IWL_ERR(priv, "REPLY_CT_KILL_CONFIG_CMD failed\n");
-+		else
-+			IWL_DEBUG_INFO(priv, "REPLY_CT_KILL_CONFIG_CMD "
-+					"succeeded, "
-+					"critical temperature is %d\n",
-+					priv->hw_params.ct_kill_threshold);
- 		break;
- 	}
--	ret = iwl_send_cmd_pdu(priv, REPLY_CT_KILL_CONFIG_CMD,
--			       sizeof(cmd), &cmd);
--	if (ret)
--		IWL_ERR(priv, "REPLY_CT_KILL_CONFIG_CMD failed\n");
--	else
--		IWL_DEBUG_INFO(priv, "REPLY_CT_KILL_CONFIG_CMD succeeded, "
--			"critical temperature is %d\n",
--			cmd.critical_temperature_R);
- }
- EXPORT_SYMBOL(iwl_rf_kill_ct_config);
++	ieee80211_unregister_hw(hw);
++
+ 	/* Remove tx reclaim tasklet */
+ 	tasklet_kill(&priv->tx_reclaim_task);
+ 
+@@ -3756,8 +3758,6 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_reclaim(hw, i, 1);
+ 
+-	ieee80211_unregister_hw(hw);
+-
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_deinit(hw, i);
  
 -- 
-1.5.6.3
-
+1.5.6.4
