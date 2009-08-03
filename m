@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-71-115-150-144.gdrpmi.dsl-w.verizon.net ([71.115.150.144]:41486
-	"EHLO s0be.servebeer.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104AbZHHVxs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 17:53:48 -0400
-From: Pat Erley <pat-lkml@erley.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Pat Erley <pat-lkml@erley.org>
-Subject: [PATCH] mac80211: remove max_bandwidth
-Date: Sat,  8 Aug 2009 17:53:19 -0400
-Message-Id: <1249768399-16855-1-git-send-email-pat-lkml@erley.org>
+Received: from cmpxchg.org ([85.214.51.133]:39633 "EHLO cmpxchg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932150AbZHCOdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 10:33:46 -0400
+Date: Mon, 3 Aug 2009 16:31:08 +0200
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: 2.6.31-rc5: Reported regressions from 2.6.30
+Message-ID: <20090803143108.GA12041@cmpxchg.org>
+References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the max_bandwidth attribute.  It is only ever
-written to, and is duplicated by max_bandwidth_khz in the
-regulatory code.
+On Sun, Aug 02, 2009 at 03:22:01PM -0700, Linus Torvalds wrote:
 
-Signed-off-by: Pat Erley <pat-lkml@erley.org>
----
- include/net/cfg80211.h |    2 --
- net/wireless/reg.c     |    3 ---
- 2 files changed, 0 insertions(+), 5 deletions(-)
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13815
+> > Subject		: emacs -nw compilation doesn't show the error message
+> > Submitter	: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> > Date		: 2009-07-23 06:22 (11 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d945cb9cce20ac7143c2de8d88b187f62db99bdc
+> 
+> Same old pty bug, same fix: commit e043e42bdb.
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13813
+> > Subject		: Hangups in n_tty_read()
+> > Submitter	: Johannes Weiner <hannes@cmpxchg.org>
+> > Date		: 2009-07-16 18:48 (18 days old)
+> > References	: http://marc.info/?l=linux-kernel&m=124777019920579&w=4
+> 
+> Hmm. Worth testing that same fix, although the symptoms here are not 
+> exactly the same.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d5756c9..2239134 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -80,7 +80,6 @@ enum ieee80211_channel_flags {
-  * with cfg80211.
-  *
-  * @center_freq: center frequency in MHz
-- * @max_bandwidth: maximum allowed bandwidth for this channel, in MHz
-  * @hw_value: hardware-specific value for the channel
-  * @flags: channel flags from &enum ieee80211_channel_flags.
-  * @orig_flags: channel flags at registration time, used by regulatory
-@@ -97,7 +96,6 @@ enum ieee80211_channel_flags {
- struct ieee80211_channel {
- 	enum ieee80211_band band;
- 	u16 center_freq;
--	u8 max_bandwidth;
- 	u16 hw_value;
- 	u32 flags;
- 	int max_antenna_gain;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 0f61ae6..fc7a484 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1018,7 +1018,6 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 			map_regdom_flags(reg_rule->flags) | bw_flags;
- 		chan->max_antenna_gain = chan->orig_mag =
- 			(int) MBI_TO_DBI(power_rule->max_antenna_gain);
--		chan->max_bandwidth = KHZ_TO_MHZ(desired_bw_khz);
- 		chan->max_power = chan->orig_mpwr =
- 			(int) MBM_TO_DBM(power_rule->max_eirp);
- 		return;
-@@ -1027,7 +1026,6 @@ static void handle_channel(struct wiphy *wiphy, enum ieee80211_band band,
- 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
--	chan->max_bandwidth = KHZ_TO_MHZ(desired_bw_khz);
- 	if (chan->orig_mpwr)
- 		chan->max_power = min(chan->orig_mpwr,
- 			(int) MBM_TO_DBM(power_rule->max_eirp));
-@@ -1329,7 +1327,6 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 
- 	chan->flags |= map_regdom_flags(reg_rule->flags) | bw_flags;
- 	chan->max_antenna_gain = (int) MBI_TO_DBI(power_rule->max_antenna_gain);
--	chan->max_bandwidth = KHZ_TO_MHZ(desired_bw_khz);
- 	chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- }
- 
--- 
-1.6.4
+Hm, I had no debugging enabled, but I think a silent hang in
 
+	pty_write()
+	  tty_flip_buffer_push()
+	    flush_to_ldisc()
+
+can cause the receiving side
+
+	tty_read()
+	  n_tty_read()
+
+to wait forever for updates.  I haven't looked closely.  It seems to
+be gone with your latest master in any case.
+
+	Hannes
