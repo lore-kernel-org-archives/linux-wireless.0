@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36561 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751712AbZH0O5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 10:57:20 -0400
-Subject: Re: [PATCH] iwlagn: show_version() displays confusing/wrong
- firmware version
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1251379989-20728-1-git-send-email-bjorn@mork.no>
-References: <1251379989-20728-1-git-send-email-bjorn@mork.no>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 Aug 2009 07:57:21 -0700
-Message-Id: <1251385041.3805.17.camel@rc-desk>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42535 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798AbZHCUBG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 16:01:06 -0400
+Date: Mon, 3 Aug 2009 15:51:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Roel Kluin <roel.kluin@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] ipw2x00: Write outside array bounds
+Message-ID: <20090803195118.GD11441@tuxdriver.com>
+References: <4A6B7DB0.7090902@gmail.com> <1248660620.3747.102.camel@debian>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1248660620.3747.102.camel@debian>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bjørn,
+On Mon, Jul 27, 2009 at 10:10:20AM +0800, Zhu Yi wrote:
+> On Sun, 2009-07-26 at 05:48 +0800, Roel Kluin wrote:
+> > channel_index loops up to IPW_SCAN_CHANNELS, but is used after being
+> > incremented. This might be able to access 1 past the end of the array
+> > 
+> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> 
+> Thanks. Do you think below patch is better?
 
-Which kernel/repo is your patch based on?
+Didn't see an answer here...which patch do we want?
 
-On Thu, 2009-08-27 at 06:33 -0700, Bjørn Mork wrote:
-> The output of show_version() is confusing at best, and can also be
-> considered wrong
-
-Correct. Since this information is already printed in the system logs we
-determined that the version sysfs file is not needed and has been
-removed. Your patch is thus not relevant to the recent code
-(wireless-testing repository).
-
-Here is the patch for your reference:
-
-commit 44f313c2e63dcf93b17e6a43769105e487e2e49d
-Author: Jay Sternberg <jay.e.sternberg@intel.com>
-Date:   Fri Jul 31 14:28:09 2009 -0700
-
-    iwlwifi: remove duplicated version info from sysfs
-    
-    version info in sysfs had been determined to be unnecessary as it
-    is already provided in syslog info.  nvm version is added to syslog
-    version info as a debug level message to provide all info that was
-    in the version sysfs data.
-    
-    Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-    Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Reinette
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			�Viva Honduras Libre!
