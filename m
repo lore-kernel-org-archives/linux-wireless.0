@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:36195 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152AbZHRXeo convert rfc822-to-8bit (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:47397 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755044AbZHCT60 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 19:34:44 -0400
-Received: by an-out-0708.google.com with SMTP id d40so3625812and.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 16:34:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A864BB1.8020307@redfish-solutions.com>
-References: <4A864BB1.8020307@redfish-solutions.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 18 Aug 2009 16:34:24 -0700
-Message-ID: <43e72e890908181634y435b0c8wdab9fb423046a08f@mail.gmail.com>
-Subject: Re: [PATCH] Don't build PCMCIA modules when PCMCIA isn't present
-To: "Philip A. Prindeville" <philipp@redfish-solutions.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Pavel Roskin <proski@gnu.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 3 Aug 2009 15:58:26 -0400
+Date: Mon, 3 Aug 2009 21:58:26 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: nico@cam.org
+Subject: [PATCH 1/5] mwl8k: fix NULL pointer dereference on receive out-of-memory
+Message-ID: <20090803195826.GH18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2009 at 10:46 PM, Philip A.
-Prindeville<philipp@redfish-solutions.com> wrote:
-> From: Philip A Prindeville <philipp@redfish-solutions.com>
->
-> If you're building for a platform that has (for example) no PCMCIA/
-> Cardbus, then having a single knob to turn to disable this is a
-> major win.  Especially if more devices get add later that are
-> PCMCIA-based.
+When we go into out-of-memory and fail to allocate skbuffs to
+refill the receive ring with, rxq_process can end up running into
+a receive ring entry that is marked as host-owned but doesn't have
+an associated skbuff.  If this happens, we must break out of the
+rx processing loop instead of trying to process the descriptor.
 
-Applied, thanks Phillip.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Acked-by: Nicolas Pitre <nico@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index a9a9704..f437fab 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1012,6 +1012,8 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
+ 		rmb();
+ 
+ 		skb = rxq->rx_skb[rxq->rx_head];
++		if (skb == NULL)
++			break;
+ 		rxq->rx_skb[rxq->rx_head] = NULL;
+ 
+ 		rxq->rx_head = (rxq->rx_head + 1) % MWL8K_RX_DESCS;
+-- 
+1.5.6.4
