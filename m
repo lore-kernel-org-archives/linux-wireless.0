@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47162 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752208AbZHAKj5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 06:39:57 -0400
-Message-ID: <4A741B7B.7070200@gmx.de>
-Date: Sat, 01 Aug 2009 12:39:55 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from mail.atheros.com ([12.36.123.2]:34798 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754638AbZHCTZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:25:11 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:12 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 11/24] ath9k: rename  ath9k_hw_set_defaults() to ath9k_hw_init_config()
+Date: Mon, 3 Aug 2009 12:24:43 -0700
+Message-ID: <1249327496-24629-12-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat-2.6: Makefile: fixed test expressions for target
- 	install
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj> 	<4A733CDE.4060801@gmx.de> <1249066564.20276.3.camel@mj> <4A737AFC.40301@gmx.de> <43e72e890907311622u1059be72y7c833f888b11cf56@mail.gmail.com>
-In-Reply-To: <43e72e890907311622u1059be72y7c833f888b11cf56@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/01/2009 01:22 AM, Luis R. Rodriguez wrote:
-> Actually please do keep relying on /bin/bash, all the scripts on
-> compat-wireless do depend on /bin/bash, I don't expect users of
-> dash/etc to use compat-wireless.
-> 
-> If we want to make compat-wireless be shell agnostic we'd need to
-> address all the other scripts. I rather not deal with that now unless
-> we really think that is also a good idea and someone is up for the
-> task.
+This reflects better what we are actually doing there.
 
-IMHO we could make bug fixes to the Makefile/scripts shell agnostic if it's not much effort and
-doesn't break readability, which is neither the case here.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Regards,
-Joerg.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6aee570..31ec83d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -388,7 +388,7 @@ static const char *ath9k_hw_devname(u16 devid)
+ 	return NULL;
+ }
+ 
+-static void ath9k_hw_set_defaults(struct ath_hw *ah)
++static void ath9k_hw_init_config(struct ath_hw *ah)
+ {
+ 	int i;
+ 
+@@ -655,7 +655,7 @@ int ath9k_hw_attach(struct ath_hw *ah)
+ 	}
+ 
+ 	ath9k_hw_init_defaults(ah);
+-	ath9k_hw_set_defaults(ah);
++	ath9k_hw_init_config(ah);
+ 
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
+ 		DPRINTF(ah->ah_sc, ATH_DBG_FATAL, "Couldn't reset chip\n");
+-- 
+1.6.3.3
+
