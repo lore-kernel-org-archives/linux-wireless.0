@@ -1,158 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:48458 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966AbZH1MYx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 08:24:53 -0400
-Date: Fri, 28 Aug 2009 17:47:59 +0530
-From: Kiran Divekar <kirandivekar@gmail.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] libertas: add NULL check on return value of get_zeroed_page
-Message-ID: <20090828121759.GA7766@ossifrage.net>
+Received: from ogre.sisk.pl ([217.79.144.158]:43168 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754474AbZHCTQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 3 Aug 2009 15:16:58 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: chris2553@googlemail.com
+Subject: Re: [Bug #13846] Possible regression in rt61pci driver
+Date: Mon, 3 Aug 2009 21:17:36 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <iZB3Pj-uj3M.A.pRC.1cgdKB@chimera> <200908031931.27427.chris2553@googlemail.com>
+In-Reply-To: <200908031931.27427.chris2553@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200908032117.36856.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of the places in debugfs.c are missing a NULL check on the return value of
-get_zeroed_page API call. Added required NULL check at appropriate places.
+On Monday 03 August 2009, Chris Clayton wrote:
+> Hi Rafael,
+> 
+> On Sunday 02 August 2009, Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of recent regressions.
+> >
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.30.  Please verify if it still should be listed and let me know
+> > (either way).
+> >
+> 
+> The folks on the wireless project have concluded that the problem I reported is down to a hardware 
+> problem when power saving is switched on on for my Belkin cardbus wireless adapter, so now I simply 
+> turn power-saving off when wlan0 comes up. I did, however, ask whether anyone was going to fix the 
+> fact that once power-saving turns the LEDs off, they never come back on again, but I haven't had an 
+> answer. Is that a regression? I guess the answer is no, because power saving in the rt61pci driver 
+> is feature that is new to 2.6.31.
 
-Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
----
- drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+Well, IMO it is a regression, because it had worked before the power saving
+feature was added.
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 811ffc3..893a55c 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char __user *userbuf,
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
- 	ssize_t res;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	pos += snprintf(buf+pos, len-pos, "state = %s\n",
- 				szStates[priv->connect_status]);
-@@ -68,6 +70,8 @@ static ssize_t lbs_getscantable(struct file *file, char __user *userbuf,
- 	char *buf = (char *)addr;
- 	DECLARE_SSID_BUF(ssid);
- 	struct bss_descriptor * iter_bss;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	pos += snprintf(buf+pos, len-pos,
- 		"# | ch  | rssi |       bssid       |   cap    | Qual | SSID \n");
-@@ -110,6 +114,8 @@ static ssize_t lbs_sleepparams_write(struct file *file,
- 	int p1, p2, p3, p4, p5, p6;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, user_buf, buf_size)) {
-@@ -148,6 +154,8 @@ static ssize_t lbs_sleepparams_read(struct file *file, char __user *userbuf,
- 	struct sleep_params sp;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
- 	if (ret)
-@@ -433,6 +441,8 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	offval.offset = priv->mac_offset;
- 	offval.value = 0;
-@@ -457,6 +467,8 @@ static ssize_t lbs_rdmac_write(struct file *file,
- 	ssize_t res, buf_size;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -481,6 +493,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
- 	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -515,6 +529,8 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	offval.offset = priv->bbp_offset;
- 	offval.value = 0;
-@@ -540,6 +556,8 @@ static ssize_t lbs_rdbbp_write(struct file *file,
- 	ssize_t res, buf_size;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -564,6 +582,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
- 	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -598,6 +618,8 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	offval.offset = priv->rf_offset;
- 	offval.value = 0;
-@@ -623,6 +645,8 @@ static ssize_t lbs_rdrf_write(struct file *file,
- 	ssize_t res, buf_size;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -647,6 +671,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
- 	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	buf_size = min(count, len - 1);
- 	if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -853,6 +879,8 @@ static ssize_t lbs_debugfs_read(struct file *file, char __user *userbuf,
- 	struct debug_data *d;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	if (!buf)
-+		return -ENOMEM;
- 
- 	p = buf;
- 
--- 
-1.5.3.4
+> Should it be fixed? I think the answer is yes, but being unable to do it
+> myself, I probably don't have a vote :-)
 
+Well, if you remind the developers about the issue from time to time, it may
+help. ;-)
+
+Thanks,
+Rafael
