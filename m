@@ -1,119 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f198.google.com ([209.85.221.198]:42651 "EHLO
-	mail-qy0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469AbZHZVkh (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:13811 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbZHCURX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 17:40:37 -0400
-Received: by qyk36 with SMTP id 36so225329qyk.22
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 14:40:39 -0700 (PDT)
-Message-ID: <4A95AA64.20502@gmail.com>
-Date: Wed, 26 Aug 2009 17:34:28 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Mon, 3 Aug 2009 16:17:23 -0400
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: chris2553@googlemail.com
+Subject: Re: [Bug #13846] Possible regression in rt61pci driver
+Date: Mon, 3 Aug 2009 22:17:19 +0200
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
- enabled
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net> <4A94B01E.9040309@gmail.com> <4A94C3E9.6070409@lwfinger.net>
-In-Reply-To: <4A94C3E9.6070409@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <iZB3Pj-uj3M.A.pRC.1cgdKB@chimera> <200908031931.27427.chris2553@googlemail.com>
+In-Reply-To: <200908031931.27427.chris2553@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908032217.19947.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Richard Farina wrote:
->   
->> Larry Finger wrote:
->>     
->>> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
->>> may oops when the module is unloaded as the workqueue for led_on was
->>> not being cancelled.
->>>
->>> This patch fixes the problem reported in
->>> http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
->>>
->>> Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
->>> ---
->>>
->>> V2 - Do not create a new workqueue.
->>>
->>> John,
->>>
->>> This patch is 2.6.31 material. To the best of my knowledge, a formal bug
->>> report was never filed; however, it was reported in the reference
->>> given above.
->>>
->>>   
->>>       
->> Anyone know what happened here? This bug still seems very much alive in
->> compat-wireless-2.6.31-rc7.  I know the window is closed and this really
->> isn't "earthshattering" but a kernel panick is kind of "a big deal".  I
->> seems like it was tested doing a proper modprobe -r but not if you just
->> unplug the usb card.
->>     
->
-> This kind of accusation is not the best way to get your problem solved.
->
->   
-I apologize if you thought there was an accusation here, that certainly 
-was not my intention. With all due respect assuming that I'm
-a jerk is neither safe nor polite.  In your original patch for this I 
-find the following text:
+Hi,
 
-"Gábor,
+> On Sunday 02 August 2009, Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of recent regressions.
+> >
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.30.  Please verify if it still should be listed and let me know
+> > (either way).
+> >
+> 
+> The folks on the wireless project have concluded that the problem I reported is down to a hardware 
+> problem when power saving is switched on on for my Belkin cardbus wireless adapter, so now I simply 
+> turn power-saving off when wlan0 comes up. I did, however, ask whether anyone was going to fix the 
+> fact that once power-saving turns the LEDs off, they never come back on again, but I haven't had an 
+> answer. Is that a regression? I guess the answer is no, because power saving in the rt61pci driver 
+> is feature that is new to 2.6.31. Should it be fixed? I think the answer is yes, but being unable 
+> to do it myself, I probably don't have a vote :-)
 
-I hope this version of the patch fixes your problem. On my system
-I ran more than 20 rmmod/insmod cycles without a problem.
+Can't recall this issue was ever reported, but that might just be me having overlooked some emails
+or have completely forgotten all about it. But here is a test patch to see if this helps in the issue,
+it is not really correct for upstream, but if it works I can see if there is a better solution.
 
-Larry"
+Thanks,
 
-My assumption in your testing manner was based only on what you said and the kernel panick I still experience
-
->> When I unplug the usb I get instadeath, very uncool.  If someone can
->> teach me how to get the kernel output from a non-functional system I am
->> happy to provide whatever.
->>     
->
-> This patch has been in wireless testing since August 3. I have no idea
-> why it wouldn't be in compat-wireless since then. In addition, I have
-> unplugged/plugged my RTL8187B device many times with no problem.
->
-> I just downloaded compat-wireless-2009-08-26 - it has the patch
-> included. You certainly could have checked your source to determine that.
->
->   
-Yes, I realize that, which is why I said the "bug is still alive" not 
-"the patch is not applied".  I even went out of my way to describe how 
-the testing was different...
-> To get something from a system that is crashing, you should switch to
-> the logging console by pressing CTRL/ALT/F10 before you do whatever it
-> takes to crash it. You will not get a full dump, but hopefully, there
-> will be enough of the stack visible when the panic occurs. Either copy
-> down the stack list, or take a picture of the screen and post a link
-> to it. FYI, you can get back to the graphical screen with CTRL/ALT/F7.
->
-> If you have a wired connection in addition to the wireless one, and
-> you have a second Linux host, you can also capture the dump using
-> netconsole. Using this facility is not easy, so we'll go the other
-> route first.
->
-> When you report what info you have, please tell what architecture you
-> are running (i386, x86_64, ppc,...) and whether your device is an
-> RTL8187L or RTL8187B. It may not matter, but who knows.
->
->   
-I will attempt to reproduce and take a picture with both x86 and x86_64, 
-and I'll look into netconsole because that sounds very useful.
-
-Thanks for the assistance,
-Rick Farina
-
-> Larry
->
->
->   
-
+Ivo
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 3845316..6fe70b1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -196,6 +196,12 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2x00dev->ops->lib->config(rt2x00dev, &libconf, ieee80211_flags);
+ 
++	if (ieee80211_flags & IEEE80211_CONF_CHANGE_PS) {
++		rt2x00led_led_activity(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
++		rt2x00leds_led_assoc(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
++		rt2x00leds_led_radio(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
++	}
++
+ 	/*
+ 	 * Some configuration changes affect the link quality
+ 	 * which means we need to reset the link tuner.
