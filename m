@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45241 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbZHJUQL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 16:16:11 -0400
-Date: Mon, 10 Aug 2009 16:14:32 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] b43: Implement LP-PHY baseband table initialization
-Message-ID: <20090810201431.GA6060@tuxdriver.com>
-References: <4A806973.1020109@gmail.com> <4A806C2F.9070206@lwfinger.net> <69e28c910908101158nbc9477re66a203657b702f6@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910908101158nbc9477re66a203657b702f6@mail.gmail.com>
+Received: from mx2.redhat.com ([66.187.237.31]:45286 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932869AbZHDPxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 11:53:38 -0400
+Subject: Re: [PATCH] libertas: Fix WEP association failure with open source
+ wpa_supplicant 0.5.10
+From: Dan Williams <dcbw@redhat.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Maithili Hinge <maithili@marvell.com>
+In-Reply-To: <1249095739-7908-1-git-send-email-bzhao@marvell.com>
+References: <1249095739-7908-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain
+Date: Tue, 04 Aug 2009 10:54:11 -0400
+Message-Id: <1249397651.21155.0.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2009 at 08:58:44PM +0200, Gábor Stefanik wrote:
-> 2009/8/10 Larry Finger <Larry.Finger@lwfinger.net>:
-> > Gábor Stefanik wrote:
-> >> Implement LP-PHY baseband table init for all revisions.
-> >>
-> >> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> >> ---
-> >> Changes from RFC:
-> >> -Improved table formatting in the code.
-> >> -The 2GHz check in adjust_gain_table now uses b43_current_band.
-> >> -Added a comment to rev2plus_table_init about a possible future
-> >> improvement.
-> >
-> > I like the new table formatting.
-> >
-> > The comment in rev2plus_table_init has a typo - "ben" should be
-> > "been". Otherwise it looks good. Thanks for all your work.
-> >
-> > Larry
-> >
+On Fri, 2009-07-31 at 20:02 -0700, Bing Zhao wrote:
+> From: Maithili Hinge <maithili@marvell.com>
 > 
-> John, can you fix that when checking in, or should I resubmit with the
-> typo fixed?
+> From: Maithili Hinge <maithili@marvell.com>
+> 
+> Add code to handle IW_AUTH_PRIVACY_INVOKED and IW_AUTH_RX_UNENCRYPTED_EAPOL
+> cases in lbs_set_auth() function in libertas code.
+> 
+> Signed-off-by: Maithili Hinge <maithili@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
 
-Sure, fine...
+Acked-by: Dan Williams <dcbw@redhat.com>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> ---
+>  drivers/net/wireless/libertas/wext.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+> index e96451c..be837a0 100644
+> --- a/drivers/net/wireless/libertas/wext.c
+> +++ b/drivers/net/wireless/libertas/wext.c
+> @@ -1728,6 +1728,8 @@ static int lbs_set_auth(struct net_device *dev,
+>  	}
+>  
+>  	switch (dwrq->flags & IW_AUTH_INDEX) {
+> +	case IW_AUTH_PRIVACY_INVOKED:
+> +	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
+>  	case IW_AUTH_TKIP_COUNTERMEASURES:
+>  	case IW_AUTH_CIPHER_PAIRWISE:
+>  	case IW_AUTH_CIPHER_GROUP:
+
