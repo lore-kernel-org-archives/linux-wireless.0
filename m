@@ -1,165 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:29727 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbZHLLnQ (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:54219 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932882AbZHDRJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 07:43:16 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 2/2] wl1251: remove unused definitions from wl1251_reg.h
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 12 Aug 2009 14:42:59 +0300
-Message-ID: <20090812114258.5006.13251.stgit@tikku>
-In-Reply-To: <20090812114251.5006.65671.stgit@tikku>
-References: <20090812114251.5006.65671.stgit@tikku>
+	Tue, 4 Aug 2009 13:09:53 -0400
+Received: by ewy10 with SMTP id 10so497523ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 10:09:53 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: cancel all work on disconnect
+Date: Tue, 4 Aug 2009 19:09:50 +0200
+Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+References: <20090802183002.16766.4142.stgit@ct.roinet.com> <20090802183015.16766.56837.stgit@ct.roinet.com>
+In-Reply-To: <20090802183015.16766.56837.stgit@ct.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908041909.50599.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Sunday 02 August 2009, Pavel Roskin wrote:
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-Luis reported that IRQ_MASK conflicts with include/pcmcia/cs.h on
-compat-wireless. Remove that and a bunch of other unused defines
-from wl1251_reg.h.
+Thanks,
 
-Reported-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
- drivers/net/wireless/wl12xx/wl1251_reg.h |  100 ------------------------------
- 1 files changed, 0 insertions(+), 100 deletions(-)
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 658a63b..b4c696d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -893,6 +893,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>  	rt2x00lib_disable_radio(rt2x00dev);
+>  
+>  	/*
+> +	 * Stop all work.
+> +	 */
+> +	cancel_work_sync(&rt2x00dev->filter_work);
+> +	cancel_work_sync(&rt2x00dev->intf_work);
+> +
+> +	/*
+>  	 * Uninitialize device.
+>  	 */
+>  	rt2x00lib_uninitialize(rt2x00dev);
+> 
+> _______________________________________________
+> users mailing list
+> users@rt2x00.serialmonkey.com
+> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+> 
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
-index 2de47cc..bdd5610 100644
---- a/drivers/net/wireless/wl12xx/wl1251_reg.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
-@@ -42,70 +42,6 @@
- /* ELP WLAN_READY bit */
- #define ELPCTRL_WLAN_READY          0x2
- 
--/*
-- * Interrupt registers.
-- * 64 bit interrupt sources registers ws ced.
-- * sme interupts were removed and new ones were added.
-- * Order was changed.
-- */
--#define FIQ_MASK                       (REGISTERS_BASE + 0x0400)
--#define FIQ_MASK_L                     (REGISTERS_BASE + 0x0400)
--#define FIQ_MASK_H                     (REGISTERS_BASE + 0x0404)
--#define FIQ_MASK_SET                   (REGISTERS_BASE + 0x0408)
--#define FIQ_MASK_SET_L                 (REGISTERS_BASE + 0x0408)
--#define FIQ_MASK_SET_H                 (REGISTERS_BASE + 0x040C)
--#define FIQ_MASK_CLR                   (REGISTERS_BASE + 0x0410)
--#define FIQ_MASK_CLR_L                 (REGISTERS_BASE + 0x0410)
--#define FIQ_MASK_CLR_H                 (REGISTERS_BASE + 0x0414)
--#define IRQ_MASK                       (REGISTERS_BASE + 0x0418)
--#define IRQ_MASK_L                     (REGISTERS_BASE + 0x0418)
--#define IRQ_MASK_H                     (REGISTERS_BASE + 0x041C)
--#define IRQ_MASK_SET                   (REGISTERS_BASE + 0x0420)
--#define IRQ_MASK_SET_L                 (REGISTERS_BASE + 0x0420)
--#define IRQ_MASK_SET_H                 (REGISTERS_BASE + 0x0424)
--#define IRQ_MASK_CLR                   (REGISTERS_BASE + 0x0428)
--#define IRQ_MASK_CLR_L                 (REGISTERS_BASE + 0x0428)
--#define IRQ_MASK_CLR_H                 (REGISTERS_BASE + 0x042C)
--#define ECPU_MASK                      (REGISTERS_BASE + 0x0448)
--#define FIQ_STS_L                      (REGISTERS_BASE + 0x044C)
--#define FIQ_STS_H                      (REGISTERS_BASE + 0x0450)
--#define IRQ_STS_L                      (REGISTERS_BASE + 0x0454)
--#define IRQ_STS_H                      (REGISTERS_BASE + 0x0458)
--#define INT_STS_ND                     (REGISTERS_BASE + 0x0464)
--#define INT_STS_RAW_L                  (REGISTERS_BASE + 0x0464)
--#define INT_STS_RAW_H                  (REGISTERS_BASE + 0x0468)
--#define INT_STS_CLR                    (REGISTERS_BASE + 0x04B4)
--#define INT_STS_CLR_L                  (REGISTERS_BASE + 0x04B4)
--#define INT_STS_CLR_H                  (REGISTERS_BASE + 0x04B8)
--#define INT_ACK                        (REGISTERS_BASE + 0x046C)
--#define INT_ACK_L                      (REGISTERS_BASE + 0x046C)
--#define INT_ACK_H                      (REGISTERS_BASE + 0x0470)
--#define INT_TRIG                       (REGISTERS_BASE + 0x0474)
--#define INT_TRIG_L                     (REGISTERS_BASE + 0x0474)
--#define INT_TRIG_H                     (REGISTERS_BASE + 0x0478)
--#define HOST_STS_L                     (REGISTERS_BASE + 0x045C)
--#define HOST_STS_H                     (REGISTERS_BASE + 0x0460)
--#define HOST_MASK                      (REGISTERS_BASE + 0x0430)
--#define HOST_MASK_L                    (REGISTERS_BASE + 0x0430)
--#define HOST_MASK_H                    (REGISTERS_BASE + 0x0434)
--#define HOST_MASK_SET                  (REGISTERS_BASE + 0x0438)
--#define HOST_MASK_SET_L                (REGISTERS_BASE + 0x0438)
--#define HOST_MASK_SET_H                (REGISTERS_BASE + 0x043C)
--#define HOST_MASK_CLR                  (REGISTERS_BASE + 0x0440)
--#define HOST_MASK_CLR_L                (REGISTERS_BASE + 0x0440)
--#define HOST_MASK_CLR_H                (REGISTERS_BASE + 0x0444)
--
--/* Host Interrupts*/
--#define HINT_MASK                      (REGISTERS_BASE + 0x0494)
--#define HINT_MASK_SET                  (REGISTERS_BASE + 0x0498)
--#define HINT_MASK_CLR                  (REGISTERS_BASE + 0x049C)
--#define HINT_STS_ND_MASKED             (REGISTERS_BASE + 0x04A0)
--/*1150 spec calls this HINT_STS_RAW*/
--#define HINT_STS_ND		       (REGISTERS_BASE + 0x04B0)
--#define HINT_STS_CLR                   (REGISTERS_BASE + 0x04A4)
--#define HINT_ACK                       (REGISTERS_BASE + 0x04A8)
--#define HINT_TRIG                      (REGISTERS_BASE + 0x04AC)
--
- /* Device Configuration registers*/
- #define SOR_CFG                        (REGISTERS_BASE + 0x0800)
- #define ECPU_CTRL                      (REGISTERS_BASE + 0x0804)
-@@ -420,16 +356,6 @@ enum wl12xx_acx_int_reg {
- 
- 
- /*===============================================
--  Phy regs
-- ===============================================*/
--#define ACX_PHY_ADDR_REG                SBB_ADDR
--#define ACX_PHY_DATA_REG                SBB_DATA
--#define ACX_PHY_CTRL_REG                SBB_CTL
--#define ACX_PHY_REG_WR_MASK             0x00000001ul
--#define ACX_PHY_REG_RD_MASK             0x00000002ul
--
--
--/*===============================================
-  EEPROM Read/Write Request 32bit RW
-  ------------------------------------------
-  1 EE_READ - EEPROM Read Request 1 - Setting this bit
-@@ -498,28 +424,6 @@ enum wl12xx_acx_int_reg {
- #define ACX_CONT_WIND_MIN_MASK   0x0000007f
- #define ACX_CONT_WIND_MAX        0x03ff0000
- 
--/*
-- * Indirect slave register/memory registers
-- * ----------------------------------------
-- */
--#define HW_SLAVE_REG_ADDR_REG		0x00000004
--#define HW_SLAVE_REG_DATA_REG		0x00000008
--#define HW_SLAVE_REG_CTRL_REG		0x0000000c
--
--#define SLAVE_AUTO_INC				0x00010000
--#define SLAVE_NO_AUTO_INC			0x00000000
--#define SLAVE_HOST_LITTLE_ENDIAN	0x00000000
--
--#define HW_SLAVE_MEM_ADDR_REG		SLV_MEM_ADDR
--#define HW_SLAVE_MEM_DATA_REG		SLV_MEM_DATA
--#define HW_SLAVE_MEM_CTRL_REG		SLV_MEM_CTL
--#define HW_SLAVE_MEM_ENDIAN_REG		SLV_END_CTL
--
--#define HW_FUNC_EVENT_INT_EN		0x8000
--#define HW_FUNC_EVENT_MASK_REG		0x00000034
--
--#define ACX_MAC_TIMESTAMP_REG	(MAC_TIMESTAMP)
--
- /*===============================================
-   HI_CFG Interface Configuration Register Values
-   ------------------------------------------
-@@ -678,10 +582,6 @@ b12-b0 - Supported Rate indicator bits as defined below.
- ******************************************************************************/
- 
- 
--#define TNETW1251_CHIP_ID_PG1_0         0x07010101
--#define TNETW1251_CHIP_ID_PG1_1         0x07020101
--#define TNETW1251_CHIP_ID_PG1_2	        0x07030101
--
- /*************************************************************************
- 
-     Interrupt Trigger Register (Host -> WiLink)
 
