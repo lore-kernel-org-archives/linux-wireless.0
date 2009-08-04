@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:40300 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933967AbZHWNaE convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:53507 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933349AbZHDWDL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 09:30:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: Abour linux driver supports BCM4325
-Date: Sun, 23 Aug 2009 15:30:03 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	feng tian <feng.of.tian@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com> <200908231455.51140.mb@bu3sch.de> <69e28c910908230624s1600a9d4k3918875551bfbf4d@mail.gmail.com>
-In-Reply-To: <69e28c910908230624s1600a9d4k3918875551bfbf4d@mail.gmail.com>
+	Tue, 4 Aug 2009 18:03:11 -0400
+Received: by mail-bw0-f219.google.com with SMTP id 19so3351543bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 15:03:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908231530.04236.mb@bu3sch.de>
+In-Reply-To: <200908042358.15966.mb@bu3sch.de>
+References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com>
+	 <200907312308.31066.mb@bu3sch.de>
+	 <83a869cd0908041454i474b0ee4hfb770c7c5166be7f@mail.gmail.com>
+	 <200908042358.15966.mb@bu3sch.de>
+Date: Wed, 5 Aug 2009 00:03:11 +0200
+Message-ID: <83a869cd0908041503i74a7bd11uf85706aeaf95b611@mail.gmail.com>
+Subject: Re: [RESEND] [PATCHv2] b43 add harware tkip
+From: gregor kowski <gregor.kowski@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 23 August 2009 15:24:29 Gábor Stefanik wrote:
-> On Sun, Aug 23, 2009 at 2:55 PM, Michael Buesch<mb@bu3sch.de> wrote:
-> > On Sunday 23 August 2009 11:13:50 Johannes Berg wrote:
-> >> On Sat, 2009-08-22 at 21:59 -0500, Larry Finger wrote:
-> >> > feng tian wrote:
-> >> > > Thank you for the information.
-> >> > > I get your point. As for the radio and phy driver, I think it's  some
-> >> > > command based configurations for the chip via SDIO. And that I can
-> >> > > refer to the BCM 43xx PCI driver codes.
-> >> > > Wonder if it's feasible. Needs your comments.
-> >> > > Thanks
-> >> >
-> >> > The first step is to be able to read/write the various registers via
-> >> > SDIO. That will be similar to the PCI operations. The next step is
-> >> > knowing what to read/write and when. We are still working that out for
-> >> > PCI. It is not trivial. See the recent postings of patches for the LP
-> >> > pHY in the linux-wireless mailing list. These are _NOT_ complete.
-> >>
-> >> Right.
-> >>
-> >> You have two completely orthogonal problems:
-> >>
-> >>  1) changing b43 so it knows how to talk not just to SSB/PCI/PCMCIA
-> >>     chips but also SDIO chips
-> >
-> > We already have working support for that and we're currently merging it mainline.
-> > If you want to help, please test the spinlock removal patchset I just posted.
-> >
-> >>  2) changing b43 so it knows how to talk to your specific radio/PHY
-> >>     chip, and LP PHY
-> >
-> > Also almost working and in the progress of merging mainline.
-> 
-> Not necessarily true in this case - an important 4325-specific routine
-> (SSB PMU recalibration) is still missing. (And I don't tink I'm
-> familiar enough with ssb to do that, unfortunately.)
+On 8/4/09, Michael Buesch <mb@bu3sch.de> wrote:
+> On Tuesday 04 August 2009 23:54:42 gregor kowski wrote:
+>> On 7/31/09, Michael Buesch <mb@bu3sch.de> wrote:
+>> > On Friday 31 July 2009 23:04:17 gregor kowski wrote:
+>> >> Hi Michael,
+>
+>> There is really bugs in the current code.
+>
+> You always talk about "bugs". What are these "bugs"? Is it just the wrong
+> max_nr_keys assignment? That's trivial to fix.
+>
+So [1] is ok ?
 
-I can do that later. It's a fairly simple routine (to me knowing the code :).
+Thanks,
 
--- 
-Greetings, Michael.
+Gregor
+
+[1]
+> So the fix will be do to something like
+> dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
+> if (b43_new_kidx_api())
+> dev->max_nr_keys -= 4;
