@@ -1,130 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37972 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:48844 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771AbZH1VBn (ORCPT
+	with ESMTP id S932477AbZHDGz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 17:01:43 -0400
-Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
- inserted
+	Tue, 4 Aug 2009 02:55:59 -0400
+Subject: Re: [DISCUSS] Implement non standard channel widths
 From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1251474321.3805.73.camel@rc-desk>
-References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
-	 <1251445557.4189.14.camel@johannes.local>
-	 <1251474321.3805.73.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ABrZ9h7QBOGsNuF5DvGM"
-Date: Fri, 28 Aug 2009 23:01:37 +0200
-Message-Id: <1251493298.3456.34.camel@johannes.local>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A77D1F5.5050706@erley.org>
+References: <4A74D5F5.8090409@erley.org>
+	 <1249201869.2007.45.camel@johannes.local>  <4A77D1F5.5050706@erley.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-XdEE+J6UOjWNnzaNSar/"
+Date: Tue, 04 Aug 2009 08:55:26 +0200
+Message-Id: <1249368926.4561.14.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ABrZ9h7QBOGsNuF5DvGM
+--=-XdEE+J6UOjWNnzaNSar/
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi Reinette,
+On Tue, 2009-08-04 at 02:15 -0400, Pat Erley wrote:
 
-> This work is motivated by an attempt to untangle the iwlwifi station
-> management to be able to use mac80211's sta notify callback. From 4965
-> and up the rate scaling in the device is done per station, so an entry
-> in the station table is required for the rate scaling initialization to
-> succeed.=20
-
-Interesting. I've been thinking about making it go the other way --
-remove rate scaling hooks completely. wl1271 apparently has rate scaling
-completely in the firmware, so the RS algorithm on the host is just
-overhead. I've been thinking putting 4965+ RS into the _driver_ makes
-more sense since it really does a lot in the firmware and not on the
-host.
-
-Do you think we should try to go that route? I'd think it would probably
-be a hardware flag ("no RS algo please") and then we'd skip all the
-hooks and put things into the driver. The advantage is that we don't
-care about the mac80211 API any more, things get cleaner and we can just
-do all RS init from sta_notify().
-
-I've also been thinking if there's a way to make sta_notify() able to
-sleep but so far I don't see one unfortunately.
-
-Thoughts?
-
-Anyhow, thanks for the explanation.
-
-> > > @@ -742,13 +740,17 @@ static int ieee80211_add_station(struct wiphy *=
-wiphy, struct net_device *dev,
-> > >  		if (err =3D=3D -EEXIST && layer2_update) {
-> > >  			/* Need to update layer 2 devices on reassociation */
-> > >  			sta =3D sta_info_get(local, mac);
-> > > -			if (sta)
-> > > +			if (sta) {
-> > > +				rate_control_rate_init(sta);
-> > >  				ieee80211_send_layer2_update(sta);
-> > > +			}
-> > >  		}
-> >=20
-> > Why is this necessary? It should already have been called for this
-> > station earlier?
+> > Also keep in mind that there _are_ standard uses for smaller bandwidth
+> > channels, Jouni has helpfully collected them on
+> > http://wireless.kernel.org/en/developers/Documentation/ChannelList
 >=20
-> maybe - I just tried to have the code behave exactly as before, just
-> with the rate scale initialization called later. Even before this patch,
-> rate scaling initialization would be called if the station already
-> exists.=20
+> Yeah, I fully understand that there are other frequency ranges that this
+> will be useful in.  My actual goal is using it in the 900mhz spectrum.
+
+Right. But then I think your hw can _only_ operate in 900mhz, so I
+suppose you're just saying 'channel 5' anyway, and the hardware has an
+offset of, say, 1500 MHz.
+
+> Great, Thanks for the input.  I'm busy tonight, but I'll take a look=20
+> tomorrow and try to start this, at least in a pseudo mock-up.  I have
+> a basic idea how I'll attack this:
 >=20
-> If it is not necessary I can remove it.
-
-No, right, I understand now.
-
-> Right now iwlwifi is adding stations inside the rate scaling code in
-> order to work around this issue. I'd like to clean this up and only use
-> the sta notify callback.
-
-Makes sense, thanks, I appreciate that -- should be a good cleanup to
-the driver and reduce the number of places that try to add a station and
-make the driver more streamlined.
-
-> > Same in ibss.c (not quoting it here) where you're only moving it to
-> > after sta_info_insert()
+> 1. add bitfield
+> 2. duplicate all functionality as pertains to bitfield
+> 3. update drivers to use bitfield/export their supported modes
+> 4. remove old functionality, rename bitfield
 >=20
-> This was my goal actually.
-
-Yeah, I finally understood :)
-
-> >  -- all that seems to do is add race conditions,
-> > allowing other code to find not-yet-initialised stations.
 >=20
-> I did not realize that this can happen. Can you please elaborate?
+> That of course simplifies the actual amount of work it encompases, but
+> I believe going with this sort of approach will prevent breaking git
+> bisection.
 
-As soon as sta_insert() got called, a packet transmitted to that station
-can be processed, find the sta info, and it seems we could end up
-calling rate_control_get_rate() before the init was done, through a race
-condition.
+As long as you do it all in one go it won't break bisection either, but
+you're welcome to do it this way instead :)
+
+> Would we want the bitfield sparse, to allow for the insertion of other
+> modes of operation we hadn't thought of?
+
+I think so, yeah.
+
+>   Also, should it be used like
+> how the NL80211_IF_TYPE_* flags are used, in that ALL supported features
+> should be added if it's to be used?  Specifically, we're going to assume
+> that if a driver exports it's supported modes, it will include stuff like
+> NO_HT if it supports operation without HT (which I think ALL devices that
+> comply with the 802.11{a,b,g,n} specs would support.  It should probably
+> be a long term goal to then add this to all drivers, period, so that
+> we won't have to make any assumptions about what a driver supports from
+> the mac80211 layer. =20
+
+Yes. I just think that's a HUGE amount of work to be doing, hence
+proposing the "if (types =3D=3D 0) types =3D ..." thing. That way only driv=
+ers
+who need the new channel types need updating, and we can print a message
+there asking drivers to be updated, or so. You could even print the
+driver name by following the wiphy's parent device, if present :)
+
+> Also, would we want to add a log message when switching from/to=20
+> non-standard operating modes?  Something like have a bit that marks the
+> highest standard mode, then any additional modes(currently 5/10 mhz only
+> could later be extended to adding HT/bonding/xspan in narrower channels)
+> would come after that and have something like:
+>=20
+>=20
+> if(mode > MAX_OPMODE)
+> 	printk(some facility, "Switching to opmode %s "
+>                               "which is not standardized", mode);
+>=20
+> (Of course, greatly simplified).
+
+I don't know -- most of these modes _are_ (being) standardised.
+
+The biggest issue I see is scanning -- but that currently gives you the
+frequency list, so I guess we could extend that to pass the frequency
+and channel width, and assume 20mhz if not given. Unfortunately, I used
+an array of u32's there so we'd need to introduce a new nl80211
+attribute for that.
+
+Also, the channel passed to scan results needs to include the width, so
+we don't try to connect to a 20mhz BSS with 5mhz channel width.
 
 johannes
 
---=-ABrZ9h7QBOGsNuF5DvGM
+--=-XdEE+J6UOjWNnzaNSar/
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKmEWuAAoJEODzc/N7+QmaPC0P/3+9Yfn8LHdMAxgYeiKpNlNQ
-YIzVpgUfo0I6zDQvAVCh6MPW2uDghwA7RfD0trdHXC0Apcq+cX/LBX+RKI8J4Mwf
-mcy5Ckalrgy79T+tcDqCfGkcEbbALy+05/1n7vFH6S08avh6XTLjsEkEvPUFNFX5
-fANIDxBSPXjbICCDlKf/rbANcvKBouknvmzYEvx0QLiiW0ry6LEerxn6PSS+2GGN
-b42hOnEzvE7An8l5u0XgZBQ+E+tStvcWItfW4z6/O2QNwsMl2pwGrsJjAuxnaGGR
-qLZLY5TGh/3Sy0V4D5S0m3/K/u445GdIytSWs3VTiA5KWS/jwV+18/2WKdA+Vjon
-amZ5367bomevtKTD9M6N/fouxqs2UobBrig0wKFLyEvwiJizO3SExNmQs0o9/GZT
-SpVbY06isQYBlnpmD8OqVGVVNAVFQB/qc7C7QMIKvvxLk51BBbovXrmXHlVYVlS7
-7IfIEsi7Liej/2Q6WuoTGj+6Crunt+n5XtPBooAFCJOA2YZS1iSE641jtXGFwBuo
-MyJw3ipUpDP/gD/1Rn5iMGw4wz61QxtQCPIcNLwEZ2fE1roUWYRgrdLly+pdHJ6Y
-i2k0K8MnNzY4ZXz8uAV0IR2w3xLnoMOOPhqKS8C24RCZXI8TbTCSVYMsKYwchqMW
-lU7AUM3W7AUFbnBWB/eL
-=3kA/
+iQIcBAABAgAGBQJKd9tbAAoJEODzc/N7+QmaOI4P/2kN+OdKeR6pdgauXmSTggr6
+8HRu0IqKebebBKHzzolq77aGOba660bnB7Ce3CEwHIxzHJw+StBcoQ2EreCoDFSg
+wOq2Wji47U9gQ5JFK61WS74J9Xr0WN7NPCeW+WZUI/jD4jyyDTIkPvfrTQcKiaPx
+5KZzst0DSptCgoLCKLM4uvirwoYnJtJU+CmqkCCDnMypkXuaZbYs+k6Akht6utZR
+HjBxlQIcpzUfVLKODXWQXrq/9SBqRZuU+KiAeEAcnWxJzkqTK5VnBcLolXka35lU
+5606Ej/Vn75Xm6qoTf3Gc3Yg8QYIME0tzfqMVIH2jQ+xe/8t2b2avM7bQkFVFQcB
+xgp9Wtt9/NsGLiAH2eDJCCljM+SA8ZbGSAUsNKqr8UW2Td/FDfy3cMVi66uPsy2T
+MtRKR3OsVLHoCFd2e3Ppfjlw1J4tOtt3nxgIZLkPKwV2ASDomx38NRUGfgBAtvCF
+OqaPDAvsYHzswJzXlMaMb+A0D1YFtrA3BlrqTXrx7+woQW/VVBE27boxo+PHes6A
+qaArllcLqGWJ25U+GvfC3vZgFfTdqQSwpwM0VmgZvYyqfX7RocWRS+d512LlP+Dt
+InLnQgacfBmpDhqKDJVm2DggIV0M2ahdDzPC5Rd3ZHUfNUv1s3wpyjYknQfwcJxb
+KV7N/R34ny5QNXSsOjfM
+=Ybbr
 -----END PGP SIGNATURE-----
 
---=-ABrZ9h7QBOGsNuF5DvGM--
+--=-XdEE+J6UOjWNnzaNSar/--
 
