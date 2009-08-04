@@ -1,77 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:32925 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461AbZHFGRe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 02:17:34 -0400
-Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Greg KH <greg@kroah.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	stephen.chen@atheros.com, linux-usb@vger.kernel.org
-In-Reply-To: <20090806050932.GA25015@kroah.com>
-References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
-	 <1249532170.21101.3.camel@localhost.localdomain>
-	 <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
-	 <1249533357.21101.5.camel@localhost.localdomain>
-	 <20090806050932.GA25015@kroah.com>
-Content-Type: text/plain
-Date: Wed, 05 Aug 2009 23:17:27 -0700
-Message-Id: <1249539447.21101.9.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:57430 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933403AbZHDWEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 18:04:07 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: gregor kowski <gregor.kowski@gmail.com>
+Subject: Re: [PATCH] remove wrong probe_resp_plcp write
+Date: Wed, 5 Aug 2009 00:04:05 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com> <1249417983.24787.8.camel@johannes.local> <83a869cd0908041458n1f23f100pee5a6b3c4c3f11e4@mail.gmail.com>
+In-Reply-To: <83a869cd0908041458n1f23f100pee5a6b3c4c3f11e4@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908050004.05429.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luiz,
+On Tuesday 04 August 2009 23:58:45 gregor kowski wrote:
+> On 8/4/09, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2009-08-04 at 22:27 +0200, Michael Buesch wrote:
+> >
+> > Just remove it -- if we need it back we can find it in the git archives,
+> > and it's rather unlikely that we're going to add that functionality to
+> > mac80211 and hostapd unless you'll push it.
+> >
+> What should be removed ?
+> b43_write_probe_resp_template and b43_write_probe_resp_plcp ?
 
-> > > >> New Atheros USB devices will use 0x0cf3. The first device
-> > > >> will be ar9271, for which we are adding support for.
-> > > >>
-> > > >> Cc: zhifeng.cai@atheros.com
-> > > >> Cc: stephen.chen@atheros.com
-> > > >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > > >> ---
-> > > >>
-> > > >> John, sending this through you as this is only
-> > > >> specific to wireless, at least at the moment.
-> > > >>
-> > > >>  include/linux/pci_ids.h |    1 +
-> > > >>  1 files changed, 1 insertions(+), 0 deletions(-)
-> > > >>
-> > > >> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > > >> index 73b46b6..27f4e6b 100644
-> > > >> --- a/include/linux/pci_ids.h
-> > > >> +++ b/include/linux/pci_ids.h
-> > > >> @@ -2170,6 +2170,7 @@
-> > > >>  #define PCI_DEVICE_ID_BCM1250_HT     0x0002
-> > > >>
-> > > >>  #define PCI_VENDOR_ID_ATHEROS                0x168c
-> > > >> +#define PCI_VENDOR_ID_ATHEROS_USB    0x0cf3
-> > > >
-> > > > this is confusing the hell out of me. What are you adding here.
-> > > 
-> > > No you're right, my fault.
-> > > 
-> > > > A USB
-> > > > vendor id or a PCI one. Is the ar9271 a PCI device or a USB device?
-> > > 
-> > > Its only USB.
-> > > 
-> > > Thanks... hm I see no USB vendor id headers. Guess we won't need to add this.
-> > 
-> > the closest we have is drivers/hid/hid-ids.h and we might just should
-> > have Greg create a usb-ids.h file.
-> 
-> Ick, no, there's no such file for a good reason.  Put your device ids in
-> the driver files, no need to share it across the whole kernel.
+yes
 
-that is fine with me btw. I have always done this. I do actually prefer
-the plain ids and then a comment above their usage :)
-
-Regards
-
-Marcel
-
-
+-- 
+Greetings, Michael.
