@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:33702 "EHLO mx2.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:64137 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbZHJQtc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 12:49:32 -0400
-Subject: Re: [PATCH] cfg80211: Set WEP ciphers
-From: Dan Williams <dcbw@redhat.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090810090447.GA5421@sortiz.org>
-References: <20090806190439.GA22647@sortiz.org>
-	 <1249680982.26088.48.camel@localhost.localdomain>
-	 <20090810090447.GA5421@sortiz.org>
+	id S933086AbZHDRFb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 13:05:31 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 10:05:32 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Igor Perminov <igor.perminov@inbox.ru>,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Subject: [PATCH] ath9k: use new FIF_PSPOLL configure filter
+Date: Tue, 4 Aug 2009 10:05:30 -0700
+Message-ID: <1249405530-14123-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Mon, 10 Aug 2009 11:49:07 -0500
-Message-Id: <1249922947.3722.0.camel@localhost.localdomain>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-08-10 at 11:04 +0200, Samuel Ortiz wrote:
-> Hi Dan,
-> 
-> On Fri, Aug 07, 2009 at 04:36:22PM -0500, Dan Williams wrote:
-> > On Thu, 2009-08-06 at 21:04 +0200, Samuel Ortiz wrote:
-> > > With iwconfig there is no way to properly set the ciphers when trying to
-> > > connect to a WEP SSID. Although mac80211 based drivers dont need it, several
-> > > fullmac drivers do.
-> > > This patch basically sets the WEP ciphers whenever they're not set at all.
-> > 
-> > If you're talking about Dynamic WEP, that's what wpa_supplicant is for,
-> > it will handle setting the ciphers through SIOCSIWENCODEEXT.
-> No, I'm not talking about dynamic WEP, but rather about "iwconfig wlan0 key
-> your_static_key".
-> 
-> 
-> > If you're talking about static WEP, then the ciphers are determined by
-> > the WEP keys that have been set with iwconfig, and you determine
-> > WEP40/WEP104 based on the length of the current WEP TX index.
-> In theory, yes, but our driver's UMAC wants to get the key cipher before
-> having actually set the keys, and with the latest key handling rework we get
-> our connect() handler called before keys are actually set.
-> 
-> 
-> > You should *not* be trying to do Dynamic WEP via iwconfig (which it
-> > seems is what you're doing below?)
-> No, that's not what we're trying to do.
+We used to set pspoll filter on ath9k on AP mode but
+we no longer need this mode specific check as mac80211
+now does the check for us and informs us when we should
+enable pspoll through FIF_PSPOLL.
 
-Thanks for the explanation, sorry for the noise then.
+Cc: Igor Perminov <igor.perminov@inbox.ru>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Dan
-
-> Cheers,
-> Samuel.
-> 
-> 
-> > Dan
-> > 
-> > > Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> > > ---
-> > >  net/wireless/sme.c |   18 ++++++++++++++++--
-> > >  1 files changed, 16 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-> > > index 8a7dcbf..b78a111 100644
-> > > --- a/net/wireless/sme.c
-> > > +++ b/net/wireless/sme.c
-> > > @@ -638,14 +638,28 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
-> > >  
-> > >  	if (connkeys && connkeys->def >= 0) {
-> > >  		int idx;
-> > > +		u32 cipher;
-> > >  
-> > >  		idx = connkeys->def;
-> > > +		cipher = connkeys->params[idx].cipher;
-> > >  		/* If given a WEP key we may need it for shared key auth */
-> > > -		if (connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP40 ||
-> > > -		    connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP104) {
-> > > +		if (cipher == WLAN_CIPHER_SUITE_WEP40 ||
-> > > +		    cipher == WLAN_CIPHER_SUITE_WEP104) {
-> > >  			connect->key_idx = idx;
-> > >  			connect->key = connkeys->params[idx].key;
-> > >  			connect->key_len = connkeys->params[idx].key_len;
-> > > +
-> > > +			/*
-> > > +			 * If ciphers are not set (e.g. when going through
-> > > +			 * iwconfig), we have to set them appropriately here.
-> > > +			 */
-> > > +			if (connect->crypto.cipher_group == 0)
-> > > +				connect->crypto.cipher_group = cipher;
-> > > +
-> > > +			if (connect->crypto.n_ciphers_pairwise == 0) {
-> > > +				connect->crypto.n_ciphers_pairwise = 1;
-> > > +				connect->crypto.ciphers_pairwise[0] = cipher;
-> > > +			}					
-> > >  		}
-> > >  	}
-> > >  
-> > > -- 
-> > > 1.6.3.1
-> > > 
-> > 
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 61edfab..6b07ced 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -448,8 +448,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	else
+ 		rfilt |= ATH9K_RX_FILTER_BEACON;
+ 
+-	/* If in HOSTAP mode, want to enable reception of PSPOLL frames */
+-	if (sc->sc_ah->opmode == NL80211_IFTYPE_AP)
++	if (sc->rx.rxfilter & FIF_PSPOLL)
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+ 	if (sc->sec_wiphy) {
+-- 
+1.6.3.3
 
