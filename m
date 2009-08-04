@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53107 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757694AbZHQR1b (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:56779 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932260AbZHDU1t convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v5 06/33] wireless: group Conexant / STEricsson drivers in kconfig
-Date: Mon, 17 Aug 2009 13:27:05 -0400
-Message-Id: <1250530052-14783-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 4 Aug 2009 16:27:49 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] remove wrong probe_resp_plcp write
+Date: Tue, 4 Aug 2009 22:27:45 +0200
+Cc: gregor kowski <gregor.kowski@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com> <200907312238.15705.mb@bu3sch.de> <20090804160558.GC4995@tuxdriver.com>
+In-Reply-To: <20090804160558.GC4995@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908042227.46237.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few of these so we keep them under a
-config option which expands upon selection.
+On Tuesday 04 August 2009 18:05:58 John W. Linville wrote:
+> On Fri, Jul 31, 2009 at 10:38:14PM +0200, Michael Buesch wrote:
+> > On Friday 31 July 2009 22:35:49 gregor kowski wrote:
+> > > The tkip hw support uncovered a bug in b43_write_probe_resp_template : it is
+> > > writing at the wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This
+> > > patch comments these writes.
+> > > 
+> > > Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+> > 
+> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+>   CC [M]  drivers/net/wireless/b43/main.o
+> drivers/net/wireless/b43/main.c:1432: warning: ‘b43_write_probe_resp_plcp’ defined but not used
+> 
+> Comment it out too?  Or are you going to fix the block that has been
+> commented-out here?
 
-Cc: Christian Lamparter <chunkeey@web.de>
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+No, please add
+#if 0
+void b43_write_probe_resp_plcp(...)
+{
+...
+}
+#endif /* 0 */
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index cfd192e..a123f6e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -284,6 +284,18 @@ config PCMCIA_WL3501
- 	 It has basic support for Linux wireless extensions and initial
- 	 micro support for ethtool.
- 
-+config CONEXANT_ST_80211
-+	bool "Intersil / Conexant / STEricsson"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Intersil / Conexant and STEricsson
-+	  wireless drivers. All these companies have sell wireless cards which
-+	  have shared common parts one way or another. The drivers for these cards
-+	  include the mac80211 based p54 drivers for PCI, USB and SPI (Nokia N810
-+	  and N800), and and the old PCI FullMAC driver prism54.
-+
-+if CONEXANT_ST_80211
-+
- source "drivers/net/wireless/p54/Kconfig"
- 
- config PRISM54
-@@ -333,6 +345,8 @@ config PRISM54
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.
- 	  The module will be called prism54.
- 
-+endif # CONEXANT_ST_80211
-+
- config USB_ZD1201
- 	tristate "USB ZD1201 based Wireless device support"
- 	depends on USB && WLAN_80211
+to comment out the function, too.
+The probe response offload is currently not supported by mac80211.
+
 -- 
-1.6.2.5
-
+Greetings, Michael.
