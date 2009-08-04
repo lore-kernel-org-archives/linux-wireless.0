@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:45040 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbZHSOoP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 10:44:15 -0400
-Message-ID: <4A8C0FBA.50502@tuffmail.co.uk>
-Date: Wed, 19 Aug 2009 15:44:10 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Received: from mx73.mail.ru ([94.100.176.87]:36034 "EHLO mx73.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755386AbZHDMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 08:30:40 -0400
+Received: from mx40.mail.ru (mx40.mail.ru [94.100.176.54])
+	by mx73.mail.ru (mPOP.Fallback_MX) with ESMTP id 51ED248A8D3
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2009 16:30:38 +0400 (MSD)
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+To: mjg59@srcf.ucam.org
+Subject: Multiple rfkill knobs for the same hardware interface
+Date: Tue, 4 Aug 2009 16:29:56 +0400
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: marcel@holtmann.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 6/5] dell-laptop: remove duplicate Kconfig entry under drivers/misc
-References: <4A8C0623.8030808@tuffmail.co.uk> <1250690811-21203-5-git-send-email-alan-jenkins@tuffmail.co.uk> <20090819141322.GA15937@srcf.ucam.org>
-In-Reply-To: <20090819141322.GA15937@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart1400429.dJ2kqDD6Lh";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <200908041630.00533.arvidjaar@mail.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthew Garrett wrote:
-> On Wed, Aug 19, 2009 at 03:06:51PM +0100, Alan Jenkins wrote:
->   
->> This is controlled by a hardware switch, so we should poll it in order
->> to pick up changes.  (There does not appear to be an interrupt or any
->> other notification mechanism).
->>     
->
-> With the exception of this one they all look fine - I'm moving house 
-> next week and won't have access to any Dell hardware for over a month, 
-> so if anyone else could confirm that these work that would be excellent.
->
->   
+--nextPart1400429.dJ2kqDD6Lh
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Ok, thanks!
+This is mostly the same situation as ACPI vs. platform backlight=20
+control. Here on Dell XPS M1330:
 
-Here's something else I just noticed.  I was able to test this one myself.
+{pts/1}% rfkill list
+0: dell-wifi: Wireless LAN
+        Soft blocked: no
+        Hard blocked: no
+1: dell-bluetooth: Bluetooth
+        Soft blocked: no
+        Hard blocked: no
+2: phy0: Wireless LAN
+        Soft blocked: no
+        Hard blocked: no
+4: hci0: Bluetooth
+        Soft blocked: no
+        Hard blocked: no
 
-----------------------------------------------------------------------
->From 7efa12d3ea8bb70897358b4a87f8dedce9b78cca Mon Sep 17 00:00:00 2001
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Date: Wed, 19 Aug 2009 15:32:17 +0100
-Subject: [PATCH] dell-laptop: remove duplicate Kconfig entry under drivers/misc
+Arguably, either one in the pair is redundant. Moreover, hard disabling=20
+wireless (using slider on notebook side):
 
-This showed up as an unselectable option when using xconfig and
-searching for "dell".  It must been overlooked when dell-laptop
-was moved to drivers/platform/x86.
+{pts/1}% rfkill list
+0: dell-wifi: Wireless LAN
+        Soft blocked: no
+        Hard blocked: no
+1: dell-bluetooth: Bluetooth
+        Soft blocked: no
+        Hard blocked: no
+2: phy0: Wireless LAN
+        Soft blocked: no
+        Hard blocked: yes
 
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
----
- drivers/misc/Kconfig |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+So dell-laptop actually lies claiming that both radios are enabled. Even=20
+if this is a bug that can be fixed, having two knobs for exactly the=20
+same piece of hardware is confusing at the very least.
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 68ab39d..22414c5 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -210,19 +210,6 @@ config SGI_GRU_DEBUG
- 	This option enables addition debugging code for the SGI GRU driver. If
- 	you are unsure, say N.
- 
--config DELL_LAPTOP
--	tristate "Dell Laptop Extras (EXPERIMENTAL)"
--	depends on X86
--	depends on DCDBAS
--	depends on EXPERIMENTAL
--	depends on BACKLIGHT_CLASS_DEVICE
--	depends on RFKILL
--	depends on POWER_SUPPLY
--	default n
--	---help---
--	This driver adds support for rfkill and backlight control to Dell
--	laptops.
--
- config ISL29003
- 	tristate "Intersil ISL29003 ambient light sensor"
- 	depends on I2C && SYSFS
--- 
-1.6.3.2
+--nextPart1400429.dJ2kqDD6Lh
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
 
+iEYEABECAAYFAkp4KcQACgkQR6LMutpd94x4AQCePD4z1F/IDdHmdCDa4sxin4ul
+Ut8AoJB5CJS4HTki/LWr6PCUn/BLNI7s
+=XC51
+-----END PGP SIGNATURE-----
 
+--nextPart1400429.dJ2kqDD6Lh--
