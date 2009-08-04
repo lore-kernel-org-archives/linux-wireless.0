@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:17585 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756657AbZHNMlS convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:57081 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932898AbZHDRM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 08:41:18 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so334444fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 05:41:18 -0700 (PDT)
+	Tue, 4 Aug 2009 13:12:59 -0400
+Received: by ewy10 with SMTP id 10so499807ewy.37
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 10:12:59 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Subject: Re: [PATCH 1/2] rt61pci: fix module reloading
+Date: Tue, 4 Aug 2009 19:12:55 +0200
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com
+References: <20090802183002.16766.4142.stgit@ct.roinet.com>
+In-Reply-To: <20090802183002.16766.4142.stgit@ct.roinet.com>
 MIME-Version: 1.0
-In-Reply-To: <4A855489.6010102@gmail.com>
-References: <4A855489.6010102@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 14 Aug 2009 14:40:58 +0200
-Message-ID: <69e28c910908140540p55904f27m1d3b609c7b317e12@mail.gmail.com>
-Subject: Re: [PATCH] ssb: Fix e typo in the rev8 SPROM extraction routine
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908041912.56012.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, please fix the typo in the commit name... how ironic this is a
-typo fix patch. :-)
+On Sunday 02 August 2009, Pavel Roskin wrote:
+> Unloading rt61pci can leave the device in such state that reloading
+> rt61pci would fail to reinitialize it.  Bogus data would be read from
+> the EEPROM and the RF version won't be recognized.
+> 
+> It appears that unloading rt61pci with power saving enabled would have
+> such effect.  To initialize the device properly, SOFT_RESET_CSR should
+> be set to the same value as rt61pci_config_ps() uses to wake up the
+> device.
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
 
-2009/8/14 Gábor Stefanik <netrolller.3d@gmail.com>:
-> No comment. :-)
->
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+I'm not really happy with the patch, but if it works, it works.
+I got no better alternative to fix this correctly so we might as well merge
+this into wireless-testing now. :)
+
+Thanks.
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
 > ---
-> Mark, this should fix your MAC address bug.
-> Anyone else testing LP-PHY should also apply this.
->
-> drivers/ssb/pci.c |    2 +-
-> 1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-> index 50811e4..335a43f 100644
-> --- a/drivers/ssb/pci.c
-> +++ b/drivers/ssb/pci.c
-> @@ -480,7 +480,7 @@ static void sprom_extract_r8(struct ssb_sprom *out,
-> const u16 *in)
->
->        /* extract the MAC address */
->        for (i = 0; i < 3; i++) {
-> -               v = in[SPOFF(SSB_SPROM1_IL0MAC) + i];
-> +               v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
->                *(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
->        }
->        SPEX(country_code, SSB_SPROM8_CCODE, 0xFFFF, 0);
+>  drivers/net/wireless/rt2x00/rt61pci.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+> index fb95b8c..e20dd74 100644
+> --- a/drivers/net/wireless/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
+> @@ -2601,6 +2601,11 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+>  	int retval;
+>  
+>  	/*
+> +	 * Disable power saving.
+> +	 */
+> +	rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
+> +
+> +	/*
+>  	 * Allocate eeprom data.
+>  	 */
+>  	retval = rt61pci_validate_eeprom(rt2x00dev);
 > --
-> 1.6.2.4
->
->
->
->
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
