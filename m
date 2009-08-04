@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:45169 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932249AbZHJR3K (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44895 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbZHDQQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 13:29:10 -0400
-Message-ID: <4A8058D7.7070106@hartkopp.net>
-Date: Mon, 10 Aug 2009 19:28:55 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
+	Tue, 4 Aug 2009 12:16:06 -0400
+Date: Tue, 4 Aug 2009 12:05:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: gregor kowski <gregor.kowski@gmail.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] remove wrong probe_resp_plcp write
+Message-ID: <20090804160558.GC4995@tuxdriver.com>
+References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com> <200907312238.15705.mb@bu3sch.de>
 MIME-Version: 1.0
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-CC: netdev@vger.kernel.org, linux-zigbee-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, Sergey Lapin <slapin@ossfans.org>,
-	Patrick McHardy <kaber@trash.net>
-Subject: Re: [PATCH 2/2] ieee802154: add virtual loopback driver
-References: <1249913800-10176-1-git-send-email-dbaryshkov@gmail.com> <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com> <1249913800-10176-3-git-send-email-dbaryshkov@gmail.com>
-In-Reply-To: <1249913800-10176-3-git-send-email-dbaryshkov@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <200907312238.15705.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dmitry Eremin-Solenikov wrote:
-> fakelb is a virtual loopback driver implementing one or several
-> interconnected radios. 
+On Fri, Jul 31, 2009 at 10:38:14PM +0200, Michael Buesch wrote:
+> On Friday 31 July 2009 22:35:49 gregor kowski wrote:
+> > The tkip hw support uncovered a bug in b43_write_probe_resp_template : it is
+> > writing at the wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This
+> > patch comments these writes.
+> > 
+> > Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-> +
-> +static int radios = 3;
-> +module_param(radios, int, 0444);
-> +MODULE_PARM_DESC(radios, "Number of simulated radios");
-> +
+  CC [M]  drivers/net/wireless/b43/main.o
+drivers/net/wireless/b43/main.c:1432: warning: ‘b43_write_probe_resp_plcp’ defined but not used
 
+Comment it out too?  Or are you going to fix the block that has been
+commented-out here?
 
-> +
-> +	for (i = 0; i < radios; i++) {
-> +		err = ieee802154fake_add_priv(&pdev->dev, priv);
-> +		if (err < 0)
-> +			goto err_slave;
-> +	}
-> +
-
-Hi Dimtry,
-
-creating software networking devices like this is IMO not state-of-the-art for
- kernel inclusion.
-
-Please use the NETLINK interface for creating the virtual loopback drivers,
-like e.g. the virtual CAN driver (drivers/net/can/vcan.c) does.
-
-Regards,
-Oliver
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
