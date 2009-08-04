@@ -1,95 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1381 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356AbZH0TSM (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:58263 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933572AbZHDX2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 15:18:12 -0400
-Date: Thu, 27 Aug 2009 15:17:15 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH 4/4] ath5k: add hardware CCMP encyption support
-Message-ID: <20090827191715.GA30419@hash.localnet>
-References: <1251169233-24169-1-git-send-email-me@bobcopeland.com> <1251169233-24169-5-git-send-email-me@bobcopeland.com> <1251338971.17295.17.camel@mj>
+	Tue, 4 Aug 2009 19:28:22 -0400
+Received: by bwz19 with SMTP id 19so3380127bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 16:28:22 -0700 (PDT)
+Message-ID: <4A78C414.7060708@gmail.com>
+Date: Wed, 05 Aug 2009 01:28:20 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1251338971.17295.17.camel@mj>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: Fix fallout from the IEEE80211_IF_TYPE to NL80211_IFTYPE
+ change.
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Subject: [PATCH] ath5k: clarify srev comparison for CCMP check
+Update a comment that still says IEEE80211_IF_TYPE instead of NL80211_IFTYPE.
 
-As Pavel Roskin noted, the check for mac version as copied from
-legacy_hal made no sense.  This replaces it with the equivalent
-and makes up a suitable #define for the mac version legacy_hal
-checked.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
+This patch replaces "b43: Typo fixes and minor cleanup",
+the other half of which has been integrated into the LP rev01 init patch.
 
-On Wed, Aug 26, 2009 at 10:09:31PM -0400, Pavel Roskin wrote:
-> On Mon, 2009-08-24 at 23:00 -0400, Bob Copeland wrote:
-> > +	ah->ah_aes_support =
-> > +		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
-> > +		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5) &&
-> > +		 (ah->ah_mac_version > (AR5K_SREV_AR5212 >> 4) ||
-> > +		  (ah->ah_mac_version == (AR5K_SREV_AR5212 >> 4) &&
-> > +		   ah->ah_mac_revision >= (AR5K_SREV_AR5211 >> 4))));
-> 
-> The above use of ah->ah_mac_revision is clearly incorrect.  You are
-> comparing a revision with a symbol for a version.
-> 
-> I suggest that you use ah_mac_srev instead.  Before this patch,
-> ah_mac_revision was a write-only variable and was a good candidate for
-> removal.
-> 
-> The last three quoted lines are equivalent to (ah->ah_mac_srev >= 0x54)
+ drivers/net/wireless/b43/b43.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Ok, here's a fixup.  I'm not sure if 0x54 was really intended since we
-don't know what srev that is, but this assumes legacy hal is correct.
-
- drivers/net/wireless/ath/ath5k/ath5k.h  |    1 +
- drivers/net/wireless/ath/ath5k/attach.c |    7 ++-----
- 2 files changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index cdc79cd..1275ba0 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -306,6 +306,7 @@ struct ath5k_srev_name {
- #define AR5K_SREV_AR5311B	0x30 /* Spirit */
- #define AR5K_SREV_AR5211	0x40 /* Oahu */
- #define AR5K_SREV_AR5212	0x50 /* Venice */
-+#define AR5K_SREV_AR5212_V4	0x54 /* ??? */
- #define AR5K_SREV_AR5213	0x55 /* ??? */
- #define AR5K_SREV_AR5213A	0x59 /* Hainan */
- #define AR5K_SREV_AR2413	0x78 /* Griffin lite */
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index 109ab7b..4819f39 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -318,12 +318,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
- 
- 	/* Crypto settings */
- 	ee = &ah->ah_capabilities.cap_eeprom;
--	ah->ah_aes_support =
-+	ah->ah_aes_support = srev >= AR5K_SREV_AR5212_V4 &&
- 		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
--		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5) &&
--		 (ah->ah_mac_version > (AR5K_SREV_AR5212 >> 4) ||
--		  (ah->ah_mac_version == (AR5K_SREV_AR5212 >> 4) &&
--		   ah->ah_mac_revision >= (AR5K_SREV_AR5211 >> 4))));
-+		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5));
- 
- 	if (srev >= AR5K_SREV_AR2414) {
- 		ah->ah_combined_mic = true;
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 41ca727..52fd6d6 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -627,7 +627,7 @@ struct b43_wl {
+ 	u8 mac_addr[ETH_ALEN];
+ 	/* Current BSSID */
+ 	u8 bssid[ETH_ALEN];
+-	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
++	/* Interface type. (NL80211_IFTYPE_XXX) */
+ 	int if_type;
+ 	/* Is the card operating in AP, STA or IBSS mode? */
+ 	bool operating;
 -- 
-1.6.2.5
+1.6.2.4
 
 
-
--- 
-Bob Copeland %% www.bobcopeland.com
 
