@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:38644 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933186AbZHHDnY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:43:24 -0400
-Received: by pzk34 with SMTP id 34so1941429pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:43:23 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Subject: [PATCH] mac80211: Use correct sign for mesh active path refresh.
-Date: Fri,  7 Aug 2009 20:31:48 -0700
-Message-Id: <1249702314-32504-3-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702314-32504-2-git-send-email-javier@cozybit.com>
-References: <>
- <1249702314-32504-1-git-send-email-javier@cozybit.com>
- <1249702314-32504-2-git-send-email-javier@cozybit.com>
+Received: from mx2.redhat.com ([66.187.237.31]:50265 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932799AbZHDQSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 12:18:32 -0400
+Subject: Re: [PATCH] libertas: check valid bits in SPI bus mode reg
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, tharvey@irobot.com
+In-Reply-To: <1249065319-18643-1-git-send-email-andrey@cozybit.com>
+References: <1249065319-18643-1-git-send-email-andrey@cozybit.com>
+Content-Type: text/plain
+Date: Tue, 04 Aug 2009 11:19:10 -0400
+Message-Id: <1249399150.21155.3.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrey Yurovsky <andrey@cozybit.com>
+On Fri, 2009-07-31 at 11:35 -0700, Andrey Yurovsky wrote:
+> The SPI driver writes to the bus mode register and performs a sanity
+> check by reading back what we wrote, however only the lower four bits of
+> that register are defined.  In some cases, the device side seems to set
+> the higher bits, causing us to fail the sanity check unnecessarily.
+> Check only the lower four bits instead.
+> 
+> Thanks to John Goyette from Schick Technologies for pointing out the
+> problem.
+> 
+> Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
 
-On locally originated traffic, we refresh active paths after a timeout.  The
-decision to do this was using the wrong sign and therefore the refresh timer
-was triggered for every frame.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b54c21c..1cd1e72 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -791,7 +791,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 	}
- 
- 	if (mpath->flags & MESH_PATH_ACTIVE) {
--		if (time_after(jiffies, mpath->exp_time -
-+		if (time_after(jiffies, mpath->exp_time +
- 			msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time))
- 				&& !memcmp(sdata->dev->dev_addr, hdr->addr4,
- 					   ETH_ALEN)
--- 
-1.5.4.3
+> ---
+>  drivers/net/wireless/libertas/if_spi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 6564282..86263a9 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -376,7 +376,7 @@ static int spu_set_bus_mode(struct if_spi_card *card, u16 mode)
+>  	err = spu_read_u16(card, IF_SPI_SPU_BUS_MODE_REG, &rval);
+>  	if (err)
+>  		return err;
+> -	if (rval != mode) {
+> +	if ((rval & 0xF) != mode) {
+>  		lbs_pr_err("Can't read bus mode register.\n");
+>  		return -EIO;
+>  	}
 
