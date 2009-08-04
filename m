@@ -1,75 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:31468 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933273AbZHHDnj (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932843AbZHDRhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:43:39 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so286716rvb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:43:38 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH] mac80211: Update the station failed frames average when minstrel is used.
-Date: Fri,  7 Aug 2009 20:31:51 -0700
-Message-Id: <1249702314-32504-6-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702314-32504-5-git-send-email-javier@cozybit.com>
-References: <>
- <1249702314-32504-1-git-send-email-javier@cozybit.com>
- <1249702314-32504-2-git-send-email-javier@cozybit.com>
- <1249702314-32504-3-git-send-email-javier@cozybit.com>
- <1249702314-32504-4-git-send-email-javier@cozybit.com>
- <1249702314-32504-5-git-send-email-javier@cozybit.com>
+	Tue, 4 Aug 2009 13:37:19 -0400
+Subject: Re: mac80211 TX frame alignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200908041905.11632.IvDoorn@gmail.com>
+References: <200908041905.11632.IvDoorn@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OrK0kGazuIFBSYNIUE21"
+Date: Tue, 04 Aug 2009 19:37:16 +0200
+Message-Id: <1249407436.24787.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fail_avg value is used to compute the mesh metric, and was only being set
-by the pid rate control module. This fixes the mesh path selection mechanism
-for cards that use mistrel for rate control.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- net/mac80211/rc80211_minstrel.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+--=-OrK0kGazuIFBSYNIUE21
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 7c51429..3ea9740 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -155,12 +155,16 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		   struct sk_buff *skb)
- {
- 	struct minstrel_sta_info *mi = priv_sta;
-+	struct minstrel_priv *mp = (struct minstrel_priv *)priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *ar = info->status.rates;
-+	struct ieee80211_local *local = hw_to_local(mp->hw);
-+	struct sta_info *si;
- 	int i, ndx;
- 	int success;
- 
- 	success = !!(info->flags & IEEE80211_TX_STAT_ACK);
-+	si = sta_info_get(local, sta->addr);
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		if (ar[i].idx < 0)
-@@ -172,8 +176,12 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 		mi->r[ndx].attempts += ar[i].count;
- 
--		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
-+		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0)) {
- 			mi->r[ndx].success += success;
-+			if (si)
-+				si->fail_avg = (18050 - mi->r[ndx].probability)
-+					/ 180;
-+		}
- 	}
- 
- 	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) && (i >= 0))
--- 
-1.5.4.3
+Hi Ivo,
+
+> Do you know if for outgoing frames the header should always
+> be 4-byte aligned?
+
+I know that there's no alignment guarantee.
+
+> I have a bugreport from users claiming that master mode
+> is failing for rt2500pci because the beacons passed to the
+> driver are not 4-byte aligned which causes the device not
+> to send out the beacons correctly.
+>=20
+> I'm just wondering if this is something that should be fixed
+> in the driver or in mac80211.
+
+I don't think we can fix that in mac80211, since we don't know whether
+or not any alignment is required. We could align beacon frames, I
+suppose, since those are created on the fly, but not data frames.
+
+johannes
+
+--=-OrK0kGazuIFBSYNIUE21
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKeHHGAAoJEODzc/N7+Qma9dMP/1/EAsQ0tanuV3rg1qRoKXv0
++kGBOcTQjuHyyi2lUqv0CrlcuBAR5CHPDyyIT3dFag9ci+OLU2YW1n5IzmAUrFR7
+cjzJ3j2+d4M+MjhTn354FN/PcLk9uUGIGzKFWWjF9MYLSClsLyaFssBXzmWRKQtD
+5zqisoxERBr0Z2SOAic6OqD2W0OtIL6gIq8UvGQRjQDiMxkTFc1EOOE9HO/IDLt5
+G7U9kBMWbvy/dLnmB8FqC4Gx++hWzLiHCaGvh7CtFoqjUSkcuNHycG4WFAos+zcG
+730YT4iGQqN2tcrB6TMVuxsTXNYpM91KSsfjPA87nN5z0ECqaxpoSkHMY2tP88pZ
+nfEJMTjGlZz1XONIPIrAexg+Rue7Q+Rnmmn46orGKuXhPF5/ywJkrG46e+1qZoPB
+ysFoINQeuiCfTkBCjiJVC3y0434nu7Kt0wJIO7titn6oxDjA10Qdvex+TgY49Y7l
+0fZ8kX+1woaAa/wsNAtBwmi1AUMOu4FliOBtobLjdN3Y0ltY5CU7rCEp9woXv/mH
+qOTYGGey8W3EHsZDTfBL8+kbppyGEhr66WozvZO6SFovngrBtisYzihLwdjUWx6I
+PVPHTJN5Y0xvCRu+ePnwtr1DLO+MkDwKnR0A10SVLd2k+QdEbI7cihND8YyUWWWz
+2aklv2j21ofUf15uMOhE
+=Ydhe
+-----END PGP SIGNATURE-----
+
+--=-OrK0kGazuIFBSYNIUE21--
 
