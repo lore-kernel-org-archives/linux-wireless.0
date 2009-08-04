@@ -1,54 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15984 "EHLO mga02.intel.com"
+Received: from mx40.mail.ru ([94.100.176.54]:57807 "EHLO mx40.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757021AbZHNTdV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 15:33:21 -0400
-Subject: Re: Spare warnings - wireless drivers
-From: reinette chatre <reinette.chatre@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
-References: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
+	id S1755446AbZHDMsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 08:48:52 -0400
+Subject: [PATCH] mac80211: FIF_PSPOLL filter flag
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain
-Date: Fri, 14 Aug 2009 12:33:22 -0700
-Message-Id: <1250278402.30019.6401.camel@rc-desk>
+Date: Tue, 04 Aug 2009 16:48:51 +0400
+Message-Id: <1249390131.8515.250.camel@sunlight>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-13 at 13:31 -0700, Luis R. Rodriguez wrote:
+When an interface is configured in the AP mode, the mac80211
+implementation doesn't inform the driver to receive PS Poll frames.
+It leads to inability to communicate with power-saving stations
+reliably.
+The FIF_CONTROL flag isn't passed by mac80211 to
+ieee80211_ops.configure_filter when an interface is in the AP mode.
+And it's ok, because we don't want to receive ACK frames and other
+control ones, but only PS Poll ones.
 
->   CHECK   drivers/net/wireless/ipw2x00/ipw2100.c
-> include/net/inet_sock.h:208:17: warning: do-while statement is not a
-> compound statement
-> drivers/net/wireless/ipw2x00/ipw2100.c:2847:21: warning: symbol 'i'
-> shadows an earlier one
-> drivers/net/wireless/ipw2x00/ipw2100.c:2770:16: originally declared here
-> drivers/net/wireless/ipw2x00/ipw2100.c:7888:22: warning: symbol 'mode'
-> shadows an earlier one
-> drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-> drivers/net/wireless/ipw2x00/ipw2100.c:7952:18: warning: symbol 'mode'
-> shadows an earlier one
-> drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-> drivers/net/wireless/ipw2x00/ipw2100.c:8000:18: warning: symbol 'mode'
-> shadows an earlier one
+This patch introduces the FIF_PSPOLL filter flag in addition to
+FIF_CONTROL, which means for the driver "pass PS Poll frames".
 
-[...]
+This flag is passed to the driver:
+A) When an interface is configured in the AP mode.
+B) In all cases, when the FIF_CONTROL flag was passed earlier (in
+addition to it).
 
-Thanks Luis.
+Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
+---
+ include/net/mac80211.h     |    8 ++++++--
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/iface.c       |   18 ++++++++++++++++--
+ net/mac80211/main.c        |    3 +++
+ 4 files changed, 26 insertions(+), 5 deletions(-)
 
-Does not look like sparse was ever run for ipw2x00 ... the driver
-specific ones will be addressed. Seems like other people also ran into
-the:
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d4e09a0..5113bba 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1236,10 +1236,13 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+  *	mac80211 needs to do and the amount of CPU wakeups, so you should
+  *	honour this flag if possible.
+  *
+- * @FIF_CONTROL: pass control frames, if PROMISC_IN_BSS is not set then
+- *	only those addressed to this station
++ * @FIF_CONTROL: pass control frames (except for PS Poll), if PROMISC_IN_BSS
++ *  is not set then only those addressed to this station.
+  *
+  * @FIF_OTHER_BSS: pass frames destined to other BSSes
++ *
++ * @FIF_PSPOLL: pass PS Poll frames, if PROMISC_IN_BSS  is not set then only
++ *  those addressed to this station.
+  */
+ enum ieee80211_filter_flags {
+ 	FIF_PROMISC_IN_BSS	= 1<<0,
+@@ -1249,6 +1252,7 @@ enum ieee80211_filter_flags {
+ 	FIF_BCN_PRBRESP_PROMISC	= 1<<4,
+ 	FIF_CONTROL		= 1<<5,
+ 	FIF_OTHER_BSS		= 1<<6,
++	FIF_PSPOLL		= 1<<7,
+ };
+ 
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index aec6853..ab6003d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -621,7 +621,7 @@ struct ieee80211_local {
+ 	int open_count;
+ 	int monitors, cooked_mntrs;
+ 	/* number of interfaces with corresponding FIF_ flags */
+-	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss;
++	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll;
+ 	unsigned int filter_flags; /* FIF_* */
+ 	struct iw_statistics wstats;
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a83087f..c5f4559 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -220,8 +220,10 @@ static int ieee80211_open(struct net_device *dev)
+ 			local->fif_fcsfail++;
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+ 			local->fif_plcpfail++;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL)
++		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+ 			local->fif_control++;
++			local->fif_pspoll++;
++		}
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+ 			local->fif_other_bss++;
+ 
+@@ -244,7 +246,14 @@ static int ieee80211_open(struct net_device *dev)
+ 			spin_unlock_bh(&local->filter_lock);
+ 
+ 			ieee80211_start_mesh(sdata);
++		} else if (sdata->vif.type == NL80211_IFTYPE_AP) {
++			local->fif_pspoll++;
++
++			spin_lock_bh(&local->filter_lock);
++			ieee80211_configure_filter(local);
++			spin_unlock_bh(&local->filter_lock);
+ 		}
++
+ 		changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 		ieee80211_enable_keys(sdata);
+@@ -388,6 +397,9 @@ static int ieee80211_stop(struct net_device *dev)
+ 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
+ 		atomic_dec(&local->iff_promiscs);
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		local->fif_pspoll--;
++
+ 	netif_addr_lock_bh(dev);
+ 	spin_lock_bh(&local->filter_lock);
+ 	__dev_addr_unsync(&local->mc_list, &local->mc_count,
+@@ -439,8 +451,10 @@ static int ieee80211_stop(struct net_device *dev)
+ 			local->fif_fcsfail--;
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+ 			local->fif_plcpfail--;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL)
++		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
++			local->fif_pspoll--;
+ 			local->fif_control--;
++		}
+ 		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+ 			local->fif_other_bss--;
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 5e76dd1..c330235 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -77,6 +77,9 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
+ 	if (local->fif_other_bss)
+ 		new_flags |= FIF_OTHER_BSS;
+ 
++	if (local->fif_pspoll)
++		new_flags |= FIF_PSPOLL;
++
+ 	changed_flags = local->filter_flags ^ new_flags;
+ 
+ 	/* be a bit nasty */
 
->   CHECK   drivers/net/wireless/ipw2x00/libipw_module.c
-> include/net/inet_sock.h:208:17: warning: do-while statement is not a
-> compound statement
-
-There is already a patch for this one ([1]) but I cannot tell of the
-kmemcheck folks merged it.
-
-Reinette
-
-[1] http://thread.gmane.org/gmane.linux.kernel/861983
 
