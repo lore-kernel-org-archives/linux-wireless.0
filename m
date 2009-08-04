@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60172 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbZHDPBD (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48714 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932930AbZHDRNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 11:01:03 -0400
-Date: Tue, 4 Aug 2009 10:55:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>, Michael Buesch <mb@bu3sch.de>,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Ath5k/mac80211 triggers WARN_ON in kernel/softirq.c
-Message-ID: <20090804145506.GA4995@tuxdriver.com>
-References: <200907301631.50780.mb@bu3sch.de> <b6c5339f0907300745l3e7ec63eu9819503c4e7766bb@mail.gmail.com> <1248968229.16129.9.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1248968229.16129.9.camel@johannes.local>
+	Tue, 4 Aug 2009 13:13:08 -0400
+Subject: Re: Multiple rfkill knobs for the same hardware interface
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Andrey Borzenkov <arvidjaar@mail.ru>
+Cc: mjg59@srcf.ucam.org, linux-wireless@vger.kernel.org
+In-Reply-To: <200908041630.00533.arvidjaar@mail.ru>
+References: <200908041630.00533.arvidjaar@mail.ru>
+Content-Type: text/plain
+Date: Tue, 04 Aug 2009 10:13:02 -0700
+Message-Id: <1249405982.3094.23.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 05:37:09PM +0200, Johannes Berg wrote:
-> On Thu, 2009-07-30 at 10:45 -0400, Bob Copeland wrote:
-> > On Thu, Jul 30, 2009 at 10:31 AM, Michael Buesch<mb@bu3sch.de> wrote:
-> > > Ath5k from today's compat-wireless triggers the following WARNing
-> > > on hostapd startup.
-> > > [ 1669.799870] ------------[ cut here ]------------
-> > > [ 1669.799934] WARNING: at kernel/softirq.c:141 local_bh_enable_ip+0x8b/0xb0()
-> > 
-> > because ath5k calls ieee80211_beacon_get inside a spin_lock_irqsave()
-> > and this is WARN_ON_ONCE(in_irq() || irqs_disabled).
-> 
-> > > [ 1669.800493]  [<ffffffff807e0fef>] _spin_unlock_bh+0xf/0x20
-> > > [ 1669.800564]  [<ffffffffa0040b92>] ieee80211_beacon_get+0x2c2/0x2d0 [mac80211]
-> > 
-> > I guess this is the first victim of spin_lock_bh conversion?
-> 
-> Indeed. I think this means we need to convert the local->sta_lock back
-> to _irqsave/restore.
-> 
-> John, can you revert the BH patch ("mac80211: do not use irq locks where
-> not necessary") and I'll send a new one with those changes removed?
+Hi Andrey,
 
-OK, will be gone today...
+> This is mostly the same situation as ACPI vs. platform backlight 
+> control. Here on Dell XPS M1330:
+> 
+> {pts/1}% rfkill list
+> 0: dell-wifi: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: no
+> 1: dell-bluetooth: Bluetooth
+>         Soft blocked: no
+>         Hard blocked: no
+> 2: phy0: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: no
+> 4: hci0: Bluetooth
+>         Soft blocked: no
+>         Hard blocked: no
+> 
+> Arguably, either one in the pair is redundant. Moreover, hard disabling 
+> wireless (using slider on notebook side):
+> 
+> {pts/1}% rfkill list
+> 0: dell-wifi: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: no
+> 1: dell-bluetooth: Bluetooth
+>         Soft blocked: no
+>         Hard blocked: no
+> 2: phy0: Wireless LAN
+>         Soft blocked: no
+>         Hard blocked: yes
+> 
+> So dell-laptop actually lies claiming that both radios are enabled. Even 
+> if this is a bug that can be fixed, having two knobs for exactly the 
+> same piece of hardware is confusing at the very least.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+this is clearly a bug in the dell-laptop module and it seems that
+Matthew fixed that already.
+
+The redundancy is just fine. The new RFKILL subsystem is capable of
+handling it and we have OP_CHANGE_ALL for exactly this case. You either
+wanna switch Bluetooth on or off. And with a 2.6.31 kernel you can do
+exactly this and no longer have to bother with details of the RFKILL
+switches representing Bluetooth for example.
+
+Also while we would like to have the platform RFKILL switches mapping to
+a device switch, it is in practice not possible since in most cases they
+are using some kind of hotplug anyway.
+
+Regards
+
+Marcel
+
+
