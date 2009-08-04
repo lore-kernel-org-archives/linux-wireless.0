@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:17222 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750934AbZHSG1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 02:27:50 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: allow cfg80211_connect_result with bssid == NULL
-Date: Wed, 19 Aug 2009 14:29:38 +0800
-Message-Id: <1250663378-9113-1-git-send-email-yi.zhu@intel.com>
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:54986 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932159AbZHDPN2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 11:13:28 -0400
+Received: by vws2 with SMTP id 2so1422658vws.4
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 08:13:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A754562.8000107@gmx.de>
+References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet>
+	 <4A754562.8000107@gmx.de>
+Date: Tue, 4 Aug 2009 11:13:28 -0400
+Message-ID: <b6c5339f0908040813y7dbe45a8h8b02524efc6e9def@mail.gmail.com>
+Subject: Re: [PATCH v2] ath5k: fix missing output in monitor mode after
+	ifconfig up
+From: Bob Copeland <me@bobcopeland.com>
+To: Joerg Albert <jal2@gmx.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of connection failure, the bssid info is not a must have.
+On Sun, Aug 2, 2009 at 3:50 AM, Joerg Albert<jal2@gmx.de> wrote:
+> Let ath5k_chan_set() always call ath5k_reset().
+> This fixes the bug that we don't
+> get any packets in monitor mode after:
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/wireless/sme.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Thanks!  Looks good.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index b78a111..bc9584a 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -435,7 +435,8 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 		return;
- 
- 	ev->type = EVENT_CONNECT_RESULT;
--	memcpy(ev->cr.bssid, bssid, ETH_ALEN);
-+	if (bssid)
-+		memcpy(ev->cr.bssid, bssid, ETH_ALEN);
- 	ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
- 	ev->cr.req_ie_len = req_ie_len;
- 	memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
 -- 
-1.6.0.4
-
+Bob Copeland %% www.bobcopeland.com
