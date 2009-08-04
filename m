@@ -1,358 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:65109 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753154AbZHSWOd convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:34359 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932824AbZHDQEL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 18:14:33 -0400
-Received: by fxm17 with SMTP id 17so135418fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 15:14:33 -0700 (PDT)
+	Tue, 4 Aug 2009 12:04:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <4A8AE255.9030102@gmail.com>
-References: <4A8AE255.9030102@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 20 Aug 2009 00:14:13 +0200
-Message-ID: <69e28c910908191514w3073d382x927062038f2bb128@mail.gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Implement spec updates and remove resolved
-	FIXMEs
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200908032217.19947.IvDoorn@gmail.com>
+References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera>
+	 <iZB3Pj-uj3M.A.pRC.1cgdKB@chimera>
+	 <200908031931.27427.chris2553@googlemail.com>
+	 <200908032217.19947.IvDoorn@gmail.com>
+Date: Tue, 4 Aug 2009 17:04:10 +0100
+Message-ID: <c6b1100b0908040904q158bd08ex5d570b7c0624c295@mail.gmail.com>
+Subject: Re: [Bug #13846] Possible regression in rt61pci driver
+From: Chris Clayton <chris2553@googlemail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seeing that this is still not in wireless-testing - this patch should
-be applied, the previously mentioned regressions were false alerts
-(Larry tested without this patch and with v478 firmware, which worked;
-while Mark applied this patch and used v410 firmware, which didn't
-work - when Mark upgraded to v478 firmware, his card too came to
-life.) So, please apply.
+Thanks Ivo,
 
-2009/8/18 Gábor Stefanik <netrolller.3d@gmail.com>:
-> Larry has started re-checking all current routines against a new
-> version of the Broadcom MIPS driver. This patch implements the first
-> round of changes he documented on the specs wiki.
+2009/8/3 Ivo van Doorn <ivdoorn@gmail.com>:
+> Hi,
 >
-> Also remove a few FIXMEs regarding missing initial values for variables
-> with dynamic initial values where reading the values has been implemented.
+>> On Sunday 02 August 2009, Rafael J. Wysocki wrote:
+>> > This message has been generated automatically as a part of a report
+>> > of recent regressions.
+>> >
+>> > The following bug entry is on the current list of known regressions
+>> > from 2.6.30.  Please verify if it still should be listed and let me know
+>> > (either way).
+>> >
+>>
+>> The folks on the wireless project have concluded that the problem I reported is down to a hardware
+>> problem when power saving is switched on on for my Belkin cardbus wireless adapter, so now I simply
+>> turn power-saving off when wlan0 comes up. I did, however, ask whether anyone was going to fix the
+>> fact that once power-saving turns the LEDs off, they never come back on again, but I haven't had an
+>> answer. Is that a regression? I guess the answer is no, because power saving in the rt61pci driver
+>> is feature that is new to 2.6.31. Should it be fixed? I think the answer is yes, but being unable
+>> to do it myself, I probably don't have a vote :-)
 >
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> Can't recall this issue was ever reported, but that might just be me having overlooked some emails
+> or have completely forgotten all about it. But here is a test patch to see if this helps in the issue,
+> it is not really correct for upstream, but if it works I can see if there is a better solution.
+>
+> Thanks,
+>
+
+I've tried the patch without success. The card doesn't seem to wake up
+again when I attempt network activity after PS has activated.
+(Actually, There are two assumptions I should check out here. Firstly,
+the LEDS going out is a sign that PS has activated and secondly, that
+the card should "wake up" if I attempt network activity after PS has
+activated).
+
+A cut and paste from the console window:
+
+[chris:~]$ iwconfig
+lo        no wireless extensions.
+
+wmaster0  no wireless extensions.
+
+wlan0     IEEE 802.11bg  ESSID:"SKY28767"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: 00:1F:33:80:09:44
+          Bit Rate=1 Mb/s   Tx-Power=10 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:on
+          Link Quality=50/70  Signal level=-60 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+[chris:~]$ echo "waiting for leds to go out"
+waiting for leds to go out
+[chris:~]$ ping router
+PING router.local.lan (192.168.0.1) from 192.168.0.30 : 56(84) bytes of data.
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+>From laptop.local.lan (192.168.0.30): Destination Host Unreachable
+^C
+--- router.local.lan ping statistics ---
+11 packets transmitted, 0 packets received, +9 errors, 100% packet loss
+[chris:~]$
+
+To get the card going again I had to physically remove and reinsert it.
+
+Chris
+
+> Ivo
 > ---
-> drivers/net/wireless/b43/phy_lp.c       |   98
-> +++++++++++++++++++------------
-> drivers/net/wireless/b43/phy_lp.h       |   18 +++---
-> drivers/net/wireless/b43/tables_lpphy.c |   12 ++++-
-> 3 files changed, 82 insertions(+), 46 deletions(-)
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+> index 3845316..6fe70b1 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+> @@ -196,6 +196,12 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+>         */
+>        rt2x00dev->ops->lib->config(rt2x00dev, &libconf, ieee80211_flags);
 >
-> diff --git a/drivers/net/wireless/b43/phy_lp.c
-> b/drivers/net/wireless/b43/phy_lp.c
-> index 242338f..6c69cdb 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -719,9 +719,39 @@ static void lpphy_set_bb_mult(struct b43_wldev *dev, u8
-> bb_mult)
->        b43_lptab_write(dev, B43_LPTAB16(0, 87), (u16)bb_mult << 8);
-> }
->
-> -static void lpphy_disable_crs(struct b43_wldev *dev)
-> +static void lpphy_set_deaf(struct b43_wldev *dev, bool user)
-> {
-> +       struct b43_phy_lp *lpphy = dev->phy.lp;
-> +
-> +       if (user)
-> +               lpphy->crs_usr_disable = 1;
-> +       else
-> +               lpphy->crs_sys_disable = 1;
->        b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x80);
-> +}
-> +
-> +static void lpphy_clear_deaf(struct b43_wldev *dev, bool user)
-> +{
-> +       struct b43_phy_lp *lpphy = dev->phy.lp;
-> +
-> +       if (user)
-> +               lpphy->crs_usr_disable = 0;
-> +       else
-> +               lpphy->crs_sys_disable = 0;
-> +
-> +       if (!lpphy->crs_usr_disable && !lpphy->crs_sys_disable) {
-> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
-> +                                       0xFF1F, 0x60);
-> +               else
-> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
-> +                                       0xFF1F, 0x20);
+> +       if (ieee80211_flags & IEEE80211_CONF_CHANGE_PS) {
+> +               rt2x00led_led_activity(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
+> +               rt2x00leds_led_assoc(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
+> +               rt2x00leds_led_radio(rt2x00dev, !(conf->flags & IEEE80211_CONF_PS));
 > +       }
-> +}
 > +
-> +static void lpphy_disable_crs(struct b43_wldev *dev, bool user)
-> +{
-> +       lpphy_set_deaf(dev, user);
->        b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x1);
->        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFB);
-> @@ -749,12 +779,9 @@ static void lpphy_disable_crs(struct b43_wldev *dev)
->        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_2, 0x3FF);
-> }
->
-> -static void lpphy_restore_crs(struct b43_wldev *dev)
-> +static void lpphy_restore_crs(struct b43_wldev *dev, bool user)
-> {
-> -       if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x60);
-> -       else
-> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x20);
-> +       lpphy_clear_deaf(dev, user);
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFF80);
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFC00);
-> }
-> @@ -800,10 +827,11 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
->                b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
->                                0xF800, rf_gain);
->        } else {
-> -               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x7F00;
-> +               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x1FC0;
-> +               pa_gain <<= 2;
->                b43_phy_write(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
->                              (gains.pga << 8) | gains.gm);
-> -               b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
-> +               b43_phy_maskset(dev, B43_PHY_OFDM(0xFB),
->                                0x8000, gains.pad | pa_gain);
->                b43_phy_write(dev, B43_PHY_OFDM(0xFC),
->                              (gains.pga << 8) | gains.gm);
-> @@ -817,7 +845,7 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
->                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFF7F, 1 <<
-> 7);
->                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xBFFF, 1 <<
-> 14);
->        }
-> -       b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFBF, 1 << 6);
-> +       b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFBF, 1 << 6);
-> }
->
-> static void lpphy_rev0_1_set_rx_gain(struct b43_wldev *dev, u32 gain)
-> @@ -857,33 +885,33 @@ static void lpphy_rev2plus_set_rx_gain(struct
-> b43_wldev *dev, u32 gain)
->        }
-> }
->
-> -static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
-> +static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
-> {
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFEF);
->        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFBF);
->        if (dev->phy.rev >= 2) {
->                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
-> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
-> -                       return;
-> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
-> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFF7);
-> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-> +                       b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
-> +                       b43_phy_mask(dev, B43_PHY_OFDM(0xE5), 0xFFF7);
-> +               }
->        } else {
->                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
->        }
-> }
->
-> -static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
-> +static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
-> {
->        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1);
->        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
->        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x40);
->        if (dev->phy.rev >= 2) {
->                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
-> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
-> -                       return;
-> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
-> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x8);
-> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-> +                       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
-> +                       b43_phy_set(dev, B43_PHY_OFDM(0xE5), 0x8);
-> +               }
->        } else {
->                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x200);
->        }
-> @@ -1002,26 +1030,22 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32
-> divisor, u8 precision)
-> {
->        u32 quotient, remainder, rbit, roundup, tmp;
->
-> -       if (divisor == 0) {
-> -               quotient = 0;
-> -               remainder = 0;
-> -       } else {
-> -               quotient = dividend / divisor;
-> -               remainder = dividend % divisor;
-> -       }
-> +       if (divisor == 0)
-> +               return 0;
-> +
-> +       quotient = dividend / divisor;
-> +       remainder = dividend % divisor;
->
->        rbit = divisor & 0x1;
->        roundup = (divisor >> 1) + rbit;
-> -       precision--;
->
-> -       while (precision != 0xFF) {
-> +       while (precision != 0) {
->                tmp = remainder - roundup;
->                quotient <<= 1;
-> -               remainder <<= 1;
-> -               if (remainder >= roundup) {
-> +               if (remainder >= roundup)
->                        remainder = (tmp << 1) + rbit;
-> -                       quotient--;
-> -               }
-> +               else
-> +                       remainder <<= 1;
->                precision--;
->        }
->
-> @@ -1123,11 +1147,11 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->        struct b43_phy_lp *lpphy = dev->phy.lp;
->        struct lpphy_iq_est iq_est;
->        struct lpphy_tx_gains tx_gains;
-> -       static const u32 ideal_pwr_table[22] = {
-> +       static const u32 ideal_pwr_table[21] = {
->                0x10000, 0x10557, 0x10e2d, 0x113e0, 0x10f22, 0x0ff64,
->                0x0eda2, 0x0e5d4, 0x0efd1, 0x0fbe8, 0x0b7b8, 0x04b35,
->                0x01a5e, 0x00a0b, 0x00444, 0x001fd, 0x000ff, 0x00088,
-> -               0x0004c, 0x0002c, 0x0001a, 0xc0006,
-> +               0x0004c, 0x0002c, 0x0001a,
->        };
->        bool old_txg_ovr;
->        u8 old_bbmult;
-> @@ -1145,7 +1169,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->                       "RC calib: Failed to switch to channel 7, error = %d",
->                       err);
->        }
-> -       old_txg_ovr = (b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) >> 6) & 1;
-> +       old_txg_ovr = !!(b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40);
->        old_bbmult = lpphy_get_bb_mult(dev);
->        if (old_txg_ovr)
->                tx_gains = lpphy_get_tx_gains(dev);
-> @@ -1160,7 +1184,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->        old_txpctl = lpphy->txpctl_mode;
->
->        lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
-> -       lpphy_disable_crs(dev);
-> +       lpphy_disable_crs(dev, true);
->        loopback = lpphy_loopback(dev);
->        if (loopback == -1)
->                goto finish;
-> @@ -1193,7 +1217,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->        lpphy_stop_ddfs(dev);
->
-> finish:
-> -       lpphy_restore_crs(dev);
-> +       lpphy_restore_crs(dev, true);
->        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, old_rf_ovrval);
->        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_0, old_rf_ovr);
->        b43_phy_write(dev, B43_LPPHY_AFE_CTL_OVRVAL, old_afe_ovrval);
-> diff --git a/drivers/net/wireless/b43/phy_lp.h
-> b/drivers/net/wireless/b43/phy_lp.h
-> index 99cb038..e158d1f 100644
-> --- a/drivers/net/wireless/b43/phy_lp.h
-> +++ b/drivers/net/wireless/b43/phy_lp.h
-> @@ -825,11 +825,11 @@ struct b43_phy_lp {
->        enum b43_lpphy_txpctl_mode txpctl_mode;
->
->        /* Transmit isolation medium band */
-> -       u8 tx_isolation_med_band; /* FIXME initial value? */
-> +       u8 tx_isolation_med_band;
->        /* Transmit isolation low band */
-> -       u8 tx_isolation_low_band; /* FIXME initial value? */
-> +       u8 tx_isolation_low_band;
->        /* Transmit isolation high band */
-> -       u8 tx_isolation_hi_band; /* FIXME initial value? */
-> +       u8 tx_isolation_hi_band;
->
->        /* Max transmit power medium band */
->        u16 max_tx_pwr_med_band;
-> @@ -848,7 +848,7 @@ struct b43_phy_lp {
->        s16 txpa[3], txpal[3], txpah[3];
->
->        /* Receive power offset */
-> -       u8 rx_pwr_offset; /* FIXME initial value? */
-> +       u8 rx_pwr_offset;
->
->        /* TSSI transmit count */
->        u16 tssi_tx_count;
-> @@ -864,16 +864,16 @@ struct b43_phy_lp {
->        s8 tx_pwr_idx_over; /* FIXME initial value? */
->
->        /* RSSI vf */
-> -       u8 rssi_vf; /* FIXME initial value? */
-> +       u8 rssi_vf;
->        /* RSSI vc */
-> -       u8 rssi_vc; /* FIXME initial value? */
-> +       u8 rssi_vc;
->        /* RSSI gs */
-> -       u8 rssi_gs; /* FIXME initial value? */
-> +       u8 rssi_gs;
->
->        /* RC cap */
->        u8 rc_cap; /* FIXME initial value? */
->        /* BX arch */
-> -       u8 bx_arch; /* FIXME initial value? */
-> +       u8 bx_arch;
->
->        /* Full calibration channel */
->        u8 full_calib_chan; /* FIXME initial value? */
-> @@ -885,6 +885,8 @@ struct b43_phy_lp {
->        /* Used for "Save/Restore Dig Filt State" */
->        u16 dig_flt_state[9];
->
-> +       bool crs_usr_disable, crs_sys_disable;
-> +
->        unsigned int pdiv;
-> };
->
-> diff --git a/drivers/net/wireless/b43/tables_lpphy.c
-> b/drivers/net/wireless/b43/tables_lpphy.c
-> index 2721310..60d472f 100644
-> --- a/drivers/net/wireless/b43/tables_lpphy.c
-> +++ b/drivers/net/wireless/b43/tables_lpphy.c
-> @@ -2367,7 +2367,17 @@ static void lpphy_rev2plus_write_gain_table(struct
-> b43_wldev *dev, int offset,
->        tmp  = data.pad << 16;
->        tmp |= data.pga << 8;
->        tmp |= data.gm;
-> -       tmp |= 0x7f000000;
-> +       if (dev->phy.rev >= 3) {
-> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
-> +                       tmp |= 0x10 << 24;
-> +               else
-> +                       tmp |= 0x70 << 24;
-> +       } else {
-> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
-> +                       tmp |= 0x14 << 24;
-> +               else
-> +                       tmp |= 0x7F << 24;
-> +       }
->        b43_lptab_write(dev, B43_LPTAB32(7, 0xC0 + offset), tmp);
->        tmp  = data.bb_mult << 20;
->        tmp |= data.dac << 28;
-> --
-> 1.6.2.4
->
->
->
+>        /*
+>         * Some configuration changes affect the link quality
+>         * which means we need to reset the link tuner.
 >
 
 
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samuel
+Johnson
