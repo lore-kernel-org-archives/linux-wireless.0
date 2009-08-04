@@ -1,36 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:40179 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756286AbZHRDwT (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:34978 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754503AbZHDWR5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:52:19 -0400
-Date: Tue, 18 Aug 2009 05:52:20 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
-Message-ID: <20090818035220.GN18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 4 Aug 2009 18:17:57 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: Typo fixes & minor cleanup
+Date: Wed, 5 Aug 2009 00:17:53 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A78B1F2.8050803@gmail.com>
+In-Reply-To: <4A78B1F2.8050803@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908050017.53378.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Wednesday 05 August 2009 00:10:58 Gábor Stefanik wrote:
+> Fix a typo in the HostFlags #defines.
+> Make use of HostFlags defines in the LP-PHY code.
+> Fix fallout from the IEEE80211_IF_TYPE to NL80211_IFTYPE change.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> 
+>  drivers/net/wireless/b43/b43.h    |    4 ++--
+>  drivers/net/wireless/b43/phy_lp.c |    2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> index 41ca727..5d79d10 100644
+> --- a/drivers/net/wireless/b43/b43.h
+> +++ b/drivers/net/wireless/b43/b43.h
+> @@ -300,7 +300,7 @@ enum {
+>  #define B43_HF_TXBTCHECK	0x000002000000ULL /* Bluetooth check during transmission */
+>  #define B43_HF_SKCFPUP		0x000004000000ULL /* Skip CFP update */
+>  #define B43_HF_N40W		0x000008000000ULL /* N PHY 40 MHz workaround (rev >= 13 only) */
+> -#define B43_HF_ANTSEL		0x000020000000ULL /* Antenna selection (for testing antenna div.) */
+> +#define B43_HF_ANTSEL		0x000010000000ULL /* Antenna selection (for testing antenna div.) */
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 9f54204..3a201a2 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2935,7 +2935,7 @@ static int mwl8k_config_wt(struct work_struct *wt)
- 	struct mwl8k_priv *priv = hw->priv;
- 	int rc = 0;
- 
--	if (!conf->radio_enabled) {
-+	if (conf->flags & IEEE80211_CONF_IDLE) {
- 		mwl8k_cmd_802_11_radio_disable(hw);
- 		priv->current_channel = NULL;
- 		rc = 0;
+Uhm, no?
+http://bcm-v4.sipsolutions.net/802.11/Host Flags
+
+The code it correct.
+
+>  #define B43_HF_BT3COEXT		0x000020000000ULL /* Bluetooth 3-wire coexistence (rev >= 13 only) */
+>  #define B43_HF_BTCANT		0x000040000000ULL /* Bluetooth coexistence (antenna mode) (rev >= 13 only) */
+>  #define B43_HF_ANTSELEN		0x000100000000ULL /* Antenna selection enabled (rev >= 13 only) */
+> @@ -627,7 +627,7 @@ struct b43_wl {
+>  	u8 mac_addr[ETH_ALEN];
+>  	/* Current BSSID */
+>  	u8 bssid[ETH_ALEN];
+> -	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
+> +	/* Interface type. (NL80211_IFTYPE_XXX) */
+
+ack
+
+>  	int if_type;
+>  	/* Is the card operating in AP, STA or IBSS mode? */
+>  	bool operating;
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index 5d50943..03a9b50 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -130,7 +130,7 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>  		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0006);
+>  		b43_phy_write(dev, B43_LPPHY_GPIO_SELECT, 0x0005);
+>  		b43_phy_write(dev, B43_LPPHY_GPIO_OUTEN, 0xFFFF);
+> -		b43_hf_write(dev, b43_hf_read(dev) | 0x0800ULL << 32);
+> +		b43_hf_write(dev, b43_hf_read(dev) | B43_HF_PR45960W);
+
+ack
+
+>  	}
+>  	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+>  		b43_phy_set(dev, B43_LPPHY_LP_PHY_CTL, 0x8000);
+
+
+
 -- 
-1.5.6.4
+Greetings, Michael.
