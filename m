@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53660 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934065AbZHHMiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 08:38:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/7] [compat-2.6] Add missing compat-2.6.*.c files
-Date: Sat,  8 Aug 2009 14:38:11 +0200
-Message-Id: <1249735096-27071-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
-References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44062 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932239AbZHDGiD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 02:38:03 -0400
+Subject: Re: [PATCH 4/5] mwl8k: prevent crash in ->configure_filter() if no
+ interface was added
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nico@cam.org
+In-Reply-To: <20090803234651.GN18639@mail.wantstofly.org>
+References: <20090803195857.GK18639@mail.wantstofly.org>
+	 <1249329790.4561.3.camel@johannes.local>
+	 <20090803234651.GN18639@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oQz+W8mQR8gvXKyRxkX1"
+Date: Tue, 04 Aug 2009 08:37:27 +0200
+Message-Id: <1249367847.4561.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/patches/98-add-compat-wireless.patch |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+--=-oQz+W8mQR8gvXKyRxkX1
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/compat/patches/98-add-compat-wireless.patch b/compat/patches/98-add-compat-wireless.patch
-index 1c7b39a..791bc6b 100644
---- a/compat/patches/98-add-compat-wireless.patch
-+++ b/compat/patches/98-add-compat-wireless.patch
-@@ -19,11 +19,16 @@ added compat.h also for ssb, I forget.
- 
- --- a/net/wireless/Makefile	2009-08-07 12:27:50.836497001 -0700
- +++ b/net/wireless/Makefile	2009-08-07 12:27:51.952497240 -0700
--@@ -11,3 +11,11 @@
-+@@ -11,3 +11,16 @@
-  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o wext-sme.o
-  
-  ccflags-y += -D__CHECK_ENDIAN__
- +# Compat-wireless kernel compatibility code
-++cfg80211-y += compat-2.6.22.o
-++cfg80211-y += compat-2.6.23.o
-++cfg80211-y += compat-2.6.24.o
-++cfg80211-y += compat-2.6.25.o
-++cfg80211-y += compat-2.6.26.o
- +cfg80211-y += compat-2.6.27.o
- +cfg80211-y += compat-2.6.28.o
- +cfg80211-y += compat-2.6.29.o
--- 
-1.6.2.1
+On Tue, 2009-08-04 at 01:46 +0200, Lennert Buytenhek wrote:
+> On Mon, Aug 03, 2009 at 10:03:10PM +0200, Johannes Berg wrote:
+>=20
+> > >  	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+> > >  		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+> > >  			rc =3D mwl8k_cmd_set_pre_scan(hw);
+> > >  		else {
+> > > -			mv_vif =3D MWL8K_VIF(priv->vif);
+> > > -			rc =3D mwl8k_cmd_set_post_scan(hw, mv_vif->bssid);
+> >=20
+> > Btw, there are pre- and post-scan hooks now.
+>=20
+> These hardware commands are slightly misnamed -- they are called
+> PRE_SCAN/POST_SCAN, but what they do is program the receive filter.
+> It seems appropriate to keep that in ->configure_filter() ?
+
+I guess it depends how they configure the filter. :)
+If they really do the beacon/probe response filter thing then yes. For
+b43, for instance, they also disable CFP updates etc. so aren't just
+that. And you can get FIF_BCN_PRBRESP_PROMISC even while _not_ scanning,
+due to monitor interfaces, so it really depends what they do (no CFP
+disabling wanted then).
+
+johannes
+
+--=-oQz+W8mQR8gvXKyRxkX1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKd9ciAAoJEODzc/N7+QmanrsP/1fUBwh10JaF/Uksf/H2sSMy
+eVPJZ0JvHx/Vto7tJelm/T61uWvvVyqQhKPzzJK+oId9RFFEVt5+dlZrR1LqzpE9
+gxQsGysKhFxHCnMD7DDNe9GGVQ1Q1CrSwskGjCytCsYdUZ0Barglumj8fQG4P3ZC
+1hMLO00iIaEUM+9q1LaTRO0o2FkcSIIj7nyAc8lw42ey3ncscwXSNjnpdLeiY6JZ
+x/a6wrsnABVflS3XprNxp2uRWO5cSDDy8hqCZSe5Hb6o6AsjhGj2mSF8pniothMG
+WyQ7JWmWOZnGJ5Asc0DUiayXdHkD+OmcRB8XlknhGjtjYMtDwuNIz18lKIrFJ801
+lUQzXSjt1BICGiSRMUW3ZulGXsjG8jbzTzmGTtfHFhphwVJnkHmjE4I1lBbBaeAk
+o1+hUAxuT+v+R//2xxpBra7sIezVvy5bJkb15m4p4RyO311IOUiDd5UkZFLNXVK3
+1kM+pKT4Nx5amqj+tjxb7zrvhvHn2mS5pQ+ajfYgM2ZI/RH6+WEfSXSgisGcF6ys
+DYRzVDhO2U2pd5nQw8+E7PrcV5uRWKP+CfOV7VHPzip0h4ehpvBkcO9Luo1hPY8u
+LI/KoqaPYfNZrpTSDFrnN4Jf1H8UPXjjhJ/ljb9hpvnKFj8NyTWcdyUfdIMsY67N
+MhfdRMVHb59L0uGMTEth
+=WpZ2
+-----END PGP SIGNATURE-----
+
+--=-oQz+W8mQR8gvXKyRxkX1--
 
