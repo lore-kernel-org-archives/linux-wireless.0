@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:41627 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbZH0ORW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 10:17:22 -0400
-Received: by bwz19 with SMTP id 19so993897bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 07:17:23 -0700 (PDT)
-Message-ID: <4A969572.7060807@gmail.com>
-Date: Thu, 27 Aug 2009 16:17:22 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:54220 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933130AbZHDV6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 17:58:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: gregor kowski <gregor.kowski@gmail.com>
+Subject: Re: [RESEND] [PATCHv2] b43 add harware tkip
+Date: Tue, 4 Aug 2009 23:58:15 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com> <200907312308.31066.mb@bu3sch.de> <83a869cd0908041454i474b0ee4hfb770c7c5166be7f@mail.gmail.com>
+In-Reply-To: <83a869cd0908041454i474b0ee4hfb770c7c5166be7f@mail.gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: Enable LP-PHY support by default and remove Kconfig
- warning
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908042358.15966.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The most common LP-PHY device, BCM4312, is now fully functional.
-So, no need to say "probably won't work for you" anymore.
-It's also not "for debuggers and developers only", as it is
-perfectly usable for end-users now (at least for BCM4312).
+On Tuesday 04 August 2009 23:54:42 gregor kowski wrote:
+> On 7/31/09, Michael Buesch <mb@bu3sch.de> wrote:
+> > On Friday 31 July 2009 23:04:17 gregor kowski wrote:
+> >> Hi Michael,
+> >>
+> >> > It's mapped to 4, because you removed the old API support.
+> >> > (I'm not sure whether we want to remove that support, yet. Gimme some
+> >> > time
+> >> > on it...)
+> >> >
+> >> Does the old API still useful ?
+> >
+> > Well, I'm not sure. Why do we remove it at all? It just avoids one single
+> > if condition in your tkip patch, doesn't it?
+> >
+> because you ask it : "We should probably remove that new_kidx_api crap
+> alltogether." [1] :)
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-This replaces the "remove scary message" patch.
+<quote> probably </quote>
 
- drivers/net/wireless/b43/Kconfig |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+> There is really bugs in the current code.
 
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 237b1aa..2af3b35 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
- -82,15 +82,13 @@ config B43_NPHY
- config B43_PHY_LP
- 	bool "Support for low-power (LP-PHY) devices (EXPERIMENTAL)"
- 	depends on B43 && EXPERIMENTAL
-+	default y
- 	---help---
- 	  Support for the LP-PHY.
- 	  The LP-PHY is a low-power PHY built into some notebooks
- 	  and embedded devices. It supports 802.11a/g
- 	  (802.11a support is optional, and currently disabled).
- 
--	  This is heavily experimental, and probably will not work for you.
--	  Say N unless you want to help debug the driver.
--
- # This config option automatically enables b43 LEDS support,
- # if it's possible.
- config B43_LEDS
+You always talk about "bugs". What are these "bugs"? Is it just the wrong
+max_nr_keys assignment? That's trivial to fix.
+
+
 -- 
-1.6.2.4
-
+Greetings, Michael.
