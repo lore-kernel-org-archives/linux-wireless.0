@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55478 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752203AbZH2LdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2009 07:33:24 -0400
-Message-ID: <4A991203.8070407@gmx.de>
-Date: Sat, 29 Aug 2009 13:33:23 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: [RFT] ar9170: use eeprom's frequency calibration values
-References: <200908212252.41053.chunkeey@web.de> <1250927567.23605.9.camel@johannes.local>
-In-Reply-To: <1250927567.23605.9.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:27203 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932733AbZHDVsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 17:48:20 -0400
+Subject: [PATCH] rt2x00: fix memory corruption in rf cache, add a sanity
+ check
+From: Pavel Roskin <proski@gnu.org>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Michael Buesch <mb@bu3sch.de>
+Content-Type: text/plain
+Date: Tue, 04 Aug 2009 17:48:16 -0400
+Message-Id: <1249422496.3489.2.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2009 09:52 AM, Johannes Berg wrote:
-> On Fri, 2009-08-21 at 22:52 +0200, Christian Lamparter wrote:
-> 
->> Johannes, in phy.c (now at line) line 429
->>
->> int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band)
->> {
->> [...]
->>         /* XXX: use EEPROM data here! */
->>
->>         err = ar9170_init_power_cal(ar);
->>         if (err)
->> [...]
->> }
->>
->> do you still know what EEPROM data is missing here? 
-> 
-> Sorry, no, I don't remember, and can't seem to find it either in otus
-> right now.
+Change rt2x00_rf_read() and rt2x00_rf_write() to subtract 1 from the rf
+register number.  This is needed because the rf registers are enumerated
+starting with one.  The size of the rf register cache is just enough to
+hold all registers, so writing to the highest register was corrupting
+memory.  Add a check to make sure that the rf register number is valid.
 
-Maybe this refers to the values in eepromBoardData initialized from the eeprom in otus/hal/hpmain.c, lines 522 ff.
-and written into the registers in line 828?
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+---
 
-I guess they should come from the modal_header[] in struct ar9170_eeprom, but I cannot map the 
-offset in hpmain.c for hpPriv->eepromImage[] into the modal_header's members.
+That's the issue reported by Michael Buesch:
+http://marc.info/?l=linux-wireless&m=124886312314098&w=2
 
+With this patch and the patch to stop works on unload, rt73usb seems
+rock solid now. 
+
+ drivers/net/wireless/rt2x00/rt2x00.h |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index cbec91e..ee9afab 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -836,13 +836,15 @@ struct rt2x00_dev {
+ static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
+ 				  const unsigned int word, u32 *data)
+ {
+-	*data = rt2x00dev->rf[word];
++	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
++	*data = rt2x00dev->rf[word - 1];
+ }
+ 
+ static inline void rt2x00_rf_write(struct rt2x00_dev *rt2x00dev,
+ 				   const unsigned int word, u32 data)
+ {
+-	rt2x00dev->rf[word] = data;
++	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
++	rt2x00dev->rf[word - 1] = data;
+ }
+ 
+ /*
+
+
+
+-- 
 Regards,
-Joerg
-
-
+Pavel Roskin
