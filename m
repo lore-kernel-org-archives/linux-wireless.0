@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41115 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755792AbZHFUlE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 16:41:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Fix hardware key index handling
-Date: Thu, 6 Aug 2009 22:41:00 +0200
-Cc: John W Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de,
-	gregor kowski <gregor.kowski@gmail.com>
-References: <200908061036.50631.mb@bu3sch.de> <4A7AE8E6.4050301@lwfinger.net>
-In-Reply-To: <4A7AE8E6.4050301@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:33023 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932383AbZHDXqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 19:46:14 -0400
+Message-ID: <4A78C842.9060303@gmx.de>
+Date: Wed, 05 Aug 2009 01:46:10 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908062241.00398.mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath5k: fix missing output in monitor mode after	ifconfig
+ up
+References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet> <4A754562.8000107@gmx.de> <20090804154153.GB4995@tuxdriver.com>
+In-Reply-To: <20090804154153.GB4995@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 06 August 2009 16:29:58 Larry Finger wrote:
-> Michael Buesch wrote:
-> > This fixes the hardware encryption keys index and array size handling.
-> > 
-> > Thanks to Gregor Kowski for reporting this issue.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> > 
-> > This should probably go as a bugfix.
-> > (Does this actually fix the PHY transmission errors? I don't see them anymore...
-> > Note that you need to enable debugging to see them.)
+On 08/04/2009 05:41 PM, John W. Linville wrote:
+> On Sun, Aug 02, 2009 at 09:50:58AM +0200, Joerg Albert wrote:
+>> Let ath5k_chan_set() always call ath5k_reset().
+>> This fixes the bug that we don't
+>> get any packets in monitor mode after:
+>>
+>> ifconfig wlan0 down
+>> iwconfig wlan0 mode monitor channel 1
+>> ifconfig wlan0 up
+>>
+>> but they arrive after
+>>
+>> iwconfig wlan0 channel 2
+>>
+>> Signed-off-by: Joerg Albert <jal2@gmx.de>
 > 
-> I still see the PHY transmission errors.
+> patching file drivers/net/wireless/ath/ath5k/base.c
+> Hunk #1 FAILED at 1071.
+> Hunk #2 FAILED at 1083.
+> Hunk #3 FAILED at 2804.
+> 3 out of 3 hunks FAILED -- saving rejects to file drivers/net/wireless/ath/ath5k/base.c.rej
 
-Ah ok. I also have a new AP. Maybe that's why I'm not seeing it here. I'll try
-later further away from the AP. That would show them again then...
+Sorry, seems like Thunderbird has converted the whitespaces.
+I'll repost the patch.
 
-> I had two of them and a "RX: 
-> packet dropped" debug message within seconds of reloading b43 with
-> this patch included.
-
-Should be fine. This happens sometimes.
-Connection and rekeying does work. (Rekeying might still break if there's
-heavy traffic. But that bug always was there. I think it's related to mac80211's
-key handling. I also saw it on intel wireless.)
-
--- 
-Greetings, Michael.
