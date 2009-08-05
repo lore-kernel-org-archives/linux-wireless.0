@@ -1,87 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:27449 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753812AbZHKMS4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 08:18:56 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, linux-next@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sfr@canb.auug.org.au
-Subject: [PATCH] wl1271: fix compiler warnings on 64 bit archs
-Date: Tue, 11 Aug 2009 11:58:27 +0300
-Message-Id: <1249981107-21746-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:51784 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934703AbZHERPX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 13:15:23 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 10:15:25 -0700
+Date: Wed, 5 Aug 2009 10:15:23 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Andrea Rossato <mailing_list@istitutocolli.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] a possible regression in managed mode ?
+Message-ID: <20090805171523.GE4727@mosca>
+References: <43e72e890908050810h29c28945o4732f8606caab9fb@mail.gmail.com>
+ <20090805155330.GC4727@mosca>
+ <20090805165227.GA18394@eeepc.nowhere.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090805165227.GA18394@eeepc.nowhere.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were a few warnings when compiling the wl1271 driver on 64 bit
-architectures.  This was due to size mismatch of integers.
+Please include linux-wireless, addint it back again.
 
-This commit fixes the following warnings:
+On Wed, Aug 05, 2009 at 09:52:27AM -0700, Andrea Rossato wrote:
+> On Wed, Aug 05, 2009 at 05:10:18PM +0200, Luis R. Rodriguez wrote:
+> > Can you try with -D nl80211 and see if that fixes your issue?
+> 
+> I'll be able to try that in a couple of days... I'm now in the
+> situation when I run my eee pc in Master mode.
+> 
+> >
+> > Also from your description of the issue below it is unclear to me if
+> > you do not see these issues with an older kernel or if this is only
+> > happening with newer kernels or wireless-testing. Can you please
+> > clarify.
+> 
+> When I use 2.6.29.4 everything works smoothly and association and
+> authentication always happen at the first try. The "authentication
+> timeout" issue only happens with the wireless-testing kernel from git.
 
-drivers/net/wireless/wl12xx/wl1271_main.c: In function 'wl1271_irq_work':
-drivers/net/wireless/wl12xx/wl1271_main.c:184: warning: large integer implicitly truncated to unsigned type
-drivers/net/wireless/wl12xx/wl1271_boot.c: In function 'wl1271_boot_upload_firmware_chunk':
-drivers/net/wireless/wl12xx/wl1271_boot.c:103: warning: format '%d' expects type 'int', but argument 2 has type 'size_t'
-drivers/net/wireless/wl12xx/wl1271_boot.c:150: warning: format '%d' expects type 'int', but argument 2 has type 'size_t'
-drivers/net/wireless/wl12xx/wl1271_boot.c: In function 'wl1271_boot_enable_interrupts':
-drivers/net/wireless/wl12xx/wl1271_boot.c:278: warning: large integer implicitly truncated to unsigned type
+This is when using wpa_supplicant 0.6.9? Or when using both 0.6.9
+and git version of the supplicant?
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |    9 +++++----
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
- 2 files changed, 7 insertions(+), 5 deletions(-)
+> Since my scripts always call "wpa_cli reassociate" I was not aware of
+> the fact that the first time wpa_supplicant was succeeding in
+> associating the first time (hence the Access Point log that show the
+> first successful association and nothing more).
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 4c22f25..2b5d101 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -100,8 +100,8 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 
- 	wl1271_debug(DEBUG_BOOT, "starting firmware upload");
- 
--	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d", fw_data_len,
--		CHUNK_SIZE);
-+	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d",
-+		     (u32) fw_data_len, CHUNK_SIZE);
- 
- 
- 	if ((fw_data_len % 4) != 0) {
-@@ -148,7 +148,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
- 	addr = dest + chunk_num * CHUNK_SIZE;
- 	p = buf + chunk_num * CHUNK_SIZE;
- 	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%d B) 0x%p to 0x%x",
--		     fw_data_len % CHUNK_SIZE, p, addr);
-+		     (u32) fw_data_len % CHUNK_SIZE, p, addr);
- 	wl1271_spi_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
- 
- 	return 0;
-@@ -275,7 +275,8 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- static void wl1271_boot_enable_interrupts(struct wl1271 *wl)
- {
- 	enable_irq(wl->irq);
--	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(WL1271_INTR_MASK));
-+	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
-+			   WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_reg_write32(wl, HI_CFG, HI_CFG_DEF_VAL);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 3bb45ce..4102d59 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -181,7 +181,8 @@ static void wl1271_irq_work(struct work_struct *work)
- 	} while (intr && --ctr);
- 
- out_sleep:
--	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK, ~(WL1271_INTR_MASK));
-+	wl1271_reg_write32(wl, ACX_REG_INTERRUPT_MASK,
-+			   WL1271_ACX_INTR_ALL & ~(WL1271_INTR_MASK));
- 	wl1271_ps_elp_sleep(wl);
- 
- out:
--- 
-1.6.0.4
+You know you can just have wpa_supplicant try to reassoc for you
+upon disconnection automatically, right? I use something like this:
 
+ctrl_interface=/var/run/wpa_supplicant
+ap_scan=1
+network={
+        ssid="mosca"
+        scan_ssid=1
+        key_mgmt=NONE
+}
+
+> On Wed, Aug 05, 2009 at 05:53:31PM +0200, Luis R. Rodriguez wrote:
+> >
+> > Also please install iw, and provide 'iw event -t' log.
+> 
+> Already installed here. I'll provide the output as soon as I'll be
+> able to test the nl80211 driver.
+
+May want to update from git, iw has been updated recently so you could
+decode more messages specially if using wireless-testing.
+
+  Luis
