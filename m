@@ -1,86 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:53614 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbZH1J7O (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:42204 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbZHEUY1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 05:59:14 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 6/8] rndis_wlan: use is_zero_ether_addr() and
-	is_broadcast_ether_addr()
+	Wed, 5 Aug 2009 16:24:27 -0400
+Received: by mail-ew0-f214.google.com with SMTP id 10so285565ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:24:28 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 28 Aug 2009 12:59:15 +0300
-Message-ID: <20090828095915.10554.78334.stgit@fate.lan>
-In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
-References: <20090828095849.10554.58857.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 5/6] orinoco: add function to retrieve current bssid
+Date: Wed,  5 Aug 2009 21:23:31 +0100
+Message-Id: <1249503812-16921-6-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
+References: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use is_zero_ether_addr() and is_broadcast_ether_addr() instead of
-memcmp against ffff_bssid/zero_bssid.
+We will need this from the cfg80211 disassociate call.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
+ drivers/net/wireless/orinoco/hw.c   |   12 ++++++++++++
+ drivers/net/wireless/orinoco/hw.h   |    2 ++
+ drivers/net/wireless/orinoco/wext.c |    4 +---
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/rndis_wlan.c |   17 ++++++-----------
- 1 files changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index dc3083b..c28fde5 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -514,11 +514,6 @@ static struct cfg80211_ops rndis_config_ops = {
- static void *rndis_wiphy_privid = &rndis_wiphy_privid;
- 
- 
--static const unsigned char zero_bssid[ETH_ALEN] = {0,};
--static const unsigned char ffff_bssid[ETH_ALEN] = { 0xff, 0xff, 0xff,
--							0xff, 0xff, 0xff };
--
--
- static struct rndis_wlan_private *get_rndis_wlan_priv(struct usbnet *dev)
- {
- 	return (struct rndis_wlan_private *)dev->driver_priv;
-@@ -995,7 +990,7 @@ static int is_associated(struct usbnet *usbdev)
- 
- 	ret = get_bssid(usbdev, bssid);
- 
--	return(ret == 0 && memcmp(bssid, zero_bssid, ETH_ALEN) != 0);
-+	return (ret == 0 && !is_zero_ether_addr(bssid));
+diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
+index 3e9021c..5b12654 100644
+--- a/drivers/net/wireless/orinoco/hw.c
++++ b/drivers/net/wireless/orinoco/hw.c
+@@ -1272,3 +1272,15 @@ int orinoco_hw_disassociate(struct orinoco_private *priv,
+ 				  &buf);
+ 	return err;
  }
++
++int orinoco_hw_get_current_bssid(struct orinoco_private *priv,
++				 u8 *addr)
++{
++	hermes_t *hw = &priv->hw;
++	int err;
++
++	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
++			      ETH_ALEN, NULL, addr);
++
++	return err;
++}
+diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
+index b096786..8df6e87 100644
+--- a/drivers/net/wireless/orinoco/hw.h
++++ b/drivers/net/wireless/orinoco/hw.h
+@@ -53,5 +53,7 @@ int orinoco_hw_trigger_scan(struct orinoco_private *priv,
+ 			    const struct cfg80211_ssid *ssid);
+ int orinoco_hw_disassociate(struct orinoco_private *priv,
+ 			    u8 *addr, u16 reason_code);
++int orinoco_hw_get_current_bssid(struct orinoco_private *priv,
++				 u8 *addr);
  
+ #endif /* _ORINOCO_HW_H_ */
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index f324bf9..f68bbe3 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -156,7 +156,6 @@ static int orinoco_ioctl_getwap(struct net_device *dev,
+ {
+ 	struct orinoco_private *priv = ndev_priv(dev);
  
-@@ -1293,8 +1288,8 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
- 		devdbg(usbdev, "add_wpa_key: recv seq flag without buffer");
- 		return -EINVAL;
- 	}
--	is_addr_ok = addr && memcmp(addr, zero_bssid, ETH_ALEN) != 0 &&
--			memcmp(addr, ffff_bssid, ETH_ALEN) != 0;
-+	is_addr_ok = addr && !is_zero_ether_addr(addr) &&
-+					!is_broadcast_ether_addr(addr);
- 	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !is_addr_ok) {
- 		devdbg(usbdev, "add_wpa_key: pairwise but bssid invalid (%pM)",
- 			addr);
-@@ -1379,8 +1374,8 @@ static int restore_key(struct usbnet *usbdev, int key_idx)
- 		/*if (priv->encr_tx_key_index == key_idx)
- 			flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;*/
+-	hermes_t *hw = &priv->hw;
+ 	int err = 0;
+ 	unsigned long flags;
  
--		if (memcmp(key.bssid, zero_bssid, ETH_ALEN) != 0 &&
--				memcmp(key.bssid, ffff_bssid, ETH_ALEN) != 0)
-+		if (!is_zero_ether_addr(key.bssid) &&
-+				!is_broadcast_ether_addr(key.bssid))
- 			flags |= NDIS_80211_ADDKEY_PAIRWISE_KEY;
+@@ -164,8 +163,7 @@ static int orinoco_ioctl_getwap(struct net_device *dev,
+ 		return -EBUSY;
  
- 		return add_wpa_key(usbdev, key.material, key.len, key_idx,
-@@ -1430,7 +1425,7 @@ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
- 		remove_key.index = cpu_to_le32(index);
- 		if (bssid) {
- 			/* pairwise key */
--			if (memcmp(bssid, ffff_bssid, ETH_ALEN) != 0)
-+			if (!is_broadcast_ether_addr(bssid))
- 				remove_key.index |=
- 					NDIS_80211_ADDKEY_PAIRWISE_KEY;
- 			memcpy(remove_key.bssid, bssid,
+ 	ap_addr->sa_family = ARPHRD_ETHER;
+-	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENTBSSID,
+-			      ETH_ALEN, NULL, ap_addr->sa_data);
++	err = orinoco_hw_get_current_bssid(priv, ap_addr->sa_data);
+ 
+ 	orinoco_unlock(priv, &flags);
+ 
+-- 
+1.6.3.3
 
