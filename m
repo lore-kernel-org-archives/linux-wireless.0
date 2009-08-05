@@ -1,385 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:61970 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753183AbZH1Uh4 convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:55530 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750701AbZHERtn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 16:37:56 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so95601fge.1
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2009 13:37:57 -0700 (PDT)
+	Wed, 5 Aug 2009 13:49:43 -0400
+Received: by pzk34 with SMTP id 34so202336pzk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 10:49:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A983FB2.2020509@gmail.com>
-References: <4A983FB2.2020509@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 28 Aug 2009 22:37:37 +0200
-Message-ID: <69e28c910908281337y63042942k9c8d54b99a17f493@mail.gmail.com>
-Subject: [PATCH] b43: LP-PHY: Fix TX gain tables
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249491866.6902.23.camel@johannes.local>
+References: <2f1373ed0908042145pc83adc5qd968e3bf8d0ce3c7@mail.gmail.com>
+	 <175701.5780.qm@web55308.mail.re4.yahoo.com>
+	 <20090805165021.GA20338@tuxdriver.com>
+	 <1249491866.6902.23.camel@johannes.local>
+Date: Wed, 5 Aug 2009 10:49:44 -0700
+Message-ID: <445f43ac0908051049wb32ea49r3e8894fd99f4ae60@mail.gmail.com>
+Subject: Re: Status of 802.11s in wireless-testing?
+From: Javier Cardona <javier@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	xxiao <austinxxh-ath9k@yahoo.com>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just noticed that the [PATCH] tag is accidentally missing on this one
-- I hope you can still apply it.
+Hi Johannes,
 
-2009/8/28 Gábor Stefanik <netrolller.3d@gmail.com>:
-> The rev1 2GHz and rev2 5GHz gain tables were incorrectly documented
-> on the specs originally. Update these gaintables to match the cor-
-> rected specs.
->
-> Signed-off-by: Gábor Stefanik <netroller.3d@gmail.com>
-> ---
-> drivers/net/wireless/b43/tables_lpphy.c |  306
-> +++++++++++++++---------------
-> 1 files changed, 153 insertions(+), 153 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/tables_lpphy.c
-> b/drivers/net/wireless/b43/tables_lpphy.c
-> index b24521c..0312b31 100644
-> --- a/drivers/net/wireless/b43/tables_lpphy.c
-> +++ b/drivers/net/wireless/b43/tables_lpphy.c
-> @@ -1613,11 +1613,62 @@ static struct lpphy_tx_gain_table_entry
-> lpphy_rev1_nopa_tx_gain_table[] = {
-> };
->
-> static struct lpphy_tx_gain_table_entry lpphy_rev1_2ghz_tx_gain_table[] = {
-> -       { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 85, },
-> -       { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 81, },
-> -       { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 78, },
-> -       { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 76, },
-> -       { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 74, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 90, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 88, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 85, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 83, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 81, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 78, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 76, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 74, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 59, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 59, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 59, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 59, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 59, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 72, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 70, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 68, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 66, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 62, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 60, },
-> +       { .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 59, },
->        { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 72, },
->        { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 70, },
->        { .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 68, },
-> @@ -1690,57 +1741,6 @@ static struct lpphy_tx_gain_table_entry
-> lpphy_rev1_2ghz_tx_gain_table[] = {
->        { .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 64, },
->        { .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 62, },
->        { .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 60, },
-> -       { .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 59, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 72, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 70, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 68, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 66, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 62, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 60, },
-> -       { .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 59, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 70, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 68, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 66, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 63, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 61, },
-> -       { .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 59, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 71, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 69, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 67, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 65, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 63, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 62, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 60, },
-> -       { .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 58, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 70, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 68, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 66, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 65, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 63, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 61, },
-> -       { .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 59, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 68, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 66, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 62, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 61, },
-> -       { .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 59, },
-> -       { .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 67, },
-> -       { .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 65, },
-> -       { .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 63, },
-> -       { .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 62, },
-> -       { .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 60, },
-> -       { .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 65, },
-> -       { .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 63, },
-> -       { .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 61, },
-> -       { .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 60, },
-> -       { .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 58, },
-> -       { .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 68, },
-> -       { .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 66, },
-> -       { .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 62, },
-> };
->
-> static struct lpphy_tx_gain_table_entry lpphy_rev1_5ghz_tx_gain_table[] = {
-> @@ -2168,103 +2168,103 @@ static struct lpphy_tx_gain_table_entry
-> lpphy_rev2_5ghz_tx_gain_table[] = {
->        { .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 68, },
->        { .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 66, },
->        { .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 248, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 241, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 234, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 227, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 221, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 215, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 208, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 203, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 197, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 191, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 186, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 181, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 175, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 170, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 166, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 161, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 156, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 152, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 148, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 143, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 139, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 135, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 132, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 128, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 124, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 121, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 117, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 114, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 111, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 108, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 104, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 102, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 99, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 96, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 93, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 90, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 88, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 85, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 83, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 81, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 78, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 76, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 74, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 72, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 70, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 68, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 66, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 64, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 64, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 62, .pad = 255, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 62, .pad = 248, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 60, .pad = 248, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 60, .pad = 241, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 59, .pad = 241, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 59, .pad = 234, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 57, .pad = 234, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 57, .pad = 227, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 55, .pad = 227, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 55, .pad = 221, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 54, .pad = 221, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 54, .pad = 215, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 52, .pad = 215, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 52, .pad = 208, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 51, .pad = 208, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 51, .pad = 203, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 49, .pad = 203, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 49, .pad = 197, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 48, .pad = 197, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 48, .pad = 191, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 47, .pad = 191, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 47, .pad = 186, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 45, .pad = 186, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 45, .pad = 181, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 44, .pad = 181, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 44, .pad = 175, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 43, .pad = 175, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 43, .pad = 170, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 42, .pad = 170, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 42, .pad = 166, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 40, .pad = 166, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 40, .pad = 161, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 39, .pad = 161, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 39, .pad = 156, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 38, .pad = 156, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 38, .pad = 152, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 37, .pad = 152, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 37, .pad = 148, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 36, .pad = 148, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 36, .pad = 143, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 35, .pad = 143, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 35, .pad = 139, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 34, .pad = 139, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 34, .pad = 135, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 33, .pad = 135, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 33, .pad = 132, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 32, .pad = 132, .dac = 0, .bb_mult = 64, },
-> -       { .gm = 255, .pga = 32, .pad = 128, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 248, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 241, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 234, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 227, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 221, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 215, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 208, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 203, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 197, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 191, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 186, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 181, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 175, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 170, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 166, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 161, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 156, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 152, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 148, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 143, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 139, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 135, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 132, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 128, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 124, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 121, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 117, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 114, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 111, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 108, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 104, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 102, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 99, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 96, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 93, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 90, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 88, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 85, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 83, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 81, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 78, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 76, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 74, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 72, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 70, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 68, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 66, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 64, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 64, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 255, .pad = 62, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 248, .pad = 62, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 248, .pad = 60, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 241, .pad = 60, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 241, .pad = 59, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 234, .pad = 59, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 234, .pad = 57, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 227, .pad = 57, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 227, .pad = 55, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 221, .pad = 55, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 221, .pad = 54, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 215, .pad = 54, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 215, .pad = 52, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 208, .pad = 52, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 208, .pad = 51, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 203, .pad = 51, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 203, .pad = 49, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 197, .pad = 49, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 197, .pad = 48, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 191, .pad = 48, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 191, .pad = 47, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 186, .pad = 47, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 186, .pad = 45, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 181, .pad = 45, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 181, .pad = 44, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 175, .pad = 44, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 175, .pad = 43, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 170, .pad = 43, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 170, .pad = 42, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 166, .pad = 42, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 166, .pad = 40, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 161, .pad = 40, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 161, .pad = 39, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 156, .pad = 39, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 156, .pad = 38, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 152, .pad = 38, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 152, .pad = 37, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 148, .pad = 37, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 148, .pad = 36, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 143, .pad = 36, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 143, .pad = 35, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 139, .pad = 35, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 139, .pad = 34, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 135, .pad = 34, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 135, .pad = 33, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 132, .pad = 33, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 132, .pad = 32, .dac = 0, .bb_mult = 64, },
-> +       { .gm = 255, .pga = 128, .pad = 32, .dac = 0, .bb_mult = 64, },
-> };
->
-> void lpphy_rev0_1_table_init(struct b43_wldev *dev)
-> --
-> 1.6.2.4
->
->
->
->
+On Wed, Aug 5, 2009 at 10:04 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> Right now, except from the stuff Luis had broken and fixed, the real
+> problem is that there are a bunch of bugs that appear to have been in
+> the code forever, just never noticed -- for instance the code can end up
+> calling synchronize_rcu() in an atomic section.
 
+I agree that there is a bug in that would cause a synchronize_rcu() in
+an atomic section when the mpath table grows beyond a certain size.
+The bug was there since the first submission of the mesh code, yes.
 
+However, the "bunch of bugs that appear to have been in the code
+forever" are, I believe, regressions.  In particular we've identified:
+ - Airtime Link Metric broken (fix in progress)
+ - Forwarding path broken (fixed here:
+http://marc.info/?l=linux-wireless&m=124698982910794&w=2)
+ - mpath pending queue broken (fixed here:
+http://marc.info/?l=linux-wireless&m=124717648406661&w=2)
+ - PREQ notification broken (fixed here:
+http://marc.info/?l=linux-wireless&m=124752948320455&w=2)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+We've been busy with those but the synchronize_rcu fix is next in our list.
+
+> This is the reason for disabling it -- it can splatter all over the
+> scheduler if that happens, and it's not clear to me that it cannot
+> happen. It seems not to happen in _most_ scenarios, but I've certainly
+> caused it to happen by not beaconing, for instance.
+
+I also agree with your assessment of the severity of the bug.
+Hopefully we'll get to fix it really soon so we can re-enable mesh
+again.
+
+Thanks,
