@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44563 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078AbZHXUPN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 16:15:13 -0400
-Date: Mon, 24 Aug 2009 16:00:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kiran Divekar <kirandivekar@gmail.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] libertas: add NULL check on return value of
-	get_zeroed_page
-Message-ID: <20090824200019.GD8998@tuxdriver.com>
-References: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:33142 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751861AbZHEFjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 01:39:03 -0400
+Subject: Re: [PATCH] wireless: display wext SSID when connected by cfg80211
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249450543.6902.1.camel@johannes.local>
+References: <1249437950-8059-1-git-send-email-yi.zhu@intel.com>
+	 <1249449590.4168.16.camel@johannes.local>
+	 <1249450026.4069.111.camel@debian> <1249450543.6902.1.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 05 Aug 2009 13:39:01 +0800
+Message-Id: <1249450741.4069.114.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 23, 2009 at 10:22:22PM +0530, Kiran Divekar wrote:
-> From fb132b536facfbdc47a24afe538c50662d16b3ad Mon Sep 17 00:00:00 2001
-> From: Kiran Divekar <kirandivekar@gmail.com>
-> Date: Sun, 23 Aug 2009 22:05:21 +0530
-> Subject: [PATCH] add NULL check on return value of get_zeroed_page
+On Wed, 2009-08-05 at 13:35 +0800, Johannes Berg wrote:
+> On Wed, 2009-08-05 at 13:27 +0800, Zhu Yi wrote:
 > 
-> Most of the places in debugfs.c are missing a NULL check on the return value of
-> get_zeroed_page API call. Added required NULL check at appropriate places.
+> > Yeah, I'm lazy to parse the current_bss.pub->information_elements for
+> > SSID in the first instance. Should we implement some beacon parsing in
+> > cfg80211 or move ieee802_11_parse_elems from mac80211?
 > 
-> Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
-
-#1 -- Don't post the output of git format-patch directly like this.  Use git
-	send-email instead.
-
-> ---
->  drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
->  1 files changed, 28 insertions(+), 0 deletions(-)
+> There's ieee80211_bss_get_ie() in cfg80211, which doesn't give you the
+> length/data in two separate values, but otherwise behaves pretty
+> similarly. IOW, something like
 > 
-> diff --git a/drivers/net/wireless/libertas/debugfs.c
-> b/drivers/net/wireless/libertas/debugfs.c
-> index 811ffc3..893a55c 100644
-> --- a/drivers/net/wireless/libertas/debugfs.c
-> +++ b/drivers/net/wireless/libertas/debugfs.c
-> @@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char
-> __user *userbuf,
->         unsigned long addr = get_zeroed_page(GFP_KERNEL);
->         char *buf = (char *)addr;
->         ssize_t res;
-> +       if (!buf)
-> +               return -ENOMEM;
-> 
->         pos += snprintf(buf+pos, len-pos, "state = %s\n",
->                                 szStates[priv->connect_status]);
+> const u8 *ssid = ieee80211_bss_get_ie(bss /* or &bss->pub */, WLAN_EID_SSID);
+> if (ssid) {
+> 	ssid_len = ssid[1];
+> 	ssid_data = ssid + 2;
+> }
 
-#2 -- Don't use an MUA that alters whitespace in the message.
+Ah, I missed that. Will send out a patch.
 
-Feel free to repost...
+Thanks,
+-yi
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
