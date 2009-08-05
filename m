@@ -1,64 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:58138 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753692AbZHQRGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:06:49 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 10:06:52 -0700
-Date: Mon, 17 Aug 2009 10:06:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"aquilaver@yahoo.com" <aquilaver@yahoo.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [PATCH v4 34/34] wireless: mark prism54.ko as deprecated and
- mark for removal
-Message-ID: <20090817170644.GE4352@mosca>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
- <1250281559-13041-35-git-send-email-lrodriguez@atheros.com>
- <1250323182.15069.0.camel@johannes.local>
+Received: from bay0-omc3-s39.bay0.hotmail.com ([65.54.246.239]:38553 "EHLO
+	bay0-omc3-s39.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751318AbZHETXX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 15:23:23 -0400
+Message-ID: <BAY0-DP3-2331DDDA7EFE78C10A04B2BD0D0@phx.gbl>
+From: Jack Lau <jackelectronics@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: RE: kernel panic ieee80211_agg_splice_packets+0x3d/0xc0 [mac80211]
+Date: Wed, 5 Aug 2009 19:23:23 +0000
+In-Reply-To: <1248821338.5206.12.camel@mj>
+References: <BAY0-DP2-2945C3011C834624418944BD170@phx.gbl>
+	 <1248640816.32168.42.camel@mj>
+    	 <BAY0-DP3-241EC0B1A0E15935251FCBBD150@phx.gbl>
+    <1248821338.5206.12.camel@mj>   
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1250323182.15069.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 15, 2009 at 12:59:42AM -0700, Johannes Berg wrote:
-> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
-> > The preferred modules is p54.ko, which also supports FullMAC
-> > PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
-> > to remove this is no one really is testing prism54.ko anymore,
-> > and while it works p54.ko provides support for the same hardware.
-> > It should be noted I have been told some FullMAC devices may not
-> > have worked with the SoftMAC driver but to date we have yet to
-> > recieve a single bug report regarding this. If there are users
-> > out there please let us know!
-> 
-> Not that I care about the changelog, but I do find it illogical to refer
-> to modules w/o .ko everywhere and then with .ko in the changelog. Of
-> course you were consistent ;)
 
-Heh I've gone and cleaned this up in the series, I just removed the
-.ko usage when I refer to modules in the entries and commit log.
-
-> > -	  The module will be called prism54.
-> > +	  When built as module you get prism54.ko
-> 
-> NAK this change.
-
-Heh ok, changed it.
-
-  Luis
+Dear all
+ 
+As a follow-up, I have tried the latest wireless-testing.git: v2.6.31-rc5-30113-gf1aa58f and the crash still persists.
+ 
+I have also opened a new Bugzilla bug at http://bugzilla.kernel.org/show_bug.cgi?id=13922
+ 
+Jack
+_________________________________________________________________
+Windows Live Messenger: Happy 10-Year Anniversary—get free winks and emoticons.
+http://clk.atdmt.com/UKM/go/157562755/direct/01/
