@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44011 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932843AbZHDRhT (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:46934 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933187AbZHECEs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 13:37:19 -0400
-Subject: Re: mac80211 TX frame alignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200908041905.11632.IvDoorn@gmail.com>
-References: <200908041905.11632.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OrK0kGazuIFBSYNIUE21"
-Date: Tue, 04 Aug 2009 19:37:16 +0200
-Message-Id: <1249407436.24787.6.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 4 Aug 2009 22:04:48 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Joerg Albert <jal2@gmx.de>
+Subject: Re: [PATCH 1/2] ar9170: cleanup of bss_info_changed and beacon config
+Date: Wed, 5 Aug 2009 04:04:45 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4A78CE98.70903@gmx.de>
+In-Reply-To: <4A78CE98.70903@gmx.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908050404.47371.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 05 August 2009 02:13:12 Joerg Albert wrote:
+> Enable/Disable the beacon in ar910_set_beacon_timers() independently
+> of ar->vif, but controlled by BSS_CHANGED_BEACON_ENABLED and
+> bss_conf->enable_beacon from mac80211.
 
---=-OrK0kGazuIFBSYNIUE21
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+no signed/cc here?
 
-Hi Ivo,
+> ---
+>  drivers/net/wireless/ath/ar9170/ar9170.h |    1 +
+>  drivers/net/wireless/ath/ar9170/mac.c    |    4 +++-
+>  drivers/net/wireless/ath/ar9170/main.c   |   15 ++++++++-------
+>  3 files changed, 12 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+> index d9f1f46..9f2801c 100644
+> --- a/drivers/net/wireless/ath/ar9170/mac.c
+> +++ b/drivers/net/wireless/ath/ar9170/mac.c
+> @@ -388,7 +388,9 @@ int ar9170_set_beacon_timers(struct ar9170 *ar)
+>  	u32 v = 0;
+>  	u32 pretbtt = 0;
+>  
+> -	if (ar->vif) {
+> +	if (ar->enable_beacon) {
+> +		if (WARN_ON(!ar->vif))
+> +			return -ENODEV;
+>  		v |= ar->vif->bss_conf.beacon_int;
+>  
+>  		switch (ar->vif->type) {
 
-> Do you know if for outgoing frames the header should always
-> be 4-byte aligned?
+err, guess that's why. (not fatal, but WARN)
+ 
+the beacon timer isn't exclusively used to notify the driver when its 
+time for a new beacon... The STA mode uses the same _timer_
+in reverse to wait for the next beacon form the assoc. AP.
 
-I know that there's no alignment guarantee.
+that said: It does not look like the firmware implements anything
+in this direction... But this is a clearly MAC register and there
+could be something in the silicon which does something useful with
+this information.
 
-> I have a bugreport from users claiming that master mode
-> is failing for rt2500pci because the beacons passed to the
-> driver are not 4-byte aligned which causes the device not
-> to send out the beacons correctly.
->=20
-> I'm just wondering if this is something that should be fixed
-> in the driver or in mac80211.
+so, to be on the safe side: why not preserve the old behavior for the
+STA mode as well and simply tell the hardware about dtim & beacon interval?
 
-I don't think we can fix that in mac80211, since we don't know whether
-or not any alignment is required. We could align beacon frames, I
-suppose, since those are created on the fly, but not data frames.
+The only remaining question is where to disabled the timer for STA.
+(which is in some way relevant to: [PATCH 2/2] because previously,
+ these timers were always disabled by remove_interface.)
 
-johannes
+I think the best place is in ar9170_op_bss_info_changed:
+       if (changed & BSS_CHANGED_ASSOC) {
 
---=-OrK0kGazuIFBSYNIUE21
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+just when bss_conf->assoc gets "0".
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKeHHGAAoJEODzc/N7+Qma9dMP/1/EAsQ0tanuV3rg1qRoKXv0
-+kGBOcTQjuHyyi2lUqv0CrlcuBAR5CHPDyyIT3dFag9ci+OLU2YW1n5IzmAUrFR7
-cjzJ3j2+d4M+MjhTn354FN/PcLk9uUGIGzKFWWjF9MYLSClsLyaFssBXzmWRKQtD
-5zqisoxERBr0Z2SOAic6OqD2W0OtIL6gIq8UvGQRjQDiMxkTFc1EOOE9HO/IDLt5
-G7U9kBMWbvy/dLnmB8FqC4Gx++hWzLiHCaGvh7CtFoqjUSkcuNHycG4WFAos+zcG
-730YT4iGQqN2tcrB6TMVuxsTXNYpM91KSsfjPA87nN5z0ECqaxpoSkHMY2tP88pZ
-nfEJMTjGlZz1XONIPIrAexg+Rue7Q+Rnmmn46orGKuXhPF5/ywJkrG46e+1qZoPB
-ysFoINQeuiCfTkBCjiJVC3y0434nu7Kt0wJIO7titn6oxDjA10Qdvex+TgY49Y7l
-0fZ8kX+1woaAa/wsNAtBwmi1AUMOu4FliOBtobLjdN3Y0ltY5CU7rCEp9woXv/mH
-qOTYGGey8W3EHsZDTfBL8+kbppyGEhr66WozvZO6SFovngrBtisYzihLwdjUWx6I
-PVPHTJN5Y0xvCRu+ePnwtr1DLO+MkDwKnR0A10SVLd2k+QdEbI7cihND8YyUWWWz
-2aklv2j21ofUf15uMOhE
-=Ydhe
------END PGP SIGNATURE-----
-
---=-OrK0kGazuIFBSYNIUE21--
-
+Regards,
+	Chr
