@@ -1,763 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:32997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901AbZHGNtW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 09:49:22 -0400
-Subject: [PATCH v3] cfg80211: validate channel settings across interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1249649433.7194.0.camel@johannes.local>
-References: <1249649261.4215.7.camel@johannes.local>
-	 <1249649433.7194.0.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 07 Aug 2009 15:49:10 +0200
-Message-Id: <1249652951.7194.2.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:47570 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933751AbZHEPxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 11:53:31 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 08:53:32 -0700
+Date: Wed, 5 Aug 2009 08:53:31 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: andrea rossato <andrea.rossato@unitn.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>
+Subject: Re: [ath5k-devel] a possible regression in managed mode ?
+Message-ID: <20090805155330.GC4727@mosca>
+References: <43e72e890908050810h29c28945o4732f8606caab9fb@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <43e72e890908050810h29c28945o4732f8606caab9fb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, there's a problem that affects regulatory
-enforcement and connection stability, in that it is
-possible to switch the channel while connected to a
-network or joined to an IBSS.
+On Wed, Aug 05, 2009 at 08:10:18AM -0700, Luis R. Rodriguez wrote:
+> On Wed, Aug 5, 2009 at 6:41 AM, andrea rossato<andrea.rossato@unitn.it> wrote:
+> > On Tue, Aug 04, 2009 at 08:36:43AM -0700, Luis R. Rodriguez wrote:
+> >> Also, can you try wpa_supplicant from git, to see if that makes a
+> >> difference?
+> > ...
+> >>
+> >> I should note that new kernel stuff should not bust with old
+> >> userspace. If upgrading to a newer supplicant fixes your issue
+> >> we may have a regression somewhere in wireless-testing, which
+> >> I have been suspicious about, but haven't had time to look at it.
+> >
+> >
+> > On Tue, Aug 04, 2009 at 08:36:43AM -0700, Luis R. Rodriguez wrote:
+> >> Also, can you try wpa_supplicant from git, to see if that makes a
+> >> difference?
+> > ...
+> >>
+> >> I should note that new kernel stuff should not bust with old
+> >> userspace. If upgrading to a newer supplicant fixes your issue
+> >> we may have a regression somewhere in wireless-testing, which
+> >> I have been suspicious about, but haven't had time to look at it.
+> >
+> >
+> > Well, I need to correct myself a bit: after trying wpa_supplicant from
+> > git and noticing it worked fine I wanted to investigate a bit further
+> > and went back to the 0.6.9 release. And it worked too, sort of...
+> >
+> > Basically both versions work with the first association and
+> > authentication. The problem comes when I ask them or they need to
+> > reassociate.
+> 
+> Can you try with -D nl80211 and see if that fixes your issue?
+> 
+> Also from your description of the issue below it is unclear to me if
+> you do not see these issues with an older kernel or if this is only
+> happening with newer kernels or wireless-testing. Can you please
+> clarify.
+> 
+>   Luis
+> 
+> > Now, since I do not use NetworkManager, and I need to connect to
+> > different wireless networks with different configurations (dhcp,
+> > proxies, etc.), in my scripts I use something like:
+> >
+> > wpa_cli -a/usr/local/sbin/wpa_action -B
+> >
+> > followed by a:
+> > wpa_cli rea
+> >
+> > And whenever wpa_supplicat tries to associate for a second time I keep
+> > getting an authentication timeout error.
+> >
+> > For instance:
+> >
+> > [13:38:02]$ wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf
+> > CTRL-EVENT-SCAN-RESULTS
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > CTRL-EVENT-SCAN-RESULTS
+> > Associated with 00:22:b0:70:1f:67
+> > WPA: Key negotiation completed with 00:22:b0:70:1f:67 [PTK=CCMP GTK=TKIP]
+> > CTRL-EVENT-CONNECTED - Connection to 00:22:b0:70:1f:67 completed (auth) [id=1 id_str=]
+> >
+> > The first run is ok. But I cannot reassociate. Below you'll see the
+> > output of wpa_supplicant and iwevent when I run `wpa_cli reas`.
+> >
+> > Now, if I run the adapter in Master mode (as an access point) and then
+> > go back to Managed mode with wpa_supplicant, the first association and
+> > authentication will work most of the time (not always).
+> >
+> > I'm puzzled but that could be a useful piece of information,
+> > hopefully. Take into account that my other Eee pc connects always
+> > perfectly with the very same AP (as mine does when running
+> > wpa_supplicant for the first time).
+> >
+> > Right now I have some troubles in providing some better debugging
+> > output (I cannot reboot right now, due to some unfinished work that
+> > must have the precedence), but please let me know what might be useful
+> > and I'll try to come up with something in the next few days.
+> >
+> > Andrea
+> >
+> > The wpa_supplicant output:
+> >
+> > CTRL-EVENT-SCAN-RESULTS
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > WPS-AP-AVAILABLE
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > WPS-AP-AVAILABLE
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > WPS-AP-AVAILABLE
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> > CTRL-EVENT-SCAN-RESULTS
+> > WPS-AP-AVAILABLE
+> > Trying to associate with 00:22:b0:70:1f:67 (SSID='Istituto Colli' freq=2427 MHz)
+> > Authentication with 00:22:b0:70:1f:67 timed out.
+> >
+> > The iwevent session:
 
-The problem comes from the fact that we only validate
-the channel against the current interface's type, not
-against any other interface. Thus, you have any type
-of interface up, additionally bring up a monitor mode
-interface and switch the channel on the monitor. This
-will obviously also switch the channel on the other
-interface.
+Also please install iw, and provide 'iw event -t' log.
 
-The problem now is that if you do that while sending
-beacons for IBSS mode, you can switch to a disabled
-channel or a channel that doesn't allow beaconing.
-Combined with a managed mode interface connected to
-an AP instead of an IBSS interface, you can easily
-break the connection that way.
+http://wireless.kernel.org/en/users/Documentation/iw
 
-To fix this, this patch validates any channel change
-with all available interfaces, and disallows such
-changes on secondary interfaces if another interface
-is connected to an AP or joined to an IBSS.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: * rebase
-v3: * fix error code (-EBUSY instead of -EINVAL)
-    * fix locking (need devlist_mtx instead of rdev mtx)
-
- net/wireless/Makefile      |    3 +
- net/wireless/chan.c        |   88 +++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h        |    6 +++
- net/wireless/ibss.c        |   63 ++++++++++++++++++++------------
- net/wireless/nl80211.c     |   54 ++++++---------------------
- net/wireless/sme.c         |    9 ++++
- net/wireless/wext-compat.c |   55 +++++++++-------------------
- net/wireless/wext-compat.h |    3 -
- net/wireless/wext-sme.c    |   67 ++++++++++++++++++----------------
- 9 files changed, 215 insertions(+), 133 deletions(-)
-
---- wireless-testing.orig/net/wireless/Makefile	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/Makefile	2009-08-07 14:50:11.000000000 +0200
-@@ -5,7 +5,8 @@ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib8
- obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
- obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
- 
--cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o mlme.o ibss.o sme.o
-+cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
-+cfg80211-y += mlme.o ibss.o sme.o chan.o
- cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o wext-sme.o
- 
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ wireless-testing/net/wireless/chan.c	2009-08-07 15:45:10.000000000 +0200
-@@ -0,0 +1,88 @@
-+/*
-+ * This file contains helper code to handle channel
-+ * settings and keeping track of what is possible at
-+ * any point in time.
-+ *
-+ * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
-+ */
-+
-+#include <net/cfg80211.h>
-+#include "core.h"
-+
-+struct ieee80211_channel *
-+rdev_fixed_channel(struct cfg80211_registered_device *rdev,
-+		   struct wireless_dev *for_wdev)
-+{
-+	struct wireless_dev *wdev;
-+	struct ieee80211_channel *result = NULL;
-+
-+	WARN_ON(!mutex_is_locked(&rdev->devlist_mtx));
-+
-+	list_for_each_entry(wdev, &rdev->netdev_list, list) {
-+		if (wdev == for_wdev)
-+			continue;
-+
-+		/*
-+		 * Lock manually to tell lockdep about allowed
-+		 * nesting here if for_wdev->mtx is held already.
-+		 * This is ok as it's all under the rdev devlist
-+		 * mutex and as such can only be done once at any
-+		 * given time.
-+		 */
-+		mutex_lock_nested(&wdev->mtx, 1);
-+		if (wdev->current_bss)
-+			result = wdev->current_bss->pub.channel;
-+		wdev_unlock(wdev);
-+
-+		if (result)
-+			break;
-+	}
-+
-+	return result;
-+}
-+
-+int rdev_set_freq(struct cfg80211_registered_device *rdev,
-+		  int freq, enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_channel *chan;
-+	struct ieee80211_sta_ht_cap *ht_cap;
-+	int result;
-+
-+	if (rdev_fixed_channel(rdev, NULL))
-+		return -EBUSY;
-+
-+	if (!rdev->ops->set_channel)
-+		return -EOPNOTSUPP;
-+
-+	chan = ieee80211_get_channel(&rdev->wiphy, freq);
-+
-+	/* Primary channel not allowed */
-+	if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-+		return -EINVAL;
-+
-+	if (channel_type == NL80211_CHAN_HT40MINUS &&
-+	    chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
-+		return -EINVAL;
-+	else if (channel_type == NL80211_CHAN_HT40PLUS &&
-+		 chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
-+		return -EINVAL;
-+
-+	ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-+
-+	if (channel_type != NL80211_CHAN_NO_HT) {
-+		if (!ht_cap->ht_supported)
-+			return -EINVAL;
-+
-+		if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
-+		    ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT)
-+			return -EINVAL;
-+	}
-+
-+	result = rdev->ops->set_channel(&rdev->wiphy, chan, channel_type);
-+	if (result)
-+		return result;
-+
-+	rdev->channel = chan;
-+
-+	return 0;
-+}
---- wireless-testing.orig/net/wireless/core.h	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2009-08-07 15:23:49.000000000 +0200
-@@ -366,4 +366,10 @@ void cfg80211_sme_disassoc(struct net_de
- void __cfg80211_scan_done(struct work_struct *wk);
- void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
- 
-+struct ieee80211_channel *
-+rdev_fixed_channel(struct cfg80211_registered_device *rdev,
-+		   struct wireless_dev *for_wdev);
-+int rdev_set_freq(struct cfg80211_registered_device *rdev,
-+		  int freq, enum nl80211_channel_type channel_type);
-+
- #endif /* __NET_WIRELESS_CORE_H */
---- wireless-testing.orig/net/wireless/nl80211.c	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-08-07 15:46:38.000000000 +0200
-@@ -701,15 +701,8 @@ static int nl80211_set_wiphy(struct sk_b
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
- 		enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
--		struct ieee80211_channel *chan;
--		struct ieee80211_sta_ht_cap *ht_cap;
- 		u32 freq;
- 
--		if (!rdev->ops->set_channel) {
--			result = -EOPNOTSUPP;
--			goto bad_res;
--		}
--
- 		result = -EINVAL;
- 
- 		if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-@@ -723,42 +716,12 @@ static int nl80211_set_wiphy(struct sk_b
- 		}
- 
- 		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
--		chan = ieee80211_get_channel(&rdev->wiphy, freq);
--
--		/* Primary channel not allowed */
--		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
--			goto bad_res;
--
--		if (channel_type == NL80211_CHAN_HT40MINUS &&
--		    (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
--			goto bad_res;
--		else if (channel_type == NL80211_CHAN_HT40PLUS &&
--			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
--			goto bad_res;
--
--		/*
--		 * At this point we know if that if HT40 was requested
--		 * we are allowed to use it and the extension channel
--		 * exists.
--		 */
- 
--		ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
--
--		/* no HT capabilities or intolerant */
--		if (channel_type != NL80211_CHAN_NO_HT) {
--			if (!ht_cap->ht_supported)
--				goto bad_res;
--			if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
--			    (ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
--				goto bad_res;
--		}
--
--		result = rdev->ops->set_channel(&rdev->wiphy, chan,
--						channel_type);
-+		mutex_lock(&rdev->devlist_mtx);
-+		result = rdev_set_freq(rdev, freq, channel_type);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		if (result)
- 			goto bad_res;
--
--		rdev->channel = chan;
- 	}
- 
- 	changed = 0;
-@@ -3453,7 +3416,7 @@ static int nl80211_associate(struct sk_b
- 	struct cfg80211_registered_device *rdev;
- 	struct net_device *dev;
- 	struct cfg80211_crypto_settings crypto;
--	struct ieee80211_channel *chan;
-+	struct ieee80211_channel *chan, *fixedchan;
- 	const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
- 	int err, ssid_len, ie_len = 0;
- 	bool use_mfp = false;
-@@ -3496,6 +3459,15 @@ static int nl80211_associate(struct sk_b
- 		goto out;
- 	}
- 
-+	mutex_lock(&rdev->devlist_mtx);
-+	fixedchan = rdev_fixed_channel(rdev, NULL);
-+	if (fixedchan && chan != fixedchan) {
-+		err = -EBUSY;
-+		mutex_unlock(&rdev->devlist_mtx);
-+		goto out;
-+	}
-+	mutex_unlock(&rdev->devlist_mtx);
-+
- 	ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
- 	ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
- 
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-08-07 15:38:35.000000000 +0200
-@@ -267,39 +267,26 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_giwrange
-  * @wiphy: the wiphy
-  * @freq: the wext freq encoding
-  *
-- * Returns a channel, %NULL for auto, or an ERR_PTR for errors!
-+ * Returns a frequency, or a negative error code, or 0 for auto.
-  */
--struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
--					     struct iw_freq *freq)
-+int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq)
- {
--	struct ieee80211_channel *chan;
--	int f;
--
- 	/*
--	 * Parse frequency - return NULL for auto and
-+	 * Parse frequency - return 0 for auto and
- 	 * -EINVAL for impossible things.
- 	 */
- 	if (freq->e == 0) {
- 		if (freq->m < 0)
--			return NULL;
--		f = ieee80211_channel_to_frequency(freq->m);
-+			return 0;
-+		return ieee80211_channel_to_frequency(freq->m);
- 	} else {
- 		int i, div = 1000000;
- 		for (i = 0; i < freq->e; i++)
- 			div /= 10;
- 		if (div <= 0)
--			return ERR_PTR(-EINVAL);
--		f = freq->m / div;
-+			return -EINVAL;
-+		return freq->m / div;
- 	}
--
--	/*
--	 * Look up channel struct and return -EINVAL when
--	 * it cannot be found.
--	 */
--	chan = ieee80211_get_channel(wiphy, f);
--	if (!chan)
--		return ERR_PTR(-EINVAL);
--	return chan;
- }
- 
- int cfg80211_wext_siwrts(struct net_device *dev,
-@@ -761,33 +748,29 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_giwencod
- 
- int cfg80211_wext_siwfreq(struct net_device *dev,
- 			  struct iw_request_info *info,
--			  struct iw_freq *freq, char *extra)
-+			  struct iw_freq *wextfreq, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
--	struct ieee80211_channel *chan;
--	int err;
-+	int freq, err;
- 
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
--		return cfg80211_mgd_wext_siwfreq(dev, info, freq, extra);
-+		return cfg80211_mgd_wext_siwfreq(dev, info, wextfreq, extra);
- 	case NL80211_IFTYPE_ADHOC:
--		return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
-+		return cfg80211_ibss_wext_siwfreq(dev, info, wextfreq, extra);
- 	default:
--		chan = cfg80211_wext_freq(wdev->wiphy, freq);
--		if (!chan)
-+		freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-+		if (freq < 0)
-+			return freq;
-+		if (freq == 0)
- 			return -EINVAL;
--		if (IS_ERR(chan))
--			return PTR_ERR(chan);
--		err = rdev->ops->set_channel(wdev->wiphy, chan,
--					     NL80211_CHAN_NO_HT);
--		if (err)
--			return err;
--		rdev->channel = chan;
--		return 0;
-+		mutex_lock(&rdev->devlist_mtx);
-+		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
-+		mutex_unlock(&rdev->devlist_mtx);
-+		return err;
- 	}
- }
--EXPORT_SYMBOL_GPL(cfg80211_wext_siwfreq);
- 
- int cfg80211_wext_giwfreq(struct net_device *dev,
- 			  struct iw_request_info *info,
---- wireless-testing.orig/net/wireless/wext-compat.h	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.h	2009-08-07 14:50:11.000000000 +0200
-@@ -42,8 +42,7 @@ int cfg80211_mgd_wext_giwessid(struct ne
- 			       struct iw_request_info *info,
- 			       struct iw_point *data, char *ssid);
- 
--struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
--					     struct iw_freq *freq);
-+int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq);
- 
- 
- extern const struct iw_handler_def cfg80211_wext_handler;
---- wireless-testing.orig/net/wireless/ibss.c	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/ibss.c	2009-08-07 15:45:29.000000000 +0200
-@@ -78,10 +78,15 @@ int __cfg80211_join_ibss(struct cfg80211
- 			 struct cfg80211_cached_keys *connkeys)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct ieee80211_channel *chan;
- 	int err;
- 
- 	ASSERT_WDEV_LOCK(wdev);
- 
-+	chan = rdev_fixed_channel(rdev, wdev);
-+	if (chan && chan != params->channel)
-+		return -EBUSY;
-+
- 	if (wdev->ssid_len)
- 		return -EALREADY;
- 
-@@ -112,9 +117,11 @@ int cfg80211_join_ibss(struct cfg80211_r
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 	err = __cfg80211_join_ibss(rdev, dev, params, connkeys);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
-@@ -264,27 +271,32 @@ int cfg80211_ibss_wext_join(struct cfg80
- 
- int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
- 			       struct iw_request_info *info,
--			       struct iw_freq *freq, char *extra)
-+			       struct iw_freq *wextfreq, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
--	struct ieee80211_channel *chan;
--	int err;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	struct ieee80211_channel *chan = NULL;
-+	int err, freq;
- 
- 	/* call only for ibss! */
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
- 		return -EINVAL;
- 
--	if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-+	if (!rdev->ops->join_ibss)
- 		return -EOPNOTSUPP;
- 
--	chan = cfg80211_wext_freq(wdev->wiphy, freq);
--	if (chan && IS_ERR(chan))
--		return PTR_ERR(chan);
--
--	if (chan &&
--	    (chan->flags & IEEE80211_CHAN_NO_IBSS ||
--	     chan->flags & IEEE80211_CHAN_DISABLED))
--		return -EINVAL;
-+	freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-+	if (freq < 0)
-+		return freq;
-+
-+	if (freq) {
-+		chan = ieee80211_get_channel(wdev->wiphy, freq);
-+		if (!chan)
-+			return -EINVAL;
-+		if (chan->flags & IEEE80211_CHAN_NO_IBSS ||
-+		    chan->flags & IEEE80211_CHAN_DISABLED)
-+			return -EINVAL;
-+	}
- 
- 	if (wdev->wext.ibss.channel == chan)
- 		return 0;
-@@ -292,8 +304,7 @@ int cfg80211_ibss_wext_siwfreq(struct ne
- 	wdev_lock(wdev);
- 	err = 0;
- 	if (wdev->ssid_len)
--		err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
--					    dev, true);
-+		err = __cfg80211_leave_ibss(rdev, dev, true);
- 	wdev_unlock(wdev);
- 
- 	if (err)
-@@ -307,9 +318,11 @@ int cfg80211_ibss_wext_siwfreq(struct ne
- 		wdev->wext.ibss.channel_fixed = false;
- 	}
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
--	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_ibss_wext_join(rdev, wdev);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
-@@ -347,6 +360,7 @@ int cfg80211_ibss_wext_siwessid(struct n
- 				struct iw_point *data, char *ssid)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	size_t len = data->length;
- 	int err;
- 
-@@ -354,14 +368,13 @@ int cfg80211_ibss_wext_siwessid(struct n
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
- 		return -EINVAL;
- 
--	if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-+	if (!rdev->ops->join_ibss)
- 		return -EOPNOTSUPP;
- 
- 	wdev_lock(wdev);
- 	err = 0;
- 	if (wdev->ssid_len)
--		err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
--					    dev, true);
-+		err = __cfg80211_leave_ibss(rdev, dev, true);
- 	wdev_unlock(wdev);
- 
- 	if (err)
-@@ -375,9 +388,11 @@ int cfg80211_ibss_wext_siwessid(struct n
- 	memcpy(wdev->wext.ibss.ssid, ssid, len);
- 	wdev->wext.ibss.ssid_len = len;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
--	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_ibss_wext_join(rdev, wdev);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
-@@ -414,6 +429,7 @@ int cfg80211_ibss_wext_siwap(struct net_
- 			     struct sockaddr *ap_addr, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	u8 *bssid = ap_addr->sa_data;
- 	int err;
- 
-@@ -421,7 +437,7 @@ int cfg80211_ibss_wext_siwap(struct net_
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
- 		return -EINVAL;
- 
--	if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-+	if (!rdev->ops->join_ibss)
- 		return -EOPNOTSUPP;
- 
- 	if (ap_addr->sa_family != ARPHRD_ETHER)
-@@ -443,8 +459,7 @@ int cfg80211_ibss_wext_siwap(struct net_
- 	wdev_lock(wdev);
- 	err = 0;
- 	if (wdev->ssid_len)
--		err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
--					    dev, true);
-+		err = __cfg80211_leave_ibss(rdev, dev, true);
- 	wdev_unlock(wdev);
- 
- 	if (err)
-@@ -456,9 +471,11 @@ int cfg80211_ibss_wext_siwap(struct net_
- 	} else
- 		wdev->wext.ibss.bssid = NULL;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
--	err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_ibss_wext_join(rdev, wdev);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
---- wireless-testing.orig/net/wireless/wext-sme.c	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/wext-sme.c	2009-08-07 15:42:12.000000000 +0200
-@@ -52,25 +52,31 @@ int cfg80211_mgd_wext_connect(struct cfg
- 
- int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
- 			      struct iw_request_info *info,
--			      struct iw_freq *freq, char *extra)
-+			      struct iw_freq *wextfreq, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
--	struct ieee80211_channel *chan;
--	int err;
-+	struct ieee80211_channel *chan = NULL;
-+	int err, freq;
- 
- 	/* call only for station! */
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
- 		return -EINVAL;
- 
--	chan = cfg80211_wext_freq(wdev->wiphy, freq);
--	if (chan && IS_ERR(chan))
--		return PTR_ERR(chan);
--
--	if (chan && (chan->flags & IEEE80211_CHAN_DISABLED))
--		return -EINVAL;
-+	freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-+	if (freq < 0)
-+		return freq;
-+
-+	if (freq) {
-+		chan = ieee80211_get_channel(wdev->wiphy, freq);
-+		if (!chan)
-+			return -EINVAL;
-+		if (chan->flags & IEEE80211_CHAN_DISABLED)
-+			return -EINVAL;
-+	}
- 
- 	cfg80211_lock_rdev(rdev);
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 
- 	if (wdev->sme_state != CFG80211_SME_IDLE) {
-@@ -84,9 +90,8 @@ int cfg80211_mgd_wext_siwfreq(struct net
- 		/* if SSID set, we'll try right again, avoid event */
- 		if (wdev->wext.connect.ssid_len)
- 			event = false;
--		err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
--					    dev, WLAN_REASON_DEAUTH_LEAVING,
--					    event);
-+		err = __cfg80211_disconnect(rdev, dev,
-+					    WLAN_REASON_DEAUTH_LEAVING, event);
- 		if (err)
- 			goto out;
- 	}
-@@ -95,17 +100,15 @@ int cfg80211_mgd_wext_siwfreq(struct net
- 	wdev->wext.connect.channel = chan;
- 
- 	/* SSID is not set, we just want to switch channel */
--	if (wdev->wext.connect.ssid_len && chan) {
--		err = -EOPNOTSUPP;
--		if (rdev->ops->set_channel)
--			err = rdev->ops->set_channel(wdev->wiphy, chan,
--						     NL80211_CHAN_NO_HT);
-+	if (chan && !wdev->wext.connect.ssid_len) {
-+		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
- 		goto out;
- 	}
- 
--	err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
-+	mutex_unlock(&rdev->devlist_mtx);
- 	cfg80211_unlock_rdev(rdev);
- 	return err;
- }
-@@ -143,6 +146,7 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 			       struct iw_point *data, char *ssid)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	size_t len = data->length;
- 	int err;
- 
-@@ -157,7 +161,8 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 	if (len > 0 && ssid[len - 1] == '\0')
- 		len--;
- 
--	cfg80211_lock_rdev(wiphy_to_dev(wdev->wiphy));
-+	cfg80211_lock_rdev(rdev);
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 
- 	err = 0;
-@@ -173,9 +178,8 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 		/* if SSID set now, we'll try to connect, avoid event */
- 		if (len)
- 			event = false;
--		err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
--					    dev, WLAN_REASON_DEAUTH_LEAVING,
--					    event);
-+		err = __cfg80211_disconnect(rdev, dev,
-+					    WLAN_REASON_DEAUTH_LEAVING, event);
- 		if (err)
- 			goto out;
- 	}
-@@ -186,10 +190,11 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 
- 	wdev->wext.connect.crypto.control_port = false;
- 
--	err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
--	cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
-+	mutex_unlock(&rdev->devlist_mtx);
-+	cfg80211_unlock_rdev(rdev);
- 	return err;
- }
- 
-@@ -230,6 +235,7 @@ int cfg80211_mgd_wext_siwap(struct net_d
- 			    struct sockaddr *ap_addr, char *extra)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	u8 *bssid = ap_addr->sa_data;
- 	int err;
- 
-@@ -244,7 +250,8 @@ int cfg80211_mgd_wext_siwap(struct net_d
- 	if (is_zero_ether_addr(bssid) || is_broadcast_ether_addr(bssid))
- 		bssid = NULL;
- 
--	cfg80211_lock_rdev(wiphy_to_dev(wdev->wiphy));
-+	cfg80211_lock_rdev(rdev);
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(wdev);
- 
- 	if (wdev->sme_state != CFG80211_SME_IDLE) {
-@@ -258,9 +265,8 @@ int cfg80211_mgd_wext_siwap(struct net_d
- 		    compare_ether_addr(bssid, wdev->wext.connect.bssid) == 0)
- 			goto out;
- 
--		err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
--					    dev, WLAN_REASON_DEAUTH_LEAVING,
--					    false);
-+		err = __cfg80211_disconnect(rdev, dev,
-+					    WLAN_REASON_DEAUTH_LEAVING, false);
- 		if (err)
- 			goto out;
- 	}
-@@ -271,10 +277,11 @@ int cfg80211_mgd_wext_siwap(struct net_d
- 	} else
- 		wdev->wext.connect.bssid = NULL;
- 
--	err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-+	err = cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
--	cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
-+	mutex_unlock(&rdev->devlist_mtx);
-+	cfg80211_unlock_rdev(rdev);
- 	return err;
- }
- 
---- wireless-testing.orig/net/wireless/sme.c	2009-08-07 14:50:09.000000000 +0200
-+++ wireless-testing/net/wireless/sme.c	2009-08-07 15:45:38.000000000 +0200
-@@ -256,9 +256,11 @@ void cfg80211_sme_scan_done(struct net_d
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 
-+	mutex_lock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
- 	wdev_lock(wdev);
- 	__cfg80211_sme_scan_done(dev);
- 	wdev_unlock(wdev);
-+	mutex_unlock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
- }
- 
- void cfg80211_sme_rx_auth(struct net_device *dev,
-@@ -644,6 +646,7 @@ int __cfg80211_connect(struct cfg80211_r
- 		       struct cfg80211_cached_keys *connkeys)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct ieee80211_channel *chan;
- 	int err;
- 
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -651,6 +654,10 @@ int __cfg80211_connect(struct cfg80211_r
- 	if (wdev->sme_state != CFG80211_SME_IDLE)
- 		return -EALREADY;
- 
-+	chan = rdev_fixed_channel(rdev, wdev);
-+	if (chan && chan != connect->channel)
-+		return -EBUSY;
-+
- 	if (WARN_ON(wdev->connect_keys)) {
- 		kfree(wdev->connect_keys);
- 		wdev->connect_keys = NULL;
-@@ -771,9 +778,11 @@ int cfg80211_connect(struct cfg80211_reg
- {
- 	int err;
- 
-+	mutex_lock(&rdev->devlist_mtx);
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = __cfg80211_connect(rdev, dev, connect, connkeys);
- 	wdev_unlock(dev->ieee80211_ptr);
-+	mutex_unlock(&rdev->devlist_mtx);
- 
- 	return err;
- }
-
-
+  Luis
