@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:51817 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755900AbZHWIG2 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:5846 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933060AbZHEFsp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 04:06:28 -0400
-Received: by bwz19 with SMTP id 19so1024548bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 01:06:29 -0700 (PDT)
-To: Rafael Laufer <rlaufer@CS.UCLA.EDU>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	=?iso-8859-15?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
-References: <4A8DED03.2050502@cs.ucla.edu>
-	<1250842695.13872.5.camel@johannes.local>
-	<69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>
-	<4A8EE182.6040709@cs.ucla.edu>
-	<1250927308.23605.6.camel@johannes.local>
-	<4A906B4C.6010208@cs.ucla.edu>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 23 Aug 2009 11:06:26 +0300
-In-Reply-To: <4A906B4C.6010208@cs.ucla.edu> (Rafael Laufer's message of "Sat\, 22 Aug 2009 15\:03\:56 -0700")
-Message-ID: <87ab1rt0n1.fsf@litku.valot.fi>
+	Wed, 5 Aug 2009 01:48:45 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so809538fga.17
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 22:48:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A78F0DC.4070104@lwfinger.net>
+References: <4A78C336.9000503@gmail.com> <4A78F0DC.4070104@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 5 Aug 2009 07:48:25 +0200
+Message-ID: <69e28c910908042248m5419a39fl5f370e73e01e8b64@mail.gmail.com>
+Subject: Re: [PATCH V3] b43: implement baseband init for LP-PHY <= rev1
+To: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafael Laufer <rlaufer@CS.UCLA.EDU> writes:
-
->>> +		/* Get the rate parameter from the radiotap header, +
->>> * allowing rate selection on a per-packet basis +		 */
->>>     
+2009/8/5 Larry Finger <Larry.Finger@lwfinger.net>:
+> Gábor Stefanik wrote:
+>> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
+>> boardflags_hi values to defines.
+>> Implement b43_phy_copy for easier copying between registers, as needed
+>> by LP-PHY init.
 >>
->> coding style
->>   
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> Cc: Michael Buesch <mb@bu3sch.de>
+>> Cc: Larry Finger <larry.finger@lwfinger.net>
+>> ---
+>> V3:
+>> -Added FIXME to the b43_hf_write call.
+>> -The b43_hf_write call now uses a #defined value, rather than a magic
+>> number.
 >
-> I am a newbie, I am gonna look into the coding style, 
+> It looks to me that V2 was put into wireless-testing. You will need to
+> prepare a separate patch to make the V2 => V3 changes.
+>
+> Larry
 
-In case you didn't know, Documentation/CodingStyle is the file you want
-to need.
+OK, I will be sending one today.
 
-> but I assume you are talking about the missing blank line in the
-> beginning
+Note to John: Please apply the "Fix fallout" patch, but not the
+"Cleanups" one. The second part of "Cleanups" will be resubmitted,
+combined with other V2->V3 changes.
 
-I think Johannes' means the comment style:
-
-/*
- * The prefer multiline comments to look like this. blah blah blah blah
- * blah blah blah blah blah blah blah blah blah blah blah blah
- */
+Larry, my next target is
+http://bcm-v4.sipsolutions.net/802.11/PHY/LP/SYNCHSTX - however, what
+is the definition of struct lpphy_extstxdata_t? Where does the stx
+array get its values (or what are its initial values, if it needs to
+be initialized here)?
+Also, with Sync-STX, >=rev2 radio init is essentially complete, except
+for "with interrupts disabled, do something with backplane (TODO)" -
+when can we expect documentation on this step?
 
 -- 
-Kalle Valo
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
