@@ -1,161 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45308 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756518AbZHNAnE (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:42204 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627AbZHEUYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 19/25] wireless: organize individual drivers alphabetically
-Date: Thu, 13 Aug 2009 20:42:58 -0400
-Message-Id: <1250210584-13374-20-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 5 Aug 2009 16:24:20 -0400
+Received: by mail-ew0-f214.google.com with SMTP id 10so285565ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:24:21 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH 3/6] orinoco: pass orinoco_set_tkip_key the sequence lengths
+Date: Wed,  5 Aug 2009 21:23:29 +0100
+Message-Id: <1249503812-16921-4-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
+References: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
- 1 files changed, 47 insertions(+), 48 deletions(-)
+When we store the keys for cfg80211, the sequence lengths will also be
+stored. So avoid assuming the sequence lengths at this level.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 59e4664..45e9cf2 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/hw.c   |   30 ++++++++++++++++++------------
+ drivers/net/wireless/orinoco/hw.h   |    3 ++-
+ drivers/net/wireless/orinoco/wext.c |    2 +-
+ 3 files changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
+index d069fe8..35516a9 100644
+--- a/drivers/net/wireless/orinoco/hw.c
++++ b/drivers/net/wireless/orinoco/hw.c
+@@ -905,11 +905,12 @@ int __orinoco_hw_setup_enc(struct orinoco_private *priv)
+ }
  
--config STRIP
--	tristate "STRIP (Metricom starmode radio IP)"
--	depends on INET && WLAN_PRE80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y if you have a Metricom radio and intend to use Starmode Radio
--	  IP. STRIP is a radio protocol developed for the MosquitoNet project
--	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
--	  traffic using Metricom radios.  Metricom radios are small, battery
--	  powered, 100kbit/sec packet radio transceivers, about the size and
--	  weight of a cellular telephone. (You may also have heard them called
--	  "Metricom modems" but we avoid the term "modem" because it misleads
--	  many people into thinking that you can plug a Metricom modem into a
--	  phone line and use it as a modem.)
--
--	  You can use STRIP on any Linux machine with a serial port, although
--	  it is obviously most useful for people with laptop computers. If you
--	  think you might get a Metricom radio in the future, there is no harm
--	  in saying Y to STRIP now, except that it makes the kernel a bit
--	  bigger.
--
--	  To compile this as a module, choose M here: the module will be
--	  called strip.
--
- config ARLAN
- 	tristate "Aironet Arlan 655 & IC2200 DS support"
- 	depends on ISA && !64BIT && WLAN_PRE80211
-@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called wavelan_cs.  If unsure, say N.
+ /* key must be 32 bytes, including the tx and rx MIC keys.
+- * rsc must be 8 bytes
+- * tsc must be 8 bytes or NULL
++ * rsc must be NULL or up to 8 bytes
++ * tsc must be NULL or up to 8 bytes
+  */
+ int __orinoco_hw_set_tkip_key(struct orinoco_private *priv, int key_idx,
+-			      int set_tx, u8 *key, u8 *rsc, u8 *tsc)
++			      int set_tx, u8 *key, u8 *rsc, size_t rsc_len,
++			      u8 *tsc, size_t tsc_len)
+ {
+ 	struct {
+ 		__le16 idx;
+@@ -934,17 +935,22 @@ int __orinoco_hw_set_tkip_key(struct orinoco_private *priv, int key_idx,
+ 	memcpy(buf.key, key,
+ 	       sizeof(buf.key) + sizeof(buf.tx_mic) + sizeof(buf.rx_mic));
  
-+config STRIP
-+	tristate "STRIP (Metricom starmode radio IP)"
-+	depends on INET && WLAN_PRE80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y if you have a Metricom radio and intend to use Starmode Radio
-+	  IP. STRIP is a radio protocol developed for the MosquitoNet project
-+	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
-+	  traffic using Metricom radios.  Metricom radios are small, battery
-+	  powered, 100kbit/sec packet radio transceivers, about the size and
-+	  weight of a cellular telephone. (You may also have heard them called
-+	  "Metricom modems" but we avoid the term "modem" because it misleads
-+	  many people into thinking that you can plug a Metricom modem into a
-+	  phone line and use it as a modem.)
+-	if (rsc == NULL)
+-		memset(buf.rsc, 0, sizeof(buf.rsc));
+-	else
+-		memcpy(buf.rsc, rsc, sizeof(buf.rsc));
++	if (rsc_len > sizeof(buf.rsc))
++		rsc_len = sizeof(buf.rsc);
 +
-+	  You can use STRIP on any Linux machine with a serial port, although
-+	  it is obviously most useful for people with laptop computers. If you
-+	  think you might get a Metricom radio in the future, there is no harm
-+	  in saying Y to STRIP now, except that it makes the kernel a bit
-+	  bigger.
++	if (tsc_len > sizeof(buf.tsc))
++		tsc_len = sizeof(buf.tsc);
 +
-+	  To compile this as a module, choose M here: the module will be
-+	  called strip.
++	memset(buf.rsc, 0, sizeof(buf.rsc));
++	memset(buf.tsc, 0, sizeof(buf.tsc));
 +
- config PCMCIA_NETWAVE
- 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
- 	depends on PCMCIA && WLAN_PRE80211
-@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called netwave_cs.  If unsure, say N.
++	if (rsc != NULL)
++		memcpy(buf.rsc, rsc, rsc_len);
  
--
- menuconfig WLAN_80211
- 	bool "Wireless LAN (IEEE 802.11)"
- 	depends on NETDEVICES
-@@ -509,28 +508,6 @@ config USB_ZD1201
+-	if (tsc == NULL) {
+-		memset(buf.tsc, 0, sizeof(buf.tsc));
++	if (tsc != NULL)
++		memcpy(buf.tsc, tsc, tsc_len);
++	else
+ 		buf.tsc[4] = 0x10;
+-	} else {
+-		memcpy(buf.tsc, tsc, sizeof(buf.tsc));
+-	}
  
- endif # ZYDAS_80211
- 
--config PCMCIA_RAYCS
--	tristate "Aviator/Raytheon 2.4GHz wireless support"
--	depends on PCMCIA && WLAN_80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
--	  (PC-card) wireless Ethernet networking card to your computer.
--	  Please read the file <file:Documentation/networking/ray_cs.txt> for
--	  details.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called ray_cs.  If unsure, say N.
--
--config PCMCIA_WL3501
--      tristate "Planet WL3501 PCMCIA cards"
--      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--      select WIRELESS_EXT
--       ---help---
--         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
--	 It has basic support for Linux wireless extensions and initial
--	 micro support for ethtool.
--
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -558,8 +535,30 @@ config ADM8211
- 
- 	  Thanks to Infineon-ADMtek for their support of this driver.
- 
--source "drivers/net/wireless/hostap/Kconfig"
-+config PCMCIA_RAYCS
-+	tristate "Aviator/Raytheon 2.4GHz wireless support"
-+	depends on PCMCIA && WLAN_80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
-+	  (PC-card) wireless Ethernet networking card to your computer.
-+	  Please read the file <file:Documentation/networking/ray_cs.txt> for
-+	  details.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called ray_cs.  If unsure, say N.
-+
- source "drivers/net/wireless/orinoco/Kconfig"
-+source "drivers/net/wireless/hostap/Kconfig"
-+
-+config PCMCIA_WL3501
-+      tristate "Planet WL3501 PCMCIA cards"
-+      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-+      select WIRELESS_EXT
-+       ---help---
-+         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
-+	 It has basic support for Linux wireless extensions and initial
-+	 micro support for ethtool.
- 
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
+ 	/* Wait upto 100ms for tx queue to empty */
+ 	for (k = 100; k > 0; k--) {
+diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
+index 27b4276..33a31fa 100644
+--- a/drivers/net/wireless/orinoco/hw.h
++++ b/drivers/net/wireless/orinoco/hw.h
+@@ -38,7 +38,8 @@ int __orinoco_hw_set_wap(struct orinoco_private *priv);
+ int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv);
+ int __orinoco_hw_setup_enc(struct orinoco_private *priv);
+ int __orinoco_hw_set_tkip_key(struct orinoco_private *priv, int key_idx,
+-			      int set_tx, u8 *key, u8 *rsc, u8 *tsc);
++			      int set_tx, u8 *key, u8 *rsc, size_t rsc_len,
++			      u8 *tsc, size_t tsc_len);
+ int orinoco_clear_tkip_key(struct orinoco_private *priv, int key_idx);
+ int __orinoco_hw_set_multicast_list(struct orinoco_private *priv,
+ 				    struct dev_addr_list *mc_list,
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 33d81b4..7e18bb4 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -863,7 +863,7 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
+ 			err = __orinoco_hw_set_tkip_key(priv, idx,
+ 				 ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY,
+ 				 (u8 *) &priv->tkip_key[idx],
+-				 tkip_iv, NULL);
++				 tkip_iv, ORINOCO_SEQ_LEN, NULL, 0);
+ 			if (err)
+ 				printk(KERN_ERR "%s: Error %d setting TKIP key"
+ 				       "\n", dev->name, err);
 -- 
-1.6.2.5
+1.6.3.3
 
