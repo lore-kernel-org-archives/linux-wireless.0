@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:38696 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753900AbZHCScv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44866 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752032AbZHESbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 14:32:51 -0400
-From: Chris Clayton <chris2553@googlemail.com>
-Reply-To: chris2553@googlemail.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [Bug #13846] Possible regression in rt61pci driver
-Date: Mon, 3 Aug 2009 19:31:27 +0100
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <iZB3Pj-uj3M.A.pRC.1cgdKB@chimera>
-In-Reply-To: <iZB3Pj-uj3M.A.pRC.1cgdKB@chimera>
+	Wed, 5 Aug 2009 14:31:03 -0400
+Date: Wed, 5 Aug 2009 14:20:41 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Andreas Steinmetz <ast@domdv.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb entry for DE wrong
+Message-ID: <20090805182040.GD20338@tuxdriver.com>
+References: <4A71A6BE.20304@domdv.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908031931.27427.chris2553@googlemail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4A71A6BE.20304@domdv.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafael,
+On Thu, Jul 30, 2009 at 03:57:18PM +0200, Andreas Steinmetz wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> [please CC me as I'm not subscribed]
+> 
+> Error in regulatory database for country DE:
+> 
+> The document
+> 
+> http://www.bundesnetzagentur.de/media/archive/5009.pdf
+> 
+> states that the frequency range from 5470 GHz to 5725 GHz can be used
+> indoor and outdoor, thus the NO-OUTDOOR flag for this range is wrong.
+> 
+> Quick and dirty translation of the relevant text from this document
+> including the note:
+> 
+> Usage indoor and outdoor. Transmission between within a plane and a
+> location outside of a plane prohibited.
 
-On Sunday 02 August 2009, Rafael J. Wysocki wrote:
-> This message has been generated automatically as a part of a report
-> of recent regressions.
->
-> The following bug entry is on the current list of known regressions
-> from 2.6.30.  Please verify if it still should be listed and let me know
-> (either way).
->
-
-The folks on the wireless project have concluded that the problem I reported is down to a hardware 
-problem when power saving is switched on on for my Belkin cardbus wireless adapter, so now I simply 
-turn power-saving off when wlan0 comes up. I did, however, ask whether anyone was going to fix the 
-fact that once power-saving turns the LEDs off, they never come back on again, but I haven't had an 
-answer. Is that a regression? I guess the answer is no, because power saving in the rt61pci driver 
-is feature that is new to 2.6.31. Should it be fixed? I think the answer is yes, but being unable 
-to do it myself, I probably don't have a vote :-)
-
-All I can do is report that I now know how to avoid my laptop freezing and leave the decision as to 
-whether it should stay on the regression list to you and the folks from the wireless project.
-
-Thanks,
-
-Chris
-
->
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13846
-> Subject		: Possible regression in rt61pci driver
-> Submitter	: Chris Clayton <chris2553@googlemail.com>
-> Date		: 2009-07-13 8:27 (21 days old)
-> References	: http://marc.info/?l=linux-kernel&m=124747418828398&w=4
-
+Post a patch?
 
 -- 
-No, Sir; there is nothing which has yet been contrived by man, by which so much happiness is 
-produced as by a good tavern or inn - Doctor Samuel Johnson
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+			¡Viva Honduras Libre!
