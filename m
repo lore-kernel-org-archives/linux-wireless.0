@@ -1,264 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59136 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757024AbZHGJEw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 05:04:52 -0400
-Subject: [PATCH] cfg80211: use reassociation when possible
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
+Received: from mail.aramid.it ([213.21.189.122]:1696 "EHLO aramid.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbZHERvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 13:51:45 -0400
+Date: Wed, 5 Aug 2009 19:31:32 +0200
+From: Andrea Rossato <mailing_list@istitutocolli.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 07 Aug 2009 11:04:10 +0200
-Message-Id: <1249635851.4215.1.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: [ath5k-devel] a possible regression in managed mode ?
+Message-ID: <20090805173129.GD18549@eeepc.nowhere.net>
+References: <43e72e890908050810h29c28945o4732f8606caab9fb@mail.gmail.com> <20090805155330.GC4727@mosca> <20090805165227.GA18394@eeepc.nowhere.net> <20090805171523.GE4727@mosca>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20090805171523.GE4727@mosca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the move of everything related to the SME from
-mac80211 to cfg80211, we lost the ability to send
-reassociation frames. This adds them back, but only
-for wireless extensions. With the userspace SME, it
-shall control assoc vs. reassoc (it already can do
-so with the nl80211 interface).
+On Wed, Aug 05, 2009 at 10:15:23AM -0700, Luis R. Rodriguez wrote:
+> > When I use 2.6.29.4 everything works smoothly and association and
+> > authentication always happen at the first try. The "authentication
+> > timeout" issue only happens with the wireless-testing kernel from git.
+> 
+> This is when using wpa_supplicant 0.6.9? Or when using both 0.6.9
+> and git version of the supplicant?
 
-I haven't touched the connect() implementation, so
-it is not possible to reassociate with the nl80211
-connect primitive. I think that should be done with
-the NL80211_CMD_ROAM command, but we'll have to see
-how that can be handled in the future, especially
-with fullmac chips.
+That happens with both versions.
 
-This patch addresses only the immediate regression
-we had in mac80211, which previously sent reassoc.
+> You know you can just have wpa_supplicant try to reassoc for you
+> upon disconnection automatically, right? I use something like this:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/net/cfg80211.h  |    4 +--
- net/wireless/core.h     |    4 ++-
- net/wireless/mlme.c     |   11 +++++++++
- net/wireless/sme.c      |   54 +++++++++++++++++++++++++++++++++++++-----------
- net/wireless/wext-sme.c |    8 ++++++-
- 5 files changed, 65 insertions(+), 16 deletions(-)
+yes, but in my setup I need to force a reassociation in order to run
+the dhclient and the correct configuration script - but not at boot
+time.
 
---- wireless-testing.orig/net/wireless/sme.c	2009-08-07 00:41:51.000000000 +0200
-+++ wireless-testing/net/wireless/sme.c	2009-08-07 00:41:51.000000000 +0200
-@@ -27,10 +27,10 @@ struct cfg80211_conn {
- 		CFG80211_CONN_ASSOCIATE_NEXT,
- 		CFG80211_CONN_ASSOCIATING,
- 	} state;
--	u8 bssid[ETH_ALEN];
-+	u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 	u8 *ie;
- 	size_t ie_len;
--	bool auto_auth;
-+	bool auto_auth, prev_bssid_valid;
- };
- 
- 
-@@ -110,6 +110,7 @@ static int cfg80211_conn_do_work(struct 
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	struct cfg80211_connect_params *params;
-+	const u8 *prev_bssid = NULL;
- 	int err;
- 
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -135,15 +136,11 @@ static int cfg80211_conn_do_work(struct 
- 	case CFG80211_CONN_ASSOCIATE_NEXT:
- 		BUG_ON(!rdev->ops->assoc);
- 		wdev->conn->state = CFG80211_CONN_ASSOCIATING;
--		/*
--		 * We could, later, implement roaming here and then actually
--		 * set prev_bssid to non-NULL. But then we need to be aware
--		 * that some APs don't like that -- so we'd need to retry
--		 * the association.
--		 */
-+		if (wdev->conn->prev_bssid_valid)
-+			prev_bssid = wdev->conn->prev_bssid;
- 		err = __cfg80211_mlme_assoc(rdev, wdev->netdev,
- 					    params->channel, params->bssid,
--					    NULL,
-+					    prev_bssid,
- 					    params->ssid, params->ssid_len,
- 					    params->ie, params->ie_len,
- 					    false, &params->crypto);
-@@ -314,6 +311,28 @@ void cfg80211_sme_rx_auth(struct net_dev
- 	}
- }
- 
-+bool cfg80211_sme_failed_reassoc(struct wireless_dev *wdev)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	if (WARN_ON(!wdev->conn))
-+		return false;
-+
-+	if (!wdev->conn->prev_bssid_valid)
-+		return false;
-+
-+	/*
-+	 * Some stupid APs don't accept reassoc, so we
-+	 * need to fall back to trying regular assoc.
-+	 */
-+	wdev->conn->prev_bssid_valid = false;
-+	wdev->conn->state = CFG80211_CONN_ASSOCIATE_NEXT;
-+	schedule_work(&rdev->conn_work);
-+
-+	return true;
-+}
-+
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
-@@ -357,8 +376,11 @@ void __cfg80211_connect_result(struct ne
- 
- 		memset(&wrqu, 0, sizeof(wrqu));
- 		wrqu.ap_addr.sa_family = ARPHRD_ETHER;
--		if (bssid && status == WLAN_STATUS_SUCCESS)
-+		if (bssid && status == WLAN_STATUS_SUCCESS) {
- 			memcpy(wrqu.ap_addr.sa_data, bssid, ETH_ALEN);
-+			memcpy(wdev->wext.prev_bssid, bssid, ETH_ALEN);
-+			wdev->wext.prev_bssid_valid = true;
-+		}
- 		wireless_send_event(dev, SIOCGIWAP, &wrqu, NULL);
- 	}
- #endif
-@@ -509,6 +531,8 @@ void __cfg80211_roamed(struct wireless_d
- 	memset(&wrqu, 0, sizeof(wrqu));
- 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
- 	memcpy(wrqu.ap_addr.sa_data, bssid, ETH_ALEN);
-+	memcpy(wdev->wext.prev_bssid, bssid, ETH_ALEN);
-+	wdev->wext.prev_bssid_valid = true;
- 	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
- #endif
- }
-@@ -641,7 +665,8 @@ EXPORT_SYMBOL(cfg80211_disconnected);
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev,
- 		       struct cfg80211_connect_params *connect,
--		       struct cfg80211_cached_keys *connkeys)
-+		       struct cfg80211_cached_keys *connkeys,
-+		       const u8 *prev_bssid)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	int err;
-@@ -721,6 +746,11 @@ int __cfg80211_connect(struct cfg80211_r
- 		wdev->sme_state = CFG80211_SME_CONNECTING;
- 		wdev->connect_keys = connkeys;
- 
-+		if (prev_bssid) {
-+			memcpy(wdev->conn->prev_bssid, prev_bssid, ETH_ALEN);
-+			wdev->conn->prev_bssid_valid = true;
-+		}
-+
- 		/* we're good if we have both BSSID and channel */
- 		if (wdev->conn->params.bssid && wdev->conn->params.channel) {
- 			wdev->conn->state = CFG80211_CONN_AUTHENTICATE_NEXT;
-@@ -772,7 +802,7 @@ int cfg80211_connect(struct cfg80211_reg
- 	int err;
- 
- 	wdev_lock(dev->ieee80211_ptr);
--	err = __cfg80211_connect(rdev, dev, connect, connkeys);
-+	err = __cfg80211_connect(rdev, dev, connect, connkeys, NULL);
- 	wdev_unlock(dev->ieee80211_ptr);
- 
- 	return err;
---- wireless-testing.orig/net/wireless/core.h	2009-08-06 17:30:45.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2009-08-07 00:41:51.000000000 +0200
-@@ -335,7 +335,8 @@ void __cfg80211_connect_result(struct ne
- int __cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		       struct net_device *dev,
- 		       struct cfg80211_connect_params *connect,
--		       struct cfg80211_cached_keys *connkeys);
-+		       struct cfg80211_cached_keys *connkeys,
-+		       const u8 *prev_bssid);
- int cfg80211_connect(struct cfg80211_registered_device *rdev,
- 		     struct net_device *dev,
- 		     struct cfg80211_connect_params *connect,
-@@ -353,6 +354,7 @@ int cfg80211_mgd_wext_connect(struct cfg
- 			      struct wireless_dev *wdev);
- 
- void cfg80211_conn_work(struct work_struct *work);
-+bool cfg80211_sme_failed_reassoc(struct wireless_dev *wdev);
- 
- /* internal helpers */
- int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
---- wireless-testing.orig/net/wireless/wext-sme.c	2009-08-07 00:41:45.000000000 +0200
-+++ wireless-testing/net/wireless/wext-sme.c	2009-08-07 00:41:51.000000000 +0200
-@@ -15,6 +15,7 @@ int cfg80211_mgd_wext_connect(struct cfg
- 			      struct wireless_dev *wdev)
- {
- 	struct cfg80211_cached_keys *ck = NULL;
-+	const u8 *prev_bssid = NULL;
- 	int err, i;
- 
- 	ASSERT_RDEV_LOCK(rdev);
-@@ -42,8 +43,12 @@ int cfg80211_mgd_wext_connect(struct cfg
- 		for (i = 0; i < 6; i++)
- 			ck->params[i].key = ck->data[i];
- 	}
-+
-+	if (wdev->wext.prev_bssid_valid)
-+		prev_bssid = wdev->wext.prev_bssid;
-+
- 	err = __cfg80211_connect(rdev, wdev->netdev,
--				 &wdev->wext.connect, ck);
-+				 &wdev->wext.connect, ck, prev_bssid);
- 	if (err)
- 		kfree(ck);
- 
-@@ -180,6 +185,7 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 			goto out;
- 	}
- 
-+	wdev->wext.prev_bssid_valid = false;
- 	wdev->wext.connect.ssid = wdev->wext.ssid;
- 	memcpy(wdev->wext.ssid, ssid, len);
- 	wdev->wext.connect.ssid_len = len;
---- wireless-testing.orig/include/net/cfg80211.h	2009-08-06 17:30:45.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2009-08-07 00:41:51.000000000 +0200
-@@ -1335,10 +1335,10 @@ struct wireless_dev {
- 		struct cfg80211_cached_keys *keys;
- 		u8 *ie;
- 		size_t ie_len;
--		u8 bssid[ETH_ALEN];
-+		u8 bssid[ETH_ALEN], prev_bssid[ETH_ALEN];
- 		u8 ssid[IEEE80211_MAX_SSID_LEN];
- 		s8 default_key, default_mgmt_key;
--		bool ps;
-+		bool ps, prev_bssid_valid;
- 		int ps_timeout;
- 	} wext;
- #endif
---- wireless-testing.orig/net/wireless/mlme.c	2009-08-07 00:41:51.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2009-08-07 00:41:51.000000000 +0200
-@@ -67,6 +67,16 @@ void cfg80211_send_rx_assoc(struct net_d
- 
- 	status_code = le16_to_cpu(mgmt->u.assoc_resp.status_code);
- 
-+	/*
-+	 * This is a bit of a hack, we don't notify userspace of
-+	 * a (re-)association reply if we tried to send a reassoc
-+	 * and got a reject -- we only try again with an assoc
-+	 * frame instead of reassoc.
-+	 */
-+	if (status_code != WLAN_STATUS_SUCCESS && wdev->conn &&
-+	    cfg80211_sme_failed_reassoc(wdev))
-+		goto out;
-+
- 	nl80211_send_rx_assoc(rdev, dev, buf, len, GFP_KERNEL);
- 
- 	if (status_code == WLAN_STATUS_SUCCESS) {
-@@ -97,6 +107,7 @@ void cfg80211_send_rx_assoc(struct net_d
- 		cfg80211_put_bss(&bss->pub);
- 	}
- 
-+ out:
- 	wdev_unlock(wdev);
- }
- EXPORT_SYMBOL(cfg80211_send_rx_assoc);
+Thanks
 
-
+Andrea
