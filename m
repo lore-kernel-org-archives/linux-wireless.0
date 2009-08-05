@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:47297 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214AbZHRBio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 21:38:44 -0400
-Date: Mon, 17 Aug 2009 18:35:02 -0700
-From: Greg KH <gregkh@suse.de>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Julia Lawall <julia@diku.dk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question about ieee80211_tx.c (fwd)
-Message-ID: <20090818013502.GD20566@suse.de>
-References: <Pine.LNX.4.64.0908171000500.20447@pc-004.diku.dk>
- <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
- <1250558021.9651.35.camel@debian>
+Received: from mail.redfish-solutions.com ([66.232.79.143]:49378 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752712AbZHEWgN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 18:36:13 -0400
+Message-ID: <4A7A0952.5020307@redfish-solutions.com>
+Date: Wed, 05 Aug 2009 15:36:02 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1250558021.9651.35.camel@debian>
+To: linux-wireless@vger.kernel.org
+Subject: Best (ath9k) miniPCI card for testing overall AP functionality
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2009 at 09:13:41AM +0800, Zhu Yi wrote:
-> On Mon, 2009-08-17 at 19:50 +0800, Gábor Stefanik wrote:
-> > On Mon, Aug 17, 2009 at 10:03 AM, Julia Lawall<julia@diku.dk> wrote:
-> > > The files ieee80211_tx.c in the directories
-> > > drivers/staging/rtl8192su/ieee80211 and
-> > drivers/staging/rtl8192e/ieee80211
-> > > both contain the following code in the function
-> > > ieee80211_query_protectionmode:
-> > >
-> > >       if (ieee->mode == IW_MODE_MASTER)
-> > >                        goto NO_PROTECTION;
-> > >
-> > > Elsewhere in these files when there is a comparison against an
-> > IW_MODE
-> > > value, the field that is compared is iw_mode.  Should that be the
-> > case
-> > > here as well?
-> > >
-> > > thanks,
-> > > julia
-> > 
-> > I don't know; rtl8192su & rtl8192e use a modified version of the
-> > libipw stack, rather than the mac80211 stack found behind non-staging
-> > drivers.
-> 
-> This is clearly a bug. The question is: who is maintaining this driver
-> and why it doesn't use/extend ieee80211/libipw?
+I'm trying to get Astlinux ready for the 0.7 release, but we've been
+hamstrung in testing because of issues with the ath5k drivers on our
+test platform...  so I've been considering getting different hardware
+for testing.  We've not been able to shake-down our transition from
+wireless-tools to iw, or from hostapd 0.6.8 to 0.6.9.
 
-I maintain it, and I am working to convert it to use the existing
-ieee80211 stack that is in the kernel.  Remember, these are drivers in
-the staging tree, they are usually "crap" :)
+I'm guessing that the ath9k tends to be further along in functionality,
+and more stable, than the ath5k?
 
-thanks,
+If that's the case, one of our partners that gives discounted pricing on
+F/OSS development hardware has the following NICs:
 
-greg k-h
+Ubiquiti SR71-A  = Atheros AR9160 with DFS SUPPORT
+Ubiquiti SR71-12 = Atheros AR9220 with DFS SUPPORT
+Ubiquiti SR71-15 = Atheros AR9220 with DFS SUPPORT
+
+
+
+I'm looking for b/g or n hardware, and the more power, the better.
+
+The 'A' doesn't seem to work with x86 based systems, as far as I can tell.
+
+The '12' is b/g/n, 27dBm and uses MMCX connectors, and is type III-A format.
+
+The '15' is a/n only, also 27dBm and uses MMCX connectors... also type
+III-A format.
+
+I'm leaning towards a '12', but they're not cheap.
+
+According to:
+
+http://linuxwireless.org/en/users/Drivers/ath9k
+
+and:
+
+http://linuxwireless.org/en/users/Drivers/ath9k/products/external
+
+none of the above cards are supported...  but that assumes that the Wiki
+is up to date.  Also the AR9220 isn't shown on the list of supported
+chipsets.
+
+Can anyone confirm or deny that it's unsupported?
+
+Thanks,
+
+-Philip
+
