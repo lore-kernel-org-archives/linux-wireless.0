@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:44896 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756654AbZHQQGe convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:50233 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751720AbZHEF3S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 12:06:34 -0400
-Received: by gxk1 with SMTP id 1so4139757gxk.17
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:06:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1250521206.15103.10.camel@johannes.local>
-References: <1250518613.15103.7.camel@johannes.local> <1250521206.15103.10.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 17 Aug 2009 09:06:14 -0700
-Message-ID: <43e72e890908170906w5b8c265bkf2c4ab2a92482718@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: allow configure_filter callback to sleep
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 5 Aug 2009 01:29:18 -0400
+Received: by fxm17 with SMTP id 17so3677332fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 22:29:18 -0700 (PDT)
+Subject: Re: [PATCH 001/002] [MAC80211] Retry probe request few times
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1249438947.3094.30.camel@localhost.localdomain>
+References: <1249056817.20593.1.camel@maxim-laptop>
+	 <1249056896.20593.3.camel@maxim-laptop>
+	 <1249438947.3094.30.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Wed, 05 Aug 2009 08:29:13 +0300
+Message-Id: <1249450153.6083.4.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2009 at 8:00 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Mon, 2009-08-17 at 16:16 +0200, Johannes Berg wrote:
->> Over time, a whole bunch of drivers have come up
->> with their own scheme to delay the configure_filter
->> operation to a workqueue. To be able to simplify
->> things, allow configure_filter to sleep, and add
->> a new prepare_multicast callback that drivers that
->> need the multicast address list implement. This new
->> callback must be atomic, but most drivers either
->> don't care or just calculate a hash which can be
->> done atomically and then uploaded to the hardware
->> non-atomically.
->
-> Oh I should probably mention that
->  1) I only tested with hwsim, but
->  2) I don't think it will break much since it doesn't really change most
->    drivers.
+On Tue, 2009-08-04 at 19:22 -0700, Marcel Holtmann wrote:
+> Hi Maxim,
+> 
+> > From: Maxim Levitsky <maximlevitsky@gmail.com>
+> > Date: Fri, 31 Jul 2009 18:54:12 +0300
+> > Subject: [PATCH] [MAC80211] Retry probe request few times
+> > 
+> > Retry 5 times  (chosen arbitary ), before assuming
+> > that station is out of range.
+> 
+> so today I got the disconnect :(
+> 
+> [54632.657912] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 1
+> [54633.154560] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 2
+> [54873.231210] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 1
+> [55113.467840] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 1
+> [55113.964510] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 2
+> [55114.464516] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 3
+> [55114.967868] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, try 4
+> [55115.464511] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms, disconnecting.
+> 
+> Should we increase the value to 8 or something? Or just accept that
+> sometimes we get a disconnect?
+> 
+I think a disconnect or two aren't a problem, they are always handled
+automatically, and can be caused by natural events.
 
-A pm-suspend->resume test might be nice as well.
+Even without these patches (I have WPA2, and disconnects were every 4
+five seconds), and still it was possible to use network.
 
-  Luis
+One disconnect in a day is really nothing to worry about (I have seen
+such here as well)
+
+You can increase try count, probably won't hurt much (each try is 0.5
+seconds, so even 10 tries gives total of 5 seconds, before disconnect on
+a really unaccessible AP, anyway)
+
+Best regards,
+	Maxim Levitsky
+
