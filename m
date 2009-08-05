@@ -1,69 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:58430 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbZHEUZR (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751339AbZHESYG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 16:25:17 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Joerg Albert <jal2@gmx.de>
-Subject: Re: [PATCH 1/2] ar9170: cleanup of bss_info_changed and beacon config
-Date: Wed, 5 Aug 2009 22:25:14 +0200
+	Wed, 5 Aug 2009 14:24:06 -0400
+Subject: Re: Status of 802.11s in wireless-testing?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4A78CE98.70903@gmx.de> <200908050404.47371.chunkeey@web.de> <4A79D7E5.1080604@gmx.de>
-In-Reply-To: <4A79D7E5.1080604@gmx.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908052225.16114.chunkeey@web.de>
+	xxiao <austinxxh-ath9k@yahoo.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <445f43ac0908051049wb32ea49r3e8894fd99f4ae60@mail.gmail.com>
+References: <2f1373ed0908042145pc83adc5qd968e3bf8d0ce3c7@mail.gmail.com>
+	 <175701.5780.qm@web55308.mail.re4.yahoo.com>
+	 <20090805165021.GA20338@tuxdriver.com>
+	 <1249491866.6902.23.camel@johannes.local>
+	 <445f43ac0908051049wb32ea49r3e8894fd99f4ae60@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-l7jh2Oj+7P9WPQnAjxHo"
+Date: Wed, 05 Aug 2009 20:23:56 +0200
+Message-Id: <1249496636.6902.29.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 05 August 2009 21:05:09 Joerg Albert wrote:
-> On 08/05/2009 04:04 AM, Christian Lamparter wrote:
-> > the beacon timer isn't exclusively used to notify the driver when its 
-> > time for a new beacon... The STA mode uses the same _timer_
-> > in reverse to wait for the next beacon form the assoc. AP.
-> >
-> > so, to be on the safe side: why not preserve the old behavior for the
-> > STA mode as well and simply tell the hardware about dtim & beacon interval?
-> 
-> ar9170_set_beacon_timers() uses the beacon interval only if for AP mode,
-Although pretbtt is closely related to the beacon interval.
-It has a slightly different purpose: It fires _before_ the beacon is sent.
-So the host is able to do some _last msec_ changes to the beacon.
 
-> dtim is left in STA mode.
-both dtim_period and beacon_int are ORed
+--=-l7jh2Oj+7P9WPQnAjxHo
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-|
-| if (ar->vif) {
-|	v |= ar->vif->bss_conf.beacon_int;
-|	switch() [...]
-|	v |= ar->vif->bss_conf.dtim_period << 16;
-| }
-|
+Hi Javier,
 
-into AR9170_MAC_REG_BCN_PERIOD.
+> I agree that there is a bug in that would cause a synchronize_rcu() in
+> an atomic section when the mpath table grows beyond a certain size.
+> The bug was there since the first submission of the mesh code, yes.
+>=20
+> However, the "bunch of bugs that appear to have been in the code
+> forever" are, I believe, regressions.  In particular we've identified:
+>  - Airtime Link Metric broken (fix in progress)
+>  - Forwarding path broken (fixed here:
+> http://marc.info/?l=3Dlinux-wireless&m=3D124698982910794&w=3D2)
+>  - mpath pending queue broken (fixed here:
+> http://marc.info/?l=3Dlinux-wireless&m=3D124717648406661&w=3D2)
+>  - PREQ notification broken (fixed here:
+> http://marc.info/?l=3Dlinux-wireless&m=3D124752948320455&w=3D2)
+>=20
+> We've been busy with those but the synchronize_rcu fix is next in our lis=
+t.
 
-It would be a BUG if this setting is omitted in STA mode,
-since dtim beacons are essential.
-> > The only remaining question is where to disabled the timer for STA.
-> > (which is in some way relevant to: [PATCH 2/2] because previously,
-> >  these timers were always disabled by remove_interface.)
-> > 
-> > I think the best place is in ar9170_op_bss_info_changed:
-> >        if (changed & BSS_CHANGED_ASSOC) {
-> > 
-> > just when bss_conf->assoc gets "0".
-> 
-> Yes. IMHO also enable on bss_conf->assoc == 1.
-yes, but not necessary for bss_conf->assoc == 1,
-ieee80211_set_associated sets BSS_CHANGED_BEACON_INT.
+I was really only referring to the issue with synchronize_rcu(), and the
+two related things where there's GFP_KERNEL that should be GFP_ATOMIC,
+although that might have been fixed? It just felt like multiple
+issues/places to me that could run into this.
 
-ar9170_set_beacon_timers is executed twice unless
-you throw more code at it than just the assoc check & call.
-But anyway, that's fine by me.
+> I also agree with your assessment of the severity of the bug.
+> Hopefully we'll get to fix it really soon so we can re-enable mesh
+> again.
 
-Thanks,
-	Chr
+Yes, that would be great, thanks. I've been meaning to look into this
+(if only to understand the mesh code better), but I have little time and
+a lot of other things to fix that are still regressions (currently
+looking at assoc vs. reassoc for instance).
+
+johannes
+
+--=-l7jh2Oj+7P9WPQnAjxHo
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKec45AAoJEODzc/N7+QmaOwgP/08oiFa3WcM+Me73SRAG8VYc
+vZudJILAWONxgYx0oE67qEg9dvYF4DKjnsUkIzm3HCYiW/TgAhAazRKt3lKs2wIX
+vw8rUB8M/jXaIq7rNQ3NkPuAHB9jmkRr6dNM1emvImkiAifeZP/iizwyJHr3vITZ
+niWp/NLNdvgU2U3EUDbIPvXeBM4F1Wds5ydrvf48XsCH/Q0h5tPUOqTLntrrqlvA
+dk+gU2aQjW07xFUZGEXDnwqt8ygt7pkpPt+wKOgfe0Z7lb//D4C64FcDrshN+DHu
+YUneVQLEot4XAHa81XF/7ctq32Jxg5tPFPx+FsE30Kv7AhyueQb2SZWiAmwFaAB2
+V/yvCO33spCEkvyEVy+WflTpXwQDl4daLnxfYDV2j/OS0a81SCWefMLRVhr/JCa5
+LCMv3WzdRvslXQqDwxH4QFkfLwVp9JXz1BBXi7TcbBF7wEiFkpHGjMpdWvSkHzTm
+WzRCnd2am/nnojgibeJbQTg3MdI9tIWIFAq7Uid+yQvwotwlGKoAVuq6r+FdLOFp
+uXb0VPkGCgWIsaCeYcAjvvP9tsNgDsrjEnaHWbEMUs+kdrQM/UvIGSJgOJef34b9
++GgnN/n9MY/Bf6DaY6iU5NY165jtV4gesdpsRDciD008LqDjTdUcrIIpA6KZB5aR
+Cez9qZ8B1cRI5mu40y55
+=FvkK
+-----END PGP SIGNATURE-----
+
+--=-l7jh2Oj+7P9WPQnAjxHo--
+
