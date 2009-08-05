@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:44354 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbZHSSny convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:44592 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934378AbZHENjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:43:54 -0400
-Received: by yxe5 with SMTP id 5so5655342yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 11:43:56 -0700 (PDT)
+	Wed, 5 Aug 2009 09:39:04 -0400
+Received: by vws2 with SMTP id 2so72666vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 06:39:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <8f3763990908191119l37c7dff3y8884b1228059cb22@mail.gmail.com>
-References: <8f3763990908191119l37c7dff3y8884b1228059cb22@mail.gmail.com>
-Date: Wed, 19 Aug 2009 14:43:55 -0400
-Message-ID: <b6c5339f0908191143y6940d664td6cb39b2021e125b@mail.gmail.com>
-Subject: Re: bug? sme.c:610 __cfg80211_disconnected
+In-Reply-To: <87hbwoniog.fsf@litku.valot.fi>
+References: <20090804033908.GA1903@hash.localnet>
+	 <87hbwoniog.fsf@litku.valot.fi>
+Date: Wed, 5 Aug 2009 09:39:04 -0400
+Message-ID: <b6c5339f0908050639p6da79e1cq7c7688c283d793a3@mail.gmail.com>
+Subject: Re: [PATCH] wl12xx: make irq handling interface specific
 From: Bob Copeland <me@bobcopeland.com>
-To: ASIC Felix <ic.felix@gmail.com>
+To: Kalle Valo <kalle.valo@iki.fi>
 Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 2:19 PM, ASIC Felix<ic.felix@gmail.com> wrote:
-> Hi,
->
-> update:
->   occurs during rekeying/reauth on wpa2 office network
->   still present in master-2009-08-19
->
-> Aug 19 11:04:02 darkslate klogd: WARNING: at net/wireless/sme.c:613
-> __cfg80211_disconnected+0x1bc/0x210 [cfg80211]()
+On Tue, Aug 4, 2009 at 3:26 AM, Kalle Valo<kalle.valo@iki.fi> wrote:
+> Thanks, this looks good and I'll take it.
 
-Please post the entire warning's stack trace inline (i.e.
-not as an attachment).
-
-I looked at your previous email in which you had attached
-the log, and it looked like ath9k was the wireless driver,
-though it could be a bug in {mac,cfg}80211 as well.  It's
-impossible to tell just from this one line though.
+Actually let me send a v2 in a just a minute or two.  There's a
+prototype mismatch compiler warning to fix.
 
 -- 
 Bob Copeland %% www.bobcopeland.com
