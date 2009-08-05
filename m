@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53132 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757759AbZHQR1c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:32 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	=?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v5 10/33] wireless: group Broadcom drivers on kconfig
-Date: Mon, 17 Aug 2009 13:27:09 -0400
-Message-Id: <1250530052-14783-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:58436 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932530AbZHEANT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 4 Aug 2009 20:13:19 -0400
+Message-ID: <4A78CE98.70903@gmx.de>
+Date: Wed, 05 Aug 2009 02:13:12 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [PATCH 1/2] ar9170: cleanup of bss_info_changed and beacon config
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves Broadcom wireless drivers into their own menu.
-There are only 2 Broadcom specific drivers so we group
-them into a menu which can expand. Although rndis_wlan
-also supports Broadcom devices, RNDIS is a spec and other
-vendors could technically implement solutions with it
-as well so we keep that separate as users most likely
-won't look for those devices under a Broadcom tag.
+Enable/Disable the beacon in ar910_set_beacon_timers() independently
+of ar->vif, but controlled by BSS_CHANGED_BEACON_ENABLED and
+bss_conf->enable_beacon from mac80211.
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Gábor Stefanik <netrolller.3d@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/Kconfig |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ar9170/ar9170.h |    1 +
+ drivers/net/wireless/ath/ar9170/mac.c    |    4 +++-
+ drivers/net/wireless/ath/ar9170/main.c   |   15 ++++++++-------
+ 3 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index c2e88dc..e910799 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -561,8 +561,21 @@ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
- endif # INTEL_80211
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index e6c3ee3..0db304a 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -177,6 +177,7 @@ struct ar9170 {
+ 	/* beaconing */
+ 	struct sk_buff *beacon;
+ 	struct work_struct beacon_work;
++	bool enable_beacon;
  
- source "drivers/net/wireless/hostap/Kconfig"
+ 	/* cryptographic engine */
+ 	u64 usedkeys;
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index d9f1f46..9f2801c 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -388,7 +388,9 @@ int ar9170_set_beacon_timers(struct ar9170 *ar)
+ 	u32 v = 0;
+ 	u32 pretbtt = 0;
+ 
+-	if (ar->vif) {
++	if (ar->enable_beacon) {
++		if (WARN_ON(!ar->vif))
++			return -ENODEV;
+ 		v |= ar->vif->bss_conf.beacon_int;
+ 
+ 		switch (ar->vif->type) {
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 099ed3c..d51b6ad 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2177,11 +2177,18 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 	}
+ 
+-	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
++	if (changed & BSS_CHANGED_BEACON_ENABLED) {
++		ar->enable_beacon = bss_conf->enable_beacon;
++	}
 +
-+config BROADCOM_80211
-+	bool "Broadcom"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Broadcom wireless drivers. This
-+	  includes the b43 driver and the b43legacy driver.
-+
-+if BROADCOM_80211
-+
- source "drivers/net/wireless/b43/Kconfig"
- source "drivers/net/wireless/b43legacy/Kconfig"
-+
-+endif # BROADCOM_80211
-+
- source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- source "drivers/net/wireless/wl12xx/Kconfig"
++	if (changed & BSS_CHANGED_BEACON) {
+ 		err = ar9170_update_beacon(ar);
+ 		if (err)
+ 			goto out;
++	}
+ 
++	if (changed & (BSS_CHANGED_BEACON_ENABLED | BSS_CHANGED_BEACON |
++		       BSS_CHANGED_BEACON_INT)) {
+ 		err = ar9170_set_beacon_timers(ar);
+ 		if (err)
+ 			goto out;
+@@ -2194,12 +2201,6 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ #endif /* CONFIG_AR9170_LEDS */
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BEACON_INT) {
+-		err = ar9170_set_beacon_timers(ar);
+-		if (err)
+-			goto out;
+-	}
+-
+ 	if (changed & BSS_CHANGED_HT) {
+ 		/* TODO */
+ 		err = 0;
 -- 
-1.6.2.5
+1.6.0.4
 
