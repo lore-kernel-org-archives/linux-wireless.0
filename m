@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:46118 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754288AbZHUDyH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39467 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933484AbZHEFvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 23:54:07 -0400
-Received: by ewy3 with SMTP id 3so373487ewy.18
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 20:54:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A8DF356.8000501@lwfinger.net>
-References: <200908202116.17847.herton@mandriva.com.br>
-	 <4A8DF356.8000501@lwfinger.net>
-Date: Fri, 21 Aug 2009 04:54:06 +0100
-Message-ID: <3ace41890908202054j62fda37ei64262890c6959f95@mail.gmail.com>
-Subject: Re: [PATCH] rtl8187: always set MSR_LINK_ENEDCA flag with RTL8187B
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 5 Aug 2009 01:51:49 -0400
+Subject: Re: [PATCH 001/002] [MAC80211] Retry probe request few times
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <69e28c910908042250n1e0bf9c6v20b6301db9e3286b@mail.gmail.com>
+References: <1249056817.20593.1.camel@maxim-laptop>
+	 <1249056896.20593.3.camel@maxim-laptop>
+	 <1249438947.3094.30.camel@localhost.localdomain>
+	 <1249450153.6083.4.camel@maxim-laptop>
+	 <1249450416.4168.22.camel@johannes.local>
+	 <69e28c910908042250n1e0bf9c6v20b6301db9e3286b@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Jcc2APB9sHy9lLD42xnO"
+Date: Wed, 05 Aug 2009 07:51:46 +0200
+Message-Id: <1249451506.6902.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 21, 2009 at 2:07 AM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
-> Herton Ronaldo Krzesinski wrote:
->> RTL8187B always needs MSR_LINK_ENEDCA flag to be set even when it is in
->> no link mode, otherwise it'll not be able to associate when this flag is
->> not set after the change "mac80211: fix managed mode BSSID handling"
->> (commit 9cef8737).
->>
->> By accident, setting BSSID of AP before association makes 8187B to
->> successfuly associate even when ENEDCA flag isn't set, which was the
->> case before the mac80211 change. But now the BSSID of AP we are trying
->> to associate is only available after association is successful, and
->> any attempt to associate without the needed flag doesn't work.
->>
->> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
->> ---
->
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+--=-Jcc2APB9sHy9lLD42xnO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->
-> I had just finished bisecting the problem reported in Bug #13960 when
-> this patch from Herton appeared in my mailbox, and it fixed the problem.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+On Wed, 2009-08-05 at 07:50 +0200, G=C3=A1bor Stefanik wrote:
 
-This seems to be related to a problem I reported a while back - see
-the "compat-wireless won't associate on 2nd load" thread, I wrote on
-May 31. Supposedly I had that problem about a week before that, the
-date on the patch from Johannes is May 14, but I just went back to
-look at the mailing list archive and it looks like there were some
-problem with applying and John did some fix on 20th. So it seems that
-it might be the source of my not being able to load compat-wireless a
-2nd time; and the description of the problem sounds like it too.
+> My =E2=82=AC0.02 (=E2=82=AC because I'm European :) ): Shouldn't probe re=
+quests be NO_ACK?
 
-Sorry I haven't been doing much with compat-wireless lately, so I have
-no firm data whether I have the same problem or not since May - that
-problem only happens if I switch from one compat-wireless to another
-compat-wireless, without rebooting - while I have tried
-compat-wireless in the last two months, I don't think I have followed
-compat-wireless as closely as I should to have two successive
-compat-wireless. I probably should go and have a try now.
+Of course not. What makes you think so?
 
-Thanks for hunting this down!
+johannes
 
-Hin-Tak
+
+--=-Jcc2APB9sHy9lLD42xnO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKeR3uAAoJEODzc/N7+QmaJOYQALCg+fDFq6/K2bQFQu1ZHRd9
+KtpHzHZGkwdD0hyKUnSTkFni3PqfgE3mHXhOc5m/lzw+ZgOscRWpGMFjkoc9MQ32
+xM/GyaOHDXjuCkCu/YjGyoFqAfRgVtwRs0pHUnecOEkrSxZAs5LP0XEHwT03uE7T
+KhxEOJ0m1X+qq2hXosbNZ4/YSdWTPeWtothsQJxhn0v7n6mrXgFq0Jlq6BqTFXa+
+d3+mzJshuEklBIrM9kgexMdAEgbcMyz5WUg9xRk/6D/8cI4KLWdXFTwFsJNq9QpX
+2+jPwKotyaOIx49vpW8FjdAYGqkPRuXg+xylFyRDAz9CyM81Ew6pIsebPcN6EWPX
+syeHMcx3AZ6kj43xmhI0eUnsRZhnmv8jcIJrlAYbXDKDo6wFGQxtkcVyn/UUSNbg
+Lupd1g/slfJy3+tRJnwo/5dnMomeVUcdNS7RHX4TDxAoM7rmvwEU/DfzDNCuQccn
+EZiKWvkadGq6kMJkcItDoo8hY7y7WZukoZcocDM9LJ7uO0I/y2LdFrqSOp3Zqf8/
+M/Ie4a4siEJb/maJnNBo07vYirblRHNI/TfyGPdVghU5lEnQ6wz9PX6vx4XfLPXa
+EVLJuJotAhggHQJw524s0ZFaTWRqxlW1LztMCAV7p+XmgVrhQ5ebuXeYQERdf0O0
+1IRzQf1u55DmKuatM0aM
+=I83t
+-----END PGP SIGNATURE-----
+
+--=-Jcc2APB9sHy9lLD42xnO--
+
