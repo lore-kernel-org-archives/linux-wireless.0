@@ -1,71 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:57081 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbZHDRM7 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:50431 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753756AbZHFRjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 13:12:59 -0400
-Received: by ewy10 with SMTP id 10so499807ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 10:12:59 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH 1/2] rt61pci: fix module reloading
-Date: Tue, 4 Aug 2009 19:12:55 +0200
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	users@rt2x00.serialmonkey.com
-References: <20090802183002.16766.4142.stgit@ct.roinet.com>
-In-Reply-To: <20090802183002.16766.4142.stgit@ct.roinet.com>
+	Thu, 6 Aug 2009 13:39:02 -0400
+Message-ID: <4A7B1529.5090002@redfish-solutions.com>
+Date: Thu, 06 Aug 2009 10:38:49 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908041912.56012.IvDoorn@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>,
+	Jon Loeliger <jdl@bigfootnetworks.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: CRDA and cross-compilation
+References: <4A7A8F7E.6020503@redfish-solutions.com> <1249569993.6446.2.camel@jdl-desktop> 	<1249576886.14919.16.camel@mj> <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
+In-Reply-To: <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 02 August 2009, Pavel Roskin wrote:
-> Unloading rt61pci can leave the device in such state that reloading
-> rt61pci would fail to reinitialize it.  Bogus data would be read from
-> the EEPROM and the RF version won't be recognized.
+Luis R. Rodriguez wrote:
+> On Thu, Aug 6, 2009 at 9:41 AM, Pavel Roskin<proski@gnu.org> wrote:
+>> On Thu, 2009-08-06 at 09:46 -0500, Jon Loeliger wrote:
+>>> On Thu, 2009-08-06 at 01:08 -0700, Philip A. Prindeville wrote:
+>>>> Who currently owns CRDA?
+>>>>
+>>>> I started to stare at cross-compiling issues, but realized that we need
+>>>> two versions of reglib.o and print-regdom.o...
+>>>>
+>>>> One to link with regdumpdb (compiled with HOSTCC) and one to link with
+>>>> everything else (compiled with TARGET_CC)...
+>>>>
+>>>> No easy way to do this without a lot of changes.
+>>> I posted a 5-part patch series to address this issue.
+>>> To the best of my knowledge, it has not been applied yet.
+>>>
+>>> You can find it here:
+>>>
+>>> http://article.gmane.org/gmane.linux.kernel.wireless.general/35350
+>> I objected against using the misleading use of the "TARGET" work in some
+>> variables, but there was no reaction.  Failure to react to objections is
+>> the likely reason it wasn't applied.
 > 
-> It appears that unloading rt61pci with power saving enabled would have
-> such effect.  To initialize the device properly, SOFT_RESET_CSR should
-> be set to the same value as rt61pci_config_ps() uses to wake up the
-> device.
+> Indeed.
 > 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-
-I'm not really happy with the patch, but if it works, it works.
-I got no better alternative to fix this correctly so we might as well merge
-this into wireless-testing now. :)
-
-Thanks.
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt61pci.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
+>> I also think that you add too much complexity to the Makefile.
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-> index fb95b8c..e20dd74 100644
-> --- a/drivers/net/wireless/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt61pci.c
-> @@ -2601,6 +2601,11 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
->  	int retval;
->  
->  	/*
-> +	 * Disable power saving.
-> +	 */
-> +	rt2x00pci_register_write(rt2x00dev, SOFT_RESET_CSR, 0x00000007);
-> +
-> +	/*
->  	 * Allocate eeprom data.
->  	 */
->  	retval = rt61pci_validate_eeprom(rt2x00dev);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Agreed.
 > 
+>> Also, the use of .config is not common.  Most valuables can be specified
+>> on the command line.  That would override the definitions in Makefile,
+>> and that's how it's done.
+> 
+> Yeah for something so simple as CRDA it seems overkill to have a .config.
+> 
+>> For instance, you can have this in Makefile:
+>>
+>> HOSTCC = gcc
+>> CC = $(HOSTCC)
+>>
+>> Running "make CC=/opt/mips/bin/gcc" would override CC but not HOSTCC.
+> 
+> ACK, is it possible to make it simpler?
+> 
+>   Luis
 
+You could also have:
+
+-include .config
+
+HOSTCC ?= gcc
+...
+
+and that will only set (default) the unset variables...
+
+-Philip
 
