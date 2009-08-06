@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49943 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046AbZHCX6L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 19:58:11 -0400
-Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
- conection monitor
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1249338797.13895.0.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-	 <1249338797.13895.0.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Mon, 03 Aug 2009 16:58:05 -0700
-Message-Id: <1249343885.3094.13.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:37022 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752495AbZHFTeI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:34:08 -0400
+Message-ID: <20090806223406.27393zuzztewms74@hayate.sektori.org>
+Date: Thu, 06 Aug 2009 22:34:06 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	"Jouni Malinen" <Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH] rndis_wlan: wait association to complete
+References: <20090806181746.31308.15687.stgit@fate.lan>
+	<1249584385.28278.124.camel@johannes.local>
+In-Reply-To: <1249584385.28278.124.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Quoting "Johannes Berg" <johannes@sipsolutions.net>:
 
-> > Hi, here is the updated version of these two patches that fix the
-> > $SUBJECT issue.
-> > 
-> > I attach these (in case mailer mangles them), and reply with patches.
-> > 
-> > Tested both with low quality signal, and beacon loss.
-> > Lack of TX is found, every 30 seconds now, and quite reliable.
-> > Lack of beacons, triggers probe like it did every 2 seconds.
-> > 
-> > 
-> > 
-> > Best regards,
-> > Maxim Levitsky
-> 
-> Just a question, when to see these in wireless-testing?
+> On Thu, 2009-08-06 at 21:17 +0300, Jussi Kivilinna wrote:
+>> Fix WPA authentication problems by waiting to association to complete.
+>> Otherwise userspace (wpa_supplicant) receives authentication packets before
+>> association events from driver.
+>
+>> +	/* If we return now, userspace would get association events too late
+>> +	 * (after receiving first packets from access point). This causes
+>> +	 * WPA authentication to fail.
+>
+> This is a bit weird, shouldn't you just send the event later then?
+>
 
-patches have been acked and tested by various people. Should be pretty
-much safe to apply and they are helping many of us to get back a stable
-WiFi connection.
+rndis_wlan bases on rndis_host/usbnet. Problem is that rndis_host uses  
+polling for rndis_command() results to avoid more complex interrupt  
+based solution. Because rndis_host and therefore rndis_wlan doesn't  
+handle interrupts on command channel, rndis_wlan knows about completed  
+association too late. 'Too late' means here that device starts  
+receiving packets from AP, which end up ignored because userspace  
+thinks device isn't assosiated yet (I think).
 
-Regards
+So this patch adds waiting in set_essid() and active polling for  
+association completion in worker.
 
-Marcel
-
+Real fix would probably be to hold on data channel until association  
+is complete, but that would mean touching usbnet/rndis_host little bit  
+too much than I'd like to.
 
