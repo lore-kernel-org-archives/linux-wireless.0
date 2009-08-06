@@ -1,76 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1998 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbZHVNgq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54216 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754389AbZHFSqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 09:36:46 -0400
-Date: Sat, 22 Aug 2009 09:35:57 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Andreas Mohr <andi@lisas.de>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	Johannes Stezenbach <js@sig21.net>
-Subject: Re: ath5k: ath5k_pci_probe(): weirdo code
-Message-ID: <20090822133557.GB6762@hash.localnet>
-References: <20090821094732.GA970@rhlx01.hs-esslingen.de>
+	Thu, 6 Aug 2009 14:46:05 -0400
+Date: Thu, 6 Aug 2009 14:32:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless@vger.kernel.org
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292
+	ieee80211_sta_work+0x97/0xd2d [mac80211]()
+Message-ID: <20090806183247.GI26809@tuxdriver.com>
+References: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090821094732.GA970@rhlx01.hs-esslingen.de>
+In-Reply-To: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 21, 2009 at 11:47:32AM +0200, Andreas Mohr wrote:
-> Hello all,
+What driver are you using?
+
+On Thu, Aug 06, 2009 at 08:30:23PM +0200, Fabio Comolli wrote:
+> Just got this after a resume from suspend-to-ram. Wifi needed to be
+> disabled and reenabled (with hardware Fn+F2 key - this is an eeePC900)
+> to function  again.
 > 
-> that 2GHz/5GHz radio information code in ath5k_pci_probe() in 2.6.31-rc6
-> source seems VERY weird.
-
-The code looks horribly confusing, it should be moved into attach.c
-and reworked a lot probably.  It looks correct though - it is fixing up
-settings for (really old) multiple radio chip devices, where we can't
-tell by the radio revision alone if it is multiband or not.
-
-ah_radio_{2,5}ghz_revision is what is in the appropriate registers in
-the card, but e.g. the revision in the 5ghz radio register may actually
-refer to the 2ghz radio on some 802.11B-only devices, depending on what
-is in the eeprom.
-
-> Then also at this place, why is there no
-> else
-> {
->   WARN_ONCE(...); // Huh. Unknown/unhandled/impossible revision combo
-
-Should be caught already in attach.c, but yeah, another warning wouldn't
-hurt.
-
->         if (!sc->ah->ah_single_chip) {
->                 /* Single chip radio (!RF5111) */
 > 
-> part seemed weird logic, too, but I then thought that this code section
-> is perhaps _intended_ to be skipped in this case, to simply not log anything
-> for single-chip radios
-
-The comment belongs to the subsequent if() test, where it should probably
-live to be clearer.  All recent devices (including yours) are now single
-chip so this code wouldn't run on your device.
-
-> BTW, I'm currently on 2.6.31-rc6 on Aspire One, with even more ath5k problems
-> than before, connection is dying every couple minutes, extended to every
-> couple dozen minutes if I force rate 1M
-
-Can you supply /debug/ieee80211/phy0/stations/<...>/rc_stats?
-
-> (but it looks like "[Bug #13948] ath5k broken after suspend-to-ram"
-> http://lkml.org/lkml/2009/8/19/468 is hopefully covering these issues already).
-
-Can you verify that the patch mentioned in the bug report works?
-We need to queue that for 2.6.31.
-
-> And I do have CONFIG..._PS (powersave) enabled by default...
-> And I do make liberal use of suspend-to-ram, as should everyone.
-
-As do I.  I don't have a 2425 though, and there are quite some variations
-between each HW revision.
+> [  919.858759] ------------[ cut here ]------------
+> [  919.858787] WARNING: at net/mac80211/mlme.c:2292
+> ieee80211_sta_work+0x97/0xd2d [mac80211]()
+> [  919.858791] Hardware name: 900
+> [  919.858793] Modules linked in: uvcvideo videodev v4l1_compat arc4
+> ecb ath5k mac80211 ath cfg80211
+> [  919.860022] Pid: 793, comm: phy0 Tainted: G   M       2.6.31-rc5 #11
+> [  919.860025] Call Trace:
+> [  919.860035]  [<c10209cf>] warn_slowpath_common+0x65/0x7c
+> [  919.860058]  [<f83d621e>] ? ieee80211_sta_work+0x97/0xd2d [mac80211]
+> [  919.860064]  [<c10209f3>] warn_slowpath_null+0xd/0x10
+> [  919.860086]  [<f83d621e>] ieee80211_sta_work+0x97/0xd2d [mac80211]
+> [  919.860092]  [<c101bb2b>] ? __wake_up+0x2f/0x56
+> [  919.860097]  [<c101bb39>] ? __wake_up+0x3d/0x56
+> [  919.860103]  [<c102eb04>] ? insert_work+0x96/0x9f
+> [  919.860108]  [<c102ed63>] ? __queue_work+0x32/0x49
+> [  919.860113]  [<c102eda1>] ? queue_work_on+0x27/0x2f
+> [  919.860119]  [<c102f52f>] ? queue_work+0x2d/0x45
+> [  919.860140]  [<f83d3324>] ?
+> ieee80211_ibss_notify_scan_completed+0x63/0x68 [mac80211]
+> [  919.860162]  [<f83d1059>] ? ieee80211_scan_completed+0x320/0x328 [mac80211]
+> [  919.860184]  [<f83d1160>] ? ieee80211_scan_work+0xb5/0x171 [mac80211]
+> [  919.860190]  [<c102f075>] worker_thread+0x15d/0x204
+> [  919.860211]  [<f83d6187>] ? ieee80211_sta_work+0x0/0xd2d [mac80211]
+> [  919.860218]  [<c1032217>] ? autoremove_wake_function+0x0/0x2f
+> [  919.860223]  [<c102ef18>] ? worker_thread+0x0/0x204
+> [  919.860229]  [<c1031fab>] kthread+0x63/0x68
+> [  919.860234]  [<c1031f48>] ? kthread+0x0/0x68
+> [  919.860240]  [<c1002f93>] kernel_thread_helper+0x7/0x10
+> [  919.860244] ---[ end trace 7a3a8d08c5a7bedf ]---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
