@@ -1,77 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33200 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbZHYKiB (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:49237 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751935AbZHFIIc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 06:38:01 -0400
-Subject: Re: Linux Kernel Wireless stack presentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <eb3ff54b0908250329s3e1a4715u27c82512fff520d5@mail.gmail.com>
-References: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
-	 <1250760130.4100.23.camel@johannes.local>
-	 <eb3ff54b0908250329s3e1a4715u27c82512fff520d5@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UxWEHWgnNcASJ+iAV3VE"
-Date: Tue, 25 Aug 2009 12:37:23 +0200
-Message-Id: <1251196643.10667.4.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 6 Aug 2009 04:08:32 -0400
+Received: from [192.168.10.7] (tosh.redfish-solutions.com [63.224.43.239])
+	(authenticated bits=0)
+	by mail.redfish-solutions.com (8.14.2/8.14.2) with ESMTP id n7688UwT021240
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2009 02:08:32 -0600
+Message-ID: <4A7A8F7E.6020503@redfish-solutions.com>
+Date: Thu, 06 Aug 2009 01:08:30 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: CRDA and cross-compilation
+Content-Type: multipart/mixed;
+ boundary="------------040007070709080100010706"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------040007070709080100010706
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
---=-UxWEHWgnNcASJ+iAV3VE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Who currently owns CRDA?
 
-Hi,
+I started to stare at cross-compiling issues, but realized that we need
+two versions of reglib.o and print-regdom.o...
 
-> > iwconfig wlan0 power timeout 0 =3D=3D PS-poll,
->=20
-> I am not sure I fully understand what you mean here by
-> "iwconfig wlan0 power timeout 0 =3D=3D PS-poll". As far as I understand,
-> "iwconfig wlan0 power timeout 0" invokes ieee80211_change_ps(); this meth=
-od
-> notifies the driver about disabling PS (by
-> ieee80211_hw_config(...IEEE80211_CONF_CHANGE_PS))
-> and sets the flags to have ~IEEE80211_CONF_PS; It also cancells the
-> dynamic_ps_enable_work work_queue thread. But what PS-POLL has to do with=
- it ?
-> I am not sure I understand how PSPOLL is relevant here.
+One to link with regdumpdb (compiled with HOSTCC) and one to link with
+everything else (compiled with TARGET_CC)...
 
-No,
+No easy way to do this without a lot of changes.
 
-	iwconfig wlan0 power off
+Here's what I have so far.
 
-goes into the disable PS case.
 
-	iwconfig wlan0 power timeout 0
+--------------040007070709080100010706
+Content-Type: text/plain;
+ name="crda-cross-compile.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="crda-cross-compile.patch"
 
-sets the timeout to zero and power management on. And when the timeout
-is 0 we use ps-poll.
+--- crda-1.1.0/Makefile.orig	2009-04-17 14:49:45.000000000 -0700
++++ crda-1.1.0/Makefile	2009-08-06 00:53:47.000000000 -0700
+@@ -1,6 +1,6 @@
+ # Modify as you see fit, note this is built into crda,
+ # so if you change it here you will have to change crda.c
+-REG_BIN?=/usr/lib/crda/regulatory.bin
++REG_BIN?=$(DESTDIR)/usr/lib/crda/regulatory.bin
+ REG_GIT?=git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+ 
+ PREFIX ?= /usr/
+@@ -22,46 +22,74 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
+ # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
+ PUBKEY_DIR?=pubkeys
+ 
++MKDIR ?= mkdir -p
++INSTALL ?= install
++
+ CFLAGS += -Wall -g
+ 
+ all: $(REG_BIN) crda intersect verify
+ 
+-ifeq ($(USE_OPENSSL),1)
++ifeq ($(CROSS_COMPILE),)
++
++ ifeq ($(USE_OPENSSL),1)
+ CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
+ LDLIBS += `pkg-config --libs openssl`
+ 
+ reglib.o: keys-ssl.c
+ 
+-else
++ else
+ CFLAGS += -DUSE_GCRYPT
+ LDLIBS += -lgcrypt
+ 
+ reglib.o: keys-gcrypt.c
+ 
+-endif
+-MKDIR ?= mkdir -p
+-INSTALL ?= install
++ endif
+ 
+ NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+ NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+ 
+-ifeq ($(NL1FOUND),Y)
++ ifeq ($(NL1FOUND),Y)
+ NLLIBNAME = libnl-1
+-endif
++ endif
+ 
+-ifeq ($(NL2FOUND),Y)
++ ifeq ($(NL2FOUND),Y)
+ CFLAGS += -DCONFIG_LIBNL20
+ NLLIBS += -lnl-genl
+ NLLIBNAME = libnl-2.0
+-endif
++ endif
+ 
+-ifeq ($(NLLIBNAME),)
++ ifeq ($(NLLIBNAME),)
+ $(error Cannot find development files for any supported version of libnl)
+-endif
++ endif
+ 
+ NLLIBS += `pkg-config --libs $(NLLIBNAME)`
+ CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
+ 
++else
++
++ ifeq ($(USE_OPENSSL),1)
++CFLAGS += -DUSE_OPENSSL
++LDLIBS += -lssl
++
++reglib.o: keys-ssl.c
++
++ else
++CFLAGS += -DUSE_GCRYPT
++LDLIBS += -lgcrypt
++
++reglib.o: keys-gcrypt.c
++
++ endif
++
++ ifeq ($(USE_LIBNL20),1)
++CFLAGS += DCONFIG_LIBNL20
++NLLIBS = -lnl-genl -lnl-2.0
++ else
++NLLIBS = -lnl
++ endif
++
++endif
++
+ ifeq ($(V),1)
+ Q=
+ NQ=@true
+@@ -111,6 +139,10 @@ verify: $(REG_BIN) regdbdump
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
+ 
++install-reg:
++	git clone $(REG_GIT) wireless-regdb
++	$(INSTALL) -m 0444 -D wireless-regdb/regulatory.bin $(REG_BIN)
++
+ install: crda crda.8.gz regdbdump.8.gz
+ 	$(NQ) '  INSTALL  crda'
+ 	$(Q)$(MKDIR) $(DESTDIR)/$(SBINDIR)
 
-johannes
-
---=-UxWEHWgnNcASJ+iAV3VE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKk77YAAoJEODzc/N7+QmaFfYQAKw13H948NbqU44Q2kG89Q/+
-SiV6Nq+SzXCzOahPA1PjSAZmcHqHE7hOpzc/R5WjDJOe1jroEuKo20SgcJqcycxP
-uvMVbnuRfKavYf6BgGkUUKLgXnl/K5oebWbBmcxc6gfP7vcw942PJG3GUTR19jb5
-Dhk7IwfcwLWpfMRdIfZl29LGdv5K8RZSWKzwh3xQ52Dq+/vo8nKgTx2nT+7nuElt
-pEiugr6wMFzY9CGCKBA4py8jVgAy58SKPcrbzFpwuHf9jaouAs7b9iD1F6EZ+tn3
-7GHBbd/lUmcrmBum/WuQditDwJ5ZUpE2Lrq1RLyjuJHC6zRDYRVMBMCC/7KwcSWy
-Jdj/Dbej76SbG85/yiBC5nAsuNMeEATG7A6n7icv1qcEl1rCygiXSMH7z69v0vB/
-T3KM6HKGw5SQnFFC+s7Uhc/cNihxAmxCupWrwOAJKRXoZW8AVFHmlDh1pGH1K63m
-Bw/3ccH5w6V97RzEH1W6oa8RDYwqtJFPV92P1Fow524O+MBQQ94wYtWa4oxtzZvi
-QqU7vpGNMLKJ4jAmokQ5COMlz5tDReTs7tuV/BxQqrs4Q2Xod5/ZeE/rGAS76u7e
-EonlPAV8sC71mttiHUYVJHyPntmTFUDJjTFylBgcPoaRWJ0pO1OkD++jAdXNOW9T
-y8cHAmE6ciiqeTd6457l
-=+KoQ
------END PGP SIGNATURE-----
-
---=-UxWEHWgnNcASJ+iAV3VE--
-
+--------------040007070709080100010706--
