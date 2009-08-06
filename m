@@ -1,278 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41816 "EHLO vs166246.vserver.de"
+Received: from mga11.intel.com ([192.55.52.93]:34242 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753679AbZHBWfk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 18:35:40 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH RESEND] b43: implement baseband init for LP-PHY <= rev1
-Date: Mon, 3 Aug 2009 00:35:37 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-References: <4A7610AE.5000908@gmail.com>
-In-Reply-To: <4A7610AE.5000908@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908030035.37285.mb@bu3sch.de>
+	id S1751169AbZHFBqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 5 Aug 2009 21:46:46 -0400
+Subject: Re: [PATCH] nl80211: fix attrtype and value for
+ NL80211_ATTR_SUPPORTED_COMMANDS
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249486901.6902.6.camel@johannes.local>
+References: <1249464510-21539-1-git-send-email-yi.zhu@intel.com>
+	 <1249486901.6902.6.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 06 Aug 2009 09:46:46 +0800
+Message-Id: <1249523206.4069.146.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 03 August 2009 00:18:22 Gábor Stefanik wrote:
-> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
-> boardflags_hi values to defines.
-> Implement b43_phy_copy for easier copying between registers, as needed
-> by LP-PHY init.
+On Wed, 2009-08-05 at 23:41 +0800, Johannes Berg wrote: 
+> On Wed, 2009-08-05 at 17:28 +0800, Zhu Yi wrote:
+> > The patch fixes the misuse between attrtype and value for the
+> > CMD list nested in NL80211_ATTR_SUPPORTED_COMMANDS attribute.
 > 
-> Signed-off-by: Gábor Stefanik<netrolller.3d@gmail.com>
-> Cc: Michael Buesch<mb@bu3sch.de>
-> Cc: Larry Finger<larry.finger@lwfinger.net>
-> ---
+> No? It was this way intentionally.
 > 
-> Hopefully this mail will survive the trip through the arcane world of Gmail's servers...
+> > --- a/net/wireless/nl80211.c
+> > +++ b/net/wireless/nl80211.c
+> > @@ -520,7 +520,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+> >  	 do {							\
+> >  		if (dev->ops->op) {				\
+> >  			i++;					\
+> > -			NLA_PUT_U32(msg, i, NL80211_CMD_ ## n);	\
+> > +			NLA_PUT_U32(msg, NL80211_CMD_ ## n, i);	\
 > 
-> If this very-very-very-long line (including	a	few	tab	characters) doesn't get mangled, chances are that the mail didn't get mangled. More text to make this line even longer.
-> 
->   b43.h        |   11 ++++++
->   phy_common.c |    7 ++++
->   phy_lp.c     |   95 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->   phy_lp.h     |    8 +++-
->   phy_n.c      |    3 +
->   5 files changed, 120 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-> index 4e8ad84..41ca727 100644
-> --- a/drivers/net/wireless/b43/b43.h
-> +++ b/drivers/net/wireless/b43/b43.h
-> @@ -142,6 +142,17 @@
->   #define B43_BFL_BTCMOD			0x4000	/* BFL_BTCOEXIST is given in alternate GPIOs */
->   #define B43_BFL_ALTIQ			0x8000	/* alternate I/Q settings */
-> 
-> +/* SPROM boardflags_hi values */
-> +#define B43_BFH_NOPA			0x0001	/* has no PA */
-> +#define B43_BFH_RSSIINV			0x0002	/* RSSI uses positive slope (not TSSI) */
-> +#define B43_BFH_PAREF			0x0004	/* uses the PARef LDO */
-> +#define B43_BFH_3TSWITCH		0x0008	/* uses a triple throw switch shared
-> +						 * with bluetooth */
-> +#define B43_BFH_PHASESHIFT		0x0010	/* can support phase shifter */
-> +#define B43_BFH_BUCKBOOST		0x0020	/* has buck/booster */
-> +#define B43_BFH_FEM_BT			0x0040	/* has FEM and switch to share antenna
-> +						 * with bluetooth */
-> +
->   /* GPIO register offset, in both ChipCommon and PCI core. */
->   #define B43_GPIO_CONTROL		0x6c
-> 
-> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-> index e176b6e..999e0bd 100644
-> --- a/drivers/net/wireless/b43/phy_common.c
-> +++ b/drivers/net/wireless/b43/phy_common.c
-> @@ -240,6 +240,13 @@ void b43_phy_write(struct b43_wldev *dev, u16 reg, u16 value)
->   	dev->phy.ops->phy_write(dev, reg, value);
->   }
-> 
-> +void b43_phy_copy(struct b43_wldev *dev, u16 srcreg, u16 destreg)
-> +{
-> +	assert_mac_suspended(dev);
-> +	dev->phy.ops->phy_write(dev, destreg,
-> +		dev->phy.ops->phy_read(dev, srcreg));
-> +}
+> This is an array, the index doesn't matter, and the value is the
+> supported command. You parse it with nla_for_each_nested()
 
-Hm, can you reverse the srcreg/destreg order?
-All C-standard copy functions use func(dest, src).
-I think we should stick with it.
+I'm trying to find if a command (i.e. NL80211_CMD_CONNECT) is supported
+or not. I think I can use nla_find_nested() if the command is an
+attribute. But I can also do the find myself if it is an array like now.
+So, never mind.
 
-> +
->   void b43_phy_mask(struct b43_wldev *dev, u16 offset, u16 mask)
->   {
->   	b43_phy_write(dev, offset,
-> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-> index 58e319d..dbaa2e4 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -66,7 +66,100 @@ static void lpphy_table_init(struct b43_wldev *dev)
-> 
->   static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
->   {
-> -	B43_WARN_ON(1);//TODO rev<  2 not supported, yet.
-> +	struct ssb_bus *bus = dev->dev->bus;
-> +	struct b43_phy_lp *lpphy = dev->phy.lp;
-> +	u16 tmp, tmp2;
-> +
-> +	if (dev->phy.rev == 1&&
-                             ^
-> +	   (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)) {
-                                    ^
-whitespaces
+Thanks,
+-yi
 
-
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0x3F00, 0x0900);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0B00);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0400);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0B00);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_5, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_5, 0xC0FF, 0x0900);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_6, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_6, 0xC0FF, 0x0B00);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_7, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_7, 0xC0FF, 0x0900);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_8, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_8, 0xC0FF, 0x0B00);
-> +	} else if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ ||
-> +		  (bus->boardinfo.type == 0x048A) || ((dev->phy.rev == 0)&&
-                                                                         ^
-whitespace
-
-> +		  (bus->sprom.boardflags_lo&  B43_BFL_FEM))) {
-                                           ^
-whitespace
-
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x0001);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0400);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x0001);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0500);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0002);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0800);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0002);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0A00);
-> +	} else if (dev->phy.rev == 1 ||
-> +		  (bus->sprom.boardflags_lo&  B43_BFL_FEM)) {
-                                           ^
-whitespace
-
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x0004);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0800);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x0004);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0C00);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0002);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0100);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0002);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0300);
-> +	} else {
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_1, 0xC0FF, 0x0900);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xFFC0, 0x000A);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_2, 0xC0FF, 0x0B00);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xFFC0, 0x0006);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_3, 0xC0FF, 0x0500);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xFFC0, 0x0006);
-> +		b43_phy_maskset(dev, B43_LPPHY_TR_LOOKUP_4, 0xC0FF, 0x0700);
-> +	}
-> +	if (dev->phy.rev == 1) {
-> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_1, B43_LPPHY_TR_LOOKUP_5);
-> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_2, B43_LPPHY_TR_LOOKUP_6);
-> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_3, B43_LPPHY_TR_LOOKUP_7);
-> +		b43_phy_copy(dev, B43_LPPHY_TR_LOOKUP_4, B43_LPPHY_TR_LOOKUP_8);
-
-(Reverse them, if you reverse the meaning of b43_phy_copy())
-
-> +	}
-> +	if (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)&&
-> +	   (bus->chip_id == 0x5354)&&
-
-Lots of whitespace needed here...
-
-> +	   (bus->chip_package == SSB_CHIPPACK_BCM4712S)) {
-> +		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0006);
-> +		b43_phy_write(dev, B43_LPPHY_GPIO_SELECT, 0x0005);
-> +		b43_phy_write(dev, B43_LPPHY_GPIO_OUTEN, 0xFFFF);
-> +		b43_hf_write(dev, b43_hf_read | 0x0800ULL<<  32);
-                                            ^^           ^  ^
-b43_hf_read is not called. You OR the function pointer.
-And whitespace at the wrong spot.
-
-> +	}
-> +	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-> +		b43_phy_set(dev, B43_LPPHY_LP_PHY_CTL, 0x8000);
-> +		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0040);
-> +		b43_phy_maskset(dev, B43_LPPHY_MINPWR_LEVEL, 0x00FF, 0xA400);
-> +		b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xF0FF, 0x0B00);
-> +		b43_phy_maskset(dev, 0x030, 0xFFF8, 0x0007);
-
-Any chance to define a name for the register?
-Even if it's just B43_LPPHY_030 or something like that.
-
-> +		b43_phy_maskset(dev, B43_LPPHY_DSSS_CONFIRM_CNT, 0xFFF8, 0x0003);
-> +		b43_phy_maskset(dev, B43_LPPHY_DSSS_CONFIRM_CNT, 0xFFC7, 0x0020);
-> +		b43_phy_mask(dev, B43_LPPHY_IDLEAFTERPKTRXTO, 0x00FF);
-> +	} else { /* 5GHz */
-> +		b43_phy_mask(dev, 0x448, 0x7FFF);
-> +		b43_phy_mask(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFBF);
-> +	}
-> +	if (dev->phy.rev == 1) {
-> +		tmp = b43_read(dev, B43_LPPHY_CLIPCTRTHRESH);
-> +		tmp2 = (tmp&  0x03E0)>>  5
-> +		tmp2 |= tmp<<  5;
-> +		b43_phy_write(dev, 0x4C3, tmp2);
-> +		tmp = b43_read(dev, B43_LPPHY_OFDMSYNCTHRESH0);
-> +		tmp2 = (tmp&  0x1F00)>>  8
-> +		tmp2 |= tmp<<  5;
-> +		b43_phy_write(dev, 0x4C4, tmp2);
-> +		tmp = b43_read(dev, B43_LPPHY_VERYLOWGAINDB);
-> +		tmp2 = tmp&  0x00FF
-> +		tmp2 |= tmp<<  8;
-> +		b43_phy_write(dev, 0x4C5, tmp2);
-
-Lots of whitespace problems in this code block.
-And please define the registers. Even if you just assign numeric names (like above).
-(hint: also use the B43_PHY_OFDM() macro)
-
-> +	}
->   }
-> 
->   static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
-> diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
-> index 18370b4..d0e67e4 100644
-> --- a/drivers/net/wireless/b43/phy_lp.h
-> +++ b/drivers/net/wireless/b43/phy_lp.h
-> @@ -273,12 +273,16 @@
->   #define B43_LPPHY_AFE_DDFS_POINTER_INIT		B43_PHY_OFDM(0xB8) /* AFE DDFS pointer init */
->   #define B43_LPPHY_AFE_DDFS_INCR_INIT		B43_PHY_OFDM(0xB9) /* AFE DDFS incr init */
->   #define B43_LPPHY_MRCNOISEREDUCTION		B43_PHY_OFDM(0xBA) /* mrcNoiseReduction */
-> -#define B43_LPPHY_TRLOOKUP3			B43_PHY_OFDM(0xBB) /* TRLookup3 */
-> -#define B43_LPPHY_TRLOOKUP4			B43_PHY_OFDM(0xBC) /* TRLookup4 */
-> +#define B43_LPPHY_TR_LOOKUP_3			B43_PHY_OFDM(0xBB) /* TR Lookup 3 */
-> +#define B43_LPPHY_TR_LOOKUP_4			B43_PHY_OFDM(0xBC) /* TR Lookup 4 */
->   #define B43_LPPHY_RADAR_FIFO_STAT		B43_PHY_OFDM(0xBD) /* Radar FIFO Status */
->   #define B43_LPPHY_GPIO_OUTEN			B43_PHY_OFDM(0xBE) /* GPIO Out enable */
->   #define B43_LPPHY_GPIO_SELECT			B43_PHY_OFDM(0xBF) /* GPIO Select */
->   #define B43_LPPHY_GPIO_OUT			B43_PHY_OFDM(0xC0) /* GPIO Out */
-> +#define B43_LPPHY_TR_LOOKUP_5			B43_PHY_OFDM(0xC7) /* TR Lookup 5 */
-> +#define B43_LPPHY_TR_LOOKUP_6			B43_PHY_OFDM(0xC8) /* TR Lookup 6 */
-> +#define B43_LPPHY_TR_LOOKUP_7			B43_PHY_OFDM(0xC9) /* TR Lookup 7 */
-> +#define B43_LPPHY_TR_LOOKUP_8			B43_PHY_OFDM(0xCA) /* TR Lookup 8 */
-> 
-> 
-> 
-> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-> index 8bcfda5..14ad95a 100644
-> --- a/drivers/net/wireless/b43/phy_n.c
-> +++ b/drivers/net/wireless/b43/phy_n.c
-> @@ -137,7 +137,8 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
-> 
->   	b43_radio_mask(dev, B2055_MASTER1, 0xFFF3);
->   	msleep(1);
-> -	if ((sprom->revision != 4) || !(sprom->boardflags_hi&  0x0002)) {
-> +	if ((sprom->revision != 4) ||
-> +	   !(sprom->boardflags_hi&  B43_BFH_RSSIINV)) {
-                                 ^
-whitespace
-
->   		if ((binfo->vendor != PCI_VENDOR_ID_BROADCOM) ||
->   		    (binfo->type != 0x46D) ||
->   		    (binfo->rev<  0x41)) {
-> 
-> 
-> 
-> 
-
-
-
--- 
-Greetings, Michael.
