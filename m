@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:20162 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752AbZHNHD7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 03:03:59 -0400
-Message-ID: <4A850C3A.4020609@nokia.com>
-Date: Fri, 14 Aug 2009 10:03:22 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-MIME-Version: 1.0
-To: "ext Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>
-Subject: Re: [PATCH v2 23/25] wireless: downgrade TI driver from menuconfig
- to config
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com> <1250210584-13374-24-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-24-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:23396 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752622AbZHFKMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 06:12:41 -0400
+Subject: Re: rt2800usb: memory corruption?
+From: Pavel Roskin <proski@gnu.org>
+To: Mike Galbraith <efault@gmx.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249195641.23166.12.camel@marge.simson.net>
+References: <1248945770.7910.24.camel@marge.simson.net>
+	 <1248946195.8925.9.camel@johannes.local>
+	 <1248947099.8396.6.camel@marge.simson.net>
+	 <1248947740.8925.12.camel@johannes.local>
+	 <1248948326.8823.4.camel@marge.simson.net>
+	 <1248955916.7995.47.camel@marge.simson.net>
+	 <1249104348.7146.60.camel@marge.simson.net>
+	 <1249124154.8236.5.camel@marge.simson.net>  <1249172514.3043.7.camel@ct>
+	 <1249190209.7486.4.camel@marge.simson.net>
+	 <1249194546.7634.4.camel@marge.simson.net>
+	 <1249195641.23166.12.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Thu, 06 Aug 2009 06:12:34 -0400
+Message-Id: <1249553554.24439.11.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Luis R. Rodriguez wrote:
-> There's only a few options here so let this expand upon
-> selection.
->
-> Cc: Kalle Valo <kalle.valo@nokia.com>
-> Cc: Luciano Coelho <luciano.coelho@nokia.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->   
+On Sun, 2009-08-02 at 08:47 +0200, Mike Galbraith wrote:
+> P.S.  I'm no longer considering moving box away from router (and if I
+> ever do, I'll use repeater instead), so wireless connectivity via this
+> adapter is a dead issue here.  Since I have the hw though, if anyone
+> wants patches tested, feel free to holler, and I'll give them a spin.
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+The fix is here:
+http://marc.info/?t=124942266800001&r=1&w=2
+
+kmemcheck wasn't helpful at resolving it, as the problem was with
+writing after the end of allocated memory, not with reading
+uninitialized memory.  SLUB debugging nailed it as soon as I took care
+to understand what it was telling me.
+
+As for the issue you found by kmemcheck, it's most certainly unrelated.
+If you can reproduce it with the rt2xxx patch, consider reporting it to
+the netdev list.  It would be helpful if you find what line is
+triggering it and include your .config file.
 
 -- 
-Cheers,
-Luca.
-
+Regards,
+Pavel Roskin
