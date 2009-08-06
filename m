@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from turing-police.cc.vt.edu ([128.173.14.107]:51704 "EHLO
-	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbZHMRAj (ORCPT
-	<RFC822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 13:00:39 -0400
-To: Andrew Morton <akpm@linux-foundation.org>,
-	Zhu Yi <yi.zhu@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: mmotm0812 - something in linux-next killed iwl-3945.c
-From: Valdis.Kletnieks@vt.edu
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1250182794_3970P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Thu, 13 Aug 2009 12:59:54 -0400
-Message-ID: <19728.1250182794@turing-police.cc.vt.edu>
+Received: from smtp.nokia.com ([192.100.122.233]:29859 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755200AbZHFL64 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 07:58:56 -0400
+Message-ID: <4A7AC555.301@nokia.com>
+Date: Thu, 06 Aug 2009 14:58:13 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+MIME-Version: 1.0
+To: ext Kalle Valo <kalle.valo@iki.fi>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl12xx: make irq handling interface specific
+References: <20090804033908.GA1903@hash.localnet>	<87hbwoniog.fsf@litku.valot.fi> <20090804122229.GA3337@hash.localnet>	<877hxionnt.fsf@litku.valot.fi> <20090805135618.GA7468@hash.localnet> <873a86nfhr.fsf@litku.valot.fi>
+In-Reply-To: <873a86nfhr.fsf@litku.valot.fi>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1250182794_3970P
-Content-Type: text/plain; charset=us-ascii
+ext Kalle Valo wrote:
+> Luca, I'm pretty sure that the workaround helps with wl1271 also. Just
+> take the wl->channel fix and the filter hack and it should work.
+>   
 
-Build bombs out:
+Excellent! This actually works! I'm sure I had tried to disable all 
+filters on my wl1271 tree, but I had broken something elsewhere, so it 
+didn't work.  Now I disabled the filters as you suggested in a clean 
+tree and I can scan, associate, run dhcp, ping etc. with wl1271 on top 
+of wireless-testing.
 
-  CC      drivers/net/wireless/iwlwifi/iwl-3945.o
-drivers/net/wireless/iwlwifi/iwl-3945.c: In function 'iwl3945_pass_packet_to_mac80211':
-drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
-drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: for each function it appears in.)
-make[1]: *** [drivers/net/wireless/iwlwifi/iwl-3945.o] Error 1
+Now I'm cleaning up my mess to send the wl1271 driver to the list ;)
 
-due to this in linux-next.patch:
+-- 
+Cheers,
+Luca.
 
-index 46288e7..ae7f163 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-(skipping)
-@@ -577,7 +577,10 @@ static void iwl3945_pass_packet_to_mac80211(struct iwl_priv
- *priv,
-        if (ieee80211_is_data(hdr->frame_control))
-                priv->rxtxpackets += len;
- #endif
--       ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
-+       iwl_update_stats(priv, false, hdr->frame_control, len);
-+
-+       memcpy(IEEE80211_SKB_RXCB(rxb->skb), stats, sizeof(*stats));
-+       ieee80211_rx_irqsafe(priv->hw, rxb->skb);
-        rxb->skb = NULL;
-
-Sorry, don't have a linux-next git tree, so no 'git blame' for what did it.
-Hopefully somebody recognizes their handiwork... ;)
-
---==_Exmh_1250182794_3970P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFKhEaKcC3lWbTT17ARAsAPAKC3u6aJQvZHnwQRCJO79r5NHvHw3ACfZSd0
-Xr8EhV4G5ef8ihpmCa2ko9Q=
-=jqP2
------END PGP SIGNATURE-----
-
---==_Exmh_1250182794_3970P--
