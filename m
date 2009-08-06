@@ -1,302 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51610 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232AbZHCVBA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56831 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415AbZHFHkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 17:01:00 -0400
-Date: Mon, 3 Aug 2009 16:59:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-08-03
-Message-ID: <20090803205954.GE11441@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	Thu, 6 Aug 2009 03:40:08 -0400
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NricAagi//1TVfMqg97i"
+Date: Thu, 06 Aug 2009 09:40:03 +0200
+Message-Id: <1249544403.3617.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-Here is another round of fixes intended for 2.6.31.  The one from
-Reinette fixes an rfkill-related bug described in bugzilla 13742.  The one
-from Luis has a lengthy changelog, but boils down to correcting some
-regulatory enforcement issues that would prevent some devices from
-working in some localities.  The rest are simple and obvious.
+--=-NricAagi//1TVfMqg97i
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Please let me know if there are problems!
 
-Thanks,
+> - The cfg80211 notification functions like cfg80211_connect_result
+>   are not called in this series. Does the driver need to keep track of
+>   each call and make sure it calls the right notifer? Right now orinoco
+>   arbitrarily sends SIOCGIWAP, IWEVASSOCRESPIE and IWEVASSOCREQIE on
+>   ?authorisation? Also not sure how this will tie in with
+>   cfg80211_send_rx_auth/assoc.
 
-John
+You don't have to worry about send_rx_auth/assoc -- those are for
+drivers like mac80211 that leave the SME up to cfg80211 or userspace.
+All you need to implement is a call to cfg80211_connect_result() and
+possibly cfg80211_roamed() when the card can roam itself if no BSSID is
+set. Those take the assoc request/response IEs too. You don't need to
+call wireless_send_event at all :)
 
----
+> - In station mode, is the connect crypto struct fully filled in
+>   regardless of WEP/WPA? I'd like to set priv->encode_alg at this stage,
+>   and then only accept keys of that type via add_key. Unfortunately
+>   join_ibss doesn't have similar info.
 
-Individual patches are available here:
+Yes, it should be filled in. I'm uncertain whether iw does it correctly
+for WEP right now, if not I can fix that. For IBSS, nl80211 can actually
+pass that info, but doesn't right now, it probably should do that
+though.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+> - In adhoc mode, how do you set open/shared WEP? i.e. how does orinoco
+>   know to set priv->wep_restrict?
 
----
+What's priv->wep_restrict? open/shared in ad-hoc seems very strange
+since you have no authentication frames?
 
-The following changes since commit eb4ad826419ab5b1260bc1625249114767d36bea:
-  Yevgeny Petrilin (1):
-        mlx4_en: Fix double pci unmapping.
+> - Digging around cfg80211, it looks like set_default_key isn't called
+>   when authentication is TKIP. How does the driver tell which key to use
+>   for transmit? Are we supposed to assume the group key is the transmit
+>   key?
 
-are available in the git repository at:
+The pairwise key, of course. But you knew that, so I think I just don't
+understand the question.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+> - TKIP pairwise keys. I think orinoco has always ignored them. The Agere
+>   driver installed pairwaise keys to index 0. Should I attempt anything?
 
-Johannes Berg (1):
-      cfg80211: add two missing NULL pointer checks
+I don't think it can have ignored them for proper operation? When you're
+doing WPA, you can only receive with the group key, and transmit with
+the pairwise key negotiated with the AP.
 
-Julia Lawall (2):
-      drivers/net/wireless/iwlwifi: introduce missing kfree
-      drivers/net/wireless: introduce missing kfree
+> - TKIP and ad-hoc. err... I plan on leaving this alone.
 
-Luis R. Rodriguez (1):
-      cfg80211: fix regression on beacon world roaming feature
+:)
+So far I've only really supported WEP with IBSS in all this. I'm happy
+to work with somebody to add support for more, but I have to admit that
+I'm not particularly interested myself.
 
-Patrick Simmons (1):
-      zd1211rw: fix unaligned access in zd_mac_rx
+johannes
 
-Reinette Chatre (1):
-      iwlagn: do not send key clear commands when rfkill enabled
+--=-NricAagi//1TVfMqg97i
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Roel Kluin (1):
-      libertas: Read buffer overflow
+-----BEGIN PGP SIGNATURE-----
 
- drivers/net/wireless/iwlwifi/iwl-core.c      |    3 +++
- drivers/net/wireless/iwlwifi/iwl-debugfs.c   |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-sta.c       |   12 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c  |    3 +++
- drivers/net/wireless/iwmc3200wifi/commands.c |    1 +
- drivers/net/wireless/libertas/11d.c          |    2 +-
- drivers/net/wireless/zd1211rw/zd_mac.c       |    2 +-
- include/net/cfg80211.h                       |    5 +++++
- net/wireless/reg.c                           |    9 +++++----
- net/wireless/reg.h                           |    3 ++-
- net/wireless/scan.c                          |    4 +++-
- 11 files changed, 42 insertions(+), 14 deletions(-)
+iQIcBAABAgAGBQJKeojPAAoJEODzc/N7+Qmaab8QAIVSx+mMEtPHZ8i7eHZv007d
+9ScUUbNQMJ4epJke3T1TCN817CL/kBK0NOtbOCFAgrGPA9NxmAPNbqaIYilMpLr6
+eplhLhcVmETpKmbOos03Z5VAgvnW0tzzidIvOMeHFCA22jekyMmO9mYf0ozoaZ6C
+PYbIXd/Qzi1NmceA4at+Ygd9Va2hExDHHfDtbmuxsogeBzSiVqBd/NhGyxpfjsTT
+N+dOSw6SIo6WabNszS6H+2XfX9rjJEJ05761+eylaEZVAQM81F5g5dLmPQ8gmzt5
+YUMK8bCyojdqXAbg5b4n2CtiSy1bnu36sBq48HuUohH12WlY72CkfTEbnOMa2wG4
+QfHmPAnw0Zdooe9cIO9Y7oMMFb8VZIqP9g06OspinFhj4e1X0uRGVxrZ97+59cBc
+/jjTsHPMQ2uImpONCaxX3q9o9k0vpNqahdm/wXTYApDLiGPon7ezcJfGoiJFz7Gp
+GtoEXLc0JAzI2yxx3S4JOq+H/zhbI+2+3Ar3uKk75Mn9JMkcPZieC0MHLifwlHcD
+S/1Uz+YB6lLCLJIqjCpQ2JWTxHh+gwM7lF//+Fs87vFZNxa4VDt6Y19u1G6MyAEM
+ztcCIGDdDCHdGYtMhJoXUipXRFaVFEk6no0/mk1+XNzDbGvB0b1WXonNJ2sGvCf5
+9Rd9BFMe++Tc6e7ENdAj
+=fIaG
+-----END PGP SIGNATURE-----
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6ab0716..18b135f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1332,6 +1332,9 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 
- 	hw->wiphy->custom_regulatory = true;
- 
-+	/* Firmware does not support this */
-+	hw->wiphy->disable_beacon_hints = true;
-+
- 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
- 	/* we create the 802.11 header and a zero-length SSID element */
- 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 11e08c0..ca00cc8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -308,18 +308,18 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
- 		return -ENODATA;
- 	}
- 
-+	ptr = priv->eeprom;
-+	if (!ptr) {
-+		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-+		return -ENOMEM;
-+	}
-+
- 	/* 4 characters for byte 0xYY */
- 	buf = kzalloc(buf_size, GFP_KERNEL);
- 	if (!buf) {
- 		IWL_ERR(priv, "Can not allocate Buffer\n");
- 		return -ENOMEM;
- 	}
--
--	ptr = priv->eeprom;
--	if (!ptr) {
--		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
--		return -ENOMEM;
--	}
- 	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
- 			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 			? "OTP" : "EEPROM");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2addf73..ffd5c61 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -566,6 +566,8 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
-+	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
-+		      keyconf->keyidx);
- 
- 	if (!test_and_clear_bit(keyconf->keyidx, &priv->ucode_key_table))
- 		IWL_ERR(priv, "index %d not used in uCode key table.\n",
-@@ -573,6 +575,11 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 
- 	priv->default_wep_key--;
- 	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
-+	if (iwl_is_rfkill(priv)) {
-+		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return 0;
-+	}
- 	ret = iwl_send_static_wepkey_cmd(priv, 1);
- 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
- 		      keyconf->keyidx, ret);
-@@ -853,6 +860,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
-+	if (iwl_is_rfkill(priv)) {
-+		IWL_DEBUG_WEP(priv, "Not sending REPLY_ADD_STA command because RFKILL enabled. \n");
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return 0;
-+	}
- 	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 2f50ab6..5238433 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3968,6 +3968,9 @@ static int iwl3945_setup_mac(struct iwl_priv *priv)
- 
- 	hw->wiphy->custom_regulatory = true;
- 
-+	/* Firmware does not support this */
-+	hw->wiphy->disable_beacon_hints = true;
-+
- 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX_3945;
- 	/* we create the 802.11 header and a zero-length SSID element */
- 	hw->wiphy->max_scan_ie_len = IWL_MAX_PROBE_REQUEST - 24 - 2;
-diff --git a/drivers/net/wireless/iwmc3200wifi/commands.c b/drivers/net/wireless/iwmc3200wifi/commands.c
-index 834a7f5..e2334d1 100644
---- a/drivers/net/wireless/iwmc3200wifi/commands.c
-+++ b/drivers/net/wireless/iwmc3200wifi/commands.c
-@@ -220,6 +220,7 @@ int iwm_store_rxiq_calib_result(struct iwm_priv *iwm)
- 	eeprom_rxiq = iwm_eeprom_access(iwm, IWM_EEPROM_CALIB_RXIQ);
- 	if (IS_ERR(eeprom_rxiq)) {
- 		IWM_ERR(iwm, "Couldn't access EEPROM RX IQ entry\n");
-+		kfree(rxiq);
- 		return PTR_ERR(eeprom_rxiq);
- 	}
- 
-diff --git a/drivers/net/wireless/libertas/11d.c b/drivers/net/wireless/libertas/11d.c
-index 9a5408e..5c69681 100644
---- a/drivers/net/wireless/libertas/11d.c
-+++ b/drivers/net/wireless/libertas/11d.c
-@@ -47,7 +47,7 @@ static u8 lbs_region_2_code(u8 *region)
- {
- 	u8 i;
- 
--	for (i = 0; region[i] && i < COUNTRY_CODE_LEN; i++)
-+	for (i = 0; i < COUNTRY_CODE_LEN && region[i]; i++)
- 		region[i] = toupper(region[i]);
- 
- 	for (i = 0; i < ARRAY_SIZE(region_code_mapping); i++) {
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 40b07b9..3bd3c77 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -698,7 +698,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *buffer, unsigned int length)
- 			&& !mac->pass_ctrl)
- 		return 0;
- 
--	fc = *(__le16 *)buffer;
-+	fc = get_unaligned((__le16*)buffer);
- 	need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
- 
- 	skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1a21895..d1892d6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -979,6 +979,10 @@ struct cfg80211_ops {
-  * 	channels at a later time. This can be used for devices which do not
-  * 	have calibration information gauranteed for frequencies or settings
-  * 	outside of its regulatory domain.
-+ * @disable_beacon_hints: enable this if your driver needs to ensure that
-+ *	passive scan flags and beaconing flags may not be lifted by cfg80211
-+ *	due to regulatory beacon hints. For more information on beacon
-+ *	hints read the documenation for regulatory_hint_found_beacon()
-  * @reg_notifier: the driver's regulatory notification callback
-  * @regd: the driver's regulatory domain, if one was requested via
-  * 	the regulatory_hint() API. This can be used by the driver
-@@ -1004,6 +1008,7 @@ struct wiphy {
- 
- 	bool custom_regulatory;
- 	bool strict_regulatory;
-+	bool disable_beacon_hints;
- 
- 	enum cfg80211_signal_type signal_type;
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5e14371..75a406d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1089,17 +1089,18 @@ static void handle_reg_beacon(struct wiphy *wiphy,
- 
- 	chan->beacon_found = true;
- 
-+	if (wiphy->disable_beacon_hints)
-+		return;
-+
- 	chan_before.center_freq = chan->center_freq;
- 	chan_before.flags = chan->flags;
- 
--	if ((chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
--	    !(chan->orig_flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
-+	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN) {
- 		chan->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
- 		channel_changed = true;
- 	}
- 
--	if ((chan->flags & IEEE80211_CHAN_NO_IBSS) &&
--	    !(chan->orig_flags & IEEE80211_CHAN_NO_IBSS)) {
-+	if (chan->flags & IEEE80211_CHAN_NO_IBSS) {
- 		chan->flags &= ~IEEE80211_CHAN_NO_IBSS;
- 		channel_changed = true;
- 	}
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index e37829a..4e167a8 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -30,7 +30,8 @@ int set_regdom(const struct ieee80211_regdomain *rd);
-  * non-radar 5 GHz channels.
-  *
-  * Drivers do not need to call this, cfg80211 will do it for after a scan
-- * on a newly found BSS.
-+ * on a newly found BSS. If you cannot make use of this feature you can
-+ * set the wiphy->disable_beacon_hints to true.
-  */
- int regulatory_hint_found_beacon(struct wiphy *wiphy,
- 					struct ieee80211_channel *beacon_chan,
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 9271118..7e595ce 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -118,7 +118,7 @@ static int cmp_ies(u8 num, u8 *ies1, size_t len1, u8 *ies2, size_t len2)
- 
- 	if (!ie1 && !ie2)
- 		return 0;
--	if (!ie1)
-+	if (!ie1 || !ie2)
- 		return -1;
- 
- 	r = memcmp(ie1 + 2, ie2 + 2, min(ie1[1], ie2[1]));
-@@ -171,6 +171,8 @@ static bool is_mesh(struct cfg80211_bss *a,
- 	ie = find_ie(WLAN_EID_MESH_CONFIG,
- 		     a->information_elements,
- 		     a->len_information_elements);
-+	if (!ie)
-+		return false;
- 	if (ie[1] != IEEE80211_MESH_CONFIG_LEN)
- 		return false;
- 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+--=-NricAagi//1TVfMqg97i--
+
