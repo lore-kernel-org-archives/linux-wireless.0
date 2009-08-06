@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:54495 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbZHRIZg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 04:25:36 -0400
-Date: Tue, 18 Aug 2009 10:25:37 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
-Message-ID: <20090818082537.GK18639@mail.wantstofly.org>
-References: <20090818035220.GN18639@mail.wantstofly.org> <1250580509.30538.2.camel@johannes.local>
+Received: from c60.cesmail.net ([216.154.195.49]:32867 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753402AbZHFQl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 12:41:28 -0400
+Subject: Re: CRDA and cross-compilation
+From: Pavel Roskin <proski@gnu.org>
+To: Jon Loeliger <jdl@bigfootnetworks.com>
+Cc: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1249569993.6446.2.camel@jdl-desktop>
+References: <4A7A8F7E.6020503@redfish-solutions.com>
+	 <1249569993.6446.2.camel@jdl-desktop>
+Content-Type: text/plain
+Date: Thu, 06 Aug 2009 12:41:26 -0400
+Message-Id: <1249576886.14919.16.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250580509.30538.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2009 at 09:28:29AM +0200, Johannes Berg wrote:
-
-> > Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
-> > ---
-> >  drivers/net/wireless/mwl8k.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
+On Thu, 2009-08-06 at 09:46 -0500, Jon Loeliger wrote:
+> On Thu, 2009-08-06 at 01:08 -0700, Philip A. Prindeville wrote:
+> > Who currently owns CRDA?
 > > 
-> > diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> > index 9f54204..3a201a2 100644
-> > --- a/drivers/net/wireless/mwl8k.c
-> > +++ b/drivers/net/wireless/mwl8k.c
-> > @@ -2935,7 +2935,7 @@ static int mwl8k_config_wt(struct work_struct *wt)
-> >  	struct mwl8k_priv *priv = hw->priv;
-> >  	int rc = 0;
-> >  
-> > -	if (!conf->radio_enabled) {
-> > +	if (conf->flags & IEEE80211_CONF_IDLE) {
-> >  		mwl8k_cmd_802_11_radio_disable(hw);
-> >  		priv->current_channel = NULL;
-> >  		rc = 0;
+> > I started to stare at cross-compiling issues, but realized that we need
+> > two versions of reglib.o and print-regdom.o...
+> > 
+> > One to link with regdumpdb (compiled with HOSTCC) and one to link with
+> > everything else (compiled with TARGET_CC)...
+> > 
+> > No easy way to do this without a lot of changes.
 > 
-> So I think the return; a little below needs to be removed to allow doing
-> other things while the radio is off? I'm not sure which actually happen
-> but I never audited the code to make sure nothing happens.
+> I posted a 5-part patch series to address this issue.
+> To the best of my knowledge, it has not been applied yet.
+> 
+> You can find it here:
+> 
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/35350
 
-The logic is just:
+I objected against using the misleading use of the "TARGET" work in some
+variables, but there was no reaction.  Failure to react to objections is
+the likely reason it wasn't applied.
 
-	if (idle) {
-		issue "radio disable" command
-	} else {
-		issue "radio enable" command
-		set channel
-		set tx power
-		set antenna config
-	}
+I also think that you add too much complexity to the Makefile.
 
-So if a channel change hapens while we are idle, that event won't get
-lost -- it'll just happen later.
+Also, the use of .config is not common.  Most valuables can be specified
+on the command line.  That would override the definitions in Makefile,
+and that's how it's done.
+
+For instance, you can have this in Makefile:
+
+HOSTCC = gcc
+CC = $(HOSTCC)
+
+Running "make CC=/opt/mips/bin/gcc" would override CC but not HOSTCC.
+
+-- 
+Regards,
+Pavel Roskin
