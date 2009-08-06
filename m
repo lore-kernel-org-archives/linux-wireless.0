@@ -1,74 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:23097 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753678AbZHNUvA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:51:00 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so403197fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 13:51:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A85CC6C.1030005@lwfinger.net>
-References: <4A85B8DE.3000704@gmail.com> <4A85CC6C.1030005@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 14 Aug 2009 22:50:41 +0200
-Message-ID: <69e28c910908141350i67eca251x4d88d17feaa92e55@mail.gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Fix setting TX power control mode during RC
-	calibration
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:50068 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753113AbZHFTII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:08:08 -0400
+Subject: Re: CRDA and cross-compilation
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jon Loeliger <jdl@bigfootnetworks.com>,
+	"Philip A. Prindeville" <philipp_subx@redfish-solutions.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>
+References: <4A7A8F7E.6020503@redfish-solutions.com>
+	 <1249569993.6446.2.camel@jdl-desktop>  <1249576886.14919.16.camel@mj>
+	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
+	 <1249580707.14919.29.camel@mj>
+	 <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 06 Aug 2009 15:08:04 -0400
+Message-Id: <1249585684.19169.12.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/14 Larry Finger <Larry.Finger@lwfinger.net>:
-> Gábor Stefanik wrote:
->> Call set_tx_power_control with a LPPHY_TXPCTL rather than an
->> LPPHY_TX_PWR_CTL_CMD_MODE.
->>
->> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
->> ---
->> This should fix the WARN_ON testers were seeing during init.
->>
->>  drivers/net/wireless/b43/phy_lp.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
->> index adfa7bf..558224b 100644
->> --- a/drivers/net/wireless/b43/phy_lp.c
->> +++ b/drivers/net/wireless/b43/phy_lp.c
->> @@ -1080,7 +1080,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
->>       old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
->>                                       B43_LPPHY_TX_PWR_CTL_CMD_MODE;
->>
->> -     lpphy_set_tx_power_control(dev, B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
->> +     lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
->>       lpphy_disable_crs(dev);
->>       loopback = lpphy_loopback(dev);
->>       if (loopback == -1)
->
->
-> With this one, I still get WARNING: at
-> drivers/net/wireless/b43/phy_lp.c:1006
-> lpphy_set_tx_power_control+0xbf/0xdd [b43]().
->
-> To get rid of them, I need to modify the enum b43_lpphy_txpctl_mode{}
-> as I wrote earlier.
+On Thu, 2009-08-06 at 11:42 -0700, Luis R. Rodriguez wrote:
 
-Is ctl still 0? Please check.
+> > -all: $(REG_BIN) crda intersect verify
+> > +all: all_noverify verify
+> > +
+> > +all_noverify: crda intersect regdbdump
+> 
+> You removed REG_BIN from here, was that intentional?
 
->
-> I'm also seeing the interface stopped and restarted. I'll try to track
-> that down.
->
-> Larry
->
->
->
-
-
+Yes.  It's not needed for the build.  As for the "verify" target, it
+already depends on $(REG_BIN)
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards,
+Pavel Roskin
