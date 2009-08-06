@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41408 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937AbZHaSAX (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:51556 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755791AbZHFTOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:00:23 -0400
-Date: Mon, 31 Aug 2009 13:59:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
-Subject: Re: [RFC v2 0/5] orinoco: use cfg80211 for key manipulation
-Message-ID: <20090831175932.GC5631@tuxdriver.com>
-References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+	Thu, 6 Aug 2009 15:14:08 -0400
+Message-ID: <4A7B2B7A.5030802@redfish-solutions.com>
+Date: Thu, 06 Aug 2009 12:14:02 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jon Loeliger <jdl@bigfootnetworks.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: CRDA and cross-compilation
+References: <4A7A8F7E.6020503@redfish-solutions.com>	 <1249569993.6446.2.camel@jdl-desktop>  <1249576886.14919.16.camel@mj>	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com> <1249580707.14919.29.camel@mj>
+In-Reply-To: <1249580707.14919.29.camel@mj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 01:04:08AM +0100, David Kilroy wrote:
-> This series basically works (at least after the last patch is applied)
-> with wpa_supplicant in wext mode.
+Pavel Roskin wrote:
+> On Thu, 2009-08-06 at 09:56 -0700, Luis R. Rodriguez wrote:
 > 
-> I had tested with wpa_supplicant in nl80211 mode, but hadn't realised
-> it wasn't using connect - I'll need to pick up Zhu Yis' patch and redo
-> some testing.
+>> ACK, is it possible to make it simpler?
 > 
-> Anyway, the nl80211 interface has a small hole which patch 5 partially
-> papers over. I'm not that happy with the way it hijacks the AUTH/ASSOC
-> state machine, but it works.
+> OK, here's my take.
 > 
-> Other outstanding issues:
->  - It looks like I haven't quite got the connect_roamed callback right:
->    I've got a WARNING I need to investigate in my logs
->  - On disconnecting and reconnecting the card I have to restart
->    wpa_supplicant for things to work. I'm guessing I have to look at
->    driver shutdown, and ensure we send a disconnected event.
+> We only need a native compiler to verify regulatory.bin.  I believe it's
+> orthogonal to building CRDA.
 > 
-> Dave.
+> For someone doing a cross-compilation, it makes no sense to verify the
+> installed regulatory.bin.  Thus, the verification should be optional.
+> 
+> But the compilation of regdbdump shouldn't be.  Firstly, it's installed
+> by "make install".  Secondly, somebody may want to verify regulatory.bin
+> on the target system.
+> 
+> Here's the patch:
+> 
+> 
+> crda: make it possible to disable verification
+> 
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  Makefile |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index b93b735..3cc61c2 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -24,7 +24,9 @@ PUBKEY_DIR?=pubkeys
+>  
+>  CFLAGS += -Wall -g
+>  
+> -all: $(REG_BIN) crda intersect verify
+> +all: all_noverify verify
+> +
+> +all_noverify: crda intersect regdbdump
+>  
+>  ifeq ($(USE_OPENSSL),1)
+>  CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
+> @@ -74,11 +76,12 @@ $(REG_BIN):
+>  	$(NQ) '  EXIST ' $(REG_BIN)
+>  	$(NQ)
+>  	$(NQ) ERROR: The file: $(REG_BIN) is missing. You need this in place in order
+> -	$(NQ) to build CRDA. You can get it from:
+> +	$(NQ) to verify CRDA. You can get it from:
+>  	$(NQ)
+>  	$(NQ) $(REG_GIT)
+>  	$(NQ)
+>  	$(NQ) "Once cloned (no need to build) cp regulatory.bin to $(REG_BIN)"
+> +	$(NQ) "Use \"make noverify\" to disable verification"
+>  	$(NQ)
+>  	$(Q) exit 1
+>  
+> 
 
-Any word on this series?  Time is short for 2.6.32...
+Can someone roll *all* the patches together?  For instance, "pkg-config" shouldn't be used on a cross-compile...
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-Philip
+
