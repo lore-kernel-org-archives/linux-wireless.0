@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54382 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128AbZH1PpY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44813 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755474AbZHFNJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 11:45:24 -0400
-Date: Fri, 28 Aug 2009 11:44:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, mickflemm@gmail.com,
-	proski@gnu.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, ic.felix@gmail.com
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use
-	in ath5k_eeprom_read_turbo_modes()
-Message-ID: <20090828154410.GB32694@tuxdriver.com>
-References: <20090827023000.21926.90867.stgit@mj.roinet.com> <40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com> <b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com> <43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com> <20090827213921.GB30419@hash.localnet> <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
+	Thu, 6 Aug 2009 09:09:52 -0400
+Subject: Re: [PATCH] cfg80211: fix disassociation warning due to misuse of
+ wdev->current_bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1249563308.15613.9.camel@ct>
+References: <20090806085242.23637.82992.stgit@ct.roinet.com>
+	 <1249549574.4852.17.camel@johannes.local>  <1249563308.15613.9.camel@ct>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TJUoit/MWpzM+al6r6fe"
+Date: Thu, 06 Aug 2009 15:09:18 +0200
+Message-Id: <1249564158.4852.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 04:14:56PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Aug 27, 2009 at 2:39 PM, Bob Copeland<me@bobcopeland.com> wrote:
-> > On Thu, Aug 27, 2009 at 11:25:03AM -0700, Luis R. Rodriguez wrote:
-> >> > Well, we also don't use the turbo modes at all and that's where the
-> >> > error is (IIRC) so it shouldn't have any impact. :)
-> >>
-> >> Again, why don't we just remove all that fucking turbo cruft?
-> >
-> > OK with me since no one seems to care enough to implement mac80211
-> > support.  I left some of the #defines in place as they are useful
-> > documentation.  Approx. 80 of the lines removed are comments.
-> >
-> >   text    data     bss     dec     hex filename
-> >  136746     480      56  137282   21842 ath5k_old.ko
-> >  134913     480      56  135449   21119 ath5k_new.ko
-> >
-> > Disclaimer: only barely tested.
-> 
-> Sexy, thanks!
-> 
-> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-I think I am on the side of removing the non-standard extensions.
-FWIW, I'll need a patch posted with a proper Subject and
-Signed-off-by...
+--=-TJUoit/MWpzM+al6r6fe
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I think Nick has some valid points.  His position sounds similar to
-that expressed to me by Felix and some others that it would be nice
-if we could more easily accomodate some of the features of madwifi
-that have made it attractive to researchers and experimenters.
-Perhaps NL80211_CMD_TESTMODE relates to this desire?
+On Thu, 2009-08-06 at 08:55 -0400, Pavel Roskin wrote:
 
-Just a thought...
+> Now that the check is fixed, it turn out there is a related problem in
+> the same function.  If the device is in the managed mode and disconnects
+> from an AP due to a low signal,
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Who decides to disconnect?
+
+This isn't making any sense to me. Once you're connected,
+wdev->auth_bsses[i] shouldn't be set any more.
+
+johannes
+
+
+--=-TJUoit/MWpzM+al6r6fe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKetX6AAoJEODzc/N7+QmaGnkP/03+SapbQR5EthKnN/slT2XI
+nR8sM9hG63RtIOaefq8z/pMlnyQIu2cdu3B2Br3K3XX5yS6NP7nfnhqOfstMYNqS
+u3QPEKbYraD3J3/58Jbqna4ny4Wi/+pTI2IKYIDDIybBtRd/BZUojgTJfKb/GvC+
+fm29u9MSLS1+PXBtjZ2quSmgnD/JmXQ5v7qV2Uy4v0dc7UjhLj7hjT76lGzSfTVD
+85oZXxZtZb/HR37cYXwp6GV4ereOcawavJ4nHSLuYyNgTEaTgLM9SNaYeAGzVWgu
+siDCJjeG9BpTO4J92MgAHUes71NB2Gjj9Rkuo2qkqqVakdLGVJ8acrZwi/cqo32R
+5Kq06j/IDx5pGqH743lg8G3uAkonFKgg14m0GIMTanyISvXdeT/tqvuxDxQz5lah
+BTMFC52vNIB1ultG6jLlJgz4u5/WoXLZTH7wiwgMUR8z09/gAM7XTP0fNnJ+ND0H
+oCyjugJXc4iC1jb812UFNS8XHm89fb9mefPCPAEiTYNnRuNfBHKsbx8N8yZ0K9UJ
+XwA78eBKGwZx67lEdr0oLoUSxinp5WP7AmqShAEgrv46aWnGYvcLY9NVeyWZpZm/
+F40Xpsof5O2tbsOO1olHJ/nyj1Sj9AaTbRaPlohI3DzofkyNl1WkIpfJYUi7TEFY
+dhxrcl8Nk9LxQBQYBZUV
+=cl3S
+-----END PGP SIGNATURE-----
+
+--=-TJUoit/MWpzM+al6r6fe--
+
