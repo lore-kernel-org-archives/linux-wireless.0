@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39185 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757141AbZHNU0D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:26:03 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 03/34] wireless: move MWL8K right below libertas on kconfig
-Date: Fri, 14 Aug 2009 16:25:28 -0400
-Message-Id: <1250281559-13041-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+Received: from c60.cesmail.net ([216.154.195.49]:1746 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752491AbZHFIx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 04:53:28 -0400
+Subject: [PATCH] cfg80211: fix disassociation warning due to misuse of
+	wdev->current_bss
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Date: Thu, 06 Aug 2009 04:52:42 -0400
+Message-ID: <20090806085242.23637.82992.stgit@ct.roinet.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+WARN_ON was triggered at mlme.c:213 when dissociating from an AP.
+
+wdev->current_bss->pub.bssid should be used in place of
+wdev->current_bss for BSSID comparison.
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/Kconfig |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ net/wireless/mlme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index ab7a185..abb6930 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -176,6 +176,15 @@ config LIBERTAS_THINFIRM_USB
- 	---help---
- 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 525e8e2..b44b6c0 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -198,7 +198,7 @@ static void __cfg80211_send_disassoc(struct net_device *dev,
+ 		return;
  
-+config MWL8K
-+	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
-+	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	---help---
-+	  This driver supports Marvell TOPDOG 802.11 wireless cards.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called mwl8k.  If unsure, say N.
-+
- config AIRO
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
- 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
-@@ -484,15 +493,6 @@ config MAC80211_HWSIM
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called mac80211_hwsim.  If unsure, say N.
- 
--config MWL8K
--	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
--	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
--	---help---
--	  This driver supports Marvell TOPDOG 802.11 wireless cards.
--
--	  To compile this driver as a module, choose M here: the module
--	  will be called mwl8k.  If unsure, say N.
--
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath/Kconfig"
- 
--- 
-1.6.2.5
-
+ 	if (wdev->current_bss &&
+-	    memcmp(wdev->current_bss, bssid, ETH_ALEN) == 0) {
++	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
+ 		for (i = 0; i < MAX_AUTH_BSSES; i++) {
+ 			if (wdev->authtry_bsses[i] || wdev->auth_bsses[i])
+ 				continue;
