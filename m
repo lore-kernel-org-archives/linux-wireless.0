@@ -1,123 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42285 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751077AbZHaQwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 12:52:10 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1MiA72-0005Ge-A7
-	for linux-wireless@vger.kernel.org; Mon, 31 Aug 2009 18:52:12 +0200
-Received: from e179057049.adsl.alicedsl.de ([85.179.57.49])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 18:52:12 +0200
-Received: from keinstein_junior by e179057049.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 18:52:12 +0200
-To: linux-wireless@vger.kernel.org
-From: Tobias Schlemmer <keinstein_junior@gmx.net>
-Subject: Re: rtl8187b Problem with tx level
-Date: Mon, 31 Aug 2009 18:51:49 +0200
-Message-ID: <h7gv36$tu0$1@ger.gmane.org>
-References: <h7eo7q$7ks$1@ger.gmane.org> <4A9B0479.209@lwfinger.net> <h7g6rd$dvb$1@ger.gmane.org> <4A9BF11D.1060205@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070507050107030903050301"
-In-Reply-To: <4A9BF11D.1060205@lwfinger.net>
+Received: from mail-yw0-f177.google.com ([209.85.211.177]:65009 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbZHFSnG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 14:43:06 -0400
+Received: by ywh7 with SMTP id 7so1390439ywh.21
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 11:43:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1249580707.14919.29.camel@mj>
+References: <4A7A8F7E.6020503@redfish-solutions.com> <1249569993.6446.2.camel@jdl-desktop>
+	<1249576886.14919.16.camel@mj> <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
+	<1249580707.14919.29.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 Aug 2009 11:42:46 -0700
+Message-ID: <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>
+Subject: Re: CRDA and cross-compilation
+To: Pavel Roskin <proski@gnu.org>
+Cc: Jon Loeliger <jdl@bigfootnetworks.com>,
+	"Philip A. Prindeville" <philipp_subx@redfish-solutions.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070507050107030903050301
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+On Thu, Aug 6, 2009 at 10:45 AM, Pavel Roskin<proski@gnu.org> wrote:
+> On Thu, 2009-08-06 at 09:56 -0700, Luis R. Rodriguez wrote:
+>
+>> ACK, is it possible to make it simpler?
+>
+> OK, here's my take.
+>
+> We only need a native compiler to verify regulatory.bin.  I believe it's
+> orthogonal to building CRDA.
+>
+> For someone doing a cross-compilation, it makes no sense to verify the
+> installed regulatory.bin.  Thus, the verification should be optional.
+>
+> But the compilation of regdbdump shouldn't be.  Firstly, it's installed
+> by "make install".  Secondly, somebody may want to verify regulatory.bin
+> on the target system.
+>
+> Here's the patch:
+>
+>
+> crda: make it possible to disable verification
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> ---
+>  Makefile |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/Makefile b/Makefile
+> index b93b735..3cc61c2 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -24,7 +24,9 @@ PUBKEY_DIR?=pubkeys
+>
+>  CFLAGS += -Wall -g
+>
+> -all: $(REG_BIN) crda intersect verify
+> +all: all_noverify verify
+> +
+> +all_noverify: crda intersect regdbdump
 
-Larry Finger schrieb:
-> There may be additional info following this.
-> 
-> In looking at my copy of the r8187 driver code, I see some branches
-> that may not be in our driver, but I need to see what ID info their
-> driver sees.
+You removed REG_BIN from here, was that intentional?
 
-Hm… the output is attached. It seems not to be very informative to me. 
-But maybe you can read more.
-
-> Have a good vacation.
-
-Thank you very much.
-
-Tobias
-
---------------070507050107030903050301
-Content-Type: text/plain;
- name="kernel-log-r8187.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="kernel-log-r8187.txt"
-
-WyAgMTY4LjI3NDg5M10gdXNiIDMtMTogbmV3IGhpZ2ggc3BlZWQgVVNCIGRldmljZSB1c2lu
-ZyBlaGNpX2hjZCBhbmQgYWRkcmVzcyA0ClsgIDE2OC40MTQ1OTldIHVzYiAzLTE6IGNvbmZp
-Z3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBjaG9pY2UKWyAgMTY4LjQ3NTk3NV0gaWVlZTgw
-MjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnTlVMTCcKWyAgMTY4LjQ4MzkwOV0g
-aWVlZTgwMjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnQ0NNUCcKWyAgMTY4LjQ5
-MTY4MF0gaWVlZTgwMjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnV0VQJwpbICAx
-NjguNDk1NTYyXSBpZWVlODAyMTFfY3J5cHQ6IHJlZ2lzdGVyZWQgYWxnb3JpdGhtICdUS0lQ
-JwpbICAxNjguNTM1OTU5XSByODE4N21zaDogbW9kdWxlIGxpY2Vuc2UgJ1Byb3ByaWV0YXJ5
-JyB0YWludHMga2VybmVsLgpbICAxNjguNTM2MDM4XSByODE4N21zaDogbm8gdmVyc2lvbiBm
-b3IgIm5vdGlmeV93eF9hc3NvY19ldmVudCIgZm91bmQ6IGtlcm5lbCB0YWludGVkLgpbICAx
-NjguNTU4MTQwXSAKWyAgMTY4LjU1ODE0Ml0gTGludXgga2VybmVsIGRyaXZlciBmb3IgUlRM
-ODE4Ny9SVEw4MTg3QiBiYXNlZCBXTEFOIGNhcmRzClsgIDE2OC41NTgxNDZdIENvcHlyaWdo
-dCAoYykgMjAwNC0yMDA1LCBBbmRyZWEgTWVyZWxsbwpbICAxNjguNTU4MTQ4XSBydGw4MTg3
-OiBJbml0aWFsaXppbmcgbW9kdWxlClsgIDE2OC41NTgxNDldIHJ0bDgxODc6IFdpcmVsZXNz
-IGV4dGVuc2lvbnMgdmVyc2lvbiAyMgpbICAxNjguNTU4MTUwXSBydGw4MTg3OiBJbml0aWFs
-aXppbmcgcHJvYyBmaWxlc3lzdGVtClsgIDE2OC42MzUyNDZdIHJ0bDgxODc6IFJlcG9ydGVk
-IEVFUFJPTSBjaGlwIGlzIGEgOTNjNDYgKDFLYml0KQpbICAxNjguODYwMjQ0XSBydGw4MTg3
-OiBDYXJkIE1BQyBhZGRyZXNzIGlzIDAwOjE2OjQ0OmZiOjUyOjZkClsgIDE2OS4xOTgyNDFd
-IHJ0bDgxODc6IFBBUEUgZnJvbSBDT05GSUcyOiAwClsgIDE2OS4yMzU5ODldIHJ0bDgxODc6
-IEVFUFJPTSBDdXN0b21lciBJRDogMDAKWyAgMTY5LjIzNTk5MF0gClsgIDE2OS4yMzY0NzJd
-IHJ0bDgxODc6IERyaXZlciBwcm9iZSBjb21wbGV0ZWQKWyAgMTY5LjIzNjQ3M10gClsgIDE2
-OS4yMzY0OTBdIHVzYmNvcmU6IHJlZ2lzdGVyZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgcnRs
-ODE4NwpbICAyODYuODA0MzkxXSBORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDE3
-ClsgIDI4Ny4xNDkxMjRdIHJ0bDgxODc6IENhcmQgc3VjY2Vzc2Z1bGx5IHJlc2V0ClsgIDI5
-NS42MTk3MDJdIFdJUkVMRVNTX01PREVfRwpbICAyOTUuNjkwOTQyXSBBRERSQ09ORihORVRE
-RVZfVVApOiB3bGFuMDogbGluayBpcyBub3QgcmVhZHkKWyAgMzYwLjcyNzIwNl0gcnRsODE4
-MF9jbG9zZSBwcm9jZXNzIApbICAzNjAuNzI3MjE5XSBydGw4MTgwX2Rvd24gcHJvY2VzcyAK
-WyAgMzYwLjc0MDMwN10gcnRsODE4NzogTWFuZ2VtZW50IFJYIHByb2Nlc3MgYWJvcnRlZCBk
-dWUgdG8gZXhwbGljaXQgc2h1dGRvd24KWyAgMzYxLjE5MTEzNl0gcnRsODE4NzogQ2FyZCBz
-dWNjZXNzZnVsbHkgcmVzZXQKWyAgMzY5Ljk2NjE4MF0gV0lSRUxFU1NfTU9ERV9HClsgIDM3
-MC4wNjE5NDhdIEFERFJDT05GKE5FVERFVl9VUCk6IHdsYW4wOiBsaW5rIGlzIG5vdCByZWFk
-eQpbICAzNzAuNDc5MjQ1XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICAzNzAuNjM2MzY2XSBM
-aW5raW5nIHdpdGggZGVsZXRlZApbICAzNzAuNzM1ODY1XSBMaW5raW5nIHdpdGggZGVsZXRl
-ZApbICAzNzMuMjg2Mzc3XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICAzNzMuMzQ1MTU0XSBB
-c3NvY2lhdGVkIHN1Y2Nlc3NmdWxseQpbICAzNzMuMzQ1MTYxXSBVc2luZyBHIHJhdGVzClsg
-IDM3My40MDY1OTRdIEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiB3bGFuMDogbGluayBiZWNv
-bWVzIHJlYWR5ClsgIDM3NC4xNjk3MjFdIGFsZyBuYW1lOkNDTVAKWyAgMzc2LjIxMDMyOV0g
-cGFkbG9jazogVklBIFBhZExvY2sgbm90IGRldGVjdGVkLgpbICAzNzYuOTU5NDcxXSBhbGcg
-bmFtZTpUS0lQClsgIDM4My41Mjk3NDZdIHdsYW4wOiBubyBJUHY2IHJvdXRlcnMgcHJlc2Vu
-dApbICAzODMuODE3NzM0XSBydGw4MTgwX2Nsb3NlIHByb2Nlc3MgClsgIDM4My44MTc3NDFd
-IHJ0bDgxODBfZG93biBwcm9jZXNzIApbICAzODMuODMwMTQ5XSBydGw4MTg3OiBNYW5nZW1l
-bnQgUlggcHJvY2VzcyBhYm9ydGVkIGR1ZSB0byBleHBsaWNpdCBzaHV0ZG93bgpbICAzODQu
-NzI3NTI1XSBydGw4MTg3OiBDYXJkIHN1Y2Nlc3NmdWxseSByZXNldApbICAzOTMuNTI4Mjcx
-XSBXSVJFTEVTU19NT0RFX0cKWyAgMzkzLjU5ODQ2NF0gTGlua2luZyB3aXRoIGRlbGV0ZWQK
-WyAgMzkzLjU5OTc1Ml0gQUREUkNPTkYoTkVUREVWX1VQKTogd2xhbjA6IGxpbmsgaXMgbm90
-IHJlYWR5ClsgIDM5My44MjE3MTJdIExpbmtpbmcgd2l0aCBkZWxldGVkClsgIDM5NC4wMTQ3
-MDldIExpbmtpbmcgd2l0aCBkZWxldGVkClsgIDM5NC4wNzA3NzldIEFzc29jaWF0ZWQgc3Vj
-Y2Vzc2Z1bGx5ClsgIDM5NC4wNzA3ODVdIFVzaW5nIEcgcmF0ZXMKWyAgMzk0LjEyODEwNF0g
-QUREUkNPTkYoTkVUREVWX0NIQU5HRSk6IHdsYW4wOiBsaW5rIGJlY29tZXMgcmVhZHkKWyAg
-Mzk0LjQ5NTU3N10gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgMzk0LjU1MzI3NF0gQXNzb2Np
-YXRlZCBzdWNjZXNzZnVsbHkKWyAgMzk0LjU1MzI4MF0gVXNpbmcgRyByYXRlcwpbICAzOTQu
-NTYxMDc1XSBydGw4MTgwX2Nsb3NlIHByb2Nlc3MgClsgIDM5NC41NjEwNzddIHJ0bDgxODBf
-ZG93biBwcm9jZXNzIApbICAzOTQuNTc2NjQ0XSBydGw4MTg3OiBNYW5nZW1lbnQgUlggcHJv
-Y2VzcyBhYm9ydGVkIGR1ZSB0byBleHBsaWNpdCBzaHV0ZG93bgpbICAzOTQuOTkyNTY2XSBy
-dGw4MTg3OiBDYXJkIHN1Y2Nlc3NmdWxseSByZXNldApbICA0MDMuMzY1MTUyXSBXSVJFTEVT
-U19NT0RFX0cKWyAgNDAzLjQ1MTcxOV0gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgNDAzLjYx
-MzcxN10gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgNDAzLjY3NTI4OF0gQXNzb2NpYXRlZCBz
-dWNjZXNzZnVsbHkKWyAgNDAzLjY3NTI5NF0gVXNpbmcgRyByYXRlcwpbICA0MDMuODI3MzQy
-XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MDMuOTgzNDY0XSBMaW5raW5nIHdpdGggZGVs
-ZXRlZApbICA0MDQuMDM5OTA5XSBBc3NvY2lhdGVkIHN1Y2Nlc3NmdWxseQpbICA0MDQuMDM5
-OTE1XSBVc2luZyBHIHJhdGVzClsgIDQxMy41MzE5MTNdIHdsYW4wOiBubyBJUHY2IHJvdXRl
-cnMgcHJlc2VudApbICA0MTkuMjYxMTU2XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MTku
-NDA5NDU5XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MTkuNDcwNzIzXSBBc3NvY2lhdGVk
-IHN1Y2Nlc3NmdWxseQpbICA0MTkuNDcwNzI5XSBVc2luZyBHIHJhdGVzClsgIDQyMC4yMzgy
-ODRdIGFsZyBuYW1lOkNDTVAKWyAgNDIwLjIzODMwOF0gYWxnIG5hbWU6VEtJUAo=
---------------070507050107030903050301--
-
+>  ifeq ($(USE_OPENSSL),1)
+>  CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
+> @@ -74,11 +76,12 @@ $(REG_BIN):
+>        $(NQ) '  EXIST ' $(REG_BIN)
+>        $(NQ)
+>        $(NQ) ERROR: The file: $(REG_BIN) is missing. You need this in place in order
+> -       $(NQ) to build CRDA. You can get it from:
+> +       $(NQ) to verify CRDA. You can get it from:
+>        $(NQ)
+>        $(NQ) $(REG_GIT)
+>        $(NQ)
+>        $(NQ) "Once cloned (no need to build) cp regulatory.bin to $(REG_BIN)"
+> +       $(NQ) "Use \"make noverify\" to disable verification"
+>        $(NQ)
+>        $(Q) exit 1
+>
+>
+> --
+> Regards,
+> Pavel Roskin
+>
