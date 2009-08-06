@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35965 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830AbZHAIWG (ORCPT
+Received: from mail-yw0-f177.google.com ([209.85.211.177]:55371 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755791AbZHFTcU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:22:06 -0400
-Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, proski@gnu.org
-In-Reply-To: <4A73FA8D.5030804@gmail.com>
-References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
-	 <4A73FA8D.5030804@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZYz7lrf6bC8/xN2tnXMa"
-Date: Sat, 01 Aug 2009 10:21:58 +0200
-Message-Id: <1249114918.26584.18.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 6 Aug 2009 15:32:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <b637ec0b0908061226m33203bco7ac38cecb939b382@mail.gmail.com>
+References: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
+	<20090806183247.GI26809@tuxdriver.com> <b637ec0b0908061226m33203bco7ac38cecb939b382@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 6 Aug 2009 12:32:00 -0700
+Message-ID: <43e72e890908061232k467ba1f7iece5d0aa9bece811@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292 ieee80211_sta_work+0x97/0xd2d
+	[mac80211]()
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 6, 2009 at 12:26 PM, Fabio Comolli<fabio.comolli@gmail.com> wrote:
+> Hi John. I'm using ath5k .
+>
+> The card is a:
+>
+> 01:00.0 Ethernet controller: Atheros Communications Inc. AR5001
+> Wireless Network Adapter (rev 01)
+>
+> with PCI ID:
+>
+> 01:00.0 0200: 168c:001c (rev 01)
 
---=-ZYz7lrf6bC8/xN2tnXMa
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+What kernel?
 
-On Sat, 2009-08-01 at 10:19 +0200, Jiri Slaby wrote:
+This is probably a driver/mac80211 adding work into the mac80211
+workqueue during the susend --> resume cycle. We recently changed the
+warning to be moved onto the actual caller who does the queue_work()
+so we don't have to guess at this and do a painful debugging.
 
-> > +	u32 current_time =3D (jiffies / HZ);
->=20
-> jiffies are long. And they start from negative to catch such issues. You
-> were lucky and/or tested after 5 minutes of uptime ;).
+I suspect you are not using the latest wireless-testing.
 
-Actually, jiffies are unsigned long, but wrap after 5 minutes of
-uptime :)
-
-johannes
-
---=-ZYz7lrf6bC8/xN2tnXMa
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKc/sjAAoJEODzc/N7+QmaJdUP/RDsW9279umdn2Gkc7NL7KlY
-KXFOQnUWo57axT9SF7tGV9WCUBtX6m9LXcDDCoeRMzG5bV7mUCKQWkmJIjrjLYHf
-BXShdjTYvTA+WnRechOmccjzHC0Q8Wt++vjUiFXXDcYuD5eZu2NGPUgfH5AI5Lcj
-6lyCm33MMlBL1UGHWrS7GD2pwWL7sQvww09UGxKjUblS82B/HYgSyCA8JGnOZqsC
-UwISKaThS5o6V2pT8baDX6Nh33ozxbsQ++O82NHLzvmxG0pN7Z0kdntKuJNxPubN
-KjpEPN27TXKXOjN7zF5hddmeEJrX4K4DlsQUxTILyaelUW3VtLAb37PfxunleCyP
-6n0W23YvOyhh/AV5gZp0S4B0687UZwYXl76NNVh/pDI1M+zAjwc08j9YqgZ4Xlg4
-aGbk7ZkD77wKVOW5qvwzmHoiXr2afwir2DjAmEnKPDJU/pPWFTl5gPjWIaHA1wz4
-yTWyk2zP9WgfZcIPcL4nbPt6cddUCjHpqw8kyxkdrR1Wwp7Qqs1gvCtJJdlfGSZp
-1h6ZCpR/Y8C77HGQMcY+K7pcfnVjHqHbVeUmYhrkNhW2/2KpuYsd7QaYWrSN03Zh
-Gvcy4Za/Z2aEvqPDIasTjBe0V0BwvTdnQowAqpGJhIa4kEJPzIuXE5zZ0EovKYBn
-HMHfxyl1OIa8jGDqwKT2
-=JSE8
------END PGP SIGNATURE-----
-
---=-ZYz7lrf6bC8/xN2tnXMa--
-
+  Luis
