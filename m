@@ -1,112 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:29938 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381AbZHFN0N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 09:26:13 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n76DPoEx014623
-	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2009 08:25:55 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@nokia.com, juuso.oikarinen@nokia.com
-Subject: [PATCH 0/2] wl1271: driver for the TI WL1271 chipset
-Date: Thu,  6 Aug 2009 16:25:27 +0300
-Message-Id: <1249565129-12677-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx2.redhat.com ([66.187.237.31]:56769 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794AbZHFHZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 03:25:31 -0400
+Date: Thu, 6 Aug 2009 09:19:03 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH 2.6.30] iwl3945: fix rfkill switch
+Message-ID: <20090806071902.GA9816@dhcp-lab-161.englab.brq.redhat.com>
+References: <1249389350-4158-1-git-send-email-sgruszka@redhat.com> <1249512709.30019.4902.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1249512709.30019.4902.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Wed, Aug 05, 2009 at 03:51:49PM -0700, reinette chatre wrote:
+> Hi Stanislaw,
+> 
+> On Tue, 2009-08-04 at 05:35 -0700, Stanislaw Gruszka wrote:
+> > Due to rfkill and iwlwifi mishmash of SW / HW killswitch representation,
+> > we have race conditions which make unable turn wifi radio on, after enable
+> > and disable again killswitch. I can observe this problem on my laptop
+> > with iwl3945 device.
+> > 
+> > In rfkill core HW switch and SW switch are separate 'states'. Device can
+> > be only in one of 3 states: RFKILL_STATE_SOFT_BLOCKED, RFKILL_STATE_UNBLOCKED,
+> > RFKILL_STATE_HARD_BLOCKED. Whereas in iwlwifi driver we have separate bits
+> > STATUS_RF_KILL_HW and STATUS_RF_KILL_SW for HW and SW switches - radio can be
+> > turned on, only if both bits are cleared.
+> > 
+> > In this particular race conditions, radio can not be turned on if in driver
+> > STATUS_RF_KILL_SW bit is set, and rfkill core is in state
+> > RFKILL_STATE_HARD_BLOCKED, because rfkill core is unable to call
+> > rfkill->toggle_radio(). This situation can be entered in case:
+> > 
+> 
+> I am trying to understand this race condition ...
+> 
+> > - killswitch is turned on
+> > - rfkill core 'see' button change first and move to RFKILL_STATE_SOFT_BLOCKED
+> >   also call ->toggle_radio() and STATE_RF_KILL_SW in driver is set
+> > - iwl3945 get info about button from hardware to set STATUS_RF_KILL_HW bit and
+> >   force rfkill to move to RFKILL_STATE_HARD_BLOCKED
+> 
+> ok - so at this point we have rfkill == RFKILL_STATE_HARD_BLOCKED, and
+> driver == STATE_RF_KILL_SW | STATE_RF_KILL_HW
+> 
+> > - killsiwtch is turend off
 
-As you probably already know, we have been working on the next generation of
-the TI WiLink chipset, which the successor of wl1251.
+Here rfkill core routines are called. Rfkill wants to clear STATUS_RF_KILL_SW
+but it can not as state is RFKILL_STATE_HARD_BLOCKED.
 
-This driver is a spin-off of the wl12xx driver.  Initially we were planning
-to have support for both chipsets in the same driver, because there were some
-similarities, but in the end we figured out that the differences were much
-bigger than expected and the code was getting a bit of an abstraction mess.
-So we decided to split it in two.  A lot of the code is still very similar,
-but most of it is because we haven't revisited the old code and still haven't
-made the necessary updates for the new chipset.  In the future, we're
-planning to identify the common parts and reuse the same code in both
-drivers.
+> > - driver clear STATUS_RF_KILL_HW
+> 
+> at this point the driver should clear STATE_RF_KILL_HW and then call
+> iwl_rfkill_set_hw_state(). From what I can tell, in
+> iwl_rfkill_set_hw_state() the test for iwl_is_rfkill_sw() will cause the
+> driver to call rfkill_force_state for RFKILL_STATE_SOFT_BLOCKED
+> 
+> So, from what I understand after the above the status will be
+> 
+> rfkill == RFKILL_STATE_SOFT_BLOCKED, and driver == STATE_RF_KILL_SW 
 
-This driver is still a work in progress with a few features still missing,
-but to facilitate the work across different companies and for those who are
-brave of heart and want to use a work-in-progress driver to help with testing
-and development, I think it's time to get it included in the wireless-testing
-tree.
+Thats right. But rfkill core no longer wants to manipulate state via
+->toggle_radio() and radio stays disabled.
+ 
+> > - rfkill core is unable to clear STATUS_RF_KILL_SW in driver
+> 
+> I do not understand why this is a problem here. Could you please
+> highlight what I am missing?
 
-More information about this chipset can be found here:
-    http://focus.ti.com/general/docs/wtbu/wtbuproductcontent.tsp?templateId=6123&navigationId=12762&contentId=29993
+In my description I miss the most important part, sorry. Race is when the
+switches are performed in that order:
 
-The current driver is not functional on top of the latest wireless-testing
-tags, because of a change in the way filtering is handled (see Kalle Valo's
-email regarding this issue with wl1251).  But I will soon send a patch with a
-hack that disables all filtering (similar to the one Kalle sent) that can be
-used before the final solution is ready.  With that patch the driver works
-and supports managed mode to connect to open and WEP access points.  Support
-for WPA will come soon.  I have tested it on top of wireless-testing tag
-master-2009-08-04 and scanning, association, udhcpc and ping works fine.
+Radio enabled 
+- rfkill SW on
+- driver HW on
+Radio disabled - ok
+- rfkill SW off <- problem not clearing STATUS_RF_KILL_SW
+- driver HW off
+Radio disabled - wrong 
 
-Comments, questions, suggestions and general reviews would be greatly
-appreciated!
+Everything is fine when actions are in that order:
 
-Cheers,
-Luca.
+Radio enabled
+- rfkill SW on
+- driver HW on
+Radio disabled - ok 
+- driver HW off
+- rfkill SW off
+Radio enabled - ok 
 
+> > 
+> > Additionally call to rfkill_epo() when STATUS_RF_KILL_HW in driver is set
+> > cause move to the same situation.
+> > 
+> > In 2.6.31 this problem is fixed due to _total_ rewrite of rfkill subsystem.
+> > This is a quite small fix for 2.6.30.x in iwl3945 driver. We disable
+> > STATUS_RF_KILL_SW bit regardless of HW bit state. Also report to rfkill
+> > subsystem SW switch bit before HW switch bit to move rfkill subsystem
+> > to SOFT_BLOCK rather than HARD_BLOCK.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> > I'm not sure if this is good candidate for stable as this is not backport
+> > of upstream commit. Also I did not test this patch with other iwlwifi devices,
+> > only with iwl3945.
+> > 
+> >  drivers/net/wireless/iwlwifi/iwl-rfkill.c |   24 ++++++++++++++----------
+> >  1 files changed, 14 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> > index 2ad9faf..d6b6098 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+> > @@ -54,21 +54,28 @@ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+> >  	case RFKILL_STATE_UNBLOCKED:
+> >  		if (iwl_is_rfkill_hw(priv)) {
+> >  			err = -EBUSY;
+> > -			goto out_unlock;
+> > +			/* pass error to rfkill core to make it state HARD
+> > +			 * BLOCKED and disable software kill switch */
+> >  		}
+> >  		iwl_radio_kill_sw_enable_radio(priv);
+> >  		break;
+> >  	case RFKILL_STATE_SOFT_BLOCKED:
+> >  		iwl_radio_kill_sw_disable_radio(priv);
+> > +		/* rfkill->mutex lock is taken */
+> > +		if (priv->rfkill->state == RFKILL_STATE_HARD_BLOCKED) {
+> > +			/* force rfkill core state to be SOFT BLOCKED,
+> > +			 * otherwise core will be unable to disable software
+> > +			 * kill switch */
+> > +			priv->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
+> > +		}
+> 
+> I understand that you are directly changing the rfkill internals because
+> the mutex is taken ... but this really does not seem right to directly
+> modify the rfkill state in this way.
 
-Luciano Coelho (2):
-  wl1271: add wl1271 driver files
-  wl1271: add wl1271 to Kconfig and the Makefile
+Agree this is dirty hack, but I did not find a better way. Eventually,
+if we add call to rfkill_uevent(), this would behave the same
+as rfkill_force_state() .
 
- drivers/net/wireless/wl12xx/Kconfig          |   12 +
- drivers/net/wireless/wl12xx/Makefile         |    6 +
- drivers/net/wireless/wl12xx/wl1271.h         |  407 ++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.c     |  961 ++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h     | 1221 ++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_boot.c    |  540 ++++++++++
- drivers/net/wireless/wl12xx/wl1271_boot.h    |   72 ++
- drivers/net/wireless/wl12xx/wl1271_cmd.c     |  813 +++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_cmd.h     |  464 +++++++++
- drivers/net/wireless/wl12xx/wl1271_debugfs.c |  518 ++++++++++
- drivers/net/wireless/wl12xx/wl1271_debugfs.h |   33 +
- drivers/net/wireless/wl12xx/wl1271_event.c   |  125 +++
- drivers/net/wireless/wl12xx/wl1271_event.h   |  110 ++
- drivers/net/wireless/wl12xx/wl1271_init.c    |  397 ++++++++
- drivers/net/wireless/wl12xx/wl1271_init.h    |  115 +++
- drivers/net/wireless/wl12xx/wl1271_main.c    | 1396 ++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_ps.c      |  142 +++
- drivers/net/wireless/wl12xx/wl1271_ps.h      |   35 +
- drivers/net/wireless/wl12xx/wl1271_reg.h     |  758 ++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_rx.c      |  200 ++++
- drivers/net/wireless/wl12xx/wl1271_rx.h      |  121 +++
- drivers/net/wireless/wl12xx/wl1271_spi.c     |  382 +++++++
- drivers/net/wireless/wl12xx/wl1271_spi.h     |  113 +++
- drivers/net/wireless/wl12xx/wl1271_tx.c      |  378 +++++++
- drivers/net/wireless/wl12xx/wl1271_tx.h      |  130 +++
- 25 files changed, 9449 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl1271.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_acx.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_acx.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_boot.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_boot.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_cmd.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_cmd.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_debugfs.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_debugfs.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_event.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_event.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_init.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_init.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_main.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_ps.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_ps.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_reg.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_rx.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_rx.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_spi.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_spi.h
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_tx.c
- create mode 100644 drivers/net/wireless/wl12xx/wl1271_tx.h
-
+Cheers
+Stanislaw
