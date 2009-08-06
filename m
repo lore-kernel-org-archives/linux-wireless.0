@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4779 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932786AbZHUSAA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 14:00:00 -0400
-Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
- again
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910908211024n1c255b3p160839c60ae0b3a@mail.gmail.com>
-References: <4A8DC955.9060100@gmail.com>
-	 <1250872433.30019.14430.camel@rc-desk>
-	 <69e28c910908211024n1c255b3p160839c60ae0b3a@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 21 Aug 2009 10:59:49 -0700
-Message-Id: <1250877589.30019.14474.camel@rc-desk>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43072 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756512AbZHFTbH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:31:07 -0400
+Date: Thu, 6 Aug 2009 15:16:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dave Jones <davej@redhat.com>, Greg KH <greg@kroah.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	zhifeng.cai@atheros.com, stephen.chen@atheros.com,
+	linux-usb@vger.kernel.org, jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] Document pci_ids.h addition policy.
+Message-ID: <20090806191655.GK26809@tuxdriver.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com> <1249532170.21101.3.camel@localhost.localdomain> <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com> <1249533357.21101.5.camel@localhost.localdomain> <20090806050932.GA25015@kroah.com> <20090806181546.GA11589@redhat.com> <20090806183326.GA28433@kroah.com> <20090806191359.GA4345@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090806191359.GA4345@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gábor,
+On Thu, Aug 06, 2009 at 03:13:59PM -0400, Dave Jones wrote:
+> On Thu, Aug 06, 2009 at 11:33:26AM -0700, Greg Kroah-Hartman wrote:
+>  
+>  > > I agree. In fact, I'd go further, and say that the bulk of what we have
+>  > > in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
+>  > > entries in that file are used by multiple files in the kernel.
+>  > 
+>  > I agree with that as well, which is why when I was PCI maintainer, I
+>  > didn't allow any new additions to the pci_ids.h file, unless it was
+>  > going to be an id that was shared by different drivers.  That cut the
+>  > new additions down to about none :)
+> 
+> Perhaps documenting this is a good idea to prevent things being moved there,
+> as it still seems to be happening judging from the git log.
+> 
+> Signed-off-by: Dave Jones <davej@redhat.com>
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 73b46b6..f9156fd 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2,6 +2,9 @@
+>   *	PCI Class, Vendor and Device IDs
+>   *
+>   *	Please keep sorted.
+> + *
+> + *	Do not add new entries to this file unless the definitions
+> + *	are shared between multiple drivers.
+>   */
+>  
+>  /* Device classes and subclasses */
+> 
 
-On Fri, 2009-08-21 at 10:24 -0700, Gábor Stefanik wrote:
+ACK
 
-> For some odd reason, reverting Wei-Yi Guy's patch makes the bug go
-> away
-
-ah - now I see. The driver defaulted to monitor mode in iwl_mac_start.
-This is not correct and this patch rightly removed that code.
-
-> ... should we do that instead for 2.6.31? (I'm all for it, if this
-> patch is not the right thing to do, as Wey-Yi's patch was not a bug
-> fix, just a cleanup.) 
-
-No, this patch was more than code cleanup - it changed the driver to
-behave correctly wrt monitor interface type. Unfortunately the
-workaround to get packet injection working was not apparent enough and
-was missed.
-
-
-> My guess is that the "default to MONITOR mode"
-> change is the culprit.
-
-yeah ...
-
-
-> Maybe we should check info->flags & IEEE80211_TX_CTL_INJECTED
-> instead... is there a way to access the ieee80211_tx_info structure
-> from this function (e.g. through priv)?
-
-No, but it may not be necessary. Why is is necessary to call this
-function in the first place if you know this is an injection packet?
-Specifically, in iwl_tx_skb and iwl3945_tx_skb (where ieee80211_tx_info)
-is known) there could just be a test if this is an injected packet, if
-it is, then do not call iwl_get_sta_id, but just use "bcast_sta_id"
-directly. Would this work? Is a test for monitor mode still needed in
-this case?
-
-Reinette
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
