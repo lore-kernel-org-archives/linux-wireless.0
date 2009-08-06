@@ -1,95 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55981 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547AbZHEFdl (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:49608 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750857AbZHFReM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 01:33:41 -0400
-Subject: Re: [PATCH 001/002] [MAC80211] Retry probe request few times
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1249450153.6083.4.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-	 <1249056896.20593.3.camel@maxim-laptop>
-	 <1249438947.3094.30.camel@localhost.localdomain>
-	 <1249450153.6083.4.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3WEqf1VWIlhalB6iyeTJ"
-Date: Wed, 05 Aug 2009 07:33:36 +0200
-Message-Id: <1249450416.4168.22.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 6 Aug 2009 13:34:12 -0400
+Received: by ewy10 with SMTP id 10so963597ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 10:34:12 -0700 (PDT)
+Message-ID: <4A7B140A.6070607@gmail.com>
+Date: Thu, 06 Aug 2009 18:34:02 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com> <1249544403.3617.5.camel@johannes.local>
+In-Reply-To: <1249544403.3617.5.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+>> - The cfg80211 notification functions like cfg80211_connect_result
+>>   are not called in this series. Does the driver need to keep track of
+>>   each call and make sure it calls the right notifer? Right now orinoco
+>>   arbitrarily sends SIOCGIWAP, IWEVASSOCRESPIE and IWEVASSOCREQIE on
+>>   ?authorisation? Also not sure how this will tie in with
+>>   cfg80211_send_rx_auth/assoc.
+> 
+> You don't have to worry about send_rx_auth/assoc -- those are for
+> drivers like mac80211 that leave the SME up to cfg80211 or userspace.
+> All you need to implement is a call to cfg80211_connect_result() and
+> possibly cfg80211_roamed() when the card can roam itself if no BSSID is
+> set. Those take the assoc request/response IEs too. You don't need to
+> call wireless_send_event at all :)
 
---=-3WEqf1VWIlhalB6iyeTJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+I thought as much. I'll add those calls, and see what happens.
 
-On Wed, 2009-08-05 at 08:29 +0300, Maxim Levitsky wrote:
+>> - In station mode, is the connect crypto struct fully filled in
+>>   regardless of WEP/WPA? I'd like to set priv->encode_alg at this stage,
+>>   and then only accept keys of that type via add_key. Unfortunately
+>>   join_ibss doesn't have similar info.
+> 
+> Yes, it should be filled in. I'm uncertain whether iw does it correctly
+> for WEP right now, if not I can fix that. For IBSS, nl80211 can actually
+> pass that info, but doesn't right now, it probably should do that
+> though.
+> 
+>> - In adhoc mode, how do you set open/shared WEP? i.e. how does orinoco
+>>   know to set priv->wep_restrict?
+> 
+> What's priv->wep_restrict? open/shared in ad-hoc seems very strange
+> since you have no authentication frames?
 
-> > [54632.657912] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 1
-> > [54633.154560] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 2
-> > [54873.231210] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 1
-> > [55113.467840] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 1
-> > [55113.964510] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 2
-> > [55114.464516] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 3
-> > [55114.967868] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- try 4
-> > [55115.464511] No probe response from AP 00:1c:f0:xx:xx:xx after 500ms,=
- disconnecting.
-> >=20
-> > Should we increase the value to 8 or something? Or just accept that
-> > sometimes we get a disconnect?
-> >=20
-> I think a disconnect or two aren't a problem, they are always handled
-> automatically, and can be caused by natural events.
->=20
-> Even without these patches (I have WPA2, and disconnects were every 4
-> five seconds), and still it was possible to use network.
->=20
-> One disconnect in a day is really nothing to worry about (I have seen
-> such here as well)
->=20
-> You can increase try count, probably won't hurt much (each try is 0.5
-> seconds, so even 10 tries gives total of 5 seconds, before disconnect on
-> a really unaccessible AP, anyway)
+priv->wep_restrict differentiates between using
+NL80211_AUTHTYPE_OPEN_SYSTEM or NL80211_AUTHTYPE_SHARED_KEY. If it makes
+no difference, I'll just zero it in ad-hoc mode.
 
-Mind you, each try will end up sending a LOT of probe request frames,
-iwlwifi sends like 12 frames for every try and never gets a response for
-some reason, so I wouldn't really increase it much further since you'd
-be spamming around a lot.
+>> - Digging around cfg80211, it looks like set_default_key isn't called
+>>   when authentication is TKIP. How does the driver tell which key to use
+>>   for transmit? Are we supposed to assume the group key is the transmit
+>>   key?
+> 
+> The pairwise key, of course. But you knew that, so I think I just don't
+> understand the question.
 
-johannes
+A bit of confusion on my part, I (think I) meant pairwise key. The tkip
+key install RID takes a flag to indicate when the key is the transmit
+key. So I'll set this for any pairwise key being installed, and assume
+we only get one of those. Should work in station mode.
 
---=-3WEqf1VWIlhalB6iyeTJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+>> - TKIP pairwise keys. I think orinoco has always ignored them. The Agere
+>>   driver installed pairwaise keys to index 0. Should I attempt anything?
+> 
+> I don't think it can have ignored them for proper operation? When you're
+> doing WPA, you can only receive with the group key, and transmit with
+> the pairwise key negotiated with the AP.
 
------BEGIN PGP SIGNATURE-----
+I think I'm just misremembering the details of what the Agere driver
+did, and confusing myself.
 
-iQIcBAABAgAGBQJKeRmsAAoJEODzc/N7+QmaE+kQAJnOYAQF/5qExKjpIisfwD4F
-19MLP3lcJ//a8AQYIcFH5ELokYNmWkD6UYAmfsVznr24wM+Z+xwZTMLXAeTDZ6Br
-WaCj9IbVwvlTNSzRXmIFd1WlH+fMKBLZO75OZrkGoI4axqVkn8bJxJFAmZOqlJo1
-OM+t+jypNlZuyuSexERIBsI/njd1teJPokuZMcSab6UWHgLjjCUSt58jOUR86ikt
-OY22ZP5XipDNARi3WeBq0W5N6Z+dJmHatelG7x6FMcxidX36Tf8mdHpNRv3cxrUT
-sf+Ljr3eTXomYd3q5Q4JfsaUaZ/3gxCfn2xISmtQY3mba4zXPfG2+SukCxvWsLDL
-XPxyVK32v59+H01VEG4Q4c0pFmIdBtQgpiOdyHWlXh/UyIV3PkuLWXiMEoiMXqdi
-7WCqMOtSOP4tzPy/yvF7aAunAxx8IlfmezApZCdv6AJUJRwn1edvUJi0bVlBj/2X
-UN+Tfo/3M1ELSD6IVx2+0nGzAnkvC09Mn4F70+8UQMHoABxzcGGvpgGzoRrOGfvt
-dk8dGv8ZbwnkskFPuYexXlHPUrFEsV/GVkLSzGPvqiPj4FbHD0bXF5Fzas79R+k1
-zMqvm0qYTIFW4mDZrCQeSoIQpvU63hpUgNM9BqMaJEzQBF2Stnjc6UwR8f30poWl
-LuJhrJpYSSnLS4l/I3DE
-=6jry
------END PGP SIGNATURE-----
+Thanks for taking the time to have a look (and answer my silly questions!).
 
---=-3WEqf1VWIlhalB6iyeTJ--
 
+Dave.
