@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37264 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752706AbZH0OAU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 10:00:20 -0400
-Date: Thu, 27 Aug 2009 09:52:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Nokia N900 running mac80211
-Message-ID: <20090827135216.GB2961@tuxdriver.com>
-References: <87k50plbd8.fsf@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87k50plbd8.fsf@nokia.com>
+Received: from c60.cesmail.net ([216.154.195.49]:1087 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753215AbZHFUj2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 16:39:28 -0400
+Subject: Re: [PATCH] cfg80211: fix disassociation warning due to misuse of
+ wdev->current_bss
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1249564158.4852.24.camel@johannes.local>
+References: <20090806085242.23637.82992.stgit@ct.roinet.com>
+	 <1249549574.4852.17.camel@johannes.local>  <1249563308.15613.9.camel@ct>
+	 <1249564158.4852.24.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 06 Aug 2009 16:39:24 -0400
+Message-Id: <1249591164.19169.41.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 02:55:31PM +0300, Kalle Valo wrote:
-> Hello,
+On Thu, 2009-08-06 at 15:09 +0200, Johannes Berg wrote:
+> On Thu, 2009-08-06 at 08:55 -0400, Pavel Roskin wrote:
 > 
-> wanted to tell you that just released Nokia N900 is using mac80211 and
-> wl1251 driver. The kernel is 2.6.28 with few wireless related patches
-> backported from newer releases and some hacks related to roaming.
+> > Now that the check is fixed, it turn out there is a related problem in
+> > the same function.  If the device is in the managed mode and disconnects
+> > from an AP due to a low signal,
 > 
-> http://www.nokia.com/press/press-releases/showpressrelease?newsid=1337594
+> Who decides to disconnect?
 
-Hey, that is cool!  Let's hope other manufacturers learn to embrace
-the open code in the kernel and abandon closed-source options that
-merely reimplement functionality that we already provide.
+I was unscrewing the antenna from the AP, and the AP wasn't visible in
+the scan results without an antenna, so I assume that the station was
+deciding to disconnect on its own.
 
-Let's also hope that this continues to motivate Nokia to support you
-are your coworkers in making strong contributions to the kernel in
-wireless and other areas.
+> This isn't making any sense to me. Once you're connected,
+> wdev->auth_bsses[i] shouldn't be set any more.
 
-Thanks!
+I see that you have posted several patches for the issue.  I'll test
+them on the same hardware tomorrow to avoid introducing extra variables.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Pavel Roskin
