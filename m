@@ -1,88 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40342 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756066AbZHYT3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 15:29:43 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 12:29:46 -0700
-Date: Tue, 25 Aug 2009 12:29:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Richard Farina <sidhayn@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] atheros: add ar9170.fw 1-stage firmware
-Message-ID: <20090825192944.GB7357@mosca>
-References: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
- <4A8DAD1D.7090608@gmail.com>
- <20090820202817.GB18102@mosca>
- <4A943AFE.1000500@gmail.com>
+Received: from mail-bw0-f213.google.com ([209.85.218.213]:60844 "EHLO
+	mail-bw0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756521AbZHFT0J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:26:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A943AFE.1000500@gmail.com>
+In-Reply-To: <20090806183247.GI26809@tuxdriver.com>
+References: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
+	 <20090806183247.GI26809@tuxdriver.com>
+Date: Thu, 6 Aug 2009 21:26:07 +0200
+Message-ID: <b637ec0b0908061226m33203bco7ac38cecb939b382@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292 ieee80211_sta_work+0x97/0xd2d
+	[mac80211]()
+From: Fabio Comolli <fabio.comolli@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 12:26:54PM -0700, Richard Farina wrote:
-> Luis R. Rodriguez wrote:
-> > On Thu, Aug 20, 2009 at 01:07:57PM -0700, Richard Farina wrote:
-> >
-> >> Luis R. Rodriguez wrote:
-> >>
-> >>> This adds support for ar9170 for using a 1-stage firmware.
-> >>> This means only 1 firmware file is required. AVM Fritz
-> >>> devices require this.
-> >>>
-> >>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >>> ---
-> >>>
-> >>> Here is a resend, noticed today this wasn't yet in the tree.
-> >>>
-> >>>
-> >>>
-> >> Last I tested this firmware it didn't seem to function nearly as well as
-> >> the 2 stage firmware, and if present, the 1 stage overrides the 2
-> >> stage.
-> >>
-> >
-> > Can you be more specific than that?
-> >
-> >
-> >> Is this an improved version?
-> >>
-> >
-> > No, it is the same firmware.
-> >
-> >
-> >> Does this work properly in your testing?
-> >>
-> >
-> > Works for me, and is also required for usage of AVM Fritz devices.
-> >
-> >
-> I apologize for my confusion.  Since we spoke on irc I am now clear that
-> this specific ar9170 firmware is slightly different than the open source
-> one available in git and seems a bit more stable than the 2 stage I was
-> previously using.  I have tested monitor mode and packet injection which
-> are the only things that interest me about this device at the moment and
-> both appear slightly more stable using the 1 stage firmware. Please do
-> add the firmware located at
-> http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
-> to the linux firmware git repo.  I believe that it would be a benefit to
-> many.
-> 
-> ACKED BY: Rick Farina
-> TESTED BY: Rick Farina
-> 
-> On a similar note, the open firmware has had issues reported by many
-> with speed and stability so I wouldn't recommend using it yet, but this
-> is mostly based on the complaints I've heard rather than my own personal
-> testing so remember a grain of salt.
+Hi John. I'm using ath5k .
 
-Thanks for the clarification, yeah I do believe the open fw needs more work,
-the code base is the same though so it remains unclear what could be the
-issue. Anyway I'll push this through and if hopefully more interested people 
-can work on the open fw. I'll respin with the WHENCE changed.
+The card is a:
 
-  Luis
+01:00.0 Ethernet controller: Atheros Communications Inc. AR5001
+Wireless Network Adapter (rev 01)
+
+with PCI ID:
+
+01:00.0 0200: 168c:001c (rev 01)
+
+
+Regards,
+Fabio
+
+
+
+
+On Thu, Aug 6, 2009 at 8:32 PM, John W. Linville<linville@tuxdriver.com> wrote:
+> What driver are you using?
+>
+> On Thu, Aug 06, 2009 at 08:30:23PM +0200, Fabio Comolli wrote:
+>> Just got this after a resume from suspend-to-ram. Wifi needed to be
+>> disabled and reenabled (with hardware Fn+F2 key - this is an eeePC900)
+>> to function  again.
+>>
+>>
+>> [  919.858759] ------------[ cut here ]------------
+>> [  919.858787] WARNING: at net/mac80211/mlme.c:2292
+>> ieee80211_sta_work+0x97/0xd2d [mac80211]()
+>> [  919.858791] Hardware name: 900
+>> [  919.858793] Modules linked in: uvcvideo videodev v4l1_compat arc4
+>> ecb ath5k mac80211 ath cfg80211
+>> [  919.860022] Pid: 793, comm: phy0 Tainted: G   M       2.6.31-rc5 #11
+>> [  919.860025] Call Trace:
+>> [  919.860035]  [<c10209cf>] warn_slowpath_common+0x65/0x7c
+>> [  919.860058]  [<f83d621e>] ? ieee80211_sta_work+0x97/0xd2d [mac80211]
+>> [  919.860064]  [<c10209f3>] warn_slowpath_null+0xd/0x10
+>> [  919.860086]  [<f83d621e>] ieee80211_sta_work+0x97/0xd2d [mac80211]
+>> [  919.860092]  [<c101bb2b>] ? __wake_up+0x2f/0x56
+>> [  919.860097]  [<c101bb39>] ? __wake_up+0x3d/0x56
+>> [  919.860103]  [<c102eb04>] ? insert_work+0x96/0x9f
+>> [  919.860108]  [<c102ed63>] ? __queue_work+0x32/0x49
+>> [  919.860113]  [<c102eda1>] ? queue_work_on+0x27/0x2f
+>> [  919.860119]  [<c102f52f>] ? queue_work+0x2d/0x45
+>> [  919.860140]  [<f83d3324>] ?
+>> ieee80211_ibss_notify_scan_completed+0x63/0x68 [mac80211]
+>> [  919.860162]  [<f83d1059>] ? ieee80211_scan_completed+0x320/0x328 [mac80211]
+>> [  919.860184]  [<f83d1160>] ? ieee80211_scan_work+0xb5/0x171 [mac80211]
+>> [  919.860190]  [<c102f075>] worker_thread+0x15d/0x204
+>> [  919.860211]  [<f83d6187>] ? ieee80211_sta_work+0x0/0xd2d [mac80211]
+>> [  919.860218]  [<c1032217>] ? autoremove_wake_function+0x0/0x2f
+>> [  919.860223]  [<c102ef18>] ? worker_thread+0x0/0x204
+>> [  919.860229]  [<c1031fab>] kthread+0x63/0x68
+>> [  919.860234]  [<c1031f48>] ? kthread+0x0/0x68
+>> [  919.860240]  [<c1002f93>] kernel_thread_helper+0x7/0x10
+>> [  919.860244] ---[ end trace 7a3a8d08c5a7bedf ]---
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
