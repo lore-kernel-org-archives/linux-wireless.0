@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:58263 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933572AbZHDX2W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 19:28:22 -0400
-Received: by bwz19 with SMTP id 19so3380127bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 16:28:22 -0700 (PDT)
-Message-ID: <4A78C414.7060708@gmail.com>
-Date: Wed, 05 Aug 2009 01:28:20 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+Received: from kroah.org ([198.145.64.141]:36150 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753279AbZHFS5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 14:57:49 -0400
+Date: Thu, 6 Aug 2009 11:33:26 -0700
+From: Greg KH <greg@kroah.com>
+To: Dave Jones <davej@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
+	stephen.chen@atheros.com, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
+Message-ID: <20090806183326.GA28433@kroah.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
+ <1249532170.21101.3.camel@localhost.localdomain>
+ <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
+ <1249533357.21101.5.camel@localhost.localdomain>
+ <20090806050932.GA25015@kroah.com>
+ <20090806181546.GA11589@redhat.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: Fix fallout from the IEEE80211_IF_TYPE to NL80211_IFTYPE
- change.
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090806181546.GA11589@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update a comment that still says IEEE80211_IF_TYPE instead of NL80211_IFTYPE.
+On Thu, Aug 06, 2009 at 02:15:46PM -0400, Dave Jones wrote:
+> On Wed, Aug 05, 2009 at 10:09:32PM -0700, Greg Kroah-Hartman wrote:
+>  > > the closest we have is drivers/hid/hid-ids.h and we might just should
+>  > > have Greg create a usb-ids.h file.
+>  >
+>  > Ick, no, there's no such file for a good reason.  Put your device ids in
+>  > the driver files, no need to share it across the whole kernel.
+> 
+> I agree. In fact, I'd go further, and say that the bulk of what we have
+> in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
+> entries in that file are used by multiple files in the kernel.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-This patch replaces "b43: Typo fixes and minor cleanup",
-the other half of which has been integrated into the LP rev01 init patch.
+I agree with that as well, which is why when I was PCI maintainer, I
+didn't allow any new additions to the pci_ids.h file, unless it was
+going to be an id that was shared by different drivers.  That cut the
+new additions down to about none :)
 
- drivers/net/wireless/b43/b43.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 41ca727..52fd6d6 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -627,7 +627,7 @@ struct b43_wl {
- 	u8 mac_addr[ETH_ALEN];
- 	/* Current BSSID */
- 	u8 bssid[ETH_ALEN];
--	/* Interface type. (IEEE80211_IF_TYPE_XXX) */
-+	/* Interface type. (NL80211_IFTYPE_XXX) */
- 	int if_type;
- 	/* Is the card operating in AP, STA or IBSS mode? */
- 	bool operating;
--- 
-1.6.2.4
-
-
-
+greg k-h
