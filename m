@@ -1,63 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41417 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753301AbZHaSAa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:00:30 -0400
-Date: Mon, 31 Aug 2009 13:53:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] b43: LP-PHY: Begin implementing calibration &
-	software RFKILL support
-Message-ID: <20090831175331.GB5631@tuxdriver.com>
-References: <4A99C4BB.7080806@gmail.com> <200908301228.16845.mb@bu3sch.de> <4A9A965F.8020200@lwfinger.net> <200908301755.40557.mb@bu3sch.de>
+Received: from bu3sch.de ([62.75.166.246]:39114 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752217AbZHFIhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 04:37:40 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John W Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix hardware key index handling
+Date: Thu, 6 Aug 2009 10:36:50 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de,
+	gregor kowski <gregor.kowski@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <200908301755.40557.mb@bu3sch.de>
+Message-Id: <200908061036.50631.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 30, 2009 at 05:55:40PM +0200, Michael Buesch wrote:
-> On Sunday 30 August 2009 17:10:23 Larry Finger wrote:
-> > Michael Buesch wrote:
-> > > On Sunday 30 August 2009 02:15:55 Gábor Stefanik wrote:
-> > >>  static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-> > >>  {
-> > >>  	struct b43_phy_lp *lpphy = dev->phy.lp;
-> > >> @@ -1357,28 +1488,440 @@ static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-> > >>  		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
-> > >>  				    saved_tab_size, saved_tab);
-> > >>  	}
-> > >> +	b43_put_phy_into_reset(dev);
-> > > 
-> > > Are you sure you really want this?
-> > > This function completely disables the PHY on the backplane and keeps the physical
-> > > PHY reset pin asserted (even after return from the function).
-> > > So the PHY will physically be powered down from this point on. The following
-> > > PHY accesses could even hang the machine, because the PHY won't respond to
-> > > register accesses anymore.
-> > > 
-> > > We currently only use this function on A/G Multi-PHY devices to permanently
-> > > hard-disable the PHY that's not used.
-> > 
-> > The PHY reset routine in
-> > http://bcm-v4.sipsolutions.net/802.11/PHY/Reset, which I just updated
-> > for the latest N PHY changes, appears to be a different routine than
-> > b43_put_phy_into_reset(). The names are confusing.
-> 
-> b43_put_phy_into_reset() is opencoded in the specifications in various init
-> routines. There's no separate specs page for that function.
-> But I think the code is straightforward and easy to understand.
+This fixes the hardware encryption keys index and array size handling.
 
-So is this patch right or not?  Should I hold onto it for 2.6.33
-(i.e. after the 2.6.32 merge window)?
+Thanks to Gregor Kowski for reporting this issue.
 
-John
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+---
+
+This should probably go as a bugfix.
+(Does this actually fix the PHY transmission errors? I don't see them anymore...
+Note that you need to enable debugging to see them.)
+
+
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2009-08-06 09:58:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2009-08-06 09:58:53.000000000 +0200
+@@ -493,6 +493,10 @@ enum {
+ 
+ /* Max size of a security key */
+ #define B43_SEC_KEYSIZE			16
++/* Max number of group keys */
++#define B43_NR_GROUP_KEYS		4
++/* Max number of pairwise keys */
++#define B43_NR_PAIRWISE_KEYS		50
+ /* Security algorithms. */
+ enum {
+ 	B43_SEC_ALGO_NONE = 0,	/* unencrypted, as of TX header. */
+@@ -819,8 +823,7 @@ struct b43_wldev {
+ 
+ 	/* encryption/decryption */
+ 	u16 ktp;		/* Key table pointer */
+-	u8 max_nr_keys;
+-	struct b43_key key[58];
++	struct b43_key key[B43_NR_GROUP_KEYS * 2 + B43_NR_PAIRWISE_KEYS];
+ 
+ 	/* Firmware data */
+ 	struct b43_firmware fw;
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-08-06 09:58:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-08-06 10:28:03.000000000 +0200
+@@ -796,18 +796,19 @@ static void key_write(struct b43_wldev *
+ static void keymac_write(struct b43_wldev *dev, u8 index, const u8 *addr)
+ {
+ 	u32 addrtmp[2] = { 0, 0, };
+-	u8 per_sta_keys_start = 8;
++	u8 pairwise_keys_start = B43_NR_GROUP_KEYS * 2;
+ 
+ 	if (b43_new_kidx_api(dev))
+-		per_sta_keys_start = 4;
++		pairwise_keys_start = B43_NR_GROUP_KEYS;
+ 
+-	B43_WARN_ON(index < per_sta_keys_start);
+-	/* We have two default TX keys and possibly two default RX keys.
++	B43_WARN_ON(index < pairwise_keys_start);
++	/* We have four default TX keys and possibly four default RX keys.
+ 	 * Physical mac 0 is mapped to physical key 4 or 8, depending
+ 	 * on the firmware version.
+ 	 * So we must adjust the index here.
+ 	 */
+-	index -= per_sta_keys_start;
++	index -= pairwise_keys_start;
++	B43_WARN_ON(index >= B43_NR_PAIRWISE_KEYS);
+ 
+ 	if (addr) {
+ 		addrtmp[0] = addr[0];
+@@ -818,27 +819,11 @@ static void keymac_write(struct b43_wlde
+ 		addrtmp[1] |= ((u32) (addr[5]) << 8);
+ 	}
+ 
+-	if (dev->dev->id.revision >= 5) {
+-		/* Receive match transmitter address mechanism */
+-		b43_shm_write32(dev, B43_SHM_RCMTA,
+-				(index * 2) + 0, addrtmp[0]);
+-		b43_shm_write16(dev, B43_SHM_RCMTA,
+-				(index * 2) + 1, addrtmp[1]);
+-	} else {
+-		/* RXE (Receive Engine) and
+-		 * PSM (Programmable State Machine) mechanism
+-		 */
+-		if (index < 8) {
+-			/* TODO write to RCM 16, 19, 22 and 25 */
+-		} else {
+-			b43_shm_write32(dev, B43_SHM_SHARED,
+-					B43_SHM_SH_PSM + (index * 6) + 0,
+-					addrtmp[0]);
+-			b43_shm_write16(dev, B43_SHM_SHARED,
+-					B43_SHM_SH_PSM + (index * 6) + 4,
+-					addrtmp[1]);
+-		}
+-	}
++	/* Receive match transmitter address (RCMTA) mechanism */
++	b43_shm_write32(dev, B43_SHM_RCMTA,
++			(index * 2) + 0, addrtmp[0]);
++	b43_shm_write16(dev, B43_SHM_RCMTA,
++			(index * 2) + 1, addrtmp[1]);
+ }
+ 
+ static void do_key_write(struct b43_wldev *dev,
+@@ -846,20 +831,20 @@ static void do_key_write(struct b43_wlde
+ 			 const u8 *key, size_t key_len, const u8 *mac_addr)
+ {
+ 	u8 buf[B43_SEC_KEYSIZE] = { 0, };
+-	u8 per_sta_keys_start = 8;
++	u8 pairwise_keys_start = B43_NR_GROUP_KEYS * 2;
+ 
+ 	if (b43_new_kidx_api(dev))
+-		per_sta_keys_start = 4;
++		pairwise_keys_start = B43_NR_GROUP_KEYS;
+ 
+-	B43_WARN_ON(index >= dev->max_nr_keys);
++	B43_WARN_ON(index >= ARRAY_SIZE(dev->key));
+ 	B43_WARN_ON(key_len > B43_SEC_KEYSIZE);
+ 
+-	if (index >= per_sta_keys_start)
++	if (index >= pairwise_keys_start)
+ 		keymac_write(dev, index, NULL);	/* First zero out mac. */
+ 	if (key)
+ 		memcpy(buf, key, key_len);
+ 	key_write(dev, index, algorithm, buf);
+-	if (index >= per_sta_keys_start)
++	if (index >= pairwise_keys_start)
+ 		keymac_write(dev, index, mac_addr);
+ 
+ 	dev->key[index].algorithm = algorithm;
+@@ -872,21 +857,24 @@ static int b43_key_write(struct b43_wlde
+ 			 struct ieee80211_key_conf *keyconf)
+ {
+ 	int i;
+-	int sta_keys_start;
++	int pairwise_keys_start;
+ 
+ 	if (key_len > B43_SEC_KEYSIZE)
+ 		return -EINVAL;
+-	for (i = 0; i < dev->max_nr_keys; i++) {
++	for (i = 0; i < ARRAY_SIZE(dev->key); i++) {
+ 		/* Check that we don't already have this key. */
+ 		B43_WARN_ON(dev->key[i].keyconf == keyconf);
+ 	}
+ 	if (index < 0) {
+ 		/* Pairwise key. Get an empty slot for the key. */
+ 		if (b43_new_kidx_api(dev))
+-			sta_keys_start = 4;
++			pairwise_keys_start = B43_NR_GROUP_KEYS;
+ 		else
+-			sta_keys_start = 8;
+-		for (i = sta_keys_start; i < dev->max_nr_keys; i++) {
++			pairwise_keys_start = B43_NR_GROUP_KEYS * 2;
++		for (i = pairwise_keys_start;
++		     i < pairwise_keys_start + B43_NR_PAIRWISE_KEYS;
++		     i++) {
++			B43_WARN_ON(i >= ARRAY_SIZE(dev->key));
+ 			if (!dev->key[i].keyconf) {
+ 				/* found empty */
+ 				index = i;
+@@ -914,7 +902,7 @@ static int b43_key_write(struct b43_wlde
+ 
+ static int b43_key_clear(struct b43_wldev *dev, int index)
+ {
+-	if (B43_WARN_ON((index < 0) || (index >= dev->max_nr_keys)))
++	if (B43_WARN_ON((index < 0) || (index >= ARRAY_SIZE(dev->key))))
+ 		return -EINVAL;
+ 	do_key_write(dev, index, B43_SEC_ALGO_NONE,
+ 		     NULL, B43_SEC_KEYSIZE, NULL);
+@@ -929,15 +917,19 @@ static int b43_key_clear(struct b43_wlde
+ 
+ static void b43_clear_keys(struct b43_wldev *dev)
+ {
+-	int i;
++	int i, count;
+ 
+-	for (i = 0; i < dev->max_nr_keys; i++)
++	if (b43_new_kidx_api(dev))
++		count = B43_NR_GROUP_KEYS + B43_NR_PAIRWISE_KEYS;
++	else
++		count = B43_NR_GROUP_KEYS * 2 + B43_NR_PAIRWISE_KEYS;
++	for (i = 0; i < count; i++)
+ 		b43_key_clear(dev, i);
+ }
+ 
+ static void b43_dump_keymemory(struct b43_wldev *dev)
+ {
+-	unsigned int i, index, offset;
++	unsigned int i, index, count, offset, pairwise_keys_start;
+ 	u8 mac[ETH_ALEN];
+ 	u16 algo;
+ 	u32 rcmta0;
+@@ -951,7 +943,14 @@ static void b43_dump_keymemory(struct b4
+ 	hf = b43_hf_read(dev);
+ 	b43dbg(dev->wl, "Hardware key memory dump:  USEDEFKEYS=%u\n",
+ 	       !!(hf & B43_HF_USEDEFKEYS));
+-	for (index = 0; index < dev->max_nr_keys; index++) {
++	if (b43_new_kidx_api(dev)) {
++		pairwise_keys_start = B43_NR_GROUP_KEYS;
++		count = B43_NR_GROUP_KEYS + B43_NR_PAIRWISE_KEYS;
++	} else {
++		pairwise_keys_start = B43_NR_GROUP_KEYS * 2;
++		count = B43_NR_GROUP_KEYS * 2 + B43_NR_PAIRWISE_KEYS;
++	}
++	for (index = 0; index < count; index++) {
+ 		key = &(dev->key[index]);
+ 		printk(KERN_DEBUG "Key slot %02u: %s",
+ 		       index, (key->keyconf == NULL) ? " " : "*");
+@@ -965,11 +964,11 @@ static void b43_dump_keymemory(struct b4
+ 				      B43_SHM_SH_KEYIDXBLOCK + (index * 2));
+ 		printk("   Algo: %04X/%02X", algo, key->algorithm);
+ 
+-		if (index >= 4) {
++		if (index >= pairwise_keys_start) {
+ 			rcmta0 = b43_shm_read32(dev, B43_SHM_RCMTA,
+-						((index - 4) * 2) + 0);
++						((index - pairwise_keys_start) * 2) + 0);
+ 			rcmta1 = b43_shm_read16(dev, B43_SHM_RCMTA,
+-						((index - 4) * 2) + 1);
++						((index - pairwise_keys_start) * 2) + 1);
+ 			*((__le32 *)(&mac[0])) = cpu_to_le32(rcmta0);
+ 			*((__le16 *)(&mac[4])) = cpu_to_le16(rcmta1);
+ 			printk("   MAC: %pM", mac);
+@@ -2990,17 +2989,14 @@ error:
+ 
+ static void b43_security_init(struct b43_wldev *dev)
+ {
+-	dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
+-	B43_WARN_ON(dev->max_nr_keys > ARRAY_SIZE(dev->key));
+ 	dev->ktp = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_KTP);
+ 	/* KTP is a word address, but we address SHM bytewise.
+ 	 * So multiply by two.
+ 	 */
+ 	dev->ktp *= 2;
+-	if (dev->dev->id.revision >= 5) {
+-		/* Number of RCMTA address slots */
+-		b43_write16(dev, B43_MMIO_RCMTA_COUNT, dev->max_nr_keys - 8);
+-	}
++	/* Number of RCMTA address slots */
++	b43_write16(dev, B43_MMIO_RCMTA_COUNT, B43_NR_PAIRWISE_KEYS);
++	/* Clear the key memory. */
+ 	b43_clear_keys(dev);
+ }
+ 
+Index: wireless-testing/drivers/net/wireless/b43/xmit.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/xmit.c	2009-08-06 09:58:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/xmit.c	2009-08-06 09:58:53.000000000 +0200
+@@ -237,7 +237,7 @@ int b43_generate_txhdr(struct b43_wldev 
+ 		int wlhdr_len;
+ 		size_t iv_len;
+ 
+-		B43_WARN_ON(key_idx >= dev->max_nr_keys);
++		B43_WARN_ON(key_idx >= ARRAY_SIZE(dev->key));
+ 		key = &(dev->key[key_idx]);
+ 
+ 		if (unlikely(!key->keyconf)) {
+@@ -578,7 +578,7 @@ void b43_rx(struct b43_wldev *dev, struc
+ 		 * key index, but the ucode passed it slightly different.
+ 		 */
+ 		keyidx = b43_kidx_to_raw(dev, keyidx);
+-		B43_WARN_ON(keyidx >= dev->max_nr_keys);
++		B43_WARN_ON(keyidx >= ARRAY_SIZE(dev->key));
+ 
+ 		if (dev->key[keyidx].algorithm != B43_SEC_ALGO_NONE) {
+ 			wlhdr_len = ieee80211_hdrlen(fctl);
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Greetings, Michael.
