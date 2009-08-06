@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sj-iport-1.cisco.com ([171.71.176.70]:35929 "EHLO
-	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbZHUAkf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 20:40:35 -0400
-Received: from sj-core-3.cisco.com (sj-core-3.cisco.com [171.68.223.137])
-	by sj-dkim-4.cisco.com (8.12.11/8.12.11) with ESMTP id n7L0eb2T019489
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 17:40:37 -0700
-Received: from xbh-sjc-221.amer.cisco.com (xbh-sjc-221.cisco.com [128.107.191.63])
-	by sj-core-3.cisco.com (8.13.8/8.14.3) with ESMTP id n7L0ebfn016450
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 00:40:37 GMT
-Message-ID: <4A8DED03.2050502@cs.ucla.edu>
-Date: Thu, 20 Aug 2009 17:40:35 -0700
-From: Rafael Laufer <rlaufer@cs.ucla.edu>
+Received: from mx2.redhat.com ([66.187.237.31]:51224 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753595AbZHFTOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:14:07 -0400
+Date: Thu, 6 Aug 2009 15:13:59 -0400
+From: Dave Jones <davej@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
+	stephen.chen@atheros.com, linux-usb@vger.kernel.org,
+	jbarnes@virtuousgeek.org
+Subject: [PATCH] Document pci_ids.h addition policy.
+Message-ID: <20090806191359.GA4345@redhat.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com> <1249532170.21101.3.camel@localhost.localdomain> <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com> <1249533357.21101.5.camel@localhost.localdomain> <20090806050932.GA25015@kroah.com> <20090806181546.GA11589@redhat.com> <20090806183326.GA28433@kroah.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090806183326.GA28433@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implements the IEEE80211_RADIOTAP_RATE 
-option when parsing radiotap headers to allow rate 
-selection on a per-packet basis.
-
-
-Signed-off-by: Rafael Laufer <rlaufer@cs.ucla.edu>
----
- Implementation of the IEEE80211_RADIOTAP_RATE 
- option when parsing radiotap headers to allow
- rate selection on a per-packet basis.
-
- net/mac80211/tx.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 10a1099..41d636b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -549,7 +549,10 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	 * If we're associated with the sta at this point we know we can at
- 	 * least send the frame at the lowest bit rate.
- 	 */
--	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
-+
-+	/* in monitor mode, we already have the rate from the radiotap header */
-+	if (likely(!(info->flags & IEEE80211_TX_CTL_INJECTED)))
-+		rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+On Thu, Aug 06, 2009 at 11:33:26AM -0700, Greg Kroah-Hartman wrote:
  
- 	if (unlikely(info->control.rates[0].idx < 0))
- 		return TX_DROP;
-@@ -972,6 +975,19 @@ static bool __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
- 				tx->flags |= IEEE80211_TX_FRAGMENTED;
- 			break;
- 
-+		/* Get the rate parameter from the radiotap header, 
-+		 * allowing rate selection on a per-packet basis 
-+		 */
-+		case IEEE80211_RADIOTAP_RATE:
-+			bitrate = (*iterator.this_arg) * 5;
-+			for (i = 0; i < sband->n_bitrates; i++) {
-+				if (sband->bitrates[i].bitrate == bitrate)
-+					break;
-+			}
-+			if (i != sband->n_bitrates)
-+				info->control.rates[0].idx = i;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
--- 
-1.6.0.4
+ > > I agree. In fact, I'd go further, and say that the bulk of what we have
+ > > in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
+ > > entries in that file are used by multiple files in the kernel.
+ > 
+ > I agree with that as well, which is why when I was PCI maintainer, I
+ > didn't allow any new additions to the pci_ids.h file, unless it was
+ > going to be an id that was shared by different drivers.  That cut the
+ > new additions down to about none :)
 
+Perhaps documenting this is a good idea to prevent things being moved there,
+as it still seems to be happening judging from the git log.
+
+Signed-off-by: Dave Jones <davej@redhat.com>
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 73b46b6..f9156fd 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2,6 +2,9 @@
+  *	PCI Class, Vendor and Device IDs
+  *
+  *	Please keep sorted.
++ *
++ *	Do not add new entries to this file unless the definitions
++ *	are shared between multiple drivers.
+  */
+ 
+ /* Device classes and subclasses */
