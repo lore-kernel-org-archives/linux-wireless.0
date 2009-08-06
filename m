@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:33616 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbZHJT11 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:27:27 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so1077455rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:29 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Subject: [PATCH 2/7] mac80211: Use correct sign for mesh active path refresh.
-Date: Mon, 10 Aug 2009 12:15:47 -0700
-Message-Id: <1249931752-18127-3-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249931752-18127-2-git-send-email-javier@cozybit.com>
-References: <20090810175225.GF2733@tuxdriver.com>
- <1249931752-18127-1-git-send-email-javier@cozybit.com>
- <1249931752-18127-2-git-send-email-javier@cozybit.com>
+Received: from kroah.org ([198.145.64.141]:55350 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755715AbZHFTqq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 6 Aug 2009 15:46:46 -0400
+Date: Thu, 6 Aug 2009 12:38:59 -0700
+From: Greg KH <greg@kroah.com>
+To: Dave Jones <davej@redhat.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
+	stephen.chen@atheros.com, linux-usb@vger.kernel.org,
+	jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] Document pci_ids.h addition policy.
+Message-ID: <20090806193859.GA29518@kroah.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
+ <1249532170.21101.3.camel@localhost.localdomain>
+ <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
+ <1249533357.21101.5.camel@localhost.localdomain>
+ <20090806050932.GA25015@kroah.com>
+ <20090806181546.GA11589@redhat.com>
+ <20090806183326.GA28433@kroah.com>
+ <20090806191359.GA4345@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090806191359.GA4345@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrey Yurovsky <andrey@cozybit.com>
+On Thu, Aug 06, 2009 at 03:13:59PM -0400, Dave Jones wrote:
+> On Thu, Aug 06, 2009 at 11:33:26AM -0700, Greg Kroah-Hartman wrote:
+>  
+>  > > I agree. In fact, I'd go further, and say that the bulk of what we have
+>  > > in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
+>  > > entries in that file are used by multiple files in the kernel.
+>  > 
+>  > I agree with that as well, which is why when I was PCI maintainer, I
+>  > didn't allow any new additions to the pci_ids.h file, unless it was
+>  > going to be an id that was shared by different drivers.  That cut the
+>  > new additions down to about none :)
+> 
+> Perhaps documenting this is a good idea to prevent things being moved there,
+> as it still seems to be happening judging from the git log.
+> 
+> Signed-off-by: Dave Jones <davej@redhat.com>
 
-On locally originated traffic, we refresh active paths after a timeout.  The
-decision to do this was using the wrong sign and therefore the refresh timer
-was triggered for every frame.
-
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b54c21c..1cd1e72 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -791,7 +791,7 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 	}
- 
- 	if (mpath->flags & MESH_PATH_ACTIVE) {
--		if (time_after(jiffies, mpath->exp_time -
-+		if (time_after(jiffies, mpath->exp_time +
- 			msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time))
- 				&& !memcmp(sdata->dev->dev_addr, hdr->addr4,
- 					   ETH_ALEN)
--- 
-1.5.4.3
-
+Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
