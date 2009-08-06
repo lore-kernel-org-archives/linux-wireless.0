@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:46863 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753198AbZHLOwb (ORCPT
+Received: from mga10.intel.com ([192.55.52.92]:20648 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753279AbZHFTCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 10:52:31 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 2/3] mac80211: fix dynamic power save for devices which have
-	nullfunc support
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Wed, 12 Aug 2009 17:52:10 +0300
-Message-ID: <20090812145209.23691.82.stgit@tikku>
-In-Reply-To: <20090812145200.23691.17281.stgit@tikku>
-References: <20090812145200.23691.17281.stgit@tikku>
+	Thu, 6 Aug 2009 15:02:32 -0400
+Date: Thu, 6 Aug 2009 21:04:41 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Set WEP ciphers
+Message-ID: <20090806190439.GA22647@sortiz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
 
-In TX path it was assumed that dynamic power save works only if
-IEEE80211_HW_PS_NULLFUNC_STACK is set. But is not the case, there are
-devices which have nullfunc support in hardware but need mac80211
-to handle dynamic power save timers, TI's wl1251 is one of them.
+With iwconfig there is no way to properly set the ciphers when trying to
+connect to a WEP SSID. Although mac80211 based drivers dont need it, several
+fullmac drivers do.
+This patch basically sets the WEP ciphers whenever they're not set at all.
 
-The fix is to not check for IEEE80211_HW_PS_NULLFUNC_STACK in
-is_dynamic_ps_enabled(), instead check IEEE80211_HW_SUPPORTS_PS and
-IEEE80211_HW_SUPPORTS_DYNAMIC_PS flags and act accordingly.
-
-Tested with wl1251.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
+ net/wireless/sme.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
- net/mac80211/tx.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 03005f9..0e7273c 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1386,10 +1386,15 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 8a7dcbf..b78a111 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -638,14 +638,28 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
  
- static bool is_dynamic_ps_enabled(struct ieee80211_local *local)
- {
--	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+
-+	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
- 		/* driver doesn't support power save */
- 		return false;
+ 	if (connkeys && connkeys->def >= 0) {
+ 		int idx;
++		u32 cipher;
  
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
-+		/* hardware does dynamic power save */
-+		return false;
+ 		idx = connkeys->def;
++		cipher = connkeys->params[idx].cipher;
+ 		/* If given a WEP key we may need it for shared key auth */
+-		if (connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP40 ||
+-		    connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP104) {
++		if (cipher == WLAN_CIPHER_SUITE_WEP40 ||
++		    cipher == WLAN_CIPHER_SUITE_WEP104) {
+ 			connect->key_idx = idx;
+ 			connect->key = connkeys->params[idx].key;
+ 			connect->key_len = connkeys->params[idx].key_len;
 +
- 	if (local->hw.conf.dynamic_ps_timeout <= 0)
- 		/* dynamic power save disabled */
- 		return false;
++			/*
++			 * If ciphers are not set (e.g. when going through
++			 * iwconfig), we have to set them appropriately here.
++			 */
++			if (connect->crypto.cipher_group == 0)
++				connect->crypto.cipher_group = cipher;
++
++			if (connect->crypto.n_ciphers_pairwise == 0) {
++				connect->crypto.n_ciphers_pairwise = 1;
++				connect->crypto.ciphers_pairwise[0] = cipher;
++			}					
+ 		}
+ 	}
+ 
+-- 
+1.6.3.1
 
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
