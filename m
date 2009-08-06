@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53135 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757762AbZHQR1c (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:32925 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461AbZHFGRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:32 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	=?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH v5 11/33] wireless: clarify rndis_wlan is not broadcom specific
-Date: Mon, 17 Aug 2009 13:27:10 -0400
-Message-Id: <1250530052-14783-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 6 Aug 2009 02:17:34 -0400
+Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Greg KH <greg@kroah.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
+	stephen.chen@atheros.com, linux-usb@vger.kernel.org
+In-Reply-To: <20090806050932.GA25015@kroah.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
+	 <1249532170.21101.3.camel@localhost.localdomain>
+	 <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
+	 <1249533357.21101.5.camel@localhost.localdomain>
+	 <20090806050932.GA25015@kroah.com>
+Content-Type: text/plain
+Date: Wed, 05 Aug 2009 23:17:27 -0700
+Message-Id: <1249539447.21101.9.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Gábor Stefanik <netrolller.3d@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Hi Luiz,
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index e910799..c557056 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -403,7 +403,10 @@ config USB_NET_RNDIS_WLAN
- 	  BUFFALO WLI-USB-G54
- 
- 	  All of these devices are based on Broadcom 4320 chip which is the
--	  only wireless RNDIS chip known to date.
-+	  only wireless RNDIS chip known to date. Technically RNDIS follows
-+	  a Microsoft specification, and although only Broadcom currently
-+	  supports this, other vendors could technically follow the
-+	  implementation as well.
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
--- 
-1.6.2.5
+> > > >> New Atheros USB devices will use 0x0cf3. The first device
+> > > >> will be ar9271, for which we are adding support for.
+> > > >>
+> > > >> Cc: zhifeng.cai@atheros.com
+> > > >> Cc: stephen.chen@atheros.com
+> > > >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > > >> ---
+> > > >>
+> > > >> John, sending this through you as this is only
+> > > >> specific to wireless, at least at the moment.
+> > > >>
+> > > >>  include/linux/pci_ids.h |    1 +
+> > > >>  1 files changed, 1 insertions(+), 0 deletions(-)
+> > > >>
+> > > >> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > > >> index 73b46b6..27f4e6b 100644
+> > > >> --- a/include/linux/pci_ids.h
+> > > >> +++ b/include/linux/pci_ids.h
+> > > >> @@ -2170,6 +2170,7 @@
+> > > >>  #define PCI_DEVICE_ID_BCM1250_HT     0x0002
+> > > >>
+> > > >>  #define PCI_VENDOR_ID_ATHEROS                0x168c
+> > > >> +#define PCI_VENDOR_ID_ATHEROS_USB    0x0cf3
+> > > >
+> > > > this is confusing the hell out of me. What are you adding here.
+> > > 
+> > > No you're right, my fault.
+> > > 
+> > > > A USB
+> > > > vendor id or a PCI one. Is the ar9271 a PCI device or a USB device?
+> > > 
+> > > Its only USB.
+> > > 
+> > > Thanks... hm I see no USB vendor id headers. Guess we won't need to add this.
+> > 
+> > the closest we have is drivers/hid/hid-ids.h and we might just should
+> > have Greg create a usb-ids.h file.
+> 
+> Ick, no, there's no such file for a good reason.  Put your device ids in
+> the driver files, no need to share it across the whole kernel.
+
+that is fine with me btw. I have always done this. I do actually prefer
+the plain ids and then a comment above their usage :)
+
+Regards
+
+Marcel
+
 
