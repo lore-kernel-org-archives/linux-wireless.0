@@ -1,99 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from correio.ufra.edu.br ([200.129.150.6]:35918 "EHLO
-	correio.ufra.edu.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbZHaQpN (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:45698 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757336AbZHGKer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 12:45:13 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by correio.ufra.edu.br (Postfix) with ESMTP id 82F137A498
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 13:42:21 -0300 (BRT)
-Received: from correio.ufra.edu.br ([127.0.0.1])
-	by localhost (correio.ufra.edu.br [127.0.0.1]) (amavisd-new, port 10025)
-	with LMTP id aK385MbLo999 for <linux-wireless@vger.kernel.org>;
-	Mon, 31 Aug 2009 13:42:12 -0300 (BRT)
-Received: from [10.10.17.60] (srv2.ufra.edu.br [200.129.150.5])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by correio.ufra.edu.br (Postfix) with ESMTP id 0C8877A492
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 13:42:12 -0300 (BRT)
-Message-ID: <4A9BFCCB.6040808@ufra.edu.br>
-Date: Mon, 31 Aug 2009 13:39:39 -0300
-From: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>
+	Fri, 7 Aug 2009 06:34:47 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 15/23] wl1251: add channel to wl1251_cmd_join() parameters
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:34:34 +0300
+Message-ID: <20090807103434.31717.15352.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: zd1211rw on ppc (iBook G4)
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi list,
+From: Kalle Valo <kalle.valo@nokia.com>
 
-On linux-2.6.24-gentoo-r3, the zd1211rw driver was working as eth1.
+Because join channel tunes to a channel, better to make it more obvious
+by adding a parameter for it.
 
-This is a big-endian machine.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+---
 
-On 2.6.30-gentoo-r5, 'ifconfig -a' shows the relevant entries below:
+ drivers/net/wireless/wl12xx/wl1251_cmd.c  |   10 +++++-----
+ drivers/net/wireless/wl12xx/wl1251_cmd.h  |    4 ++--
+ drivers/net/wireless/wl12xx/wl1251_main.c |   10 +++++-----
+ 3 files changed, 12 insertions(+), 12 deletions(-)
 
-wlan0     Link encap:Ethernet  HWaddr 00:16:01:D0:11:7D 
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index e276cb5..4e796db 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -251,8 +251,8 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
+-		    u8 dtim_interval)
++int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
++		    u16 beacon_interval, u8 dtim_interval)
+ {
+ 	unsigned long timeout;
+ 	struct cmd_join *join;
+@@ -273,9 +273,9 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	wl1251_debug(DEBUG_CMD, "cmd join%s %d %d",
++	wl1251_debug(DEBUG_CMD, "cmd join%s ch %d %d/%d",
+ 		     bss_type == BSS_TYPE_IBSS ? " ibss" : "",
+-		     beacon_interval, dtim_interval);
++		     channel, beacon_interval, dtim_interval);
+ 
+ 	/* Reverse order BSSID */
+ 	bssid = (u8 *) &join->bssid_lsb;
+@@ -291,7 +291,7 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
+ 	join->beacon_interval = beacon_interval;
+ 	join->dtim_interval = dtim_interval;
+ 	join->bss_type = bss_type;
+-	join->channel = wl->channel;
++	join->channel = channel;
+ 	join->ctrl = JOIN_CMD_CTRL_TX_FLUSH;
+ 
+ 	ret = wl1251_cmd_send(wl, CMD_START_JOIN, join, sizeof(*join));
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+index ffeabf2..dff798a 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+@@ -36,8 +36,8 @@ int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len);
+ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
+ 		   void *bitmap, u16 bitmap_len, u8 bitmap_control);
+ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable);
+-int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
+-		    u8 dtim_interval);
++int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
++		    u16 beacon_interval, u8 dtim_interval);
+ int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
+ int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
+ 			   size_t len);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 2514c94..5e90459 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -324,7 +324,7 @@ static void wl1251_filter_work(struct work_struct *work)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1251_cmd_join(wl, wl->bss_type, wl->beacon_int,
++	ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel, wl->beacon_int,
+ 				   wl->dtim_period);
+ 	if (ret < 0)
+ 		goto out_sleep;
+@@ -565,8 +565,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		goto out;
+ 
+ 	if (channel != wl->channel) {
+-		ret = wl1251_cmd_join(wl, wl->bss_type, wl->beacon_int,
+-					   wl->dtim_period);
++		ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel,
++				      wl->beacon_int, wl->dtim_period);
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 
+@@ -1123,7 +1123,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 
+ 		if (wl->bss_type != BSS_TYPE_IBSS) {
+-			ret = wl1251_cmd_join(wl, wl->bss_type,
++			ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel,
+ 					      wl->beacon_int,
+ 					      wl->dtim_period);
+ 			if (ret < 0)
+@@ -1152,7 +1152,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 
+ 		ret = wl1251_cmd_join(wl, wl->bss_type, wl->beacon_int,
+-				      wl->dtim_period);
++				      wl->channel, wl->dtim_period);
+ 
+ 		if (ret < 0)
+ 			goto out;
 
-wmaster0  Link encap:UNSPEC  HWaddr
-00-16-01-D0-11-7D-10-00-00-00-00-00-00-00-00-00 
-          [NO FLAGS]  MTU:0  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
-
-dmesg command shows:
-
-usb 1-2: new high speed USB device using ehci_hcd and address 3
-usb 1-2: New USB device found, idVendor=0411, idProduct=00da
-usb 1-2: New USB device strings: Mfr=16, Product=32, SerialNumber=0
-usb 1-2: Product: USB2.0 WLAN
-usb 1-2: Manufacturer: Buffalo
-usb 1-2: configuration #1 chosen from 1 choice
-usb 1-2: reset high speed USB device using ehci_hcd and address 3
-phy1: Selected rate control algorithm 'minstrel'
-zd1211rw 1-2:1.0: phy1
-usb 1-2: firmware: requesting zd1211/zd1211b_ub
-usb 1-2: firmware: requesting zd1211/zd1211b_uphr
-zd1211rw 1-2:1.0: firmware version 4725
-zd1211rw 1-2:1.0: zd1211b chip 0411:00da v4810 high 00-16-01 AL2230S_RF
-pa0 g--N-
-usb 1-2: firmware: requesting zd1211/zd1211b_ub
-usb 1-2: firmware: requesting zd1211/zd1211b_uphr
-usb 1-2: firmware: requesting zd1211/zd1211b_ub
-usb 1-2: firmware: requesting zd1211/zd1211b_uphr
-usb 1-2: USB control request for firmware upload failed. Error number -110
-usb 1-2: Could not upload firmware code uph. Error number -110
-zd1211rw 1-2:1.0: couldn't load firmware. Error number -110
-
-lsusb shows:
-
-Bus 001 Device 003: ID 0411:00da MelCo., Inc. WLI-U2-KG54L
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-
-Bringing it up:
-
-ifconfig wlan0 up
-SIOCSIFFLAGS: Connection timed out
-
-DHCP command:
-dhcpcd wlan0
-dhcpcd: version 5.0.6 starting
-dhcpcd: wlan0: interface not found or invalid
-
-Likely is a issue similar reported previously:
-http://marc.info/?l=linux-wireless&m=124906700820860&w=2
-
-Quick peek at the source diffs between previous version reveals some
-changes.
-
-Regards,
-
-Leonardo
