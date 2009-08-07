@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39305 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932811AbZHNU1x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:27:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 14/34] wireless: group Cisco together on kconfig
-Date: Fri, 14 Aug 2009 16:25:39 -0400
-Message-Id: <1250281559-13041-15-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:32413 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753136AbZHGEPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 00:15:22 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 21:15:23 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19067.43624.740010.151237@gargle.gargle.HOWL>
+Date: Fri, 7 Aug 2009 09:45:36 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/12] ath9k: Update beacon RSSI
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few of these so we keep them under
-a config option which expands upon selection.
+ANI uses the beacon RSSI for its operation.
+Update this properly.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/Kconfig |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index f5d9dba..82a617d 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -195,6 +195,16 @@ config MWL8K
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index f6a8b1c..1a08c69 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -252,6 +252,10 @@ static int ath_rx_prepare(struct sk_buff *skb, struct ath_desc *ds,
+ 	else if (ds->ds_rxstat.rs_rssi > 127)
+ 		ds->ds_rxstat.rs_rssi = 127;
  
- endif # MARVELL_80211
- 
-+config CISCO_80211
-+	bool "Cisco"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Cisco wireless drivers. This
-+	  includes the Cisco Aironet ISA and PCI drivers and the Cisco
-+	  Aironet PCMCIA drivers.
++	/* Update Beacon RSSI, this is used by ANI. */
++	if (ieee80211_is_beacon(fc))
++		sc->nodestats.ns_avgbrssi = ds->ds_rxstat.rs_rssi;
 +
-+if CISCO_80211
-+
- config AIRO
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
- 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
-@@ -233,6 +243,8 @@ config AIRO_CS
- 	  and Cisco proprietary API, so both the Linux Wireless Tools and the
- 	  Cisco Linux utilities can be used to configure the card.
- 
-+endif # CISCO_80211
-+
- config ATMEL_80211
- 	bool "Atmel"
- 	depends on WLAN_80211
+ 	rx_status->mactime = ath_extend_tsf(sc, ds->ds_rxstat.rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
 -- 
-1.6.2.5
+1.6.4
 
