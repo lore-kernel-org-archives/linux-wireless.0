@@ -1,56 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33274 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952AbZH0VAi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:38 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 12/13] wl1271: Clear probe-request template after scan
-Date: Fri, 28 Aug 2009 00:00:06 +0300
-Message-Id: <1251406807-31495-13-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx2.redhat.com ([66.187.237.31]:41312 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752140AbZHGV4B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 17:56:01 -0400
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+From: Dan Williams <dcbw@redhat.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A7C9ED0.8000600@gmail.com>
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+	 <4A7C91B8.2010106@gmail.com>
+	 <1249680231.26088.42.camel@localhost.localdomain>
+	 <4A7C9ED0.8000600@gmail.com>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 16:54:39 -0500
+Message-Id: <1249682079.26088.50.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Fri, 2009-08-07 at 22:38 +0100, Dave wrote:
+> Dan Williams wrote:
+> > On Fri, 2009-08-07 at 21:42 +0100, Dave wrote:
+> >> David Kilroy wrote:
+> >>> First attempt at connect/disconnect, join_ibss/leave_ibss, and add_key
+> >>> etc. These patches rely on the series I just sent, but conflict with
+> >>> Holgers set_channel patch. Simple to resolve, and I'll do that in my
+> >>> next update.
+> >>>
+> >>> This doesn't work yet*, but I've a number of questions.
+> >> FYI, I've got this kinda working with wpa_supplicant in wext mode.
+> >>
+> >> First: on it's own wpa_supplicant keeps doing the 4 way handshake, while
+> >>  cfg80211 pumps out the following:
+> >>
+> >> ------------[ cut here ]------------
+> >> WARNING: at net/wireless/sme.c:451 __cfg80211_roamed+0x9a/0x1a5 [cfg80211]()
+> >> Hardware name: Latitude C600
+> >> Modules linked in: orinoco_cs orinoco cfg80211 michael_mic snd_maestro3
+> >> aty128fb [last unloaded: cfg80211]
+> >> Pid: 5, comm: events/0 Tainted: G   M    W  2.6.31-rc4-wl #87
+> >> Call Trace:
+> >>  [<c101ca51>] warn_slowpath_common+0x60/0x90
+> >>  [<c101ca8e>] warn_slowpath_null+0xd/0x10
+> >>  [<d1521659>] __cfg80211_roamed+0x9a/0x1a5 [cfg80211]
+> >>  [<d15139a9>] cfg80211_event_work+0x104/0x1bc [cfg80211]
+> >>  [<c102b39c>] worker_thread+0x15e/0x208
+> >>  [<d15138a5>] ? cfg80211_event_work+0x0/0x1bc [cfg80211]
+> >>  [<c102e5d5>] ? autoremove_wake_function+0x0/0x33
+> >>  [<c102b23e>] ? worker_thread+0x0/0x208
+> >>  [<c102e261>] kthread+0x66/0x6b
+> >>  [<c102e1fb>] ? kthread+0x0/0x6b
+> >>  [<c1003053>] kernel_thread_helper+0x7/0x10
+> >> ---[ end trace 12e5dbe2024c37ae ]---
+> >>
+> >> Cfg80211 is trying to select the bss we've authenticated against.
+> >> Unfortunately the BSS list is empty.
+> >>
+> >> If before starting wpa_supplicant I run:
+> >>
+> >> iw dev eth1 scan ssid <SSID>
+> >>
+> >> Then wpa_supplicant connects fine. The AP in question is configured with
+> >> a hidden SSID.
+> >>
+> >> Any suggestions as to how I need to address this?
+> > 
+> > Do a scan before you try to associate?  Most fullmac cards do one
+> > internally in the firmware before they try to associate anyway, but they
+> > may not emit the event to the driver.  If you're not doing a scan when
+> > you get the associate request, you probably should do one, let cfg80211
+> > cache the bss list, and then you're fine, right?
+> 
+> That should work. I just realised why it's doing this. I have
+> wpa_supplicant configured with ap_scan=2, so it doesn't scan before
+> connecting.
 
-Clear the probe-request template on the firmware after scan. Unless
-cleared, the firmware can independently send probe requests to the AP
-and interfere with the mac80211 logic.
+Yeah, Don't Do That :)
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_event.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+You shouldn't really ever use ap_scan=2 unless you want IW_MODE_MASTER
+or IW_MODE_IBSS.  Think of the children, and let the supplicant do the
+work.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index f3afd4a..87055f7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -26,6 +26,7 @@
- #include "wl1271_spi.h"
- #include "wl1271_event.h"
- #include "wl1271_ps.h"
-+#include "wl12xx_80211.h"
- 
- static int wl1271_event_scan_complete(struct wl1271 *wl,
- 				      struct event_mailbox *mbox)
-@@ -34,6 +35,9 @@ static int wl1271_event_scan_complete(struct wl1271 *wl,
- 		     mbox->scheduled_scan_status);
- 
- 	if (wl->scanning) {
-+		int size = sizeof(struct wl12xx_probe_req_template);
-+		wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
-+					size);
- 		mutex_unlock(&wl->mutex);
- 		ieee80211_scan_completed(wl->hw, false);
- 		mutex_lock(&wl->mutex);
--- 
-1.5.6.5
+Dan
+
+> Just tried wpa_supplicant in nl80211 mode. In that case, it's stuck in
+> scanning (presumably ignoring my ap_scan setting). It's not seeing my AP
+> (because it's hidden?), and so doesn't proceed. And I can't seem to get
+> it to do an active scan for my AP.
+> 
+> 
+> Dave.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
