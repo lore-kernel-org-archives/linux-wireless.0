@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34801 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754651AbZHCTZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:12 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:13 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 12/24] ath9k: remove debug message for no memoery on ath_init()
-Date: Mon, 3 Aug 2009 12:24:44 -0700
-Message-ID: <1249327496-24629-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+Received: from smtp.nokia.com ([192.100.122.233]:55495 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbZHGKq2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 06:46:28 -0400
+Message-ID: <4A7C05F1.5010102@nokia.com>
+Date: Fri, 07 Aug 2009 13:46:09 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: ext Kalle Valo <kalle.valo@iki.fi>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 21/23] wl1251: remove Luciano as maintainer
+References: <20090807102732.31717.84006.stgit@tikku> <20090807103518.31717.48612.stgit@tikku>
+In-Reply-To: <20090807103518.31717.48612.stgit@tikku>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're now propagating the -ENOMEM error so there is no need to
-keep a debug message there now.
+ext Kalle Valo wrote:
+> From: Kalle Valo <kalle.valo@nokia.com>
+>
+> Luciano is maintaining wl1271 part.
+>
+> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+> Cc: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
+>   
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6242950..230dedb 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1324,8 +1324,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 
- 	ah = kzalloc(sizeof(struct ath_hw), GFP_KERNEL);
- 	if (!ah) {
--		DPRINTF(sc, ATH_DBG_FATAL,
--			"Cannot allocate memory for state block\n");
- 		r = -ENOMEM;
- 		goto bad_no_ah;
- 	}
 -- 
-1.6.3.3
+Cheers,
+Luca.
 
