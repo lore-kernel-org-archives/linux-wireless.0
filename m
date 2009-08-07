@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:38644 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933314AbZHHDnl (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50135 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752961AbZHGVuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:43:41 -0400
-Received: by mail-pz0-f196.google.com with SMTP id 34so1941429pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:43:42 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH] mac80211: Early detection of broken mesh paths when using minstrel.
-Date: Fri,  7 Aug 2009 20:31:52 -0700
-Message-Id: <1249702314-32504-7-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702314-32504-6-git-send-email-javier@cozybit.com>
-References: <>
- <1249702314-32504-1-git-send-email-javier@cozybit.com>
- <1249702314-32504-2-git-send-email-javier@cozybit.com>
- <1249702314-32504-3-git-send-email-javier@cozybit.com>
- <1249702314-32504-4-git-send-email-javier@cozybit.com>
- <1249702314-32504-5-git-send-email-javier@cozybit.com>
- <1249702314-32504-6-git-send-email-javier@cozybit.com>
+	Fri, 7 Aug 2009 17:50:25 -0400
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave <kilroyd@googlemail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4A7C9ED0.8000600@gmail.com>
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+	 <4A7C91B8.2010106@gmail.com>
+	 <1249680231.26088.42.camel@localhost.localdomain>
+	 <4A7C9ED0.8000600@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hZDqkXVhTHLKgSYguB9s"
+Date: Fri, 07 Aug 2009 23:50:21 +0200
+Message-Id: <1249681821.7194.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c        |    1 -
- net/mac80211/rc80211_minstrel.c |    8 +++++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+--=-hZDqkXVhTHLKgSYguB9s
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b4309b2..1cd1e72 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -272,7 +272,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	last_hop_metric = airtime_link_metric_get(local, sta);
--	printk("XXX: last_hop_metric = %d\n", last_hop_metric);
- 	/* Update and check originator routing info */
- 	fresh_info = true;
- 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 3ea9740..0071649 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -51,6 +51,7 @@
- #include <linux/random.h>
- #include <linux/ieee80211.h>
- #include <net/mac80211.h>
-+#include "mesh.h"
- #include "rate.h"
- #include "rc80211_minstrel.h"
- 
-@@ -178,9 +179,14 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0)) {
- 			mi->r[ndx].success += success;
--			if (si)
-+			if (si) {
- 				si->fail_avg = (18050 - mi->r[ndx].probability)
- 					/ 180;
-+				WARN_ON(si->fail_avg > 100);
-+				if (si->fail_avg == 100 &&
-+					ieee80211_vif_is_mesh(&si->sdata->vif))
-+					mesh_plink_broken(si);
-+			}
- 		}
- 	}
- 
--- 
-1.5.4.3
+On Fri, 2009-08-07 at 22:38 +0100, Dave wrote:
+
+> Just tried wpa_supplicant in nl80211 mode. In that case, it's stuck in
+> scanning (presumably ignoring my ap_scan setting). It's not seeing my AP
+> (because it's hidden?), and so doesn't proceed. And I can't seem to get
+> it to do an active scan for my AP.
+
+(just quickly skimmed this thread, will reply in more detail tomorrow if
+there's still a need)
+
+You can put scan_ssid=3D1 into a network block to make it scan for the
+SSID.
+
+johannes
+
+--=-hZDqkXVhTHLKgSYguB9s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKfKGaAAoJEODzc/N7+QmavKoP/ikesuH4b84Wfk95owcP51SR
+RPoNtZhHH4drVKkhdK3H0bk1Yt/k8H+jJiO+GOtYwtFfnV52bfrqaEyKCkdCcVjl
+qEhq+NXVwmcHrOdGfYEDUU9N/FVq8yIihT0MkexRUU81bO3SJ5V9FoNHKPWpezz2
+5+YtBf+acI+BccFFbkmJKU5YhCSAurcWEK8nbzpOlgosIjQ5/I1UE3aPq3Ga2U69
+WxkdBNBi8omTYywV7RzQRvNHY4pl7hie1jByCA6BNVvWxaS1EW1L4seskEM+4kfk
+blG+L4zkwEheYz37rE+CBpS7rR3wDZs6BOp9SzJWwreounAZ31U2qsq7o936AH1C
+J9hdFevStxINJDKbkz+qzbdPjlInNdcGsmmYnSRMNPByuGks5SRNmgOcVqzgPtX+
+3D0yQMCryKkT/Gth3v2b5gte4y4aaCAvFVynZBUbTe/VlB4OUnsFlQCwPfYnehAh
+896qjDeSOHXXB8q2l0WXCc9gH+aKHkXbATMxX+PZszjIx2OYV+d3KD7pFs8tGDMW
+Esm5s19Xf47zG8dxfVPWSLUZl1nPeUV42BDpBmf65Q3Qq3V1XQMO8490HQm85PQN
+lCZnAfZtlbeVlsKNLscHIxGBy/l31pDA26p09LBzv+tDTSdPknujVI9EHK0Te0tN
+w0OXqb7XPYf+oJEucPPn
+=WEBy
+-----END PGP SIGNATURE-----
+
+--=-hZDqkXVhTHLKgSYguB9s--
 
