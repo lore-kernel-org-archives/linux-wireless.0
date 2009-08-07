@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41481 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754710AbZHMTbt (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:58499 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754650AbZHGRju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/20] wireless: cleanup and organize drivers kconfig better
-Date: Thu, 13 Aug 2009 15:31:29 -0400
-Message-Id: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 7 Aug 2009 13:39:50 -0400
+From: Frans Pop <elendil@planet.nl>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: ath5k - strange regulatory domain change
+Date: Fri, 7 Aug 2009 19:39:48 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Chris Clayton <chris2553@googlemail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com> <20090807151304.GE7545@tuxdriver.com> <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
+In-Reply-To: <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908071939.49627.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series consists of a lot of organizational changes on
-the wireless drivers kconfig. We also do some cleanup towards the
-end to help simplify the individual kconfig entries. Hope is to
-help users compiling their kernels find their drivers as quickly
-as possible. It also makes it easier to understand which driver
-are for what vendor chipsets as some of vendor drivers were
-completely scattered apart.
+On Friday 07 August 2009, you wrote:
+> The way the EEPROM was programmed for this type of
+> regulatory domain was to give you a group number under which other
+> countries fall under. If you ended up getting a direct alpha2
+> programmed in the EEPROM instead you would still end up matching the
+> alpha2 to a group number. The group number leads you to a regulatory
+> domain that all those countries in that group number adhere to. So it
+> was a way to group up regulatory domain rules between countries. The
+> "CN" you see just so happens to be the alpha2 for the first country in
+> the same group regulatory domain group.
+>
+> What we can do is to elaborate on that on the dmesg and also maybe
 
-This might be some sort of OCD kicking in.
+That would be very welcome.
 
-Luis R. Rodriguez (20):
-  wireless: group intel wireless drivers on kconfig
-  wireless: move MWL8K right below Libertas on kconfig
-  wireless: move Marvell wireless under a kconfig option
-  wireless: move p54 and prism54 drivers closeer on kconfig
-  wireless: group conexant / STEricsson wireless drivers in kconfig
-  wireless: move zd1211rw option closer to old ZyDAS on kconfig
-  wireless: group ZyDAS wireless drivers in kconfig
-  wireless: group Realtek wireless on kconfig
-  wireless: move bcm drivers above rndis wlan driver
-  wireless: group Broadcom wireless drivers on kconfig
-  wireless: group Atmel wireless together on kconfig
-  wireless: move AIRO_CS closer to AIRO_CS
-  wireless: group Cisco wireless together on kconfig
-  wireless: move drivers with menuconfigs together on kconfig
-  wireless: organize group drivers alphabetically
-  wireless: remove IEEE 802.11 description on hostapd
-  wireless: move mac80211_hwsim to top level wireless driver menu
-  wireless: organize individual drivers alphabetically
-  wireless: simplify WLAN_PRE80211 entries
-  wireless: simplify WLAN_80211 entries
+> pick the most common country on the group so it will tend to match the
+> country users are on.
 
- drivers/net/wireless/Kconfig              |  450 +++++++++++++++++------------
- drivers/net/wireless/ath/Kconfig          |    1 -
- drivers/net/wireless/ath/ar9170/Kconfig   |    2 +-
- drivers/net/wireless/ath/ath5k/Kconfig    |    2 +-
- drivers/net/wireless/ath/ath9k/Kconfig    |    2 +-
- drivers/net/wireless/b43/Kconfig          |    2 +-
- drivers/net/wireless/b43legacy/Kconfig    |    2 +-
- drivers/net/wireless/hostap/Kconfig       |    3 +-
- drivers/net/wireless/ipw2x00/Kconfig      |    6 +-
- drivers/net/wireless/iwlwifi/Kconfig      |    2 +-
- drivers/net/wireless/iwmc3200wifi/Kconfig |    2 +-
- drivers/net/wireless/orinoco/Kconfig      |    2 +-
- drivers/net/wireless/p54/Kconfig          |    2 +-
- drivers/net/wireless/rt2x00/Kconfig       |    2 +-
- drivers/net/wireless/wl12xx/Kconfig       |    2 +-
- drivers/net/wireless/zd1211rw/Kconfig     |    2 +-
- 16 files changed, 287 insertions(+), 197 deletions(-)
+I think that would just be moving the problem from one group of users to 
+another, possibly only marginally smaller, group of users.
 
+As far as I can see the largest group is ETSI1_WORLD and contains 33 
+countries, followed by NULL1_WORLD (is that a real group?) with 22. 
+That's probably too many to list them all.
+OTOH, all other groups contain at most 7 countries, which could possibly 
+be listed.
+
+Probably the simplest option would be to just display some identification 
+of the domain group itself and point users to documentation which 
+explains what countries fall under what groups. That would at least avoid 
+the confusion caused by randomly picking a matching country.
+Variation could be to display the country if the group only contains one 
+country, but that could also be considered an inconsistent user 
+interface.
+
+Cheers,
+FJP
