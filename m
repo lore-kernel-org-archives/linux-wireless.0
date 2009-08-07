@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:57907 "EHLO mx2.redhat.com"
+Received: from mx2.redhat.com ([66.187.237.31]:53517 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753279AbZHMH3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 03:29:42 -0400
-Date: Thu, 13 Aug 2009 09:28:16 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH 2.6.30] iwl3945: fix rfkill switch
-Message-ID: <20090813072816.GA2373@dhcp-lab-161.englab.brq.redhat.com>
-References: <1249389350-4158-1-git-send-email-sgruszka@redhat.com> <1249512709.30019.4902.camel@rc-desk> <20090806071902.GA9816@dhcp-lab-161.englab.brq.redhat.com> <1249589758.30019.5034.camel@rc-desk> <20090807063141.GA2523@dhcp-lab-161.englab.brq.redhat.com> <1249922692.30019.5610.camel@rc-desk> <20090811140908.GA3235@dhcp-lab-161.englab.brq.redhat.com> <1250014113.30019.5799.camel@rc-desk> <20090812151235.GA3912@dhcp-lab-161.englab.brq.redhat.com> <1250095502.30019.5951.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250095502.30019.5951.camel@rc-desk>
+	id S1753397AbZHGVVz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 17:21:55 -0400
+Subject: Re: Libertas: Association request to the driver failed
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Mack <daniel@caiaq.de>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <20090807191156.GS19257@buzzloop.caiaq.de>
+References: <20090807191156.GS19257@buzzloop.caiaq.de>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 16:21:37 -0500
+Message-Id: <1249680097.26088.40.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2009 at 09:45:02AM -0700, reinette chatre wrote:
-> > > I also do not understand the need to modify rfkill's internal state.
-> > 
-> > It's needed for Case1. Additional change of internal rfkill state, which
-> > I proposed in previous e-mail is against situation when we have:
-> >  	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_SOFT_BLOCKED
-> > To make it:
-> >  	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+On Fri, 2009-08-07 at 21:11 +0200, Daniel Mack wrote:
+> Since a recent merge of the wireless tree to Linus' master, my SDIO
+> connected libertas module fails to connect to our WLAN.
 > 
-> ok - this makes sense now. In your previous email you also mentioned
-> that that delta patch was untested. Is it possible for you or anybody
-> else on that redhat bugzilla to give the new patch a try?
-Yes, I'm going to rewrite patch, test and resend it. 
- 
-> I think I now understand what is going on. Having worked through all the
-> possible scenarios makes me more comfortable about his patch considering
-> the awkward way in which it is forced to solve the problem. I am really
-> glad we do not need to do this moving forward.
-I'm happy too.
+> 'iwlist scanning' works fine, but wpa_supplicant keeps on spitting out
+> the following message:
+> 
+>   CTRL-EVENT-SCAN-RESULTS 
+>   Trying to associate with 00:04:0e:4b:c7:b3 (SSID='caiaq' freq=2437 MHz)
+>   Association request to the driver failed
+> 
+> Haven't done any bisect or deeper inspection of recent changes yet. Can
+> anyone point me in some direction maybe? The change must have been
+> introduced between -rc3 and -rc5. My userspace did not change since
+> then.
 
-Thanks
-Stanislaw
+That error actually means nothing and I believe the log message has been
+removed in recent supplicant versions.  It simply means that the driver
+doesn't support some of the random ioctls that the supplicant tries, but
+most of the time, that's not a problem.
+
+What you can do for the time being is increase the association timeout
+(which gets lowered to like 5 seconds if that message is printed because
+the driver returned -1 from wpa_drv_associate()), and see if the card
+does in fact associate after 10 or 15 seconds.  That is a useful point
+of debugging information.
+
+Dan
+
+
