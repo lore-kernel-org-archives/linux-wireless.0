@@ -1,107 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43803 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752319AbZHDXwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 19:52:09 -0400
-Message-ID: <4A78C9A7.2050401@gmx.de>
-Date: Wed, 05 Aug 2009 01:52:07 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] ath5k: fix missing output in monitor mode after	ifconfig
- up
-References: <4A74C2B6.3070407@gmx.de> <20090802032019.GA25339@hash.localnet> <4A754562.8000107@gmx.de> <20090804154153.GB4995@tuxdriver.com>
-In-Reply-To: <20090804154153.GB4995@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:43452 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932431AbZHGPDo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 11:03:44 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1MZQyu-0005Kf-4p
+	for linux-wireless@vger.kernel.org; Fri, 07 Aug 2009 17:03:44 +0200
+Subject: [PATCH/RFT] mac80211: try uploading key if a slot was freed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 17:03:41 +0200
+Message-Id: <1249657421.7194.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When we remove a key from hwaccel, that may mean
+that there's a new free item in the hwaccel, and
+we could fill it with another station's key. By
+keeping track of which keys the driver said it
+could not support (-EOPNOTSUPP) and which it had
+no space for (-ENOSPC) we can try uploading a
+key that was previously rejected due to no space
+after another key is removed.
 
-Let ath5k_chan_set() always call ath5k_reset().
-This fixes the bug that we don't
-get any packets in monitor mode after:
-
-ifconfig wlan0 down
-iwconfig wlan0 mode monitor channel 1
-ifconfig wlan0 up
-
-but they arrive after
-
-iwconfig wlan0 channel 2
-
-Signed-off-by: Joerg Albert <jal2@gmx.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
+RFT because I really have no idea how to test this
+properly. Maybe with a hacked driver that claims
+to support only a single key in hwaccel?
 
-Same version as [PATCH v2] but with correct whitespaces (hopefully).
+ net/mac80211/key.c |   51 ++++++++++++++++++++++++++++++++++-----------------
+ net/mac80211/key.h |    3 +++
+ 2 files changed, 37 insertions(+), 17 deletions(-)
 
- drivers/net/wireless/ath/ath5k/base.c |   35 ++++++++++++++------------------
- 1 files changed, 15 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3a1c156..5d50285 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1071,10 +1071,9 @@ ath5k_setup_bands(struct ieee80211_hw *hw)
- }
+--- wireless-testing.orig/net/mac80211/key.c	2009-08-07 16:48:46.000000000 +0200
++++ wireless-testing/net/mac80211/key.c	2009-08-07 16:59:01.000000000 +0200
+@@ -141,20 +141,21 @@ static void ieee80211_key_enable_hw_acce
  
- /*
-- * Set/change channels.  If the channel is really being changed,
-- * it's done by reseting the chip.  To accomplish this we must
-- * first cleanup any pending DMA, then restart stuff after a la
-- * ath5k_init.
-+ * Set/change channels. We always reset the chip.
-+ * To accomplish this we must first cleanup any pending DMA,
-+ * then restart stuff after a la  ath5k_init.
-  *
-  * Called with sc->lock.
-  */
-@@ -1084,19 +1083,13 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
- 		sc->curchan->center_freq, chan->center_freq);
+ 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
  
--	if (chan->center_freq != sc->curchan->center_freq ||
--		chan->hw_value != sc->curchan->hw_value) {
--
--		/*
--		 * To switch channels clear any pending DMA operations;
--		 * wait long enough for the RX fifo to drain, reset the
--		 * hardware at the new frequency, and then re-enable
--		 * the relevant bits of the h/w.
--		 */
--		return ath5k_reset(sc, chan);
+-	if (!ret) {
+-		spin_lock_bh(&todo_lock);
++	spin_lock_bh(&todo_lock);
++	if (!ret)
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+-		spin_unlock_bh(&todo_lock);
 -	}
--
--	return 0;
-+	/*
-+	 * To switch channels clear any pending DMA operations;
-+	 * wait long enough for the RX fifo to drain, reset the
-+	 * hardware at the new frequency, and then re-enable
-+	 * the relevant bits of the h/w.
-+	 */
-+	return ath5k_reset(sc, chan);
++	else if (ret == -EOPNOTSUPP)
++		key->flags |= KEY_FLAG_HWACCEL_NOT_SUPPORTED;
++	spin_unlock_bh(&todo_lock);
+ 
+-	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
+-		printk(KERN_ERR "mac80211-%s: failed to set key "
+-		       "(%d, %pM) to hardware (%d)\n",
+-		       wiphy_name(key->local->hw.wiphy),
+-		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
++	WARN(ret && ret != -ENOSPC && ret != -EOPNOTSUPP,
++	     "mac80211-%s: failed to set key (%d, %pM) to hardware (%d)\n",
++	     wiphy_name(key->local->hw.wiphy), key->conf.keyidx,
++	     sta ? sta->addr : bcast_addr, ret);
  }
  
- static void
-@@ -2811,9 +2804,11 @@ ath5k_config(struct ieee80211_hw *hw, u32 changed)
+-static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
++static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key,
++					   bool upload_another)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_sta *sta;
+@@ -184,14 +185,30 @@ static void ieee80211_key_disable_hw_acc
+ 	ret = drv_set_key(key->local, DISABLE_KEY, &sdata->vif,
+ 			  sta, &key->conf);
  
- 	mutex_lock(&sc->lock);
+-	if (ret)
+-		printk(KERN_ERR "mac80211-%s: failed to remove key "
+-		       "(%d, %pM) from hardware (%d)\n",
+-		       wiphy_name(key->local->hw.wiphy),
+-		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
++	WARN(ret,
++	     "mac80211-%s: failed to remove key (%d, %pM) from hardware (%d)\n",
++	     wiphy_name(key->local->hw.wiphy), key->conf.keyidx,
++	     sta ? sta->addr : bcast_addr, ret);
  
--	ret = ath5k_chan_set(sc, conf->channel);
--	if (ret < 0)
--		goto unlock;
-+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+		ret = ath5k_chan_set(sc, conf->channel);
-+		if (ret < 0)
-+			goto unlock;
+ 	spin_lock_bh(&todo_lock);
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
++
++	list_for_each_entry(key, &sdata->key_list, list) {
++		if (key->flags & KEY_FLAG_HWACCEL_NOT_SUPPORTED)
++			continue;
++		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
++			continue;
++		if (key->flags & KEY_FLAG_TODO_DELETE)
++			continue;
++		if (key->flags & KEY_FLAG_TODO_HWACCEL_ADD)
++			continue;
++		if (key->flags & KEY_FLAG_TODO_HWACCEL_REMOVE)
++			continue;
++		spin_unlock_bh(&todo_lock);
++		ieee80211_key_enable_hw_accel(key);
++		spin_lock_bh(&todo_lock);
 +	}
++
+ 	spin_unlock_bh(&todo_lock);
+ }
  
- 	if ((changed & IEEE80211_CONF_CHANGE_POWER) &&
- 	(sc->power_level != conf->power_level)) {
--- 
-1.6.0.4
-
+@@ -527,7 +544,7 @@ static void __ieee80211_key_destroy(stru
+ 	if (!key)
+ 		return;
+ 
+-	ieee80211_key_disable_hw_accel(key);
++	ieee80211_key_disable_hw_accel(key, true);
+ 
+ 	if (key->conf.alg == ALG_CCMP)
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
+@@ -583,7 +600,7 @@ static void __ieee80211_key_todo(void)
+ 			work_done = true;
+ 		}
+ 		if (todoflags & KEY_FLAG_TODO_HWACCEL_REMOVE) {
+-			ieee80211_key_disable_hw_accel(key);
++			ieee80211_key_disable_hw_accel(key, false);
+ 			work_done = true;
+ 		}
+ 		if (todoflags & KEY_FLAG_TODO_DELETE) {
+--- wireless-testing.orig/net/mac80211/key.h	2009-08-07 16:49:17.000000000 +0200
++++ wireless-testing/net/mac80211/key.h	2009-08-07 16:58:47.000000000 +0200
+@@ -48,6 +48,8 @@ struct sta_info;
+  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
+  * @KEY_FLAG_TODO_DEFMGMTKEY: Key is default management key and debugfs needs
+  *	to be updated.
++ * @KEY_FLAG_HWACCEL_NOT_SUPPORTED: hardware acceleration not supported for
++ *	this key type (tried and driver returned -EOPNOTSUPP)
+  */
+ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
+@@ -57,6 +59,7 @@ enum ieee80211_internal_key_flags {
+ 	KEY_FLAG_TODO_DEFKEY		= BIT(4),
+ 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
+ 	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
++	KEY_FLAG_HWACCEL_NOT_SUPPORTED	= BIT(7),
+ };
+ 
+ struct tkip_ctx {
 
 
