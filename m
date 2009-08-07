@@ -1,72 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5825 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752724AbZH0OGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 10:06:03 -0400
-Subject: Re: libertas wext.c: IW_ENCODE_NOKEY for WEP keys [resend as plain
- text]
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704306D2369E90@SC-VEXCH1.marvell.com>
-References: <477F20668A386D41ADCC57781B1F704306D2369E90@SC-VEXCH1.marvell.com>
-Content-Type: text/plain
-Date: Thu, 27 Aug 2009 09:06:15 -0500
-Message-Id: <1251381975.11788.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.105.134]:19708 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757409AbZHGKdz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 06:33:55 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 08/23] wl1251: add sdio support
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:33:42 +0300
+Message-ID: <20090807103342.31717.95260.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-26 at 12:11 -0700, Bing Zhao wrote:
-> Hi all,
->  
-> There was a commit to unset the IW_ENCODE_NOKEY flag for WEP keys.
->  
-> "libertas: Don't set IW_ENCODE_NOKEY when returning WEP keys."
->   
->  
-> Without this change, the IW_ENCODE_NOKEY flag is set for WEP keys and then iwconfig command would display "****-****-**" as "Encryption key".
->   
-> After this change, the IW_ENCODE_NOKEY flag is NOT set for WEP keys and then iwconfig command will display plain text of the WEP key ("1234-5678-90" in my case, below).
+From: Bob Copeland <me@bobcopeland.com>
 
-mac82011 doesn't set NOKEY in cfg80211_wext_giwencode().  I guess we
-should ask if *all* drivers should set NOKEY and then be consistent.
+This adds the wl1251_sdio module, enabling the SDIO interface for
+wl1251, as used by the Google G1 phone and others.
 
-Dan
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-> eth1      IEEE 802.11b/g  ESSID:"Cisco1-G"
->           Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1D:45:CE:20:D0
->           Bit Rate:54 Mb/s   Tx-Power=15 dBm
->           Retry short limit:8   RTS thr=2347 B   Fragment thr=2346 B
->  
->           Encryption key:1234-5678-90   Security mode:open
->  
->           Power Management:off
->           Link Quality=92/100  Signal level=-66 dBm  Noise level=-94 dBm
->           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
->  
->  
->  
-> Was there any reason to not set IW_ENCODE_NOKEY for WEP keys?
-> Is it feasible to set IW_ENCODE_NOKEY for WEP switch case?
->  
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -1165,6 +1165,7 @@ static int lbs_get_encode(struct net_device *dev,
->                 dwrq->flags |= (index + 1);
->                 /* Return WEP enabled */
->                 dwrq->flags &= ~IW_ENCODE_DISABLED;
-> +               dwrq->flags |= IW_ENCODE_NOKEY;
->         } else if ((priv->secinfo.WPAenabled)
->                    || (priv->secinfo.WPA2enabled)) {
->                 /* return WPA enabled */
->  
-> 
-> Thanks for your help,
->  
-> Bing
-> 
+ drivers/net/wireless/wl12xx/Kconfig       |   11 ++
+ drivers/net/wireless/wl12xx/Makefile      |    1 
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |  188 +++++++++++++++++++++++++++++
+ 3 files changed, 200 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_sdio.c
+
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index e47d076..3c8b2cd 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -27,3 +27,14 @@ config WL1251_SPI
+ 
+ 	  If you choose to build a module, it'll be called wl1251_spi.
+ 	  Say N if unsure.
++
++config WL1251_SDIO
++	tristate "TI wl1251 SDIO support"
++	depends on WL1251 && MMC
++	---help---
++	  This module adds support for the SDIO interface of adapters using
++	  TI wl1251 chipset.  Select this if your platform is using
++	  the SDIO bus.
++
++	  If you choose to build a module, it'll be called
++	  wl1251_sdio. Say N if unsure.
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index ebf623a..f7f84d4 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -5,3 +5,4 @@ wl1251-objs		= wl1251_main.o wl1251_event.o \
+ 
+ obj-$(CONFIG_WL1251)	+= wl1251.o
+ obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
++obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+new file mode 100644
+index 0000000..f1d9e76
+--- /dev/null
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -0,0 +1,188 @@
++/*
++ * wl12xx SDIO routines
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ * Copyright (C) 2005 Texas Instruments Incorporated
++ * Copyright (C) 2008 Google Inc
++ * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
++ */
++#include <linux/module.h>
++#include <linux/crc7.h>
++#include <linux/mod_devicetable.h>
++#include <linux/irq.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/sdio_ids.h>
++#include <linux/platform_device.h>
++
++#include "wl1251.h"
++#include "wl12xx_80211.h"
++#include "reg.h"
++#include "wl1251_ps.h"
++#include "wl1251_io.h"
++#include "wl1251_tx.h"
++#include "wl1251_debugfs.h"
++
++#ifndef SDIO_VENDOR_ID_TI
++#define SDIO_VENDOR_ID_TI		0x104c
++#endif
++
++#ifndef SDIO_DEVICE_ID_TI_WL1251
++#define SDIO_DEVICE_ID_TI_WL1251	0x9066
++#endif
++
++static struct sdio_func *wl_to_func(struct wl1251 *wl)
++{
++	return wl->if_priv;
++}
++
++static void wl1251_sdio_interrupt(struct sdio_func *func)
++{
++	wl1251_irq(0, sdio_get_drvdata(func));
++}
++
++static const struct sdio_device_id wl1251_devices[] = {
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1251) },
++	{}
++};
++MODULE_DEVICE_TABLE(sdio, wl1251_devices);
++
++
++void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
++{
++	int ret;
++	struct sdio_func *func = wl_to_func(wl);
++
++	sdio_claim_host(func);
++	ret = sdio_memcpy_fromio(func, buf, addr, len);
++	if (ret)
++		wl1251_error("sdio read failed (%d)", ret);
++	sdio_release_host(func);
++}
++
++void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
++{
++	int ret;
++	struct sdio_func *func = wl_to_func(wl);
++
++	sdio_claim_host(func);
++	ret = sdio_memcpy_toio(func, addr, buf, len);
++	if (ret)
++		wl1251_error("sdio write failed (%d)", ret);
++	sdio_release_host(func);
++}
++
++void wl1251_sdio_reset(struct wl1251 *wl)
++{
++}
++
++void wl1251_sdio_set_power(bool enable)
++{
++}
++
++struct wl1251_if_operations wl1251_sdio_ops = {
++	.read = wl1251_sdio_read,
++	.write = wl1251_sdio_write,
++	.reset = wl1251_sdio_reset,
++};
++
++int wl1251_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
++{
++	int ret;
++	struct wl1251 *wl;
++	struct ieee80211_hw *hw;
++
++	hw = wl1251_alloc_hw();
++	if (IS_ERR(hw))
++		return PTR_ERR(hw);
++
++	wl = hw->priv;
++
++	sdio_claim_host(func);
++	ret = sdio_enable_func(func);
++	if (ret)
++		goto release;
++
++	sdio_set_block_size(func, 512);
++
++	SET_IEEE80211_DEV(hw, &func->dev);
++	wl->if_priv = func;
++	wl->if_ops = &wl1251_sdio_ops;
++	wl->set_power = wl1251_sdio_set_power;
++
++	sdio_release_host(func);
++	ret = wl1251_init_ieee80211(wl);
++	sdio_claim_host(func);
++	if (ret)
++		goto disable;
++
++	ret = sdio_claim_irq(func, wl1251_sdio_interrupt);
++	if (ret)
++		goto no_irq;
++
++	sdio_release_host(func);
++	sdio_set_drvdata(func, wl);
++	return ret;
++
++no_irq:
++	wl1251_free_hw(wl);
++disable:
++	sdio_disable_func(func);
++release:
++	sdio_release_host(func);
++	return ret;
++}
++
++static void __devexit wl1251_sdio_remove(struct sdio_func *func)
++{
++	struct wl1251 *wl = sdio_get_drvdata(func);
++
++	wl1251_free_hw(wl);
++
++	sdio_claim_host(func);
++	sdio_release_irq(func);
++	sdio_disable_func(func);
++	sdio_release_host(func);
++}
++
++static struct sdio_driver wl1251_sdio_driver = {
++	.name		= "wl1251_sdio",
++	.id_table	= wl1251_devices,
++	.probe		= wl1251_sdio_probe,
++	.remove		= __devexit_p(wl1251_sdio_remove),
++};
++
++static int __init wl1251_sdio_init(void)
++{
++	int err;
++
++	err = sdio_register_driver(&wl1251_sdio_driver);
++	if (err)
++		wl1251_error("failed to register sdio driver: %d", err);
++	return err;
++}
++
++static void __exit wl1251_sdio_exit(void)
++{
++	sdio_unregister_driver(&wl1251_sdio_driver);
++	wl1251_notice("unloaded");
++}
++
++module_init(wl1251_sdio_init);
++module_exit(wl1251_sdio_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
++MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
 
