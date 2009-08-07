@@ -1,93 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:45764 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757016AbZHRDyx (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:36966 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753434AbZHGVic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:54:53 -0400
-Date: Tue, 18 Aug 2009 05:54:54 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 23/29] mwl8k: get rid of mwl8k_set_rts_threshold() workqueue use
-Message-ID: <20090818035454.GB18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 7 Aug 2009 17:38:32 -0400
+Received: by ewy10 with SMTP id 10so1836710ewy.37
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 14:38:32 -0700 (PDT)
+Message-ID: <4A7C9ED0.8000600@gmail.com>
+Date: Fri, 07 Aug 2009 22:38:24 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>	 <4A7C91B8.2010106@gmail.com> <1249680231.26088.42.camel@localhost.localdomain>
+In-Reply-To: <1249680231.26088.42.camel@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   43 ++---------------------------------------
- 1 files changed, 3 insertions(+), 40 deletions(-)
+Dan Williams wrote:
+> On Fri, 2009-08-07 at 21:42 +0100, Dave wrote:
+>> David Kilroy wrote:
+>>> First attempt at connect/disconnect, join_ibss/leave_ibss, and add_key
+>>> etc. These patches rely on the series I just sent, but conflict with
+>>> Holgers set_channel patch. Simple to resolve, and I'll do that in my
+>>> next update.
+>>>
+>>> This doesn't work yet*, but I've a number of questions.
+>> FYI, I've got this kinda working with wpa_supplicant in wext mode.
+>>
+>> First: on it's own wpa_supplicant keeps doing the 4 way handshake, while
+>>  cfg80211 pumps out the following:
+>>
+>> ------------[ cut here ]------------
+>> WARNING: at net/wireless/sme.c:451 __cfg80211_roamed+0x9a/0x1a5 [cfg80211]()
+>> Hardware name: Latitude C600
+>> Modules linked in: orinoco_cs orinoco cfg80211 michael_mic snd_maestro3
+>> aty128fb [last unloaded: cfg80211]
+>> Pid: 5, comm: events/0 Tainted: G   M    W  2.6.31-rc4-wl #87
+>> Call Trace:
+>>  [<c101ca51>] warn_slowpath_common+0x60/0x90
+>>  [<c101ca8e>] warn_slowpath_null+0xd/0x10
+>>  [<d1521659>] __cfg80211_roamed+0x9a/0x1a5 [cfg80211]
+>>  [<d15139a9>] cfg80211_event_work+0x104/0x1bc [cfg80211]
+>>  [<c102b39c>] worker_thread+0x15e/0x208
+>>  [<d15138a5>] ? cfg80211_event_work+0x0/0x1bc [cfg80211]
+>>  [<c102e5d5>] ? autoremove_wake_function+0x0/0x33
+>>  [<c102b23e>] ? worker_thread+0x0/0x208
+>>  [<c102e261>] kthread+0x66/0x6b
+>>  [<c102e1fb>] ? kthread+0x0/0x6b
+>>  [<c1003053>] kernel_thread_helper+0x7/0x10
+>> ---[ end trace 12e5dbe2024c37ae ]---
+>>
+>> Cfg80211 is trying to select the bss we've authenticated against.
+>> Unfortunately the BSS list is empty.
+>>
+>> If before starting wpa_supplicant I run:
+>>
+>> iw dev eth1 scan ssid <SSID>
+>>
+>> Then wpa_supplicant connects fine. The AP in question is configured with
+>> a hidden SSID.
+>>
+>> Any suggestions as to how I need to address this?
+> 
+> Do a scan before you try to associate?  Most fullmac cards do one
+> internally in the firmware before they try to associate anyway, but they
+> may not emit the event to the driver.  If you're not doing a scan when
+> you get the associate request, you probably should do one, let cfg80211
+> cache the bss list, and then you're fine, right?
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 927f987..c8e65c6 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1970,7 +1970,7 @@ struct mwl8k_cmd_rts_threshold {
- } __attribute__((packed));
- 
- static int mwl8k_rts_threshold(struct ieee80211_hw *hw,
--			       u16 action, u16 *threshold)
-+			       u16 action, u16 threshold)
- {
- 	struct mwl8k_cmd_rts_threshold *cmd;
- 	int rc;
-@@ -1982,7 +1982,7 @@ static int mwl8k_rts_threshold(struct ieee80211_hw *hw,
- 	cmd->header.code = cpu_to_le16(MWL8K_CMD_RTS_THRESHOLD);
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	cmd->action = cpu_to_le16(action);
--	cmd->threshold = cpu_to_le16(*threshold);
-+	cmd->threshold = cpu_to_le16(threshold);
- 
- 	rc = mwl8k_post_cmd(hw, &cmd->header);
- 	kfree(cmd);
-@@ -2816,46 +2816,9 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 	mwl8k_queue_work(hw, &worker->header, mwl8k_configure_filter_wt);
- }
- 
--struct mwl8k_set_rts_threshold_worker {
--	struct mwl8k_work_struct header;
--	u32 value;
--};
--
--static int mwl8k_set_rts_threshold_wt(struct work_struct *wt)
--{
--	struct mwl8k_set_rts_threshold_worker *worker =
--		(struct mwl8k_set_rts_threshold_worker *)wt;
--
--	struct ieee80211_hw *hw = worker->header.hw;
--	u16 threshold = (u16)(worker->value);
--	int rc;
--
--	rc = mwl8k_rts_threshold(hw, MWL8K_CMD_SET, &threshold);
--
--	return rc;
--}
--
- static int mwl8k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- {
--	int rc;
--	struct mwl8k_set_rts_threshold_worker *worker;
--
--	worker = kzalloc(sizeof(*worker), GFP_KERNEL);
--	if (worker == NULL)
--		return -ENOMEM;
--
--	worker->header.sleep = 1;
--	worker->value = value;
--
--	rc = mwl8k_queue_work(hw, &worker->header, mwl8k_set_rts_threshold_wt);
--	kfree(worker);
--
--	if (rc == -ETIMEDOUT) {
--		printk(KERN_ERR "%s() timed out\n", __func__);
--		rc = -EINVAL;
--	}
--
--	return rc;
-+	return mwl8k_rts_threshold(hw, MWL8K_CMD_SET, value);
- }
- 
- struct mwl8k_conf_tx_worker {
--- 
-1.5.6.4
+That should work. I just realised why it's doing this. I have
+wpa_supplicant configured with ap_scan=2, so it doesn't scan before
+connecting.
+
+Just tried wpa_supplicant in nl80211 mode. In that case, it's stuck in
+scanning (presumably ignoring my ap_scan setting). It's not seeing my AP
+(because it's hidden?), and so doesn't proceed. And I can't seem to get
+it to do an active scan for my AP.
+
+
+Dave.
