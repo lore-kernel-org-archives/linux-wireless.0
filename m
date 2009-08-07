@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36280 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756074AbZHFSqX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:46:23 -0400
-Message-Id: <20090806184234.313983716@sipsolutions.net>
-References: <20090806184131.114246687@sipsolutions.net>
-Date: Thu, 06 Aug 2009 20:41:33 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Pavel Roskin <proski@gnu.org>
-Subject: [PATCH 2/3] cfg80211: fix nl80211 disconnected events
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:1415 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751539AbZHGWlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 18:41:52 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/16] iwlwifi driver updates 07/08/2009
+Date: Fri,  7 Aug 2009 15:41:36 -0700
+Message-Id: <1249684912-22936-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When reporting a disconnection to userspace, we try
-to report whether it was from the AP or by our own
-choice. However, we misreported a broadcast deauth
-or disassoc as being by own choice, which is wrong.
-Fix this by checking the sender address instead of
-the destination address.
+In this series we re-enable the feature that enables users with multiple
+iwlwifi devices in one system to be able to set debug flags per device. We
+also complete the "fat" to "ht40" name change. This series contains a few
+patches that introduce significant debug support via debugfs. A previous
+feature that attempted to make ucode loading more reliable caused some
+issues and we are reverting it in this batch. We include a few fixes and
+cleanup to the thermal throttling code and some other general fixes. A new
+feature introduced with this series is the support of dynamic power save
+support. Unfortuantely power save support still has some issues and we have
+to disable it until these have been resolved.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/mlme.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[PATCH 01/16] iwlwifi: re-introduce per device debugging
+[PATCH 02/16] iwlwifi: name changed from "fat" to "ht40"
+[PATCH 03/16] iwlwifi: new debugging feature for dumping data traffic
+[PATCH 04/16] iwlwifi: Traffic type and counter for debugFs
+[PATCH 05/16] iwlwifi: tx/rx queue pointer information
+[PATCH 06/16] iwlwifi: uCode statistics notification counter
+[PATCH 07/16] iwlwifi: Display sensitivity and chain noise information
+[PATCH 08/16] iwlwifi: revert uCode Alive notification with timeout
+[PATCH 09/16] iwlwifi: fix thermal throttling locking problem
+[PATCH 10/16] iwlwifi: fix legacy thermal throttling power index
+[PATCH 11/16] iwlwifi: handle the case when set power fail
+[PATCH 12/16] iwlwifi: refactor some thermal throttle code
+[PATCH 13/16] iwlwifi: fix missing EXPORT_SYMBOL
+[PATCH 14/16] iwlwifi: display correct critical temperature infomation
+[PATCH 15/16] iwlwifi: automatically adjust sleep level
+[PATCH 16/16] iwlwifi: disable powersave mode
 
---- wireless-testing.orig/net/wireless/mlme.c	2009-08-06 20:36:05.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2009-08-06 20:40:09.000000000 +0200
-@@ -149,7 +149,7 @@ static void __cfg80211_send_deauth(struc
- 
- 		reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
- 
--		from_ap = memcmp(mgmt->da, dev->dev_addr, ETH_ALEN) == 0;
-+		from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
- 		__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
- 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
-@@ -215,7 +215,7 @@ static void __cfg80211_send_disassoc(str
- 
- 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
- 
--	from_ap = memcmp(mgmt->da, dev->dev_addr, ETH_ALEN) == 0;
-+	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
- 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- }
- 
 
--- 
+Thank you
+
+Reinette
 
