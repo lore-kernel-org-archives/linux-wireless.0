@@ -1,82 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:30629 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753437AbZHZXLf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 19:11:35 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so111942qwh.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 16:11:36 -0700 (PDT)
-Message-ID: <4A95C128.5000405@gmail.com>
-Date: Wed, 26 Aug 2009 19:11:36 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
- 	enabled
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>	 <4A94B01E.9040309@gmail.com> <4A94C3E9.6070409@lwfinger.net>	 <4A95AA64.20502@gmail.com> <3ace41890908261538s6818b56ax56cca5af18398dbc@mail.gmail.com>
-In-Reply-To: <3ace41890908261538s6818b56ax56cca5af18398dbc@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx2.redhat.com ([66.187.237.31]:42695 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785AbZHGVYA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 17:24:00 -0400
+Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
+From: Dan Williams <dcbw@redhat.com>
+To: Dave <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A7C91B8.2010106@gmail.com>
+References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+	 <4A7C91B8.2010106@gmail.com>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 16:23:51 -0500
+Message-Id: <1249680231.26088.42.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
-> On Wed, Aug 26, 2009 at 10:34 PM, Richard Farina<sidhayn@gmail.com> wrote:
->
->   
->> I apologize if you thought there was an accusation here, that certainly was
->> not my intention. With all due respect assuming that I'm
->> a jerk is neither safe nor polite.  In your original patch for this I find
->> the following text:
->>     
->
->   
->> Yes, I realize that, which is why I said the "bug is still alive" not "the
->> patch is not applied".  I even went out of my way to describe how the
->> testing was different...
->>     
->
-> While I thought Larry's reply was a bit brief, I looked back on the
-> thread and I think I am on Larry's side. All you mentioned was that
-> you had a crash on unplug, and then you automatically assume that it
-> is because the most recent crash-related fix (which Larry kindly made)
-> did not work. You have no proof that your problem is even the same as
-> what the fix tried to solve. You did not try to go back to a non-LED
-> enabled compat-wireless, for example.
->
-> To be honest, I think you 'went out of your way' to try to pin your
-> problem on one of the developers, so that your problem is guaranteed
-> to receive attention. That's not very fair...
->
-> That said, I think this thread has gone on long enough - all that
-> happened is that (1) you had a crash on unplug, (2) you tried to pin
-> it on Larry, (3) many people has checked and verified that what Larry
-> did went in, (4) we still don't know whether your crash is related to
-> the LED change or not.
->
-> Since we still don't know whether your crash is related to any
-> LED-related change or not, this thread is not going well.
->
->   
-I accept your criticism.  I should have been more clear.  This happens 
-only when CONFIG_RTL8187_LEDS=y is set.
+On Fri, 2009-08-07 at 21:42 +0100, Dave wrote:
+> David Kilroy wrote:
+> > First attempt at connect/disconnect, join_ibss/leave_ibss, and add_key
+> > etc. These patches rely on the series I just sent, but conflict with
+> > Holgers set_channel patch. Simple to resolve, and I'll do that in my
+> > next update.
+> > 
+> > This doesn't work yet*, but I've a number of questions.
+> 
+> FYI, I've got this kinda working with wpa_supplicant in wext mode.
+> 
+> First: on it's own wpa_supplicant keeps doing the 4 way handshake, while
+>  cfg80211 pumps out the following:
+> 
+> ------------[ cut here ]------------
+> WARNING: at net/wireless/sme.c:451 __cfg80211_roamed+0x9a/0x1a5 [cfg80211]()
+> Hardware name: Latitude C600
+> Modules linked in: orinoco_cs orinoco cfg80211 michael_mic snd_maestro3
+> aty128fb [last unloaded: cfg80211]
+> Pid: 5, comm: events/0 Tainted: G   M    W  2.6.31-rc4-wl #87
+> Call Trace:
+>  [<c101ca51>] warn_slowpath_common+0x60/0x90
+>  [<c101ca8e>] warn_slowpath_null+0xd/0x10
+>  [<d1521659>] __cfg80211_roamed+0x9a/0x1a5 [cfg80211]
+>  [<d15139a9>] cfg80211_event_work+0x104/0x1bc [cfg80211]
+>  [<c102b39c>] worker_thread+0x15e/0x208
+>  [<d15138a5>] ? cfg80211_event_work+0x0/0x1bc [cfg80211]
+>  [<c102e5d5>] ? autoremove_wake_function+0x0/0x33
+>  [<c102b23e>] ? worker_thread+0x0/0x208
+>  [<c102e261>] kthread+0x66/0x6b
+>  [<c102e1fb>] ? kthread+0x0/0x6b
+>  [<c1003053>] kernel_thread_helper+0x7/0x10
+> ---[ end trace 12e5dbe2024c37ae ]---
+> 
+> Cfg80211 is trying to select the bss we've authenticated against.
+> Unfortunately the BSS list is empty.
+> 
+> If before starting wpa_supplicant I run:
+> 
+> iw dev eth1 scan ssid <SSID>
+> 
+> Then wpa_supplicant connects fine. The AP in question is configured with
+> a hidden SSID.
+> 
+> Any suggestions as to how I need to address this?
 
-I'm not trying to "pin" the bug on Larry claiming it is his fault, I'm 
-merely stating that I am experiencing a problem that looks extremely 
-similar to what he described when he pushed the mentioned patch.
+Do a scan before you try to associate?  Most fullmac cards do one
+internally in the firmware before they try to associate anyway, but they
+may not emit the event to the driver.  If you're not doing a scan when
+you get the associate request, you probably should do one, let cfg80211
+cache the bss list, and then you're fine, right?
 
-Again, I'm not trying to point my finger blaming someone, I'm trying to 
-help fix a problem.  I am traveling for the next few days, when I get 
-home to my camera I hope you are all calm enough to help me troubleshoot 
-this bug so we can find a solution instead of accusing each other of 
-accusing each other.
-
-My apologies for any perceived insults against anyone, seriously, that's 
-not my goal here.
+Dan
 
 
--Rick
