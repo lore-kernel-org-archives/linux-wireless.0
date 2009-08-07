@@ -1,149 +1,337 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43452 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932431AbZHGPDo (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:53346 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757405AbZHGKdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 11:03:44 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1MZQyu-0005Kf-4p
-	for linux-wireless@vger.kernel.org; Fri, 07 Aug 2009 17:03:44 +0200
-Subject: [PATCH/RFT] mac80211: try uploading key if a slot was freed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Fri, 07 Aug 2009 17:03:41 +0200
-Message-Id: <1249657421.7194.7.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 7 Aug 2009 06:33:36 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 05/23] wl1251: make wl1251_set_partition bus agnostic
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:33:18 +0300
+Message-ID: <20090807103318.31717.78853.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we remove a key from hwaccel, that may mean
-that there's a new free item in the hwaccel, and
-we could fill it with another station's key. By
-keeping track of which keys the driver said it
-could not support (-EOPNOTSUPP) and which it had
-no space for (-ENOSPC) we can try uploading a
-key that was previously rejected due to no space
-after another key is removed.
+From: Bob Copeland <me@bobcopeland.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The same partition setting code can be used for both SPI and SDIO
+modes, if we remove the spi-specific commands and use the more
+generic buffer write routines.  Do that and move it to io.c
+since it deals with register/memory address offsets.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
-RFT because I really have no idea how to test this
-properly. Maybe with a hacked driver that claims
-to support only a single key in hwaccel?
 
- net/mac80211/key.c |   51 ++++++++++++++++++++++++++++++++++-----------------
- net/mac80211/key.h |    3 +++
- 2 files changed, 37 insertions(+), 17 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_io.c  |   95 +++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_io.h  |   15 ++++
+ drivers/net/wireless/wl12xx/wl1251_spi.c |  124 ------------------------------
+ drivers/net/wireless/wl12xx/wl1251_spi.h |   15 ----
+ 4 files changed, 110 insertions(+), 139 deletions(-)
 
---- wireless-testing.orig/net/mac80211/key.c	2009-08-07 16:48:46.000000000 +0200
-+++ wireless-testing/net/mac80211/key.c	2009-08-07 16:59:01.000000000 +0200
-@@ -141,20 +141,21 @@ static void ieee80211_key_enable_hw_acce
- 
- 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
- 
--	if (!ret) {
--		spin_lock_bh(&todo_lock);
-+	spin_lock_bh(&todo_lock);
-+	if (!ret)
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
--		spin_unlock_bh(&todo_lock);
--	}
-+	else if (ret == -EOPNOTSUPP)
-+		key->flags |= KEY_FLAG_HWACCEL_NOT_SUPPORTED;
-+	spin_unlock_bh(&todo_lock);
- 
--	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
--		printk(KERN_ERR "mac80211-%s: failed to set key "
--		       "(%d, %pM) to hardware (%d)\n",
--		       wiphy_name(key->local->hw.wiphy),
--		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
-+	WARN(ret && ret != -ENOSPC && ret != -EOPNOTSUPP,
-+	     "mac80211-%s: failed to set key (%d, %pM) to hardware (%d)\n",
-+	     wiphy_name(key->local->hw.wiphy), key->conf.keyidx,
-+	     sta ? sta->addr : bcast_addr, ret);
- }
- 
--static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
-+static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key,
-+					   bool upload_another)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_io.c b/drivers/net/wireless/wl12xx/wl1251_io.c
+index bc95785..db2cfbf 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_io.c
++++ b/drivers/net/wireless/wl12xx/wl1251_io.c
+@@ -84,3 +84,98 @@ void wl1251_reg_write32(struct wl1251 *wl, int addr, u32 val)
  {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_sta *sta;
-@@ -184,14 +185,30 @@ static void ieee80211_key_disable_hw_acc
- 	ret = drv_set_key(key->local, DISABLE_KEY, &sdata->vif,
- 			  sta, &key->conf);
- 
--	if (ret)
--		printk(KERN_ERR "mac80211-%s: failed to remove key "
--		       "(%d, %pM) from hardware (%d)\n",
--		       wiphy_name(key->local->hw.wiphy),
--		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
-+	WARN(ret,
-+	     "mac80211-%s: failed to remove key (%d, %pM) from hardware (%d)\n",
-+	     wiphy_name(key->local->hw.wiphy), key->conf.keyidx,
-+	     sta ? sta->addr : bcast_addr, ret);
- 
- 	spin_lock_bh(&todo_lock);
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ 	wl1251_write32(wl, wl1251_translate_reg_addr(wl, addr), val);
+ }
 +
-+	list_for_each_entry(key, &sdata->key_list, list) {
-+		if (key->flags & KEY_FLAG_HWACCEL_NOT_SUPPORTED)
-+			continue;
-+		if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-+			continue;
-+		if (key->flags & KEY_FLAG_TODO_DELETE)
-+			continue;
-+		if (key->flags & KEY_FLAG_TODO_HWACCEL_ADD)
-+			continue;
-+		if (key->flags & KEY_FLAG_TODO_HWACCEL_REMOVE)
-+			continue;
-+		spin_unlock_bh(&todo_lock);
-+		ieee80211_key_enable_hw_accel(key);
-+		spin_lock_bh(&todo_lock);
++/* Set the partitions to access the chip addresses.
++ *
++ * There are two VIRTUAL partitions (the memory partition and the
++ * registers partition), which are mapped to two different areas of the
++ * PHYSICAL (hardware) memory.  This function also makes other checks to
++ * ensure that the partitions are not overlapping.  In the diagram below, the
++ * memory partition comes before the register partition, but the opposite is
++ * also supported.
++ *
++ *                               PHYSICAL address
++ *                                     space
++ *
++ *                                    |    |
++ *                                 ...+----+--> mem_start
++ *          VIRTUAL address     ...   |    |
++ *               space       ...      |    | [PART_0]
++ *                        ...         |    |
++ * 0x00000000 <--+----+...         ...+----+--> mem_start + mem_size
++ *               |    |         ...   |    |
++ *               |MEM |      ...      |    |
++ *               |    |   ...         |    |
++ *  part_size <--+----+...            |    | {unused area)
++ *               |    |   ...         |    |
++ *               |REG |      ...      |    |
++ *  part_size    |    |         ...   |    |
++ *      +     <--+----+...         ...+----+--> reg_start
++ *  reg_size              ...         |    |
++ *                           ...      |    | [PART_1]
++ *                              ...   |    |
++ *                                 ...+----+--> reg_start + reg_size
++ *                                    |    |
++ *
++ */
++void wl1251_set_partition(struct wl1251 *wl,
++			  u32 mem_start, u32 mem_size,
++			  u32 reg_start, u32 reg_size)
++{
++	struct wl1251_partition partition[2];
++
++	wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
++		     mem_start, mem_size);
++	wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
++		     reg_start, reg_size);
++
++	/* Make sure that the two partitions together don't exceed the
++	 * address range */
++	if ((mem_size + reg_size) > HW_ACCESS_MEMORY_MAX_RANGE) {
++		wl1251_debug(DEBUG_SPI, "Total size exceeds maximum virtual"
++			     " address range.  Truncating partition[0].");
++		mem_size = HW_ACCESS_MEMORY_MAX_RANGE - reg_size;
++		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
++			     mem_start, mem_size);
++		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
++			     reg_start, reg_size);
 +	}
 +
- 	spin_unlock_bh(&todo_lock);
++	if ((mem_start < reg_start) &&
++	    ((mem_start + mem_size) > reg_start)) {
++		/* Guarantee that the memory partition doesn't overlap the
++		 * registers partition */
++		wl1251_debug(DEBUG_SPI, "End of partition[0] is "
++			     "overlapping partition[1].  Adjusted.");
++		mem_size = reg_start - mem_start;
++		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
++			     mem_start, mem_size);
++		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
++			     reg_start, reg_size);
++	} else if ((reg_start < mem_start) &&
++		   ((reg_start + reg_size) > mem_start)) {
++		/* Guarantee that the register partition doesn't overlap the
++		 * memory partition */
++		wl1251_debug(DEBUG_SPI, "End of partition[1] is"
++			     " overlapping partition[0].  Adjusted.");
++		reg_size = mem_start - reg_start;
++		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
++			     mem_start, mem_size);
++		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
++			     reg_start, reg_size);
++	}
++
++	partition[0].start = mem_start;
++	partition[0].size  = mem_size;
++	partition[1].start = reg_start;
++	partition[1].size  = reg_size;
++
++	wl->physical_mem_addr = mem_start;
++	wl->physical_reg_addr = reg_start;
++
++	wl->virtual_mem_addr = 0;
++	wl->virtual_reg_addr = mem_size;
++
++	wl->if_ops->write(wl, HW_ACCESS_PART0_SIZE_ADDR, partition,
++		sizeof(partition));
++}
+diff --git a/drivers/net/wireless/wl12xx/wl1251_io.h b/drivers/net/wireless/wl12xx/wl1251_io.h
+index 1fa2ab1..b89d2ac 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_io.h
++++ b/drivers/net/wireless/wl12xx/wl1251_io.h
+@@ -23,6 +23,17 @@
+ 
+ #include "wl1251.h"
+ 
++#define HW_ACCESS_MEMORY_MAX_RANGE		0x1FFC0
++
++#define HW_ACCESS_PART0_SIZE_ADDR           0x1FFC0
++#define HW_ACCESS_PART0_START_ADDR          0x1FFC4
++#define HW_ACCESS_PART1_SIZE_ADDR           0x1FFC8
++#define HW_ACCESS_PART1_START_ADDR          0x1FFCC
++
++#define HW_ACCESS_REGISTER_SIZE             4
++
++#define HW_ACCESS_PRAM_MAX_RANGE		0x3c000
++
+ static inline u32 wl1251_read32(struct wl1251 *wl, int addr)
+ {
+ 	u32 response;
+@@ -46,4 +57,8 @@ void wl1251_mem_write32(struct wl1251 *wl, int addr, u32 val);
+ u32 wl1251_reg_read32(struct wl1251 *wl, int addr);
+ void wl1251_reg_write32(struct wl1251 *wl, int addr, u32 val);
+ 
++void wl1251_set_partition(struct wl1251 *wl,
++			  u32 part_start, u32 part_size,
++			  u32 reg_start,  u32 reg_size);
++
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 61a0852..ceb237b 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -115,130 +115,6 @@ static void wl1251_spi_reset_wake(struct wl1251 *wl)
+ 	wl1251_spi_init(wl);
  }
  
-@@ -527,7 +544,7 @@ static void __ieee80211_key_destroy(stru
- 	if (!key)
- 		return;
+-
+-/* Set the SPI partitions to access the chip addresses
+- *
+- * There are two VIRTUAL (SPI) partitions (the memory partition and the
+- * registers partition), which are mapped to two different areas of the
+- * PHYSICAL (hardware) memory.  This function also makes other checks to
+- * ensure that the partitions are not overlapping.  In the diagram below, the
+- * memory partition comes before the register partition, but the opposite is
+- * also supported.
+- *
+- *                               PHYSICAL address
+- *                                     space
+- *
+- *                                    |    |
+- *                                 ...+----+--> mem_start
+- *          VIRTUAL address     ...   |    |
+- *               space       ...      |    | [PART_0]
+- *                        ...         |    |
+- * 0x00000000 <--+----+...         ...+----+--> mem_start + mem_size
+- *               |    |         ...   |    |
+- *               |MEM |      ...      |    |
+- *               |    |   ...         |    |
+- *  part_size <--+----+...            |    | {unused area)
+- *               |    |   ...         |    |
+- *               |REG |      ...      |    |
+- *  part_size    |    |         ...   |    |
+- *      +     <--+----+...         ...+----+--> reg_start
+- *  reg_size              ...         |    |
+- *                           ...      |    | [PART_1]
+- *                              ...   |    |
+- *                                 ...+----+--> reg_start + reg_size
+- *                                    |    |
+- *
+- */
+-int wl1251_set_partition(struct wl1251 *wl,
+-			  u32 mem_start, u32 mem_size,
+-			  u32 reg_start, u32 reg_size)
+-{
+-	struct wl1251_partition *partition;
+-	struct spi_transfer t;
+-	struct spi_message m;
+-	size_t len, cmd_len;
+-	u32 *cmd;
+-	int addr;
+-
+-	cmd_len = sizeof(u32) + 2 * sizeof(struct wl1251_partition);
+-	cmd = kzalloc(cmd_len, GFP_KERNEL);
+-	if (!cmd)
+-		return -ENOMEM;
+-
+-	spi_message_init(&m);
+-	memset(&t, 0, sizeof(t));
+-
+-	partition = (struct wl1251_partition *) (cmd + 1);
+-	addr = HW_ACCESS_PART0_SIZE_ADDR;
+-	len = 2 * sizeof(struct wl1251_partition);
+-
+-	*cmd |= WSPI_CMD_WRITE;
+-	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+-	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
+-
+-	wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
+-		     mem_start, mem_size);
+-	wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
+-		     reg_start, reg_size);
+-
+-	/* Make sure that the two partitions together don't exceed the
+-	 * address range */
+-	if ((mem_size + reg_size) > HW_ACCESS_MEMORY_MAX_RANGE) {
+-		wl1251_debug(DEBUG_SPI, "Total size exceeds maximum virtual"
+-			     " address range.  Truncating partition[0].");
+-		mem_size = HW_ACCESS_MEMORY_MAX_RANGE - reg_size;
+-		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
+-			     mem_start, mem_size);
+-		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
+-			     reg_start, reg_size);
+-	}
+-
+-	if ((mem_start < reg_start) &&
+-	    ((mem_start + mem_size) > reg_start)) {
+-		/* Guarantee that the memory partition doesn't overlap the
+-		 * registers partition */
+-		wl1251_debug(DEBUG_SPI, "End of partition[0] is "
+-			     "overlapping partition[1].  Adjusted.");
+-		mem_size = reg_start - mem_start;
+-		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
+-			     mem_start, mem_size);
+-		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
+-			     reg_start, reg_size);
+-	} else if ((reg_start < mem_start) &&
+-		   ((reg_start + reg_size) > mem_start)) {
+-		/* Guarantee that the register partition doesn't overlap the
+-		 * memory partition */
+-		wl1251_debug(DEBUG_SPI, "End of partition[1] is"
+-			     " overlapping partition[0].  Adjusted.");
+-		reg_size = mem_start - reg_start;
+-		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
+-			     mem_start, mem_size);
+-		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
+-			     reg_start, reg_size);
+-	}
+-
+-	partition[0].start = mem_start;
+-	partition[0].size  = mem_size;
+-	partition[1].start = reg_start;
+-	partition[1].size  = reg_size;
+-
+-	wl->physical_mem_addr = mem_start;
+-	wl->physical_reg_addr = reg_start;
+-
+-	wl->virtual_mem_addr = 0;
+-	wl->virtual_reg_addr = mem_size;
+-
+-	t.tx_buf = cmd;
+-	t.len = cmd_len;
+-	spi_message_add_tail(&t, &m);
+-
+-	spi_sync(wl->spi, &m);
+-
+-	kfree(cmd);
+-
+-	return 0;
+-}
+-
+ static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
+ 			    size_t len)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.h b/drivers/net/wireless/wl12xx/wl1251_spi.h
+index 7c6da21..cb0c228 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.h
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.h
+@@ -29,17 +29,6 @@
+ #include "wl1251_acx.h"
+ #include "reg.h"
  
--	ieee80211_key_disable_hw_accel(key);
-+	ieee80211_key_disable_hw_accel(key, true);
+-#define HW_ACCESS_MEMORY_MAX_RANGE		0x1FFC0
+-
+-#define HW_ACCESS_PART0_SIZE_ADDR           0x1FFC0
+-#define HW_ACCESS_PART0_START_ADDR          0x1FFC4
+-#define HW_ACCESS_PART1_SIZE_ADDR           0x1FFC8
+-#define HW_ACCESS_PART1_START_ADDR          0x1FFCC
+-
+-#define HW_ACCESS_REGISTER_SIZE             4
+-
+-#define HW_ACCESS_PRAM_MAX_RANGE		0x3c000
+-
+ #define WSPI_CMD_READ                 0x40000000
+ #define WSPI_CMD_WRITE                0x00000000
+ #define WSPI_CMD_FIXED                0x20000000
+@@ -69,8 +58,4 @@
+ 		((WL1251_BUSY_WORD_LEN - 4) / sizeof(u32))
+ #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
  
- 	if (key->conf.alg == ALG_CCMP)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
-@@ -583,7 +600,7 @@ static void __ieee80211_key_todo(void)
- 			work_done = true;
- 		}
- 		if (todoflags & KEY_FLAG_TODO_HWACCEL_REMOVE) {
--			ieee80211_key_disable_hw_accel(key);
-+			ieee80211_key_disable_hw_accel(key, false);
- 			work_done = true;
- 		}
- 		if (todoflags & KEY_FLAG_TODO_DELETE) {
---- wireless-testing.orig/net/mac80211/key.h	2009-08-07 16:49:17.000000000 +0200
-+++ wireless-testing/net/mac80211/key.h	2009-08-07 16:58:47.000000000 +0200
-@@ -48,6 +48,8 @@ struct sta_info;
-  * @KEY_FLAG_TODO_ADD_DEBUGFS: Key needs to be added to debugfs.
-  * @KEY_FLAG_TODO_DEFMGMTKEY: Key is default management key and debugfs needs
-  *	to be updated.
-+ * @KEY_FLAG_HWACCEL_NOT_SUPPORTED: hardware acceleration not supported for
-+ *	this key type (tried and driver returned -EOPNOTSUPP)
-  */
- enum ieee80211_internal_key_flags {
- 	KEY_FLAG_UPLOADED_TO_HARDWARE	= BIT(0),
-@@ -57,6 +59,7 @@ enum ieee80211_internal_key_flags {
- 	KEY_FLAG_TODO_DEFKEY		= BIT(4),
- 	KEY_FLAG_TODO_ADD_DEBUGFS	= BIT(5),
- 	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
-+	KEY_FLAG_HWACCEL_NOT_SUPPORTED	= BIT(7),
- };
- 
- struct tkip_ctx {
-
+-int wl1251_set_partition(struct wl1251 *wl,
+-			 u32 part_start, u32 part_size,
+-			 u32 reg_start,  u32 reg_size);
+-
+ #endif /* __WL1251_SPI_H__ */
 
