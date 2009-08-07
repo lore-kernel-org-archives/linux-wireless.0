@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:60463 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319AbZHKPLY (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39163 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932494AbZHGOqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 11:11:24 -0400
-Received: by ewy10 with SMTP id 10so3852075ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 08:11:24 -0700 (PDT)
-Subject: Re: Roaming behavior
-From: David Seira <davidseira@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20090811135915.GC2684@tuxdriver.com>
-References: <loom.20090811T124332-602@post.gmane.org>
-	 <20090811135915.GC2684@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 Aug 2009 17:11:21 +0200
-Message-Id: <1250003481.4185.7.camel@solid2>
-Mime-Version: 1.0
+	Fri, 7 Aug 2009 10:46:05 -0400
+Date: Fri, 7 Aug 2009 10:42:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joerg Albert <jal2@gmx.de>
+Cc: Christian Lamparter <chunkeey@web.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ar9170: cleanup of bss_info_changed and beacon
+	config
+Message-ID: <20090807144217.GC7545@tuxdriver.com>
+References: <4A78CE98.70903@gmx.de> <200908050404.47371.chunkeey@web.de> <4A79D7E5.1080604@gmx.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A79D7E5.1080604@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El mar, 11-08-2009 a las 09:59 -0400, John W. Linville escribió:
-> On Tue, Aug 11, 2009 at 12:44:51PM +0000, David Seira wrote:
+On Wed, Aug 05, 2009 at 09:05:09PM +0200, Joerg Albert wrote:
+> On 08/05/2009 04:04 AM, Christian Lamparter wrote:
 > 
-> > I asked in the ath5k-user list about how to change roaming behavior of
-> > ath5k. Pavel Roskin told me that I asked here.
-> > I need to modify the roaming behavior, where can I do this?
+> > no signed/cc here?
 > 
-> This is mostly in the hands of wpa_supplicant...what modifications
-> do you want to make?
-> 
-> John
+> oops, forgot it. Seems like both patches miss some context lines at the end, too.
 
-Hi.
-I want to delete this behavior because I'm developing an application
-which do that alone.
+So for the record, I'm dropping both patches and waiting for a
+resend with whatever corrections you need to make base on Christian's
+feedback.
 
-Thanks for all,
-David
-
-P.D: I have an OpenWRT r16278. The files that I want to modify were in
-compat-wireless-2009-05-21, but I don't know which are.
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
