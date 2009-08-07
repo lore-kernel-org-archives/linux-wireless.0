@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41496 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755449AbZHMTbt (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:49069 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033AbZHGQkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 13/20] wireless: group Cisco wireless together on kconfig
-Date: Thu, 13 Aug 2009 15:31:42 -0400
-Message-Id: <1250191909-21682-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 7 Aug 2009 12:40:51 -0400
+Received: by pzk34 with SMTP id 34so1718240pzk.4
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 09:40:51 -0700 (PDT)
+Message-ID: <4A7C58CC.2040708@lwfinger.net>
+Date: Fri, 07 Aug 2009 11:39:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT] p54: implement rfkill
+References: <200907192354.15349.chunkeey@web.de> <20090807153602.GG7545@tuxdriver.com>
+In-Reply-To: <20090807153602.GG7545@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+John W. Linville wrote:
+> On Sun, Jul 19, 2009 at 11:54:15PM +0200, Christian Lamparter wrote:
+>> This patch gets rid of the deprecated radio_enabled
+>>
+>> fwio.c: In function ‘p54_setup_mac’:
+>> fwio.c:323: warning: ‘radio_enabled’ is deprecated (declared at include/net/mac80211.h:607)
+> 
+> Anyone had a chance to test this?  And report the results to Christian?
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 3be8623..1c74512 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -195,6 +195,16 @@ config MWL8K
- 
- endif # MARVELL_80211
- 
-+menuconfig CISCO_80211
-+	bool "Cisco Wireless Cards"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Cisco wireless drivers. This
-+	  includes the Cisco Aironet ISA and PCI drivers and the Cisco
-+	  Aironet PCMCIA drivers.
-+
-+if CISCO_80211
-+
- config AIRO
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
- 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
-@@ -233,6 +243,8 @@ config AIRO_CS
- 	  and Cisco proprietary API, so both the Linux Wireless Tools and the
- 	  Cisco Linux utilities can be used to configure the card.
- 
-+endif # CISCO_80211
-+
- menuconfig ATMEL_80211
- 	bool "Atmel Wireless Cards"
- 	depends on WLAN_80211
--- 
-1.6.2.5
+Sorry - I missed this one.
+
+I just tested it. With the patch, the warning is removed. As far as
+system operation, the following is observed:
+
+1. If b43 is loaded when using p54usb, then the hardware switch will
+kill operation. This behavior is the same with or without this patch.
+
+2. If b43 is unloaded, then p54usb no longer follows the hardware
+switch, but operation can be killed with the rfkill user-space
+utility. Again, this behavior does not depend on the patch.
+
+Based on the code changes in the patch, it looks as if the radio is
+turned off when the device is blocked, but I have no way to test that.
+
+Christian - please add a
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net> to the patch and
+submit. This change should be in 2.6.32.
+
+Larry
+
 
