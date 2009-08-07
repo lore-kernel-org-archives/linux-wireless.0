@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:55468 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855AbZHSTIh (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:14031 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784AbZHGSVz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 15:08:37 -0400
-Received: by vws2 with SMTP id 2so3926058vws.4
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 12:08:38 -0700 (PDT)
+	Fri, 7 Aug 2009 14:21:55 -0400
+Received: by ey-out-2122.google.com with SMTP id 9so562801eyd.37
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 11:21:55 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: allow DMA optimisation
+Date: Fri, 7 Aug 2009 20:21:52 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1249656135.7194.6.camel@johannes.local> <200908071855.38921.IvDoorn@gmail.com> <1249668106.7194.10.camel@johannes.local>
+In-Reply-To: <1249668106.7194.10.camel@johannes.local>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908191150h6fa8a811u30c57420afd17e08@mail.gmail.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-	 <20090819150138.GB5905@tuxdriver.com> <20090819180235.GA7126@mosca>
-	 <20090819183506.GG5905@tuxdriver.com>
-	 <43e72e890908191150h6fa8a811u30c57420afd17e08@mail.gmail.com>
-Date: Wed, 19 Aug 2009 15:08:38 -0400
-Message-ID: <b6c5339f0908191208m2aef3305lcb4cadabeb72733f@mail.gmail.com>
-Subject: Re: [PATCH v5 00/33] wireless: kconfig updates
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200908072021.53221.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 2:50 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
+On Friday 07 August 2009, Johannes Berg wrote:
+> On Fri, 2009-08-07 at 18:55 +0200, Ivo van Doorn wrote:
+> 
+> > > If we have a lot of frames to transmit at once, for
+> > > instance with fragmentation, it can be an optimisation
+> > > to only tell the DMA engine about them on the last
+> > > fragment/frame to avoid banging the IO too much. This
+> > > patch allows implementation such an optimisation by
+> > > telling the driver when more frames can be expected.
+> > 
+> > Wouldn't this be the same as the
+> > 	if (ieee80211_has_morefrags())
+> > 		.. kick queue ...
+> 
+> Initially, yes, but I think we should eventually use it for sending out
+> multiple frames after restarting queues etc. For instance after
+> scanning, we could send out a bunch of frames at once.
 
-> Well so to group all of Intel stuff we do need this, at least I can't
-> think of a way to do it. If we don't want to group intel stuff then we
-> can remove it. Is there a downside to this grouping, for example?
+This would work for PCI devices, but USB devices can spoil the
+fun (as usual) because those devices use the queue in the hardware
+and you can't control the actual "kick".
 
-One (admittedly hand-wavy) argument against vendor grouping is that you
-don't always know who made the chip.  So you have CompanyA buying CompanyB's
-IP, making a product, and then we write a driver for CompanyA's device
-called awifi2000.  Meanwhile CompanyB sells it to CompanyC too so their
-"C Wifi Plus" product happens to work with the awifi2000 driver.  Now you
-have to reorg the menus to put it under CompanyB.
+> > > Currently, this is used by mac80211 only on fragmented
+> > > frames, but could also be used in the future on other
+> > > frames when the queue was full and there are multiple
+> > > frames pending.
+> > >
+> > > Note that drivers need to be careful when using this
+> > > flag, they need to kick their DMA engines not just
+> > > when this flag is clear, but also when the queue gets
+> > > full so that progress can be made.
+> > 
+> > What would a good value be for the threshold?
+> > rt2x00 currently uses 10% of the queue, which means that
+> > 2 or 3 entries are kept available at all times.
+> 
+> Well, for fragmentation I think the maximum number of fragments is 9.
 
-I imagine this is a lot less likely with wireless, if you know enough to
-write a driver, you usually know who made it.  But ISTR it happened a lot
-with v4l stuff since there are more commodity parts on those cards.
+Ok, I'll look into increasing the queue size and theshold to something
+closer to 9. :)
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Ivo
