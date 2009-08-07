@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-1.ms.rz.RWTH-Aachen.DE ([134.130.7.72]:61729 "EHLO
-	mta-1.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754381AbZHTOPK (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:45319 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905AbZHGKdH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 10:15:10 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-15
-Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
- by mta-1.ms.rz.RWTH-Aachen.de
- (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
- with ESMTP id <0KOO001OWI9BDC60@mta-1.ms.rz.RWTH-Aachen.de> for
- linux-wireless@vger.kernel.org; Thu, 20 Aug 2009 16:15:11 +0200 (CEST)
-Received: from [137.226.12.123]
- (informatik-4-137-226-12-123.nn.RWTH-Aachen.DE [137.226.12.123] (may be
- forged))	by relay.rwth-aachen.de (8.13.8+Sun/8.13.8/1)
- with ESMTP id n7KEFB2L018025	for <linux-wireless@vger.kernel.org>; Thu,
- 20 Aug 2009 16:15:11 +0200 (CEST)
-Message-id: <4A8D5A48.5070809@nets.rwth-aachen.de>
-Date: Thu, 20 Aug 2009 16:14:32 +0200
-From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Minstrel's definition of best throughput
+	Fri, 7 Aug 2009 06:33:07 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 00/23] wl1251 sdio support
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:32:39 +0300
+Message-ID: <20090807102732.31717.84006.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi John,
 
-while watching the rc_stats of minstrel, I noticed
-that minstrel does not choose the rate with best throughput.
-For example, I often see something like this:
+here are quite a few wl1251 patches for you. It would be good to get
+them to 2.6.32 if possible. Major addition is the sdio support which
+have been tested with the Google G1 phone. Also some code cleanup and
+odd fixes.
 
-rate     throughput  ewma prob   this prob  this succ/attempt   success    attempts
-     1         0.8       89.1      100.0          0(  0)       1490        2257
-     2         1.8       95.3      100.0          0(  0)         13          15
-     5.5       4.8       95.5      100.0          0(  0)         17          22
-  P 11         9.4       98.5      100.0          0(  0)       1532        2195
-     6         5.4       95.6      100.0          0(  0)         28          88
-     9         8.1       96.2      100.0          0(  0)        143         431
-    12         8.7       78.8      100.0          0(  0)        209         814
-    18        12.3       75.8      100.0          0(  0)        302        2416
-    24        18.3       86.2      100.0          0(  0)       5765        9196
-    36         2.6       85.2      100.0          0(  0)     736813      886517
-T   48        14.7       97.4      100.0          2(  2)    3433862     4411674
- t  54         8.5       73.3      100.0          0(  0)    1488241     2180261
+---
+
+Bob Copeland (8):
+      wl1251: make irq handling interface specific
+      wl1251: add sdio support
+      wl1251: split spi interface into separate module
+      wl1251: move module probe methods into spi.c
+      wl1251: make wl1251_set_partition bus agnostic
+      wl1251: introduce wl1251_if_operations struct
+      wl1251: use wiphy_dev instead of wl->spi->dev
+      wl1251: separate bus i/o code into io.c
+
+Kalle Valo (15):
+      wl1251: hack to disable filters for fixing association
+      wl1251: add hw scan completed debug message
+      wl1251: remove Luciano as maintainer
+      wl1251: rename reg.h to wl1251_reg.h
+      wl1251: use workqueue provided by mac80211
+      wl1251: move wl1251_acx_wake_up_conditions() to wl1251_ps_set_mode()
+      wl1251: fix channel setting in wl1251_op_config()
+      wl1251: create wl1251_join()
+      wl1251: add channel to wl1251_cmd_join() parameters
+      wl1251: initialise default channel to zero
+      wl1251: remove wait parameter from wl1251_cmd_join()
+      wl1251: use beacon interval and dtim period provided by mac80211
+      wl1251: reorder wl1251_cmd_join() arguments
+      wl1251: remove wl1251_ops
+      wl1251: remove fixed address support from spi commands
 
 
-Why did minstrel chose the 48M rate, and not 24M for the best throughput rate?
-Also "this prob" seems fishy to me, its always 100...
-Another thing: I noticed that the througput field in minstrel_rate is never used?
-Should I send a patch, removing it? Or does anyone remember why it was there
-in the first place?
-
-
-Best regards,
-Arnd
-
-P.S. runnning 2.6.31-rc6 with ath5k...
-
-
+ drivers/net/wireless/wl12xx/Kconfig        |   28 +
+ drivers/net/wireless/wl12xx/Makefile       |    7 
+ drivers/net/wireless/wl12xx/reg.h          |  744 ----------------------------
+ drivers/net/wireless/wl12xx/wl1251.h       |   78 ++-
+ drivers/net/wireless/wl12xx/wl1251_acx.c   |   84 +++
+ drivers/net/wireless/wl12xx/wl1251_acx.h   |  146 +++++
+ drivers/net/wireless/wl12xx/wl1251_boot.c  |  266 +++++++++-
+ drivers/net/wireless/wl12xx/wl1251_boot.h  |    1 
+ drivers/net/wireless/wl12xx/wl1251_cmd.c   |   62 +-
+ drivers/net/wireless/wl12xx/wl1251_cmd.h   |    4 
+ drivers/net/wireless/wl12xx/wl1251_event.c |    7 
+ drivers/net/wireless/wl12xx/wl1251_init.c  |  213 ++++++++
+ drivers/net/wireless/wl12xx/wl1251_init.h  |    2 
+ drivers/net/wireless/wl12xx/wl1251_io.c    |  196 +++++++
+ drivers/net/wireless/wl12xx/wl1251_io.h    |   64 ++
+ drivers/net/wireless/wl12xx/wl1251_main.c  |  375 ++++++++------
+ drivers/net/wireless/wl12xx/wl1251_ops.c   |    5 
+ drivers/net/wireless/wl12xx/wl1251_ops.h   |  165 ------
+ drivers/net/wireless/wl12xx/wl1251_ps.c    |   18 +
+ drivers/net/wireless/wl12xx/wl1251_reg.h   |  744 ++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_rx.c    |    9 
+ drivers/net/wireless/wl12xx/wl1251_sdio.c  |  205 ++++++++
+ drivers/net/wireless/wl12xx/wl1251_spi.c   |  327 +++++-------
+ drivers/net/wireless/wl12xx/wl1251_spi.h   |   56 --
+ drivers/net/wireless/wl12xx/wl1251_tx.c    |   64 +-
+ 25 files changed, 2402 insertions(+), 1468 deletions(-)
+ delete mode 100644 drivers/net/wireless/wl12xx/reg.h
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_io.c
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_io.h
+ delete mode 100644 drivers/net/wireless/wl12xx/wl1251_ops.h
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_reg.h
+ create mode 100644 drivers/net/wireless/wl12xx/wl1251_sdio.c
 
