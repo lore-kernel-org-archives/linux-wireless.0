@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:54403 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751247AbZHZOyI (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:45979 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757437AbZHGKfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 10:54:08 -0400
-Date: Wed, 26 Aug 2009 07:53:37 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>
-Subject: Re: 2.6.31-rc7-git2: Reported regressions 2.6.29 -> 2.6.30
-Message-Id: <20090826075337.4230d82c.akpm@linux-foundation.org>
-In-Reply-To: <b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
-References: <JuOd1ZASH0B.A.YGB.0zGlKB@chimera>
-	<b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 7 Aug 2009 06:35:37 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 22/23] wl1251: add hw scan completed debug message
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:35:26 +0300
+Message-ID: <20090807103526.31717.93856.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 26 Aug 2009 10:47:13 +0200 Rafa__ Mi__ecki <zajec5@gmail.com> wrote:
+From: Kalle Valo <kalle.valo@nokia.com>
 
-> 2009/8/25 Rafael J. Wysocki <rjw@sisk.pl>:
-> > Bug-Entry __ __ __ : http://bugzilla.kernel.org/show_bug.cgi?id=13514
-> > Subject __ __ __ __ : acer_wmi causes stack corruption
-> > Submitter __ __ __ : Rus <harbour@sfinx.od.ua>
-> > Date __ __ __ __ __ __: 2009-06-12 08:13 (75 days old)
-> 
-> It has patch, just Len doesn't seem to... don't know, read the topic?
-> http://patchwork.kernel.org/patch/29082/
-> 
-> Can we ping Len somehow to push this patch directly to Linus's tree?
-> 
+The logs currently don't show when hw scan has completed, fix that.
 
-I'm not seeing any linux-acpi emails from Len since August 14.
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+---
 
-So I merged this patch and shall send it along with
+ drivers/net/wireless/wl12xx/wl1251_event.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-thermal_sys-check-get_temp-return-value.patch
-acpi-dont-call-acpi_processor_init-if-acpi-is-disabled.patch
+diff --git a/drivers/net/wireless/wl12xx/wl1251_event.c b/drivers/net/wireless/wl12xx/wl1251_event.c
+index 7bd1b6a..00076c4 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_event.c
++++ b/drivers/net/wireless/wl12xx/wl1251_event.c
+@@ -39,6 +39,7 @@ static int wl1251_event_scan_complete(struct wl1251 *wl,
+ 		mutex_unlock(&wl->mutex);
+ 		ieee80211_scan_completed(wl->hw, false);
+ 		mutex_lock(&wl->mutex);
++		wl1251_debug(DEBUG_MAC80211, "mac80211 hw scan completed");
+ 		wl->scanning = false;
+ 	}
+ 
 
-in to Linus today.
