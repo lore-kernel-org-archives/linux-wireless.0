@@ -1,162 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41510 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755457AbZHMTbu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35037 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718AbZHGSqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:50 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 18/20] wireless: organize individual drivers alphabetically
-Date: Thu, 13 Aug 2009 15:31:47 -0400
-Message-Id: <1250191909-21682-19-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 7 Aug 2009 14:46:07 -0400
+Date: Fri, 7 Aug 2009 14:39:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-08-07
+Message-ID: <20090807183916.GI7545@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Dave,
+
+Here are a few more late-comers intended for 2.6.31.  They are basically
+simple one-liners (or might-as-well-be-one-liners), most fixing potential
+security or crash issues or avoiding potentially obscure bugs.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/Kconfig |   96 ++++++++++++++++++++---------------------
- 1 files changed, 47 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index b9a8fbd..02c7d16 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
+Individual patches are available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+
+---
+
+The following changes since commit 0bf52b981770cbf006323bab5177f2858a196766:
+  Ingo Molnar (1):
+        net: Fix spinlock use in alloc_netdev_mq()
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Bob Dunlop (1):
+      libertas: correct packing of rxpd structure
+
+Lennert Buytenhek (5):
+      mwl8k: fix NULL pointer dereference on receive out-of-memory
+      mwl8k: add various missing GET_HW_SPEC endian conversions
+      mwl8k: call pci_unmap_single() before accessing command structure again
+      mwl8k: prevent crash in ->configure_filter() if no interface was added
+      mwl8k: prevent module unload hang
+
+Zhu Yi (1):
+      ipw2x00: Write outside array bounds
+
+ drivers/net/wireless/ipw2x00/ipw2200.c  |    2 +-
+ drivers/net/wireless/libertas/hostcmd.h |    4 ++--
+ drivers/net/wireless/mwl8k.c            |   31 +++++++++++++++++++------------
+ 3 files changed, 22 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 44c29b3..6dcac73 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -6226,7 +6226,7 @@ static void ipw_add_scan_channels(struct ipw_priv *priv,
+ 			};
  
--config STRIP
--	tristate "STRIP (Metricom starmode radio IP)"
--	depends on INET && WLAN_PRE80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y if you have a Metricom radio and intend to use Starmode Radio
--	  IP. STRIP is a radio protocol developed for the MosquitoNet project
--	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
--	  traffic using Metricom radios.  Metricom radios are small, battery
--	  powered, 100kbit/sec packet radio transceivers, about the size and
--	  weight of a cellular telephone. (You may also have heard them called
--	  "Metricom modems" but we avoid the term "modem" because it misleads
--	  many people into thinking that you can plug a Metricom modem into a
--	  phone line and use it as a modem.)
--
--	  You can use STRIP on any Linux machine with a serial port, although
--	  it is obviously most useful for people with laptop computers. If you
--	  think you might get a Metricom radio in the future, there is no harm
--	  in saying Y to STRIP now, except that it makes the kernel a bit
--	  bigger.
--
--	  To compile this as a module, choose M here: the module will be
--	  called strip.
--
- config ARLAN
- 	tristate "Aironet Arlan 655 & IC2200 DS support"
- 	depends on ISA && !64BIT && WLAN_PRE80211
-@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called wavelan_cs.  If unsure, say N.
+ 			u8 channel;
+-			while (channel_index < IPW_SCAN_CHANNELS) {
++			while (channel_index < IPW_SCAN_CHANNELS - 1) {
+ 				channel =
+ 				    priv->speed_scan[priv->speed_scan_pos];
+ 				if (channel == 0) {
+diff --git a/drivers/net/wireless/libertas/hostcmd.h b/drivers/net/wireless/libertas/hostcmd.h
+index 0a2e291..c8a1998 100644
+--- a/drivers/net/wireless/libertas/hostcmd.h
++++ b/drivers/net/wireless/libertas/hostcmd.h
+@@ -56,8 +56,8 @@ struct rxpd {
+ 			u8 bss_type;
+ 			/* BSS number */
+ 			u8 bss_num;
+-		} bss;
+-	} u;
++		} __attribute__ ((packed)) bss;
++	} __attribute__ ((packed)) u;
  
-+config STRIP
-+	tristate "STRIP (Metricom starmode radio IP)"
-+	depends on INET && WLAN_PRE80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y if you have a Metricom radio and intend to use Starmode Radio
-+	  IP. STRIP is a radio protocol developed for the MosquitoNet project
-+	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
-+	  traffic using Metricom radios.  Metricom radios are small, battery
-+	  powered, 100kbit/sec packet radio transceivers, about the size and
-+	  weight of a cellular telephone. (You may also have heard them called
-+	  "Metricom modems" but we avoid the term "modem" because it misleads
-+	  many people into thinking that you can plug a Metricom modem into a
-+	  phone line and use it as a modem.)
+ 	/* SNR */
+ 	u8 snr;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index a263d5c..83967af 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -261,7 +261,7 @@ struct mwl8k_vif {
+ 	 */
+ };
+ 
+-#define MWL8K_VIF(_vif) (struct mwl8k_vif *)(&((_vif)->drv_priv))
++#define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
+ 
+ static const struct ieee80211_channel mwl8k_channels[] = {
+ 	{ .center_freq = 2412, .hw_value = 1, },
+@@ -1012,6 +1012,8 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
+ 		rmb();
+ 
+ 		skb = rxq->rx_skb[rxq->rx_head];
++		if (skb == NULL)
++			break;
+ 		rxq->rx_skb[rxq->rx_head] = NULL;
+ 
+ 		rxq->rx_head = (rxq->rx_head + 1) % MWL8K_RX_DESCS;
+@@ -1591,6 +1593,9 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ 	timeout = wait_for_completion_timeout(&cmd_wait,
+ 				msecs_to_jiffies(MWL8K_CMD_TIMEOUT_MS));
+ 
++	pci_unmap_single(priv->pdev, dma_addr, dma_size,
++					PCI_DMA_BIDIRECTIONAL);
 +
-+	  You can use STRIP on any Linux machine with a serial port, although
-+	  it is obviously most useful for people with laptop computers. If you
-+	  think you might get a Metricom radio in the future, there is no harm
-+	  in saying Y to STRIP now, except that it makes the kernel a bit
-+	  bigger.
+ 	result = &cmd->result;
+ 	if (!timeout) {
+ 		spin_lock_irq(&priv->fw_lock);
+@@ -1610,8 +1615,6 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ 			       *result);
+ 	}
+ 
+-	pci_unmap_single(priv->pdev, dma_addr, dma_size,
+-					PCI_DMA_BIDIRECTIONAL);
+ 	return rc;
+ }
+ 
+@@ -1654,18 +1657,18 @@ static int mwl8k_cmd_get_hw_spec(struct ieee80211_hw *hw)
+ 	memset(cmd->perm_addr, 0xff, sizeof(cmd->perm_addr));
+ 	cmd->ps_cookie = cpu_to_le32(priv->cookie_dma);
+ 	cmd->rx_queue_ptr = cpu_to_le32(priv->rxq[0].rx_desc_dma);
+-	cmd->num_tx_queues = MWL8K_TX_QUEUES;
++	cmd->num_tx_queues = cpu_to_le32(MWL8K_TX_QUEUES);
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		cmd->tx_queue_ptrs[i] = cpu_to_le32(priv->txq[i].tx_desc_dma);
+-	cmd->num_tx_desc_per_queue = MWL8K_TX_DESCS;
+-	cmd->total_rx_desc = MWL8K_RX_DESCS;
++	cmd->num_tx_desc_per_queue = cpu_to_le32(MWL8K_TX_DESCS);
++	cmd->total_rx_desc = cpu_to_le32(MWL8K_RX_DESCS);
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 
+ 	if (!rc) {
+ 		SET_IEEE80211_PERM_ADDR(hw, cmd->perm_addr);
+ 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
+-		priv->fw_rev = cmd->fw_rev;
++		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
+ 		priv->hw_rev = cmd->hw_rev;
+ 		priv->region_code = le16_to_cpu(cmd->region_code);
+ 	}
+@@ -3216,15 +3219,19 @@ static int mwl8k_configure_filter_wt(struct work_struct *wt)
+ 	struct dev_addr_list *mclist = worker->mclist;
+ 
+ 	struct mwl8k_priv *priv = hw->priv;
+-	struct mwl8k_vif *mv_vif;
+ 	int rc = 0;
+ 
+ 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+ 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+ 			rc = mwl8k_cmd_set_pre_scan(hw);
+ 		else {
+-			mv_vif = MWL8K_VIF(priv->vif);
+-			rc = mwl8k_cmd_set_post_scan(hw, mv_vif->bssid);
++			u8 *bssid;
 +
-+	  To compile this as a module, choose M here: the module will be
-+	  called strip.
++			bssid = "\x00\x00\x00\x00\x00\x00";
++			if (priv->vif != NULL)
++				bssid = MWL8K_VIF(priv->vif)->bssid;
 +
- config PCMCIA_NETWAVE
- 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
- 	depends on PCMCIA && WLAN_PRE80211
-@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called netwave_cs.  If unsure, say N.
++			rc = mwl8k_cmd_set_post_scan(hw, bssid);
+ 		}
+ 	}
  
--
- menuconfig WLAN_80211
- 	bool "Wireless LAN (IEEE 802.11)"
- 	depends on NETDEVICES
-@@ -535,29 +534,6 @@ config USB_ZD1201
+@@ -3726,6 +3733,8 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
  
- endif # ZYDAS_80211
+ 	ieee80211_stop_queues(hw);
  
--
--config PCMCIA_RAYCS
--	tristate "Aviator/Raytheon 2.4GHz wireless support"
--	depends on PCMCIA && WLAN_80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
--	  (PC-card) wireless Ethernet networking card to your computer.
--	  Please read the file <file:Documentation/networking/ray_cs.txt> for
--	  details.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called ray_cs.  If unsure, say N.
--
--config PCMCIA_WL3501
--      tristate "Planet WL3501 PCMCIA cards"
--      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--      select WIRELESS_EXT
--       ---help---
--         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
--	 It has basic support for Linux wireless extensions and initial
--	 micro support for ethtool.
--
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -585,8 +561,30 @@ config ADM8211
- 
- 	  Thanks to Infineon-ADMtek for their support of this driver.
- 
--source "drivers/net/wireless/hostap/Kconfig"
-+config PCMCIA_RAYCS
-+	tristate "Aviator/Raytheon 2.4GHz wireless support"
-+	depends on PCMCIA && WLAN_80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
-+	  (PC-card) wireless Ethernet networking card to your computer.
-+	  Please read the file <file:Documentation/networking/ray_cs.txt> for
-+	  details.
++	ieee80211_unregister_hw(hw);
 +
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called ray_cs.  If unsure, say N.
-+
- source "drivers/net/wireless/orinoco/Kconfig"
-+source "drivers/net/wireless/hostap/Kconfig"
-+
-+config PCMCIA_WL3501
-+      tristate "Planet WL3501 PCMCIA cards"
-+      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-+      select WIRELESS_EXT
-+       ---help---
-+         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
-+	 It has basic support for Linux wireless extensions and initial
-+	 micro support for ethtool.
+ 	/* Remove tx reclaim tasklet */
+ 	tasklet_kill(&priv->tx_reclaim_task);
  
- config MAC80211_HWSIM
- 	tristate "Simulated radio testing tool for mac80211"
+@@ -3739,8 +3748,6 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_reclaim(hw, i, 1);
+ 
+-	ieee80211_unregister_hw(hw);
+-
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
+ 		mwl8k_txq_deinit(hw, i);
+ 
 -- 
-1.6.2.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
