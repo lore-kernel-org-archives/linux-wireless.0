@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:55244 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbZHHUKy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 16:10:54 -0400
-Received: by bwz19 with SMTP id 19so1990306bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 13:10:54 -0700 (PDT)
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH v4] cfg80211: validate channel settings across interfaces
-References: <1249649261.4215.7.camel@johannes.local>
-	<1249649433.7194.0.camel@johannes.local>
-	<1249652951.7194.2.camel@johannes.local>
-	<1249658555.7194.8.camel@johannes.local>
-	<1249712383.30019.5561.camel@rc-desk> <4A7DD307.6090209@lwfinger.net>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 08 Aug 2009 23:10:51 +0300
-In-Reply-To: <4A7DD307.6090209@lwfinger.net> (Larry Finger's message of "Sat\, 08 Aug 2009 14\:33\:27 -0500")
-Message-ID: <87r5vmkqwk.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx2.redhat.com ([66.187.237.31]:50077 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753735AbZHGVcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 17:32:48 -0400
+Subject: Re: [PATCH] rndis_wlan: wait association to complete
+From: Dan Williams <dcbw@redhat.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+In-Reply-To: <20090806223406.27393zuzztewms74@hayate.sektori.org>
+References: <20090806181746.31308.15687.stgit@fate.lan>
+	 <1249584385.28278.124.camel@johannes.local>
+	 <20090806223406.27393zuzztewms74@hayate.sektori.org>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 16:31:58 -0500
+Message-Id: <1249680718.26088.44.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Thu, 2009-08-06 at 22:34 +0300, Jussi Kivilinna wrote:
+> Quoting "Johannes Berg" <johannes@sipsolutions.net>:
+> 
+> > On Thu, 2009-08-06 at 21:17 +0300, Jussi Kivilinna wrote:
+> >> Fix WPA authentication problems by waiting to association to complete.
+> >> Otherwise userspace (wpa_supplicant) receives authentication packets before
+> >> association events from driver.
+> >
+> >> +	/* If we return now, userspace would get association events too late
+> >> +	 * (after receiving first packets from access point). This causes
+> >> +	 * WPA authentication to fail.
+> >
+> > This is a bit weird, shouldn't you just send the event later then?
+> >
+> 
+> rndis_wlan bases on rndis_host/usbnet. Problem is that rndis_host uses  
+> polling for rndis_command() results to avoid more complex interrupt  
+> based solution. Because rndis_host and therefore rndis_wlan doesn't  
+> handle interrupts on command channel, rndis_wlan knows about completed  
+> association too late. 'Too late' means here that device starts  
+> receiving packets from AP, which end up ignored because userspace  
+> thinks device isn't assosiated yet (I think).
+> 
+> So this patch adds waiting in set_essid() and active polling for  
+> association completion in worker.
+> 
+> Real fix would probably be to hold on data channel until association  
+> is complete, but that would mean touching usbnet/rndis_host little bit  
+> too much than I'd like to.
 
->> For example, when I run:
->> $ iwconfig wlan0 channel <ch> essid <essid>
->> 
->> then the command prompt never returns and system becomes progressively
->> unresponsive. The logs do not contain any details of the problem.
->
-> I have the same problem here as well.
+If this patch ever blocks SIOSIWESSID, then a huge NAK.  Setting the
+ESSID is an asynchronous operation, it should *not* block for operation
+to complete.  Completion is signaled only when an IWESSID event is sent
+to userspace.  What you should be doing is dropping packets from the AP
+on the floor until the firmware things the association is complete.
 
-This patch fixes the issue:
+Dan
 
-commit 21e433f9ea04c319cc12b4094f292a8f1ad709e9
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Sat Aug 8 11:03:58 2009 +0200
 
-    cfg80211: fix locking for SIWFREQ
-
-Johannes sent it to the list this today and it's not in wireless-testing
-yet.
-
--- 
-Kalle Valo
