@@ -1,69 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40251 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811AbZHYJ2m (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:19772 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757427AbZHGKey (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 05:28:42 -0400
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: htl10@users.sourceforge.net
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <950315.98615.qm@web23105.mail.ird.yahoo.com>
-References: <950315.98615.qm@web23105.mail.ird.yahoo.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zs1KzhIa+UMZm+akdKaD"
-Date: Tue, 25 Aug 2009 11:27:57 +0200
-Message-Id: <1251192477.10667.3.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 7 Aug 2009 06:34:54 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 16/23] wl1251: create wl1251_join()
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:34:42 +0300
+Message-ID: <20090807103441.31717.80626.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Kalle Valo <kalle.valo@nokia.com>
 
---=-zs1KzhIa+UMZm+akdKaD
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Better to use wl1251_cmd_join() only for sending the command and move
+the logic to wl1251_join().
 
-On Tue, 2009-08-25 at 06:51 +0000, Hin-Tak Leung wrote:
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+---
 
-> dmesg and rfkill/state corresponds exactly to what the sliding switch
-> does (in the on position, dmesg says it is on, states says 2, in the
-> off position, dmesg says it is off, state says 1). NM basically
-> ignores rfkill/state, and just if'up the device whenever it notices
-> the device has gone down.
+ drivers/net/wireless/wl12xx/wl1251_cmd.c  |   17 -----------
+ drivers/net/wireless/wl12xx/wl1251_main.c |   45 +++++++++++++++++++++++------
+ 2 files changed, 36 insertions(+), 26 deletions(-)
 
-NM can't ignore the state since cfg80211 enforces it.
-
-Can you please use rfkill (http://git.sipsolutions.net/rfkill.git) to
-see what's going on? Like print out events while you slide the button
-and use NM etc.
-
-One thing that would be possible -- does your poll callback work while
-the interface is down? Try to tell NM to turn off the wireless network,
-and see whether the state ever changes with your slider.
-
-johannes
-
---=-zs1KzhIa+UMZm+akdKaD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKk66XAAoJEODzc/N7+QmaD5gP+wezvZjR05RtOT56XQTHrDgR
-JbZ6NgL9GZy9Jn9/GVyAuHV3Vpd6XRN+ec+TwMLfRwvejhJ7JFr/4Dj+V1XtfMda
-JcmRnwtn42dQaesi14S7Hxo82uLV2U3a50AI7Nt1sPenu5BA2U6HBqZrxjccw1Xn
-A6+qG9blxgmJY/T9EL38xZ9lUVWGqahAzav83PEwxraB0FrN/6bFmhGgo2CIbW/H
-HZDQq8PuLVVDYO9NdWmst0mGkiluUwN3b4vKZDBcprWfDShJy+1fGNjtC2gU2O34
-xV/F4PZLk+KhhsvPAPLSwGb72hPQKGWTzQD2fBooRWkMcIsZfP9Nfd0aoS0v3np9
-ISjyV4T8AVzfdTroGkrEJgEDE8uxZx2/a1mhAY4usQ3DH7RMPtPt7n4ujAdLrPC0
-8390Ycyk/XlxgifFxan+7HgAM7dG3zmLHfGRAfOzZfWGHCIDKnQqKOhDMbTvI0+q
-/qkfja/S327/xTmj36LHyIcF+zS657bKhnq1OxRXiWi9P3TM6v4v1DWIlASyCF9q
-AVWIJuNCIMqi7hhAe4Z4A1Ruy3fP79NVys8ZUX5Q1OINsFCmk9fcD082XOw4+8hU
-IYfCbz46MKymD63TX28juIgjaNgJA+PeoCF+zqMfQmOwV0nXLozR26kVGnmLMxik
-dJmwShVivxBeBuiq5xkY
-=u04u
------END PGP SIGNATURE-----
-
---=-zs1KzhIa+UMZm+akdKaD--
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index 4e796db..d7800a3 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -254,7 +254,6 @@ out:
+ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		    u16 beacon_interval, u8 dtim_interval)
+ {
+-	unsigned long timeout;
+ 	struct cmd_join *join;
+ 	int ret, i;
+ 	u8 *bssid;
+@@ -265,14 +264,6 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		goto out;
+ 	}
+ 
+-	/* FIXME: this should be in main.c */
+-	ret = wl1251_acx_frame_rates(wl, DEFAULT_HW_GEN_TX_RATE,
+-				     DEFAULT_HW_GEN_MODULATION_TYPE,
+-				     wl->tx_mgmt_frm_rate,
+-				     wl->tx_mgmt_frm_mod);
+-	if (ret < 0)
+-		goto out;
+-
+ 	wl1251_debug(DEBUG_CMD, "cmd join%s ch %d %d/%d",
+ 		     bss_type == BSS_TYPE_IBSS ? " ibss" : "",
+ 		     channel, beacon_interval, dtim_interval);
+@@ -300,14 +291,6 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		goto out;
+ 	}
+ 
+-	timeout = msecs_to_jiffies(JOIN_TIMEOUT);
+-
+-	/*
+-	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
+-	 * simplify locking we just sleep instead, for now
+-	 */
+-	msleep(10);
+-
+ out:
+ 	kfree(join);
+ 	return ret;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index 5e90459..e575b78 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -309,6 +309,34 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static int wl1251_join(struct wl1251 *wl, u8 bss_type, u8 channel,
++		       u16 beacon_interval, u8 dtim_period)
++{
++	int ret;
++
++	ret = wl1251_acx_frame_rates(wl, DEFAULT_HW_GEN_TX_RATE,
++				     DEFAULT_HW_GEN_MODULATION_TYPE,
++				     wl->tx_mgmt_frm_rate,
++				     wl->tx_mgmt_frm_mod);
++	if (ret < 0)
++		goto out;
++
++
++	ret = wl1251_cmd_join(wl, bss_type, channel, beacon_interval,
++			      dtim_period);
++	if (ret < 0)
++		goto out;
++
++	/*
++	 * FIXME: we should wait for JOIN_EVENT_COMPLETE_ID but to simplify
++	 * locking we just sleep instead, for now
++	 */
++	msleep(10);
++
++out:
++	return ret;
++}
++
+ static void wl1251_filter_work(struct work_struct *work)
+ {
+ 	struct wl1251 *wl =
+@@ -324,8 +352,8 @@ static void wl1251_filter_work(struct work_struct *work)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel, wl->beacon_int,
+-				   wl->dtim_period);
++	ret = wl1251_join(wl, wl->bss_type, wl->channel, wl->beacon_int,
++			  wl->dtim_period);
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
+@@ -565,8 +593,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		goto out;
+ 
+ 	if (channel != wl->channel) {
+-		ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel,
+-				      wl->beacon_int, wl->dtim_period);
++		ret = wl1251_join(wl, wl->bss_type, wl->channel,
++				  wl->beacon_int, wl->dtim_period);
+ 		if (ret < 0)
+ 			goto out_sleep;
+ 
+@@ -1123,9 +1151,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 
+ 		if (wl->bss_type != BSS_TYPE_IBSS) {
+-			ret = wl1251_cmd_join(wl, wl->bss_type, wl->channel,
+-					      wl->beacon_int,
+-					      wl->dtim_period);
++			ret = wl1251_join(wl, wl->bss_type, wl->channel,
++					  wl->beacon_int, wl->dtim_period);
+ 			if (ret < 0)
+ 				goto out_sleep;
+ 			wl1251_warning("Set ctsprotect failed %d", ret);
+@@ -1151,8 +1178,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		ret = wl1251_cmd_join(wl, wl->bss_type, wl->beacon_int,
+-				      wl->channel, wl->dtim_period);
++		ret = wl1251_join(wl, wl->bss_type, wl->beacon_int,
++				  wl->channel, wl->dtim_period);
+ 
+ 		if (ret < 0)
+ 			goto out;
 
