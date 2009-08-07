@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:54230 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932489AbZHYXwe convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:46047 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757442AbZHGKfs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 19:52:34 -0400
-Received: by iwn42 with SMTP id 42so1465399iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 16:52:36 -0700 (PDT)
+	Fri, 7 Aug 2009 06:35:48 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 23/23] wl1251: hack to disable filters for fixing association
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:35:33 +0300
+Message-ID: <20090807103533.31717.69122.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <20090825233827.GA10998@mosca>
-References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
-	<b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
-	<20090825185842.GA7357@mosca> <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
-	<20090825233827.GA10998@mosca>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 25 Aug 2009 16:52:16 -0700
-Message-ID: <43e72e890908251652k82f542bx1e6897b12eadc2e9@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 4:38 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
-> On Tue, Aug 25, 2009 at 12:22:55PM -0700, Bob Copeland wrote:
->> On Tue, Aug 25, 2009 at 2:58 PM, Luis R.
->> Rodriguez<lrodriguez@atheros.com> wrote:
->> > OK how about the band info, think that's useful?
->>
->> Yeah, band is useful.  We don't have to pretty print it though
->> (unless you really feel like it), %d would work just as well.
->>
->> Also WARN_ON_ONCE might be a good idea.
->
-> Alright, first let me see if I can reproduce after cleaning
-> curband crap a little.
->
->> >> which could indicate some
->> >> race condition with flushing the rx queue on channel changes.
->> >
->> > I'll see if I can reproduce somehow.
->> >
->> >> I haven't yet seen a hw rate we didn't know about.
->> >
->> > So you've seen this lately as well?
->>
->> I saw it some time ago, but then changed the order of how the
->> curchan/curband variables were set when we change channels and
->> haven't seen since.  But kerneloops says a lot of other people
->> are still hitting it as well :(
->
-> OK that's good to know too.
->
->> Hmm, ath5k_rx_stop probably wants an equivalent to txq_drainq in
->> there somewhere.
->
-> True.
->
-> First thing I saw upon a quick review was we were relying on our own
-> curband for RX instead of the cfg80211 hw->conf band. Now granted
-> that *may* be updated properly, and it seems that may be the case,
-> but since do not tend to trust drivers here's a removal of all that
-> crap first. I'll test this first to see if I run into the same warning.
-> If this doesn't cure it then we are indeed processing old frames on RX
-> and need to flush 'em out prior to a channel change first.
->
-> Good thing is after a few hours I can reproduce at least.
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Whah, the warn is still there.
+Commit 9cef8737 "mac80211: fix managed mode BSSID handling" broke
+association in wl1251, most probably because the driver configured
+the bssid filter incorrectly. Workaround this by disabling filter
+altogether. This needs to be fixed properly soon.
 
-[ 7281.492622] ------------[ cut here ]------------
-[ 7281.492655] WARNING: at drivers/net/wireless/ath/ath5k/base.c:1133
-ath5k_tasklet_rx+0x57b/0x720 [ath5k]()
-[ 7281.492663] Hardware name: 7660A14
-[ 7281.492668] invalid driver rate index mapped for hw_rix: 1b on freq: 5540
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
-  Luis
+ drivers/net/wireless/wl12xx/wl1251_cmd.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index 6cd024b..770f260 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -276,6 +276,15 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 	join->rx_config_options = wl->rx_config;
+ 	join->rx_filter_options = wl->rx_filter;
+ 
++	/*
++	 * FIXME: disable temporarily all filters because after commit
++	 * 9cef8737 "mac80211: fix managed mode BSSID handling" broke
++	 * association. The filter logic needs to be implemented properly
++	 * and once that is done, this hack can be removed.
++	 */
++	join->rx_config_options = 0;
++	join->rx_filter_options = WL1251_DEFAULT_RX_FILTER;
++
+ 	join->basic_rate_set = RATE_MASK_1MBPS | RATE_MASK_2MBPS |
+ 		RATE_MASK_5_5MBPS | RATE_MASK_11MBPS;
+ 
+
