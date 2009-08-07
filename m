@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.227]:33616 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752324AbZHJT1g (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56341 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932098AbZHGO2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:27:36 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so1077455rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:37 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 4/7] mac80211: Update the station failed frames average when minstrel is used.
-Date: Mon, 10 Aug 2009 12:15:49 -0700
-Message-Id: <1249931752-18127-5-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249931752-18127-4-git-send-email-javier@cozybit.com>
-References: <20090810175225.GF2733@tuxdriver.com>
- <1249931752-18127-1-git-send-email-javier@cozybit.com>
- <1249931752-18127-2-git-send-email-javier@cozybit.com>
- <1249931752-18127-3-git-send-email-javier@cozybit.com>
- <1249931752-18127-4-git-send-email-javier@cozybit.com>
+	Fri, 7 Aug 2009 10:28:13 -0400
+Subject: [PATCH] mac80211: document TX powersave filter requirements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 07 Aug 2009 16:28:09 +0200
+Message-Id: <1249655289.7194.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fail_avg value is used to compute the mesh metric, and was only being set
-by the pid rate control module. This fixes the mesh path selection mechanism
-for cards that use mistrel for rate control.
+This documents what's required to implement that TX powersave
+filter properly wrt. handling hardware queues.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/rc80211_minstrel.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+ include/net/mac80211.h |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 7c51429..3ea9740 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -155,12 +155,16 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		   struct sk_buff *skb)
- {
- 	struct minstrel_sta_info *mi = priv_sta;
-+	struct minstrel_priv *mp = (struct minstrel_priv *)priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_tx_rate *ar = info->status.rates;
-+	struct ieee80211_local *local = hw_to_local(mp->hw);
-+	struct sta_info *si;
- 	int i, ndx;
- 	int success;
- 
- 	success = !!(info->flags & IEEE80211_TX_STAT_ACK);
-+	si = sta_info_get(local, sta->addr);
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		if (ar[i].idx < 0)
-@@ -172,8 +176,12 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 		mi->r[ndx].attempts += ar[i].count;
- 
--		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0))
-+		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0)) {
- 			mi->r[ndx].success += success;
-+			if (si)
-+				si->fail_avg = (18050 - mi->r[ndx].probability)
-+					/ 180;
-+		}
- 	}
- 
- 	if ((info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) && (i >= 0))
--- 
-1.5.4.3
+--- wireless-testing.orig/include/net/mac80211.h	2009-08-07 16:24:58.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-08-07 16:26:46.000000000 +0200
+@@ -239,7 +239,14 @@ struct ieee80211_bss_conf {
+  * @IEEE80211_TX_CTL_AMPDU: this frame should be sent as part of an A-MPDU
+  * @IEEE80211_TX_CTL_INJECTED: Frame was injected, internal to mac80211.
+  * @IEEE80211_TX_STAT_TX_FILTERED: The frame was not transmitted
+- *	because the destination STA was in powersave mode.
++ *	because the destination STA was in powersave mode. Note that to
++ *	avoid race conditions, the filter must be set by the hardware or
++ *	firmware upon receiving a frame that indicates that the station
++ *	went to sleep (must be done on device to filter frames already on
++ *	the queue) and may only be unset after mac80211 gives the OK for
++ *	that by setting the IEEE80211_TX_CTL_CLEAR_PS_FILT (see above),
++ *	since only then is it guaranteed that no more frames are in the
++ *	hardware queue.
+  * @IEEE80211_TX_STAT_ACK: Frame was acknowledged
+  * @IEEE80211_TX_STAT_AMPDU: The frame was aggregated, so status
+  * 	is for the whole aggregation.
+
 
