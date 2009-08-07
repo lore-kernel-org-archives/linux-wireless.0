@@ -1,37 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35314 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751036AbZHBGrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 02:47:24 -0400
-Subject: Re: rt2800usb: memory corruption?
-From: Mike Galbraith <efault@gmx.de>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1249194546.7634.4.camel@marge.simson.net>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-	 <1248947740.8925.12.camel@johannes.local>
-	 <1248948326.8823.4.camel@marge.simson.net>
-	 <1248955916.7995.47.camel@marge.simson.net>
-	 <1249104348.7146.60.camel@marge.simson.net>
-	 <1249124154.8236.5.camel@marge.simson.net>  <1249172514.3043.7.camel@ct>
-	 <1249190209.7486.4.camel@marge.simson.net>
-	 <1249194546.7634.4.camel@marge.simson.net>
+Received: from mx2.redhat.com ([66.187.237.31]:43602 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753365AbZHGVi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 7 Aug 2009 17:38:27 -0400
+Subject: Re: [PATCH] cfg80211: Set WEP ciphers
+From: Dan Williams <dcbw@redhat.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090806190439.GA22647@sortiz.org>
+References: <20090806190439.GA22647@sortiz.org>
 Content-Type: text/plain
-Date: Sun, 02 Aug 2009 08:47:21 +0200
-Message-Id: <1249195641.23166.12.camel@marge.simson.net>
+Date: Fri, 07 Aug 2009 16:36:22 -0500
+Message-Id: <1249680982.26088.48.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-08-06 at 21:04 +0200, Samuel Ortiz wrote:
+> With iwconfig there is no way to properly set the ciphers when trying to
+> connect to a WEP SSID. Although mac80211 based drivers dont need it, several
+> fullmac drivers do.
+> This patch basically sets the WEP ciphers whenever they're not set at all.
 
-P.S.  I'm no longer considering moving box away from router (and if I
-ever do, I'll use repeater instead), so wireless connectivity via this
-adapter is a dead issue here.  Since I have the hw though, if anyone
-wants patches tested, feel free to holler, and I'll give them a spin.
+If you're talking about Dynamic WEP, that's what wpa_supplicant is for,
+it will handle setting the ciphers through SIOCSIWENCODEEXT.
 
-	-Mike
+If you're talking about static WEP, then the ciphers are determined by
+the WEP keys that have been set with iwconfig, and you determine
+WEP40/WEP104 based on the length of the current WEP TX index.
+
+You should *not* be trying to do Dynamic WEP via iwconfig (which it
+seems is what you're doing below?)
+
+Dan
+
+> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+> ---
+>  net/wireless/sme.c |   18 ++++++++++++++++--
+>  1 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 8a7dcbf..b78a111 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -638,14 +638,28 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+>  
+>  	if (connkeys && connkeys->def >= 0) {
+>  		int idx;
+> +		u32 cipher;
+>  
+>  		idx = connkeys->def;
+> +		cipher = connkeys->params[idx].cipher;
+>  		/* If given a WEP key we may need it for shared key auth */
+> -		if (connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP40 ||
+> -		    connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP104) {
+> +		if (cipher == WLAN_CIPHER_SUITE_WEP40 ||
+> +		    cipher == WLAN_CIPHER_SUITE_WEP104) {
+>  			connect->key_idx = idx;
+>  			connect->key = connkeys->params[idx].key;
+>  			connect->key_len = connkeys->params[idx].key_len;
+> +
+> +			/*
+> +			 * If ciphers are not set (e.g. when going through
+> +			 * iwconfig), we have to set them appropriately here.
+> +			 */
+> +			if (connect->crypto.cipher_group == 0)
+> +				connect->crypto.cipher_group = cipher;
+> +
+> +			if (connect->crypto.n_ciphers_pairwise == 0) {
+> +				connect->crypto.n_ciphers_pairwise = 1;
+> +				connect->crypto.ciphers_pairwise[0] = cipher;
+> +			}					
+>  		}
+>  	}
+>  
+> -- 
+> 1.6.3.1
+> 
 
