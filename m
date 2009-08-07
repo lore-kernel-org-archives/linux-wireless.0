@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:50181 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbZHDPZK convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:53252 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757392AbZHGKdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 11:25:10 -0400
-Received: by gxk9 with SMTP id 9so6923716gxk.13
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 08:25:10 -0700 (PDT)
+	Fri, 7 Aug 2009 06:33:13 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 03/23] wl1251: use wiphy_dev instead of wl->spi->dev
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 07 Aug 2009 13:33:04 +0300
+Message-ID: <20090807103303.31717.44884.stgit@tikku>
+In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
+References: <20090807102732.31717.84006.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <20090731183132.GG7963@makis>
-References: <20090731180556.GC7963@makis> <20090731183132.GG7963@makis>
-Date: Tue, 4 Aug 2009 11:25:09 -0400
-Message-ID: <b6c5339f0908040825u294d6ec4s117d9fce52e78537@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 2/4] ath5k: Linear PCDAC code fixes
-From: Bob Copeland <me@bobcopeland.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 2:31 PM, Nick
-Kossifidis<mick@madwifi-project.org> wrote:
->  * Set correct xpd curve indices for high/low gain curves during
->   rfbuffer setup on RF5112B with both calibration curves available.
->
->  * Don't return zero min power when we have the same pcdac value
->   twice because it breaks interpolation. Instead return the right
->   x barrier as we do when we have equal power levels for 2 different
->   pcdac values.
->
->  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+From: Bob Copeland <me@bobcopeland.com>
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Remove a dependency on the bus-specific struct device by using wiphy_dev
+when requesting firmware.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
+
+ drivers/net/wireless/wl12xx/wl1251_main.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index a858e4d..953cdb4 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -75,9 +75,10 @@ static irqreturn_t wl1251_irq(int irq, void *cookie)
+ static int wl1251_fetch_firmware(struct wl1251 *wl)
+ {
+ 	const struct firmware *fw;
++	struct device *dev = wiphy_dev(wl->hw->wiphy);
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, wl->chip.fw_filename, &wl->spi->dev);
++	ret = request_firmware(&fw, wl->chip.fw_filename, dev);
+ 
+ 	if (ret < 0) {
+ 		wl1251_error("could not get firmware: %d", ret);
+@@ -113,9 +114,10 @@ out:
+ static int wl1251_fetch_nvs(struct wl1251 *wl)
+ {
+ 	const struct firmware *fw;
++	struct device *dev = wiphy_dev(wl->hw->wiphy);
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, wl->chip.nvs_filename, &wl->spi->dev);
++	ret = request_firmware(&fw, wl->chip.nvs_filename, dev);
+ 
+ 	if (ret < 0) {
+ 		wl1251_error("could not get nvs file: %d", ret);
+
