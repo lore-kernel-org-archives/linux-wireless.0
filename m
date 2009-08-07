@@ -1,47 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:44855 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754407AbZHCJPN convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f215.google.com ([209.85.218.215]:52638 "EHLO
+	mail-bw0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932168AbZHGO5b convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 05:15:13 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH RESEND] b43: implement baseband init for LP-PHY <= rev1
-Date: Mon, 3 Aug 2009 11:15:12 +0200
-Cc: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-References: <4A7610AE.5000908@gmail.com> <200908031113.38229.mb@bu3sch.de>
-In-Reply-To: <200908031113.38229.mb@bu3sch.de>
+	Fri, 7 Aug 2009 10:57:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908031115.12929.mb@bu3sch.de>
+In-Reply-To: <20090807134803.GA7545@tuxdriver.com>
+References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
+	 <200908071324.45269.elendil@planet.nl>
+	 <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com>
+	 <20090807134803.GA7545@tuxdriver.com>
+Date: Fri, 7 Aug 2009 15:57:30 +0100
+Message-ID: <c6b1100b0908070757t7b973180s17959e0f46347d5d@mail.gmail.com>
+Subject: Re: ath5k - strange regulatory domain change
+From: Chris Clayton <chris2553@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Frans Pop <elendil@planet.nl>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 03 August 2009 11:13:37 Michael Buesch wrote:
-> On Monday 03 August 2009 00:18:22 GÃ¡bor Stefanik wrote:
-> > Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
-> > boardflags_hi values to defines.
-> > Implement b43_phy_copy for easier copying between registers, as needed
-> > by LP-PHY init.
-> 
-> > +	if (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)&&
-> > +	   (bus->chip_id == 0x5354)&&
-> > +	   (bus->chip_package == SSB_CHIPPACK_BCM4712S)) {
-> > +		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0006);
-> > +		b43_phy_write(dev, B43_LPPHY_GPIO_SELECT, 0x0005);
-> > +		b43_phy_write(dev, B43_LPPHY_GPIO_OUTEN, 0xFFFF);
-> > +		b43_hf_write(dev, b43_hf_read | 0x0800ULL<<  32);
-> > +	}
-> 
-> The HF write is wrong. Read the specification:
-> http://bcm-v4.sipsolutions.net/802.11/Mhf
-> 
-> Patch otherwise looks ok.
+Hi John,
 
-Sorry, I replied to the wrong mail. But this does also apply to V2 patch.
+2009/8/7 John W. Linville <linville@tuxdriver.com>:
+> On Fri, Aug 07, 2009 at 01:56:43PM +0100, Chris Clayton wrote:
+>> Thanks Frans,
+>>
+>> 2009/8/7 Frans Pop <elendil@planet.nl>:
+>> > Chris Clayton wrote:
+>> >> Because of some problems with my Belkin Wireless G card  (model
+>> >> F5D7010) and the rt61pci driver, I've started to use a "no-name" card
+>> >> that is supported by the ath5k driver.
+>> >>
+>> >> A problem is that I have come across is that for some reason the CN
+>> >> regulatory domain is being set automatically. This doesn't happen with
+>> >> the Belkin (rt61) card. I have the following line in
+>> >> /etc/modprobe.d/modprobe.conf to set the regulatory domain to GB:
+>> >>
+>> >> options cfg80211 ieee80211_regdom=GB
+>> >
+>> > This issue has already been discussed extensively (after I reported it).
+>> > Please see the following thread: http://lkml.org/lkml/2009/7/8/421. It
+>> > contains a lot of information from the wireless maintainers.
+>> >
+>>
+>> To sum this up then (as I understand things):
+>>
+>> 1. I am the system administrator (root);
+>> 2. I am using a valid (albeit deprecated from 2.6.31) method to tell
+>> the wireless infrastructure that I want the regulatory domain set to
+>> GB;
+>> 3. GB is a valid code; and
+>> 4. the wireless infrastructure sets the regulatory domain to CN.
+>> 5. in 2.6.30, the wireless infrastructure does what I (the root user)
+>> tell it to do.
+>>
+>> That's a regression in my book. Oh well! I do have the iw and crda
+>> applications installed, so I've taken that route of setting the
+>> regulatory domain to GB.
+>
+> Are you actually getting the wrong regulatory rules enforced?  Or are
+> you merely bothered that it is reporting "CN" instead of "GB"?
+>
+
+I'm not sure whether it's wrong or not. To these dmesg snippets from
+my original post look wrong because one of the frequency ranges listed
+for CN is outside those listed for GB and one of the CN max_eirp
+entries is not preent in the GB list. Whether that is OK or not I
+don't know and can't find (lay user) documentation to tell me.
+
+cfg80211: Regulatory domain changed to country: GB
+        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+        (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
+
+cfg80211: Regulatory domain changed to country: CN
+        (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+        (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+        (5735000 KHz - 5835000 KHz @ 40000 KHz), (N/A, 3000 mBm)
+
+
+Thanks
+
+Chris
+
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
+
+
 
 -- 
-Greetings, Michael.
+No, Sir; there is nothing which has yet been contrived by man, by which
+so much happiness is produced as by a good tavern or inn - Doctor Samuel
+Johnson
