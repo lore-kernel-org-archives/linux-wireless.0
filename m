@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:35238 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209AbZHNSMJ (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:56277 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbZHGRvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 14:12:09 -0400
-Received: by fxm11 with SMTP id 11so1316077fxm.39
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 11:12:09 -0700 (PDT)
+	Fri, 7 Aug 2009 13:51:37 -0400
 MIME-Version: 1.0
-In-Reply-To: <1250273426.4411.0.camel@johannes.local>
-References: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
-	<4A859F52.1000608@gmail.com> <1250273426.4411.0.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 14 Aug 2009 20:11:49 +0200
-Message-ID: <69e28c910908141111g171c1a23qc2d49992468ddf44@mail.gmail.com>
-Subject: Re: Spare warnings - wireless drivers
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dave <kilroyd@googlemail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200908071939.49627.elendil@planet.nl>
+References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
+	<20090807151304.GE7545@tuxdriver.com> <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
+	<200908071939.49627.elendil@planet.nl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 7 Aug 2009 10:51:17 -0700
+Message-ID: <43e72e890908071051w1f306349rfab32de80759006e@mail.gmail.com>
+Subject: Re: ath5k - strange regulatory domain change
+To: Frans Pop <elendil@planet.nl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Chris Clayton <chris2553@googlemail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2009 at 8:10 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-08-14 at 18:30 +0100, Dave wrote:
->
->> I've been staring at setibssport for 5 minutes, and can't see the
->> alleged imbalance. False positive?
+On Fri, Aug 7, 2009 at 10:39 AM, Frans Pop<elendil@planet.nl> wrote:
+> On Friday 07 August 2009, you wrote:
+>> The way the EEPROM was programmed for this type of
+>> regulatory domain was to give you a group number under which other
+>> countries fall under. If you ended up getting a direct alpha2
+>> programmed in the EEPROM instead you would still end up matching the
+>> alpha2 to a group number. The group number leads you to a regulatory
+>> domain that all those countries in that group number adhere to. So it
+>> was a way to group up regulatory domain rules between countries. The
+>> "CN" you see just so happens to be the alpha2 for the first country in
+>> the same group regulatory domain group.
 >>
->> I can't see why sparse picked on setibssport either - half the other
->> functions in that file do exactly the same.
+>> What we can do is to elaborate on that on the dmesg and also maybe
 >
-> Yeah, I've been there too -- no idea why that particular function trips
-> up sparse.
+> That would be very welcome.
 >
-> johannes
+>> pick the most common country on the group so it will tend to match the
+>> country users are on.
 >
+> I think that would just be moving the problem from one group of users to
+> another, possibly only marginally smaller, group of users.
+>
+> As far as I can see the largest group is ETSI1_WORLD and contains 33
+> countries, followed by NULL1_WORLD (is that a real group?) with 22.
+> That's probably too many to list them all.
+> OTOH, all other groups contain at most 7 countries, which could possibly
+> be listed.
+>
+> Probably the simplest option would be to just display some identification
+> of the domain group itself and point users to documentation which
+> explains what countries fall under what groups. That would at least avoid
+> the confusion caused by randomly picking a matching country.
+> Variation could be to display the country if the group only contains one
+> country, but that could also be considered an inconsistent user
+> interface.
 
-It's literally a sparse warning, then.
+Or maybe see if the currently set regulatory domain matches an alpha2
+in the group, if so then just display the same alpha2. Will take a
+look.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+  Luis
