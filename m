@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3964 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234AbZHDMWv (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54902 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbZHGSQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 08:22:51 -0400
-Date: Tue, 4 Aug 2009 08:22:29 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl12xx: make irq handling interface specific
-Message-ID: <20090804122229.GA3337@hash.localnet>
-References: <20090804033908.GA1903@hash.localnet> <87hbwoniog.fsf@litku.valot.fi>
+	Fri, 7 Aug 2009 14:16:07 -0400
+Date: Fri, 7 Aug 2009 14:00:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Frans Pop <elendil@planet.nl>,
+	Chris Clayton <chris2553@googlemail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: ath5k - strange regulatory domain change
+Message-ID: <20090807180033.GH7545@tuxdriver.com>
+References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com> <20090807151304.GE7545@tuxdriver.com> <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com> <200908071939.49627.elendil@planet.nl> <43e72e890908071051w1f306349rfab32de80759006e@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87hbwoniog.fsf@litku.valot.fi>
+In-Reply-To: <43e72e890908071051w1f306349rfab32de80759006e@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 04, 2009 at 10:26:39AM +0300, Kalle Valo wrote:
-> So this patch is only needed on top of the rebased sdio patchset I sent
-> few weeks ago to get sdio working? Or did I miss any patches? I'm just
-> being careful here because I want to get sdio support to 2.6.32 (if it's
-> ok for John) and there isn't that much time for that.
+On Fri, Aug 07, 2009 at 10:51:17AM -0700, Luis R. Rodriguez wrote:
+> On Fri, Aug 7, 2009 at 10:39 AM, Frans Pop<elendil@planet.nl> wrote:
 
-Hi Kalle,
+> > Probably the simplest option would be to just display some identification
+> > of the domain group itself and point users to documentation which
+> > explains what countries fall under what groups. That would at least avoid
+> > the confusion caused by randomly picking a matching country.
+> > Variation could be to display the country if the group only contains one
+> > country, but that could also be considered an inconsistent user
+> > interface.
+> 
+> Or maybe see if the currently set regulatory domain matches an alpha2
+> in the group, if so then just display the same alpha2. Will take a
+> look.
 
-Yes, the only other patch I have is for the platform gpios for the MSM
-kernel (msm_wifi.ko module for HTC Dream) which doesn't touch this at all
-and is platform specific.  The plan was to turn that into a platform
-rfkill driver, though it can probably go to staging in its present form
-with the other Dream stuff.
+That makes sense to me...
 
 -- 
-Bob Copeland %% www.bobcopeland.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
