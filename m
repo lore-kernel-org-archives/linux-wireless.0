@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:43325 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbZHJT1o (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47346 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753032AbZHGPqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:27:44 -0400
-Received: by mail-pz0-f196.google.com with SMTP id 34so3033885pzk.4
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:46 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 6/7] mac80211: Assign a default mesh beaconing interval.
-Date: Mon, 10 Aug 2009 12:15:51 -0700
-Message-Id: <1249931752-18127-7-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249931752-18127-6-git-send-email-javier@cozybit.com>
-References: <20090810175225.GF2733@tuxdriver.com>
- <1249931752-18127-1-git-send-email-javier@cozybit.com>
- <1249931752-18127-2-git-send-email-javier@cozybit.com>
- <1249931752-18127-3-git-send-email-javier@cozybit.com>
- <1249931752-18127-4-git-send-email-javier@cozybit.com>
- <1249931752-18127-5-git-send-email-javier@cozybit.com>
- <1249931752-18127-6-git-send-email-javier@cozybit.com>
+	Fri, 7 Aug 2009 11:46:05 -0400
+Date: Fri, 7 Aug 2009 11:34:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ivan.kuten@promwad.com, linux-wireless@vger.kernel.org,
+	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
+Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
+	way
+Message-ID: <20090807153419.GF7545@tuxdriver.com>
+References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com> <1245150895.8623.3.camel@johannes.local> <4A475F82.9040007@promwad.com> <1246262320.5947.3.camel@johannes.local> <4A68A465.6020501@promwad.com> <1248371971.634.0.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1248371971.634.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh stack was enabling beaconing without specifying an interval.  This
-patch defines a default beaconing interval of 1s.
+On Thu, Jul 23, 2009 at 07:59:31PM +0200, Johannes Berg wrote:
+> On Thu, 2009-07-23 at 20:56 +0300, Ivan Kuten wrote:
+> > > On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
+> > >> Hello,
+> > >>
+> > >> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unaligned allocations
+> > >> for creq->ssids and creq->channels. Should it be something like that?
+> > > 
+> > > Seems alright, but there is more than one instance of this, maybe you
+> > > can make a function to allocate a scan request properly and have it be
+> > > called from all the places it's needed.
+> > > 
+> > > johannes
+> > > 
+> > 
+> > Hello Johannes,
+> > Can you point to that multiple scan allocations? I see only one kzalloc
+> > with followed possible alignment violation - it's in cfg80211_wext_siwscan in scan.c
+> 
+> I'm sure there's one in nl80211.c too
 
-Incidentally, this fixes mesh beaconing in mac80211_hwsim devices.
+Ivan/Yauhen,
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c |    6 ++++--
- net/mac80211/mesh.h |    1 +
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Will you be posted an updated patch?  Time is short before the next merge window...
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 10d9338..25d0065 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -525,9 +525,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
- 
- 	ifmsh->housekeeping = true;
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	queue_work(local->hw, &ifmsh->work);
-+	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
--						BSS_CHANGED_BEACON_ENABLED);
-+						BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_BEACON_INT);
- }
- 
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 2ebd74c..4241925 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -174,6 +174,7 @@ struct mesh_rmc {
-  */
- #define MESH_PATH_REFRESH_TIME			1000
- #define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
-+#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
- 
- #define MESH_MAX_PREQ_RETRIES 4
- #define MESH_PATH_EXPIRE (600 * HZ)
+John
 -- 
-1.5.4.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
