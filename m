@@ -1,180 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppsw-6.csi.cam.ac.uk ([131.111.8.136]:60198 "EHLO
-	ppsw-6.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbZHLOrR (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:57183 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412AbZHHV4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 10:47:17 -0400
-Message-ID: <4A8281AD.1010807@cam.ac.uk>
-Date: Wed, 12 Aug 2009 08:47:41 +0000
-From: Jonathan Cameron <jic23@cam.ac.uk>
+	Sat, 8 Aug 2009 17:56:11 -0400
+Received: by ewy7 with SMTP id 7so1937884ewy.18
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 14:56:11 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 4/7] rt2x00: Fix quality houskeeping for software diversity
+Date: Sat, 8 Aug 2009 23:54:24 +0200
+Cc: users@rt2x00.serialmonkey.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Lars Ericsson <Lars_Ericsson@telia.com>
+References: <200908082353.04274.IvDoorn@gmail.com> <200908082353.26986.IvDoorn@gmail.com> <200908082353.47835.IvDoorn@gmail.com>
+In-Reply-To: <200908082353.47835.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Roel Kluin <roel.kluin@gmail.com>
-CC: Cyrill Gorcunov <gorcunov@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Daniel Mack <daniel@caiaq.de>
-Subject: Re: Libertas: Association request to the driver failed
-References: <20090807191156.GS19257@buzzloop.caiaq.de>	<20090809102417.GH13639@buzzloop.caiaq.de>	<4A7EAED8.9090900@gmail.com> <200908091310.56919.mb@bu3sch.de>	<20090809191359.GG4805@lenovo> <4A7FF84C.7070708@gmail.com>
-In-Reply-To: <4A7FF84C.7070708@gmail.com>
-Content-Type: text/plain; charset=us-ascii
+Message-Id: <200908082354.24733.IvDoorn@gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All, 
+From: Lars Ericsson <Lars_Ericsson@telia.com>
 
-After applying this patch I've been receiving 0x12 response from
-an access point (association failed: not all rates supported)
-to association requests.
+Antanna quality statistics is not handled correctly, which leads to
+software diversity being shutdown completly.
 
-See below for queries on what is happening,
-> Several arrays were read before checking whether the index was within
-> bounds. ARRAY_SIZE() should be used to determine the size of arrays.
-> 
-> rates->rates has an arraysize of 1, so calling get_common_rates()
-> with a rates_size of MAX_RATES (14) was causing reads out of bounds.
-> 
-> tmp_size can increment at most to MAX_RATES * ARRAY_SIZE(lbs_bg_rates),
-> so that should be the number of elements of tmp[].
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> 
->> | Is it a good idea to use dynamic stack arrays in the kernel?
->> | What about kmalloc for dynamic allocations?
->> | 
->> | -- 
->> | Greetings, Michael.
->>
->> I saw one pattern in trace code (not sure if it's
->> still there) but personally don't like dynamic
->> stack arrays (though at moment the max value
->> being passed into routine is known maybe just
->> use MAX_RATES instead of (*rates_size)?). Hmm?
-> 
-> Good point.
-> 
->> 	-- Cyrill
-> 
-> Thanks,
-> 
-> I think there was another problem in lbs_associate(),
-> the memcpy already affected rates->rates.
-> 
-> Also in get_common_rates() I think we can safely move the
-> memset/memcpy, originally after label done, upwards.
-> 
-> The patch below, if correct, is to be applied after the revert
-> 
-> Roel
-> 
-> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-> index b9b3741..ba0164a 100644
-> --- a/drivers/net/wireless/libertas/assoc.c
-> +++ b/drivers/net/wireless/libertas/assoc.c
-> @@ -1,6 +1,7 @@
->  /* Copyright (C) 2006, Red Hat, Inc. */
->  
->  #include <linux/types.h>
-> +#include <linux/kernel.h>
->  #include <linux/etherdevice.h>
->  #include <linux/ieee80211.h>
->  #include <linux/if_arp.h>
-> @@ -43,41 +44,41 @@ static int get_common_rates(struct lbs_private *priv,
->  	u16 *rates_size)
->  {
->  	u8 *card_rates = lbs_bg_rates;
-> -	size_t num_card_rates = sizeof(lbs_bg_rates);
-> -	int ret = 0, i, j;
-> -	u8 tmp[30];
-> +	int i, j;
-> +	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
->  	size_t tmp_size = 0;
->  
->  	/* For each rate in card_rates that exists in rate1, copy to tmp */
-> -	for (i = 0; card_rates[i] && (i < num_card_rates); i++) {
-> -		for (j = 0; rates[j] && (j < *rates_size); j++) {
-> +	for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
-> +		for (j = 0; j < *rates_size && rates[j]; j++) {
->  			if (rates[j] == card_rates[i])
->  				tmp[tmp_size++] = card_rates[i];
->  		}
->  	}
->  
->  	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
-> -	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates, num_card_rates);
-> +	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
-> +			ARRAY_SIZE(lbs_bg_rates));
->  	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
->  	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
->  
-> +	memset(rates, 0, *rates_size);
-> +	*rates_size = min_t(u16, tmp_size, *rates_size);
-> +	memcpy(rates, tmp, *rates_size);
-> +
->  	if (!priv->enablehwauto) {
->  		for (i = 0; i < tmp_size; i++) {
->  			if (tmp[i] == priv->cur_rate)
-> -				goto done;
-> +				break;
-> +		}
-> +		if (i == tmp_size) {
-> +			lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> +					"compatible with the network.\n",
-> +					priv->cur_rate);
-> +			return -1;
->  		}
-> -		lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> -		       "compatible with the network.\n", priv->cur_rate);
-> -		ret = -1;
-> -		goto done;
->  	}
-> -	ret = 0;
-> -
-> -done:
-> -	memset(rates, 0, *rates_size);
-> -	*rates_size = min_t(int, tmp_size, *rates_size);
-> -	memcpy(rates, tmp, *rates_size);
-> -	return ret;
-> +	return 0;
->  }
->  
->  
-> @@ -321,8 +322,8 @@ static int lbs_associate(struct lbs_private *priv,
->  
->  	rates = (struct mrvl_ie_rates_param_set *) pos;
->  	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
-> -	memcpy(&rates->rates, &bss->rates, MAX_RATES);
-> -	tmplen = MAX_RATES;
-> +	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
-Isn't this always going to be 1? Switching back to original version
-allows association to work for me.
+The main problem is that during antenna diversity statistics can
+be reset resulting in loosing the signal strength just before
+evaluation.
 
-As is, it only allows one rate to be tested as ARRAY_SIZE(rates->rates)
-is always 1 as it stands.  
+rssi history is not updated correctly leading to incorrect comparison
+material for basing antenna switching on.
 
-If this is the desired behaviour please explain why?
-I'll admit I'm not really sure what should be happening, I've merely
-been bisecting looking for what was causing a regression for me.
+Signed-off-by: Lars Ericsson <Lars_Ericsson@telia.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h     |   11 ++---
+ drivers/net/wireless/rt2x00/rt2x00link.c |   77 +++++++++++++-----------------
+ 2 files changed, 38 insertions(+), 50 deletions(-)
 
-> +	memcpy(&rates->rates, &bss->rates, tmplen);
->  	if (get_common_rates(priv, rates->rates, &tmplen)) {
->  		ret = -1;
->  		goto done;
-> @@ -598,7 +599,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
->  
->  	/* Copy Data rates from the rates recorded in scan response */
->  	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
-> -	ratesize = min_t(u16, sizeof(cmd.bss.rates), MAX_RATES);
-> +	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
->  	memcpy(cmd.bss.rates, bss->rates, ratesize);
->  	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
->  		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
-> 
-> _______________________________________________
-> libertas-dev mailing list
-> libertas-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/libertas-dev
-> 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index ee9afab..aa3ff0a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -245,14 +245,11 @@ struct link_ant {
+ 	struct antenna_setup active;
+ 
+ 	/*
+-	 * RSSI information for the different antennas.
+-	 * These statistics are used to determine when
+-	 * to switch antenna when using software diversity.
+-	 *
+-	 *        rssi[0] -> Antenna A RSSI
+-	 *        rssi[1] -> Antenna B RSSI
++	 * RSSI history information for the antenna.
++	 * Used to determine when to switch antenna
++	 * when using software diversity.
+ 	 */
+-	int rssi_history[2];
++	int rssi_history;
+ 
+ 	/*
+ 	 * Current RSSI average of the currently active antenna.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index fe951dc..dd68f3a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -103,39 +103,21 @@ static int rt2x00link_antenna_get_link_rssi(struct rt2x00_dev *rt2x00dev)
+ 	return DEFAULT_RSSI;
+ }
+ 
+-static int rt2x00link_antenna_get_rssi_history(struct rt2x00_dev *rt2x00dev,
+-					       enum antenna antenna)
++static int rt2x00link_antenna_get_rssi_history(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct link_ant *ant = &rt2x00dev->link.ant;
+ 
+-	if (ant->rssi_history[antenna - ANTENNA_A])
+-		return ant->rssi_history[antenna - ANTENNA_A];
++	if (ant->rssi_history)
++		return ant->rssi_history;
+ 	return DEFAULT_RSSI;
+ }
+-/* Small wrapper for rt2x00link_antenna_get_rssi_history() */
+-#define rt2x00link_antenna_get_rssi_rx_history(__dev) \
+-	rt2x00link_antenna_get_rssi_history((__dev), \
+-					    (__dev)->link.ant.active.rx)
+-#define rt2x00link_antenna_get_rssi_tx_history(__dev) \
+-	rt2x00link_antenna_get_rssi_history((__dev), \
+-					    (__dev)->link.ant.active.tx)
+ 
+ static void rt2x00link_antenna_update_rssi_history(struct rt2x00_dev *rt2x00dev,
+-						   enum antenna antenna,
+ 						   int rssi)
+ {
+ 	struct link_ant *ant = &rt2x00dev->link.ant;
+-	ant->rssi_history[ant->active.rx - ANTENNA_A] = rssi;
++	ant->rssi_history = rssi;
+ }
+-/* Small wrapper for rt2x00link_antenna_get_rssi_history() */
+-#define rt2x00link_antenna_update_rssi_rx_history(__dev, __rssi) \
+-	rt2x00link_antenna_update_rssi_history((__dev), \
+-					       (__dev)->link.ant.active.rx, \
+-					       (__rssi))
+-#define rt2x00link_antenna_update_rssi_tx_history(__dev, __rssi) \
+-	rt2x00link_antenna_update_rssi_history((__dev), \
+-					       (__dev)->link.ant.active.tx, \
+-					       (__rssi))
+ 
+ static void rt2x00link_antenna_reset(struct rt2x00_dev *rt2x00dev)
+ {
+@@ -146,8 +128,10 @@ static void rt2x00lib_antenna_diversity_sample(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct link_ant *ant = &rt2x00dev->link.ant;
+ 	struct antenna_setup new_ant;
+-	int sample_a = rt2x00link_antenna_get_rssi_history(rt2x00dev, ANTENNA_A);
+-	int sample_b = rt2x00link_antenna_get_rssi_history(rt2x00dev, ANTENNA_B);
++	int other_antenna;
++
++	int sample_current = rt2x00link_antenna_get_link_rssi(rt2x00dev);
++	int sample_other = rt2x00link_antenna_get_rssi_history(rt2x00dev);
+ 
+ 	memcpy(&new_ant, &ant->active, sizeof(new_ant));
+ 
+@@ -161,17 +145,22 @@ static void rt2x00lib_antenna_diversity_sample(struct rt2x00_dev *rt2x00dev)
+ 	 * from both antennas. It now is time to determine
+ 	 * which antenna demonstrated the best performance.
+ 	 * When we are already on the antenna with the best
+-	 * performance, then there really is nothing for us
+-	 * left to do.
++	 * performance, just create a good starting point
++	 * for the history and we are done.
+ 	 */
+-	if (sample_a == sample_b)
++	if (sample_current >= sample_other) {
++		rt2x00link_antenna_update_rssi_history(rt2x00dev,
++			sample_current);
+ 		return;
++	}
++
++	other_antenna = (ant->active.rx == ANTENNA_A) ? ANTENNA_B : ANTENNA_A;
+ 
+ 	if (ant->flags & ANTENNA_RX_DIVERSITY)
+-		new_ant.rx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
++		new_ant.rx = other_antenna;
+ 
+ 	if (ant->flags & ANTENNA_TX_DIVERSITY)
+-		new_ant.tx = (sample_a > sample_b) ? ANTENNA_A : ANTENNA_B;
++		new_ant.tx = other_antenna;
+ 
+ 	rt2x00lib_config_antenna(rt2x00dev, new_ant);
+ }
+@@ -190,8 +179,8 @@ static void rt2x00lib_antenna_diversity_eval(struct rt2x00_dev *rt2x00dev)
+ 	 * after that update the history with the current value.
+ 	 */
+ 	rssi_curr = rt2x00link_antenna_get_link_rssi(rt2x00dev);
+-	rssi_old = rt2x00link_antenna_get_rssi_rx_history(rt2x00dev);
+-	rt2x00link_antenna_update_rssi_rx_history(rt2x00dev, rssi_curr);
++	rssi_old = rt2x00link_antenna_get_rssi_history(rt2x00dev);
++	rt2x00link_antenna_update_rssi_history(rt2x00dev, rssi_curr);
+ 
+ 	/*
+ 	 * Legacy driver indicates that we should swap antenna's
+@@ -216,7 +205,7 @@ static void rt2x00lib_antenna_diversity_eval(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00lib_config_antenna(rt2x00dev, new_ant);
+ }
+ 
+-static void rt2x00lib_antenna_diversity(struct rt2x00_dev *rt2x00dev)
++static bool rt2x00lib_antenna_diversity(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct link_ant *ant = &rt2x00dev->link.ant;
+ 	unsigned int flags = ant->flags;
+@@ -238,7 +227,7 @@ static void rt2x00lib_antenna_diversity(struct rt2x00_dev *rt2x00dev)
+ 	if (!(ant->flags & ANTENNA_RX_DIVERSITY) &&
+ 	    !(ant->flags & ANTENNA_TX_DIVERSITY)) {
+ 		ant->flags = 0;
+-		return;
++		return true;
+ 	}
+ 
+ 	/* Update flags */
+@@ -250,10 +239,15 @@ static void rt2x00lib_antenna_diversity(struct rt2x00_dev *rt2x00dev)
+ 	 * the data. The latter should only be performed once
+ 	 * every 2 seconds.
+ 	 */
+-	if (ant->flags & ANTENNA_MODE_SAMPLE)
++	if (ant->flags & ANTENNA_MODE_SAMPLE) {
+ 		rt2x00lib_antenna_diversity_sample(rt2x00dev);
+-	else if (rt2x00dev->link.count & 1)
++		return true;
++	} else if (rt2x00dev->link.count & 1) {
+ 		rt2x00lib_antenna_diversity_eval(rt2x00dev);
++		return true;
++	}
++
++	return false;
+ }
+ 
+ void rt2x00link_update_stats(struct rt2x00_dev *rt2x00dev,
+@@ -451,15 +445,12 @@ static void rt2x00link_tuner(struct work_struct *work)
+ 	rt2x00leds_led_quality(rt2x00dev, link->avg_rssi);
+ 
+ 	/*
+-	 * Evaluate antenna setup, make this the last step since this could
+-	 * possibly reset some statistics.
+-	 */
+-	rt2x00lib_antenna_diversity(rt2x00dev);
+-
+-	/*
+-	 * Reset the quality counters which recounted during each period.
++	 * Evaluate antenna setup, make this the last step when
++	 * rt2x00lib_antenna_diversity made changes the quality
++	 * statistics will be reset.
+ 	 */
+-	rt2x00link_reset_qual(rt2x00dev);
++	if (rt2x00lib_antenna_diversity(rt2x00dev))
++		rt2x00link_reset_qual(rt2x00dev);
+ 
+ 	/*
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+-- 
+1.6.3.3
 
