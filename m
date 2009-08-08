@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:54958 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753404AbZHTHMm convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:57264 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933417AbZHHDuW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 03:12:42 -0400
-Received: by iwn42 with SMTP id 42so320121iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 00:12:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
-References: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 20 Aug 2009 00:12:24 -0700
-Message-ID: <43e72e890908200012x23b7773dvf215676726a514e5@mail.gmail.com>
-Subject: Re: Linux Kernel Wireless stack presentation
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Aug 2009 23:50:22 -0400
+Received: by mail-pz0-f196.google.com with SMTP id 34so1943403pzk.4
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:50:23 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH 6/8] mac80211: Early detection of broken mesh paths when using minstrel.
+Date: Fri,  7 Aug 2009 20:38:29 -0700
+Message-Id: <1249702711-32737-7-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249702711-32737-6-git-send-email-javier@cozybit.com>
+References: <>
+ <1249702711-32737-1-git-send-email-javier@cozybit.com>
+ <1249702711-32737-2-git-send-email-javier@cozybit.com>
+ <1249702711-32737-3-git-send-email-javier@cozybit.com>
+ <1249702711-32737-4-git-send-email-javier@cozybit.com>
+ <1249702711-32737-5-git-send-email-javier@cozybit.com>
+ <1249702711-32737-6-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 20, 2009 at 12:02 AM, Rami Rosen<ramirose@gmail.com> wrote:
-> Folks,
->
->  I am giving on Thursday next week a lecture about the Linux Kernel
-> Wireless stack in a
-> Linux User Group in Herzelia (Israel).
->
->  The slides are available online now, so I thought some of you might
-> be interested
-> to take a look; the presentation is very detailed (over 110 pages).
->
-> see:
-> http://tuxology.net/wp-content/uploads/2009/08/wirelessLecHerzelinux.pdf
 
-A few comments:
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c        |    1 -
+ net/mac80211/rc80211_minstrel.c |    8 +++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-* Ditch iwconfig and refer to iw
-* ath5k/ath9k do not have any firmware burned onto any "ROM", the
-devices just do not require software, everything is done by the driver
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index b4309b2..1cd1e72 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -272,7 +272,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	last_hop_metric = airtime_link_metric_get(local, sta);
+-	printk("XXX: last_hop_metric = %d\n", last_hop_metric);
+ 	/* Update and check originator routing info */
+ 	fresh_info = true;
+ 
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 3ea9740..0071649 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -51,6 +51,7 @@
+ #include <linux/random.h>
+ #include <linux/ieee80211.h>
+ #include <net/mac80211.h>
++#include "mesh.h"
+ #include "rate.h"
+ #include "rc80211_minstrel.h"
+ 
+@@ -178,9 +179,14 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0)) {
+ 			mi->r[ndx].success += success;
+-			if (si)
++			if (si) {
+ 				si->fail_avg = (18050 - mi->r[ndx].probability)
+ 					/ 180;
++				WARN_ON(si->fail_avg > 100);
++				if (si->fail_avg == 100 &&
++					ieee80211_vif_is_mesh(&si->sdata->vif))
++					mesh_plink_broken(si);
++			}
+ 		}
+ 	}
+ 
+-- 
+1.5.4.3
 
-   Luis
