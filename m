@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:44251 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755066AbZHTSWD (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:59500 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933432AbZHHHkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 14:22:03 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: fix broadcast buffering in AP mode
-Date: Thu, 20 Aug 2009 20:22:01 +0200
-Cc: John Linville <linville@tuxdriver.com>
-References: <200908172124.15399.chunkeey@web.de>
-In-Reply-To: <200908172124.15399.chunkeey@web.de>
+	Sat, 8 Aug 2009 03:40:16 -0400
+Received: by fxm28 with SMTP id 28so155005fxm.17
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 00:40:16 -0700 (PDT)
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: add information for wl1271 wireless driver
+References: <1249681805-21015-1-git-send-email-luciano.coelho@nokia.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 08 Aug 2009 10:40:13 +0300
+In-Reply-To: <1249681805-21015-1-git-send-email-luciano.coelho@nokia.com> (Luciano Coelho's message of "Sat\,  8 Aug 2009 00\:50\:05 +0300")
+Message-ID: <87hbwin482.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908202022.01623.chunkeey@web.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "mac80211: fix PS-poll response race" somehow broke
-broadcast buffering in a funny way.
+Luciano Coelho <luciano.coelho@nokia.com> writes:
 
-During normal operation - stations are awake - the firmware refused
-to transmit broadcast frames and reported P54_TX_PSM_CANCELLED.
-But everything worked as soon as one station entered PSM.
+> Add maintainer information section for the wl1271 wireless driver and fix the
+> information for wl1271.
+>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-The reason:
-The stack sets IEEE80211_TX_CTL_SEND_AFTER_DTIM for outgoing
-broadcast frames as soon as a station is marked as sleeping.
-This flag triggers a path which will reroute these frames
-into p54's "content after beacon" queue, which is designed
-to cope with the demands for psm.
+Thanks.
 
-This patch restores the old behavior.
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
 
-IEEE80211_TX_CTL_CLEAR_PS_FILT will once again be used to signalize
-the firmware to ignore the ps canceling for certain frames.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 6fc0b61..b6dda2b 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -623,6 +623,9 @@ static void p54_tx_80211_header(struct p54_common *priv, struct sk_buff *skb,
- 	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
- 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
- 
-+	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
-+		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
-+
- 	*queue = skb_get_queue_mapping(skb) + P54_QUEUE_DATA;
- 
- 	switch (priv->mode) {
+-- 
+Kalle Valo
