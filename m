@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3180 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273AbZHYDBg (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:34077 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbZHHPJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 23:01:36 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 0/4] ath5k: misc updates
-Date: Mon, 24 Aug 2009 23:00:29 -0400
-Message-Id: <1251169233-24169-1-git-send-email-me@bobcopeland.com>
+	Sat, 8 Aug 2009 11:09:49 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ar9170usb: fix spurious firmware related message
+Date: Sat, 8 Aug 2009 17:09:48 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200908081709.48599.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+When ar9170-2.fw was missing, the driver erroneously complained
+about missing the initialization values file ar9170-1.fw...
 
-Here are a few patches that have been sitting around in my tree
-for a while.  A cleanup or two, rxs conversion, and CCMP support.
-
-Bob Copeland (4):
-  ath5k: clean up filter flags setting
-  ath5k: add led pin configuration for compaq c700 laptop
-  ath5k: use the skb->cb directly for RX status
-  ath5k: add hardware CCMP encyption support
-
- drivers/net/wireless/ath/ath5k/ath5k.h  |    1 +
- drivers/net/wireless/ath/ath5k/attach.c |   10 ++++
- drivers/net/wireless/ath/ath5k/base.c   |   83 +++++++++++++++++-------------
- drivers/net/wireless/ath/ath5k/led.c    |    2 +
- 4 files changed, 60 insertions(+), 36 deletions(-)
-
-
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index 1aec7af..e0138ac 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -598,11 +598,15 @@ static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
+ 
+ 	err = request_firmware(&aru->init_values, "ar9170-1.fw",
+ 			       &aru->udev->dev);
++	if (err) {
++		dev_err(&aru->udev->dev, "file with init values not found.\n");
++		return err;
++	}
+ 
+ 	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
+ 	if (err) {
+ 		release_firmware(aru->init_values);
+-		dev_err(&aru->udev->dev, "file with init values not found.\n");
++		dev_err(&aru->udev->dev, "firmware file not found.\n");
+ 		return err;
+ 	}
+ 
