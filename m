@@ -1,161 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53124 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757733AbZHQR1c (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38036 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755280AbZHHJEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:32 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 19/33] wireless: organize individual drivers alphabetically
-Date: Mon, 17 Aug 2009 13:27:18 -0400
-Message-Id: <1250530052-14783-20-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 8 Aug 2009 05:04:08 -0400
+Subject: [PATCH] cfg80211: fix locking for SIWFREQ
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Sat, 08 Aug 2009 11:03:58 +0200
+Message-Id: <1249722238.31670.17.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
- 1 files changed, 47 insertions(+), 48 deletions(-)
+"cfg80211: validate channel settings across interfaces"
+contained a locking bug -- in the managed-mode SIWFREQ
+call it would end up running into a lock recursion.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index e57c62d..de76484 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
+This fixes it by not checking that particular interface
+for a channel that it needs to stay on, which is as it
+should be as that's the interface we're setting the
+channel for.
+
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+Reported-by: Kalle Valo <kalle.valo@iki.fi>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/chan.c        |    3 ++-
+ net/wireless/core.h        |    1 +
+ net/wireless/nl80211.c     |    2 +-
+ net/wireless/wext-compat.c |    2 +-
+ net/wireless/wext-sme.c    |    2 +-
+ 5 files changed, 6 insertions(+), 4 deletions(-)
+
+--- wireless-testing.orig/net/wireless/chan.c	2009-08-08 10:53:52.000000000 +0200
++++ wireless-testing/net/wireless/chan.c	2009-08-08 10:54:10.000000000 +0200
+@@ -42,13 +42,14 @@ rdev_fixed_channel(struct cfg80211_regis
+ }
  
--config STRIP
--	tristate "STRIP (Metricom starmode radio IP)"
--	depends on INET && WLAN_PRE80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y if you have a Metricom radio and intend to use Starmode Radio
--	  IP. STRIP is a radio protocol developed for the MosquitoNet project
--	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
--	  traffic using Metricom radios.  Metricom radios are small, battery
--	  powered, 100kbit/sec packet radio transceivers, about the size and
--	  weight of a cellular telephone. (You may also have heard them called
--	  "Metricom modems" but we avoid the term "modem" because it misleads
--	  many people into thinking that you can plug a Metricom modem into a
--	  phone line and use it as a modem.)
--
--	  You can use STRIP on any Linux machine with a serial port, although
--	  it is obviously most useful for people with laptop computers. If you
--	  think you might get a Metricom radio in the future, there is no harm
--	  in saying Y to STRIP now, except that it makes the kernel a bit
--	  bigger.
--
--	  To compile this as a module, choose M here: the module will be
--	  called strip.
--
- config ARLAN
- 	tristate "Aironet Arlan 655 & IC2200 DS support"
- 	depends on ISA && !64BIT && WLAN_PRE80211
-@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called wavelan_cs.  If unsure, say N.
+ int rdev_set_freq(struct cfg80211_registered_device *rdev,
++		  struct wireless_dev *for_wdev,
+ 		  int freq, enum nl80211_channel_type channel_type)
+ {
+ 	struct ieee80211_channel *chan;
+ 	struct ieee80211_sta_ht_cap *ht_cap;
+ 	int result;
  
-+config STRIP
-+	tristate "STRIP (Metricom starmode radio IP)"
-+	depends on INET && WLAN_PRE80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y if you have a Metricom radio and intend to use Starmode Radio
-+	  IP. STRIP is a radio protocol developed for the MosquitoNet project
-+	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
-+	  traffic using Metricom radios.  Metricom radios are small, battery
-+	  powered, 100kbit/sec packet radio transceivers, about the size and
-+	  weight of a cellular telephone. (You may also have heard them called
-+	  "Metricom modems" but we avoid the term "modem" because it misleads
-+	  many people into thinking that you can plug a Metricom modem into a
-+	  phone line and use it as a modem.)
-+
-+	  You can use STRIP on any Linux machine with a serial port, although
-+	  it is obviously most useful for people with laptop computers. If you
-+	  think you might get a Metricom radio in the future, there is no harm
-+	  in saying Y to STRIP now, except that it makes the kernel a bit
-+	  bigger.
-+
-+	  To compile this as a module, choose M here: the module will be
-+	  called strip.
-+
- config PCMCIA_NETWAVE
- 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
- 	depends on PCMCIA && WLAN_PRE80211
-@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called netwave_cs.  If unsure, say N.
+-	if (rdev_fixed_channel(rdev, NULL))
++	if (rdev_fixed_channel(rdev, for_wdev))
+ 		return -EBUSY;
  
--
- menuconfig WLAN_80211
- 	bool "Wireless LAN (IEEE 802.11)"
- 	depends on NETDEVICES
-@@ -509,28 +508,6 @@ config USB_ZD1201
+ 	if (!rdev->ops->set_channel)
+--- wireless-testing.orig/net/wireless/core.h	2009-08-08 10:54:29.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-08-08 10:54:37.000000000 +0200
+@@ -374,6 +374,7 @@ struct ieee80211_channel *
+ rdev_fixed_channel(struct cfg80211_registered_device *rdev,
+ 		   struct wireless_dev *for_wdev);
+ int rdev_set_freq(struct cfg80211_registered_device *rdev,
++		  struct wireless_dev *for_wdev,
+ 		  int freq, enum nl80211_channel_type channel_type);
  
- endif # ZYDAS_80211
+ #endif /* __NET_WIRELESS_CORE_H */
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-08-08 10:54:51.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-08-08 10:54:58.000000000 +0200
+@@ -721,7 +721,7 @@ static int nl80211_set_wiphy(struct sk_b
+ 		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
  
--config PCMCIA_RAYCS
--	tristate "Aviator/Raytheon 2.4GHz wireless support"
--	depends on PCMCIA && WLAN_80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
--	  (PC-card) wireless Ethernet networking card to your computer.
--	  Please read the file <file:Documentation/networking/ray_cs.txt> for
--	  details.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called ray_cs.  If unsure, say N.
--
--config PCMCIA_WL3501
--      tristate "Planet WL3501 PCMCIA cards"
--      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--      select WIRELESS_EXT
--       ---help---
--         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
--	 It has basic support for Linux wireless extensions and initial
--	 micro support for ethtool.
--
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -558,8 +535,30 @@ config ADM8211
+ 		mutex_lock(&rdev->devlist_mtx);
+-		result = rdev_set_freq(rdev, freq, channel_type);
++		result = rdev_set_freq(rdev, NULL, freq, channel_type);
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		if (result)
+ 			goto bad_res;
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-08-08 10:54:52.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-08-08 10:55:04.000000000 +0200
+@@ -766,7 +766,7 @@ int cfg80211_wext_siwfreq(struct net_dev
+ 		if (freq == 0)
+ 			return -EINVAL;
+ 		mutex_lock(&rdev->devlist_mtx);
+-		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
++		err = rdev_set_freq(rdev, NULL, freq, NL80211_CHAN_NO_HT);
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		return err;
+ 	}
+--- wireless-testing.orig/net/wireless/wext-sme.c	2009-08-08 10:54:52.000000000 +0200
++++ wireless-testing/net/wireless/wext-sme.c	2009-08-08 10:55:08.000000000 +0200
+@@ -106,7 +106,7 @@ int cfg80211_mgd_wext_siwfreq(struct net
  
- 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 	/* SSID is not set, we just want to switch channel */
+ 	if (chan && !wdev->wext.connect.ssid_len) {
+-		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
++		err = rdev_set_freq(rdev, wdev, freq, NL80211_CHAN_NO_HT);
+ 		goto out;
+ 	}
  
--source "drivers/net/wireless/hostap/Kconfig"
-+config PCMCIA_RAYCS
-+	tristate "Aviator/Raytheon 2.4GHz wireless support"
-+	depends on PCMCIA && WLAN_80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
-+	  (PC-card) wireless Ethernet networking card to your computer.
-+	  Please read the file <file:Documentation/networking/ray_cs.txt> for
-+	  details.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called ray_cs.  If unsure, say N.
-+
- source "drivers/net/wireless/orinoco/Kconfig"
-+source "drivers/net/wireless/hostap/Kconfig"
-+
-+config PCMCIA_WL3501
-+      tristate "Planet WL3501 PCMCIA cards"
-+      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-+      select WIRELESS_EXT
-+       ---help---
-+         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
-+	 It has basic support for Linux wireless extensions and initial
-+	 micro support for ethtool.
- 
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
--- 
-1.6.2.5
+
 
