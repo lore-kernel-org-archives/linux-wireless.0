@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:44691 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121AbZHMCEA convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:31294 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933304AbZHHDnp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 22:04:00 -0400
-Received: by yxe5 with SMTP id 5so608855yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 19:04:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890908111404k780a3a8ehd8745142e9c01f56@mail.gmail.com>
-References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
-	<1249735096-27071-3-git-send-email-hauke@hauke-m.de> <43e72e890908101520x19fddcddx72215fb0851baf2f@mail.gmail.com>
-	<4A81DA33.1050405@hauke-m.de> <43e72e890908111404k780a3a8ehd8745142e9c01f56@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 12 Aug 2009 19:03:39 -0700
-Message-ID: <43e72e890908121903u1117b73doc26fdf40e6fb64c8@mail.gmail.com>
-Subject: Re: [PATCH 3/7] [compat-2.6] pcmcia_parse_tuple was redefined in
-	pcmcia/cistpl.h
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Aug 2009 23:43:45 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so563117rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:43:47 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH] mac80211: Assign a default mesh beaconing interval.
+Date: Fri,  7 Aug 2009 20:31:53 -0700
+Message-Id: <1249702314-32504-8-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249702314-32504-7-git-send-email-javier@cozybit.com>
+References: <>
+ <1249702314-32504-1-git-send-email-javier@cozybit.com>
+ <1249702314-32504-2-git-send-email-javier@cozybit.com>
+ <1249702314-32504-3-git-send-email-javier@cozybit.com>
+ <1249702314-32504-4-git-send-email-javier@cozybit.com>
+ <1249702314-32504-5-git-send-email-javier@cozybit.com>
+ <1249702314-32504-6-git-send-email-javier@cozybit.com>
+ <1249702314-32504-7-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 11, 2009 at 2:04 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
-> On Tue, Aug 11, 2009 at 1:53 PM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
->> Hi Luis,
->>
->> Thank you for applying the rest of the patches. Next time I will use
->> --cover-letter when generating the patches.
->>
->> Luis R. Rodriguez wrote:
->>> On Sat, Aug 8, 2009 at 5:38 AM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
->>>> fix build:
->>>> undef pcmcia_parse_tuple before redefine it again.
->>>>
->>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>> ---
->>>>  compat/compat-2.6.28.h |    8 +++++++-
->>>>  1 files changed, 7 insertions(+), 1 deletions(-)
->>>>
->>>> diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
->>>> index fdc021a..e25259f 100644
->>>> --- a/compat/compat-2.6.28.h
->>>> +++ b/compat/compat-2.6.28.h
->>>> @@ -29,7 +29,13 @@
->>>>  })
->>>>  #endif /* From include/asm-generic/bug.h */
->>>>
->>>> -#define pcmcia_parse_tuple(tuple, parse) pcmcia_parse_tuple(NULL, tuple, parse)
->>>> +#include <pcmcia/cs_types.h>
->>>> +#include <pcmcia/cs.h>
->>>> +#include <pcmcia/cistpl.h>
->>>> +#ifdef pcmcia_parse_tuple
->>>> +#undef pcmcia_parse_tuple
->>>> +#define pcmcia_parse_tuple(tuple, parse) pccard_parse_tuple(tuple, parse)
->>>> +#endif
->>>
->>> Where did pccard_parse_tuple() come from?
->> In include/pcmcia/cistpl.h pcmcia_parse_tuple(p_dev, tuple, parse) is
->> defined as pccard_parse_tuple(tuple, parse)
->>
->>> Did you see the commit 0df8084caf53774113c8f118e9dd43e660cf9e15 by any
->>> chance? That fixed compilation for me against older kernels.
->> I still get a compile error with recent compat-wireless including commit
->> 0df8084caf53774113c8f118e9dd43e660cf9e15 with kernel <= 2.6.27 in Ubuntu:
->>
->> In file included from
->> /compat-wireless-git/drivers/net/wireless/b43/pcmcia.c:30:
->> include/pcmcia/cistpl.h:610:1: warning: "pcmcia_parse_tuple" redefined
->> In file included from /compat-wireless-git/include/net/compat.h:19,
->>                 from <command-line>:0:
->> /compat-wireless-git/include/net/compat-2.6.28.h:32:1: warning: this is
->> the location of the previous definition
->>
->> The above patch fixes it for me. The patch does not look relay nice, do
->> you have a better idea how to solve this problem?
->
-> Hm odd, compilation worked for me against 2.6.27 using KLIB and
-> KLIB_BUILD. I'll try to do that again today see if I still can compile
-> ok or not.
+Incidentally, this fixes mesh beaconing in mac80211_hwsim devices.
 
-OK thanks for the patch, applied!
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh.c |    6 ++++--
+ net/mac80211/mesh.h |    1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5202d7c..3b49d39 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -525,9 +525,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 
+ 	ifmsh->housekeeping = true;
+-	ieee80211_queue_work(&local->hw, &ifmsh->work);
++	queue_work(local->hw, &ifmsh->work);
++	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
+-						BSS_CHANGED_BEACON_ENABLED);
++						BSS_CHANGED_BEACON_ENABLED |
++						BSS_CHANGED_BEACON_INT);
+ }
+ 
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 6cb3db8..b6ea100 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -174,6 +174,7 @@ struct mesh_rmc {
+  */
+ #define MESH_PATH_REFRESH_TIME			1000
+ #define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
++#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
+ 
+ #define MESH_MAX_PREQ_RETRIES 4
+ #define MESH_PATH_EXPIRE (600 * HZ)
+-- 
+1.5.4.3
+
