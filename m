@@ -1,158 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33278 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006AbZH0VAm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:42 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 07/13] wl1271: Implementation for SPI busy word checking
-Date: Fri, 28 Aug 2009 00:00:01 +0300
-Message-Id: <1251406807-31495-8-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53689 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934117AbZHHMie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Aug 2009 08:38:34 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/7] [compat-2.6] Rename CONFIG_IWL4965 symbol
+Date: Sat,  8 Aug 2009 14:38:15 +0200
+Message-Id: <1249735096-27071-6-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
+References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+In kernel 2.6.26 and older CONFIG_IWL4965 was build as an extra
+module, but now it is directly included in the iwlagn.
 
-This patch adds implementation for checking for SPI busy words - i.e.
-honoring a delay request from the WLAN chipset upon reading
-registers/memory.
+CONFIG_IWL4965 has to be set to y, to build correctly.
 
-To optimized the average SPI ready by 32 bits, also configure the number
-of busywords to one to disable the "fixed-busy-word" functionality.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/wl12xx/wl1271.h     |   10 +++-
- drivers/net/wireless/wl12xx/wl1271_spi.c |   69 +++++++++++++++++++++++++++++-
- 2 files changed, 75 insertions(+), 4 deletions(-)
+ compat/patches/09-rename-iwl4965-config.patch |   31 +++++++++++++++++++++++++
+ config.mk                                     |    2 +-
+ 2 files changed, 32 insertions(+), 1 deletions(-)
+ create mode 100644 compat/patches/09-rename-iwl4965-config.patch
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index c455dcb..957da8c 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -107,7 +107,13 @@ enum {
- #define WL1271_FW_NAME "wl1271-fw.bin"
- #define WL1271_NVS_NAME "wl1271-nvs.bin"
- 
--#define WL1271_BUSY_WORD_LEN 8
-+/*
-+ * FIXME: for the wl1271, a busy word count of 1 here will result in a more
-+ * optimal SPI interface. There is some SPI bug however, causing RXS time outs
-+ * with this mode occasionally on boot, so lets have two for now.
-+ */
-+#define WL1271_BUSY_WORD_CNT 2
-+#define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
- 
- #define WL1271_ELP_HW_STATE_ASLEEP 0
- #define WL1271_ELP_HW_STATE_IRQ    1
-@@ -389,7 +395,7 @@ struct wl1271 {
- 
- 	u32 buffer_32;
- 	u32 buffer_cmd;
--	u8 buffer_busyword[WL1271_BUSY_WORD_LEN];
-+	u32 buffer_busyword[WL1271_BUSY_WORD_CNT];
- 	struct wl1271_rx_descriptor *rx_descriptor;
- 
- 	struct wl1271_fw_status *fw_status;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 4a12880..504991a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -244,12 +244,75 @@ int wl1271_set_partition(struct wl1271 *wl,
- 	return 0;
- }
- 
-+#define WL1271_BUSY_WORD_TIMEOUT 1000
+diff --git a/compat/patches/09-rename-iwl4965-config.patch b/compat/patches/09-rename-iwl4965-config.patch
+new file mode 100644
+index 0000000..e539c75
+--- /dev/null
++++ b/compat/patches/09-rename-iwl4965-config.patch
+@@ -0,0 +1,31 @@
++In kernel 2.6.26 and older CONFIG_IWL4965 was build as an extra
++module, but now it is directly included in the iwlagn.
 +
-+void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
-+{
-+	struct spi_transfer t[1];
-+	struct spi_message m;
-+	u32 *busy_buf;
-+	int num_busy_bytes = 0;
++CONFIG_IWL4965 has to be set to y, to build correctly.
 +
-+	wl1271_info("spi read BUSY!");
-+
-+	/*
-+	 * Look for the non-busy word in the read buffer, and if found,
-+	 * read in the remaining data into the buffer.
-+	 */
-+	busy_buf = (u32 *)buf;
-+	for (; (u32)busy_buf < (u32)buf + len; busy_buf++) {
-+		num_busy_bytes += sizeof(u32);
-+		if (*busy_buf & 0x1) {
-+			spi_message_init(&m);
-+			memset(t, 0, sizeof(t));
-+			memmove(buf, busy_buf, len - num_busy_bytes);
-+			t[0].rx_buf = buf + (len - num_busy_bytes);
-+			t[0].len = num_busy_bytes;
-+			spi_message_add_tail(&t[0], &m);
-+			spi_sync(wl->spi, &m);
-+			return;
-+		}
-+	}
-+
-+	/*
-+	 * Read further busy words from SPI until a non-busy word is
-+	 * encountered, then read the data itself into the buffer.
-+	 */
-+	wl1271_info("spi read BUSY-polling needed!");
-+
-+	num_busy_bytes = WL1271_BUSY_WORD_TIMEOUT;
-+	busy_buf = wl->buffer_busyword;
-+	while (num_busy_bytes) {
-+		num_busy_bytes--;
-+		spi_message_init(&m);
-+		memset(t, 0, sizeof(t));
-+		t[0].rx_buf = busy_buf;
-+		t[0].len = sizeof(u32);
-+		spi_message_add_tail(&t[0], &m);
-+		spi_sync(wl->spi, &m);
-+
-+		if (*busy_buf & 0x1) {
-+			spi_message_init(&m);
-+			memset(t, 0, sizeof(t));
-+			t[0].rx_buf = buf;
-+			t[0].len = len;
-+			spi_message_add_tail(&t[0], &m);
-+			spi_sync(wl->spi, &m);
-+			return;
-+		}
-+	}
-+
-+	/* The SPI bus is unresponsive, the read failed. */
-+	memset(buf, 0, len);
-+	wl1271_error("SPI read busy-word timeout!\n");
-+}
-+
- void wl1271_spi_read(struct wl1271 *wl, int addr, void *buf,
- 		     size_t len, bool fixed)
- {
- 	struct spi_transfer t[3];
- 	struct spi_message m;
--	u8 *busy_buf;
-+	u32 *busy_buf;
- 	u32 *cmd;
- 
- 	cmd = &wl->buffer_cmd;
-@@ -281,7 +344,9 @@ void wl1271_spi_read(struct wl1271 *wl, int addr, void *buf,
- 
- 	spi_sync(wl->spi, &m);
- 
--	/* FIXME: check busy words */
-+	/* Check busy words */
-+	if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1))
-+		wl1271_spi_read_busy(wl, buf, len);
- 
- 	wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
- 	wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, len);
++--- a/drivers/net/wireless/iwlwifi/Makefile
+++++ b/drivers/net/wireless/iwlwifi/Makefile
++@@ -9,7 +9,7 @@ iwlcore-$(CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT) += iwl-spectrum.o
++ obj-$(CONFIG_IWLAGN)	+= iwlagn.o
++ iwlagn-objs		:= iwl-agn.o iwl-agn-rs.o
++ 
++-iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
+++iwlagn-$(CONFIG_COMPAT_IWL4965) += iwl-4965.o
++ iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
++ iwlagn-$(CONFIG_IWL5000) += iwl-6000.o
++ iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
++--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
++@@ -3088,10 +3088,10 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
++ 
++ /* Hardware specific file defines the PCI IDs table for that hardware module */
++ static struct pci_device_id iwl_hw_card_ids[] = {
++-#ifdef CONFIG_IWL4965
+++#ifdef CONFIG_COMPAT_IWL4965
++ 	{IWL_PCI_DEVICE(0x4229, PCI_ANY_ID, iwl4965_agn_cfg)},
++ 	{IWL_PCI_DEVICE(0x4230, PCI_ANY_ID, iwl4965_agn_cfg)},
++-#endif /* CONFIG_IWL4965 */
+++#endif /* CONFIG_COMPAT_IWL4965 */
++ #ifdef CONFIG_IWL5000
++ 	{IWL_PCI_DEVICE(0x4232, 0x1205, iwl5100_bg_cfg)},
++ 	{IWL_PCI_DEVICE(0x4232, 0x1305, iwl5100_bg_cfg)},
+diff --git a/config.mk b/config.mk
+index 0d8962b..2dab9af 100644
+--- a/config.mk
++++ b/config.mk
+@@ -135,7 +135,7 @@ CONFIG_IWLWIFI_SPECTRUM_MEASUREMENT=y
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ CONFIG_IWLAGN=m
+-CONFIG_IWL4965=y
++CONFIG_COMPAT_IWL4965=y
+ CONFIG_IWL5000=y
+ CONFIG_IWL3945=m
+ CONFIG_IWL3945_SPECTRUM_MEASUREMENT=y
 -- 
-1.5.6.5
+1.6.2.1
 
