@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:47233 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134AbZHGQzl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 12:55:41 -0400
-Received: by ewy10 with SMTP id 10so1673447ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 09:55:41 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: allow DMA optimisation
-Date: Fri, 7 Aug 2009 18:55:38 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1249656135.7194.6.camel@johannes.local>
-In-Reply-To: <1249656135.7194.6.camel@johannes.local>
+Received: from mgw2.diku.dk ([130.225.96.92]:47624 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750885AbZHHNWf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Aug 2009 09:22:35 -0400
+Date: Sat, 8 Aug 2009 15:22:26 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless/ath/ath5k: Change constant name
+Message-ID: <Pine.LNX.4.64.0908081521210.27715@ask.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200908071855.38921.IvDoorn@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Julia Lawall <julia@diku.dk>
 
-> If we have a lot of frames to transmit at once, for
-> instance with fragmentation, it can be an optimisation
-> to only tell the DMA engine about them on the last
-> fragment/frame to avoid banging the IO too much. This
-> patch allows implementation such an optimisation by
-> telling the driver when more frames can be expected.
+Elsewhere, the tqi_type field is compared to constants having a name
+beginning with AR5K_TX_QUEUE, rather than AR5K_TX_QUEUE_ID.  I have thus
+converted AR5K_TX_QUEUE_ID_CAB to AR5K_TX_QUEUE_CAB.  This does, however,
+change the value, so perhaps something else was wanted.
 
-Wouldn't this be the same as the
-	if (ieee80211_has_morefrags())
-		.. kick queue ...
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-Other then that this flag is very nice, I already had some
-similar sort of mechanism build into rt2x00 based on
-RTS/CTS and ieee80211_has_morefrags()
+---
+ drivers/net/wireless/ath/ath5k/qcu.c           |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Currently, this is used by mac80211 only on fragmented
-> frames, but could also be used in the future on other
-> frames when the queue was full and there are multiple
-> frames pending.
->
-> Note that drivers need to be careful when using this
-> flag, they need to kick their DMA engines not just
-> when this flag is clear, but also when the queue gets
-> full so that progress can be made.
-
-What would a good value be for the threshold?
-rt2x00 currently uses 10% of the queue, which means that
-2 or 3 entries are kept available at all times.
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index 6d5aaf0..eeebb9a 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -362,7 +362,7 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
+ 		}
  
-Ivo
+ 		if (tq->tqi_ready_time &&
+-		(tq->tqi_type != AR5K_TX_QUEUE_ID_CAB))
++		(tq->tqi_type != AR5K_TX_QUEUE_CAB))
+ 			ath5k_hw_reg_write(ah, AR5K_REG_SM(tq->tqi_ready_time,
+ 				AR5K_QCU_RDYTIMECFG_INTVAL) |
+ 				AR5K_QCU_RDYTIMECFG_ENABLE,
