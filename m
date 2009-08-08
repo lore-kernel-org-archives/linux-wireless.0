@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:50554 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbZHXXeg (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:57264 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933243AbZHHDtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 19:34:36 -0400
-Received: by iwn42 with SMTP id 42so1119674iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 16:34:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090820145239.GC2657@tuxdriver.com>
-References: <4A7CA188.1070706@gmail.com> <20090810202622.GB6060@tuxdriver.com>
-	<4A811464.4030108@gmail.com> <20090811182514.GF2634@tuxdriver.com>
-	<20090820145239.GC2657@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 24 Aug 2009 16:34:18 -0700
-Message-ID: <43e72e890908241634w37868afelf28eff02789f3016@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Fix read buffer overflow
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Andrew Morton <akpm@linux-foundation.org>, m.sujith@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Fri, 7 Aug 2009 23:49:51 -0400
+Received: by mail-pz0-f196.google.com with SMTP id 34so1943403pzk.4
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:49:52 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Subject: [PATCH 1/8] mac80211: Improve dequeing from mpath frame queue.
+Date: Fri,  7 Aug 2009 20:38:24 -0700
+Message-Id: <1249702711-32737-2-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249702711-32737-1-git-send-email-javier@cozybit.com>
+References: <>
+ <1249702711-32737-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 20, 2009 at 7:52 AM, John W. Linville<linville@tuxdriver.com> wrote:
-> Anybody?
+From: Andrey Yurovsky <andrey@cozybit.com>
 
-Sorry for the delay,
+Also, fix typo in comment.
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh.h      |    2 +-
+ net/mac80211/mesh_hwmp.c |    6 ++----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-This is actually pretty sloppy existing code and I'd prefer to see
-this nasty POS code rewritten to avoid such nasty checks from the
-start. Also notice how both ath9k_hw_get_legacy_target_powers() and
-ath9k_hw_get_target_powers() do exactly the same, except they use a
-different name for the bool, a different structure for the calibrated
-power targets (array size changes on one element of the struct). But
-this patch also fixes another not-noted potential negative rade index
-access: lowIndex could be -1 under a special circumstance and this
-would prevent that negative index access as well on powInfo[lowIndex].
-So although this probably just does not happen right now its safer to
-have a fix for two of these theoretical negative array index access
-than nothing at hand; a proper rewrite of these two routines as I want
-it would require quite a few changes here and more testing. Mentally
-lets add that to the TODO list..
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index ce53881..6aaf1ec 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -61,7 +61,7 @@ enum mesh_path_flags {
+  * 	retry
+  * @discovery_retries: number of discovery retries
+  * @flags: mesh path flags, as specified on &enum mesh_path_flags
+- * @state_lock: mesh pat state lock
++ * @state_lock: mesh path state lock
+  *
+  *
+  * The combination of dst and sdata is unique in the mesh path table. Since the
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e1a763e..b54c21c 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -810,10 +810,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		}
+ 
+ 		if (skb_queue_len(&mpath->frame_queue) >=
+-				MESH_FRAME_QUEUE_LEN) {
+-			skb_to_free = mpath->frame_queue.next;
+-			skb_unlink(skb_to_free, &mpath->frame_queue);
+-		}
++				MESH_FRAME_QUEUE_LEN)
++			skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 		skb_queue_tail(&mpath->frame_queue, skb);
+-- 
+1.5.4.3
 
-  Luis
