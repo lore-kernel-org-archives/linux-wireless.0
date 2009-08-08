@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:36868 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbZHJTML convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:31294 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933002AbZHHDnK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:12:11 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH RFC] ssb: Implement the remaining rev.8 SPROM vars needed  for LP-PHY
-Date: Mon, 10 Aug 2009 21:12:09 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A806B9E.5010105@gmail.com> <200908102101.38698.mb@bu3sch.de> <69e28c910908101207p17139562v55ede047c944dae@mail.gmail.com>
-In-Reply-To: <69e28c910908101207p17139562v55ede047c944dae@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908102112.09368.mb@bu3sch.de>
+	Fri, 7 Aug 2009 23:43:10 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so563117rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:43:10 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: andrey@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Subject: Mesh fixes and improvements
+Date: Fri,  7 Aug 2009 20:31:46 -0700
+Message-Id: <1249702314-32504-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 August 2009 21:07:45 Gábor Stefanik wrote:
-> > Also, it seems you need +1 instead of +2 (it is an u16 pointer).
-> I'm adding to _offset, not to SPOFF(_offset). AFAICS _offset is not an
-> u16 pointer, it's a plain #defined number, unlike SPOFF(_offset).
+This series includes some fixes, testing aids and improvements to the mesh
+stack.  It is important to note that the patch
+"Use-3-address-format-for-mesh-broadcast-frames" breaks compatibility with
+previous versions.  This is unavoidable and will keep happening as new versions
+of the 802.11s drafts are produced.
 
-Ah ok. All those parenthesis are a little bit confusing. 8-X
+Also, I'm not sure if "Simulate-transmission-losses-on-plinks-to-..." should be
+merged upstream, but we find it really useful to test mesh configurations.
+Please comment if you have different opinions on its adequacy or
+implementation.
 
--- 
-Greetings, Michael.
+Cheers,
+
+Javier
+
+ include/linux/nl80211.h         |    4 +
+ include/net/cfg80211.h          |    4 +
+ net/mac80211/Kconfig            |    1 -
+ net/mac80211/cfg.c              |    6 ++
+ net/mac80211/ieee80211_i.h      |    2 +-
+ net/mac80211/mesh.c             |  138 ++++++++++++++++++------------------
+ net/mac80211/mesh.h             |   29 +++++++-
+ net/mac80211/mesh_hwmp.c        |    8 +--
+ net/mac80211/mesh_pathtbl.c     |  146 +++++++++++++++++++++++++++++----------
+ net/mac80211/mesh_plink.c       |    6 ++
+ net/mac80211/rc80211_minstrel.c |   16 ++++-
+ net/mac80211/rx.c               |   45 ++++++++-----
+ net/mac80211/sta_info.h         |    1 +
+ net/mac80211/tx.c               |  118 +++++++++++++++++++++++---------
+ net/wireless/nl80211.c          |    9 +++
+ net/wireless/util.c             |   16 +++-
+ 16 files changed, 380 insertions(+), 169 deletions(-)
