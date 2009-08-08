@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17829 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750737AbZHNE5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 00:57:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 21:57:18 -0700
-Date: Thu, 13 Aug 2009 21:57:16 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 16/25] wireless: organize group drivers
- alphabetically
-Message-ID: <20090814045716.GC28524@mosca>
-References: <1250221576-1945-1-git-send-email-lrodriguez@atheros.com>
- <4A84ECF0.7070705@lwfinger.net>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:57561 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664AbZHHIJM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 8 Aug 2009 04:09:12 -0400
+Received: by bwz19 with SMTP id 19so1817083bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 01:09:11 -0700 (PDT)
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: Re: [PATCH 3/8] mac80211: Simulate transmission losses on plinks to aid in testing mesh metrics.
+References: <1249702711-32737-1-git-send-email-javier@cozybit.com>
+	<1249702711-32737-2-git-send-email-javier@cozybit.com>
+	<1249702711-32737-3-git-send-email-javier@cozybit.com>
+	<1249702711-32737-4-git-send-email-javier@cozybit.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sat, 08 Aug 2009 11:09:09 +0300
+In-Reply-To: <1249702711-32737-4-git-send-email-javier@cozybit.com> (Javier Cardona's message of "Fri\,  7 Aug 2009 20\:38\:26 -0700")
+Message-ID: <87d476n2vu.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A84ECF0.7070705@lwfinger.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2009 at 09:49:52PM -0700, Larry Finger wrote:
-> Luis R. Rodriguez wrote:
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> 
-> If you resent #4 at the same time that you sent the new version of
-> #16, something is eating that one. Neither the original or a resend
-> show up on the archives of the list. Is there some special character
-> in that patch that is causing it to be killed?
+Javier Cardona <javier@cozybit.com> writes:
 
-Hmmm.. odd, let me kick it again. I'll add you to the list.
+> This enables us to specify a simulated loss probability per mesh peer link.
+> Useful to simulate and test different mesh topologies and test different mesh
+> metrics.
+>
+> The simulated loss rate setting can be configured as a plink action.  The
+> intended use is:
+>
+> iw dev mesh station set <MAC> plink_action loss 25
 
-  Luis
+I really would not like to see debug functionality in nl80211 just to
+simplify the maintenance. Debugging belongs to debugfs or somewhere
+else.
+
+Disclaimer: I know nothing about mesh and I may have misunderstood
+something.
+
+-- 
+Kalle Valo
