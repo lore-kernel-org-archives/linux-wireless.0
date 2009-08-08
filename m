@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40343 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135AbZHDDOM (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41197 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374AbZHHInL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 23:14:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	ath9k-devel@lists.ath9k.org, stephen.chen@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] ath9k: add initial ar9271 support
-Date: Mon,  3 Aug 2009 23:14:09 -0400
-Message-Id: <1249355652-10031-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 8 Aug 2009 04:43:11 -0400
+Subject: Re: [PATCH v4] cfg80211: validate channel settings across
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1249712383.30019.5561.camel@rc-desk>
+References: <1249649261.4215.7.camel@johannes.local>
+	 <1249649433.7194.0.camel@johannes.local>
+	 <1249652951.7194.2.camel@johannes.local>
+	 <1249658555.7194.8.camel@johannes.local>
+	 <1249712383.30019.5561.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yzdvPVoJH9/j8e6wDD6s"
+Date: Sat, 08 Aug 2009 10:43:04 +0200
+Message-Id: <1249720984.31670.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ar9721 is the next generation Atheros 802.11 USB device.
-Contrary to ar9170 ar9271 actually has an Atheros based
-MAC. ar9271 is a single stream 802.11n device intended
-supporting only the 2.4 GHz band. As it is single
-stream max supported MCS rate is MCS 7. The devices
-do come with 2 antennas for antenna TX/RX diversity.
 
-This series adds the initial hardware ar9271 support
-on ath9k. Since the device is USB based and actually does
-require firmware a different driver core may be used,
-however, we do expect the hardware access to be shared.
+--=-yzdvPVoJH9/j8e6wDD6s
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I'll send a separate notice about the driver core, am
-hoping other interested developers may want to join in on
-helping getting that part done. Hope is to get ar9271
-supported merged in the 2.6.32-rc series but since the
-attached changes are also required I'm sending these early
-in the hopes to minimize the required driver core chages
-required to support ar9271.
+Hi,
 
-Luis R. Rodriguez (3):
-  ath9k: add ar9271 revision and subrevision ID helpers
-  ath9k: add initvals and registry definitions for AR9271
-  ath9k: add initial hardware support for ar9271
+> I am able to bring the interface up and scan, but when I try to
+> associate I get a hang.
+>=20
+> For example, when I run:
+> $ iwconfig wlan0 channel <ch> essid <essid>
+>=20
+> then the command prompt never returns and system becomes progressively
+> unresponsive. The logs do not contain any details of the problem.
 
- drivers/net/wireless/ath/ath9k/calib.c    |  106 +++++-
- drivers/net/wireless/ath/ath9k/eeprom.c   |  142 +++++--
- drivers/net/wireless/ath/ath9k/hw.c       |  104 +++++-
- drivers/net/wireless/ath/ath9k/hw.h       |    2 +
- drivers/net/wireless/ath/ath9k/initvals.h |  666 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/phy.h      |    3 +
- drivers/net/wireless/ath/ath9k/reg.h      |   37 ++
- 7 files changed, 1020 insertions(+), 40 deletions(-)
+Hmm, yes, that's a pretty obvious deadlock, I obviously didn't test
+managed-mode 'iwconfig wlan0 channel' setting. I'll send a fix, I'm
+sorry.
+
+johannes
+
+--=-yzdvPVoJH9/j8e6wDD6s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKfTqVAAoJEODzc/N7+QmaESEP/1OsfK6XwLTSXY2o/0Yvby0Y
+zATpxNGmfylmDWV4LyH6eoYPMemRZPQkTn30FxjYwUoYMmvFvgDq8VdRdmFF7U7v
+OczENE8ChoSwlTvkFkJfysiRu8SF1mbmDt6SztT47YDychp0FRioZqqOqMPDCtfR
+SLqe0yVNeZ482+oJ/PhUw1DivdOVXITRdTxKyAjPae49Fj5WRrhtW+/u2/6mYt7Y
+Aq6i9a+BAIKpwcez8KcvJSDT2E8xtHPQ3BGCk3fZhgd0ta2k3RUCssKiaAYVbatg
+TCmp/KLqW7O+w7P5xLhit02lb07LhP8DSs0ekEq/61f3sQx8Syu9P575Zw9nmjBz
+vQ1uaMcpAp7WwjseZODRALQtY/ZJzLmrEK/ul48x+1PzdNom5kS3gim4yzHFtjwA
+qfjtUlG7EutHyhlrN4BbB9gT461h/Oyc7tfTkpSBejgEj8mcXacykDoZAA5Lta+y
+SRZ7NV4I7eUHvud0nkk3U3/GJjwS97L1vbBY15fcivGGwZf+qNNd3KHEglYduLJE
+CSPnAJ9SvjcHmv4iE6f5pIjn2oYNmnfIU8QBU65wjvPP65XGgVs+wepvpnfR2tYg
+Bsl79USVVxB83U7jBiXvntmm3AIGsOU2XGV6Hwb9BHW/o01eHCnqYdeaR3HENGqw
+eoRBZthUwJbJDO50AQ8/
+=CSwP
+-----END PGP SIGNATURE-----
+
+--=-yzdvPVoJH9/j8e6wDD6s--
 
