@@ -1,467 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:42204 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbZHEUYb (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.236]:31937 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933568AbZHHDu0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 16:24:31 -0400
-Received: by mail-ew0-f214.google.com with SMTP id 10so285565ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:24:32 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
+	Fri, 7 Aug 2009 23:50:26 -0400
+Received: by rv-out-0506.google.com with SMTP id k40so287461rvb.5
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:50:28 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 6/6] orinoco: consolidate storage of WEP and TKIP keys
-Date: Wed,  5 Aug 2009 21:23:32 +0100
-Message-Id: <1249503812-16921-7-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
-References: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH 7/8] mac80211: Assign a default mesh beaconing interval.
+Date: Fri,  7 Aug 2009 20:38:30 -0700
+Message-Id: <1249702711-32737-8-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249702711-32737-7-git-send-email-javier@cozybit.com>
+References: <>
+ <1249702711-32737-1-git-send-email-javier@cozybit.com>
+ <1249702711-32737-2-git-send-email-javier@cozybit.com>
+ <1249702711-32737-3-git-send-email-javier@cozybit.com>
+ <1249702711-32737-4-git-send-email-javier@cozybit.com>
+ <1249702711-32737-5-git-send-email-javier@cozybit.com>
+ <1249702711-32737-6-git-send-email-javier@cozybit.com>
+ <1249702711-32737-7-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When TKIP support was added, we stored the keys separately to avoid
-issues when both TKIP and WEP keys are sent to the driver.
+Incidentally, this fixes mesh beaconing in mac80211_hwsim devices.
 
-We need to consolidate the storage to convert to cfg80211, so do this
-first and try iron out the issues.
-
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/orinoco/hw.c      |   42 +++++++++--
- drivers/net/wireless/orinoco/main.c    |   33 ++++++---
- drivers/net/wireless/orinoco/orinoco.h |    4 +-
- drivers/net/wireless/orinoco/wext.c    |  122 +++++++++++++++++++++-----------
- 4 files changed, 139 insertions(+), 62 deletions(-)
+ net/mac80211/mesh.c |    6 ++++--
+ net/mac80211/mesh.h |    1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 5b12654..40d8dfa 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -768,12 +768,29 @@ int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv)
- {
- 	hermes_t *hw = &priv->hw;
- 	int err = 0;
-+	int i;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5202d7c..3b49d39 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -525,9 +525,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
  
- 	switch (priv->firmware_type) {
- 	case FIRMWARE_TYPE_AGERE:
-+	{
-+		struct orinoco_key keys[ORINOCO_MAX_KEYS];
-+
-+		memset(&keys, 0, sizeof(keys));
-+		for (i = 0; i < ORINOCO_MAX_KEYS; i++) {
-+			int len = min(priv->keys[i].key_len,
-+				      ORINOCO_MAX_KEY_SIZE);
-+			memcpy(&keys[i].data, priv->keys[i].key, len);
-+			if (len > SMALL_KEY_SIZE)
-+				keys[i].len = cpu_to_le16(LARGE_KEY_SIZE);
-+			else if (len > 0)
-+				keys[i].len = cpu_to_le16(SMALL_KEY_SIZE);
-+			else
-+				keys[i].len = cpu_to_le16(0);
-+		}
-+
- 		err = HERMES_WRITE_RECORD(hw, USER_BAP,
- 					  HERMES_RID_CNFWEPKEYS_AGERE,
--					  &priv->keys);
-+					  &keys);
- 		if (err)
- 			return err;
- 		err = hermes_write_wordrec(hw, USER_BAP,
-@@ -782,28 +799,38 @@ int __orinoco_hw_setup_wepkeys(struct orinoco_private *priv)
- 		if (err)
- 			return err;
- 		break;
-+	}
- 	case FIRMWARE_TYPE_INTERSIL:
- 	case FIRMWARE_TYPE_SYMBOL:
- 		{
- 			int keylen;
--			int i;
+ 	ifmsh->housekeeping = true;
+-	ieee80211_queue_work(&local->hw, &ifmsh->work);
++	queue_work(local->hw, &ifmsh->work);
++	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
+-						BSS_CHANGED_BEACON_ENABLED);
++						BSS_CHANGED_BEACON_ENABLED |
++						BSS_CHANGED_BEACON_INT);
+ }
  
- 			/* Force uniform key length to work around
- 			 * firmware bugs */
--			keylen = le16_to_cpu(priv->keys[priv->tx_key].len);
-+			keylen = priv->keys[priv->tx_key].key_len;
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 6cb3db8..b6ea100 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -174,6 +174,7 @@ struct mesh_rmc {
+  */
+ #define MESH_PATH_REFRESH_TIME			1000
+ #define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
++#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
  
- 			if (keylen > LARGE_KEY_SIZE) {
- 				printk(KERN_ERR "%s: BUG: Key %d has oversize length %d.\n",
- 				       priv->ndev->name, priv->tx_key, keylen);
- 				return -E2BIG;
--			}
-+			} else if (keylen > SMALL_KEY_SIZE)
-+				keylen = LARGE_KEY_SIZE;
-+			else if (keylen > 0)
-+				keylen = SMALL_KEY_SIZE;
-+			else
-+				keylen = 0;
- 
- 			/* Write all 4 keys */
- 			for (i = 0; i < ORINOCO_MAX_KEYS; i++) {
-+				u8 key[LARGE_KEY_SIZE] = { 0 };
-+
-+				memcpy(key, priv->keys[i].key,
-+				       priv->keys[i].key_len);
-+
- 				err = hermes_write_ltv(hw, USER_BAP,
- 						HERMES_RID_CNFDEFAULTKEY0 + i,
- 						HERMES_BYTES_TO_RECLEN(keylen),
--						priv->keys[i].data);
-+						key);
- 				if (err)
- 					return err;
- 			}
-@@ -829,8 +856,8 @@ int __orinoco_hw_setup_enc(struct orinoco_private *priv)
- 	int auth_flag;
- 	int enc_flag;
- 
--	/* Setup WEP keys for WEP and WPA */
--	if (priv->encode_alg)
-+	/* Setup WEP keys */
-+	if (priv->encode_alg == ORINOCO_ALG_WEP)
- 		__orinoco_hw_setup_wepkeys(priv);
- 
- 	if (priv->wep_restrict)
-@@ -976,7 +1003,6 @@ int orinoco_clear_tkip_key(struct orinoco_private *priv, int key_idx)
- 	hermes_t *hw = &priv->hw;
- 	int err;
- 
--	memset(&priv->tkip_key[key_idx], 0, sizeof(priv->tkip_key[key_idx]));
- 	err = hermes_write_wordrec(hw, USER_BAP,
- 				   HERMES_RID_CNFREMDEFAULTTKIPKEY_AGERE,
- 				   key_idx);
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index 931f7de..2c7dc65 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -341,12 +341,14 @@ static int orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- {
- 	struct orinoco_private *priv = ndev_priv(dev);
- 	struct net_device_stats *stats = &priv->stats;
-+	struct orinoco_tkip_key *key;
- 	hermes_t *hw = &priv->hw;
- 	int err = 0;
- 	u16 txfid = priv->txfid;
- 	struct ethhdr *eh;
- 	int tx_control;
- 	unsigned long flags;
-+	int do_mic;
- 
- 	if (!netif_running(dev)) {
- 		printk(KERN_ERR "%s: Tx on stopped device!\n",
-@@ -378,9 +380,14 @@ static int orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 	if (skb->len < ETH_HLEN)
- 		goto drop;
- 
-+	key = (struct orinoco_tkip_key *) priv->keys[priv->tx_key].key;
-+
-+	do_mic = ((priv->encode_alg == ORINOCO_ALG_TKIP) &&
-+		  (key != NULL));
-+
- 	tx_control = HERMES_TXCTRL_TX_OK | HERMES_TXCTRL_TX_EX;
- 
--	if (priv->encode_alg == ORINOCO_ALG_TKIP)
-+	if (do_mic)
- 		tx_control |= (priv->tx_key << HERMES_MIC_KEY_ID_SHIFT) |
- 			HERMES_TXCTRL_MIC;
- 
-@@ -462,7 +469,7 @@ static int orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 	}
- 
- 	/* Calculate Michael MIC */
--	if (priv->encode_alg == ORINOCO_ALG_TKIP) {
-+	if (do_mic) {
- 		u8 mic_buf[MICHAEL_MIC_LEN + 1];
- 		u8 *mic;
- 		size_t offset;
-@@ -480,8 +487,7 @@ static int orinoco_xmit(struct sk_buff *skb, struct net_device *dev)
- 			len = MICHAEL_MIC_LEN;
- 		}
- 
--		orinoco_mic(priv->tx_tfm_mic,
--			    priv->tkip_key[priv->tx_key].tx_mic,
-+		orinoco_mic(priv->tx_tfm_mic, key->tx_mic,
- 			    eh->h_dest, eh->h_source, 0 /* priority */,
- 			    skb->data + ETH_HLEN, skb->len - ETH_HLEN, mic);
- 
-@@ -926,6 +932,7 @@ static void orinoco_rx(struct net_device *dev,
- 
- 	/* Calculate and check MIC */
- 	if (status & HERMES_RXSTAT_MIC) {
-+		struct orinoco_tkip_key *key;
- 		int key_id = ((status & HERMES_RXSTAT_MIC_KEY_ID) >>
- 			      HERMES_MIC_KEY_ID_SHIFT);
- 		u8 mic[MICHAEL_MIC_LEN];
-@@ -939,14 +946,18 @@ static void orinoco_rx(struct net_device *dev,
- 		skb_trim(skb, skb->len - MICHAEL_MIC_LEN);
- 		length -= MICHAEL_MIC_LEN;
- 
--		orinoco_mic(priv->rx_tfm_mic,
--			    priv->tkip_key[key_id].rx_mic,
--			    desc->addr1,
--			    src,
-+		key = (struct orinoco_tkip_key *) priv->keys[key_id].key;
-+
-+		if (!key) {
-+			printk(KERN_WARNING "%s: Received encrypted frame from "
-+			       "%pM using key %i, but key is not installed\n",
-+			       dev->name, src, key_id);
-+			goto drop;
-+		}
-+
-+		orinoco_mic(priv->rx_tfm_mic, key->rx_mic, desc->addr1, src,
- 			    0, /* priority or QoS? */
--			    skb->data,
--			    skb->len,
--			    &mic[0]);
-+			    skb->data, skb->len, &mic[0]);
- 
- 		if (memcmp(mic, rxmic,
- 			   MICHAEL_MIC_LEN)) {
-diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-index badfc56..9ac6f1d 100644
---- a/drivers/net/wireless/orinoco/orinoco.h
-+++ b/drivers/net/wireless/orinoco/orinoco.h
-@@ -120,7 +120,8 @@ struct orinoco_private {
- 	enum nl80211_iftype iw_mode;
- 	enum orinoco_alg encode_alg;
- 	u16 wep_restrict, tx_key;
--	struct orinoco_key keys[ORINOCO_MAX_KEYS];
-+	struct key_params keys[ORINOCO_MAX_KEYS];
-+
- 	int bitratemode;
- 	char nick[IW_ESSID_MAX_SIZE+1];
- 	char desired_essid[IW_ESSID_MAX_SIZE+1];
-@@ -150,7 +151,6 @@ struct orinoco_private {
- 	u8 *wpa_ie;
- 	int wpa_ie_len;
- 
--	struct orinoco_tkip_key tkip_key[ORINOCO_MAX_KEYS];
- 	struct crypto_hash *rx_tfm_mic;
- 	struct crypto_hash *tx_tfm_mic;
- 
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index f68bbe3..3e56f76 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -22,6 +22,67 @@
- 
- #define MAX_RID_LEN 1024
- 
-+/* Helper routine to record keys
-+ * Do not call from interrupt context */
-+static int orinoco_set_key(struct orinoco_private *priv, int index,
-+			   enum orinoco_alg alg, const u8 *key, int key_len,
-+			   const u8 *seq, int seq_len)
-+{
-+	kzfree(priv->keys[index].key);
-+	kzfree(priv->keys[index].seq);
-+
-+	if (key_len) {
-+		priv->keys[index].key = kzalloc(key_len, GFP_KERNEL);
-+		if (!priv->keys[index].key)
-+			goto nomem;
-+	} else
-+		priv->keys[index].key = NULL;
-+
-+	if (seq_len) {
-+		priv->keys[index].seq = kzalloc(seq_len, GFP_KERNEL);
-+		if (!priv->keys[index].seq)
-+			goto free_key;
-+	} else
-+		priv->keys[index].seq = NULL;
-+
-+	priv->keys[index].key_len = key_len;
-+	priv->keys[index].seq_len = seq_len;
-+
-+	if (key_len)
-+		memcpy(priv->keys[index].key, key, key_len);
-+	if (seq_len)
-+		memcpy(priv->keys[index].seq, seq, seq_len);
-+
-+	switch (alg) {
-+	case ORINOCO_ALG_TKIP:
-+		priv->keys[index].cipher = WLAN_CIPHER_SUITE_TKIP;
-+		break;
-+
-+	case ORINOCO_ALG_WEP:
-+		priv->keys[index].cipher = (key_len > SMALL_KEY_SIZE) ?
-+			WLAN_CIPHER_SUITE_WEP104 : WLAN_CIPHER_SUITE_WEP40;
-+		break;
-+
-+	case ORINOCO_ALG_NONE:
-+	default:
-+		priv->keys[index].cipher = 0;
-+		break;
-+	}
-+
-+	return 0;
-+
-+free_key:
-+	kfree(priv->keys[index].key);
-+	priv->keys[index].key = NULL;
-+
-+nomem:
-+	priv->keys[index].key_len = 0;
-+	priv->keys[index].seq_len = 0;
-+	priv->keys[index].cipher = 0;
-+
-+	return -ENOMEM;
-+}
-+
- static struct iw_statistics *orinoco_get_wireless_stats(struct net_device *dev)
- {
- 	struct orinoco_private *priv = ndev_priv(dev);
-@@ -180,7 +241,6 @@ static int orinoco_ioctl_setiwencode(struct net_device *dev,
- 	int setindex = priv->tx_key;
- 	enum orinoco_alg encode_alg = priv->encode_alg;
- 	int restricted = priv->wep_restrict;
--	u16 xlen = 0;
- 	int err = -EINPROGRESS;		/* Call commit handler */
- 	unsigned long flags;
- 
-@@ -207,12 +267,6 @@ static int orinoco_ioctl_setiwencode(struct net_device *dev,
- 		if ((index < 0) || (index >= ORINOCO_MAX_KEYS))
- 			index = priv->tx_key;
- 
--		/* Adjust key length to a supported value */
--		if (erq->length > SMALL_KEY_SIZE)
--			xlen = LARGE_KEY_SIZE;
--		else /* (erq->length > 0) */
--			xlen = SMALL_KEY_SIZE;
--
- 		/* Switch on WEP if off */
- 		if (encode_alg != ORINOCO_ALG_WEP) {
- 			setindex = index;
-@@ -229,7 +283,7 @@ static int orinoco_ioctl_setiwencode(struct net_device *dev,
- 			}
- 		} else {
- 			/* Set the index : Check that the key is valid */
--			if (priv->keys[index].len == 0) {
-+			if (priv->keys[index].key_len == 0) {
- 				err = -EINVAL;
- 				goto out;
- 			}
-@@ -245,10 +299,8 @@ static int orinoco_ioctl_setiwencode(struct net_device *dev,
- 		restricted = 1;
- 
- 	if (erq->pointer && erq->length > 0) {
--		priv->keys[index].len = cpu_to_le16(xlen);
--		memset(priv->keys[index].data, 0,
--		       sizeof(priv->keys[index].data));
--		memcpy(priv->keys[index].data, keybuf, erq->length);
-+		err = orinoco_set_key(priv, index, ORINOCO_ALG_WEP, keybuf,
-+				      erq->length, NULL, 0);
- 	}
- 	priv->tx_key = setindex;
- 
-@@ -277,7 +329,6 @@ static int orinoco_ioctl_getiwencode(struct net_device *dev,
- {
- 	struct orinoco_private *priv = ndev_priv(dev);
- 	int index = (erq->flags & IW_ENCODE_INDEX) - 1;
--	u16 xlen = 0;
- 	unsigned long flags;
- 
- 	if (!priv->has_wep)
-@@ -299,11 +350,9 @@ static int orinoco_ioctl_getiwencode(struct net_device *dev,
- 	else
- 		erq->flags |= IW_ENCODE_OPEN;
- 
--	xlen = le16_to_cpu(priv->keys[index].len);
-+	erq->length = priv->keys[index].key_len;
- 
--	erq->length = xlen;
--
--	memcpy(keybuf, priv->keys[index].data, ORINOCO_MAX_KEY_SIZE);
-+	memcpy(keybuf, priv->keys[index].key, erq->length);
- 
- 	orinoco_unlock(priv, &flags);
- 	return 0;
-@@ -789,7 +838,6 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
- 	int idx, alg = ext->alg, set_key = 1;
- 	unsigned long flags;
- 	int err = -EINVAL;
--	u16 key_len;
- 
- 	if (orinoco_lock(priv, &flags) != 0)
- 		return -EBUSY;
-@@ -822,24 +870,17 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
- 		switch (alg) {
- 		case IW_ENCODE_ALG_NONE:
- 			priv->encode_alg = ORINOCO_ALG_NONE;
--			priv->keys[idx].len = 0;
-+			err = orinoco_set_key(priv, idx, ORINOCO_ALG_NONE,
-+					      NULL, 0, NULL, 0);
- 			break;
- 
- 		case IW_ENCODE_ALG_WEP:
--			if (ext->key_len > SMALL_KEY_SIZE)
--				key_len = LARGE_KEY_SIZE;
--			else if (ext->key_len > 0)
--				key_len = SMALL_KEY_SIZE;
--			else
-+			if (ext->key_len <= 0)
- 				goto out;
- 
- 			priv->encode_alg = ORINOCO_ALG_WEP;
--			priv->keys[idx].len = cpu_to_le16(key_len);
--
--			key_len = min(ext->key_len, key_len);
--
--			memset(priv->keys[idx].data, 0, ORINOCO_MAX_KEY_SIZE);
--			memcpy(priv->keys[idx].data, ext->key, key_len);
-+			err = orinoco_set_key(priv, idx, ORINOCO_ALG_WEP,
-+					      ext->key, ext->key_len, NULL, 0);
- 			break;
- 
- 		case IW_ENCODE_ALG_TKIP:
-@@ -847,20 +888,21 @@ static int orinoco_ioctl_set_encodeext(struct net_device *dev,
- 			u8 *tkip_iv = NULL;
- 
- 			if (!priv->has_wpa ||
--			    (ext->key_len > sizeof(priv->tkip_key[0])))
-+			    (ext->key_len > sizeof(struct orinoco_tkip_key)))
- 				goto out;
- 
- 			priv->encode_alg = ORINOCO_ALG_TKIP;
--			memset(&priv->tkip_key[idx], 0,
--			       sizeof(priv->tkip_key[idx]));
--			memcpy(&priv->tkip_key[idx], ext->key, ext->key_len);
- 
- 			if (ext->ext_flags & IW_ENCODE_EXT_RX_SEQ_VALID)
- 				tkip_iv = &ext->rx_seq[0];
- 
-+			err = orinoco_set_key(priv, idx, ORINOCO_ALG_TKIP,
-+					      ext->key, ext->key_len, tkip_iv,
-+					      ORINOCO_SEQ_LEN);
-+
- 			err = __orinoco_hw_set_tkip_key(priv, idx,
- 				 ext->ext_flags & IW_ENCODE_EXT_SET_TX_KEY,
--				 (u8 *) &priv->tkip_key[idx],
-+				 priv->keys[idx].key,
- 				 tkip_iv, ORINOCO_SEQ_LEN, NULL, 0);
- 			if (err)
- 				printk(KERN_ERR "%s: Error %d setting TKIP key"
-@@ -918,16 +960,14 @@ static int orinoco_ioctl_get_encodeext(struct net_device *dev,
- 		break;
- 	case ORINOCO_ALG_WEP:
- 		ext->alg = IW_ENCODE_ALG_WEP;
--		ext->key_len = min_t(u16, le16_to_cpu(priv->keys[idx].len),
--				     max_key_len);
--		memcpy(ext->key, priv->keys[idx].data, ext->key_len);
-+		ext->key_len = min(priv->keys[idx].key_len, max_key_len);
-+		memcpy(ext->key, priv->keys[idx].key, ext->key_len);
- 		encoding->flags |= IW_ENCODE_ENABLED;
- 		break;
- 	case ORINOCO_ALG_TKIP:
- 		ext->alg = IW_ENCODE_ALG_TKIP;
--		ext->key_len = min_t(u16, sizeof(struct orinoco_tkip_key),
--				     max_key_len);
--		memcpy(ext->key, &priv->tkip_key[idx], ext->key_len);
-+		ext->key_len = min(priv->keys[idx].key_len, max_key_len);
-+		memcpy(ext->key, priv->keys[idx].key, ext->key_len);
- 		encoding->flags |= IW_ENCODE_ENABLED;
- 		break;
- 	}
+ #define MESH_MAX_PREQ_RETRIES 4
+ #define MESH_PATH_EXPIRE (600 * HZ)
 -- 
-1.6.3.3
+1.5.4.3
 
