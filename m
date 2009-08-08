@@ -1,158 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:50172 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857AbZHPQFO (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:45076 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566AbZHHV4O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2009 12:05:14 -0400
-Received: by fxm11 with SMTP id 11so1907312fxm.39
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2009 09:05:15 -0700 (PDT)
-Message-ID: <4A882E35.60407@gmail.com>
-Date: Sun, 16 Aug 2009 18:05:09 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+	Sat, 8 Aug 2009 17:56:14 -0400
+Received: by mail-ew0-f211.google.com with SMTP id 7so1937881ewy.18
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 14:56:15 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 7/7] [PATCH] rt2x00: FIF_PSPOLL filter flag support
+Date: Sat, 8 Aug 2009 23:55:55 +0200
+Cc: users@rt2x00.serialmonkey.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Igor Perminov <igor.perminov@inbox.ru>
+References: <200908082353.04274.IvDoorn@gmail.com> <200908082354.51745.IvDoorn@gmail.com> <200908082355.19233.IvDoorn@gmail.com>
+In-Reply-To: <200908082355.19233.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] b43: LP-PHY: Update code for spec fixes, and fix a few
- typos
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908082355.56192.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few typos have been discovered in both the specs and the code.
-This patch fixes them.
+From: Igor Perminov <igor.perminov@inbox.ru>
 
-Also use lpphy_op_switch_channel consistently, and make all users
-of it print its return value for easier debugging.
+This patch implements FIF_PSPOLL filter flag support in rt2x00 drivers,
+which has been introduced in mac80211 (see
+http://marc.info/?l=linux-wireless&m=124897986330807&w=2).
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-V2: Fix one more typo (this time a harmless one).
+ drivers/net/wireless/rt2x00/rt2800usb.c |    9 ++++++++-
+ drivers/net/wireless/rt2x00/rt2x00.h    |    2 ++
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   17 +++++++++++++++++
+ drivers/net/wireless/rt2x00/rt61pci.c   |    8 +++++++-
+ drivers/net/wireless/rt2x00/rt73usb.c   |    8 +++++++-
+ 5 files changed, 41 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/b43/phy_lp.c |   53 ++++++++++++++++++++++++------------
- 1 files changed, 35 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index d949cfa..1de4a74 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -554,7 +554,7 @@ static void lpphy_2062_init(struct b43_wldev *dev)
- 	B43_WARN_ON(!(bus->chipco.capabilities & SSB_CHIPCO_CAP_PMU));
- 	B43_WARN_ON(crystalfreq == 0);
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 9efb417..2de0389 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -518,7 +518,7 @@ static void rt2800usb_config_filter(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_RTS,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PSPOLL,
+-			   !(filter_flags & FIF_CONTROL));
++			   !(filter_flags & FIF_PSPOLL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA, 1);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
+@@ -2624,6 +2624,13 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
  
--	if (crystalfreq >= 30000000) {
-+	if (crystalfreq <= 30000000) {
- 		lpphy->pdiv = 1;
- 		b43_radio_mask(dev, B2062_S_RFPLL_CTL1, 0xFFFB);
- 	} else {
-@@ -562,14 +562,16 @@ static void lpphy_2062_init(struct b43_wldev *dev)
- 		b43_radio_set(dev, B2062_S_RFPLL_CTL1, 0x4);
- 	}
- 
--	tmp = (800000000 * lpphy->pdiv + crystalfreq) /
--	      (32000000 * lpphy->pdiv);
--	tmp = (tmp - 1) & 0xFF;
-+	tmp = (((800000000 * lpphy->pdiv + crystalfreq) /
-+	      (2 * crystalfreq)) - 8) & 0xFF;
-+	b43_radio_write(dev, B2062_S_RFPLL_CTL7, tmp);
+ 	/*
++	 * This device has multiple filters for control frames
++	 * and has a separate filter for PS Poll frames.
++	 */
++	__set_bit(DRIVER_SUPPORT_CONTROL_FILTERS, &rt2x00dev->flags);
++	__set_bit(DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL, &rt2x00dev->flags);
 +
-+	tmp = (((100 * crystalfreq + 16000000 * lpphy->pdiv) /
-+	      (32000000 * lpphy->pdiv)) - 1) & 0xFF;
- 	b43_radio_write(dev, B2062_S_RFPLL_CTL18, tmp);
++	/*
+ 	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 806ef60..99e8959 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -624,6 +624,8 @@ enum rt2x00_flags {
+ 	 */
+ 	CONFIG_SUPPORT_HW_BUTTON,
+ 	CONFIG_SUPPORT_HW_CRYPTO,
++	DRIVER_SUPPORT_CONTROL_FILTERS,
++	DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL,
  
--	tmp = (2 * crystalfreq + 1000000 * lpphy->pdiv) /
--	      (2000000 * lpphy->pdiv);
--	tmp = ((tmp & 0xFF) - 1) & 0xFFFF;
-+	tmp = (((2 * crystalfreq + 1000000 * lpphy->pdiv) /
-+	      (2000000 * lpphy->pdiv)) - 1) & 0xFF;
- 	b43_radio_write(dev, B2062_S_RFPLL_CTL19, tmp);
+ 	/*
+ 	 * Driver configuration
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 74451f9..cb7b6d4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -392,6 +392,7 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+ 	    FIF_FCSFAIL |
+ 	    FIF_PLCPFAIL |
+ 	    FIF_CONTROL |
++	    FIF_PSPOLL |
+ 	    FIF_OTHER_BSS |
+ 	    FIF_PROMISC_IN_BSS;
  
- 	ref = (1000 * lpphy->pdiv + 2 * crystalfreq) / (2000 * lpphy->pdiv);
-@@ -673,7 +675,7 @@ static void lpphy_radio_init(struct b43_wldev *dev)
- 	b43_phy_mask(dev, B43_LPPHY_FOURWIRE_CTL, 0xFFFD);
- 	udelay(1);
+@@ -407,6 +408,22 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+ 		*total_flags |= FIF_PROMISC_IN_BSS | FIF_OTHER_BSS;
  
--	if (dev->phy.rev < 2) {
-+	if (dev->phy.radio_ver == 0x2062) {
- 		lpphy_2062_init(dev);
- 	} else {
- 		lpphy_2063_init(dev);
-@@ -690,11 +692,18 @@ struct lpphy_iq_est { u32 iq_prod, i_pwr, q_pwr; };
- 
- static void lpphy_set_rc_cap(struct b43_wldev *dev)
- {
--	u8 rc_cap = dev->phy.lp->rc_cap;
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
- 
--	b43_radio_write(dev, B2062_N_RXBB_CALIB2, max_t(u8, rc_cap-4, 0x80));
--	b43_radio_write(dev, B2062_N_TX_CTL_A, ((rc_cap & 0x1F) >> 1) | 0x80);
--	b43_radio_write(dev, B2062_S_RXG_CNT16, ((rc_cap & 0x1F) >> 2) | 0x80);
-+	u8 rc_cap = (lpphy->rc_cap & 0x1F) >> 1;
-+	
-+	if (dev->phy.rev == 1) //FIXME check channel 14!
-+		rc_cap = max_t(u8, rc_cap + 5, 15);
-+
-+	b43_radio_write(dev, B2062_N_RXBB_CALIB2,
-+			max_t(u8, lpphy->rc_cap - 4, 0x80));
-+	b43_radio_write(dev, B2062_N_TX_CTL_A, rc_cap | 0x80);
-+	b43_radio_write(dev, B2062_S_RXG_CNT16,
-+			((lpphy->rc_cap & 0x1F) >> 2) | 0x80);
- }
- 
- static u8 lpphy_get_bb_mult(struct b43_wldev *dev)
-@@ -1103,6 +1112,9 @@ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
- 	lpphy_write_tx_pctl_mode_to_hardware(dev);
- }
- 
-+static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
-+				       unsigned int new_channel);
-+
- static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
-@@ -1120,11 +1132,16 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
- 	    old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
- 	enum b43_lpphy_txpctl_mode old_txpctl;
- 	u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
--	int loopback, i, j, inner_sum;
-+	int loopback, i, j, inner_sum, err;
- 
- 	memset(&iq_est, 0, sizeof(iq_est));
- 
--	b43_switch_channel(dev, 7);
-+	err = b43_lpphy_op_switch_channel(dev, 7);
-+	if (err) {
-+		b43dbg(dev->wl,
-+		       "RC calib: Failed to switch to channel 7, error = %d",
-+		       err);
+ 	/*
++	 * If the device has a single filter for all control frames,
++	 * FIF_CONTROL and FIF_PSPOLL flags imply each other.
++	 * And if the device has more than one filter for control frames
++	 * of different types, but has no a separate filter for PS Poll frames,
++	 * FIF_CONTROL flag implies FIF_PSPOLL.
++	 */
++	if (!test_bit(DRIVER_SUPPORT_CONTROL_FILTERS, &rt2x00dev->flags)) {
++		if (*total_flags & FIF_CONTROL || *total_flags & FIF_PSPOLL)
++			*total_flags |= FIF_CONTROL | FIF_PSPOLL;
 +	}
- 	old_txg_ovr = (b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) >> 6) & 1;
- 	old_bbmult = lpphy_get_bb_mult(dev);
- 	if (old_txg_ovr)
-@@ -1883,14 +1900,14 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
- 	struct ssb_bus *bus = dev->dev->bus;
--	static const struct b206x_channel *chandata = NULL;
-+	const struct b206x_channel *chandata = NULL;
- 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
- 	u32 tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
- 	int i, err = 0;
++	if (!test_bit(DRIVER_SUPPORT_CONTROL_FILTER_PSPOLL, &rt2x00dev->flags)) {
++		if (*total_flags & FIF_CONTROL)
++			*total_flags |= FIF_PSPOLL;
++	}
++
++	/*
+ 	 * Check if there is any work left for us.
+ 	 */
+ 	if (rt2x00dev->packet_filter == *total_flags)
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index e20dd74..3447997 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -530,7 +530,7 @@ static void rt61pci_config_filter(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_PHYSICAL,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+-			   !(filter_flags & FIF_CONTROL));
++			   !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
+ 			   !(filter_flags & FIF_PROMISC_IN_BSS));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
+@@ -2624,6 +2624,12 @@ static int rt61pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
  
--	for (i = 0; i < ARRAY_SIZE(b2063_chantbl); i++) {
--		if (b2063_chantbl[i].channel == channel) {
--			chandata = &b2063_chantbl[i];
-+	for (i = 0; i < ARRAY_SIZE(b2062_chantbl); i++) {
-+		if (b2062_chantbl[i].channel == channel) {
-+			chandata = &b2062_chantbl[i];
- 			break;
- 		}
- 	}
+ 	/*
++	 * This device has multiple filters for control frames,
++	 * but has no a separate filter for PS Poll frames.
++	 */
++	__set_bit(DRIVER_SUPPORT_CONTROL_FILTERS, &rt2x00dev->flags);
++
++	/*
+ 	 * This device requires firmware and DMA mapped skbs.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 4f9b177..4b9955b 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -493,7 +493,7 @@ static void rt73usb_config_filter(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_PHYSICAL,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+-			   !(filter_flags & FIF_CONTROL));
++			   !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
+ 			   !(filter_flags & FIF_PROMISC_IN_BSS));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
+@@ -2144,6 +2144,12 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 		return retval;
+ 
+ 	/*
++	 * This device has multiple filters for control frames,
++	 * but has no a separate filter for PS Poll frames.
++	 */
++	__set_bit(DRIVER_SUPPORT_CONTROL_FILTERS, &rt2x00dev->flags);
++
++	/*
+ 	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
 -- 
-1.6.2.4
-
-
+1.6.3.3
 
