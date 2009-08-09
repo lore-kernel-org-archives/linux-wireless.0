@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58077 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752590AbZHXOaM (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.232]:35210 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbZHIPMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 10:30:12 -0400
-Date: Mon, 24 Aug 2009 10:20:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: gregor kowski <gregor.kowski@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>
-Subject: Re: [PATCHv4] b43 add harware tkip
-Message-ID: <20090824142008.GB8998@tuxdriver.com>
-References: <83a869cd0908191335u723f62c6p119ec4ed8cfb51c5@mail.gmail.com> <87eir6tueg.fsf@litku.valot.fi> <83a869cd0908211443s1d366f70o202ae768a93b20dc@mail.gmail.com>
+	Sun, 9 Aug 2009 11:12:33 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so792593rvb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2009 08:12:34 -0700 (PDT)
+Message-ID: <4A7EE75E.30900@lwfinger.net>
+Date: Sun, 09 Aug 2009 10:12:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <83a869cd0908211443s1d366f70o202ae768a93b20dc@mail.gmail.com>
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Deauthentications with p54usb
+References: <4A7C9383.2040705@lwfinger.net> <200908072350.26193.chunkeey@web.de>
+In-Reply-To: <200908072350.26193.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 21, 2009 at 11:43:55PM +0200, gregor kowski wrote:
-> This add hardware tkip for b43. This can help to reduce the load a low
-> powered router and make higher throughput. To enable it, you need to
-> set "hwtkip" module param.
+Christian Lamparter wrote:
 > 
-> Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-> Acked-by: Michael Buesch <mb@bu3sch.de>
+> reason 7 must be:
+> WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
+> 
+> and class 3 frames are (according to 802.11-2007 11.3.c)
+> 	- "normal" data frames
+> 	(- some MLMEs - probably not relevant )
+> 	- control frame:
+> 		=> especially: Power Save Poll.
+> 
+> your log doesn't hold any records about a disassoc event from the AP.
+> so, my first guess would be that you're hitting yet another
+> power saving related issue.  And as far as I know b43 does not do that yet.
+> So, can you please give the device another go without ps?
+> 
+> (BTW: mac80211 prints a debug text (if enabled in kconfig),
+>  whenever the device goes or leaves the hibernation mode...
+>  do you see any of those too?) 
 
-An earlier version was already merged.  What is different here?
+Once I got that debug mode set with PS enabled, I still got the deauth
+events, but no messages from mac80211. I may not have had the debug
+value set correctly. Turning off CONFIG_CFG80211_DEFAULT_PS stopped
+the messages, thus it certainly looks like a power saving event.
 
-Please submit a new patch with just the differences.
+Larry
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
