@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:54219 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932882AbZHDRJx (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:48347 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbZHIKS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 13:09:53 -0400
-Received: by ewy10 with SMTP id 10so497523ewy.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 10:09:53 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 2/2] rt2x00: cancel all work on disconnect
-Date: Tue, 4 Aug 2009 19:09:50 +0200
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-References: <20090802183002.16766.4142.stgit@ct.roinet.com> <20090802183015.16766.56837.stgit@ct.roinet.com>
-In-Reply-To: <20090802183015.16766.56837.stgit@ct.roinet.com>
+	Sun, 9 Aug 2009 06:18:26 -0400
+Received: by bwz19 with SMTP id 19so2130806bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2009 03:18:26 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: add missing device list locking
+References: <1249811489.4636.2.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 09 Aug 2009 13:18:23 +0300
+In-Reply-To: <1249811489.4636.2.camel@johannes.local> (Johannes Berg's message of "Sun\, 09 Aug 2009 11\:51\:29 +0200")
+Message-ID: <87iqgxl28g.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908041909.50599.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 02 August 2009, Pavel Roskin wrote:
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Thanks,
+> When calling into the wext code from the NETDEV_UP
+> notifier, we need to hold the devlist_mtx mutex as
+> the wext code ends up calling into channel checks.
+>
+> Reported-by: Kalle Valo <kalle.valo@iki.fi>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Thanks for fixing this. I wasn't able to reproduce the warning after one
+suspend/resume cycle, but I'll test this patch a bit more before I send
+my Tested-by tag.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 658a63b..b4c696d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -893,6 +893,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
->  	rt2x00lib_disable_radio(rt2x00dev);
->  
->  	/*
-> +	 * Stop all work.
-> +	 */
-> +	cancel_work_sync(&rt2x00dev->filter_work);
-> +	cancel_work_sync(&rt2x00dev->intf_work);
-> +
-> +	/*
->  	 * Uninitialize device.
->  	 */
->  	rt2x00lib_uninitialize(rt2x00dev);
-> 
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
-> 
-
-
+-- 
+Kalle Valo
