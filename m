@@ -1,31 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:61519 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932068AbZHCU3q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 16:29:46 -0400
-Received: by gxk9 with SMTP id 9so6148999gxk.13
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 13:29:46 -0700 (PDT)
+Received: from bar.sig21.net ([80.81.252.164]:53306 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753397AbZHIJef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Aug 2009 05:34:35 -0400
+Date: Sun, 9 Aug 2009 11:34:30 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.31-rc5 regression: ath5k broken after suspend-to-ram
+Message-ID: <20090809093430.GA6325@sig21.net>
+References: <20090807215155.GA17043@sig21.net>
 MIME-Version: 1.0
-In-Reply-To: <20090803195816.GG18639@mail.wantstofly.org>
-References: <20090803195816.GG18639@mail.wantstofly.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 3 Aug 2009 13:29:26 -0700
-Message-ID: <43e72e890908031329p7afcc94bg7d101a41041b46b2@mail.gmail.com>
-Subject: Re: [PATCH 0/5] various mwl8k bugfixes
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	nico@cam.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090807215155.GA17043@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 3, 2009 at 12:58 PM, Lennert
-Buytenhek<buytenh@wantstofly.org> wrote:
-> This patch series fixes a couple of potential crashes and hangs in
-> mwl8k, and some other misbehaviour.  They are against current linus
-> tree, which is 2.6.31-rc5 plus some.  Please consider applying.
+On Fri, Aug 07, 2009 at 11:51:55PM +0200, Johannes Stezenbach wrote:
+> 
+> On my old Thinkpad T42p running linux-2.6.31-rc5-246-g90bc1a6,
+> after suspend-to-RAM ath5k cannot associate to an AP using WPA
+> anymore.  It worked with kernel 2.6.29.1.
 
-BTW mind adding a MAINTAINERS entry for this driver?
+FWFI, it also works with 2.6.30.  (I could not initialliy test
+with 2.6.30 because suspend/resume is broken in that kernel,
+but it can be fixed up with a workaround patch.)
 
-  Luis
+
+Johannes
