@@ -1,44 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tulikuusama.dnainternet.net ([83.102.40.132]:48665 "EHLO
-	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751359AbZH1K1m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 06:27:42 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [RFC PATCH 00/10] complete cfg80211 conversion
+Received: from bu3sch.de ([62.75.166.246]:46765 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750885AbZHIR0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Aug 2009 13:26:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 28 Aug 2009 13:27:42 +0300
-Message-ID: <20090828102742.15684.10566.stgit@fate.lan>
+Subject: wext channel configuration broken
+Date: Sun, 9 Aug 2009 19:26:11 +0200
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200908091926.11895.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset completes cfg80211 conversion of rndis_wlan. Tested connect with 
-wext-compat: WPA/WPA2-PSK, WEP work with station mode. Adhoc work with
-and without WEP. Throught nl80211 pretty much untested.
+Hi,
 
-Should rndis_wlan find out key_id for cfg80211_michael_mic_failure, patch 
-currently uses -1?
+Doing an "iwconfig wlanX channel 1" on current wireless-testing _without_
+doing an "iwconfig wlanX mode XXX" previously freezes the current process.
+No debug messages (but I don't have manu debugging options enabled, like lock debugging).
 
----
-
-Jussi Kivilinna (10):
-      rndis_wlan: use cfg80211_wext_handler
-      rndis_wlan: disable IWEVPMKIDCAND wireless event
-      rndis_wlan: convert mic failure wireless event to cfg80211
-      rndis_wlan: remove unneeded SIOCSIWCOMMIT
-      rndis_wlan: rename wireless stats worker to device poller
-      rndis_wlan: add cfg80211 dump_station
-      rndis_wlan: add cfg80211 get_station
-      rndis_wlan: add cfg80211 key handling
-      rndis_wlan: add cfg80211 set_channel
-      rndis_wlan: add cfg80211 connect, disconnect, join_ibss and leave_ibss
-
-
- drivers/net/wireless/rndis_wlan.c | 1299 ++++++++++++++++---------------------
- 1 files changed, 571 insertions(+), 728 deletions(-)
+Doing an "iwconfig wlanX mode XXX" before changing the channel fixes the issue.
+This happens both on an up and down device.
 
 -- 
+Greetings, Michael.
