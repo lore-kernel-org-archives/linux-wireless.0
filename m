@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:54011 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933257AbZHGTus (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:43325 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbZHJT1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 15:50:48 -0400
-Received: by ewy10 with SMTP id 10so1778162ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 12:50:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090807145555.GD7545@tuxdriver.com>
-References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
-	 <4A73FA8D.5030804@gmail.com>
-	 <1249114918.26584.18.camel@johannes.local>
-	 <4A73FBBD.3070507@gmail.com> <1249115316.2007.0.camel@johannes.local>
-	 <40f31dec0908031054m3b8231fdrf36f363702218116@mail.gmail.com>
-	 <20090807145555.GD7545@tuxdriver.com>
-Date: Fri, 7 Aug 2009 22:50:48 +0300
-Message-ID: <40f31dec0908071250p2c5ceda4j6eb60c475295913d@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 10 Aug 2009 15:27:23 -0400
+Received: by pzk34 with SMTP id 34so3033885pzk.4
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:24 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH 1/7] mac80211: Improve dequeing from mpath frame queue.
+Date: Mon, 10 Aug 2009 12:15:46 -0700
+Message-Id: <1249931752-18127-2-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249931752-18127-1-git-send-email-javier@cozybit.com>
+References: <20090810175225.GF2733@tuxdriver.com>
+ <1249931752-18127-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/7 John W. Linville <linville@tuxdriver.com>:
->
-> Last I saw in this thread...
->
+Also, fix typo in comment.
 
-Yup, sorry for the delay ;-(
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Tested-by: Andrey Yurovsky <andrey@cozybit.com>
+---
+ net/mac80211/mesh.h      |    2 +-
+ net/mac80211/mesh_hwmp.c |    6 ++----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-> Can we have a clean repost of the whole series (including proper
-> Signed-off-by and any Acked-by, Tested-by, etc)?
-
-sure
-
-> Also, in the future
-> I think it would be good for you to take some of the comments from
-> Luis to heart -- explain the 'why' not the 'what' in the changelogs,
-> do one thing per patch, etc.
-
-I'll try and make them more complete from now on ;-)
-
-> I'm going to drop the original 1-4 now and wait for a clean repost.
->
-
-ack ;-)
-
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index ce53881..6aaf1ec 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -61,7 +61,7 @@ enum mesh_path_flags {
+  * 	retry
+  * @discovery_retries: number of discovery retries
+  * @flags: mesh path flags, as specified on &enum mesh_path_flags
+- * @state_lock: mesh pat state lock
++ * @state_lock: mesh path state lock
+  *
+  *
+  * The combination of dst and sdata is unique in the mesh path table. Since the
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e1a763e..b54c21c 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -810,10 +810,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
+ 		}
+ 
+ 		if (skb_queue_len(&mpath->frame_queue) >=
+-				MESH_FRAME_QUEUE_LEN) {
+-			skb_to_free = mpath->frame_queue.next;
+-			skb_unlink(skb_to_free, &mpath->frame_queue);
+-		}
++				MESH_FRAME_QUEUE_LEN)
++			skb_to_free = skb_dequeue(&mpath->frame_queue);
+ 
+ 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 		skb_queue_tail(&mpath->frame_queue, skb);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.4.3
+
