@@ -1,57 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2563 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961AbZHRDeS (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:52981 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932249AbZHJRUR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:34:18 -0400
-Date: Mon, 17 Aug 2009 23:33:56 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl1251: halt the embedded CPU before loading firmware
-Message-ID: <20090818033356.GB524@hash.localnet>
+	Mon, 10 Aug 2009 13:20:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
+Date: Mon, 10 Aug 2009 19:19:24 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A7F713E.8040405@gmail.com> <69e28c910908100549w6af5bd12j568c7f0c2aa31e30@mail.gmail.com> <200908101452.50072.mb@bu3sch.de>
+In-Reply-To: <200908101452.50072.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908101919.25306.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After initial power-up, the embedded cpu is usually halted.  However,
-if we down the interface and only do a soft reset before bringing
-the interface back up, it will still be running and the firmware
-loading code will bail out.  This change halts the CPU before loading
-the firmware, enabling a second call to wl1251_boot() to succeed
-without a hard reset.
+On Monday 10 August 2009 14:52:49 Michael Buesch wrote:
+> On Monday 10 August 2009 14:49:31 Gábor Stefanik wrote:
+> > 2009/8/10 Michael Buesch <mb@bu3sch.de>:
+> > > On Monday 10 August 2009 03:00:46 Gábor Stefanik wrote:
+> > >> +static const u16 lpphy_sw_control_table[] = {
+> > >> +     0x0128,
+> > >> +     0x0128,
+> > >> +     0x0009,
+> > >> +     0x0009,
+> > >> +     0x0028,
+> > >> +     0x0028,
+> > >
+> > > Is it possible to use more than one value per line for all these tables?
+> > > Make sure to make best use of the 80 columns limit.
+> > > This would significantly decrease the patch/file length. (linewise)
+> > >
+> > > --
+> > > Greetings, Michael.
+> > >
+> > 
+> > Well, I converted the tables directly from the Wikitext on
+> > bcm-v4.sipsolutions.net using regex search&replace - if you know a
+> > good regex to convert the tables to use multiple values on each line,
+> > please post it.
+> > 
+> 
+> I have some hacky python scripts to parse and reformat these tables.
+> I will post them in a few hours. I'll have to leave now. brb.
+> 
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
+Hm, I don't seem to have the scripts anymore. But python re is fairly simple.
+Here's a hacky script to parse a table, perform some transformations on it and
+print out the C defines:
 
-Hi Kalle,
+#!/usr/bin/env python
 
-Thoughts on this?  It fixes my remaining issue with warm card reset.
-I think Android code does this in the firmware loader:
+import re
+import sys
 
-http://android.git.kernel.org/?p=platform/system/wlan/ti.git;a=blob;f=sta_dk_4_0_4_32/common/src/TNETW_Driver/FW_Transfer/HwInit/HwInit.c;h=e5cc2becdd2b9010903598fc56574776f6aeec8d;hb=HEAD#l291
+d = file(sys.argv[1]).readlines()
 
- drivers/net/wireless/wl12xx/wl1251_boot.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
-index 592c3b5..452d748 100644
---- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-@@ -465,6 +465,9 @@ int wl1251_boot(struct wl1251 *wl)
- 	int ret = 0, minor_minor_e2_ver;
- 	u32 tmp, boot_data;
- 
-+	/* halt embedded ARM CPU while loading firmware */
-+	wl1251_reg_write32(wl, ACX_REG_ECPU_CONTROL, ECPU_CONTROL_HALT);
-+
- 	ret = wl1251_boot_soft_reset(wl);
- 	if (ret < 0)
- 		goto out;
+for line in d:
+	r = re.compile(r"\|\| `0x([0-9A-Fa-f]+)` \|\| ([\w\s\(\)/]+) \|\|")
+	m = r.match(line)
+	if m:
+		offset = int(m.group(1), 16)
+		name = m.group(2)
+		name = name.replace("workAround", "workaround")
+
+		origname = name
+
+		name = name.replace("(", " ")
+		name = name.replace(")", " ")
+
+		name = name.upper()
+		name = name.strip()
+
+		name = name.replace(" ", "_")
+		name = name.replace("/", "_")
+		name = name.replace("CONTROL", "CTL")
+		name = name.replace("COMMON", "COMM")
+		name = name.replace("CALIBRATION", "CALIB")
+		name = name.replace("DEBUG", "DBG")
+		name = name.replace("COUNTER", "CNT")
+		name = name.replace("POWER", "PWR")
+		name = name.replace("B_PHY", "B")
+		name = name.replace("ADDRESS", "ADDR")
+		name = name.replace("OUT_ENABLE", "OUTEN")
+		name = name.replace("THRESHOLD", "THRES")
+		name = name.replace("STATUS", "STAT")
+		name = name.replace("COEFFICIENT", "COEFF")
+		name = name.replace("INTERVAL", "INT")
+		name = name.replace("TIMEOUT", "TO")
+		name = name.replace("VALUE", "VAL")
+		name = name.replace("SAMPLE", "SMPL")
+
+		name = "B43_LPPHY_" + name
+
+		nr_tabs = 5 - (len(name) / 8)
+		tabs = "\t" * nr_tabs
+
+		comment = origname
+
+		if (offset & 0x400):
+			accessor = "B43_PHY_OFDM"
+		else:
+			accessor = "B43_PHY_CCK"
+		offset &= ~0x400;
+		if (offset & ~0xFF):
+			print "offset ERROR %X" % offset
+			sys.exit(1)
+		sys.stdout.write("#define %s%s%s(0x%02X)" % (name, tabs, accessor, offset))
+		if comment:
+			sys.stdout.write(" /* %s */" % comment)
+		sys.stdout.write("\n")
+	else:
+		pass
+		print "NO match " + line
+
 -- 
-1.6.2.5
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Greetings, Michael.
