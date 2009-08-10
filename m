@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:33631 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933140AbZHDV6p (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:52760 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754599AbZHJMwx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 17:58:45 -0400
-Received: by mail-bw0-f219.google.com with SMTP id 19so3349532bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 14:58:45 -0700 (PDT)
+	Mon, 10 Aug 2009 08:52:53 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
+Date: Mon, 10 Aug 2009 14:52:49 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A7F713E.8040405@gmail.com> <200908101441.43480.mb@bu3sch.de> <69e28c910908100549w6af5bd12j568c7f0c2aa31e30@mail.gmail.com>
+In-Reply-To: <69e28c910908100549w6af5bd12j568c7f0c2aa31e30@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1249417983.24787.8.camel@johannes.local>
-References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com>
-	 <200907312238.15705.mb@bu3sch.de>
-	 <20090804160558.GC4995@tuxdriver.com>
-	 <200908042227.46237.mb@bu3sch.de>
-	 <1249417983.24787.8.camel@johannes.local>
-Date: Tue, 4 Aug 2009 23:58:45 +0200
-Message-ID: <83a869cd0908041458n1f23f100pee5a6b3c4c3f11e4@mail.gmail.com>
-Subject: Re: [PATCH] remove wrong probe_resp_plcp write
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908101452.50072.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/4/09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2009-08-04 at 22:27 +0200, Michael Buesch wrote:
->
-> Just remove it -- if we need it back we can find it in the git archives,
-> and it's rather unlikely that we're going to add that functionality to
-> mac80211 and hostapd unless you'll push it.
->
-What should be removed ?
-b43_write_probe_resp_template and b43_write_probe_resp_plcp ?
+On Monday 10 August 2009 14:49:31 Gábor Stefanik wrote:
+> 2009/8/10 Michael Buesch <mb@bu3sch.de>:
+> > On Monday 10 August 2009 03:00:46 Gábor Stefanik wrote:
+> >> +static const u16 lpphy_sw_control_table[] = {
+> >> +     0x0128,
+> >> +     0x0128,
+> >> +     0x0009,
+> >> +     0x0009,
+> >> +     0x0028,
+> >> +     0x0028,
+> >
+> > Is it possible to use more than one value per line for all these tables?
+> > Make sure to make best use of the 80 columns limit.
+> > This would significantly decrease the patch/file length. (linewise)
+> >
+> > --
+> > Greetings, Michael.
+> >
+> 
+> Well, I converted the tables directly from the Wikitext on
+> bcm-v4.sipsolutions.net using regex search&replace - if you know a
+> good regex to convert the tables to use multiple values on each line,
+> please post it.
+> 
 
-Gregor
+I have some hacky python scripts to parse and reformat these tables.
+I will post them in a few hours. I'll have to leave now. brb.
+
+-- 
+Greetings, Michael.
