@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59135 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:52548 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755006AbZHNSK3 (ORCPT
+	with ESMTP id S1754907AbZHJOEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 14:10:29 -0400
-Subject: Re: Spare warnings - wireless drivers
+	Mon, 10 Aug 2009 10:04:45 -0400
+Subject: [PATCH] mac80211: small tx code cleanup
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A859F52.1000608@gmail.com>
-References: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
-	 <4A859F52.1000608@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-v5KFZqRrarswyVcGuO9r"
-Date: Fri, 14 Aug 2009 20:10:26 +0200
-Message-Id: <1250273426.4411.0.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 10 Aug 2009 16:04:15 +0200
+Message-Id: <1249913055.32614.6.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+It's really easier to read if it's not indented
+as much, so invert the condition and rearrange
+the code so the smaller chunk is indented instead.
 
---=-v5KFZqRrarswyVcGuO9r
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/tx.c |   38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-On Fri, 2009-08-14 at 18:30 +0100, Dave wrote:
+--- wireless-testing.orig/net/mac80211/tx.c	2009-08-10 13:38:28.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-08-10 13:39:32.000000000 +0200
+@@ -317,30 +317,30 @@ ieee80211_tx_h_multicast_ps_buf(struct i
+ 	if (!atomic_read(&tx->sdata->bss->num_sta_ps))
+ 		return TX_CONTINUE;
+ 
++	/* buffered in hardware */
++	if (!(tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING)) {
++		info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++
++		return TX_CONTINUE;
++	}
++
+ 	/* buffered in mac80211 */
+-	if (tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING) {
+-		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+-			purge_old_ps_buffers(tx->local);
+-		if (skb_queue_len(&tx->sdata->bss->ps_bc_buf) >=
+-		    AP_MAX_BC_BUFFER) {
++	if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
++		purge_old_ps_buffers(tx->local);
++
++	if (skb_queue_len(&tx->sdata->bss->ps_bc_buf) >= AP_MAX_BC_BUFFER) {
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+-			if (net_ratelimit()) {
+-				printk(KERN_DEBUG "%s: BC TX buffer full - "
+-				       "dropping the oldest frame\n",
+-				       tx->dev->name);
+-			}
++		if (net_ratelimit())
++			printk(KERN_DEBUG "%s: BC TX buffer full - dropping the oldest frame\n",
++			       tx->dev->name);
+ #endif
+-			dev_kfree_skb(skb_dequeue(&tx->sdata->bss->ps_bc_buf));
+-		} else
+-			tx->local->total_ps_buffered++;
+-		skb_queue_tail(&tx->sdata->bss->ps_bc_buf, tx->skb);
+-		return TX_QUEUED;
+-	}
++		dev_kfree_skb(skb_dequeue(&tx->sdata->bss->ps_bc_buf));
++	} else
++		tx->local->total_ps_buffered++;
+ 
+-	/* buffered in hardware */
+-	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
++	skb_queue_tail(&tx->sdata->bss->ps_bc_buf, tx->skb);
+ 
+-	return TX_CONTINUE;
++	return TX_QUEUED;
+ }
+ 
+ static int ieee80211_use_mfp(__le16 fc, struct sta_info *sta,
 
-> I've been staring at setibssport for 5 minutes, and can't see the
-> alleged imbalance. False positive?
->=20
-> I can't see why sparse picked on setibssport either - half the other
-> functions in that file do exactly the same.
-
-Yeah, I've been there too -- no idea why that particular function trips
-up sparse.
-
-johannes
-
---=-v5KFZqRrarswyVcGuO9r
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhaiPAAoJEODzc/N7+QmaFzQP/jIWxxxJUG7u3+tgTiIK40ot
-BbKD6cHM7W80hMn7tcLUMmhJ7G5+KqTSc/7fZyUj6OXq0FuzvDW1EcGIoW1McmVZ
-BM1rue82eooCOXtCuY6/K5XU0HZQQYZHV4JA94hqB/2MIFgKvwymg9ktNNZT6iTR
-UdPU9Wizpsnovus/K+K5G0REdlnWp1ZIUrCeP39hkWt+r5bzksDb4cppaJn0RukT
-R1X1tHO/9cv5lzf+YWwxME8Z1YDamLwWxEaBlnBpCV1MKKgUz4K5TW+gaWtU32Mg
-vI7HNOLKFzmrfnFVxfJhg1NKVz5cMMLcYmkkj13YKpJ6sL+2NyMN/hHYTl/cyjLl
-/inmQP1sJ0R9wtLva818mXJCB+UDi3JvvCvirXF2YiZtblfxk1qy8TFNuByDTFI9
-qISEuTlSeR+n60wZmj7jcajM6raPke/A9Ht6kUbygRB+aw4vUrGvYETG4lVSQHlv
-DE4j0x9we3L6rwHbbrANbkYs/hgX+TjDIAESSaCzZGX+EWDhw0ABXxjPAd0WBj18
-iOi+sIUu+tPBHF36KcVUQZOgeaTi3PAe5gYx+W/NN7YtL8qaveJFOOilwVpa2G/6
-RAYRKbe/rKRsCMw35WuRKRZXxZ5u6lx7Sy5eelxhCgkUctUEExbYS9KBZntD64xv
-AoP4SAmRQF0GSnZiTDki
-=lvWE
------END PGP SIGNATURE-----
-
---=-v5KFZqRrarswyVcGuO9r--
 
