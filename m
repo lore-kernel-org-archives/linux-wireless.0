@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:52228 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751288AbZHaVKw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 17:10:52 -0400
-Received: by fxm17 with SMTP id 17so3061918fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:10:53 -0700 (PDT)
-Message-ID: <4A9C3C59.5010305@lwfinger.net>
-Date: Mon, 31 Aug 2009 16:10:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
+Received: from ogre.sisk.pl ([217.79.144.158]:48069 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754629AbZHJOFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 10:05:38 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: chris2553@googlemail.com
+Subject: Re: [Bug #13846] LEDs switched off permanently by power saving with rt61pci driver
+Date: Mon, 10 Aug 2009 16:06:27 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: rtl8187b Problem with tx level
-References: <h7eo7q$7ks$1@ger.gmane.org>	 <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>	 <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>	 <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>	 <43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com> <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-In-Reply-To: <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <AuPdDySr74O.A.5LC.Pj1fKB@chimera> <u1L1PAbl8zG.A.EjD.3j1fKB@chimera> <200908101111.16762.chris2553@googlemail.com>
+In-Reply-To: <200908101111.16762.chris2553@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200908101606.27144.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung wrote:
+On Monday 10 August 2009, Chris Clayton wrote:
+> Hi Rafael,
 > 
-> I just took a look at the history - there aren't obvious bug fixes, a
-> bunch of work queue-related changes from you & Johannes; feature-wise,
-> Larry added LED blinking after 2.6.30, and Herton added rfkill support
-> quite recently after 2.6.31-rc7 . But no, there isn't any change that
-> would affect tx level beyond 2.6.31-rc7, I think.
+> On Sunday 09 August 2009, Rafael J. Wysocki wrote:
+> > This message has been generated automatically as a part of a report
+> > of recent regressions.
+> >
+> > The following bug entry is on the current list of known regressions
+> > from 2.6.30.  Please verify if it still should be listed and let me know
+> > (either way).
+> >
+> 
+> Ivo sent a test patch for this and I tested it., but without success. I reported my findings but 
+> didn't get a reply. See http://marc.info/?l=linux-wireless&m=124940189007154&w=4.
+> 
+> I suspect the failure is due to the same PS hardware probelms that were at the route of my original 
+> report.. Unless one of the wireless folks say otherwise, I think we should close this on the basis 
+> of busted hardware. I'm happy to simply eject the card and re-insert it now that I have some udev 
+> scripts to tear down the wireless configuration on the ejection and set it uop again when the card 
+> is re-inserted.
 
-Your analysis matches my recollection.
+Thanks, closed.
 
-Apparently RealTek is supplying a closed-source driver for RTL8187B
-these days. There are no sources for the B on their web site. In
-addition, the one that Tobias loaded tainted his kernel.
-
-Larry
-
+Rafael
