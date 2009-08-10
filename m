@@ -1,53 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37088 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756462AbZHNHz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 03:55:27 -0400
-Subject: Re: [PATCH] nl80211 connect API support
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1250229046.7696.0.camel@johannes.local>
-References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com>
-	 <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
-	 <20090813091103.GA1826@jm.kir.nu> <1250155777.4972.9.camel@debian>
-	 <20090813104635.GA7330@jm.kir.nu>  <1250223474.4972.47.camel@debian>
-	 <1250229046.7696.0.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 14 Aug 2009 15:55:27 +0800
-Message-Id: <1250236527.4972.64.camel@debian>
-Mime-Version: 1.0
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:62747 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755135AbZHJPuh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 11:50:37 -0400
+Received: by yxe5 with SMTP id 5so3908784yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 08:50:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090810150455.GB2733@tuxdriver.com>
+References: <AuPdDySr74O.A.5LC.Pj1fKB@chimera> <20090810150455.GB2733@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 10 Aug 2009 08:50:17 -0700
+Message-ID: <43e72e890908100850v1cbb4252j3136245ba4d316b6@mail.gmail.com>
+Subject: Re: wireless regressions -- Re: 2.6.31-rc5-git5: Reported regressions
+	from 2.6.30
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Fabio Comolli <fabio.comolli@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-08-14 at 13:50 +0800, Johannes Berg wrote:
-> On Fri, 2009-08-14 at 12:17 +0800, Zhu Yi wrote:
-> 
-> > Johannes, I think we need a way in cfg80211 to tell connect vs.
-> > auth/assoc. The current capability method (nl80211_send_wiphy) cannot do
-> > this. For example,
-> > 
-> > 	if (dev->ops->connect || dev->ops->auth)
-> > 		NLA_PUT_U32(msg, i, NL80211_CMD_CONNECT);
-> > 
-> > We need to either make NL80211_CMD_CONNECT only depends on ops->connect
-> > or make NL80211_CMD_AUTH depends on ops->auth. Johannes, which one do
-> > you prefer?
-> 
-> The latter is already there as far as I can see?
-> 
->         CMD(auth, AUTHENTICATE);
->         CMD(assoc, ASSOCIATE);
->         CMD(deauth, DEAUTHENTICATE);
->         CMD(disassoc, DISASSOCIATE);
-> 
-> so you should be able to check for these.
+On Mon, Aug 10, 2009 at 8:04 AM, John W. Linville<linville@tuxdriver.com> wrote:
+> On Sun, Aug 09, 2009 at 10:36:49PM +0200, Rafael J. Wysocki wrote:
+>> This message contains a list of some regressions from 2.6.30, for which there
+>> are no fixes in the mainline I know of.  If any of them have been fixed already,
+>> please let me know.
+>
+> Wireless-related ones...
 
-My bad. I'll use NL80211_CMD_AUTHENTICATE.
+Some notes on some of these.
 
-Thanks,
--yi
+>> Unresolved regressions
+>> ----------------------
+>
+>> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=13947
+>> Subject               : Libertas: Association request to the driver failed
+>> Submitter     : Daniel Mack <daniel@caiaq.de>
+>> Date          : 2009-08-07 19:11 (3 days old)
+>> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=57921c312e8cef72ba35a4cfe870b376da0b1b87
+>> References    : http://marc.info/?l=linux-kernel&m=124967234311481&w=4
+>> Handled-By    : Roel Kluin <roel.kluin@gmail.com>
+>>
+>>
+>> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=13943
+>> Subject               : WARNING: at net/mac80211/mlme.c:2292 with ath5k
+>> Submitter     : Fabio Comolli <fabio.comolli@gmail.com>
+>> Date          : 2009-08-06 20:15 (4 days old)
+>> References    : http://marc.info/?l=linux-kernel&m=124958978600600&w=4
 
+As I noted earlier this comes from the fact that a driver or mac80211
+is queuing work onto the mac80211 workqueue when we already ran the
+mac80211 suspend callbacks and we haven't yet resumed. There have been
+several fixes for these, for both drivers and mac80211. We've already
+pushed them to wireless-testing but I do not recall which ones have
+been propagated to 2.6.31 as fixes.
+
+So we have two options, we either treat all these as real issues for
+2.6.31 and try to backport all related fixes, or we downgrade this
+warning to just bail out. The problem with debugging these issues
+as-is on 2.6.31 is that the caller which queued the work remains
+invisible to the trace from the warning -- the warning comes from the
+workqueue callback not the routine which ran queue_work(). This was
+recently changed in wireless-testing and we now issue the warnings
+from the callers of queue_work() for the mac80211 workqueue so we
+*can* easily see the root cause to the issue and easily fix this.
+
+We can surely fix this issue alone but we're sure bound to see this
+warning later from other buggy drivers/mac80211 on 2.6.31 so we do
+need to address how we want to address this issue as a whole for
+2.6.31.
+
+Fabio to help iron out this issue can you please use wireless-testing,
+use IBSS as you were and go through the suspend-resume cycle to see if
+you see a new warning with ath5k.
+
+>> Regressions with patches
+>> ------------------------
+>>
+>> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=13948
+>> Subject               : ath5k broken after suspend-to-ram
+>> Submitter     : Johannes Stezenbach <js@sig21.net>
+>> Date          : 2009-08-07 21:51 (3 days old)
+>> References    : http://marc.info/?l=linux-kernel&m=124968192727854&w=4
+>> Handled-By    : Nick Kossifidis <mickflemm@gmail.com>
+>> Patch         : http://patchwork.kernel.org/patch/38550/
+
+This bug report status is now RESOLVED PATCH_ALREADY_AVAILABLE .
+
+  Luis
