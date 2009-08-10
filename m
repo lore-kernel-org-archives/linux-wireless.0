@@ -1,466 +1,317 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:32836 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbZHJT1t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:27:49 -0400
-Received: by wa-out-1112.google.com with SMTP id j5so768212wah.21
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:50 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 7/7] mac80211: Move mpath and mpp growth to mesh workqueue.
-Date: Mon, 10 Aug 2009 12:15:52 -0700
-Message-Id: <1249931752-18127-8-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249931752-18127-7-git-send-email-javier@cozybit.com>
-References: <20090810175225.GF2733@tuxdriver.com>
- <1249931752-18127-1-git-send-email-javier@cozybit.com>
- <1249931752-18127-2-git-send-email-javier@cozybit.com>
- <1249931752-18127-3-git-send-email-javier@cozybit.com>
- <1249931752-18127-4-git-send-email-javier@cozybit.com>
- <1249931752-18127-5-git-send-email-javier@cozybit.com>
- <1249931752-18127-6-git-send-email-javier@cozybit.com>
- <1249931752-18127-7-git-send-email-javier@cozybit.com>
+Received: from venema.h4ckr.net ([217.24.1.135]:38432 "EHLO venema.h4ckr.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753401AbZHJA3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 9 Aug 2009 20:29:05 -0400
+Date: Mon, 10 Aug 2009 03:29:02 +0300
+From: Nick Kossifidis <mick@madwifi-project.org>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
+	mcgrof@gmail.com, nbd@openwrt.org
+Subject: [PATCH 3/5] ath5k: Wakeup fixes
+Message-ID: <20090810002902.GC7079@makis>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents calling rcu_synchronize from within the tx path by moving the
-table growth code to the mesh workqueue.
+ * Don't put chip to full sleep because there are problems during
+   wakeup. Instead hold MAC/Baseband on warm reset state via a new
+   function ath5k_hw_on_hold.
 
-Move mesh_table_free and mesh_table_grow from mesh.c to mesh_pathtbl.c and
-declare them static.
+ * Minor cleanups
 
-Also, re-enable mesh in Kconfig and update the configuration description.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+ Tested-by: Ben Greear <greearb@candelatech.com>
+ Tested-by: Johannes Stezenbach <js@sig21.net>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Tested-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- net/mac80211/Kconfig        |    8 +-
- net/mac80211/ieee80211_i.h  |    2 +-
- net/mac80211/mesh.c         |   77 +++--------------------
- net/mac80211/mesh.h         |   20 ++++++-
- net/mac80211/mesh_pathtbl.c |  146 ++++++++++++++++++++++++++++++++-----------
- 5 files changed, 144 insertions(+), 109 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    1 +
+ drivers/net/wireless/ath/ath5k/attach.c |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c   |   44 +++++----
+ drivers/net/wireless/ath/ath5k/reset.c  |  155 +++++++++++++++++++++++--------
+ 4 files changed, 140 insertions(+), 62 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 7dd77b6..9db4ff8 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -66,12 +66,12 @@ endmenu
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
- 	depends on MAC80211 && EXPERIMENTAL
--	depends on BROKEN
- 	---help---
- 	 This options enables support of Draft 802.11s mesh networking.
--	 The implementation is based on Draft 1.08 of the Mesh Networking
--	 amendment. For more information visit http://o11s.org/.
--
-+	 The implementation is based on Draft 2.08 of the Mesh Networking
-+	 amendment.  However, no compliance with that draft is claimed or even
-+	 possible, as drafts leave a number of identifiers to be defined after
-+	 ratification.  For more information visit http://o11s.org/.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 9137511..1047a6c 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1157,6 +1157,7 @@ extern void ath5k_unregister_leds(struct ath5k_softc *sc);
  
- config MAC80211_LEDS
- 	bool "Enable LED triggers"
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d6bd7dd..a6abc7d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -355,7 +355,7 @@ struct ieee80211_if_mesh {
+ /* Reset Functions */
+ extern int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
++extern int ath5k_hw_on_hold(struct ath5k_hw *ah);
+ extern int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode, struct ieee80211_channel *channel, bool change_channel);
+ /* Power management functions */
+ extern int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode, bool set_chip, u16 sleep_duration);
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 6263065..238eeb7 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -145,7 +145,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 		goto err_free;
  
- 	unsigned long timers_running;
+ 	/* Bring device out of sleep and reset it's units */
+-	ret = ath5k_hw_nic_wakeup(ah, CHANNEL_B, true);
++	ret = ath5k_hw_nic_wakeup(ah, 0, true);
+ 	if (ret)
+ 		goto err_free;
  
--	bool housekeeping;
-+	unsigned long wrkq_flags;
- 
- 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
- 	size_t mesh_id_len;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 25d0065..3185e18 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -47,7 +47,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
--	ifmsh->housekeeping = true;
-+	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
- 
- 	if (local->quiescing) {
- 		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
-@@ -320,30 +320,6 @@ struct mesh_table *mesh_table_alloc(int size_order)
- 	return newtbl;
- }
- 
--static void __mesh_table_free(struct mesh_table *tbl)
--{
--	kfree(tbl->hash_buckets);
--	kfree(tbl->hashwlock);
--	kfree(tbl);
--}
--
--void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
--{
--	struct hlist_head *mesh_hash;
--	struct hlist_node *p, *q;
--	int i;
--
--	mesh_hash = tbl->hash_buckets;
--	for (i = 0; i <= tbl->hash_mask; i++) {
--		spin_lock(&tbl->hashwlock[i]);
--		hlist_for_each_safe(p, q, &mesh_hash[i]) {
--			tbl->free_node(p, free_leafs);
--			atomic_dec(&tbl->entries);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 5d50285..0370cba 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2446,27 +2446,29 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	ret = ath5k_stop_locked(sc);
+ 	if (ret == 0 && !test_bit(ATH_STAT_INVALID, sc->status)) {
+ 		/*
+-		 * Set the chip in full sleep mode.  Note that we are
+-		 * careful to do this only when bringing the interface
+-		 * completely to a stop.  When the chip is in this state
+-		 * it must be carefully woken up or references to
+-		 * registers in the PCI clock domain may freeze the bus
+-		 * (and system).  This varies by chip and is mostly an
+-		 * issue with newer parts that go to sleep more quickly.
+-		 */
+-		if (sc->ah->ah_mac_srev >= 0x78) {
+-			/*
+-			 * XXX
+-			 * don't put newer MAC revisions > 7.8 to sleep because
+-			 * of the above mentioned problems
+-			 */
+-			ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mac version > 7.8, "
+-				"not putting device to sleep\n");
+-		} else {
+-			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+-				"putting device to full sleep\n");
+-			ath5k_hw_set_power(sc->ah, AR5K_PM_FULL_SLEEP, true, 0);
 -		}
--		spin_unlock(&tbl->hashwlock[i]);
--	}
--	__mesh_table_free(tbl);
--}
- 
- static void ieee80211_mesh_path_timer(unsigned long data)
- {
-@@ -360,44 +336,6 @@ static void ieee80211_mesh_path_timer(unsigned long data)
- 	ieee80211_queue_work(&local->hw, &ifmsh->work);
- }
- 
--struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
--{
--	struct mesh_table *newtbl;
--	struct hlist_head *oldhash;
--	struct hlist_node *p, *q;
--	int i;
--
--	if (atomic_read(&tbl->entries)
--			< tbl->mean_chain_len * (tbl->hash_mask + 1))
--		goto endgrow;
--
--	newtbl = mesh_table_alloc(tbl->size_order + 1);
--	if (!newtbl)
--		goto endgrow;
--
--	newtbl->free_node = tbl->free_node;
--	newtbl->mean_chain_len = tbl->mean_chain_len;
--	newtbl->copy_node = tbl->copy_node;
--	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
--
--	oldhash = tbl->hash_buckets;
--	for (i = 0; i <= tbl->hash_mask; i++)
--		hlist_for_each(p, &oldhash[i])
--			if (tbl->copy_node(p, newtbl) < 0)
--				goto errcopy;
--
--	return newtbl;
--
--errcopy:
--	for (i = 0; i <= newtbl->hash_mask; i++) {
--		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
--			tbl->free_node(p, 0);
--	}
--	__mesh_table_free(newtbl);
--endgrow:
--	return NULL;
--}
--
- /**
-  * ieee80211_fill_mesh_addresses - fill addresses of a locally originated mesh frame
-  * @hdr:    	802.11 frame header
-@@ -487,7 +425,6 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
- 	if (free_plinks != sdata->u.mesh.accepting_plinks)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 
--	ifmsh->housekeeping = false;
- 	mod_timer(&ifmsh->housekeeping_timer,
- 		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
- }
-@@ -524,8 +461,8 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
- 
--	ifmsh->housekeeping = true;
--	queue_work(local->hw, &ifmsh->work);
-+	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
-+	ieee80211_queue_work(&local->hw, &ifmsh->work);
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
-@@ -664,7 +601,13 @@ static void ieee80211_mesh_work(struct work_struct *work)
- 		       ifmsh->last_preq + msecs_to_jiffies(ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval)))
- 		mesh_path_start_discovery(sdata);
- 
--	if (ifmsh->housekeeping)
-+	if (test_and_clear_bit(MESH_WORK_GROW_MPATH_TABLE, &ifmsh->wrkq_flags))
-+		mesh_mpath_table_grow();
++		 * Don't set the card in full sleep mode!
++		 *
++		 * a) When the device is in this state it must be carefully
++		 * woken up or references to registers in the PCI clock
++		 * domain may freeze the bus (and system).  This varies
++		 * by chip and is mostly an issue with newer parts
++		 * (madwifi sources mentioned srev >= 0x78) that go to
++		 * sleep more quickly.
++		 *
++		 * b) On older chips full sleep results a weird behaviour
++		 * during wakeup. I tested various cards with srev < 0x78
++		 * and they don't wake up after module reload, a second
++		 * module reload is needed to bring the card up again.
++		 *
++		 * Until we figure out what's going on don't enable
++		 * full chip reset on any chip (this is what Legacy HAL
++		 * and Sam's HAL do anyway). Instead Perform a full reset
++		 * on the device (same as initial state after attach) and
++		 * leave it idle (keep MAC/BB on warm reset) */
++		ret = ath5k_hw_on_hold(sc->ah);
 +
-+	if (test_and_clear_bit(MESH_WORK_GROW_MPATH_TABLE, &ifmsh->wrkq_flags))
-+		mesh_mpp_table_grow();
++		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
++				"putting device to sleep\n");
+ 	}
+ 	ath5k_txbuf_free(sc, sc->bbuf);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 86733fd..34e13c7 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -258,29 +258,35 @@ int ath5k_hw_set_power(struct ath5k_hw *ah, enum ath5k_power_mode mode,
+ 		if (!set_chip)
+ 			goto commit;
+ 
+-		/* Preserve sleep duration */
+ 		data = ath5k_hw_reg_read(ah, AR5K_SLEEP_CTL);
 +
-+	if (test_and_clear_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags))
- 		ieee80211_mesh_housekeeping(sdata, ifmsh);
++		/* If card is down we 'll get 0xffff... so we
++		 * need to clean this up before we write the register
++		 */
+ 		if (data & 0xffc00000)
+ 			data = 0;
+ 		else
+-			data = data & 0xfffcffff;
++			/* Preserve sleep duration etc */
++			data = data & ~AR5K_SLEEP_CTL_SLE;
+ 
+-		ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
++		ath5k_hw_reg_write(ah, data | AR5K_SLEEP_CTL_SLE_WAKE,
++							AR5K_SLEEP_CTL);
+ 		udelay(15);
+ 
+-		for (i = 50; i > 0; i--) {
++		for (i = 200; i > 0; i--) {
+ 			/* Check if the chip did wake up */
+ 			if ((ath5k_hw_reg_read(ah, AR5K_PCICFG) &
+ 					AR5K_PCICFG_SPWR_DN) == 0)
+ 				break;
+ 
+ 			/* Wait a bit and retry */
+-			udelay(200);
+-			ath5k_hw_reg_write(ah, data, AR5K_SLEEP_CTL);
++			udelay(50);
++			ath5k_hw_reg_write(ah, data | AR5K_SLEEP_CTL_SLE_WAKE,
++							AR5K_SLEEP_CTL);
+ 		}
+ 
+ 		/* Fail if the chip didn't wake up */
+-		if (i <= 0)
++		if (i == 0)
+ 			return -EIO;
+ 
+ 		break;
+@@ -296,6 +302,64 @@ commit:
  }
  
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 4241925..eb23fc6 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -44,6 +44,23 @@ enum mesh_path_flags {
- };
- 
- /**
-+ * enum mesh_deferred_task_flags - mac80211 mesh deferred tasks
+ /*
++ * Put device on hold
 + *
-+ *
-+ *
-+ * @MESH_WORK_HOUSEKEEPING: run the periodic mesh housekeeping tasks
-+ * @MESH_WORK_GROW_MPATH_TABLE: the mesh path table is full and needs
-+ * to grow.
-+ * @MESH_WORK_GROW_MPP_TABLE: the mesh portals table is full and needs to
-+ * grow
++ * Put MAC and Baseband on warm reset and
++ * keep that state (don't clean sleep control
++ * register). After this MAC and Baseband are
++ * disabled and a full reset is needed to come
++ * back. This way we save as much power as possible
++ * without puting the card on full sleep.
 + */
-+enum mesh_deferred_task_flags {
-+	MESH_WORK_HOUSEKEEPING,
-+	MESH_WORK_GROW_MPATH_TABLE,
-+	MESH_WORK_GROW_MPP_TABLE,
-+};
-+
-+/**
-  * struct mesh_path - mac80211 mesh path structure
-  *
-  * @dst: mesh path destination mac address
-@@ -250,7 +267,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- /* Mesh tables */
- struct mesh_table *mesh_table_alloc(int size_order);
- void mesh_table_free(struct mesh_table *tbl, bool free_leafs);
--struct mesh_table *mesh_table_grow(struct mesh_table *tbl);
-+void mesh_mpath_table_grow(void);
-+void mesh_mpp_table_grow(void);
- u32 mesh_table_hash(u8 *addr, struct ieee80211_sub_if_data *sdata,
- 		struct mesh_table *tbl);
- /* Mesh paths */
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 431865a..751c4d0 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -39,6 +39,69 @@ static struct mesh_table *mesh_paths;
- static struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
- 
- int mesh_paths_generation;
-+static void __mesh_table_free(struct mesh_table *tbl)
++int ath5k_hw_on_hold(struct ath5k_hw *ah)
 +{
-+	kfree(tbl->hash_buckets);
-+	kfree(tbl->hashwlock);
-+	kfree(tbl);
-+}
++	struct pci_dev *pdev = ah->ah_sc->pdev;
++	u32 bus_flags;
++	int ret;
 +
-+void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
-+{
-+	struct hlist_head *mesh_hash;
-+	struct hlist_node *p, *q;
-+	int i;
-+
-+	mesh_hash = tbl->hash_buckets;
-+	for (i = 0; i <= tbl->hash_mask; i++) {
-+		spin_lock(&tbl->hashwlock[i]);
-+		hlist_for_each_safe(p, q, &mesh_hash[i]) {
-+			tbl->free_node(p, free_leafs);
-+			atomic_dec(&tbl->entries);
-+		}
-+		spin_unlock(&tbl->hashwlock[i]);
++	/* Make sure device is awake */
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to wakeup the MAC Chip\n");
++		return ret;
 +	}
-+	__mesh_table_free(tbl);
-+}
 +
-+static struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
-+{
-+	struct mesh_table *newtbl;
-+	struct hlist_head *oldhash;
-+	struct hlist_node *p, *q;
-+	int i;
++	/*
++	 * Put chipset on warm reset...
++	 *
++	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * results card to hang and always return 0xffff... so
++	 * we ingore that flag for PCI-E cards. On PCI cards
++	 * this flag gets cleared after 64 PCI clocks.
++	 */
++	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
 +
-+	if (atomic_read(&tbl->entries)
-+			< tbl->mean_chain_len * (tbl->hash_mask + 1))
-+		goto endgrow;
-+
-+	newtbl = mesh_table_alloc(tbl->size_order + 1);
-+	if (!newtbl)
-+		goto endgrow;
-+
-+	newtbl->free_node = tbl->free_node;
-+	newtbl->mean_chain_len = tbl->mean_chain_len;
-+	newtbl->copy_node = tbl->copy_node;
-+	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
-+
-+	oldhash = tbl->hash_buckets;
-+	for (i = 0; i <= tbl->hash_mask; i++)
-+		hlist_for_each(p, &oldhash[i])
-+			if (tbl->copy_node(p, newtbl) < 0)
-+				goto errcopy;
-+
-+	return newtbl;
-+
-+errcopy:
-+	for (i = 0; i <= newtbl->hash_mask; i++) {
-+		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
-+			tbl->free_node(p, 0);
++	if (ah->ah_version == AR5K_AR5210) {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
++			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
++			mdelay(2);
++	} else {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_BASEBAND | bus_flags);
 +	}
-+	__mesh_table_free(newtbl);
-+endgrow:
-+	return NULL;
++
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to put device on warm reset\n");
++		return -EIO;
++	}
++
++	/* ...wakeup again!*/
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to put device on hold\n");
++		return ret;
++	}
++
++	return ret;
 +}
 +
- 
- /* This lock will have the grow table function as writer and add / delete nodes
-  * as readers. When reading the table (i.e. doing lookups) we are well protected
-@@ -187,6 +250,8 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
++/*
+  * Bring up MAC + PHY Chips and program PLL
+  * TODO: Half/Quarter rate support
   */
- int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
- 	struct mesh_path *mpath, *new_mpath;
- 	struct mpath_node *node, *new_node;
- 	struct hlist_head *bucket;
-@@ -195,8 +260,6 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 	int err = 0;
- 	u32 hash_idx;
- 
--	might_sleep();
--
- 	if (memcmp(dst, sdata->dev->dev_addr, ETH_ALEN) == 0)
- 		/* never add ourselves as neighbours */
- 		return -ENOTSUPP;
-@@ -208,11 +271,11 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 		return -ENOSPC;
- 
- 	err = -ENOMEM;
--	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
-+	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
- 	if (!new_mpath)
- 		goto err_path_alloc;
- 
--	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
-+	new_node = kmalloc(sizeof(struct mpath_node), GFP_ATOMIC);
- 	if (!new_node)
- 		goto err_node_alloc;
- 
-@@ -250,20 +313,8 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
- 	read_unlock(&pathtbl_resize_lock);
- 	if (grow) {
--		struct mesh_table *oldtbl, *newtbl;
--
--		write_lock(&pathtbl_resize_lock);
--		oldtbl = mesh_paths;
--		newtbl = mesh_table_grow(mesh_paths);
--		if (!newtbl) {
--			write_unlock(&pathtbl_resize_lock);
--			return 0;
--		}
--		rcu_assign_pointer(mesh_paths, newtbl);
--		write_unlock(&pathtbl_resize_lock);
--
--		synchronize_rcu();
--		mesh_table_free(oldtbl, false);
-+		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
-+		ieee80211_queue_work(&local->hw, &ifmsh->work);
+@@ -318,6 +382,50 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 		return ret;
  	}
- 	return 0;
  
-@@ -278,9 +329,46 @@ err_path_alloc:
- 	return err;
- }
- 
-+void mesh_mpath_table_grow(void)
-+{
-+	struct mesh_table *oldtbl, *newtbl;
++	/*
++	 * Put chipset on warm reset...
++	 *
++	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * results card to hang and always return 0xffff... so
++	 * we ingore that flag for PCI-E cards. On PCI cards
++	 * this flag gets cleared after 64 PCI clocks.
++	 */
++	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
 +
-+	write_lock(&pathtbl_resize_lock);
-+	oldtbl = mesh_paths;
-+	newtbl = mesh_table_grow(mesh_paths);
-+	if (!newtbl) {
-+		write_unlock(&pathtbl_resize_lock);
-+		return;
++	if (ah->ah_version == AR5K_AR5210) {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
++			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
++			mdelay(2);
++	} else {
++		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
++			AR5K_RESET_CTL_BASEBAND | bus_flags);
 +	}
-+	rcu_assign_pointer(mesh_paths, newtbl);
-+	write_unlock(&pathtbl_resize_lock);
 +
-+	synchronize_rcu();
-+	mesh_table_free(oldtbl, false);
-+}
-+
-+void mesh_mpp_table_grow(void)
-+{
-+	struct mesh_table *oldtbl, *newtbl;
-+
-+	write_lock(&pathtbl_resize_lock);
-+	oldtbl = mpp_paths;
-+	newtbl = mesh_table_grow(mpp_paths);
-+	if (!newtbl) {
-+		write_unlock(&pathtbl_resize_lock);
-+		return;
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip\n");
++		return -EIO;
 +	}
-+	rcu_assign_pointer(mpp_paths, newtbl);
-+	write_unlock(&pathtbl_resize_lock);
 +
-+	synchronize_rcu();
-+	mesh_table_free(oldtbl, false);
-+}
- 
- int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
- 	struct mesh_path *mpath, *new_mpath;
- 	struct mpath_node *node, *new_node;
- 	struct hlist_head *bucket;
-@@ -289,8 +377,6 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	int err = 0;
- 	u32 hash_idx;
- 
--	might_sleep();
--
- 	if (memcmp(dst, sdata->dev->dev_addr, ETH_ALEN) == 0)
- 		/* never add ourselves as neighbours */
- 		return -ENOTSUPP;
-@@ -299,11 +385,11 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 		return -ENOTSUPP;
- 
- 	err = -ENOMEM;
--	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
-+	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
- 	if (!new_mpath)
- 		goto err_path_alloc;
- 
--	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
-+	new_node = kmalloc(sizeof(struct mpath_node), GFP_ATOMIC);
- 	if (!new_node)
- 		goto err_node_alloc;
- 
-@@ -337,20 +423,8 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	spin_unlock(&mpp_paths->hashwlock[hash_idx]);
- 	read_unlock(&pathtbl_resize_lock);
- 	if (grow) {
--		struct mesh_table *oldtbl, *newtbl;
--
--		write_lock(&pathtbl_resize_lock);
--		oldtbl = mpp_paths;
--		newtbl = mesh_table_grow(mpp_paths);
--		if (!newtbl) {
--			write_unlock(&pathtbl_resize_lock);
--			return 0;
--		}
--		rcu_assign_pointer(mpp_paths, newtbl);
--		write_unlock(&pathtbl_resize_lock);
--
--		synchronize_rcu();
--		mesh_table_free(oldtbl, false);
-+		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
-+		ieee80211_queue_work(&local->hw, &ifmsh->work);
++	/* ...wakeup again!...*/
++	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
++	if (ret) {
++		ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
++		return ret;
++	}
++
++	/* ...clear reset control register and pull device out of
++	 * warm reset */
++	if (ath5k_hw_nic_reset(ah, 0)) {
++		ATH5K_ERR(ah->ah_sc, "failed to warm reset the MAC Chip\n");
++		return -EIO;
++	}
++
++	/* On initialization skip PLL programming since we don't have
++	 * a channel / mode set yet */
++	if (initial)
++		return 0;
++
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		/*
+ 		 * Get channel mode flags
+@@ -383,39 +491,6 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 					AR5K_PHY_TURBO);
  	}
- 	return 0;
  
--- 
-1.5.4.3
-
+-	/* reseting PCI on PCI-E cards results card to hang
+-	 * and always return 0xffff... so we ingore that flag
+-	 * for PCI-E cards */
+-	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+-
+-	/* Reset chipset */
+-	if (ah->ah_version == AR5K_AR5210) {
+-		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+-			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
+-			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
+-			mdelay(2);
+-	} else {
+-		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+-			AR5K_RESET_CTL_BASEBAND | bus_flags);
+-	}
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc, "failed to reset the MAC Chip\n");
+-		return -EIO;
+-	}
+-
+-	/* ...wakeup again!*/
+-	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
+-	if (ret) {
+-		ATH5K_ERR(ah->ah_sc, "failed to resume the MAC Chip\n");
+-		return ret;
+-	}
+-
+-	/* ...final warm reset */
+-	if (ath5k_hw_nic_reset(ah, 0)) {
+-		ATH5K_ERR(ah->ah_sc, "failed to warm reset the MAC Chip\n");
+-		return -EIO;
+-	}
+-
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 
+ 		/* ...update PLL if needed */
