@@ -1,95 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:35125 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbZHEUdG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 16:33:06 -0400
-Received: by mail-ew0-f214.google.com with SMTP id 10so291644ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:33:07 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 2/4] orinoco: add cfg80211 join_ibss and leave_ibss
-Date: Wed,  5 Aug 2009 21:32:50 +0100
-Message-Id: <1249504372-17063-3-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
-References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+Received: from mga01.intel.com ([192.55.52.88]:12071 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755712AbZHJQ2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 12:28:22 -0400
+Date: Mon, 10 Aug 2009 09:28:23 -0700
+From: Jesse Barnes <jesse.barnes@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: Greg KH <greg@kroah.com>, Marcel Holtmann <marcel@holtmann.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
+	stephen.chen@atheros.com, linux-usb@vger.kernel.org,
+	jbarnes@virtuousgeek.org
+Subject: Re: [PATCH] Document pci_ids.h addition policy.
+Message-ID: <20090810092823.4f697e55@jbarnes-g45>
+In-Reply-To: <20090806191359.GA4345@redhat.com>
+References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
+	<1249532170.21101.3.camel@localhost.localdomain>
+	<43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
+	<1249533357.21101.5.camel@localhost.localdomain>
+	<20090806050932.GA25015@kroah.com>
+	<20090806181546.GA11589@redhat.com>
+	<20090806183326.GA28433@kroah.com>
+	<20090806191359.GA4345@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Basic ad-hoc support.
+On Thu, 6 Aug 2009 15:13:59 -0400
+Dave Jones <davej@redhat.com> wrote:
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/cfg.c |   51 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 51 insertions(+), 0 deletions(-)
+> On Thu, Aug 06, 2009 at 11:33:26AM -0700, Greg Kroah-Hartman wrote:
+>  
+>  > > I agree. In fact, I'd go further, and say that the bulk of what
+>  > > we have in pci_ids.h is also pointlessly shared. Only a tiny
+>  > > fraction of the device entries in that file are used by multiple
+>  > > files in the kernel.
+>  > 
+>  > I agree with that as well, which is why when I was PCI maintainer,
+>  > I didn't allow any new additions to the pci_ids.h file, unless it
+>  > was going to be an id that was shared by different drivers.  That
+>  > cut the new additions down to about none :)
+> 
+> Perhaps documenting this is a good idea to prevent things being moved
+> there, as it still seems to be happening judging from the git log.
+> 
+> Signed-off-by: Dave Jones <davej@redhat.com>
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 73b46b6..f9156fd 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2,6 +2,9 @@
+>   *	PCI Class, Vendor and Device IDs
+>   *
+>   *	Please keep sorted.
+> + *
+> + *	Do not add new entries to this file unless the definitions
+> + *	are shared between multiple drivers.
+>   */
+>  
+>  /* Device classes and subclasses */
+> 
 
-diff --git a/drivers/net/wireless/orinoco/cfg.c b/drivers/net/wireless/orinoco/cfg.c
-index 56bd4f1..84a7884 100644
---- a/drivers/net/wireless/orinoco/cfg.c
-+++ b/drivers/net/wireless/orinoco/cfg.c
-@@ -390,9 +390,60 @@ static int orinoco_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	return err;
- }
- 
-+static int orinoco_join_ibss(struct wiphy *wiphy, struct net_device *dev,
-+			     struct cfg80211_ibss_params *params)
-+{
-+	struct orinoco_private *priv = wiphy_priv(wiphy);
-+	unsigned long lock;
-+	int err;
-+
-+	if (orinoco_lock(priv, &lock) != 0)
-+		return -EBUSY;
-+
-+	/* Setup the requested parameters in priv. If the card is not
-+	 * capable, then the driver will just ignore the settings that
-+	 * it can't do. */
-+
-+	err = __orinoco_connect(wiphy, params->channel, params->bssid,
-+				params->ssid, params->ssid_len);
-+	if (err)
-+		goto out;
-+
-+	/* Ignore information elements and beacon interval */
-+
-+	err = orinoco_commit(priv);
-+ out:
-+	orinoco_unlock(priv, &lock);
-+
-+	return err;
-+}
-+
-+static int orinoco_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
-+{
-+	struct orinoco_private *priv = wiphy_priv(wiphy);
-+	unsigned long lock;
-+	int err;
-+
-+	if (orinoco_lock(priv, &lock) != 0)
-+		return -EBUSY;
-+
-+	/* Do we need to disassociate as well? */
-+
-+	memset(priv->desired_bssid, 0, ETH_ALEN);
-+	memset(priv->desired_essid, 0, sizeof(priv->desired_essid));
-+
-+	err = orinoco_commit(priv);
-+
-+	orinoco_unlock(priv, &lock);
-+
-+	return err;
-+}
-+
- const struct cfg80211_ops orinoco_cfg_ops = {
- 	.change_virtual_intf = orinoco_change_vif,
- 	.scan = orinoco_scan,
- 	.connect = orinoco_connect,
- 	.disconnect = orinoco_disconnect,
-+	.join_ibss = orinoco_join_ibss,
-+	.leave_ibss = orinoco_leave_ibss,
- };
+Applied to linux-next, thanks.  I'll try to be more strict about this
+too (I've reminded a few people of this informal policy already).
+
 -- 
-1.6.3.3
-
+Jesse Barnes, Intel Open Source Technology Center
