@@ -1,67 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:44733 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269AbZHXISw (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:16683 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbZHJOzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 04:18:52 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
-Subject: Re: Implementing wireless testbed on Linux
-Date: Mon, 24 Aug 2009 10:18:13 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <029301ca2239$0ac9ad70$205d0850$@kaist.ac.kr>
-In-Reply-To: <029301ca2239$0ac9ad70$205d0850$@kaist.ac.kr>
+	Mon, 10 Aug 2009 10:55:20 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so727700wah.21
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 07:55:21 -0700 (PDT)
+Message-ID: <4A8034D4.5030909@lwfinger.net>
+Date: Mon, 10 Aug 2009 09:55:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908241018.13234.hs4233@mail.mn-solutions.de>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
+References: <4A7F713E.8040405@gmail.com> <4A7F811F.4070908@lwfinger.net> <69e28c910908100437n46a04f76tf91876d48ab19cb4@mail.gmail.com>
+In-Reply-To: <69e28c910908100437n46a04f76tf91876d48ab19cb4@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> In the case of using 802.11n chipset, which card and device
-> driver should I choose? At the same time, which version of
-> Linux kernel should be appropriate?
+Gábor Stefanik wrote:
+> 2009/8/10 Larry Finger <Larry.Finger@lwfinger.net>:
+>> Gábor Stefanik wrote:
+>>> Implement LP-PHY baseband table init for all revisions.
+>>>
+>>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>>>
+>>> ---
+>>> Sorry for the size; it's difficult to cut short changes like this
+>>> (most of the patch is just table data). Please review, there may always be
+>>> bugs that I failed to catch while reading through the code. I have added
+>>> comments to places that were not quite clear to me.
+>>>
+>>> phy_lp.c       |   41 tables_lpphy.c | 3223
+>>> +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>> tables_lpphy.h |    3 3 files changed, 3263 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/phy_lp.c
+>>> b/drivers/net/wireless/b43/phy_lp.c
+>>> index 27eadee..cf17489 100644
+>>> --- a/drivers/net/wireless/b43/phy_lp.c
+>>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>>> @@ -59,9 +59,43 @@ static void b43_lpphy_op_free(struct b43_wldev *dev)
+>>>     dev->phy.lp = NULL;
+>>> }
+>>>
+>>> +static void lpphy_adjust_gain_table(struct b43_wldev *dev)
+>>> +{
+>>> +    struct b43_phy_lp *lpphy = dev->phy.lp;
+>>> +    u32 freq = dev->wl->hw->conf.channel->center_freq;
+>>> +    u16 temp[3];
+>>> +    u16 isolation;
+>>> +
+>>> +    B43_WARN_ON(dev->phy.rev >= 2);
+>>> +
+>>> +    if (freq < 2400) /* FIXME Can this ever happen? Should we WARN_ON? */
+>> This was a typo. It should be 2500, not 2400.
+> 
+> Thanks! So it is actually better to implement this as "if
+> (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)"? That would make
+> it easier to implement non-standard channels similar to how it was
+> done for ath5k (Richard Farina's frequency patch - assuming the HW is
+> capable of something like that).
 
-I'd go with Atheros based PCI cards. The cards are good, and the 
-support is outstanding (Atheros people work together with Linux 
-community on this mailing list!).
+Yes, that would work for the 2.4 GHz band, and I guess there could be
+similar routines or macros to split the 5 GHz band into low, medium
+and high channels.
 
-> Is there any difference between pci and usb interfaces?
+>>> +        isolation = lpphy->tx_isolation_med_band;
+>>> +    else if (freq <= 5320)
+>> --snip --
+>>
+>>> +void lpphy_rev2plus_table_init(struct b43_wldev *dev)
+>>> +{
+>>> +    struct ssb_bus *bus = dev->dev->bus;
+>>> +    int i;
+>>> +
+>>> +    B43_WARN_ON(dev->phy.rev < 2);
+>>> +
+>>> +    //XXX should this be done using b43_lptab_write_bulk?
+>>> +    for (i = 0; i < 704; i++)
+>>> +        b43_lptab_write(dev, B43_LPTAB32(7, i), 0);
+>> No. The bulk write is for writing tables with length greater than 1.
+>> In this case, you have 704 different tables each of length 1.
+> 
+> By the way, looking at the implementation again, it looks a bit fishy
+> to me - we write zeros to 4 bytes of table ID 7, then increase the
+> offset by 1 byte, and again write 4 bytes - 3 of which are the same
+> bytes we already zeroed in the previous step.
+> 
+> I suspect this would suffice:
+> 
+> for (i = 0; i < 704; i += 4)
+>            b43_lptab_write(dev, B43_LPTAB32(7, i), 0);
+> 
+> This version cuts the write count in half, and removes redundant byte writes.
+> 
+> Maybe this should be tested once the code is functional.
 
-Sure. Please read http://www.pcisig.com/specifications and 
-http://www.usb.org/developers/docs/. The busses are VERY 
-different in case of hierarchy, latency, max transfer rates and 
-so on.
+Without knowing what the firmware does with these values, I'm not sure
+that the two steps are equivalent, but that can be tested. I'm sure of
+the specs in this instance.
 
-I fear, however, that this mailing list isn't the right channel 
-to transfer this knowledge.
-
-
-
-> Definitely, all device and software should be stable and
-> up-to-date.
-
-That's a contradicion. Especially wireless is quite evolving in 
-the Linux kernel.
-
-
-There's the possibility that you use a vendor-kernel (e.g. Debian 
-kernel, Fedora kernel, or whatever distro you use). I personally 
-won't do this, but I'd use a more "vanilla" kernel. The vendors 
-usually put a huge amount on patches into their kernels, that 
-will make results not as easy to compare. Also, if you have a 
-specific questions, chances are way higher that the people in 
-the mailing list know about the "vanilla" kernel or 
-wireless-testing kernel than some random vendor kernel.
-
-
-If you absolutely need something stable, you should go with the 
-least recent stable linux kernel (see http://www.kernel.org/).
-
-If you want to be more up-to-date, you should use 
-wireless-testing. Expect new functionality, fixed bugs, but also 
-new bugs there :-)    However, If you ever have to change some 
-driver code, you definitely want wireless-testing. You cannot 
-(usually) use the source from the stable kernel when submitting 
-patches. More info at 
-http://wireless.kernel.org/en/developers/Documentation
+Larry
