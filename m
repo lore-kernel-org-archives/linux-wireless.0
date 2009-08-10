@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from buzzloop.caiaq.de ([212.112.241.133]:35424 "EHLO
-	buzzloop.caiaq.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751337AbZHIKYV (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:37929 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928AbZHJInw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 06:24:21 -0400
-Date: Sun, 9 Aug 2009 12:24:17 +0200
-From: Daniel Mack <daniel@caiaq.de>
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Libertas: Association request to the driver failed
-Message-ID: <20090809102417.GH13639@buzzloop.caiaq.de>
-References: <20090807191156.GS19257@buzzloop.caiaq.de>
- <20090807193610.GK7545@tuxdriver.com>
- <20090808123512.GZ19257@buzzloop.caiaq.de>
- <4A7D8AB6.9030707@gmail.com>
- <4A7E9596.4070901@gmail.com>
+	Mon, 10 Aug 2009 04:43:52 -0400
+Received: by bwz19 with SMTP id 19so2441167bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 01:43:52 -0700 (PDT)
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org, joe@perches.com
+Subject: Re: [PATCH v2] MAINTAINERS: add information for wl1271 wireless driver
+References: <1249892113-25090-1-git-send-email-luciano.coelho@nokia.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 10 Aug 2009 11:43:50 +0300
+In-Reply-To: <1249892113-25090-1-git-send-email-luciano.coelho@nokia.com> (Luciano Coelho's message of "Mon\, 10 Aug 2009 11\:15\:13 +0300")
+Message-ID: <877hxckqih.fsf@litku.valot.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A7E9596.4070901@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 09, 2009 at 11:23:34AM +0200, Roel Kluin wrote:
-> >> The change came in after -rc5,
-> >> and I found 57921c31 ("libertas: Read buffer overflow") to be the
-> >> culprit. Reverting it brings my libertas device back to life. I copied
-> >> the author.
-> >>
-> >> Thanks,
-> >> Daniel
-> > 
-> > Ah, I think I made an error, I think tmp is too small and should be
-> > 
-> > u8 tmp[*rates_size * ARRAY_SIZE(lbs_bg_rates) - 1];
-> 
-> After some sleep I realized it should be:
-> 
-> u8 tmp[*rates_size * ARRAY_SIZE(lbs_bg_rates)];
+Luciano Coelho <luciano.coelho@nokia.com> writes:
 
-I'll test that tomorrow. Would be easier if you send in a new patch I
-can ack directly in case it works :)
+> Add maintainer information section for the wl1271 wireless driver and fix the
+> information for wl1271.
+>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-Thanks,
-Daniel
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
+
+-- 
+Kalle Valo
