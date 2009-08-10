@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:45774 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbZHRDzq (ORCPT
+Received: from wf-out-1314.google.com ([209.85.200.172]:54416 "EHLO
+	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751679AbZHJXOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:55:46 -0400
-Date: Tue, 18 Aug 2009 05:55:47 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 28/29] mwl8k: update copyright and version number
-Message-ID: <20090818035547.GG18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 10 Aug 2009 19:14:32 -0400
+Received: by wf-out-1314.google.com with SMTP id 26so1217816wfd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 16:14:33 -0700 (PDT)
+Message-ID: <4A80A9D5.2060704@lwfinger.net>
+Date: Mon, 10 Aug 2009 18:14:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: Fix a typo in the sync_stx routine
+References: <4A80A522.2020200@gmail.com>
+In-Reply-To: <4A80A522.2020200@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Gábor Stefanik wrote:
+> I completely missed the "one's complement" instruction from the specs.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> drivers/net/wireless/b43/phy_lp.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c
+> b/drivers/net/wireless/b43/phy_lp.c
+> index 46fe476..34ad738 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -578,7 +578,7 @@ static void lpphy_sync_stx(struct b43_wldev *dev)
+>         tmp >>= e->rf_shift;
+>         tmp <<= e->phy_shift;
+>         b43_phy_maskset(dev, B43_PHY_OFDM(0xF2 + e->phy_offset),
+> -                e->mask << e->phy_shift, tmp);
+> +                ~(e->mask << e->phy_shift), tmp);
+>     }
+> }
+> 
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index c8aa552..2150c32 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2,7 +2,7 @@
-  * drivers/net/wireless/mwl8k.c
-  * Driver for Marvell TOPDOG 802.11 Wireless cards
-  *
-- * Copyright (C) 2008 Marvell Semiconductor Inc.
-+ * Copyright (C) 2008-2009 Marvell Semiconductor Inc.
-  *
-  * This file is licensed under the terms of the GNU General Public
-  * License version 2.  This program is licensed "as is" without any
-@@ -25,7 +25,7 @@
- 
- #define MWL8K_DESC	"Marvell TOPDOG(R) 802.11 Wireless Network Driver"
- #define MWL8K_NAME	KBUILD_MODNAME
--#define MWL8K_VERSION	"0.9.1"
-+#define MWL8K_VERSION	"0.10"
- 
- MODULE_DESCRIPTION(MWL8K_DESC);
- MODULE_VERSION(MWL8K_VERSION);
--- 
-1.5.6.4
+I should have caught that one.
+
+When debugging gets started, it might be useful to add a statement
+
+      WARN_ON(mask & set);
+
+at the start of b43_radio_maskset() and b43_phy_maskset(). That way
+these kind of mistakes will be caught early.
+
+Larry
+
+
