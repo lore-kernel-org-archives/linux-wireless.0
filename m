@@ -1,28 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv.flidais.net ([64.142.75.214]:37716 "EHLO serv.flidais.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933188AbZHVSt2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 14:49:28 -0400
-Received: from serv.flidais.net (localhost [127.0.0.1])
-	by serv.flidais.net (Postfix) with ESMTP id 9C36720C144
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 11:44:47 -0700 (PDT)
-Received: from [192.168.2.98] (unknown [64.142.75.212])
-	by serv.flidais.net (Postfix) with ESMTPS id A9BFA20C144
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 11:44:46 -0700 (PDT)
-Message-ID: <4A903BEB.4030606@flidais.net>
-Date: Sat, 22 Aug 2009 11:41:47 -0700
-From: Nathan Kennedy <nathan@flidais.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58399 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbZHJPQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 11:16:07 -0400
+Date: Mon, 10 Aug 2009 11:11:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ivan Kuten <ivan.kuten@promwad.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: fix alignment problem in scan request
+Message-ID: <20090810151107.GC2733@tuxdriver.com>
+References: <1249660447.7194.9.camel@johannes.local> <4A800E17.3000002@promwad.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Broadcom BCM43XG Master mode?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A800E17.3000002@promwad.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I recently purchased a Linksys WMP300N that has teh BCM43XG chipset.  
-The only driver that I've gotten to work well with it is the wl driver 
-from Broadcom, however when I try to set the wireless mode to master I 
-get an error that the operation is not permitted.  Is there a different 
-way to get this card into master mode?
+On Mon, Aug 10, 2009 at 03:09:59PM +0300, Ivan Kuten wrote:
+> Johannes,
+> 
+> I can test only on compat-wireless.
 
-Thanks in advance
+Did you have to quote the whole patch (and top-post) for that?
+Any reason you can't apply patches to compat-wireless?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
