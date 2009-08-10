@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33037 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754571AbZHNFuy (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:59590 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754025AbZHJMtw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 01:50:54 -0400
-Subject: Re: [PATCH] nl80211 connect API support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <1250223474.4972.47.camel@debian>
-References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com>
-	 <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
-	 <20090813091103.GA1826@jm.kir.nu> <1250155777.4972.9.camel@debian>
-	 <20090813104635.GA7330@jm.kir.nu>  <1250223474.4972.47.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3dA5dhX7XVZRJIEZKPNK"
-Date: Fri, 14 Aug 2009 07:50:46 +0200
-Message-Id: <1250229046.7696.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 10 Aug 2009 08:49:52 -0400
+Received: by fxm28 with SMTP id 28so884762fxm.17
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 05:49:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200908101441.43480.mb@bu3sch.de>
+References: <4A7F713E.8040405@gmail.com> <200908101441.43480.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 10 Aug 2009 14:49:31 +0200
+Message-ID: <69e28c910908100549w6af5bd12j568c7f0c2aa31e30@mail.gmail.com>
+Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2009/8/10 Michael Buesch <mb@bu3sch.de>:
+> On Monday 10 August 2009 03:00:46 Gábor Stefanik wrote:
+>> +static const u16 lpphy_sw_control_table[] = {
+>> +     0x0128,
+>> +     0x0128,
+>> +     0x0009,
+>> +     0x0009,
+>> +     0x0028,
+>> +     0x0028,
+>
+> Is it possible to use more than one value per line for all these tables?
+> Make sure to make best use of the 80 columns limit.
+> This would significantly decrease the patch/file length. (linewise)
+>
+> --
+> Greetings, Michael.
+>
 
---=-3dA5dhX7XVZRJIEZKPNK
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well, I converted the tables directly from the Wikitext on
+bcm-v4.sipsolutions.net using regex search&replace - if you know a
+good regex to convert the tables to use multiple values on each line,
+please post it.
 
-On Fri, 2009-08-14 at 12:17 +0800, Zhu Yi wrote:
-
-> Johannes, I think we need a way in cfg80211 to tell connect vs.
-> auth/assoc. The current capability method (nl80211_send_wiphy) cannot do
-> this. For example,
->=20
-> 	if (dev->ops->connect || dev->ops->auth)
-> 		NLA_PUT_U32(msg, i, NL80211_CMD_CONNECT);
->=20
-> We need to either make NL80211_CMD_CONNECT only depends on ops->connect
-> or make NL80211_CMD_AUTH depends on ops->auth. Johannes, which one do
-> you prefer?
-
-The latter is already there as far as I can see?
-
-        CMD(auth, AUTHENTICATE);
-        CMD(assoc, ASSOCIATE);
-        CMD(deauth, DEAUTHENTICATE);
-        CMD(disassoc, DISASSOCIATE);
-
-so you should be able to check for these.
-
-johannes
-
---=-3dA5dhX7XVZRJIEZKPNK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhPsxAAoJEODzc/N7+QmaRxoP/0L80U7BhlOLZmrbbS1gZatI
-kfNxOjIx7XG/J4SWFhTLZKEXa3GwxY/H2+mIJx7V1u+fyl911v6QbjUY5tdo3EA/
-GlMhMsTYzBUN6A8dw9GRzki6TnG4uUmBEj7wbcBwEE0H4Lch46HNWfgKXHXiMil2
-1SRxnf5zEbOW2xvlYMMdwUHTd97GcxhqOrOrBsIenvsZrgrUd2PZqaz/qmWu9S8d
-LiiLT70IwIP3MOfo9kleNeZ1uIrBi4jsOtsfloaViFuGMOkZF8+Tn91in0f272Ay
-0eye91r2qKiGMode9PIgDoCgqkj2eYkZaxb5apuZUNYL88ifmuFnIgio7RX12OGw
-Gr71kbR2zI0QoUrn9ksMsPsusqxQKIkBd1a4dItjHWjlfS/xLowIUrX3iS8HpdUK
-AzDQcj1n8Vxy6HpbvV69EQSMER+7nrxgjV3RB1n57xh9+0ft0MZw1sUgzvg5AOmn
-Rf4ebgELnyHqLrgYW/bdIWapZTW+1LOiem616EIrPjbfVex5yC7V2O3OcilORCTZ
-U9SHxYK6uUgGazBvSfCxIiR04o6P/Q3E+Jv+1B0ibDxop2IzEu2joYjSVb0qi7ds
-LM3U/jSDw+/e3SPiodoDPbKB6rzjwcwfv30EqHQTu1wNFEdF4je6kw4WK/G3OVk4
-aTiwG0UBLhAwbTbPm7En
-=KHdy
------END PGP SIGNATURE-----
-
---=-3dA5dhX7XVZRJIEZKPNK--
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
