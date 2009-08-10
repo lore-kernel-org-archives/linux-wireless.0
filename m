@@ -1,65 +1,466 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:57264 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933243AbZHHDtv (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.179]:32836 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbZHJT1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:49:51 -0400
-Received: by mail-pz0-f196.google.com with SMTP id 34so1943403pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:49:52 -0700 (PDT)
+	Mon, 10 Aug 2009 15:27:49 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so768212wah.21
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:50 -0700 (PDT)
 From: Javier Cardona <javier@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Subject: [PATCH 1/8] mac80211: Improve dequeing from mpath frame queue.
-Date: Fri,  7 Aug 2009 20:38:24 -0700
-Message-Id: <1249702711-32737-2-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702711-32737-1-git-send-email-javier@cozybit.com>
-References: <>
- <1249702711-32737-1-git-send-email-javier@cozybit.com>
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH 7/7] mac80211: Move mpath and mpp growth to mesh workqueue.
+Date: Mon, 10 Aug 2009 12:15:52 -0700
+Message-Id: <1249931752-18127-8-git-send-email-javier@cozybit.com>
+In-Reply-To: <1249931752-18127-7-git-send-email-javier@cozybit.com>
+References: <20090810175225.GF2733@tuxdriver.com>
+ <1249931752-18127-1-git-send-email-javier@cozybit.com>
+ <1249931752-18127-2-git-send-email-javier@cozybit.com>
+ <1249931752-18127-3-git-send-email-javier@cozybit.com>
+ <1249931752-18127-4-git-send-email-javier@cozybit.com>
+ <1249931752-18127-5-git-send-email-javier@cozybit.com>
+ <1249931752-18127-6-git-send-email-javier@cozybit.com>
+ <1249931752-18127-7-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrey Yurovsky <andrey@cozybit.com>
+This prevents calling rcu_synchronize from within the tx path by moving the
+table growth code to the mesh workqueue.
 
-Also, fix typo in comment.
+Move mesh_table_free and mesh_table_grow from mesh.c to mesh_pathtbl.c and
+declare them static.
+
+Also, re-enable mesh in Kconfig and update the configuration description.
 
 Signed-off-by: Javier Cardona <javier@cozybit.com>
+Tested-by: Andrey Yurovsky <andrey@cozybit.com>
 ---
- net/mac80211/mesh.h      |    2 +-
- net/mac80211/mesh_hwmp.c |    6 ++----
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ net/mac80211/Kconfig        |    8 +-
+ net/mac80211/ieee80211_i.h  |    2 +-
+ net/mac80211/mesh.c         |   77 +++--------------------
+ net/mac80211/mesh.h         |   20 ++++++-
+ net/mac80211/mesh_pathtbl.c |  146 ++++++++++++++++++++++++++++++++-----------
+ 5 files changed, 144 insertions(+), 109 deletions(-)
 
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 7dd77b6..9db4ff8 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -66,12 +66,12 @@ endmenu
+ config MAC80211_MESH
+ 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
+ 	depends on MAC80211 && EXPERIMENTAL
+-	depends on BROKEN
+ 	---help---
+ 	 This options enables support of Draft 802.11s mesh networking.
+-	 The implementation is based on Draft 1.08 of the Mesh Networking
+-	 amendment. For more information visit http://o11s.org/.
+-
++	 The implementation is based on Draft 2.08 of the Mesh Networking
++	 amendment.  However, no compliance with that draft is claimed or even
++	 possible, as drafts leave a number of identifiers to be defined after
++	 ratification.  For more information visit http://o11s.org/.
+ 
+ config MAC80211_LEDS
+ 	bool "Enable LED triggers"
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d6bd7dd..a6abc7d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -355,7 +355,7 @@ struct ieee80211_if_mesh {
+ 
+ 	unsigned long timers_running;
+ 
+-	bool housekeeping;
++	unsigned long wrkq_flags;
+ 
+ 	u8 mesh_id[IEEE80211_MAX_MESH_ID_LEN];
+ 	size_t mesh_id_len;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 25d0065..3185e18 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -47,7 +47,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+-	ifmsh->housekeeping = true;
++	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
+ 
+ 	if (local->quiescing) {
+ 		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
+@@ -320,30 +320,6 @@ struct mesh_table *mesh_table_alloc(int size_order)
+ 	return newtbl;
+ }
+ 
+-static void __mesh_table_free(struct mesh_table *tbl)
+-{
+-	kfree(tbl->hash_buckets);
+-	kfree(tbl->hashwlock);
+-	kfree(tbl);
+-}
+-
+-void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
+-{
+-	struct hlist_head *mesh_hash;
+-	struct hlist_node *p, *q;
+-	int i;
+-
+-	mesh_hash = tbl->hash_buckets;
+-	for (i = 0; i <= tbl->hash_mask; i++) {
+-		spin_lock(&tbl->hashwlock[i]);
+-		hlist_for_each_safe(p, q, &mesh_hash[i]) {
+-			tbl->free_node(p, free_leafs);
+-			atomic_dec(&tbl->entries);
+-		}
+-		spin_unlock(&tbl->hashwlock[i]);
+-	}
+-	__mesh_table_free(tbl);
+-}
+ 
+ static void ieee80211_mesh_path_timer(unsigned long data)
+ {
+@@ -360,44 +336,6 @@ static void ieee80211_mesh_path_timer(unsigned long data)
+ 	ieee80211_queue_work(&local->hw, &ifmsh->work);
+ }
+ 
+-struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
+-{
+-	struct mesh_table *newtbl;
+-	struct hlist_head *oldhash;
+-	struct hlist_node *p, *q;
+-	int i;
+-
+-	if (atomic_read(&tbl->entries)
+-			< tbl->mean_chain_len * (tbl->hash_mask + 1))
+-		goto endgrow;
+-
+-	newtbl = mesh_table_alloc(tbl->size_order + 1);
+-	if (!newtbl)
+-		goto endgrow;
+-
+-	newtbl->free_node = tbl->free_node;
+-	newtbl->mean_chain_len = tbl->mean_chain_len;
+-	newtbl->copy_node = tbl->copy_node;
+-	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
+-
+-	oldhash = tbl->hash_buckets;
+-	for (i = 0; i <= tbl->hash_mask; i++)
+-		hlist_for_each(p, &oldhash[i])
+-			if (tbl->copy_node(p, newtbl) < 0)
+-				goto errcopy;
+-
+-	return newtbl;
+-
+-errcopy:
+-	for (i = 0; i <= newtbl->hash_mask; i++) {
+-		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
+-			tbl->free_node(p, 0);
+-	}
+-	__mesh_table_free(newtbl);
+-endgrow:
+-	return NULL;
+-}
+-
+ /**
+  * ieee80211_fill_mesh_addresses - fill addresses of a locally originated mesh frame
+  * @hdr:    	802.11 frame header
+@@ -487,7 +425,6 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata,
+ 	if (free_plinks != sdata->u.mesh.accepting_plinks)
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 
+-	ifmsh->housekeeping = false;
+ 	mod_timer(&ifmsh->housekeeping_timer,
+ 		  round_jiffies(jiffies + IEEE80211_MESH_HOUSEKEEPING_INTERVAL));
+ }
+@@ -524,8 +461,8 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+ 
+-	ifmsh->housekeeping = true;
+-	queue_work(local->hw, &ifmsh->work);
++	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
++	ieee80211_queue_work(&local->hw, &ifmsh->work);
+ 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
+ 						BSS_CHANGED_BEACON_ENABLED |
+@@ -664,7 +601,13 @@ static void ieee80211_mesh_work(struct work_struct *work)
+ 		       ifmsh->last_preq + msecs_to_jiffies(ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval)))
+ 		mesh_path_start_discovery(sdata);
+ 
+-	if (ifmsh->housekeeping)
++	if (test_and_clear_bit(MESH_WORK_GROW_MPATH_TABLE, &ifmsh->wrkq_flags))
++		mesh_mpath_table_grow();
++
++	if (test_and_clear_bit(MESH_WORK_GROW_MPATH_TABLE, &ifmsh->wrkq_flags))
++		mesh_mpp_table_grow();
++
++	if (test_and_clear_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags))
+ 		ieee80211_mesh_housekeeping(sdata, ifmsh);
+ }
+ 
 diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index ce53881..6aaf1ec 100644
+index 4241925..eb23fc6 100644
 --- a/net/mac80211/mesh.h
 +++ b/net/mac80211/mesh.h
-@@ -61,7 +61,7 @@ enum mesh_path_flags {
-  * 	retry
-  * @discovery_retries: number of discovery retries
-  * @flags: mesh path flags, as specified on &enum mesh_path_flags
-- * @state_lock: mesh pat state lock
-+ * @state_lock: mesh path state lock
-  *
-  *
-  * The combination of dst and sdata is unique in the mesh path table. Since the
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index e1a763e..b54c21c 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -810,10 +810,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		}
+@@ -44,6 +44,23 @@ enum mesh_path_flags {
+ };
  
- 		if (skb_queue_len(&mpath->frame_queue) >=
--				MESH_FRAME_QUEUE_LEN) {
--			skb_to_free = mpath->frame_queue.next;
--			skb_unlink(skb_to_free, &mpath->frame_queue);
+ /**
++ * enum mesh_deferred_task_flags - mac80211 mesh deferred tasks
++ *
++ *
++ *
++ * @MESH_WORK_HOUSEKEEPING: run the periodic mesh housekeeping tasks
++ * @MESH_WORK_GROW_MPATH_TABLE: the mesh path table is full and needs
++ * to grow.
++ * @MESH_WORK_GROW_MPP_TABLE: the mesh portals table is full and needs to
++ * grow
++ */
++enum mesh_deferred_task_flags {
++	MESH_WORK_HOUSEKEEPING,
++	MESH_WORK_GROW_MPATH_TABLE,
++	MESH_WORK_GROW_MPP_TABLE,
++};
++
++/**
+  * struct mesh_path - mac80211 mesh path structure
+  *
+  * @dst: mesh path destination mac address
+@@ -250,7 +267,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
+ /* Mesh tables */
+ struct mesh_table *mesh_table_alloc(int size_order);
+ void mesh_table_free(struct mesh_table *tbl, bool free_leafs);
+-struct mesh_table *mesh_table_grow(struct mesh_table *tbl);
++void mesh_mpath_table_grow(void);
++void mesh_mpp_table_grow(void);
+ u32 mesh_table_hash(u8 *addr, struct ieee80211_sub_if_data *sdata,
+ 		struct mesh_table *tbl);
+ /* Mesh paths */
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 431865a..751c4d0 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -39,6 +39,69 @@ static struct mesh_table *mesh_paths;
+ static struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
+ 
+ int mesh_paths_generation;
++static void __mesh_table_free(struct mesh_table *tbl)
++{
++	kfree(tbl->hash_buckets);
++	kfree(tbl->hashwlock);
++	kfree(tbl);
++}
++
++void mesh_table_free(struct mesh_table *tbl, bool free_leafs)
++{
++	struct hlist_head *mesh_hash;
++	struct hlist_node *p, *q;
++	int i;
++
++	mesh_hash = tbl->hash_buckets;
++	for (i = 0; i <= tbl->hash_mask; i++) {
++		spin_lock(&tbl->hashwlock[i]);
++		hlist_for_each_safe(p, q, &mesh_hash[i]) {
++			tbl->free_node(p, free_leafs);
++			atomic_dec(&tbl->entries);
++		}
++		spin_unlock(&tbl->hashwlock[i]);
++	}
++	__mesh_table_free(tbl);
++}
++
++static struct mesh_table *mesh_table_grow(struct mesh_table *tbl)
++{
++	struct mesh_table *newtbl;
++	struct hlist_head *oldhash;
++	struct hlist_node *p, *q;
++	int i;
++
++	if (atomic_read(&tbl->entries)
++			< tbl->mean_chain_len * (tbl->hash_mask + 1))
++		goto endgrow;
++
++	newtbl = mesh_table_alloc(tbl->size_order + 1);
++	if (!newtbl)
++		goto endgrow;
++
++	newtbl->free_node = tbl->free_node;
++	newtbl->mean_chain_len = tbl->mean_chain_len;
++	newtbl->copy_node = tbl->copy_node;
++	atomic_set(&newtbl->entries, atomic_read(&tbl->entries));
++
++	oldhash = tbl->hash_buckets;
++	for (i = 0; i <= tbl->hash_mask; i++)
++		hlist_for_each(p, &oldhash[i])
++			if (tbl->copy_node(p, newtbl) < 0)
++				goto errcopy;
++
++	return newtbl;
++
++errcopy:
++	for (i = 0; i <= newtbl->hash_mask; i++) {
++		hlist_for_each_safe(p, q, &newtbl->hash_buckets[i])
++			tbl->free_node(p, 0);
++	}
++	__mesh_table_free(newtbl);
++endgrow:
++	return NULL;
++}
++
+ 
+ /* This lock will have the grow table function as writer and add / delete nodes
+  * as readers. When reading the table (i.e. doing lookups) we are well protected
+@@ -187,6 +250,8 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
+  */
+ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct ieee80211_local *local = sdata->local;
+ 	struct mesh_path *mpath, *new_mpath;
+ 	struct mpath_node *node, *new_node;
+ 	struct hlist_head *bucket;
+@@ -195,8 +260,6 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ 	int err = 0;
+ 	u32 hash_idx;
+ 
+-	might_sleep();
+-
+ 	if (memcmp(dst, sdata->dev->dev_addr, ETH_ALEN) == 0)
+ 		/* never add ourselves as neighbours */
+ 		return -ENOTSUPP;
+@@ -208,11 +271,11 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ 		return -ENOSPC;
+ 
+ 	err = -ENOMEM;
+-	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
++	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
+ 	if (!new_mpath)
+ 		goto err_path_alloc;
+ 
+-	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_ATOMIC);
+ 	if (!new_node)
+ 		goto err_node_alloc;
+ 
+@@ -250,20 +313,8 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
+ 	spin_unlock(&mesh_paths->hashwlock[hash_idx]);
+ 	read_unlock(&pathtbl_resize_lock);
+ 	if (grow) {
+-		struct mesh_table *oldtbl, *newtbl;
+-
+-		write_lock(&pathtbl_resize_lock);
+-		oldtbl = mesh_paths;
+-		newtbl = mesh_table_grow(mesh_paths);
+-		if (!newtbl) {
+-			write_unlock(&pathtbl_resize_lock);
+-			return 0;
 -		}
-+				MESH_FRAME_QUEUE_LEN)
-+			skb_to_free = skb_dequeue(&mpath->frame_queue);
+-		rcu_assign_pointer(mesh_paths, newtbl);
+-		write_unlock(&pathtbl_resize_lock);
+-
+-		synchronize_rcu();
+-		mesh_table_free(oldtbl, false);
++		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
++		ieee80211_queue_work(&local->hw, &ifmsh->work);
+ 	}
+ 	return 0;
  
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		skb_queue_tail(&mpath->frame_queue, skb);
+@@ -278,9 +329,46 @@ err_path_alloc:
+ 	return err;
+ }
+ 
++void mesh_mpath_table_grow(void)
++{
++	struct mesh_table *oldtbl, *newtbl;
++
++	write_lock(&pathtbl_resize_lock);
++	oldtbl = mesh_paths;
++	newtbl = mesh_table_grow(mesh_paths);
++	if (!newtbl) {
++		write_unlock(&pathtbl_resize_lock);
++		return;
++	}
++	rcu_assign_pointer(mesh_paths, newtbl);
++	write_unlock(&pathtbl_resize_lock);
++
++	synchronize_rcu();
++	mesh_table_free(oldtbl, false);
++}
++
++void mesh_mpp_table_grow(void)
++{
++	struct mesh_table *oldtbl, *newtbl;
++
++	write_lock(&pathtbl_resize_lock);
++	oldtbl = mpp_paths;
++	newtbl = mesh_table_grow(mpp_paths);
++	if (!newtbl) {
++		write_unlock(&pathtbl_resize_lock);
++		return;
++	}
++	rcu_assign_pointer(mpp_paths, newtbl);
++	write_unlock(&pathtbl_resize_lock);
++
++	synchronize_rcu();
++	mesh_table_free(oldtbl, false);
++}
+ 
+ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct ieee80211_local *local = sdata->local;
+ 	struct mesh_path *mpath, *new_mpath;
+ 	struct mpath_node *node, *new_node;
+ 	struct hlist_head *bucket;
+@@ -289,8 +377,6 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
+ 	int err = 0;
+ 	u32 hash_idx;
+ 
+-	might_sleep();
+-
+ 	if (memcmp(dst, sdata->dev->dev_addr, ETH_ALEN) == 0)
+ 		/* never add ourselves as neighbours */
+ 		return -ENOTSUPP;
+@@ -299,11 +385,11 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
+ 		return -ENOTSUPP;
+ 
+ 	err = -ENOMEM;
+-	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_KERNEL);
++	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
+ 	if (!new_mpath)
+ 		goto err_path_alloc;
+ 
+-	new_node = kmalloc(sizeof(struct mpath_node), GFP_KERNEL);
++	new_node = kmalloc(sizeof(struct mpath_node), GFP_ATOMIC);
+ 	if (!new_node)
+ 		goto err_node_alloc;
+ 
+@@ -337,20 +423,8 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
+ 	spin_unlock(&mpp_paths->hashwlock[hash_idx]);
+ 	read_unlock(&pathtbl_resize_lock);
+ 	if (grow) {
+-		struct mesh_table *oldtbl, *newtbl;
+-
+-		write_lock(&pathtbl_resize_lock);
+-		oldtbl = mpp_paths;
+-		newtbl = mesh_table_grow(mpp_paths);
+-		if (!newtbl) {
+-			write_unlock(&pathtbl_resize_lock);
+-			return 0;
+-		}
+-		rcu_assign_pointer(mpp_paths, newtbl);
+-		write_unlock(&pathtbl_resize_lock);
+-
+-		synchronize_rcu();
+-		mesh_table_free(oldtbl, false);
++		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
++		ieee80211_queue_work(&local->hw, &ifmsh->work);
+ 	}
+ 	return 0;
+ 
 -- 
 1.5.4.3
 
