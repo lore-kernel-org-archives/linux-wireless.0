@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59675 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756665AbZHGOBK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 10:01:10 -0400
-Date: Fri, 7 Aug 2009 09:48:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: Frans Pop <elendil@planet.nl>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: ath5k - strange regulatory domain change
-Message-ID: <20090807134803.GA7545@tuxdriver.com>
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com> <200908071324.45269.elendil@planet.nl> <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com>
+Received: from bar.sig21.net ([80.81.252.164]:45175 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754109AbZHJMwl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 08:52:41 -0400
+Date: Mon, 10 Aug 2009 14:52:41 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.31-rc5 regression: ath5k broken after suspend-to-ram
+Message-ID: <20090810125241.GA6082@sig21.net>
+References: <20090807215155.GA17043@sig21.net>
+ <b6c5339f0908090906p3d29fdd2x8473dcc6df178167@mail.gmail.com>
+ <20090809170401.GB16332@sig21.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090809170401.GB16332@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 07, 2009 at 01:56:43PM +0100, Chris Clayton wrote:
-> Thanks Frans,
-> 
-> 2009/8/7 Frans Pop <elendil@planet.nl>:
-> > Chris Clayton wrote:
-> >> Because of some problems with my Belkin Wireless G card  (model
-> >> F5D7010) and the rt61pci driver, I've started to use a "no-name" card
-> >> that is supported by the ath5k driver.
-> >>
-> >> A problem is that I have come across is that for some reason the CN
-> >> regulatory domain is being set automatically. This doesn't happen with
-> >> the Belkin (rt61) card. I have the following line in
-> >> /etc/modprobe.d/modprobe.conf to set the regulatory domain to GB:
-> >>
-> >> options cfg80211 ieee80211_regdom=GB
-> >
-> > This issue has already been discussed extensively (after I reported it).
-> > Please see the following thread: http://lkml.org/lkml/2009/7/8/421. It
-> > contains a lot of information from the wireless maintainers.
-> >
-> 
-> To sum this up then (as I understand things):
-> 
-> 1. I am the system administrator (root);
-> 2. I am using a valid (albeit deprecated from 2.6.31) method to tell
-> the wireless infrastructure that I want the regulatory domain set to
-> GB;
-> 3. GB is a valid code; and
-> 4. the wireless infrastructure sets the regulatory domain to CN.
-> 5. in 2.6.30, the wireless infrastructure does what I (the root user)
-> tell it to do.
-> 
-> That's a regression in my book. Oh well! I do have the iw and crda
-> applications installed, so I've taken that route of setting the
-> regulatory domain to GB.
+On Sun, Aug 09, 2009 at 07:04:01PM +0200, Johannes Stezenbach wrote:
+> With the nl80211 driver everything works.
 
-Are you actually getting the wrong regulatory rules enforced?  Or are
-you merely bothered that it is reporting "CN" instead of "GB"?
+Although it might not be that important I though I should
+report the following observations when using
+wpa_supplicant with the nl80211 driver onn ath5k:
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1. wpa_supplicant complains about "Could not configure driver
+   to use managed mode" and "Failed to set interface wlan0 mode"
+   (but it works anyway). This is Debian sid wpasupplicant_0.6.9-3.
+   The error is from wpasupplicant-0.6.9/src/drivers/driver_nl80211.c
+   where is sends the NL80211_CMD_SET_INTERFACE msg.
+
+2. The first ifup after boot or ath5k module reload
+   (modprobe ath5k -r; modprobe ath5k) is much faster
+   than the second and subsequent ifup.  The first time
+   it takes around 7 secs until "wpa_cli status" reports
+   wpa_state=COMPLETED, the second time it takes around 25 secs.
+ 
+
+Thanks
+Johannes
