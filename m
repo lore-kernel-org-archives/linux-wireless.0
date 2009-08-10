@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:60569 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462AbZHOWGB convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate05.web.de ([217.72.192.243]:60051 "EHLO
+	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbZHJS4H convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2009 18:06:01 -0400
-Received: by ywh3 with SMTP id 3so3092608ywh.22
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2009 15:06:02 -0700 (PDT)
+	Mon, 10 Aug 2009 14:56:07 -0400
+Date: Mon, 10 Aug 2009 20:56:07 +0200
+Message-Id: <1758026153@web.de>
 MIME-Version: 1.0
-In-Reply-To: <69e28c910908150509i158bf2a6r33de5899cdc8bd13@mail.gmail.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	<1250281559-13041-11-git-send-email-lrodriguez@atheros.com>
-	<69e28c910908150509i158bf2a6r33de5899cdc8bd13@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 15 Aug 2009 15:05:42 -0700
-Message-ID: <43e72e890908151505s6cd9fea0p722de5a781a8ba8b@mail.gmail.com>
-Subject: Re: [PATCH v4 10/34] wireless: group Broadcom drivers on kconfig
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+From: Chunkeey@web.de
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Carpenter <error27@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2.6.31] ar9170: fix read & write outside array bounds
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/15 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Fri, Aug 14, 2009 at 10:25 PM, Luis R.
-> Rodriguez<lrodriguez@atheros.com> wrote:
->> This moves Broadcom wireless drivers into their own menu.
->> There are only 2 Broadcom specific drivers so we group
->> them into a menu which can expand. Although rndis_wlan
->> also supports Broadcom devices, RNDIS is a spec and other
->> vendors could technically implement solutions with it
->> as well so we keep that separate as users most likely
->> won't look for those devices under a Broadcom tag.
->>
->> Cc: Michael Buesch <mb@bu3sch.de>
->> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
->> Cc: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  drivers/net/wireless/Kconfig |   13 +++++++++++++
->>  1 files changed, 13 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
->> index c2e88dc..150565d 100644
->> --- a/drivers/net/wireless/Kconfig
->> +++ b/drivers/net/wireless/Kconfig
->> @@ -561,8 +561,21 @@ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
->>  endif # INTEL_80211
->>
->>  source "drivers/net/wireless/hostap/Kconfig"
->> +
->> +config BROADCOM_80211
->> +       bool "Broadcom"
->> +       depends on WLAN_80211
->> +       ---help---
->> +         This will enable the support for Broadcom wireless drivers. This
->> +         includes b43 driver, b43legacy driver and the rndis_wlan driver.
->
-> NAK. Again, rndis_wlan is Microsoft, not Broadcom.
+"John W. Linville" <linville@tuxdriver.com> wrote:
+> On Sun, Aug 09, 2009 at 02:24:09PM +0200, Christian Lamparter wrote:
+> > From: Dan Carpenter <error27@gmail.com>
+> > 
+> > queue == __AR9170_NUM_TXQ would cause a bug on the next line.
+> > 
+> > found by Smatch ( http://repo.or.cz/w/smatch.git ).
+> > 
+> > Cc: stable@kernel.org
+> > Reported-by: Dan Carpenter <error27@gmail.com>
+> > Signed-off-by: Dan Carpenter <error27@gmail.com>
+> > Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> > ---
+> > diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+> > index 4fc389a..ea8c941 100644
+> > --- a/drivers/net/wireless/ath/ar9170/main.c
+> > +++ b/drivers/net/wireless/ath/ar9170/main.c
+> > @@ -2458,13 +2458,14 @@ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
+> >  	int ret;
+> >  
+> >  	mutex_lock(&ar->mutex);
+> > -	if ((param) && !(queue > __AR9170_NUM_TXQ)) {
+> > +	if (queue < __AR9170_NUM_TXQ) {
+> >  		memcpy(&ar->edcf[ar9170_qos_hwmap[queue]],
+> >  		       param, sizeof(*param));
+> >  
+> >  		ret = ar9170_set_qos(ar);
+> > -	} else
+> > +	} else {
+> >  		ret = -EINVAL;
+> > +	}
+> >  
+> >  	mutex_unlock(&ar->mutex);
+> >  	return ret;
+> 
+> The p54 version of this patch used hw->queues instead of a constant.
+> Wouldn't that be better here?
+Depends...
 
-Yes, the patch does not group rndis with broadcom, please re-read the patch.
+Other drivers like ath9k/iwlwifi use a constant _check_ as well.
+Having constants is always a plus for AOT compilers.
 
-  Luis
+The reason why p54 does this differently and uses a variable
+here, is simply because  the number of queues depends on
+the firmware revision. Users - with the old, original windows
+driver firmwares - have experienced serve stability problems
+with QoS enabled.
+
+Regards,
+       Chr
+
+________________________________________________________________
+Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
+f�r nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
+
