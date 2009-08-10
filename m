@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:44906 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837AbZHXPSK convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.228]:20088 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbZHJO1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 11:18:10 -0400
-Received: by vws2 with SMTP id 2so1926423vws.4
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 08:18:11 -0700 (PDT)
+	Mon, 10 Aug 2009 10:27:42 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so1010616rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 07:27:43 -0700 (PDT)
+Message-ID: <4A802E5B.8040800@lwfinger.net>
+Date: Mon, 10 Aug 2009 09:27:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20090824143622.GC8998@tuxdriver.com>
-References: <20090824143622.GC8998@tuxdriver.com>
-Date: Mon, 24 Aug 2009 11:18:11 -0400
-Message-ID: <b6c5339f0908240818t21d6d12bk27b6ef10433bc4f0@mail.gmail.com>
-Subject: Re: [davem@davemloft.net: consider 2.6.31 a done deal...]
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
+To: Michael Buesch <mb@bu3sch.de>
+CC: linville@tuxdriver.com,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl818x: Add some documentation to the TX desc flags
+References: <200908091757.31010.mb@bu3sch.de>
+In-Reply-To: <200908091757.31010.mb@bu3sch.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 24, 2009 at 10:36 AM, John W.
-Linville<linville@tuxdriver.com> wrote:
-> FYI...obviously, this goes for wireless fixes for 2.6.31 as well...
->
+Michael Buesch wrote:
+> Add some TX desc flags docs.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
+> 
+> It's incomplete. Just the ones I could easily figure out by myself...
 
-Right-o, then I withdraw the request about that ath5k fix, we'll
-just plan to send it @stable.
+ack
 
->> At least that should be your mindset when you submit changes
->> at this point.  With the net-2.6 pull request I just sent to
->> Linus, I really don't want to see anything submitted for
->> net-2.6 unless it is EARTH SHATTERING.
+Thanks for the start. In a quick check, the one you didn't fill in
+(RTL818X_TX_DESC_FLAG_RX_UNDER) is not used and should be removed.
+I'll do that and add the RX desc flags.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Larry
+
+
