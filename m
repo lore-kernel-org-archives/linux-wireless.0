@@ -1,58 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45248 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755173AbZHMRaJ (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.26]:23121 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753526AbZHJKdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 13:30:09 -0400
-Date: Thu, 13 Aug 2009 13:28:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Valdis.Kletnieks@vt.edu
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [ipw3945-devel] mmotm0812 - something in linux-next killed
-	iwl-3945.c
-Message-ID: <20090813172819.GD2647@tuxdriver.com>
-References: <19728.1250182794@turing-police.cc.vt.edu>
+	Mon, 10 Aug 2009 06:33:13 -0400
+Message-ID: <4A7FF84C.7070708@gmail.com>
+Date: Mon, 10 Aug 2009 12:37:00 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19728.1250182794@turing-police.cc.vt.edu>
+To: Cyrill Gorcunov <gorcunov@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>, Daniel Mack <daniel@caiaq.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Libertas: Association request to the driver failed
+References: <20090807191156.GS19257@buzzloop.caiaq.de> <20090809102417.GH13639@buzzloop.caiaq.de> <4A7EAED8.9090900@gmail.com> <200908091310.56919.mb@bu3sch.de> <20090809191359.GG4805@lenovo>
+In-Reply-To: <20090809191359.GG4805@lenovo>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2009 at 12:59:54PM -0400, Valdis.Kletnieks@vt.edu wrote:
-> Build bombs out:
-> 
->   CC      drivers/net/wireless/iwlwifi/iwl-3945.o
-> drivers/net/wireless/iwlwifi/iwl-3945.c: In function 'iwl3945_pass_packet_to_mac80211':
-> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
-> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: (Each undeclared identifier is reported only once
-> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: for each function it appears in.)
-> make[1]: *** [drivers/net/wireless/iwlwifi/iwl-3945.o] Error 1
-> 
-> due to this in linux-next.patch:
-> 
-> index 46288e7..ae7f163 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> (skipping)
-> @@ -577,7 +577,10 @@ static void iwl3945_pass_packet_to_mac80211(struct iwl_priv
->  *priv,
->         if (ieee80211_is_data(hdr->frame_control))
->                 priv->rxtxpackets += len;
->  #endif
-> -       ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
-> +       iwl_update_stats(priv, false, hdr->frame_control, len);
-> +
-> +       memcpy(IEEE80211_SKB_RXCB(rxb->skb), stats, sizeof(*stats));
-> +       ieee80211_rx_irqsafe(priv->hw, rxb->skb);
->         rxb->skb = NULL;
-> 
-> Sorry, don't have a linux-next git tree, so no 'git blame' for what did it.
-> Hopefully somebody recognizes their handiwork... ;)
+Several arrays were read before checking whether the index was within
+bounds. ARRAY_SIZE() should be used to determine the size of arrays.
 
-I think this is the LEDS-related build failure, which already has a patch.
+rates->rates has an arraysize of 1, so calling get_common_rates()
+with a rates_size of MAX_RATES (14) was causing reads out of bounds.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+tmp_size can increment at most to MAX_RATES * ARRAY_SIZE(lbs_bg_rates),
+so that should be the number of elements of tmp[].
+
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+
+> | Is it a good idea to use dynamic stack arrays in the kernel?
+> | What about kmalloc for dynamic allocations?
+> | 
+> | -- 
+> | Greetings, Michael.
+> 
+> I saw one pattern in trace code (not sure if it's
+> still there) but personally don't like dynamic
+> stack arrays (though at moment the max value
+> being passed into routine is known maybe just
+> use MAX_RATES instead of (*rates_size)?). Hmm?
+
+Good point.
+
+> 	-- Cyrill
+
+Thanks,
+
+I think there was another problem in lbs_associate(),
+the memcpy already affected rates->rates.
+
+Also in get_common_rates() I think we can safely move the
+memset/memcpy, originally after label done, upwards.
+
+The patch below, if correct, is to be applied after the revert
+
+Roel
+
+diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+index b9b3741..ba0164a 100644
+--- a/drivers/net/wireless/libertas/assoc.c
++++ b/drivers/net/wireless/libertas/assoc.c
+@@ -1,6 +1,7 @@
+ /* Copyright (C) 2006, Red Hat, Inc. */
+ 
+ #include <linux/types.h>
++#include <linux/kernel.h>
+ #include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
+ #include <linux/if_arp.h>
+@@ -43,41 +44,41 @@ static int get_common_rates(struct lbs_private *priv,
+ 	u16 *rates_size)
+ {
+ 	u8 *card_rates = lbs_bg_rates;
+-	size_t num_card_rates = sizeof(lbs_bg_rates);
+-	int ret = 0, i, j;
+-	u8 tmp[30];
++	int i, j;
++	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
+ 	size_t tmp_size = 0;
+ 
+ 	/* For each rate in card_rates that exists in rate1, copy to tmp */
+-	for (i = 0; card_rates[i] && (i < num_card_rates); i++) {
+-		for (j = 0; rates[j] && (j < *rates_size); j++) {
++	for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
++		for (j = 0; j < *rates_size && rates[j]; j++) {
+ 			if (rates[j] == card_rates[i])
+ 				tmp[tmp_size++] = card_rates[i];
+ 		}
+ 	}
+ 
+ 	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
+-	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates, num_card_rates);
++	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
++			ARRAY_SIZE(lbs_bg_rates));
+ 	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+ 	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
+ 
++	memset(rates, 0, *rates_size);
++	*rates_size = min_t(u16, tmp_size, *rates_size);
++	memcpy(rates, tmp, *rates_size);
++
+ 	if (!priv->enablehwauto) {
+ 		for (i = 0; i < tmp_size; i++) {
+ 			if (tmp[i] == priv->cur_rate)
+-				goto done;
++				break;
++		}
++		if (i == tmp_size) {
++			lbs_pr_alert("Previously set fixed data rate %#x isn't "
++					"compatible with the network.\n",
++					priv->cur_rate);
++			return -1;
+ 		}
+-		lbs_pr_alert("Previously set fixed data rate %#x isn't "
+-		       "compatible with the network.\n", priv->cur_rate);
+-		ret = -1;
+-		goto done;
+ 	}
+-	ret = 0;
+-
+-done:
+-	memset(rates, 0, *rates_size);
+-	*rates_size = min_t(int, tmp_size, *rates_size);
+-	memcpy(rates, tmp, *rates_size);
+-	return ret;
++	return 0;
+ }
+ 
+ 
+@@ -321,8 +322,8 @@ static int lbs_associate(struct lbs_private *priv,
+ 
+ 	rates = (struct mrvl_ie_rates_param_set *) pos;
+ 	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
+-	memcpy(&rates->rates, &bss->rates, MAX_RATES);
+-	tmplen = MAX_RATES;
++	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
++	memcpy(&rates->rates, &bss->rates, tmplen);
+ 	if (get_common_rates(priv, rates->rates, &tmplen)) {
+ 		ret = -1;
+ 		goto done;
+@@ -598,7 +599,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
+ 
+ 	/* Copy Data rates from the rates recorded in scan response */
+ 	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
+-	ratesize = min_t(u16, sizeof(cmd.bss.rates), MAX_RATES);
++	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
+ 	memcpy(cmd.bss.rates, bss->rates, ratesize);
+ 	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
+ 		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
