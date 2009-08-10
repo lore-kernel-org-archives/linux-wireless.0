@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52202 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbZHBJdU (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.227]:33616 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145AbZHJT1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 05:33:20 -0400
-Subject: Re: Unsupported PHY on B43
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <efe7343f0908020226n4b693defv38546a6f8aa1cfd9@mail.gmail.com>
-References: <efe7343f0908020214m6d8b2518n51d4264943ce273a@mail.gmail.com>
-	 <1249204732.2007.49.camel@johannes.local>
-	 <efe7343f0908020226n4b693defv38546a6f8aa1cfd9@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-V+35PhHXVUO30qzsBRi8"
-Date: Sun, 02 Aug 2009 11:33:17 +0200
-Message-Id: <1249205597.2007.50.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 10 Aug 2009 15:27:18 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so1077455rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:19 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: andrey@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Subject: Mesh fixes and improvements [v2]
+Date: Mon, 10 Aug 2009 12:15:45 -0700
+Message-Id: <1249931752-18127-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <20090810175225.GF2733@tuxdriver.com>
+References: <20090810175225.GF2733@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[v2]
 
---=-V+35PhHXVUO30qzsBRi8
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Withdraw "Simulate-transmission-losses-on-plinks-to-...".
+Add detail to changelogs and Kconfig.
+Changed queue_work -> ieee80211_queue_work
 
-On Sun, 2009-08-02 at 10:26 +0100, Luis Correia wrote:
+[v1]
 
-> > This is an 11n phy.
->=20
-> Great, an 11n device with only two antennas (they are usually three).
+This series includes some fixes, testing aids and improvements to the mesh
+stack.  It is important to note that the patch
+"Use-3-address-format-for-mesh-broadcast-frames" breaks compatibility with
+previous versions.  This is unavoidable and will keep happening as new versions
+of the 802.11s drafts are produced.
 
-Oh, it depends on the configuration -- maybe they used a cheaper device
-with fewer chains.
+Also, I'm not sure if "Simulate-transmission-losses-on-plinks-to-..." should be
+merged upstream, but we find it really useful to test mesh configurations.
+Please comment if you have different opinions on its adequacy or
+implementation.
 
-> >> I'm available to test drivers, patches, git kernels, the whole lot.
-> >
-> > There's nothing available beyond what you have.
->=20
-> Bummer, I guess I'll have to wait then.
+Cheers,
 
-Don't hold your breath -- nobody's working on it. I also really want it
-working, but since nobody seems even interested in writing the driver,
-we've halted the reverse engineering effort.
+Javier
 
-johannes
 
---=-V+35PhHXVUO30qzsBRi8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKdV1aAAoJEODzc/N7+QmagV0P/RN8t2AhB9bNCM6RF/lWIHQU
-/rWmxa3DdXSdHfct4E8CReuIhdlrAf7eOMhcAueGbLHTOjRKBBaF/k5AzUqlNZud
-a64JULBcFuFnkQEq1aAd3Z3L3ORuq1A+2oq/4HbvxrkVX5tbhjA+U3zSyD+YLDfp
-ydqWvUbIsSC8RQb4bmdFOlNrtAKkwJ2P9Bgb2rYhk79twe6SERe14snjFPar+Wh/
-rGEjRGOGJAlsSPRb7lJvIePgeLy6bgWEqg1NzO9noSURZuqsHrIpX95r0h4yezts
-ZGmU74tiD7rdwJUMcndkASeCW1P9HE3YQ0KjLMZKL/X773NCD8ULxnieKysQg87x
-jvaoAwTUr6yStltTeUVqg6HFEgIDBQ2fAFwKIIzvaqgJLWzLFca/d9M13oVId59t
-mvK9uTPuHzgtPclXvxec+KcHrPrPDdj7Mat6Hl3Uanxp9xL5yl1noiFX8zko46aF
-M8qyvt1tk/tIVxf5GfrUR9MjmEg+NI8B770V/iEmGKS4UrCkTC9j2q3SMT0q3s0R
-+ZZOVou/3xPhEkimfAgflPqM95Y8Sie7lOnTdLtVU+gUt+FWfQmROn/86O/jei6J
-GU3WATwfhUocORnWPlbXrnS6MUUS3IzAaXNaQB+nilW6jhAtDvQsOGJYSQox2ELb
-8ZhK2yJWf1U0ewgSlBdq
-=wDIa
------END PGP SIGNATURE-----
-
---=-V+35PhHXVUO30qzsBRi8--
+ include/linux/nl80211.h         |    4 +
+ include/net/cfg80211.h          |    4 +
+ net/mac80211/Kconfig            |    8 +-
+ net/mac80211/cfg.c              |    6 ++
+ net/mac80211/ieee80211_i.h      |    2 +-
+ net/mac80211/mesh.c             |  136 ++++++++++++++++++------------------
+ net/mac80211/mesh.h             |   29 +++++++-
+ net/mac80211/mesh_hwmp.c        |    9 +--
+ net/mac80211/mesh_pathtbl.c     |  146 +++++++++++++++++++++++++++++----------
+ net/mac80211/mesh_plink.c       |    6 ++
+ net/mac80211/rc80211_minstrel.c |   16 ++++-
+ net/mac80211/rx.c               |   45 ++++++++-----
+ net/mac80211/sta_info.h         |    1 +
+ net/mac80211/tx.c               |  118 +++++++++++++++++++++++---------
+ net/wireless/nl80211.c          |    9 +++
+ net/wireless/util.c             |   16 +++-
+ 16 files changed, 384 insertions(+), 171 deletions(-)
 
