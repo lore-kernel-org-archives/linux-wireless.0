@@ -1,181 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f228.google.com ([209.85.220.228]:60895 "EHLO
-	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbZHMP1c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 11:27:32 -0400
-Received: by fxm28 with SMTP id 28so658966fxm.17
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 08:27:31 -0700 (PDT)
-Message-ID: <4A8430E3.5020703@gmail.com>
-Date: Thu, 13 Aug 2009 17:27:31 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:57965 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752377AbZHJJCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 10 Aug 2009 05:02:40 -0400
+Date: Mon, 10 Aug 2009 11:04:49 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: Set WEP ciphers
+Message-ID: <20090810090447.GA5421@sortiz.org>
+References: <20090806190439.GA22647@sortiz.org> <1249680982.26088.48.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] b43: LP-PHY: Initialize TX power control
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1249680982.26088.48.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HW TX power control init still needs work.
-The SW init is complete according to the specs.
+Hi Dan,
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-v3: WARN_ON() setting TSSI mux mode to Ext, per Larry's suggestion.
-v2: Address Michael's comments, and update for the dummy transmission changes.
+On Fri, Aug 07, 2009 at 04:36:22PM -0500, Dan Williams wrote:
+> On Thu, 2009-08-06 at 21:04 +0200, Samuel Ortiz wrote:
+> > With iwconfig there is no way to properly set the ciphers when trying to
+> > connect to a WEP SSID. Although mac80211 based drivers dont need it, several
+> > fullmac drivers do.
+> > This patch basically sets the WEP ciphers whenever they're not set at all.
+> 
+> If you're talking about Dynamic WEP, that's what wpa_supplicant is for,
+> it will handle setting the ciphers through SIOCSIWENCODEEXT.
+No, I'm not talking about dynamic WEP, but rather about "iwconfig wlan0 key
+your_static_key".
 
-This depends on both the rev0/1 RC calibration patch and the
-updated V4 dummy transmission patch I submitted earlier.
 
-Larry, please review the SPEC TODO/SPEC FIXME comments!
+> If you're talking about static WEP, then the ciphers are determined by
+> the WEP keys that have been set with iwconfig, and you determine
+> WEP40/WEP104 based on the length of the current WEP TX index.
+In theory, yes, but our driver's UMAC wants to get the key cipher before
+having actually set the keys, and with the latest key handling rework we get
+our connect() handler called before keys are actually set.
 
- drivers/net/wireless/b43/phy_lp.c |  105 ++++++++++++++++++++++++++++++++++---
- drivers/net/wireless/b43/phy_lp.h |    5 ++
- 2 files changed, 103 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 2441a8d..b4e51f0 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1257,18 +1257,109 @@ static void lpphy_calibration(struct b43_wldev *dev)
- 	b43_mac_enable(dev);
- }
- 
-+static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum tssi_mux_mode mode)
-+{
-+	if (mode != TSSI_MUX_EXT) {
-+		b43_radio_set(dev, B2063_PA_SP1, 0x2);
-+		b43_phy_set(dev, B43_PHY_OFDM(0xF3), 0x1000);
-+		b43_radio_write(dev, B2063_PA_CTL10, 0x51);
-+		if (mode == TSSI_MUX_POSTPA) {
-+			b43_radio_mask(dev, B2063_PA_SP1, 0xFFFE);
-+			b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFC7);
-+		} else {
-+			b43_radio_maskset(dev, B2063_PA_SP1, 0xFFFE, 0x1);
-+			b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVRVAL,
-+					0xFFC7, 0x20);
-+		}
-+	} else {
-+		B43_WARN_ON(1);
-+	}
-+}
-+
-+static void lpphy_tx_pctl_init_hw(struct b43_wldev *dev)
-+{
-+	u16 tmp;
-+	int i;
-+
-+	//SPEC TODO Call LP PHY Clear TX Power offsets
-+	for (i = 0; i < 64; i++) {
-+		if (dev->phy.rev >= 2)
-+			b43_lptab_write(dev, B43_LPTAB32(7, i + 1), i);
-+		else
-+			b43_lptab_write(dev, B43_LPTAB32(10, i + 1), i);
-+	}
-+
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xFF00, 0xFF);
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0x8FFF, 0x5000);
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI, 0xFFC0, 0x1F);
-+	if (dev->phy.rev < 2) {
-+		b43_phy_mask(dev, B43_LPPHY_LP_PHY_CTL, 0xEFFF);
-+		b43_phy_maskset(dev, B43_LPPHY_LP_PHY_CTL, 0xDFFF, 0x2000);
-+	} else {
-+		b43_phy_mask(dev, B43_PHY_OFDM(0x103), 0xFFFE);
-+		b43_phy_maskset(dev, B43_PHY_OFDM(0x103), 0xFFFB, 0x4);
-+		b43_phy_maskset(dev, B43_PHY_OFDM(0x103), 0xFFEF, 0x10);
-+		b43_radio_maskset(dev, B2063_IQ_CALIB_CTL2, 0xF3, 0x1);
-+		lpphy_set_tssi_mux(dev, TSSI_MUX_POSTPA);
-+	}
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI, 0x7FFF, 0x8000);
-+	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xFF);
-+	b43_phy_write(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xA);
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
-+			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
-+			B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
-+	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xF8FF);
-+	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
-+			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
-+			B43_LPPHY_TX_PWR_CTL_CMD_MODE_SW);
-+
-+	if (dev->phy.rev < 2) {
-+		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_0, 0xEFFF, 0x1000);
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xEFFF);
-+	} else {
-+		lpphy_set_tx_power_by_index(dev, 0x7F);
-+	}
-+
-+	b43_dummy_transmission(dev, true, true);
-+
-+	tmp = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT);
-+	if (tmp & 0x8000) {
-+		b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI,
-+				0xFFC0, (tmp & 0xFF) - 32);
-+	}
-+
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xEFFF);
-+
-+	// (SPEC?) TODO Set "Target TX frequency" variable to 0
-+	// SPEC FIXME "Set BB Multiplier to 0xE000" impossible - bb_mult is u8!
-+}
-+
-+static void lpphy_tx_pctl_init_sw(struct b43_wldev *dev)
-+{
-+	struct lpphy_tx_gains gains;
-+
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		gains.gm = 4;
-+		gains.pad = 12;
-+		gains.pga = 12;
-+		gains.dac = 0;
-+	} else {
-+		gains.gm = 7;
-+		gains.pad = 14;
-+		gains.pga = 15;
-+		gains.dac = 0;
-+	}
-+	lpphy_set_tx_gains(dev, gains);
-+	lpphy_set_bb_mult(dev, 150);
-+}
-+
- /* Initialize TX power control */
- static void lpphy_tx_pctl_init(struct b43_wldev *dev)
- {
- 	if (0/*FIXME HWPCTL capable */) {
--		//TODO
-+		lpphy_tx_pctl_init_hw(dev);
- 	} else { /* This device is only software TX power control capable. */
--		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--			//TODO
--		} else {
--			//TODO
--		}
--		//TODO set BB multiplier to 0x0096
-+		lpphy_tx_pctl_init_sw(dev);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
-index 0461d5b..4eab760 100644
---- a/drivers/net/wireless/b43/phy_lp.h
-+++ b/drivers/net/wireless/b43/phy_lp.h
-@@ -886,6 +886,11 @@ struct b43_phy_lp {
- 	u16 dig_flt_state[9];
- };
- 
-+enum tssi_mux_mode {
-+	TSSI_MUX_PREPA,
-+	TSSI_MUX_POSTPA,
-+	TSSI_MUX_EXT,
-+};
- 
- struct b43_phy_operations;
- extern const struct b43_phy_operations b43_phyops_lp;
+> You should *not* be trying to do Dynamic WEP via iwconfig (which it
+> seems is what you're doing below?)
+No, that's not what we're trying to do.
+
+Cheers,
+Samuel.
+
+
+> Dan
+> 
+> > Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+> > ---
+> >  net/wireless/sme.c |   18 ++++++++++++++++--
+> >  1 files changed, 16 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> > index 8a7dcbf..b78a111 100644
+> > --- a/net/wireless/sme.c
+> > +++ b/net/wireless/sme.c
+> > @@ -638,14 +638,28 @@ int __cfg80211_connect(struct cfg80211_registered_device *rdev,
+> >  
+> >  	if (connkeys && connkeys->def >= 0) {
+> >  		int idx;
+> > +		u32 cipher;
+> >  
+> >  		idx = connkeys->def;
+> > +		cipher = connkeys->params[idx].cipher;
+> >  		/* If given a WEP key we may need it for shared key auth */
+> > -		if (connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP40 ||
+> > -		    connkeys->params[idx].cipher == WLAN_CIPHER_SUITE_WEP104) {
+> > +		if (cipher == WLAN_CIPHER_SUITE_WEP40 ||
+> > +		    cipher == WLAN_CIPHER_SUITE_WEP104) {
+> >  			connect->key_idx = idx;
+> >  			connect->key = connkeys->params[idx].key;
+> >  			connect->key_len = connkeys->params[idx].key_len;
+> > +
+> > +			/*
+> > +			 * If ciphers are not set (e.g. when going through
+> > +			 * iwconfig), we have to set them appropriately here.
+> > +			 */
+> > +			if (connect->crypto.cipher_group == 0)
+> > +				connect->crypto.cipher_group = cipher;
+> > +
+> > +			if (connect->crypto.n_ciphers_pairwise == 0) {
+> > +				connect->crypto.n_ciphers_pairwise = 1;
+> > +				connect->crypto.ciphers_pairwise[0] = cipher;
+> > +			}					
+> >  		}
+> >  	}
+> >  
+> > -- 
+> > 1.6.3.1
+> > 
+> 
+
 -- 
-1.6.2.4
-
-
-
+Intel Open Source Technology Centre
+http://oss.intel.com/
