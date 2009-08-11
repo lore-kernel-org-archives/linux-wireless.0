@@ -1,97 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.211.193]:43375 "EHLO
-	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbZHMCDN convert rfc822-to-8bit (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:41026 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755374AbZHKT5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 22:03:13 -0400
-Received: by ywh31 with SMTP id 31so641394ywh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 19:03:14 -0700 (PDT)
+	Tue, 11 Aug 2009 15:57:17 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH v2] usbnet: add rx queue pausing
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com,
+	David Brownell <dbrownell@users.sourceforge.net>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Tue, 11 Aug 2009 22:57:16 +0300
+Message-ID: <20090811195716.8447.56369.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <4A829D90.2080208@tls-tautenburg.de>
-References: <4A829D90.2080208@tls-tautenburg.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 12 Aug 2009 19:02:54 -0700
-Message-ID: <43e72e890908121902g11b136e8y3f1cd30e6c607c08@mail.gmail.com>
-Subject: Re: compile error: compat-wireless-2009-08-12
-To: Bringfried Stecklum <stecklum@tls-tautenburg.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2009 at 3:46 AM, Bringfried
-Stecklum<stecklum@tls-tautenburg.de> wrote:
-> When trying to compile the latest compat-wireless package on an Ubuntu 8.10
-> 64bit system running linux kernel 2.6.27-12 I get the following error
->
-> stecklum@extragalactix:~/System/src/compat-wireless-2009-08-12$ make
-> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> make -C /lib/modules/2.6.27-12-mygeneric/build
-> M=/home/stecklum/System/src/compat-wireless-2009-08-12 modules
-> make[1]: Entering directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
-> ...
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/main.c:
-> In function ‘b43_request_firmware’:
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/main.c:2103:
-> warning: format not a string literal and no format arguments
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/tables.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_common.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_g.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_a.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/sysfs.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/xmit.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/lo.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/wa.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/dma.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pio.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/rfkill.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/leds.o
->  CC [M]
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.o
-> In file included from
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:30:
-> include/pcmcia/cistpl.h:610:1: warning: "pcmcia_parse_tuple" redefined
-> In file included from
-> /home/stecklum/System/src/compat-wireless-2009-08-12/include/net/compat.h:19,
->                 from <command-line>:0:
-> /home/stecklum/System/src/compat-wireless-2009-08-12/include/net/compat-2.6.28.h:32:1:
-> warning: this is the location of the previous definition
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91:41:
-> error: macro "pcmcia_parse_tuple" requires 3 arguments, but only 2 given
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:
-> In function ‘b43_pcmcia_probe’:
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91:
-> error: ‘pcmcia_parse_tuple’ undeclared (first use in this function)
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91:
-> error: (Each undeclared identifier is reported only once
-> /home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91:
-> error: for each function it appears in.)
-> make[4]: ***
-> [/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.o]
-> Error 1
-> make[3]: ***
-> [/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43]
-> Error 2
-> make[2]: ***
-> [/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless]
-> Error 2
-> make[1]: *** [_module_/home/stecklum/System/src/compat-wireless-2009-08-12]
-> Error 2
-> make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
-> make: *** [modules] Error 2
+Add rx queue pausing to usbnet. This is needed by rndis_wlan so that it can
+control rx queue and prevent received packets from being send forward before
+rndis_wlan receives and handles 'media connect'-indication. Without this
+establishing WPA connections is hard and fail often.
 
-Try today's release.
+[v2] - removed unneeded use of skb_clone
 
-  Luis
+Cc: David Brownell <dbrownell@users.sourceforge.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+
+ drivers/net/usb/usbnet.c          |   44 ++++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/rndis_wlan.c |   13 ++++++++++-
+ include/linux/usb/usbnet.h        |    6 +++++
+ 3 files changed, 61 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index af1fe46..7d471fc 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -233,6 +233,11 @@ void usbnet_skb_return (struct usbnet *dev, struct sk_buff *skb)
+ {
+ 	int	status;
+ 
++	if (test_bit(EVENT_RX_PAUSED, &dev->flags)) {
++		skb_queue_tail(&dev->rxq_pause, skb);
++		return;
++	}
++
+ 	skb->protocol = eth_type_trans (skb, dev->net);
+ 	dev->net->stats.rx_packets++;
+ 	dev->net->stats.rx_bytes += skb->len;
+@@ -526,6 +531,41 @@ static void intr_complete (struct urb *urb)
+ }
+ 
+ /*-------------------------------------------------------------------------*/
++void usbnet_pause_rx(struct usbnet *dev)
++{
++	set_bit(EVENT_RX_PAUSED, &dev->flags);
++
++	if (netif_msg_rx_status(dev))
++		devdbg(dev, "paused rx queue enabled");
++}
++EXPORT_SYMBOL_GPL(usbnet_pause_rx);
++
++void usbnet_resume_rx(struct usbnet *dev)
++{
++	struct sk_buff *skb;
++	int num = 0;
++
++	clear_bit(EVENT_RX_PAUSED, &dev->flags);
++
++	while ((skb = skb_dequeue(&dev->rxq_pause)) != NULL) {
++		usbnet_skb_return(dev, skb);
++		num++;
++	}
++
++	tasklet_schedule(&dev->bh);
++
++	if (netif_msg_rx_status(dev))
++		devdbg(dev, "paused rx queue disabled, %d skbs requeued", num);
++}
++EXPORT_SYMBOL_GPL(usbnet_resume_rx);
++
++void usbnet_purge_paused_rxq(struct usbnet *dev)
++{
++	skb_queue_purge(&dev->rxq_pause);
++}
++EXPORT_SYMBOL_GPL(usbnet_purge_paused_rxq);
++
++/*-------------------------------------------------------------------------*/
+ 
+ // unlink pending rx/tx; completion handlers do all other cleanup
+ 
+@@ -623,6 +663,8 @@ int usbnet_stop (struct net_device *net)
+ 
+ 	usb_kill_urb(dev->interrupt);
+ 
++	usbnet_purge_paused_rxq(dev);
++
+ 	/* deferred work (task, timer, softirq) must also stop.
+ 	 * can't flush_scheduled_work() until we drop rtnl (later),
+ 	 * else workers could deadlock; so make workers a NOP.
+@@ -1113,7 +1155,6 @@ static void usbnet_bh (unsigned long param)
+ }
+ 
+ 
+-
+ /*-------------------------------------------------------------------------
+  *
+  * USB Device Driver support
+@@ -1210,6 +1251,7 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+ 	skb_queue_head_init (&dev->rxq);
+ 	skb_queue_head_init (&dev->txq);
+ 	skb_queue_head_init (&dev->done);
++	skb_queue_head_init(&dev->rxq_pause);
+ 	dev->bh.func = usbnet_bh;
+ 	dev->bh.data = (unsigned long) dev;
+ 	INIT_WORK (&dev->kevent, kevent);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 828dc18..d42692d 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1764,8 +1764,15 @@ static int rndis_iw_set_essid(struct net_device *dev,
+ 
+ 	if (!wrqu->essid.flags || length == 0)
+ 		return disassociate(usbdev, 1);
+-	else
++	else {
++		/* Pause and purge rx queue, so we don't pass packets before
++		 * 'media connect'-indication.
++		 */
++		usbnet_pause_rx(usbdev);
++		usbnet_purge_paused_rxq(usbdev);
++
+ 		return set_essid(usbdev, &ssid);
++	}
+ }
+ 
+ 
+@@ -2328,6 +2335,8 @@ get_bssid:
+ 			memcpy(evt.ap_addr.sa_data, bssid, ETH_ALEN);
+ 			wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
+ 		}
++
++		usbnet_resume_rx(usbdev);
+ 	}
+ 
+ 	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending)) {
+@@ -2541,6 +2550,8 @@ static void rndis_wlan_indication(struct usbnet *usbdev, void *ind, int buflen)
+ 
+ 	switch (msg->status) {
+ 	case RNDIS_STATUS_MEDIA_CONNECT:
++		usbnet_pause_rx(usbdev);
++
+ 		devinfo(usbdev, "media connect");
+ 
+ 		/* queue work to avoid recursive calls into rndis_command */
+diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
+index de8b4b1..0951425 100644
+--- a/include/linux/usb/usbnet.h
++++ b/include/linux/usb/usbnet.h
+@@ -53,6 +53,7 @@ struct usbnet {
+ 	struct sk_buff_head	rxq;
+ 	struct sk_buff_head	txq;
+ 	struct sk_buff_head	done;
++	struct sk_buff_head	rxq_pause;
+ 	struct urb		*interrupt;
+ 	struct tasklet_struct	bh;
+ 
+@@ -63,6 +64,7 @@ struct usbnet {
+ #		define EVENT_RX_MEMORY	2
+ #		define EVENT_STS_SPLIT	3
+ #		define EVENT_LINK_RESET	4
++#		define EVENT_RX_PAUSED	5
+ };
+ 
+ static inline struct usb_driver *driver_of(struct usb_interface *intf)
+@@ -190,6 +192,10 @@ extern void usbnet_defer_kevent (struct usbnet *, int);
+ extern void usbnet_skb_return (struct usbnet *, struct sk_buff *);
+ extern void usbnet_unlink_rx_urbs(struct usbnet *);
+ 
++extern void usbnet_pause_rx(struct usbnet *);
++extern void usbnet_resume_rx(struct usbnet *);
++extern void usbnet_purge_paused_rxq(struct usbnet *);
++
+ extern int usbnet_get_settings (struct net_device *net, struct ethtool_cmd *cmd);
+ extern int usbnet_set_settings (struct net_device *net, struct ethtool_cmd *cmd);
+ extern u32 usbnet_get_link (struct net_device *net);
+
