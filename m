@@ -1,61 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:47406 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754931AbZHCT65 (ORCPT
+Received: from acsinet11.oracle.com ([141.146.126.233]:26197 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755214AbZHKSqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:58:57 -0400
-Date: Mon, 3 Aug 2009 21:58:57 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: nico@cam.org
-Subject: [PATCH 4/5] mwl8k: prevent crash in ->configure_filter() if no interface was added
-Message-ID: <20090803195857.GK18639@mail.wantstofly.org>
+	Tue, 11 Aug 2009 14:46:32 -0400
+Date: Tue, 11 Aug 2009 11:45:18 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: ext Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1271: fix compiler warnings on 64 bit archs
+Message-Id: <20090811114518.d45d4006.randy.dunlap@oracle.com>
+In-Reply-To: <4A81BB47.2020607@nokia.com>
+References: <1249981107-21746-1-git-send-email-luciano.coelho@nokia.com>
+	<20090811200746.cde6aed9.sfr@canb.auug.org.au>
+	<4A81BB47.2020607@nokia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
-Acked-by: Nicolas Pitre <nico@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+On Tue, 11 Aug 2009 21:41:11 +0300 Luciano Coelho wrote:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a92752e..4890f8f 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -261,7 +261,7 @@ struct mwl8k_vif {
- 	 */
- };
- 
--#define MWL8K_VIF(_vif) (struct mwl8k_vif *)(&((_vif)->drv_priv))
-+#define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
- 
- static const struct ieee80211_channel mwl8k_channels[] = {
- 	{ .center_freq = 2412, .hw_value = 1, },
-@@ -3228,15 +3228,19 @@ static int mwl8k_configure_filter_wt(struct work_struct *wt)
- 	struct dev_addr_list *mclist = worker->mclist;
- 
- 	struct mwl8k_priv *priv = hw->priv;
--	struct mwl8k_vif *mv_vif;
- 	int rc = 0;
- 
- 	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
- 		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
- 			rc = mwl8k_cmd_set_pre_scan(hw);
- 		else {
--			mv_vif = MWL8K_VIF(priv->vif);
--			rc = mwl8k_cmd_set_post_scan(hw, mv_vif->bssid);
-+			u8 *bssid;
-+
-+			bssid = "\x00\x00\x00\x00\x00\x00";
-+			if (priv->vif != NULL)
-+				bssid = MWL8K_VIF(priv->vif)->bssid;
-+
-+			rc = mwl8k_cmd_set_post_scan(hw, bssid);
- 		}
- 	}
- 
--- 
-1.5.6.4
+> ext Stephen Rothwell wrote:
+> > Hi Luciano,
+> >
+> > On Tue, 11 Aug 2009 11:58:27 +0300 Luciano Coelho <luciano.coelho@nokia.com> wrote:
+> >   
+> >> +++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+> >> @@ -100,8 +100,8 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+> >>  
+> >>  	wl1271_debug(DEBUG_BOOT, "starting firmware upload");
+> >>  
+> >> -	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d", fw_data_len,
+> >> -		CHUNK_SIZE);
+> >> +	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d",
+> >> +		     (u32) fw_data_len, CHUNK_SIZE);
+> >>     
+> >
+> > fw_data_len is a size_t and so should be printed with %zd.
+> >
+> >   
+> >> @@ -148,7 +148,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+> >>  	addr = dest + chunk_num * CHUNK_SIZE;
+> >>  	p = buf + chunk_num * CHUNK_SIZE;
+> >>  	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%d B) 0x%p to 0x%x",
+> >> -		     fw_data_len % CHUNK_SIZE, p, addr);
+> >> +		     (u32) fw_data_len % CHUNK_SIZE, p, addr);
+> >>     
+> >
+> > ditto.
+> >   
+> 
+> Thanks! I didn't know about the z length modifier for printf (everyday 
+> learning something new!), I should have checked the manpage.  I'll fix 
+> this and send v2 of my patch.
+
+man page is fine, but you can also check (in the kernel source tree)
+Documentation/printk-formats.txt
+
+
+---
+~Randy
+LPC 2009, Sept. 23-25, Portland, Oregon
+http://linuxplumbersconf.org/2009/
