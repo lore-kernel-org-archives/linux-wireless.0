@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56595 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753422AbZH3Pzw convert rfc822-to-8bit (ORCPT
+Received: from rtitmf2.realtek.com ([60.250.210.236]:4820 "EHLO
+	mf2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbZHKL7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 11:55:52 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v2] b43: LP-PHY: Begin implementing calibration & software RFKILL support
-Date: Sun, 30 Aug 2009 17:55:40 +0200
-Cc: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A99C4BB.7080806@gmail.com> <200908301228.16845.mb@bu3sch.de> <4A9A965F.8020200@lwfinger.net>
-In-Reply-To: <4A9A965F.8020200@lwfinger.net>
+	Tue, 11 Aug 2009 07:59:32 -0400
+From: David Woo <xinhua_wu@realsil.com.cn>
+To: <javier@cozybit.com>
+CC: <linux-wireless@vger.kernel.org>, <andrey@cozybit.com>,
+	<johannes@sipsolutions.net>, <linville@tuxdriver.com>,
+	<devel@lists.open80211s.org>
+Subject: diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+Date: Tue, 11 Aug 2009 18:22:25 +0800
+Message-ID: <1249986145-6531-1-git-send-email-xinhua_wu@realsil.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908301755.40557.mb@bu3sch.de>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 30 August 2009 17:10:23 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Sunday 30 August 2009 02:15:55 Gábor Stefanik wrote:
-> >>  static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-> >>  {
-> >>  	struct b43_phy_lp *lpphy = dev->phy.lp;
-> >> @@ -1357,28 +1488,440 @@ static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-> >>  		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
-> >>  				    saved_tab_size, saved_tab);
-> >>  	}
-> >> +	b43_put_phy_into_reset(dev);
-> > 
-> > Are you sure you really want this?
-> > This function completely disables the PHY on the backplane and keeps the physical
-> > PHY reset pin asserted (even after return from the function).
-> > So the PHY will physically be powered down from this point on. The following
-> > PHY accesses could even hang the machine, because the PHY won't respond to
-> > register accesses anymore.
-> > 
-> > We currently only use this function on A/G Multi-PHY devices to permanently
-> > hard-disable the PHY that's not used.
-> 
-> The PHY reset routine in
-> http://bcm-v4.sipsolutions.net/802.11/PHY/Reset, which I just updated
-> for the latest N PHY changes, appears to be a different routine than
-> b43_put_phy_into_reset(). The names are confusing.
-
-b43_put_phy_into_reset() is opencoded in the specifications in various init
-routines. There's no separate specs page for that function.
-But I think the code is straightforward and easy to understand.
-
--- 
-Greetings, Michael.
+ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+-				    u8 *preq_elem, u32 metric)
+-{
++				    u8 *preq_elem, u32 metric) {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_path *mpath;
+ 	u8 *dst_addr, *orig_addr;
+@@ -431,7 +430,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			if ((!(mpath->flags & MESH_PATH_DSN_VALID)) ||
+ 					DSN_LT(mpath->dsn, dst_dsn)) {
+ 				mpath->dsn = dst_dsn;
+-				mpath->flags |= MESH_PATH_DSN_VALID;
++				mpath->flags &= MESH_PATH_DSN_VALID;
+ 			} else if ((!(dst_flags & MP_F_DO)) &&
+ 					(mpath->flags & MESH_PATH_ACTIVE)) {
+ 				reply = true;
+@@ -448,15 +447,14 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (reply) {
+ 		lifetime = PREQ_IE_LIFETIME(preq_elem);
+-		ttl = PREQ_IE_TTL(preq_elem);
+-		if (ttl != 0) {
+-			ttl = ifmsh->mshcfg.dot11MeshTTL;
++		ttl = ifmsh->mshcfg.dot11MeshTTL;
++		if (ttl != 0)
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, dst_addr,
+ 				cpu_to_le32(dst_dsn), 0, orig_addr,
+ 				cpu_to_le32(orig_dsn), mgmt->sa, 0, ttl,
+ 				cpu_to_le32(lifetime), cpu_to_le32(metric),
+ 				0, sdata);
+-		} else
++		else
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
+ 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ffcbad7..cb14253 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -409,7 +409,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+ 	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
+ 		baseaddr += 4;
+-		baselen += 4;
++		baselen -= 4;
+ 	}
+ 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
+ 	if (!elems.peer_link) {
