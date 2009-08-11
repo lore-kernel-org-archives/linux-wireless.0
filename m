@@ -1,57 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:57545 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751448AbZHVVDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 17:03:40 -0400
-Message-ID: <4A905D2B.9090405@gmx.de>
-Date: Sat, 22 Aug 2009 23:03:39 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:33435 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883AbZHKTrC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Aug 2009 15:47:02 -0400
+Received: by fxm28 with SMTP id 28so1742176fxm.17
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 12:47:02 -0700 (PDT)
+Message-ID: <4A81CAB4.1090002@gmail.com>
+Date: Tue, 11 Aug 2009 21:47:00 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@web.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFT] ar9170: use eeprom's frequency calibration values
-References: <200908212252.41053.chunkeey@web.de> <4A8F2F71.1010100@gmx.de> <200908220151.19792.chunkeey@web.de>
-In-Reply-To: <200908220151.19792.chunkeey@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Implement reading band SPROM
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2009 01:51 AM, Christian Lamparter wrote:
-> On Saturday 22 August 2009 01:36:17 Joerg Albert wrote:
->> On 08/21/2009 10:52 PM, Christian Lamparter wrote:
->>> This patch adds some more bits from the vendor driver, which
->>> are supposed to help users with the one-stage/openfw firmwares.
->> The otus driver sets phy registers 672-703 only for the one-stage firmware -
->> hal/hpmain.c, line 3445:
->>
->>         #ifndef ZM_OTUS_LINUX_PHASE_2
->>         reg_write(regAddr + i, val);  /* CR672 */
->>         #endif
->>
->> Are you sure it doesn't hurt with the two-stage firmware?
-> no idea, that's why I ask requested input, instead of posting a patch +
-> sob right away.
-> 
-> so far, I haven't heard of or experienced any regressions or anomalies.
-> Do you already have comments or complains? :)
+Some of the new variables in b43_phy_lp appear to be dead code in
+the vendor driver; they will be removed if they remain unused when
+LP-PHY implementation is finished.
 
-Your patch works fine here with a WNDA3100, using the two-stage firmware, against
-a 802.11g AP. After "iwconfig wlan1 rate 54M" I get approx. 22 MBit/s throughput
-with iperf, same as without the patch.
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+Changes from RFC:
+-Fixed << vs. >>= confusion.
+-Read RX power offset which I missed in the RFC.
+-Corrected the names of the tx_max_rate vars in b43_phy_lp.
 
-> Unfortunately, my device (WNDA3100) still doesn't work properly
-> with either version at phy-rates beyond the magic 18MBit barrier.
+ phy_lp.c |   85 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ phy_lp.h |   16 +++++++++++
+ 2 files changed, 100 insertions(+), 1 deletion(-)
 
-Strange, same device here (or another hw version? FCC ID: PY307300073)
-and I see packets @ 54M from the dev in the sniffer. But it also has the
-invalid regdomain 0x8000 in the eeprom ...
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 43272a8..c40b8a0 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -59,6 +59,89 @@ static void b43_lpphy_op_free(struct b43_wldev *dev)
+ 	dev->phy.lp = NULL;
+ }
+ 
++static void lpphy_read_band_sprom(struct b43_wldev *dev)
++{
++	struct b43_phy_lp *lpphy = dev->phy.lp;
++	struct ssb_bus *bus = dev->dev->bus;
++	u16 cckpo, maxpwr;
++	u32 ofdmpo;
++	int i;
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		lpphy->tx_isolation_med_band = bus->sprom.tri2g;
++		lpphy->bx_arch = bus->sprom.bxa2g;
++		lpphy->rx_pwr_offset = bus->sprom.rxpo2g;
++		lpphy->rssi_vf = bus->sprom.rssismf2g;
++		lpphy->rssi_vc = bus->sprom.rssismc2g;
++		lpphy->rssi_gs = bus->sprom.rssisav2g;
++		lpphy->txpa[0] = bus->sprom.pa0b0;
++		lpphy->txpa[1] = bus->sprom.pa0b1;
++		lpphy->txpa[2] = bus->sprom.pa0b2;
++		maxpwr = bus->sprom.maxpwr_bg;
++		lpphy->max_tx_pwr_med_band = maxpwr;
++		cckpo = bus->sprom.cck2gpo;
++		ofdmpo = bus->sprom.ofdm2gpo;
++		if (cckpo) {
++			for (i = 0; i < 4; i++) {
++				lpphy->tx_max_rate[i] =
++					maxpwr - (ofdmpo & 0xF) * 2;
++				ofdmpo >>= 4;
++			}
++			ofdmpo = bus->sprom.ofdm2gpo;
++			for (i = 4; i < 15; i++) {
++				lpphy->tx_max_rate[i] =
++					maxpwr - (ofdmpo & 0xF) * 2;
++				ofdmpo >>= 4;
++			}
++		} else {
++			ofdmpo &= 0xFF;
++			for (i = 0; i < 4; i++)
++				lpphy->tx_max_rate[i] = maxpwr;
++			for (i = 4; i < 15; i++)
++				lpphy->tx_max_rate[i] = maxpwr - ofdmpo;
++		}
++	} else { /* 5GHz */
++		lpphy->tx_isolation_low_band = bus->sprom.tri5gl;
++		lpphy->tx_isolation_med_band = bus->sprom.tri5g;
++		lpphy->tx_isolation_hi_band = bus->sprom.tri5gh;
++		lpphy->bx_arch = bus->sprom.bxa5g;
++		lpphy->rx_pwr_offset = bus->sprom.rxpo5g;
++		lpphy->rssi_vf = bus->sprom.rssismf5g;
++		lpphy->rssi_vc = bus->sprom.rssismc5g;
++		lpphy->rssi_gs = bus->sprom.rssisav5g;
++		lpphy->txpa[0] = bus->sprom.pa1b0;
++		lpphy->txpa[1] = bus->sprom.pa1b1;
++		lpphy->txpa[2] = bus->sprom.pa1b2;
++		lpphy->txpal[0] = bus->sprom.pa1lob0;
++		lpphy->txpal[1] = bus->sprom.pa1lob1;
++		lpphy->txpal[2] = bus->sprom.pa1lob2;
++		lpphy->txpah[0] = bus->sprom.pa1hib0;
++		lpphy->txpah[1] = bus->sprom.pa1hib1;
++		lpphy->txpah[2] = bus->sprom.pa1hib2;
++		maxpwr = bus->sprom.maxpwr_al;
++		ofdmpo = bus->sprom.ofdm5glpo;
++		lpphy->max_tx_pwr_low_band = maxpwr;
++		for (i = 4; i < 12; i++) {
++			lpphy->tx_max_ratel[i] = maxpwr - (ofdmpo & 0xF) * 2;
++			ofdmpo >>= 4;
++		}
++		maxpwr = bus->sprom.maxpwr_a;
++		ofdmpo = bus->sprom.ofdm5gpo;
++		lpphy->max_tx_pwr_med_band = maxpwr;
++		for (i = 4; i < 12; i++) {
++			lpphy->tx_max_rate[i] = maxpwr - (ofdmpo & 0xF) * 2;
++			ofdmpo >>= 4;
++		}
++		maxpwr = bus->sprom.maxpwr_ah;
++		ofdmpo = bus->sprom.ofdm5ghpo;
++		lpphy->max_tx_pwr_hi_band = maxpwr;
++		for (i = 4; i < 12; i++) {
++			lpphy->tx_max_rateh[i] = maxpwr - (ofdmpo & 0xF) * 2;
++			ofdmpo >>= 4;
++		}
++	}
++}
++
+ static void lpphy_adjust_gain_table(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+@@ -694,7 +777,7 @@ static void lpphy_tx_pctl_init(struct b43_wldev *dev)
+ 
+ static int b43_lpphy_op_init(struct b43_wldev *dev)
+ {
+-	/* TODO: band SPROM */
++	lpphy_read_band_sprom(dev); //FIXME should this be in prepare_structs?
+ 	lpphy_baseband_init(dev);
+ 	lpphy_radio_init(dev);
+ 	//TODO calibrate RC
+diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
+index 13d89ea..0461d5b 100644
+--- a/drivers/net/wireless/b43/phy_lp.h
++++ b/drivers/net/wireless/b43/phy_lp.h
+@@ -831,6 +831,22 @@ struct b43_phy_lp {
+ 	/* Transmit isolation high band */
+ 	u8 tx_isolation_hi_band; /* FIXME initial value? */
+ 
++	/* Max transmit power medium band */
++	u16 max_tx_pwr_med_band;
++	/* Max transmit power low band */
++	u16 max_tx_pwr_low_band;
++	/* Max transmit power high band */
++	u16 max_tx_pwr_hi_band;
++
++	/* FIXME What are these used for? */
++	/* FIXME Is 15 the correct array size? */
++	u16 tx_max_rate[15];
++	u16 tx_max_ratel[15];
++	u16 tx_max_rateh[15];
++
++	/* Transmit power arrays */
++	s16 txpa[3], txpal[3], txpah[3];
++
+ 	/* Receive power offset */
+ 	u8 rx_pwr_offset; /* FIXME initial value? */
+ 
+-- 
+1.6.2.4
 
-With the one-stage firmware and without your patch my device doesn't associate with the AP,
-seems like no packets are sent. So I can't test your patch with the one-stage fw.
-Same result with a AVM Fritz stick.
-I'll look into bisecting.
 
-Regards,
-Joerg.
