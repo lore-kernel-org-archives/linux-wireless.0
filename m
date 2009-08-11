@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate09.web.de ([217.72.192.184]:44007 "EHLO
-	fmmailgate09.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751192AbZHMW1l convert rfc822-to-8bit (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:40099 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754459AbZHKQuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 18:27:41 -0400
-Date: Fri, 14 Aug 2009 00:27:40 +0200
-Message-Id: <1763718213@web.de>
+	Tue, 11 Aug 2009 12:50:04 -0400
+Message-ID: <20090811195003.12164r4rj49km328@hayate.sektori.org>
+Date: Tue, 11 Aug 2009 19:50:03 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	"David Brownell" <dbrownell@users.sourceforge.net>
+Subject: Re: [PATCH 2/2] usbnet: add rx queue pausing
+References: <20090811145203.20888.83008.stgit@fate.lan>
+	<20090811145208.20888.70513.stgit@fate.lan>
+	<1250002657.13529.63.camel@johannes.local>
+In-Reply-To: <1250002657.13529.63.camel@johannes.local>
 MIME-Version: 1.0
-From: Chunkeey@web.de
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Deauthentications with p54usb
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Larry Finger" <Larry.Finger@lwfinger.net> wrote:
-> 
-> I'll try to collect a dump.
-> 
-Any news regarding that dump?
-Or are you too busy reviewing b43's LP code? :)
+Quoting "Johannes Berg" <johannes@sipsolutions.net>:
 
-It looks like more drivers are affected. 
- - Luis reported some deauth (reasons=7) for ath9k with a cisco ap.
- - Kalle has the same issues with wl1271 with a ?Zyxel? AP.
+> On Tue, 2009-08-11 at 17:52 +0300, Jussi Kivilinna wrote:
+>
+>> +	if (test_bit(EVENT_RX_PAUSED, &dev->flags)) {
+>> +		struct sk_buff *skb2;
+>> +
+>> +		skb2 = skb_clone(skb, GFP_ATOMIC);
+>> +		if (unlikely(!skb2))
+>> +			return;
+>> +
+>> +		skb_queue_tail(&dev->rxq_pause, skb2);
+>> +		kfree_skb(skb);
+>
+> Why clone and then free the original?
+>
 
-Regards,
- Chr
-________________________________________________________________
-Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
-für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
+Ah, I had some problems and let this in. No reason, works fine without  
+cloning. I'll post v2 soon.
+
+-Jussi
 
