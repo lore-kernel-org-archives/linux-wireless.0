@@ -1,91 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coruscant.huijgen.tk ([84.245.31.19]:28336 "EHLO
-	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755562AbZHNMUp (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbZHKL41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 08:20:45 -0400
-Message-ID: <4A855670.1090902@huijgen.tk>
-Date: Fri, 14 Aug 2009 14:20:00 +0200
-From: Mark Huijgen <mark.sf.net@huijgen.tk>
-MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] b43: Add LP-PHY firmware loading support
-References: <4A8555F5.5090603@gmail.com>
-In-Reply-To: <4A8555F5.5090603@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 11 Aug 2009 07:56:27 -0400
+Subject: Re: [PATCH] iw: fix typos in MCS set parsing code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+In-Reply-To: <1249973250-9235-1-git-send-email-juhosg@openwrt.org>
+References: <1249973250-9235-1-git-send-email-juhosg@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-LSEuwHEI1esQtE84qBDs"
+Date: Tue, 11 Aug 2009 08:54:04 +0200
+Message-Id: <1249973644.5903.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Still missing a break in the bandswitch initvals.
 
-Mark
+--=-LSEuwHEI1esQtE84qBDs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Gábor Stefanik wrote:
-> Add support for loading LP-PHY firmware to b43_try_request_fw.
->
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> drivers/net/wireless/b43/main.c |   25 ++++++++++++++++++++++++-
-> 1 files changed, 24 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/main.c
-> b/drivers/net/wireless/b43/main.c
-> index fbcbe4f..51767fa 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct
-> b43_request_fw_context *ctx)
->         filename = "ucode5";
->     else if ((rev >= 11) && (rev <= 12))
->         filename = "ucode11";
-> -    else if (rev >= 13)
-> +    else if (rev == 13)
->         filename = "ucode13";
-> +    else if (rev == 14)
-> +        filename = "ucode14";
-> +    else if (rev >= 15)
-> +        filename = "ucode15";
->     else
->         goto err_no_ucode;
->     err = b43_do_request_fw(ctx, filename, &fw->ucode);
-> @@ -2111,6 +2115,16 @@ static int b43_try_request_fw(struct
-> b43_request_fw_context *ctx)
->         else
->             goto err_no_initvals;
->         break;
-> +    case B43_PHYTYPE_LP:
-> +        if (rev == 13)
-> +            filename = "lp0initvals13";
-> +        else if (rev == 14)
-> +            filename = "lp0initvals14";
-> +        else if (rev >= 15)
-> +            filename = "lp0initvals15";
-> +        else
-> +            goto err_no_initvals;
-> +        break;
->     default:
->         goto err_no_initvals;
->     }
-> @@ -2145,6 +2159,15 @@ static int b43_try_request_fw(struct
-> b43_request_fw_context *ctx)
->         else
->             goto err_no_initvals;
->         break;
-> +    case B43_PHYTYPE_LP:
-> +        if (rev == 13)
-> +            filename = "lp0bsinitvals13";
-> +        else if (rev == 14)
-> +            filename = "lp0bsinitvals14";
-> +        else if (rev >= 15)
-> +            filename = "lp0bsinitvals15";
-> +        else
-> +            goto err_no_initvals;
->     default:
->         goto err_no_initvals;
->     }
+On Tue, 2009-08-11 at 08:47 +0200, Gabor Juhos wrote:
+> The current code uses wrong binary operator for masking,
+> and the shift values for the 'tx_max_num_spatial_streams' and
+> 'tx_unequal_modulation' fields are off-by-one.
+
+> -			tx_max_num_spatial_streams =3D (mcs[12] | ((1 << 3) | (1 << 4))) + 1;
+> -			tx_unequal_modulation =3D !!(mcs[12] & (1 << 5));
+> +			tx_max_num_spatial_streams =3D (mcs[12] & ((1 << 2) | (1 << 3))) + 1;
+> +			tx_unequal_modulation =3D !!(mcs[12] & (1 << 4));
+
+Are you sure? The "Supported MCS Set" field is defined as a series of
+_bits_, and the bits are transmitted the other way around within each
+byte.
+
+johannes
+
+--=-LSEuwHEI1esQtE84qBDs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKgRWJAAoJEODzc/N7+QmaRrQP/RG7iWa3xXK0dqpRXUWB1QSE
+AKcTdSJz4K25lEnLqNGb5lb5tZtz4ZPX3p/rCftFl7tSs6eXrGrrMTePZnNP7Ct3
+MJOr5rHnbagg+sMab8w22dEuqrNlab4+SoPsXeRbYki2Ei2M6Ho4VDYfaPLuk2zC
+9eBDzi7p648UhTb4rAMV9Xr4WRkgyi/Rk8HW0xo8RFrC5SvGi2sDdxe1HyRZeQQb
+ck0xJibQaDz8cjo40QXij8vtGZn713SYpOJSrNDzmvqg51tGJKCC+J+PsxQPN0sb
+LQwsA7NBhYaLM+8aQKFiR8mK1kvEIfz6fO7gDzCEw70hlyZQ1R4F9t5BdVJoKb1s
+x1l2Bh37ftwVaY5q/9QYDc1TOwxAJqBCY7+lmFkvy5xBsJNesxd7lb0bxpcZoi7r
+6Ou91cuj6ElARFb3Fiq7vIXNGF/loMb1sepqSrxdsiRsH4Rt/NKP+uGcD5N8q36h
+2AaK+Wwdfe9PWQpGjrPwbvq5mu219NT8ShGqsjv6Huqd/2nT4O+xTN5a+VfRuP3O
+hfg6CYupbSbMNQU8GS3zm8fbwow4W4Puaba1zsjtXVzEYv2Idjgj8JmwWrIlo9Sw
+d9C0zZ+1mJr79rDX/GD8xZqCnO7s6pf0ySRozhrlECqU4Yi4H7UizpwZn58NPy/3
+hF/uhWgdljAOJ2+ylYum
+=M4gF
+-----END PGP SIGNATURE-----
+
+--=-LSEuwHEI1esQtE84qBDs--
 
