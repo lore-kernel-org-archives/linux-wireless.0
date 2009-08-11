@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39379 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932828AbZHNU2x (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:34614 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332AbZHKToM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:28:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v4 23/34] wireless: downgrade TI driver from menuconfig to config
-Date: Fri, 14 Aug 2009 16:25:48 -0400
-Message-Id: <1250281559-13041-24-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 11 Aug 2009 15:44:12 -0400
+Message-ID: <4A81C9F4.4070000@nokia.com>
+Date: Tue, 11 Aug 2009 22:43:48 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+MIME-Version: 1.0
+To: "ext John W. Linville" <linville@tuxdriver.com>
+CC: ext Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wl1271: fix compiler warnings on 64 bit archs
+References: <1249981107-21746-1-git-send-email-luciano.coelho@nokia.com> <20090811200746.cde6aed9.sfr@canb.auug.org.au> <4A81BB47.2020607@nokia.com> <20090811191518.GI2634@tuxdriver.com>
+In-Reply-To: <20090811191518.GI2634@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few options here so let this expand upon
-selection.
+ext John W. Linville wrote:
+> On Tue, Aug 11, 2009 at 09:41:11PM +0300, Luciano Coelho wrote:
+>   
+>> Thanks! I didn't know about the z length modifier for printf (everyday  
+>> learning something new!), I should have checked the manpage.  I'll fix  
+>> this and send v2 of my patch.
+>>     
+>
+> I've got it fixed-up already...
+>   
 
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/wl12xx/Kconfig |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Thanks, I noticed that it was already fixed in wireless-next after I had 
+already sent v2.  Sorry for the trouble.
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 1818e45..78029fd 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -1,10 +1,12 @@
--menuconfig WL12XX
-+config WL12XX
- 	boolean "TI wl12xx driver support"
- 	depends on MAC80211 && EXPERIMENTAL
- 	---help---
- 	  This will enable TI wl12xx driver support. The drivers make
- 	  use of the mac80211 stack.
- 
-+if WL12XX
-+
- config WL1251
- 	tristate "TI wl1251 support"
- 	depends on WL12XX && GENERIC_HARDIRQS
-@@ -50,3 +52,5 @@ config WL1271
- 
- 	  If you choose to build a module, it'll be called wl1271. Say N if
- 	  unsure.
-+
-+endif # WL12XX
 -- 
-1.6.2.5
+Cheers,
+Luca.
 
