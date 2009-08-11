@@ -1,45 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:49993 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754900AbZHYSpL convert rfc822-to-8bit (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:45812 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754937AbZHKOwJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 14:45:11 -0400
-Received: by vws2 with SMTP id 2so2888399vws.4
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 11:45:12 -0700 (PDT)
+	Tue, 11 Aug 2009 10:52:09 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 2/2] usbnet: add rx queue pausing
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com,
+	David Brownell <dbrownell@users.sourceforge.net>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Date: Tue, 11 Aug 2009 17:52:08 +0300
+Message-ID: <20090811145208.20888.70513.stgit@fate.lan>
+In-Reply-To: <20090811145203.20888.83008.stgit@fate.lan>
+References: <20090811145203.20888.83008.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
-References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
-Date: Tue, 25 Aug 2009 14:45:12 -0400
-Message-ID: <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 2:25 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
-> This was printing the wrong value on the warning. While at it
-> lets expand this warning to provide a little more useful
-> information for debugging such as the band and hardware rate
-> index when possible and clarify what the warning is actually
-> printing.
+Add rx queue pausing to usbnet. This is needed by rndis_wlan so that it can
+control rx queue and prevent received packets from being send forward before
+rndis_wlan receives and handles 'media connect'-indication. Without this
+establishing WPA connections is hard and fail often.
 
->        rix = sc->rate_idx[sc->curband->band][hw_rix];
-> -       if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
-> +       if (WARN(rix < 0, "invalid driver rate index: %x "
-> +                "(hw_rix: %x band: %s)\n", rix, hw_rix,
-> +                sc->curband->band ? "5 GHz" : "2.4 GHz"))
+Cc: David Brownell <dbrownell@users.sourceforge.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-rix will always be -1 here so no real need to print it.
+ drivers/net/usb/usbnet.c          |   52 ++++++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/rndis_wlan.c |   13 +++++++++
+ include/linux/usb/usbnet.h        |    6 ++++
+ 3 files changed, 69 insertions(+), 2 deletions(-)
 
-I'm pretty sure band is going to be "the wrong one," because all
-instances of this warning I've seen have been valid rate indexes,
-like 1 mbit rates when scanning 5 ghz, which could indicate some
-race condition with flushing the rx queue on channel changes.  I
-haven't yet seen a hw rate we didn't know about.
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index af1fe46..06cf18a 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -233,6 +233,19 @@ void usbnet_skb_return (struct usbnet *dev, struct sk_buff *skb)
+ {
+ 	int	status;
+ 
++	if (test_bit(EVENT_RX_PAUSED, &dev->flags)) {
++		struct sk_buff *skb2;
++
++		skb2 = skb_clone(skb, GFP_ATOMIC);
++		if (unlikely(!skb2))
++			return;
++
++		skb_queue_tail(&dev->rxq_pause, skb2);
++		kfree_skb(skb);
++
++		return;
++	}
++
+ 	skb->protocol = eth_type_trans (skb, dev->net);
+ 	dev->net->stats.rx_packets++;
+ 	dev->net->stats.rx_bytes += skb->len;
+@@ -526,6 +539,41 @@ static void intr_complete (struct urb *urb)
+ }
+ 
+ /*-------------------------------------------------------------------------*/
++void usbnet_pause_rx(struct usbnet *dev)
++{
++	set_bit(EVENT_RX_PAUSED, &dev->flags);
++
++	if (netif_msg_rx_status(dev))
++		devdbg(dev, "paused rx queue enabled");
++}
++EXPORT_SYMBOL_GPL(usbnet_pause_rx);
++
++void usbnet_resume_rx(struct usbnet *dev)
++{
++	struct sk_buff *skb;
++	int num = 0;
++
++	clear_bit(EVENT_RX_PAUSED, &dev->flags);
++
++	while ((skb = skb_dequeue(&dev->rxq_pause)) != NULL) {
++		usbnet_skb_return(dev, skb);
++		num++;
++	}
++
++	tasklet_schedule(&dev->bh);
++
++	if (netif_msg_rx_status(dev))
++		devdbg(dev, "paused rx queue disabled, %d skbs requeued", num);
++}
++EXPORT_SYMBOL_GPL(usbnet_resume_rx);
++
++void usbnet_purge_paused_rxq(struct usbnet *dev)
++{
++	skb_queue_purge(&dev->rxq_pause);
++}
++EXPORT_SYMBOL_GPL(usbnet_purge_paused_rxq);
++
++/*-------------------------------------------------------------------------*/
+ 
+ // unlink pending rx/tx; completion handlers do all other cleanup
+ 
+@@ -623,6 +671,8 @@ int usbnet_stop (struct net_device *net)
+ 
+ 	usb_kill_urb(dev->interrupt);
+ 
++	usbnet_purge_paused_rxq(dev);
++
+ 	/* deferred work (task, timer, softirq) must also stop.
+ 	 * can't flush_scheduled_work() until we drop rtnl (later),
+ 	 * else workers could deadlock; so make workers a NOP.
+@@ -1113,7 +1163,6 @@ static void usbnet_bh (unsigned long param)
+ }
+ 
+ 
+-
+ /*-------------------------------------------------------------------------
+  *
+  * USB Device Driver support
+@@ -1210,6 +1259,7 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+ 	skb_queue_head_init (&dev->rxq);
+ 	skb_queue_head_init (&dev->txq);
+ 	skb_queue_head_init (&dev->done);
++	skb_queue_head_init(&dev->rxq_pause);
+ 	dev->bh.func = usbnet_bh;
+ 	dev->bh.data = (unsigned long) dev;
+ 	INIT_WORK (&dev->kevent, kevent);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 828dc18..d42692d 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1764,8 +1764,15 @@ static int rndis_iw_set_essid(struct net_device *dev,
+ 
+ 	if (!wrqu->essid.flags || length == 0)
+ 		return disassociate(usbdev, 1);
+-	else
++	else {
++		/* Pause and purge rx queue, so we don't pass packets before
++		 * 'media connect'-indication.
++		 */
++		usbnet_pause_rx(usbdev);
++		usbnet_purge_paused_rxq(usbdev);
++
+ 		return set_essid(usbdev, &ssid);
++	}
+ }
+ 
+ 
+@@ -2328,6 +2335,8 @@ get_bssid:
+ 			memcpy(evt.ap_addr.sa_data, bssid, ETH_ALEN);
+ 			wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
+ 		}
++
++		usbnet_resume_rx(usbdev);
+ 	}
+ 
+ 	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending)) {
+@@ -2541,6 +2550,8 @@ static void rndis_wlan_indication(struct usbnet *usbdev, void *ind, int buflen)
+ 
+ 	switch (msg->status) {
+ 	case RNDIS_STATUS_MEDIA_CONNECT:
++		usbnet_pause_rx(usbdev);
++
+ 		devinfo(usbdev, "media connect");
+ 
+ 		/* queue work to avoid recursive calls into rndis_command */
+diff --git a/include/linux/usb/usbnet.h b/include/linux/usb/usbnet.h
+index de8b4b1..0951425 100644
+--- a/include/linux/usb/usbnet.h
++++ b/include/linux/usb/usbnet.h
+@@ -53,6 +53,7 @@ struct usbnet {
+ 	struct sk_buff_head	rxq;
+ 	struct sk_buff_head	txq;
+ 	struct sk_buff_head	done;
++	struct sk_buff_head	rxq_pause;
+ 	struct urb		*interrupt;
+ 	struct tasklet_struct	bh;
+ 
+@@ -63,6 +64,7 @@ struct usbnet {
+ #		define EVENT_RX_MEMORY	2
+ #		define EVENT_STS_SPLIT	3
+ #		define EVENT_LINK_RESET	4
++#		define EVENT_RX_PAUSED	5
+ };
+ 
+ static inline struct usb_driver *driver_of(struct usb_interface *intf)
+@@ -190,6 +192,10 @@ extern void usbnet_defer_kevent (struct usbnet *, int);
+ extern void usbnet_skb_return (struct usbnet *, struct sk_buff *);
+ extern void usbnet_unlink_rx_urbs(struct usbnet *);
+ 
++extern void usbnet_pause_rx(struct usbnet *);
++extern void usbnet_resume_rx(struct usbnet *);
++extern void usbnet_purge_paused_rxq(struct usbnet *);
++
+ extern int usbnet_get_settings (struct net_device *net, struct ethtool_cmd *cmd);
+ extern int usbnet_set_settings (struct net_device *net, struct ethtool_cmd *cmd);
+ extern u32 usbnet_get_link (struct net_device *net);
 
--- 
-Bob Copeland %% www.bobcopeland.com
