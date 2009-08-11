@@ -1,85 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:34177 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752389AbZHJSqB convert rfc822-to-8bit (ORCPT
+Received: from rtitmf2.realtek.com ([60.250.210.236]:4820 "EHLO
+	mf2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303AbZHKL7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 14:46:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] b43: Update LP-PHY rev2+ baseband init to match the specs
-Date: Mon, 10 Aug 2009 20:46:00 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A806A19.2070209@gmail.com>
-In-Reply-To: <4A806A19.2070209@gmail.com>
+	Tue, 11 Aug 2009 07:59:34 -0400
+Message-ID: <4A815A3B.3080404@realsil.com.cn>
+Date: Tue, 11 Aug 2009 19:47:07 +0800
+From: david woo <xinhua_wu@realsil.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908102046.00427.mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "javier@cozybit.com" <javier@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"andrey@cozybit.com" <andrey@cozybit.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>
+Subject: Re: diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+References: <1249986145-6531-1-git-send-email-xinhua_wu@realsil.com.cn> <1249987806.5705.0.camel@johannes.local>
+In-Reply-To: <1249987806.5705.0.camel@johannes.local>
+Content-Type: multipart/mixed;
+	boundary="------------000300070302030508080700"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 August 2009 20:42:33 GÃ¡bor Stefanik wrote:
-> +static void lpphy_save_dig_flt_state(struct b43_wldev *dev)
-> +{
-> +	static const u16 addr[] = {
-> +		B43_PHY_OFDM(0xC1),
-> +		B43_PHY_OFDM(0xC2),
-> +		B43_PHY_OFDM(0xC3),
-> +		B43_PHY_OFDM(0xC4),
-> +		B43_PHY_OFDM(0xC5),
-> +		B43_PHY_OFDM(0xC6),
-> +		B43_PHY_OFDM(0xC7),
-> +		B43_PHY_OFDM(0xC8),
-> +		B43_PHY_OFDM(0xCF),
-> +	};
-> +
-> +	static const u16 coeffs[] = {
-> +		0xDE5E, 0xE832, 0xE331, 0x4D26,
-> +		0x0026, 0x1420, 0x0020, 0xFE08,
-> +		0x0008,
-> +	};
-> +
-> +	struct b43_phy_lp *lpphy = dev->phy.lp;
-> +	int i;
-> +
-> +	for (i = 0; i < 9; i++) {
+--------------000300070302030508080700
+Content-Type: text/plain; charset="GB2312"
+Content-Transfer-Encoding: 8bit
 
-Use ARRAY_SIZE, please.
+Johannes Berg Ð´µÀ:
+> On Tue, 2009-08-11 at 18:22 +0800, David Woo wrote:
+>> static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+>>  				    struct ieee80211_mgmt *mgmt,
+>> -				    u8 *preq_elem, u32 metric)
+>> -{
+>> +				    u8 *preq_elem, u32 metric) {
+> 
+> And other than adding this coding style mistake, what does this patch
+> do?
+> 
+> johannes
 
-> +		lpphy->dig_flt_state[i] = b43_phy_read(dev, addr[i]);
-> +		b43_phy_write(dev, addr[i], coefs[i]);
-> +	}
-> +}
-> +
-> +static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
-> +{
-> +	static const u16 addr[] = {
-> +		B43_PHY_OFDM(0xC1),
-> +		B43_PHY_OFDM(0xC2),
-> +		B43_PHY_OFDM(0xC3),
-> +		B43_PHY_OFDM(0xC4),
-> +		B43_PHY_OFDM(0xC5),
-> +		B43_PHY_OFDM(0xC6),
-> +		B43_PHY_OFDM(0xC7),
-> +		B43_PHY_OFDM(0xC8),
-> +		B43_PHY_OFDM(0xCF),
-> +	};
-> +
-> +	struct b43_phy_lp *lpphy = dev->phy.lp;
-> +	int i;
-> +
-> +	for (i = 0; i < 9; i++)
+It's my first time to submit the patch file, I just mean to submit the attched 
+patch file.
 
-Same here.
+[PATCH] mac80211: Fix preq frame process and peer link frame baselen.
+  
+This patch is just to fix rreq reply condition, and peer link confirm frame baselen.
 
-> +		b43_phy_write(dev, addr[i], lpphy->dig_flt_state[i]);
-> +}
-> +
+Signed-off-by: David Woo <xinhua_wu@realsil.com.cn>
+---
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e1a763e..c065854 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -397,7 +397,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 
+ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+-				    u8 *preq_elem, u32 metric) {
++				    u8 *preq_elem, u32 metric)
++{
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_path *mpath;
+ 	u8 *dst_addr, *orig_addr;
+@@ -430,7 +431,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			if ((!(mpath->flags & MESH_PATH_DSN_VALID)) ||
+ 					DSN_LT(mpath->dsn, dst_dsn)) {
+ 				mpath->dsn = dst_dsn;
+-				mpath->flags &= MESH_PATH_DSN_VALID;
++				mpath->flags |= MESH_PATH_DSN_VALID;
+ 			} else if ((!(dst_flags & MP_F_DO)) &&
+ 					(mpath->flags & MESH_PATH_ACTIVE)) {
+ 				reply = true;
+@@ -447,14 +448,15 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (reply) {
+ 		lifetime = PREQ_IE_LIFETIME(preq_elem);
+-		ttl = ifmsh->mshcfg.dot11MeshTTL;
+-		if (ttl != 0)
++		ttl = PREQ_IE_TTL(preq_elem);
++		if (ttl != 0) {
++			ttl = ifmsh->mshcfg.dot11MeshTTL;
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, dst_addr,
+ 				cpu_to_le32(dst_dsn), 0, orig_addr,
+ 				cpu_to_le32(orig_dsn), mgmt->sa, 0, ttl,
+ 				cpu_to_le32(lifetime), cpu_to_le32(metric),
+ 				0, sdata);
+-		else
++		} else
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
+ 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index cb14253..ffcbad7 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -409,7 +409,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+ 	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
+ 		baseaddr += 4;
+-		baselen -= 4;
++		baselen += 4;
+ 	}
+ 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
+ 	if (!elems.peer_link) {
+
+  
+David
 
 
--- 
-Greetings, Michael.
+--------------000300070302030508080700
+Content-Type: text/x-patch; name="mesh.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline; filename="mesh.patch"
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e1a763e..c065854 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -397,7 +397,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+ 
+ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				    struct ieee80211_mgmt *mgmt,
+-				    u8 *preq_elem, u32 metric) {
++				    u8 *preq_elem, u32 metric)
++{
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_path *mpath;
+ 	u8 *dst_addr, *orig_addr;
+@@ -430,7 +431,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			if ((!(mpath->flags & MESH_PATH_DSN_VALID)) ||
+ 					DSN_LT(mpath->dsn, dst_dsn)) {
+ 				mpath->dsn = dst_dsn;
+-				mpath->flags &= MESH_PATH_DSN_VALID;
++				mpath->flags |= MESH_PATH_DSN_VALID;
+ 			} else if ((!(dst_flags & MP_F_DO)) &&
+ 					(mpath->flags & MESH_PATH_ACTIVE)) {
+ 				reply = true;
+@@ -447,14 +448,15 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (reply) {
+ 		lifetime = PREQ_IE_LIFETIME(preq_elem);
+-		ttl = ifmsh->mshcfg.dot11MeshTTL;
+-		if (ttl != 0)
++		ttl = PREQ_IE_TTL(preq_elem);
++		if (ttl != 0) {
++			ttl = ifmsh->mshcfg.dot11MeshTTL;
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, dst_addr,
+ 				cpu_to_le32(dst_dsn), 0, orig_addr,
+ 				cpu_to_le32(orig_dsn), mgmt->sa, 0, ttl,
+ 				cpu_to_le32(lifetime), cpu_to_le32(metric),
+ 				0, sdata);
+-		else
++		} else
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
+ 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index cb14253..ffcbad7 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -409,7 +409,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+ 	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
+ 		baseaddr += 4;
+-		baselen -= 4;
++		baselen += 4;
+ 	}
+ 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
+ 	if (!elems.peer_link) {
+
+--------------000300070302030508080700--
