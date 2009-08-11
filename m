@@ -1,128 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34682 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750897AbZHRAfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 20:35:51 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 17:35:53 -0700
-Date: Mon, 17 Aug 2009 17:35:50 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
-Message-ID: <20090818003550.GG15363@mosca>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
- <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
- <1250283993.4411.1.camel@johannes.local>
- <43e72e890908171000r52f59cb6tbfef751324bf9968@mail.gmail.com>
- <1250545069.25876.0.camel@johannes.local>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43514 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075AbZHKSbM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Aug 2009 14:31:12 -0400
+Date: Tue, 11 Aug 2009 14:24:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: Daniel Mack <daniel@caiaq.de>, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dcbw@redhat.com
+Subject: Re: Libertas: Association request to the driver failed
+Message-ID: <20090811182426.GE2634@tuxdriver.com>
+References: <20090807191156.GS19257@buzzloop.caiaq.de> <20090807193610.GK7545@tuxdriver.com> <20090808123512.GZ19257@buzzloop.caiaq.de> <4A7D8AB6.9030707@gmail.com> <4A7E9596.4070901@gmail.com> <20090809102417.GH13639@buzzloop.caiaq.de> <4A7EAED8.9090900@gmail.com> <20090810175939.GH2733@tuxdriver.com> <4A811776.8090003@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1250545069.25876.0.camel@johannes.local>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A811776.8090003@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 17, 2009 at 02:37:49PM -0700, Johannes Berg wrote:
-> On Mon, 2009-08-17 at 10:00 -0700, Luis R. Rodriguez wrote:
-> > On Fri, Aug 14, 2009 at 2:06 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> > > On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
-> > >> We can now remove that comment about mac80211 requiring
-> > >> cfg80211 and do that for the user.
-> > >
-> > > "now"? What changed to make this possible?
-> > >
-> > > NAK this change, because with it, it's possible to select
-> > > mac80211 = Y
-> > > -> cfg80211 = Y
-> > > while rfkill = M
-> > >
-> > > which will break the kernel build.
-> > 
-> > I'm able to do this with current kconfig, does this need to be fixed?
-> 
-> I don't think you can select this with the current config since cfg80211
-> depends on RFKILL == CFG80211 || RFKILL == n.
-> 
-> So you can do
-> CFG80211 = m
-> RFKILL = m
-> 
-> CFG80211 = *
-> RFKILL = n
-> 
-> CFG80211 = *
-> RFKILL = y
-> 
-> but NOT
-> 
-> CFG80211 = y
-> RFKILL = m
+Comments from the libertas crowd?  This seems a bit long for this
+part of the cycle.
 
+Should we just revert the original patch, then reapply it with this
+one for 2.6.32?
 
-Ah I see, thanks. OK how about this then:
+John
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH] wireless: make mac80211 select cfg80211
+On Tue, Aug 11, 2009 at 09:02:14AM +0200, Roel Kluin wrote:
+> The size of the tmp buffer was too small, causing a regression
+> 
+> rates->rates has an arraysize of 1, so a memcpy with
+> MAX_RATES (14) was already causing reads out of bounds.
+> 
+> In get_common_rates() the memset/memcpy can be moved upwards.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> Tested-by: Daniel Mack <daniel@caiaq.de>
+> ---
+> > Delta patch, please...
+> 
+> Here,
+> 
+> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+> index d699737..ba0164a 100644
+> --- a/drivers/net/wireless/libertas/assoc.c
+> +++ b/drivers/net/wireless/libertas/assoc.c
+> @@ -44,8 +44,8 @@ static int get_common_rates(struct lbs_private *priv,
+>  	u16 *rates_size)
+>  {
+>  	u8 *card_rates = lbs_bg_rates;
+> -	int ret = 0, i, j;
+> -	u8 tmp[(ARRAY_SIZE(lbs_bg_rates) - 1) * (*rates_size - 1)];
+> +	int i, j;
+> +	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
+>  	size_t tmp_size = 0;
+>  
+>  	/* For each rate in card_rates that exists in rate1, copy to tmp */
+> @@ -62,20 +62,23 @@ static int get_common_rates(struct lbs_private *priv,
+>  	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+>  	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
+>  
+> +	memset(rates, 0, *rates_size);
+> +	*rates_size = min_t(u16, tmp_size, *rates_size);
+> +	memcpy(rates, tmp, *rates_size);
+> +
+>  	if (!priv->enablehwauto) {
+>  		for (i = 0; i < tmp_size; i++) {
+>  			if (tmp[i] == priv->cur_rate)
+> -				goto done;
+> +				break;
+> +		}
+> +		if (i == tmp_size) {
+> +			lbs_pr_alert("Previously set fixed data rate %#x isn't "
+> +					"compatible with the network.\n",
+> +					priv->cur_rate);
+> +			return -1;
+>  		}
+> -		lbs_pr_alert("Previously set fixed data rate %#x isn't "
+> -		       "compatible with the network.\n", priv->cur_rate);
+> -		ret = -1;
+>  	}
+> -done:
+> -	memset(rates, 0, *rates_size);
+> -	*rates_size = min_t(int, tmp_size, *rates_size);
+> -	memcpy(rates, tmp, *rates_size);
+> -	return ret;
+> +	return 0;
+>  }
+>  
+>  
+> @@ -319,8 +322,8 @@ static int lbs_associate(struct lbs_private *priv,
+>  
+>  	rates = (struct mrvl_ie_rates_param_set *) pos;
+>  	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
+> -	memcpy(&rates->rates, &bss->rates, MAX_RATES);
+>  	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
+> +	memcpy(&rates->rates, &bss->rates, tmplen);
+>  	if (get_common_rates(priv, rates->rates, &tmplen)) {
+>  		ret = -1;
+>  		goto done;
+> 
 
-This lets us keep mac80211 on the menu map even if cfg80211
-is not enabled. We now remove that pesky comment about this.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/Kconfig |    5 +----
- net/rfkill/Kconfig   |    1 +
- net/wireless/Kconfig |    1 -
- 3 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 8300d19..8fc6ae6 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,6 +1,6 @@
- config MAC80211
- 	tristate "mac80211 - SoftMAC device support"
--	depends on CFG80211
-+	select CFG80211
- 	select CRYPTO
- 	select CRYPTO_ECB
- 	select CRYPTO_ARC4
-@@ -23,9 +23,6 @@ config MAC80211
- 	  When built as a module mac80211 will be built as mac80211, if not sure
- 	  you should build this as a module.
- 
--comment "CFG80211 needs to be enabled for MAC80211"
--	depends on CFG80211=n
--
- if MAC80211 != n
- 
- config MAC80211_RC_PID
-diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-index eaf7658..65e98b8 100644
---- a/net/rfkill/Kconfig
-+++ b/net/rfkill/Kconfig
-@@ -3,6 +3,7 @@
- #
- menuconfig RFKILL
- 	tristate "RF switch subsystem support"
-+	depends on CFG80211 || !CFG80211
- 	help
- 	  Say Y here if you want to have control over RF switches
- 	  found on many WiFi and Bluetooth cards.
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 982004b..524aeaf 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -1,6 +1,5 @@
- config CFG80211
- 	tristate "cfg80211 - wireless configuration API"
--	depends on RFKILL || !RFKILL
- 	---help---
- 	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
- 	  Enable this if you have a wireless device.
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
