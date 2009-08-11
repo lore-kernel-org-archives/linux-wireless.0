@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32420 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752448AbZHGEQe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 00:16:34 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 21:16:36 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-yw0-f193.google.com ([209.85.211.193]:56759 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752977AbZHKVFN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 11 Aug 2009 17:05:13 -0400
+Received: by ywh31 with SMTP id 31so5189446ywh.4
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 14:05:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19067.43693.836150.327183@gargle.gargle.HOWL>
-Date: Fri, 7 Aug 2009 09:46:45 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/12] ath9k: Cleanup ath9k_hw_4k_set_gain() interface
+In-Reply-To: <4A81DA33.1050405@hauke-m.de>
+References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de>
+	<1249735096-27071-3-git-send-email-hauke@hauke-m.de> <43e72e890908101520x19fddcddx72215fb0851baf2f@mail.gmail.com>
+	<4A81DA33.1050405@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 11 Aug 2009 14:04:54 -0700
+Message-ID: <43e72e890908111404k780a3a8ehd8745142e9c01f56@mail.gmail.com>
+Subject: Re: [PATCH 3/7] [compat-2.6] pcmcia_parse_tuple was redefined in
+	pcmcia/cistpl.h
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-regChainOffset is always zero, remove it.
+On Tue, Aug 11, 2009 at 1:53 PM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
+> Hi Luis,
+>
+> Thank you for applying the rest of the patches. Next time I will use
+> --cover-letter when generating the patches.
+>
+> Luis R. Rodriguez wrote:
+>> On Sat, Aug 8, 2009 at 5:38 AM, Hauke Mehrtens<hauke@hauke-m.de> wrote:
+>>> fix build:
+>>> undef pcmcia_parse_tuple before redefine it again.
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>> ---
+>>>  compat/compat-2.6.28.h |    8 +++++++-
+>>>  1 files changed, 7 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
+>>> index fdc021a..e25259f 100644
+>>> --- a/compat/compat-2.6.28.h
+>>> +++ b/compat/compat-2.6.28.h
+>>> @@ -29,7 +29,13 @@
+>>>  })
+>>>  #endif /* From include/asm-generic/bug.h */
+>>>
+>>> -#define pcmcia_parse_tuple(tuple, parse) pcmcia_parse_tuple(NULL, tuple, parse)
+>>> +#include <pcmcia/cs_types.h>
+>>> +#include <pcmcia/cs.h>
+>>> +#include <pcmcia/cistpl.h>
+>>> +#ifdef pcmcia_parse_tuple
+>>> +#undef pcmcia_parse_tuple
+>>> +#define pcmcia_parse_tuple(tuple, parse) pccard_parse_tuple(tuple, parse)
+>>> +#endif
+>>
+>> Where did pccard_parse_tuple() come from?
+> In include/pcmcia/cistpl.h pcmcia_parse_tuple(p_dev, tuple, parse) is
+> defined as pccard_parse_tuple(tuple, parse)
+>
+>> Did you see the commit 0df8084caf53774113c8f118e9dd43e660cf9e15 by any
+>> chance? That fixed compilation for me against older kernels.
+> I still get a compile error with recent compat-wireless including commit
+> 0df8084caf53774113c8f118e9dd43e660cf9e15 with kernel <= 2.6.27 in Ubuntu:
+>
+> In file included from
+> /compat-wireless-git/drivers/net/wireless/b43/pcmcia.c:30:
+> include/pcmcia/cistpl.h:610:1: warning: "pcmcia_parse_tuple" redefined
+> In file included from /compat-wireless-git/include/net/compat.h:19,
+>                 from <command-line>:0:
+> /compat-wireless-git/include/net/compat-2.6.28.h:32:1: warning: this is
+> the location of the previous definition
+>
+> The above patch fixes it for me. The patch does not look relay nice, do
+> you have a better idea how to solve this problem?
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom_4k.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+Hm odd, compilation worked for me against 2.6.27 using KLIB and
+KLIB_BUILD. I'll try to do that again today see if I still can compile
+ok or not.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 111f4d7..aafc6d3 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -844,13 +844,13 @@ static void ath9k_hw_4k_set_addac(struct ath_hw *ah,
- static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 				 struct modal_eep_4k_header *pModal,
- 				 struct ar5416_eeprom_4k *eep,
--				 u8 txRxAttenLocal, int regChainOffset)
-+				 u8 txRxAttenLocal)
- {
--	REG_WRITE(ah, AR_PHY_SWITCH_CHAIN_0 + regChainOffset,
-+	REG_WRITE(ah, AR_PHY_SWITCH_CHAIN_0,
- 		  pModal->antCtrlChain[0]);
- 
--	REG_WRITE(ah, AR_PHY_TIMING_CTRL4(0) + regChainOffset,
--		  (REG_READ(ah, AR_PHY_TIMING_CTRL4(0) + regChainOffset) &
-+	REG_WRITE(ah, AR_PHY_TIMING_CTRL4(0),
-+		  (REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
- 		   ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
- 		     AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
- 		  SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
-@@ -860,14 +860,14 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 	    AR5416_EEP_MINOR_VER_3) {
- 		txRxAttenLocal = pModal->txRxAttenCh[0];
- 
--		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ,
- 			      AR_PHY_GAIN_2GHZ_XATTEN1_MARGIN, pModal->bswMargin[0]);
--		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ,
- 			      AR_PHY_GAIN_2GHZ_XATTEN1_DB, pModal->bswAtten[0]);
--		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_MARGIN,
- 			      pModal->xatten2Margin[0]);
--		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB, pModal->xatten2Db[0]);
- 
- 		/* Set the block 1 value to block 0 value */
-@@ -884,9 +884,9 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
- 			      pModal->xatten2Db[0]);
- 	}
- 
--	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
-+	REG_RMW_FIELD(ah, AR_PHY_RXGAIN,
- 		      AR9280_PHY_RXGAIN_TXRX_ATTEN, txRxAttenLocal);
--	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + regChainOffset,
-+	REG_RMW_FIELD(ah, AR_PHY_RXGAIN,
- 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
- 
- 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
-@@ -919,7 +919,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		  ah->eep_ops->get_eeprom_antenna_cfg(ah, chan));
- 
- 	/* Single chain for 4K EEPROM*/
--	ath9k_hw_4k_set_gain(ah, pModal, eep, txRxAttenLocal, 0);
-+	ath9k_hw_4k_set_gain(ah, pModal, eep, txRxAttenLocal);
- 
- 	/* Initialize Ant Diversity settings from EEPROM */
- 	if (pModal->version >= 3) {
--- 
-1.6.4
-
+  Luis
