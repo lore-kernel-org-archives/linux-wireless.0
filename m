@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:35125 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbZHEUc7 (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:41338 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754090AbZHLQvy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 16:32:59 -0400
-Received: by ewy10 with SMTP id 10so291644ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:32:59 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC 0/4] orinoco: use cfg80211 for key manipulation
-Date: Wed,  5 Aug 2009 21:32:48 +0100
-Message-Id: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 12 Aug 2009 12:51:54 -0400
+Received: by vws2 with SMTP id 2so136724vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:51:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890908120945l14f6590ev38f7083a1b1dae8@mail.gmail.com>
+References: <43e72e890908120945l14f6590ev38f7083a1b1dae8@mail.gmail.com>
+Date: Wed, 12 Aug 2009 12:51:55 -0400
+Message-ID: <b6c5339f0908120951u76c9ac9amfb006ba4960a07c9@mail.gmail.com>
+Subject: Re: ath5k warning on bitrate
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First attempt at connect/disconnect, join_ibss/leave_ibss, and add_key
-etc. These patches rely on the series I just sent, but conflict with
-Holgers set_channel patch. Simple to resolve, and I'll do that in my
-next update.
+On Wed, Aug 12, 2009 at 12:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> I have some patches on top of this for ath5k but I doubt they were the
+> culprit. The warning comes from the second check:
 
-This doesn't work yet*, but I've a number of questions.
+>        rix = sc->rate_idx[sc->curband->band][hw_rix];
+>        if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
+>                rix = 0;
 
-- The cfg80211 notification functions like cfg80211_connect_result
-  are not called in this series. Does the driver need to keep track of
-  each call and make sure it calls the right notifer? Right now orinoco
-  arbitrarily sends SIOCGIWAP, IWEVASSOCRESPIE and IWEVASSOCREQIE on
-  ?authorisation? Also not sure how this will tie in with
-  cfg80211_send_rx_auth/assoc.
+Just another case of sc->curband being wrong when processing this.
 
-- In station mode, is the connect crypto struct fully filled in
-  regardless of WEP/WPA? I'd like to set priv->encode_alg at this stage,
-  and then only accept keys of that type via add_key. Unfortunately
-  join_ibss doesn't have similar info.
+> [  402.717626] ath5k phy0: noise floor calibration timeout (2462MHz)
 
-- In adhoc mode, how do you set open/shared WEP? i.e. how does orinoco
-  know to set priv->wep_restrict?
+Because of a scan.  Did we break the thing that flushed rx processing
+on channel changes?
 
-- Digging around cfg80211, it looks like set_default_key isn't called
-  when authentication is TKIP. How does the driver tell which key to use
-  for transmit? Are we supposed to assume the group key is the transmit
-  key?
-
-- TKIP pairwise keys. I think orinoco has always ignored them. The Agere
-  driver installed pairwaise keys to index 0. Should I attempt anything?
-
-- TKIP and ad-hoc. err... I plan on leaving this alone.
-
-
-All hints greatly appreciated :)
-
-
-
-Dave.
-
-* wpa_supplicant in wext mode gets stuck in the ASSOCIATING state.
-  Haven't tried nl80211 mode.
-
----
-David Kilroy (4):
-  orinoco: add cfg80211 connect and disconnect
-  orinoco: add cfg80211 join_ibss and leave_ibss
-  orinoco: implement cfg80211 key manipulation functions
-  orinoco: do WE via cfg80211
-
- drivers/net/wireless/orinoco/cfg.c  |  486 +++++++++++++++++++++++
- drivers/net/wireless/orinoco/wext.c |  726 +----------------------------------
- 2 files changed, 497 insertions(+), 715 deletions(-)
-
+-- 
+Bob Copeland %% www.bobcopeland.com
