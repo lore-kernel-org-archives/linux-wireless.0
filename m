@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f195.google.com ([209.85.212.195]:61903 "EHLO
-	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178AbZH0DnI convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:46859 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752735AbZHLOw3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 23:43:08 -0400
-Received: by vws33 with SMTP id 33so592681vws.33
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 20:43:09 -0700 (PDT)
+	Wed, 12 Aug 2009 10:52:29 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 1/3] mac80211: refactor dynamic power save check
+To: linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Date: Wed, 12 Aug 2009 17:52:01 +0300
+Message-ID: <20090812145200.23691.17281.stgit@tikku>
 MIME-Version: 1.0
-In-Reply-To: <20090827023000.21926.90867.stgit@mj.roinet.com>
-References: <20090827023000.21926.90867.stgit@mj.roinet.com>
-Date: Wed, 26 Aug 2009 23:43:09 -0400
-Message-ID: <b6c5339f0908262043x490cd51eh297d9289f58acd31@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ath5k: fix uninitialized value use in
-	ath5k_eeprom_read_turbo_modes()
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 10:30 PM, Pavel Roskin<proski@gnu.org> wrote:
-> The `val' variable in ath5k_eeprom_read_turbo_modes() is used
-> uninitialized.  gcc 4.4.1 with -fno-inline-functions-called-once reports
-> it:
->
-> eeprom.c: In function 'ath5k_eeprom_read_turbo_modes':
-> eeprom.c:441: warning: 'val' may be used uninitialized in this function
+From: Kalle Valo <kalle.valo@nokia.com>
 
-Thanks!
+Refactor dynamic power save checks to a function of it's own for better
+readibility. No functional changes.
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+---
 
--- 
-Bob Copeland %% www.bobcopeland.com
+ net/mac80211/tx.c |   24 +++++++++++++++++++++---
+ 1 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 10a1099..03005f9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1384,6 +1384,26 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
+ 	return 0;
+ }
+ 
++static bool is_dynamic_ps_enabled(struct ieee80211_local *local)
++{
++	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
++		/* driver doesn't support power save */
++		return false;
++
++	if (local->hw.conf.dynamic_ps_timeout <= 0)
++		/* dynamic power save disabled */
++		return false;
++
++	if (local->scanning)
++		/* we are scanning, don't enable power save */
++		return false;
++
++	if (!local->ps_sdata)
++		return false;
++
++	return true;
++}
++
+ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+@@ -1396,9 +1416,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+ 
+ 	dev_hold(sdata->dev);
+ 
+-	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
+-	    local->hw.conf.dynamic_ps_timeout > 0 &&
+-	    !(local->scanning) && local->ps_sdata) {
++	if (is_dynamic_ps_enabled(local)) {
+ 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 			ieee80211_stop_queues_by_reason(&local->hw,
+ 					IEEE80211_QUEUE_STOP_REASON_PS);
+
