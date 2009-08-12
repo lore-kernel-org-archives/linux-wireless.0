@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:24322 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755041AbZHCT6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:58:25 -0400
-Subject: Re: [ath9k-devel] [PATCH 08/24] ath9k: pass only one argument to
- hw attach
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1249328027-24865-1-git-send-email-lrodriguez@atheros.com>
-References: <1249328027-24865-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Mon, 03 Aug 2009 15:58:23 -0400
-Message-Id: <1249329503.5652.9.camel@mj>
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:2823 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752445AbZHLHH1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 03:07:27 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: David Seira <davidseira@gmail.com>
+Subject: Re: Roaming behavior
+Date: Wed, 12 Aug 2009 09:07:18 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <loom.20090811T124332-602@post.gmane.org> <20090811135915.GC2684@tuxdriver.com> <1250003481.4185.7.camel@solid2>
+In-Reply-To: <1250003481.4185.7.camel@solid2>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908120907.18501.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-08-03 at 12:33 -0700, Luis R. Rodriguez wrote:
-> The softc is cached and set within the ath_hw struct.
+> I want to delete this behavior because I'm developing an
+> application which do that alone.
 
-That's not meant to criticize this particular patch, but what's the
-point in distinguishing sc from ah these days?  I believe "ah" used to
-refer to the closed part of the sc structure that was only touched by
-Atheros HAL, hence the name.
+Please look at wpa_supplicants behavior when you configure 
+ap_scan= and scan_ssid=. With them, you can configure 
+wpa_supplicant to not issue scan requests on it's own.
 
-Since there is no HAL anymore, ah should disappear.
+Then your user-space app can do the monitoring, scanning (via 
+nl80211) issue a command to wpa_supplicant to authenticate to 
+some AP.
 
-As the first step, ah should be allocated as part of sc.  Then ah and sc
-should stop pointing to each other.  Instead, macros based on offsetof
-should be used.  Then ah should be dissolved and replaced with sc
-throughout the code.
+Another option would be to look into network-manager and see what 
+it offers.
 
-That's probably a good task for an aspiring kernel hacker, as it
-requires little specialized knowledge.
+
+But basically, mac80211 has inferior support for roaming compared 
+to some older solutions.
+
+Some examples: with madwifi, I can tell the driver to only scan 
+on channels 1,6,11. That's not exactly standards-conforming, but 
+can speed up roaming considerably, because a full scan is now 
+way shorter. mac80211 doesn't support such a thing directly. It 
+just occurs to me that you might be able to do something like 
+with with a special regulatory daemon.
+
+Or with orinoco, you could define a level when to roam (e.g. at 
+what SNR/RSSI/whatever it is based on). mac80211 doesn't have 
+this.
+
+
+
+I'm quite sure that this will be eventually done, and then you 
+have the same seamless roaming with all/most of your WLAN cards, 
+where with the pre-mac80211 only some of the card did somewhat 
+well and other cards were only usable for hot-spot operation.
 
 -- 
-Regards,
-Pavel Roskin
+http://www.holgerschurig.de
