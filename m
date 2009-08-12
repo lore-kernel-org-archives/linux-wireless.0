@@ -1,250 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:53588 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755012AbZHRJyA (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41922 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472AbZHLVdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 05:54:00 -0400
-Date: Tue, 18 Aug 2009 11:54:00 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 10/29] mwl8k: fix mwl8k_configure_filter() parameter lifetime issue
-Message-ID: <20090818095400.GB6195@mail.wantstofly.org>
-References: <20090818035233.GO18639@mail.wantstofly.org> <20090818040039.GA4116@mail.wantstofly.org> <1250580198.30538.0.camel@johannes.local> <20090818081339.GI18639@mail.wantstofly.org>
+	Wed, 12 Aug 2009 17:33:50 -0400
+Subject: [PATCH] cfg80211: allow driver to override PS default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 12 Aug 2009 23:33:20 +0200
+Message-Id: <1250112800.12285.0.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090818081339.GI18639@mail.wantstofly.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2009 at 10:13:39AM +0200, Lennert Buytenhek wrote:
+Sometimes drivers might have a good reason to override
+the PS default, like iwlwifi right now where it affects
+RX performance significantly at this point. This will
+allow them to override the default, if desired, in a
+way that users can still change it according to their
+trade-off choices, not the driver's, like would happen
+if the driver just disabled PS completely then.
 
-> > > This will clash with:
-> > > 
-> > > 	http://article.gmane.org/gmane.linux.kernel.wireless.general/38141
-> > > 
-> > > But that is easy to fix up.  (The easiest would probably be to not
-> > > apply the mwl8k part of that patch, and I'll send a followup patch
-> > > to implement ->prepare_multicast() for mwl8k.)
-> > 
-> > It's not quite that easy because that patch changes the arguments to the
-> > functions so the multicast list is no longer available in
-> > ->configure_filter().
-> 
-> OK, if my patch set gets applied first, please use the mwl8k
-> ->prepare_multicast() implementation that's below in your patch.
-> 
-> If your patch gets applied first, I'll fix it up in my set.
-
-OK, your patch is already in, as you noted on IRC, so I've replaced
-this by:
-
-
-
->From 9145398d5822cf3ed963fb155a2771c4facd1d85 Mon Sep 17 00:00:00 2001
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Date: Tue, 18 Aug 2009 03:55:42 +0200
-Subject: [PATCH 09/29] mwl8k: fix mwl8k_configure_filter() parameter lifetime issue
-
-mwl8k_configure_filter() passes pointers to total_flags and the
-multicast address list to a workqueue function, while there is no
-guarantee that those pointers will still be valid by the time the
-workqueue function runs.
-
-Solve this by passing total_flags by value, and by passing an
-already built multicast address setup command packet to the workqueue
-function so that we don't have to look at the multicast address list
-itself outside of mwl8k_configure_filter().
-
-Also, since ->configure_filter() can sleep now, wait synchronously
-for the worker to finish.
-
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/mwl8k.c |  107 +++++++++++++++--------------------------
- 1 files changed, 39 insertions(+), 68 deletions(-)
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/core.c    |    4 +++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a40434b..a961b69 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1613,38 +1613,39 @@ struct mwl8k_cmd_mac_multicast_adr {
+--- wireless-testing.orig/include/net/cfg80211.h	2009-08-12 23:17:58.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2009-08-12 23:19:13.000000000 +0200
+@@ -1108,6 +1108,9 @@ struct cfg80211_ops {
+  * @net: the network namespace this wiphy currently lives in
+  * @netnsok: if set to false, do not allow changing the netns of this
+  *	wiphy at all
++ * @ps_default: default for powersave, will be set depending on the
++ *	kernel's default on wiphy_new(), but can be changed by the
++ *	driver if it has a good reason to override the default
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -1123,6 +1126,7 @@ struct wiphy {
+ 	bool disable_beacon_hints;
  
- #define MWL8K_ENABLE_RX_MULTICAST 0x000F
+ 	bool netnsok;
++	bool ps_default;
  
--static int mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
--					int mc_count,
--					struct dev_addr_list *mclist)
-+static struct mwl8k_cmd_pkt *
-+__mwl8k_cmd_mac_multicast_adr(struct ieee80211_hw *hw,
-+			      int mc_count, struct dev_addr_list *mclist)
- {
-+	struct mwl8k_priv *priv = hw->priv;
- 	struct mwl8k_cmd_mac_multicast_adr *cmd;
--	int index = 0;
--	int rc;
--	int size = sizeof(*cmd) + mc_count * ETH_ALEN;
-+	int size;
-+	int i;
+ 	enum cfg80211_signal_type signal_type;
+ 
+--- wireless-testing.orig/net/wireless/core.c	2009-08-12 23:19:17.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-08-12 23:19:56.000000000 +0200
+@@ -412,6 +412,8 @@ struct wiphy *wiphy_new(const struct cfg
+ 	rdev->wiphy.dev.class = &ieee80211_class;
+ 	rdev->wiphy.dev.platform_data = rdev;
+ 
++	rdev->wiphy.ps_default = CONFIG_CFG80211_DEFAULT_PS_VALUE;
 +
-+	if (mc_count > priv->num_mcaddrs)
-+		mc_count = priv->num_mcaddrs;
-+
-+	size = sizeof(*cmd) + mc_count * ETH_ALEN;
+ 	wiphy_net_set(&rdev->wiphy, &init_net);
  
--	cmd = kzalloc(size, GFP_KERNEL);
-+	cmd = kzalloc(size, GFP_ATOMIC);
- 	if (cmd == NULL)
--		return -ENOMEM;
-+		return NULL;
- 
- 	cmd->header.code = cpu_to_le16(MWL8K_CMD_MAC_MULTICAST_ADR);
- 	cmd->header.length = cpu_to_le16(size);
- 	cmd->action = cpu_to_le16(MWL8K_ENABLE_RX_MULTICAST);
- 	cmd->numaddr = cpu_to_le16(mc_count);
- 
--	while (index < mc_count && mclist) {
-+	for (i = 0; i < mc_count && mclist; i++) {
- 		if (mclist->da_addrlen != ETH_ALEN) {
--			rc = -EINVAL;
--			goto mwl8k_cmd_mac_multicast_adr_exit;
-+			kfree(cmd);
-+			return NULL;
- 		}
--		memcpy(cmd->addr[index++], mclist->da_addr, ETH_ALEN);
-+		memcpy(cmd->addr[i], mclist->da_addr, ETH_ALEN);
- 		mclist = mclist->next;
- 	}
- 
--	rc = mwl8k_post_cmd(hw, &cmd->header);
--
--mwl8k_cmd_mac_multicast_adr_exit:
--	kfree(cmd);
--	return rc;
-+	return &cmd->header;
- }
- 
- /*
-@@ -3091,12 +3092,21 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 		printk(KERN_ERR "%s() timed out\n", __func__);
- }
- 
-+static u64 mwl8k_prepare_multicast(struct ieee80211_hw *hw,
-+				   int mc_count, struct dev_addr_list *mclist)
-+{
-+	struct mwl8k_cmd_pkt *cmd;
-+
-+	cmd = __mwl8k_cmd_mac_multicast_adr(hw, mc_count, mclist);
-+
-+	return (unsigned long)cmd;
-+}
-+
- struct mwl8k_configure_filter_worker {
- 	struct mwl8k_work_struct header;
- 	unsigned int changed_flags;
--	unsigned int *total_flags;
--	int mc_count;
--	struct dev_addr_list *mclist;
-+	unsigned int total_flags;
-+	struct mwl8k_cmd_pkt *multicast_adr_cmd;
- };
- 
- #define MWL8K_SUPPORTED_IF_FLAGS	FIF_BCN_PRBRESP_PROMISC
-@@ -3105,18 +3115,12 @@ static int mwl8k_configure_filter_wt(struct work_struct *wt)
- {
- 	struct mwl8k_configure_filter_worker *worker =
- 		(struct mwl8k_configure_filter_worker *)wt;
--
- 	struct ieee80211_hw *hw = worker->header.hw;
--	unsigned int changed_flags = worker->changed_flags;
--	unsigned int *total_flags = worker->total_flags;
--	int mc_count = worker->mc_count;
--	struct dev_addr_list *mclist = worker->mclist;
--
- 	struct mwl8k_priv *priv = hw->priv;
- 	int rc = 0;
- 
--	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
--		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
-+	if (worker->changed_flags & FIF_BCN_PRBRESP_PROMISC) {
-+		if (worker->total_flags & FIF_BCN_PRBRESP_PROMISC)
- 			rc = mwl8k_cmd_set_pre_scan(hw);
- 		else {
- 			u8 *bssid;
-@@ -3129,54 +3133,20 @@ static int mwl8k_configure_filter_wt(struct work_struct *wt)
- 		}
- 	}
- 
--	if (rc)
--		goto mwl8k_configure_filter_exit;
--	if (mc_count) {
--		if (mc_count > priv->num_mcaddrs)
--			mc_count = priv->num_mcaddrs;
--
--		rc = mwl8k_cmd_mac_multicast_adr(hw, mc_count, mclist);
--		if (rc)
--			printk(KERN_ERR
--			"%s()Error setting multicast addresses\n",
--			__func__);
--	}
-+	if (!rc && worker->multicast_adr_cmd != NULL)
-+		rc = mwl8k_post_cmd(hw, worker->multicast_adr_cmd);
-+	kfree(worker->multicast_adr_cmd);
- 
--mwl8k_configure_filter_exit:
- 	return rc;
- }
- 
--static u64 mwl8k_prepare_multicast(struct ieee80211_hw *hw,
--				   int mc_count, struct dev_addr_list *mclist)
--{
--	struct mwl8k_configure_filter_worker *worker;
--
--	worker = kzalloc(sizeof(*worker), GFP_ATOMIC);
--
--	if (!worker)
--		return 0;
--
--	/*
--	 * XXX: This is _HORRIBLY_ broken!!
--	 *
--	 *	No locking, the mclist pointer might be invalid as soon as this
--	 *	function returns, something in the list might be invalidated
--	 *	once we get to the worker, etc...
--	 */
--	worker->mc_count = mc_count;
--	worker->mclist = mclist;
--
--	return (u64)worker;
--}
--
- static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 				   unsigned int changed_flags,
- 				   unsigned int *total_flags,
- 				   u64 multicast)
- {
--
--	struct mwl8k_configure_filter_worker *worker = (void *)multicast;
- 	struct mwl8k_priv *priv = hw->priv;
-+	struct mwl8k_configure_filter_worker *worker;
- 
- 	/* Clear unsupported feature flags */
- 	*total_flags &= MWL8K_SUPPORTED_IF_FLAGS;
-@@ -3184,12 +3154,13 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
- 	if (!(changed_flags & MWL8K_SUPPORTED_IF_FLAGS))
- 		return;
- 
-+	worker = kzalloc(sizeof(*worker), GFP_ATOMIC);
- 	if (worker == NULL)
- 		return;
- 
--	worker->header.options = MWL8K_WQ_QUEUE_ONLY | MWL8K_WQ_TX_WAIT_EMPTY;
- 	worker->changed_flags = changed_flags;
--	worker->total_flags = total_flags;
-+	worker->total_flags = *total_flags;
-+	worker->multicast_adr_cmd = (void *)(unsigned long)multicast;
- 
- 	mwl8k_queue_work(hw, &worker->header, priv->config_wq,
- 			 mwl8k_configure_filter_wt);
--- 
-1.5.6.4
+ 	rdev->rfkill_ops.set_block = cfg80211_rfkill_set_block;
+@@ -674,7 +676,7 @@ static int cfg80211_netdev_notifier_call
+ 		wdev->wext.default_key = -1;
+ 		wdev->wext.default_mgmt_key = -1;
+ 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+-		wdev->wext.ps = CONFIG_CFG80211_DEFAULT_PS_VALUE;
++		wdev->wext.ps = wdev->wiphy->ps_default;
+ 		wdev->wext.ps_timeout = 100;
+ 		if (rdev->ops->set_power_mgmt)
+ 			if (rdev->ops->set_power_mgmt(wdev->wiphy, dev,
+
+
