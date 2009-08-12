@@ -1,111 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1885 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750954AbZH1PpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 11:45:19 -0400
-Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
- inserted
-From: reinette chatre <reinette.chatre@intel.com>
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:40774 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbZHLNGr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 09:06:47 -0400
+Date: Wed, 12 Aug 2009 17:06:05 +0400
+From: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1251445557.4189.14.camel@johannes.local>
-References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
-	 <1251445557.4189.14.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 28 Aug 2009 08:45:21 -0700
-Message-Id: <1251474321.3805.73.camel@rc-desk>
-Mime-Version: 1.0
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Sergey Lapin <slapin@ossfans.org>
+Subject: Re: [PATCH 1/2] mac802154: add a software MAC 802.15.4
+ implementation
+Message-ID: <20090812130605.GA17169@doriath.ww600.siemens.net>
+References: <1249913800-10176-1-git-send-email-dbaryshkov@gmail.com>
+ <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com>
+ <1249914466.32614.13.camel@johannes.local>
+ <20090811202304.GA6303@doriath.ww600.siemens.net>
+ <1250023198.13529.69.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250023198.13529.69.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Tue, Aug 11, 2009 at 10:39:58PM +0200, Johannes Berg wrote:
+> On Wed, 2009-08-12 at 00:23 +0400, Dmitry Eremin-Solenikov wrote:
+> 
+> > > That return value is strange.
+> > 
+> > The idea is that tx function can return info about errors during
+> > transmit (busy channel, no ACK, etc).
+> 
+> Well, TX functions don't usually wait for anything so busy channel or no
+> ack wouldn't be possible to return there but more like a TX status, and
+> I think people are more used to NETDEV_TX_OK etc. return values. But
+> it's your choice to make, obviously. If you want to return specific
+> information like that though I would recommend making an enum so you get
+> at least some type checking (and things like 'return -1' are more
+> obviously wrong).
 
-On Fri, 2009-08-28 at 00:45 -0700, Johannes Berg wrote:
-> Thanks. I'll comment on both patches together. Can you please also tell
-> us what the problem is this is solving? I'm a bit lost.
-
-This work is motivated by an attempt to untangle the iwlwifi station
-management to be able to use mac80211's sta notify callback. From 4965
-and up the rate scaling in the device is done per station, so an entry
-in the station table is required for the rate scaling initialization to
-succeed. 
-
-> I think both of these patches should just rolled into one since this is
-> also a mac80211 patch -- even if it's for the bit that interacts with
-> cfg80211.
-
-ok - will do (if it is determined that they are needed).
+Currently we do all the work from special worker threads, so it's
+possible for this callback to sleep. The error isn't yet propagated to
+upper layers (there is a huge TODO there), anyway.
 
 > 
-> However, I don't think I actually understand the changes.
+> > > We've had no end to trouble with the master netdev, I suggest you look
+> > > into the current mac80211 code and see if you can get rid of it.
+> > 
+> > What troubles w/ master netdev did you have had? I do still see the
+> > master devices in mac80211. IIUC, it's planned to replace (from
+> > management point of view) the mdev with wiphy instance, isn't it?
 > 
-> >  	sta_apply_parameters(local, sta, params);
-> >  
-> > -	rate_control_rate_init(sta);
-> > -
-> >  	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-> >  		sdata->vif.type == NL80211_IFTYPE_AP;
-> >  
-> > @@ -742,13 +740,17 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
-> >  		if (err == -EEXIST && layer2_update) {
-> >  			/* Need to update layer 2 devices on reassociation */
-> >  			sta = sta_info_get(local, mac);
-> > -			if (sta)
-> > +			if (sta) {
-> > +				rate_control_rate_init(sta);
-> >  				ieee80211_send_layer2_update(sta);
-> > +			}
-> >  		}
+> Mostly the userspace API was a mess, and you can't actually _do_
+> anything with the master netdev. It also doesn't see all the frames,
+> only outgoing. It's very strange.
+
+We were using master netdevices for several purposes:
+1) ip link add link mwpanX type wpan, so that we have out-of-box support
+   for radio additions. That's really nice thing to have.
+
+2) for SOCK_RAW implementation that can be used to send raw packets
+   over-the-air/receive raw packets. I think we can use af_packet for
+   this, but I'm still not sure about packet injection.
+
+3) On the RX, we did send a clone of skb to the mdev and clones to slave
+   interfaces, thus overcoming your last argument.
+
+> The biggest problem is that it really clutters up the userspace API
+> since you can't do any netdev things with it, it's just a placeholder.
 > 
-> Why is this necessary? It should already have been called for this
-> station earlier?
+> In addition to that, you can't put anything into skb->cb, then push the
+> frame to the master netdev, and expect things in skb->cb to still be
+> there when the frame arrives at the master netdev. Not sure you do that
+> (I hope not because that would be very buggy), but eventually you'll
+> probably find that you do want that, etc.
 
-maybe - I just tried to have the code behave exactly as before, just
-with the rate scale initialization called later. Even before this patch,
-rate scaling initialization would be called if the station already
-exists. 
+Hmm. It works for us. Could you please tell me more about the problems
+with skb->cb ?
 
-If it is not necessary I can remove it.
+> IMHO it's just better practise to not use it in situations like this
+> where it can't be really used as a netdev.
 
-> 
-> >  		rcu_read_unlock();
-> >  		return err;
-> >  	}
-> >  
-> > +	rate_control_rate_init(sta);
-> > +
-> 
-> Also, I don't see anything between the old place that it was called and
-> the new place you're moving it to that could possibly change the station
-> parameters?
+We did use it as a netdev, however we can probably live without it.
+I'll rethink this interface.
 
-Station parameters may not have changed, but at this point the driver
-has been notified that this station exists and it is now able to do the
-rate scaling initialization correctly.
-
-Right now iwlwifi is adding stations inside the rate scaling code in
-order to work around this issue. I'd like to clean this up and only use
-the sta notify callback.
-
-> 
-> Same in ibss.c (not quoting it here) where you're only moving it to
-> after sta_info_insert()
-
-This was my goal actually.
-
->  -- all that seems to do is add race conditions,
-> allowing other code to find not-yet-initialised stations.
-
-I did not realize that this can happen. Can you please elaborate?
-
-> So the only place I could see a change being necessary would be mlme.c,
-> but then only moving rate_control_rate_init() to after the flags
-> settings, not to after the insert.
-
-Here too I moved it to after the insert for the same reason as above.
-
-
-Reinette
-
+-- 
+With best wishes
+Dmitry
 
