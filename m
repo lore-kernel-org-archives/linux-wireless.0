@@ -1,50 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47346 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032AbZHGPqF (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.247]:29673 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165AbZHLRcy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 11:46:05 -0400
-Date: Fri, 7 Aug 2009 11:34:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ivan.kuten@promwad.com, linux-wireless@vger.kernel.org,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>
-Subject: Re: [PATCH] wireless: Compare ethernet addresses by unaligned safe
-	way
-Message-ID: <20090807153419.GF7545@tuxdriver.com>
-References: <1245149672-18063-1-git-send-email-yauhen.kharuzhy@promwad.com> <1245150895.8623.3.camel@johannes.local> <4A475F82.9040007@promwad.com> <1246262320.5947.3.camel@johannes.local> <4A68A465.6020501@promwad.com> <1248371971.634.0.camel@johannes.local>
+	Wed, 12 Aug 2009 13:32:54 -0400
+Received: by an-out-0708.google.com with SMTP id d40so139360and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 10:32:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1248371971.634.0.camel@johannes.local>
+In-Reply-To: <b6c5339f0908121013v4316cfdbsf4e274217555dbe9@mail.gmail.com>
+References: <1250096221-11000-1-git-send-email-lrodriguez@atheros.com>
+	<1250096221-11000-4-git-send-email-lrodriguez@atheros.com>
+	<b6c5339f0908121013v4316cfdbsf4e274217555dbe9@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 Aug 2009 10:32:35 -0700
+Message-ID: <43e72e890908121032u52ed53f5u5835dd73d83f8871@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ath5k: use bit shift operators for cache line size
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 23, 2009 at 07:59:31PM +0200, Johannes Berg wrote:
-> On Thu, 2009-07-23 at 20:56 +0300, Ivan Kuten wrote:
-> > > On Sun, 2009-06-28 at 15:18 +0300, Ivan Kuten wrote:
-> > >> Hello,
-> > >>
-> > >> In net/wireless/scan.c : cfg80211_wext_siwscan there seems also unaligned allocations
-> > >> for creq->ssids and creq->channels. Should it be something like that?
-> > > 
-> > > Seems alright, but there is more than one instance of this, maybe you
-> > > can make a function to allocate a scan request properly and have it be
-> > > called from all the places it's needed.
-> > > 
-> > > johannes
-> > > 
-> > 
-> > Hello Johannes,
-> > Can you point to that multiple scan allocations? I see only one kzalloc
-> > with followed possible alignment violation - it's in cfg80211_wext_siwscan in scan.c
-> 
-> I'm sure there's one in nl80211.c too
+On Wed, Aug 12, 2009 at 10:13 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Wed, Aug 12, 2009 at 12:57 PM, Luis R.
+> Rodriguez<lrodriguez@atheros.com> wrote:
+>> This matches ath9k, providing consistency when reading both drivers.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/ath/ath5k/base.c |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+>> index 63c2b57..2b3cf39 100644
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -471,7 +471,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>>                 * DMA to work so force a reasonable value here if it
+>>                 * comes up zero.
+>>                 */
+>> -               csz = L1_CACHE_BYTES / sizeof(u32);
+>> +               csz = L1_CACHE_BYTES >> 2;
+>>                pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, csz);
+>
+> I'm not sure it's better,
 
-Ivan/Yauhen,
+I did this for consistency between drivers but yes the advantage with
+a shift is it should be cheaper than a multiplication. Although I am
+not sure if simple multiplications get optimized by either the
+compiler or an architecture to shifts.
 
-Will you be posted an updated patch?  Time is short before the next merge window...
+> although the whole thing seems bogus to
+> me.  Is there really a modern machine where PCI cache line size should
+> only be four bytes?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Beats me, I was just matching the code for ath9k. The whole cache
+alignment practice seems to be debatable to me and and hoping Sam
+Leffer might recall the exact reasonings behind it.
+
+Whether we remove this though would be a change which should go
+through a separate patch I think.
+
+  Luis
