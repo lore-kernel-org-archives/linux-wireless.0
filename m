@@ -1,68 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44204 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbZH0HPL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 03:15:11 -0400
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
- Implement  rfkill support)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>, hal@lists.freedesktop.org,
-	htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
-	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QzPeNyo3eGpSnl+4pq8J"
-Date: Thu, 27 Aug 2009 09:14:27 +0200
-Message-Id: <1251357267.20531.4.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:51903 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751648AbZHLPOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 11:14:02 -0400
+Date: Wed, 12 Aug 2009 17:12:36 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH 2.6.30] iwl3945: fix rfkill switch
+Message-ID: <20090812151235.GA3912@dhcp-lab-161.englab.brq.redhat.com>
+References: <1249389350-4158-1-git-send-email-sgruszka@redhat.com> <1249512709.30019.4902.camel@rc-desk> <20090806071902.GA9816@dhcp-lab-161.englab.brq.redhat.com> <1249589758.30019.5034.camel@rc-desk> <20090807063141.GA2523@dhcp-lab-161.englab.brq.redhat.com> <1249922692.30019.5610.camel@rc-desk> <20090811140908.GA3235@dhcp-lab-161.englab.brq.redhat.com> <1250014113.30019.5799.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250014113.30019.5799.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Aug 11, 2009 at 11:08:33AM -0700, reinette chatre wrote:
+> Hi Stanislaw,
+> 
+> Thank you for your patience ...
 
---=-QzPeNyo3eGpSnl+4pq8J
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Hello, I understand your concerns, patch is not so straightforward and
+hard to understand, if you don't have system where you can reproduce.
 
-On Wed, 2009-08-26 at 16:45 -0700, Luis R. Rodriguez wrote:
+> On Tue, 2009-08-11 at 07:09 -0700, Stanislaw Gruszka wrote:
+> > On Mon, Aug 10, 2009 at 09:44:52AM -0700, reinette chatre wrote:
+> > > Yes. I assume that what happens here is that rfkill notifies user that
+> > > state changes to RFKILL_STATE_UNBLOCKED. In your new patch the driver
+> > > will now clear STATUS_RF_KILL_SW, with STATUS_RF_KILL_HW still being
+> > > set. So, in this run, after iwl_rfkill_soft_rf_kill is called there will
+> > > be a state mismatch with rfkill thinking the system is unblocked while
+> > > the driver has it as hard blocked. This is not right.
+> > 
+> > In such case we return -EBUSY from iwl_rfkill_soft_rf_kill() - rfkill
+> > state not change. 
+> 
+> oh - right - sorry
+> 
+> > I made a comment it will be HARD_BLOCKED, this
+> > is not true anymore, it can be also in state SOFT_BLOCKED . 
+> 
+> How so? Isn't the idea behind toggle_radio that the SOFT_BLOCKED state
+> changes? In this case when we get a new state of UNBLOCKED then I do not
+> understand how SOFT_BLOCKED can be true also.
 
-> Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
+Hugh, right I was completely wrong here. 
+ 
+> > However
+> > comment was true with previous version of the patch for 2.6.29, where
+> > there was no HARD -> SOFT downgrade and that part was called only when
+> > rfkill state was HARD_BLOCKED.
+> > 
+> > > Can this be fixed by adding a iwl_rfkill_set_hw_state in this run?
+> > 
+> > We can not call iwl_rfkill_set_hw_state in iwl_rfkill_soft_rt_kill
+> > as rfkill->muttex is taken. We eventually can force state in the same ugly
+> > way as is done for case RFKILL_STATE_SOFT_BLOCKED and I think, this is good
+> > idea :) , below not tested delta patch:
+> > 
+> 
+> This just seems to mess with the rfkill internals even more. Can this
+> not be avoided?
 
-Yes, but I never understood why that matters. If you've got
-compat-wireless "rfkill" loaded then the original rfkill can't be loaded
-anyway. And their symbols would probably clash anyway if the original is
-built in, in which case you can't use compat.
+Other solution eventually would be ignore rfkill core request to SW disable
+radio when we have already STATUS_RF_KILL_HW=1, but I think it is very bad
+idea and probably broke thinks.
 
-You haven't renamed cfg80211's sysfs either, so why rfkill?
+We currently call rfkill_force_state() which is changing internal state
+of rfkill core, however it is done through defined api. Uh, patch is
+not ideal, but I do not have anything better. 
 
-johannes
+> > > >From what I can tell this patch introduced a disagreement of rfkill
+> > > state between driver and rfkill system.
+> > 
+> > In driver we have no states, but separate bits for each killswitch. Situation
+> > gets better after rfkill rewrite where also rfkill core become to have separate
+> > bits, but with 2.6.30 we have no such luck.
+> > 
+> > Currently we have "states" like below:
+> > 
+> > STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_HARD_BLOCKED
+> > STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
+> > STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_HARD_BLOCKED
+> > STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_UNBLOCKED
+> > 
+> > Patch is intended to work like that:
+> > 
+> > STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
+> > STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
+> > STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_HARD_BLOCKED
+> > STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_UNBLOCKED
+> 
+> I can see that this is what the last hunk of the patch accomplishes -
+> but I do not see why it is needed.
+> 
+> > 
+> >   STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> > 
+> > driver HW on
+> > 
+> >   STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+> > 
+> > rfkill SW on ( -> rfkill_epo() -> rfkill_toggle_radio() with force = 1)
+> > 
+> >   STATUS_RF_KILL_HW=1, STATUS_RF_KILL_SW=1, RFKILL_STATE_HARD_BLOCKED
+> > 
+> > rfkill SW off (HARD_BLOCKED not clearing STATUS_RF_KILL_SW)
+> > 
+> >   STATUS_RF_KILL_HW=1, STATUS_RF_KILL_SW=1, RFKILL_STATE_HARD_BLOCKED
+> > 
+> > driver HW off (called from iwl_bg_rf_kill())
+> > 
+> >   STATUS_RF_KILL_HW=0, STATUS_RF_KILL_SW=1, RFKILL_STATE_SOFT_BLOCKED
+> > 
+> > rfkill core no longer wants to turn radio on
+> 
+> >From what I understand what you are describing above should be addressed
+> by this hunk of your patch:
+> 
+>         case RFKILL_STATE_UNBLOCKED:
+>                 if (iwl_is_rfkill_hw(priv)) {
+>                         err = -EBUSY;
+> -                       goto out_unlock;
+> +                       /* pass error to rfkill core to make it state HARD
+> +                        * BLOCKED and disable software kill switch */
+>                 }
+> 
+> This should make these new transitions possible:
+> 
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> driver HW on
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+> rfkill SW on ( -> rfkill_epo() -> rfkill_toggle_radio() with force = 1)
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_HARD_BLOCKED
+> rfkill SW off 
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+No, rfkill core will not call ->toggle_radio()
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_HARD_BLOCKED
+> driver HW off (called from iwl_bg_rf_kill())
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+Would be:
+ 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_UNBLOCKED
 
---=-QzPeNyo3eGpSnl+4pq8J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Not work without the patch, with patch it works like that:
 
------BEGIN PGP SIGNATURE-----
+ 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+driver HW on
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+rfkill SW on 
+	rfkill call -> rfkill_epo() -> rfkill_toggle_radio(RFKILL_STATE_SOFT_BLOCKED)
+	with force = 1 . Due to changes in iwl_rfkill_soft_rf_kill() we move
+	state to RFKILL_STATE_SOFT_BLOCKED, so:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+rfkill SW off 
+	rfkill core call ->toggle_radio(RFKILL_STATE_UNBLOCKED) 
+	iwl_is_rfkill_hw(priv) is true but we disable STATUS_RF_KILL_SW
+	anyway and return -EBUSY to not change rfkill core state, so:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_SOFT_BLOCKED
+driver HW off
+	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
 
-iQIcBAABAgAGBQJKljJMAAoJEODzc/N7+Qma4T4P/jZ5TIYrErrDo9s8wW7H7hy2
-Fa8xlLJew6sB7s4Nt4904wEEP7a10Lms0QvFZMvkjjc8N89A7YEGbQehy/W76NKq
-Le0E8tlokS76hpjiRxeUjBP17GXQdCorpd3oowEZ78wK7LwuIymz4BsxDOwbsnUj
-xGvLh0bibrZzRvxu4cm8IrBBfktNn+vw8G+UIJd232CRR7UoeBkRABfYyGXg4/u5
-djtrVppGLFkgiS8Hn+XlE7/Q1v1d2SD4m602YbLEuXlUGgWh1bi0UHsciPZm59fa
-vRORs+01sOM6kcbL4jU1OZF/u997YBaL+Zn4Xc8DLqdbHQCqFyEL9GhK8PPAuAaP
-FLv5RnokbwMuZOHh43CeXvkS5ovF2shRlIMXVCwkcedd0TYDx5V/8Xs/+tgKkGZL
-2VXbOOAW6mQAbayACipTGLncwidbaRSXmB5vw9MFQpMZY5ljAsIYO1+4qDQUvcIH
-i1HurmvHU/6pN1LSTWt4FifjH8gXByEHwEIkwA1PXgZOds89s77NQw8SrHWyyvmq
-Kd94yCdFyaIaJTYNQvqxcUOOxanb1VpTMG4O0Is8V9FeV9mGYb8ibVIgUFT8A+oX
-97BoTpzL6gYqsYOhgLjTlWYA59d2/+mJ6Q7y6g9QVhxm95renTy76dLVL0n6eqEY
-cDgDBK6KiyHl6oWvy0B+
-=w+uS
------END PGP SIGNATURE-----
+> Looking further I tried to see how other combinations would be treated. Here is how I see the potential scenarios:
+> 
+> Case1 (considered above):
+> driver HW on -> rfkill SW on -> rfkill SW off -> driver HW off
+> Case2:
+> driver HW on -> rfkill SW on -> driver HW off -> rfkill SW off
+> Case3:
+> rfkill SW on -> driver HW on -> rfkill SW off -> driver HW off
+> Case4:
+> rfkill SW on -> driver HW on -> driver HW off -> rfkill SW off 
+> 
+> Looking at the rest of the cases I do not see the problem addressed by the other hunks.
+> 
+> I see:
+> 
+> Case 2:
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> driver HW on
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+> rfkill SW on
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_HARD_BLOCKED
+> driver HW off
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+> rfkill SW off 
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
 
---=-QzPeNyo3eGpSnl+4pq8J--
+Yes, works without the patch.
+
+> Case3:
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> rfkill SW on
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+> driver HW on
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_HARD_BLOCKED
+> rfkill SW off
+
+No, rfkill will not call ->toggle_radio()  
+
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+> driver HW off
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+
+Not work without the patch, with patch it works like that:
+
+Case3:
+ 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+rfkill SW on
+ 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+driver HW on
+	Here due to changes in iwl_rfkill_set_hw_state() rfkill core stay in
+	RFKILL_STATE_SOFT_BLOCKED so:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+rfkill SW off
+	rfkill core call ->toggle_radio(RFKILL_STATE_UNBLOCKED) 
+	iwl_is_rfkill_hw(priv) is true but we disable STATUS_RF_KILL_SW
+	anyway and return -EBUSY to not change rfkill core state, so:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_SOFT_BLOCKED
+driver HW off
+	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+
+> Case4:
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> rfkill SW on
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+> driver HW on
+> 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 1, RFKILL_STATE_HARD_BLOCKED
+> driver HW off
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 1, RFKILL_STATE_SOFT_BLOCKED
+> rfkill SW off 
+> 	STATUS_RF_KILL_HW = 0, STATUS_RF_KILL_SW = 0, RFKILL_STATE_UNBLOCKED
+> 
+
+Yes, work without the patch.
+
+> I understand that one hunk of your patch accomplishes the mapping of
+> "STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <->
+> RFKILL_STATUS_SOFT_BLOCKED" - but I do not understand why it is needed. Could you please explain?
+
+I hope above explanation are clear now. 
+
+> I also do not understand the need to modify rfkill's internal state.
+
+It's needed for Case1. Additional change of internal rfkill state, which
+I proposed in previous e-mail is against situation when we have:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_SOFT_BLOCKED
+To make it:
+ 	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+
+Regards
+Stanislaw
 
