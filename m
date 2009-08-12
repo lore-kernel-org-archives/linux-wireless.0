@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:57112 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbZHZWrJ (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:51419 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbZHLVID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 18:47:09 -0400
-Received: by iwn42 with SMTP id 42so411741iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 15:47:11 -0700 (PDT)
+	Wed, 12 Aug 2009 17:08:03 -0400
+Received: by vws2 with SMTP id 2so291447vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 14:08:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1251325824.20531.1.camel@johannes.local>
-References: <850984.89698.qm@web23108.mail.ird.yahoo.com> <1251297273.15619.11.camel@johannes.local>
-	<43e72e890908261333m1d576fdhaa16088affec5426@mail.gmail.com>
-	<43e72e890908261506h6b9ec4efq2d190388663d4671@mail.gmail.com>
-	<1251324755.20531.0.camel@johannes.local> <43e72e890908261526g538eea56l873314e576331449@mail.gmail.com>
-	<1251325824.20531.1.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 Aug 2009 15:46:51 -0700
-Message-ID: <43e72e890908261546k23093162g2bece1efe9f467e9@mail.gmail.com>
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: htl10@users.sourceforge.net,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <43e72e890908121148l2cde20a9xb2c045e03574ffaa@mail.gmail.com>
+References: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
+	 <4A83064A.2080609@gmail.com>
+	 <43e72e890908121148l2cde20a9xb2c045e03574ffaa@mail.gmail.com>
+Date: Wed, 12 Aug 2009 17:08:03 -0400
+Message-ID: <b6c5339f0908121408q4f3382e3rabd4def2de14c56c@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] ath5k: fix requested allocated RX skb size
+	for DMA
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, Nick Kossifidis <mickflemm@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 3:30 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-08-26 at 15:26 -0700, Luis R. Rodriguez wrote:
+On Wed, Aug 12, 2009 at 2:48 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> On Wed, Aug 12, 2009 at 11:13 AM, Jiri Slaby<jirislaby@gmail.com> wrote:
+>> What was the exact purpose of this? My guess is that we should map
+>> starting at a next cache line boundary and put this aligned address to
+>> the device instead?
 >
->> I was thinking of the case where someone hit rfkill between dev_open()
->> and mac80211's subif_open() but I am either not sure if this is
->> possible.
+> I've heard two theories:
 >
-> Oh, but that's ok -- we'll set the interface down again very quickly
-> after. Besides, you could be in subif_open() already while hitting it,
-> somewhere in driver initialisation...
->
->> If there is a real value to adding it to mac80211 then we wouldn't
->> need to tug around a hunk for it on compat.
->
-> I don't see any value in it.
+> 1) AR5210 *required* it otherwise bad we would get bad data
+> 2) Performance considerations
 
-OK -- then someone interested can add the hunk to compat.
+>From what I can tell Jiri has the right guess:
 
-  Luis
+  // ?? nice pointer arithmetic... should use PTR_ALIGN here?
+  off = ((unsigned long) skb->data) % sc->cachelsz;
+  if (off != 0)
+      skb_reserve(skb, sc->cachelsz);
+
+in other words, when we allocate, round up to the next cache line
+greater than IEEE80211_MAX_LEN, then add an extra cache_line-1
+bytes so we can map starting from it.
+
+dev_alloc_skb already does some padding and alignment, and it's
+configurable on a per-arch basis (though looks like only powerpc
+sets it to L1 cache size, everywhere else it's 32 bytes.)
+
+I guess if someone is bored some benchmarking would be useful.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
