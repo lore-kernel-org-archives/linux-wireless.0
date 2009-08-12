@@ -1,389 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37952 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753861AbZHBV5c convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:42020 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754741AbZHLUml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 17:57:32 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.31-rc5: Reported regressions 2.6.29 -> 2.6.30
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
+	Wed, 12 Aug 2009 16:42:41 -0400
+Received: by fxm28 with SMTP id 28so246820fxm.17
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 13:42:41 -0700 (PDT)
+Message-ID: <4A832940.6000807@gmail.com>
+Date: Wed, 12 Aug 2009 22:42:40 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <upey9ZSfnaF.A.-oE.rpgdKB@chimera>
-Date: Sun,  2 Aug 2009 21:06:28 +0200 (CEST)
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Initialize TX power control
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions introduced between 2.6.29 and
-2.6.30, for which there are no fixes in the mainline I know of.  If any of them
-have been fixed already, please let me know.
+The HW TX power control init still needs work.
+The SW init is complete according to the specs.
+
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+This depends on both the rev0/1 RC calibration patch and the
+V4 dummy transmission patch I submitted earlier.
+
+Larry, please check the SPEC TODO/SPEC FIXME comments.
+
+ drivers/net/wireless/b43/phy_lp.c |  104 ++++++++++++++++++++++++++++++++++---
+ drivers/net/wireless/b43/phy_lp.h |    5 ++
+ 2 files changed, 102 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index e05981b..6ebaeb2 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1258,18 +1258,108 @@ static void lpphy_calibration(struct b43_wldev *dev)
+ 	b43_mac_enable(dev);
+ }
+ 
++static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum tssi_mux_mode mode)
++{
++	if (mode != TSSI_MUX_EXT) {
++		b43_radio_set(dev, B2063_PA_SP1, 0x2);
++		b43_phy_set(dev, B43_PHY_OFDM(0xF3), 0x1000);
++		b43_radio_write(dev, B2063_PA_CTL10, 0x51);
++		if (mode == TSSI_MUX_POSTPA) {
++			b43_radio_mask(dev, B2063_PA_SP1, 0xFFFE);
++			b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFC7);
++		} else {
++			b43_radio_maskset(dev, B2063_PA_SP1, 0xFFFE, 0x1);
++			b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVRVAL,
++					0xFFC7, 0x20);
++		}
++	} else {
++		//SPEC TODO
++	}
++}
++
++static void lpphy_tx_pctl_init_hw(struct b43_wldev *dev)
++{
++	u16 tmp;
++	int i;
++
++	//SPEC TODO Call LP PHY Clear TX Power offsets
++	for (i = 0; i < 64; i++) {
++		if (dev->phy.rev >= 2)
++			b43_lptab_write(dev, B43_LPTAB32(7, i+1), i);
++		else
++			b43_lptab_write(dev, B43_LPTAB32(10, i+1), i);
++	}
++
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xFF00, 0xFF);
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0x8FFF, 0x5000);
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI, 0xFFC0, 0x1F);
++	if (dev->phy.rev < 2) {
++		b43_phy_mask(dev, B43_LPPHY_LP_PHY_CTL, 0xEFFF);
++		b43_phy_maskset(dev, B43_LPPHY_LP_PHY_CTL, 0xDFFF, 0x2000);
++	} else {
++		b43_phy_mask(dev, B43_PHY_OFDM(0x103), 0xFFFE);
++		b43_phy_maskset(dev, B43_PHY_OFDM(0x103), 0xFFFB, 0x4);
++		b43_phy_maskset(dev, B43_PHY_OFDM(0x103), 0xFFEF, 0x10);
++		b43_radio_maskset(dev, B2063_IQ_CALIB_CTL2, 0xF3, 0x1);
++		lpphy_set_tssi_mux(dev, TSSI_MUX_POSTPA);
++	}
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI, 0x7FFF, 0x8000);
++	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xFF);
++	b43_phy_write(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xA);
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
++			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
++			B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
++	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xF8FF);
++	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
++			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
++			B43_LPPHY_TX_PWR_CTL_CMD_MODE_SW);
++
++	if (dev->phy.rev < 2) {
++		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_0, 0xEFFF, 0x1000);
++		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xEFFF);
++	} else {
++		lpphy_set_tx_power_by_index(dev, 0x7F);
++	}
++
++	b43_dummy_transmission_v4(dev, true, true);
++
++	tmp = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT);
++	if (tmp & 0x8000)
++		b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI,
++				0xFFC0, (tmp & 0xFF) - 32);
++
++	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xEFFF);
++
++	// (SPEC?) TODO Set "Target TX frequency" variable to 0
++	// SPEC FIXME "Set BB Multiplier to 0xE000" impossible - bb_mult is u8!
++}
++
++static void lpphy_tx_pctl_init_sw(struct b43_wldev *dev)
++{
++	struct lpphy_tx_gains gains;
++
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
++		gains.gm = 4;
++		gains.pad = 12;
++		gains.pga = 12;
++		gains.dac = 0;
++	} else {
++		gains.gm = 7;
++		gains.pad = 14;
++		gains.pga = 15;
++		gains.dac = 0;
++	}
++	lpphy_set_tx_gains(dev, gains);
++	lpphy_set_bb_mult(dev, 150);
++}
++
+ /* Initialize TX power control */
+ static void lpphy_tx_pctl_init(struct b43_wldev *dev)
+ {
+ 	if (0/*FIXME HWPCTL capable */) {
+-		//TODO
++		lpphy_tx_pctl_init_hw(dev);
+ 	} else { /* This device is only software TX power control capable. */
+-		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+-			//TODO
+-		} else {
+-			//TODO
+-		}
+-		//TODO set BB multiplier to 0x0096
++		lpphy_tx_pctl_init_sw(dev);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
+index 0461d5b..4eab760 100644
+--- a/drivers/net/wireless/b43/phy_lp.h
++++ b/drivers/net/wireless/b43/phy_lp.h
+@@ -886,6 +886,11 @@ struct b43_phy_lp {
+ 	u16 dig_flt_state[9];
+ };
+ 
++enum tssi_mux_mode {
++	TSSI_MUX_PREPA,
++	TSSI_MUX_POSTPA,
++	TSSI_MUX_EXT,
++};
+ 
+ struct b43_phy_operations;
+ extern const struct b43_phy_operations b43_phyops_lp;
+-- 
+1.6.2.4
 
-If you know of any other unresolved regressions introduced between 2.6.29
-and 2.6.30, please let me know either and I'll add them to the list.
-Also, please let me know if any of the entries below are invalid.
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2009-08-02      145       44          39
-  2009-07-27      143       48          45
-  2009-07-07      138       50          46
-  2009-06-29      133       46          43
-  2009-06-07      110       35          31
-  2009-05-31      100       32          27
-  2009-05-24       92       34          27
-  2009-05-16       81       36          33
-  2009-04-25       55       36          26
-  2009-04-17       37       35          28
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13898
-Subject		: Intel 3945ABG - problems on 2.6.30.X
-Submitter	: dienet <dienet@poczta.fm>
-Date		: 2009-07-31 15:17 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=124905346729959&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13886
-Subject		: Suspend to disk no longer works in 2.6.30.2 with an EIDE drive
-Submitter	:  <akwatts@ymail.com>
-Date		: 2009-08-01 10:12 (2 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13865
-Subject		: Can only resume with HP_WMI selected on compaq nc6000 when 4c395bdd3f2ca8f7e8efad881e16071182c3b8ca is reverted
-Submitter	: cedric <cedric@belbone.be>
-Date		: 2009-07-29 12:47 (5 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13797
-Subject		: iBook G4 doesn't suspend since 2ed8d2b3a8
-Submitter	: Jörg Sommer <joerg@alea.gnuu.de>
-Date		: 2009-07-18 20:18 (16 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13795
-Subject		: abnormal boot and no suspend due to 'async' (fastboot)
-Submitter	: Rafal Kaczynski <fscnoboot@wp.pl>
-Date		: 2009-07-18 17:19 (16 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13780
-Subject		: NULL pointer dereference loading powernowk8
-Submitter	: Kurt Roeckx <kurt@roeckx.be>
-Date		: 2009-07-15 18:00 (19 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13739
-Subject		: 2.6.30 leaking keys on console switch
-Submitter	: Andi Kleen <andi@firstfloor.org>
-Date		: 2009-07-07 8:44 (27 days old)
-References	: http://marc.info/?l=linux-kernel&m=124695628924382&w=4
-Handled-By	: Jiri Kosina <jkosina@suse.cz>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13694
-Subject		: i915 phantom TV
-Submitter	: Maciek Józiewicz <mjoziew@gmail.com>
-Date		: 2009-07-02 12:26 (32 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13682
-Subject		: The webcam stopped working when upgrading from 2.6.29 to 2.6.30
-Submitter	: Nathanael Schaeffer <nathanael.schaeffer@gmail.com>
-Date		: 2009-06-30 13:34 (34 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13669
-Subject		: Kernel bug with dock driver
-Submitter	: Joerg Platte <jplatte@naasa.net>
-Date		: 2009-06-14 21:00 (50 days old)
-References	: http://lkml.org/lkml/2009/6/14/216
-Handled-By	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13660
-Subject		: Crashes during boot on 2.6.30 / 2.6.31-rc, random programs
-Submitter	: Joao Correia <joaomiguelcorreia@gmail.com>
-Date		: 2009-06-27 16:07 (37 days old)
-References	: http://lkml.org/lkml/2009/6/27/95
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13646
-Subject		: warn_on tty_io.c, broken bluetooth
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2009-06-19 17:05 (45 days old)
-References	: http://lkml.org/lkml/2009/6/19/187
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13644
-Subject		: hibernation/swsusp lockup due to acpi-cpufreq
-Submitter	: Johannes Stezenbach <js@sig21.net>
-Date		: 2009-06-16 01:27 (48 days old)
-References	: http://lkml.org/lkml/2009/6/15/630
-		  http://lkml.org/lkml/2009/6/29/504
-Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13638
-Subject		: rt2870 driver is broken for (some) cards
-Submitter	: jakob gruber <jakob.gruber@kabelnet.at>
-Date		: 2009-06-27 17:33 (37 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13634
-Subject		: [drm:drm_wait_vblank] *ERROR* failed to acquire vblank counter, -22
-Submitter	: Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Date		: 2009-06-27 07:02 (37 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13621
-Subject		: xfs hangs with assertion failed
-Submitter	: Johannes Engel <jcnengel@googlemail.com>
-Date		: 2009-06-25 10:07 (39 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13620
-Subject		: acpi_enforce_resources broken - conflicting i2c module loaded on some EeePCs
-Submitter	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Date		: 2009-06-25 08:31 (39 days old)
-References	: <http://lists.alioth.debian.org/pipermail/debian-eeepc-devel/2009-June/002316.html>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13583
-Subject		: pdflush uses 5% CPU on otherwise idle system
-Submitter	: Paul Martin <pm@debian.org>
-Date		: 2009-06-19 13:33 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13581
-Subject		: ath9k doesn't work with newer kernels
-Submitter	: Matteo <rootkit85@yahoo.it>
-Date		: 2009-06-19 12:04 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13564
-Subject		: random general protection fault at boot time caused by khubd.
-Submitter	: Pauli <suokkos@gmail.com>
-Date		: 2009-06-18 12:44 (46 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13558
-Subject		: Tracelog during resume
-Submitter	: Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
-Date		: 2009-06-17 11:32 (47 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13554
-Subject		: linux-image-2.6.30-1-686, KMS enabled: black screen, no X window
-Submitter	: Jos van Wolput <wolput@onsneteindhoven.nl>
-Date		: 2009-06-17 06:28 (47 days old)
-References	: http://marc.info/?l=linux-kernel&m=124686965407853&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13514
-Subject		: acer_wmi causes stack corruption
-Submitter	: Rus <harbour@sfinx.od.ua>
-Date		: 2009-06-12 08:13 (52 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13512
-Subject		: D43 on 2.6.30 doesn't suspend anymore
-Submitter	: Daniel Smolik <marvin@mydatex.cz>
-Date		: 2009-06-11 20:12 (53 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13502
-Subject		: GPE storm causes polling mode, which causes /proc/acpi/battery read to take 4 seconds - MacBookPro4,1
-Submitter	:  <sveina@gmail.com>
-Date		: 2009-06-10 20:04 (54 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13408
-Subject		: Performance regression in 2.6.30-rc7
-Submitter	: Diego Calleja <diegocg@gmail.com>
-Date		: 2009-05-30 18:51 (65 days old)
-References	: http://lkml.org/lkml/2009/5/30/146
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13407
-Subject		: adb trackpad disappears after suspend to ram
-Submitter	: Jan Scholz <scholz@fias.uni-frankfurt.de>
-Date		: 2009-05-28 7:59 (67 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2ed8d2b3a81bdbb0418301628ccdb008ac9f40b7
-References	: http://marc.info/?l=linux-kernel&m=124349762314976&w=4
-Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13401
-Subject		: pktcdvd writing is really slow with CFQ scheduler (bisected)
-Submitter	: Laurent Riffard <laurent.riffard@free.fr>
-Date		: 2009-05-28 18:43 (67 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13374
-Subject		: reiserfs blocked for more than 120secs
-Submitter	: Harald Dunkel <harald.dunkel@t-online.de>
-Date		: 2009-05-23 8:52 (72 days old)
-References	: http://marc.info/?l=linux-kernel&m=124306880410811&w=4
-		  http://lkml.org/lkml/2009/5/29/389
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13373
-Subject		: fbcon, intelfb, i915: INFO: possible circular locking dependency detected
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2009-05-23 5:08 (72 days old)
-References	: http://marc.info/?l=linux-kernel&m=124305538130702&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13362
-Subject		: rt2x00: slow wifi with correct basic rate bitmap
-Submitter	: Alejandro Riveira <ariveira@gmail.com>
-Date		: 2009-05-22 13:32 (73 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13351
-Subject		: 2.6.30 corrupts my system after suspend resume with readonly mounted hard disk
-Submitter	:  <unggnu@googlemail.com>
-Date		: 2009-05-20 14:09 (75 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=78a8b35bc7abf8b8333d6f625e08c0f7cc1c3742
-Handled-By	: Yinghai Lu <yinghai@kernel.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13341
-Subject		: Random Oops at boot at loading ip6tables rules
-Submitter	:  <patrick@ostenberg.de>
-Date		: 2009-05-19 09:08 (76 days old)
-Handled-By	: Rusty Russell <rusty@rustcorp.com.au>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13328
-Subject		: b44: eth0: BUG! Timeout waiting for bit 00000002 of register 42c to clear.
-Submitter	: Francis Moreau <francis.moro@gmail.com>
-Date		: 2009-05-03 16:22 (92 days old)
-References	: http://marc.info/?l=linux-kernel&m=124136778012280&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13318
-Subject		: AGP doesn't work anymore on nforce2
-Submitter	: Karsten Mehrhoff <kawime@gmx.de>
-Date		: 2009-04-30 8:51 (95 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=59de2bebabc5027f93df999d59cc65df591c3e6e
-References	: http://marc.info/?l=linux-kernel&m=124108156417560&w=4
-Handled-By	: Shaohua Li <shaohua.li@intel.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13306
-Subject		: hibernate slow on _second_ run
-Submitter	: Johannes Berg <johannes@sipsolutions.net>
-Date		: 2009-05-14 09:34 (81 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13219
-Subject		: Intel 440GX: Since kernel 2.6.30-rc1, computers hangs randomly but not with kernel <= 2.6.29.6
-Submitter	: David Hill <hilld@binarystorm.net>
-Date		: 2009-05-01 16:57 (94 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13180
-Subject		: 2.6.30-rc2: WARNING at i915_gem.c for i915_gem_idle
-Submitter	: Niel Lambrechts <niel.lambrechts@gmail.com>
-Date		: 2009-04-21 21:35 (104 days old)
-References	: http://marc.info/?l=linux-kernel&m=124034980819102&w=4
-		  http://lkml.org/lkml/2009/4/27/290
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13109
-Subject		: High latency on /sys/class/thermal
-Submitter	: Tiago Simões Batista <tiagosbatista@gmail.com>
-Date		: 2009-04-11 14:56 (114 days old)
-References	: http://marc.info/?l=linux-kernel&m=123946182301248&w=4
-Handled-By	: Zhang Rui <rui.zhang@intel.com>
-		  Alexey Starikovskiy <astarikovskiy@suse.de>
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13897
-Subject		: PAT wc & vmap mapping count issue
-Submitter	: Jerome Glisse <glisse@freedesktop.org>
-Date		: 2009-07-30 13:11 (4 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=3869c4aa18835c8c61b44bd0f3ace36e9d3b5bd0
-References	: http://marc.info/?l=linux-kernel&m=124895237114605&w=4
-Handled-By	: Pallipadi, Venkatesh <venkatesh.pallipadi@intel.com>
-Patch		: http://patchwork.kernel.org/patch/38436/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13884
-Subject		: x86 CPA incorrect memtype reserving using set_pages_array_xx
-Submitter	: Thomas Hellstrom <thellstrom@vmware.com>
-Date		: 2009-07-31 13:39 (3 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=9ae2847591c857bed44bc094b908b412bfa1b244
-Handled-By	: Thomas Hellstrom <thellstrom@vmware.com>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=22552
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13389
-Subject		: Warning 'Invalid throttling state, reset' gets displayed when it should not be
-Submitter	: Frans Pop <elendil@planet.nl>
-Date		: 2009-05-26 15:24 (69 days old)
-Handled-By	: Frans Pop <elendil@planet.nl>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=21671
-		  http://bugzilla.kernel.org/attachment.cgi?id=21672
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13337
-Subject		: [post 2.6.29 regression] hang during suspend of b44/b43 modules
-Submitter	: Tomas Janousek <tomi@nomi.cz>
-Date		: 2009-05-18 10:59 (77 days old)
-Handled-By	: Johannes Berg <johannes@sipsolutions.net>
-Patch		: http://patchwork.kernel.org/patch/37837/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13319
-Subject		: Page allocation failures with b43 and p54usb
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2009-04-29 21:01 (96 days old)
-References	: http://marc.info/?l=linux-kernel&m=124103897101088&w=4
-		  http://lkml.org/lkml/2009/6/7/136
-		  http://lkml.org/lkml/2009/7/26/213
-Handled-By	: Johannes Berg <johannes@sipsolutions.net>
-		  David Rientjes <rientjes@google.com>
-Patch		: http://patchwork.kernel.org/patch/37655/
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.29 and 2.6.30, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13070
-
-Please let me know if there are any Bugzilla entries that should be added to
-the list in there.
-
-Thanks,
-Rafael
 
