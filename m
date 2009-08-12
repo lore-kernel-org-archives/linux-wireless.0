@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:38435 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbZHAVvc (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.238]:38253 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336AbZHLSP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 17:51:32 -0400
-Date: Sat, 1 Aug 2009 22:51:30 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
-Message-ID: <20090801215130.GA24201@srcf.ucam.org>
-References: <1249152859-14769-1-git-send-email-mjg@redhat.com> <1249159133.3491.13.camel@localhost.localdomain> <20090801204534.GA23642@srcf.ucam.org> <1249159942.3491.21.camel@localhost.localdomain> <20090801205445.GA23751@srcf.ucam.org> <1249163327.3491.24.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1249163327.3491.24.camel@localhost.localdomain>
+	Wed, 12 Aug 2009 14:15:29 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so67731rvb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:15:31 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Woo <xinhua_wu@realsil.com.cn>,
+	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Subject: [PATCH 2/2] mac80211: Fix invalid length passed to IE parser for PLINK CONFIRM frames
+Date: Wed, 12 Aug 2009 11:03:44 -0700
+Message-Id: <1250100224-23832-3-git-send-email-javier@cozybit.com>
+In-Reply-To: <1250100224-23832-2-git-send-email-javier@cozybit.com>
+References: <4A82639F.6000908@realsil.com.cn>
+ <1250100224-23832-1-git-send-email-javier@cozybit.com>
+ <1250100224-23832-2-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 01, 2009 at 02:48:47PM -0700, Marcel Holtmann wrote:
+From: David Woo <xinhua_wu@realsil.com.cn>
 
-> why is it confusing? I don't understanding your argument here. I think
-> the KEY_RFKILL_ALL is confusing is the user policy then only kills WiFi
-> devices or toggles between various on/off combinations.
+The length of the fixed portion of plink confirm frames is 4 bytes longer than
+the other plink_action frames.  This path corrects an error in the length
+adjustment done for these type of frames.
 
-Having it be KEY_RFKILL implies that KEY_WLAN and similar aren't related 
-to rfkill. KEY_RFKILL_ALL implies that the key invokes policy on all 
-rfkill devices, which is the aim here.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 7c49c95..3575fe3 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -415,7 +415,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	baselen = (u8 *) mgmt->u.action.u.plink_action.variable - (u8 *) mgmt;
+ 	if (mgmt->u.action.u.plink_action.action_code == PLINK_CONFIRM) {
+ 		baseaddr += 4;
+-		baselen -= 4;
++		baselen += 4;
+ 	}
+ 	ieee802_11_parse_elems(baseaddr, len - baselen, &elems);
+ 	if (!elems.peer_link) {
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.5.4.3
+
