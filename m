@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38863 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934650AbZHEREc (ORCPT
+Received: from mail-gx0-f213.google.com ([209.85.217.213]:40038 "EHLO
+	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026AbZHLRZx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 13:04:32 -0400
-Subject: Re: Status of 802.11s in wireless-testing?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: xxiao <austinxxh-ath9k@yahoo.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20090805165021.GA20338@tuxdriver.com>
-References: <2f1373ed0908042145pc83adc5qd968e3bf8d0ce3c7@mail.gmail.com>
-	 <175701.5780.qm@web55308.mail.re4.yahoo.com>
-	 <20090805165021.GA20338@tuxdriver.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GjyUw/menBAMCT8wdzmn"
-Date: Wed, 05 Aug 2009 19:04:26 +0200
-Message-Id: <1249491866.6902.23.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 12 Aug 2009 13:25:53 -0400
+Received: by gxk9 with SMTP id 9so244375gxk.13
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 10:25:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090812100416.744dc5ba@nehalam>
+References: <20090812100416.744dc5ba@nehalam>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 12 Aug 2009 10:25:34 -0700
+Message-ID: <43e72e890908121025p75b141b6o86c30518bf9de7ea@mail.gmail.com>
+Subject: Re: Multiple SSID
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 12, 2009 at 10:04 AM, Stephen
+Hemminger<shemminger@vyatta.com> wrote:
+> I have a dumb questions. How does one setup multiple SSID's with
+> current (ie not madwifi) wireless API?
+>
+> 1. I assume need to run multiple instances of hostapd with different
+>   config. Will that work?
 
---=-GjyUw/menBAMCT8wdzmn
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes. But the next question is how to create new wlan%d AP interfaces.
+That is answered below.
 
-On Wed, 2009-08-05 at 12:50 -0400, John W. Linville wrote:
-> On Wed, Aug 05, 2009 at 09:08:54AM -0700, xxiao wrote:
-> > I didn't see patches from open80211s project for a while, which
-> > means it will break as the rest mac80211/drivers are evolving quickly.
->=20
-> You may be right, but it _should_not_ mean that -- at least not
-> necessarily.  Yes, there will be accidental breakage from time to time.
-> But developers ought to keep mesh in mind when making changes and
-> they should be "on the hook" to fix whatever breaks.
+> 2. Since IP address is attached to device (wlan0), how can each SSID
+>   have different IP address? Use vlan's?
 
-Right now, except from the stuff Luis had broken and fixed, the real
-problem is that there are a bunch of bugs that appear to have been in
-the code forever, just never noticed -- for instance the code can end up
-calling synchronize_rcu() in an atomic section.
+The new 'iw' [2] utility could be used to create monitor interfaces or
+ad-hoc interfaces for example. We decided to only allow you to create
+an "AP" type of interface with a utility that handles the MLME in
+userspace, such a utility is hostapd. You will need to use the nl80211
+driver with hosatpd [2]. We have documented the supported wireless
+modes in our wiki [3], I suppose that could use some updating.
 
-This is the reason for disabling it -- it can splatter all over the
-scheduler if that happens, and it's not clear to me that it cannot
-happen. It seems not to happen in _most_ scenarios, but I've certainly
-caused it to happen by not beaconing, for instance.
+Anyway I believe AP-enabled devices right now only support creating 1
+AP interfface. I believe the exception to this right now is ath9k
+through the private virtual interface stuff Jouni created, but to be
+honest I have to go and review that to make sure you can create 2 APs.
 
-johannes
+Typically drivers (MadWifi) which supported multiple BSSs (therefore
+with two SSIDs) would allow you to do this by creating BSSes on the
+same channel. The ath9k virtual interface thing allows you to create
+interfaces on *separate* channels, and provides its own scheduler,
+which you can tune, for switching back and forth.
 
---=-GjyUw/menBAMCT8wdzmn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+[1] http://wireless.kernel.org/en/users/Documentation/iw
+[2] http://wireless.kernel.org/en/users/Documentation/hostapd
+[3] http://wireless.kernel.org/en/users/Documentation/modes
 
------BEGIN PGP SIGNATURE-----
+> 3. Do vlan's work on wireless (ath9k)?
 
-iQIcBAABAgAGBQJKebuXAAoJEODzc/N7+QmaRdYP/imtvj1dkodmUfpvCQLFTes/
-u8Udfv0yi7Sd/AQFevCS839IhI5KiDVc6uCH+89+O1Owpx/9oBDRiJvrG7OUzCQ3
-fmeTAuXmt7Gy+PBlUxT2RgwPZ1+zGcC8Vs6S3PtM5XrYRFdFRF3hO+mT5xdppYN6
-RqIdWvSj/mvr5LgtRTtv5aiFmiWjA9u27+fZSCbMDtC1OkBDiWODIvgxYONA98ue
-2UPM7vTmSrcbBX5+gfqhSpzA5rqwzucTbW34XMGy+9SjNjOu80AZJuTvCee0tmx9
-0pl7c3lRZ3oJIZO9lgVkqOAjYYv4koMAXm307w3utIHiRdfXtXhwwW0I+R9e0Bwm
-UvVfOGSeIUg2v6ndq7b/NB0bKgHOnVjWgUCO+/dt5NpVzqOXrMAwwDxSwJWAtqab
-RX/8n+91Mn3uSn/+WMA5nvisS9vb7ruoWZvkX+ZjfPujhVob1gxLkJaQS4qulVJm
-rAoNSBjmQC03sHFQsp/Mi8my++z+80DA6Se6e7jh4jbPSMmzd+gs//pigBIhd5dq
-ry1bKNSAl1cTkGLcwy9Q0XZCgN3K9qbB5JytyTICJd1n0+TJyNSyD94jNS2foGbY
-iWLpNif2op2s6/31M3z940f4qMpD1CWco+HaOwYw6TK3bQJQZy2+afVZlXDfwPCQ
-aPD+tHlEAVPPW3PYeFn3
-=c0JZ
------END PGP SIGNATURE-----
+Not sure what is required to support vlans.
 
---=-GjyUw/menBAMCT8wdzmn--
-
+  Luis
