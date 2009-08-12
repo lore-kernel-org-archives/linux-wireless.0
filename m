@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:54123 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752371AbZHGLYp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 07:24:45 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Chris Clayton <chris2553@googlemail.com>
-Subject: Re: ath5k - strange regulatory domain change
-Date: Fri, 7 Aug 2009 13:24:44 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
-In-reply-To: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:10427 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751318AbZHLMAS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 08:00:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 05:00:20 -0700
+Date: Wed, 12 Aug 2009 17:28:05 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Roel Kluin <roel.kluin@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] ath9k: Prevent read buffer overflow
+Message-ID: <20090812115803.GA4876@vasanth-laptop>
+References: <4A81BB1E.6040904@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200908071324.45269.elendil@planet.nl>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A81BB1E.6040904@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chris Clayton wrote:
-> Because of some problems with my Belkin Wireless G card  (model
-> F5D7010) and the rt61pci driver, I've started to use a "no-name" card
-> that is supported by the ath5k driver.
+On Wed, Aug 12, 2009 at 12:10:30AM +0530, Roel Kluin wrote:
+> Prevent a read from valid_rate_index[] with a negative index
 > 
-> A problem is that I have come across is that for some reason the CN
-> regulatory domain is being set automatically. This doesn't happen with
-> the Belkin (rt61) card. I have the following line in
-> /etc/modprobe.d/modprobe.conf to set the regulatory domain to GB:
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Maybe we should add this?
 > 
-> options cfg80211 ieee80211_regdom=GB
+> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> index ba06e78..a67b7f6 100644
+> --- a/drivers/net/wireless/ath/ath9k/rc.c
+> +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> @@ -1458,7 +1458,7 @@ static void ath_rc_init(struct ath_softc *sc,
+>                 ath_rc_priv->rate_max_phy = ath_rc_priv->valid_phy_rateidx[i][j-1];
+>         }
+>         ASSERT(ath_rc_priv->rate_table_size <= RATE_TABLE_SIZE);
+> -       ASSERT(k <= RATE_TABLE_SIZE);
+> +       ASSERT(k <= RATE_TABLE_SIZE && k >= 4);
 
-This issue has already been discussed extensively (after I reported it). 
-Please see the following thread: http://lkml.org/lkml/2009/7/8/421. It 
-contains a lot of information from the wireless maintainers.
 
-Cheers.
-FJP
+NACK, k is initialized to 0 in the for loop few lines above this
+ASSERT.
+
+Vasanth
