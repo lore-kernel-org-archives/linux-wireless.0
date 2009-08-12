@@ -1,172 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53218 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757704AbZHQR1f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:35 -0400
+Received: from mail.atheros.com ([12.36.123.2]:46904 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752026AbZHLQ6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 12:58:10 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:58:12 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, aquilaver@yahoo.com,
-	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?utf-8?q?Bj=C3=B6rn=20Steinbrink?= <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v5 26/33] wireless: mark prism54 as deprecated and mark for removal
-Date: Mon, 17 Aug 2009 13:27:25 -0400
-Message-Id: <1250530052-14783-27-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<ath5k-devel@lists.ath5k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath5k: fix requested allocated RX skb size for DMA
+Date: Wed, 12 Aug 2009 09:58:10 -0700
+Message-ID: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The preferred modules is p54 which also supports FullMAC
-PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
-to remove this is no one really is testing prism54 anymore,
-and while it works p54 provides support for the same hardware.
-It should be noted I have been told some FullMAC devices may not
-have worked with the SoftMAC driver but to date we have yet to
-recieve a single bug report regarding this. If there are users
-out there please let us know!
+When we dev_alloc_skb() our RX buffers we were asking
+for them to be of size:
 
-Cc: aquilaver@yahoo.com
-Cc: linux-kernel@vger.kernel.org
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: Kai Engert <kengert@redhat.com>
-Cc: Jean Tourrilhes <jt@hpl.hp.com>
-Cc: Tim de Waal<tim.dewaal@yahoo.com>
-Cc: Roy Marples <uberlord@gentoo.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christian Lamparter <chunkeey@web.de>
-Cc: Björn Steinbrink <B.Steinbrink@gmx.de>
-Cc: Tim Gardner <tim.gardner@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>
+sc->rxbufsize + sc->common.cachelsz - 1
+
+but when mapping processor virtual memeory for access by the
+hardware we were only giving it the sc->rxbufsize, therefore
+always preventing the device from accessing the fully allocated
+skb.
+
+This patch fixes the disparity. It is unclear to me if there are
+other consequences to having this mismatch other than perhaps never
+allowing the device to use the full capacity of the allocated skb.
+
+Cc: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- Documentation/feature-removal-schedule.txt |   29 +++++++++++++++
- drivers/net/wireless/Kconfig               |   53 +++++++--------------------
- 2 files changed, 43 insertions(+), 39 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/feature-removal-schedule.txt b/Documentation/feature-removal-schedule.txt
-index 09e031c..147688a 100644
---- a/Documentation/feature-removal-schedule.txt
-+++ b/Documentation/feature-removal-schedule.txt
-@@ -6,6 +6,35 @@ be removed from this file.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 2b3cf39..75843f2 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1157,17 +1157,18 @@ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
+ 	 * fake physical layer header at the start.
+ 	 */
+ 	skb = ath_rxbuf_alloc(&sc->common,
+-			      sc->rxbufsize + sc->common.cachelsz - 1,
++			      sc->rxbufsize,
+ 			      GFP_ATOMIC);
  
- ---------------------------
+ 	if (!skb) {
+ 		ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
+-				sc->rxbufsize + sc->common.cachelsz - 1);
++				sc->rxbufsize);
+ 		return NULL;
+ 	}
  
-+What:	PRISM54
-+When:	2.6.34
+ 	*skb_addr = pci_map_single(sc->pdev,
+ 		skb->data, sc->rxbufsize, PCI_DMA_FROMDEVICE);
 +
-+Why:	prism54 FullMAC PCI / Cardbus devices used to be supported only by the
-+	prism54 wireless driver. After Intersil stopped selling these
-+	devices in preference for the newer more flexible SoftMAC devices
-+	a SoftMAC device driver was required and prism54 did not support
-+	them. The p54 driver now exists and has been present in the kernel for
-+	a while. This driver supports both SoftMAC devices and FullMAC devices.
-+	The main difference between these devices was the amount of memory which
-+	could be used for the firmware. The SoftMAC devices support a smaller
-+	amount of memory. Because of this the SoftMAC firmware fits into FullMAC
-+	devices's memory. p54 supports not only PCI / Cardbus but also USB
-+	and SPI. Since p54 supports all devices prism54 supports
-+	you will have a conflict. I'm not quite sure how distributions are
-+	handling this conflict right now. prism54 was kept around due to
-+	claims users may experience issues when using the SoftMAC driver.
-+	Time has passed users have not reported issues. If you use prism54
-+	and for whatever reason you cannot use p54 please let us know!
-+	E-mail us at: linux-wireless@vger.kernel.org
-+
-+	For more information see the p54 wiki page:
-+
-+	http://wireless.kernel.org/en/users/Drivers/p54
-+
-+Who:	Luis R. Rodriguez <lrodriguez@atheros.com>
-+
-+---------------------------
-+
- What:	IRQF_SAMPLE_RANDOM
- Check:	IRQF_SAMPLE_RANDOM
- When:	July 2009
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 6be46f3..ed9093f 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -258,51 +258,26 @@ if CONEXANT_ST_80211
- source "drivers/net/wireless/p54/Kconfig"
+ 	if (unlikely(pci_dma_mapping_error(sc->pdev, *skb_addr))) {
+ 		ATH5K_ERR(sc, "%s: DMA mapping failed\n", __func__);
+ 		dev_kfree_skb(skb);
+@@ -1607,9 +1608,10 @@ ath5k_rx_start(struct ath5k_softc *sc)
+ 	int ret;
  
- config PRISM54
--	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus' 
-+	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus (DEPRECATED)'
- 	depends on PCI && EXPERIMENTAL
- 	select WIRELESS_EXT
- 	select FW_LOADER
- 	---help---
--	  Enable PCI and Cardbus support for the following chipset based cards:
-+	  This enables support for FullMAC PCI/Cardbus prism54 devices. This
-+	  driver is now deprecated in favor for the SoftMAC driver, p54. p54
-+	  supports FullMAC PCI/Cardbus devices as well. For details on the
-+	  removal of this driver on the kernel see the feature removal
-+	  schedule:
+ 	sc->rxbufsize = roundup(IEEE80211_MAX_LEN, sc->common.cachelsz);
++	sc->rxbufsize += sc->common.cachelsz - 1;
  
--	  ISL3880 - Prism GT            802.11 b/g
--	  ISL3877 - Prism Indigo        802.11 a
--	  ISL3890 - Prism Duette        802.11 a/b/g
--	  
--	  For a complete list of supported cards visit <http://prism54.org>.
--	  Here is the latest confirmed list of supported cards:
--
--	  3com OfficeConnect 11g Cardbus Card aka 3CRWE154G72 (version 1)
--	  Allnet ALL0271 PCI Card
--	  Compex WL54G Cardbus Card
--	  Corega CG-WLCB54GT Cardbus Card
--	  D-Link Air Plus Xtreme G A1 Cardbus Card aka DWL-g650
--	  I-O Data WN-G54/CB Cardbus Card
--	  Kobishi XG-300 aka Z-Com Cardbus Card
--	  Netgear WG511 Cardbus Card
--	  Ovislink WL-5400PCI PCI Card
--	  Peabird WLG-PCI PCI Card
--	  Sitecom WL-100i Cardbus Card
--	  Sitecom WL-110i PCI Card
--	  SMC2802W -    EZ Connect g 2.4GHz 54 Mbps Wireless PCI Card
--	  SMC2835W -    EZ Connect g 2.4GHz 54 Mbps Wireless Cardbus Card
--	  SMC2835W-V2 - EZ Connect g 2.4GHz 54 Mbps Wireless Cardbus Card
--	  Z-Com XG-900 PCI Card
--	  Zyxel G-100 Cardbus Card
--
--	  If you enable this you will need a firmware file as well.
--	  You will need to copy this to /usr/lib/hotplug/firmware/isl3890.
--	  You can get this non-GPL'd firmware file from the Prism54 project page:
--	  <http://prism54.org>
--	  You will also need the /etc/hotplug/firmware.agent script from
--	  a current hotplug package.
--
--	  Note: You need a motherboard with DMA support to use any of these cards 
-+	  Documentation/feature-removal-schedule.txt
-+
-+	  For more information refer to the prism54 wiki:
-+
-+	  http://wireless.kernel.org/en/users/Drivers/p54
-+
-+	  Note: You need a motherboard with DMA support to use any of these cards
- 	  
--	  If you want to compile the driver as a module ( = code which can be
--	  inserted in and removed from the running kernel whenever you want),
--	  say M here and read <file:Documentation/kbuild/modules.txt>.
--	  The module will be called prism54.
-+	  When built as module you get the module prism54
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "cachelsz %u rxbufsize %u\n",
+-		sc->common.cachelsz, sc->rxbufsize);
++		  sc->common.cachelsz, sc->rxbufsize);
  
- endif # CONEXANT_ST_80211
- 
+ 	spin_lock_bh(&sc->rxbuflock);
+ 	sc->rxlink = NULL;
 -- 
-1.6.2.5
+1.6.3.3
 
