@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:34363 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbZH0VRs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:17:48 -0400
-Message-ID: <4A96F7EF.6040101@nokia.com>
-Date: Fri, 28 Aug 2009 00:17:35 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:13687 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751476AbZHLVpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 17:45:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 14:45:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<ath5k-devel@lists.ath5k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Dakota Lee <Dakota.Lee@Atheros.com>
+Subject: [PATCH] ath9k: update kconfig to indicate support for AR9002 family
+Date: Wed, 12 Aug 2009 14:45:16 -0700
+Message-ID: <1250113516-16573-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Oikarinen Juuso (Nokia-D-MSW/Tampere)" <juuso.oikarinen@nokia.com>,
-	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>
-Subject: Re: [PATCH 11/13] wl1271: use workqueue provided by mac80211 instead
- 	of the default
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com> 	<1251406807-31495-12-git-send-email-luciano.coelho@nokia.com> <43e72e890908271402p2137ce3n4b7459f4ce5fba14@mail.gmail.com>
-In-Reply-To: <43e72e890908271402p2137ce3n4b7459f4ce5fba14@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Luis R. Rodriguez wrote:
-> On Thu, Aug 27, 2009 at 2:00 PM, Luciano Coelho<luciano.coelho@nokia.com> wrote:
->   
->> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
->>
->> Use the workqueue provided by the mac80211 stack instead of the system
->> default queue.
->>     
->
-> You mean ieee80211_queue_work() ? This patch seems to be based on an
-> old wireless-testing.
->   
+ath9k supports the AR9002 family of chipsets. This includes
+the AR9285 and the miniPCI AR9223 and AR9220 (which themselves
+have AR9280+AR5133).
 
-Oops! It seems like I have sent the wrong series of patches.  I'll have 
-to review and resend tomorrow.
+We now refer people to the wiki page as it seems this is not
+as popular as we would have hoped.
 
+Reported-by: JD <jd1008@gmail.com>
+Cc: Dakota Lee <Dakota.Lee@Atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 2cb72f8..ef5f59c 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -6,7 +6,13 @@ config ATH9K
+ 	select NEW_LEDS
+ 	---help---
+ 	  This module adds support for wireless adapters based on
+-	  Atheros IEEE 802.11n AR5008 and AR9001 family of chipsets.
++	  Atheros IEEE 802.11n AR5008, AR9001 and AR9002 family
++	  of chipsets. For a specific list of supported external
++	  cards, laptops that already ship with these cards and
++	  APs that come with these cards refer to to ath9k wiki
++	  products page:
++
++	  http://wireless.kernel.org/en/users/Drivers/ath9k/products
+ 
+ 	  If you choose to build a module, it'll be called ath9k.
+ 
 -- 
-Cheers,
-Luca.
+1.6.3.3
 
