@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:40581 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755266AbZHYRC7 (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:34131 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbZHLSNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 13:02:59 -0400
-Received: by ewy2 with SMTP id 2so637585ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 10:02:59 -0700 (PDT)
+	Wed, 12 Aug 2009 14:13:25 -0400
+Received: by fxm28 with SMTP id 28so170909fxm.17
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:13:25 -0700 (PDT)
+Message-ID: <4A83064A.2080609@gmail.com>
+Date: Wed, 12 Aug 2009 20:13:30 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Date: Tue, 25 Aug 2009 19:02:58 +0200
-Message-ID: <da0cccbf0908251002l572ea238x5cf1685be06edcbd@mail.gmail.com>
-Subject: B44 not being installed
-From: Gregy <p.gregy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, ath5k-devel@lists.ath5k.org,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH] ath5k: fix requested allocated RX skb size for DMA
+References: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I would like to report something that looks like a bug to me.
-compat-wireless 2009-08-25
-kernel 2.6.31-rc4
-With stock config.mk b44 is enabled and should be compiled and
-installed with make && make install
-I fact it is not compiled and installed -> after I load new ssb wired
-network stops working
+On 08/12/2009 06:58 PM, Luis R. Rodriguez wrote:
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1157,17 +1157,18 @@ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
+>  	 * fake physical layer header at the start.
+>  	 */
+>  	skb = ath_rxbuf_alloc(&sc->common,
+> -			      sc->rxbufsize + sc->common.cachelsz - 1,
 
-Could you please look into it?
-
-Thanks
+What was the exact purpose of this? My guess is that we should map
+starting at a next cache line boundary and put this aligned address to
+the device instead?
