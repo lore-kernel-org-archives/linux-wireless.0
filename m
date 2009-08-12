@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.230]:31329 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbZHNUn1 (ORCPT
+Received: from mail-yw0-f191.google.com ([209.85.211.191]:36578 "EHLO
+	mail-yw0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbZHLStH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:43:27 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so497156rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 13:43:29 -0700 (PDT)
-Message-ID: <4A85CC6C.1030005@lwfinger.net>
-Date: Fri, 14 Aug 2009 15:43:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 12 Aug 2009 14:49:07 -0400
+Received: by ywh29 with SMTP id 29so298328ywh.33
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:49:07 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH] b43: LP-PHY: Fix setting TX power control mode during
- RC	calibration
-References: <4A85B8DE.3000704@gmail.com>
-In-Reply-To: <4A85B8DE.3000704@gmail.com>
+In-Reply-To: <4A83064A.2080609@gmail.com>
+References: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
+	<4A83064A.2080609@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 Aug 2009 11:48:45 -0700
+Message-ID: <43e72e890908121148l2cde20a9xb2c045e03574ffaa@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] ath5k: fix requested allocated RX skb size
+	for DMA
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, Nick Kossifidis <mickflemm@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> Call set_tx_power_control with a LPPHY_TXPCTL rather than an
-> LPPHY_TX_PWR_CTL_CMD_MODE.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> This should fix the WARN_ON testers were seeing during init.
-> 
->  drivers/net/wireless/b43/phy_lp.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-> index adfa7bf..558224b 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -1080,7 +1080,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
->  	old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
->  					B43_LPPHY_TX_PWR_CTL_CMD_MODE;
->  
-> -	lpphy_set_tx_power_control(dev, B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
-> +	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
->  	lpphy_disable_crs(dev);
->  	loopback = lpphy_loopback(dev);
->  	if (loopback == -1)
+On Wed, Aug 12, 2009 at 11:13 AM, Jiri Slaby<jirislaby@gmail.com> wrote:
+> On 08/12/2009 06:58 PM, Luis R. Rodriguez wrote:
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -1157,17 +1157,18 @@ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
+>>        * fake physical layer header at the start.
+>>        */
+>>       skb = ath_rxbuf_alloc(&sc->common,
+>> -                           sc->rxbufsize + sc->common.cachelsz - 1,
+>
+> What was the exact purpose of this? My guess is that we should map
+> starting at a next cache line boundary and put this aligned address to
+> the device instead?
 
+I've heard two theories:
 
-With this one, I still get WARNING: at
-drivers/net/wireless/b43/phy_lp.c:1006
-lpphy_set_tx_power_control+0xbf/0xdd [b43]().
+1) AR5210 *required* it otherwise bad we would get bad data
+2) Performance considerations
 
-To get rid of them, I need to modify the enum b43_lpphy_txpctl_mode{}
-as I wrote earlier.
+I've tried checking internally but haven't found out yet the exact
+answer and this seems purely historical. I poked Sam Leffler to see if
+he recalls. But as we the 0x41 reset which I removed it seems to be
+best to leave unless we can be 100% sure we can remove this.
 
-I'm also seeing the interface stopped and restarted. I'll try to track
-that down.
-
-Larry
-
-
+  Luis
