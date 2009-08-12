@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41480 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753916AbZHMTbt (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:38463 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbZHLS1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/20] wireless: move MWL8K right below Libertas on kconfig
-Date: Thu, 13 Aug 2009 15:31:31 -0400
-Message-Id: <1250191909-21682-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 12 Aug 2009 14:27:17 -0400
+Received: by fxm28 with SMTP id 28so178058fxm.17
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:27:17 -0700 (PDT)
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwl3945: fix compilation error in iwl3945_pass_packet_to_mac80211()
+References: <20090812110727.4963.99515.stgit@tikku>
+	<1250091440.30019.5928.camel@rc-desk>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Wed, 12 Aug 2009 21:27:13 +0300
+In-Reply-To: <1250091440.30019.5928.camel@rc-desk> (reinette chatre's message of "Wed\, 12 Aug 2009 08\:37\:20 -0700")
+Message-ID: <87ocqkkhvi.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+reinette chatre <reinette.chatre@intel.com> writes:
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 92bb407..b2e8b04 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -176,6 +176,15 @@ config LIBERTAS_THINFIRM_USB
- 	---help---
- 	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
- 
-+config MWL8K
-+	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
-+	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	---help---
-+	  This driver supports Marvell TOPDOG 802.11 wireless cards.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called mwl8k.  If unsure, say N.
-+
- config AIRO
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
- 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
-@@ -484,15 +493,6 @@ config MAC80211_HWSIM
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called mac80211_hwsim.  If unsure, say N.
- 
--config MWL8K
--	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
--	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
--	---help---
--	  This driver supports Marvell TOPDOG 802.11 wireless cards.
--
--	  To compile this driver as a module, choose M here: the module
--	  will be called mwl8k.  If unsure, say N.
--
- menuconfig INTEL_80211
- 	bool "Intel Wireless Cards"
- 	depends on WLAN_80211
+> On Wed, 2009-08-12 at 04:07 -0700, Kalle Valo wrote:
+>> Commit "iwlwifi: Traffic type and counter for debugFs" broke iwl3945 in
+>> a case when CONFIG_IWLWIFI_LEDS is disabled:
+>> 
+>> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
+>> 
+>> Fix it by removing the ifdef check for hdr variable.
+
+[...]
+
+> We have an identical patch pending. I assumed most people compile with
+> led support and thus did not rush to get it in.
+
+I don't remember why I have leds disabled. Most probably some problem a
+long time ago and I never bothered to turn it back on.
+
+> Now that it is a problem for more people I think this one should go
+> in.
+
+I agree that this should go in. Compilation errors are always annoying.
+
 -- 
-1.6.2.5
-
+Kalle Valo
