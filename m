@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:62625 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756326AbZHQRBA (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:52826 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752291AbZHLSPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:01:00 -0400
-Received: by yxe5 with SMTP id 5so3760453yxe.33
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 10:01:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1250283993.4411.1.camel@johannes.local>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	<1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
-	<1250283993.4411.1.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 17 Aug 2009 10:00:40 -0700
-Message-ID: <43e72e890908171000r52f59cb6tbfef751324bf9968@mail.gmail.com>
-Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-Content-Type: text/plain; charset=UTF-8
+	Wed, 12 Aug 2009 14:15:18 -0400
+Received: by pzk34 with SMTP id 34so135874pzk.4
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:15:19 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: andrey@cozybit.com, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	xinhua_wu@realsil.com.cn
+Subject: Fix preq frame process and peer link frame baselen.
+Date: Wed, 12 Aug 2009 11:03:42 -0700
+Message-Id: <1250100224-23832-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <4A82639F.6000908@realsil.com.cn>
+References: <4A82639F.6000908@realsil.com.cn>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2009 at 2:06 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
->> We can now remove that comment about mac80211 requiring
->> cfg80211 and do that for the user.
->
-> "now"? What changed to make this possible?
->
-> NAK this change, because with it, it's possible to select
-> mac80211 = Y
-> -> cfg80211 = Y
-> while rfkill = M
->
-> which will break the kernel build.
+> Yes, I agree with you, and this patch is just to check whether this PREQ is valid with
+> the ttl it contains instead of local TTL, and the local TTL has also been provided for
+> PREP further process.
 
-I'm able to do this with current kconfig, does this need to be fixed?
+I'm still unconvinced with that change.  The ttl check you refer to is done on
+transmission: PREQs with ttl of zero are never transmitted.  See further down in
+that same function:
 
-  Luis
+	ttl = PREQ_IE_TTL(preq_elem);
+	lifetime = PREQ_IE_LIFETIME(preq_elem);
+	if (ttl <= 1) {
+		/* supress frame */
+
+Furthermore, with the change you propose, you open the possibility for PREPs to
+be transmitted with ttl=0 (if ifmsh->mshcfg.dot11MeshTTL was set to zero).
+
+Regarding your baselen explanation, I now understand it and agree to the
+suggested change.  Your initial patch submission was reversed and I got confused
+looking at two version of the same.
+
+I've created a new series with the parts of your patch that I agree with.  They
+follow this e-mail.
+
+Thanks!
+
+Javier
