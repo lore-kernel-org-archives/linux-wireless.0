@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:46047 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757442AbZHGKfs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:35:48 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 23/23] wl1251: hack to disable filters for fixing association
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:35:33 +0300
-Message-ID: <20090807103533.31717.69122.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:46850 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018AbZHLQ5C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 12:57:02 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:57:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<ath5k-devel@lists.ath5k.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/3] ath: advance ath.ko with one more helper
+Date: Wed, 12 Aug 2009 09:56:58 -0700
+Message-ID: <1250096221-11000-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+This adds a common structure where we can start stuffing shared items
+and introduces a helper for both ath5k and ath9k's use.
 
-Commit 9cef8737 "mac80211: fix managed mode BSSID handling" broke
-association in wl1251, most probably because the driver configured
-the bssid filter incorrectly. Workaround this by disabling filter
-altogether. This needs to be fixed properly soon.
+Luis R. Rodriguez (3):
+  ath: add common ath_rxbuf_alloc() and make ath9k use it
+  ath5k: use common ath.ko ath_rxbuf_alloc()
+  ath5k: use bit shift operators for cache line size
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- drivers/net/wireless/wl12xx/wl1251_cmd.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-index 6cd024b..770f260 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-@@ -276,6 +276,15 @@ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
- 	join->rx_config_options = wl->rx_config;
- 	join->rx_filter_options = wl->rx_filter;
- 
-+	/*
-+	 * FIXME: disable temporarily all filters because after commit
-+	 * 9cef8737 "mac80211: fix managed mode BSSID handling" broke
-+	 * association. The filter logic needs to be implemented properly
-+	 * and once that is done, this hack can be removed.
-+	 */
-+	join->rx_config_options = 0;
-+	join->rx_filter_options = WL1251_DEFAULT_RX_FILTER;
-+
- 	join->basic_rate_set = RATE_MASK_1MBPS | RATE_MASK_2MBPS |
- 		RATE_MASK_5_5MBPS | RATE_MASK_11MBPS;
- 
+ drivers/net/wireless/ath/Kconfig       |    4 +--
+ drivers/net/wireless/ath/ath.h         |   30 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/base.c  |   23 ++++++------------
+ drivers/net/wireless/ath/ath5k/base.h  |    3 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++-
+ drivers/net/wireless/ath/ath9k/main.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c  |   40 +++----------------------------
+ drivers/net/wireless/ath/main.c        |   36 ++++++++++++++++++++++++++++
+ 8 files changed, 85 insertions(+), 57 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath.h
 
