@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:12007 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:29666 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932640AbZHUUe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:34:28 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Daniel C Halperin <daniel.c.halperin@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/14] iwlwifi: set HT flags in ieee80211_rx_status for received packets
-Date: Fri, 21 Aug 2009 13:34:21 -0700
-Message-Id: <1250886867-4112-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
-References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+	id S1751141AbZHLPhU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 12 Aug 2009 11:37:20 -0400
+Subject: Re: [PATCH] iwl3945: fix compilation error in
+ iwl3945_pass_packet_to_mac80211()
+From: reinette chatre <reinette.chatre@intel.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20090812110727.4963.99515.stgit@tikku>
+References: <20090812110727.4963.99515.stgit@tikku>
+Content-Type: text/plain
+Date: Wed, 12 Aug 2009 08:37:20 -0700
+Message-Id: <1250091440.30019.5928.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel C Halperin <daniel.c.halperin@intel.com>
+On Wed, 2009-08-12 at 04:07 -0700, Kalle Valo wrote:
+> Commit "iwlwifi: Traffic type and counter for debugFs" broke iwl3945 in
+> a case when CONFIG_IWLWIFI_LEDS is disabled:
+> 
+> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
+> 
+> Fix it by removing the ifdef check for hdr variable.
+> 
+> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+> ---
+> 
+>  drivers/net/wireless/iwlwifi/iwl-3945.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> index ae7f163..ba5ef83 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> @@ -544,9 +544,7 @@ static void iwl3945_pass_packet_to_mac80211(struct iwl_priv *priv,
+>  				   struct ieee80211_rx_status *stats)
+>  {
+>  	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+> -#ifdef CONFIG_IWLWIFI_LEDS
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)IWL_RX_DATA(pkt);
+> -#endif
+>  	struct iwl3945_rx_frame_hdr *rx_hdr = IWL_RX_HDR(pkt);
+>  	struct iwl3945_rx_frame_end *rx_end = IWL_RX_END(pkt);
+>  	short len = le16_to_cpu(rx_hdr->len);
+> 
 
-Add code to set the HT flags (HT, 40 MHz, Short guard interval) in
-the ieee80211_rx_status field passed to mac80211.  This ensures that mac80211
-processes these HT packets correctly.
+We have an identical patch pending. I assumed most people compile with
+led support and thus did not rush to get it in. Now that it is a problem
+for more people I think this one should go in.
 
-Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 353d9a2..e34d3fc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -915,6 +915,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
- 	u32 len;
- 	u32 ampdu_status;
- 	u16 fc;
-+	u32 rate_n_flags;
- 
- 	/**
- 	 * REPLY_RX and REPLY_RX_MPDU_CMD are handled differently.
-@@ -1032,6 +1033,15 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
- 	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
- 		rx_status.flag |= RX_FLAG_SHORTPRE;
- 
-+	/* Set up the HT phy flags */
-+	rate_n_flags = le32_to_cpu(phy_res->rate_n_flags);
-+	if (rate_n_flags & RATE_MCS_HT_MSK)
-+		rx_status.flag |= RX_FLAG_HT;
-+	if (rate_n_flags & RATE_MCS_HT40_MSK)
-+		rx_status.flag |= RX_FLAG_40MHZ;
-+	if (rate_n_flags & RATE_MCS_SGI_MSK)
-+		rx_status.flag |= RX_FLAG_SHORT_GI;
-+
- 	if (iwl_is_network_packet(priv, header)) {
- 		priv->last_rx_rssi = rx_status.signal;
- 		priv->last_beacon_time =  priv->ucode_beacon_time;
--- 
-1.5.6.3
+Thank you
+
+Reinette
+
 
