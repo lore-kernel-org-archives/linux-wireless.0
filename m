@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41488 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755401AbZHMTbt (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:45077 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652AbZHLBlX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/20] wireless: group intel wireless drivers on kconfig
-Date: Thu, 13 Aug 2009 15:31:30 -0400
-Message-Id: <1250191909-21682-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 11 Aug 2009 21:41:23 -0400
+Received: by pzk34 with SMTP id 34so3840740pzk.4
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 18:41:24 -0700 (PDT)
+Message-ID: <4A821DBE.2020508@lwfinger.net>
+Date: Tue, 11 Aug 2009 20:41:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [RFC] b43: LP-PHY: Initialize SW TX power control
+References: <4A81DC91.8020208@gmail.com>
+In-Reply-To: <4A81DC91.8020208@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves intel wireless drivers into their own menu.
+Gábor Stefanik wrote:
+> I'm not sure at all if writing to offset 0 in the TX gain table
+> is the right thing to do... please clarify.
+> 
+> Not-yet-signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> 
+> ---
+> If this is indeed the right thing to do, please inform me,
+> and I will resubmit this as a formal patch.
+> 
+> phy_lp.c |   16 ++++++++++++----
+> 1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c
+> b/drivers/net/wireless/b43/phy_lp.c
+> index 689c932..93451c9 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -847,15 +847,23 @@ static void lpphy_calibration(struct b43_wldev *dev)
+> /* Initialize TX power control */
+> static void lpphy_tx_pctl_init(struct b43_wldev *dev)
+> {
+> +    lpphy_tx_gain_table_entry txgain;
+>     if (0/*FIXME HWPCTL capable */) {
+>         //TODO
+>     } else { /* This device is only software TX power control capable. */
+> +        txgain.bb_mult = 0x96;
+>         if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+> -            //TODO
+> +            txgain.gm = 4;
+> +            txgain.pad = 12;
+> +            txgain.pga = 12;
+> +            txgain.dac = 0;
+>         } else {
+> -            //TODO
+> -        }
+> -        //TODO set BB multiplier to 0x0096
+> +            txgain.gm = 7;
+> +            txgain.pad = 15;
+> +            txgain.pga = 14;
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   16 +++++++++++++---
- 1 files changed, 13 insertions(+), 3 deletions(-)
+I found a typo in the specs today. The pad should be 14 and pga should
+be 15.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index dda7cc2..92bb407 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -493,10 +493,21 @@ config MWL8K
- 	  To compile this driver as a module, choose M here: the module
- 	  will be called mwl8k.  If unsure, say N.
- 
--source "drivers/net/wireless/p54/Kconfig"
--source "drivers/net/wireless/ath/Kconfig"
-+menuconfig INTEL_80211
-+	bool "Intel Wireless Cards"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Intel wireless drivers. This
-+	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
-+
-+if INTEL_80211
- source "drivers/net/wireless/ipw2x00/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
-+source "drivers/net/wireless/iwmc3200wifi/Kconfig"
-+endif # INTEL_80211
-+
-+source "drivers/net/wireless/p54/Kconfig"
-+source "drivers/net/wireless/ath/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
- source "drivers/net/wireless/b43/Kconfig"
- source "drivers/net/wireless/b43legacy/Kconfig"
-@@ -504,6 +515,5 @@ source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- source "drivers/net/wireless/wl12xx/Kconfig"
--source "drivers/net/wireless/iwmc3200wifi/Kconfig"
- 
- endmenu
--- 
-1.6.2.5
+> +            txgain.dac = 0;
+> +        } // FIXME offset 0 is just a guess!
+> +        lpphy_write_gain_table(dev, 0, txgain);
 
+The link was wrong in the page. The correct routine is
+http://bcm-v4.sipsolutions.net/802.11/PHY/LP/SetTXGain. It has one
+argument &txgain. I don't think this one has been written yet.
+
+Larry
