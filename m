@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:55298 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182AbZH0VgA convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1925 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbZHMDAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:36:00 -0400
-Received: by iwn42 with SMTP id 42so745747iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:36:02 -0700 (PDT)
+	Wed, 12 Aug 2009 23:00:16 -0400
+Date: Wed, 12 Aug 2009 22:59:09 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH 0/3] ath: advance ath.ko with one more
+	helper
+Message-ID: <20090813025909.GB28871@hash.localnet>
+References: <1250096221-11000-1-git-send-email-lrodriguez@atheros.com> <b6c5339f0908121021x3bc9fe26vb17532de6c464b7f@mail.gmail.com> <43e72e890908121027x5211c7cja3185861bc9c02f1@mail.gmail.com> <40f31dec0908121913y1dc39032p26556135f22c3f48@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1251408741.22482.14.camel@johannes.local>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-	<1251406807-31495-14-git-send-email-luciano.coelho@nokia.com>
-	<1251408741.22482.14.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 27 Aug 2009 14:35:42 -0700
-Message-ID: <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
-Subject: Re: [PATCH 13/13] wl1271: added Juuso Oikarinen as module author
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0908121913y1dc39032p26556135f22c3f48@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 2:32 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-08-28 at 00:00 +0300, Luciano Coelho wrote:
->> Add Juuso as one of the module authors, since he's working heavily on this
->> module as well.
->>
->> Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
->> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
->> ---
->>  drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
->>  1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
->> index a97d434..4163eac 100644
->> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
->> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
->> @@ -1449,4 +1449,5 @@ module_init(wl1271_init);
->>  module_exit(wl1271_exit);
->>
->>  MODULE_LICENSE("GPL");
->> -MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
->> +MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>, "
->> +           "Juuso Oikarinen <juuso.oikarinen@nokia.com>");
->
-> Use multiple MODULE_AUTHORs instead.
+On Thu, Aug 13, 2009 at 05:13:50AM +0300, Nick Kossifidis wrote:
+> You mean have a common reg.h for both ath5k and ath9k ?
 
-Where is that defined?
+I meant the existing regulatory, not register, headers -- but if
+there is stuff to be shared in reg[ister].h we can do that too.
 
-  Luis
+> code is much cleaner than ath9k and it's a better place to start, i've
+> seen most hw
+> code on ath9k and i'm ready to move on if it's O.K. with you.
+
+I guess we should coordinate a bit.  I don't have much in the way
+of unsent patches but perhaps we should pick a specific time to
+start moving stuff around so we don't all have a pile of rejects.
+Maybe after 2.6.32 merge window?
+
+(This particular patch series, though, is fine enough now I think.)
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
