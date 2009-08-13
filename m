@@ -1,87 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:54731 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbZH1DGz convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60054 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752983AbZHMKqo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 23:06:55 -0400
-Received: by ewy2 with SMTP id 2so1789152ewy.17
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 20:06:56 -0700 (PDT)
+	Thu, 13 Aug 2009 06:46:44 -0400
+Date: Thu, 13 Aug 2009 13:46:35 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: Re: [PATCH] nl80211 connect API support
+Message-ID: <20090813104635.GA7330@jm.kir.nu>
+References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com> <1250153731-17208-2-git-send-email-yi.zhu@intel.com> <20090813091103.GA1826@jm.kir.nu> <1250155777.4972.9.camel@debian>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908271709u288eaef9g23bcf077038a310f@mail.gmail.com>
-References: <20090827023000.21926.90867.stgit@mj.roinet.com>
-	 <40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com>
-	 <b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com>
-	 <43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com>
-	 <20090827213921.GB30419@hash.localnet>
-	 <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
-	 <43e72e890908271709u288eaef9g23bcf077038a310f@mail.gmail.com>
-Date: Fri, 28 Aug 2009 06:06:56 +0300
-Message-ID: <40f31dec0908272006q4de6a9aey226d2b7f9c15d0e8@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use in
-	ath5k_eeprom_read_turbo_modes()
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, proski@gnu.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, ic.felix@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250155777.4972.9.camel@debian>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/28 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Thu, Aug 27, 2009 at 4:14 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Thu, Aug 27, 2009 at 2:39 PM, Bob Copeland<me@bobcopeland.com> wrote:
->>> On Thu, Aug 27, 2009 at 11:25:03AM -0700, Luis R. Rodriguez wrote:
->>>> > Well, we also don't use the turbo modes at all and that's where the
->>>> > error is (IIRC) so it shouldn't have any impact. :)
->>>>
->>>> Again, why don't we just remove all that fucking turbo cruft?
->>>
->>> OK with me since no one seems to care enough to implement mac80211
->>> support.  I left some of the #defines in place as they are useful
->>> documentation.  Approx. 80 of the lines removed are comments.
->>>
->>>   text    data     bss     dec     hex filename
->>>  136746     480      56  137282   21842 ath5k_old.ko
->>>  134913     480      56  135449   21119 ath5k_new.ko
->>>
->>> Disclaimer: only barely tested.
->>
->> Sexy, thanks!
->>
->> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->>
->>>        { AR5K_PHY(14),
->>> -          { 0x00000007, 0x00000007, 0x0000000b, 0x0000000b } },
->>> +          { 0x00000007, 0x0000000b, 0x0000000b } },
->>
->> Apart from this one initval all other ar5211_ini_mode[] values between
->> 802.11a and 802.11g are the same! Which means we could potentially
->> save (35 lines here * 4 bytes) + (3 entries for AR5K_PHY(14) * 4) =
->> 152 bytes here if we just converge 11a and 11g as just OFDM data for
->> this ini array and remove AR5K_PHY(14) entry and deal with it as a
->> final write. I wonder if AR5K_PHY(14) (0x9838) was a typo for 11a or
->> 11g. I'll try to dig to see what this is, perhaps its not a good idea
->> to move this out and set this later, not sure if this is inline for
->> the rf buffer trigger stuff, I'll poke.
->>
->> All other ini arrays differ in more than 1 line so probably not worth mucking.
->
-> OK so upon review here is what I can determine from the above:
->
-> AR5211 supports 802.11a and 802.11b, so I suspect the 11g stuff was
-> kept there for testing purposes, all of that is actually unused. I say
-> we remove 11g stuff for AR5211 as well and save ourselves those bytes.
+On Thu, Aug 13, 2009 at 05:29:37PM +0800, Zhu Yi wrote:
 
-AR5211 supports draft g (ofdm only) so these values are correct, we
-currently don't support draft g on mac80211 but again i don't see why
-we should remove all this data, Atheros hasn't removed any of this
-from their HAL neither Sam (and MadWiFi/ath both support draft g
--pureg- operation).
+> The connect API wraps auth/assoc commands in cfg80211 SME. For example,
+> when cfg80211 receives NL80211_CMD_CONNECT (cfg80211_connect), it checks
+> if connect API is supported or not. If it is not supported (for all
+> mac80211 based drivers), it uses the common cfg80211_conn_do_work() to
+> do auth/assoc the same way as it handles NL80211_CMD_AUTHENTICATE. So
+> from user space point of view, if connect API is supported, it can use
+> it directly and let cfg80211 to maintain the state of auth and assoc.
 
-
+It is not about whether it would be possible to use connect or not; it
+is about whether the additional features provided by separate auth/assoc
+commands are of use--and they are. wpa_supplicant will provide more
+functionality, e.g., FT, when using these commands. Any change to add
+support for the new NL80211_CMD_CONNECT must not break this existing
+mechanism; it is only to add support for drivers that cannot support the
+auth/assoc interface that provides more control to user space.
 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Jouni Malinen                                            PGP id EFC895FA
