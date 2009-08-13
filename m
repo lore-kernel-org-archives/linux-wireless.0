@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lirone.symas.net ([64.71.152.235]:41323 "EHLO lirone.symas.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbZH2BG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 21:06:26 -0400
-Received: from [76.91.220.157] (helo=[192.168.1.28])
-	by lirone.symas.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <hyc@symas.com>)
-	id 1MhCOi-0000Js-H8
-	for linux-wireless@vger.kernel.org; Fri, 28 Aug 2009 18:06:28 -0700
-Message-ID: <4A987F0F.9040905@symas.com>
-Date: Fri, 28 Aug 2009 18:06:23 -0700
-From: Howard Chu <hyc@symas.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45248 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755173AbZHMRaJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 13:30:09 -0400
+Date: Thu, 13 Aug 2009 13:28:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Valdis.Kletnieks@vt.edu
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Zhu Yi <yi.zhu@intel.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [ipw3945-devel] mmotm0812 - something in linux-next killed
+	iwl-3945.c
+Message-ID: <20090813172819.GD2647@tuxdriver.com>
+References: <19728.1250182794@turing-police.cc.vt.edu>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k DMA problems
-References: <4A958F45.40109@symas.com>
-In-Reply-To: <4A958F45.40109@symas.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19728.1250182794@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am I the only one having these problems? ath9k hasn't worked well for me since 
-2.6.29.4; every snapshot since then has suffered from random drops. In 
-2.6.29.6 it at least would quickly reassociate. The current ones hang within 
-20-30 minutes of use and never come back. The compat-wireless snapshots have 
-all been equally unusable.
+On Thu, Aug 13, 2009 at 12:59:54PM -0400, Valdis.Kletnieks@vt.edu wrote:
+> Build bombs out:
+> 
+>   CC      drivers/net/wireless/iwlwifi/iwl-3945.o
+> drivers/net/wireless/iwlwifi/iwl-3945.c: In function 'iwl3945_pass_packet_to_mac80211':
+> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
+> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: (Each undeclared identifier is reported only once
+> drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: for each function it appears in.)
+> make[1]: *** [drivers/net/wireless/iwlwifi/iwl-3945.o] Error 1
+> 
+> due to this in linux-next.patch:
+> 
+> index 46288e7..ae7f163 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+> (skipping)
+> @@ -577,7 +577,10 @@ static void iwl3945_pass_packet_to_mac80211(struct iwl_priv
+>  *priv,
+>         if (ieee80211_is_data(hdr->frame_control))
+>                 priv->rxtxpackets += len;
+>  #endif
+> -       ieee80211_rx_irqsafe(priv->hw, rxb->skb, stats);
+> +       iwl_update_stats(priv, false, hdr->frame_control, len);
+> +
+> +       memcpy(IEEE80211_SKB_RXCB(rxb->skb), stats, sizeof(*stats));
+> +       ieee80211_rx_irqsafe(priv->hw, rxb->skb);
+>         rxb->skb = NULL;
+> 
+> Sorry, don't have a linux-next git tree, so no 'git blame' for what did it.
+> Hopefully somebody recognizes their handiwork... ;)
 
-Howard Chu wrote:
-> Still seeing occasional hangs using the ath9k in 2.6.31-rc6, and even worse
-> using compat-wireless 2009-08-22. Today I got this which was even more
-> interesting:
->
-> [369014.776586] wlan0: associate with AP 00:12:17:26:56:10 (try 1)
-> [369014.779197] wlan0: RX ReassocResp from 00:12:17:26:56:10 (capab=0x411
-> status=0 aid=2)
-> [369014.779197] wlan0: associated
-> [369472.707961] ath9k: DMA failed to stop in 10 ms AR_CR=0xdeadbeef
-> AR_DIAG_SW=0xdeadbeef
->
-> This is on an HP dv5z laptop, it reports an AR9280 at boot.
-
+I think this is the LEDS-related build failure, which already has a patch.
 
 -- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
