@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55498 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751881AbZHCGf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 02:35:28 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 1/3] iwmc3200wifi: fix set_wpa_version and set_auth_type order
-Date: Mon,  3 Aug 2009 14:37:01 +0800
-Message-Id: <1249281423-26435-2-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1249281423-26435-1-git-send-email-yi.zhu@intel.com>
-References: <1249281423-26435-1-git-send-email-yi.zhu@intel.com>
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:40637 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752196AbZHMTrI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 15:47:08 -0400
+Received: by pzk34 with SMTP id 34so708855pzk.4
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 12:47:09 -0700 (PDT)
+Message-ID: <4A846DB9.8080802@lwfinger.net>
+Date: Thu, 13 Aug 2009 14:47:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] b43: Update dummy transmission to match V4 specs
+References: <4A842887.2080109@gmail.com> <200908131923.29847.mb@bu3sch.de>
+In-Reply-To: <200908131923.29847.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwm->umac_profile->sec.flags is set by iwm_set_wpa_version and
-checked by iwm_set_auth_type. The patch changes the order to
-make the flag used correctly.
+Michael Buesch wrote:
+> On Thursday 13 August 2009 16:51:51 Gábor Stefanik wrote:
+>> The V4 dummy transmission has two extra bools in its prototype,
+>> so update all callers with the 2 bools.
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> v2: Convert all callers to v4, and drop the v3->v4 wrapper.
+> 
+>> -	/* Commit writes */
+>> -	b43_read32(dev, B43_MMIO_MACCTL);
+> 
+>> -	value = ((phy->type == B43_PHYTYPE_A) ? 1 : 0);
+>> +	if (dev->dev->id.revision < 11)
+>> +		b43_write16(dev, 0x07C0, 0x0000);
+>> +	else
+>> +		b43_write16(dev, 0x07C0, 0x0100);
+>> +	value = (ofdm ? 0x41 : 0x40);
+>>  	b43_write16(dev, 0x050C, value);
+> 
+> This patch changes G-PHY codepaths. Did you test it on (at least one) G-PHY device?
+> 
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+My device with the 0x4312 ID still works with this patch applied.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 3f5a08f..a6e852f 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -484,6 +484,8 @@ static int iwm_set_auth_type(struct iwm_priv *iwm,
- 
- static int iwm_set_wpa_version(struct iwm_priv *iwm, u32 wpa_version)
- {
-+	IWM_DBG_WEXT(iwm, DBG, "wpa_version: %d\n", wpa_version);
-+
- 	if (!wpa_version) {
- 		iwm->umac_profile->sec.flags = UMAC_SEC_FLG_LEGACY_PROFILE;
- 		return 0;
-@@ -508,6 +510,9 @@ static int iwm_set_cipher(struct iwm_priv *iwm, u32 cipher, bool ucast)
- 		return 0;
- 	}
- 
-+	IWM_DBG_WEXT(iwm, DBG, "%ccast cipher is 0x%x\n", ucast ? 'u' : 'm',
-+		     cipher);
-+
- 	switch (cipher) {
- 	case IW_AUTH_CIPHER_NONE:
- 		*profile_cipher = UMAC_CIPHER_TYPE_NONE;
-@@ -584,11 +589,11 @@ static int iwm_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		iwm->umac_profile->bss_num = 0;
- 	}
- 
--	ret = iwm_set_auth_type(iwm, sme->auth_type);
-+	ret = iwm_set_wpa_version(iwm, sme->crypto.wpa_versions);
- 	if (ret < 0)
- 		return ret;
- 
--	ret = iwm_set_wpa_version(iwm, sme->crypto.wpa_versions);
-+	ret = iwm_set_auth_type(iwm, sme->auth_type);
- 	if (ret < 0)
- 		return ret;
- 
--- 
-1.6.0.4
-
+Larry
