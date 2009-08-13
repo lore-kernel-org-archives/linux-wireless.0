@@ -1,65 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39068 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:43950 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835AbZHAI2i (ORCPT
+	with ESMTP id S1753125AbZHMTbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:28:38 -0400
-Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
+	Thu, 13 Aug 2009 15:31:06 -0400
+Subject: Re: [PATCH] cfg80211: export cfg80211_wext_siwfreq
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, proski@gnu.org
-In-Reply-To: <4A73FBBD.3070507@gmail.com>
-References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
-	 <4A73FA8D.5030804@gmail.com> <1249114918.26584.18.camel@johannes.local>
-	 <4A73FBBD.3070507@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-b4RBZgJMeX6ZANoNAMQ2"
-Date: Sat, 01 Aug 2009 10:28:36 +0200
-Message-Id: <1249115316.2007.0.camel@johannes.local>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20090813173931.5382.67689.stgit@fate.lan>
+References: <20090813173931.5382.67689.stgit@fate.lan>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2G0JJVNrCYO77dZazjxZ"
+Date: Thu, 13 Aug 2009 21:31:03 +0200
+Message-Id: <1250191863.21250.5.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-b4RBZgJMeX6ZANoNAMQ2
+--=-2G0JJVNrCYO77dZazjxZ
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-08-01 at 10:24 +0200, Jiri Slaby wrote:
-> On 08/01/2009 10:21 AM, Johannes Berg wrote:
-> > Actually, jiffies are unsigned long
+On Thu, 2009-08-13 at 20:39 +0300, Jussi Kivilinna wrote:
+> cfg80211_wext_siwfreq() should be exported with EXPORT_SYMBOL_GPL.
+
+Indeed, thanks.
+
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
 >=20
-> Yeah, this is what I meant. I agree I messed it up when I didn't write
-> the unsigned explicitly. It might have been confusing, thanks for
-> pointing out.
+>  net/wireless/wext-compat.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+> index c449174..c12029b 100644
+> --- a/net/wireless/wext-compat.c
+> +++ b/net/wireless/wext-compat.c
+> @@ -771,6 +771,7 @@ int cfg80211_wext_siwfreq(struct net_device *dev,
+>  		return err;
+>  	}
+>  }
+> +EXPORT_SYMBOL_GPL(cfg80211_wext_siwfreq);
+> =20
+>  int cfg80211_wext_giwfreq(struct net_device *dev,
+>  			  struct iw_request_info *info,
+>=20
+>=20
 
-And, in addition to what you said, the code shouldn't divide jiffies, it
-should multiply the timeout, add it to the start time, and then use
-time_is_after_jiffies() or so.
 
-johannes
-
---=-b4RBZgJMeX6ZANoNAMQ2
+--=-2G0JJVNrCYO77dZazjxZ
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKc/yxAAoJEODzc/N7+QmaI/8P/0NF2y8i6YJ8D5aJwAWhDqs5
-pYthE81046oUNQbiUGqxjX5zgRFqU7i2AAqny5RFRMbdQW8X72DPoygu4f88G1BL
-TmBogdqPJfixk5ZPEF0kgG39kv1Y17IgMwnnUBNF8NGoR6Cl44KNklUwmFm0MKgH
-NY5Dosl0ad9byr9IrzvIkM4I4nUfDy9JrdIIe60kOMMxp9DG3P4BujXqWQC+tlHi
-jrvA5KBVjY2uREip9nIPLAYvUyz/6lvESSjia8nrqOhH11ZP7E2ig5WYfEpDNuOi
-rAWQccdXJW7yHIVV2SPu6Y1Hy8WrmQYKse5ecueAlh5GytzaD/4JraooeIsF6QSp
-3yvc59/OiZpBPKVFc7sE+CGw10XYF5bR7Zux8O/73uJElYnmaOMU6xU1f6iu1kJH
-+BSOlIslKoQrtRJBARP0TWMY+LPx0yKrVjeoQADTriKoug+i6qvqBcLI3crYpRfm
-sb97oOPTYv2iE7n1WVlyVpl/2fwUFjefmaU47SBldW9apQzHk3f8RiLw8OmQo1Vz
-zilO3khl5FLMciVrQxvoCdseMER9LqJkO+rhMvsBV4MrCofXE8clG5KHgE2EMTwK
-KIgdN7eBL79SQJPezYHn3hLIwBWzwlI2bMVl3UBxI5ilKqeWfSkjeouPGJm1dF7Y
-P4SgujbKu/UQUx37OLWW
-=Acoh
+iQIcBAABAgAGBQJKhGn0AAoJEODzc/N7+QmaDOsQAKr8JmDiHubKQmPYsfE0w5IO
+bHnnH0p7WCeFs0zsg3kwSBrZ1WnpjVZKYT02J1xN6ySTy3ljd6GSyysoYPk0Wo/z
+uexQUvnT59BJlKvgDR760Hnth5Om1YW1RKPqQg6SS178JwHWXxAaLxp8b4YpZa8p
+Ts6ZinmTsseXL0uoo+6dyTUHSJd22rgstlxUvKBb2apUYNnt2iQxBM2K1xYNRzqs
+XYb2Z9+zEPifHoxbVAmD3p6vveQtFZcRnbl8KCQddiTUXUDh7fF4r61yhsYEMmNL
+efn657xrZcPzJstGZE6vSnLITs7Jnix+gx+mUNYxaxhyx4pB2CVkucA01TS1p98D
+3f2rgTjyWR3GGEMazNJWxVC9D6tNzFwVGQs9tZ8nicf7KmTclaL8H8oVcv8YpG87
+X15+ZH3Mf+gTcyRdtlnvoLylKumz8EXrrnnzruwaay8Cv8p8t+sqk4+46VM7/omd
+LM07kDgsWFfqKARqswnIIaOUkgc0kEpB/Y6aS33XfkMht7ljrdgxlHviojqqLY+O
+uQcDD87TixugRlsIQNxgDJpAZN5Gvr15fHbS6XPPnfgRfZ9qQ6Hpthlevto/ALsb
+YB/jdTFeHvKaPvup/YPEw8MG4yeZNxhWsnZJ/npwHKD1ZLiY6qjLO5ibYAPKOQiM
+2z57ZYhby4p3Zi/gpIl4
+=oFA/
 -----END PGP SIGNATURE-----
 
---=-b4RBZgJMeX6ZANoNAMQ2--
+--=-2G0JJVNrCYO77dZazjxZ--
 
