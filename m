@@ -1,109 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50394 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906AbZHYOe3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 10:34:29 -0400
-Subject: [PATCH] mac80211: fix scan cancel on ifdown
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Tue, 25 Aug 2009 16:33:47 +0200
-Message-Id: <1251210827.10667.6.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:11292 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932394AbZHMUbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 04/13] iwlwifi: cleanup HT40 extension channels setup
+Date: Thu, 13 Aug 2009 13:30:53 -0700
+Message-Id: <1250195462-15811-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When an interface is taken down while a scan is
-pending -- i.e. a scan request was accepted but
-not yet acted upon due to other work being in
-progress -- we currently do not properly cancel
-that scan and end up getting stuck. Fix this by
-doing better checks when an interface is taken
-down.
+From: Zhu Yi <yi.zhu@intel.com>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+The patch cleans up the HT40 extension channels setup for EEPROM
+band 6 and 7 to make it more readable.
+
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/iface.c |   26 ++------------------------
- net/mac80211/scan.c  |    9 ++++++---
- 2 files changed, 8 insertions(+), 27 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |   37 +++++++++-------------------
+ 1 files changed, 12 insertions(+), 25 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2009-08-25 14:39:06.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2009-08-25 14:39:42.000000000 +0200
-@@ -497,30 +497,8 @@ static int ieee80211_stop(struct net_dev
- 		}
- 		/* fall through */
- 	default:
--		if (local->scan_sdata == sdata) {
--			if (!local->ops->hw_scan)
--				cancel_delayed_work_sync(&local->scan_work);
--			/*
--			 * The software scan can no longer run now, so we can
--			 * clear out the scan_sdata reference. However, the
--			 * hardware scan may still be running. The complete
--			 * function must be prepared to handle a NULL value.
--			 */
--			local->scan_sdata = NULL;
--			/*
--			 * The memory barrier guarantees that another CPU
--			 * that is hardware-scanning will now see the fact
--			 * that this interface is gone.
--			 */
--			smp_mb();
--			/*
--			 * If software scanning, complete the scan but since
--			 * the scan_sdata is NULL already don't send out a
--			 * scan event to userspace -- the scan is incomplete.
--			 */
--			if (test_bit(SCAN_SW_SCANNING, &local->scanning))
--				ieee80211_scan_completed(&local->hw, true);
--		}
-+		if (local->scan_sdata == sdata)
-+			ieee80211_scan_cancel(local);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 78c4a32..ded6332 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -484,14 +484,14 @@ static void iwl_init_band_reference(const struct iwl_priv *priv,
+ 			    ? # x " " : "")
  
- 		/*
- 		 * Disable beaconing for AP and mesh, IBSS can't
---- wireless-testing.orig/net/mac80211/scan.c	2009-08-25 14:37:44.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2009-08-25 15:50:07.000000000 +0200
-@@ -280,6 +280,7 @@ void ieee80211_scan_completed(struct iee
- 	if (local->scan_req != local->int_scan_req)
- 		cfg80211_scan_done(local->scan_req, aborted);
- 	local->scan_req = NULL;
-+	local->scan_sdata = NULL;
- 
- 	was_hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
- 	local->scanning = 0;
-@@ -660,6 +661,7 @@ void ieee80211_scan_work(struct work_str
- 		int rc;
- 
- 		local->scan_req = NULL;
-+		local->scan_sdata = NULL;
- 
- 		rc = __ieee80211_start_scan(sdata, req);
- 		mutex_unlock(&local->scan_mtx);
-@@ -742,7 +744,7 @@ int ieee80211_request_internal_scan(stru
- 
- void ieee80211_scan_cancel(struct ieee80211_local *local)
+ /**
+- * iwl_set_ht40_chan_info - Copy ht40 channel info into driver's priv.
++ * iwl_mod_ht40_chan_info - Copy ht40 channel info into driver's priv.
+  *
+  * Does not set up a command, or touch hardware.
+  */
+-static int iwl_set_ht40_chan_info(struct iwl_priv *priv,
++static int iwl_mod_ht40_chan_info(struct iwl_priv *priv,
+ 			      enum ieee80211_band band, u16 channel,
+ 			      const struct iwl_eeprom_channel *eeprom_ch,
+-			      u8 ht40_extension_channel)
++			      u8 clear_ht40_extension_channel)
  {
--	bool swscan;
-+	bool abortscan;
+ 	struct iwl_channel_info *ch_info;
  
- 	cancel_delayed_work_sync(&local->scan_work);
+@@ -523,7 +523,7 @@ static int iwl_set_ht40_chan_info(struct iwl_priv *priv,
+ 	ch_info->ht40_min_power = 0;
+ 	ch_info->ht40_scan_power = eeprom_ch->max_power_avg;
+ 	ch_info->ht40_flags = eeprom_ch->flags;
+-	ch_info->ht40_extension_channel = ht40_extension_channel;
++	ch_info->ht40_extension_channel &= ~clear_ht40_extension_channel;
  
-@@ -751,9 +753,10 @@ void ieee80211_scan_cancel(struct ieee80
- 	 * queued -- mostly at suspend under RTNL.
- 	 */
- 	mutex_lock(&local->scan_mtx);
--	swscan = test_bit(SCAN_SW_SCANNING, &local->scanning);
-+	abortscan = test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-+		    (!local->scanning && local->scan_req);
- 	mutex_unlock(&local->scan_mtx);
- 
--	if (swscan)
-+	if (abortscan)
- 		ieee80211_scan_completed(&local->hw, true);
+ 	return 0;
  }
-
+@@ -592,8 +592,7 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 			/* First write that ht40 is not enabled, and then enable
+ 			 * one by one */
+ 			ch_info->ht40_extension_channel =
+-				(IEEE80211_CHAN_NO_HT40PLUS |
+-				 IEEE80211_CHAN_NO_HT40MINUS);
++					IEEE80211_CHAN_NO_HT40;
+ 
+ 			if (!(is_channel_valid(ch_info))) {
+ 				IWL_DEBUG_INFO(priv, "Ch. %d Flags %x [%sGHz] - "
+@@ -652,7 +651,6 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 	/* Two additional EEPROM bands for 2.4 and 5 GHz HT40 channels */
+ 	for (band = 6; band <= 7; band++) {
+ 		enum ieee80211_band ieeeband;
+-		u8 ht40_extension_chan;
+ 
+ 		iwl_init_band_reference(priv, band, &eeprom_ch_count,
+ 					&eeprom_ch_info, &eeprom_ch_index);
+@@ -663,28 +661,17 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 
+ 		/* Loop through each band adding each of the channels */
+ 		for (ch = 0; ch < eeprom_ch_count; ch++) {
+-
+-			if ((band == 6) &&
+-				((eeprom_ch_index[ch] == 5) ||
+-				 (eeprom_ch_index[ch] == 6) ||
+-				 (eeprom_ch_index[ch] == 7)))
+-				/* both are allowed: above and below */
+-				ht40_extension_chan = 0;
+-			else
+-				ht40_extension_chan =
+-					IEEE80211_CHAN_NO_HT40MINUS;
+-
+ 			/* Set up driver's info for lower half */
+-			iwl_set_ht40_chan_info(priv, ieeeband,
++			iwl_mod_ht40_chan_info(priv, ieeeband,
+ 						eeprom_ch_index[ch],
+-						&(eeprom_ch_info[ch]),
+-						ht40_extension_chan);
++						&eeprom_ch_info[ch],
++						IEEE80211_CHAN_NO_HT40PLUS);
+ 
+ 			/* Set up driver's info for upper half */
+-			iwl_set_ht40_chan_info(priv, ieeeband,
+-						(eeprom_ch_index[ch] + 4),
+-						&(eeprom_ch_info[ch]),
+-						IEEE80211_CHAN_NO_HT40PLUS);
++			iwl_mod_ht40_chan_info(priv, ieeeband,
++						eeprom_ch_index[ch] + 4,
++						&eeprom_ch_info[ch],
++						IEEE80211_CHAN_NO_HT40MINUS);
+ 		}
+ 	}
+ 
+-- 
+1.5.6.3
 
