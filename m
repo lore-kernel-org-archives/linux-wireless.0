@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f228.google.com ([209.85.220.228]:59590 "EHLO
-	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754025AbZHJMtw convert rfc822-to-8bit (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:47063 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752291AbZHMRXe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 08:49:52 -0400
-Received: by fxm28 with SMTP id 28so884762fxm.17
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 05:49:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908101441.43480.mb@bu3sch.de>
-References: <4A7F713E.8040405@gmail.com> <200908101441.43480.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 10 Aug 2009 14:49:31 +0200
-Message-ID: <69e28c910908100549w6af5bd12j568c7f0c2aa31e30@mail.gmail.com>
-Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
-To: Michael Buesch <mb@bu3sch.de>
+	Thu, 13 Aug 2009 13:23:34 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH v2] b43: Update dummy transmission to match V4 specs
+Date: Thu, 13 Aug 2009 19:23:29 +0200
 Cc: John Linville <linville@tuxdriver.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
 	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <4A842887.2080109@gmail.com>
+In-Reply-To: <4A842887.2080109@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908131923.29847.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/10 Michael Buesch <mb@bu3sch.de>:
-> On Monday 10 August 2009 03:00:46 Gábor Stefanik wrote:
->> +static const u16 lpphy_sw_control_table[] = {
->> +     0x0128,
->> +     0x0128,
->> +     0x0009,
->> +     0x0009,
->> +     0x0028,
->> +     0x0028,
->
-> Is it possible to use more than one value per line for all these tables?
-> Make sure to make best use of the 80 columns limit.
-> This would significantly decrease the patch/file length. (linewise)
->
-> --
-> Greetings, Michael.
->
+On Thursday 13 August 2009 16:51:51 GÃ¡bor Stefanik wrote:
+> The V4 dummy transmission has two extra bools in its prototype,
+> so update all callers with the 2 bools.
+> 
+> Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
+> ---
+> v2: Convert all callers to v4, and drop the v3->v4 wrapper.
 
-Well, I converted the tables directly from the Wikitext on
-bcm-v4.sipsolutions.net using regex search&replace - if you know a
-good regex to convert the tables to use multiple values on each line,
-please post it.
+> -	/* Commit writes */
+> -	b43_read32(dev, B43_MMIO_MACCTL);
+
+> -	value = ((phy->type == B43_PHYTYPE_A) ? 1 : 0);
+> +	if (dev->dev->id.revision < 11)
+> +		b43_write16(dev, 0x07C0, 0x0000);
+> +	else
+> +		b43_write16(dev, 0x07C0, 0x0100);
+> +	value = (ofdm ? 0x41 : 0x40);
+>  	b43_write16(dev, 0x050C, value);
+
+This patch changes G-PHY codepaths. Did you test it on (at least one) G-PHY device?
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Greetings, Michael.
