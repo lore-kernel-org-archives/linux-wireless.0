@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:34454 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbZHRSaX (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:64721 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754427AbZHMWPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 14:30:23 -0400
-Received: by gxk1 with SMTP id 1so5279641gxk.17
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 11:30:24 -0700 (PDT)
+	Thu, 13 Aug 2009 18:15:10 -0400
+Date: Thu, 13 Aug 2009 17:15:07 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: Fix sparse warnings
+Message-ID: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1250618853.7887.0.camel@johannes.local>
-References: <200908181954.23419.IvDoorn@gmail.com> <1250618324.9886.25.camel@johannes.local>
-	<200908182004.58584.IvDoorn@gmail.com> <1250618853.7887.0.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 18 Aug 2009 11:24:50 -0700
-Message-ID: <43e72e890908181124v7e7731dei1b52806f6daccfb8@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: configure_filter() callback is allowed to sleep
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2009 at 11:07 AM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Tue, 2009-08-18 at 20:04 +0200, Ivo van Doorn wrote:
->
->> > Speaking of which -- bss_info_changed can sleep too, which means you can
->> > remove DRIVER_REQUIRE_SCHEDULED completely I think?
->>
->> Seriously, that would be great. Patch coming up in a few minutes. ;)
->
-> Cool.
->
-> Hey, sorry it took so long to make it possible :)
->
-> I wonder if drivers now ever have a reason to queue work on the mac80211
-> workqueue? Some periodic calibration tasks maybe?
+The b43 driver generates the following sparse warnings:
 
-ath9k just has the virtual wiphy stuff and that uses the mac80211
-workqueue.  Maybe we can review this stuff at the summit in
-consideration for how we may want this eventually on
-mac80211/cfg80211.
+  CHECK   drivers/net/wireless/b43/phy_g.c
+drivers/net/wireless/b43/phy_g.c:974:35: warning: cast truncates bits from constant value (ffff7fff becomes 7fff)
+  CHECK   drivers/net/wireless/b43/wa.c
+drivers/net/wireless/b43/wa.c:385:53: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+drivers/net/wireless/b43/wa.c:403:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+drivers/net/wireless/b43/wa.c:405:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+drivers/net/wireless/b43/wa.c:415:50: warning: cast truncates bits from constant value (ffff0fff becomes fff)
 
-  Luis
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+John,
+
+There is no hurry for this material.
+
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c
++++ wireless-testing/drivers/net/wireless/b43/phy_g.c
+@@ -971,7 +971,7 @@ b43_radio_interference_mitigation_enable
+ 		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+ 
+ 		if (phy->rev >= 3) {
+-			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
++			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
+ 			b43_phy_maskset(dev, 0x0415, 0x8000, 0x36D8);
+ 			b43_phy_maskset(dev, 0x0416, 0x8000, 0x36D8);
+ 			b43_phy_maskset(dev, 0x0417, 0xFE00, 0x016D);
+Index: wireless-testing/drivers/net/wireless/b43/wa.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/wa.c
++++ wireless-testing/drivers/net/wireless/b43/wa.c
+@@ -382,7 +382,8 @@ static void b43_wa_altagc(struct b43_wld
+ 		b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 3, 25);
+ 	}
+ 
+-	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)~0xFF00, 0x5700);
++	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)(~0xFF00 & 0xFFFF),
++			0x5700);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x007F, 0x000F);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x3F80, 0x2B80);
+ 	b43_phy_maskset(dev, B43_PHY_ANTWRSETT, 0xF0FF, 0x0300);
+@@ -400,9 +401,9 @@ static void b43_wa_altagc(struct b43_wld
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x00FF, 0x0020);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x3F00, 0x0200);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x82), ~0x00FF, 0x002E);
+-	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)~0xFF00, 0x1A00);
++	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)(~0xFF00 & 0xFFFF), 0x1A00);
+ 	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), ~0x00FF, 0x0028);
+-	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)~0xFF00, 0x2C00);
++	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)(~0xFF00 & 0xFFFF), 0x2C00);
+ 	if (phy->rev == 1) {
+ 		b43_phy_write(dev, B43_PHY_PEAK_COUNT, 0x092B);
+ 		b43_phy_maskset(dev, B43_PHY_OFDM(0x1B), ~0x001E, 0x0002);
+@@ -412,7 +413,8 @@ static void b43_wa_altagc(struct b43_wld
+ 		b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, ~0x000F, 0x0004);
+ 		if (phy->rev >= 6) {
+ 			b43_phy_write(dev, B43_PHY_OFDM(0x22), 0x287A);
+-			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)~0xF000, 0x3000);
++			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)(~0xF000 &
++					0xFFFF), 0x3000);
+ 		}
+ 	}
+ 	b43_phy_maskset(dev, B43_PHY_DIVSRCHIDX, 0x8080, 0x7874);
