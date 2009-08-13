@@ -1,46 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:47425 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbZGaXWj convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:61866 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbZHMDHy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 19:22:39 -0400
-Received: by gxk9 with SMTP id 9so4223001gxk.13
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 16:22:39 -0700 (PDT)
+	Wed, 12 Aug 2009 23:07:54 -0400
+Received: by yxe5 with SMTP id 5so644846yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 20:07:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A737AFC.40301@gmx.de>
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>
-	<4A733CDE.4060801@gmx.de> <1249066564.20276.3.camel@mj> <4A737AFC.40301@gmx.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 31 Jul 2009 16:22:19 -0700
-Message-ID: <43e72e890907311622u1059be72y7c833f888b11cf56@mail.gmail.com>
-Subject: Re: [PATCH] compat-2.6: Makefile: fixed test expressions for target
-	install
-To: Joerg Albert <jal2@gmx.de>
-Cc: Pavel Roskin <proski@gnu.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <40f31dec0908121913y1dc39032p26556135f22c3f48@mail.gmail.com>
+References: <1250096221-11000-1-git-send-email-lrodriguez@atheros.com>
+	<b6c5339f0908121021x3bc9fe26vb17532de6c464b7f@mail.gmail.com>
+	<43e72e890908121027x5211c7cja3185861bc9c02f1@mail.gmail.com>
+	<40f31dec0908121913y1dc39032p26556135f22c3f48@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 12 Aug 2009 20:07:35 -0700
+Message-ID: <43e72e890908122007r766506e7i52aab859b01283d1@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 0/3] ath: advance ath.ko with one more
+	helper
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 4:15 PM, Joerg Albert<jal2@gmx.de> wrote:
-> On 07/31/2009 08:56 PM, Pavel Roskin wrote:
->
->> No, I didn't mean that.  I meant:
+On Wed, Aug 12, 2009 at 7:13 PM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+> 2009/8/12 Luis R. Rodriguez <lrodriguez@atheros.com>:
+>> On Wed, Aug 12, 2009 at 10:21 AM, Bob Copeland<me@bobcopeland.com> wrote:
+>>> On Wed, Aug 12, 2009 at 12:56 PM, Luis R.
+>>> Rodriguez<lrodriguez@atheros.com> wrote:
+>>>> This adds a common structure where we can start stuffing shared items
+>>>> and introduces a helper for both ath5k and ath9k's use.
+>>>>
+>>>> Luis R. Rodriguez (3):
+>>>>  ath: add common ath_rxbuf_alloc() and make ath9k use it
+>>>>  ath5k: use common ath.ko ath_rxbuf_alloc()
+>>>>  ath5k: use bit shift operators for cache line size
+>>>
+>>> Series looks OK to me but I think we can add a 4/4 that would:
+>>>
+>>> - include ath/reg.h [don't remember if that's the name right now]
+>>>  in ath.h
+>>> - move reg structs into ath_common (although, this could be a
+>>>  bad call for ar9170, haven't really checked).
+>>>
+>>> Then we only have to deal with one header and one composite struct
+>>> (for now) as the interface between the modules.
 >>
->> if [ -z "" ] && [ -z "" ]; then echo "both empty"; fi
->> ...
->> We should not rely on any bash features as /bin/sh may not be bash at
->> all.
+>> Sure, I was thinking of doing this after this. Is that acceptable?
+>>
+>>  Luis
 >
-> Agreed. Will repost the patch.
+> You mean have a common reg.h for both ath5k and ath9k ? Works for me
+> but we have to deal with some new register ranges and some registers
+> have moved on ath9k + reg.h on ath9k has no descriptions, comments, it doesn't
+> include macros for accessing queue registers or tables, mixes eeprom offsets
+> with register addresses and other macros.
 
-Actually please do keep relying on /bin/bash, all the scripts on
-compat-wireless do depend on /bin/bash, I don't expect users of
-dash/etc to use compat-wireless.
+Sorry no I meant ath/reg.h as in regulatory, as that is already party of ath.ko.
 
-If we want to make compat-wireless be shell agnostic we'd need to
-address all the other scripts. I rather not deal with that now unless
-we really think that is also a good idea and someone is up for the
-task.
+> My plan was to start merging ath9k hw code on ath5k (not the driver part,
+> pcu.c, qcu.c, phy.c, eeprom.c etc + registers/eeprom offsets/descriptor formats)
+> and then move all that on ath and have both ath5k/ath9k use it. I
+> believe ath5k hw
+> code is much cleaner than ath9k and it's a better place to start, i've
+> seen most hw
+> code on ath9k and i'm ready to move on if it's O.K. with you.
+
+When we update ath9k for new hw support it is easiest if that code
+matches what we have internally at Atheros. Granted we diverge from
+that every now and then but I believe those changes can be brought
+back in that we do and yet keep the internal code working. I believe
+the changes so far bring clarity and readability. Unfortunately we
+haven't yet gotten any the changes we've made on ath9k hw access stuff
+or regulatory merged back in so we keep diverging more and more from
+our internal codebase.
+
+Because of this for now I would not welcome bringing ath9k code to
+ath5k in any way whatsoever. What I think is reasonable though is to
+start merging into ath.ko common code which doesn't change much or
+would mean diverging a lot from ath9k's current style for the hw
+related stuff. Don't get me wrong, changes are welcomed but the less
+intrusive the better. "start merging ath9k hw code on ath5k" sounds
+very intrusive by all means.
+
+Lets do this slowly and take it on, on a patch by patch basis.
 
   Luis
