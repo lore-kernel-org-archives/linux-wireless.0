@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:38772 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753787AbZHQVTZ (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:49287 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754749AbZHMTrL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 17:19:25 -0400
-Received: by pxi34 with SMTP id 34so1393426pxi.4
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 14:19:27 -0700 (PDT)
-Message-ID: <4A89C93E.8070705@lwfinger.net>
-Date: Mon, 17 Aug 2009 16:18:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 13 Aug 2009 15:47:11 -0400
+Received: by yxe5 with SMTP id 5so1281233yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 12:47:12 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] b43: LP-PHY: Fix reading old mode in the set TX power
- 	control routine
-References: <4A85AD1B.1060008@gmail.com> <69e28c910908171233l75b4f72cq8981fb048ad8ffbb@mail.gmail.com> 	<20090817195607.GJ5500@tuxdriver.com> <69e28c910908171303m69a575f0kad6e32592d3184ea@mail.gmail.com>
-In-Reply-To: <69e28c910908171303m69a575f0kad6e32592d3184ea@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1250192346.21250.6.camel@johannes.local>
+References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	<1250191909-21682-11-git-send-email-lrodriguez@atheros.com>
+	<1250192346.21250.6.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 13 Aug 2009 12:46:52 -0700
+Message-ID: <43e72e890908131246t44fe8c3eya3d3894810aeea7f@mail.gmail.com>
+Subject: Re: [PATCH 10/20] wireless: group Broadcom wireless drivers on
+	kconfig
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-G�bor Stefanik wrote:
-> 2009/8/17 John W. Linville <linville@tuxdriver.com>:
->> On Mon, Aug 17, 2009 at 09:33:06PM +0200, G�bor Stefanik wrote:
->>> 2009/8/14 G�bor Stefanik <netrolller.3d@gmail.com>:
->>>> Check the mode the hardware is in, not the mode we used the last time.
->>>>
->>>> Signed-off-by: G�bor Stefanik <netrolller.3d@gmail.com>
->>>> ---
->>>> Mark, please test if this fixes the TX power control WARN_ON you were
->>>> seeing.
->>>>
->>>> drivers/net/wireless/b43/phy_lp.c |    4 ++--
->>>> 1 files changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/b43/phy_lp.c
->>>> b/drivers/net/wireless/b43/phy_lp.c
->>>> index 292ee51..76457f7 100644
->>>> --- a/drivers/net/wireless/b43/phy_lp.c
->>>> +++ b/drivers/net/wireless/b43/phy_lp.c
->>>> @@ -1015,9 +1015,9 @@ static void lpphy_set_tx_power_control(struct
->>>> b43_wldev *dev,
->>>>        struct b43_phy_lp *lpphy = dev->phy.lp;
->>>>        enum b43_lpphy_txpctl_mode oldmode;
->>>>
->>>> -       oldmode = lpphy->txpctl_mode;
->>>>        lpphy_read_tx_pctl_mode_from_hardware(dev);
->>>> -       if (lpphy->txpctl_mode == mode)
->>>> +       oldmode = lpphy->txpctl_mode;
->>>> +       if (oldmode == mode)
->>>>                return;
->>>>        lpphy->txpctl_mode = mode;
->>>>
->>>> --
->>>> 1.6.2.4
->>>>
->>> John, any news on this one? I can't see it in wireless testing.
->> Larry said "It does not fix it here. I'll take a look at the specs"...
-> 
-> It did not fix the warning, but it is nevertheless a legitimate fix.
-> (I found this bug when I was looking for the source of the WARN_ON -
-> this is not the source of the WARN_ON, but still a bug.)
+On Thu, Aug 13, 2009 at 12:39 PM, Johannes
+Berg<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-08-13 at 15:31 -0400, Luis R. Rodriguez wrote:
+>> Cc: Michael Buesch <mb@bu3sch.de>
+>> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
+>> Cc: Johannes Berg <johannes@sipsolutions.net>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/Kconfig |   10 ++++++++++
+>>  1 files changed, 10 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+>> index 65397fe..1a8e9bd 100644
+>> --- a/drivers/net/wireless/Kconfig
+>> +++ b/drivers/net/wireless/Kconfig
+>> @@ -378,6 +378,14 @@ config USB_ZD1201
+>>
+>>  endif # ZYDAS_80211
+>>
+>> +menuconfig BROADCOM_80211
+>> +     bool "Broadcom Wireless Cards"
+>> +     depends on WLAN_80211
+>> +     ---help---
+>> +       This will enable the support for Broadcom wireless drivers. This
+>> +       includes b43 driver, b43legacy driver and the rndis_wlan driver.
+>
+> Ok ... so what's the point of all these patches?
 
-This patch is OK.
+Its stated on 0/20.
 
-Larry
+> Also, I don't think rndis wlan is always broadcom, and in an case it's
+> almost never marked as such.
+
+>From the rndis_wlan kconfig:
+
+          "All of these devices are based on Broadcom 4320 chip which is the
+          only wireless RNDIS chip known to date."
+
+  Luis
