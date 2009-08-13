@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:33346 "EHLO mail.atheros.com"
+Received: from mx2.redhat.com ([66.187.237.31]:57397 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751142AbZHFB7m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 21:59:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 18:59:44 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<mcgrof@gmail.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	<zhifeng.cai@atheros.com>, <stephen.chen@atheros.com>
-Subject: [PATCH] pci_ids.h: add new Atheros USB vendor ID
-Date: Wed, 5 Aug 2009 18:59:41 -0700
-Message-ID: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751520AbZHMRUy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 13:20:54 -0400
+Subject: Re: Roaming behavior
+From: Dan Williams <dcbw@redhat.com>
+To: David Seira <davidseira@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20090813T094313-518@post.gmane.org>
+References: <loom.20090811T124332-602@post.gmane.org>
+	 <20090811135915.GC2684@tuxdriver.com> <1250003481.4185.7.camel@solid2>
+	 <200908120907.18501.hs4233@mail.mn-solutions.de>
+	 <1250061248.13529.94.camel@johannes.local>
+	 <loom.20090813T094313-518@post.gmane.org>
 Content-Type: text/plain
+Date: Thu, 13 Aug 2009 12:20:50 -0500
+Message-Id: <1250184050.5896.28.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New Atheros USB devices will use 0x0cf3. The first device
-will be ar9271, for which we are adding support for.
+On Thu, 2009-08-13 at 09:44 +0000, David Seira wrote:
+> 
+> 
+> But I haven't installed wpa_supplicant, I don't need it. In which files is
+> roaming behavior implemented?
 
-Cc: zhifeng.cai@atheros.com
-Cc: stephen.chen@atheros.com
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+wpa_supplicant is the defacto wifi control program for Linux.  Yes, it
+doesn't more than WPA.  Yes, it can be used for open and WEP networks.
+If you don't use it, you'll just end up rewriting a large chunk of it.
 
-John, sending this through you as this is only
-specific to wireless, at least at the moment.
-
- include/linux/pci_ids.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 73b46b6..27f4e6b 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2170,6 +2170,7 @@
- #define PCI_DEVICE_ID_BCM1250_HT	0x0002
- 
- #define PCI_VENDOR_ID_ATHEROS		0x168c
-+#define PCI_VENDOR_ID_ATHEROS_USB	0x0cf3
- 
- #define PCI_VENDOR_ID_NETCELL		0x169c
- #define PCI_DEVICE_ID_REVOLUTION	0x0044
--- 
-1.6.3.3
+Dan
 
