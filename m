@@ -1,65 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847AbZHRHXU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 03:23:20 -0400
-Subject: Re: [PATCH 10/29] mwl8k: fix mwl8k_configure_filter() parameter
- lifetime issue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20090818040039.GA4116@mail.wantstofly.org>
-References: <20090818035233.GO18639@mail.wantstofly.org>
-	 <20090818040039.GA4116@mail.wantstofly.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OkUNUQ3YlWG5wsf4uijL"
-Date: Tue, 18 Aug 2009 09:23:18 +0200
-Message-Id: <1250580198.30538.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mx2.redhat.com ([66.187.237.31]:34411 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754398AbZHMMad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 08:30:33 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2.6.30 v2] iwl3945: fix rfkill switch
+Date: Thu, 13 Aug 2009 14:29:08 +0200
+Message-Id: <1250166548-2548-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Due to rfkill and iwlwifi mishmash of SW / HW killswitch representation,
+we have race conditions which make unable turn wifi radio on, after enable
+and disable again killswitch. I can observe this problem on my laptop
+with iwl3945 device.
 
---=-OkUNUQ3YlWG5wsf4uijL
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+In rfkill core HW switch and SW switch are separate 'states'. Device can
+be only in one of 3 states: RFKILL_STATE_SOFT_BLOCKED, RFKILL_STATE_UNBLOCKED,
+RFKILL_STATE_HARD_BLOCKED. Whereas in iwlwifi driver we have separate bits
+STATUS_RF_KILL_HW and STATUS_RF_KILL_SW for HW and SW switches - radio can be
+turned on, only if both bits are cleared.
 
-On Tue, 2009-08-18 at 06:00 +0200, Lennert Buytenhek wrote:
+In this particular race conditions, radio can not be turned on if in driver
+STATUS_RF_KILL_SW bit is set, and rfkill core is in state
+RFKILL_STATE_HARD_BLOCKED, because rfkill core is unable to call
+rfkill->toggle_radio(). This situation can be entered in case:
 
-> This will clash with:
->=20
-> 	http://article.gmane.org/gmane.linux.kernel.wireless.general/38141
->=20
-> But that is easy to fix up.  (The easiest would probably be to not
-> apply the mwl8k part of that patch, and I'll send a followup patch
-> to implement ->prepare_multicast() for mwl8k.)
+- killswitch is turned on
+- rfkill core 'see' button change first and move to RFKILL_STATE_SOFT_BLOCKED
+  also call ->toggle_radio() and STATE_RF_KILL_SW in driver is set
+- iwl3945 get info about button from hardware to set STATUS_RF_KILL_HW bit and
+  force rfkill to move to RFKILL_STATE_HARD_BLOCKED
+- killsiwtch is turend off
+- driver clear STATUS_RF_KILL_HW
+- rfkill core is unable to clear STATUS_RF_KILL_SW in driver
 
-It's not quite that easy because that patch changes the arguments to the
-functions so the multicast list is no longer available in
-->configure_filter().
+Additionally call to rfkill_epo() when STATUS_RF_KILL_HW in driver is set
+cause move to the same situation.
 
-johannes
+In 2.6.31 this problem is fixed due to _total_ rewrite of rfkill subsystem.
+This is a quite small fix for 2.6.30.x in iwlwifi driver. We are changing
+internal rfkill state to always have below relations true:
 
---=-OkUNUQ3YlWG5wsf4uijL
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
+STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
+STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_HARD_BLOCKED
+STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_UNBLOCKED
 
------BEGIN PGP SIGNATURE-----
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+Patch was tested by me only with iwl3945 device.
+  
+ drivers/net/wireless/iwlwifi/iwl-rfkill.c |   26 ++++++++++++++++----------
+ 1 files changed, 16 insertions(+), 10 deletions(-)
 
-iQIcBAABAgAGBQJKilbiAAoJEODzc/N7+QmalPMP/AtcR0hL12nRcGQP+g1DzN3k
-ZM/SqBDmsdu1a6bISmoLEv+wWStu7tFuNqqYqrHb4xUB3UED+Brt362gQ6UeQzpQ
-djUC6k4TiqCG2p63OxJNY59eS0gSkyAMlw7s8+5yVIMdoC3zgaGj3M3DZM4JY0Ho
-ypWPKFtb9jYBakspGYfdqimFOfPySVlw6g23qfdEhsLBu46P8k1+MmZAFFD515er
-EzuoeRAvCb0KjjSi/vKu4WxOsNpwuiAFDRc3vt+Mw3+07MIe6O+aXQuEljaCV2VV
-S7hOaAoG7yXXzfr3k1Z6QJSTzrPPmJUTvhvVfU2hLI0nw+tb7jpV8b9Eo/E3Ig8k
-x0fXdYpPiODSfJ1/mrxutu9s5QJ8a6c4GISGOTb7Ve1afkSZlhOeAXYgZlORmzq2
-o/M93tRce1zPsRv2/22Ay6GkG1/yxoGaNNzI8KZIjIzYEKR4My302C3bUVHSBC9Z
-X44lWuNzuJHNSHBrkGa8rAfvVqMXeUFOsj83kaBKwIsZ0p1utiuNMaVmrVIbI1sm
-tIRFRq/2JZa6PgLI7Y0uHeR2CEWz2uO3XzNTvgGfzMNLxRpvYJgBYhGt2Xq62CWi
-FjUpyQKEsGzR2b6JCmqsj59ohquNQT++D++6O3crnvZqHa7KQnDsaAOOOGHzZZkA
-1MwA6GA2VB2ufyfbDePB
-=Ji5U
------END PGP SIGNATURE-----
-
---=-OkUNUQ3YlWG5wsf4uijL--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+index 2ad9faf..fc3a95f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
+@@ -53,22 +53,31 @@ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
+ 	switch (state) {
+ 	case RFKILL_STATE_UNBLOCKED:
+ 		if (iwl_is_rfkill_hw(priv)) {
++			/* pass error to rfkill core, make it state HARD
++			 * BLOCKED (rfkill->mutex taken) and disable
++			 * software kill switch */
+ 			err = -EBUSY;
+-			goto out_unlock;
++			priv->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
+ 		}
+ 		iwl_radio_kill_sw_enable_radio(priv);
+ 		break;
+ 	case RFKILL_STATE_SOFT_BLOCKED:
+ 		iwl_radio_kill_sw_disable_radio(priv);
++		/* rfkill->mutex is taken */
++		if (priv->rfkill->state == RFKILL_STATE_HARD_BLOCKED) {
++			/* force rfkill core state to be SOFT BLOCKED,
++			 * otherwise core will be unable to disable software
++			 * kill switch */
++			priv->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
++		}
+ 		break;
+ 	default:
+ 		IWL_WARN(priv, "we received unexpected RFKILL state %d\n",
+ 			state);
+ 		break;
+ 	}
+-out_unlock:
+-	mutex_unlock(&priv->mutex);
+ 
++	mutex_unlock(&priv->mutex);
+ 	return err;
+ }
+ 
+@@ -132,14 +141,11 @@ void iwl_rfkill_set_hw_state(struct iwl_priv *priv)
+ 	if (!priv->rfkill)
+ 		return;
+ 
+-	if (iwl_is_rfkill_hw(priv)) {
++	if (iwl_is_rfkill_sw(priv))
++		rfkill_force_state(priv->rfkill, RFKILL_STATE_SOFT_BLOCKED);
++	else if (iwl_is_rfkill_hw(priv))
+ 		rfkill_force_state(priv->rfkill, RFKILL_STATE_HARD_BLOCKED);
+-		return;
+-	}
+-
+-	if (!iwl_is_rfkill_sw(priv))
+-		rfkill_force_state(priv->rfkill, RFKILL_STATE_UNBLOCKED);
+ 	else
+-		rfkill_force_state(priv->rfkill, RFKILL_STATE_SOFT_BLOCKED);
++		rfkill_force_state(priv->rfkill, RFKILL_STATE_UNBLOCKED);
+ }
+ EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
+-- 
+1.6.2.5
 
