@@ -1,94 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49975 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbZHAPZt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:41513 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755460AbZHMTbu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 11:25:49 -0400
-Subject: Re: [PATCH 000/002] Fix frequent reconnects caused by new
- conection monitor
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1249070739.25620.11.camel@maxim-laptop>
-References: <1249056817.20593.1.camel@maxim-laptop>
-	 <1249066338.30019.214.camel@rc-desk>
-	 <1249067293.19089.10.camel@maxim-laptop>
-	 <1249068449.23662.17.camel@localhost.localdomain>
-	 <1249070739.25620.11.camel@maxim-laptop>
-Content-Type: text/plain
-Date: Sat, 01 Aug 2009 08:25:45 -0700
-Message-Id: <1249140345.3491.5.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Thu, 13 Aug 2009 15:31:50 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 19/20] wireless: simplify WLAN_PRE80211 entries
+Date: Thu, 13 Aug 2009 15:31:48 -0400
+Message-Id: <1250191909-21682-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maxim,
+We do simplify them by ifdef'ing on WLAN_PRE80211 for
+the WLAN_PRE80211 drivers, this removes the need to depend
+on WLAN_PRE80211 on each individual driver.
 
-> > > > > Hi, here is the updated version of these two patches that fix the
-> > > > > $SUBJECT issue.
-> > > > > 
-> > > > > I attach these (in case mailer mangles them), and reply with patches.
-> > > > > 
-> > > > > Tested both with low quality signal, and beacon loss.
-> > > > > Lack of TX is found, every 30 seconds now, and quite reliable.
-> > > > > Lack of beacons, triggers probe like it did every 2 seconds.
-> > > > 
-> > > > Thanks!
-> > > > 
-> > > > I've been running with this for two hours now with no disconnects. This
-> > > > is where before the patches I would get disconnected after a few
-> > > > minutes. I did get two "No probe response from AP xx:xx:xx:xx:xx:xx
-> > > > after 500ms, try 1" messages in my log.
-> > > This is normal, or at least can be normal, I patched the driver to
-> > > display this message, when there is a probe timeout, but instead of
-> > > disconnect, it retries, currently 5 times, but this can be even further
-> > > increased is necessarily.
-> > > (these messages are only in logs when verbose mac debugging is enabled)
-> > > 
-> > > I don't know exactly why probes aren't answered, but I strongly suspect
-> > > that my AP sometimes 'goes out to lunch' and then answers, since
-> > > typically after a failed probe it sends many replies.
-> > > (Or it could be some buffering done by iwl3945 microcode). I currently
-> > > can't monitor the connection from outside, but as soon as I can I see
-> > > whether the above is true. Nevertheless if signal quality isn't great,
-> > > there are valid reasons for probe loss, and it shouldn't cause all the
-> > > fuzz (and since I use WPA2, every reconnection causes whole WPA
-> > > handshake to be preformed, and this takes at least 2 seconds, and if a
-> > > reconnection happens each 5 seconds, it gets very very annoying, and
-> > > almost unusable.
-> > 
-> > I am testing your patches and so far so good. Seems to be working
-> > perfectly fine. I see this in the logs:
-> > 
-> > [41027.333419] wlan0: detected beacon loss from AP - sending probe request
-> > [41027.389260] wlan0: cancelling probereq poll due to a received beacon
-> > [41027.793518] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 1
-> > [41028.292731] No probe response from AP 00:1c:f0:62:88:5b after 500ms, try 2
-> > 
-> > Need to watch out if this pattern emerges and if the beacon loss trigger
-> > might give us an indication. Maybe the ucode is just not ready then.
-> Here (on my system) I see no beacon losses at all, like I said there
-> could be many reasons behind packet losses, and best way to mitigate
-> them is to retry.
-> 
-> Your logs indicate that beacons weren't recieved for 2 seconds, then
-> mac80211 tried to send a probe, but a beacon is recieved before the
-> probe answer, this probe is canceled (at least should be) then after a
-> while, a probe request (same one?) is time outed, and retried twice,
-> then finally answered.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-it looked related, but it wasn't at all. I have this running for over 24
-hours by now and the patches work perfectly fine. Today it saw for the
-first time a try 4 message. Otherwise it only had to try up to three
-times before it succeeded.
-
-Tested-by: Marcel Holtmann <marcel@holtmann.org>
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 02c7d16..a18748b 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -14,9 +14,11 @@ menuconfig WLAN_PRE80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
++if WLAN_PRE80211
++
+ config ARLAN
+ 	tristate "Aironet Arlan 655 & IC2200 DS support"
+-	depends on ISA && !64BIT && WLAN_PRE80211
++	depends on ISA && !64BIT
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  Aironet makes Arlan, a class of wireless LAN adapters. These use the
+@@ -32,7 +34,7 @@ config ARLAN
+ 
+ config WAVELAN
+ 	tristate "AT&T/Lucent old WaveLAN & DEC RoamAbout DS ISA support"
+-	depends on ISA && WLAN_PRE80211
++	depends on ISA
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  The Lucent WaveLAN (formerly NCR and AT&T; or DEC RoamAbout DS) is
+@@ -55,7 +57,7 @@ config WAVELAN
+ 
+ config PCMCIA_WAVELAN
+ 	tristate "AT&T/Lucent old WaveLAN Pcmcia wireless support"
+-	depends on PCMCIA && WLAN_PRE80211
++	depends on PCMCIA
+ 	select WIRELESS_EXT
+ 	help
+ 	  Say Y here if you intend to attach an AT&T/Lucent Wavelan PCMCIA
+@@ -67,7 +69,7 @@ config PCMCIA_WAVELAN
+ 
+ config STRIP
+ 	tristate "STRIP (Metricom starmode radio IP)"
+-	depends on INET && WLAN_PRE80211
++	depends on INET
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  Say Y if you have a Metricom radio and intend to use Starmode Radio
+@@ -91,7 +93,7 @@ config STRIP
+ 
+ config PCMCIA_NETWAVE
+ 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
+-	depends on PCMCIA && WLAN_PRE80211
++	depends on PCMCIA
+ 	select WIRELESS_EXT
+ 	help
+ 	  Say Y here if you intend to attach this type of PCMCIA (PC-card)
+@@ -100,6 +102,8 @@ config PCMCIA_NETWAVE
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called netwave_cs.  If unsure, say N.
+ 
++endif # WLAN_PRE80211
++
+ menuconfig WLAN_80211
+ 	bool "Wireless LAN (IEEE 802.11)"
+ 	depends on NETDEVICES
+-- 
+1.6.2.5
 
