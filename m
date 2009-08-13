@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53104 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:41496 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757689AbZHQR1b (ORCPT
+	with ESMTP id S1755449AbZHMTbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:31 -0400
+	Thu, 13 Aug 2009 15:31:49 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Stephen Chen <stephen.chen@atheros.com>
-Subject: [PATCH v5 08/33] wireless: group ZyDAS wireless drivers in kconfig
-Date: Mon, 17 Aug 2009 13:27:07 -0400
-Message-Id: <1250530052-14783-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 13/20] wireless: group Cisco wireless together on kconfig
+Date: Thu, 13 Aug 2009 15:31:42 -0400
+Message-Id: <1250191909-21682-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few of these so we keep them under a config option
-which expands upon selection.
-
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Stephen Chen <stephen.chen@atheros.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/Kconfig |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ drivers/net/wireless/Kconfig |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 9f1b5b6..a04ca56 100644
+index 3be8623..1c74512 100644
 --- a/drivers/net/wireless/Kconfig
 +++ b/drivers/net/wireless/Kconfig
-@@ -347,6 +347,15 @@ config PRISM54
+@@ -195,6 +195,16 @@ config MWL8K
  
- endif # CONEXANT_ST_80211
+ endif # MARVELL_80211
  
-+config ZYDAS_80211
-+	bool "ZyDAS"
++menuconfig CISCO_80211
++	bool "Cisco Wireless Cards"
 +	depends on WLAN_80211
 +	---help---
-+	  This will enable the support for ZyDAS wireless drivers. This includes
-+	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
++	  This will enable the support for Cisco wireless drivers. This
++	  includes the Cisco Aironet ISA and PCI drivers and the Cisco
++	  Aironet PCMCIA drivers.
 +
-+if ZYDAS_80211
++if CISCO_80211
 +
- source "drivers/net/wireless/zd1211rw/Kconfig"
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+ 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
+@@ -233,6 +243,8 @@ config AIRO_CS
+ 	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+ 	  Cisco Linux utilities can be used to configure the card.
  
- config USB_ZD1201
-@@ -367,6 +376,8 @@ config USB_ZD1201
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called zd1201.
- 
-+endif # ZYDAS_80211
++endif # CISCO_80211
 +
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
- 	depends on USB && WLAN_80211 && EXPERIMENTAL
+ menuconfig ATMEL_80211
+ 	bool "Atmel Wireless Cards"
+ 	depends on WLAN_80211
 -- 
 1.6.2.5
 
