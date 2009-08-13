@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:54601 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476AbZHXWUN (ORCPT
+Received: from fmmailgate04.web.de ([217.72.192.242]:34816 "EHLO
+	fmmailgate04.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932502AbZHMUfC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 18:20:13 -0400
+	Thu, 13 Aug 2009 16:35:02 -0400
+Date: Thu, 13 Aug 2009 22:35:01 +0200
+Message-Id: <1763609912@web.de>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908241436o5f30cfe6xa7bdda8b25ac082@mail.gmail.com>
-References: <1251149659-32212-1-git-send-email-tomas.winkler@intel.com>
-	 <43e72e890908241436o5f30cfe6xa7bdda8b25ac082@mail.gmail.com>
-Date: Tue, 25 Aug 2009 01:20:14 +0300
-Message-ID: <1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com>
-Subject: Re: [PATCH 1/1] iwmc3200: add more SDIO device ids
-From: Tomas Winkler <tomasw@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+From: Chunkeey@web.de
+To: linville@tuxdriver.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: =?iso-8859-15?Q?Re:_[PATCH_04/20]_wireless:_move_p54_and_prism54_drive?=
+ =?iso-8859-15?Q?rs_closeer_on_kconfig?=
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 12:36 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Mon, Aug 24, 2009 at 2:34 PM, Tomas Winkler<tomas.winkler@intel.com> wrote:
->> add WiFi BGN SKU and WiMAX 2.4GHz SKU device ids
->>
->> Cc:inaky.perez-gonzalez@intel.com
->> Cc:cindy.h.kao@intel.com
->> Cc:yi.zhu@intel.com
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->
-> Since it seems we are preferring to not do this for PCI for cases
-> where the ID will only be used for 1 device perhaps its best to remove
-> all those ids and stuff them directly into the intel driver itself
-> that will use it.
->
-I don't have strong opinion about it but this is the current habit
-IIRC there was a mail thread that explicitly asked to move SDIO IDs
-there,  of course I cannot locate it right now :(
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+Subject: [PATCH 04/20] wireless: move p54 and prism54 drivers closeer on kconfig
+                                                                  ^^
 
-Thanks
-Tomas
+not much to complain (closeer typo...) since you said you do a respin anyway...
+
+Regards,
+    Chr
+________________________________________________________________
+Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
+für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
+
