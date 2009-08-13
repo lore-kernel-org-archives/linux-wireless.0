@@ -1,80 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:38414 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932344AbZHUVzq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 17:55:46 -0400
-Received: by fxm17 with SMTP id 17so674269fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 14:55:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1250867479.4600.11.camel@johannes.local>
-References: <4A8EAFA6.9010608@gmail.com> <1250865255.4600.6.camel@johannes.local>
-	<69e28c910908210741wd3bc391x311523f5b55fd4f1@mail.gmail.com>
-	<1250865918.4600.9.camel@johannes.local> <69e28c910908210804h6181aab1w4a864392239aa1ac@mail.gmail.com>
-	<1250867479.4600.11.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 21 Aug 2009 23:55:27 +0200
-Message-ID: <69e28c910908211455u5dcd70f0u94eab510ab91a69a@mail.gmail.com>
-Subject: Re: Plans for an online meeting regarding Radiotap
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	Mike Kershaw <dragorn@kismetwireless.net>,
-	Sam Leffler <sam@freebsd.org>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	Damien Bergamini <damien.bergamini@free.fr>,
-	Sepherosa Ziehau <sepherosa@gmail.com>,
-	"Thomas d'Otreppe" <tdotreppe@aircrack-ng.org>,
-	Dave Young <hidave.darkstar@gmail.com>,
-	radiotap <radiotap@radiotap.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	freebsd-mobile <freebsd-mobile@freebsd.org>,
-	misc-openbsd <misc@openbsd.org>, tech-openbsd <tech@openbsd.org>,
-	netbsd-net <tech-net@netbsd.org>,
-	wireshark-dev <wireshark-dev@wireshark.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:3757 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932392AbZHMUbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:15 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/13] iwlwifi: include HT configuration when adding stations through rs_rate_init
+Date: Thu, 13 Aug 2009 13:30:52 -0700
+Message-Id: <1250195462-15811-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/21 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2009-08-21 at 17:04 +0200, Gábor Stefanik wrote:
->
->> I've reworked RTS/CTS since then, just haven't got to sending a new
->> proposal yet. The current plan is as follows:
->>
->> TX_FLAGS & 0x0002: Use CTS
->> TX_FLAGS & 0x0004: Use RTS
->> TX_FLAGS & 0x0020: Disable RTS/CTS usage
->
-> Seems a bit strange, wouldn't setting neither RTS nor CTS have the
-> effect? Seems like 0x20 should rather be "use automatic and ignore the
-> other bits". Anyway, not appropriate here, you should just bring a new
-> proposal.
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-The point is that if all bits are 0, auto-setup is used. The problem
-with my original proposal (using two bits) was that an all-zero value
-had different effect than not including the TX flags field (and simply
-swapping "none" and "auto" would result in an illogicality where what
-would logically be "use both" would become "use neither" - just the
-opposite of its logical meaning). Making 0x20 mean "Auto-select
-RTS/CTS", interpreting all-zeros as "Use neither", would have the same
-problem as my proposal - all-zeros is different from a missing field.
-(An empty, zeroed field 15 should have no effect on the process,
-behaving as if field 15 was not present in the header.)
+Driver's first notification of a new station from mac80211 can be through rate
+selection API.  This patch fixes a bug where, in this code path, the HT
+capabilities of the new station were ignored.
 
->
->> If I remember correctly, I made an implementation for the Linux kernel
->> (a generator-side implementation) and one for Wireshark (a parser-side
->> implementation). Or should I make two generator-side implementations
->> according to the requirement (e.g. one for Linux, another for
->> OpenBSD)?
->
-> No, that was ok, I just meant that therefore by definition it can't be a
-> problem of lack of implementations.
->
-> johannes
->
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   18 ++++++++++--------
+ 1 files changed, 10 insertions(+), 8 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 1bd7cd4..551c4ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2522,6 +2522,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct ieee80211_supported_band *sband = txrc->sband;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+ 	struct ieee80211_conf *conf = &priv->hw->conf;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct iwl_lq_sta *lq_sta = priv_sta;
+@@ -2554,7 +2555,7 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
+ 			IWL_DEBUG_RATE(priv, "LQ: ADD station %pM\n",
+ 				       hdr->addr1);
+ 			sta_id = iwl_add_station(priv, hdr->addr1,
+-						false, CMD_ASYNC, NULL);
++						false, CMD_ASYNC, ht_cap);
+ 		}
+ 		if ((sta_id != IWL_INVALID_STATION)) {
+ 			lq_sta->lq.sta_id = sta_id;
+@@ -2623,6 +2624,7 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
+ 	int i, j;
+ 	struct iwl_priv *priv = (struct iwl_priv *)priv_r;
+ 	struct ieee80211_conf *conf = &priv->hw->conf;
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	struct iwl_lq_sta *lq_sta = priv_sta;
+ 	u16 mask_bit = 0;
+ 	int count;
+@@ -2651,7 +2653,7 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
+ 		if (sta_id == IWL_INVALID_STATION) {
+ 			IWL_DEBUG_RATE(priv, "LQ: ADD station %pM\n", sta->addr);
+ 			sta_id = iwl_add_station(priv, sta->addr, false,
+-						CMD_ASYNC, NULL);
++						CMD_ASYNC, ht_cap);
+ 		}
+ 		if ((sta_id != IWL_INVALID_STATION)) {
+ 			lq_sta->lq.sta_id = sta_id;
+@@ -2672,19 +2674,19 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
+ 	 * active_siso_rate mask includes 9 MBits (bit 5), and CCK (bits 0-3),
+ 	 * supp_rates[] does not; shift to convert format, force 9 MBits off.
+ 	 */
+-	lq_sta->active_siso_rate = sta->ht_cap.mcs.rx_mask[0] << 1;
+-	lq_sta->active_siso_rate |= sta->ht_cap.mcs.rx_mask[0] & 0x1;
++	lq_sta->active_siso_rate = ht_cap->mcs.rx_mask[0] << 1;
++	lq_sta->active_siso_rate |= ht_cap->mcs.rx_mask[0] & 0x1;
+ 	lq_sta->active_siso_rate &= ~((u16)0x2);
+ 	lq_sta->active_siso_rate <<= IWL_FIRST_OFDM_RATE;
+ 
+ 	/* Same here */
+-	lq_sta->active_mimo2_rate = sta->ht_cap.mcs.rx_mask[1] << 1;
+-	lq_sta->active_mimo2_rate |= sta->ht_cap.mcs.rx_mask[1] & 0x1;
++	lq_sta->active_mimo2_rate = ht_cap->mcs.rx_mask[1] << 1;
++	lq_sta->active_mimo2_rate |= ht_cap->mcs.rx_mask[1] & 0x1;
+ 	lq_sta->active_mimo2_rate &= ~((u16)0x2);
+ 	lq_sta->active_mimo2_rate <<= IWL_FIRST_OFDM_RATE;
+ 
+-	lq_sta->active_mimo3_rate = sta->ht_cap.mcs.rx_mask[2] << 1;
+-	lq_sta->active_mimo3_rate |= sta->ht_cap.mcs.rx_mask[2] & 0x1;
++	lq_sta->active_mimo3_rate = ht_cap->mcs.rx_mask[2] << 1;
++	lq_sta->active_mimo3_rate |= ht_cap->mcs.rx_mask[2] & 0x1;
+ 	lq_sta->active_mimo3_rate &= ~((u16)0x2);
+ 	lq_sta->active_mimo3_rate <<= IWL_FIRST_OFDM_RATE;
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.6.3
+
