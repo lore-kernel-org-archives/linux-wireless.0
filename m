@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33878 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbZHaTfi (ORCPT
+Received: from wa-out-1112.google.com ([209.85.146.183]:14569 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754724AbZHMPGb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 15:35:38 -0400
-Date: Mon, 31 Aug 2009 15:33:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	"H. Peter Anvin" <hpa@kernel.org>, linux-kernel@vger.kernel.org,
-	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: memleaks, acpi + ext4 + tty
-Message-ID: <20090831193345.GG5631@tuxdriver.com>
-References: <43e72e890908272225w79ec5bf6kc7ef1160e5a088ae@mail.gmail.com> <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com> <43e72e890908280952j410293fbm47b4b9d566e26c14@mail.gmail.com> <43e72e890908281450k78cc1a2fmd4fd033ae0f4176f@mail.gmail.com> <43e72e890908281509o44930348w581b865107ea3e98@mail.gmail.com> <43e72e890908310123w5d361ed5tff58a7663044bdcd@mail.gmail.com> <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com> <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com> <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
+	Thu, 13 Aug 2009 11:06:31 -0400
+Received: by wa-out-1112.google.com with SMTP id j5so198119wah.21
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 08:06:33 -0700 (PDT)
+Message-ID: <4A842BF5.8090704@lwfinger.net>
+Date: Thu, 13 Aug 2009 10:06:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] b43: LP-PHY: Initialize TX power control
+References: <4A842934.2060206@gmail.com>
+In-Reply-To: <4A842934.2060206@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 12:30:15PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Aug 31, 2009 at 11:37 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-
-> > OK I tried this, I even 'rm -rf * ; git checkout -f' and ..
-> > merge-2009-08-28 tag yields the same issues, long lag upon bootup with
-> > some kmemleaks I cannot even get to check. So somehow something is
-> > different between merge-2009-08-28 and Linus' rc8. This is just
-> > bizarre so to be even safer I'm just going to do a fresh git clone on
-> > wireless-testing.
+Gábor Stefanik wrote:
+> The HW TX power control init still needs work.
+> The SW init is complete according to the specs.
 > 
-> Hey John so I tested wireless-testing on the merge-2009-08-28 tag on a
-> fresh git pull and verified this is indeed busted for me. Although I
-> had tried hpa's linux-2.6-allstable on HEAD just to be sure I am now
-> building Linus' tree from a fresh git clone on the v2.6.31-rc8 tag
-> just to be double check this was indeed not a 2.6.31-rc8 issue but
-> instead *something* on wireless-testing. What that something is is
-> unclear to me still, I guess after all these tests I'll run a manual
-> diff as git doesn't seem to be picking anything up.
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> v2: Address Michael's comments, and update for the dummy transmission
+> changes.
+> 
+> This depends on both the rev0/1 RC calibration patch and the
+> updated V4 dummy transmission patch I submitted earlier.
+> 
+> Larry, please review the SPEC TODO/SPEC FIXME comments!
+> 
+> drivers/net/wireless/b43/phy_lp.c |  105
+> ++++++++++++++++++++++++++++++++++---
+> drivers/net/wireless/b43/phy_lp.h |    5 ++
+> 2 files changed, 103 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c
+> b/drivers/net/wireless/b43/phy_lp.c
+> index 2441a8d..b4e51f0 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1257,18 +1257,109 @@ static void lpphy_calibration(struct b43_wldev
+> *dev)
+>     b43_mac_enable(dev);
+> }
+> 
+> +static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum
+> tssi_mux_mode mode)
+> +{
+> +    if (mode != TSSI_MUX_EXT) {
+> +        b43_radio_set(dev, B2063_PA_SP1, 0x2);
+> +        b43_phy_set(dev, B43_PHY_OFDM(0xF3), 0x1000);
+> +        b43_radio_write(dev, B2063_PA_CTL10, 0x51);
+> +        if (mode == TSSI_MUX_POSTPA) {
+> +            b43_radio_mask(dev, B2063_PA_SP1, 0xFFFE);
+> +            b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFC7);
+> +        } else {
+> +            b43_radio_maskset(dev, B2063_PA_SP1, 0xFFFE, 0x1);
+> +            b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVRVAL,
+> +                    0xFFC7, 0x20);
+> +        }
+> +    } else {
+> +        //SPEC TODO
 
-As you determined, there is no difference between merge-2009-08-28
-and v2.6.31-rc8.  If one works and the other doesn't, then the main
-thing not working will be git...
+Put a WARN_ON(1) here. This branch would be an error. No, I don't
+understand it either!
 
-What is linux-2.6-allstable?  My guess is that the culprit is between
-v2.6.31-rc8 and whatever is at the head of linux-2.6-allstable.
+Larry
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+
