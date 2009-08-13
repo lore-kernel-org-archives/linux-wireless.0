@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.224]:21781 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799AbZHXQl3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 12:41:29 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so755423rvb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 09:41:31 -0700 (PDT)
-Message-ID: <4A92C269.9010301@lwfinger.net>
-Date: Mon, 24 Aug 2009 11:40:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: [Fwd: [Bug 13725] p54 gets a "tx refused but queue active" WARNING
- from mac80211]
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:25438 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753765AbZHMIxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 04:53:50 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: j@w1.fi
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] Fix cipher overwide problem for 802.1X WEP
+Date: Thu, 13 Aug 2009 16:55:30 +0800
+Message-Id: <1250153731-17208-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian and Johannes,
+We set the cipher_pairwise and cipher_group to WEP104 only if they
+are not set already. Otherwise WEP40 has no way to be configured.
+This problem is found on 802.1X with static WEP.
 
-A dongle running p54usb gets a "tx refused but queue active" WARNING
-when used as an AP using hostapd and running 2.6.31-rc6 from Linus's
-tree, even with my patch that fixed this problem in STA mode.
-Christian, have you tested this configuration? Johannes - any thoughts?
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ wpa_supplicant/wpa_supplicant.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-I'm trying to reproduce the problem.
-
-Larry
-
-======================================================================
-
--------- Original Message --------
-Subject: [Bug 13725] p54 gets a "tx refused but queue active" WARNING
-from mac80211
-Date: Mon, 24 Aug 2009 15:22:34 GMT
-From: bugzilla-daemon@bugzilla.kernel.org
-To: Larry.Finger@lwfinger.net
-References: <bug-13725-734@http.bugzilla.kernel.org/>
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13725
-
-
-
-
-
---- Comment #3 from cortez8591@gmail.com  2009-08-24 15:22:33 ---
-I'm using p54usb dongle with hostapd to share my Internet connection.
-After
-client connects with station and start browsing/downloading it takes
-0.5 - 1min
-and suddenly network sharing stops working. The only error message
-comes from
-dmesg and it is the error mentioned before. System load was from 0.10
-to 0.30
-max.
-
+diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
+index d03e9da..f1f929a 100644
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -1116,7 +1116,8 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
+ 		      EAPOL_FLAG_REQUIRE_KEY_BROADCAST)) == 0 &&
+ 		    !wep_keys_set) {
+ 			use_crypt = 0;
+-		} else {
++		} else if (cipher_pairwise == WPA_CIPHER_NONE &&
++			   cipher_group == WPA_CIPHER_NONE) {
+ 			/* Assume that dynamic WEP-104 keys will be used and
+ 			 * set cipher suites in order for drivers to expect
+ 			 * encryption. */
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You reported the bug.
+1.6.0.4
 
