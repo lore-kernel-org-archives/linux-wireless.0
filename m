@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:50734 "EHLO mgw1.diku.dk"
+Received: from mga03.intel.com ([143.182.124.21]:3757 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835AbZHAI5B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:57:01 -0400
-Date: Sat, 1 Aug 2009 10:54:21 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: yi.zhu@intel.com, reinette.chatre@intel.com,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing kfree
-Message-ID: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S932405AbZHMUbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:16 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/13] iwlwifi: remove unused members of iwl_ht_info
+Date: Thu, 13 Aug 2009 13:30:55 -0700
+Message-Id: <1250195462-15811-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Error handling code following a kzalloc should free the allocated data.
+Some members of iwl_ht_info are unused, and one of
+them is write-only, so we can remove these three:
+max_amsdu_size, ampdu_factor and mpdu_density.
 
-The semantic match that finds the problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
-
-// <smpl>
-@r exists@
-local idexpression x;
-statement S;
-expression E;
-identifier f,f1,l;
-position p1,p2;
-expression *ptr != NULL;
-@@
-
-x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-...
-if (x == NULL) S
-<... when != x
-     when != if (...) { <+...x...+> }
-(
-x->f1 = E
-|
- (x->f1 == NULL || ...)
-|
- f(...,x->f1,...)
-)
-...>
-(
- return \(0\|<+...x...+>\|ptr\);
-|
- return@p2 ...;
-)
-
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
-
-print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 ---
+ 2 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 7707a26..c2106d0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -320,6 +320,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
- 	ptr = priv->eeprom;
- 	if (!ptr) {
- 		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-+		kfree(buf);
- 		return -ENOMEM;
- 	}
- 	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 479b7e1..08345b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2397,8 +2397,6 @@ static void iwl_ht_conf(struct iwl_priv *priv,
+ 		iwl_conf->sgf |= HT_SHORT_GI_40MHZ;
+ 
+ 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
+-	iwl_conf->max_amsdu_size =
+-		!!(ht_conf->cap & IEEE80211_HT_CAP_MAX_AMSDU);
+ 
+ 	iwl_conf->supported_chan_width =
+ 		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 0b19a6f..db74534 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -509,9 +509,6 @@ struct iwl_ht_info {
+ 	u8 sm_ps;
+ 	u8 is_green_field;
+ 	u8 sgf;			/* HT_SHORT_GI_* short guard interval */
+-	u8 max_amsdu_size;
+-	u8 ampdu_factor;
+-	u8 mpdu_density;
+ 	struct ieee80211_mcs_info mcs;
+ 	/* BSS related data */
+ 	u8 extension_chan_offset;
+-- 
+1.5.6.3
+
