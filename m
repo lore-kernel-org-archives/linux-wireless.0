@@ -1,185 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:35359 "EHLO mx2.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:26932 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754513AbZHGGdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 02:33:11 -0400
-Date: Fri, 7 Aug 2009 08:31:42 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH 2.6.30] iwl3945: fix rfkill switch
-Message-ID: <20090807063141.GA2523@dhcp-lab-161.englab.brq.redhat.com>
-References: <1249389350-4158-1-git-send-email-sgruszka@redhat.com> <1249512709.30019.4902.camel@rc-desk> <20090806071902.GA9816@dhcp-lab-161.englab.brq.redhat.com> <1249589758.30019.5034.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1249589758.30019.5034.camel@rc-desk>
+	id S932425AbZHMUbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:19 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/13] iwlwifi: fix erroneous use of iwl_rx_packet.len as a length
+Date: Thu, 13 Aug 2009 13:31:01 -0700
+Message-Id: <1250195462-15811-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 06, 2009 at 01:15:58PM -0700, reinette chatre wrote:
-> Hi Stanislaw,
-> 
-> On Thu, 2009-08-06 at 00:19 -0700, Stanislaw Gruszka wrote:
-> > On Wed, Aug 05, 2009 at 03:51:49PM -0700, reinette chatre wrote:
-> > > On Tue, 2009-08-04 at 05:35 -0700, Stanislaw Gruszka wrote:
-> > > > Due to rfkill and iwlwifi mishmash of SW / HW killswitch representation,
-> > > > we have race conditions which make unable turn wifi radio on, after enable
-> > > > and disable again killswitch. I can observe this problem on my laptop
-> > > > with iwl3945 device.
-> > > > 
-> > > > In rfkill core HW switch and SW switch are separate 'states'. Device can
-> > > > be only in one of 3 states: RFKILL_STATE_SOFT_BLOCKED, RFKILL_STATE_UNBLOCKED,
-> > > > RFKILL_STATE_HARD_BLOCKED. Whereas in iwlwifi driver we have separate bits
-> > > > STATUS_RF_KILL_HW and STATUS_RF_KILL_SW for HW and SW switches - radio can be
-> > > > turned on, only if both bits are cleared.
-> > > > 
-> > > > In this particular race conditions, radio can not be turned on if in driver
-> > > > STATUS_RF_KILL_SW bit is set, and rfkill core is in state
-> > > > RFKILL_STATE_HARD_BLOCKED, because rfkill core is unable to call
-> > > > rfkill->toggle_radio(). This situation can be entered in case:
-> > > > 
-> > > 
-> > > I am trying to understand this race condition ...
-> > > 
-> > > > - killswitch is turned on
-> > > > - rfkill core 'see' button change first and move to RFKILL_STATE_SOFT_BLOCKED
-> > > >   also call ->toggle_radio() and STATE_RF_KILL_SW in driver is set
-> > > > - iwl3945 get info about button from hardware to set STATUS_RF_KILL_HW bit and
-> > > >   force rfkill to move to RFKILL_STATE_HARD_BLOCKED
-> > > 
-> > > ok - so at this point we have rfkill == RFKILL_STATE_HARD_BLOCKED, and
-> > > driver == STATE_RF_KILL_SW | STATE_RF_KILL_HW
-> > > 
-> > > > - killsiwtch is turend off
-> > 
-> > Here rfkill core routines are called. Rfkill wants to clear STATUS_RF_KILL_SW
-> > but it can not as state is RFKILL_STATE_HARD_BLOCKED.
-> > 
-> > > > - driver clear STATUS_RF_KILL_HW
-> > > 
-> > > at this point the driver should clear STATE_RF_KILL_HW and then call
-> > > iwl_rfkill_set_hw_state(). From what I can tell, in
-> > > iwl_rfkill_set_hw_state() the test for iwl_is_rfkill_sw() will cause the
-> > > driver to call rfkill_force_state for RFKILL_STATE_SOFT_BLOCKED
-> > > 
-> > > So, from what I understand after the above the status will be
-> > > 
-> > > rfkill == RFKILL_STATE_SOFT_BLOCKED, and driver == STATE_RF_KILL_SW 
-> > 
-> > Thats right. But rfkill core no longer wants to manipulate state via
-> > ->toggle_radio() and radio stays disabled.
-> >  
-> > > > - rfkill core is unable to clear STATUS_RF_KILL_SW in driver
-> > > 
-> > > I do not understand why this is a problem here. Could you please
-> > > highlight what I am missing?
-> > 
-> > In my description I miss the most important part, sorry. Race is when the
-> > switches are performed in that order:
-> > 
-> > Radio enabled 
-> > - rfkill SW on
-> > - driver HW on
-> > Radio disabled - ok
-> > - rfkill SW off <- problem not clearing STATUS_RF_KILL_SW
-> > - driver HW off
-> > Radio disabled - wrong 
-> > 
-> > Everything is fine when actions are in that order:
-> > 
-> > Radio enabled
-> > - rfkill SW on
-> > - driver HW on
-> > Radio disabled - ok 
-> > - driver HW off
-> > - rfkill SW off
-> > Radio enabled - ok 
-> 
-> 
-> Thanks for the explanation.
-> 
-> > 
-> > > > 
-> > > > Additionally call to rfkill_epo() when STATUS_RF_KILL_HW in driver is set
-> > > > cause move to the same situation.
-> > > > 
-> > > > In 2.6.31 this problem is fixed due to _total_ rewrite of rfkill subsystem.
-> > > > This is a quite small fix for 2.6.30.x in iwl3945 driver. We disable
-> > > > STATUS_RF_KILL_SW bit regardless of HW bit state. Also report to rfkill
-> > > > subsystem SW switch bit before HW switch bit to move rfkill subsystem
-> > > > to SOFT_BLOCK rather than HARD_BLOCK.
-> > > > 
-> > > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > > ---
-> > > > I'm not sure if this is good candidate for stable as this is not backport
-> > > > of upstream commit. Also I did not test this patch with other iwlwifi devices,
-> > > > only with iwl3945.
-> > > > 
-> > > >  drivers/net/wireless/iwlwifi/iwl-rfkill.c |   24 ++++++++++++++----------
-> > > >  1 files changed, 14 insertions(+), 10 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-rfkill.c b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> > > > index 2ad9faf..d6b6098 100644
-> > > > --- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-> > > > @@ -54,21 +54,28 @@ static int iwl_rfkill_soft_rf_kill(void *data, enum rfkill_state state)
-> > > >  	case RFKILL_STATE_UNBLOCKED:
-> > > >  		if (iwl_is_rfkill_hw(priv)) {
-> > > >  			err = -EBUSY;
-> > > > -			goto out_unlock;
-> > > > +			/* pass error to rfkill core to make it state HARD
-> > > > +			 * BLOCKED and disable software kill switch */
-> > > >  		}
-> > > >  		iwl_radio_kill_sw_enable_radio(priv);
-> > > >  		break;
-> > > >  	case RFKILL_STATE_SOFT_BLOCKED:
-> > > >  		iwl_radio_kill_sw_disable_radio(priv);
-> > > > +		/* rfkill->mutex lock is taken */
-> > > > +		if (priv->rfkill->state == RFKILL_STATE_HARD_BLOCKED) {
-> > > > +			/* force rfkill core state to be SOFT BLOCKED,
-> > > > +			 * otherwise core will be unable to disable software
-> > > > +			 * kill switch */
-> > > > +			priv->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-> > > > +		}
-> > > 
-> > > I understand that you are directly changing the rfkill internals because
-> > > the mutex is taken ... but this really does not seem right to directly
-> > > modify the rfkill state in this way.
-> > 
-> > Agree this is dirty hack, but I did not find a better way. Eventually,
-> > if we add call to rfkill_uevent(), this would behave the same
-> > as rfkill_force_state() .
-> 
-> Sorry, but I really do not understand why this code is needed. From what
-> you say rfkill can be in one of three states: RFKILL_STATE_UNBLOCKED,
-> RFKILL_STATE_SOFT_BLOCKED, or RFKILL_STATE_HARD_BLOCKED. From what I
-> understand the above code is called when there is an rfkill state change
-> and the new state is provided. So, only _one_ of the three states will
-> be provided as parameter. This state is then tested - so in the case
-> that you modified here the state has already been tested to be
-> RFKILL_STATE_SOFT_BLOCKED. How is it thus possible that it can be
-> RFKILL_STATE_HARD_BLOCKED also?
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Local variable state != priv->rfkill->state . See rfkill_toggle_radio()
-especially this part:
+The field called 'len' in struct iwl_rx_packet is in fact not just a length
+field but also includes some flags from the flow handler.  In several places
+throughout the driver, this causes incorrect values to be interpreted as
+lengths when the field is improperly masked.
 
-	if (force || state != rfkill->state) {
-		retval = rfkill->toggle_radio(rfkill->data, state);
-		/* never allow a HARD->SOFT downgrade! */
-		if (!retval && rfkill->state != RFKILL_STATE_HARD_BLOCKED)
-			rfkill->state = state;
-	}
+In most situations the improper use is for debugging output, and simply results
+in an erroneous message, such as:
 
-Without the change rfkill core will be in state RFKILL_STATE_HARD_BLOCKED and
-latter will not clear STATE_RF_KILL_SW.
+[551933.070224] ieee80211 phy0: I iwl_rx_statistics Statistics notification received (480 vs -1367342620).
+
+which should read '(480 vs 484)'.
+
+In at least one case this could case bad things to happen:
+
+void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
+                                      struct iwl_rx_mem_buffer *rxb)
+{
+        struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+        IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
+                        "notification for %s:\n",
+                        le32_to_cpu(pkt->len), get_cmd_string(pkt->hdr.cmd));
+        iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw, le32_to_cpu(pkt->len)
+);
+}
+EXPORT_SYMBOL(iwl_rx_pm_debug_statistics_notif);
+
+Given the rampant misuse of this field without proper masking throughout the
+driver (every use but one), this patch renames the field from 'len' to
+'len_n_flags' to reduce confusion.  It also adds the proper masking when
+this field is used as a length value.
+
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |    3 ++-
+ 5 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index b5a4d2e..e9a685d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -349,12 +349,13 @@ static void iwl3945_rx_reply_tx(struct iwl_priv *priv,
+  *
+  *****************************************************************************/
  
-All hunks from the patch are needed on my laptop (lenoveo T60) to make
-killswitch works as expected. Applying only some hunks from the patch helps
-is one case or other, but without all hunks there is still possible to have
-radio disabled when killswitch is off.
+-void iwl3945_hw_rx_statistics(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
++void iwl3945_hw_rx_statistics(struct iwl_priv *priv,
++		struct iwl_rx_mem_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+ 	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+ 		     (int)sizeof(struct iwl3945_notif_statistics),
+-		     le32_to_cpu(pkt->len));
++		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
+ 
+ 	memcpy(&priv->statistics_39, pkt->u.raw, sizeof(priv->statistics_39));
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 720d234..1d539e3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -494,7 +494,7 @@ static void iwl5000_rx_calib_result(struct iwl_priv *priv,
+ {
+ 	struct iwl_rx_packet *pkt = (void *)rxb->skb->data;
+ 	struct iwl_calib_hdr *hdr = (struct iwl_calib_hdr *)pkt->u.raw;
+-	int len = le32_to_cpu(pkt->len) & FH_RSCSR_FRAME_SIZE_MSK;
++	int len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
+ 	int index;
+ 
+ 	/* reduce the size of the length field itself */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 9398ad7..f430384 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3482,7 +3482,7 @@ struct iwl_wimax_coex_cmd {
+  *****************************************************************************/
+ 
+ struct iwl_rx_packet {
+-	__le32 len;
++	__le32 len_n_flags;
+ 	struct iwl_cmd_header hdr;
+ 	union {
+ 		struct iwl3945_rx_frame rx_frame;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 62aa87b..f4c2431 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2294,10 +2294,11 @@ void iwl_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
+ 				      struct iwl_rx_mem_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
++	u32 len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
+ 	IWL_DEBUG_RADIO(priv, "Dumping %d bytes of unhandled "
+-			"notification for %s:\n",
+-			le32_to_cpu(pkt->len), get_cmd_string(pkt->hdr.cmd));
+-	iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw, le32_to_cpu(pkt->len));
++			"notification for %s:\n", len,
++			get_cmd_string(pkt->hdr.cmd));
++	iwl_print_hex_dump(priv, IWL_DL_RADIO, pkt->u.raw, len);
+ }
+ EXPORT_SYMBOL(iwl_rx_pm_debug_statistics_notif);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 092d327..353d9a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -539,7 +539,8 @@ void iwl_rx_statistics(struct iwl_priv *priv,
+ 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
+ 
+ 	IWL_DEBUG_RX(priv, "Statistics notification received (%d vs %d).\n",
+-		     (int)sizeof(priv->statistics), pkt->len);
++		     (int)sizeof(priv->statistics),
++		     le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK);
+ 
+ 	change = ((priv->statistics.general.temperature !=
+ 		   pkt->u.stats.general.temperature) ||
+-- 
+1.5.6.3
 
-Regards
-Stanislaw 
