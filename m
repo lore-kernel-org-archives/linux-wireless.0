@@ -1,480 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53357 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757407AbZHGKdi (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44601 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768AbZHMTjO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:33:38 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 06/23] wl1251: move module probe methods into spi.c
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:33:26 +0300
-Message-ID: <20090807103326.31717.36637.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 13 Aug 2009 15:39:14 -0400
+Subject: Re: [PATCH 10/20] wireless: group Broadcom wireless drivers on
+ kconfig
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+In-Reply-To: <1250191909-21682-11-git-send-email-lrodriguez@atheros.com>
+References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	 <1250191909-21682-11-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cvKFWuW6SDOixysPnV6l"
+Date: Thu, 13 Aug 2009 21:39:06 +0200
+Message-Id: <1250192346.21250.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
 
-This change moves all of the spi specific code from main.c into
-spi.c.  The module initialization code also moves, but common
-code for initializing mac80211 etc. stays in main.c, as this will
-eventually form a common library module also used by wl1251_sdio.
+--=-cvKFWuW6SDOixysPnV6l
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+On Thu, 2009-08-13 at 15:31 -0400, Luis R. Rodriguez wrote:
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: G=C3=A1bor Stefanik <netrolller.3d@gmail.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/Kconfig |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index 65397fe..1a8e9bd 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -378,6 +378,14 @@ config USB_ZD1201
+> =20
+>  endif # ZYDAS_80211
+> =20
+> +menuconfig BROADCOM_80211
+> +	bool "Broadcom Wireless Cards"
+> +	depends on WLAN_80211
+> +	---help---
+> +	  This will enable the support for Broadcom wireless drivers. This
+> +	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
 
- drivers/net/wireless/wl12xx/wl1251.h      |    7 +
- drivers/net/wireless/wl12xx/wl1251_acx.c  |    1 
- drivers/net/wireless/wl12xx/wl1251_cmd.c  |    1 
- drivers/net/wireless/wl12xx/wl1251_main.c |  148 ++++-------------------------
- drivers/net/wireless/wl12xx/wl1251_spi.c  |  125 ++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_tx.c   |    1 
- 6 files changed, 151 insertions(+), 132 deletions(-)
+Ok ... so what's the point of all these patches?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index 284bb50..df4c06d 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -292,7 +292,7 @@ struct wl1251 {
- 	bool mac80211_registered;
- 
- 	struct spi_device *spi;
--	struct wl1251_if_operations *if_ops;
-+	const struct wl1251_if_operations *if_ops;
- 
- 	void (*set_power)(bool enable);
- 	int irq;
-@@ -404,6 +404,11 @@ struct wl1251 {
- int wl1251_plt_start(struct wl1251 *wl);
- int wl1251_plt_stop(struct wl1251 *wl);
- 
-+irqreturn_t wl1251_irq(int irq, void *cookie);
-+struct ieee80211_hw *wl1251_alloc_hw(void);
-+int wl1251_free_hw(struct wl1251 *wl);
-+int wl1251_init_ieee80211(struct wl1251 *wl);
-+
- #define DEFAULT_HW_GEN_MODULATION_TYPE    CCK_LONG /* Long Preamble */
- #define DEFAULT_HW_GEN_TX_RATE          RATE_2MBPS
- #define JOIN_TIMEOUT 5000 /* 5000 milliseconds to join */
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
-index 2e3171a..91fe16c 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
-@@ -2,7 +2,6 @@
- 
- #include <linux/module.h>
- #include <linux/crc7.h>
--#include <linux/spi/spi.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-index 2c30c70..dfbf681 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-@@ -2,7 +2,6 @@
- 
- #include <linux/module.h>
- #include <linux/crc7.h>
--#include <linux/spi/spi.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 0f30d0a..74544e1 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -26,17 +26,15 @@
- #include <linux/firmware.h>
- #include <linux/delay.h>
- #include <linux/irq.h>
--#include <linux/spi/spi.h>
- #include <linux/crc32.h>
- #include <linux/etherdevice.h>
--#include <linux/spi/wl12xx.h>
- 
- #include "wl1251.h"
- #include "wl12xx_80211.h"
- #include "reg.h"
- #include "wl1251_ops.h"
- #include "wl1251_io.h"
--#include "wl1251_spi.h"
-+#include "wl1251_cmd.h"
- #include "wl1251_event.h"
- #include "wl1251_tx.h"
- #include "wl1251_rx.h"
-@@ -59,7 +57,7 @@ static void wl1251_power_on(struct wl1251 *wl)
- 	wl->set_power(true);
- }
- 
--static irqreturn_t wl1251_irq(int irq, void *cookie)
-+irqreturn_t wl1251_irq(int irq, void *cookie)
- {
- 	struct wl1251 *wl;
- 
-@@ -1169,8 +1167,10 @@ static int wl1251_register_hw(struct wl1251 *wl)
- 	return 0;
- }
- 
--static int wl1251_init_ieee80211(struct wl1251 *wl)
-+int wl1251_init_ieee80211(struct wl1251 *wl)
- {
-+	int ret;
-+
- 	/* The tx descriptor buffer and the TKIP space */
- 	wl->hw->extra_tx_headroom = sizeof(struct tx_double_buffer_desc)
- 		+ WL1251_TKIP_IV_SPACE;
-@@ -1186,41 +1186,37 @@ static int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1251_band_2ghz;
- 
--	SET_IEEE80211_DEV(wl->hw, &wl->spi->dev);
-+	ret = wl1251_register_hw(wl);
-+	if (ret)
-+		goto out;
- 
--	return 0;
--}
-+	wl1251_debugfs_init(wl);
-+	wl1251_notice("initialized");
- 
--extern struct wl1251_if_operations wl1251_spi_ops;
-+	ret = 0;
-+
-+out:
-+	return ret;
-+}
- 
- #define WL1251_DEFAULT_CHANNEL 1
--static int __devinit wl1251_probe(struct spi_device *spi)
-+struct ieee80211_hw *wl1251_alloc_hw(void)
- {
--	struct wl12xx_platform_data *pdata;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
--	int ret, i;
-+	int i;
- 	static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
- 
--	pdata = spi->dev.platform_data;
--	if (!pdata) {
--		wl1251_error("no platform data");
--		return -ENODEV;
--	}
--
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1251_ops);
- 	if (!hw) {
- 		wl1251_error("could not alloc ieee80211_hw");
--		return -ENOMEM;
-+		return ERR_PTR(-ENOMEM);
- 	}
- 
- 	wl = hw->priv;
- 	memset(wl, 0, sizeof(*wl));
- 
- 	wl->hw = hw;
--	dev_set_drvdata(&spi->dev, wl);
--	wl->spi = spi;
--	wl->if_ops = &wl1251_spi_ops;
- 
- 	wl->data_in_count = 0;
- 
-@@ -1268,74 +1264,15 @@ static int __devinit wl1251_probe(struct spi_device *spi)
- 	wl->rx_descriptor = kmalloc(sizeof(*wl->rx_descriptor), GFP_KERNEL);
- 	if (!wl->rx_descriptor) {
- 		wl1251_error("could not allocate memory for rx descriptor");
--		ret = -ENOMEM;
--		goto out_free;
-+		ieee80211_free_hw(hw);
-+		return ERR_PTR(-ENOMEM);
- 	}
- 
--	/* This is the only SPI value that we need to set here, the rest
--	 * comes from the board-peripherals file */
--	spi->bits_per_word = 32;
--
--	ret = spi_setup(spi);
--	if (ret < 0) {
--		wl1251_error("spi_setup failed");
--		goto out_free;
--	}
--
--	wl->set_power = pdata->set_power;
--	if (!wl->set_power) {
--		wl1251_error("set power function missing in platform data");
--		ret = -ENODEV;
--		goto out_free;
--	}
--
--	wl->irq = spi->irq;
--	if (wl->irq < 0) {
--		wl1251_error("irq missing in platform data");
--		ret = -ENODEV;
--		goto out_free;
--	}
--
--	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
--	if (ret < 0) {
--		wl1251_error("request_irq() failed: %d", ret);
--		goto out_free;
--	}
--
--	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
--
--	disable_irq(wl->irq);
--
--	ret = wl1251_init_ieee80211(wl);
--	if (ret)
--		goto out_irq;
--
--	ret = wl1251_register_hw(wl);
--	if (ret)
--		goto out_irq;
--
--	wl1251_debugfs_init(wl);
--
--	wl1251_notice("initialized");
--
--	return 0;
--
-- out_irq:
--	free_irq(wl->irq, wl);
--
-- out_free:
--	kfree(wl->rx_descriptor);
--	wl->rx_descriptor = NULL;
--
--	ieee80211_free_hw(hw);
--
--	return ret;
-+	return hw;
- }
- 
--static int __devexit wl1251_remove(struct spi_device *spi)
-+int wl1251_free_hw(struct wl1251 *wl)
- {
--	struct wl1251 *wl = dev_get_drvdata(&spi->dev);
--
- 	ieee80211_unregister_hw(wl->hw);
- 
- 	wl1251_debugfs_exit(wl);
-@@ -1355,44 +1292,3 @@ static int __devexit wl1251_remove(struct spi_device *spi)
- 
- 	return 0;
- }
--
--
--static struct spi_driver wl1251_spi_driver = {
--	.driver = {
--		/* FIXME: use wl12xx name to not break the user space */
--		.name		= "wl12xx",
--		.bus		= &spi_bus_type,
--		.owner		= THIS_MODULE,
--	},
--
--	.probe		= wl1251_probe,
--	.remove		= __devexit_p(wl1251_remove),
--};
--
--static int __init wl1251_init(void)
--{
--	int ret;
--
--	ret = spi_register_driver(&wl1251_spi_driver);
--	if (ret < 0) {
--		wl1251_error("failed to register spi driver: %d", ret);
--		goto out;
--	}
--
--out:
--	return ret;
--}
--
--static void __exit wl1251_exit(void)
--{
--	spi_unregister_driver(&wl1251_spi_driver);
--
--	wl1251_notice("unloaded");
--}
--
--module_init(wl1251_init);
--module_exit(wl1251_exit);
--
--MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>, "
--		"Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index ceb237b..13e7a72 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -21,9 +21,11 @@
-  *
-  */
- 
-+#include <linux/irq.h>
- #include <linux/module.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
-+#include <linux/spi/wl12xx.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-@@ -55,7 +57,7 @@ static void wl1251_spi_reset(struct wl1251 *wl)
- 	wl1251_dump(DEBUG_SPI, "spi reset -> ", cmd, WSPI_INIT_CMD_LEN);
- }
- 
--static void wl1251_spi_init(struct wl1251 *wl)
-+static void wl1251_spi_wake(struct wl1251 *wl)
- {
- 	u8 crc[WSPI_INIT_CMD_CRC_LEN], *cmd;
- 	struct spi_transfer t;
-@@ -112,7 +114,7 @@ static void wl1251_spi_init(struct wl1251 *wl)
- static void wl1251_spi_reset_wake(struct wl1251 *wl)
- {
- 	wl1251_spi_reset(wl);
--	wl1251_spi_init(wl);
-+	wl1251_spi_wake(wl);
- }
- 
- static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
-@@ -191,3 +193,122 @@ const struct wl1251_if_operations wl1251_spi_ops = {
- 	.write = wl1251_spi_write,
- 	.reset = wl1251_spi_reset_wake,
- };
-+
-+static int __devinit wl1251_spi_probe(struct spi_device *spi)
-+{
-+	struct wl12xx_platform_data *pdata;
-+	struct ieee80211_hw *hw;
-+	struct wl1251 *wl;
-+	int ret;
-+
-+	pdata = spi->dev.platform_data;
-+	if (!pdata) {
-+		wl1251_error("no platform data");
-+		return -ENODEV;
-+	}
-+
-+	hw = wl1251_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	SET_IEEE80211_DEV(hw, &spi->dev);
-+	dev_set_drvdata(&spi->dev, wl);
-+	wl->spi = spi;
-+	wl->if_ops = &wl1251_spi_ops;
-+
-+	/* This is the only SPI value that we need to set here, the rest
-+	 * comes from the board-peripherals file */
-+	spi->bits_per_word = 32;
-+
-+	ret = spi_setup(spi);
-+	if (ret < 0) {
-+		wl1251_error("spi_setup failed");
-+		goto out_free;
-+	}
-+
-+	wl->set_power = pdata->set_power;
-+	if (!wl->set_power) {
-+		wl1251_error("set power function missing in platform data");
-+		return -ENODEV;
-+	}
-+
-+	wl->irq = spi->irq;
-+	if (wl->irq < 0) {
-+		wl1251_error("irq missing in platform data");
-+		return -ENODEV;
-+	}
-+
-+	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
-+	if (ret < 0) {
-+		wl1251_error("request_irq() failed: %d", ret);
-+		goto out_free;
-+	}
-+
-+	set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
-+
-+	disable_irq(wl->irq);
-+
-+	ret = wl1251_init_ieee80211(wl);
-+	if (ret)
-+		goto out_irq;
-+
-+	return 0;
-+
-+ out_irq:
-+	free_irq(wl->irq, wl);
-+
-+ out_free:
-+	ieee80211_free_hw(hw);
-+
-+	return ret;
-+}
-+
-+static int __devexit wl1251_spi_remove(struct spi_device *spi)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(&spi->dev);
-+
-+	wl1251_free_hw(wl);
-+
-+	return 0;
-+}
-+
-+static struct spi_driver wl1251_spi_driver = {
-+	.driver = {
-+		.name		= "wl12xx",
-+		.bus		= &spi_bus_type,
-+		.owner		= THIS_MODULE,
-+	},
-+
-+	.probe		= wl1251_spi_probe,
-+	.remove		= __devexit_p(wl1251_spi_remove),
-+};
-+
-+static int __init wl1251_spi_init(void)
-+{
-+	int ret;
-+
-+	ret = spi_register_driver(&wl1251_spi_driver);
-+	if (ret < 0) {
-+		wl1251_error("failed to register spi driver: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	return ret;
-+}
-+
-+static void __exit wl1251_spi_exit(void)
-+{
-+	spi_unregister_driver(&wl1251_spi_driver);
-+
-+	wl1251_notice("unloaded");
-+}
-+
-+module_init(wl1251_spi_init);
-+module_exit(wl1251_spi_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
-index 7ddc9a3..f20bab6 100644
---- a/drivers/net/wireless/wl12xx/wl1251_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
-@@ -27,7 +27,6 @@
- 
- #include "wl1251.h"
- #include "reg.h"
--#include "wl1251_spi.h"
- #include "wl1251_tx.h"
- #include "wl1251_ps.h"
- #include "wl1251_io.h"
+Also, I don't think rndis wlan is always broadcom, and in an case it's
+almost never marked as such.
+
+johannes
+
+--=-cvKFWuW6SDOixysPnV6l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKhGvXAAoJEODzc/N7+QmaIiwQAM0NyXyJvJP/WAvbGbDc3+01
+wDXuy6D/BL3An5v/Y5pgvKJ3kf4d+SlAakxUD9T6F3mrfKsDMjfPrkrcSXzyzsd+
+ZjeE3huSqCc9ooZUVOnw8n/NXmQD5il7xzm5m/nOn793AKFKONNsiCSwS6/UIKLX
+Ba5VGbNguA5J+0R2pfACFukU5P4VrRjthi9BpCwszX0RbtPJz44e5Cs9Et8Xwh6d
+y1kFR5sUnlRkPgOi22qR3xHPbGraQZbbBKkjCRyoxIf6iHYhtjHUfK1e01N3Mw4/
+HpCHJlS/ioKVQytlDFjghTJBIuilWtFLQ9ttu9GwJ3ZlDHX9EoYctVcOoYJVbZlW
+cqfMag1ez/kic9IqBLb7QDVcpZI+RwknYEF66ZjCpvm4GghhhJ0wfvTcziTNO6TZ
+31fdwTStpvNRR2z5QdlGXAXFYcKXf+DJ3Abd7dCPc4oFaGifHMIJBBdjE9HmIVRo
+z/Bre6tIgeCjswOrR20Cuefk0uLepTz8EwYLavA8b8mT/icnL4Xxl3nXsUWhyFvv
+WMgHuD93heLpX974lc2jpKrCSJQlWUzzQqOuCa8qOTkVDHGcsbPvjjY4KMgrc5bZ
+u6zpRw9JygppICzaruDIPs5aAxiZlAAYtu+BPGxcZkSYQ/t+7S85MBs+uqYPsHMP
+dy4gvmTuPPNYLFVc8WBW
+=+Jih
+-----END PGP SIGNATURE-----
+
+--=-cvKFWuW6SDOixysPnV6l--
 
