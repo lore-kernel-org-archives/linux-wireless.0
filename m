@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:35278 "EHLO vs166246.vserver.de"
+Received: from mx2.redhat.com ([66.187.237.31]:57907 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933485AbZHWMtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 08:49:35 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: [RFT] b43: Get rid of spinlocks (version 2)
-Date: Sun, 23 Aug 2009 14:48:16 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Albert Herranz <albert_herranz@yahoo.es>
+	id S1753279AbZHMH3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 03:29:42 -0400
+Date: Thu, 13 Aug 2009 09:28:16 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH 2.6.30] iwl3945: fix rfkill switch
+Message-ID: <20090813072816.GA2373@dhcp-lab-161.englab.brq.redhat.com>
+References: <1249389350-4158-1-git-send-email-sgruszka@redhat.com> <1249512709.30019.4902.camel@rc-desk> <20090806071902.GA9816@dhcp-lab-161.englab.brq.redhat.com> <1249589758.30019.5034.camel@rc-desk> <20090807063141.GA2523@dhcp-lab-161.englab.brq.redhat.com> <1249922692.30019.5610.camel@rc-desk> <20090811140908.GA3235@dhcp-lab-161.englab.brq.redhat.com> <1250014113.30019.5799.camel@rc-desk> <20090812151235.GA3912@dhcp-lab-161.englab.brq.redhat.com> <1250095502.30019.5951.camel@rc-desk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200908231448.16550.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250095502.30019.5951.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Aug 12, 2009 at 09:45:02AM -0700, reinette chatre wrote:
+> > > I also do not understand the need to modify rfkill's internal state.
+> > 
+> > It's needed for Case1. Additional change of internal rfkill state, which
+> > I proposed in previous e-mail is against situation when we have:
+> >  	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_SOFT_BLOCKED
+> > To make it:
+> >  	STATUS_RF_KILL_HW = 1, STATUS_RF_KILL_SW = 0, RFKILL_STATE_HARD_BLOCKED
+> 
+> ok - this makes sense now. In your previous email you also mentioned
+> that that delta patch was untested. Is it possible for you or anybody
+> else on that redhat bugzilla to give the new patch a try?
+Yes, I'm going to rewrite patch, test and resend it. 
+ 
+> I think I now understand what is going on. Having worked through all the
+> possible scenarios makes me more comfortable about his patch considering
+> the awkward way in which it is forced to solve the problem. I am really
+> glad we do not need to do this moving forward.
+I'm happy too.
 
-This patchset removes all spinlocks (except the LEDs lock for now) from b43.
-There are no known races or bugs added by this patchset.
-Please test it a lot, so we can ensure there are no regressions.
-
-It sometimes crashes for me in the lockdep code on module unload, but I'm not
-really sure whether that is a b43 or lockdep bug.
-Please test test test. :)
-
-Apply the patchset in this order to wireless-testing.git:
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/001-fix-irq-thread-wakeup.patch
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/002-b43-threaded-irq-handler.patch
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/003-b43-remove-tx-lock.patch
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/004-b43-remove-queue-locks.patch
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/005-b43-remove-pio-rx-work.patch
-http://bu3sch.de/patches/wireless-testing/20090823-1442/patches/006-b43-remove-shm-lock.patch
-
-
--- 
-Greetings, Michael.
+Thanks
+Stanislaw
