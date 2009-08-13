@@ -1,79 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55839 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308AbZHZPPY (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.232]:36413 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755346AbZHMTFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 11:15:24 -0400
-Date: Wed, 26 Aug 2009 11:03:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
-	enabled
-Message-ID: <20090826150323.GA2807@tuxdriver.com>
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net> <4A94B01E.9040309@gmail.com>
+	Thu, 13 Aug 2009 15:05:05 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so305746rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 12:05:06 -0700 (PDT)
+Message-ID: <4A8463DE.7060402@lwfinger.net>
+Date: Thu, 13 Aug 2009 14:05:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4A94B01E.9040309@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC/RFT] b43: LP-PHY: Implement channel switching for  rev2+/B2063
+ radio
+References: <4A842AFD.1020903@gmail.com> <200908131955.32283.mb@bu3sch.de> <69e28c910908131100h7d403196y3f8be4809fc61d0f@mail.gmail.com> <200908132005.37769.mb@bu3sch.de>
+In-Reply-To: <200908132005.37769.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 11:46:38PM -0400, Richard Farina wrote:
-> Larry Finger wrote:
->> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
->> may oops when the module is unloaded as the workqueue for led_on was
->> not being cancelled.
+Michael Buesch wrote:
+> On Thursday 13 August 2009 20:00:47 Gábor Stefanik wrote:
+>> (List re-CC-ed.)
 >>
->> This patch fixes the problem reported in
->> http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
->>
->> Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
->> ---
->>
->> V2 - Do not create a new workqueue.
->>
->> John,
->>
->> This patch is 2.6.31 material. To the best of my knowledge, a formal bug
->> report was never filed; however, it was reported in the reference given above.
->>
->>   
-> Anyone know what happened here? This bug still seems very much alive in  
-> compat-wireless-2.6.31-rc7.  I know the window is closed and this really
-> isn't "earthshattering" but a kernel panick is kind of "a big deal".  I  
-> seems like it was tested doing a proper modprobe -r but not if you just  
-> unplug the usb card.
-> When I unplug the usb I get instadeath, very uncool.  If someone can  
-> teach me how to get the kernel output from a non-functional system I am  
-> happy to provide whatever.
+>> 2009/8/13 Michael Buesch <mb@bu3sch.de>:
+>>> On Thursday 13 August 2009 19:50:16 Gábor Stefanik wrote:
+>>>> 2009/8/13 Michael Buesch <mb@bu3sch.de>:
+>>>>> On Thursday 13 August 2009 17:02:21 Gábor Stefanik wrote:
+>>>>>> Rev.2+/B2063 will now hopefully show some signs of life, though
+>>>>>> it won't work at full performance, as calibration is still missing.
+>>>>>>
+>>>>>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>>>>>>  static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>>>>>> @@ -1369,7 +1370,7 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
+>>>>>>       lpphy_baseband_init(dev);
+>>>>>>       lpphy_radio_init(dev);
+>>>>>>       lpphy_calibrate_rc(dev);
+>>>>>> -     //TODO set channel
+>>>>>> +     b43_switch_channel(dev, dev->wl->hw->conf.channel->hw_value);
+>>>>> Does dev->wl->hw->conf.channel->hw_value already have a sane value here?
+>>>> I think it should - hw->conf.channel was handed to us by mac80211.
+>>>> http://bcm-v4.sipsolutions.net/802.11/PHY/LP/Init says "Set channel
+>>>> with current chanspec as argument", and hw->conf.channel is our
+>>>> equivalent of chanspec.
+>>> hw->conf.channel was not handed to us at all. You simply pick it
+>>> from mac80211's conf structure and _assume_ that it is initialized.
+>>> In the other PHY implementations we use phyop_default_channel (or mandatory
+>>> hardcoded channel values) in the PHY init only. I think you should do the
+>>> same here. Mac80211 will make sure to select the correct channel later.
+>> OK, I will use the default channel (though that's not exactly what the
+>> spec says - Larry, is using the default channel correct?)
+> 
+> What on earth could be incorrect about it? It's an as arbitrary value as
+> dev->wl->hw->conf.channel->hw_value would be.
 
-commit 3da7429ce92abd79b14e2275a28be144ce2c3013
-Author: Larry Finger <Larry.Finger@lwfinger.net>
-Date:   Tue Jul 14 15:55:16 2009 -0500
+I have not found anything that says what should be used. If the
+channel is valid for the selected band, it should be as good as any.
+> 
+>>>>> Also please call b43_lpphy_op_switch_channel() instead of b43_switch_channel().
+>>>> No, that would be wrong; the generic parts of b43_switch_channel also
+>>>> need to be executed. See
+>>> I don't see why. The generic parts are nothing that should be done at the PHY init.
+>> Well, the spec says that the generic parts need to be run, so I
+>> implemented it as such.
+> 
+> We do understand what the generic stuff does and it is not required at this point.
+> 
+>> Larry, is this part of the spec correct?
+> 
+> I'm pretty sure it is. But that does not mean we have to implement the same
+> bullshit broadcom does ;)
 
-    rtl8187: Fix for kernel oops when unloading with LEDs enabled
-    
-    When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
-    may oops when the module is unloaded as the workqueue for led_on was
-    not being cancelled.
-    
-    This patch fixes the problem reported in
-    http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
-    
-    Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
-    Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Amen. I have to put it on the web site just in case it is important,
+but it must be done that way _ONLY_ if found to be needed for
+operation or performance.
 
-The above commit is in linux-2.6 since v2.6.31-rc2.  If it isn't in
-compat-wireless, I have no idea why.
-
-Hth...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Larry
