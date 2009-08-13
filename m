@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f195.google.com ([209.85.212.195]:37583 "EHLO
-	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756108AbZHYU6h convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f228.google.com ([209.85.220.228]:55572 "EHLO
+	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656AbZHMSCY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 16:58:37 -0400
-Received: by vws33 with SMTP id 33so88472vws.33
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 13:58:39 -0700 (PDT)
+	Thu, 13 Aug 2009 14:02:24 -0400
+Received: by fxm28 with SMTP id 28so742033fxm.17
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 11:02:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1251232252.9398.2.camel@mj>
-References: <20090714015739.GA28490@hash.localnet> <1251232252.9398.2.camel@mj>
-Date: Tue, 25 Aug 2009 16:58:39 -0400
-Message-ID: <b6c5339f0908251358r7693deefid2a0f738eb508e1f@mail.gmail.com>
-Subject: Re: [PATCH 2.6.31] ath5k: temporarily disable crypto for AP mode
-From: Bob Copeland <me@bobcopeland.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <200908131923.29847.mb@bu3sch.de>
+References: <4A842887.2080109@gmail.com> <200908131923.29847.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 13 Aug 2009 20:02:04 +0200
+Message-ID: <69e28c910908131102o29273371w4f86d685f6410bf7@mail.gmail.com>
+Subject: Re: [PATCH v2] b43: Update dummy transmission to match V4 specs
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 4:30 PM, Pavel Roskin<proski@gnu.org> wrote:
+2009/8/13 Michael Buesch <mb@bu3sch.de>:
+> On Thursday 13 August 2009 16:51:51 Gábor Stefanik wrote:
+>> The V4 dummy transmission has two extra bools in its prototype,
+>> so update all callers with the 2 bools.
 >>
->> Pavel, this ok with you for now?
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> v2: Convert all callers to v4, and drop the v3->v4 wrapper.
 >
-> Sorry for delay.  I don't have time to test it, but I have no specific
-> objections.
+>> -     /* Commit writes */
+>> -     b43_read32(dev, B43_MMIO_MACCTL);
+>
+>> -     value = ((phy->type == B43_PHYTYPE_A) ? 1 : 0);
+>> +     if (dev->dev->id.revision < 11)
+>> +             b43_write16(dev, 0x07C0, 0x0000);
+>> +     else
+>> +             b43_write16(dev, 0x07C0, 0x0100);
+>> +     value = (ofdm ? 0x41 : 0x40);
+>>       b43_write16(dev, 0x050C, value);
+>
+> This patch changes G-PHY codepaths. Did you test it on (at least one) G-PHY device?
 
-Thanks, for the update.  It already went to Linus I believe.
-
-I did spend enough time looking at the root problem to decide that
-fixing it won't be too hard, but I also saw some questionable logic
-in the original code that wants a cleanup, I can post patches soon.
+Not yet - if you could test it, I would be grateful.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
