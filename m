@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1631 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbZHBDVb (ORCPT
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:62977 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756284AbZHMVES convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 23:21:31 -0400
-Date: Sat, 1 Aug 2009 23:20:20 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Joerg Albert <jal2@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath5k: fix missing output in monitor mode after
-	ifconfig up
-Message-ID: <20090802032019.GA25339@hash.localnet>
-References: <4A74C2B6.3070407@gmx.de>
+	Thu, 13 Aug 2009 17:04:18 -0400
+Received: by yxe5 with SMTP id 5so1348947yxe.33
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 14:04:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A74C2B6.3070407@gmx.de>
+In-Reply-To: <4A847F2A.8000301@lwfinger.net>
+References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	<1250191909-21682-5-git-send-email-lrodriguez@atheros.com>
+	<4A847F2A.8000301@lwfinger.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 13 Aug 2009 14:03:58 -0700
+Message-ID: <43e72e890908131403s1d3a7f47ted2980ff4841b65@mail.gmail.com>
+Subject: Re: [PATCH 04/20] wireless: move p54 and prism54 drivers closeer on
+	kconfig
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@web.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 02, 2009 at 12:33:26AM +0200, Joerg Albert wrote:
-> Let ath5k_chan_set() call ath5k_reset() if ath5k_config() was told
-> that the channel changed. This fixes the bug that we don't
-> get any packets in monitor mode after:
+On Thu, Aug 13, 2009 at 2:01 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> Luis R. Rodriguez wrote:
+>> Cc: Christian Lamparter <chunkeey@web.de>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/Kconfig |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> I think the p54 and p54usb configuration ends up in the wrong place.
+> Was there supposed to be a Patch 03/20? I didn't get that one.
 
-Cool, thanks for the patch.  Just a couple of comments:
+Yeah it seems the mailserver ate it. I'll respin.
 
-> +                              int chan_changed);
-
-Should use bool for that.
-
-> -       ret = ath5k_chan_set(sc, conf->channel);
-> +       ret = ath5k_chan_set(sc, conf->channel,
-> +                            changed & IEEE80211_CONF_CHANGE_CHANNEL);
-
-Since this is the only place ath5k_chan_set is called, how about changing
-ath5k_chan_set to unconditionally do a reset, and put the test outside?
-
-i.e.:
-
-        if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
-                ath5k_chan_set(sc, conf->channel);
-
-Thanks!
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
