@@ -1,75 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39449 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932847AbZHNU3z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:29:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:3757 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932378AbZHMUbT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:19 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v4 31/34] wireless: update mac80211 kconfig entry
-Date: Fri, 14 Aug 2009 16:25:56 -0400
-Message-Id: <1250281559-13041-32-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/13] iwlwifi: configure HT40 channels in iwl_mac_config
+Date: Thu, 13 Aug 2009 13:30:57 -0700
+Message-Id: <1250195462-15811-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This updates the mac80211 kconfig entry to clarify
-what it is and refer people to our wireless wiki for
-more documentation.
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+As indicated by note in iwl_ht_conf, some HT parameters are set on association
+(e.g., channel width) and some vary over time (HT protection mode) and per
+station (e.g., short GI support).  The global parameters should be set in
+iwl_mac_config and the local/varying parameters in iwl_ht_conf.
+
+This patch moves the channel width configuration from iwl_ht_conf to
+iwl_mac_config, and defers further cleanup of the local/global conflation for a
+later patch.
+
+This fixes a bug in using HT40 channels in some modes.
+
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/Kconfig |   25 ++++++++++++++++++++++---
- 1 files changed, 22 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |   46 +++++++++++++++++--------------
+ 1 files changed, 25 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 9db4ff8..d4d3dca 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,5 +1,5 @@
- config MAC80211
--	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
-+	tristate "mac80211 - SoftMAC device support"
- 	depends on CFG80211
- 	select CRYPTO
- 	select CRYPTO_ECB
-@@ -7,8 +7,27 @@ config MAC80211
- 	select CRYPTO_AES
- 	select CRC32
- 	---help---
--	  This option enables the hardware independent IEEE 802.11
--	  networking stack.
-+	  This option enables support for a framework used by IEEE-802.11
-+	  SoftMAC devices. SoftMAC devices allow for a finer control of the
-+	  hardware, allowing for 802.11 frame management to be done in software
-+	  for them, for both parsing and generation of 802.11 wireless frames.
-+	  Most 802.11 devices today tend to be of this type.
-+
-+	  mac8011 implements the cfg80211 callbacks for SoftMAC devices,
-+	  mac80211 then depends on cfg80211 for both registration to the networking
-+	  subsystem and for configuration. Configuration is handled by cfg80211 both
-+	  through nl80211 and wireless extensions.
-+
-+	  If you have new userspace utitlities which support nl80211 you do not
-+	  need wireless-extensions to support a mac80211 device.
-+
-+	  For more information refer the the wireless wiki entry on mac80211:
-+
-+	  http://wireless.kernel.org/en/developers/Documentation/mac80211
-+
-+	  When built as a module mac80211 will be built as mac80211.ko, if not sure
-+	  you should build this as a module.
-+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 08345b9..104fd95 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2398,25 +2398,6 @@ static void iwl_ht_conf(struct iwl_priv *priv,
  
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
+ 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
+ 
+-	iwl_conf->supported_chan_width =
+-		!!(ht_conf->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+-
+-	/*
+-	 * XXX: The HT configuration needs to be moved into iwl_mac_config()
+-	 *	to be done there correctly.
+-	 */
+-
+-	iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-	if (conf_is_ht40_minus(&priv->hw->conf))
+-		iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-	else if (conf_is_ht40_plus(&priv->hw->conf))
+-		iwl_conf->extension_chan_offset = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-
+-	/* If no above or below channel supplied disable HT40 channel */
+-	if (iwl_conf->extension_chan_offset != IEEE80211_HT_PARAM_CHA_SEC_ABOVE &&
+-	    iwl_conf->extension_chan_offset != IEEE80211_HT_PARAM_CHA_SEC_BELOW)
+-		iwl_conf->supported_chan_width = 0;
+-
+ 	iwl_conf->sm_ps = (u8)((ht_conf->cap & IEEE80211_HT_CAP_SM_PS) >> 2);
+ 
+ 	memcpy(&iwl_conf->mcs, &ht_conf->mcs, 16);
+@@ -2733,6 +2714,7 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct iwl_priv *priv = hw->priv;
+ 	const struct iwl_channel_info *ch_info;
+ 	struct ieee80211_conf *conf = &hw->conf;
++	struct iwl_ht_info *ht_conf = &priv->current_ht_config;
+ 	unsigned long flags = 0;
+ 	int ret = 0;
+ 	u16 ch;
+@@ -2774,10 +2756,32 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto set_ch_out;
+ 		}
+ 
+-		priv->current_ht_config.is_ht = conf_is_ht(conf);
+-
+ 		spin_lock_irqsave(&priv->lock, flags);
+ 
++		/* Configure HT40 channels */
++		ht_conf->is_ht = conf_is_ht(conf);
++		if (ht_conf->is_ht) {
++			if (conf_is_ht40_minus(conf)) {
++				ht_conf->extension_chan_offset =
++					IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++				ht_conf->supported_chan_width =
++					IWL_CHANNEL_WIDTH_40MHZ;
++			} else if (conf_is_ht40_plus(conf)) {
++				ht_conf->extension_chan_offset =
++					IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++				ht_conf->supported_chan_width =
++					IWL_CHANNEL_WIDTH_40MHZ;
++			} else {
++				ht_conf->extension_chan_offset =
++					IEEE80211_HT_PARAM_CHA_SEC_NONE;
++				ht_conf->supported_chan_width =
++					IWL_CHANNEL_WIDTH_20MHZ;
++			}
++		} else
++			ht_conf->supported_chan_width = IWL_CHANNEL_WIDTH_20MHZ;
++		/* Default to no protection. Protection mode will later be set
++		 * from BSS config in iwl_ht_conf */
++		ht_conf->ht_protection = IEEE80211_HT_OP_MODE_PROTECTION_NONE;
+ 
+ 		/* if we are switching from ht to 2.4 clear flags
+ 		 * from any ht related info since 2.4 does not
 -- 
-1.6.2.5
+1.5.6.3
 
