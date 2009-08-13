@@ -1,50 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:55230 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485AbZHZVis (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47976
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750774AbZHMAha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 17:38:48 -0400
-Received: by fxm17 with SMTP id 17so469665fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 14:38:50 -0700 (PDT)
-From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Revert to the original PHY register write routine
-Date: Wed, 26 Aug 2009 23:38:48 +0200
-Message-Id: <1251322728-7034-1-git-send-email-netrolller.3d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 12 Aug 2009 20:37:30 -0400
+Date: Wed, 12 Aug 2009 17:37:41 -0700 (PDT)
+Message-Id: <20090812.173741.47086672.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-08-11
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090811183605.GG2634@tuxdriver.com>
+References: <20090811183605.GG2634@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: root <root@NR3DMain.NR3D>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 11 Aug 2009 14:36:06 -0400
 
-After some discussion on IRC about the PHY register write change,
-I am not sure anymore if this is the right thing to do.
+> Here are a couple more minor fixes intended for 2.6.31.  Hopefully we
+> are winding-down!
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/phy_lp.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 80f245c..a57c40d 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1496,7 +1496,8 @@ static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
- 
- static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
- {
--	b43_write32(dev, B43_MMIO_PHY_CONTROL, ((u32)value << 16) | reg);
-+	b43_write32(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write32(dev, B43_MMIO_PHY_DATA, value);
- }
- 
- static void b43_lpphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
--- 
-1.5.6
-
+Pulled, thanks John.
