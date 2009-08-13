@@ -1,227 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:40185 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756643AbZHRDwz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:52:55 -0400
-Date: Tue, 18 Aug 2009 05:52:56 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 12/29] mwl8k: dma header manipulations can't fail
-Message-ID: <20090818035256.GQ18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:3757 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932410AbZHMUbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 16:31:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>
+Subject: [PATCH 09/13] iwlwifi: check short GI support per-station rather than globally
+Date: Thu, 13 Aug 2009 13:30:58 -0700
+Message-Id: <1250195462-15811-10-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
+References: <1250195462-15811-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding and removing the DMA header that the mwl8k hardware requires
-on tx and provides on rx can never fail, since we are guaranteed to
-have enough headroom on the tx path to expand the packet, and we only
-ever shrink the packet on the rx path.  (And on both paths we are
-guaranteed to be the only user of the skb we are handling.)
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-This allows removing all of the skb clone handling in the tx and tx
-reclaim paths, and eliminates error checks in both the tx and rx
-paths, simplifying the code a bit more.
+Short guard interval support is a local per-station parameter not a global
+per-NIC parameter.  (mac80211 will correctly remove SGI support from station
+capabilities if the BSS does not permit it).  This patch removes the short GI
+support bitfield from the global iwl_ht_info struct and properly uses
+per-station HT capabilities during rate selection.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/mwl8k.c |   83 +++++++-----------------------------------
- 1 files changed, 13 insertions(+), 70 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   69 ++++++----------------------
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    5 --
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    4 --
+ 3 files changed, 15 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 4580b1d..f4b197b 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -111,17 +111,6 @@ struct mwl8k_rx_queue {
- 	struct sk_buff **rx_skb;
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 551c4ba..3b1bbc3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -1225,18 +1225,6 @@ static int rs_switch_to_mimo2(struct iwl_priv *priv,
+ 	else
+ 		tbl->is_ht40 = 0;
  
--struct mwl8k_skb {
--	/*
--	 * The DMA engine requires a modification to the payload.
--	 * If the skbuff is shared/cloned, it needs to be unshared.
--	 * This method is used to ensure the stack always gets back
--	 * the skbuff it sent for transmission.
--	 */
--	struct sk_buff *clone;
--	struct sk_buff *skb;
--};
+-	/* FIXME: - don't toggle SGI here
+-	if (tbl->is_ht40) {
+-		if (priv->current_ht_config.sgf & HT_SHORT_GI_40MHZ_ONLY)
+-			tbl->is_SGI = 1;
+-		else
+-			tbl->is_SGI = 0;
+-	} else if (priv->current_ht_config.sgf & HT_SHORT_GI_20MHZ_ONLY)
+-		tbl->is_SGI = 1;
+-	else
+-		tbl->is_SGI = 0;
+-	*/
 -
- struct mwl8k_tx_queue {
- 	/* hw transmits here */
- 	int tx_head;
-@@ -132,7 +121,7 @@ struct mwl8k_tx_queue {
- 	struct ieee80211_tx_queue_stats tx_stats;
- 	struct mwl8k_tx_desc *tx_desc_area;
- 	dma_addr_t tx_desc_dma;
--	struct mwl8k_skb *tx_skb;
-+	struct sk_buff **tx_skb;
- };
+ 	rs_set_expected_tpt_table(lq_sta, tbl);
  
- /* Pointers to the firmware data and meta information about it.  */
-@@ -714,12 +703,11 @@ struct mwl8k_dma_data {
- } __attribute__((packed));
+ 	rate = rs_get_best_rate(priv, lq_sta, tbl, rate_mask, index);
+@@ -1291,18 +1279,6 @@ static int rs_switch_to_mimo3(struct iwl_priv *priv,
+ 	else
+ 		tbl->is_ht40 = 0;
  
- /* Routines to add/remove DMA header from skb.  */
--static inline int mwl8k_remove_dma_header(struct sk_buff *skb)
-+static inline void mwl8k_remove_dma_header(struct sk_buff *skb)
- {
--	struct mwl8k_dma_data *tr = (struct mwl8k_dma_data *)(skb->data);
-+	struct mwl8k_dma_data *tr = (struct mwl8k_dma_data *)skb->data;
- 	void *dst, *src = &tr->wh;
--	__le16 fc = tr->wh.frame_control;
--	int hdrlen = ieee80211_hdrlen(fc);
-+	int hdrlen = ieee80211_hdrlen(tr->wh.frame_control);
- 	u16 space = sizeof(struct mwl8k_dma_data) - hdrlen;
+-	/* FIXME: - don't toggle SGI here
+-	if (tbl->is_ht40) {
+-		if (priv->current_ht_config.sgf & HT_SHORT_GI_40MHZ_ONLY)
+-			tbl->is_SGI = 1;
+-		else
+-			tbl->is_SGI = 0;
+-	} else if (priv->current_ht_config.sgf & HT_SHORT_GI_20MHZ_ONLY)
+-		tbl->is_SGI = 1;
+-	else
+-		tbl->is_SGI = 0;
+-	*/
+-
+ 	rs_set_expected_tpt_table(lq_sta, tbl);
  
- 	dst = (void *)tr + space;
-@@ -727,11 +715,9 @@ static inline int mwl8k_remove_dma_header(struct sk_buff *skb)
- 		memmove(dst, src, hdrlen);
- 		skb_pull(skb, space);
+ 	rate = rs_get_best_rate(priv, lq_sta, tbl, rate_mask, index);
+@@ -1350,18 +1326,6 @@ static int rs_switch_to_siso(struct iwl_priv *priv,
+ 	else
+ 		tbl->is_ht40 = 0;
+ 
+-	/* FIXME: - don't toggle SGI here
+-	if (tbl->is_ht40) {
+-		if (priv->current_ht_config.sgf & HT_SHORT_GI_40MHZ_ONLY)
+-			tbl->is_SGI = 1;
+-		else
+-			tbl->is_SGI = 0;
+-	} else if (priv->current_ht_config.sgf & HT_SHORT_GI_20MHZ_ONLY)
+-		tbl->is_SGI = 1;
+-	else
+-		tbl->is_SGI = 0;
+-	*/
+-
+ 	if (is_green)
+ 		tbl->is_SGI = 0; /*11n spec: no SGI in SISO+Greenfield*/
+ 
+@@ -1530,6 +1494,7 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
+ 	struct iwl_scale_tbl_info *search_tbl =
+ 				&(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
+ 	struct iwl_rate_scale_data *window = &(tbl->win[index]);
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
+ 		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
+ 	u8 start_action = tbl->action;
+@@ -1589,13 +1554,11 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
+ 				goto out;
+ 			break;
+ 		case IWL_SISO_SWITCH_GI:
+-			if (!tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_20MHZ))
++			if (!tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_20))
+ 				break;
+-			if (tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_40MHZ))
++			if (tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_40))
+ 				break;
+ 
+ 			IWL_DEBUG_RATE(priv, "LQ: SISO toggle SGI/NGI\n");
+@@ -1669,6 +1632,7 @@ static int rs_move_mimo2_to_other(struct iwl_priv *priv,
+ 	struct iwl_scale_tbl_info *search_tbl =
+ 				&(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
+ 	struct iwl_rate_scale_data *window = &(tbl->win[index]);
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
+ 		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
+ 	u8 start_action = tbl->action;
+@@ -1729,13 +1693,11 @@ static int rs_move_mimo2_to_other(struct iwl_priv *priv,
+ 			break;
+ 
+ 		case IWL_MIMO2_SWITCH_GI:
+-			if (!tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_20MHZ))
++			if (!tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_20))
+ 				break;
+-			if (tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_40MHZ))
++			if (tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_40))
+ 				break;
+ 
+ 			IWL_DEBUG_RATE(priv, "LQ: MIMO2 toggle SGI/NGI\n");
+@@ -1811,6 +1773,7 @@ static int rs_move_mimo3_to_other(struct iwl_priv *priv,
+ 	struct iwl_scale_tbl_info *search_tbl =
+ 				&(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
+ 	struct iwl_rate_scale_data *window = &(tbl->win[index]);
++	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+ 	u32 sz = (sizeof(struct iwl_scale_tbl_info) -
+ 		  (sizeof(struct iwl_rate_scale_data) * IWL_RATE_COUNT));
+ 	u8 start_action = tbl->action;
+@@ -1893,13 +1856,11 @@ static int rs_move_mimo3_to_other(struct iwl_priv *priv,
+ 			break;
+ 
+ 		case IWL_MIMO3_SWITCH_GI:
+-			if (!tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_20MHZ))
++			if (!tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_20))
+ 				break;
+-			if (tbl->is_ht40 &&
+-				!(priv->current_ht_config.sgf &
+-						HT_SHORT_GI_40MHZ))
++			if (tbl->is_ht40 && !(ht_cap->cap &
++						IEEE80211_HT_CAP_SGI_40))
+ 				break;
+ 
+ 			IWL_DEBUG_RATE(priv, "LQ: MIMO3 toggle SGI/NGI\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 104fd95..b845cf3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2391,11 +2391,6 @@ static void iwl_ht_conf(struct iwl_priv *priv,
  	}
+ 	ht_conf = &sta->ht_cap;
+ 
+-	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_20)
+-		iwl_conf->sgf |= HT_SHORT_GI_20MHZ;
+-	if (ht_conf->cap & IEEE80211_HT_CAP_SGI_40)
+-		iwl_conf->sgf |= HT_SHORT_GI_40MHZ;
 -
--	return 0;
- }
+ 	iwl_conf->is_green_field = !!(ht_conf->cap & IEEE80211_HT_CAP_GRN_FLD);
  
--static inline struct sk_buff *mwl8k_add_dma_header(struct sk_buff *skb)
-+static inline void mwl8k_add_dma_header(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *wh;
- 	u32 hdrlen, pktlen;
-@@ -763,8 +749,6 @@ static inline struct sk_buff *mwl8k_add_dma_header(struct sk_buff *skb)
- 	 * This includes all crypto material including the MIC.
- 	 */
- 	tr->fwlen = cpu_to_le16(pktlen - hdrlen);
+ 	iwl_conf->sm_ps = (u8)((ht_conf->cap & IEEE80211_HT_CAP_SM_PS) >> 2);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index db74534..e6a1c6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -508,7 +508,6 @@ struct iwl_ht_info {
+ 	u8 supported_chan_width;
+ 	u8 sm_ps;
+ 	u8 is_green_field;
+-	u8 sgf;			/* HT_SHORT_GI_* short guard interval */
+ 	struct ieee80211_mcs_info mcs;
+ 	/* BSS related data */
+ 	u8 extension_chan_offset;
+@@ -728,9 +727,6 @@ struct iwl_dma_ptr {
+ 	size_t size;
+ };
+ 
+-#define HT_SHORT_GI_20MHZ	(1 << 0)
+-#define HT_SHORT_GI_40MHZ	(1 << 1)
 -
--	return skb;
- }
- 
- 
-@@ -967,10 +951,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 					MWL8K_RX_MAXSZ, PCI_DMA_FROMDEVICE);
- 
- 		skb_put(skb, le16_to_cpu(rx_desc->pkt_len));
--		if (mwl8k_remove_dma_header(skb)) {
--			dev_kfree_skb(skb);
--			continue;
--		}
-+		mwl8k_remove_dma_header(skb);
- 
- 		wh = (struct ieee80211_hdr *)skb->data;
- 
-@@ -1224,7 +1205,6 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
- 
- 	while (txq->tx_stats.len > 0) {
- 		int tx;
--		int rc;
- 		struct mwl8k_tx_desc *tx_desc;
- 		unsigned long addr;
- 		int size;
-@@ -1232,7 +1212,6 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
- 		struct ieee80211_tx_info *info;
- 		u32 status;
- 
--		rc = 0;
- 		tx = txq->tx_head;
- 		tx_desc = txq->tx_desc_area + tx;
- 
-@@ -1252,40 +1231,18 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
- 
- 		addr = le32_to_cpu(tx_desc->pkt_phys_addr);
- 		size = le16_to_cpu(tx_desc->pkt_len);
--		skb = txq->tx_skb[tx].skb;
--		txq->tx_skb[tx].skb = NULL;
-+		skb = txq->tx_skb[tx];
-+		txq->tx_skb[tx] = NULL;
- 
- 		BUG_ON(skb == NULL);
- 		pci_unmap_single(priv->pdev, addr, size, PCI_DMA_TODEVICE);
- 
--		rc = mwl8k_remove_dma_header(skb);
-+		mwl8k_remove_dma_header(skb);
- 
- 		/* Mark descriptor as unused */
- 		tx_desc->pkt_phys_addr = 0;
- 		tx_desc->pkt_len = 0;
- 
--		if (txq->tx_skb[tx].clone) {
--			/* Replace with original skb
--			 * before returning to stack
--			 * as buffer has been cloned
--			 */
--			dev_kfree_skb(skb);
--			skb = txq->tx_skb[tx].clone;
--			txq->tx_skb[tx].clone = NULL;
--		}
--
--		if (rc) {
--			/* Something has gone wrong here.
--			 * Failed to remove DMA header.
--			 * Print error message and drop packet.
--			 */
--			printk(KERN_ERR "%s: Error removing DMA header from "
--					"tx skb 0x%p.\n", priv->name, skb);
--
--			dev_kfree_skb(skb);
--			continue;
--		}
--
- 		info = IEEE80211_SKB_CB(skb);
- 		ieee80211_tx_info_clear_status(info);
- 		if (MWL8K_TXD_SUCCESS(status))
-@@ -1327,7 +1284,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	struct mwl8k_tx_desc *tx;
- 	struct mwl8k_dma_data *tr;
- 	struct mwl8k_vif *mwl8k_vif;
--	struct sk_buff *org_skb = skb;
- 	dma_addr_t dma;
- 	u16 qos = 0;
- 	bool qosframe = false, ampduframe = false;
-@@ -1338,21 +1294,12 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	txq = priv->txq + index;
- 	tx = txq->tx_desc_area + txq->tx_tail;
- 
--	BUG_ON(txq->tx_skb[txq->tx_tail].skb != NULL);
-+	BUG_ON(txq->tx_skb[txq->tx_tail] != NULL);
- 
- 	/*
--	 * Append HW DMA header to start of packet.  Drop packet if
--	 * there is not enough space or a failure to unshare/unclone
--	 * the skb.
-+	 * Append HW DMA header to start of packet.
- 	 */
--	skb = mwl8k_add_dma_header(skb);
--
--	if (skb == NULL) {
--		printk(KERN_DEBUG "%s: failed to prepend HW DMA "
--			"header, dropping TX frame.\n", priv->name);
--		dev_kfree_skb(org_skb);
--		return NETDEV_TX_OK;
--	}
-+	mwl8k_add_dma_header(skb);
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	mwl8k_vif = MWL8K_VIF(tx_info->control.vif);
-@@ -1380,8 +1327,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 		printk(KERN_DEBUG "%s: failed to dma map skb, "
- 			"dropping TX frame.\n", priv->name);
- 
--		if (org_skb != NULL)
--			dev_kfree_skb(org_skb);
- 		if (skb != NULL)
- 			dev_kfree_skb(skb);
- 		return NETDEV_TX_OK;
-@@ -1437,9 +1382,7 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	tx->pkt_phys_addr = cpu_to_le32(dma);
- 	tx->pkt_len = cpu_to_le16(skb->len);
- 
--	txq->tx_skb[txq->tx_tail].skb = skb;
--	txq->tx_skb[txq->tx_tail].clone =
--		skb == org_skb ? NULL : org_skb;
-+	txq->tx_skb[txq->tx_tail] = skb;
- 
- 	spin_lock_bh(&priv->tx_lock);
+ #define IWL_CHANNEL_WIDTH_20MHZ   0
+ #define IWL_CHANNEL_WIDTH_40MHZ   1
  
 -- 
-1.5.6.4
+1.5.6.3
+
