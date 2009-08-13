@@ -1,102 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coruscant.huijgen.tk ([84.245.31.19]:16485 "EHLO
-	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbZHSOAy (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:45265 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196AbZHMONK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 10:00:54 -0400
-Message-ID: <4A8C056A.4050005@huijgen.tk>
-Date: Wed, 19 Aug 2009 16:00:10 +0200
-From: Mark Huijgen <mark.sf.net@huijgen.tk>
+	Thu, 13 Aug 2009 10:13:10 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so980495fga.17
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 07:13:11 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+In-Reply-To: <200908131515.59966.mb@bu3sch.de>
+References: <4A832940.6000807@gmail.com> <200908131515.59966.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 13 Aug 2009 16:12:51 +0200
+Message-ID: <69e28c910908130712j28465ca0qae8eaad0a4a490ee@mail.gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Initialize TX power control
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
 	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANN] b43 LP-PHY support (BCM4310/4312/4315) working (partially)!
-References: <69e28c910908181329r4b6b7cc8w3c9c0d79dda3730c@mail.gmail.com> 	<4A8BBB02.4020203@huijgen.tk> <69e28c910908190428s46f3d25dnb2f2d8591f99618f@mail.gmail.com> 	<4A8BF35E.1090507@huijgen.tk> <1250687066.1067.25.camel@johannes.local> 	<69e28c910908190626s46fd0bfer5cc9dec9c5bb1c24@mail.gmail.com> 	<4A8C02D8.7080309@huijgen.tk> <69e28c910908190654v231d66c7k6a223f481f702c7c@mail.gmail.com>
-In-Reply-To: <69e28c910908190654v231d66c7k6a223f481f702c7c@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> 2009/8/19 Mark Huijgen <mark.sf.net@huijgen.tk>:
->   
->> Gábor Stefanik wrote:
->>     
->>> Mark, could you produce a dmesg output with the new firmware, patches
->>> applied, and channel set to 1? Post the output of dmesg after scanning
->>> & probably associating, if possible. (Scan/assoc may produce messages
->>> in dmesg.)
->>>
->>>       
->> I tested this already, but with default chan set to 1, I cannot get the
->> interface up.
->> This is somewhere in my mail, but it got a bit messy after I noticed
->> that after
->> changing some of the code my modules got installed in another directory
->> (-dirty).
->>
->> I just restarted the notebook, but now the results are different again...
->>
->> New firmware, with patches applied and default channel 7:
->> [   72.160057] b43-phy1: Loading firmware version 478.104 (2008-07-01
->> 00:50:23)
->> [   72.163484] b43-phy1 debug: RC calib: Failed to switch to channel 7,
->> error = -5
->> [   72.168100] b43-phy1 debug: Switch to init channel failed, error = -5.
->>
->> Recompile module with default chan 1, patches still applied and new
->> firmware,
->> # modprobe -r b43 && modprobe b43 verbose=3 && ifconfig wlan0 up
->>
->> [  430.259877] b43-phy2 debug: Switch to init channel failed, error = -5.
->>
->> Recompile again, but with default chan back to 7, still patched and
->> still new firmware.
->> So same as in first situation:
->> # modprobe -r b43 && modprobe b43 verbose=3 && ifconfig wlan0 up
->>
->> [  524.748062] b43-phy3 debug: Chip initialized
->>
->> And I can get my interface up and working!
->>
->> Without this procedure I have not been able to get a working chip. Seems
->> the partially
->> initialized state after each try, allows the next try to get a bit
->> further. And together with
->> the default channel switching between 1 and 7, I get a working chip, but
->> a chip that does
->> not seem to be able to find my AP thats on channel 1.
->>
->> If I now change default chan to 1 again, I am getting the same error as
->> in step 2 above.
->> I have not been able to get the interface up with default chan set to 1.
->>
->> Mark
->>
->>
->>     
+2009/8/13 Michael Buesch <mb@bu3sch.de>:
+> On Wednesday 12 August 2009 22:42:40 Gábor Stefanik wrote:
+>> The HW TX power control init still needs work.
+>> The SW init is complete according to the specs.
 >
-> What do you see in dmesg after running a scan?
->   
-After step 2, interface cannot be brought up:
-# iw dev wlan0 scan
-command failed: Network is down (-100)
+> HW PCTL needs a serious amount of work in the common code, too.
+> For now I would focus to SW PCTL and fix HW PCTL later.
+>
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> This depends on both the rev0/1 RC calibration patch and the
+>> V4 dummy transmission patch I submitted earlier.
+>>
+>> Larry, please check the SPEC TODO/SPEC FIXME comments.
+>>
+>>  drivers/net/wireless/b43/phy_lp.c |  104 ++++++++++++++++++++++++++++++++++---
+>>  drivers/net/wireless/b43/phy_lp.h |    5 ++
+>>  2 files changed, 102 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>> index e05981b..6ebaeb2 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -1258,18 +1258,108 @@ static void lpphy_calibration(struct b43_wldev *dev)
+>>       b43_mac_enable(dev);
+>>  }
+>>
+>> +static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum tssi_mux_mode mode)
+>> +{
+>> +     if (mode != TSSI_MUX_EXT) {
+>> +             b43_radio_set(dev, B2063_PA_SP1, 0x2);
+>> +             b43_phy_set(dev, B43_PHY_OFDM(0xF3), 0x1000);
+>> +             b43_radio_write(dev, B2063_PA_CTL10, 0x51);
+>> +             if (mode == TSSI_MUX_POSTPA) {
+>> +                     b43_radio_mask(dev, B2063_PA_SP1, 0xFFFE);
+>> +                     b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFC7);
+>> +             } else {
+>> +                     b43_radio_maskset(dev, B2063_PA_SP1, 0xFFFE, 0x1);
+>> +                     b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVRVAL,
+>> +                                     0xFFC7, 0x20);
+>> +             }
+>> +     } else {
+>> +             //SPEC TODO
+>> +     }
+>> +}
+>> +
+>> +static void lpphy_tx_pctl_init_hw(struct b43_wldev *dev)
+>> +{
+>> +     u16 tmp;
+>> +     int i;
+>> +
+>> +     //SPEC TODO Call LP PHY Clear TX Power offsets
+>> +     for (i = 0; i < 64; i++) {
+>> +             if (dev->phy.rev >= 2)
+>> +                     b43_lptab_write(dev, B43_LPTAB32(7, i+1), i);
+>                                                            ^^^
+> Please keep in mind to use spaces all the time. It is our coding style and I think
+> we should stick with it.
 
-No extra output in dmesg
+Will do.
 
-After step 3 (so with default chan 7 again), interface comes up and I
-can scan:
-# iw dev wlan0 scan
-<<list of scan results>>
+>
+>> +     tmp = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT);
+>> +     if (tmp & 0x8000)
+>> +             b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_IDLETSSI,
+>> +                             0xFFC0, (tmp & 0xFF) - 32);
+>
+> Curly brackets for multiline indents, please.
 
-No extra output generated in dmesg.
+Will do.
+V2 will also be updated for the dummy transmission change.
 
-I must add that I do not have debugging messages enabled for any
-mac80211 related options, only for b43 module.
+>
+>
+> --
+> Greetings, Michael.
+>
 
-Mark
 
 
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
