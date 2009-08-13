@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:53814 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750846AbZHBAWE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 20:22:04 -0400
-Subject: Re: rt2800usb: memory corruption?
-From: Pavel Roskin <proski@gnu.org>
-To: Mike Galbraith <efault@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1249124154.8236.5.camel@marge.simson.net>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-	 <1248947740.8925.12.camel@johannes.local>
-	 <1248948326.8823.4.camel@marge.simson.net>
-	 <1248955916.7995.47.camel@marge.simson.net>
-	 <1249104348.7146.60.camel@marge.simson.net>
-	 <1249124154.8236.5.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Sat, 01 Aug 2009 20:21:54 -0400
-Message-Id: <1249172514.3043.7.camel@ct>
-Mime-Version: 1.0
+Received: from sypressi.dnainternet.net ([83.102.40.135]:54219 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbZHMRjc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 13:39:32 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH] cfg80211: export cfg80211_wext_siwfreq
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 13 Aug 2009 20:39:31 +0300
+Message-ID: <20090813173931.5382.67689.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-08-01 at 12:55 +0200, Mike Galbraith wrote:
+cfg80211_wext_siwfreq() should be exported with EXPORT_SYMBOL_GPL.
 
-> Enabled slub/pagealloc debugging.  First down/rmmod said...
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-I suggest that you try kmemcheck.  It's very slow, but it finds memory
-problems when they occur, not when it's too late.
+ net/wireless/wext-compat.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-You may want to disable kmemleak and framebuffer support and make sure
-that X doesn't start, at it will be too slow.  Slub debugging might
-conflict with kmemcheck, so it's better to disable it.
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index c449174..c12029b 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -771,6 +771,7 @@ int cfg80211_wext_siwfreq(struct net_device *dev,
+ 		return err;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwfreq);
+ 
+ int cfg80211_wext_giwfreq(struct net_device *dev,
+ 			  struct iw_request_info *info,
 
--- 
-Regards,
-Pavel Roskin
