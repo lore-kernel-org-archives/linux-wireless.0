@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60433 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbZHGPbH (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39222 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932798AbZHNU0X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 11:31:07 -0400
-Date: Fri, 7 Aug 2009 11:16:47 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: Frans Pop <elendil@planet.nl>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mcgrof@gmail.com
-Subject: Re: ath5k - strange regulatory domain change
-Message-ID: <20090807151304.GE7545@tuxdriver.com>
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com> <200908071324.45269.elendil@planet.nl> <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com> <20090807134803.GA7545@tuxdriver.com> <c6b1100b0908070757t7b973180s17959e0f46347d5d@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <c6b1100b0908070757t7b973180s17959e0f46347d5d@mail.gmail.com>
+	Fri, 14 Aug 2009 16:26:23 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	Stephen Chen <stephen.chen@atheros.com>
+Subject: [PATCH v4 07/34] wireless: move zd1211rw option closer to old ZyDAS on kconfig
+Date: Fri, 14 Aug 2009 16:25:32 -0400
+Message-Id: <1250281559-13041-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 07, 2009 at 03:57:30PM +0100, Chris Clayton wrote:
-> 2009/8/7 John W. Linville <linville@tuxdriver.com>:
-> > On Fri, Aug 07, 2009 at 01:56:43PM +0100, Chris Clayton wrote:
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> >> To sum this up then (as I understand things):
-> >>
-> >> 1. I am the system administrator (root);
-> >> 2. I am using a valid (albeit deprecated from 2.6.31) method to tell
-> >> the wireless infrastructure that I want the regulatory domain set to
-> >> GB;
-> >> 3. GB is a valid code; and
-> >> 4. the wireless infrastructure sets the regulatory domain to CN.
-> >> 5. in 2.6.30, the wireless infrastructure does what I (the root user)
-> >> tell it to do.
-> >>
-> >> That's a regression in my book. Oh well! I do have the iw and crda
-> >> applications installed, so I've taken that route of setting the
-> >> regulatory domain to GB.
-> >
-> > Are you actually getting the wrong regulatory rules enforced?  Or are
-> > you merely bothered that it is reporting "CN" instead of "GB"?
-> >
-> 
-> I'm not sure whether it's wrong or not. To these dmesg snippets from
-> my original post look wrong because one of the frequency ranges listed
-> for CN is outside those listed for GB and one of the CN max_eirp
-> entries is not preent in the GB list. Whether that is OK or not I
-> don't know and can't find (lay user) documentation to tell me.
-> 
-> cfg80211: Regulatory domain changed to country: GB
->         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->         (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->         (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->         (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->         (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
-> 
-> cfg80211: Regulatory domain changed to country: CN
->         (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->         (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->         (5735000 KHz - 5835000 KHz @ 40000 KHz), (N/A, 3000 mBm)
-
-It looks like a mismatch to me.  Luis, can you sort this out?
-
-John
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index a123f6e..9f1b5b6 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -347,6 +347,8 @@ config PRISM54
+ 
+ endif # CONEXANT_ST_80211
+ 
++source "drivers/net/wireless/zd1211rw/Kconfig"
++
+ config USB_ZD1201
+ 	tristate "USB ZD1201 based Wireless device support"
+ 	depends on USB && WLAN_80211
+@@ -539,7 +541,6 @@ endif # INTEL_80211
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
+-source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.5
+
