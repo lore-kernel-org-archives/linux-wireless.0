@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3323 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751578AbZHANXr (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39305 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932811AbZHNU1x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 09:23:47 -0400
-Date: Sat, 1 Aug 2009 09:22:53 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, nbd@openwrt.org
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-Message-ID: <20090801132253.GB15971@hash.localnet>
-References: <20090731181020.GE7963@makis> <43e72e890907311115h56df6ac0p1ea7165e305a10ee@mail.gmail.com> <40f31dec0907311125o1654bd23jee861ba8bea57611@mail.gmail.com> <b6c5339f0907311211w4d810b23uc6ec8027924da647@mail.gmail.com> <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <40f31dec0907311252n76adfde7kb9f34bf8c6baf34c@mail.gmail.com>
+	Fri, 14 Aug 2009 16:27:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 14/34] wireless: group Cisco together on kconfig
+Date: Fri, 14 Aug 2009 16:25:39 -0400
+Message-Id: <1250281559-13041-15-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 10:52:42PM +0300, Nick Kossifidis wrote:
-> > make the above true it needs to stop the queues etc when doing
-> > calibration.
-> 
-> ACK, how do we do that ?
-> ieee80211_stop_queues / ieee80211_wake_queues
+There's only a few of these so we keep them under
+a config option which expands upon selection.
 
-Yup.  And disabling (at least rx and swba) interrupts on the device
-is also probably a good idea.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f5d9dba..82a617d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -195,6 +195,16 @@ config MWL8K
+ 
+ endif # MARVELL_80211
+ 
++config CISCO_80211
++	bool "Cisco"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Cisco wireless drivers. This
++	  includes the Cisco Aironet ISA and PCI drivers and the Cisco
++	  Aironet PCMCIA drivers.
++
++if CISCO_80211
++
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+ 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
+@@ -233,6 +243,8 @@ config AIRO_CS
+ 	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+ 	  Cisco Linux utilities can be used to configure the card.
+ 
++endif # CISCO_80211
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.2.5
 
