@@ -1,87 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:56892 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754613AbZHGRjH convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39349 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932806AbZHNU2R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 13:39:07 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] p54: implement rfkill
-Date: Fri, 7 Aug 2009 19:39:05 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908071939.05779.chunkeey@web.de>
+	Fri, 14 Aug 2009 16:28:17 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 19/34] wireless: organize individual drivers alphabetically
+Date: Fri, 14 Aug 2009 16:25:44 -0400
+Message-Id: <1250281559-13041-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implements a basic rfkill support for p54 hardware and
-removes a rfkill related WARNING:
-
-fwio.c: In function ‘p54_setup_mac’:
-fwio.c:323: warning: ‘radio_enabled’ is deprecated.
-
-by abandoning radio_enable in flavour for IEEE80211_CONF_CHANGE_IDLE. 
-
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index 21f1901..e7b9e9c 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -320,7 +320,7 @@ int p54_setup_mac(struct p54_common *priv)
- 		return -ENOMEM;
+ drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
+ 1 files changed, 47 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 51aa041..583eddc 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
  
- 	setup = (struct p54_setup_mac *) skb_put(skb, sizeof(*setup));
--	if (priv->hw->conf.radio_enabled) {
-+	if (!(priv->hw->conf.flags & IEEE80211_CONF_IDLE)) {
- 		switch (priv->mode) {
- 		case NL80211_IFTYPE_STATION:
- 			mode = P54_FILTER_TYPE_STATION;
-@@ -348,8 +348,9 @@ int p54_setup_mac(struct p54_common *priv)
- 		     (priv->filter_flags & FIF_OTHER_BSS)) &&
- 		    (mode != P54_FILTER_TYPE_PROMISCUOUS))
- 			mode |= P54_FILTER_TYPE_TRANSPARENT;
--	} else
-+	} else {
- 		mode = P54_FILTER_TYPE_HIBERNATE;
-+	}
+-config STRIP
+-	tristate "STRIP (Metricom starmode radio IP)"
+-	depends on INET && WLAN_PRE80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y if you have a Metricom radio and intend to use Starmode Radio
+-	  IP. STRIP is a radio protocol developed for the MosquitoNet project
+-	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
+-	  traffic using Metricom radios.  Metricom radios are small, battery
+-	  powered, 100kbit/sec packet radio transceivers, about the size and
+-	  weight of a cellular telephone. (You may also have heard them called
+-	  "Metricom modems" but we avoid the term "modem" because it misleads
+-	  many people into thinking that you can plug a Metricom modem into a
+-	  phone line and use it as a modem.)
+-
+-	  You can use STRIP on any Linux machine with a serial port, although
+-	  it is obviously most useful for people with laptop computers. If you
+-	  think you might get a Metricom radio in the future, there is no harm
+-	  in saying Y to STRIP now, except that it makes the kernel a bit
+-	  bigger.
+-
+-	  To compile this as a module, choose M here: the module will be
+-	  called strip.
+-
+ config ARLAN
+ 	tristate "Aironet Arlan 655 & IC2200 DS support"
+ 	depends on ISA && !64BIT && WLAN_PRE80211
+@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called wavelan_cs.  If unsure, say N.
  
- 	setup->mac_mode = cpu_to_le16(mode);
- 	memcpy(setup->mac_addr, priv->mac_addr, ETH_ALEN);
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index bcab4c6..c3c00a1 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -288,6 +288,11 @@ static int p54_config(struct ieee80211_hw *dev, u32 changed)
- 		if (ret)
- 			goto out;
- 	}
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+		ret = p54_setup_mac(priv);
-+		if (ret)
-+			goto out;
-+	}
++config STRIP
++	tristate "STRIP (Metricom starmode radio IP)"
++	depends on INET && WLAN_PRE80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y if you have a Metricom radio and intend to use Starmode Radio
++	  IP. STRIP is a radio protocol developed for the MosquitoNet project
++	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
++	  traffic using Metricom radios.  Metricom radios are small, battery
++	  powered, 100kbit/sec packet radio transceivers, about the size and
++	  weight of a cellular telephone. (You may also have heard them called
++	  "Metricom modems" but we avoid the term "modem" because it misleads
++	  many people into thinking that you can plug a Metricom modem into a
++	  phone line and use it as a modem.)
++
++	  You can use STRIP on any Linux machine with a serial port, although
++	  it is obviously most useful for people with laptop computers. If you
++	  think you might get a Metricom radio in the future, there is no harm
++	  in saying Y to STRIP now, except that it makes the kernel a bit
++	  bigger.
++
++	  To compile this as a module, choose M here: the module will be
++	  called strip.
++
+ config PCMCIA_NETWAVE
+ 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
+ 	depends on PCMCIA && WLAN_PRE80211
+@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called netwave_cs.  If unsure, say N.
  
- out:
- 	mutex_unlock(&priv->conf_mutex);
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 704685f..6fc0b61 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -552,6 +552,12 @@ static void p54_rx_trap(struct p54_common *priv, struct sk_buff *skb)
- 		break;
- 	case P54_TRAP_TIMER:
- 		break;
-+	case P54_TRAP_FAA_RADIO_OFF:
-+		wiphy_rfkill_set_hw_state(priv->hw->wiphy, true);
-+		break;
-+	case P54_TRAP_FAA_RADIO_ON:
-+		wiphy_rfkill_set_hw_state(priv->hw->wiphy, false);
-+		break;
- 	default:
- 		printk(KERN_INFO "%s: received event:%x freq:%d\n",
- 		       wiphy_name(priv->hw->wiphy), event, freq);
+-
+ menuconfig WLAN_80211
+ 	bool "Wireless LAN (IEEE 802.11)"
+ 	depends on NETDEVICES
+@@ -509,28 +508,6 @@ config USB_ZD1201
+ 
+ endif # ZYDAS_80211
+ 
+-config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-	depends on PCMCIA && WLAN_80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
+-	  (PC-card) wireless Ethernet networking card to your computer.
+-	  Please read the file <file:Documentation/networking/ray_cs.txt> for
+-	  details.
+-
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called ray_cs.  If unsure, say N.
+-
+-config PCMCIA_WL3501
+-      tristate "Planet WL3501 PCMCIA cards"
+-      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-      select WIRELESS_EXT
+-       ---help---
+-         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
+-	 It has basic support for Linux wireless extensions and initial
+-	 micro support for ethtool.
+-
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -558,8 +535,30 @@ config ADM8211
+ 
+ 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 
+-source "drivers/net/wireless/hostap/Kconfig"
++config PCMCIA_RAYCS
++	tristate "Aviator/Raytheon 2.4GHz wireless support"
++	depends on PCMCIA && WLAN_80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
++	  (PC-card) wireless Ethernet networking card to your computer.
++	  Please read the file <file:Documentation/networking/ray_cs.txt> for
++	  details.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called ray_cs.  If unsure, say N.
++
+ source "drivers/net/wireless/orinoco/Kconfig"
++source "drivers/net/wireless/hostap/Kconfig"
++
++config PCMCIA_WL3501
++      tristate "Planet WL3501 PCMCIA cards"
++      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
++      select WIRELESS_EXT
++       ---help---
++         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
++	 It has basic support for Linux wireless extensions and initial
++	 micro support for ethtool.
+ 
+ config USB_NET_RNDIS_WLAN
+ 	tristate "Wireless RNDIS USB support"
+-- 
+1.6.2.5
+
