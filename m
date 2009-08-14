@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:43325 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132AbZHJT1X (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:64478 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517AbZHNVAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 15:27:23 -0400
-Received: by pzk34 with SMTP id 34so3033885pzk.4
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 12:27:24 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 1/7] mac80211: Improve dequeing from mpath frame queue.
-Date: Mon, 10 Aug 2009 12:15:46 -0700
-Message-Id: <1249931752-18127-2-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249931752-18127-1-git-send-email-javier@cozybit.com>
-References: <20090810175225.GF2733@tuxdriver.com>
- <1249931752-18127-1-git-send-email-javier@cozybit.com>
+	Fri, 14 Aug 2009 17:00:31 -0400
+Received: by bwz22 with SMTP id 22so1356783bwz.18
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:00:32 -0700 (PDT)
+Message-ID: <4A85D070.6070702@gmail.com>
+Date: Fri, 14 Aug 2009 23:00:32 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Fix another TX power control abuse
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, fix typo in comment.
+This should fix the remaining WARN_ON.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
-Tested-by: Andrey Yurovsky <andrey@cozybit.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
- net/mac80211/mesh.h      |    2 +-
- net/mac80211/mesh_hwmp.c |    6 ++----
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/b43/phy_lp.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index ce53881..6aaf1ec 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -61,7 +61,7 @@ enum mesh_path_flags {
-  * 	retry
-  * @discovery_retries: number of discovery retries
-  * @flags: mesh path flags, as specified on &enum mesh_path_flags
-- * @state_lock: mesh pat state lock
-+ * @state_lock: mesh path state lock
-  *
-  *
-  * The combination of dst and sdata is unique in the mesh path table. Since the
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index e1a763e..b54c21c 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -810,10 +810,8 @@ int mesh_nexthop_lookup(struct sk_buff *skb,
- 		}
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index bf89173..3872a31 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1059,7 +1059,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+ 	bool old_txg_ovr;
+ 	u8 old_bbmult;
+ 	u16 old_rf_ovr, old_rf_ovrval, old_afe_ovr, old_afe_ovrval,
+-	    old_rf2_ovr, old_rf2_ovrval, old_phy_ctl, old_txpctl;
++	    old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
++	enum b43_lpphy_txpctl_mode old_txpctl;
+ 	u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
+ 	int loopback, i, j, inner_sum;
  
- 		if (skb_queue_len(&mpath->frame_queue) >=
--				MESH_FRAME_QUEUE_LEN) {
--			skb_to_free = mpath->frame_queue.next;
--			skb_unlink(skb_to_free, &mpath->frame_queue);
--		}
-+				MESH_FRAME_QUEUE_LEN)
-+			skb_to_free = skb_dequeue(&mpath->frame_queue);
+@@ -1077,8 +1078,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+ 	old_rf2_ovr = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2);
+ 	old_rf2_ovrval = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2_VAL);
+ 	old_phy_ctl = b43_phy_read(dev, B43_LPPHY_LP_PHY_CTL);
+-	old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
+-					B43_LPPHY_TX_PWR_CTL_CMD_MODE;
++	lpphy_read_tx_pctl_mode_from_hardware(dev);
++	old_txpctl = lpphy->txpctl_mode;
  
- 		info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 		skb_queue_tail(&mpath->frame_queue, skb);
+ 	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+ 	lpphy_disable_crs(dev);
 -- 
-1.5.4.3
+1.6.2.4
+
+
 
