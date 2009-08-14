@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:53345 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158AbZH1K22 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45321 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756526AbZHNAnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 06:28:28 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [RFC PATCH 09/10] rndis_wlan: disable IWEVPMKIDCAND wireless event
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 28 Aug 2009 13:28:30 +0300
-Message-ID: <20090828102830.15684.65092.stgit@fate.lan>
-In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
-References: <20090828102742.15684.10566.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 13 Aug 2009 20:43:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v2 23/25] wireless: downgrade TI driver from menuconfig to config
+Date: Thu, 13 Aug 2009 20:43:02 -0400
+Message-Id: <1250210584-13374-24-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+There's only a few options here so let this expand upon
+selection.
+
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/wl12xx/Kconfig |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/rndis_wlan.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 01cd341..512000b 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2821,14 +2821,16 @@ static void rndis_wlan_pmkid_cand_list_indication(struct usbnet *usbdev,
- 		return;
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 1818e45..78029fd 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -1,10 +1,12 @@
+-menuconfig WL12XX
++config WL12XX
+ 	boolean "TI wl12xx driver support"
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	---help---
+ 	  This will enable TI wl12xx driver support. The drivers make
+ 	  use of the mac80211 stack.
  
- 	for (i = 0; i < le32_to_cpu(cand_list->num_candidates); i++) {
--		struct iw_pmkid_cand pcand;
--		union iwreq_data wrqu;
- 		struct ndis_80211_pmkid_candidate *cand =
- 						&cand_list->candidate_list[i];
- 
- 		devdbg(usbdev, "cand[%i]: flags: 0x%08x, bssid: %pM",
- 				i, le32_to_cpu(cand->flags), cand->bssid);
- 
-+#if 0
-+		struct iw_pmkid_cand pcand;
-+		union iwreq_data wrqu;
++if WL12XX
 +
- 		memset(&pcand, 0, sizeof(pcand));
- 		if (le32_to_cpu(cand->flags) & 0x01)
- 			pcand.flags |= IW_PMKID_CAND_PREAUTH;
-@@ -2839,6 +2841,7 @@ static void rndis_wlan_pmkid_cand_list_indication(struct usbnet *usbdev,
- 		wrqu.data.length = sizeof(pcand);
- 		wireless_send_event(usbdev->net, IWEVPMKIDCAND, &wrqu,
- 								(u8 *)&pcand);
-+#endif
- 	}
- }
+ config WL1251
+ 	tristate "TI wl1251 support"
+ 	depends on WL12XX && GENERIC_HARDIRQS
+@@ -50,3 +52,5 @@ config WL1271
  
+ 	  If you choose to build a module, it'll be called wl1271. Say N if
+ 	  unsure.
++
++endif # WL12XX
+-- 
+1.6.2.5
 
