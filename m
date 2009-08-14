@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754816AbZHNVGh (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:33545 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755060AbZHNQHY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 17:06:37 -0400
-Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-In-Reply-To: <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	 <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zPX4aGb+lqyAxA/DJXo4"
-Date: Fri, 14 Aug 2009 23:06:33 +0200
-Message-Id: <1250283993.4411.1.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 14 Aug 2009 12:07:24 -0400
+Message-ID: <20090814190724.12373pfrirqifq2o@hayate.sektori.org>
+Date: Fri, 14 Aug 2009 19:07:24 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "=?iso-8859-1?b?R+Fib3I=?= Stefanik" <netrolller.3d@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Michael Buesch" <mb@bu3sch.de>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 11/25] wireless: clarify rndis_wlan is not broadcom
+	specific
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	<1250210584-13374-12-git-send-email-lrodriguez@atheros.com>
+	<69e28c910908140313p7d138635q51ee71c362aaa7f6@mail.gmail.com>
+In-Reply-To: <69e28c910908140313p7d138635q51ee71c362aaa7f6@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting "Gábor Stefanik" <netrolller.3d@gmail.com>:
 
---=-zPX4aGb+lqyAxA/DJXo4
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> On Fri, Aug 14, 2009 at 2:42 AM, Luis R.
+> Rodriguez<lrodriguez@atheros.com> wrote:
+>> Cc: Michael Buesch <mb@bu3sch.de>
+>> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
+>> Cc: Johannes Berg <johannes@sipsolutions.net>
+>> Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  drivers/net/wireless/Kconfig |    4 +++-
+>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+>> index cb5aae6..a1bdb51 100644
+>> --- a/drivers/net/wireless/Kconfig
+>> +++ b/drivers/net/wireless/Kconfig
+>> @@ -403,7 +403,9 @@ config USB_NET_RNDIS_WLAN
+>>          BUFFALO WLI-USB-G54
+>>
+>>          All of these devices are based on Broadcom 4320 chip which is the
+>> -         only wireless RNDIS chip known to date.
+>> +         only wireless RNDIS chip known to date. Technically RNDIS follows
+>> +         a specification and although only Broadcom currently supports this
+>> +         other vendors could technically follow the implementation as well.
+>
+> To the aforementioned "other vendors" - please do not follow this
+> brain-dead, Microsoft-based spec! :-)
+>
 
-On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
-> We can now remove that comment about mac80211 requiring
-> cfg80211 and do that for the user.
+Agreed!
 
-"now"? What changed to make this possible?
-
-NAK this change, because with it, it's possible to select
-mac80211 =3D Y
--> cfg80211 =3D Y
-while rfkill =3D M
-
-which will break the kernel build.
-
-johannes
-
---=-zPX4aGb+lqyAxA/DJXo4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhdHVAAoJEODzc/N7+QmacW0P/0SsXVnWJE5VB6wbMg3CQga1
-btrxCjej2jGSLc+7LCgeTvsOJgti4OeYd8XnGTybWgabwoqN8UXtvkoyYL56qIw7
-JJHHjtU1zzdepfX8VGcBG+gSAMn1gypEBP2QRpAdxvnASw6YZA6oSMODvVR2F9I3
-bk4EiAV63EWlgnx7MUc/AI6qV7cDuANWZ7iCYWLbemjWrn1WMI3l5336h00ZeUtV
-/pMHhBDwB1unj7S5U7G/LPH1meE+3r5K0vkuP5qYqtrWW1B7h8e9gIVEj+4bn72N
-NjOo+p0wrCI9sUfGQ3xIoGEg/JcPCWxiQd+X5E61sYCw1ZlsLHJROGb6qqRkYtlR
-iunkw5O3WgxRtWbamJqQlDWURuXsVUkBiZF8PLVC3owdNuaWvclNA8WGTb3JyxCx
-cOqOOBv0rQ0P3thiya3X6ePAOhOZo7WbwFP/h277G0ZMjaR6WGjTulN/ktaQftlS
-Ndikx0ndlo4YiK5ezEM9+vUwq863e+zjUw9tQwEkS6n0M3ScuC6HH91HBCQfXHZY
-VCsXEns1HPEGVenx5+zG5BTG1jSuCOb096ZAauxAUpx606cVJCWOuc20N4iCefAX
-eShQtDoUrx3PQ+sf0384p8jdX0X5pMgjsEIaFCMMo/Kix+fF85l03ejK8hRI/2vE
-T4NcLrHdyoUAwR+w9bAT
-=AKMu
------END PGP SIGNATURE-----
-
---=-zPX4aGb+lqyAxA/DJXo4--
+-Jussi
 
