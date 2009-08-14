@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:63973 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933273AbZHVLUa (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39256 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932805AbZHNU1C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 07:20:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <1250890778-28959-1-git-send-email-Mario_Limonciello@Dell.com>
-References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
-	 <1250890778-28959-1-git-send-email-Mario_Limonciello@Dell.com>
-Date: Sat, 22 Aug 2009 12:20:27 +0100
-Message-ID: <9b2b86520908220420p282c862fn9c44697db010a08d@mail.gmail.com>
-Subject: Re: [PATCH] compal-laptop: Replace sysfs support with rfkill support
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Mario Limonciello <Mario_Limonciello@dell.com>
-Cc: cezary.jackiewicz@gmail.com, linux-wireless@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 14 Aug 2009 16:27:02 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 09/34] wireless: group Realtek wireless on kconfig
+Date: Fri, 14 Aug 2009 16:25:34 -0400
+Message-Id: <1250281559-13041-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/21/09, Mario Limonciello <Mario_Limonciello@dell.com> wrote:
-> This drops the support for manually groking the files in sysfs
-> to turn on and off the WLAN and BT for Compal laptops in favor
-> of platform rfkill support.
->
-> It has been combined into a single patch to not introduce regressions
-> in the process of simply adding rfkill support.
->
-> Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
+There's only a few of these so we keep them under a config option
+which expands upon selection.
 
-> @@ -390,23 +314,19 @@ static int __init compal_init(void)
->
->  	ret = platform_device_add(compal_device);
->  	if (ret)
-> -		goto fail_platform_device1;
-> +		goto fail_platform_device;
->
-> -	ret = sysfs_create_group(&compal_device->dev.kobj,
-> -		&compal_attribute_group);
-> +	ret = setup_rfkill();
->  	if (ret)
-> -		goto fail_platform_device2;
-> +		goto fail_rfkill;
->
->  	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
->  		" successfully loaded.\n");
->
->  	return 0;
->
-> -fail_platform_device2:
-> -
-> -	platform_device_del(compal_device);
-> -
-> -fail_platform_device1:
-> +fail_rfkill:
-> +fail_platform_device:
->
->  	platform_device_put(compal_device);
->
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-I guess our mails crossed.  As in the previous patch I think
-platform_device_del() should still be called, in the fail_rfkill case.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index a04ca56..c2e88dc 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -407,6 +407,15 @@ config USB_NET_RNDIS_WLAN
+ 
+ 	  If you choose to build a module, it'll be called rndis_wlan.
+ 
++config REALTEK_80211
++	bool "Realtek"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Realtek wireless drivers. This includes
++	  the PCI rtl8180 driver and the USB rtl8187 driver.
++
++if REALTEK_80211
++
+ config RTL8180
+ 	tristate "Realtek 8180/8185 PCI support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -492,6 +501,8 @@ config RTL8187_LEDS
+ 	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
+ 	default y
+ 
++endif # REALTEK_80211
++
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+-- 
+1.6.2.5
 
-Previously platform_device_del() was required after
-platform_device_add(), if we bailed out because of a failure in
-sysfs_create_group().  I don't think that requirement is removed by
-replacing sysfs_create_group() with setup_rfkill().
-
-Regards
-Alan
