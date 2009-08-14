@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2182 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754508AbZHVNlC (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39371 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932749AbZHNU2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 09:41:02 -0400
-Date: Sat, 22 Aug 2009 09:40:44 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-Message-ID: <20090822134044.GC6762@hash.localnet>
-References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com> <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com> <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com> <20090822124709.GA6762@hash.localnet> <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
+	Fri, 14 Aug 2009 16:28:40 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH v4 22/34] wireless: remove "Wireless" from rndis kconfig entry
+Date: Fri, 14 Aug 2009 16:25:47 -0400
+Message-Id: <1250281559-13041-23-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 22, 2009 at 03:02:26PM +0200, Fabio Comolli wrote:
-> Hi Bob.
-> 
-> I'm not a git user. How can I user wireless-testing without git? Is
-> there a patch or seomething?
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-No, I'm unaware of a way to get it without git.  Well, okay, try
-compat-wireless, but be sure to use the 'bleeding edge' compat-wireless,
-and post the contents of its 'git-describe' file with the warnings so
-I can be sure we're on the same page.
-
-http://wireless.kernel.org/en/users/Download
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 9fc1f4f..a39fa8f 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -558,7 +558,7 @@ config PCMCIA_WL3501
+ 	 micro support for ethtool.
+ 
+ config USB_NET_RNDIS_WLAN
+-	tristate "Wireless RNDIS USB support"
++	tristate "RNDIS USB support"
+ 	depends on USB && EXPERIMENTAL
+ 	depends on CFG80211
+ 	select USB_USBNET
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.2.5
 
