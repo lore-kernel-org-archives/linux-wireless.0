@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:33195 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbZHHIZN (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:17585 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756657AbZHNMlS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 04:25:13 -0400
-Received: by bwz19 with SMTP id 19so1820481bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 01:25:13 -0700 (PDT)
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: Re: [PATCH 16/16] iwlwifi: disable powersave mode
-References: <1249684912-22936-1-git-send-email-reinette.chatre@intel.com>
-	<1249684912-22936-17-git-send-email-reinette.chatre@intel.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 08 Aug 2009 11:25:09 +0300
-In-Reply-To: <1249684912-22936-17-git-send-email-reinette.chatre@intel.com> (Reinette Chatre's message of "Fri\,  7 Aug 2009 15\:41\:52 -0700")
-Message-ID: <878whun256.fsf@litku.valot.fi>
+	Fri, 14 Aug 2009 08:41:18 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so334444fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 05:41:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A855489.6010102@gmail.com>
+References: <4A855489.6010102@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 14 Aug 2009 14:40:58 +0200
+Message-ID: <69e28c910908140540p55904f27m1d3b609c7b317e12@mail.gmail.com>
+Subject: Re: [PATCH] ssb: Fix e typo in the rev8 SPROM extraction routine
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette Chatre <reinette.chatre@intel.com> writes:
+John, please fix the typo in the commit name... how ironic this is a
+typo fix patch. :-)
 
-> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+2009/8/14 Gábor Stefanik <netrolller.3d@gmail.com>:
+> No comment. :-)
 >
-> The enabling of powersaving had a big impact on reliability and
-> performance. Throughput on n band suffered especially. With power save
-> support enabled we see significant ping response times, dropped frames, and
-> reduced throughput. These are captured in the following bug reports:
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> Mark, this should fix your MAC address bug.
+> Anyone else testing LP-PHY should also apply this.
 >
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2051
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2053
+> drivers/ssb/pci.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> Disable power save by default, add "iwl_support_ps" module parameter
-> that can be used to enable it again.
+> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+> index 50811e4..335a43f 100644
+> --- a/drivers/ssb/pci.c
+> +++ b/drivers/ssb/pci.c
+> @@ -480,7 +480,7 @@ static void sprom_extract_r8(struct ssb_sprom *out,
+> const u16 *in)
+>
+>        /* extract the MAC address */
+>        for (i = 0; i < 3; i++) {
+> -               v = in[SPOFF(SSB_SPROM1_IL0MAC) + i];
+> +               v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
+>                *(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+>        }
+>        SPEX(country_code, SSB_SPROM8_CCODE, 0xFFFF, 0);
+> --
+> 1.6.2.4
+>
+>
+>
+>
 
-You are again creating driver specific parameters. But we should be
-moving away from this and instead use just generic interfaces. Please,
-think three times (or even more) whenever creating new driver specific
-interfaces, be it module parameters, sysfs files etc.. It's a
-maintenance nightmare and also very confusing for the users. We need to
-focus on nl80211 and make it work properly with all drivers.
 
-For the problem at hand, I see two options:
-
-1. Users seeing the problem disable power save either via wext or with
-   CONFIG_CFG80211_DEFAULT_PS and everyone else still can use power
-   save. The issue will be investigated and fixed. If the AP is buggy,
-   there isn't much we can do.
-
-2. If you think the problem is widespread, remove
-   IEEE80211_HW_SUPPORTS_PS from the driver, fix the issues and renable
-   power save support.
 
 -- 
-Kalle Valo
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
