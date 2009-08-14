@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:41953 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349AbZHGVuM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 17:50:12 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n77LnsaN003709
-	for <linux-wireless@vger.kernel.org>; Sat, 8 Aug 2009 00:49:59 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@nokia.com
-Subject: [PATCH] MAINTAINERS: add information for wl1271 wireless driver
-Date: Sat,  8 Aug 2009 00:50:05 +0300
-Message-Id: <1249681805-21015-1-git-send-email-luciano.coelho@nokia.com>
+Received: from c60.cesmail.net ([216.154.195.49]:43721 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755107AbZHNV3f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2009 17:29:35 -0400
+Subject: Re: [PATCH] b43: Fix sparse warnings
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <200908142300.01397.mb@bu3sch.de>
+References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
+	 <200908142215.38112.mb@bu3sch.de> <1250283133.8137.16.camel@mj>
+	 <200908142300.01397.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Fri, 14 Aug 2009 17:29:31 -0400
+Message-Id: <1250285371.8137.44.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add maintainer information section for the wl1271 wireless driver and fix the
-information for wl1271.
+On Fri, 2009-08-14 at 23:00 +0200, Michael Buesch wrote:
+> On Friday 14 August 2009 22:52:13 Pavel Roskin wrote:
+> > On Fri, 2009-08-14 at 22:15 +0200, Michael Buesch wrote:
+> > 
+> > > > -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+> > > > +			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
+> > > 
+> 
+> > I would just use 0x7fff here.
+> 
+> That does not work if 0x8000 is a #defined bit.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- MAINTAINERS |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+One approach would be to use a macro and tell sparse to ignore it
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f2f7156..a529544 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5570,7 +5570,17 @@ L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
--F:	drivers/net/wireless/wl12xx/wl1251*
-+F:	drivers/net/wireless/wl12xx/*
-+X:	drivers/net/wireless/wl12xx/wl1271*
-+
-+WL1271 WIRELESS DRIVER
-+P:	Luciano Coelho
-+M:	luciano.coelho@nokia.com
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-+S:	Maintained
-+F:	drivers/net/wireless/wl12xx/wl1271*
- 
- WL3501 WIRELESS PCMCIA CARD DRIVER
- M:	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+#define NEGATE(x) (__force typeof(x))(~x)
+
+Another approach would be to have b43_phy_mask() and similar functions
+accept int and do the bit cutting in one place.
+
+It should also be possible to have separate functions e.g.
+b43_phy_unmask() that would do the negation, so that the caller won't
+need to do it.
+
 -- 
-1.6.0.4
-
+Regards,
+Pavel Roskin
