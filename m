@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9226 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932551AbZHUUe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:34:26 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:45304 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515AbZHNAnE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 20:43:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/14] iwlwifi: set default tx power user limit to minimal
-Date: Fri, 21 Aug 2009 13:34:14 -0700
-Message-Id: <1250886867-4112-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
-References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v2 09/25] wireless: group Realtek wireless on kconfig
+Date: Thu, 13 Aug 2009 20:42:48 -0400
+Message-Id: <1250210584-13374-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+There's only a few of these so we keep them under a config option
+which expands upon selection.
 
-Set the tx_power_user_lmt to the lowest power level
-this value will get overwritten by channel's max power avg
-from eeprom
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/Kconfig |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f1f6dab..43781dc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1671,7 +1671,10 @@ int iwl_init_drv(struct iwl_priv *priv)
- 	priv->qos_data.qos_cap.val = 0;
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index accdc6f..6dba711 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -407,6 +407,15 @@ config USB_NET_RNDIS_WLAN
  
- 	priv->rates_mask = IWL_RATES_MASK;
--	priv->tx_power_user_lmt = IWL_TX_POWER_TARGET_POWER_MAX;
-+	/* Set the tx_power_user_lmt to the lowest power level
-+	 * this value will get overwritten by channel max power avg
-+	 * from eeprom */
-+	priv->tx_power_user_lmt = IWL_TX_POWER_TARGET_POWER_MIN;
+ 	  If you choose to build a module, it'll be called rndis_wlan.
  
- 	ret = iwl_init_channel_map(priv);
- 	if (ret) {
++config REALTEK_80211
++	bool "Realtek"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Realtek wireless drivers. This includes
++	  the PCI rtl8180 driver and the USB rtl8187 driver.
++
++if REALTEK_80211
++
+ config RTL8180
+ 	tristate "Realtek 8180/8185 PCI support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -492,6 +501,8 @@ config RTL8187_LEDS
+ 	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
+ 	default y
+ 
++endif # REALTEK_80211
++
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
 -- 
-1.5.6.3
+1.6.2.5
 
