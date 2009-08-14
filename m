@@ -1,65 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50135 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961AbZHGVuZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39357 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932824AbZHNU2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 17:50:25 -0400
-Subject: Re: [RFC 0/4] orinoco: use cfg80211 for key manipulation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave <kilroyd@googlemail.com>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <4A7C9ED0.8000600@gmail.com>
-References: <1249504372-17063-1-git-send-email-kilroyd@googlemail.com>
-	 <4A7C91B8.2010106@gmail.com>
-	 <1249680231.26088.42.camel@localhost.localdomain>
-	 <4A7C9ED0.8000600@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hZDqkXVhTHLKgSYguB9s"
-Date: Fri, 07 Aug 2009 23:50:21 +0200
-Message-Id: <1249681821.7194.14.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 14 Aug 2009 16:28:23 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 20/34] wireless: simplify WLAN_PRE80211 entries
+Date: Fri, 14 Aug 2009 16:25:45 -0400
+Message-Id: <1250281559-13041-21-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We do simplify them by ifdef'ing on WLAN_PRE80211 for
+the WLAN_PRE80211 drivers, this removes the need to depend
+on WLAN_PRE80211 on each individual driver.
 
---=-hZDqkXVhTHLKgSYguB9s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-On Fri, 2009-08-07 at 22:38 +0100, Dave wrote:
-
-> Just tried wpa_supplicant in nl80211 mode. In that case, it's stuck in
-> scanning (presumably ignoring my ap_scan setting). It's not seeing my AP
-> (because it's hidden?), and so doesn't proceed. And I can't seem to get
-> it to do an active scan for my AP.
-
-(just quickly skimmed this thread, will reply in more detail tomorrow if
-there's still a need)
-
-You can put scan_ssid=3D1 into a network block to make it scan for the
-SSID.
-
-johannes
-
---=-hZDqkXVhTHLKgSYguB9s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKfKGaAAoJEODzc/N7+QmavKoP/ikesuH4b84Wfk95owcP51SR
-RPoNtZhHH4drVKkhdK3H0bk1Yt/k8H+jJiO+GOtYwtFfnV52bfrqaEyKCkdCcVjl
-qEhq+NXVwmcHrOdGfYEDUU9N/FVq8yIihT0MkexRUU81bO3SJ5V9FoNHKPWpezz2
-5+YtBf+acI+BccFFbkmJKU5YhCSAurcWEK8nbzpOlgosIjQ5/I1UE3aPq3Ga2U69
-WxkdBNBi8omTYywV7RzQRvNHY4pl7hie1jByCA6BNVvWxaS1EW1L4seskEM+4kfk
-blG+L4zkwEheYz37rE+CBpS7rR3wDZs6BOp9SzJWwreounAZ31U2qsq7o936AH1C
-J9hdFevStxINJDKbkz+qzbdPjlInNdcGsmmYnSRMNPByuGks5SRNmgOcVqzgPtX+
-3D0yQMCryKkT/Gth3v2b5gte4y4aaCAvFVynZBUbTe/VlB4OUnsFlQCwPfYnehAh
-896qjDeSOHXXB8q2l0WXCc9gH+aKHkXbATMxX+PZszjIx2OYV+d3KD7pFs8tGDMW
-Esm5s19Xf47zG8dxfVPWSLUZl1nPeUV42BDpBmf65Q3Qq3V1XQMO8490HQm85PQN
-lCZnAfZtlbeVlsKNLscHIxGBy/l31pDA26p09LBzv+tDTSdPknujVI9EHK0Te0tN
-w0OXqb7XPYf+oJEucPPn
-=WEBy
------END PGP SIGNATURE-----
-
---=-hZDqkXVhTHLKgSYguB9s--
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 583eddc..f340713 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -14,9 +14,11 @@ menuconfig WLAN_PRE80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
++if WLAN_PRE80211
++
+ config ARLAN
+ 	tristate "Aironet Arlan 655 & IC2200 DS support"
+-	depends on ISA && !64BIT && WLAN_PRE80211
++	depends on ISA && !64BIT
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  Aironet makes Arlan, a class of wireless LAN adapters. These use the
+@@ -32,7 +34,7 @@ config ARLAN
+ 
+ config WAVELAN
+ 	tristate "AT&T/Lucent old WaveLAN & DEC RoamAbout DS ISA support"
+-	depends on ISA && WLAN_PRE80211
++	depends on ISA
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  The Lucent WaveLAN (formerly NCR and AT&T; or DEC RoamAbout DS) is
+@@ -55,7 +57,7 @@ config WAVELAN
+ 
+ config PCMCIA_WAVELAN
+ 	tristate "AT&T/Lucent old WaveLAN Pcmcia wireless support"
+-	depends on PCMCIA && WLAN_PRE80211
++	depends on PCMCIA
+ 	select WIRELESS_EXT
+ 	help
+ 	  Say Y here if you intend to attach an AT&T/Lucent Wavelan PCMCIA
+@@ -67,7 +69,7 @@ config PCMCIA_WAVELAN
+ 
+ config STRIP
+ 	tristate "STRIP (Metricom starmode radio IP)"
+-	depends on INET && WLAN_PRE80211
++	depends on INET
+ 	select WIRELESS_EXT
+ 	---help---
+ 	  Say Y if you have a Metricom radio and intend to use Starmode Radio
+@@ -91,7 +93,7 @@ config STRIP
+ 
+ config PCMCIA_NETWAVE
+ 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
+-	depends on PCMCIA && WLAN_PRE80211
++	depends on PCMCIA
+ 	select WIRELESS_EXT
+ 	help
+ 	  Say Y here if you intend to attach this type of PCMCIA (PC-card)
+@@ -100,6 +102,8 @@ config PCMCIA_NETWAVE
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called netwave_cs.  If unsure, say N.
+ 
++endif # WLAN_PRE80211
++
+ menuconfig WLAN_80211
+ 	bool "Wireless LAN (IEEE 802.11)"
+ 	depends on NETDEVICES
+-- 
+1.6.2.5
 
