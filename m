@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:41119 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbZHFOaM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46005 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932849AbZHNUaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 10:30:12 -0400
-Received: by pzk34 with SMTP id 34so934395pzk.4
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 07:30:13 -0700 (PDT)
-Message-ID: <4A7AE8E6.4050301@lwfinger.net>
-Date: Thu, 06 Aug 2009 09:29:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de,
-	gregor kowski <gregor.kowski@gmail.com>
-Subject: Re: [PATCH] b43: Fix hardware key index handling
-References: <200908061036.50631.mb@bu3sch.de>
-In-Reply-To: <200908061036.50631.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 14 Aug 2009 16:30:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
+Date: Fri, 14 Aug 2009 16:25:57 -0400
+Message-Id: <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> This fixes the hardware encryption keys index and array size handling.
-> 
-> Thanks to Gregor Kowski for reporting this issue.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> ---
-> 
-> This should probably go as a bugfix.
-> (Does this actually fix the PHY transmission errors? I don't see them anymore...
-> Note that you need to enable debugging to see them.)
+We can now remove that comment about mac80211 requiring
+cfg80211 and do that for the user.
 
-I still see the PHY transmission errors. I had two of them and a "RX:
-packet dropped" debug message within seconds of reloading b43 with
-this patch included.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/Kconfig |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-Larry
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index d4d3dca..6293b21 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -1,6 +1,6 @@
+ config MAC80211
+ 	tristate "mac80211 - SoftMAC device support"
+-	depends on CFG80211
++	select CFG80211
+ 	select CRYPTO
+ 	select CRYPTO_ECB
+ 	select CRYPTO_ARC4
+@@ -28,10 +28,6 @@ config MAC80211
+ 	  When built as a module mac80211 will be built as mac80211.ko, if not sure
+ 	  you should build this as a module.
+ 
+-
+-comment "CFG80211 needs to be enabled for MAC80211"
+-	depends on CFG80211=n
+-
+ menu "Rate control algorithm selection"
+ 	depends on MAC80211 != n
+ 
+-- 
+1.6.2.5
+
