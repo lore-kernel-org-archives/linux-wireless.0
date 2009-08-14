@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:60367 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbZHKAky (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:55041 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755327AbZHNRZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 20:40:54 -0400
-Received: by pzk34 with SMTP id 34so3161072pzk.4
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 17:40:55 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH] mac80211: Fix unresolved mesh frames queued without valid control.vif
-Date: Mon, 10 Aug 2009 17:29:29 -0700
-Message-Id: <1249950569-26792-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249950260-26536-1-git-send-email-javier@cozybit.com>
-References: <1249950260-26536-1-git-send-email-javier@cozybit.com>
+	Fri, 14 Aug 2009 13:25:07 -0400
+Received: by bwz22 with SMTP id 22so1265942bwz.18
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 10:25:08 -0700 (PDT)
+To: Chunkeey@web.de
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Deauthentications with p54usb
+References: <1763718213@web.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 14 Aug 2009 20:17:57 +0300
+In-Reply-To: <1763718213@web.de> (Chunkeey@web.de's message of "Fri\, 14 Aug 2009 00\:27\:40 +0200")
+Message-ID: <8763cq1fi2.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh frames that could not be immediately resolved were queued with a NULL
-info->control.vif.  This patch moves the call to mesh_nexthop_lookup closer to
-the point where it is handed over to ieee80211_tx().  This ensures that the
-unresolved frames are ready to be sent once the path is resolved.
+Chunkeey@web.de writes:
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/tx.c |   18 ++++++++++--------
- 1 files changed, 10 insertions(+), 8 deletions(-)
+> "Larry Finger" <Larry.Finger@lwfinger.net> wrote:
+>> 
+>> I'll try to collect a dump.
+>> 
+> Any news regarding that dump?
+> Or are you too busy reviewing b43's LP code? :)
+>
+> It looks like more drivers are affected. 
+>  - Luis reported some deauth (reasons=7) for ath9k with a cisco ap.
+>  - Kalle has the same issues with wl1271 with a ?Zyxel? AP.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b9f5be6..56dc8df 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1413,14 +1413,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif) &&
--	    ieee80211_is_data(hdr->frame_control)) {
--		if (!is_multicast_ether_addr(hdr->addr1))
--			if (mesh_nexthop_lookup(skb, sdata)) {
--				dev_put(sdata->dev);
--				return;
--			}
--	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
-+	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
- 		int hdrlen;
- 		u16 len_rthdr;
- 
-@@ -1477,6 +1470,15 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	info->control.vif = &sdata->vif;
- 
-+	if (ieee80211_vif_is_mesh(&sdata->vif) &&
-+	    ieee80211_is_data(hdr->frame_control) &&
-+		!is_multicast_ether_addr(hdr->addr1))
-+			if (mesh_nexthop_lookup(skb, sdata)) {
-+				/* skb queued: don't free */
-+				dev_put(sdata->dev);
-+				return;
-+			}
-+
- 	ieee80211_select_queue(local, skb);
- 	ieee80211_tx(sdata, skb, false);
- 	dev_put(sdata->dev);
+Actually that was with wl1251. It was a bug in the driver, I'll send a
+patch within few days.
+
 -- 
-1.5.4.3
-
+Kalle Valo
