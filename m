@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:40183 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756622AbZHRDwp (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:8876 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbZHNWBS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:52:45 -0400
-Date: Tue, 18 Aug 2009 05:52:46 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 11/29] mwl8k: ->add_interface() is not called for monitor interfaces
-Message-ID: <20090818035246.GP18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 14 Aug 2009 18:01:18 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so144215fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 15:01:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4A85D7A3.9020009@lwfinger.net>
+References: <4A85D070.6070702@gmail.com> <4A85D7A3.9020009@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 15 Aug 2009 00:00:59 +0200
+Message-ID: <69e28c910908141500s2e6ee71avcebffd6107fe5a1@mail.gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Fix another TX power control abuse
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to check for NL80211_IFTYPE_MONITOR in
-->add_interface(), as this function is never called for monitor
-interfaces.  Also, there is no need to advertise this bit in our
-wiphy's ->interface_modes.
+2009/8/14 Larry Finger <Larry.Finger@lwfinger.net>:
+> Gábor Stefanik wrote:
+>> This should fix the remaining WARN_ON.
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> drivers/net/wireless/b43/phy_lp.c |    7 ++++---
+>> 1 files changed, 4 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c
+>> b/drivers/net/wireless/b43/phy_lp.c
+>> index bf89173..3872a31 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -1059,7 +1059,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>     bool old_txg_ovr;
+>>     u8 old_bbmult;
+>>     u16 old_rf_ovr, old_rf_ovrval, old_afe_ovr, old_afe_ovrval,
+>> -        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl, old_txpctl;
+>> +        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
+>> +    enum b43_lpphy_txpctl_mode old_txpctl;
+>>     u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
+>>     int loopback, i, j, inner_sum;
+>>
+>> @@ -1077,8 +1078,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>     old_rf2_ovr = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2);
+>>     old_rf2_ovrval = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2_VAL);
+>>     old_phy_ctl = b43_phy_read(dev, B43_LPPHY_LP_PHY_CTL);
+>> -    old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
+>> -                    B43_LPPHY_TX_PWR_CTL_CMD_MODE;
+>> +    lpphy_read_tx_pctl_mode_from_hardware(dev);
+>> +    old_txpctl = lpphy->txpctl_mode;
+>>
+>>     lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+>>     lpphy_disable_crs(dev);
+>
+> Yes, this one got rid of the warnings.
+>
+> Larry
+>
+>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+I guess the device still doesn't TX/RX.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index e266bc1..4580b1d 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2883,8 +2883,7 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
- 	/*
- 	 * We only support managed interfaces for now.
- 	 */
--	if (conf->type != NL80211_IFTYPE_STATION &&
--	    conf->type != NL80211_IFTYPE_MONITOR)
-+	if (conf->type != NL80211_IFTYPE_STATION)
- 		return -EINVAL;
- 
- 	/* Clean out driver private area */
-@@ -3444,8 +3443,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 
- 	hw->queues = MWL8K_TX_QUEUES;
- 
--	hw->wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_MONITOR);
-+	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 
- 	/* Set rssi and noise values to dBm */
- 	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_NOISE_DBM;
 -- 
-1.5.6.4
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
