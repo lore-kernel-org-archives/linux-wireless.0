@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:53068 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754400AbZHKMuD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 08:50:03 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1Maqni-0006Rc-TA
-	for linux-wireless@vger.kernel.org; Tue, 11 Aug 2009 12:50:03 +0000
-Received: from 123.Red-213-97-87.staticIP.rima-tde.net ([213.97.87.123])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 12:50:02 +0000
-Received: from davidseira by 123.Red-213-97-87.staticIP.rima-tde.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2009 12:50:02 +0000
-To: linux-wireless@vger.kernel.org
-From: David Seira <davidseira@gmail.com>
-Subject: Roaming behavior
-Date: Tue, 11 Aug 2009 12:44:51 +0000 (UTC)
-Message-ID: <loom.20090811T124332-602@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from bombadil.infradead.org ([18.85.46.34]:45319 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756524AbZHNAnF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 20:43:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+Subject: [PATCH v2 17/25] wireless: remove IEEE 802.11 description on hostapd
+Date: Thu, 13 Aug 2009 20:42:56 -0400
+Message-Id: <1250210584-13374-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Its implied as hostap falls under the WLAN_80211 group menu.
 
-I asked in the ath5k-user list about how to change roaming behavior of
-ath5k. Pavel Roskin told me that I asked here.
-I need to modify the roaming behavior, where can I do this?
+Cc: Jouni Malinen <j@w1.fi>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/hostap/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks for all,
-David
-
-P.D: sorry for my poor english
+diff --git a/drivers/net/wireless/hostap/Kconfig b/drivers/net/wireless/hostap/Kconfig
+index c15db22..13d074e 100644
+--- a/drivers/net/wireless/hostap/Kconfig
++++ b/drivers/net/wireless/hostap/Kconfig
+@@ -1,5 +1,5 @@
+ config HOSTAP
+-	tristate "IEEE 802.11 for Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
++	tristate "Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
+ 	depends on WLAN_80211
+ 	select WIRELESS_EXT
+ 	select CRYPTO
+-- 
+1.6.2.5
 
