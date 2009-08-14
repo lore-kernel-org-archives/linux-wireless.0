@@ -1,189 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34387 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:39325 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbZHTQUB (ORCPT
+	with ESMTP id S932815AbZHNU2H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 12:20:01 -0400
-Date: Thu, 20 Aug 2009 12:20:00 -0400
+	Fri, 14 Aug 2009 16:28:07 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Simon Farnsworth <simon@farnz.org.uk>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	David Quan <David.Quan@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>
-Subject: Re: Regulatory problems with ath5k in AP mode
-Message-ID: <20090820162000.GA2602@bombadil.infradead.org>
-References: <h6ced0$hoi$1@ger.gmane.org> <43e72e890908191720m6838e81ei853a27856288db8f@mail.gmail.com> <200908200923.46741.simon@farnz.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200908200923.46741.simon@farnz.org.uk>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v4 16/34] wireless: organize group drivers alphabetically
+Date: Fri, 14 Aug 2009 16:25:41 -0400
+Message-Id: <1250281559-13041-17-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: this e-mail is on a public mailing list. I'm adding David and Michael.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |  286 +++++++++++++++++++++---------------------
+ 1 files changed, 144 insertions(+), 142 deletions(-)
 
-On Thu, Aug 20, 2009 at 09:23:39AM +0100, Simon Farnsworth wrote:
-> On Thursday 20 August 2009 01:20:58 Luis R. Rodriguez wrote:
-> > On Mon, Aug 17, 2009 at 1:27 PM, Simon Farnsworth<simon@farnz.org.uk> wrote:
-> > > As I'm trying to use the cards for AP mode, I cannot rely on beacons with
-> > > regulatory data being present;
-> >
-> > Regulatory questions are often and I try really hard to answer them
-> > first through documentation so it seems we need to improve
-> > documentation further. To be thorough though I'd first like to ask if
-> > you have read all this:
-> >
-> > Linux regulatory docs:
-> >
-> > http://wireless.kernel.org/en/developers/Regulatory
-> >
-> > Atheros shared module documentation (ath.ko):
-> >
-> > http://wireless.kernel.org/en/users/Drivers/ath
-> >
-> I've read both of those - they're why I'm not simply overriding the EEPROM
-> by hacking ath5k.ko around.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 325d14d..a6801fa 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -110,77 +110,73 @@ menuconfig WLAN_80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
+-menuconfig MARVELL_80211
+-	bool "Marvell"
+-	depends on WLAN_80211
+-	---help---
+-	  This will enable the support for Marvell wireless drivers. This includes
+-	  the drivers: libertas, libertas_tf, and mwl8k.
++source "drivers/net/wireless/ath/Kconfig"
+ 
+-if MARVELL_80211
+-config LIBERTAS
+-	tristate "Marvell 8xxx Libertas WLAN driver support"
++config ATMEL_80211
++	bool "Atmel"
+ 	depends on WLAN_80211
+-	select WIRELESS_EXT
+-	select LIB80211
+-	select FW_LOADER
+-	---help---
+-	  A library for Marvell Libertas 8xxx devices.
+-
+-config LIBERTAS_USB
+-	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
+-	depends on LIBERTAS && USB
+ 	---help---
+-	  A driver for Marvell Libertas 8388 USB devices.
++	  This will enable the support for Atmel wireless drivers.
+ 
+-config LIBERTAS_CS
+-	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
+-	depends on LIBERTAS && PCMCIA
+-	select FW_LOADER
+-	---help---
+-	  A driver for Marvell Libertas 8385 CompactFlash devices.
++if ATMEL_80211
+ 
+-config LIBERTAS_SDIO
+-	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
+-	depends on LIBERTAS && MMC
+-	---help---
+-	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
++config ATMEL
++      tristate "Atmel at76c50x chipset  802.11b support"
++      depends on (PCI || PCMCIA) && WLAN_80211
++      select WIRELESS_EXT
++      select FW_LOADER
++      select CRC32
++       ---help---
++        A driver 802.11b wireless cards based on the Atmel fast-vnet
++        chips. This driver supports standard Linux wireless extensions.
+ 
+-config LIBERTAS_SPI
+-	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
+-	depends on LIBERTAS && SPI
+-	---help---
+-	  A driver for Marvell Libertas 8686 SPI devices.
++        Many  cards based on this chipset do not have flash memory
++        and need their firmware loaded at start-up. If yours is
++        one of these, you will need to provide a firmware image
++        to be loaded into the card by the driver. The Atmel
++        firmware package can be downloaded from
++        <http://www.thekelleys.org.uk/atmel>
+ 
+-config LIBERTAS_DEBUG
+-	bool "Enable full debugging output in the Libertas module."
+-	depends on LIBERTAS
+-	---help---
+-	  Debugging support.
++config PCI_ATMEL
++      tristate "Atmel at76c506 PCI cards"
++      depends on ATMEL && PCI
++       ---help---
++        Enable support for PCI and mini-PCI cards containing the
++        Atmel at76c506 chip.
+ 
+-config LIBERTAS_THINFIRM
+-	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
+-	depends on WLAN_80211 && MAC80211
++config PCMCIA_ATMEL
++	tristate "Atmel at76c502/at76c504 PCMCIA cards"
++	depends on ATMEL && PCMCIA
++	select WIRELESS_EXT
+ 	select FW_LOADER
++	select CRC32
+ 	---help---
+-	  A library for Marvell Libertas 8xxx devices using thinfirm.
++	  Enable support for PCMCIA cards containing the
++	  Atmel at76c502 and at76c504 chips.
+ 
+-config LIBERTAS_THINFIRM_USB
+-	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
+-	depends on LIBERTAS_THINFIRM && USB
+-	---help---
+-	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
++config AT76C50X_USB
++        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
++        depends on MAC80211 && WLAN_80211 && USB
++        select FW_LOADER
++        ---help---
++          Enable support for USB Wireless devices using Atmel at76c503,
++          at76c505 or at76c505a chips.
+ 
+-config MWL8K
+-	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
+-	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
++endif # ATMEL_80211
++
++config BROADCOM_80211
++	bool "Broadcom wireless driver support"
++	depends on WLAN_80211
+ 	---help---
+-	  This driver supports Marvell TOPDOG 802.11 wireless cards.
++	  This will enable the support for Broadcom wireless drivers. This
++	  includes b43 driver and the b43legacy driver.
+ 
+-	  To compile this driver as a module, choose M here: the module
+-	  will be called mwl8k.  If unsure, say N.
++if BROADCOM_80211
+ 
+-endif # MARVELL_80211
++source "drivers/net/wireless/b43/Kconfig"
++source "drivers/net/wireless/b43legacy/Kconfig"
++
++endif # BROADCOM_80211
+ 
+ config CISCO_80211
+ 	bool "Cisco"
+@@ -232,57 +228,20 @@ config AIRO_CS
+ 
+ endif # CISCO_80211
+ 
+-config ATMEL_80211
+-	bool "Atmel"
++menuconfig INTEL_80211
++	bool "Intel"
+ 	depends on WLAN_80211
+ 	---help---
+-	  This will enable the support for Atmel wireless drivers.
+-
+-if ATMEL_80211
+-
+-config ATMEL
+-      tristate "Atmel at76c50x chipset  802.11b support"
+-      depends on (PCI || PCMCIA) && WLAN_80211
+-      select WIRELESS_EXT
+-      select FW_LOADER
+-      select CRC32
+-       ---help---
+-        A driver 802.11b wireless cards based on the Atmel fast-vnet
+-        chips. This driver supports standard Linux wireless extensions.
+-
+-        Many  cards based on this chipset do not have flash memory
+-        and need their firmware loaded at start-up. If yours is
+-        one of these, you will need to provide a firmware image
+-        to be loaded into the card by the driver. The Atmel
+-        firmware package can be downloaded from
+-        <http://www.thekelleys.org.uk/atmel>
+-
+-config PCI_ATMEL
+-      tristate "Atmel at76c506 PCI cards"
+-      depends on ATMEL && PCI
+-       ---help---
+-        Enable support for PCI and mini-PCI cards containing the
+-        Atmel at76c506 chip.
++	  This will enable the support for Intel wireless drivers. This
++	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
+ 
+-config PCMCIA_ATMEL
+-	tristate "Atmel at76c502/at76c504 PCMCIA cards"
+-	depends on ATMEL && PCMCIA
+-	select WIRELESS_EXT
+-	select FW_LOADER
+-	select CRC32
+-	---help---
+-	  Enable support for PCMCIA cards containing the
+-	  Atmel at76c502 and at76c504 chips.
++if INTEL_80211
+ 
+-config AT76C50X_USB
+-        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
+-        depends on MAC80211 && WLAN_80211 && USB
+-        select FW_LOADER
+-        ---help---
+-          Enable support for USB Wireless devices using Atmel at76c503,
+-          at76c505 or at76c505a chips.
++source "drivers/net/wireless/ipw2x00/Kconfig"
++source "drivers/net/wireless/iwlwifi/Kconfig"
++source "drivers/net/wireless/iwmc3200wifi/Kconfig"
+ 
+-endif # ATMEL_80211
++endif # INTEL_80211
+ 
+ config CONEXANT_ST_80211
+ 	bool "Intersil / Conexant / STEricsson"
+@@ -347,50 +306,79 @@ config PRISM54
+ 
+ endif # CONEXANT_ST_80211
+ 
+-config ZYDAS_80211
+-	bool "ZyDAS"
++menuconfig MARVELL_80211
++	bool "Marvell"
+ 	depends on WLAN_80211
+ 	---help---
+-	  This will enable the support for ZyDAS wireless drivers. This includes
+-	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
++	  This will enable the support for Marvell wireless drivers. This includes
++	  the drivers: libertas, libertas_tf, and mwl8k.
+ 
+-if ZYDAS_80211
++if MARVELL_80211
++config LIBERTAS
++	tristate "Marvell 8xxx Libertas WLAN driver support"
++	depends on WLAN_80211
++	select WIRELESS_EXT
++	select LIB80211
++	select FW_LOADER
++	---help---
++	  A library for Marvell Libertas 8xxx devices.
+ 
+-source "drivers/net/wireless/zd1211rw/Kconfig"
++config LIBERTAS_USB
++	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
++	depends on LIBERTAS && USB
++	---help---
++	  A driver for Marvell Libertas 8388 USB devices.
+ 
+-config USB_ZD1201
+-	tristate "USB ZD1201 based Wireless device support"
+-	depends on USB && WLAN_80211
+-	select WIRELESS_EXT
++config LIBERTAS_CS
++	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
++	depends on LIBERTAS && PCMCIA
+ 	select FW_LOADER
+ 	---help---
+-	  Say Y if you want to use wireless LAN adapters based on the ZyDAS
+-	  ZD1201 chip.
++	  A driver for Marvell Libertas 8385 CompactFlash devices.
+ 
+-	  This driver makes the adapter appear as a normal Ethernet interface,
+-	  typically on wlan0.
++config LIBERTAS_SDIO
++	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
++	depends on LIBERTAS && MMC
++	---help---
++	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
+ 
+-	  The zd1201 device requires external firmware to be loaded.
+-	  This can be found at http://linux-lc100020.sourceforge.net/
++config LIBERTAS_SPI
++	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
++	depends on LIBERTAS && SPI
++	---help---
++	  A driver for Marvell Libertas 8686 SPI devices.
+ 
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called zd1201.
++config LIBERTAS_DEBUG
++	bool "Enable full debugging output in the Libertas module."
++	depends on LIBERTAS
++	---help---
++	  Debugging support.
+ 
+-endif # ZYDAS_80211
++config LIBERTAS_THINFIRM
++	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
++	depends on WLAN_80211 && MAC80211
++	select FW_LOADER
++	---help---
++	  A library for Marvell Libertas 8xxx devices using thinfirm.
+ 
+-config BROADCOM_80211
+-	bool "Broadcom"
+-	depends on WLAN_80211
++config LIBERTAS_THINFIRM_USB
++	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
++	depends on LIBERTAS_THINFIRM && USB
+ 	---help---
+-	  This will enable the support for Broadcom wireless drivers. This
+-	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
++	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
+ 
+-if BROADCOM_80211
++config MWL8K
++	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
++	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
++	---help---
++	  This driver supports Marvell TOPDOG 802.11 wireless cards.
+ 
+-source "drivers/net/wireless/b43/Kconfig"
+-source "drivers/net/wireless/b43legacy/Kconfig"
++	  To compile this driver as a module, choose M here: the module
++	  will be called mwl8k.  If unsure, say N.
+ 
+-endif # BROADCOM_80211
++endif # MARVELL_80211
++
++source "drivers/net/wireless/rt2x00/Kconfig"
+ 
+ config REALTEK_80211
+ 	bool "Realtek"
+@@ -488,24 +476,38 @@ config RTL8187_LEDS
+ 
+ endif # REALTEK_80211
+ 
+-menuconfig INTEL_80211
+-	bool "Intel"
++source "drivers/net/wireless/wl12xx/Kconfig"
++
++config ZYDAS_80211
++	bool "ZyDAS"
+ 	depends on WLAN_80211
+ 	---help---
+-	  This will enable the support for Intel wireless drivers. This
+-	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
++	  This will enable the support for ZyDAS wireless drivers. This includes
++	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
+ 
+-if INTEL_80211
++if ZYDAS_80211
+ 
+-source "drivers/net/wireless/ipw2x00/Kconfig"
+-source "drivers/net/wireless/iwlwifi/Kconfig"
+-source "drivers/net/wireless/iwmc3200wifi/Kconfig"
++source "drivers/net/wireless/zd1211rw/Kconfig"
+ 
+-endif # INTEL_80211
++config USB_ZD1201
++	tristate "USB ZD1201 based Wireless device support"
++	depends on USB && WLAN_80211
++	select WIRELESS_EXT
++	select FW_LOADER
++	---help---
++	  Say Y if you want to use wireless LAN adapters based on the ZyDAS
++	  ZD1201 chip.
+ 
+-source "drivers/net/wireless/ath/Kconfig"
+-source "drivers/net/wireless/rt2x00/Kconfig"
+-source "drivers/net/wireless/wl12xx/Kconfig"
++	  This driver makes the adapter appear as a normal Ethernet interface,
++	  typically on wlan0.
++
++	  The zd1201 device requires external firmware to be loaded.
++	  This can be found at http://linux-lc100020.sourceforge.net/
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called zd1201.
++
++endif # ZYDAS_80211
+ 
+ config PCMCIA_RAYCS
+ 	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-- 
+1.6.2.5
 
-Great to hear.
-
-> > > instead, I have modprobe configured to run
-> > > "iw reg set GB" after cfg80211 is loaded,
-> >
-> > How do you have modprove configured to do that? Are you using
-> > ieee80211_regdom module parameter? If so please consider just using
-> > 'iw' or hostapd configured as you have below.
-> >
->
-> In /etc/modprobe.d/regulatory, I have a line:
-> install cfg80211 /sbin/modprobe --ignore-install cfg80211 ; /usr/local/sbin/iw reg set GB
-
-Heh, interesting, yeah I guess I have to test such a concoction and I guess using the
-ieee80211_regdom parameter will do the same. Anyway, this is will only help compliance,
-and since you are already setting this on hostapd setting it twice will yield an -EALREADY,
-so I recommend to just do it once and if you do want to set it, set it on hostapd.
-
-> > > My cards both have a regdomain in the EEPROM of 0x0,
-> >
-> > This is something that the manufacturer would have decided on.
-> >
-> > > which my vendor assures
-> > > me is the correct regdomain for cards which don't claim any particular
-> > > regulatory compliance,
-> >
-> > Who exactly did you speak to?
-> >
-> > Atheros uses 0x0 for a default mapping to the US.
-> >
->
-> I spoke to Mikrotik, who manufactured the R52 card I'm using. They assured
-> me that EEPROM regdomain 0x0 was correct for a card with no knowledge of
-> what regulatory domain it would be sold in, and in any case, told me that
-> it works fine with the driver they have from Atheros, so it must be an
-> upstream kernel bug.
-
-Please kindly inform them that this information is incorrect. 0x0 is to be used
-by Atheros devices to map to the "US", always. Mikrotek just so happens to be
-a manufacturer who sells cards for AP purposes. Ubiquity is another example but
-I am aware Ubiquity sells Atheros *modified* hardware to operate either with
-higher EIRP or on different frequency ranges. Anyway, manufactuers in general
-who sell hardware with intentions of supporting AP mode have to test their
-cards for proper operation and calibration and for regulatory purposes. This
-is why you see these cards come with their own FCC ID attached.
-
-So be aware, 0x0 will always map to the US. If the manufacturer did not intend to
-do that they can provide their own regulatory.bin to customers where they can map
-"US" to their own defined regulatory domain. For you to use their regulatory.bin
-they can make public their RSA public key generated by building a modified
-wireless-regdb so users can compile crda to trust it. The pubkey from the
-manfuacturer can be put into the crda/pubkeys/ before compilation. If the
-manufacturer uses another value to put into the EEPROM they should use whatever
-country that value maps to to build their own regulatory.bin. If the manufacturer
-intended for the card they sell to be used in different countries *and* they
-support letting users change the country they can add those countries they
-have tested for regulatory support and have regulatory certification onto their
-regulatory.bin, in this case the default EEPROM mapping should yield a large
-regulatory domain which allows the full capability they want to allow for on their
-cards. That is if their cards are programmed with 0x0 then since ath.ko will ask
-for regulatory_hint("US") for Atheros devices they must map "US" to a big
-regulatory domain, and next their customers can use 'iw reg set' or embed
-the country code as you have in hostapd.conf so that it then restricts the
-regulatory settings further to fit the country you are in, that is the
-intersection between the big regulatory domain and the one intended. Granted
-this means if they used "0x0" "US" is already taken, so they could either
-provide patches for ath.ko for their customers so that "0x0" does not match
-to "US" all the time but to something else like a debug mode like "ZZ", or
-maybe numbers "50" maybe, although I forget if this will fail right now
-on cfg80211, or simply use another alpah2 for "US" for their customers.
-
-Keep in mind though that the functionality to support country selection for
-AP operation is something that I understand as not welcomed by the FCC so
-I would be careful in considertion supporting this as a manufacturer for users
-in the US.
-
-Anyway the advantage of all this is all this can be supported now through userspace.
-It used to be some manufacturers had to provide patches on top of the supported
-Atheros driver to support custom regulatory domains. Provided the manfucturer has
-tested a regulatory domain this is no longer required and these changes can now
-be done completey in userspace.
-
-Feel free to refer Mikrotek, Ubiquity, or any manufacturer selling Atheros cards
-to support AP mode to the above. They should first test their stuff though :)
-
-> > > thus preventing legal
-> > > use of the WiFi bands, but allowing me illegal use.
-> >
-> > This is no different than considering the case of when you ship an
-> > access point from JP to the US and you start beaconing on channel 13.
-> > You are violating local US regulatory laws if your configuration was
-> > to beacon on channel 13. If you take a US AP to the JP you then are
-> > prevented from usage of the allowed channel 13.
-> >
-> > I realize it may seem silly, and in fact I agree, but that is the law.
-> > If you were to bring an AP from JP to the US *with* a regulatory
-> > domain which matches the JP SKUs and therefore are allowed to beacon
-> > on channel 13 we give you the flexibility in Linux to enhance
-> > compliance and indicate you are on in the US and disable channel 13.
-> > Now, as much as I would love for it to be the case that the other way
-> > around should be enabled it is not, and although technically it is
-> > feasible, it is just not something agreeable to current regulatory
-> > agencies. Maybe one day it will be for 802.11, who knows.
-> >
-> > Anyway in your case since the device sends a regulatory hint for "US"
-> > first, and then you say "GB" the card will *always* respect first
-> > "US", and "GB" is just used to further help compliance.
-> >
->
-> So, if I understand correctly, this is not considered a bug by you or the
-> card manufacturer, both of whom insist that the other one is wrong. Am I
-> right in thinking that the easiest way to resolve this is to stick with an
-> unmodified kernel, but to use my own regulatory database that treats US as
-> GB?
-
-Your manufacturer has their information incorrect in thinking 0x0 maps to
-some debug mode to allow all channels. 0x0 maps to "US" by default on
-Atheros drivers. See the above explanation for what your manufacturer
-*can* do.
-
-> > > Secondly, I'm seeing different regulatory settings on each card. "iw
-> > > list" shows me that in the 2GHz band, phy1 is being allowed to use 27.0
-> > > dBm on channels 1-11, whereas I'm only allowed to use 20.0 dBm, but I'm
-> > > allowed channels 1-13.
-> >
-> > I did not understand the last part, can you rephrase this again?
-> >
->
-> Easiest to look at the full iw list output below, and remember that my
-> local regulatory domain is GB, which is also the domain the cards were sold
-> as having.
-
-OK I'll try to do that, but again, I think we already spotted the main issue here:
-your manufacturer should be notified 0x0 is intended by Atheros drivers to map to
-the "US". For support for new upstream Atheros Linux drivers (in the Linux kernel)
-they should revisit how they should support customers for regulatory purposes
-in light of the new regulatory infrastructure which does allow them to modify
-the regulatory database in userspace and sign off on it.
-
-I'll look into the other logs through another thread. Feel free to refer
-manufacturers to this e-mail for documentation purposes.
-
-  Luis
