@@ -1,48 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:38688 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbZHRSZS convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45281 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752984AbZHNAnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 14:25:18 -0400
-Received: by ywh3 with SMTP id 3so5440042ywh.22
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 11:25:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1250619585.4742.1929.camel@desktop>
-References: <445f43ac0908181108g490934c1ib0c805859cba1e44@mail.gmail.com>
-	 <1250618340-32129-1-git-send-email-javier@cozybit.com>
-	 <1250619585.4742.1929.camel@desktop>
-Date: Tue, 18 Aug 2009 11:25:18 -0700
-Message-ID: <445f43ac0908181125v6b1f4e2rc7ac511ae4a6c951@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: New stat counters for multicast and unicast
-	forwarded frames
-From: Javier Cardona <javier@cozybit.com>
-To: Daniel Walker <dwalker@fifo99.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	andrey@cozybit.com, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Aug 2009 20:43:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 00/25] wireless: cleanup and reorganize kconfig
+Date: Thu, 13 Aug 2009 20:42:39 -0400
+Message-Id: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel,
+John, here's a second iteration of this series, this time
+I'm using a menu (config) which expands upon selection for
+groups which have only a few drivers. For groups which do tend
+to pollute your screen I've put them under their own menu
+(menuconfig). At first I had each group with an appended
+"wireless drivers support" but in the end that seemed too
+odd so I removed it and now group drivers are pivoted by
+the vendor driver.
 
-On Tue, Aug 18, 2009 at 11:19 AM, Daniel Walker<dwalker@fifo99.com> wrote:
-> On Tue, 2009-08-18 at 10:59 -0700, Javier Cardona wrote:
->> From: Daniel Walker <dwalker@fifo99.com>
->>
->> This expands on the current fwded_frames stat counter which should be equal to
->> the total of these two new counters.  The new counters are called "fwded_mcast"
->> and "fwded_unicast".
->>
->> Signed-off-by: Daniel Walker <dwalker@fifo99.com>
->> Signed-off-by: Javier Cardona <javier@cozybit.com>
->> ---
->
-> Might have been nice for you to wait for me to review the new version
-> before adding my sign off , but it looks fine.
+I've kept rndis_wlan on its own although only currently
+known chipsets which support it are Broadcom based.
+I also don't expect old rndis_wlan users to know
+that this is a broadcom driver for now so its better
+to keep that apart.
 
-You are right.  Sorry for that.
+Let me know if you like the color of the shed, its
+understandable if you dislike it.
 
-Thanks,
+Luis R. Rodriguez (25):
+  wireless: move iwmc3200wifi closer to the other intel drivers
+  wireless: group intel wireless drivers on kconfig
+  wireless: move MWL8K right below libertas on kconfig
+  wireless: group Marvell wireless in kconfig
+  wireless: move p54 and prism54 drivers closer on kconfig
+  wireless: group Conexant / STEricsson drivers in kconfig
+  wireless: move zd1211rw option closer to old ZyDAS on kconfig
+  wireless: group ZyDAS wireless drivers in kconfig
+  wireless: group Realtek wireless on kconfig
+  wireless: group Broadcom drivers on kconfig
+  wireless: clarify rndis_wlan is not broadcom specific
+  wireless: group Atmel wireless together on kconfig
+  wireless: move AIRO_CS closer to AIRO_CS
+  wireless: group Cisco together on kconfig
+  wireless: move group drivers together
+  wireless: organize group drivers alphabetically
+  wireless: remove IEEE 802.11 description on hostapd
+  wireless: move mac80211_hwsim to top level wireless driver menu
+  wireless: organize individual drivers alphabetically
+  wireless: simplify WLAN_PRE80211 entries
+  wireless: simplify WLAN_80211 entries
+  wireless: remove "Wireless" from rndis kconfig entry
+  wireless: downgrade TI driver from menuconfig to config
+  wl12xx: be consistent with the other group driver entries
+  ath: be consistent with the other group driver entries
 
-Javier
+ drivers/net/wireless/Kconfig              |  455 +++++++++++++++++-----------
+ drivers/net/wireless/ath/Kconfig          |    3 +-
+ drivers/net/wireless/ath/ar9170/Kconfig   |    2 +-
+ drivers/net/wireless/ath/ath5k/Kconfig    |    2 +-
+ drivers/net/wireless/ath/ath9k/Kconfig    |    2 +-
+ drivers/net/wireless/b43/Kconfig          |    2 +-
+ drivers/net/wireless/b43legacy/Kconfig    |    2 +-
+ drivers/net/wireless/hostap/Kconfig       |    3 +-
+ drivers/net/wireless/ipw2x00/Kconfig      |    6 +-
+ drivers/net/wireless/iwlwifi/Kconfig      |    2 +-
+ drivers/net/wireless/iwmc3200wifi/Kconfig |    2 +-
+ drivers/net/wireless/orinoco/Kconfig      |    2 +-
+ drivers/net/wireless/p54/Kconfig          |    2 +-
+ drivers/net/wireless/rt2x00/Kconfig       |    2 +-
+ drivers/net/wireless/wl12xx/Kconfig       |   10 +-
+ drivers/net/wireless/zd1211rw/Kconfig     |    2 +-
+ 16 files changed, 299 insertions(+), 200 deletions(-)
+
