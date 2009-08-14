@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:61919 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753726AbZHZVqT (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58756 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816AbZHNVGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 17:46:19 -0400
-Received: by bwz22 with SMTP id 22so501085bwz.18
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 14:46:20 -0700 (PDT)
-From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] b43: LP-PHY: Revert to the original PHY register write routine
-Date: Wed, 26 Aug 2009 23:46:18 +0200
-Message-Id: <1251323178-7173-1-git-send-email-netrolller.3d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 14 Aug 2009 17:06:37 -0400
+Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+In-Reply-To: <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	 <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zPX4aGb+lqyAxA/DJXo4"
+Date: Fri, 14 Aug 2009 23:06:33 +0200
+Message-Id: <1250283993.4411.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After some discussion on IRC about the PHY register write change,
-I am not sure anymore if this is the right thing to do.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-v3: Use 16-bit writes.
+--=-zPX4aGb+lqyAxA/DJXo4
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/b43/phy_lp.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
+> We can now remove that comment about mac80211 requiring
+> cfg80211 and do that for the user.
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 80f245c..a57c40d 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1496,7 +1496,8 @@ static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
- 
- static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
- {
--	b43_write32(dev, B43_MMIO_PHY_CONTROL, ((u32)value << 16) | reg);
-+	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-+	b43_write16(dev, B43_MMIO_PHY_DATA, value);
- }
- 
- static void b43_lpphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
--- 
-1.5.6
+"now"? What changed to make this possible?
+
+NAK this change, because with it, it's possible to select
+mac80211 =3D Y
+-> cfg80211 =3D Y
+while rfkill =3D M
+
+which will break the kernel build.
+
+johannes
+
+--=-zPX4aGb+lqyAxA/DJXo4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKhdHVAAoJEODzc/N7+QmacW0P/0SsXVnWJE5VB6wbMg3CQga1
+btrxCjej2jGSLc+7LCgeTvsOJgti4OeYd8XnGTybWgabwoqN8UXtvkoyYL56qIw7
+JJHHjtU1zzdepfX8VGcBG+gSAMn1gypEBP2QRpAdxvnASw6YZA6oSMODvVR2F9I3
+bk4EiAV63EWlgnx7MUc/AI6qV7cDuANWZ7iCYWLbemjWrn1WMI3l5336h00ZeUtV
+/pMHhBDwB1unj7S5U7G/LPH1meE+3r5K0vkuP5qYqtrWW1B7h8e9gIVEj+4bn72N
+NjOo+p0wrCI9sUfGQ3xIoGEg/JcPCWxiQd+X5E61sYCw1ZlsLHJROGb6qqRkYtlR
+iunkw5O3WgxRtWbamJqQlDWURuXsVUkBiZF8PLVC3owdNuaWvclNA8WGTb3JyxCx
+cOqOOBv0rQ0P3thiya3X6ePAOhOZo7WbwFP/h277G0ZMjaR6WGjTulN/ktaQftlS
+Ndikx0ndlo4YiK5ezEM9+vUwq863e+zjUw9tQwEkS6n0M3ScuC6HH91HBCQfXHZY
+VCsXEns1HPEGVenx5+zG5BTG1jSuCOb096ZAauxAUpx606cVJCWOuc20N4iCefAX
+eShQtDoUrx3PQ+sf0384p8jdX0X5pMgjsEIaFCMMo/Kix+fF85l03ejK8hRI/2vE
+T4NcLrHdyoUAwR+w9bAT
+=AKMu
+-----END PGP SIGNATURE-----
+
+--=-zPX4aGb+lqyAxA/DJXo4--
 
