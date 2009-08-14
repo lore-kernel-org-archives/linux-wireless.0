@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46850 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018AbZHLQ5C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:57:02 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:57:04 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:45326 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756528AbZHNAnF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 20:43:05 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<ath5k-devel@lists.ath5k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] ath: advance ath.ko with one more helper
-Date: Wed, 12 Aug 2009 09:56:58 -0700
-Message-ID: <1250096221-11000-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v2 24/25] wl12xx: be consistent with the other group driver entries
+Date: Thu, 13 Aug 2009 20:43:03 -0400
+Message-Id: <1250210584-13374-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a common structure where we can start stuffing shared items
-and introduces a helper for both ath5k and ath9k's use.
+Other TI drivers can land here now.
 
-Luis R. Rodriguez (3):
-  ath: add common ath_rxbuf_alloc() and make ath9k use it
-  ath5k: use common ath.ko ath_rxbuf_alloc()
-  ath5k: use bit shift operators for cache line size
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/ath/Kconfig       |    4 +--
- drivers/net/wireless/ath/ath.h         |   30 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/base.c  |   23 ++++++------------
- drivers/net/wireless/ath/ath5k/base.h  |    3 +-
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++-
- drivers/net/wireless/ath/ath9k/main.c  |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c  |   40 +++----------------------------
- drivers/net/wireless/ath/main.c        |   36 ++++++++++++++++++++++++++++
- 8 files changed, 85 insertions(+), 57 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath.h
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 78029fd..f4510f7 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -1,5 +1,5 @@
+ config WL12XX
+-	boolean "TI wl12xx driver support"
++	boolean "Texas Instruments"
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	---help---
+ 	  This will enable TI wl12xx driver support. The drivers make
+-- 
+1.6.2.5
 
