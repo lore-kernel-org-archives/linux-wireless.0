@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39338 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:39199 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932817AbZHNU2K (ORCPT
+	with ESMTP id S1757144AbZHNU0J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:28:10 -0400
+	Fri, 14 Aug 2009 16:26:09 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Johannes Berg\"" <johannes@sipsolutions.net>
-Subject: [PATCH v4 18/34] wireless: move mac80211_hwsim to top level wireless driver menu
-Date: Fri, 14 Aug 2009 16:25:43 -0400
-Message-Id: <1250281559-13041-19-git-send-email-lrodriguez@atheros.com>
+	Christian Lamparter <chunkeey@web.de>
+Subject: [PATCH v4 05/34] wireless: move p54 and prism54 drivers closer on kconfig
+Date: Fri, 14 Aug 2009 16:25:30 -0400
+Message-Id: <1250281559-13041-6-git-send-email-lrodriguez@atheros.com>
 In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211_hwsim is not a device driver for real hardware it is a
-driver we can use to simulate a real device for testing mac80211.
-Move it to the top wireless driver menu by removing its dependency
-on WLAN_80211.
-
-While at it move it outside of the WLAN_80211 section as we'll
-be touching all those later.
-
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg" <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@web.de>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/Kconfig |   26 +++++++++++++-------------
- 1 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index a6801fa..51aa041 100644
+index fdf0257..cfd192e 100644
 --- a/drivers/net/wireless/Kconfig
 +++ b/drivers/net/wireless/Kconfig
-@@ -558,19 +558,6 @@ config ADM8211
+@@ -284,6 +284,8 @@ config PCMCIA_WL3501
+ 	 It has basic support for Linux wireless extensions and initial
+ 	 micro support for ethtool.
  
- 	  Thanks to Infineon-ADMtek for their support of this driver.
- 
--config MAC80211_HWSIM
--	tristate "Simulated radio testing tool for mac80211"
--	depends on MAC80211 && WLAN_80211
--	---help---
--	  This driver is a developer testing tool that can be used to test
--	  IEEE 802.11 networking stack (mac80211) functionality. This is not
--	  needed for normal wireless LAN usage and is only for testing. See
--	  Documentation/networking/mac80211_hwsim for more information on how
--	  to use this tool.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called mac80211_hwsim.  If unsure, say N.
--
- source "drivers/net/wireless/hostap/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- 
-@@ -606,4 +593,17 @@ config USB_NET_RNDIS_WLAN
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
-+config MAC80211_HWSIM
-+	tristate "Simulated radio testing tool for mac80211"
-+	depends on MAC80211
-+	---help---
-+	  This driver is a developer testing tool that can be used to test
-+	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-+	  needed for normal wireless LAN usage and is only for testing. See
-+	  Documentation/networking/mac80211_hwsim for more information on how
-+	  to use this tool.
++source "drivers/net/wireless/p54/Kconfig"
 +
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mac80211_hwsim.  If unsure, say N.
-+
- endmenu
+ config PRISM54
+ 	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus' 
+ 	depends on PCI && EXPERIMENTAL && WLAN_80211
+@@ -503,7 +505,6 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
+ 
+-source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath/Kconfig"
+ 
+ menuconfig INTEL_80211
 -- 
 1.6.2.5
 
