@@ -1,93 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:4916 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753840AbZHCUmF convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45301 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756517AbZHNAnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 16:42:05 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so561698fga.17
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 13:42:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908032238.18030.mb@bu3sch.de>
-References: <4A7610AE.5000908@gmail.com> <200908031115.12929.mb@bu3sch.de>
-	<69e28c910908030655g4ea70567y30ca2e68a77b872b@mail.gmail.com>
-	<200908032238.18030.mb@bu3sch.de>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 3 Aug 2009 22:41:44 +0200
-Message-ID: <69e28c910908031341n439384b4ned41f2983ab1de29@mail.gmail.com>
-Subject: Re: [PATCH RESEND] b43: implement baseband init for LP-PHY <= rev1
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Aug 2009 20:43:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 15/25] wireless: move group drivers together
+Date: Thu, 13 Aug 2009 20:42:54 -0400
+Message-Id: <1250210584-13374-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/3 Michael Buesch <mb@bu3sch.de>:
-> On Monday 03 August 2009 15:55:29 Gábor Stefanik wrote:
->> On Mon, Aug 3, 2009 at 11:15 AM, Michael Buesch<mb@bu3sch.de> wrote:
->> > On Monday 03 August 2009 11:13:37 Michael Buesch wrote:
->> >> On Monday 03 August 2009 00:18:22 Gábor Stefanik wrote:
->> >> > Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
->> >> > boardflags_hi values to defines.
->> >> > Implement b43_phy_copy for easier copying between registers, as needed
->> >> > by LP-PHY init.
->> >>
->> >> > +   if (bus->sprom.boardflags_hi&  B43_BFH_FEM_BT)&&
->> >> > +      (bus->chip_id == 0x5354)&&
->> >> > +      (bus->chip_package == SSB_CHIPPACK_BCM4712S)) {
->> >> > +           b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x0006);
->> >> > +           b43_phy_write(dev, B43_LPPHY_GPIO_SELECT, 0x0005);
->> >> > +           b43_phy_write(dev, B43_LPPHY_GPIO_OUTEN, 0xFFFF);
->> >> > +           b43_hf_write(dev, b43_hf_read | 0x0800ULL<<  32);
->> >> > +   }
->> >>
->> >> The HF write is wrong. Read the specification:
->> >> http://bcm-v4.sipsolutions.net/802.11/Mhf
->> >>
->> >> Patch otherwise looks ok.
->> >
->> > Sorry, I replied to the wrong mail. But this does also apply to V2 patch.
->> >
->> > --
->> > Greetings, Michael.
->> >
->>
->> In V2, this line is as follows (b43_hf_read corrected):
->>
->> b43_hf_write(dev, b43_hf_read(dev) | 0x0800ULL << 32)
->>
->> The command in the specs is this:
->>
->> mhf(2, 0x800, 0x800, 1)
->>
->> 2 means B43_SHM_SH_HOSTFHI, 0x800 is the bit to set, and 1 is
->> allbands, which, per Larry, can be ignored in our current
->> implementation (it is specific to the caching behavior of the mips
->> driver).
->>
->> From what I read in b43_hf_write, writing to HOSTFHI can be achieved
->> by left-shifting by 32 (16 for HOSTFMI).
->>
->> Is the problem that we write all 3 hostflags registers here?
->>
->> (BTW are there any other known host flags? If there are, maybe we
->> should #define them.)
->>
->
-> My point is that update_mhf does not write to actual hardware, as far
-> as I understand the code. Larry, can you please explain that part of the
-> specs?
->
+The group drivers are now above, individual drivers below.
 
->From 802.11/Mhf:
-"If core->clk is not zero AND band->mhfs[idx] is not equal to tmp:
-   1. Write band->mhfs[idx] to Shared Memory Address addr[idx]"
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |  156 +++++++++++++++++++++---------------------
+ 1 files changed, 77 insertions(+), 79 deletions(-)
 
-This looks to me like it does indeed write to SHM, though the actual
-mhf() tries to avoid writing to SHM if possible, while b43_hf_write
-doesn't perform this optimization. (We don't have a band->mhfs, nor a
-bandstate[] array.)
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 6594a3a..4ed50f6 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -110,19 +110,6 @@ menuconfig WLAN_80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
+-config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-	depends on PCMCIA && WLAN_80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
+-	  (PC-card) wireless Ethernet networking card to your computer.
+-	  Please read the file <file:Documentation/networking/ray_cs.txt> for
+-	  details.
+-
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called ray_cs.  If unsure, say N.
+-
+ menuconfig MARVELL_80211
+ 	bool "Marvell"
+ 	depends on WLAN_80211
+@@ -297,15 +284,6 @@ config AT76C50X_USB
+ 
+ endif # ATMEL_80211
+ 
+-config PCMCIA_WL3501
+-      tristate "Planet WL3501 PCMCIA cards"
+-      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-      select WIRELESS_EXT
+-       ---help---
+-         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
+-	 It has basic support for Linux wireless extensions and initial
+-	 micro support for ethtool.
+-
+ config CONEXANT_ST_80211
+ 	bool "Intersil / Conexant / STEricsson"
+ 	depends on WLAN_80211
+@@ -400,36 +378,19 @@ config USB_ZD1201
+ 
+ endif # ZYDAS_80211
+ 
+-config USB_NET_RNDIS_WLAN
+-	tristate "Wireless RNDIS USB support"
+-	depends on USB && WLAN_80211 && EXPERIMENTAL
+-	depends on CFG80211
+-	select USB_USBNET
+-	select USB_NET_CDCETHER
+-	select USB_NET_RNDIS_HOST
+-	select WIRELESS_EXT
++config BROADCOM_80211
++	bool "Broadcom"
++	depends on WLAN_80211
+ 	---help---
+-	  This is a driver for wireless RNDIS devices.
+-	  These are USB based adapters found in devices such as:
++	  This will enable the support for Broadcom wireless drivers. This
++	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
+ 
+-	  Buffalo WLI-U2-KG125S
+-	  U.S. Robotics USR5421
+-	  Belkin F5D7051
+-	  Linksys WUSB54GSv2
+-	  Linksys WUSB54GSC
+-	  Asus WL169gE
+-	  Eminent EM4045
+-	  BT Voyager 1055
+-	  Linksys WUSB54GSv1
+-	  U.S. Robotics USR5420
+-	  BUFFALO WLI-USB-G54
++if BROADCOM_80211
+ 
+-	  All of these devices are based on Broadcom 4320 chip which is the
+-	  only wireless RNDIS chip known to date. Technically RNDIS follows
+-	  a specification and although only Broadcom currently supports this
+-	  other vendors could technically follow the implementation as well.
++source "drivers/net/wireless/b43/Kconfig"
++source "drivers/net/wireless/b43legacy/Kconfig"
+ 
+-	  If you choose to build a module, it'll be called rndis_wlan.
++endif # BROADCOM_80211
+ 
+ config REALTEK_80211
+ 	bool "Realtek"
+@@ -527,6 +488,47 @@ config RTL8187_LEDS
+ 
+ endif # REALTEK_80211
+ 
++menuconfig INTEL_80211
++	bool "Intel"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Intel wireless drivers. This
++	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
++
++if INTEL_80211
++
++source "drivers/net/wireless/ipw2x00/Kconfig"
++source "drivers/net/wireless/iwlwifi/Kconfig"
++source "drivers/net/wireless/iwmc3200wifi/Kconfig"
++
++endif # INTEL_80211
++
++source "drivers/net/wireless/ath/Kconfig"
++source "drivers/net/wireless/rt2x00/Kconfig"
++source "drivers/net/wireless/wl12xx/Kconfig"
++
++config PCMCIA_RAYCS
++	tristate "Aviator/Raytheon 2.4GHz wireless support"
++	depends on PCMCIA && WLAN_80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
++	  (PC-card) wireless Ethernet networking card to your computer.
++	  Please read the file <file:Documentation/networking/ray_cs.txt> for
++	  details.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called ray_cs.  If unsure, say N.
++
++config PCMCIA_WL3501
++      tristate "Planet WL3501 PCMCIA cards"
++      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
++      select WIRELESS_EXT
++       ---help---
++         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
++	 It has basic support for Linux wireless extensions and initial
++	 micro support for ethtool.
++
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -567,42 +569,38 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
+ 
+-source "drivers/net/wireless/p54/Kconfig"
+-source "drivers/net/wireless/ath/Kconfig"
+-
+-menuconfig INTEL_80211
+-	bool "Intel"
+-	depends on WLAN_80211
+-	---help---
+-	  This will enable the support for Intel wireless drivers. This
+-	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
+-
+-if INTEL_80211
+-
+-source "drivers/net/wireless/ipw2x00/Kconfig"
+-source "drivers/net/wireless/iwlwifi/Kconfig"
+-source "drivers/net/wireless/iwmc3200wifi/Kconfig"
+-
+-endif # INTEL_80211
+-
+ source "drivers/net/wireless/hostap/Kconfig"
++source "drivers/net/wireless/orinoco/Kconfig"
+ 
+-config BROADCOM_80211
+-	bool "Broadcom"
+-	depends on WLAN_80211
++config USB_NET_RNDIS_WLAN
++	tristate "Wireless RNDIS USB support"
++	depends on USB && WLAN_80211 && EXPERIMENTAL
++	depends on CFG80211
++	select USB_USBNET
++	select USB_NET_CDCETHER
++	select USB_NET_RNDIS_HOST
++	select WIRELESS_EXT
+ 	---help---
+-	  This will enable the support for Broadcom wireless drivers. This
+-	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
+-
+-if BROADCOM_80211
++	  This is a driver for wireless RNDIS devices.
++	  These are USB based adapters found in devices such as:
+ 
+-source "drivers/net/wireless/b43/Kconfig"
+-source "drivers/net/wireless/b43legacy/Kconfig"
++	  Buffalo WLI-U2-KG125S
++	  U.S. Robotics USR5421
++	  Belkin F5D7051
++	  Linksys WUSB54GSv2
++	  Linksys WUSB54GSC
++	  Asus WL169gE
++	  Eminent EM4045
++	  BT Voyager 1055
++	  Linksys WUSB54GSv1
++	  U.S. Robotics USR5420
++	  BUFFALO WLI-USB-G54
+ 
+-endif # BROADCOM_80211
++	  All of these devices are based on Broadcom 4320 chip which is the
++	  only wireless RNDIS chip known to date. Technically RNDIS follows
++	  a specification and although only Broadcom currently supports this
++	  other vendors could technically follow the implementation as well.
+ 
+-source "drivers/net/wireless/rt2x00/Kconfig"
+-source "drivers/net/wireless/orinoco/Kconfig"
+-source "drivers/net/wireless/wl12xx/Kconfig"
++	  If you choose to build a module, it'll be called rndis_wlan.
+ 
+ endmenu
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.2.5
+
