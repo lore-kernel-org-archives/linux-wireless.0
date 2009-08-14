@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59044 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbZH2JIp (ORCPT
+Received: from mail-px0-f196.google.com ([209.85.216.196]:42757 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755996AbZHNVbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2009 05:08:45 -0400
-Subject: rndis endian warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8Ahw2qOvVMbARTg8AFjz"
-Date: Sat, 29 Aug 2009 11:08:43 +0200
-Message-Id: <1251536923.3456.37.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 14 Aug 2009 17:31:18 -0400
+Received: by pxi34 with SMTP id 34so461187pxi.4
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:31:19 -0700 (PDT)
+Message-ID: <4A85D7A3.9020009@lwfinger.net>
+Date: Fri, 14 Aug 2009 16:31:15 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: LP-PHY: Fix another TX power control abuse
+References: <4A85D070.6070702@gmail.com>
+In-Reply-To: <4A85D070.6070702@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gábor Stefanik wrote:
+> This should fix the remaining WARN_ON.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> drivers/net/wireless/b43/phy_lp.c |    7 ++++---
+> 1 files changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c
+> b/drivers/net/wireless/b43/phy_lp.c
+> index bf89173..3872a31 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1059,7 +1059,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>     bool old_txg_ovr;
+>     u8 old_bbmult;
+>     u16 old_rf_ovr, old_rf_ovrval, old_afe_ovr, old_afe_ovrval,
+> -        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl, old_txpctl;
+> +        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
+> +    enum b43_lpphy_txpctl_mode old_txpctl;
+>     u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
+>     int loopback, i, j, inner_sum;
+> 
+> @@ -1077,8 +1078,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>     old_rf2_ovr = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2);
+>     old_rf2_ovrval = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2_VAL);
+>     old_phy_ctl = b43_phy_read(dev, B43_LPPHY_LP_PHY_CTL);
+> -    old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
+> -                    B43_LPPHY_TX_PWR_CTL_CMD_MODE;
+> +    lpphy_read_tx_pctl_mode_from_hardware(dev);
+> +    old_txpctl = lpphy->txpctl_mode;
+> 
+>     lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+>     lpphy_disable_crs(dev);
 
---=-8Ahw2qOvVMbARTg8AFjz
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Yes, this one got rid of the warnings.
 
-Hi,
-
-There are a whole bunch of endianness warnings from sparse in rndis --
-please run
-
-make M=3Ddrivers/net/wireless C=3D2 CF=3D-D__CHECK_ENDIAN__
-
-and check the result.
-
-johannes
-
---=-8Ahw2qOvVMbARTg8AFjz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKmPAUAAoJEODzc/N7+QmanGkP/RTJUJD54mCAboss47Ts5Dgv
-eumuG6k+v7Q5SFZz1QfA1CVW4xt4586KBxs1l8kcYw3enFz7C3u+uxRXJwB7/DU4
-hunfALQ6T3xhgqH1QzTv/yeM2mAc0B9A4569q0FdwqA6h9tjzQb8IJBNbDb8Cekh
-qkHvp5NHkeD7OYzHwUhqrAxHxORWUlUBYoAKbMA+z89GcumZDcYh6uX1XRHU8NKk
-LneiACX64oJRkDl7LUIMtaFo1aHZvBZIYRIGDAcJWxT+EW9nhn5eeAZEunce54cQ
-og6aTFvwKOQO6d3PmzKoBQwc7E71NDGJ0ftVq2gxX3PK22iD4iuux8QtlBOyYzL6
-gl2njefWZozasK/52zo6LySc6ryEAJoAVjsJEjP9B5SfufgkvQZpwAkXN+3/bvDI
-0cZv2zbu1GbI94BALD75AdAYL5yNv+vShtT99liX5oX5tURpGe8ffRnO34xUOU2l
-to2KVt/0WcmYFzxXLW2UcggzzHsggj489q8dolBuCIbd+r/1gKklwsxrWXZ3G/pu
-K3YFWPUmxmvhhQMzDow/OGAVAuWBZmbqY6gy0IaAgDhuKMdPzDmY9A7fGcpvMgYM
-k3xUS4lPpHa+spUES9icOjBQa2ak/KNvHo3Uu+S/tTL8zadbnZ7lww09UE7156B8
-992sDelYzvyvPqlgd7aO
-=UHMh
------END PGP SIGNATURE-----
-
---=-8Ahw2qOvVMbARTg8AFjz--
+Larry
 
