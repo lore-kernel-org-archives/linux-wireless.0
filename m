@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34020 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752531AbZHMJLN (ORCPT
+Received: from coruscant.huijgen.tk ([84.245.31.19]:28336 "EHLO
+	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755562AbZHNMUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 05:11:13 -0400
-Date: Thu, 13 Aug 2009 12:11:03 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: Re: [PATCH] nl80211 connect API support
-Message-ID: <20090813091103.GA1826@jm.kir.nu>
-References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com> <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
+	Fri, 14 Aug 2009 08:20:45 -0400
+Message-ID: <4A855670.1090902@huijgen.tk>
+Date: Fri, 14 Aug 2009 14:20:00 +0200
+From: Mark Huijgen <mark.sf.net@huijgen.tk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] b43: Add LP-PHY firmware loading support
+References: <4A8555F5.5090603@gmail.com>
+In-Reply-To: <4A8555F5.5090603@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2009 at 04:55:31PM +0800, Zhu Yi wrote:
+Still missing a break in the bandswitch initvals.
 
-> -	 * authenticate - Request driver to authenticate
-> +	 * authenticate - Request driver to authenticate (deprecated)
+Mark
 
-> +	 * This is an optional function that to make compatibility for wireless
-> +	 * stack that doesn't support connect API when driver SME is used
-> +	 * (WPA_DRIVER_FLAGS_SME).
+Gábor Stefanik wrote:
+> Add support for loading LP-PHY firmware to b43_try_request_fw.
+>
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> drivers/net/wireless/b43/main.c |   25 ++++++++++++++++++++++++-
+> 1 files changed, 24 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/main.c
+> b/drivers/net/wireless/b43/main.c
+> index fbcbe4f..51767fa 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct
+> b43_request_fw_context *ctx)
+>         filename = "ucode5";
+>     else if ((rev >= 11) && (rev <= 12))
+>         filename = "ucode11";
+> -    else if (rev >= 13)
+> +    else if (rev == 13)
+>         filename = "ucode13";
+> +    else if (rev == 14)
+> +        filename = "ucode14";
+> +    else if (rev >= 15)
+> +        filename = "ucode15";
+>     else
+>         goto err_no_ucode;
+>     err = b43_do_request_fw(ctx, filename, &fw->ucode);
+> @@ -2111,6 +2115,16 @@ static int b43_try_request_fw(struct
+> b43_request_fw_context *ctx)
+>         else
+>             goto err_no_initvals;
+>         break;
+> +    case B43_PHYTYPE_LP:
+> +        if (rev == 13)
+> +            filename = "lp0initvals13";
+> +        else if (rev == 14)
+> +            filename = "lp0initvals14";
+> +        else if (rev >= 15)
+> +            filename = "lp0initvals15";
+> +        else
+> +            goto err_no_initvals;
+> +        break;
+>     default:
+>         goto err_no_initvals;
+>     }
+> @@ -2145,6 +2159,15 @@ static int b43_try_request_fw(struct
+> b43_request_fw_context *ctx)
+>         else
+>             goto err_no_initvals;
+>         break;
+> +    case B43_PHYTYPE_LP:
+> +        if (rev == 13)
+> +            filename = "lp0bsinitvals13";
+> +        else if (rev == 14)
+> +            filename = "lp0bsinitvals14";
+> +        else if (rev >= 15)
+> +            filename = "lp0bsinitvals15";
+> +        else
+> +            goto err_no_initvals;
+>     default:
+>         goto err_no_initvals;
+>     }
 
-Thanks for the patch. If I understood this correctly, wpa_supplicant
-would be converted to use the new connect command whenever it is
-supported. While it is nice to get support for connect added, this is
-not how it should be done as it breaks all the new work we have been
-enabling with mac80211. The separate auth/assoc commands should be the
-default operation and only if the driver does not support this, should
-the connect command be used.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
