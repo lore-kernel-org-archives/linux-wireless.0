@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sinikuusama.dnainternet.net ([83.102.40.134]:37485 "EHLO
-	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751912AbZH1J7Z (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:2565 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691AbZHNVCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 05:59:25 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH 8/8] rndis_wlan: enable infrastructure before setting random
-	essid
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 28 Aug 2009 12:59:26 +0300
-Message-ID: <20090828095926.10554.15679.stgit@fate.lan>
-In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
-References: <20090828095849.10554.58857.stgit@fate.lan>
+	Fri, 14 Aug 2009 17:02:47 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so138675fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:02:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1250283432.8137.19.camel@mj>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	<1250281559-13041-14-git-send-email-lrodriguez@atheros.com>
+	<1250283432.8137.19.camel@mj>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 14 Aug 2009 23:02:28 +0200
+Message-ID: <69e28c910908141402l41ff4a75xd9552aabf756b2f6@mail.gmail.com>
+Subject: Re: [PATCH v4 13/34] wireless: move AIRO_CS closer to AIRO_CS
+To: Pavel Roskin <proski@gnu.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Random essid must be set to turn on radio when not connected. If device is
-in ad-hoc mode, this results 'media connect' indications with the random
-essid which should be ignored.
+On Fri, Aug 14, 2009 at 10:57 PM, Pavel Roskin<proski@gnu.org> wrote:
+> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>
+> You mean "wireless: move AIRO_CS closer to AIRO"
+>
+> Otherwise it's sort of pointless :-)
+>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+Unless AIRO_CS has a split personality. :-)
 
- drivers/net/wireless/rndis_wlan.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index d117620..c5a674d 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -921,6 +921,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
- /*
-  * common functions
-  */
-+static int set_infra_mode(struct usbnet *usbdev, int mode);
- static void restore_keys(struct usbnet *usbdev);
- static int rndis_check_bssid_list(struct usbnet *usbdev);
- 
-@@ -1014,6 +1015,11 @@ static int disassociate(struct usbnet *usbdev, int reset_ssid)
- 	/* disassociate causes radio to be turned off; if reset_ssid
- 	 * is given, set random ssid to enable radio */
- 	if (reset_ssid) {
-+		/* Set device to infrastructure mode so we don't get ad-hoc
-+		 * 'media connect' indications with the random ssid.
-+		 */
-+		set_infra_mode(usbdev, NDIS_80211_INFRA_INFRA);
-+
- 		ssid.length = cpu_to_le32(sizeof(ssid.essid));
- 		get_random_bytes(&ssid.essid[2], sizeof(ssid.essid)-2);
- 		ssid.essid[0] = 0x1;
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
