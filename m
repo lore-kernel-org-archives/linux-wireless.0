@@ -1,70 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f183.google.com ([209.85.211.183]:43284 "EHLO
-	mail-yw0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275AbZHFQ5L convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45308 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756518AbZHNAnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 12:57:11 -0400
-Received: by ywh13 with SMTP id 13so1236243ywh.15
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 09:57:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1249576886.14919.16.camel@mj>
-References: <4A7A8F7E.6020503@redfish-solutions.com> <1249569993.6446.2.camel@jdl-desktop>
-	<1249576886.14919.16.camel@mj>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 6 Aug 2009 09:56:51 -0700
-Message-ID: <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
-Subject: Re: CRDA and cross-compilation
-To: Pavel Roskin <proski@gnu.org>
-Cc: Jon Loeliger <jdl@bigfootnetworks.com>,
-	"Philip A. Prindeville" <philipp_subx@redfish-solutions.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 13 Aug 2009 20:43:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 19/25] wireless: organize individual drivers alphabetically
+Date: Thu, 13 Aug 2009 20:42:58 -0400
+Message-Id: <1250210584-13374-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 6, 2009 at 9:41 AM, Pavel Roskin<proski@gnu.org> wrote:
-> On Thu, 2009-08-06 at 09:46 -0500, Jon Loeliger wrote:
->> On Thu, 2009-08-06 at 01:08 -0700, Philip A. Prindeville wrote:
->> > Who currently owns CRDA?
->> >
->> > I started to stare at cross-compiling issues, but realized that we need
->> > two versions of reglib.o and print-regdom.o...
->> >
->> > One to link with regdumpdb (compiled with HOSTCC) and one to link with
->> > everything else (compiled with TARGET_CC)...
->> >
->> > No easy way to do this without a lot of changes.
->>
->> I posted a 5-part patch series to address this issue.
->> To the best of my knowledge, it has not been applied yet.
->>
->> You can find it here:
->>
->> http://article.gmane.org/gmane.linux.kernel.wireless.general/35350
->
-> I objected against using the misleading use of the "TARGET" work in some
-> variables, but there was no reaction.  Failure to react to objections is
-> the likely reason it wasn't applied.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
+ 1 files changed, 47 insertions(+), 48 deletions(-)
 
-Indeed.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 59e4664..45e9cf2 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
+-config STRIP
+-	tristate "STRIP (Metricom starmode radio IP)"
+-	depends on INET && WLAN_PRE80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y if you have a Metricom radio and intend to use Starmode Radio
+-	  IP. STRIP is a radio protocol developed for the MosquitoNet project
+-	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
+-	  traffic using Metricom radios.  Metricom radios are small, battery
+-	  powered, 100kbit/sec packet radio transceivers, about the size and
+-	  weight of a cellular telephone. (You may also have heard them called
+-	  "Metricom modems" but we avoid the term "modem" because it misleads
+-	  many people into thinking that you can plug a Metricom modem into a
+-	  phone line and use it as a modem.)
+-
+-	  You can use STRIP on any Linux machine with a serial port, although
+-	  it is obviously most useful for people with laptop computers. If you
+-	  think you might get a Metricom radio in the future, there is no harm
+-	  in saying Y to STRIP now, except that it makes the kernel a bit
+-	  bigger.
+-
+-	  To compile this as a module, choose M here: the module will be
+-	  called strip.
+-
+ config ARLAN
+ 	tristate "Aironet Arlan 655 & IC2200 DS support"
+ 	depends on ISA && !64BIT && WLAN_PRE80211
+@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called wavelan_cs.  If unsure, say N.
+ 
++config STRIP
++	tristate "STRIP (Metricom starmode radio IP)"
++	depends on INET && WLAN_PRE80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y if you have a Metricom radio and intend to use Starmode Radio
++	  IP. STRIP is a radio protocol developed for the MosquitoNet project
++	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
++	  traffic using Metricom radios.  Metricom radios are small, battery
++	  powered, 100kbit/sec packet radio transceivers, about the size and
++	  weight of a cellular telephone. (You may also have heard them called
++	  "Metricom modems" but we avoid the term "modem" because it misleads
++	  many people into thinking that you can plug a Metricom modem into a
++	  phone line and use it as a modem.)
++
++	  You can use STRIP on any Linux machine with a serial port, although
++	  it is obviously most useful for people with laptop computers. If you
++	  think you might get a Metricom radio in the future, there is no harm
++	  in saying Y to STRIP now, except that it makes the kernel a bit
++	  bigger.
++
++	  To compile this as a module, choose M here: the module will be
++	  called strip.
++
+ config PCMCIA_NETWAVE
+ 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
+ 	depends on PCMCIA && WLAN_PRE80211
+@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called netwave_cs.  If unsure, say N.
+ 
+-
+ menuconfig WLAN_80211
+ 	bool "Wireless LAN (IEEE 802.11)"
+ 	depends on NETDEVICES
+@@ -509,28 +508,6 @@ config USB_ZD1201
+ 
+ endif # ZYDAS_80211
+ 
+-config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-	depends on PCMCIA && WLAN_80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
+-	  (PC-card) wireless Ethernet networking card to your computer.
+-	  Please read the file <file:Documentation/networking/ray_cs.txt> for
+-	  details.
+-
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called ray_cs.  If unsure, say N.
+-
+-config PCMCIA_WL3501
+-      tristate "Planet WL3501 PCMCIA cards"
+-      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-      select WIRELESS_EXT
+-       ---help---
+-         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
+-	 It has basic support for Linux wireless extensions and initial
+-	 micro support for ethtool.
+-
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -558,8 +535,30 @@ config ADM8211
+ 
+ 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 
+-source "drivers/net/wireless/hostap/Kconfig"
++config PCMCIA_RAYCS
++	tristate "Aviator/Raytheon 2.4GHz wireless support"
++	depends on PCMCIA && WLAN_80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
++	  (PC-card) wireless Ethernet networking card to your computer.
++	  Please read the file <file:Documentation/networking/ray_cs.txt> for
++	  details.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called ray_cs.  If unsure, say N.
++
+ source "drivers/net/wireless/orinoco/Kconfig"
++source "drivers/net/wireless/hostap/Kconfig"
++
++config PCMCIA_WL3501
++      tristate "Planet WL3501 PCMCIA cards"
++      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
++      select WIRELESS_EXT
++       ---help---
++         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
++	 It has basic support for Linux wireless extensions and initial
++	 micro support for ethtool.
+ 
+ config USB_NET_RNDIS_WLAN
+ 	tristate "Wireless RNDIS USB support"
+-- 
+1.6.2.5
 
-> I also think that you add too much complexity to the Makefile.
-
-Agreed.
-
-> Also, the use of .config is not common.  Most valuables can be specified
-> on the command line.  That would override the definitions in Makefile,
-> and that's how it's done.
-
-Yeah for something so simple as CRDA it seems overkill to have a .config.
-
-> For instance, you can have this in Makefile:
->
-> HOSTCC = gcc
-> CC = $(HOSTCC)
->
-> Running "make CC=/opt/mips/bin/gcc" would override CC but not HOSTCC.
-
-ACK, is it possible to make it simpler?
-
-  Luis
