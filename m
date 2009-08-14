@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:27063 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.153]:52312 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386AbZHaPtw (ORCPT
+	with ESMTP id S1754437AbZHNKNa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 11:49:52 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so502621fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 08:49:53 -0700 (PDT)
-Message-ID: <4A9BF11D.1060205@lwfinger.net>
-Date: Mon, 31 Aug 2009 10:49:49 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 14 Aug 2009 06:13:30 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so50611fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 03:13:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Tobias Schlemmer <keinstein_junior@gmx.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8187b Problem with tx level
-References: <h7eo7q$7ks$1@ger.gmane.org> <4A9B0479.209@lwfinger.net> <h7g6rd$dvb$1@ger.gmane.org>
-In-Reply-To: <h7g6rd$dvb$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1250210584-13374-12-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	<1250210584-13374-12-git-send-email-lrodriguez@atheros.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 14 Aug 2009 12:13:10 +0200
+Message-ID: <69e28c910908140313p7d138635q51ee71c362aaa7f6@mail.gmail.com>
+Subject: Re: [PATCH v2 11/25] wireless: clarify rndis_wlan is not broadcom
+	specific
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tobias Schlemmer wrote:
-> Hi,
-> 
-> thank you for your quick answer.
-> 
-> Larry Finger schrieb:
->> Tobias Schlemmer wrote:
->>> Interestingly iwconfig always reports TX power of 20dBm, regardless of
->>> the actual tx power, but always a TX rate of 1M. Setting the latter to a
->>> higher value results in packet loss.
->>
->> Where are you located? Your log says you are using the EU regulatory
->> domain; however, that is no longer valid. You should add a line like
->>
->> options cfg80211 ieee80211_regdom=XX
->>
->> to /etc/modprobe.conf.local. From your name, I would guess the XX
->> should be DE.
-> 
-> I guess, too. For some reason it is not corrected in some tutorials.
-> 
->> It is likely that the 20 dBm is set by mac80211 as the maximum allowed
->> by your local regulations. That value is in fact correct for most
->> locations in the EU.
-> 
-> As far as I know, Germany has a maximum of 100mW, which should be 20dBm,
-> if I'm right. This means the driver reports full power though the device
-> actually seems to send with much less power. The power gets lost
-> somewhere between this display and the antenna. Since there exists a
-> working driver, I can hardly expect it on the hardware side.
-> 
-> I've attached the output of iwconfig for the two drivers. The
-> proprietary works, the compat-wireless one even failed to authenticate
-> (auth timeout) today. I don't know which tx power the proprietary driver
-> uses. If you can tell me how to find out, I'll try that.
-> 
-> Some additional information: The automatic rate setting seems to work
-> somehow. Last night it grow to 11M for a short time (reporting signal
-> stregth of -3dBm).
-> 
-> Maybe, the tx power gets only reduced, but never increased. That's what
-> the AP sees.
-> 
->> My rtl8187b runs at a full 54 Mbs and operates at at least 15 m from
->> my AP. I don't run AP firmware that lets me see the signal strength
->> from the STA.
-> 
-> That dosn't surprise me. The archives don't talk about similar problems.
+On Fri, Aug 14, 2009 at 2:42 AM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/Kconfig |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index cb5aae6..a1bdb51 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -403,7 +403,9 @@ config USB_NET_RNDIS_WLAN
+>          BUFFALO WLI-USB-G54
+>
+>          All of these devices are based on Broadcom 4320 chip which is the
+> -         only wireless RNDIS chip known to date.
+> +         only wireless RNDIS chip known to date. Technically RNDIS follows
+> +         a specification and although only Broadcom currently supports this
+> +         other vendors could technically follow the implementation as well.
 
-While you are still available, please provide the dmesg output for the
-r8187 (vendor) driver beginning at the point that the USB device is
-recognized. With rtl8187, it looks like:
+To the aforementioned "other vendors" - please do not follow this
+brain-dead, Microsoft-based spec! :-)
 
-[  346.940054] usb 1-1: new high speed USB device using ehci_hcd and
-address 4
-[  347.086851] usb 1-1: configuration #1 chosen from 1 choice
-[  347.418280] cfg80211: Calling CRDA for country: EU
-[  348.348579] phy0: Selected rate control algorithm 'minstrel'
-[  348.349108] phy0: hwaddr e3c7a080, RTL8187BvE V0 + rtl8225z2
-[  348.349131] usbcore: registered new interface driver rtl8187
+BTW, there are a few missing commas in the 3rd added line:
+"a specification, and although only Broadcom currently support this,"
+would be better.
 
-There may be additional info following this.
+>
+>          If you choose to build a module, it'll be called rndis_wlan.
+>
+> --
+> 1.6.2.5
+>
+>
 
-In looking at my copy of the r8187 driver code, I see some branches
-that may not be in our driver, but I need to see what ID info their
-driver sees.
 
-Have a good vacation.
-
-Larry
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
