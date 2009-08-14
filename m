@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbZHLNOb (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:60960 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755156AbZHNS3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 09:14:31 -0400
-Subject: Re: [PATCH 1/2] mac802154: add a software MAC 802.15.4
- implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sergey Lapin <slapin@ossfans.org>
-In-Reply-To: <20090812130605.GA17169@doriath.ww600.siemens.net>
-References: <1249913800-10176-1-git-send-email-dbaryshkov@gmail.com>
-	 <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com>
-	 <1249914466.32614.13.camel@johannes.local>
-	 <20090811202304.GA6303@doriath.ww600.siemens.net>
-	 <1250023198.13529.69.camel@johannes.local>
-	 <20090812130605.GA17169@doriath.ww600.siemens.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4xkkTI3pjNNfpRSvxoZh"
-Date: Wed, 12 Aug 2009 15:13:57 +0200
-Message-Id: <1250082837.8784.21.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 14 Aug 2009 14:29:47 -0400
+Received: by bwz22 with SMTP id 22so1295212bwz.18
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 11:29:47 -0700 (PDT)
+Message-ID: <4A85AD1B.1060008@gmail.com>
+Date: Fri, 14 Aug 2009 20:29:47 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Fix reading old mode in the set TX power control
+ routine
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Check the mode the hardware is in, not the mode we used the last time.
 
---=-4xkkTI3pjNNfpRSvxoZh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+Mark, please test if this fixes the TX power control WARN_ON you were seeing.
 
-On Wed, 2009-08-12 at 17:06 +0400, Dmitry Eremin-Solenikov wrote:
+ drivers/net/wireless/b43/phy_lp.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> > In addition to that, you can't put anything into skb->cb, then push the
-> > frame to the master netdev, and expect things in skb->cb to still be
-> > there when the frame arrives at the master netdev. Not sure you do that
-> > (I hope not because that would be very buggy), but eventually you'll
-> > probably find that you do want that, etc.
->=20
-> Hmm. It works for us. Could you please tell me more about the problems
-> with skb->cb ?
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 292ee51..76457f7 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1015,9 +1015,9 @@ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+ 	enum b43_lpphy_txpctl_mode oldmode;
+ 
+-	oldmode = lpphy->txpctl_mode;
+ 	lpphy_read_tx_pctl_mode_from_hardware(dev);
+-	if (lpphy->txpctl_mode == mode)
++	oldmode = lpphy->txpctl_mode;
++	if (oldmode == mode)
+ 		return;
+ 	lpphy->txpctl_mode = mode;
+ 
+-- 
+1.6.2.4
 
-Uh, well, you don't own the skb->cb between dev_queue_xmit() and
-ndo_start_xmit(). In fact, your phy_cb data will be overwritten by the
-qdisc.
 
-So your code is completely and utterly broken just like mac80211 was for
-a long time.
-
-Also, looking into this a bit more, I see no reason to allocate a work
-struct every time you get a frame -- better just queue them up and stick
-everything else into skb->cb. In fact, you don't need a master netdev
-here anyway, just move all code from ieee802154_master_hard_start_xmit()
-into ieee802154_net_xmit().
-
-johannes
-
---=-4xkkTI3pjNNfpRSvxoZh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKgsASAAoJEODzc/N7+Qma1iwP/1/hQZ1LeYX5v4mwqN69nqV/
-mTvn2qoyfi3As4hiuf/9OrDsvCj1fAbcGO8tgGlmOs3wvt+zAN0ZVtS99F8weZWI
-6U7EB65orKfqR1aTPFG7oIzBNu/YqngAk479PJcYWNNyNmQJBromn7sKEMEDBzey
-cwALVhWEmQpMOe0gQOk9Ro7o37QEiFVIIWOaSf41sceGwEXSgufr4s/w9CweoIu9
-Jo1Vqz43wO5jfcmCc3Zqe0cUhVUmg+tIdEyXugnV5K7LR0WucEA9Z4hFIYgSzHTW
-PdXDmMfuWFIt0/zTrYkjPEsuHbB/24pdspa/lei6HuXotSiEftBTg1e3pGP5ig84
-DzdH1E675m7PV6uGQY6ooV/Pu4X69vE21rRZjEyZS1rmthWXpI6MaQZFfUKw8CnF
-Fkm+6mMAHDg7crWMbp0K/DHPXbGjyQ1kLI0RFBEket6CjOnsvos87aKmlwZkqbfR
-4qyEw5xpUPC9UEVSTueOLrddSzfpRyBWaTAxa9xHSNeLjPohUCt7PjTh7cSA510Q
-OxNylGGALMspKao8sw+SbKtzGzA68IQHyEGWf5BXhK+x2tf4DP2dMn5AWE3MNw7D
-mmkby78NOgZ5nZRkl3OEzA3lTPhnv/+zkI1qu3Xare++6V7nytpPo6WTtSq1+f3W
-lGWThUeZ4xmDd1HTfwOM
-=Ihhq
------END PGP SIGNATURE-----
-
---=-4xkkTI3pjNNfpRSvxoZh--
 
