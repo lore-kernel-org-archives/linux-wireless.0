@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:51002 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbZH0P23 convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39388 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932833AbZHNU3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 11:28:29 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "Zhu\, Yi" <yi.zhu@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlagn: show_version() displays confusing/wrong firmware version
-References: <1251379989-20728-1-git-send-email-bjorn@mork.no>
-	<1251385041.3805.17.camel@rc-desk>
-Date: Thu, 27 Aug 2009 17:09:05 +0200
-In-Reply-To: <1251385041.3805.17.camel@rc-desk> (reinette chatre's message of
-	"Thu, 27 Aug 2009 07:57:21 -0700")
-Message-ID: <87r5uxb8fi.fsf@nemi.mork.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 14 Aug 2009 16:29:01 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v4 24/34] wireless: Update TI kconfig description
+Date: Fri, 14 Aug 2009 16:25:49 -0400
+Message-Id: <1250281559-13041-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre <reinette.chatre@intel.com> writes:
+Other TI drivers can land here now.
 
-> Hi Bjørn,
->
-> Which kernel/repo is your patch based on?
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/wl12xx/Kconfig |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Oh, sorry for not including that vital information.  I'm afraid it is
-against Linus' tree at 
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
-and not any of the wireless/networking trees.
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 78029fd..46afa88 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -1,9 +1,8 @@
+ config WL12XX
+-	boolean "TI wl12xx driver support"
++	boolean "Texas Instruments"
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	---help---
+-	  This will enable TI wl12xx driver support. The drivers make
+-	  use of the mac80211 stack.
++	  This will enable support for Texas Instruments wireless chipsets.
+ 
+ if WL12XX
+ 
+-- 
+1.6.2.5
 
-"git log drivers/net/wireless/iwlwifi/iwl-agn.c" shows this as the last
-commit affecting iwl-agn.c before my change:
-
-commit 872ed1902f511a8947021c562f5728a5bf0640b5
-Author: Reinette Chatre <reinette.chatre@intel.com>
-Date:   Thu Jul 9 10:33:37 2009 -0700
-
-    iwlwifi: only show active power level via sysfs
-    
-
-
-Bjørn
