@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46017 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:45300 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932851AbZHNUaL (ORCPT
+	with ESMTP id S1756514AbZHNAnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:30:11 -0400
+	Thu, 13 Aug 2009 20:43:04 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v4 33/34] wireless: remove mac80211 rate selection extra menu
-Date: Fri, 14 Aug 2009 16:25:58 -0400
-Message-Id: <1250281559-13041-34-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 14/25] wireless: group Cisco together on kconfig
+Date: Thu, 13 Aug 2009 20:42:53 -0400
+Message-Id: <1250210584-13374-15-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can just display this upon enabling mac80211 with an
-'if MAC80211 != n' check.
+There's only a few of these so we keep them under
+a config option which expands upon selection.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/Kconfig |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/Kconfig |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 6293b21..8e4c8cf 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -28,8 +28,7 @@ config MAC80211
- 	  When built as a module mac80211 will be built as mac80211.ko, if not sure
- 	  you should build this as a module.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index d54a622..6594a3a 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -195,6 +195,16 @@ config MWL8K
  
--menu "Rate control algorithm selection"
--	depends on MAC80211 != n
-+if MAC80211 != n
+ endif # MARVELL_80211
  
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EMBEDDED
-@@ -76,7 +75,7 @@ config MAC80211_RC_DEFAULT
- 	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default ""
++config CISCO_80211
++	bool "Cisco"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Cisco wireless drivers. This
++	  includes the Cisco Aironet ISA and PCI drivers and the Cisco
++	  Aironet PCMCIA drivers.
++
++if CISCO_80211
++
+ config AIRO
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 ISA and PCI cards"
+ 	depends on ISA_DMA_API && WLAN_80211 && (PCI || BROKEN)
+@@ -233,6 +243,8 @@ config AIRO_CS
+ 	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+ 	  Cisco Linux utilities can be used to configure the card.
  
--endmenu
-+endif
- 
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
++endif # CISCO_80211
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
 -- 
 1.6.2.5
 
