@@ -1,122 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34957 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbZHTSq4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 14:46:56 -0400
-Subject: [PATCH] cfg80211: check lost scans later, fix bug
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
+Received: from mga11.intel.com ([192.55.52.93]:37088 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756462AbZHNHz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2009 03:55:27 -0400
+Subject: Re: [PATCH] nl80211 connect API support
+From: Zhu Yi <yi.zhu@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <1250229046.7696.0.camel@johannes.local>
+References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com>
+	 <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
+	 <20090813091103.GA1826@jm.kir.nu> <1250155777.4972.9.camel@debian>
+	 <20090813104635.GA7330@jm.kir.nu>  <1250223474.4972.47.camel@debian>
+	 <1250229046.7696.0.camel@johannes.local>
 Content-Type: text/plain
-Date: Thu, 20 Aug 2009 20:46:51 +0200
-Message-Id: <1250794011.9307.8.camel@johannes.local>
+Date: Fri, 14 Aug 2009 15:55:27 +0800
+Message-Id: <1250236527.4972.64.camel@debian>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we lose a scan, cfg80211 tries to clean up after
-the driver. However, it currently does this too early,
-it does this in GOING_DOWN already instead of DOWN, so
-it may happen with mac80211. Besides fixing this, also
-make it more robust by leaking the scan request so if
-the driver later actually finishes the scan, it won't
-crash. Also check in ___cfg80211_scan_done whether a
-scan request is still pending and exit if not.
+On Fri, 2009-08-14 at 13:50 +0800, Johannes Berg wrote:
+> On Fri, 2009-08-14 at 12:17 +0800, Zhu Yi wrote:
+> 
+> > Johannes, I think we need a way in cfg80211 to tell connect vs.
+> > auth/assoc. The current capability method (nl80211_send_wiphy) cannot do
+> > this. For example,
+> > 
+> > 	if (dev->ops->connect || dev->ops->auth)
+> > 		NLA_PUT_U32(msg, i, NL80211_CMD_CONNECT);
+> > 
+> > We need to either make NL80211_CMD_CONNECT only depends on ops->connect
+> > or make NL80211_CMD_AUTH depends on ops->auth. Johannes, which one do
+> > you prefer?
+> 
+> The latter is already there as far as I can see?
+> 
+>         CMD(auth, AUTHENTICATE);
+>         CMD(assoc, ASSOCIATE);
+>         CMD(deauth, DEAUTHENTICATE);
+>         CMD(disassoc, DISASSOCIATE);
+> 
+> so you should be able to check for these.
 
-Reported-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Tested-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/core.c |    4 +++-
- net/wireless/core.h |    2 +-
- net/wireless/scan.c |   21 ++++++++++++++++++---
- 3 files changed, 22 insertions(+), 5 deletions(-)
+My bad. I'll use NL80211_CMD_AUTHENTICATE.
 
---- wireless-testing.orig/net/wireless/core.c	2009-08-20 20:29:10.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-08-20 20:29:12.000000000 +0200
-@@ -662,7 +662,7 @@ static void wdev_cleanup_work(struct wor
- 
- 	if (WARN_ON(rdev->scan_req && rdev->scan_req->dev == wdev->netdev)) {
- 		rdev->scan_req->aborted = true;
--		___cfg80211_scan_done(rdev);
-+		___cfg80211_scan_done(rdev, true);
- 	}
- 
- 	cfg80211_unlock_rdev(rdev);
-@@ -753,6 +753,8 @@ static int cfg80211_netdev_notifier_call
- 		default:
- 			break;
- 		}
-+		break;
-+	case NETDEV_DOWN:
- 		dev_hold(dev);
- 		schedule_work(&wdev->cleanup_work);
- 		break;
---- wireless-testing.orig/net/wireless/core.h	2009-08-20 20:29:10.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2009-08-20 20:29:12.000000000 +0200
-@@ -370,7 +370,7 @@ void cfg80211_sme_scan_done(struct net_d
- void cfg80211_sme_rx_auth(struct net_device *dev, const u8 *buf, size_t len);
- void cfg80211_sme_disassoc(struct net_device *dev, int idx);
- void __cfg80211_scan_done(struct work_struct *wk);
--void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev);
-+void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
- void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
- 
- struct ieee80211_channel *
---- wireless-testing.orig/net/wireless/scan.c	2009-08-20 20:29:10.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2009-08-20 20:35:13.000000000 +0200
-@@ -18,7 +18,7 @@
- 
- #define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
- 
--void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev)
-+void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- {
- 	struct cfg80211_scan_request *request;
- 	struct net_device *dev;
-@@ -26,8 +26,13 @@ void ___cfg80211_scan_done(struct cfg802
- 	union iwreq_data wrqu;
- #endif
- 
-+	ASSERT_RDEV_LOCK();
-+
- 	request = rdev->scan_req;
- 
-+	if (!request)
-+		return;
-+
- 	dev = request->dev;
- 
- 	/*
-@@ -53,7 +58,17 @@ void ___cfg80211_scan_done(struct cfg802
- 	dev_put(dev);
- 
- 	rdev->scan_req = NULL;
--	kfree(request);
-+
-+	/*
-+	 * OK. If this is invoked with "leak" then we can't
-+	 * free this ... but we've cleaned it up anyway. The
-+	 * driver failed to call the scan_done callback, so
-+	 * all bets are off, it might still be trying to use
-+	 * the scan request or not ... if it accesses the dev
-+	 * in there (it shouldn't anyway) then it may crash.
-+	 */
-+	if (!leak)
-+		kfree(request);
- }
- 
- void __cfg80211_scan_done(struct work_struct *wk)
-@@ -64,7 +79,7 @@ void __cfg80211_scan_done(struct work_st
- 			    scan_done_wk);
- 
- 	cfg80211_lock_rdev(rdev);
--	___cfg80211_scan_done(rdev);
-+	___cfg80211_scan_done(rdev, false);
- 	cfg80211_unlock_rdev(rdev);
- }
- 
-
+Thanks,
+-yi
 
