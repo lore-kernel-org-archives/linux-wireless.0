@@ -1,48 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:59341 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbZH3XcK (ORCPT
+Received: from coruscant.huijgen.tk ([84.245.31.19]:28367 "EHLO
+	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640AbZHNMWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 19:32:10 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so716028eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 16:32:12 -0700 (PDT)
-Message-ID: <4A9B0BF8.3040505@lwfinger.net>
-Date: Sun, 30 Aug 2009 18:32:08 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 14 Aug 2009 08:22:47 -0400
+Message-ID: <4A855483.8070208@huijgen.tk>
+Date: Fri, 14 Aug 2009 14:11:47 +0200
+From: Mark Huijgen <mark.sf.net@huijgen.tk>
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Inter 5300 AGN with unsupported EEPROM
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH] b43: Add LP-PHY firmware loading support
+References: <4A854FDF.5020208@gmail.com>
+In-Reply-To: <4A854FDF.5020208@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reinette,
+Missing break in initval case switches, see below.
 
-While helping on the openSUSE wireless forum, I ran across another
-unit with the same unsupported EEPROM as in the thread at
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1997.
-
-The thread at openSUSE is at
- http://forums.opensuse.org/network-internet/wireless/420589-intel-5300-wifi-minipci-card-asus-g71gx-rx05-bestbuy-3.html
-
-Most of the thread is useless as the OP wouldn't supply critical data
-and persisted in various rants, but on the 3rd page, he finally
-provided the output of 'dmesg | grep iwl', which was
-
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
-iwlagn: Copyright(c) 2003-2008 Intel Corporation
-iwlagn 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlagn 0000:07:00.0: setting latency timer to 64
-iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=0x24
-iwlagn: Unsuported EEPROM VER=0x114 < 0x11a CALIB=0x3 < 0x4
-iwlagn 0000:07:00.0: PCI INT A disabled
-iwlagn: probe of 0000:07:00.0 failed with error -22
-
-The OP states that this device came from Best Buy. What is the current
-scoop on this EEPROM version?
-
-Thanks,
-
-Larry
+Gábor Stefanik wrote:
+> Add support for loading LP-PHY firmware to b43_try_request_fw.
+>
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> For anyone hoping that the channel switch patches will make their LP card work - this is also definitely required.
+>
+> Mark, this doesn't fix your problem specifically, but it will be needed after your problem is fixed.
+>
+>  drivers/net/wireless/b43/main.c |   24 +++++++++++++++++++++++-
+>  1 files changed, 23 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index fbcbe4f..1e657fe 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+>  		filename = "ucode5";
+>  	else if ((rev >= 11) && (rev <= 12))
+>  		filename = "ucode11";
+> -	else if (rev >= 13)
+> +	else if (rev == 13)
+>  		filename = "ucode13";
+> +	else if (rev == 14)
+> +		filename = "ucode14";
+> +	else if (rev >= 15)
+> +		filename = "ucode15";
+>  	else
+>  		goto err_no_ucode;
+>  	err = b43_do_request_fw(ctx, filename, &fw->ucode);
+> @@ -2111,6 +2115,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+>  		else
+>  			goto err_no_initvals;
+>  		break;
+> +	case B43_PHYTYPE_LP:
+> +		if (rev == 13)
+> +			filename = "lp0initvals13";
+> +		else if (rev == 14)
+> +			filename = "lp0initvals14";
+> +		else if (rev >= 15)
+> +			filename = "lp0initvals15";
+> +		else
+> +			goto err_no_initvals;
+>   
+break;
+>  	default:
+>  		goto err_no_initvals;
+>  	}
+> @@ -2145,6 +2158,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+>  		else
+>  			goto err_no_initvals;
+>  		break;
+> +	case B43_PHYTYPE_LP:
+> +		if (rev == 13)
+> +			filename = "lp0bsinitvals13";
+> +		else if (rev == 14)
+> +			filename = "lp0bsinitvals14";
+> +		else if (rev >= 15)
+> +			filename = "lp0bsinitvals15";
+> +		else
+> +			goto err_no_initvals;
+>   
+break;
+>  	default:
+>  		goto err_no_initvals;
+>  	}
+>   
 
