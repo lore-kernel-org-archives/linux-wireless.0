@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f215.google.com ([209.85.218.215]:44910 "EHLO
-	mail-bw0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757879AbZHGNCN convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45297 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756220AbZHNAnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 09:02:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <200908071324.45269.elendil@planet.nl>
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
-	 <200908071324.45269.elendil@planet.nl>
-Date: Fri, 7 Aug 2009 13:56:43 +0100
-Message-ID: <c6b1100b0908070556sb3f4f80sc757d8b100cbcb3c@mail.gmail.com>
-Subject: Re: ath5k - strange regulatory domain change
-From: Chris Clayton <chris2553@googlemail.com>
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 13 Aug 2009 20:43:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 13/25] wireless: move AIRO_CS closer to AIRO_CS
+Date: Thu, 13 Aug 2009 20:42:52 -0400
+Message-Id: <1250210584-13374-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Frans,
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-2009/8/7 Frans Pop <elendil@planet.nl>:
-> Chris Clayton wrote:
->> Because of some problems with my Belkin Wireless G card  (model
->> F5D7010) and the rt61pci driver, I've started to use a "no-name" card
->> that is supported by the ath5k driver.
->>
->> A problem is that I have come across is that for some reason the CN
->> regulatory domain is being set automatically. This doesn't happen with
->> the Belkin (rt61) card. I have the following line in
->> /etc/modprobe.d/modprobe.conf to set the regulatory domain to GB:
->>
->> options cfg80211 ieee80211_regdom=GB
->
-> This issue has already been discussed extensively (after I reported it).
-> Please see the following thread: http://lkml.org/lkml/2009/7/8/421. It
-> contains a lot of information from the wireless maintainers.
->
-
-To sum this up then (as I understand things):
-
-1. I am the system administrator (root);
-2. I am using a valid (albeit deprecated from 2.6.31) method to tell
-the wireless infrastructure that I want the regulatory domain set to
-GB;
-3. GB is a valid code; and
-4. the wireless infrastructure sets the regulatory domain to CN.
-5. in 2.6.30, the wireless infrastructure does what I (the root user)
-tell it to do.
-
-That's a regression in my book. Oh well! I do have the iw and crda
-applications installed, so I've taken that route of setting the
-regulatory domain to GB.
-
-Interestingly, if I make no attempt to set the regulatory domain at
-all, it get sets to World and CN never comes into it. It's only if I
-try to set it to GB via the module parameter that it gets set to CN.
-To me, that seems broken.
-
-Thanks again,
-
-Chris
-
-> Cheers.
-> FJP
->
-
-
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 823dc71..d54a622 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -213,6 +213,26 @@ config AIRO
+ 
+ 	  The driver can be compiled as a module and will be named "airo".
+ 
++config AIRO_CS
++	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
++	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
++	select WIRELESS_EXT
++	select CRYPTO
++	select CRYPTO_AES
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
++	  802.11 wireless cards.  This driver is the same as the Aironet
++	  driver part of the Linux Pcmcia package.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
++	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
++	  802.11b cards.
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
+@@ -265,26 +285,6 @@ config AT76C50X_USB
+ 
+ endif # ATMEL_80211
+ 
+-config AIRO_CS
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+-	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
+-	  802.11 wireless cards.  This driver is the same as the Aironet
+-	  driver part of the Linux Pcmcia package.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
+-	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
+-	  802.11b cards.
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+ config PCMCIA_WL3501
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
 -- 
-No, Sir; there is nothing which has yet been contrived by man, by which
-so much happiness is produced as by a good tavern or inn - Doctor Samuel
-Johnson
+1.6.2.5
+
