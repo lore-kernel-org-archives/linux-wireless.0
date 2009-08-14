@@ -1,104 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:45668 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757426AbZHGKem (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:34:42 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 11/23] wl1251: reorder wl1251_cmd_join() arguments
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:34:05 +0300
-Message-ID: <20090807103404.31717.55173.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+Received: from mail.atheros.com ([12.36.123.2]:38217 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752619AbZHNBvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 13 Aug 2009 21:51:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 18:51:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [RFT] ar9170: check mpdu len on single mpdu before processing
+Date: Thu, 13 Aug 2009 18:51:16 -0700
+Message-ID: <1250214676-10608-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+When ar9170 recieves a single MPDU in RX stream mode
+we set the header and tail pointers for processing
+but we never check if the MPDU will actually have
+it given by the length passed. Should we have run into
+this we would be chowing down on memory which may
+not be ours.
 
-It's more common to have beacon interval before dtim period. Also use
-bool instead of u8.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+Cc: Stephen Chen <Stephen.Chen@atheros.com>
+Cc: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
 
- drivers/net/wireless/wl12xx/wl1251_cmd.c  |    4 ++--
- drivers/net/wireless/wl12xx/wl1251_cmd.h  |    4 ++--
- drivers/net/wireless/wl12xx/wl1251_main.c |    8 ++++----
- 3 files changed, 8 insertions(+), 8 deletions(-)
+I won't be able to test this for a bit, was reviewing
+RX stream support and noticed this.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-index 53f5da6..50daa9b 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-@@ -251,8 +251,8 @@ out:
- 	return ret;
- }
+BTW Chris, Stephen points out we *can* use packet mode for
+RX with Otus devices. I haven't yet checked if ar9170 supports
+it but I think that's what the Windows driver uses. It seems
+RX stream mode is used to reduce the number of interrupt and
+can help on some platforms. The down side to RX stream mode
+seems to be that it "may introduce buffer copy as a side effect",
+not sure what that is though, Stephen, can you clarify?
+
+ drivers/net/wireless/ath/ar9170/main.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index ea8c941..75c317d 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1040,9 +1040,27 @@ static void ar9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
  
--int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 dtim_interval,
--		    u16 beacon_interval, u8 wait)
-+int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
-+		    u8 dtim_interval, bool wait)
- {
- 	unsigned long timeout;
- 	struct cmd_join *join;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
-index 64f228d..f9177d6 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
-@@ -36,8 +36,8 @@ int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len);
- int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
- 		   void *bitmap, u16 bitmap_len, u8 bitmap_control);
- int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable);
--int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 dtim_interval,
--		    u16 beacon_interval, u8 wait);
-+int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u16 beacon_interval,
-+		    u8 dtim_interval, bool wait);
- int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
- int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
- 			   size_t len);
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 8c88fe2..47b82fa 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -325,7 +325,7 @@ static void wl1251_filter_work(struct work_struct *work)
- 		goto out;
+ 	case AR9170_RX_STATUS_MPDU_SINGLE:
+ 		/* single mpdu - has plcp (head) and phy status (tail) */
++
++		if (unlikely(mpdu_len < sizeof(struct ar9170_rx_head))) {
++			if (ar9170_nag_limiter(ar))
++				printk(KERN_ERR "%s: rx'd single mpdu "
++				       "with no header.\n",
++				       wiphy_name(ar->hw->wiphy));
++			return;
++		}
++
+ 		head = (void *) buf;
  
- 	/* FIXME: replace the magic numbers with proper definitions */
--	ret = wl1251_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+	ret = wl1251_cmd_join(wl, wl->bss_type, 100, 1, false);
- 	if (ret < 0)
- 		goto out_sleep;
+ 		mpdu_len -= sizeof(struct ar9170_rx_head);
++
++		if (unlikely(mpdu_len < sizeof(struct ar9170_rx_phystatus))) {
++			if (ar9170_nag_limiter(ar))
++				printk(KERN_ERR "%s: rx'd single mpdu"
++				       "with no tail.\n",
++				       wiphy_name(ar->hw->wiphy));
++			return ;
++		}
++
+ 		mpdu_len -= sizeof(struct ar9170_rx_phystatus);
  
-@@ -565,7 +565,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (channel != wl->channel) {
- 		/* FIXME: use beacon interval provided by mac80211 */
--		ret = wl1251_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+		ret = wl1251_cmd_join(wl, wl->bss_type, 100, 1, false);
- 		if (ret < 0)
- 			goto out_sleep;
- 
-@@ -1113,7 +1113,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 			goto out;
- 
- 		if (wl->bss_type != BSS_TYPE_IBSS) {
--			ret = wl1251_cmd_join(wl, wl->bss_type, 5, 100, 1);
-+			ret = wl1251_cmd_join(wl, wl->bss_type, 100, 5, true);
- 			if (ret < 0)
- 				goto out_sleep;
- 			wl1251_warning("Set ctsprotect failed %d", ret);
-@@ -1139,7 +1139,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 		if (ret < 0)
- 			goto out;
- 
--		ret = wl1251_cmd_join(wl, wl->bss_type, 1, 100, 0);
-+		ret = wl1251_cmd_join(wl, wl->bss_type, 100, 1, false);
- 
- 		if (ret < 0)
- 			goto out;
+ 		buf += sizeof(struct ar9170_rx_head);
+-- 
+1.6.3.3
 
