@@ -1,82 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44601 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768AbZHMTjO (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:46028 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756603AbZHNMXy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:39:14 -0400
-Subject: Re: [PATCH 10/20] wireless: group Broadcom wireless drivers on
- kconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Fri, 14 Aug 2009 08:23:54 -0400
+Received: by fxm11 with SMTP id 11so1131817fxm.39
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 05:23:54 -0700 (PDT)
+Message-ID: <4A85575A.2050303@gmail.com>
+Date: Fri, 14 Aug 2009 14:23:54 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
 	Michael Buesch <mb@bu3sch.de>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-In-Reply-To: <1250191909-21682-11-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-	 <1250191909-21682-11-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-cvKFWuW6SDOixysPnV6l"
-Date: Thu, 13 Aug 2009 21:39:06 +0200
-Message-Id: <1250192346.21250.6.camel@johannes.local>
-Mime-Version: 1.0
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] b43: Add LP-PHY firmware loading support
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add support for loading LP-PHY firmware to b43_try_request_fw.
 
---=-cvKFWuW6SDOixysPnV6l
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+V3: Add yet another missing "break".
+V2: Add a missing "break".
 
-On Thu, 2009-08-13 at 15:31 -0400, Luis R. Rodriguez wrote:
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: G=C3=A1bor Stefanik <netrolller.3d@gmail.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/Kconfig |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> index 65397fe..1a8e9bd 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -378,6 +378,14 @@ config USB_ZD1201
-> =20
->  endif # ZYDAS_80211
-> =20
-> +menuconfig BROADCOM_80211
-> +	bool "Broadcom Wireless Cards"
-> +	depends on WLAN_80211
-> +	---help---
-> +	  This will enable the support for Broadcom wireless drivers. This
-> +	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
+ drivers/net/wireless/b43/main.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
 
-Ok ... so what's the point of all these patches?
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index fbcbe4f..51767fa 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		filename = "ucode5";
+ 	else if ((rev >= 11) && (rev <= 12))
+ 		filename = "ucode11";
+-	else if (rev >= 13)
++	else if (rev == 13)
+ 		filename = "ucode13";
++	else if (rev == 14)
++		filename = "ucode14";
++	else if (rev >= 15)
++		filename = "ucode15";
+ 	else
+ 		goto err_no_ucode;
+ 	err = b43_do_request_fw(ctx, filename, &fw->ucode);
+@@ -2111,6 +2115,16 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_LP:
++		if (rev == 13)
++			filename = "lp0initvals13";
++		else if (rev == 14)
++			filename = "lp0initvals14";
++		else if (rev >= 15)
++			filename = "lp0initvals15";
++		else
++			goto err_no_initvals;
++		break;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+@@ -2145,6 +2159,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_LP:
++		if (rev == 13)
++			filename = "lp0bsinitvals13";
++		else if (rev == 14)
++			filename = "lp0bsinitvals14";
++		else if (rev >= 15)
++			filename = "lp0bsinitvals15";
++		else
++			goto err_no_initvals;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+-- 
+1.6.2.4
 
-Also, I don't think rndis wlan is always broadcom, and in an case it's
-almost never marked as such.
 
-johannes
-
---=-cvKFWuW6SDOixysPnV6l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhGvXAAoJEODzc/N7+QmaIiwQAM0NyXyJvJP/WAvbGbDc3+01
-wDXuy6D/BL3An5v/Y5pgvKJ3kf4d+SlAakxUD9T6F3mrfKsDMjfPrkrcSXzyzsd+
-ZjeE3huSqCc9ooZUVOnw8n/NXmQD5il7xzm5m/nOn793AKFKONNsiCSwS6/UIKLX
-Ba5VGbNguA5J+0R2pfACFukU5P4VrRjthi9BpCwszX0RbtPJz44e5Cs9Et8Xwh6d
-y1kFR5sUnlRkPgOi22qR3xHPbGraQZbbBKkjCRyoxIf6iHYhtjHUfK1e01N3Mw4/
-HpCHJlS/ioKVQytlDFjghTJBIuilWtFLQ9ttu9GwJ3ZlDHX9EoYctVcOoYJVbZlW
-cqfMag1ez/kic9IqBLb7QDVcpZI+RwknYEF66ZjCpvm4GghhhJ0wfvTcziTNO6TZ
-31fdwTStpvNRR2z5QdlGXAXFYcKXf+DJ3Abd7dCPc4oFaGifHMIJBBdjE9HmIVRo
-z/Bre6tIgeCjswOrR20Cuefk0uLepTz8EwYLavA8b8mT/icnL4Xxl3nXsUWhyFvv
-WMgHuD93heLpX974lc2jpKrCSJQlWUzzQqOuCa8qOTkVDHGcsbPvjjY4KMgrc5bZ
-u6zpRw9JygppICzaruDIPs5aAxiZlAAYtu+BPGxcZkSYQ/t+7S85MBs+uqYPsHMP
-dy4gvmTuPPNYLFVc8WBW
-=+Jih
------END PGP SIGNATURE-----
-
---=-cvKFWuW6SDOixysPnV6l--
 
