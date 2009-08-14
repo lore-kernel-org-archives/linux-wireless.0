@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38217 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752619AbZHNBvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 21:51:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 18:51:18 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:39270 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755879AbZHNU1f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2009 16:27:35 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [RFT] ar9170: check mpdu len on single mpdu before processing
-Date: Thu, 13 Aug 2009 18:51:16 -0700
-Message-ID: <1250214676-10608-1-git-send-email-lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	=?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v4 10/34] wireless: group Broadcom drivers on kconfig
+Date: Fri, 14 Aug 2009 16:25:35 -0400
+Message-Id: <1250281559-13041-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When ar9170 recieves a single MPDU in RX stream mode
-we set the header and tail pointers for processing
-but we never check if the MPDU will actually have
-it given by the length passed. Should we have run into
-this we would be chowing down on memory which may
-not be ours.
+This moves Broadcom wireless drivers into their own menu.
+There are only 2 Broadcom specific drivers so we group
+them into a menu which can expand. Although rndis_wlan
+also supports Broadcom devices, RNDIS is a spec and other
+vendors could technically implement solutions with it
+as well so we keep that separate as users most likely
+won't look for those devices under a Broadcom tag.
 
-Cc: Stephen Chen <Stephen.Chen@atheros.com>
-Cc: Christian Lamparter <chunkeey@web.de>
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: Gábor Stefanik <netrolller.3d@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/Kconfig |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-I won't be able to test this for a bit, was reviewing
-RX stream support and noticed this.
-
-BTW Chris, Stephen points out we *can* use packet mode for
-RX with Otus devices. I haven't yet checked if ar9170 supports
-it but I think that's what the Windows driver uses. It seems
-RX stream mode is used to reduce the number of interrupt and
-can help on some platforms. The down side to RX stream mode
-seems to be that it "may introduce buffer copy as a side effect",
-not sure what that is though, Stephen, can you clarify?
-
- drivers/net/wireless/ath/ar9170/main.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index ea8c941..75c317d 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -1040,9 +1040,27 @@ static void ar9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c2e88dc..150565d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -561,8 +561,21 @@ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
+ endif # INTEL_80211
  
- 	case AR9170_RX_STATUS_MPDU_SINGLE:
- 		/* single mpdu - has plcp (head) and phy status (tail) */
+ source "drivers/net/wireless/hostap/Kconfig"
 +
-+		if (unlikely(mpdu_len < sizeof(struct ar9170_rx_head))) {
-+			if (ar9170_nag_limiter(ar))
-+				printk(KERN_ERR "%s: rx'd single mpdu "
-+				       "with no header.\n",
-+				       wiphy_name(ar->hw->wiphy));
-+			return;
-+		}
++config BROADCOM_80211
++	bool "Broadcom"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Broadcom wireless drivers. This
++	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
 +
- 		head = (void *) buf;
- 
- 		mpdu_len -= sizeof(struct ar9170_rx_head);
++if BROADCOM_80211
 +
-+		if (unlikely(mpdu_len < sizeof(struct ar9170_rx_phystatus))) {
-+			if (ar9170_nag_limiter(ar))
-+				printk(KERN_ERR "%s: rx'd single mpdu"
-+				       "with no tail.\n",
-+				       wiphy_name(ar->hw->wiphy));
-+			return ;
-+		}
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
 +
- 		mpdu_len -= sizeof(struct ar9170_rx_phystatus);
- 
- 		buf += sizeof(struct ar9170_rx_head);
++endif # BROADCOM_80211
++
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
 -- 
-1.6.3.3
+1.6.2.5
 
