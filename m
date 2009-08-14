@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:1726 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbZHHQVL (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39215 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932797AbZHNU0T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 12:21:11 -0400
-Date: Sat, 8 Aug 2009 12:20:01 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] drivers/net/wireless/ath/ath5k: Change constant name
-Message-ID: <20090808162001.GA18271@hash.localnet>
-References: <Pine.LNX.4.64.0908081521210.27715@ask.diku.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.64.0908081521210.27715@ask.diku.dk>
+	Fri, 14 Aug 2009 16:26:19 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>,
+	Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v4 06/34] wireless: group Conexant / STEricsson drivers in kconfig
+Date: Fri, 14 Aug 2009 16:25:31 -0400
+Message-Id: <1250281559-13041-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 08, 2009 at 03:22:26PM +0200, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Elsewhere, the tqi_type field is compared to constants having a name
-> beginning with AR5K_TX_QUEUE, rather than AR5K_TX_QUEUE_ID.  I have thus
-> converted AR5K_TX_QUEUE_ID_CAB to AR5K_TX_QUEUE_CAB.  This does, however,
-> change the value, so perhaps something else was wanted.
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
+There's only a few of these so we keep them under a
+config option which expands upon selection.
 
-Nice catch, thanks.  Shouldn't cause any problem with 2.6.31 since we
-don't use the CAB queue yet, but it was definitely wrong.
+Cc: Christian Lamparter <chunkeey@web.de>
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
-
-
-> diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-> index 6d5aaf0..eeebb9a 100644
-> --- a/drivers/net/wireless/ath/ath5k/qcu.c
-> +++ b/drivers/net/wireless/ath/ath5k/qcu.c
-> @@ -362,7 +362,7 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
->  		}
->  
->  		if (tq->tqi_ready_time &&
-> -		(tq->tqi_type != AR5K_TX_QUEUE_ID_CAB))
-> +		(tq->tqi_type != AR5K_TX_QUEUE_CAB))
->  			ath5k_hw_reg_write(ah, AR5K_REG_SM(tq->tqi_ready_time,
->  				AR5K_QCU_RDYTIMECFG_INTVAL) |
->  				AR5K_QCU_RDYTIMECFG_ENABLE,
-> 
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index cfd192e..a123f6e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -284,6 +284,18 @@ config PCMCIA_WL3501
+ 	 It has basic support for Linux wireless extensions and initial
+ 	 micro support for ethtool.
+ 
++config CONEXANT_ST_80211
++	bool "Intersil / Conexant / STEricsson"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Intersil / Conexant and STEricsson
++	  wireless drivers. All these companies have sell wireless cards which
++	  have shared common parts one way or another. The drivers for these cards
++	  include the mac80211 based p54 drivers for PCI, USB and SPI (Nokia N810
++	  and N800), and and the old PCI FullMAC driver prism54.
++
++if CONEXANT_ST_80211
++
+ source "drivers/net/wireless/p54/Kconfig"
+ 
+ config PRISM54
+@@ -333,6 +345,8 @@ config PRISM54
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.
+ 	  The module will be called prism54.
+ 
++endif # CONEXANT_ST_80211
++
+ config USB_ZD1201
+ 	tristate "USB ZD1201 based Wireless device support"
+ 	depends on USB && WLAN_80211
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.2.5
 
