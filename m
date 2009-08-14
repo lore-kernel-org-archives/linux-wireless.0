@@ -1,84 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53099 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757666AbZHQR1b (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:51359 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754727AbZHNMR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 00/33] wireless: kconfig updates
-Date: Mon, 17 Aug 2009 13:26:59 -0400
-Message-Id: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 14 Aug 2009 08:17:59 -0400
+Received: by bwz22 with SMTP id 22so1106892bwz.18
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 05:17:59 -0700 (PDT)
+Message-ID: <4A8555F5.5090603@gmail.com>
+Date: Fri, 14 Aug 2009 14:17:57 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] b43: Add LP-PHY firmware loading support
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is revision number 5 on the wireless kconfig updates, I apologize
-for the spam but I had to rebase based on reviews on some earlier
-patches. In this series I've removed the .ko references for modules
-both in the commit logs and in the kconfig entries, I've also
-made the changes pointed out in the TI kconfig, and left the comments
-on the mac80211 and cfg80211 kconfig simpler based on johill's feedback.
+Add support for loading LP-PHY firmware to b43_try_request_fw.
 
-I left out the patch that selects cfg80211 when you select mac80211
-as there is an issue there that is still under review (building cfg80211
-and mac80211 built-in but rfkill as a module).
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+ drivers/net/wireless/b43/main.c |   25 ++++++++++++++++++++++++-
+ 1 files changed, 24 insertions(+), 1 deletions(-)
 
-Luis R. Rodriguez (33):
-  wireless: move iwmc3200wifi closer to the other intel drivers
-  wireless: group intel wireless drivers on kconfig
-  wireless: move MWL8K right below libertas on kconfig
-  wireless: group Marvell wireless in kconfig
-  wireless: move p54 and prism54 drivers closer on kconfig
-  wireless: group Conexant / STEricsson drivers in kconfig
-  wireless: move zd1211rw option closer to old ZyDAS on kconfig
-  wireless: group ZyDAS wireless drivers in kconfig
-  wireless: group Realtek wireless on kconfig
-  wireless: group Broadcom drivers on kconfig
-  wireless: clarify rndis_wlan is not broadcom specific
-  wireless: group Atmel wireless together on kconfig
-  wireless: move AIRO_CS closer to AIRO_CS
-  wireless: group Cisco together on kconfig
-  wireless: move group drivers together
-  wireless: organize group drivers alphabetically
-  wireless: remove IEEE 802.11 description on hostapd
-  wireless: move mac80211_hwsim to top level wireless driver menu
-  wireless: organize individual drivers alphabetically
-  wireless: simplify WLAN_PRE80211 entries
-  wireless: simplify WLAN_80211 entries
-  wireless: remove "Wireless" from rndis kconfig entry
-  wireless: downgrade TI driver from menuconfig to config
-  wireless: Update TI kconfig description
-  wireless: make ath consistent with the other groups
-  wireless: mark prism54 as deprecated and mark for removal
-  wireless: update top level wireless driver entry
-  wireless: update wireless kconfig description
-  wireless: update cfg80211 kconfig entry
-  wireless: update reg debug kconfig entry
-  wireless: update WIRELESS_EXT kconfig entry
-  wireless: update mac80211 kconfig entry
-  wireless: remove mac80211 rate selection extra menu
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index fbcbe4f..51767fa 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2062,8 +2062,12 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		filename = "ucode5";
+ 	else if ((rev >= 11) && (rev <= 12))
+ 		filename = "ucode11";
+-	else if (rev >= 13)
++	else if (rev == 13)
+ 		filename = "ucode13";
++	else if (rev == 14)
++		filename = "ucode14";
++	else if (rev >= 15)
++		filename = "ucode15";
+ 	else
+ 		goto err_no_ucode;
+ 	err = b43_do_request_fw(ctx, filename, &fw->ucode);
+@@ -2111,6 +2115,16 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_LP:
++		if (rev == 13)
++			filename = "lp0initvals13";
++		else if (rev == 14)
++			filename = "lp0initvals14";
++		else if (rev >= 15)
++			filename = "lp0initvals15";
++		else
++			goto err_no_initvals;
++		break;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+@@ -2145,6 +2159,15 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else
+ 			goto err_no_initvals;
+ 		break;
++	case B43_PHYTYPE_LP:
++		if (rev == 13)
++			filename = "lp0bsinitvals13";
++		else if (rev == 14)
++			filename = "lp0bsinitvals14";
++		else if (rev >= 15)
++			filename = "lp0bsinitvals15";
++		else
++			goto err_no_initvals;
+ 	default:
+ 		goto err_no_initvals;
+ 	}
+-- 
+1.6.2.4
 
- Documentation/feature-removal-schedule.txt |   29 ++
- drivers/net/wireless/Kconfig               |  522 ++++++++++++++++------------
- drivers/net/wireless/ath/Kconfig           |    3 +-
- drivers/net/wireless/ath/ar9170/Kconfig    |    2 +-
- drivers/net/wireless/ath/ath5k/Kconfig     |    2 +-
- drivers/net/wireless/ath/ath9k/Kconfig     |    2 +-
- drivers/net/wireless/b43/Kconfig           |    2 +-
- drivers/net/wireless/b43legacy/Kconfig     |    2 +-
- drivers/net/wireless/hostap/Kconfig        |    3 +-
- drivers/net/wireless/ipw2x00/Kconfig       |    6 +-
- drivers/net/wireless/iwlwifi/Kconfig       |    2 +-
- drivers/net/wireless/iwmc3200wifi/Kconfig  |    2 +-
- drivers/net/wireless/orinoco/Kconfig       |    2 +-
- drivers/net/wireless/p54/Kconfig           |    2 +-
- drivers/net/wireless/rt2x00/Kconfig        |    2 +-
- drivers/net/wireless/wl12xx/Kconfig        |   17 +-
- drivers/net/wireless/zd1211rw/Kconfig      |    2 +-
- net/Kconfig                                |    8 +-
- net/mac80211/Kconfig                       |   24 +-
- net/wireless/Kconfig                       |   27 ++-
- 20 files changed, 406 insertions(+), 255 deletions(-)
+
 
