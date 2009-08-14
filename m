@@ -1,62 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:33545 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755060AbZHNQHY convert rfc822-to-8bit (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:49582 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098AbZHNURm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 12:07:24 -0400
-Message-ID: <20090814190724.12373pfrirqifq2o@hayate.sektori.org>
-Date: Fri, 14 Aug 2009 19:07:24 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "=?iso-8859-1?b?R+Fib3I=?= Stefanik" <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Michael Buesch" <mb@bu3sch.de>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2 11/25] wireless: clarify rndis_wlan is not broadcom
-	specific
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-	<1250210584-13374-12-git-send-email-lrodriguez@atheros.com>
-	<69e28c910908140313p7d138635q51ee71c362aaa7f6@mail.gmail.com>
-In-Reply-To: <69e28c910908140313p7d138635q51ee71c362aaa7f6@mail.gmail.com>
+	Fri, 14 Aug 2009 16:17:42 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: Add LP-PHY firmware loading support
+Date: Fri, 14 Aug 2009 22:17:39 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A854FDF.5020208@gmail.com>
+In-Reply-To: <4A854FDF.5020208@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+  charset="utf-8"
+Message-Id: <200908142217.40004.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Gábor Stefanik" <netrolller.3d@gmail.com>:
+On Friday 14 August 2009 13:51:59 GÃ¡bor Stefanik wrote:
+> Add support for loading LP-PHY firmware to b43_try_request_fw.
+> 
+> Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
 
-> On Fri, Aug 14, 2009 at 2:42 AM, Luis R.
-> Rodriguez<lrodriguez@atheros.com> wrote:
->> Cc: Michael Buesch <mb@bu3sch.de>
->> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
->> Cc: Johannes Berg <johannes@sipsolutions.net>
->> Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->> ---
->>  drivers/net/wireless/Kconfig |    4 +++-
->>  1 files changed, 3 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
->> index cb5aae6..a1bdb51 100644
->> --- a/drivers/net/wireless/Kconfig
->> +++ b/drivers/net/wireless/Kconfig
->> @@ -403,7 +403,9 @@ config USB_NET_RNDIS_WLAN
->>          BUFFALO WLI-USB-G54
->>
->>          All of these devices are based on Broadcom 4320 chip which is the
->> -         only wireless RNDIS chip known to date.
->> +         only wireless RNDIS chip known to date. Technically RNDIS follows
->> +         a specification and although only Broadcom currently supports this
->> +         other vendors could technically follow the implementation as well.
->
-> To the aforementioned "other vendors" - please do not follow this
-> brain-dead, Microsoft-based spec! :-)
->
-
-Agreed!
-
--Jussi
-
+ack
+-- 
+Greetings, Michael.
