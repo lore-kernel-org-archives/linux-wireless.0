@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44866 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752032AbZHESbD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 14:31:03 -0400
-Date: Wed, 5 Aug 2009 14:20:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andreas Steinmetz <ast@domdv.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb entry for DE wrong
-Message-ID: <20090805182040.GD20338@tuxdriver.com>
-References: <4A71A6BE.20304@domdv.de>
+Received: from bu3sch.de ([62.75.166.246]:49391 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754907AbZHNUPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2009 16:15:44 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] b43: Fix sparse warnings
+Date: Fri, 14 Aug 2009 22:15:37 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
+In-Reply-To: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4A71A6BE.20304@domdv.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908142215.38112.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 30, 2009 at 03:57:18PM +0200, Andreas Steinmetz wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Friday 14 August 2009 00:15:07 Larry Finger wrote:
+> The b43 driver generates the following sparse warnings:
 > 
-> [please CC me as I'm not subscribed]
+>   CHECK   drivers/net/wireless/b43/phy_g.c
+> drivers/net/wireless/b43/phy_g.c:974:35: warning: cast truncates bits from constant value (ffff7fff becomes 7fff)
+>   CHECK   drivers/net/wireless/b43/wa.c
+> drivers/net/wireless/b43/wa.c:385:53: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+> drivers/net/wireless/b43/wa.c:403:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+> drivers/net/wireless/b43/wa.c:405:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+> drivers/net/wireless/b43/wa.c:415:50: warning: cast truncates bits from constant value (ffff0fff becomes fff)
 > 
-> Error in regulatory database for country DE:
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
 > 
-> The document
+> John,
 > 
-> http://www.bundesnetzagentur.de/media/archive/5009.pdf
+> There is no hurry for this material.
 > 
-> states that the frequency range from 5470 GHz to 5725 GHz can be used
-> indoor and outdoor, thus the NO-OUTDOOR flag for this range is wrong.
+> Larry
+> ---
 > 
-> Quick and dirty translation of the relevant text from this document
-> including the note:
-> 
-> Usage indoor and outdoor. Transmission between within a plane and a
-> location outside of a plane prohibited.
+> Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c
+> +++ wireless-testing/drivers/net/wireless/b43/phy_g.c
+> @@ -971,7 +971,7 @@ b43_radio_interference_mitigation_enable
+>  		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+>  
+>  		if (phy->rev >= 3) {
+> -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+> +			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
 
-Post a patch?
+Uh come on...
+The u16 cast already is stupid as hell, but this is becoming braindead.
+The code is perfectly fine. Sparse should instead provide an option to disable
+this fragile check.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+Greetings, Michael.
