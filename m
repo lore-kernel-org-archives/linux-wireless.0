@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:33172 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932475AbZHDHAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 03:00:08 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1MYE0A-00017q-PN
-	for linux-wireless@vger.kernel.org; Tue, 04 Aug 2009 07:00:02 +0000
-Received: from i59F7B022.versanet.de ([89.247.176.34])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 07:00:02 +0000
-Received: from jal2 by i59F7B022.versanet.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 07:00:02 +0000
-To: linux-wireless@vger.kernel.org
-From: Joerg Albert <jal2@gmx.de>
-Subject: Re: [PATCH] cfg80211: clear SSID on disconnect
-Date: Tue, 4 Aug 2009 06:55:53 +0000 (UTC)
-Message-ID: <loom.20090804T064513-963@post.gmane.org>
-References: <1249311832.4561.2.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-px0-f196.google.com ([209.85.216.196]:64901 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885AbZHNVd7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 14 Aug 2009 17:33:59 -0400
+Received: by pxi34 with SMTP id 34so461843pxi.4
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:34:00 -0700 (PDT)
+Message-ID: <4A85D844.8040805@lwfinger.net>
+Date: Fri, 14 Aug 2009 16:33:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>,
+	John W Linville <linville@tuxdriver.com>
+CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Fix sparse warnings
+References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net> <200908142215.38112.mb@bu3sch.de>
+In-Reply-To: <200908142215.38112.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@...> writes:
-
-
->  	wdev->current_bss = NULL;
->  	wdev->sme_state = CFG80211_SME_IDLE;
-> +	wdev->ssid_len = 0;
+Michael Buesch wrote:
+> On Friday 14 August 2009 00:15:07 Larry Finger wrote:
+>> The b43 driver generates the following sparse warnings:
+>>
+>>   CHECK   drivers/net/wireless/b43/phy_g.c
+>> drivers/net/wireless/b43/phy_g.c:974:35: warning: cast truncates bits from constant value (ffff7fff becomes 7fff)
+>>   CHECK   drivers/net/wireless/b43/wa.c
+>> drivers/net/wireless/b43/wa.c:385:53: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+>> drivers/net/wireless/b43/wa.c:403:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+>> drivers/net/wireless/b43/wa.c:405:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
+>> drivers/net/wireless/b43/wa.c:415:50: warning: cast truncates bits from constant value (ffff0fff becomes fff)
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> John,
+>>
+>> There is no hurry for this material.
+>>
+>> Larry
+>> ---
+>>
+>> Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
+>> ===================================================================
+>> --- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c
+>> +++ wireless-testing/drivers/net/wireless/b43/phy_g.c
+>> @@ -971,7 +971,7 @@ b43_radio_interference_mitigation_enable
+>>  		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+>>  
+>>  		if (phy->rev >= 3) {
+>> -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+>> +			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
 > 
->  	if (wdev->conn) {
->  		kfree(wdev->conn->ie);
+> Uh come on...
+> The u16 cast already is stupid as hell, but this is becoming braindead.
+> The code is perfectly fine. Sparse should instead provide an option to disable
+> this fragile check.
 
-Sorry, but this didn't help with the ar9170 problem. I still get a call
-to  ar9170_op_bss_info_changed() after ifconfig wlan1 down.
-I put a printk at your change in sme.c and it's not called.
+John,
 
-Please be aware that in managed mode my adapter stays in state SCANNING, 'cause
-there is not AP around with essid huhu_m:
+Just drop this patch. The code is OK as is.
 
-ifconfig wlan1 up
-iwconfig wlan1 essid huhu_m
-ifconfig wlan1 down
-iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
-/* ar9170_op_bss_info_changed() is called with ar->vif == NULL */
-
-Regards,
-Jörg.
-
-
-
+Larry
