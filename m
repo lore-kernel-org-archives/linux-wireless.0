@@ -1,112 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:48898 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751271AbZHMRk4 convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43479 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753623AbZHOApS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 13:40:56 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [RFC/RFT] b43: LP-PHY: Implement channel switching for rev2+/B2063 radio
-Date: Thu, 13 Aug 2009 19:40:52 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A842AFD.1020903@gmail.com>
-In-Reply-To: <4A842AFD.1020903@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908131940.52830.mb@bu3sch.de>
+	Fri, 14 Aug 2009 20:45:18 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 13/34] wireless: move AIRO_CS closer to AIRO
+Date: Fri, 14 Aug 2009 20:45:19 -0400
+Message-Id: <1250297119-10124-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 13 August 2009 17:02:21 Gábor Stefanik wrote:
-> Rev.2+/B2063 will now hopefully show some signs of life, though
-> it won't work at full performance, as calibration is still missing.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
->  static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
-> @@ -1369,7 +1370,7 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
->  	lpphy_baseband_init(dev);
->  	lpphy_radio_init(dev);
->  	lpphy_calibrate_rc(dev);
-> -	//TODO set channel
-> +	b43_switch_channel(dev, dev->wl->hw->conf.channel->hw_value);
+This v5 changes AIRO_CS to AIRO in the commit log subject
+line as noted by Pavel.
 
-Does dev->wl->hw->conf.channel->hw_value already have a sane value here?
-Also please call b43_lpphy_op_switch_channel() instead of b43_switch_channel().
+ drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-> +static void lpphy_b2063_tune(struct b43_wldev *dev,
-> +			     unsigned int channel)
-> +{
-> +	struct ssb_bus *bus = dev->dev->bus;
-> +
-> +	struct b2063_channel chandata;
-> +	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
-> +	u32 freqref, vco_freq, val1, val2, val3, timeout, timeoutref, count;
-> +	u16 old_comm15, scale;
-> +	u32 tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-> +	int i, div = (crystal_freq <= 26000000 ? 1 : 2);
-> +
-> +	memset(&chandata, 0, sizeof(chandata));
-> +
-> +	for (i = 0; i < ARRAY_SIZE(b2063_chantbl); i++) {
-> +		if (b2063_chantbl[i].channel == channel) {
-> +			chandata = b2063_chantbl[i];
-
-Can you use a const pointer instead of copying the whole data structure?
-
-> +			break;
-> +		}
-> +	}
-> +
-> +	B43_WARN_ON(!chandata.channel);
-
-> +
->  static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
->  				       unsigned int new_channel)
->  {
-> -	//TODO
-> +	struct b2063_channel chandata;
-> +	int i;
-> +
-> +	memset(&chandata, 0, sizeof(chandata));
-> +
-> +	//FIXME this abuses the 2063 channel table for chan2freq purposes!
-> +	for (i = 0; i < ARRAY_SIZE(b2063_chantbl); i++) {
-> +		if (b2063_chantbl[i].channel == new_channel) {
-> +			chandata = b2063_chantbl[i];
-> +			break;
-> +		}
-> +	}
-> +
-> +	B43_WARN_ON(!chandata.channel);
-> +
-> +	/* FIXME this should be the last thing done, even after generic
-> +	 * parts - does it matter?
-
-It is correct as is.
-
-> +	 * SPEC FIXME should this write channel, freq, chanspec or cookie?
-> +	 */
-
-Can you explain this FIXME? What's "chanspec", what's "cookie"?
-
-> +	b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
-> +	if (dev->phy.radio_ver == 0x2063) {
-> +		lpphy_b2063_tune(dev, new_channel);
-> +	} else {
-> +		lpphy_b2062_tune(dev, new_channel);
-> +		//TODO Japan filter
-> +	}
-> +	lpphy_adjust_gain_table(dev, chandata.freq);
->  	return 0;
->  }
->  
-
-
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 32f3203..f5d9dba 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -213,6 +213,26 @@ config AIRO
+ 
+ 	  The driver can be compiled as a module and will be named "airo".
+ 
++config AIRO_CS
++	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
++	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
++	select WIRELESS_EXT
++	select CRYPTO
++	select CRYPTO_AES
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
++	  802.11 wireless cards.  This driver is the same as the Aironet
++	  driver part of the Linux Pcmcia package.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
++	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
++	  802.11b cards.
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
+@@ -265,26 +285,6 @@ config AT76C50X_USB
+ 
+ endif # ATMEL_80211
+ 
+-config AIRO_CS
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+-	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
+-	  802.11 wireless cards.  This driver is the same as the Aironet
+-	  driver part of the Linux Pcmcia package.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
+-	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
+-	  802.11b cards.
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+ config PCMCIA_WL3501
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
 -- 
-Greetings, Michael.
+1.6.2.5
+
