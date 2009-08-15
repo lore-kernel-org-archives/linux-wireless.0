@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.181]:62088 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752681AbZHTUw4 (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.249]:31275 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208AbZHOAts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 16:52:56 -0400
-Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
-From: John Dykstra <john.dykstra1@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-In-Reply-To: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
-References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
-Content-Type: text/plain
-Date: Thu, 20 Aug 2009 20:52:51 +0000
-Message-Id: <1250801571.7176.10.camel@Maple>
-Mime-Version: 1.0
+	Fri, 14 Aug 2009 20:49:48 -0400
+Received: by an-out-0708.google.com with SMTP id d40so1585918and.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 17:49:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 14 Aug 2009 17:49:28 -0700
+Message-ID: <43e72e890908141749q49fdbce8o634ef49fa1a2a85e@mail.gmail.com>
+Subject: Re: [PATCH v4 00/34] wireless: update/re-arrange kconfigs
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
-> Subject         : WARNING: at net/ipv4/af_inet.c:154
-> inet_sock_destruct+0x164/0x1c0()
-> Submitter       : Ralf Hildebrandt <ralf.hildebrandt@charite.de>
-> Date            : 2009-08-18 12:37 (2 days old)
+On Fri, Aug 14, 2009 at 1:25 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> Here is the 4th iteration of this series
 
-That looks similar to the WARNING discussed in [1].
+John please ignore 28-33 but please do consider 1-32 and 34 unless
+there are objections raised.
 
-There was no resolution to that thread.  However, [2] points out
-possible other occurrences of the problem in 2.6.27, 28 and 29.
-
---  John
-
-[1]  http://www.spinics.net/lists/netdev/msg103267.html
-[2]  http://www.spinics.net/lists/netdev/msg104120.html
-
-
+  Luis
