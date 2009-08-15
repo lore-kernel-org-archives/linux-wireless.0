@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39395 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932820AbZHNU3G (ORCPT
+Received: from mail-pz0-f196.google.com ([209.85.222.196]:39092 "EHLO
+	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbZHOUAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:29:06 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 25/34] wireless: make ath consistent with the other groups
-Date: Fri, 14 Aug 2009 16:25:50 -0400
-Message-Id: <1250281559-13041-26-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 15 Aug 2009 16:00:02 -0400
+Received: by pzk34 with SMTP id 34so1433945pzk.4
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2009 13:00:03 -0700 (PDT)
+Message-ID: <4A8713BE.5020505@lwfinger.net>
+Date: Sat, 15 Aug 2009 14:59:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54: disable PS by default
+References: <200908141323.05936.chunkeey@web.de>
+In-Reply-To: <200908141323.05936.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Christian Lamparter wrote:
+> Johannes kindly pointed out that I completely missed a hunk in
+> his patch: "[PATCH] cfg80211: allow driver to override PS default".
+> 
+> The driver must explicitly set ps_default to false,
+> as the setting is pre-filled with the kconfig default.
+> 
+> Signed-off-by: Christian Lamparter <chunkeey@web.de>
+> ---
 
-diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
-index 9bfa909..b974b73 100644
---- a/drivers/net/wireless/ath/Kconfig
-+++ b/drivers/net/wireless/ath/Kconfig
-@@ -1,5 +1,5 @@
- menuconfig ATH_COMMON
--	tristate "Atheros Wireless Cards"
-+	tristate "Atheros"
- 	depends on CFG80211
- 	---help---
- 	  This will enable the support for the Atheros wireless drivers.
--- 
-1.6.2.5
+With this patch, I no longer see the disconnects. ACK.
+
+Larry
 
