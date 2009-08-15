@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:49713 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641AbZHTT0I (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:53011 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750824AbZHOFqr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 15:26:08 -0400
-Subject: Re: [PATCH] atheros: add ar9170.fw 1-stage firmware
-From: David Woodhouse <dwmw2@infradead.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
-References: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain
-Date: Thu, 20 Aug 2009 20:26:04 +0100
-Message-Id: <1250796364.3311.0.camel@macbook.infradead.org>
-Mime-Version: 1.0
+	Sat, 15 Aug 2009 01:46:47 -0400
+Message-ID: <4A864BB1.8020307@redfish-solutions.com>
+Date: Fri, 14 Aug 2009 22:46:25 -0700
+From: "Philip A. Prindeville" <philipp@redfish-solutions.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Pavel Roskin <proski@gnu.org>
+Subject: [PATCH] Don't build PCMCIA modules when PCMCIA isn't present
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-20 at 11:40 -0700, Luis R. Rodriguez wrote:
-> 
-> Here is a resend, noticed today this wasn't yet in the tree.
-> 
->  ar9170.fw |  Bin 0 -> 15960 bytes
->  1 files changed, 0 insertions(+), 0 deletions(-)
->  create mode 100644 ar9170.fw
+From: Philip A Prindeville <philipp@redfish-solutions.com>
 
-Needs patch to WHENCE file.
+If you're building for a platform that has (for example) no PCMCIA/
+Cardbus, then having a single knob to turn to disable this is a
+major win.  Especially if more devices get add later that are
+PCMCIA-based.
 
--- 
-dwmw2
+Tested.
+
+Signed-off-by: Philip A Prindeville <philipp@redfish-solutions.com>
+---
+ config.mk |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/config.mk b/config.mk
+index 0c3ea98..a24b7bd 100644
+--- a/config.mk
++++ b/config.mk
+@@ -191,7 +191,9 @@ CONFIG_B43=m
+ CONFIG_B43_HWRNG=y
+ CONFIG_B43_PCI_AUTOSELECT=y
+ CONFIG_B43_PCICORE_AUTOSELECT=y
++ifneq ($(CONFIG_PCMCIA),)
+ CONFIG_B43_PCMCIA=y
++endif
+ CONFIG_B43_PIO=y
+ CONFIG_B43_LEDS=y
+ CONFIG_B43_RFKILL=y
+@@ -242,8 +244,10 @@ CONFIG_SSB_BLOCKIO=y
+ CONFIG_SSB_PCIHOST_POSSIBLE=y
+ CONFIG_SSB_PCIHOST=y
+ CONFIG_SSB_B43_PCI_BRIDGE=y
++ifneq ($(CONFIG_PCMCIA),)
+ CONFIG_SSB_PCMCIAHOST_POSSIBLE=y
+ CONFIG_SSB_PCMCIAHOST=y
++endif
+ # CONFIG_SSB_DEBUG=y
+ CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+ CONFIG_SSB_DRIVER_PCICORE=y
+@@ -258,7 +262,9 @@ CONFIG_B44_PCI=y
+ CONFIG_RTL8180=m
+ 
+ CONFIG_ADM8211=m
++ifneq ($(CONFIG_PCMCIA),)
+ CONFIG_PCMCIA_ATMEL=m
++endif
+ 
+ CONFIG_RT2X00_LIB_PCI=m
+ CONFIG_RT2400PCI=m
 
