@@ -1,58 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34820 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754746AbZHCTZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:25 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:26 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 21/24] ath9k: set sc->sc_ah to NULL after freeing it
-Date: Mon, 3 Aug 2009 12:24:53 -0700
-Message-ID: <1249327496-24629-22-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:40723 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753335AbZHPLcl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 16 Aug 2009 07:32:41 -0400
+Subject: [PATCH] cfg80211: fix deadlock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>
 Content-Type: text/plain
+Date: Sun, 16 Aug 2009 13:32:38 +0200
+Message-Id: <1250422358.17522.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+When removing an interface with nl80211, cfg80211 will
+deadlock in the netdev notifier because we're already
+holding rdev->mtx and try to acquire it again to verify
+the scan has been done.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 91bffc9..d3d2cb6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1278,6 +1278,7 @@ void ath_detach(struct ath_softc *sc)
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+This bug was introduced by my patch
+"cfg80211: check for and abort dangling scan requests".
+
+To fix this, move the dangling scan request check into
+wiphy_unregister(). This will not be able to catch all
+cases right away, but if the scan problem happens with
+a manual ifdown or so it will be possible to remedy it
+by removing the module/device.
+
+Additionally, add comments about the deadlock scenario.
+
+Reported-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/wireless/core.c |   32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
+
+--- wireless-testing.orig/net/wireless/core.c	2009-08-16 13:22:52.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-08-16 13:28:12.000000000 +0200
+@@ -586,9 +586,15 @@ void wiphy_unregister(struct wiphy *wiph
+ 	 * get to lock contention here if userspace issues a command
+ 	 * that identified the hardware by wiphy index.
+ 	 */
+-	mutex_lock(&rdev->mtx);
+-	/* unlock again before freeing */
+-	mutex_unlock(&rdev->mtx);
++	cfg80211_lock_rdev(rdev);
++
++	if (WARN_ON(rdev->scan_req)) {
++		rdev->scan_req->aborted = true;
++		___cfg80211_scan_done(rdev);
++	}
++
++	cfg80211_unlock_rdev(rdev);
++	flush_work(&rdev->scan_done_wk);
  
- 	ath9k_hw_detach(sc->sc_ah);
-+	sc->sc_ah = NULL;
- 	ath9k_exit_debug(sc);
+ 	cfg80211_debugfs_rdev_del(rdev);
+ 
+@@ -603,9 +609,7 @@ void wiphy_unregister(struct wiphy *wiph
+ 
+ 	mutex_unlock(&cfg80211_mutex);
+ 
+-	flush_work(&rdev->scan_done_wk);
+ 	cancel_work_sync(&rdev->conn_work);
+-	kfree(rdev->scan_req);
+ 	flush_work(&rdev->event_work);
  }
+ EXPORT_SYMBOL(wiphy_unregister);
+@@ -653,6 +657,11 @@ static int cfg80211_netdev_notifier_call
  
-@@ -1521,6 +1522,7 @@ bad2:
- bad:
- 	if (ah)
- 		ath9k_hw_detach(ah);
-+	sc->sc_ah = NULL;
- bad_no_ah:
- 	ath9k_exit_debug(sc);
- 
-@@ -1631,6 +1633,7 @@ error_attach:
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
- 
- 	ath9k_hw_detach(sc->sc_ah);
-+	sc->sc_ah = NULL;
- 	ath9k_exit_debug(sc);
- 
- 	return error;
--- 
-1.6.3.3
+ 	switch (state) {
+ 	case NETDEV_REGISTER:
++		/*
++		 * NB: cannot take rdev->mtx here because this may be
++		 * called within code protected by it when interfaces
++		 * are added with nl80211.
++		 */
+ 		mutex_init(&wdev->mtx);
+ 		INIT_LIST_HEAD(&wdev->event_list);
+ 		spin_lock_init(&wdev->event_lock);
+@@ -730,13 +739,11 @@ static int cfg80211_netdev_notifier_call
+ #endif
+ 		break;
+ 	case NETDEV_UNREGISTER:
+-		cfg80211_lock_rdev(rdev);
+-
+-		if (WARN_ON(rdev->scan_req && rdev->scan_req->dev == dev)) {
+-			rdev->scan_req->aborted = true;
+-			___cfg80211_scan_done(rdev);
+-		}
+-
++		/*
++		 * NB: cannot take rdev->mtx here because this may be
++		 * called within code protected by it when interfaces
++		 * are removed with nl80211.
++		 */
+ 		mutex_lock(&rdev->devlist_mtx);
+ 		/*
+ 		 * It is possible to get NETDEV_UNREGISTER
+@@ -755,7 +762,6 @@ static int cfg80211_netdev_notifier_call
+ #endif
+ 		}
+ 		mutex_unlock(&rdev->devlist_mtx);
+-		cfg80211_unlock_rdev(rdev);
+ 		break;
+ 	case NETDEV_PRE_UP:
+ 		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)))
+
 
