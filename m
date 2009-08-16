@@ -1,122 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:34859 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806AbZHMBpp (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:61052 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946AbZHPN0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 21:45:45 -0400
-Received: from [192.168.10.7] (builder.redfish-solutions.com [192.168.10.7])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.2/8.14.2) with ESMTP id n7D1jcWo011198
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 19:45:46 -0600
-Message-ID: <4A837042.4000507@redfish-solutions.com>
-Date: Wed, 12 Aug 2009 18:45:38 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Sun, 16 Aug 2009 09:26:38 -0400
+Received: by fxm11 with SMTP id 11so1868562fxm.39
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2009 06:26:39 -0700 (PDT)
+Message-ID: <4A88090D.3070107@gmail.com>
+Date: Sun, 16 Aug 2009 15:26:37 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: Minimal cross-compilation fix for CRDA
-Content-Type: multipart/mixed;
- boundary="------------020606090000060301060504"
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Update code for spec fixes, and fix a few typos
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020606090000060301060504
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+A few typos have been discovered both in the specs in and our code.
+This patch fixes them.
 
-Reposting.
+Also use lpphy_op_switch_channel consistently, and make all callers
+print its return value for easier debugging.
 
-I think I've addresses all of the comments, and this fix is as short as
-possible.
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+I think using a forward declaration is justified in this case;
+as avoiding the forward decl would require moving around huge
+blocks of code, completely breaking any logical ordering.
 
-I considered passing in all of the variables from outside, but (a) this
-doesn't scale well, and (b) things like $(NLLIBNAME) are "scratch"
-variables used by the make process when doing discovery about the host
-it's running on... they shouldn't be externally visible, much less
-overridden by some encompassing make.
+ drivers/net/wireless/b43/phy_lp.c |   51 ++++++++++++++++++++++++------------
+ 1 files changed, 34 insertions(+), 17 deletions(-)
 
-Putting the auto-discovery into its own path with a gating variable
-seems like the cleanest, most robust, most maintainable approach.
-
-
-
---------------020606090000060301060504
-Content-Type: text/plain;
- name="crda-cross-compile.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="crda-cross-compile.patch"
-
-Changes:
-
-1. Move invariant definitions to before any cross-compilation conditional sections for clarity (and to avoid having to duplicate them).
-
-2. Bracket any host (native) compilation sections with conditional based on $(CROSS_COMPILE) being empty.
-
-4. Add 'else' section for cross-compilation using openssl and libnl-1 (or libnl-2 if explicitly selected).
-
-
---- crda-1.1.0/Makefile	2009-08-10 13:37:36.000000000 -0700
-+++ crda-1.1.0/Makefile.new	2009-08-10 17:29:22.000000000 -0700
-@@ -22,12 +22,17 @@
- # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
- PUBKEY_DIR?=pubkeys
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index e4a040b..a51da6e 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -552,7 +552,7 @@ static void lpphy_2062_init(struct b43_wldev *dev)
+ 	B43_WARN_ON(!(bus->chipco.capabilities & SSB_CHIPCO_CAP_PMU));
+ 	B43_WARN_ON(crystalfreq == 0);
  
-+MKDIR ?= mkdir -p
-+INSTALL ?= install
-+
- CFLAGS += -Wall -g
+-	if (crystalfreq >= 30000000) {
++	if (crystalfreq <= 30000000) {
+ 		lpphy->pdiv = 1;
+ 		b43_radio_mask(dev, B2062_S_RFPLL_CTL1, 0xFFFB);
+ 	} else {
+@@ -560,14 +560,16 @@ static void lpphy_2062_init(struct b43_wldev *dev)
+ 		b43_radio_set(dev, B2062_S_RFPLL_CTL1, 0x4);
+ 	}
  
- all: all_noverify verify
+-	tmp = (800000000 * lpphy->pdiv + crystalfreq) /
+-	      (32000000 * lpphy->pdiv);
+-	tmp = (tmp - 1) & 0xFF;
++	tmp = (((800000000 * lpphy->pdiv + crystalfreq) /
++	      (2 * crystalfreq)) - 8) & 0xFF;
++	b43_radio_write(dev, B2062_S_RFPLL_CTL7, tmp);
++
++	tmp = (((100 * crystalfreq + 16000000 * lpphy->pdiv) /
++	      (32000000 * lpphy->pdiv)) - 1) & 0xFF;
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL18, tmp);
  
- all_noverify: crda intersect regdbdump
+-	tmp = (2 * crystalfreq + 1000000 * lpphy->pdiv) /
+-	      (2000000 * lpphy->pdiv);
+-	tmp = ((tmp & 0xFF) - 1) & 0xFFFF;
++	tmp = (((2 * crystalfreq + 1000000 * lpphy->pdiv) /
++	      (2000000 * lpphy->pdiv)) - 1) & 0xFF;
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL19, tmp);
  
-+ifeq ($(CROSS_COMPILE),)
-+
- ifeq ($(USE_OPENSSL),1)
- CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
- LDLIBS += `pkg-config --libs openssl`
-@@ -41,8 +46,6 @@
- reglib.o: keys-gcrypt.c
+ 	ref = (1000 * lpphy->pdiv + 2 * crystalfreq) / (2000 * lpphy->pdiv);
+@@ -671,7 +673,7 @@ static void lpphy_radio_init(struct b43_wldev *dev)
+ 	b43_phy_mask(dev, B43_LPPHY_FOURWIRE_CTL, 0xFFFD);
+ 	udelay(1);
  
- endif
--MKDIR ?= mkdir -p
--INSTALL ?= install
+-	if (dev->phy.rev < 2) {
++	if (dev->phy.radio_ver == 0x2062) {
+ 		lpphy_2062_init(dev);
+ 	} else {
+ 		lpphy_2063_init(dev);
+@@ -688,11 +690,18 @@ struct lpphy_iq_est { u32 iq_prod, i_pwr, q_pwr; };
  
- NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
- NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
-@@ -64,6 +67,31 @@
- NLLIBS += `pkg-config --libs $(NLLIBNAME)`
- CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
+ static void lpphy_set_rc_cap(struct b43_wldev *dev)
+ {
+-	u8 rc_cap = dev->phy.lp->rc_cap;
++	struct b43_phy_lp *lpphy = dev->phy.lp;
  
-+else
+-	b43_radio_write(dev, B2062_N_RXBB_CALIB2, max_t(u8, rc_cap-4, 0x80));
+-	b43_radio_write(dev, B2062_N_TX_CTL_A, ((rc_cap & 0x1F) >> 1) | 0x80);
+-	b43_radio_write(dev, B2062_S_RXG_CNT16, ((rc_cap & 0x1F) >> 2) | 0x80);
++	u8 rc_cap = (lpphy->rc_cap & 0x1F) >> 1;
++	
++	if (dev->phy.rev == 1) //FIXME check channel 14!
++		rc_cap = max_t(u8, rc_cap + 5, 15);
 +
-+ifeq ($(USE_OPENSSL),1)
-+CFLAGS += -DUSE_OPENSSL
-+LDLIBS += -lssl
++	b43_radio_write(dev, B2062_N_RXBB_CALIB2,
++			max_t(u8, lpphy->rc_cap - 4, 0x80));
++	b43_radio_write(dev, B2062_N_TX_CTL_A, rc_cap | 0x80);
++	b43_radio_write(dev, B2062_S_RXG_CNT16,
++			((lpphy->rc_cap & 0x1F) >> 2) | 0x80);
+ }
+ 
+ static u8 lpphy_get_bb_mult(struct b43_wldev *dev)
+@@ -1101,6 +1110,9 @@ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
+ 	lpphy_write_tx_pctl_mode_to_hardware(dev);
+ }
+ 
++static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
++				       unsigned int new_channel);
 +
-+reglib.o: keys-ssl.c
-+
-+else
-+CFLAGS += -DUSE_GCRYPT
-+LDLIBS += -lgcrypt
-+
-+reglib.o: keys-gcrypt.c
-+
-+endif
-+
-+ifeq ($(USE_LIBNL20),1)
-+CFLAGS += -DCONFIG_LIBNL20
-+NLLIBS = -lnl-genl -lnl-2.0
-+else
-+NLLIBS = -lnl
-+endif
-+
-+endif
-+
- ifeq ($(V),1)
- Q=
- NQ=@true
+ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+@@ -1118,11 +1130,16 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+ 	    old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
+ 	enum b43_lpphy_txpctl_mode old_txpctl;
+ 	u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
+-	int loopback, i, j, inner_sum;
++	int loopback, i, j, inner_sum, err;
+ 
+ 	memset(&iq_est, 0, sizeof(iq_est));
+ 
+-	b43_switch_channel(dev, 7);
++	err = b43_lpphy_op_switch_channel(dev, 7);
++	if (err) {
++		b43dbg(dev->wl,
++		       "RC calib: Failed to switch to channel 7, error = %d",
++		       err);
++	}
+ 	old_txg_ovr = (b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) >> 6) & 1;
+ 	old_bbmult = lpphy_get_bb_mult(dev);
+ 	if (old_txg_ovr)
+@@ -1881,14 +1898,14 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
+ {
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+ 	struct ssb_bus *bus = dev->dev->bus;
+-	static const struct b206x_channel *chandata = NULL;
++	const struct b206x_channel *chandata = NULL;
+ 	u32 crystal_freq = bus->chipco.pmu.crystalfreq * 1000;
+ 	u32 tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+ 	int i, err = 0;
+ 
+-	for (i = 0; i < ARRAY_SIZE(b2063_chantbl); i++) {
++	for (i = 0; i < ARRAY_SIZE(b2062_chantbl); i++) {
+ 		if (b2063_chantbl[i].channel == channel) {
+-			chandata = &b2063_chantbl[i];
++			chandata = &b2062_chantbl[i];
+ 			break;
+ 		}
+ 	}
+-- 
+1.6.2.4
 
---------------020606090000060301060504--
+
+
