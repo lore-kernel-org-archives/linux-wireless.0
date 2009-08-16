@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:27498 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbZHVFmD convert rfc822-to-8bit (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:38973 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750795AbZHPNnM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 01:42:03 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so282466fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 22:42:03 -0700 (PDT)
+	Sun, 16 Aug 2009 09:43:12 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Fix a spec error in the B2062 channel switch routine
+Date: Sun, 16 Aug 2009 15:43:11 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A880A78.9050205@gmail.com>
+In-Reply-To: <4A880A78.9050205@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1250858409.5137.2.camel@johannes.local>
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
-	 <4A8E8F59.9050706@lwfinger.net>
-	 <1250858409.5137.2.camel@johannes.local>
-Date: Sat, 22 Aug 2009 13:42:03 +0800
-Message-ID: <f42a38140908212242h1ce0339fw1243dbacf54000ab@mail.gmail.com>
-Subject: Re: Abour linux driver supports BCM4325
-From: feng tian <feng.of.tian@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908161543.11499.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of waiting for the codes, we decide to do someting on
-supporting the BCM 4325 running in linux via SDIO.
-The linux wireless dirver supports another chip (marvel 8686) with
-SDIO interface, the sources codes locate in
-drivers/net/wireless/libertas.
-We are wondering to develop the BCM4325 driver in the reference to the
-marvel 8686 SDIO driver.
-Please give comments on this, thanks.
+On Sunday 16 August 2009 15:32:40 Gábor Stefanik wrote:
+> The channel switch routine had a whole instruction missing. Add it.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 
-BR
-Feng
+ack
 
-2009/8/21 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2009-08-21 at 07:13 -0500, Larry Finger wrote:
->
->> > We are working on a project which supports the BCM4325 linux wireless
->> > driver. The interface between the BCM chip and SOC(pxa310) is SDIO.
->> > I did some searches online and found that there is no available driver
->> > for this chip. Do I have to implement this myself? Is there anyone can
->> > provide us some related materials? �Thanks very much.
->>
->> The code for the LP PHY, which I believe is present in the 4325, is
->> just being written. At the moment, the chip is able to receive on some
->> channels, and may be able to transmit. These results are reported on
->> this mailing list, and the code is being applied to the wireless
->> testing git tree.
->
-> Also, somebody is working on SDIO support with Michael.
->
-> johannes
->
+> ---
+>  drivers/net/wireless/b43/phy_lp.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index a51da6e..3889519 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1939,6 +1939,10 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
+>  	tmp5 = tmp7 * 0x100;
+>  	tmp6 = tmp5 / tmp4;
+>  	tmp7 = tmp5 % tmp4;
+> +	b43_radio_write(dev, B2062_S_RFPLL_CTL27, tmp6);
+> +	tmp5 = tmp7 * 0x100;
+> +	tmp6 = tmp5 / tmp4;
+> +	tmp7 = tmp5 % tmp4;
+>  	b43_radio_write(dev, B2062_S_RFPLL_CTL28, tmp6);
+>  	tmp5 = tmp7 * 0x100;
+>  	tmp6 = tmp5 / tmp4;
+
+
+
+-- 
+Greetings, Michael.
