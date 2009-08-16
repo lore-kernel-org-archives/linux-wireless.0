@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53146 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757798AbZHQR1d (ORCPT
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:64541 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbZHPQkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:33 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v5 23/33] wireless: downgrade TI driver from menuconfig to config
-Date: Mon, 17 Aug 2009 13:27:22 -0400
-Message-Id: <1250530052-14783-24-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 16 Aug 2009 12:40:10 -0400
+Received: by fxm11 with SMTP id 11so1916389fxm.39
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2009 09:40:11 -0700 (PDT)
+Message-ID: <4A883669.6010504@gmail.com>
+Date: Sun, 16 Aug 2009 18:40:09 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Fix a bug in the B2062 channel tune path
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few options here so let this expand upon
-selection. To give it the same effect of a menuconfig
-though we ifdef the options based on the base config
-menu selection. Because of this new check we can simplify
-the kconfig entries to not depend on WL12XX anymore as that
-is now implied.
+I missed the "+16" part of the instruction in the specs.
 
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
- drivers/net/wireless/wl12xx/Kconfig |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/b43/phy_lp.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index 1818e45..ef250e9 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -1,13 +1,15 @@
--menuconfig WL12XX
-+config WL12XX
- 	boolean "TI wl12xx driver support"
- 	depends on MAC80211 && EXPERIMENTAL
- 	---help---
- 	  This will enable TI wl12xx driver support. The drivers make
- 	  use of the mac80211 stack.
- 
-+if WL12XX
-+
- config WL1251
- 	tristate "TI wl1251 support"
--	depends on WL12XX && GENERIC_HARDIRQS
-+	depends on GENERIC_HARDIRQS
- 	select FW_LOADER
- 	select CRC7
- 	---help---
-@@ -41,7 +43,7 @@ config WL1251_SDIO
- 
- config WL1271
- 	tristate "TI wl1271 support"
--	depends on WL12XX && SPI_MASTER && GENERIC_HARDIRQS
-+	depends on SPI_MASTER && GENERIC_HARDIRQS
- 	select FW_LOADER
- 	select CRC7
- 	---help---
-@@ -50,3 +52,5 @@ config WL1271
- 
- 	  If you choose to build a module, it'll be called wl1271. Say N if
- 	  unsure.
-+
-+endif # WL12XX
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 1de4a74..5a7b873 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1952,7 +1952,7 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL29, tmp6 + ((2 * tmp7) / tmp4));
+ 	tmp8 = b43_phy_read(dev, B2062_S_RFPLL_CTL19);
+ 	tmp9 = ((2 * tmp3 * (tmp8 + 1)) + (3 * tmp1)) / (6 * tmp1);
+-	b43_radio_write(dev, B2062_S_RFPLL_CTL23, tmp9 >> 8);
++	b43_radio_write(dev, B2062_S_RFPLL_CTL23, (tmp9 >> 8) + 16);
+ 	b43_radio_write(dev, B2062_S_RFPLL_CTL24, tmp9 & 0xFF);
+ 	
+ 	lpphy_b2062_vco_calib(dev);
 -- 
-1.6.2.5
+1.6.2.4
+
+
 
