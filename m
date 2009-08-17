@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:37477 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756921AbZHNTL7 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:35825 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753125AbZHQOVE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 15:11:59 -0400
-Received: by bwz22 with SMTP id 22so1313426bwz.18
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 12:11:59 -0700 (PDT)
-Message-ID: <4A85B6FF.8070304@gmail.com>
-Date: Fri, 14 Aug 2009 21:11:59 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	Mon, 17 Aug 2009 10:21:04 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so673144fga.17
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 07:21:04 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Don't adjust gain table for rev2+ when setting
- channel
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH] mac80211: remove deprecated API
+References: <1250518687.15103.9.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 17 Aug 2009 17:21:02 +0300
+In-Reply-To: <1250518687.15103.9.camel@johannes.local> (Johannes Berg's message of "Mon\, 17 Aug 2009 16\:18\:07 +0200")
+Message-ID: <874os6v7w1.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rev2+ never needs to have gain tables adjusted according to the spec.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/phy_lp.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> All but two drivers have now stopped using the two
+> deprecated members radio_enabled and beacon_int,
+> so it's about time to remove them for good.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/at76c50x-usb.c |    5 ++---
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 76457f7..adfa7bf 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -2059,10 +2059,9 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
- 		if (err)
- 			return err;
- 		lpphy_japan_filter(dev, new_channel);
-+		lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
- 	}
- 
--	lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
--
- 	return 0;
- }
- 
+For the at76 part:
+
+Acked-by: Kalle Valo <kalle.valo@iki.fi>
+
 -- 
-1.6.2.4
-
-
-
+Kalle Valo
