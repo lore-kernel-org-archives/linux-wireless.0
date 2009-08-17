@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:45695 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100AbZH0Vrr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:47:47 -0400
-Received: by iwn42 with SMTP id 42so748860iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:47:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-	<1251406807-31495-14-git-send-email-luciano.coelho@nokia.com>
-	<1251408741.22482.14.camel@johannes.local> <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 27 Aug 2009 14:47:29 -0700
-Message-ID: <43e72e890908271447o26348e6docc126b440aa80724@mail.gmail.com>
-Subject: Re: [PATCH 13/13] wl1271: added Juuso Oikarinen as module author
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:62464 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753186AbZHQUao (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 16:30:44 -0400
+Subject: Re: [PATCH] b43: Fix sparse warnings
+From: Pavel Roskin <proski@gnu.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <200908151204.11024.mb@bu3sch.de>
+References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
+	 <69e28c910908141404q42685aebo93718a7504020c06@mail.gmail.com>
+	 <1250285729.8137.48.camel@mj>  <200908151204.11024.mb@bu3sch.de>
+Content-Type: text/plain
+Date: Mon, 17 Aug 2009 16:30:41 -0400
+Message-Id: <1250541041.10511.10.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 2:35 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Thu, Aug 27, 2009 at 2:32 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
->> On Fri, 2009-08-28 at 00:00 +0300, Luciano Coelho wrote:
->>> Add Juuso as one of the module authors, since he's working heavily on this
->>> module as well.
->>>
->>> Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
->>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
->>> ---
->>>  drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
->>>  1 files changed, 2 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
->>> index a97d434..4163eac 100644
->>> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
->>> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
->>> @@ -1449,4 +1449,5 @@ module_init(wl1271_init);
->>>  module_exit(wl1271_exit);
->>>
->>>  MODULE_LICENSE("GPL");
->>> -MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
->>> +MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>, "
->>> +           "Juuso Oikarinen <juuso.oikarinen@nokia.com>");
->>
->> Use multiple MODULE_AUTHORs instead.
->
-> Where is that defined?
+On Sat, 2009-08-15 at 12:04 +0200, Michael Buesch wrote:
 
-Hah nevermind, my mind read MODULE_AUTHORS() :)
+> I still do not understand why it does complain about an _explicit_ truncation.
+> That's simply stupid. If I program an explicit truncation I _do_ mean to truncate the value.
 
-  Luis
+Actually, it's a bug in sparse.  Sparse acts inconsistently.
+
+This causes a warning:
+
+void mask(unsigned short mask);
+static void test(void)
+{
+        mask((unsigned short)0xffff0000);
+}
+
+test.c:4:30: warning: cast truncates bits from constant value (ffff0000
+becomes 0)
+
+But this is OK:
+
+void mask(unsigned short mask);
+static void test(void)
+{
+        mask((unsigned short)0xfffff000);
+}
+
+Moreover, this is OK, even though the cast changes the value of the
+constant:
+
+void mask(unsigned short mask);
+static void test(void)
+{
+        mask((unsigned short)0xfffff000U);
+}
+
+I suggest that we take no action until sparse is fixed.  I'm going to
+report the issue to the sparse mailing list now.
+
+-- 
+Regards,
+Pavel Roskin
