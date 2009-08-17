@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:47409 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755113AbZHCT7J (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:33037 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754374AbZHQPbk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:59:09 -0400
-Date: Mon, 3 Aug 2009 21:59:09 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: nico@cam.org
-Subject: [PATCH 5/5] mwl8k: prevent module unload hang
-Message-ID: <20090803195909.GL18639@mail.wantstofly.org>
-Mime-Version: 1.0
+	Mon, 17 Aug 2009 11:31:40 -0400
+Received: by bwz22 with SMTP id 22so2380010bwz.18
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 08:31:39 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: Re: [PATCH v2] cfg80211: fix deadlock
+References: <1250422358.17522.0.camel@johannes.local>
+	<1250504737.15103.1.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 17 Aug 2009 18:31:33 +0300
+In-Reply-To: <1250504737.15103.1.camel@johannes.local> (Johannes Berg's message of "Mon\, 17 Aug 2009 12\:25\:37 +0200")
+Message-ID: <87vdkmtq22.fsf@litku.valot.fi>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to unregister our ieee80211_hw before resetting the chip, as
-the former causes firmware commands to be issued which will time out
-once the chip has been reset.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
-Acked-by: Nicolas Pitre <nico@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> When removing an interface with nl80211, cfg80211 will
+> deadlock in the netdev notifier because we're already
+> holding rdev->mtx and try to acquire it again to verify
+> the scan has been done.
+>
+> This bug was introduced by my patch
+> "cfg80211: check for and abort dangling scan requests".
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 4890f8f..4fc1271 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -3743,6 +3743,8 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
- 
- 	ieee80211_stop_queues(hw);
- 
-+	ieee80211_unregister_hw(hw);
-+
- 	/* Remove tx reclaim tasklet */
- 	tasklet_kill(&priv->tx_reclaim_task);
- 
-@@ -3756,8 +3758,6 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
- 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
- 		mwl8k_txq_reclaim(hw, i, 1);
- 
--	ieee80211_unregister_hw(hw);
--
- 	for (i = 0; i < MWL8K_TX_QUEUES; i++)
- 		mwl8k_txq_deinit(hw, i);
- 
+[...]
+
+> Reported-by: Christian Lamparter <chunkeey@web.de>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+
+I was bitten by the bug as well and this patch fixed it. Thanks.
+
+Tested-by: Kalle Valo <kalle.valo@iki.fi>
+
 -- 
-1.5.6.4
+Kalle Valo
