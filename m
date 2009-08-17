@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:38148 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757799AbZHQLsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 07:48:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [RFT] Threaded IRQ handlers for b43
-Date: Mon, 17 Aug 2009 13:48:04 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200908161539.57917.mb@bu3sch.de>
-In-Reply-To: <200908161539.57917.mb@bu3sch.de>
+Received: from mail-fx0-f215.google.com ([209.85.220.215]:41609 "EHLO
+	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261AbZHQPoP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 11:44:15 -0400
+Received: by fxm11 with SMTP id 11so2361708fxm.39
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 08:44:16 -0700 (PDT)
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: correct definitions for 0th bit defines
+References: <20090817151814.GB13125@hash.localnet>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 17 Aug 2009 18:44:13 +0300
+In-Reply-To: <20090817151814.GB13125@hash.localnet> (Bob Copeland's message of "Mon\, 17 Aug 2009 11\:18\:14 -0400")
+Message-ID: <87r5vatpgy.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908171348.04399.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 16 August 2009 15:39:57 Michael Buesch wrote:
-> This request-for-test patch converts the b43 driver to use threaded
-> interrupt handlers. This is needed to support b43 on SDIO. But it also
-> simplifies the locking by removal of the wl->irq_lock spinlock.
-> 
-> http://bu3sch.de/patches/wireless-testing/20090816-1535/patches/002-b43-threaded-irq-handler.patch
-> 
-> A known regression is a new race between the interrupt handler and the
-> beacon update handler. But as long as you don't run AP mode, it won't hurt.
-> I'm working on a solution...
-> 
-> Please test this patch whether it creates other regressions (performance and crashes).
-> 
-> The patch also needs the following hack to the threaded IRQ code:
-> http://bu3sch.de/patches/wireless-testing/20090816-1535/patches/001-hack-threaded-irqs.patch
-> 
+Bob Copeland <me@bobcopeland.com> writes:
 
-This is the correct fix for the threaded IRQ code. Apply this instead of the hack:
-http://bu3sch.de/patches/wireless-testing/20090817-1347/patches/001-fix-irq-thread-wakeup.patch
+> ACX_SLV_SOFT_RESET_BIT and ACX_REG_EEPROM_START_BIT are both defined
+> as "1" in the vendor driver code, but they were defined to be BIT(1)
+> ("2") here.  
+>
+> The SOFT_RESET typo ensures that wl1251_boot_soft_reset() doesn't;
+> as a result the device hangs when trying to reprogram the PLL
+> registers while running.
+
+My bad, thanks for fixing this.
+
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
 
 -- 
-Greetings, Michael.
+Kalle Valo
