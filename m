@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imr-da03.mx.aol.com ([205.188.105.145]:47782 "EHLO
-	imr-da03.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215AbZHBBsZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53127 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757747AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 21:48:25 -0400
-Message-ID: <4A74EEB2.6040400@netscape.net>
-Date: Sat, 01 Aug 2009 19:41:06 -0600
-From: Patrick Simmons <linuxrocks123@netscape.net>
-MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: mb@bu3sch.de, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-Subject: Re: [PATCH] Fix SPARC64 unaligned access in zd_mac_rx
-References: <1249029583.29587.46.camel@johannes.local>	<20090731.222350.254918321.davem@davemloft.net>	<200908011240.17229.mb@bu3sch.de> <20090801.091207.217317135.davem@davemloft.net>
-In-Reply-To: <20090801.091207.217317135.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	"Johannes Berg\"" <johannes@sipsolutions.net>
+Subject: [PATCH v5 18/33] wireless: move mac80211_hwsim to top level wireless driver menu
+Date: Mon, 17 Aug 2009 13:27:17 -0400
+Message-Id: <1250530052-14783-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
-> From: Michael Buesch <mb@bu3sch.de>
-> Date: Sat, 1 Aug 2009 12:40:16 +0200
-> 
->> On Saturday 01 August 2009 07:23:50 David Miller wrote:
->>> From: Johannes Berg <johannes@sipsolutions.net>
->>> Date: Fri, 31 Jul 2009 10:39:43 +0200
->>>
->>>> On Fri, 2009-07-31 at 01:59 -0600, Patrick Simmons wrote:
->>>>> I'm running zd1211rw on SPARC64 and was getting a lot of "unaligned 
->>>>> access" messages in dmesg.  I tracked the problem down to this line, and 
->>>>> changing the cast to a memcpy fixes the issue.
->>>>>  
->>>>> -       fc = *(__le16 *)buffer;
->>>>> +       memcpy(&fc,buffer,sizeof(__le16));
->>>>>         need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
->>>> Please use get_unaligned instead.
->>> And, more specifically, one of the endian get_unaligned variants.
->> No. fc is supposed to be LE.
-> 
-> Ok, I see.
+mac80211_hwsim is not a device driver for real hardware it is a
+driver we can use to simulate a real device for testing mac80211.
+Move it to the top wireless driver menu by removing its dependency
+on WLAN_80211.
 
-Revised patch below.
+While at it move it outside of the WLAN_80211 section as we'll
+be touching all those later.
 
-Signed-off-by: Patrick Simmons <linuxrocks123@netscape.net>
+Cc: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg" <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -694,7 +694,7 @@
-                         && !mac->pass_ctrl)
-                 return 0;
-
--       fc = *(__le16 *)buffer;
-+       fc = get_unaligned(buffer);
-         need_padding = ieee80211_is_data_qos(fc) ^ ieee80211_has_a4(fc);
-
-         skb = dev_alloc_skb(length + (need_padding ? 2 : 0));
-
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f9f2b67..e57c62d 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -558,19 +558,6 @@ config ADM8211
+ 
+ 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 
+-config MAC80211_HWSIM
+-	tristate "Simulated radio testing tool for mac80211"
+-	depends on MAC80211 && WLAN_80211
+-	---help---
+-	  This driver is a developer testing tool that can be used to test
+-	  IEEE 802.11 networking stack (mac80211) functionality. This is not
+-	  needed for normal wireless LAN usage and is only for testing. See
+-	  Documentation/networking/mac80211_hwsim for more information on how
+-	  to use this tool.
+-
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called mac80211_hwsim.  If unsure, say N.
+-
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ 
+@@ -606,4 +593,17 @@ config USB_NET_RNDIS_WLAN
+ 
+ 	  If you choose to build a module, it'll be called rndis_wlan.
+ 
++config MAC80211_HWSIM
++	tristate "Simulated radio testing tool for mac80211"
++	depends on MAC80211
++	---help---
++	  This driver is a developer testing tool that can be used to test
++	  IEEE 802.11 networking stack (mac80211) functionality. This is not
++	  needed for normal wireless LAN usage and is only for testing. See
++	  Documentation/networking/mac80211_hwsim for more information on how
++	  to use this tool.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called mac80211_hwsim.  If unsure, say N.
++
+ endmenu
 -- 
-If I'm not here, I've gone out to find myself.  If I get back before I 
-return, please keep me here.
+1.6.2.5
+
