@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:12168 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbZHRS1w (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53179 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757848AbZHQR1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 14:27:52 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so815325eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 11:27:53 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] rt2x00: configure_filter() callback is allowed to sleep
-Date: Tue, 18 Aug 2009 20:27:51 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908181954.23419.IvDoorn@gmail.com> <200908182004.58584.IvDoorn@gmail.com> <1250618853.7887.0.camel@johannes.local>
-In-Reply-To: <1250618853.7887.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200908182027.51461.IvDoorn@gmail.com>
+	Mon, 17 Aug 2009 13:27:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v5 31/33] wireless: update WIRELESS_EXT kconfig entry
+Date: Mon, 17 Aug 2009 13:27:30 -0400
+Message-Id: <1250530052-14783-32-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 18 August 2009, Johannes Berg wrote:
-> On Tue, 2009-08-18 at 20:04 +0200, Ivo van Doorn wrote:
-> 
-> > > Speaking of which -- bss_info_changed can sleep too, which means you can
-> > > remove DRIVER_REQUIRE_SCHEDULED completely I think?
-> > 
-> > Seriously, that would be great. Patch coming up in a few minutes. ;)
-> 
-> Cool.
-> 
-> Hey, sorry it took so long to make it possible :)
->
-> I wonder if drivers now ever have a reason to queue work on the mac80211
-> workqueue? Some periodic calibration tasks maybe?
+Provide more documentation as to why its being deprecated.
 
-Well after the removal of DRIVER_REQUIRE_SCHEDULED I only have 1
-workqueue structure left: Updating beacons.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/Kconfig |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-During the update it needs to iterate through all interfaces using
-ieee80211_iterate_active_interfaces_atomic(), during the actual update
-a mutex is required because USB device access is required. And not in the least
-the function is called by the set_tim() callback function.
-
-Ivo
-
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 991e177..982004b 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -81,8 +81,16 @@ config WIRELESS_EXT
+ 	bool "Wireless extensions"
+ 	default y
+ 	---help---
+-	  This option enables the legacy wireless extensions
+-	  (wireless network interface configuration via ioctls.)
++	  This option enables the legacy wireless extensions.
++	  Wireless extensions was the first 802.11 wireless configuration
++	  API used by the networking subsystem. You will not need this unless
++	  you have old userspace utilities or old wireless devices which
++	  have not yet been ported to cfg80211.
++
++	  Wireless extensions is being deprecated in favor for cfg80211. For
++	  information regarding why see the wireless wiki:
++
++	  http://wireless.kernel.org/en/developers/Documentation/Wireless-Extensions
+ 
+ 	  Say Y unless you've upgraded all your userspace to use
+ 	  nl80211 instead of wireless extensions.
+-- 
+1.6.2.5
 
