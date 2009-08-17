@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53098 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757615AbZHQR1b (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49901 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751781AbZHQKYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [PATCH v5 05/33] wireless: move p54 and prism54 drivers closer on kconfig
-Date: Mon, 17 Aug 2009 13:27:04 -0400
-Message-Id: <1250530052-14783-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 17 Aug 2009 06:24:02 -0400
+Date: Mon, 17 Aug 2009 13:23:54 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Christian Felsing <hostmaster@taunusstein.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Multiple BSSID problem with hostapd
+Message-ID: <20090817102354.GA19258@jm.kir.nu>
+References: <4A73F9CB.8000606@taunusstein.net> <4A75333D.9070100@taunusstein.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4A75333D.9070100@taunusstein.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Christian Lamparter <chunkeey@web.de>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Sun, Aug 02, 2009 at 08:33:33AM +0200, Christian Felsing wrote:
+> After investigating source code following function caused my problem:
+> 
+> static int i802_bss_add(void *priv, const char *ifname, const u8 *bssid)
+> {
+>         int ifidx;
+> 
+>         /*
+>          * The kernel supports that when the low-level driver does,
+>          * but we currently don't because we need per-BSS data that
+>          * currently we can't handle easily.
+>          */
+>         return -1;
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index fdf0257..cfd192e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -284,6 +284,8 @@ config PCMCIA_WL3501
- 	 It has basic support for Linux wireless extensions and initial
- 	 micro support for ethtool.
- 
-+source "drivers/net/wireless/p54/Kconfig"
-+
- config PRISM54
- 	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus' 
- 	depends on PCI && EXPERIMENTAL && WLAN_80211
-@@ -503,7 +505,6 @@ config MAC80211_HWSIM
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called mac80211_hwsim.  If unsure, say N.
- 
--source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath/Kconfig"
- 
- menuconfig INTEL_80211
+Some more investigation would show that this does not exist in the
+hostapd development branch..
+
+> Obviously hostapd does not support multiple SSIDs because that function
+> returns always an error.
+
+That is the case for hostapd 0.6.9. In any case, there are number of new
+kernel features that may not be fully supported by the 0.6.x branch and
+checking the current development branch (0.7.x) would be a good idea
+when advanced AP functionality is desired.
+
 -- 
-1.6.2.5
-
+Jouni Malinen                                            PGP id EFC895FA
