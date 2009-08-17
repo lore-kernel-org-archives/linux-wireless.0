@@ -1,110 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50739 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752251AbZHKUx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 16:53:27 -0400
-Message-ID: <4A81DA33.1050405@hauke-m.de>
-Date: Tue, 11 Aug 2009 22:53:07 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/7] [compat-2.6] pcmcia_parse_tuple was redefined in
- 	pcmcia/cistpl.h
-References: <1249735096-27071-1-git-send-email-hauke@hauke-m.de> 	<1249735096-27071-3-git-send-email-hauke@hauke-m.de> <43e72e890908101520x19fddcddx72215fb0851baf2f@mail.gmail.com>
-In-Reply-To: <43e72e890908101520x19fddcddx72215fb0851baf2f@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig5C2F661DAADA94C6B47F988B"
+Received: from xc.sipsolutions.net ([83.246.72.84]:38000 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbZHQHYA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 03:24:00 -0400
+Subject: Re: [PATCH] cfg80211: set SME state machine correctly for roam
+ event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1250476527.9651.21.camel@debian>
+References: <1250155399-17847-1-git-send-email-yi.zhu@intel.com>
+	 <1250157249.21250.0.camel@johannes.local> <1250222301.4972.31.camel@debian>
+	 <1250261645.24924.22.camel@johannes.local>
+	 <1250476527.9651.21.camel@debian>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xIA2iaW/PxSXdsSvEvtv"
+Date: Mon, 17 Aug 2009 09:23:52 +0200
+Message-Id: <1250493832.11216.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig5C2F661DAADA94C6B47F988B
-Content-Type: text/plain; charset=UTF-8
+
+--=-xIA2iaW/PxSXdsSvEvtv
+Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-Hi Luis,
+On Mon, 2009-08-17 at 10:35 +0800, Zhu Yi wrote:
 
-Thank you for applying the rest of the patches. Next time I will use
---cover-letter when generating the patches.
+> Yes, the iwmc3200wifi device sends special disconnect and reassoc events
+> for roaming. But since we know we'll be reassociated shortly, we don't
+> propagate this special disconnect event outside (to kernel SME and
+> userspace). I agree we should use cfg80211_roamed() to indicate a real
+> roam event. But sometimes the device reassociated to the same BSSID. Do
+> you think the driver should simply ignore this event or still call
+> cfg80211_connect_result() as well?
 
-Luis R. Rodriguez wrote:
-> On Sat, Aug 8, 2009 at 5:38 AM, Hauke Mehrtens<hauke@hauke-m.de> wrote:=
+You probably can't just ignore it since it might require re-doing WPA
+handshake, so I think I'd just send a "roamed to the same" event.
 
->> fix build:
->> undef pcmcia_parse_tuple before redefine it again.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  compat/compat-2.6.28.h |    8 +++++++-
->>  1 files changed, 7 insertions(+), 1 deletions(-)
->>
->> diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
->> index fdc021a..e25259f 100644
->> --- a/compat/compat-2.6.28.h
->> +++ b/compat/compat-2.6.28.h
->> @@ -29,7 +29,13 @@
->>  })
->>  #endif /* From include/asm-generic/bug.h */
->>
->> -#define pcmcia_parse_tuple(tuple, parse) pcmcia_parse_tuple(NULL, tup=
-le, parse)
->> +#include <pcmcia/cs_types.h>
->> +#include <pcmcia/cs.h>
->> +#include <pcmcia/cistpl.h>
->> +#ifdef pcmcia_parse_tuple
->> +#undef pcmcia_parse_tuple
->> +#define pcmcia_parse_tuple(tuple, parse) pccard_parse_tuple(tuple, pa=
-rse)
->> +#endif
->=20
-> Where did pccard_parse_tuple() come from?
-In include/pcmcia/cistpl.h pcmcia_parse_tuple(p_dev, tuple, parse) is
-defined as pccard_parse_tuple(tuple, parse)
+> Continue with the above case, in my current implementation, I call=20
+> cfg80211_connect_result(). Then I find the SME enters a weird state
+> (CFG80211_SME_CONNECTED while wdev->current_bss is NULL). So I think if
+> we don't allow cfg80211_connect_result() to be called while
+> CFG80211_SME_CONNECTED, let's put a big WARN_ON at the beginning of
+> __cfg80211_connect_result(). The current code seems allow this case
+> (i.e. send some roam event), thus I'm confused.
 
-> Did you see the commit 0df8084caf53774113c8f118e9dd43e660cf9e15 by any
-> chance? That fixed compilation for me against older kernels.
-I still get a compile error with recent compat-wireless including commit
-0df8084caf53774113c8f118e9dd43e660cf9e15 with kernel <=3D 2.6.27 in Ubunt=
-u:
+Ok, I'll take a look. There probably was a reason that's somewhat
+related to the cfg80211 SME, but it must be possible to change.
 
-In file included from
-/compat-wireless-git/drivers/net/wireless/b43/pcmcia.c:30:
-include/pcmcia/cistpl.h:610:1: warning: "pcmcia_parse_tuple" redefined
-In file included from /compat-wireless-git/include/net/compat.h:19,
-                 from <command-line>:0:
-/compat-wireless-git/include/net/compat-2.6.28.h:32:1: warning: this is
-the location of the previous definition
+johannes
 
-The above patch fixes it for me. The patch does not look relay nice, do
-you have a better idea how to solve this problem?
-
-Hauke
-
-
---------------enig5C2F661DAADA94C6B47F988B
+--=-xIA2iaW/PxSXdsSvEvtv
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIcBAEBAgAGBQJKgdo4AAoJEIZ0px9YPRMyz14P/A+dC989vcul2n/W+CtA3SJS
-qjp3Ww/Yqpyf8O1SOjn8lNr5VYn762fpYuVjHj+hSFeGS62PoWajpd5uj/faYT3U
-ox5s29eBTHyuLZVrhg++JPE9IQ6WPr/nRkIqRRT+NqAbIfd2z8hHRTrAfnWbaqI6
-MHAb/YLO44vTfpNcJOIrKf6xFPwIfasUEvxLEsi6s7kGWJ3TigLDsVAjMtqDk2dy
-rGEq81y3SeMTzl/wV7YFhU5jMspSuAdhBrwaDPiDD+gG9sN5x0N3SlvHJSIwf3nW
-Go5CN/EwqcBjwQM0SdD2jqVwzbO3xv3wPefvYUTXR6nFjOWdVsD1Jyt6X9nO12d5
-gKLmU1qH4f7Ay5VBBeUmOdNrEyEGS0F7X6kQRmvsQhVFIe4MxTTnwbmI8eqPBpTg
-b8/Z/NCdX5FtaZIdWmdbdpQndC1T05oprJ6f2lOWyoXxQ45R2mergYk13yXr2mOv
-r1Tz2OwRyq/PCL0evAthC8rJmZDz8O6sLdIQbFj9F29z/Ar/xxFOH5ygxKI71U4z
-a9JDiq1i/cbGSjCNLuEA0DGOSjmJefz83IrZXR5T0flJ/dvb408ziDy77MlOSMFO
-T4qoW+ydW8cSb4lYoRKCi2EVhQXpKpLq9PU3VD0MHNuSBeSa9FpF0LHv+bw5mdJI
-DO4NbRAVTLFzbwbonYyY
-=IVsc
+iQIcBAABAgAGBQJKiQV+AAoJEODzc/N7+QmapnMP+wTWqXwRqrHhbsioe2lrdsak
+XfQD6HIMdoKs3D4ILWBYs3IZ6MlgjUv7mv6IH2mlH1oAJZienbhpvz/PvfwMLwcC
+P87+C56fKyP1vSd/WfyLvLE9V6CfOqxdWUuy7NRr1uZWWbDqzkFIhz0a0WibC5pG
+Z34t/V31rVt05O4uK2USrEf4TSktRcpZdrED7yYJVnd25NnFAnJdfOWs8oNXa0Mo
+hnKQPpcGCQsMZsjZ6iDY/a6TPcu7mKG7WLSlpuNgg/EwuZ7tE1tp3+zYCCUq30UF
+BS9E80m3Neagrs05Zm0YeWWbeo0+SF7t2BUN09bM48+PKCx7x8frAVDs7zVCaXH+
+JTTXdRKIDAfmjc9L8Vivtq+EwLy+TC900opNiOEkIfA+WeJgqphbpHL6rNBDUO2e
+Rcpz78EwaE2uOLi8fCLzvjxFpoLNf69VDgfXUW1lmPBCOjHANvlUKSIIo4a194Ze
+BY3aaJYzmExb5WJmamPlwJgt91x4rVhiIiyY0OPofbqJyu7xY2ydpGb8M8u2qc56
+llBZOlLx0EA+Butxf1t3cPEGWbytdyef6OU1bmHHYv75uUPqUWBzaOo9WQUwfull
+O3xEmHfatCTBzBVfcTLlXW/w2zKosy1jxYVnx3H5JHmAnclzo2/D4EUioN+wtCqB
+Oxz/ipZB7l9Dp59vZf+m
+=+Nj7
 -----END PGP SIGNATURE-----
 
---------------enig5C2F661DAADA94C6B47F988B--
+--=-xIA2iaW/PxSXdsSvEvtv--
+
