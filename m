@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f195.google.com ([209.85.212.195]:51192 "EHLO
-	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756485AbZHZOIy convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53092 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455AbZHQR1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 10:08:54 -0400
-Received: by vws33 with SMTP id 33so132023vws.33
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 07:08:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090825233827.GA10998@mosca>
-References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
-	 <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
-	 <20090825185842.GA7357@mosca>
-	 <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
-	 <20090825233827.GA10998@mosca>
-Date: Wed, 26 Aug 2009 10:08:55 -0400
-Message-ID: <b6c5339f0908260708l38208046o43330d9eda808b1e@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Aug 2009 13:27:31 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Zhu Yi <yi.zhu@intel.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH v5 02/33] wireless: group intel wireless drivers on kconfig
+Date: Mon, 17 Aug 2009 13:27:01 -0400
+Message-Id: <1250530052-14783-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 7:38 PM, Luis R. Rodriguez<lrodriguez@atheros.com>
-> First thing I saw upon a quick review was we were relying on our own
-> curband for RX instead of the cfg80211 hw->conf band. Now granted
-> that *may* be updated properly, and it seems that may be the case,
+This moves intel wireless drivers into their own menu.
+Intel drivers are plenty and so are their driver options so we
+give them its own menuconfig.
 
-Looks good at first glance, except it conflicts with changes I
-recently posted.  I'm all for getting rid of driver copies of stuff
-in the stack.
+Cc: Zhu Yi <yi.zhu@intel.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Samuel Ortiz <samuel.ortiz@intel.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-> -       /* NB: setup here so ath5k_rate_update is happy */
-> -       if (test_bit(AR5K_MODE_11A, ah->ah_modes))
-> -               ath5k_setcurmode(sc, AR5K_MODE_11A);
-> -       else
-> -               ath5k_setcurmode(sc, AR5K_MODE_11B);
-> -
-
-I take it ath5k_rate_update didn't really care?
-
->  ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
->  {
->        ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
-> -               sc->curchan->center_freq, chan->center_freq);
-> +               sc->hw->conf.channel->center_freq, chan->center_freq);
-
-So, does hw->conf.channel change before we're told to change channel,
-or after?
-
-> -       if (chan) {
-> -               ath5k_hw_set_imr(ah, 0);
-> -               ath5k_txq_cleanup(sc);
-> -               ath5k_rx_stop(sc);
-> -
-> -               sc->curchan = chan;
-> -               sc->curband = &sc->sbands[chan->band];
-> -       }
-
-Unless I missed something I think we still want:
-
-    if (chan_change)
-        ath5k_chan_set(...);
-
-> -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
-> +       ret = ath5k_hw_reset(ah, sc->opmode, chan, chan_change);
-
-There's just no synchronization of this stuff, not too surprising there
-are races.
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 72dbac6..ab7a185 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -495,9 +495,22 @@ config MWL8K
+ 
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath/Kconfig"
++
++menuconfig INTEL_80211
++	bool "Intel"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Intel wireless drivers. This
++	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
++
++if INTEL_80211
++
+ source "drivers/net/wireless/ipw2x00/Kconfig"
+ source "drivers/net/wireless/iwlwifi/Kconfig"
+ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
++
++endif # INTEL_80211
++
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.2.5
+
