@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39959 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751430AbZHZUrI convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35906 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104AbZHQPaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 16:47:08 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] b43: Remove scary message from LP-PHY's Kconfig
-Date: Wed, 26 Aug 2009 22:47:05 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
-In-Reply-To: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+	Mon, 17 Aug 2009 11:30:10 -0400
+Date: Mon, 17 Aug 2009 11:24:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31-rc6 lockdep report
+Message-ID: <20090817152432.GB5412@tuxdriver.com>
+References: <20090817151223.GA13125@hash.localnet> <1250522209.15103.19.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908262247.07735.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250522209.15103.19.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 26 August 2009 21:48:52 Gábor Stefanik wrote:
-> From: root Gábor Stefanik <netrolller.3d@gmail.com>
+On Mon, Aug 17, 2009 at 05:16:49PM +0200, Johannes Berg wrote:
+> On Mon, 2009-08-17 at 11:12 -0400, Bob Copeland wrote:
+> > Haven't looked at it yet, I just hit this one while riding the
+> > train this morning and connecting to someone's adhoc station.
+> > 
+> > [43559.227490] wlan0: Selected IBSS BSSID 2a:51:0a:35:5c:a1 based on configured SSID
+> > [43559.258660] ath5k phy0: bf=efb0b680 bf_skb=(null)
+> > [43559.291501] phy0: Adding new IBSS station 00:21:e9:94:5e:93 (dev=wlan0)
+> > [43559.291518] phy0: Allocated STA 00:21:e9:94:5e:93
+> > [43559.292327] phy0: Inserted STA 00:21:e9:94:5e:93
+> > [43633.646820] phy0: Adding new IBSS station 00:1e:c2:3b:f4:e3 (dev=wlan0)
+> > [43633.646838] phy0: Allocated STA 00:1e:c2:3b:f4:e3
+> > [43633.646859] 
+> > [43633.646860] =========================================================
+> > [43633.646864] [ INFO: possible irq lock inversion dependency detected ]
+> > [43633.646867] 2.6.31-rc6 #179
+> > [43633.646870] ---------------------------------------------------------
+> > [43633.646873] cc1/18756 just changed the state of lock:
+> > [43633.646876]  (&local->sta_lock){..-...}, at: [<fa244acd>] sta_info_insert+0x91/0x174 [mac80211]
+> > [43633.646900] but this lock took another, SOFTIRQ-unsafe lock in the past:
+> > [43633.646903]  (todo_lock){+.+...}
+> > [43633.646906] 
+> > [43633.646907] and interrupts could create inverse lock ordering between them.
 > 
-> The most common LP-PHY device, BCM4312, is now fully functional.
-> So, no need to say "probably won't work for you" anymore.
-> It's also not "for debuggers and developers only", as it is
-> perfectly usable for end-users now (at least for BCM4312).
+> Yeah, commit 6565a1c6d2e0754b5f1e8160252f6dc9493ed6c4 needs to be
+> backported. I suspect it applies as-is, John mind trying that? If not,
+> let me know and I'll port it.
 
-Please also add
-default y
-
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> This should only be applied once the "Qdiv roundup" and the "Fix and update"
-> patches reach the tree, as those 2 patches are needed to make the BCM4312
-> really work.
-> 
->  drivers/net/wireless/b43/Kconfig |    3 ---
->  1 files changed, 0 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-> index 87d10c8..1c0999b 100644
-> --- a/drivers/net/wireless/b43/Kconfig
-> +++ b/drivers/net/wireless/b43/Kconfig
-> @@ -88,9 +88,6 @@ config B43_PHY_LP
->  	  and embedded devices. It supports 802.11a/g
->  	  (802.11a support is optional, and currently disabled).
->  
-> -	  This is heavily experimental, and probably will not work for you.
-> -	  Say N unless you want to help debug the driver.
-> -
->  # This config option automatically enables b43 LEDS support,
->  # if it's possible.
->  config B43_LEDS
-
-
+Cherry-picked it ok, will send along w/ next batch of fixes...
 
 -- 
-Greetings, Michael.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
