@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51931 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbZHJUbR (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53107 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757694AbZHQR1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 16:31:17 -0400
-Date: Mon, 10 Aug 2009 16:26:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ath9k: Fix read buffer overflow
-Message-ID: <20090810202622.GB6060@tuxdriver.com>
-References: <4A7CA188.1070706@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A7CA188.1070706@gmail.com>
+	Mon, 17 Aug 2009 13:27:31 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>,
+	Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH v5 06/33] wireless: group Conexant / STEricsson drivers in kconfig
+Date: Mon, 17 Aug 2009 13:27:05 -0400
+Message-Id: <1250530052-14783-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 07, 2009 at 11:50:00PM +0200, Roel Kluin wrote:
-> Prevent a read of powInfo[-1] in the first iteration.
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> The last hunk I already sent in a previous patch.
+There's only a few of these so we keep them under a
+config option which expands upon selection.
 
-The last two hunks, apparently -- neither of them apply.
+Cc: Christian Lamparter <chunkeey@web.de>
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-Why on earth would you randomly include those hunks here?  Especially
-if you already sent them?
-
-Listen, I'm glad you are there to do these various clean-ups.
-But honestly your patches seem to always have some problem that
-requires manual intervention to apply them.  You make my life hard,
-and you slow me down.  That makes John a grumpy boy.
-
-John
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index cfd192e..a123f6e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -284,6 +284,18 @@ config PCMCIA_WL3501
+ 	 It has basic support for Linux wireless extensions and initial
+ 	 micro support for ethtool.
+ 
++config CONEXANT_ST_80211
++	bool "Intersil / Conexant / STEricsson"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Intersil / Conexant and STEricsson
++	  wireless drivers. All these companies have sell wireless cards which
++	  have shared common parts one way or another. The drivers for these cards
++	  include the mac80211 based p54 drivers for PCI, USB and SPI (Nokia N810
++	  and N800), and and the old PCI FullMAC driver prism54.
++
++if CONEXANT_ST_80211
++
+ source "drivers/net/wireless/p54/Kconfig"
+ 
+ config PRISM54
+@@ -333,6 +345,8 @@ config PRISM54
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.
+ 	  The module will be called prism54.
+ 
++endif # CONEXANT_ST_80211
++
+ config USB_ZD1201
+ 	tristate "USB ZD1201 based Wireless device support"
+ 	depends on USB && WLAN_80211
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.5
+
