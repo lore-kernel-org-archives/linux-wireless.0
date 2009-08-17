@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:50746 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932130AbZHQQ4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 12:56:31 -0400
-Received: by ewy10 with SMTP id 10so3097928ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:32 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 6/7] rt2x00: Fix MCS register intialization
-Date: Mon, 17 Aug 2009 18:55:40 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>
-References: <200908171853.24256.IvDoorn@gmail.com> <200908171854.50790.IvDoorn@gmail.com> <200908171855.15390.IvDoorn@gmail.com>
-In-Reply-To: <200908171855.15390.IvDoorn@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:38148 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757799AbZHQLsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 07:48:04 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: bcm43xx-dev@lists.berlios.de
+Subject: Re: [RFT] Threaded IRQ handlers for b43
+Date: Mon, 17 Aug 2009 13:48:04 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200908161539.57917.mb@bu3sch.de>
+In-Reply-To: <200908161539.57917.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908171855.40486.IvDoorn@gmail.com>
+  charset="iso-8859-1"
+Message-Id: <200908171348.04399.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the original Ralink driver,
-LG_FBK_CFG0_OFDMMCS2FBK should be initialized to 9 rather then 3.
+On Sunday 16 August 2009 15:39:57 Michael Buesch wrote:
+> This request-for-test patch converts the b43 driver to use threaded
+> interrupt handlers. This is needed to support b43 on SDIO. But it also
+> simplifies the locking by removal of the wl->irq_lock spinlock.
+> 
+> http://bu3sch.de/patches/wireless-testing/20090816-1535/patches/002-b43-threaded-irq-handler.patch
+> 
+> A known regression is a new race between the interrupt handler and the
+> beacon update handler. But as long as you don't run AP mode, it won't hurt.
+> I'm working on a solution...
+> 
+> Please test this patch whether it creates other regressions (performance and crashes).
+> 
+> The patch also needs the following hack to the threaded IRQ code:
+> http://bu3sch.de/patches/wireless-testing/20090816-1535/patches/001-hack-threaded-irqs.patch
+> 
 
-Based on a patch for rt2800pci from Benoit
+This is the correct fix for the threaded IRQ code. Apply this instead of the hack:
+http://bu3sch.de/patches/wireless-testing/20090817-1347/patches/001-fix-irq-thread-wakeup.patch
 
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 3633e58..45e02f1 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1520,7 +1520,7 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00usb_register_read(rt2x00dev, LG_FBK_CFG0, &reg);
- 	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS0FBK, 8);
- 	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS1FBK, 8);
--	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS2FBK, 3);
-+	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS2FBK, 9);
- 	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS3FBK, 10);
- 	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS4FBK, 11);
- 	rt2x00_set_field32(&reg, LG_FBK_CFG0_OFDMMCS5FBK, 12);
 -- 
-1.6.4
-
+Greetings, Michael.
