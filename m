@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36267 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754641AbZHCTsU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:48:20 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:48:22 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:53101 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757680AbZHQR1b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 13:27:31 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 10/24] ath9k: rename ath9k_hw_newstate() to ath9k_hw_init_defaults()
-Date: Mon, 3 Aug 2009 12:48:20 -0700
-Message-ID: <1249328900-25430-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	Stephen Chen <stephen.chen@atheros.com>
+Subject: [PATCH v5 07/33] wireless: move zd1211rw option closer to old ZyDAS on kconfig
+Date: Mon, 17 Aug 2009 13:27:06 -0400
+Message-Id: <1250530052-14783-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reflects better what we are actually doing there.
-
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Stephen Chen <stephen.chen@atheros.com>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Resend try #2
-
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4f3d7bf..6aee570 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -437,7 +437,7 @@ static void ath9k_hw_set_defaults(struct ath_hw *ah)
- 		ah->config.serialize_regmode = SER_REG_MODE_AUTO;
- }
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index a123f6e..9f1b5b6 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -347,6 +347,8 @@ config PRISM54
  
--static void ath9k_hw_newstate(struct ath_hw *ah)
-+static void ath9k_hw_init_defaults(struct ath_hw *ah)
- {
- 	ah->hw_version.magic = AR5416_MAGIC;
- 	ah->regulatory.country_code = CTRY_DEFAULT;
-@@ -654,7 +654,7 @@ int ath9k_hw_attach(struct ath_hw *ah)
- 		goto bad;
- 	}
+ endif # CONEXANT_ST_80211
  
--	ath9k_hw_newstate(ah);
-+	ath9k_hw_init_defaults(ah);
- 	ath9k_hw_set_defaults(ah);
- 
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
++source "drivers/net/wireless/zd1211rw/Kconfig"
++
+ config USB_ZD1201
+ 	tristate "USB ZD1201 based Wireless device support"
+ 	depends on USB && WLAN_80211
+@@ -539,7 +541,6 @@ endif # INTEL_80211
+ source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
+-source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
 -- 
-1.6.3.3
+1.6.2.5
 
