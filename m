@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:1746 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752491AbZHFIx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 04:53:28 -0400
-Subject: [PATCH] cfg80211: fix disassociation warning due to misuse of
-	wdev->current_bss
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Thu, 06 Aug 2009 04:52:42 -0400
-Message-ID: <20090806085242.23637.82992.stgit@ct.roinet.com>
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:62625 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756326AbZHQRBA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 13:01:00 -0400
+Received: by yxe5 with SMTP id 5so3760453yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 10:01:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1250283993.4411.1.camel@johannes.local>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	<1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
+	<1250283993.4411.1.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 17 Aug 2009 10:00:40 -0700
+Message-ID: <43e72e890908171000r52f59cb6tbfef751324bf9968@mail.gmail.com>
+Subject: Re: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARN_ON was triggered at mlme.c:213 when dissociating from an AP.
+On Fri, Aug 14, 2009 at 2:06 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
+>> We can now remove that comment about mac80211 requiring
+>> cfg80211 and do that for the user.
+>
+> "now"? What changed to make this possible?
+>
+> NAK this change, because with it, it's possible to select
+> mac80211 = Y
+> -> cfg80211 = Y
+> while rfkill = M
+>
+> which will break the kernel build.
 
-wdev->current_bss->pub.bssid should be used in place of
-wdev->current_bss for BSSID comparison.
+I'm able to do this with current kconfig, does this need to be fixed?
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- net/wireless/mlme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 525e8e2..b44b6c0 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -198,7 +198,7 @@ static void __cfg80211_send_disassoc(struct net_device *dev,
- 		return;
- 
- 	if (wdev->current_bss &&
--	    memcmp(wdev->current_bss, bssid, ETH_ALEN) == 0) {
-+	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
- 		for (i = 0; i < MAX_AUTH_BSSES; i++) {
- 			if (wdev->authtry_bsses[i] || wdev->auth_bsses[i])
- 				continue;
+  Luis
