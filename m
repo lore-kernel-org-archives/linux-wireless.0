@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:39679 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750878AbZHKAph (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53128 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757744AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 20:45:37 -0400
-Message-ID: <4A80BF22.9060101@redfish-solutions.com>
-Date: Mon, 10 Aug 2009 17:45:22 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Philip Craig <philipc@snapgear.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jon Loeliger <jdl@bigfootnetworks.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] CRDA and cross-compilation
-References: <4A7A8F7E.6020503@redfish-solutions.com>	 <1249569993.6446.2.camel@jdl-desktop> 	<1249576886.14919.16.camel@mj>	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>	 <1249580707.14919.29.camel@mj>	 <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>	 <4A7BD15E.1030604@redfish-solutions.com>	 <43e72e890908070905s447a2fc0j2dc086048194db34@mail.gmail.com>	 <4A7CC24D.1000104@redfish-solutions.com> <1249698462.25983.7.camel@mj> <4A809B8D.5000309@redfish-solutions.com> <4A80BE1F.8020708@snapgear.com>
-In-Reply-To: <4A80BE1F.8020708@snapgear.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+Subject: [PATCH v5 17/33] wireless: remove IEEE 802.11 description on hostapd
+Date: Mon, 17 Aug 2009 13:27:16 -0400
+Message-Id: <1250530052-14783-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Philip Craig wrote:
-> Philip A. Prindeville wrote:
->> * allowing a cross-compilation without contamination by the host's own state via pkg-config bleeding into it.
-> 
-> Setting PKG_CONFIG_LIBDIR should fix that without any makefile changes.
-> I haven't tried with this package, but it works for every other
-> cross compilation I've done.
+Its implied as hostap falls under the WLAN_80211 group menu.
 
-Indeed, and that would work until, as Pavel points out, someone adds something naive and ill-informed like a `uname -r` (or `arch`) into the Makefile.
+Cc: Jouni Malinen <j@w1.fi>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/hostap/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I'm not just trying to make the current version safe for cross-compilation, but all future versions too so I don't ever have to come back and fix this issue again.
-
-You have no idea how many packages we had to make cross-compilation safe.  Literally dozens.  And some of them continue to have periodic regressions.
-
+diff --git a/drivers/net/wireless/hostap/Kconfig b/drivers/net/wireless/hostap/Kconfig
+index c15db22..13d074e 100644
+--- a/drivers/net/wireless/hostap/Kconfig
++++ b/drivers/net/wireless/hostap/Kconfig
+@@ -1,5 +1,5 @@
+ config HOSTAP
+-	tristate "IEEE 802.11 for Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
++	tristate "Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
+ 	depends on WLAN_80211
+ 	select WIRELESS_EXT
+ 	select CRYPTO
+-- 
+1.6.2.5
 
