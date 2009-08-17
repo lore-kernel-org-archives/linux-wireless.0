@@ -1,46 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:53507 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933349AbZHDWDL (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:23125 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932108AbZHQQ4a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 18:03:11 -0400
-Received: by mail-bw0-f219.google.com with SMTP id 19so3351543bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 15:03:11 -0700 (PDT)
+	Mon, 17 Aug 2009 12:56:30 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so711134eye.37
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:32 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 7/7] rt2x00: Add support for retry rates
+Date: Mon, 17 Aug 2009 18:56:10 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>
+References: <200908171853.24256.IvDoorn@gmail.com> <200908171855.15390.IvDoorn@gmail.com> <200908171855.40486.IvDoorn@gmail.com>
+In-Reply-To: <200908171855.40486.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <200908042358.15966.mb@bu3sch.de>
-References: <83a869cd0907271349h248204at74cc1603419fc83b@mail.gmail.com>
-	 <200907312308.31066.mb@bu3sch.de>
-	 <83a869cd0908041454i474b0ee4hfb770c7c5166be7f@mail.gmail.com>
-	 <200908042358.15966.mb@bu3sch.de>
-Date: Wed, 5 Aug 2009 00:03:11 +0200
-Message-ID: <83a869cd0908041503i74a7bd11uf85706aeaf95b611@mail.gmail.com>
-Subject: Re: [RESEND] [PATCHv2] b43 add harware tkip
-From: gregor kowski <gregor.kowski@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908171856.10503.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/4/09, Michael Buesch <mb@bu3sch.de> wrote:
-> On Tuesday 04 August 2009 23:54:42 gregor kowski wrote:
->> On 7/31/09, Michael Buesch <mb@bu3sch.de> wrote:
->> > On Friday 31 July 2009 23:04:17 gregor kowski wrote:
->> >> Hi Michael,
->
->> There is really bugs in the current code.
->
-> You always talk about "bugs". What are these "bugs"? Is it just the wrong
-> max_nr_keys assignment? That's trivial to fix.
->
-So [1] is ok ?
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 
-Thanks,
+rt2800pci can handle different retry rates,
+it will always step 1 rate down after a failed
+transmission so creating the retry rate list
+for mac80211 is quite simple.
 
-Gregor
+Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c   |   22 +++++++++++++++++-----
+ drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-[1]
-> So the fix will be do to something like
-> dev->max_nr_keys = (dev->dev->id.revision >= 5) ? 58 : 20;
-> if (b43_new_kidx_api())
-> dev->max_nr_keys -= 4;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index b6676c6..9ab70e4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -220,7 +220,8 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
+ 	unsigned int header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
+-	u8 rate_idx, rate_flags;
++	u8 rate_idx, rate_flags, retry_rates;
++	unsigned int i;
+ 
+ 	/*
+ 	 * Unmap the skb.
+@@ -259,16 +260,27 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 
+ 	rate_idx = skbdesc->tx_rate_idx;
+ 	rate_flags = skbdesc->tx_rate_flags;
++	retry_rates = test_bit(TXDONE_FALLBACK, &txdesc->flags) ?
++	    (txdesc->retry + 1) : 1;
+ 
+ 	/*
+ 	 * Initialize TX status
+ 	 */
+ 	memset(&tx_info->status, 0, sizeof(tx_info->status));
+ 	tx_info->status.ack_signal = 0;
+-	tx_info->status.rates[0].idx = rate_idx;
+-	tx_info->status.rates[0].flags = rate_flags;
+-	tx_info->status.rates[0].count = txdesc->retry + 1;
+-	tx_info->status.rates[1].idx = -1; /* terminate */
++
++	/*
++	 * Frame was send with retries, hardware tried
++	 * different rates to send out the frame, at each
++	 * retry it lowered the rate 1 step.
++	 */
++	for (i = 0; i < retry_rates && i < IEEE80211_TX_MAX_RATES; i++) {
++		tx_info->status.rates[i].idx = rate_idx - i;
++		tx_info->status.rates[i].flags = rate_flags;
++		tx_info->status.rates[i].count = 1;
++	}
++	if (i < (IEEE80211_TX_MAX_RATES -1))
++		tx_info->status.rates[i].idx = -1; /* terminate */
+ 
+ 	if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+ 		if (test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
+index 47d175a..a5591fb 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.h
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
+@@ -214,6 +214,7 @@ struct rxdone_entry_desc {
+  *
+  * @TXDONE_UNKNOWN: Hardware could not determine success of transmission.
+  * @TXDONE_SUCCESS: Frame was successfully send
++ * @TXDONE_FALLBACK: Frame was successfully send using a fallback rate.
+  * @TXDONE_FAILURE: Frame was not successfully send
+  * @TXDONE_EXCESSIVE_RETRY: In addition to &TXDONE_FAILURE, the
+  *	frame transmission failed due to excessive retries.
+@@ -221,6 +222,7 @@ struct rxdone_entry_desc {
+ enum txdone_entry_desc_flags {
+ 	TXDONE_UNKNOWN,
+ 	TXDONE_SUCCESS,
++	TXDONE_FALLBACK,
+ 	TXDONE_FAILURE,
+ 	TXDONE_EXCESSIVE_RETRY,
+ };
+-- 
+1.6.4
+
