@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:64721 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754427AbZHMWPK (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53150 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757718AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 18:15:10 -0400
-Date: Thu, 13 Aug 2009 17:15:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43: Fix sparse warnings
-Message-ID: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v5 24/33] wireless: Update TI kconfig description
+Date: Mon, 17 Aug 2009 13:27:23 -0400
+Message-Id: <1250530052-14783-25-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The b43 driver generates the following sparse warnings:
+Other TI drivers can land here now.
 
-  CHECK   drivers/net/wireless/b43/phy_g.c
-drivers/net/wireless/b43/phy_g.c:974:35: warning: cast truncates bits from constant value (ffff7fff becomes 7fff)
-  CHECK   drivers/net/wireless/b43/wa.c
-drivers/net/wireless/b43/wa.c:385:53: warning: cast truncates bits from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:403:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:405:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:415:50: warning: cast truncates bits from constant value (ffff0fff becomes fff)
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/wl12xx/Kconfig |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-John,
-
-There is no hurry for this material.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c
-+++ wireless-testing/drivers/net/wireless/b43/phy_g.c
-@@ -971,7 +971,7 @@ b43_radio_interference_mitigation_enable
- 		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index ef250e9..021bcdf 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -1,9 +1,8 @@
+ config WL12XX
+-	boolean "TI wl12xx driver support"
++	boolean "Texas Instruments"
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	---help---
+-	  This will enable TI wl12xx driver support. The drivers make
+-	  use of the mac80211 stack.
++	  This will enable support for Texas Instruments wireless chipsets.
  
- 		if (phy->rev >= 3) {
--			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
-+			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
- 			b43_phy_maskset(dev, 0x0415, 0x8000, 0x36D8);
- 			b43_phy_maskset(dev, 0x0416, 0x8000, 0x36D8);
- 			b43_phy_maskset(dev, 0x0417, 0xFE00, 0x016D);
-Index: wireless-testing/drivers/net/wireless/b43/wa.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/wa.c
-+++ wireless-testing/drivers/net/wireless/b43/wa.c
-@@ -382,7 +382,8 @@ static void b43_wa_altagc(struct b43_wld
- 		b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 3, 25);
- 	}
+ if WL12XX
  
--	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)~0xFF00, 0x5700);
-+	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)(~0xFF00 & 0xFFFF),
-+			0x5700);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x007F, 0x000F);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x3F80, 0x2B80);
- 	b43_phy_maskset(dev, B43_PHY_ANTWRSETT, 0xF0FF, 0x0300);
-@@ -400,9 +401,9 @@ static void b43_wa_altagc(struct b43_wld
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x00FF, 0x0020);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x3F00, 0x0200);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x82), ~0x00FF, 0x002E);
--	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)~0xFF00, 0x1A00);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)(~0xFF00 & 0xFFFF), 0x1A00);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), ~0x00FF, 0x0028);
--	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)~0xFF00, 0x2C00);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)(~0xFF00 & 0xFFFF), 0x2C00);
- 	if (phy->rev == 1) {
- 		b43_phy_write(dev, B43_PHY_PEAK_COUNT, 0x092B);
- 		b43_phy_maskset(dev, B43_PHY_OFDM(0x1B), ~0x001E, 0x0002);
-@@ -412,7 +413,8 @@ static void b43_wa_altagc(struct b43_wld
- 		b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, ~0x000F, 0x0004);
- 		if (phy->rev >= 6) {
- 			b43_phy_write(dev, B43_PHY_OFDM(0x22), 0x287A);
--			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)~0xF000, 0x3000);
-+			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)(~0xF000 &
-+					0xFFFF), 0x3000);
- 		}
- 	}
- 	b43_phy_maskset(dev, B43_PHY_DIVSRCHIDX, 0x8080, 0x7874);
+-- 
+1.6.2.5
+
