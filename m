@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:60124 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284AbZHRTaD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 15:30:03 -0400
-Received: by bwz22 with SMTP id 22so3236747bwz.18
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 12:30:02 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:58138 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753692AbZHQRGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 13:06:49 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 10:06:52 -0700
+Date: Mon, 17 Aug 2009 10:06:44 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2x00: configure_filter() callback is allowed to sleep
-References: <200908181954.23419.IvDoorn@gmail.com>
-	<1250618324.9886.25.camel@johannes.local>
-	<200908182004.58584.IvDoorn@gmail.com>
-	<1250618853.7887.0.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 18 Aug 2009 22:30:00 +0300
-In-Reply-To: <1250618853.7887.0.camel@johannes.local> (Johannes Berg's message of "Tue\, 18 Aug 2009 20\:07\:33 +0200")
-Message-ID: <87my5wudhj.fsf@litku.valot.fi>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"aquilaver@yahoo.com" <aquilaver@yahoo.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>,
+	Kai Engert <kengert@redhat.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>,
+	Tim de Waal <tim.dewaal@yahoo.com>,
+	Roy Marples <uberlord@gentoo.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Christian Lamparter <chunkeey@web.de>,
+	=?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [PATCH v4 34/34] wireless: mark prism54.ko as deprecated and
+ mark for removal
+Message-ID: <20090817170644.GE4352@mosca>
+References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+ <1250281559-13041-35-git-send-email-lrodriguez@atheros.com>
+ <1250323182.15069.0.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1250323182.15069.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Sat, Aug 15, 2009 at 12:59:42AM -0700, Johannes Berg wrote:
+> On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
+> > The preferred modules is p54.ko, which also supports FullMAC
+> > PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
+> > to remove this is no one really is testing prism54.ko anymore,
+> > and while it works p54.ko provides support for the same hardware.
+> > It should be noted I have been told some FullMAC devices may not
+> > have worked with the SoftMAC driver but to date we have yet to
+> > recieve a single bug report regarding this. If there are users
+> > out there please let us know!
+> 
+> Not that I care about the changelog, but I do find it illogical to refer
+> to modules w/o .ko everywhere and then with .ko in the changelog. Of
+> course you were consistent ;)
 
-> I wonder if drivers now ever have a reason to queue work on the mac80211
-> workqueue? Some periodic calibration tasks maybe?
+Heh I've gone and cleaned this up in the series, I just removed the
+.ko usage when I refer to modules in the entries and commit log.
 
-wl1251 and wl1271 queue tx frames to a workqueue. This is because they
-use synchronous spi interface. This might change if we switch
-asynchronous interface in the future. No idea how this affects sdio,
-though.
+> > -	  The module will be called prism54.
+> > +	  When built as module you get prism54.ko
+> 
+> NAK this change.
 
--- 
-Kalle Valo
+Heh ok, changed it.
+
+  Luis
