@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback-out2.mxes.net ([216.86.168.191]:54170 "EHLO
-	fallback-in2.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751361AbZHSORa (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53104 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757689AbZHQR1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 10:17:30 -0400
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-To: mjg@redhat.com
-Cc: marcel@holtmann.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Subject: [PATCH 2/5] dell-laptop: fix rfkill memory leak on unload and failure paths
-Date: Wed, 19 Aug 2009 15:06:48 +0100
-Message-Id: <1250690811-21203-2-git-send-email-alan-jenkins@tuffmail.co.uk>
-In-Reply-To: <4A8C0623.8030808@tuffmail.co.uk>
-References: <4A8C0623.8030808@tuffmail.co.uk>
+	Mon, 17 Aug 2009 13:27:31 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Daniel Drake <dsd@gentoo.org>,
+	Stephen Chen <stephen.chen@atheros.com>
+Subject: [PATCH v5 08/33] wireless: group ZyDAS wireless drivers in kconfig
+Date: Mon, 17 Aug 2009 13:27:07 -0400
+Message-Id: <1250530052-14783-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rfkill_unregister() should always be followed by rfkill_destroy().
+There's only a few of these so we keep them under a config option
+which expands upon selection.
 
-Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/platform/x86/dell-laptop.c |   30 ++++++++++++++++++------------
- 1 files changed, 18 insertions(+), 12 deletions(-)
+ drivers/net/wireless/Kconfig |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
-index 12b6f33..8fbff38 100644
---- a/drivers/platform/x86/dell-laptop.c
-+++ b/drivers/platform/x86/dell-laptop.c
-@@ -268,6 +268,22 @@ err_wifi:
- 	return ret;
- }
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 9f1b5b6..a04ca56 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -347,6 +347,15 @@ config PRISM54
  
-+static void dell_cleanup_rfkill(void)
-+{
-+	if (wifi_rfkill) {
-+		rfkill_unregister(wifi_rfkill);
-+		rfkill_destroy(wifi_rfkill);
-+	}
-+	if (bluetooth_rfkill) {
-+		rfkill_unregister(bluetooth_rfkill);
-+		rfkill_destroy(bluetooth_rfkill);
-+	}
-+	if (wwan_rfkill) {
-+		rfkill_unregister(wwan_rfkill);
-+		rfkill_destroy(wwan_rfkill);
-+	}
-+}
+ endif # CONEXANT_ST_80211
+ 
++config ZYDAS_80211
++	bool "ZyDAS"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for ZyDAS wireless drivers. This includes
++	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
 +
- static int dell_send_intensity(struct backlight_device *bd)
- {
- 	struct calling_interface_buffer buffer;
-@@ -370,12 +386,7 @@ static int __init dell_init(void)
- 	return 0;
++if ZYDAS_80211
++
+ source "drivers/net/wireless/zd1211rw/Kconfig"
  
- fail_backlight:
--	if (wifi_rfkill)
--		rfkill_unregister(wifi_rfkill);
--	if (bluetooth_rfkill)
--		rfkill_unregister(bluetooth_rfkill);
--	if (wwan_rfkill)
--		rfkill_unregister(wwan_rfkill);
-+	dell_cleanup_rfkill();
- fail_rfkill:
- 	kfree(da_tokens);
- 	return ret;
-@@ -384,12 +395,7 @@ fail_rfkill:
- static void __exit dell_exit(void)
- {
- 	backlight_device_unregister(dell_backlight_device);
--	if (wifi_rfkill)
--		rfkill_unregister(wifi_rfkill);
--	if (bluetooth_rfkill)
--		rfkill_unregister(bluetooth_rfkill);
--	if (wwan_rfkill)
--		rfkill_unregister(wwan_rfkill);
-+	dell_cleanup_rfkill();
- }
+ config USB_ZD1201
+@@ -367,6 +376,8 @@ config USB_ZD1201
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called zd1201.
  
- module_init(dell_init);
++endif # ZYDAS_80211
++
+ config USB_NET_RNDIS_WLAN
+ 	tristate "Wireless RNDIS USB support"
+ 	depends on USB && WLAN_80211 && EXPERIMENTAL
 -- 
-1.6.3.2
+1.6.2.5
 
