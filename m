@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:59293 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932494AbZHUXPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 19:15:35 -0400
-Message-ID: <4A8F2A96.6070408@gmx.de>
-Date: Sat, 22 Aug 2009 01:15:34 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211: reassociate in STA mode after AP was power-cycled
-References: <4A8F0D8D.7000508@gmx.de> <1250889836.4600.21.camel@johannes.local>
-In-Reply-To: <1250889836.4600.21.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bombadil.infradead.org ([18.85.46.34]:53173 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757840AbZHQR1d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 13:27:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 30/33] wireless: update reg debug kconfig entry
+Date: Mon, 17 Aug 2009 13:27:29 -0400
+Message-Id: <1250530052-14783-31-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/21/2009 11:23 PM, Johannes Berg wrote:
-> On Fri, 2009-08-21 at 23:11 +0200, Joerg Albert wrote:
->> I had a ar9170usb device in STA mode associated to an AP and power-cycled the AP - slowly enough to get the
->> STA disassociated. 
->>
->> I wonder why the STA doesn't re-associate again to the AP once it's up again. Waited for 5+ minutes.
-> 
-> It told userspace that it disconnected, and as such it can't do anything
-> any more. Just run wpa_supplicant.
+Refer to the wireless wiki for more information.
 
-Thanks, that helped. I wasn't aware that wpa_supplicant controls non-wpa connections, too.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/Kconfig |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Jörg.
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 1591e2b..991e177 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -32,6 +32,10 @@ config CFG80211_REG_DEBUG
+ 	default n
+ 	---help---
+ 	  You can enable this if you want to debug regulatory changes.
++	  For more information on cfg80211 regulatory refer to the wireless
++	  wiki:
++
++	  http://wireless.kernel.org/en/developers/Regulatory
+ 
+ 	  If unsure, say N.
+ 
+-- 
+1.6.2.5
+
