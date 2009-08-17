@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:45216 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751338AbZHACjl (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53098 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757615AbZHQR1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 22:39:41 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
-	Maithili Hinge <maithili@marvell.com>
-Subject: [PATCH] libertas: Fix WEP association failure with open source wpa_supplicant 0.5.10
-Date: Fri, 31 Jul 2009 20:02:19 -0700
-Message-Id: <1249095739-7908-1-git-send-email-bzhao@marvell.com>
+	Mon, 17 Aug 2009 13:27:31 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [PATCH v5 05/33] wireless: move p54 and prism54 drivers closer on kconfig
+Date: Mon, 17 Aug 2009 13:27:04 -0400
+Message-Id: <1250530052-14783-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maithili Hinge <maithili@marvell.com>
-
-From: Maithili Hinge <maithili@marvell.com>
-
-Add code to handle IW_AUTH_PRIVACY_INVOKED and IW_AUTH_RX_UNENCRYPTED_EAPOL
-cases in lbs_set_auth() function in libertas code.
-
-Signed-off-by: Maithili Hinge <maithili@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/libertas/wext.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index e96451c..be837a0 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -1728,6 +1728,8 @@ static int lbs_set_auth(struct net_device *dev,
- 	}
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index fdf0257..cfd192e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -284,6 +284,8 @@ config PCMCIA_WL3501
+ 	 It has basic support for Linux wireless extensions and initial
+ 	 micro support for ethtool.
  
- 	switch (dwrq->flags & IW_AUTH_INDEX) {
-+	case IW_AUTH_PRIVACY_INVOKED:
-+	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
- 	case IW_AUTH_TKIP_COUNTERMEASURES:
- 	case IW_AUTH_CIPHER_PAIRWISE:
- 	case IW_AUTH_CIPHER_GROUP:
++source "drivers/net/wireless/p54/Kconfig"
++
+ config PRISM54
+ 	tristate 'Intersil Prism GT/Duette/Indigo PCI/Cardbus' 
+ 	depends on PCI && EXPERIMENTAL && WLAN_80211
+@@ -503,7 +505,6 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
+ 
+-source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath/Kconfig"
+ 
+ menuconfig INTEL_80211
 -- 
-1.5.3.4
+1.6.2.5
+
