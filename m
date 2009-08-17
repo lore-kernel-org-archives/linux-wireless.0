@@ -1,34 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39327
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932359AbZHUUNG (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53132 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757759AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:13:06 -0400
-Date: Fri, 21 Aug 2009 13:13:18 -0700 (PDT)
-Message-Id: <20090821.131318.130589385.davem@davemloft.net>
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-08-21
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090821170324.GC8532@tuxdriver.com>
-References: <20090821170324.GC8532@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	=?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v5 10/33] wireless: group Broadcom drivers on kconfig
+Date: Mon, 17 Aug 2009 13:27:09 -0400
+Message-Id: <1250530052-14783-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 21 Aug 2009 13:03:25 -0400
+This moves Broadcom wireless drivers into their own menu.
+There are only 2 Broadcom specific drivers so we group
+them into a menu which can expand. Although rndis_wlan
+also supports Broadcom devices, RNDIS is a spec and other
+vendors could technically implement solutions with it
+as well so we keep that separate as users most likely
+won't look for those devices under a Broadcom tag.
 
-> One more straggler for 2.6.31...without this rtl8187b devices simply
-> don't work. :-(
-> 
-> The patch is small and isolated to rtl8187.  I think we should take
-> it for 2.6.31.
-> 
-> Please let me know if there are problems!
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: Gábor Stefanik <netrolller.3d@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-Pulled, and I'll push out to kernel.org after a test build.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c2e88dc..e910799 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -561,8 +561,21 @@ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
+ endif # INTEL_80211
+ 
+ source "drivers/net/wireless/hostap/Kconfig"
++
++config BROADCOM_80211
++	bool "Broadcom"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Broadcom wireless drivers. This
++	  includes the b43 driver and the b43legacy driver.
++
++if BROADCOM_80211
++
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
++
++endif # BROADCOM_80211
++
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
+-- 
+1.6.2.5
 
-Thanks!
