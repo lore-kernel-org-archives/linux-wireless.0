@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50379
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756997AbZHNT3n (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53110 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757700AbZHQR1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 15:29:43 -0400
-Date: Fri, 14 Aug 2009 12:29:52 -0700 (PDT)
-Message-Id: <20090814.122952.110351063.davem@davemloft.net>
+	Mon, 17 Aug 2009 13:27:31 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-08-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090814141315.GI2650@tuxdriver.com>
-References: <20090814141315.GI2650@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 12/33] wireless: group Atmel wireless together on kconfig
+Date: Mon, 17 Aug 2009 13:27:11 -0400
+Message-Id: <1250530052-14783-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 14 Aug 2009 10:13:15 -0400
+There's only a few of these so we keep them under a config option
+which expands upon selection.
 
-> Yet another round of updates intended for 2.6.32...
-> 
-> -- sdio support fo wl1251
-> -- other wl1251 fixes
-> -- new driver for wl1271
-> -- some orinoco fixes
-> -- some work on LP-PHY support for b43 (finally...hooray!)
-> -- add new FIF_PSPOLL filter flag
-> -- mesh mode fixes
-> -- ath9k, ath5k, mac80211 updates, etc...
-> 
-> Please let me know if there are problems!
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Looks good, pulled, thanks!
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index c557056..b489d9c 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -213,6 +213,14 @@ config AIRO
+ 
+ 	  The driver can be compiled as a module and will be named "airo".
+ 
++config ATMEL_80211
++	bool "Atmel"
++	depends on WLAN_80211
++	---help---
++	  This will enable the support for Atmel wireless drivers.
++
++if ATMEL_80211
++
+ config ATMEL
+       tristate "Atmel at76c50x chipset  802.11b support"
+       depends on (PCI || PCMCIA) && WLAN_80211
+@@ -255,6 +263,8 @@ config AT76C50X_USB
+           Enable support for USB Wireless devices using Atmel at76c503,
+           at76c505 or at76c505a chips.
+ 
++endif # ATMEL_80211
++
+ config AIRO_CS
+ 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+ 	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+-- 
+1.6.2.5
+
