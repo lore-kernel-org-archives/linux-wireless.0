@@ -1,60 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:36262 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292AbZHTWIX (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:56177 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbZHQThj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 18:08:23 -0400
-Received: by fxm17 with SMTP id 17so179486fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 15:08:24 -0700 (PDT)
-Message-ID: <4A8DC955.9060100@gmail.com>
-Date: Fri, 21 Aug 2009 00:08:21 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+	Mon, 17 Aug 2009 15:37:39 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [RFT/RFC] p54: fix broadcast buffering in AP mode
+Date: Mon, 17 Aug 2009 21:24:14 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwlwifi: Make injection of non-broadcast frames work again
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200908172124.15399.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
-("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
-broke injection of non-broadcast frames to unassociated stations
-(causing a SYSASSERT for all such injected frames), due to injected
-frames no longer automatically getting a broadcast station ID assigned,
-and instead ending up with invalid station IDs.
-This patch restores the old behavior, fixing the aforementioned
-regression.
+The patch "mac80211: fix PS-poll response race" somehow broke
+broadcast buffering in a funny way.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+During normal operation - stations are awake - the firmware refused
+to transmit broadcast frames and reported P54_TX_PSM_CANCELLED.
+But everything worked as soon as one station entered PSM.
+
+The best explanation I could come up with is:
+The stack sets IEEE80211_TX_CTL_SEND_AFTER_DTIM for outgoing
+broadcast frames as soon as a station is marked as sleeping.
+This flag triggers a path which will reroute these frames
+into p54's "content after beacon" queue.
+
+The most likely reason why this worked before is because mac80211
+always sets IEEE80211_TX_CTL_CLEAR_PS_FILT flag for outgoing
+broadcast frames. This once - before the PS-poll patch -
+was used to signalize the firmware to overwrite the
+ps canceling for this special frame.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
-This fixes a regression introduced between 2.6.30 and 2.6.31-rc1.
-Please apply to 2.6.31.
-
- drivers/net/wireless/iwlwifi/iwl-sta.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index c6633fe..81a656f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -1054,7 +1054,8 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
- 	__le16 fc = hdr->frame_control;
+diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
+index e7b9e9c..57a0ffd 100644
+--- a/drivers/net/wireless/p54/fwio.c
++++ b/drivers/net/wireless/p54/fwio.c
+@@ -283,7 +283,10 @@ int p54_sta_unlock(struct p54_common *priv, u8 *addr)
+ 		return -ENOMEM;
  
- 	/* If this frame is broadcast or management, use broadcast station id */
--	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
-+	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
-+	    iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
- 		return priv->hw_params.bcast_sta_id;
+ 	sta = (struct p54_sta_unlock *)skb_put(skb, sizeof(*sta));
+-	memcpy(sta->addr, addr, ETH_ALEN);
++	if (addr)
++		memcpy(sta->addr, addr, ETH_ALEN);
++	else
++		memset(sta->addr, ~0, ETH_ALEN);
+ 	p54_tx(priv, skb);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+index 77203e3..db415c2 100644
+--- a/drivers/net/wireless/p54/main.c
++++ b/drivers/net/wireless/p54/main.c
+@@ -38,20 +38,42 @@ static void p54_sta_notify(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
+ 			      struct ieee80211_sta *sta)
+ {
+ 	struct p54_common *priv = dev->priv;
++	struct p54_sta_info *sta_info = (void *) sta->drv_priv;
++
+ 	switch (notify_cmd) {
+ 	case STA_NOTIFY_ADD:
+ 	case STA_NOTIFY_REMOVE:
++	case STA_NOTIFY_AWAKE:
+ 		/*
+ 		 * Notify the firmware that we don't want or we don't
+ 		 * need to buffer frames for this station anymore.
+ 		 */
  
- 	switch (priv->iw_mode) {
--- 
-1.6.2.4
+ 		p54_sta_unlock(priv, sta->addr);
++
++		if (sta_info->state & STA_DOZING) {
++			if (atomic_dec_and_test(&priv->num_sta_ps)) {
++				/*
++				 * The last station has woken up.
++				 *
++				 * Disable broadcast ps filter, which has
++				 * been secretly set by firmware.
++				 */
++
++				p54_sta_unlock(priv, NULL);
++			}
++		}
++
++		sta_info->state &= ~STA_DOZING;
+ 		break;
+-	case STA_NOTIFY_AWAKE:
+-		/* update the firmware's filter table */
+-		p54_sta_unlock(priv, sta->addr);
++
++	case STA_NOTIFY_SLEEP:
++		if (!(sta_info->state & STA_DOZING))
++			atomic_inc(&priv->num_sta_ps);
++
++		sta_info->state |= STA_DOZING;
+ 		break;
++
+ 	default:
+ 		break;
+ 	}
+@@ -185,6 +207,8 @@ static int p54_start(struct ieee80211_hw *dev)
+ 	priv->softled_state = 0;
+ 	err = p54_set_leds(priv);
+ 
++	atomic_set(&priv->num_sta_ps, 0);
++
+ out:
+ 	mutex_unlock(&priv->conf_mutex);
+ 	return err;
+@@ -581,6 +605,8 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+ 	 */
+ 	dev->wiphy->ps_default = false;
+ 
++	dev->sta_data_size = sizeof(struct p54_sta_info);
++
+ 	mutex_init(&priv->conf_mutex);
+ 	mutex_init(&priv->eeprom_mutex);
+ 	init_completion(&priv->eeprom_comp);
+diff --git a/drivers/net/wireless/p54/p54.h b/drivers/net/wireless/p54/p54.h
+index 1afc394..8cacb7a 100644
+--- a/drivers/net/wireless/p54/p54.h
++++ b/drivers/net/wireless/p54/p54.h
+@@ -228,6 +228,7 @@ struct p54_common {
+ 	/* statistics */
+ 	struct ieee80211_low_level_stats stats;
+ 	struct delayed_work work;
++	atomic_t num_sta_ps;
+ 
+ 	/* eeprom handling */
+ 	void *eeprom;
+@@ -235,6 +236,14 @@ struct p54_common {
+ 	struct mutex eeprom_mutex;
+ };
+ 
++enum p54_sta_state_t {
++	STA_DOZING	= BIT(0),
++};
++
++struct p54_sta_info {
++	enum p54_sta_state_t state;
++};
++
+ /* interfaces for the drivers */
+ int p54_rx(struct ieee80211_hw *dev, struct sk_buff *skb);
+ void p54_free_skb(struct ieee80211_hw *dev, struct sk_buff *skb);
+---
 
+Of course, instead of the big patch above we could restore the
+original behavior with:
 
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index 6fc0b61..b6dda2b 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -623,6 +623,9 @@ static void p54_tx_80211_header(struct p54_common *priv, struct sk_buff *skb,
+ 	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+ 
++	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
++		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
++
+ 	*queue = skb_get_queue_mapping(skb) + P54_QUEUE_DATA;
+ 
+ 	switch (priv->mode) {
+---
 
+pools are open! Didn't have a chance to test them on real HW & setup.
+Please report if these patches fix/break anything...
+
+Regards,
+   Chr
