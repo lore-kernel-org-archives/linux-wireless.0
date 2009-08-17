@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:56277 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbZHGRvh (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53111 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757709AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 13:51:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <200908071939.49627.elendil@planet.nl>
-References: <c6b1100b0908070350t3101030bs4b3d2e7485ad9aee@mail.gmail.com>
-	<20090807151304.GE7545@tuxdriver.com> <43e72e890908071013w28644e70h5323e19d19da33a2@mail.gmail.com>
-	<200908071939.49627.elendil@planet.nl>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 7 Aug 2009 10:51:17 -0700
-Message-ID: <43e72e890908071051w1f306349rfab32de80759006e@mail.gmail.com>
-Subject: Re: ath5k - strange regulatory domain change
-To: Frans Pop <elendil@planet.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Chris Clayton <chris2553@googlemail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 13/33] wireless: move AIRO_CS closer to AIRO_CS
+Date: Mon, 17 Aug 2009 13:27:12 -0400
+Message-Id: <1250530052-14783-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 7, 2009 at 10:39 AM, Frans Pop<elendil@planet.nl> wrote:
-> On Friday 07 August 2009, you wrote:
->> The way the EEPROM was programmed for this type of
->> regulatory domain was to give you a group number under which other
->> countries fall under. If you ended up getting a direct alpha2
->> programmed in the EEPROM instead you would still end up matching the
->> alpha2 to a group number. The group number leads you to a regulatory
->> domain that all those countries in that group number adhere to. So it
->> was a way to group up regulatory domain rules between countries. The
->> "CN" you see just so happens to be the alpha2 for the first country in
->> the same group regulatory domain group.
->>
->> What we can do is to elaborate on that on the dmesg and also maybe
->
-> That would be very welcome.
->
->> pick the most common country on the group so it will tend to match the
->> country users are on.
->
-> I think that would just be moving the problem from one group of users to
-> another, possibly only marginally smaller, group of users.
->
-> As far as I can see the largest group is ETSI1_WORLD and contains 33
-> countries, followed by NULL1_WORLD (is that a real group?) with 22.
-> That's probably too many to list them all.
-> OTOH, all other groups contain at most 7 countries, which could possibly
-> be listed.
->
-> Probably the simplest option would be to just display some identification
-> of the domain group itself and point users to documentation which
-> explains what countries fall under what groups. That would at least avoid
-> the confusion caused by randomly picking a matching country.
-> Variation could be to display the country if the group only contains one
-> country, but that could also be considered an inconsistent user
-> interface.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-Or maybe see if the currently set regulatory domain matches an alpha2
-in the group, if so then just display the same alpha2. Will take a
-look.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index b489d9c..b03035f 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -213,6 +213,26 @@ config AIRO
+ 
+ 	  The driver can be compiled as a module and will be named "airo".
+ 
++config AIRO_CS
++	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
++	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
++	select WIRELESS_EXT
++	select CRYPTO
++	select CRYPTO_AES
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
++	  802.11 wireless cards.  This driver is the same as the Aironet
++	  driver part of the Linux Pcmcia package.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
++	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
++	  802.11b cards.
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
+@@ -265,26 +285,6 @@ config AT76C50X_USB
+ 
+ endif # ATMEL_80211
+ 
+-config AIRO_CS
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+-	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
+-	  802.11 wireless cards.  This driver is the same as the Aironet
+-	  driver part of the Linux Pcmcia package.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
+-	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
+-	  802.11b cards.
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+ config PCMCIA_WL3501
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-- 
+1.6.2.5
 
-  Luis
