@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f195.google.com ([209.85.212.195]:65064 "EHLO
-	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756085AbZHYT32 (ORCPT
+Received: from mail-px0-f196.google.com ([209.85.216.196]:50663 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755655AbZHQVSZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 15:29:28 -0400
-Received: by vws33 with SMTP id 33so21986vws.33
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 12:29:30 -0700 (PDT)
+	Mon, 17 Aug 2009 17:18:25 -0400
+Received: by pxi34 with SMTP id 34so1392988pxi.4
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 14:18:27 -0700 (PDT)
+Message-ID: <4A89C902.4030807@lwfinger.net>
+Date: Mon, 17 Aug 2009 16:17:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20090825185842.GA7357@mosca>
-References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
-	 <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
-	 <20090825185842.GA7357@mosca>
-Date: Tue, 25 Aug 2009 15:22:55 -0400
-Message-ID: <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: LP-PHY: Fix setting TX power control mode during
+ RC 	calibration
+References: <4A85B8DE.3000704@gmail.com> <69e28c910908171232i6828d42bh3aac1d236f789c91@mail.gmail.com> 	<20090817195718.GK5500@tuxdriver.com> <69e28c910908171302s3aed3181w38ba402ca7dfa13d@mail.gmail.com>
+In-Reply-To: <69e28c910908171302s3aed3181w38ba402ca7dfa13d@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 25, 2009 at 2:58 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
-> OK how about the band info, think that's useful?
+Gábor Stefanik wrote:
+> 2009/8/17 John W. Linville <linville@tuxdriver.com>:
+>> On Mon, Aug 17, 2009 at 09:32:42PM +0200, Gábor Stefanik wrote:
+>>> 2009/8/14 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>> Call set_tx_power_control with a LPPHY_TXPCTL rather than an
+>>>> LPPHY_TX_PWR_CTL_CMD_MODE.
+>>>>
+>>>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>>>> ---
+>>>> This should fix the WARN_ON testers were seeing during init.
+>>>>
+>>>> drivers/net/wireless/b43/phy_lp.c |    2 +-
+>>>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/b43/phy_lp.c
+>>>> b/drivers/net/wireless/b43/phy_lp.c
+>>>> index adfa7bf..558224b 100644
+>>>> --- a/drivers/net/wireless/b43/phy_lp.c
+>>>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>>>> @@ -1080,7 +1080,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>>>> *dev)
+>>>>        old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
+>>>>                                        B43_LPPHY_TX_PWR_CTL_CMD_MODE;
+>>>>
+>>>> -       lpphy_set_tx_power_control(dev, B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
+>>>> +       lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+>>>>        lpphy_disable_crs(dev);
+>>>>        loopback = lpphy_loopback(dev);
+>>>>        if (loopback == -1)
+>>>> --
+>>>> 1.6.2.4
+>>>>
+>>> John, any news on this one? I can't see it in wireless testing.
+>> Larry said:
+>>
+>> With this one, I still get WARNING: at
+>> drivers/net/wireless/b43/phy_lp.c:1006
+>> lpphy_set_tx_power_control+0xbf/0xdd [b43]().
+>>
+> 
+> Previously, he was getting 2 warnings. This fixes one of them, the
+> other one is handled by commit
+> 1181d724fc2897f11f95bf6ebc86ae111390929c ("Fix another TX power
+> control abuse").
+> 
 
-Yeah, band is useful.  We don't have to pretty print it though
-(unless you really feel like it), %d would work just as well.
+I need to be more careful with my comments. This pack is needed and
+OK. Because of my involvement with the RE, I cannot ack any of these
+LP PHY patches.
 
-Also WARN_ON_ONCE might be a good idea.
-
->> which could indicate some
->> race condition with flushing the rx queue on channel changes.
->
-> I'll see if I can reproduce somehow.
->
->> I haven't yet seen a hw rate we didn't know about.
->
-> So you've seen this lately as well?
-
-I saw it some time ago, but then changed the order of how the
-curchan/curband variables were set when we change channels and
-haven't seen since.  But kerneloops says a lot of other people
-are still hitting it as well :(
-
-Hmm, ath5k_rx_stop probably wants an equivalent to txq_drainq in
-there somewhere.
-
--- 
-Bob Copeland %% www.bobcopeland.com
+Larry
