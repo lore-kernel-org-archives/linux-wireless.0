@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:44153 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755428AbZHYPJA convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:64142 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932113AbZHQQ4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 11:09:00 -0400
-Received: by vws2 with SMTP id 2so2680711vws.4
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 08:09:02 -0700 (PDT)
+	Mon, 17 Aug 2009 12:56:31 -0400
+Received: by ewy10 with SMTP id 10so3097919ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:31 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 5/7] rt2x00: wireless CLI ID and packet ID must not be 0
+Date: Mon, 17 Aug 2009 18:55:15 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>
+References: <200908171853.24256.IvDoorn@gmail.com> <200908171854.19205.IvDoorn@gmail.com> <200908171854.50790.IvDoorn@gmail.com>
+In-Reply-To: <200908171854.50790.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1251211217-7816-1-git-send-email-netrolller.3d@gmail.com>
-References: <1251211217-7816-1-git-send-email-netrolller.3d@gmail.com>
-Date: Tue, 25 Aug 2009 11:09:01 -0400
-Message-ID: <b6c5339f0908250809q3e74a36ud9b04338ba18496@mail.gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Fix and simplify Qdiv roundup
-From: Bob Copeland <me@bobcopeland.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908171855.15390.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/25 Gábor Stefanik <netrolller.3d@gmail.com>:
-> The Qdiv roundup routine is essentially a fixed-point
-> division algorithm, using only integer math.
-> However, the version in the specs had a major error
-> that has been recently fixed (a missing quotient++).
->
-> Replace Qdiv roundup with a rewritten, simplified version.
+In the TX descriptor the Packet ID must not be 0,
+so add 1 to the ID. The wireless CLI ID is not allowed
+to be 0 either, but also must be initialized with the
+wcid value rather then keyid.
 
-Hi!
+Based on a patch for rt2800pci from Benoit
 
-> @@ -1042,20 +1042,14 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
->        quotient = dividend / divisor;
->        remainder = dividend % divisor;
->
-> -       rbit = divisor & 0x1;
-> -       roundup = (divisor >> 1) + rbit;
-> -
->        while (precision != 0) {
-> -               tmp = remainder - roundup;
->                quotient <<= 1;
-> -               if (remainder >= roundup)
-> -                       remainder = (tmp << 1) + rbit;
-> -               else
-> -                       remainder <<= 1;
-> +               quotient |= (remainder << 1) / divisor;
-> +               remainder = (remainder << 1) % divisor;
->                precision--;
->        }
+Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Unless precision is 0, this just added a bunch of divides into
-the inner loop, which might be a big surprise to anyone expecting
-this to be fast...
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 6de2eda..3633e58 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1995,11 +1995,11 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
+ 	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
+ 			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
+-			       txdesc->key_idx : 0xff);
++			       (skbdesc->entry->entry_idx + 1) : 0xff);
+ 	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
+ 			   skb->len - txdesc->l2pad);
+ 	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
+-			   skbdesc->entry->entry_idx);
++			   skbdesc->entry->queue->qid + 1);
+ 	rt2x00_desc_write(txwi, 1, word);
+ 
+ 	/*
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.4
+
