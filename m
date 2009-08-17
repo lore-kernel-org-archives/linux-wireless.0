@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.238]:38253 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbZHLSPZ (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2819 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756219AbZHQPSp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 14:15:25 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so67731rvb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 11:15:26 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Woo <xinhua_wu@realsil.com.cn>,
-	Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 1/2] mac80211: Mark a destination sequence number as valid when a PREQ is received.
-Date: Wed, 12 Aug 2009 11:03:43 -0700
-Message-Id: <1250100224-23832-2-git-send-email-javier@cozybit.com>
-In-Reply-To: <1250100224-23832-1-git-send-email-javier@cozybit.com>
-References: <4A82639F.6000908@realsil.com.cn>
- <1250100224-23832-1-git-send-email-javier@cozybit.com>
+	Mon, 17 Aug 2009 11:18:45 -0400
+Date: Mon, 17 Aug 2009 11:18:14 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl1251: correct definitions for 0th bit defines
+Message-ID: <20090817151814.GB13125@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Woo <xinhua_wu@realsil.com.cn>
+ACX_SLV_SOFT_RESET_BIT and ACX_REG_EEPROM_START_BIT are both defined
+as "1" in the vendor driver code, but they were defined to be BIT(1)
+("2") here.  
 
-If a PREQ frame is received giving us a fresher DSN than what we have, record
-the new dsn and mark it as valid.  This patch fixes a bug in the setting of the
-MESH_PATH_DSN_VALID flag.
+The SOFT_RESET typo ensures that wl1251_boot_soft_reset() doesn't;
+as a result the device hangs when trying to reprogram the PLL
+registers while running.
 
-Also, minor fix to coding style on that file.
-
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/mac80211/mesh_hwmp.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_reg.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 1cd1e72..ef1efd3 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -397,7 +397,8 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl12xx/wl1251_reg.h
+index 2de47cc..86a8666 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_reg.h
++++ b/drivers/net/wireless/wl12xx/wl1251_reg.h
+@@ -309,8 +309,8 @@ enum wl12xx_acx_int_reg {
+ 	ACX_REG_TABLE_LEN
+ };
  
- static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_mgmt *mgmt,
--				    u8 *preq_elem, u32 metric) {
-+				    u8 *preq_elem, u32 metric)
-+{
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct mesh_path *mpath;
- 	u8 *dst_addr, *orig_addr;
-@@ -430,7 +431,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 			if ((!(mpath->flags & MESH_PATH_DSN_VALID)) ||
- 					DSN_LT(mpath->dsn, dst_dsn)) {
- 				mpath->dsn = dst_dsn;
--				mpath->flags &= MESH_PATH_DSN_VALID;
-+				mpath->flags |= MESH_PATH_DSN_VALID;
- 			} else if ((!(dst_flags & MP_F_DO)) &&
- 					(mpath->flags & MESH_PATH_ACTIVE)) {
- 				reply = true;
+-#define ACX_SLV_SOFT_RESET_BIT   BIT(1)
+-#define ACX_REG_EEPROM_START_BIT BIT(1)
++#define ACX_SLV_SOFT_RESET_BIT   BIT(0)
++#define ACX_REG_EEPROM_START_BIT BIT(0)
+ 
+ /* Command/Information Mailbox Pointers */
+ 
 -- 
-1.5.4.3
+1.6.2.5
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
