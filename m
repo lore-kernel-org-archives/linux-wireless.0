@@ -1,304 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34787 "EHLO mail.atheros.com"
+Received: from lo.gmane.org ([80.91.229.12]:36010 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754442AbZHCTZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:01 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:03 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/24] ath9k: move memory allocation of ath_hw to ath_init()
-Date: Mon, 3 Aug 2009 12:24:36 -0700
-Message-ID: <1249327496-24629-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1758235AbZHQWfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 18:35:47 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1MdAAS-0007Rz-OY
+	for linux-wireless@vger.kernel.org; Mon, 17 Aug 2009 23:55:04 +0200
+Received: from lister.visitors.farnz.org.uk ([81.187.250.196])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 23:55:04 +0200
+Received: from simon by lister.visitors.farnz.org.uk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 23:55:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Simon Farnsworth <simon@farnz.org.uk>
+Subject: Regulatory problems with ath5k in AP mode
+Date: Mon, 17 Aug 2009 21:27:06 +0100
+Message-ID: <h6ced0$hoi$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This lets us simplify attach code and arguments passed.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c   |   65 ++++++++++-----------------------
- drivers/net/wireless/ath/ath9k/hw.h   |    2 +-
- drivers/net/wireless/ath/ath9k/main.c |   35 ++++++++++++------
- 3 files changed, 44 insertions(+), 58 deletions(-)
+Hello,
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2e09204..fcefea8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -437,20 +437,9 @@ static void ath9k_hw_set_defaults(struct ath_hw *ah)
- 		ah->config.serialize_regmode = SER_REG_MODE_AUTO;
- }
- 
--static struct ath_hw *ath9k_hw_newstate(u16 devid, struct ath_softc *sc,
--					int *status)
-+static void ath9k_hw_newstate(u16 devid,
-+			      struct ath_hw *ah)
- {
--	struct ath_hw *ah;
--
--	ah = kzalloc(sizeof(struct ath_hw), GFP_KERNEL);
--	if (ah == NULL) {
--		DPRINTF(sc, ATH_DBG_FATAL,
--			"Cannot allocate memory for state block\n");
--		*status = -ENOMEM;
--		return NULL;
--	}
--
--	ah->ah_sc = sc;
- 	ah->hw_version.magic = AR5416_MAGIC;
- 	ah->regulatory.country_code = CTRY_DEFAULT;
- 	ah->hw_version.devid = devid;
-@@ -479,8 +468,6 @@ static struct ath_hw *ath9k_hw_newstate(u16 devid, struct ath_softc *sc,
- 	ah->gbeacon_rate = 0;
- 
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
--
--	return ah;
- }
- 
- static int ath9k_hw_rfattach(struct ath_hw *ah)
-@@ -623,28 +610,25 @@ static int ath9k_hw_post_attach(struct ath_hw *ah)
- 	return 0;
- }
- 
--static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
--					 int *status)
-+static int ath9k_hw_do_attach(struct ath_hw *ah,
-+			      u16 devid,
-+			      struct ath_softc *sc)
- {
--	struct ath_hw *ah;
--	int ecode;
-+	int r;
- 	u32 i, j;
- 
--	ah = ath9k_hw_newstate(devid, sc, status);
--	if (ah == NULL)
--		return NULL;
--
-+	ath9k_hw_newstate(devid, ah);
- 	ath9k_hw_set_defaults(ah);
- 
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
- 		DPRINTF(sc, ATH_DBG_FATAL, "Couldn't reset chip\n");
--		ecode = -EIO;
-+		r = -EIO;
- 		goto bad;
- 	}
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE)) {
- 		DPRINTF(sc, ATH_DBG_FATAL, "Couldn't wakeup chip\n");
--		ecode = -EIO;
-+		r = -EIO;
- 		goto bad;
- 	}
- 
-@@ -676,7 +660,7 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 			"Mac Chip Rev 0x%02x.%x is not supported by "
- 			"this driver\n", ah->hw_version.macVersion,
- 			ah->hw_version.macRev);
--		ecode = -EOPNOTSUPP;
-+		r = -EOPNOTSUPP;
- 		goto bad;
- 	}
- 
-@@ -878,8 +862,8 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 	else
- 		ath9k_hw_disablepcie(ah);
- 
--	ecode = ath9k_hw_post_attach(ah);
--	if (ecode != 0)
-+	r = ath9k_hw_post_attach(ah);
-+	if (r)
- 		goto bad;
- 
- 	if (AR_SREV_9287_11(ah))
-@@ -939,8 +923,8 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 		}
- 	}
- 
--	ecode = ath9k_hw_init_macaddr(ah);
--	if (ecode != 0) {
-+	r = ath9k_hw_init_macaddr(ah);
-+	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Failed to initialize MAC address\n");
- 		goto bad;
-@@ -953,14 +937,10 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 
- 	ath9k_init_nfcal_hist_buffer(ah);
- 
--	return ah;
-+	return 0;
- bad:
--	if (ah)
--		ath9k_hw_detach(ah);
--	if (status)
--		*status = ecode;
--
--	return NULL;
-+	ath9k_hw_detach(ah);
-+	return r;
- }
- 
- static void ath9k_hw_init_bb(struct ath_hw *ah,
-@@ -1206,10 +1186,8 @@ void ath9k_hw_detach(struct ath_hw *ah)
- 	kfree(ah);
- }
- 
--struct ath_hw *ath9k_hw_attach(u16 devid, struct ath_softc *sc, int *error)
-+int ath9k_hw_attach(struct ath_hw *ah, u16 devid, struct ath_softc *sc)
- {
--	struct ath_hw *ah = NULL;
--
- 	switch (devid) {
- 	case AR5416_DEVID_PCI:
- 	case AR5416_DEVID_PCIE:
-@@ -1220,14 +1198,11 @@ struct ath_hw *ath9k_hw_attach(u16 devid, struct ath_softc *sc, int *error)
- 	case AR9285_DEVID_PCIE:
- 	case AR5416_DEVID_AR9287_PCI:
- 	case AR5416_DEVID_AR9287_PCIE:
--		ah = ath9k_hw_do_attach(devid, sc, error);
--		break;
-+		return ath9k_hw_do_attach(ah, devid, sc);
- 	default:
--		*error = -EOPNOTSUPP;
- 		break;
- 	}
--
--	return ah;
-+	return -EOPNOTSUPP;
- }
- 
- /*******/
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 93a8930..4a0d5f2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -544,7 +544,7 @@ struct ath_hw {
- /* Attach, Detach, Reset */
- const char *ath9k_hw_probe(u16 vendorid, u16 devid);
- void ath9k_hw_detach(struct ath_hw *ah);
--struct ath_hw *ath9k_hw_attach(u16 devid, struct ath_softc *sc, int *error);
-+int ath9k_hw_attach(struct ath_hw *ah, u16 devid, struct ath_softc *sc);
- void ath9k_hw_rfdetach(struct ath_hw *ah);
- int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		   bool bChannelChange);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ada5fef..c2b9974 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1295,7 +1295,7 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- static int ath_init(u16 devid, struct ath_softc *sc)
- {
- 	struct ath_hw *ah = NULL;
--	int error = 0, i;
-+	int r = 0, i;
- 	int csz = 0;
- 
- 	/* XXX: hardware will not be ready until ath_open() being called */
-@@ -1322,11 +1322,21 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	/* XXX assert csz is non-zero */
- 	sc->cachelsz = csz << 2;	/* convert to bytes */
- 
--	ah = ath9k_hw_attach(devid, sc, &error);
--	if (ah == NULL) {
-+	ah = kzalloc(sizeof(struct ath_hw), GFP_KERNEL);
-+	if (!ah) {
-+		DPRINTF(sc, ATH_DBG_FATAL,
-+			"Cannot allocate memory for state block\n");
-+		r = -ENOMEM;
-+		goto bad_no_ah;
-+	}
-+
-+	ah->ah_sc = sc;
-+
-+	r = ath9k_hw_attach(ah, devid, sc);
-+	if (r) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to attach hardware; "
--			"initialization status: %d\n", error);
-+			"initialization status: %d\n", r);
- 		goto bad;
- 	}
- 	sc->sc_ah = ah;
-@@ -1347,7 +1357,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	for (i = 0; i < sc->keymax; i++)
- 		ath9k_hw_keyreset(ah, (u16) i);
- 
--	if (error)
-+	if (r)
- 		goto bad;
- 
- 	/* default to MONITOR mode */
-@@ -1369,14 +1379,14 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	if (sc->beacon.beaconq == -1) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup a beacon xmit queue\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 	sc->beacon.cabq = ath_txq_setup(sc, ATH9K_TX_QUEUE_CAB, 0);
- 	if (sc->beacon.cabq == NULL) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup CAB xmit queue\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 
-@@ -1391,26 +1401,26 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	if (!ath_tx_setup(sc, ATH9K_WME_AC_BK)) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup xmit queue for BK traffic\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 
- 	if (!ath_tx_setup(sc, ATH9K_WME_AC_BE)) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup xmit queue for BE traffic\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 	if (!ath_tx_setup(sc, ATH9K_WME_AC_VI)) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup xmit queue for VI traffic\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 	if (!ath_tx_setup(sc, ATH9K_WME_AC_VO)) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Unable to setup xmit queue for VO traffic\n");
--		error = -EIO;
-+		r = -EIO;
- 		goto bad2;
- 	}
- 
-@@ -1506,9 +1516,10 @@ bad2:
- bad:
- 	if (ah)
- 		ath9k_hw_detach(ah);
-+bad_no_ah:
- 	ath9k_exit_debug(sc);
- 
--	return error;
-+	return r;
- }
- 
- void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
--- 
-1.6.3.3
+I'm facing problems using two ath5k miniPCI cards in a single box as a
+dual-band access point. I'm using wireless-testing as of commit
+d5a88a192e556a7c30f9d425bb6673b5bff5e3f3.
+
+As I'm trying to use the cards for AP mode, I cannot rely on beacons with
+regulatory data being present; instead, I have modprobe configured to run
+"iw reg set GB" after cfg80211 is loaded, and hostapd.conf files containing
+the line "country_code=GB".
+
+My cards both have a regdomain in the EEPROM of 0x0, which my vendor assures
+me is the correct regdomain for cards which don't claim any particular
+regulatory compliance, and which rely on the host OS getting regulatory
+compliance right. I am seeing two problems; firstly, the regulatory
+infrastructure insists that I'm in the United States, thus preventing legal
+use of the WiFi bands, but allowing me illegal use.
+
+Secondly, I'm seeing different regulatory settings on each card. "iw list"
+shows me that in the 2GHz band, phy1 is being allowed to use 27.0 dBm on
+channels 1-11, whereas I'm only allowed to use 20.0 dBm, but I'm allowed
+channels 1-13. In the 5GHz band, phy1 is allowed 17.0 dBm on channels 36-48,
+to my local regulation's 20.0 dBm, reduced power in the (unusable as yet due
+to driver limitations) DFS-only channels between 5.490 GHz and 5.710 GHz,
+and 30 dBm in the illegal channels for my region of 149 to 165.
+
+On phy0, I see that I'm being permitted 20.0 dBm in the 2GHz band (but still
+only channels 1-11, and no beaconing permitted in the 5GHz band.
+
+How do I persuade the Atheros drivers that, since I'm using AP mode, the
+user-set regulatory domain is correct, and that the domain it selects for
+EEPROM regdomain 0x0 is wrong?
+
+Ideally, I would expect both cards to have the same regulatory rules
+applied; I would further expect to be able to select a different country's
+regulations to the ones selected by default, without losing the card's
+calibration settings (which I believe are stored in a way that depends on
+the EEPROM regdomain setting). I should note that I'm happy to run a
+privately patched kernel, if that's the only way to do what I want, but I'm
+still concerned about the differing regulatory rules between the two cards.
+
+The relevant chunk of dmesg follows, and I can provide any other needed
+information upon request:
+
+[    1.857433] cfg80211: Calling CRDA to update world regulatory domain
+[    1.891579] cfg80211: Calling CRDA for country: GB
+[    2.015975] ath5k 0000:02:04.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[    2.016204] ath5k 0000:02:04.0: registered as 'phy0'
+[    2.152564] ath: EEPROM regdomain: 0x0
+[    2.152574] ath: EEPROM indicates default country code should be used
+[    2.152580] ath: doing EEPROM country->regdmn map search
+[    2.152589] ath: country maps to regdmn code: 0x3a
+[    2.152595] ath: Country alpha2 being used: US
+[    2.152601] ath: Regpair used: 0x3a
+[    2.264328] phy0: Selected rate control algorithm 'minstrel'
+[    2.264822] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+[    2.265041]   alloc irq_desc for 17 on node -1
+[    2.265048]   alloc kstat_irqs on node -1
+[    2.265066] ath5k 0000:02:08.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[    2.265276] ath5k 0000:02:08.0: registered as 'phy1'
+[    2.400795] ath: EEPROM regdomain: 0x0
+[    2.400805] ath: EEPROM indicates default country code should be used
+[    2.400812] ath: doing EEPROM country->regdmn map search
+[    2.400821] ath: country maps to regdmn code: 0x3a
+[    2.400827] ath: Country alpha2 being used: US
+[    2.400832] ath: Regpair used: 0x3a
+[    2.400924] cfg80211: Calling CRDA for country: US
+[    2.403133] phy1: Selected rate control algorithm 'minstrel'
+[    2.403636] ath5k phy1: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+[    2.403867] cfg80211: Calling CRDA for country: US
+[    3.076972] cfg80211: Current regulatory domain intersected:
+[    3.077089]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[    3.077277]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[    3.077386]  (2457000 KHz - 2472000 KHz @ 15000 KHz), (300 mBi, 2000 mBm)
+[    3.077494]  (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+[    3.077602]  (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[    3.082954] cfg80211: Current regulatory domain intersected:
+[    3.083078]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[    3.083278]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[    3.083392]  (2457000 KHz - 2472000 KHz @ 15000 KHz), (300 mBi, 2000 mBm)
+[    3.083504]  (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+[    3.083616]  (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+
+- -- 
+Thanks in advance for your help,
+
+Simon Farnsworth
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkqJvRoACgkQSWe+XpRKvi0LrwCfVEMPoShTcFGE3SMTJyv0tT6u
+IHQAnjCelYIVpCaxEoZIvKpUzQB9tJn1
+=FGOO
+-----END PGP SIGNATURE-----
+
 
