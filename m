@@ -1,80 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016AbZHOH77 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53183 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757858AbZHQR1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 Aug 2009 03:59:59 -0400
-Subject: Re: [PATCH v4 34/34] wireless: mark prism54.ko as deprecated and
- mark for removal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, aquilaver@yahoo.com,
-	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?ISO-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>
-In-Reply-To: <1250281559-13041-35-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	 <1250281559-13041-35-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tv9P+t3g7Muy8KHLHc/m"
-Date: Sat, 15 Aug 2009 09:59:42 +0200
-Message-Id: <1250323182.15069.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 17 Aug 2009 13:27:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v5 33/33] wireless: remove mac80211 rate selection extra menu
+Date: Mon, 17 Aug 2009 13:27:32 -0400
+Message-Id: <1250530052-14783-34-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We can just display this upon enabling mac80211 with an
+'if MAC80211 != n' check.
 
---=-tv9P+t3g7Muy8KHLHc/m
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/Kconfig |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
-> The preferred modules is p54.ko, which also supports FullMAC
-> PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
-> to remove this is no one really is testing prism54.ko anymore,
-> and while it works p54.ko provides support for the same hardware.
-> It should be noted I have been told some FullMAC devices may not
-> have worked with the SoftMAC driver but to date we have yet to
-> recieve a single bug report regarding this. If there are users
-> out there please let us know!
-
-Not that I care about the changelog, but I do find it illogical to refer
-to modules w/o .ko everywhere and then with .ko in the changelog. Of
-course you were consistent ;)
-
-> -	  The module will be called prism54.
-> +	  When built as module you get prism54.ko
-
-NAK this change.
-
-johannes
-
---=-tv9P+t3g7Muy8KHLHc/m
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhmrqAAoJEODzc/N7+QmafhgQAI17nxRmHFThE0ajfM/SGrir
-rWISfI+9Pi/dqtIXdKlR8fsT34mzd8NkJ+9dn9pGNren+r4fUTwhr6SiSRzqmwcg
-e7qNC6XUSW8Kh3sByc73upexIthLoNnqvuVQVRRvJA3ghNd4KuBklilGqxe7FtL/
-igVintQkCrlAiX/d/16ci91QvbC9Po+dWfd/cZ/FM6yeTtTVfqLvKCl86ZVA+w6l
-dmJtqYznSiWdl1KHOu9FNw7FC2vgKfShrGGqVmK4ZKTHDHSx3+BqYywfC4FukaLc
-f14nUvTB+hdjr93USlXAqgbF7P4dTMOilVa6pHubur4s6mHbP3INaQoeVGGDX8l/
-1uPSu2KbTY+KI72d0brGKT5bdRdXh8qZxqKRDQekNVDST0AuSx3uqVGF9XYNdMe9
-7In56uXHiPPoKXMNN3hGoHjumKTf78E6Cma/PqZ6oDNEF2N7XSAJXkeVbzld8U81
-h5fnC0uL6oPQndnZNwipS/5HPxoN3nWc2Chxd8xrJ3/ac6fYfUJ0Tbdl+9wioPMQ
-lZUqRn4zaWaPr/JjuhUl1L4NvOY4JUsnZ5faDEFj3cJs4fTXPt1tmzrokjRxFxqv
-nD0bqgUtVZp/aFq79VUYdYRgGKzK83TZPDPL1+asOic21awmWhZQtK9kxAX8PTC1
-8JSpL19aZsThN+YHRU+C
-=Vze7
------END PGP SIGNATURE-----
-
---=-tv9P+t3g7Muy8KHLHc/m--
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 72006f9..8300d19 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -26,8 +26,7 @@ config MAC80211
+ comment "CFG80211 needs to be enabled for MAC80211"
+ 	depends on CFG80211=n
+ 
+-menu "Rate control algorithm selection"
+-	depends on MAC80211 != n
++if MAC80211 != n
+ 
+ config MAC80211_RC_PID
+ 	bool "PID controller based rate control algorithm" if EMBEDDED
+@@ -74,7 +73,7 @@ config MAC80211_RC_DEFAULT
+ 	default "pid" if MAC80211_RC_DEFAULT_PID
+ 	default ""
+ 
+-endmenu
++endif
+ 
+ config MAC80211_MESH
+ 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
+-- 
+1.6.2.5
 
