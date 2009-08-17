@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:54008 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752966AbZHFSlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:41:12 -0400
-Subject: Re: CRDA and cross-compilation
-From: Pavel Roskin <proski@gnu.org>
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jon Loeliger <jdl@bigfootnetworks.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4A7B2163.4030805@redfish-solutions.com>
-References: <4A7A8F7E.6020503@redfish-solutions.com>
-	 <1249569993.6446.2.camel@jdl-desktop>  <1249576886.14919.16.camel@mj>
-	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>
-	 <1249580707.14919.29.camel@mj>  <4A7B2163.4030805@redfish-solutions.com>
-Content-Type: text/plain
-Date: Thu, 06 Aug 2009 14:41:11 -0400
-Message-Id: <1249584071.19169.7.camel@mj>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:53142 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756455AbZHQR1c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH v5 22/33] wireless: remove "Wireless" from rndis kconfig entry
+Date: Mon, 17 Aug 2009 13:27:21 -0400
+Message-Id: <1250530052-14783-23-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-06 at 11:30 -0700, Philip A. Prindeville wrote:
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Dumb question but, why not just build a target and host version each of regdumpdb?
-
-Because it's more complicated.  Because we may want to disable
-verification for reasons other than cross-compiling.  Because it's
-already possible:
-
-set -e
-make verify REG_BIN=/targetfs/regulatory.bin
-make clean
-make all_noverify CC=cross-gcc
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index e783246..6be46f3 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -558,7 +558,7 @@ config PCMCIA_WL3501
+ 	 micro support for ethtool.
+ 
+ config USB_NET_RNDIS_WLAN
+-	tristate "Wireless RNDIS USB support"
++	tristate "RNDIS USB support"
+ 	depends on USB && EXPERIMENTAL
+ 	depends on CFG80211
+ 	select USB_USBNET
 -- 
-Regards,
-Pavel Roskin
+1.6.2.5
+
