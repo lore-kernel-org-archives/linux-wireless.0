@@ -1,65 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:64901 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755885AbZHNVd7 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53124 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757733AbZHQR1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 17:33:59 -0400
-Received: by pxi34 with SMTP id 34so461843pxi.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:34:00 -0700 (PDT)
-Message-ID: <4A85D844.8040805@lwfinger.net>
-Date: Fri, 14 Aug 2009 16:33:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>,
-	John W Linville <linville@tuxdriver.com>
-CC: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: Fix sparse warnings
-References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net> <200908142215.38112.mb@bu3sch.de>
-In-Reply-To: <200908142215.38112.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Aug 2009 13:27:32 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 19/33] wireless: organize individual drivers alphabetically
+Date: Mon, 17 Aug 2009 13:27:18 -0400
+Message-Id: <1250530052-14783-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Friday 14 August 2009 00:15:07 Larry Finger wrote:
->> The b43 driver generates the following sparse warnings:
->>
->>   CHECK   drivers/net/wireless/b43/phy_g.c
->> drivers/net/wireless/b43/phy_g.c:974:35: warning: cast truncates bits from constant value (ffff7fff becomes 7fff)
->>   CHECK   drivers/net/wireless/b43/wa.c
->> drivers/net/wireless/b43/wa.c:385:53: warning: cast truncates bits from constant value (ffff00ff becomes ff)
->> drivers/net/wireless/b43/wa.c:403:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
->> drivers/net/wireless/b43/wa.c:405:48: warning: cast truncates bits from constant value (ffff00ff becomes ff)
->> drivers/net/wireless/b43/wa.c:415:50: warning: cast truncates bits from constant value (ffff0fff becomes fff)
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John,
->>
->> There is no hurry for this material.
->>
->> Larry
->> ---
->>
->> Index: wireless-testing/drivers/net/wireless/b43/phy_g.c
->> ===================================================================
->> --- wireless-testing.orig/drivers/net/wireless/b43/phy_g.c
->> +++ wireless-testing/drivers/net/wireless/b43/phy_g.c
->> @@ -971,7 +971,7 @@ b43_radio_interference_mitigation_enable
->>  		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
->>  
->>  		if (phy->rev >= 3) {
->> -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
->> +			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
-> 
-> Uh come on...
-> The u16 cast already is stupid as hell, but this is becoming braindead.
-> The code is perfectly fine. Sparse should instead provide an option to disable
-> this fragile check.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
+ 1 files changed, 47 insertions(+), 48 deletions(-)
 
-John,
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index e57c62d..de76484 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
+ 	  This option does not affect the kernel build, it only
+ 	  lets you choose drivers.
+ 
+-config STRIP
+-	tristate "STRIP (Metricom starmode radio IP)"
+-	depends on INET && WLAN_PRE80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y if you have a Metricom radio and intend to use Starmode Radio
+-	  IP. STRIP is a radio protocol developed for the MosquitoNet project
+-	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
+-	  traffic using Metricom radios.  Metricom radios are small, battery
+-	  powered, 100kbit/sec packet radio transceivers, about the size and
+-	  weight of a cellular telephone. (You may also have heard them called
+-	  "Metricom modems" but we avoid the term "modem" because it misleads
+-	  many people into thinking that you can plug a Metricom modem into a
+-	  phone line and use it as a modem.)
+-
+-	  You can use STRIP on any Linux machine with a serial port, although
+-	  it is obviously most useful for people with laptop computers. If you
+-	  think you might get a Metricom radio in the future, there is no harm
+-	  in saying Y to STRIP now, except that it makes the kernel a bit
+-	  bigger.
+-
+-	  To compile this as a module, choose M here: the module will be
+-	  called strip.
+-
+ config ARLAN
+ 	tristate "Aironet Arlan 655 & IC2200 DS support"
+ 	depends on ISA && !64BIT && WLAN_PRE80211
+@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called wavelan_cs.  If unsure, say N.
+ 
++config STRIP
++	tristate "STRIP (Metricom starmode radio IP)"
++	depends on INET && WLAN_PRE80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y if you have a Metricom radio and intend to use Starmode Radio
++	  IP. STRIP is a radio protocol developed for the MosquitoNet project
++	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
++	  traffic using Metricom radios.  Metricom radios are small, battery
++	  powered, 100kbit/sec packet radio transceivers, about the size and
++	  weight of a cellular telephone. (You may also have heard them called
++	  "Metricom modems" but we avoid the term "modem" because it misleads
++	  many people into thinking that you can plug a Metricom modem into a
++	  phone line and use it as a modem.)
++
++	  You can use STRIP on any Linux machine with a serial port, although
++	  it is obviously most useful for people with laptop computers. If you
++	  think you might get a Metricom radio in the future, there is no harm
++	  in saying Y to STRIP now, except that it makes the kernel a bit
++	  bigger.
++
++	  To compile this as a module, choose M here: the module will be
++	  called strip.
++
+ config PCMCIA_NETWAVE
+ 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
+ 	depends on PCMCIA && WLAN_PRE80211
+@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called netwave_cs.  If unsure, say N.
+ 
+-
+ menuconfig WLAN_80211
+ 	bool "Wireless LAN (IEEE 802.11)"
+ 	depends on NETDEVICES
+@@ -509,28 +508,6 @@ config USB_ZD1201
+ 
+ endif # ZYDAS_80211
+ 
+-config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-	depends on PCMCIA && WLAN_80211
+-	select WIRELESS_EXT
+-	---help---
+-	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
+-	  (PC-card) wireless Ethernet networking card to your computer.
+-	  Please read the file <file:Documentation/networking/ray_cs.txt> for
+-	  details.
+-
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called ray_cs.  If unsure, say N.
+-
+-config PCMCIA_WL3501
+-      tristate "Planet WL3501 PCMCIA cards"
+-      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-      select WIRELESS_EXT
+-       ---help---
+-         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
+-	 It has basic support for Linux wireless extensions and initial
+-	 micro support for ethtool.
+-
+ config ADM8211
+ 	tristate "ADMtek ADM8211 support"
+ 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+@@ -558,8 +535,30 @@ config ADM8211
+ 
+ 	  Thanks to Infineon-ADMtek for their support of this driver.
+ 
+-source "drivers/net/wireless/hostap/Kconfig"
++config PCMCIA_RAYCS
++	tristate "Aviator/Raytheon 2.4GHz wireless support"
++	depends on PCMCIA && WLAN_80211
++	select WIRELESS_EXT
++	---help---
++	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
++	  (PC-card) wireless Ethernet networking card to your computer.
++	  Please read the file <file:Documentation/networking/ray_cs.txt> for
++	  details.
++
++	  To compile this driver as a module, choose M here: the module will be
++	  called ray_cs.  If unsure, say N.
++
+ source "drivers/net/wireless/orinoco/Kconfig"
++source "drivers/net/wireless/hostap/Kconfig"
++
++config PCMCIA_WL3501
++      tristate "Planet WL3501 PCMCIA cards"
++      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
++      select WIRELESS_EXT
++       ---help---
++         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
++	 It has basic support for Linux wireless extensions and initial
++	 micro support for ethtool.
+ 
+ config USB_NET_RNDIS_WLAN
+ 	tristate "Wireless RNDIS USB support"
+-- 
+1.6.2.5
 
-Just drop this patch. The code is OK as is.
-
-Larry
