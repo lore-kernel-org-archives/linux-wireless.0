@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:53520 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941AbZHNLXr (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53160 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757817AbZHQR1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 07:23:47 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: disable PS by default
-Date: Fri, 14 Aug 2009 13:23:05 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Message-Id: <200908141323.05936.chunkeey@web.de>
-Content-Type: Text/Plain;
-  charset="us-ascii"
+	Mon, 17 Aug 2009 13:27:33 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 27/33] wireless: update top level wireless driver entry
+Date: Mon, 17 Aug 2009 13:27:26 -0400
+Message-Id: <1250530052-14783-28-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes kindly pointed out that I completely missed a hunk in
-his patch: "[PATCH] cfg80211: allow driver to override PS default".
+Change it to a menuconfig to give it some documentation, to
+refer users to our wireless wiki for extra resources and
+documentation. It seems our wiki is still obscure to some.
 
-The driver must explicitly set ps_default to false,
-as the setting is pre-filled with the kconfig default.
-
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 4a741df..77203e3 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -575,6 +575,12 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
- 	dev->extra_tx_headroom = sizeof(struct p54_hdr) + 4 +
- 				 sizeof(struct p54_tx_data);
+ drivers/net/wireless/Kconfig |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index ed9093f..2dab145 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -2,8 +2,17 @@
+ # Wireless LAN device configuration
+ #
  
-+	/*
-+	 * For now, disable PS by default because it affects
-+	 * link stability significantly.
-+	 */
-+	dev->wiphy->ps_default = false;
+-menu "Wireless LAN"
++menuconfig WLAN
++	bool "IEEE 802.11 - Wireless LAN"
+ 	depends on !S390
++	---help---
++	  This section contains all the pre 802.11 and 802.11 wireless
++	  device drivers. For a complete list of drivers and documentation
++	  on them refer to the wireless wiki:
 +
- 	mutex_init(&priv->conf_mutex);
- 	mutex_init(&priv->eeprom_mutex);
- 	init_completion(&priv->eeprom_comp);
++	  http://wireless.kernel.org/en/users/Drivers
++
++if WLAN
+ 
+ menuconfig WLAN_PRE80211
+ 	bool "Wireless LAN (pre-802.11)"
+@@ -579,4 +588,4 @@ config MAC80211_HWSIM
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called mac80211_hwsim.  If unsure, say N.
+ 
+-endmenu
++endif # WLAN
+-- 
+1.6.2.5
+
