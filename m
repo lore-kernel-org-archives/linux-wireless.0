@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:45757 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756841AbZHRDyQ (ORCPT
+Received: from mail-ew0-f214.google.com ([209.85.219.214]:64136 "EHLO
+	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756895AbZHQQ41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:54:16 -0400
-Date: Tue, 18 Aug 2009 05:54:17 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 20/29] mwl8k: get rid of mwl8k_stop() workqueue use
-Message-ID: <20090818035417.GY18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 17 Aug 2009 12:56:27 -0400
+Received: by ewy10 with SMTP id 10so3097890ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:28 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 1/7] rt2x00: Fix RFKILL polling
+Date: Mon, 17 Aug 2009 18:53:24 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908171853.24256.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   28 +---------------------------
- 1 files changed, 1 insertions(+), 27 deletions(-)
+The rfkill_poll callback function in the drivers check a bit
+to see if the RFKILL key has been pressed. However when the
+bit is set it means the radio is active and the device can be
+used.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 69e6879..6b16542 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2551,41 +2551,15 @@ static int mwl8k_start(struct ieee80211_hw *hw)
- 	return rc;
- }
- 
--struct mwl8k_stop_worker {
--	struct mwl8k_work_struct header;
--};
--
--static int mwl8k_stop_wt(struct work_struct *wt)
--{
--	struct mwl8k_stop_worker *worker = (struct mwl8k_stop_worker *)wt;
--	struct ieee80211_hw *hw = worker->header.hw;
--
--	return mwl8k_cmd_802_11_radio_disable(hw);
--}
--
- static void mwl8k_stop(struct ieee80211_hw *hw)
+The wiphy_rfkill_set_hw_state() function expects the inversed,
+so '1' must be send when the radio must be disabled.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index cb7b6d4..b27a250 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -704,8 +704,8 @@ EXPORT_SYMBOL_GPL(rt2x00mac_conf_tx);
+ void rt2x00mac_rfkill_poll(struct ieee80211_hw *hw)
  {
--	int rc;
--	struct mwl8k_stop_worker *worker;
- 	struct mwl8k_priv *priv = hw->priv;
- 	int i;
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	bool blocked = !!rt2x00dev->ops->lib->rfkill_poll(rt2x00dev);
++	bool active = !!rt2x00dev->ops->lib->rfkill_poll(rt2x00dev);
  
--	if (priv->vif != NULL)
--		return;
-+	mwl8k_cmd_802_11_radio_disable(hw);
- 
- 	ieee80211_stop_queues(hw);
- 
--	worker = kzalloc(sizeof(*worker), GFP_KERNEL);
--	if (worker == NULL)
--		return;
--
--	worker->header.sleep = 1;
--
--	rc = mwl8k_queue_work(hw, &worker->header, mwl8k_stop_wt);
--	kfree(worker);
--	if (rc == -ETIMEDOUT)
--		printk(KERN_ERR "%s() timed out\n", __func__);
--
- 	/* Disable interrupts */
- 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
- 	free_irq(priv->pdev->irq, hw);
+-	wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
++	wiphy_rfkill_set_hw_state(hw->wiphy, !active);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_rfkill_poll);
 -- 
-1.5.6.4
+1.6.4
+
