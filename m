@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40903 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754258AbZHNDlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 23:41:06 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 20:41:07 -0700
-Date: Thu, 13 Aug 2009 20:41:05 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:53013 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752781AbZHQTqN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 15:46:13 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 00/25] wireless: cleanup and reorganize kconfig
-Message-ID: <20090814034105.GA28524@mosca>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
- <4A84DB04.6070105@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A84DB04.6070105@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v5 13/33] wireless: move AIRO_CS closer to AIRO
+Date: Mon, 17 Aug 2009 15:46:14 -0400
+Message-Id: <1250538374-21468-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 13, 2009 at 08:33:24PM -0700, Larry Finger wrote:
-> Luis R. Rodriguez wrote:
-> > John, here's a second iteration of this series, this time
-> > I'm using a menu (config) which expands upon selection for
-> > groups which have only a few drivers. For groups which do tend
-> > to pollute your screen I've put them under their own menu
-> > (menuconfig). At first I had each group with an appended
-> > "wireless drivers support" but in the end that seemed too
-> > odd so I removed it and now group drivers are pivoted by
-> > the vendor driver.
-> >
-> > I've kept rndis_wlan on its own although only currently
-> > known chipsets which support it are Broadcom based.
-> > I also don't expect old rndis_wlan users to know
-> > that this is a broadcom driver for now so its better
-> > to keep that apart.
-> >
-> > Let me know if you like the color of the shed, its
-> > understandable if you dislike it.
-> 
-> #4 is missing this time. That is probably the reason that #13 has some
-> fuzz, and #15 fails. In addition, once you apply past #3, youo get an
-> error
-> drivers/net/wireless/Kconfig:498: file
-> 'drivers/net/wireless/p54/Kconfig' is already sourced from
-> 'drivers/net/wireless/Kconfig'
-> make[1]: *** [xconfig] Error 1
-> make: *** [xconfig] Error 2
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
+ 1 files changed, 20 insertions(+), 20 deletions(-)
 
-Oh ok, thanks I'll resend, also noticed a typo on #15. Will resend that one as well.
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index b489d9c..b03035f 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -213,6 +213,26 @@ config AIRO
+ 
+ 	  The driver can be compiled as a module and will be named "airo".
+ 
++config AIRO_CS
++	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
++	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
++	select WIRELESS_EXT
++	select CRYPTO
++	select CRYPTO_AES
++	---help---
++	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
++	  802.11 wireless cards.  This driver is the same as the Aironet
++	  driver part of the Linux Pcmcia package.
++	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
++	  - with or without encryption) as well as card before the Cisco
++	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
++	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
++	  802.11b cards.
++
++	  This driver support both the standard Linux Wireless Extensions
++	  and Cisco proprietary API, so both the Linux Wireless Tools and the
++	  Cisco Linux utilities can be used to configure the card.
++
+ config ATMEL_80211
+ 	bool "Atmel"
+ 	depends on WLAN_80211
+@@ -265,26 +285,6 @@ config AT76C50X_USB
+ 
+ endif # ATMEL_80211
+ 
+-config AIRO_CS
+-	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
+-	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
+-	select WIRELESS_EXT
+-	select CRYPTO
+-	select CRYPTO_AES
+-	---help---
+-	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
+-	  802.11 wireless cards.  This driver is the same as the Aironet
+-	  driver part of the Linux Pcmcia package.
+-	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
+-	  - with or without encryption) as well as card before the Cisco
+-	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
+-	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
+-	  802.11b cards.
+-
+-	  This driver support both the standard Linux Wireless Extensions
+-	  and Cisco proprietary API, so both the Linux Wireless Tools and the
+-	  Cisco Linux utilities can be used to configure the card.
+-
+ config PCMCIA_WL3501
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-- 
+1.6.2.5
 
-  Luis
