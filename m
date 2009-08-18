@@ -1,94 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50995 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932634AbZHUUe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:34:27 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/14] iwlwifi: change IWL6000_UCODE_API_MAX to v4
-Date: Fri, 21 Aug 2009 13:34:18 -0700
-Message-Id: <1250886867-4112-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
-References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+Received: from xi.wantstofly.org ([80.101.37.227]:38626 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbZHRINj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2009 04:13:39 -0400
+Date: Tue, 18 Aug 2009 10:13:39 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/29] mwl8k: fix mwl8k_configure_filter() parameter lifetime issue
+Message-ID: <20090818081339.GI18639@mail.wantstofly.org>
+References: <20090818035233.GO18639@mail.wantstofly.org> <20090818040039.GA4116@mail.wantstofly.org> <1250580198.30538.0.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250580198.30538.0.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Tue, Aug 18, 2009 at 09:23:18AM +0200, Johannes Berg wrote:
 
-uCode version changed to v4 for 6000 series
+> > This will clash with:
+> > 
+> > 	http://article.gmane.org/gmane.linux.kernel.wireless.general/38141
+> > 
+> > But that is easy to fix up.  (The easiest would probably be to not
+> > apply the mwl8k part of that patch, and I'll send a followup patch
+> > to implement ->prepare_multicast() for mwl8k.)
+> 
+> It's not quite that easy because that patch changes the arguments to the
+> functions so the multicast list is no longer available in
+> ->configure_filter().
 
-The additional parameter added to v4 is providing current tx power for
-each chain in tx statistics portion of "statistics notification"
-command.
+OK, if my patch set gets applied first, please use the mwl8k
+->prepare_multicast() implementation that's below in your patch.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-commands.h |   18 ++++++++++++++++--
- 2 files changed, 18 insertions(+), 4 deletions(-)
+If your patch gets applied first, I'll fix it up in my set.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 383177d..33ef736 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -46,8 +46,8 @@
- #include "iwl-5000-hw.h"
+
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 2c7c85d..316a728 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2654,26 +2654,33 @@ out:
+ 	mwl8k_fw_unlock(hw);
+ }
  
- /* Highest firmware API version supported */
--#define IWL6000_UCODE_API_MAX 3
--#define IWL6050_UCODE_API_MAX 3
-+#define IWL6000_UCODE_API_MAX 4
-+#define IWL6050_UCODE_API_MAX 4
- 
- /* Lowest firmware API version supported */
- #define IWL6000_UCODE_API_MIN 1
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index f430384..6b82d4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2930,6 +2930,20 @@ struct statistics_rx {
- 	struct statistics_rx_ht_phy ofdm_ht;
- } __attribute__ ((packed));
- 
-+/**
-+ * struct statistics_tx_power - current tx power
-+ *
-+ * @ant_a: current tx power on chain a in 1/2 dB step
-+ * @ant_b: current tx power on chain b in 1/2 dB step
-+ * @ant_c: current tx power on chain c in 1/2 dB step
-+ */
-+struct statistics_tx_power {
-+	u8 ant_a;
-+	u8 ant_b;
-+	u8 ant_c;
-+	u8 reserved;
-+} __attribute__ ((packed));
+-struct mwl8k_configure_filter_worker {
+-	struct work_struct wt;
+-	struct ieee80211_hw *hw;
+-	unsigned int changed_flags;
+-	unsigned int total_flags;
+-	struct mwl8k_cmd_pkt *set_multicast_adr;
+-};
++static u64 mwl8k_prepare_multicast(struct ieee80211_hw *hw,
++				   int mc_count, struct dev_addr_list *mclist)
++{
++	struct mwl8k_cmd_pkt *cmd;
 +
- struct statistics_tx_non_phy_agg {
- 	__le32 ba_timeout;
- 	__le32 ba_reschedule_frames;
-@@ -2941,8 +2955,6 @@ struct statistics_tx_non_phy_agg {
- 	__le32 underrun;
- 	__le32 bt_prio_kill;
- 	__le32 rx_ba_rsp_cnt;
--	__le32 reserved2;
--	__le32 reserved3;
- } __attribute__ ((packed));
++	cmd = __mwl8k_cmd_mac_multicast_adr(hw, mc_count, mclist);
  
- struct statistics_tx {
-@@ -2961,6 +2973,8 @@ struct statistics_tx {
- 	__le32 cts_timeout_collision;
- 	__le32 ack_or_ba_timeout_collision;
- 	struct statistics_tx_non_phy_agg agg;
-+	struct statistics_tx_power tx_power;
-+	__le32 reserved1;
- } __attribute__ ((packed));
+-static void mwl8k_configure_filter_wt(struct work_struct *wt)
++	return (unsigned long)cmd;
++}
++
++static void mwl8k_configure_filter(struct ieee80211_hw *hw,
++				   unsigned int changed_flags,
++				   unsigned int *total_flags,
++				   u64 multicast)
+ {
+-	struct mwl8k_configure_filter_worker *worker =
+-		(struct mwl8k_configure_filter_worker *)wt;
+-	struct ieee80211_hw *hw = worker->hw;
+ 	struct mwl8k_priv *priv = hw->priv;
++	struct mwl8k_cmd_pkt *multicast_adr_cmd =
++		(void *)(unsigned long)multicast;
++
++	/* Clear unsupported feature flags */
++	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
  
+ 	if (mwl8k_fw_lock(hw))
+-		return;
++		goto out;
  
--- 
-1.5.6.3
-
+-	if (worker->changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+-		if (worker->total_flags & FIF_BCN_PRBRESP_PROMISC)
++	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
++		if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
+ 			mwl8k_cmd_set_pre_scan(hw);
+ 		else {
+ 			u8 *bssid;
+@@ -2686,44 +2693,13 @@ static void mwl8k_configure_filter_wt(struct work_struct *wt)
+ 		}
+ 	}
+ 
+-	if (worker->set_multicast_adr != NULL) {
+-		mwl8k_post_cmd(hw, worker->set_multicast_adr);
+-		kfree(worker->set_multicast_adr);
+-	}
++	if (multicast_adr_cmd != NULL)
++		mwl8k_post_cmd(hw, multicast_adr_cmd);
+ 
+ 	mwl8k_fw_unlock(hw);
+ 
+-	kfree(worker);
+-}
+-
+-static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+-				   unsigned int changed_flags,
+-				   unsigned int *total_flags,
+-				   int mc_count,
+-				   struct dev_addr_list *mclist)
+-{
+-	struct mwl8k_priv *priv = hw->priv;
+-	struct mwl8k_configure_filter_worker *worker;
+-
+-	/* Clear unsupported feature flags */
+-	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
+-
+-	if (!(changed_flags & FIF_BCN_PRBRESP_PROMISC) && !mc_count)
+-		return;
+-
+-	worker = kzalloc(sizeof(*worker), GFP_ATOMIC);
+-	if (worker == NULL)
+-		return;
+-
+-	worker->hw = hw;
+-	worker->changed_flags = changed_flags;
+-	worker->total_flags = *total_flags;
+-	if (mc_count)
+-		worker->set_multicast_adr =
+-			__mwl8k_cmd_mac_multicast_adr(hw, mc_count, mclist);
+-
+-	INIT_WORK(&worker->wt, mwl8k_configure_filter_wt);
+-	queue_work(priv->config_wq, &worker->wt);
++out:
++	kfree(multicast_adr_cmd);
+ }
+ 
+ static int mwl8k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+@@ -2787,6 +2763,7 @@ static const struct ieee80211_ops mwl8k_ops = {
+ 	.remove_interface	= mwl8k_remove_interface,
+ 	.config			= mwl8k_config,
+ 	.bss_info_changed	= mwl8k_bss_info_changed,
++	.prepare_multicast	= mwl8k_prepare_multicast,
+ 	.configure_filter	= mwl8k_configure_filter,
+ 	.set_rts_threshold	= mwl8k_set_rts_threshold,
+ 	.conf_tx		= mwl8k_conf_tx,
