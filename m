@@ -1,790 +1,331 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29189 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462AbZHHGTz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 02:19:55 -0400
-Subject: Re: [PATCH v4] cfg80211: validate channel settings across
- interfaces
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1249658555.7194.8.camel@johannes.local>
-References: <1249649261.4215.7.camel@johannes.local>
-	 <1249649433.7194.0.camel@johannes.local>
-	 <1249652951.7194.2.camel@johannes.local>
-	 <1249658555.7194.8.camel@johannes.local>
-Content-Type: text/plain
-Date: Fri, 07 Aug 2009 23:19:43 -0700
-Message-Id: <1249712383.30019.5561.camel@rc-desk>
+Received: from xi.wantstofly.org ([80.101.37.227]:45752 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756765AbZHRDx4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 23:53:56 -0400
+Date: Tue, 18 Aug 2009 05:53:57 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 18/29] mwl8k: fix firmware command serialisation
+Message-ID: <20090818035357.GW18639@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+The current mwl8k_priv->fw_lock spinlock doesn't actually protect
+against multiple commands being submitted at once, as it is not kept
+held over the entire firmware command submission.  And since waiting
+for command completion sleeps, we can't use a spinlock anyway.
 
-This patch is now in wireless-testing and it is causing a problem for
-me. This was determined using bisect.
+To fix mwl8k firmware command serialisation properly, we have the
+following requirements:
+- Some commands require that the packet transmit path is idle when
+  the command is issued.  (For simplicity, we'll just quiesce the
+  transmit path for every command.)
+- There are certain sequences of commands that need to be issued to
+  the hardware sequentially, with no other intervening commands.
 
-I am able to bring the interface up and scan, but when I try to
-associate I get a hang.
+This leads to an implementation of a "firmware lock" as a mutex that
+can be taken recursively, and which is taken by both the low-level
+command submission function (mwl8k_post_cmd) as well as any users of
+that function that require issuing of an atomic sequence of commands,
+and quiesces the transmit path whenever it's taken.
 
-For example, when I run:
-$ iwconfig wlan0 channel <ch> essid <essid>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |  154 ++++++++++++++++++++++++------------------
+ 1 files changed, 89 insertions(+), 65 deletions(-)
 
-then the command prompt never returns and system becomes progressively
-unresponsive. The logs do not contain any details of the problem.
-
-Reinette
-
-
-On Fri, 2009-08-07 at 08:22 -0700, Johannes Berg wrote:
-> Currently, there's a problem that affects regulatory
-> enforcement and connection stability, in that it is
-> possible to switch the channel while connected to a
-> network or joined to an IBSS.
-> 
-> The problem comes from the fact that we only validate
-> the channel against the current interface's type, not
-> against any other interface. Thus, you have any type
-> of interface up, additionally bring up a monitor mode
-> interface and switch the channel on the monitor. This
-> will obviously also switch the channel on the other
-> interface.
-> 
-> The problem now is that if you do that while sending
-> beacons for IBSS mode, you can switch to a disabled
-> channel or a channel that doesn't allow beaconing.
-> Combined with a managed mode interface connected to
-> an AP instead of an IBSS interface, you can easily
-> break the connection that way.
-> 
-> To fix this, this patch validates any channel change
-> with all available interfaces, and disallows such
-> changes on secondary interfaces if another interface
-> is connected to an AP or joined to an IBSS.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> ---
-> v2: * rebase
-> v3: * fix error code (-EBUSY instead of -EINVAL)
->     * fix locking (need devlist_mtx instead of rdev mtx)
-> v4: * use SINGLE_DEPTH_NESTING instead of 1
-> 
->  net/wireless/Makefile      |    3 +
->  net/wireless/chan.c        |   88 +++++++++++++++++++++++++++++++++++++++++++++
->  net/wireless/core.h        |    6 +++
->  net/wireless/ibss.c        |   63 ++++++++++++++++++++------------
->  net/wireless/nl80211.c     |   54 ++++++---------------------
->  net/wireless/sme.c         |    9 ++++
->  net/wireless/wext-compat.c |   55 +++++++++-------------------
->  net/wireless/wext-compat.h |    3 -
->  net/wireless/wext-sme.c    |   67 ++++++++++++++++++----------------
->  9 files changed, 215 insertions(+), 133 deletions(-)
-> 
-> --- wireless-testing.orig/net/wireless/Makefile 2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/Makefile      2009-08-07 14:50:11.000000000 +0200
-> @@ -5,7 +5,8 @@ obj-$(CONFIG_LIB80211_CRYPT_WEP) += lib8
->  obj-$(CONFIG_LIB80211_CRYPT_CCMP) += lib80211_crypt_ccmp.o
->  obj-$(CONFIG_LIB80211_CRYPT_TKIP) += lib80211_crypt_tkip.o
-> 
-> -cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o mlme.o ibss.o sme.o
-> +cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
-> +cfg80211-y += mlme.o ibss.o sme.o chan.o
->  cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
->  cfg80211-$(CONFIG_WIRELESS_EXT) += wext-compat.o wext-sme.o
-> 
-> --- /dev/null   1970-01-01 00:00:00.000000000 +0000
-> +++ wireless-testing/net/wireless/chan.c        2009-08-07 17:20:41.000000000 +0200
-> @@ -0,0 +1,88 @@
-> +/*
-> + * This file contains helper code to handle channel
-> + * settings and keeping track of what is possible at
-> + * any point in time.
-> + *
-> + * Copyright 2009      Johannes Berg <johannes@sipsolutions.net>
-> + */
-> +
-> +#include <net/cfg80211.h>
-> +#include "core.h"
-> +
-> +struct ieee80211_channel *
-> +rdev_fixed_channel(struct cfg80211_registered_device *rdev,
-> +                  struct wireless_dev *for_wdev)
-> +{
-> +       struct wireless_dev *wdev;
-> +       struct ieee80211_channel *result = NULL;
-> +
-> +       WARN_ON(!mutex_is_locked(&rdev->devlist_mtx));
-> +
-> +       list_for_each_entry(wdev, &rdev->netdev_list, list) {
-> +               if (wdev == for_wdev)
-> +                       continue;
-> +
-> +               /*
-> +                * Lock manually to tell lockdep about allowed
-> +                * nesting here if for_wdev->mtx is held already.
-> +                * This is ok as it's all under the rdev devlist
-> +                * mutex and as such can only be done once at any
-> +                * given time.
-> +                */
-> +               mutex_lock_nested(&wdev->mtx, SINGLE_DEPTH_NESTING);
-> +               if (wdev->current_bss)
-> +                       result = wdev->current_bss->pub.channel;
-> +               wdev_unlock(wdev);
-> +
-> +               if (result)
-> +                       break;
-> +       }
-> +
-> +       return result;
-> +}
-> +
-> +int rdev_set_freq(struct cfg80211_registered_device *rdev,
-> +                 int freq, enum nl80211_channel_type channel_type)
-> +{
-> +       struct ieee80211_channel *chan;
-> +       struct ieee80211_sta_ht_cap *ht_cap;
-> +       int result;
-> +
-> +       if (rdev_fixed_channel(rdev, NULL))
-> +               return -EBUSY;
-> +
-> +       if (!rdev->ops->set_channel)
-> +               return -EOPNOTSUPP;
-> +
-> +       chan = ieee80211_get_channel(&rdev->wiphy, freq);
-> +
-> +       /* Primary channel not allowed */
-> +       if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-> +               return -EINVAL;
-> +
-> +       if (channel_type == NL80211_CHAN_HT40MINUS &&
-> +           chan->flags & IEEE80211_CHAN_NO_HT40MINUS)
-> +               return -EINVAL;
-> +       else if (channel_type == NL80211_CHAN_HT40PLUS &&
-> +                chan->flags & IEEE80211_CHAN_NO_HT40PLUS)
-> +               return -EINVAL;
-> +
-> +       ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-> +
-> +       if (channel_type != NL80211_CHAN_NO_HT) {
-> +               if (!ht_cap->ht_supported)
-> +                       return -EINVAL;
-> +
-> +               if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
-> +                   ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT)
-> +                       return -EINVAL;
-> +       }
-> +
-> +       result = rdev->ops->set_channel(&rdev->wiphy, chan, channel_type);
-> +       if (result)
-> +               return result;
-> +
-> +       rdev->channel = chan;
-> +
-> +       return 0;
-> +}
-> --- wireless-testing.orig/net/wireless/core.h   2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/core.h        2009-08-07 17:20:31.000000000 +0200
-> @@ -366,4 +366,10 @@ void cfg80211_sme_disassoc(struct net_de
->  void __cfg80211_scan_done(struct work_struct *wk);
->  void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
-> 
-> +struct ieee80211_channel *
-> +rdev_fixed_channel(struct cfg80211_registered_device *rdev,
-> +                  struct wireless_dev *for_wdev);
-> +int rdev_set_freq(struct cfg80211_registered_device *rdev,
-> +                 int freq, enum nl80211_channel_type channel_type);
-> +
->  #endif /* __NET_WIRELESS_CORE_H */
-> --- wireless-testing.orig/net/wireless/nl80211.c        2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/nl80211.c     2009-08-07 17:20:30.000000000 +0200
-> @@ -701,15 +701,8 @@ static int nl80211_set_wiphy(struct sk_b
-> 
->         if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
->                 enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-> -               struct ieee80211_channel *chan;
-> -               struct ieee80211_sta_ht_cap *ht_cap;
->                 u32 freq;
-> 
-> -               if (!rdev->ops->set_channel) {
-> -                       result = -EOPNOTSUPP;
-> -                       goto bad_res;
-> -               }
-> -
->                 result = -EINVAL;
-> 
->                 if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE]) {
-> @@ -723,42 +716,12 @@ static int nl80211_set_wiphy(struct sk_b
->                 }
-> 
->                 freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-> -               chan = ieee80211_get_channel(&rdev->wiphy, freq);
-> -
-> -               /* Primary channel not allowed */
-> -               if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-> -                       goto bad_res;
-> -
-> -               if (channel_type == NL80211_CHAN_HT40MINUS &&
-> -                   (chan->flags & IEEE80211_CHAN_NO_HT40MINUS))
-> -                       goto bad_res;
-> -               else if (channel_type == NL80211_CHAN_HT40PLUS &&
-> -                        (chan->flags & IEEE80211_CHAN_NO_HT40PLUS))
-> -                       goto bad_res;
-> -
-> -               /*
-> -                * At this point we know if that if HT40 was requested
-> -                * we are allowed to use it and the extension channel
-> -                * exists.
-> -                */
-> 
-> -               ht_cap = &rdev->wiphy.bands[chan->band]->ht_cap;
-> -
-> -               /* no HT capabilities or intolerant */
-> -               if (channel_type != NL80211_CHAN_NO_HT) {
-> -                       if (!ht_cap->ht_supported)
-> -                               goto bad_res;
-> -                       if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
-> -                           (ht_cap->cap & IEEE80211_HT_CAP_40MHZ_INTOLERANT))
-> -                               goto bad_res;
-> -               }
-> -
-> -               result = rdev->ops->set_channel(&rdev->wiphy, chan,
-> -                                               channel_type);
-> +               mutex_lock(&rdev->devlist_mtx);
-> +               result = rdev_set_freq(rdev, freq, channel_type);
-> +               mutex_unlock(&rdev->devlist_mtx);
->                 if (result)
->                         goto bad_res;
-> -
-> -               rdev->channel = chan;
->         }
-> 
->         changed = 0;
-> @@ -3453,7 +3416,7 @@ static int nl80211_associate(struct sk_b
->         struct cfg80211_registered_device *rdev;
->         struct net_device *dev;
->         struct cfg80211_crypto_settings crypto;
-> -       struct ieee80211_channel *chan;
-> +       struct ieee80211_channel *chan, *fixedchan;
->         const u8 *bssid, *ssid, *ie = NULL, *prev_bssid = NULL;
->         int err, ssid_len, ie_len = 0;
->         bool use_mfp = false;
-> @@ -3496,6 +3459,15 @@ static int nl80211_associate(struct sk_b
->                 goto out;
->         }
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
-> +       fixedchan = rdev_fixed_channel(rdev, NULL);
-> +       if (fixedchan && chan != fixedchan) {
-> +               err = -EBUSY;
-> +               mutex_unlock(&rdev->devlist_mtx);
-> +               goto out;
-> +       }
-> +       mutex_unlock(&rdev->devlist_mtx);
-> +
->         ssid = nla_data(info->attrs[NL80211_ATTR_SSID]);
->         ssid_len = nla_len(info->attrs[NL80211_ATTR_SSID]);
-> 
-> --- wireless-testing.orig/net/wireless/wext-compat.c    2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-compat.c 2009-08-07 15:38:35.000000000 +0200
-> @@ -267,39 +267,26 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_giwrange
->   * @wiphy: the wiphy
->   * @freq: the wext freq encoding
->   *
-> - * Returns a channel, %NULL for auto, or an ERR_PTR for errors!
-> + * Returns a frequency, or a negative error code, or 0 for auto.
->   */
-> -struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
-> -                                            struct iw_freq *freq)
-> +int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq)
->  {
-> -       struct ieee80211_channel *chan;
-> -       int f;
-> -
->         /*
-> -        * Parse frequency - return NULL for auto and
-> +        * Parse frequency - return 0 for auto and
->          * -EINVAL for impossible things.
->          */
->         if (freq->e == 0) {
->                 if (freq->m < 0)
-> -                       return NULL;
-> -               f = ieee80211_channel_to_frequency(freq->m);
-> +                       return 0;
-> +               return ieee80211_channel_to_frequency(freq->m);
->         } else {
->                 int i, div = 1000000;
->                 for (i = 0; i < freq->e; i++)
->                         div /= 10;
->                 if (div <= 0)
-> -                       return ERR_PTR(-EINVAL);
-> -               f = freq->m / div;
-> +                       return -EINVAL;
-> +               return freq->m / div;
->         }
-> -
-> -       /*
-> -        * Look up channel struct and return -EINVAL when
-> -        * it cannot be found.
-> -        */
-> -       chan = ieee80211_get_channel(wiphy, f);
-> -       if (!chan)
-> -               return ERR_PTR(-EINVAL);
-> -       return chan;
->  }
-> 
->  int cfg80211_wext_siwrts(struct net_device *dev,
-> @@ -761,33 +748,29 @@ EXPORT_SYMBOL_GPL(cfg80211_wext_giwencod
-> 
->  int cfg80211_wext_siwfreq(struct net_device *dev,
->                           struct iw_request_info *info,
-> -                         struct iw_freq *freq, char *extra)
-> +                         struct iw_freq *wextfreq, char *extra)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
->         struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> -       struct ieee80211_channel *chan;
-> -       int err;
-> +       int freq, err;
-> 
->         switch (wdev->iftype) {
->         case NL80211_IFTYPE_STATION:
-> -               return cfg80211_mgd_wext_siwfreq(dev, info, freq, extra);
-> +               return cfg80211_mgd_wext_siwfreq(dev, info, wextfreq, extra);
->         case NL80211_IFTYPE_ADHOC:
-> -               return cfg80211_ibss_wext_siwfreq(dev, info, freq, extra);
-> +               return cfg80211_ibss_wext_siwfreq(dev, info, wextfreq, extra);
->         default:
-> -               chan = cfg80211_wext_freq(wdev->wiphy, freq);
-> -               if (!chan)
-> +               freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-> +               if (freq < 0)
-> +                       return freq;
-> +               if (freq == 0)
->                         return -EINVAL;
-> -               if (IS_ERR(chan))
-> -                       return PTR_ERR(chan);
-> -               err = rdev->ops->set_channel(wdev->wiphy, chan,
-> -                                            NL80211_CHAN_NO_HT);
-> -               if (err)
-> -                       return err;
-> -               rdev->channel = chan;
-> -               return 0;
-> +               mutex_lock(&rdev->devlist_mtx);
-> +               err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
-> +               mutex_unlock(&rdev->devlist_mtx);
-> +               return err;
->         }
->  }
-> -EXPORT_SYMBOL_GPL(cfg80211_wext_siwfreq);
-> 
->  int cfg80211_wext_giwfreq(struct net_device *dev,
->                           struct iw_request_info *info,
-> --- wireless-testing.orig/net/wireless/wext-compat.h    2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-compat.h 2009-08-07 14:50:11.000000000 +0200
-> @@ -42,8 +42,7 @@ int cfg80211_mgd_wext_giwessid(struct ne
->                                struct iw_request_info *info,
->                                struct iw_point *data, char *ssid);
-> 
-> -struct ieee80211_channel *cfg80211_wext_freq(struct wiphy *wiphy,
-> -                                            struct iw_freq *freq);
-> +int cfg80211_wext_freq(struct wiphy *wiphy, struct iw_freq *freq);
-> 
-> 
->  extern const struct iw_handler_def cfg80211_wext_handler;
-> --- wireless-testing.orig/net/wireless/ibss.c   2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/ibss.c        2009-08-07 15:45:29.000000000 +0200
-> @@ -78,10 +78,15 @@ int __cfg80211_join_ibss(struct cfg80211
->                          struct cfg80211_cached_keys *connkeys)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct ieee80211_channel *chan;
->         int err;
-> 
->         ASSERT_WDEV_LOCK(wdev);
-> 
-> +       chan = rdev_fixed_channel(rdev, wdev);
-> +       if (chan && chan != params->channel)
-> +               return -EBUSY;
-> +
->         if (wdev->ssid_len)
->                 return -EALREADY;
-> 
-> @@ -112,9 +117,11 @@ int cfg80211_join_ibss(struct cfg80211_r
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
->         int err;
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
->         err = __cfg80211_join_ibss(rdev, dev, params, connkeys);
->         wdev_unlock(wdev);
-> +       mutex_unlock(&rdev->devlist_mtx);
-> 
->         return err;
->  }
-> @@ -264,27 +271,32 @@ int cfg80211_ibss_wext_join(struct cfg80
-> 
->  int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
->                                struct iw_request_info *info,
-> -                              struct iw_freq *freq, char *extra)
-> +                              struct iw_freq *wextfreq, char *extra)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> -       struct ieee80211_channel *chan;
-> -       int err;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> +       struct ieee80211_channel *chan = NULL;
-> +       int err, freq;
-> 
->         /* call only for ibss! */
->         if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
->                 return -EINVAL;
-> 
-> -       if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-> +       if (!rdev->ops->join_ibss)
->                 return -EOPNOTSUPP;
-> 
-> -       chan = cfg80211_wext_freq(wdev->wiphy, freq);
-> -       if (chan && IS_ERR(chan))
-> -               return PTR_ERR(chan);
-> -
-> -       if (chan &&
-> -           (chan->flags & IEEE80211_CHAN_NO_IBSS ||
-> -            chan->flags & IEEE80211_CHAN_DISABLED))
-> -               return -EINVAL;
-> +       freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-> +       if (freq < 0)
-> +               return freq;
-> +
-> +       if (freq) {
-> +               chan = ieee80211_get_channel(wdev->wiphy, freq);
-> +               if (!chan)
-> +                       return -EINVAL;
-> +               if (chan->flags & IEEE80211_CHAN_NO_IBSS ||
-> +                   chan->flags & IEEE80211_CHAN_DISABLED)
-> +                       return -EINVAL;
-> +       }
-> 
->         if (wdev->wext.ibss.channel == chan)
->                 return 0;
-> @@ -292,8 +304,7 @@ int cfg80211_ibss_wext_siwfreq(struct ne
->         wdev_lock(wdev);
->         err = 0;
->         if (wdev->ssid_len)
-> -               err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, true);
-> +               err = __cfg80211_leave_ibss(rdev, dev, true);
->         wdev_unlock(wdev);
-> 
->         if (err)
-> @@ -307,9 +318,11 @@ int cfg80211_ibss_wext_siwfreq(struct ne
->                 wdev->wext.ibss.channel_fixed = false;
->         }
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> -       err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_ibss_wext_join(rdev, wdev);
->         wdev_unlock(wdev);
-> +       mutex_unlock(&rdev->devlist_mtx);
-> 
->         return err;
->  }
-> @@ -347,6 +360,7 @@ int cfg80211_ibss_wext_siwessid(struct n
->                                 struct iw_point *data, char *ssid)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
->         size_t len = data->length;
->         int err;
-> 
-> @@ -354,14 +368,13 @@ int cfg80211_ibss_wext_siwessid(struct n
->         if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
->                 return -EINVAL;
-> 
-> -       if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-> +       if (!rdev->ops->join_ibss)
->                 return -EOPNOTSUPP;
-> 
->         wdev_lock(wdev);
->         err = 0;
->         if (wdev->ssid_len)
-> -               err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, true);
-> +               err = __cfg80211_leave_ibss(rdev, dev, true);
->         wdev_unlock(wdev);
-> 
->         if (err)
-> @@ -375,9 +388,11 @@ int cfg80211_ibss_wext_siwessid(struct n
->         memcpy(wdev->wext.ibss.ssid, ssid, len);
->         wdev->wext.ibss.ssid_len = len;
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> -       err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_ibss_wext_join(rdev, wdev);
->         wdev_unlock(wdev);
-> +       mutex_unlock(&rdev->devlist_mtx);
-> 
->         return err;
->  }
-> @@ -414,6 +429,7 @@ int cfg80211_ibss_wext_siwap(struct net_
->                              struct sockaddr *ap_addr, char *extra)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
->         u8 *bssid = ap_addr->sa_data;
->         int err;
-> 
-> @@ -421,7 +437,7 @@ int cfg80211_ibss_wext_siwap(struct net_
->         if (WARN_ON(wdev->iftype != NL80211_IFTYPE_ADHOC))
->                 return -EINVAL;
-> 
-> -       if (!wiphy_to_dev(wdev->wiphy)->ops->join_ibss)
-> +       if (!rdev->ops->join_ibss)
->                 return -EOPNOTSUPP;
-> 
->         if (ap_addr->sa_family != ARPHRD_ETHER)
-> @@ -443,8 +459,7 @@ int cfg80211_ibss_wext_siwap(struct net_
->         wdev_lock(wdev);
->         err = 0;
->         if (wdev->ssid_len)
-> -               err = __cfg80211_leave_ibss(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, true);
-> +               err = __cfg80211_leave_ibss(rdev, dev, true);
->         wdev_unlock(wdev);
-> 
->         if (err)
-> @@ -456,9 +471,11 @@ int cfg80211_ibss_wext_siwap(struct net_
->         } else
->                 wdev->wext.ibss.bssid = NULL;
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> -       err = cfg80211_ibss_wext_join(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_ibss_wext_join(rdev, wdev);
->         wdev_unlock(wdev);
-> +       mutex_unlock(&rdev->devlist_mtx);
-> 
->         return err;
->  }
-> --- wireless-testing.orig/net/wireless/wext-sme.c       2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-sme.c    2009-08-07 17:20:31.000000000 +0200
-> @@ -52,25 +52,31 @@ int cfg80211_mgd_wext_connect(struct cfg
-> 
->  int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
->                               struct iw_request_info *info,
-> -                             struct iw_freq *freq, char *extra)
-> +                             struct iw_freq *wextfreq, char *extra)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
->         struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> -       struct ieee80211_channel *chan;
-> -       int err;
-> +       struct ieee80211_channel *chan = NULL;
-> +       int err, freq;
-> 
->         /* call only for station! */
->         if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION))
->                 return -EINVAL;
-> 
-> -       chan = cfg80211_wext_freq(wdev->wiphy, freq);
-> -       if (chan && IS_ERR(chan))
-> -               return PTR_ERR(chan);
-> -
-> -       if (chan && (chan->flags & IEEE80211_CHAN_DISABLED))
-> -               return -EINVAL;
-> +       freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
-> +       if (freq < 0)
-> +               return freq;
-> +
-> +       if (freq) {
-> +               chan = ieee80211_get_channel(wdev->wiphy, freq);
-> +               if (!chan)
-> +                       return -EINVAL;
-> +               if (chan->flags & IEEE80211_CHAN_DISABLED)
-> +                       return -EINVAL;
-> +       }
-> 
->         cfg80211_lock_rdev(rdev);
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> 
->         if (wdev->sme_state != CFG80211_SME_IDLE) {
-> @@ -84,9 +90,8 @@ int cfg80211_mgd_wext_siwfreq(struct net
->                 /* if SSID set, we'll try right again, avoid event */
->                 if (wdev->wext.connect.ssid_len)
->                         event = false;
-> -               err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, WLAN_REASON_DEAUTH_LEAVING,
-> -                                           event);
-> +               err = __cfg80211_disconnect(rdev, dev,
-> +                                           WLAN_REASON_DEAUTH_LEAVING, event);
->                 if (err)
->                         goto out;
->         }
-> @@ -95,17 +100,15 @@ int cfg80211_mgd_wext_siwfreq(struct net
->         wdev->wext.connect.channel = chan;
-> 
->         /* SSID is not set, we just want to switch channel */
-> -       if (wdev->wext.connect.ssid_len && chan) {
-> -               err = -EOPNOTSUPP;
-> -               if (rdev->ops->set_channel)
-> -                       err = rdev->ops->set_channel(wdev->wiphy, chan,
-> -                                                    NL80211_CHAN_NO_HT);
-> +       if (chan && !wdev->wext.connect.ssid_len) {
-> +               err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
->                 goto out;
->         }
-> 
-> -       err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->         wdev_unlock(wdev);
-> +       mutex_unlock(&rdev->devlist_mtx);
->         cfg80211_unlock_rdev(rdev);
->         return err;
->  }
-> @@ -143,6 +146,7 @@ int cfg80211_mgd_wext_siwessid(struct ne
->                                struct iw_point *data, char *ssid)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
->         size_t len = data->length;
->         int err;
-> 
-> @@ -157,7 +161,8 @@ int cfg80211_mgd_wext_siwessid(struct ne
->         if (len > 0 && ssid[len - 1] == '\0')
->                 len--;
-> 
-> -       cfg80211_lock_rdev(wiphy_to_dev(wdev->wiphy));
-> +       cfg80211_lock_rdev(rdev);
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> 
->         err = 0;
-> @@ -173,9 +178,8 @@ int cfg80211_mgd_wext_siwessid(struct ne
->                 /* if SSID set now, we'll try to connect, avoid event */
->                 if (len)
->                         event = false;
-> -               err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, WLAN_REASON_DEAUTH_LEAVING,
-> -                                           event);
-> +               err = __cfg80211_disconnect(rdev, dev,
-> +                                           WLAN_REASON_DEAUTH_LEAVING, event);
->                 if (err)
->                         goto out;
->         }
-> @@ -186,10 +190,11 @@ int cfg80211_mgd_wext_siwessid(struct ne
-> 
->         wdev->wext.connect.crypto.control_port = false;
-> 
-> -       err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->         wdev_unlock(wdev);
-> -       cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
-> +       mutex_unlock(&rdev->devlist_mtx);
-> +       cfg80211_unlock_rdev(rdev);
->         return err;
->  }
-> 
-> @@ -230,6 +235,7 @@ int cfg80211_mgd_wext_siwap(struct net_d
->                             struct sockaddr *ap_addr, char *extra)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
->         u8 *bssid = ap_addr->sa_data;
->         int err;
-> 
-> @@ -244,7 +250,8 @@ int cfg80211_mgd_wext_siwap(struct net_d
->         if (is_zero_ether_addr(bssid) || is_broadcast_ether_addr(bssid))
->                 bssid = NULL;
-> 
-> -       cfg80211_lock_rdev(wiphy_to_dev(wdev->wiphy));
-> +       cfg80211_lock_rdev(rdev);
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(wdev);
-> 
->         if (wdev->sme_state != CFG80211_SME_IDLE) {
-> @@ -258,9 +265,8 @@ int cfg80211_mgd_wext_siwap(struct net_d
->                     compare_ether_addr(bssid, wdev->wext.connect.bssid) == 0)
->                         goto out;
-> 
-> -               err = __cfg80211_disconnect(wiphy_to_dev(wdev->wiphy),
-> -                                           dev, WLAN_REASON_DEAUTH_LEAVING,
-> -                                           false);
-> +               err = __cfg80211_disconnect(rdev, dev,
-> +                                           WLAN_REASON_DEAUTH_LEAVING, false);
->                 if (err)
->                         goto out;
->         }
-> @@ -271,10 +277,11 @@ int cfg80211_mgd_wext_siwap(struct net_d
->         } else
->                 wdev->wext.connect.bssid = NULL;
-> 
-> -       err = cfg80211_mgd_wext_connect(wiphy_to_dev(wdev->wiphy), wdev);
-> +       err = cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->         wdev_unlock(wdev);
-> -       cfg80211_unlock_rdev(wiphy_to_dev(wdev->wiphy));
-> +       mutex_unlock(&rdev->devlist_mtx);
-> +       cfg80211_unlock_rdev(rdev);
->         return err;
->  }
-> 
-> --- wireless-testing.orig/net/wireless/sme.c    2009-08-07 14:50:09.000000000 +0200
-> +++ wireless-testing/net/wireless/sme.c 2009-08-07 17:20:31.000000000 +0200
-> @@ -256,9 +256,11 @@ void cfg80211_sme_scan_done(struct net_d
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> 
-> +       mutex_lock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
->         wdev_lock(wdev);
->         __cfg80211_sme_scan_done(dev);
->         wdev_unlock(wdev);
-> +       mutex_unlock(&wiphy_to_dev(wdev->wiphy)->devlist_mtx);
->  }
-> 
->  void cfg80211_sme_rx_auth(struct net_device *dev,
-> @@ -644,6 +646,7 @@ int __cfg80211_connect(struct cfg80211_r
->                        struct cfg80211_cached_keys *connkeys)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +       struct ieee80211_channel *chan;
->         int err;
-> 
->         ASSERT_WDEV_LOCK(wdev);
-> @@ -651,6 +654,10 @@ int __cfg80211_connect(struct cfg80211_r
->         if (wdev->sme_state != CFG80211_SME_IDLE)
->                 return -EALREADY;
-> 
-> +       chan = rdev_fixed_channel(rdev, wdev);
-> +       if (chan && chan != connect->channel)
-> +               return -EBUSY;
-> +
->         if (WARN_ON(wdev->connect_keys)) {
->                 kfree(wdev->connect_keys);
->                 wdev->connect_keys = NULL;
-> @@ -771,9 +778,11 @@ int cfg80211_connect(struct cfg80211_reg
->  {
->         int err;
-> 
-> +       mutex_lock(&rdev->devlist_mtx);
->         wdev_lock(dev->ieee80211_ptr);
->         err = __cfg80211_connect(rdev, dev, connect, connkeys);
->         wdev_unlock(dev->ieee80211_ptr);
-> +       mutex_unlock(&rdev->devlist_mtx);
-> 
->         return err;
->  }
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 905f750..5516058 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -139,13 +139,18 @@ struct mwl8k_priv {
+ 
+ 	struct pci_dev *pdev;
+ 	u8 name[16];
+-	/* firmware access lock */
+-	spinlock_t fw_lock;
+ 
+ 	/* firmware files and meta data */
+ 	struct mwl8k_firmware fw;
+ 	u32 part_num;
+ 
++	/* firmware access */
++	struct mutex fw_mutex;
++	struct task_struct *fw_mutex_owner;
++	int fw_mutex_depth;
++	struct completion *tx_wait;
++	struct completion *hostcmd_wait;
++
+ 	/* lock held over TX and TX reap */
+ 	spinlock_t tx_lock;
+ 
+@@ -179,9 +184,6 @@ struct mwl8k_priv {
+ 	bool radio_short_preamble;
+ 	bool wmm_enabled;
+ 
+-	/* Set if PHY config is in progress */
+-	bool inconfig;
+-
+ 	/* XXX need to convert this to handle multiple interfaces */
+ 	bool capture_beacon;
+ 	u8 capture_bssid[ETH_ALEN];
+@@ -200,8 +202,6 @@ struct mwl8k_priv {
+ 
+ 	/* Work thread to serialize configuration requests */
+ 	struct workqueue_struct *config_wq;
+-	struct completion *hostcmd_wait;
+-	struct completion *tx_wait;
+ };
+ 
+ /* Per interface specific private data */
+@@ -1113,6 +1113,9 @@ static int mwl8k_scan_tx_ring(struct mwl8k_priv *priv,
+ 	return ndescs;
+ }
+ 
++/*
++ * Must be called with hw->fw_mutex held and tx queues stopped.
++ */
+ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+@@ -1122,9 +1125,6 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 
+ 	might_sleep();
+ 
+-	if (priv->tx_wait != NULL)
+-		printk(KERN_ERR "WARNING Previous TXWaitEmpty instance\n");
+-
+ 	spin_lock_bh(&priv->tx_lock);
+ 	count = mwl8k_txq_busy(priv);
+ 	if (count) {
+@@ -1140,7 +1140,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 		int newcount;
+ 
+ 		timeout = wait_for_completion_timeout(&cmd_wait,
+-					msecs_to_jiffies(1000));
++					msecs_to_jiffies(5000));
+ 		if (timeout)
+ 			return 0;
+ 
+@@ -1149,7 +1149,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 		newcount = mwl8k_txq_busy(priv);
+ 		spin_unlock_bh(&priv->tx_lock);
+ 
+-		printk(KERN_ERR "%s(%u) TIMEDOUT:1000ms Pend:%u-->%u\n",
++		printk(KERN_ERR "%s(%u) TIMEDOUT:5000ms Pend:%u-->%u\n",
+ 		       __func__, __LINE__, count, newcount);
+ 
+ 		mwl8k_scan_tx_ring(priv, txinfo);
+@@ -1228,10 +1228,10 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
+ 
+ 		ieee80211_tx_status_irqsafe(hw, skb);
+ 
+-		wake = !priv->inconfig && priv->radio_on;
++		wake = 1;
+ 	}
+ 
+-	if (wake)
++	if (wake && priv->radio_on && !mutex_is_locked(&priv->fw_mutex))
+ 		ieee80211_wake_queue(hw, index);
+ }
+ 
+@@ -1360,6 +1360,60 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 
+ 
+ /*
++ * Firmware access.
++ *
++ * We have the following requirements for issuing firmware commands:
++ * - Some commands require that the packet transmit path is idle when
++ *   the command is issued.  (For simplicity, we'll just quiesce the
++ *   transmit path for every command.)
++ * - There are certain sequences of commands that need to be issued to
++ *   the hardware sequentially, with no other intervening commands.
++ *
++ * This leads to an implementation of a "firmware lock" as a mutex that
++ * can be taken recursively, and which is taken by both the low-level
++ * command submission function (mwl8k_post_cmd) as well as any users of
++ * that function that require issuing of an atomic sequence of commands,
++ * and quiesces the transmit path whenever it's taken.
++ */
++static int mwl8k_fw_lock(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++
++	if (priv->fw_mutex_owner != current) {
++		int rc;
++
++		mutex_lock(&priv->fw_mutex);
++		ieee80211_stop_queues(hw);
++
++		rc = mwl8k_tx_wait_empty(hw);
++		if (rc) {
++			ieee80211_wake_queues(hw);
++			mutex_unlock(&priv->fw_mutex);
++
++			return rc;
++		}
++
++		priv->fw_mutex_owner = current;
++	}
++
++	priv->fw_mutex_depth++;
++
++	return 0;
++}
++
++static void mwl8k_fw_unlock(struct ieee80211_hw *hw)
++{
++	struct mwl8k_priv *priv = hw->priv;
++
++	if (!--priv->fw_mutex_depth) {
++		ieee80211_wake_queues(hw);
++		priv->fw_mutex_owner = NULL;
++		mutex_unlock(&priv->fw_mutex);
++	}
++}
++
++
++/*
+  * Command processing.
+  */
+ 
+@@ -1384,28 +1438,28 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ 	if (pci_dma_mapping_error(priv->pdev, dma_addr))
+ 		return -ENOMEM;
+ 
+-	if (priv->hostcmd_wait != NULL)
+-		printk(KERN_ERR "WARNING host command in progress\n");
++	rc = mwl8k_fw_lock(hw);
++	if (rc)
++		return rc;
+ 
+-	spin_lock_irq(&priv->fw_lock);
+ 	priv->hostcmd_wait = &cmd_wait;
+ 	iowrite32(dma_addr, regs + MWL8K_HIU_GEN_PTR);
+ 	iowrite32(MWL8K_H2A_INT_DOORBELL,
+ 		regs + MWL8K_HIU_H2A_INTERRUPT_EVENTS);
+ 	iowrite32(MWL8K_H2A_INT_DUMMY,
+ 		regs + MWL8K_HIU_H2A_INTERRUPT_EVENTS);
+-	spin_unlock_irq(&priv->fw_lock);
+ 
+ 	timeout = wait_for_completion_timeout(&cmd_wait,
+ 				msecs_to_jiffies(MWL8K_CMD_TIMEOUT_MS));
+ 
++	priv->hostcmd_wait = NULL;
++
++	mwl8k_fw_unlock(hw);
++
+ 	pci_unmap_single(priv->pdev, dma_addr, dma_size,
+ 					PCI_DMA_BIDIRECTIONAL);
+ 
+ 	if (!timeout) {
+-		spin_lock_irq(&priv->fw_lock);
+-		priv->hostcmd_wait = NULL;
+-		spin_unlock_irq(&priv->fw_lock);
+ 		printk(KERN_ERR "%s: Command %s timeout after %u ms\n",
+ 		       priv->name,
+ 		       mwl8k_cmd_name(cmd->code, buf, sizeof(buf)),
+@@ -2336,17 +2390,14 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
+ 	}
+ 
+ 	if (status & MWL8K_A2H_INT_OPC_DONE) {
+-		if (priv->hostcmd_wait != NULL) {
++		if (priv->hostcmd_wait != NULL)
+ 			complete(priv->hostcmd_wait);
+-			priv->hostcmd_wait = NULL;
+-		}
+ 	}
+ 
+ 	if (status & MWL8K_A2H_INT_QUEUE_EMPTY) {
+-		if (!priv->inconfig &&
+-			priv->radio_on &&
+-			mwl8k_txq_busy(priv))
+-				mwl8k_tx_start(priv);
++		if (!mutex_is_locked(&priv->fw_mutex) &&
++		    priv->radio_on && mwl8k_txq_busy(priv))
++			mwl8k_tx_start(priv);
+ 	}
+ 
+ 	return IRQ_HANDLED;
+@@ -2400,41 +2451,13 @@ static void mwl8k_config_thread(struct work_struct *wt)
+ {
+ 	struct mwl8k_work_struct *worker = (struct mwl8k_work_struct *)wt;
+ 	struct ieee80211_hw *hw = worker->hw;
+-	struct mwl8k_priv *priv = hw->priv;
+ 	int rc = 0;
+-	int iter;
+ 
+-	spin_lock_irq(&priv->tx_lock);
+-	priv->inconfig = true;
+-	spin_unlock_irq(&priv->tx_lock);
+-
+-	ieee80211_stop_queues(hw);
+-
+-	/*
+-	 * Wait for host queues to drain before doing PHY
+-	 * reconfiguration. This avoids interrupting any in-flight
+-	 * DMA transfers to the hardware.
+-	 */
+-	iter = 4;
+-	do {
+-		rc = mwl8k_tx_wait_empty(hw);
+-		if (rc)
+-			printk(KERN_ERR "%s() txwait timeout=1000ms "
+-				"Retry:%u/%u\n", __func__, 4 - iter + 1, 4);
+-	} while (rc && --iter);
+-
+-	rc = iter ? 0 : -ETIMEDOUT;
+-
+-	if (!rc)
++	rc = mwl8k_fw_lock(hw);
++	if (!rc) {
+ 		rc = worker->wfunc(wt);
+-
+-	spin_lock_irq(&priv->tx_lock);
+-	priv->inconfig = false;
+-	if (priv->pending_tx_pkts && priv->radio_on)
+-		mwl8k_tx_start(priv);
+-	spin_unlock_irq(&priv->tx_lock);
+-
+-	ieee80211_wake_queues(hw);
++		mwl8k_fw_unlock(hw);
++	}
+ 
+ 	if (worker->sleep) {
+ 		worker->rc = rc;
+@@ -3163,15 +3186,10 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv = hw->priv;
+ 	priv->hw = hw;
+ 	priv->pdev = pdev;
+-	priv->hostcmd_wait = NULL;
+-	priv->tx_wait = NULL;
+-	priv->inconfig = false;
+ 	priv->wmm_enabled = false;
+ 	priv->pending_tx_pkts = 0;
+ 	strncpy(priv->name, MWL8K_NAME, sizeof(priv->name));
+ 
+-	spin_lock_init(&priv->fw_lock);
+-
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 	pci_set_drvdata(pdev, hw);
+ 
+@@ -3237,6 +3255,12 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 		goto err_iounmap;
+ 	rxq_refill(hw, 0, INT_MAX);
+ 
++	mutex_init(&priv->fw_mutex);
++	priv->fw_mutex_owner = NULL;
++	priv->fw_mutex_depth = 0;
++	priv->tx_wait = NULL;
++	priv->hostcmd_wait = NULL;
++
+ 	spin_lock_init(&priv->tx_lock);
+ 
+ 	for (i = 0; i < MWL8K_TX_QUEUES; i++) {
+-- 
+1.5.6.4
