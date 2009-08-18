@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cmpxchg.org ([85.214.51.133]:39633 "EHLO cmpxchg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932150AbZHCOdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 10:33:46 -0400
-Date: Mon, 3 Aug 2009 16:31:08 +0200
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: 2.6.31-rc5: Reported regressions from 2.6.30
-Message-ID: <20090803143108.GA12041@cmpxchg.org>
-References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+Received: from xi.wantstofly.org ([80.101.37.227]:54495 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbZHRIZg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2009 04:25:36 -0400
+Date: Tue, 18 Aug 2009 10:25:37 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
+Message-ID: <20090818082537.GK18639@mail.wantstofly.org>
+References: <20090818035220.GN18639@mail.wantstofly.org> <1250580509.30538.2.camel@johannes.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
+In-Reply-To: <1250580509.30538.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 02, 2009 at 03:22:01PM -0700, Linus Torvalds wrote:
+On Tue, Aug 18, 2009 at 09:28:29AM +0200, Johannes Berg wrote:
 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13815
-> > Subject		: emacs -nw compilation doesn't show the error message
-> > Submitter	: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> > Date		: 2009-07-23 06:22 (11 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d945cb9cce20ac7143c2de8d88b187f62db99bdc
+> > Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> > ---
+> >  drivers/net/wireless/mwl8k.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> > index 9f54204..3a201a2 100644
+> > --- a/drivers/net/wireless/mwl8k.c
+> > +++ b/drivers/net/wireless/mwl8k.c
+> > @@ -2935,7 +2935,7 @@ static int mwl8k_config_wt(struct work_struct *wt)
+> >  	struct mwl8k_priv *priv = hw->priv;
+> >  	int rc = 0;
+> >  
+> > -	if (!conf->radio_enabled) {
+> > +	if (conf->flags & IEEE80211_CONF_IDLE) {
+> >  		mwl8k_cmd_802_11_radio_disable(hw);
+> >  		priv->current_channel = NULL;
+> >  		rc = 0;
 > 
-> Same old pty bug, same fix: commit e043e42bdb.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13813
-> > Subject		: Hangups in n_tty_read()
-> > Submitter	: Johannes Weiner <hannes@cmpxchg.org>
-> > Date		: 2009-07-16 18:48 (18 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124777019920579&w=4
-> 
-> Hmm. Worth testing that same fix, although the symptoms here are not 
-> exactly the same.
+> So I think the return; a little below needs to be removed to allow doing
+> other things while the radio is off? I'm not sure which actually happen
+> but I never audited the code to make sure nothing happens.
 
-Hm, I had no debugging enabled, but I think a silent hang in
+The logic is just:
 
-	pty_write()
-	  tty_flip_buffer_push()
-	    flush_to_ldisc()
+	if (idle) {
+		issue "radio disable" command
+	} else {
+		issue "radio enable" command
+		set channel
+		set tx power
+		set antenna config
+	}
 
-can cause the receiving side
-
-	tty_read()
-	  n_tty_read()
-
-to wait forever for updates.  I haven't looked closely.  It seems to
-be gone with your latest master in any case.
-
-	Hannes
+So if a channel change hapens while we are idle, that event won't get
+lost -- it'll just happen later.
