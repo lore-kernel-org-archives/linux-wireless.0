@@ -1,79 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60880 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754804AbZHNVJR (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:53122 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728AbZHRSdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 17:09:17 -0400
-Subject: Re: [PATCH v4 30/34] wireless: update WIRELESS_EXT kconfig entry
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-In-Reply-To: <1250281559-13041-31-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-	 <1250281559-13041-31-git-send-email-lrodriguez@atheros.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EOXhcESbB92P4B+MUPmi"
-Date: Fri, 14 Aug 2009 23:09:15 +0200
-Message-Id: <1250284155.4411.2.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 18 Aug 2009 14:33:15 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so816143eye.37
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 11:33:15 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: bss_info_changed() callback is allowed to sleep
+Date: Tue, 18 Aug 2009 20:33:12 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com,
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908182033.12934.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The bss_info_changed() callback function no longer needs
+to be atomic. Remove the scheduled work structure and
+call into the driver directly.
 
---=-EOXhcESbB92P4B+MUPmi
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Additionaly this makes the DRIVER_REQUIRE_SCHEDULED
+flag redundant so it can be removed.
 
-On Fri, 2009-08-14 at 16:25 -0400, Luis R. Rodriguez wrote:
-> Provide more documentation as to why its being deprecated.
->=20
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/wireless/Kconfig |   12 ++++++++++--
->  1 files changed, 10 insertions(+), 2 deletions(-)
->=20
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index 60dd09e..b07ed2c 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -86,8 +86,16 @@ config WIRELESS_EXT
->  	bool "Wireless extensions"
->  	default y
->  	---help---
-> -	  This option enables the legacy wireless extensions
-> -	  (wireless network interface configuration via ioctls.)
-> +	  This option enables the legacy wireless extensions.
-> +	  Wireless extensions was the first 802.11 wireless configuration
-> +	  API used by the networking subsystem. You will not need this unless
-> +	  you have old userspace utilities or old wireless devices which
-> +	  have not yet been ported to cfg80211.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    1 -
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 -
+ drivers/net/wireless/rt2x00/rt2x00.h    |    3 ---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    8 --------
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   14 +++-----------
+ drivers/net/wireless/rt2x00/rt73usb.c   |    1 -
+ 6 files changed, 3 insertions(+), 25 deletions(-)
 
-I cannot agree with this wording -- all current tools still use wext
-unless you go really experimental.
-
-johannes
-
---=-EOXhcESbB92P4B+MUPmi
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKhdJ3AAoJEODzc/N7+QmasvkQAM6mXJxwNAIxCpUFnFvL4sqV
-GdIfKHI/AHVImy188r+opAMwrKR5mqSvqpFhxextXX26RBrdtxpn1RyRncmcnMB0
-B78IaAXA+ub9Vw/T+F1Q/JFcpgK28dNl/0Qu1KIsQVGlXv339jGBqi6rrSMkGv6+
-Se1GaKicjCZ/MJXQ+WWJfRs8KwIMbyf+h94yA3aeJA3fT//zATyWaqBfCPbG/sAS
-ARdivwjGbJ0Ju/vEGkmFumPgWykdQhQljDHq0nj9N8irjw57AsUM8RfdX5l4R/el
-AJtrz7aQlKvjQIBwpPHUMUycVCtSWSdPMiVV3luS8OyGo/yzuDGGbGhLAp8QEABb
-Ni3bT87bIH8m9NNIGWkGH62/hQV793iEV67AreplH2ha3rd/xXmT6UMea2CPcohi
-wKiMbHtOPHaGkmC9t0Q6HiWabIlvPmMmrmolgN64FcpeCQxNjlot+PasbD+pNkJW
-nDdKZTEShApUamK7UEd4Dl5GXsDs+U1U6OVqMMJUspbE+Q+TCgHuEhCvWNvQpSgd
-TP8W7v08Gjnr8o7QmEVB+LXckSVP95k+vZdyy/+kaPbJ5KC8INqv5JcyNQ0A6Hjs
-Ifu3eF98nFZ/k3x5MGnNCutkxg6W223rMMN8Fe4k+1/c/BD6dRsjCv+wvU0PEizd
-RHfGYMKgY3YQNcFPlKTp
-=YdjQ
------END PGP SIGNATURE-----
-
---=-EOXhcESbB92P4B+MUPmi--
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 09a5894..b04f59b 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -1874,7 +1874,6 @@ static int rt2500usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_ATIM_QUEUE, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags);
+-	__set_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags);
+ 	if (!modparam_nohwcrypt) {
+ 		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+ 		__set_bit(DRIVER_REQUIRE_COPY_IV, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 45e02f1..639dc6c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -2634,7 +2634,6 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+-	__set_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags);
+ 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
+ 	if (!modparam_nohwcrypt)
+ 		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 2d0b6b0..f5978a6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -356,8 +356,6 @@ struct rt2x00_intf {
+ 	 */
+ 	unsigned int delayed_flags;
+ #define DELAYED_UPDATE_BEACON		0x00000001
+-#define DELAYED_CONFIG_ERP		0x00000002
+-#define DELAYED_LED_ASSOC		0x00000004
+ 
+ 	/*
+ 	 * Software sequence counter, this is only required
+@@ -620,7 +618,6 @@ enum rt2x00_flags {
+ 	DRIVER_REQUIRE_FIRMWARE,
+ 	DRIVER_REQUIRE_BEACON_GUARD,
+ 	DRIVER_REQUIRE_ATIM_QUEUE,
+-	DRIVER_REQUIRE_SCHEDULED,
+ 	DRIVER_REQUIRE_DMA,
+ 	DRIVER_REQUIRE_COPY_IV,
+ 	DRIVER_REQUIRE_L2PAD,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 16b560a..3f8c70e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -123,7 +123,6 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
+ {
+ 	struct rt2x00_dev *rt2x00dev = data;
+ 	struct rt2x00_intf *intf = vif_to_intf(vif);
+-	struct ieee80211_bss_conf conf;
+ 	int delayed_flags;
+ 
+ 	/*
+@@ -133,7 +132,6 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
+ 	 */
+ 	spin_lock(&intf->lock);
+ 
+-	memcpy(&conf, &vif->bss_conf, sizeof(conf));
+ 	delayed_flags = intf->delayed_flags;
+ 	intf->delayed_flags = 0;
+ 
+@@ -150,12 +148,6 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
+ 
+ 	if (delayed_flags & DELAYED_UPDATE_BEACON)
+ 		rt2x00queue_update_beacon(rt2x00dev, vif, true);
+-
+-	if (delayed_flags & DELAYED_CONFIG_ERP)
+-		rt2x00lib_config_erp(rt2x00dev, intf, &conf);
+-
+-	if (delayed_flags & DELAYED_LED_ASSOC)
+-		rt2x00leds_led_assoc(rt2x00dev, !!rt2x00dev->intf_associated);
+ }
+ 
+ static void rt2x00lib_intf_scheduled(struct work_struct *work)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 967d3b5..a91f316 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -636,23 +636,15 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 		else
+ 			rt2x00dev->intf_associated--;
+ 
+-		if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+-			rt2x00leds_led_assoc(rt2x00dev,
+-					     !!rt2x00dev->intf_associated);
+-		else
+-			delayed |= DELAYED_LED_ASSOC;
++		rt2x00leds_led_assoc(rt2x00dev, !!rt2x00dev->intf_associated);
+ 	}
+ 
+ 	/*
+ 	 * When the erp information has changed, we should perform
+ 	 * additional configuration steps. For all other changes we are done.
+ 	 */
+-	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
+-		if (!test_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags))
+-			rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
+-		else
+-			delayed |= DELAYED_CONFIG_ERP;
+-	}
++	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT))
++		rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
+ 
+ 	spin_lock(&intf->lock);
+ 	if (delayed) {
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 4d94b65..90e1172 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2151,7 +2151,6 @@ static int rt73usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 * This device requires firmware.
+ 	 */
+ 	__set_bit(DRIVER_REQUIRE_FIRMWARE, &rt2x00dev->flags);
+-	__set_bit(DRIVER_REQUIRE_SCHEDULED, &rt2x00dev->flags);
+ 	if (!modparam_nohwcrypt)
+ 		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
+ 
+-- 
+1.6.4
 
