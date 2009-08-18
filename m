@@ -1,82 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46640 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932348AbZHNOyL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53795 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbZHRPPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 10:54:11 -0400
-Subject: Re: [PATCH] cfg80211: set SME state machine correctly for roam
- event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1250222301.4972.31.camel@debian>
-References: <1250155399-17847-1-git-send-email-yi.zhu@intel.com>
-	 <1250157249.21250.0.camel@johannes.local> <1250222301.4972.31.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8v3ehC/ekuf3faqeFxAY"
-Date: Fri, 14 Aug 2009 16:54:05 +0200
-Message-Id: <1250261645.24924.22.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 18 Aug 2009 11:15:14 -0400
+Date: Tue, 18 Aug 2009 11:14:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-08-18
+Message-ID: <20090818151436.GA2768@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-8v3ehC/ekuf3faqeFxAY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Two more for 2.6.31...
 
-On Fri, 2009-08-14 at 11:58 +0800, Zhu Yi wrote:
+The one from Johannes is actually already in net-next-2.6, but it has
+since been reported to cause a possible irq lock inversion dependency in
+2.6.31-rc6, as described here:
 
-> The device notifies both when it begins to roam and after the new
-> association is made. Yes, I think I missed the cfg80211_roamed call for
-> the real roam event. But there is still a reassociation path that the
-> above situation could happen (__cfg80211_connect_result is called while
-> in CFG80211_SME_CONNECTED state). Or do you think we should suppress
-> reassoc event from driver?
+	http://marc.info/?l=linux-wireless&m=125052198303537&w=2
 
-Would that be after a disconnect event?
+The one from me fixes a minor bounds checking problem in orinoco, as
+reported by Dan Carpenter.  It is simple and obvious.
 
-I think that after a DISCONNECTED event the device should go to sleep
-completely and wait for userspace instructions. Otherwise we end up
-having a weird situation _again_ where userspace has no idea what the
-device is doing. I suppose if the device just keeps trying you just have
-to tell it to stop after a bit if it doesn't find a new connections.
+Please let me know if there are problems!
 
-Otherwise, if you're roaming, you still get a disconnect/reassoc or
-something like that? Those together should form a ROAMED event.
+John
 
-> Actually, the code in __cfg80211_connect_result() has already handled
-> the (wdev->sme_state =3D=3D CFG80211_SME_CONNECTED) case. The problem is
-> wdev->current_bss is set to NULL but leaves wdev->sme_state still as
-> CFG80211_SME_CONNECTED. So I think the patch is still valid, but needs a
-> better description.
+---
 
-I don't think I understand?
+Individual patches are available here:
 
-Why would you ever have a connect_result() while already connected?
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
 
-johannes
+---
 
---=-8v3ehC/ekuf3faqeFxAY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+The following changes since commit 8cdb045632e5ee22854538619ac6f150eb0a4894:
+  Tom Goff (1):
+        gre: Fix MTU calculation for bound GRE tunnels
 
------BEGIN PGP SIGNATURE-----
+are available in the git repository at:
 
-iQIcBAABAgAGBQJKhXqKAAoJEODzc/N7+QmaflUP/2jOFZn251VR46p7QSSrrd81
-PO2jSi+e2EhZ7zfKHE7tgn9htM9vVAMfhxYtYAtYxgwCvBa+xM6rMQUvrKfUHsut
-pEVeE9IAM4cAI1BX7DJjT/r3w1eoUF77zdiBOFK/1OR/DsWvoxHnaEOQiNdZdwvv
-Mnu2fhwJEjGq4Arytr/hJ6hoVAvTrnQe6sgcu1pP1oDLgCY0Hyjhr2bNqujxLEOt
-IeJ7pH+ZDhc65CeIAKw4/gOxCRrMmaJurmLsNYV09g+ptA2pYnK0Fjt8VSOIU7b7
-ZFXgG6FOrftJ+wQHLkD5yN6O46AEAh7v5aIxbUHy0/L7NSQ+TMy2p3xQlAX3cXRQ
-oKmDQOVN9j4JV5DMUSFqknWR5gZO1fHLPqh6SqKDI/RXu4HCvLeXUHDBjsGC/vlc
-chbLZ8XxRPc8RcyB2CUFhhFpwzVUcfPHggNi4dpIuLyHlJIWDvzWDFaePU8Bk53P
-MshEvffg8OFH6fyG6isQ8DxHBX9szpW10bS3w09FBHEkIMTW/MkfO+qWQrAoRpgt
-4u9gWubkBYMxR6W53L3m+Mmoeo+y2ZkwfKjP6taO/KYg96iqiQmhMjZehpZ4nS+m
-4naqQvSSDJLOQb9l2Zu6kyTOsxLq4hnoWluh6UjNKEQGuSQ58MefYbRNiYG1V27G
-Ue0cEulAGLlxERIgYsSl
-=6n4K
------END PGP SIGNATURE-----
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
 
---=-8v3ehC/ekuf3faqeFxAY--
+Johannes Berg (1):
+      mac80211: fix todo lock
 
+John W. Linville (1):
+      orinoco: correct key bounds check in orinoco_hw_get_tkip_iv
+
+ drivers/net/wireless/orinoco/hw.c |    2 +-
+ net/mac80211/key.c                |   28 +++++++++++++++-------------
+ 2 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
+index 632fac8..b394627 100644
+--- a/drivers/net/wireless/orinoco/hw.c
++++ b/drivers/net/wireless/orinoco/hw.c
+@@ -70,7 +70,7 @@ int orinoco_hw_get_tkip_iv(struct orinoco_private *priv, int key, u8 *tsc)
+ 	int err = 0;
+ 	u8 tsc_arr[4][IW_ENCODE_SEQ_MAX_SIZE];
+ 
+-	if ((key < 0) || (key > 4))
++	if ((key < 0) || (key >= 4))
+ 		return -EINVAL;
+ 
+ 	err = hermes_read_ltv(hw, USER_BAP, HERMES_RID_CURRENT_TKIP_IV,
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index ce26756..659a42d 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -67,6 +67,8 @@ static DECLARE_WORK(todo_work, key_todo);
+  *
+  * @key: key to add to do item for
+  * @flag: todo flag(s)
++ *
++ * Must be called with IRQs or softirqs disabled.
+  */
+ static void add_todo(struct ieee80211_key *key, u32 flag)
+ {
+@@ -140,9 +142,9 @@ static void ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	ret = drv_set_key(key->local, SET_KEY, &sdata->vif, sta, &key->conf);
+ 
+ 	if (!ret) {
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 	}
+ 
+ 	if (ret && ret != -ENOSPC && ret != -EOPNOTSUPP)
+@@ -164,12 +166,12 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	if (!key || !key->local->ops->set_key)
+ 		return;
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)) {
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 		return;
+ 	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ 
+ 	sta = get_sta_for_key(key);
+ 	sdata = key->sdata;
+@@ -188,9 +190,9 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 		       wiphy_name(key->local->hw.wiphy),
+ 		       key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ }
+ 
+ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+@@ -437,14 +439,14 @@ void ieee80211_key_link(struct ieee80211_key *key,
+ 
+ 	__ieee80211_key_replace(sdata, sta, old_key, key);
+ 
+-	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+-
+ 	/* free old key later */
+ 	add_todo(old_key, KEY_FLAG_TODO_DELETE);
+ 
+ 	add_todo(key, KEY_FLAG_TODO_ADD_DEBUGFS);
+ 	if (netif_running(sdata->dev))
+ 		add_todo(key, KEY_FLAG_TODO_HWACCEL_ADD);
++
++	spin_unlock_irqrestore(&sdata->local->key_lock, flags);
+ }
+ 
+ static void __ieee80211_key_free(struct ieee80211_key *key)
+@@ -547,7 +549,7 @@ static void __ieee80211_key_todo(void)
+ 	 */
+ 	synchronize_rcu();
+ 
+-	spin_lock(&todo_lock);
++	spin_lock_bh(&todo_lock);
+ 	while (!list_empty(&todo_list)) {
+ 		key = list_first_entry(&todo_list, struct ieee80211_key, todo);
+ 		list_del_init(&key->todo);
+@@ -558,7 +560,7 @@ static void __ieee80211_key_todo(void)
+ 					  KEY_FLAG_TODO_HWACCEL_REMOVE |
+ 					  KEY_FLAG_TODO_DELETE);
+ 		key->flags &= ~todoflags;
+-		spin_unlock(&todo_lock);
++		spin_unlock_bh(&todo_lock);
+ 
+ 		work_done = false;
+ 
+@@ -591,9 +593,9 @@ static void __ieee80211_key_todo(void)
+ 
+ 		WARN_ON(!work_done);
+ 
+-		spin_lock(&todo_lock);
++		spin_lock_bh(&todo_lock);
+ 	}
+-	spin_unlock(&todo_lock);
++	spin_unlock_bh(&todo_lock);
+ }
+ 
+ void ieee80211_key_todo(void)
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
