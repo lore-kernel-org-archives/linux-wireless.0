@@ -1,28 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rex.securecomputing.com ([203.24.151.4]:53365 "EHLO
-	cyberguard.com.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750878AbZHKAkp (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40177 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756190AbZHRDwG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 20:40:45 -0400
-Message-ID: <4A80BE1F.8020708@snapgear.com>
-Date: Tue, 11 Aug 2009 10:41:03 +1000
-From: Philip Craig <philipc@snapgear.com>
-MIME-Version: 1.0
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jon Loeliger <jdl@bigfootnetworks.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] CRDA and cross-compilation
-References: <4A7A8F7E.6020503@redfish-solutions.com>	 <1249569993.6446.2.camel@jdl-desktop> 	<1249576886.14919.16.camel@mj>	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>	 <1249580707.14919.29.camel@mj>	 <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>	 <4A7BD15E.1030604@redfish-solutions.com>	 <43e72e890908070905s447a2fc0j2dc086048194db34@mail.gmail.com>	 <4A7CC24D.1000104@redfish-solutions.com> <1249698462.25983.7.camel@mj> <4A809B8D.5000309@redfish-solutions.com>
-In-Reply-To: <4A809B8D.5000309@redfish-solutions.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 17 Aug 2009 23:52:06 -0400
+Date: Tue, 18 Aug 2009 05:52:08 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 08/29] mwl8k: remove MWL8K_*_SLOTTIME defines
+Message-ID: <20090818035208.GM18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Philip A. Prindeville wrote:
-> * allowing a cross-compilation without contamination by the host's own state via pkg-config bleeding into it.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   15 +++------------
+ 1 files changed, 3 insertions(+), 12 deletions(-)
 
-Setting PKG_CONFIG_LIBDIR should fix that without any makefile changes.
-I haven't tried with this package, but it works for every other
-cross compilation I've done.
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index c9bb9b1..9f54204 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -274,14 +274,6 @@ static const struct ieee80211_rate mwl8k_rates[] = {
+ 	{ .bitrate = 540, .hw_value = 108, },
+ };
+ 
+-/* Slot time */
+-
+-/* Short Slot: 9us slot time */
+-#define MWL8K_SHORT_SLOTTIME		1
+-
+-/* Long slot: 20us slot time */
+-#define MWL8K_LONG_SLOTTIME		0
+-
+ /* Set or get info from Firmware */
+ #define MWL8K_CMD_SET			0x0001
+ #define MWL8K_CMD_GET			0x0000
+@@ -1895,7 +1887,7 @@ struct mwl8k_cmd_set_slot {
+ 	__u8 short_slot;
+ } __attribute__((packed));
+ 
+-static int mwl8k_cmd_set_slot(struct ieee80211_hw *hw, int slot_time)
++static int mwl8k_cmd_set_slot(struct ieee80211_hw *hw, bool short_slot_time)
+ {
+ 	struct mwl8k_cmd_set_slot *cmd;
+ 	int rc;
+@@ -1907,7 +1899,7 @@ static int mwl8k_cmd_set_slot(struct ieee80211_hw *hw, int slot_time)
+ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_SLOT);
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+ 	cmd->action = cpu_to_le16(MWL8K_CMD_SET);
+-	cmd->short_slot = slot_time == MWL8K_SHORT_SLOTTIME ? 1 : 0;
++	cmd->short_slot = short_slot_time;
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	kfree(cmd);
+@@ -3045,8 +3037,7 @@ static int mwl8k_bss_info_changed_wt(struct work_struct *wt)
+ 			goto mwl8k_bss_info_changed_exit;
+ 
+ 		/* Set slot time */
+-		if (mwl8k_cmd_set_slot(hw, info->use_short_slot ?
+-				MWL8K_SHORT_SLOTTIME : MWL8K_LONG_SLOTTIME))
++		if (mwl8k_cmd_set_slot(hw, info->use_short_slot))
+ 			goto mwl8k_bss_info_changed_exit;
+ 
+ 		/* Update peer rate info */
+-- 
+1.5.6.4
