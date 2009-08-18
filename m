@@ -1,164 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:23099 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbZHSSf1 (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40163 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232AbZHRDuO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:35:27 -0400
-From: Mario Limonciello <Mario_Limonciello@Dell.com>
-To: cezary.jackiewicz@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Mario Limonciello <Mario_Limonciello@Dell.com>
-Subject: [PATCH 2/3] Add rfkill support to compal-laptop
-Date: Wed, 19 Aug 2009 13:36:09 -0500
-Message-Id: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
+	Mon, 17 Aug 2009 23:50:14 -0400
+Date: Tue, 18 Aug 2009 05:50:15 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 01/29] mwl8k: remove various unused struct members and defines
+Message-ID: <20090818035015.GF18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
-Reviewed-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/platform/x86/compal-laptop.c |   87 +++++++++++++++++++++++++++++++++-
- 1 files changed, 85 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwl8k.c |   73 ++++-------------------------------------
+ 1 files changed, 8 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/platform/x86/compal-laptop.c b/drivers/platform/x86/compal-laptop.c
-index c1c8c03..da7ead6 100644
---- a/drivers/platform/x86/compal-laptop.c
-+++ b/drivers/platform/x86/compal-laptop.c
-@@ -52,6 +52,7 @@
- #include <linux/backlight.h>
- #include <linux/platform_device.h>
- #include <linux/autoconf.h>
-+#include <linux/rfkill.h>
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 8a6d3af..6f78fae 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -58,7 +58,6 @@ MODULE_DEVICE_TABLE(pci, mwl8k_table);
+ #define MWL8K_HIU_H2A_INTERRUPT_STATUS_MASK	0x00000c28
+ #define  MWL8K_H2A_INT_DUMMY			(1 << 20)
+ #define  MWL8K_H2A_INT_RESET			(1 << 15)
+-#define  MWL8K_H2A_INT_PS			(1 << 2)
+ #define  MWL8K_H2A_INT_DOORBELL			(1 << 1)
+ #define  MWL8K_H2A_INT_PPA_READY		(1 << 0)
  
- #define COMPAL_DRIVER_VERSION "0.2.6"
+@@ -161,10 +160,8 @@ struct mwl8k_priv {
  
-@@ -64,6 +65,10 @@
- #define WLAN_MASK	0x01
- #define BT_MASK 	0x02
+ 	/* lock held over TX and TX reap */
+ 	spinlock_t tx_lock;
+-	u32 int_mask;
  
-+static struct rfkill *wifi_rfkill;
-+static struct rfkill *bt_rfkill;
-+static struct platform_device *compal_device;
-+
- static int force;
- module_param(force, bool, 0);
- MODULE_PARM_DESC(force, "Force driver load, ignore DMI data");
-@@ -89,6 +94,77 @@ static int get_lcd_level(void)
- 	return (int) result;
- }
+ 	struct ieee80211_vif *vif;
+-	struct list_head vif_list;
  
-+static int compal_rfkill_set(void *data, bool blocked)
-+{
-+	unsigned long radio = (unsigned long) data;
-+	u8 result, value;
-+
-+	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
-+
-+	if (!blocked)
-+		value = (u8) (result | radio);
-+	else
-+		value = (u8) (result & ~radio);
-+	ec_write(COMPAL_EC_COMMAND_WIRELESS, value);
-+
-+	return 0;
-+}
-+
-+static void compal_rfkill_poll(struct rfkill *rfkill, void *data)
-+{
-+	u8 result;
-+	bool hw_blocked;
-+
-+	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
-+
-+	hw_blocked = !(result & KILLSWITCH_MASK);
-+	rfkill_set_hw_state(rfkill, hw_blocked);
-+}
-+
-+static const struct rfkill_ops compal_rfkill_ops = {
-+	.poll = compal_rfkill_poll,
-+	.set_block = compal_rfkill_set,
-+};
-+
-+static int setup_rfkill(void)
-+{
-+	int ret;
-+
-+	wifi_rfkill = rfkill_alloc("compal-wifi", &compal_device->dev,
-+				RFKILL_TYPE_WLAN, &compal_rfkill_ops,
-+				(void *) WLAN_MASK);
-+	if (!wifi_rfkill)
-+		return -ENOMEM;
-+
-+	ret = rfkill_register(wifi_rfkill);
-+	if (ret)
-+		goto err_wifi;
-+
-+	bt_rfkill = rfkill_alloc("compal-bluetooth", &compal_device->dev,
-+				RFKILL_TYPE_BLUETOOTH, &compal_rfkill_ops,
-+				(void *) BT_MASK);
-+	if (!bt_rfkill) {
-+		ret = -ENOMEM;
-+		goto err_allocate_bt;
-+	}
-+	ret = rfkill_register(bt_rfkill);
-+	if (ret)
-+		goto err_register_bt;
-+
-+	return 0;
-+
-+err_register_bt:
-+	rfkill_destroy(bt_rfkill);
-+
-+err_allocate_bt:
-+	rfkill_unregister(wifi_rfkill);
-+
-+err_wifi:
-+	rfkill_destroy(wifi_rfkill);
-+
-+	return ret;
-+}
-+
- static int set_wlan_state(int state)
- {
- 	u8 result, value;
-@@ -258,8 +334,6 @@ static struct platform_driver compal_driver = {
- 	}
+ 	struct ieee80211_channel *current_channel;
+ 
+@@ -173,10 +170,8 @@ struct mwl8k_priv {
+ 	dma_addr_t cookie_dma;
+ 
+ 	u16 num_mcaddrs;
+-	u16 region_code;
+ 	u8 hw_rev;
+ 	__le32 fw_rev;
+-	u32 wep_enabled;
+ 
+ 	/*
+ 	 * Running count of TX packets in flight, to avoid
+@@ -226,8 +221,6 @@ struct mwl8k_priv {
+ 
+ /* Per interface specific private data */
+ struct mwl8k_vif {
+-	struct list_head node;
+-
+ 	/* backpointer to parent config block */
+ 	struct mwl8k_priv *priv;
+ 
+@@ -247,18 +240,11 @@ struct mwl8k_vif {
+ 	/* number of supported legacy rates */
+ 	u8	legacy_nrates;
+ 
+-	/* Number of supported MCS rates. Work in progress */
+-	u8	mcs_nrates;
+-
+ 	 /* Index into station database.Returned by update_sta_db call */
+ 	u8	peer_id;
+ 
+ 	/* Non AMPDU sequence number assigned by driver */
+ 	u16	seqno;
+-
+-	/* Note:There is no channel info,
+-	 * refer to the master channel info in priv
+-	 */
  };
  
--static struct platform_device *compal_device;
+ #define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
+@@ -681,11 +667,9 @@ struct ewc_ht_info {
+ 
+ /* Peer Entry flags - used to define the type of the peer node */
+ #define MWL8K_PEER_TYPE_ACCESSPOINT	2
+-#define MWL8K_PEER_TYPE_ADHOC_STATION	4
+ 
+ #define MWL8K_IEEE_LEGACY_DATA_RATES	12
+ #define MWL8K_MCS_BITMAP_SIZE		16
+-#define pad_size			16
+ 
+ struct peer_capability_info {
+ 	/* Peer type - AP vs. STA.  */
+@@ -707,7 +691,7 @@ struct peer_capability_info {
+ 
+ 	/* HT rate table. Intersection of our rates and peer rates.  */
+ 	__u8	ht_rates[MWL8K_MCS_BITMAP_SIZE];
+-	__u8	pad[pad_size];
++	__u8	pad[16];
+ 
+ 	/* If set, interoperability mode, no proprietary extensions.  */
+ 	__u8	interop;
+@@ -717,15 +701,6 @@ struct peer_capability_info {
+ } __attribute__((packed));
+ 
+ /* Inline functions to manipulate QoS field in data descriptor.  */
+-static inline u16 mwl8k_qos_setbit_tid(u16 qos, u8 tid)
+-{
+-	u16 val_mask = 0x000f;
+-	u16 qos_mask = ~val_mask;
 -
- /* Initialization */
+-	/* TID bits 0-3 */
+-	return (qos & qos_mask) | (tid & val_mask);
+-}
+-
+ static inline u16 mwl8k_qos_setbit_eosp(u16 qos)
+ {
+ 	u16 val_mask = 1 << 4;
+@@ -826,9 +801,7 @@ static inline struct sk_buff *mwl8k_add_dma_header(struct sk_buff *skb)
+ /*
+  * Packet reception.
+  */
+-#define MWL8K_RX_CTRL_KEY_INDEX_MASK	0x30
+ #define MWL8K_RX_CTRL_OWNED_BY_HOST	0x02
+-#define MWL8K_RX_CTRL_AMPDU		0x01
  
- static int dmi_check_cb(const struct dmi_system_id *id)
-@@ -397,11 +471,16 @@ static int __init compal_init(void)
- 	if (ret)
- 		goto fail_platform_device2;
+ struct mwl8k_rx_desc {
+ 	__le16 pkt_len;
+@@ -1073,8 +1046,6 @@ enum {
  
-+	ret = setup_rfkill();
-+	if (ret)
-+		goto fail_rfkill;
-+
- 	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
- 		" successfully loaded.\n");
+ /* Transmit packet ACK policy */
+ #define MWL8K_TXD_ACK_POLICY_NORMAL		0
+-#define MWL8K_TXD_ACK_POLICY_NONE		1
+-#define MWL8K_TXD_ACK_POLICY_NO_EXPLICIT	2
+ #define MWL8K_TXD_ACK_POLICY_BLOCKACK		3
  
+ #define GET_TXQ(_ac) (\
+@@ -1083,20 +1054,11 @@ enum {
+ 		((_ac) == WME_AC_BK) ? MWL8K_WME_AC_BK : \
+ 		MWL8K_WME_AC_BE)
+ 
+-#define MWL8K_TXD_STATUS_IDLE			0x00000000
+-#define MWL8K_TXD_STATUS_USED			0x00000001
+ #define MWL8K_TXD_STATUS_OK			0x00000001
+ #define MWL8K_TXD_STATUS_OK_RETRY		0x00000002
+ #define MWL8K_TXD_STATUS_OK_MORE_RETRY		0x00000004
+ #define MWL8K_TXD_STATUS_MULTICAST_TX		0x00000008
+-#define MWL8K_TXD_STATUS_BROADCAST_TX		0x00000010
+-#define MWL8K_TXD_STATUS_FAILED_LINK_ERROR	0x00000020
+-#define MWL8K_TXD_STATUS_FAILED_EXCEED_LIMIT	0x00000040
+-#define MWL8K_TXD_STATUS_FAILED_AGING		0x00000080
+-#define MWL8K_TXD_STATUS_HOST_CMD		0x40000000
+ #define MWL8K_TXD_STATUS_FW_OWNED		0x80000000
+-#define  MWL8K_TXD_SOFTSTALE				0x80
+-#define  MWL8K_TXD_SOFTSTALE_MGMT_RETRY			0x01
+ 
+ struct mwl8k_tx_desc {
+ 	__le32 status;
+@@ -1279,12 +1241,10 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw, u32 delay_ms)
  	return 0;
- 
-+fail_rfkill:
- fail_platform_device2:
- 
- 	platform_device_del(compal_device);
-@@ -428,6 +507,10 @@ static void __exit compal_cleanup(void)
- 	platform_device_unregister(compal_device);
- 	platform_driver_unregister(&compal_driver);
- 	backlight_device_unregister(compalbl_device);
-+	rfkill_unregister(wifi_rfkill);
-+	rfkill_destroy(wifi_rfkill);
-+	rfkill_unregister(bt_rfkill);
-+	rfkill_destroy(bt_rfkill);
- 
- 	printk(KERN_INFO "compal-laptop: driver unloaded.\n");
  }
+ 
+-#define MWL8K_TXD_OK	(MWL8K_TXD_STATUS_OK | \
+-			 MWL8K_TXD_STATUS_OK_RETRY | \
+-			 MWL8K_TXD_STATUS_OK_MORE_RETRY)
+-#define MWL8K_TXD_SUCCESS(stat)		((stat) & MWL8K_TXD_OK)
+-#define MWL8K_TXD_FAIL_RETRY(stat)	\
+-	((stat) & (MWL8K_TXD_STATUS_FAILED_EXCEED_LIMIT))
++#define MWL8K_TXD_SUCCESS(status)				\
++	((status) & (MWL8K_TXD_STATUS_OK |			\
++		     MWL8K_TXD_STATUS_OK_RETRY |		\
++		     MWL8K_TXD_STATUS_OK_MORE_RETRY))
+ 
+ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
+ {
+@@ -1671,7 +1631,6 @@ static int mwl8k_cmd_get_hw_spec(struct ieee80211_hw *hw)
+ 		priv->num_mcaddrs = le16_to_cpu(cmd->num_mcaddrs);
+ 		priv->fw_rev = le32_to_cpu(cmd->fw_rev);
+ 		priv->hw_rev = cmd->hw_rev;
+-		priv->region_code = le16_to_cpu(cmd->region_code);
+ 	}
+ 
+ 	kfree(cmd);
+@@ -2150,7 +2109,6 @@ struct mwl8k_cmd_set_edca_params {
+ 	__u8 txq;
+ } __attribute__((packed));
+ 
+-#define MWL8K_GET_EDCA_ALL	0
+ #define MWL8K_SET_EDCA_CW	0x01
+ #define MWL8K_SET_EDCA_TXOP	0x02
+ #define MWL8K_SET_EDCA_AIFS	0x04
+@@ -2323,18 +2281,12 @@ static int mwl8k_cmd_update_sta_db(struct ieee80211_hw *hw,
+ /*
+  * CMD_SET_AID.
+  */
+-#define IEEE80211_OPMODE_DISABLED			0x00
+-#define IEEE80211_OPMODE_NON_MEMBER_PROT_MODE		0x01
+-#define IEEE80211_OPMODE_ONE_20MHZ_STA_PROT_MODE	0x02
+-#define IEEE80211_OPMODE_HTMIXED_PROT_MODE		0x03
+-
+ #define MWL8K_RATE_INDEX_MAX_ARRAY			14
+ 
+ #define MWL8K_FRAME_PROT_DISABLED			0x00
+ #define MWL8K_FRAME_PROT_11G				0x07
+ #define MWL8K_FRAME_PROT_11N_HT_40MHZ_ONLY		0x02
+ #define MWL8K_FRAME_PROT_11N_HT_ALL			0x06
+-#define MWL8K_FRAME_PROT_MASK				0x07
+ 
+ struct mwl8k_cmd_update_set_aid {
+ 	struct	mwl8k_cmd_pkt header;
+@@ -2439,10 +2391,6 @@ static int mwl8k_update_rateset(struct ieee80211_hw *hw,
+  */
+ #define MWL8K_RATE_TABLE_SIZE	8
+ #define MWL8K_UCAST_RATE	0
+-#define MWL8K_MCAST_RATE	1
+-#define MWL8K_BCAST_RATE	2
+-
+-#define MWL8K_USE_FIXED_RATE	0x0001
+ #define MWL8K_USE_AUTO_RATE	0x0002
+ 
+ struct mwl8k_rate_entry {
+@@ -2535,7 +2483,6 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
+ 	status = ioread32(priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+ 	iowrite32(~status, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+ 
+-	status &= priv->int_mask;
+ 	if (!status)
+ 		return IRQ_NONE;
+ 
+@@ -2873,7 +2820,7 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	/* Enable interrupts */
+-	iowrite32(priv->int_mask, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
++	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+ 
+ 	worker = kzalloc(sizeof(*worker), GFP_KERNEL);
+ 	if (worker == NULL) {
+@@ -3519,7 +3466,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv->hostcmd_wait = NULL;
+ 	priv->tx_wait = NULL;
+ 	priv->inconfig = false;
+-	priv->wep_enabled = 0;
+ 	priv->wmm_mode = false;
+ 	priv->pending_tx_pkts = 0;
+ 	strncpy(priv->name, MWL8K_NAME, sizeof(priv->name));
+@@ -3601,8 +3547,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+-	priv->int_mask = 0;
+-	iowrite32(priv->int_mask, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
++	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_CLEAR_SEL);
+ 	iowrite32(0xffffffff, priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS_MASK);
+ 
+@@ -3639,9 +3584,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	 * commands use interrupts and avoids polling.  Disable
+ 	 * interrupts when done.
+ 	 */
+-	priv->int_mask |= MWL8K_A2H_EVENTS;
+-
+-	iowrite32(priv->int_mask, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
++	iowrite32(MWL8K_A2H_EVENTS, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+ 
+ 	/* Get config data, mac addrs etc */
+ 	rc = mwl8k_cmd_get_hw_spec(hw);
 -- 
-1.6.3.3
-
+1.5.6.4
