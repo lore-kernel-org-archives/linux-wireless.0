@@ -1,80 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:36970 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732AbZH1AJY convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:44235 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbZHRDKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 20:09:24 -0400
-Received: by iwn42 with SMTP id 42so780206iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 17:09:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
-References: <20090827023000.21926.90867.stgit@mj.roinet.com>
-	<40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com>
-	<b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com>
-	<43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com>
-	<20090827213921.GB30419@hash.localnet> <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 27 Aug 2009 17:09:06 -0700
-Message-ID: <43e72e890908271709u288eaef9g23bcf077038a310f@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use in
-	ath5k_eeprom_read_turbo_modes()
-To: Bob Copeland <me@bobcopeland.com>
-Cc: mickflemm@gmail.com, proski@gnu.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, ic.felix@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Mon, 17 Aug 2009 23:10:08 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1MdF5M-0000kY-BD
+	for linux-wireless@vger.kernel.org; Tue, 18 Aug 2009 05:10:08 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] wireless-regdb: master-2009-08-17
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1MdF5M-0000kY-BD@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Tue, 18 Aug 2009 05:10:08 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 4:14 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Thu, Aug 27, 2009 at 2:39 PM, Bob Copeland<me@bobcopeland.com> wrote:
->> On Thu, Aug 27, 2009 at 11:25:03AM -0700, Luis R. Rodriguez wrote:
->>> > Well, we also don't use the turbo modes at all and that's where the
->>> > error is (IIRC) so it shouldn't have any impact. :)
->>>
->>> Again, why don't we just remove all that fucking turbo cruft?
->>
->> OK with me since no one seems to care enough to implement mac80211
->> support.  I left some of the #defines in place as they are useful
->> documentation.  Approx. 80 of the lines removed are comments.
->>
->>   text    data     bss     dec     hex filename
->>  136746     480      56  137282   21842 ath5k_old.ko
->>  134913     480      56  135449   21119 ath5k_new.ko
->>
->> Disclaimer: only barely tested.
->
-> Sexy, thanks!
->
-> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->
->>        { AR5K_PHY(14),
->> -          { 0x00000007, 0x00000007, 0x0000000b, 0x0000000b } },
->> +          { 0x00000007, 0x0000000b, 0x0000000b } },
->
-> Apart from this one initval all other ar5211_ini_mode[] values between
-> 802.11a and 802.11g are the same! Which means we could potentially
-> save (35 lines here * 4 bytes) + (3 entries for AR5K_PHY(14) * 4) =
-> 152 bytes here if we just converge 11a and 11g as just OFDM data for
-> this ini array and remove AR5K_PHY(14) entry and deal with it as a
-> final write. I wonder if AR5K_PHY(14) (0x9838) was a typo for 11a or
-> 11g. I'll try to dig to see what this is, perhaps its not a good idea
-> to move this out and set this later, not sure if this is inline for
-> the rf buffer trigger stuff, I'll poke.
->
-> All other ini arrays differ in more than 1 line so probably not worth mucking.
 
-OK so upon review here is what I can determine from the above:
+A new release of wireless-regdb (master-2009-08-17) is available at:
 
-AR5211 supports 802.11a and 802.11b, so I suspect the 11g stuff was
-kept there for testing purposes, all of that is actually unused. I say
-we remove 11g stuff for AR5211 as well and save ourselves those bytes.
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.08.17.tar.bz2
 
-And for the record -- reordering the mode stuff seems fine except care
-must be taken to ensure all those writes are done prior to
-AR5K_PHY_ACT aka 0x981c aka AR5K_PHY(7).
+SHA1 sum: ab87bfd0b2f26a8e1213da16ce2add47c831ac66
 
-The rf buffer stuff I mentioned earlier would not apply here as that
-is related to other stuff.
 
-  Luis
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.08.17-regulatory.bin
+
+SHA1 sum fb30b37c3e838f8d71f66a435febfbbef692504f
+
+Here is the short log of the changes included in this 
+release:
+
+Kel Modderman -  wireless-regdb: manual page section mismatch
