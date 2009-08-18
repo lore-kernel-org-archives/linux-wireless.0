@@ -1,67 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.211.193]:42740 "EHLO
-	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754205AbZHLQUP (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:45770 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757204AbZHRDzW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:20:15 -0400
-Received: by ywh31 with SMTP id 31so175643ywh.4
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:20:15 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 12 Aug 2009 18:20:15 +0200
-Message-ID: <15d0b9b20908120920sa42235ft4ce0daed4e4f0130@mail.gmail.com>
-Subject: Staging: rt2870: new USB ID for Belkin N+ F5D8055
-From: Daniele Napolitano <dnax88@gmail.com>
-To: linux-wireless@vger.kernel.org, gregkh@suse.de,
-	akpm@linux-foundation.org, greg@kroah.com
-Content-Type: multipart/mixed; boundary=0016e646065cbc6d330470f4314f
+	Mon, 17 Aug 2009 23:55:22 -0400
+Date: Tue, 18 Aug 2009 05:55:23 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 26/29] mwl8k: make mwl8k_configure_filter() use queue_work() directly
+Message-ID: <20090818035523.GE18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016e646065cbc6d330470f4314f
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+mwl8k_configure_filter() was the last remaining user of
+mwl8k_queue_work(), which can now be removed in favor of just using
+queue_work() on priv->config_wq directly.
 
-In attachment patch and its gpg sign.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   40 +++++++++++++++++++++-------------------
+ 1 files changed, 21 insertions(+), 19 deletions(-)
 
-I've made this patch with drivers/staging branch found here:
-http://git.kernel.org/?p=linux/kernel/git/gregkh/staging-2.6.git
-
-Regards.
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index b863b74..dea1440 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2747,27 +2747,26 @@ out:
+ }
+ 
+ struct mwl8k_configure_filter_worker {
+-	struct mwl8k_work_struct header;
++	struct work_struct wt;
++	struct ieee80211_hw *hw;
+ 	unsigned int changed_flags;
+ 	unsigned int total_flags;
+ 	struct mwl8k_cmd_pkt *set_multicast_adr;
+ };
+ 
+-#define MWL8K_SUPPORTED_IF_FLAGS	FIF_BCN_PRBRESP_PROMISC
+-
+-static int mwl8k_configure_filter_wt(struct work_struct *wt)
++static void mwl8k_configure_filter_wt(struct work_struct *wt)
+ {
+ 	struct mwl8k_configure_filter_worker *worker =
+ 		(struct mwl8k_configure_filter_worker *)wt;
+-	struct ieee80211_hw *hw = worker->header.hw;
+-	unsigned int changed_flags = worker->changed_flags;
+-	unsigned int total_flags = worker->total_flags;
++	struct ieee80211_hw *hw = worker->hw;
+ 	struct mwl8k_priv *priv = hw->priv;
+-	int rc = 0;
+ 
+-	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
+-		if (total_flags & FIF_BCN_PRBRESP_PROMISC)
+-			rc = mwl8k_cmd_set_pre_scan(hw);
++	if (mwl8k_fw_lock(hw))
++		return;
++
++	if (worker->changed_flags & FIF_BCN_PRBRESP_PROMISC) {
++		if (worker->total_flags & FIF_BCN_PRBRESP_PROMISC)
++			mwl8k_cmd_set_pre_scan(hw);
+ 		else {
+ 			u8 *bssid;
+ 
+@@ -2775,17 +2774,18 @@ static int mwl8k_configure_filter_wt(struct work_struct *wt)
+ 			if (priv->vif != NULL)
+ 				bssid = MWL8K_VIF(priv->vif)->bssid;
+ 
+-			rc = mwl8k_cmd_set_post_scan(hw, bssid);
++			mwl8k_cmd_set_post_scan(hw, bssid);
+ 		}
+ 	}
+ 
+ 	if (worker->set_multicast_adr != NULL) {
+-		if (!rc)
+-			rc = mwl8k_post_cmd(hw, worker->set_multicast_adr);
++		mwl8k_post_cmd(hw, worker->set_multicast_adr);
+ 		kfree(worker->set_multicast_adr);
+ 	}
+ 
+-	return rc;
++	mwl8k_fw_unlock(hw);
++
++	kfree(worker);
+ }
+ 
+ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+@@ -2794,26 +2794,28 @@ static void mwl8k_configure_filter(struct ieee80211_hw *hw,
+ 				   int mc_count,
+ 				   struct dev_addr_list *mclist)
+ {
++	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_configure_filter_worker *worker;
+ 
+ 	/* Clear unsupported feature flags */
+-	*total_flags &= MWL8K_SUPPORTED_IF_FLAGS;
++	*total_flags &= FIF_BCN_PRBRESP_PROMISC;
+ 
+-	if (!(changed_flags & MWL8K_SUPPORTED_IF_FLAGS) && !mc_count)
++	if (!(changed_flags & FIF_BCN_PRBRESP_PROMISC) && !mc_count)
+ 		return;
+ 
+ 	worker = kzalloc(sizeof(*worker), GFP_ATOMIC);
+ 	if (worker == NULL)
+ 		return;
+ 
+-	worker->header.sleep = 0;
++	worker->hw = hw;
+ 	worker->changed_flags = changed_flags;
+ 	worker->total_flags = *total_flags;
+ 	if (mc_count)
+ 		worker->set_multicast_adr =
+ 			__mwl8k_cmd_mac_multicast_adr(hw, mc_count, mclist);
+ 
+-	mwl8k_queue_work(hw, &worker->header, mwl8k_configure_filter_wt);
++	INIT_WORK(&worker->wt, mwl8k_configure_filter_wt);
++	queue_work(priv->config_wq, &worker->wt);
+ }
+ 
+ static int mwl8k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
 -- 
-Daniele "DnaX" Napolitano
-https://launchpad.net/~dnax88
-
---0016e646065cbc6d330470f4314f
-Content-Type: text/x-diff; charset=US-ASCII; name="rt2870-add-id-for-belkin-f5d8055.patch"
-Content-Disposition: attachment;
-	filename="rt2870-add-id-for-belkin-f5d8055.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fya9iny90
-
-U2lnbmVkLW9mZi1ieTogRGFuaWVsZSBOYXBvbGl0YW5vIDxkbmF4ODhAZ21haWwuY29tPgotLS0g
-cnQyODcwLmgJMjAwOS0wOC0xMiAxODowNjo0Mi42MDY5MjU2NDkgKzAyMDAKKysrIHJ0Mjg3MF9w
-YXRjaGVkLmgJMjAwOS0wOC0xMiAxODowNzoxMS42OTg5MzEzNzAgKzAyMDAKQEAgLTEwMiw2ICsx
-MDIsNyBAQAogCXtVU0JfREVWSUNFKDB4MTRCMiwweDNDMTIpfSwgLyogQUwgKi8gICAgICAgICAg
-IFwKIAl7VVNCX0RFVklDRSgweDA1MEQsMHg4MDUzKX0sIC8qIEJlbGtpbiAqLwkJXAogCXtVU0Jf
-REVWSUNFKDB4MDUwRCwweDgxNUMpfSwgLyogQmVsa2luICovCQlcCisJe1VTQl9ERVZJQ0UoMHgw
-NTBELDB4ODI1YSl9LCAvKiBCZWxraW4gKi8JCVwKIAl7VVNCX0RFVklDRSgweDE0QjIsMHgzQzIz
-KX0sIC8qIEFpcmxpbmsgKi8JCVwKIAl7VVNCX0RFVklDRSgweDE0QjIsMHgzQzI3KX0sIC8qIEFp
-cmxpbmsgKi8JCVwKIAl7VVNCX0RFVklDRSgweDA3QUEsMHgwMDJGKX0sIC8qIENvcmVnYSAqLwkJ
-XAo=
---0016e646065cbc6d330470f4314f
-Content-Type: application/pgp-encrypted;
-	name="rt2870-add-id-for-belkin-f5d8055.patch.gpg"
-Content-Disposition: attachment;
-	filename="rt2870-add-id-for-belkin-f5d8055.patch.gpg"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fya9ivyh1
-
-owGbwMvMwCT4/YHuRD+1KmPGtUz6SWpFJUYW5ga6iSkpupkpumn5RbpJqTnZmXm6aaYpFgampnoF
-iSXJGV5NryKCM9PzUlN089PSdJMqrRRcEvMyU3NSFfwSC/JzMksS8/IVbFLyEissLBzScxMzc/SS
-83PtuHR1dRUgVuhlcBoZGFjqGljoGhopGFpYGZhZmRjpmRmYWRqZmplYKmgbAOW5tLW1oRriwTan
-pmBqNLcyNNQzs7SwNDY0NjeAanRwUNA1NDDSMVPQBlHmCg4OXAqc1aHBTvEurmGezq4aBhWGJk5G
-OgYVxs6GRpq1Ogr6WgqOPgpa+goIEIOhx8DUwAWoBxgWxlA9TuAAAurj5MSt3NDUGZtybRzKjUwT
-iTEd7gEjmGMcM4tyMvOyCao3J0q9gbmjI1C9gYGRG1S9c35RanoiVHmHGwuDIBMDGysTKEEwcHEK
-wBLThnKGBROCU66lv9p37lbhiu7v73YvWfRs8lqGefY/JjoUTpgResO6e9Mm/+a48oeVPQA=
---0016e646065cbc6d330470f4314f--
+1.5.6.4
