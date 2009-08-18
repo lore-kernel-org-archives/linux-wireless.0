@@ -1,77 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59383 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753030AbZHSSpM (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:42007 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbZHRUIa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:45:12 -0400
-Date: Wed, 19 Aug 2009 14:44:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Pavel Roskin <proski@gnu.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: bisecting with wireless-testing
-Message-ID: <20090819184431.GH5905@tuxdriver.com>
-References: <1250142042.2352.26.camel@ct> <200908182346.29416.kunal.gangakhedkar@gmail.com> <1250629490.7534.20.camel@mj> <43e72e890908181407w2d658392w1f61b7f37beb04d1@mail.gmail.com> <1250630158.7534.29.camel@mj> <43e72e890908181424l770b3356ie990e9cadcb39877@mail.gmail.com> <1250631900.7534.44.camel@mj> <20090818215748.GJ20633@mosca> <20090819175809.GD5905@tuxdriver.com> <20090819183416.GE7126@mosca>
+	Tue, 18 Aug 2009 16:08:30 -0400
+Received: by bwz22 with SMTP id 22so3257769bwz.18
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 13:08:30 -0700 (PDT)
+Message-ID: <4A8B0A3F.6040106@gmail.com>
+Date: Tue, 18 Aug 2009 22:08:31 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090819183416.GE7126@mosca>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Two small spec updates
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 11:34:16AM -0700, Luis R. Rodriguez wrote:
-> Renaming subject and adding linux-wireless.
-> 
-> On Wed, Aug 19, 2009 at 10:58:09AM -0700, John W. Linville wrote:
+The specs are beginning to support rev3 LP-PHYs - implement one of
+the changes needed for rev3 support.
+Also, in the new MIPS driver, the "Japan TX filter" was renamed to
+"analog TX filter init" - however, calling it "init" is confusing,
+so name it "set analog filter", with a comment for easier future
+identification.
 
-> > It should not be necessary to bisect through reverts.  I maintain
-> > different tags for such purposes.
-> >
-> > Always use the lastest merge-* tag as the base for bisection.
-> > This should be equivalent to whichever -rc release from Linus is the
-> > current base for wireless-testing.  If you need to go any earlier
-> > than that, you should be using linux-2.6.
-> >
-> > So for example with current tree:
-> > 
-> >         git bisect start
-> >         git bisect bad master-2009-08-19
-> >         git bisect good merge-2009-08-14
-> > 
-> > This should include all of the current wireless patches in
-> > wireless-testing but not in the base linux-2.6 kernel.
-> 
-> This does indeed help alot. Just to be clear let me provide an
-> example. So say git tag -l | grep merge | tail -3 yields:
-> 
-> merge-2009-07-24
-> merge-2009-08-03
-> merge-2009-08-14
-> 
-> I believe what you are indicating if you are bisecting using to avoid
-> running into the reverts you'd have to ensure then that you bisect between
-> a bad commit and the next dated merge tag. So if you ran into a snag say
-> on master-2009-08-06, you should test if merge-2009-08-03 is good first,
-> and if its not then consider using linux-2.6.git ? If so wouldn't
-> the code on master-2009-08-06 not yet be available on linux-2.6.git?
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+ drivers/net/wireless/b43/phy_lp.c |   17 ++++++++++++-----
+ 1 files changed, 12 insertions(+), 5 deletions(-)
 
-If you look, merge-2009-08-03 is identical to 2.6.31-rc5:
-
-	git diff merge-2009-08-03..v2.6.31-rc5
-
-So if you have a problem in master-2009-08-06, then either the
-problem exists in v2.6.31-rc5 or it is between merge-2009-08-03 and
-master-2009-08-06.  (Read the tags carefully, they look similar.)
-
-The point is, it never makes sense to use a good marker any
-farther back than the most recent merge-* tag when trying to bisect
-wireless-testing.  Otherwise, all the reverts and such will cause
-confusion.  If the problem still exists at the most recent merge-*
-tag, then the problem is in linux-2.6 and should be bisected there.
-
-John
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 6c69cdb..65f0010 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -609,9 +609,14 @@ static void lpphy_2063_init(struct b43_wldev *dev)
+ 	b43_radio_write(dev, B2063_PA_SP7, 0);
+ 	b43_radio_write(dev, B2063_TX_RF_SP6, 0x20);
+ 	b43_radio_write(dev, B2063_TX_RF_SP9, 0x40);
+-	b43_radio_write(dev, B2063_PA_SP3, 0xa0);
+-	b43_radio_write(dev, B2063_PA_SP4, 0xa0);
+-	b43_radio_write(dev, B2063_PA_SP2, 0x18);
++	if (dev->phy.rev == 2) {
++		b43_radio_write(dev, B2063_PA_SP3, 0xa0);
++		b43_radio_write(dev, B2063_PA_SP4, 0xa0);
++		b43_radio_write(dev, B2063_PA_SP2, 0x18);
++	} else {
++		b43_radio_write(dev, B2063_PA_SP3, 0x20);
++		b43_radio_write(dev, B2063_PA_SP2, 0x20);
++	}
+ }
+ 
+ struct lpphy_stx_table_entry {
+@@ -1996,7 +2001,9 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
+ 	return err;
+ }
+ 
+-static void lpphy_japan_filter(struct b43_wldev *dev, int channel)
++
++/* This was previously called lpphy_japan_filter */
++static void lpphy_set_analog_filter(struct b43_wldev *dev, int channel)
+ {
+ 	struct b43_phy_lp *lpphy = dev->phy.lp;
+ 	u16 tmp = (channel == 14); //SPEC FIXME check japanwidefilter!
+@@ -2165,7 +2172,7 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+ 		err = lpphy_b2062_tune(dev, new_channel);
+ 		if (err)
+ 			return err;
+-		lpphy_japan_filter(dev, new_channel);
++		lpphy_set_analog_filter(dev, new_channel);
+ 		lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+ 	}
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.4
+
+
+
