@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailin.taunusstein.net ([193.138.96.2]:45453 "EHLO
-	mailin.taunusstein.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbZHQKZc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 06:25:32 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mailin.taunusstein.net (Postfix) with ESMTP id 2A9CF479CE
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 12:25:32 +0200 (CEST)
-Received: from mailin.taunusstein.net ([127.0.0.1])
-	by localhost (mail.taunusstein.net [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id 7I+2GAtK+Pvt for <linux-wireless@vger.kernel.org>;
-	Mon, 17 Aug 2009 12:25:26 +0200 (CEST)
-Received: from [192.168.1.3] (u12-251.dsl.vianetworks.de [194.231.229.251])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "hostmaster@taunusstein.net", Issuer "taunusstein.net Root CA" (verified OK))
-	by mailin.taunusstein.net (Postfix) with ESMTPS
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 12:25:26 +0200 (CEST)
-Message-ID: <4A893016.1030201@taunusstein.net>
-Date: Mon, 17 Aug 2009 12:25:26 +0200
-From: Christian Felsing <hostmaster@taunusstein.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Multiple BSSID problem with hostapd
-References: <4A73F9CB.8000606@taunusstein.net> <4A75333D.9070100@taunusstein.net> <20090817102354.GA19258@jm.kir.nu>
-In-Reply-To: <20090817102354.GA19258@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:11370 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751424AbZHRBNm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 17 Aug 2009 21:13:42 -0400
+Subject: Re: question about ieee80211_tx.c (fwd)
+From: Zhu Yi <yi.zhu@intel.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Julia Lawall <julia@diku.dk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>
+In-Reply-To: <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
+References: <Pine.LNX.4.64.0908171000500.20447@pc-004.diku.dk>
+	 <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 18 Aug 2009 09:13:41 +0800
+Message-Id: <1250558021.9651.35.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Works with development branch :-)
-
-regards
-Christian
-
-Jouni Malinen schrieb:
-> checking the current development branch (0.7.x) would be a good idea
-> when advanced AP functionality is desired.
+On Mon, 2009-08-17 at 19:50 +0800, Gábor Stefanik wrote:
+> On Mon, Aug 17, 2009 at 10:03 AM, Julia Lawall<julia@diku.dk> wrote:
+> > The files ieee80211_tx.c in the directories
+> > drivers/staging/rtl8192su/ieee80211 and
+> drivers/staging/rtl8192e/ieee80211
+> > both contain the following code in the function
+> > ieee80211_query_protectionmode:
+> >
+> >       if (ieee->mode == IW_MODE_MASTER)
+> >                        goto NO_PROTECTION;
+> >
+> > Elsewhere in these files when there is a comparison against an
+> IW_MODE
+> > value, the field that is compared is iw_mode.  Should that be the
+> case
+> > here as well?
+> >
+> > thanks,
+> > julia
 > 
+> I don't know; rtl8192su & rtl8192e use a modified version of the
+> libipw stack, rather than the mac80211 stack found behind non-staging
+> drivers.
+
+This is clearly a bug. The question is: who is maintaining this driver
+and why it doesn't use/extend ieee80211/libipw?
+
+Thanks,
+-yi
 
