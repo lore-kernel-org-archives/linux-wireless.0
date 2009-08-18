@@ -1,84 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39292 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932810AbZHNU1p (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40183 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756622AbZHRDwp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:27:45 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 13/34] wireless: move AIRO_CS closer to AIRO_CS
-Date: Fri, 14 Aug 2009 16:25:38 -0400
-Message-Id: <1250281559-13041-14-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 17 Aug 2009 23:52:45 -0400
+Date: Tue, 18 Aug 2009 05:52:46 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 11/29] mwl8k: ->add_interface() is not called for monitor interfaces
+Message-ID: <20090818035246.GP18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+There is no need to check for NL80211_IFTYPE_MONITOR in
+->add_interface(), as this function is never called for monitor
+interfaces.  Also, there is no need to advertise this bit in our
+wiphy's ->interface_modes.
+
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
- 1 files changed, 20 insertions(+), 20 deletions(-)
+ drivers/net/wireless/mwl8k.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 32f3203..f5d9dba 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -213,6 +213,26 @@ config AIRO
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index e266bc1..4580b1d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2883,8 +2883,7 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
+ 	/*
+ 	 * We only support managed interfaces for now.
+ 	 */
+-	if (conf->type != NL80211_IFTYPE_STATION &&
+-	    conf->type != NL80211_IFTYPE_MONITOR)
++	if (conf->type != NL80211_IFTYPE_STATION)
+ 		return -EINVAL;
  
- 	  The driver can be compiled as a module and will be named "airo".
+ 	/* Clean out driver private area */
+@@ -3444,8 +3443,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
  
-+config AIRO_CS
-+	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
-+	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
-+	select WIRELESS_EXT
-+	select CRYPTO
-+	select CRYPTO_AES
-+	---help---
-+	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
-+	  802.11 wireless cards.  This driver is the same as the Aironet
-+	  driver part of the Linux Pcmcia package.
-+	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
-+	  - with or without encryption) as well as card before the Cisco
-+	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
-+	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
-+	  802.11b cards.
-+
-+	  This driver support both the standard Linux Wireless Extensions
-+	  and Cisco proprietary API, so both the Linux Wireless Tools and the
-+	  Cisco Linux utilities can be used to configure the card.
-+
- config ATMEL_80211
- 	bool "Atmel"
- 	depends on WLAN_80211
-@@ -265,26 +285,6 @@ config AT76C50X_USB
+ 	hw->queues = MWL8K_TX_QUEUES;
  
- endif # ATMEL_80211
+-	hw->wiphy->interface_modes =
+-		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_MONITOR);
++	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
  
--config AIRO_CS
--	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
--	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
--	select WIRELESS_EXT
--	select CRYPTO
--	select CRYPTO_AES
--	---help---
--	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
--	  802.11 wireless cards.  This driver is the same as the Aironet
--	  driver part of the Linux Pcmcia package.
--	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
--	  - with or without encryption) as well as card before the Cisco
--	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
--	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
--	  802.11b cards.
--
--	  This driver support both the standard Linux Wireless Extensions
--	  and Cisco proprietary API, so both the Linux Wireless Tools and the
--	  Cisco Linux utilities can be used to configure the card.
--
- config PCMCIA_WL3501
-       tristate "Planet WL3501 PCMCIA cards"
-       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+ 	/* Set rssi and noise values to dBm */
+ 	hw->flags |= IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_NOISE_DBM;
 -- 
-1.6.2.5
-
+1.5.6.4
