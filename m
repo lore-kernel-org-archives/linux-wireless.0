@@ -1,76 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:41171 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906AbZHIQGD convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:60124 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751284AbZHRTaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 12:06:03 -0400
+	Tue, 18 Aug 2009 15:30:03 -0400
+Received: by bwz22 with SMTP id 22so3236747bwz.18
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 12:30:02 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] rt2x00: configure_filter() callback is allowed to sleep
+References: <200908181954.23419.IvDoorn@gmail.com>
+	<1250618324.9886.25.camel@johannes.local>
+	<200908182004.58584.IvDoorn@gmail.com>
+	<1250618853.7887.0.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Tue, 18 Aug 2009 22:30:00 +0300
+In-Reply-To: <1250618853.7887.0.camel@johannes.local> (Johannes Berg's message of "Tue\, 18 Aug 2009 20\:07\:33 +0200")
+Message-ID: <87my5wudhj.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <20090807215155.GA17043@sig21.net>
-References: <20090807215155.GA17043@sig21.net>
-Date: Sun, 9 Aug 2009 12:06:03 -0400
-Message-ID: <b6c5339f0908090906p3d29fdd2x8473dcc6df178167@mail.gmail.com>
-Subject: Re: 2.6.31-rc5 regression: ath5k broken after suspend-to-ram
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 7, 2009 at 5:51 PM, Johannes Stezenbach<js@sig21.net> wrote:
-> Hi,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Hi!
+> I wonder if drivers now ever have a reason to queue work on the mac80211
+> workqueue? Some periodic calibration tasks maybe?
 
-> If I use nl80211 the second ifup fails with
-> "SIOCSIFFLAGS: Input/output error" messages and the follwing
-> is in dmesg:
->
->   ath5k phy0: failed to wakeup the MAC Chip
->   ath5k phy0: can't reset hardware (-5)
-
-Ok, does this patch help the above?
-
-http://patchwork.kernel.org/patch/38550/
-
->   Aug  7 20:13:28 void wpa_supplicant[9932]: Trying to associate with 00:00:00:00:00:00 (SSID='...' freq=2412 MHz)
-
-I assume in all cases you have elided the mac addresses and they
-are the same in all of the examples?  (You can keep the first three
-octets in the future, they are just vendor information.)
-
->   Aug  7 23:10:08 void kernel: wlan0: RX AssocResp from 00:00:00:00:00:00 (capab=0x411 status=0 aid=1)
->   Aug  7 23:10:08 void kernel: wlan0: associated
->   Aug  7 23:10:08 void wpa_supplicant[16215]: Associated with 00:00:00:00:00:00
->   Aug  7 23:10:08 void wpa_supplicant[16215]: WPA: Key negotiation completed with 00:00:00:00:00:00 [PTK=CCMP GTK=TKIP]
->   Aug  7 23:10:08 void wpa_supplicant[16215]: CTRL-EVENT-CONNECTED - Connection to 00:00:00:00:00:00 completed (auth) [id=0 id_str=]
->   Aug  7 23:10:12 void wpa_supplicant[16215]: CTRL-EVENT-SCAN-RESULTS
->   Aug  7 23:10:12 void wpa_supplicant[16215]: Trying to associate with 00:00:00:00:00:00 (SSID='...' freq=2412 MHz)
-
-Hmm so it completed association... then 4 seconds later, got some
-scan results and tried again.  Odd.
-
-> During resume the following is logged:
->
->   ath5k 0000:02:02.0: restoring config space at offset 0x3 (was 0x5008, writing 0xa808)
->   pm_op(): pci_pm_resume+0x0/0x79 returns -16
->   PM: Device 0000:00:00.0 failed to resume: error -16
->
-> Not sure if this is causing the problem?
-
--EBUSY... not sure.
-
-> In case it matters:
->  CONFIG_MAC80211_DEFAULT_PS=y
->  CONFIG_MAC80211_DEFAULT_PS_VALUE=1
-
-That's for 802.11 power saving which ath5k doesn't do yet, so it
-doesn't matter here.
-
-Ok thanks for the very detailed report, I'll take a look.  My
-hardware suspends/resumes under 2.6.31, but I do have a few
-differences in my setup compared to yours.
+wl1251 and wl1271 queue tx frames to a workqueue. This is because they
+use synchronous spi interface. This might change if we switch
+asynchronous interface in the future. No idea how this affects sdio,
+though.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Kalle Valo
