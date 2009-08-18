@@ -1,50 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:23396 "EHLO c60.cesmail.net"
+Received: from fifo99.com ([67.223.236.141]:52589 "EHLO fifo99.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752622AbZHFKMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 06:12:41 -0400
-Subject: Re: rt2800usb: memory corruption?
-From: Pavel Roskin <proski@gnu.org>
-To: Mike Galbraith <efault@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1249195641.23166.12.camel@marge.simson.net>
-References: <1248945770.7910.24.camel@marge.simson.net>
-	 <1248946195.8925.9.camel@johannes.local>
-	 <1248947099.8396.6.camel@marge.simson.net>
-	 <1248947740.8925.12.camel@johannes.local>
-	 <1248948326.8823.4.camel@marge.simson.net>
-	 <1248955916.7995.47.camel@marge.simson.net>
-	 <1249104348.7146.60.camel@marge.simson.net>
-	 <1249124154.8236.5.camel@marge.simson.net>  <1249172514.3043.7.camel@ct>
-	 <1249190209.7486.4.camel@marge.simson.net>
-	 <1249194546.7634.4.camel@marge.simson.net>
-	 <1249195641.23166.12.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Thu, 06 Aug 2009 06:12:34 -0400
-Message-Id: <1249553554.24439.11.camel@ct>
-Mime-Version: 1.0
+	id S1754660AbZHROCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2009 10:02:20 -0400
+From: Daniel Walker <dwalker@fifo99.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Walker <dwalker@fifo99.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org,
+	Sven-Thorsten Dietrich <sven@thebigcorporation.com>
+Subject: [PATCH] net: wireless: mesh: Add multicast and unicast stat counters
+Date: Tue, 18 Aug 2009 07:02:26 -0700
+Message-Id: <1250604146-10140-1-git-send-email-dwalker@fifo99.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2009-08-02 at 08:47 +0200, Mike Galbraith wrote:
-> P.S.  I'm no longer considering moving box away from router (and if I
-> ever do, I'll use repeater instead), so wireless connectivity via this
-> adapter is a dead issue here.  Since I have the hw though, if anyone
-> wants patches tested, feel free to holler, and I'll give them a spin.
+I added two new stat counters to count if each forwarded frame is
+either multicast or unicast. This expands on the current fwded_frames
+stat counter which should be equal to the total of these two new
+counters.
 
-The fix is here:
-http://marc.info/?t=124942266800001&r=1&w=2
+The new counters are called "fwded_mcast" and "fwded_unicast".
 
-kmemcheck wasn't helpful at resolving it, as the problem was with
-writing after the end of allocated memory, not with reading
-uninitialized memory.  SLUB debugging nailed it as soon as I took care
-to understand what it was telling me.
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: David S. Miller <davem@davemloft.net>
+CC: John W. Linville <linville@tuxdriver.com>
+CC: Luis R. Rodriguez <lrodriguez@atheros.com>
+CC: Andrey Yurovsky <andrey@cozybit.com>
+CC: Javier Cardona <javier@cozybit.com>
+CC: linux-wireless@vger.kernel.org
+CC: Sven-Thorsten Dietrich <sven@thebigcorporation.com>
+Signed-off-by: Daniel Walker <dwalker@fifo99.com>
+---
+ net/mac80211/debugfs_netdev.c |    6 ++++++
+ net/mac80211/ieee80211_i.h    |    6 +++++-
+ net/mac80211/mesh_hwmp.c      |    4 ++++
+ net/mac80211/rx.c             |    9 +++++++--
+ 4 files changed, 22 insertions(+), 3 deletions(-)
 
-As for the issue you found by kmemcheck, it's most certainly unrelated.
-If you can reproduce it with the rt2xxx patch, consider reporting it to
-the netdev list.  It would be helpful if you find what line is
-triggering it and include your .config file.
-
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e9ec6ca..00f7c6e 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -116,6 +116,8 @@ IEEE80211_IF_FILE(peer, u.wds.remote_addr, MAC);
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ /* Mesh stats attributes */
++IEEE80211_IF_FILE(fwded_mcast, u.mesh.mshstats.fwded_mcast, DEC);
++IEEE80211_IF_FILE(fwded_unicast, u.mesh.mshstats.fwded_unicast, DEC);
+ IEEE80211_IF_FILE(fwded_frames, u.mesh.mshstats.fwded_frames, DEC);
+ IEEE80211_IF_FILE(dropped_frames_ttl, u.mesh.mshstats.dropped_frames_ttl, DEC);
+ IEEE80211_IF_FILE(dropped_frames_no_route,
+@@ -205,6 +207,8 @@ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+ {
+ 	sdata->mesh_stats_dir = debugfs_create_dir("mesh_stats",
+ 				sdata->debugfsdir);
++	MESHSTATS_ADD(mcast_frames);
++	MESHSTATS_ADD(unicast_frames);
+ 	MESHSTATS_ADD(fwded_frames);
+ 	MESHSTATS_ADD(dropped_frames_ttl);
+ 	MESHSTATS_ADD(dropped_frames_no_route);
+@@ -327,6 +331,8 @@ static void del_monitor_files(struct ieee80211_sub_if_data *sdata)
+ 
+ static void del_mesh_stats(struct ieee80211_sub_if_data *sdata)
+ {
++	MESHSTATS_DEL(mcast_frames);
++	MESHSTATS_DEL(unicast_frames);
+ 	MESHSTATS_DEL(fwded_frames);
+ 	MESHSTATS_DEL(dropped_frames_ttl);
+ 	MESHSTATS_DEL(dropped_frames_no_route);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d6bd7dd..82c39d9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -212,7 +212,9 @@ struct ieee80211_if_vlan {
+ };
+ 
+ struct mesh_stats {
+-	__u32 fwded_frames;		/* Mesh forwarded frames */
++	__u32 fwded_mcast;		/* Mesh forwarded multicast frames */
++	__u32 fwded_unicast;		/* Mesh forwarded unicast frames */
++	__u32 fwded_frames;		/* Mesh total forwarded frames */
+ 	__u32 dropped_frames_ttl;	/* Not transmitted since mesh_ttl == 0*/
+ 	__u32 dropped_frames_no_route;	/* Not transmitted, no route found */
+ 	atomic_t estab_plinks;
+@@ -506,6 +508,8 @@ struct ieee80211_sub_if_data {
+ #ifdef CONFIG_MAC80211_MESH
+ 	struct dentry *mesh_stats_dir;
+ 	struct {
++		struct dentry *fwded_mcast;
++		struct dentry *fwded_unicast;
+ 		struct dentry *fwded_frames;
+ 		struct dentry *dropped_frames_ttl;
+ 		struct dentry *dropped_frames_no_route;
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index e1a763e..593ea64 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -478,6 +478,8 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				hopcount, ttl, cpu_to_le32(lifetime),
+ 				cpu_to_le32(metric), cpu_to_le32(preq_id),
+ 				sdata);
++		
++		ifmsh->mshstats.fwded_mcast++;
+ 		ifmsh->mshstats.fwded_frames++;
+ 	}
+ }
+@@ -536,6 +538,8 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		cpu_to_le32(lifetime), cpu_to_le32(metric),
+ 		0, sdata);
+ 	rcu_read_unlock();
++
++	sdata->u.mesh.mshstats.fwded_unicast++;
+ 	sdata->u.mesh.mshstats.fwded_frames++;
+ 	return;
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 25a669c..cf21f57 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1543,16 +1543,21 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			info->control.vif = &rx->sdata->vif;
+ 			ieee80211_select_queue(local, fwd_skb);
+-			if (is_multicast_ether_addr(fwd_hdr->addr3))
++			if (is_multicast_ether_addr(fwd_hdr->addr3)) {
+ 				memcpy(fwd_hdr->addr1, fwd_hdr->addr3,
+ 						ETH_ALEN);
+-			else {
++				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
++							     fwded_mcast);
++			} else {
+ 				int err = mesh_nexthop_lookup(fwd_skb, sdata);
+ 				/* Failed to immediately resolve next hop:
+ 				 * fwded frame was dropped or will be added
+ 				 * later to the pending skb queue.  */
+ 				if (err)
+ 					return RX_DROP_MONITOR;
++
++				IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
++							     fwded_unicast);
+ 			}
+ 			IEEE80211_IFSTA_MESH_CTR_INC(&sdata->u.mesh,
+ 						     fwded_frames);
 -- 
-Regards,
-Pavel Roskin
+1.5.6.3
+
