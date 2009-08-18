@@ -1,46 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate05.web.de ([217.72.192.243]:59493 "EHLO
-	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094AbZHXUdU convert rfc822-to-8bit (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40187 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbZHRDxF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 16:33:20 -0400
-Date: Mon, 24 Aug 2009 22:33:16 +0200
-Message-Id: <1779655662@web.de>
-MIME-Version: 1.0
-From: Chunkeey@web.de
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Bob Copeland <bcopeland@gmail.com>
-Cc: Chr <chunkeey@web.de>, Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Kernel Panic in __ieee80211_tx with p43usb as AP
-Content-Type: text/plain; charset=iso-8859-15
+	Mon, 17 Aug 2009 23:53:05 -0400
+Date: Tue, 18 Aug 2009 05:53:07 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 13/29] mwl8k: don't touch 'command done' interrupt during firmware load
+Message-ID: <20090818035307.GR18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, Aug 24, 2009 at 4:07 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
-> > static inline int drv_tx(struct ieee80211_local *local, struct sk_buff
-> > *skb)
-> > {
-> >        return local->ops->tx(&local->hw, skb);
-> > }
-> >
-> > Are there any suggest changes that would let me debug this problem
-> > without crashing the kernel?
-> 
-> Could be a callback into mac80211, e.g. ieee80211_get_tx_rate()
-> returning null (I haven't looked at any p54 code, I just know I've hit
-> one there before with ath5k).
+Since firmware load commands don't generate 'command done' interrupts
+like normal commands do, polling for command done interrupts just
+unnecessarily slows down the firmware load process.  Removing this bit
+of code speeds up loading a typical firmware image from 840 msec to
+180 msec.
 
-huu. at this point the frame already has a valid rate.
-I guessing the dump is missing some more lines and 
-it crashes somewhere deep down in the driver.
-But, I'm not yet sure where exactly... do you think
-you can capture a full oops?
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   24 +-----------------------
+ 1 files changed, 1 insertions(+), 23 deletions(-)
 
-Regards,
-   Chr
-________________________________________________________________
-Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
-für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index f4b197b..86b6b5d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -411,7 +411,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+ {
+ 	void __iomem *regs = priv->regs;
+ 	dma_addr_t dma_addr;
+-	int rc;
+ 	int loops;
+ 
+ 	dma_addr = pci_map_single(priv->pdev, data, length, PCI_DMA_TODEVICE);
+@@ -425,7 +424,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+ 	iowrite32(MWL8K_H2A_INT_DUMMY,
+ 		regs + MWL8K_HIU_H2A_INTERRUPT_EVENTS);
+ 
+-	rc = -ETIMEDOUT;
+ 	loops = 1000;
+ 	do {
+ 		u32 int_code;
+@@ -433,7 +431,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+ 		int_code = ioread32(regs + MWL8K_HIU_INT_CODE);
+ 		if (int_code == MWL8K_INT_CODE_CMD_FINISHED) {
+ 			iowrite32(0, regs + MWL8K_HIU_INT_CODE);
+-			rc = 0;
+ 			break;
+ 		}
+ 
+@@ -442,26 +439,7 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+ 
+ 	pci_unmap_single(priv->pdev, dma_addr, length, PCI_DMA_TODEVICE);
+ 
+-	/*
+-	 * Clear 'command done' interrupt bit.
+-	 */
+-	loops = 1000;
+-	do {
+-		u32 status;
+-
+-		status = ioread32(priv->regs +
+-				MWL8K_HIU_A2H_INTERRUPT_STATUS);
+-		if (status & MWL8K_A2H_INT_OPC_DONE) {
+-			iowrite32(~MWL8K_A2H_INT_OPC_DONE,
+-				priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+-			ioread32(priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
+-			break;
+-		}
+-
+-		udelay(1);
+-	} while (--loops);
+-
+-	return rc;
++	return loops ? 0 : -ETIMEDOUT;
+ }
+ 
+ static int mwl8k_load_fw_image(struct mwl8k_priv *priv,
+-- 
+1.5.6.4
