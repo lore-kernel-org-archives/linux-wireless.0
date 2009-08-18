@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:53755 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbZHBFte (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36849 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbZHRHXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 01:49:34 -0400
-Received: by bwz19 with SMTP id 19so1910468bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 22:49:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1249171448.3491.32.camel@localhost.localdomain>
-References: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
-	 <1249171448.3491.32.camel@localhost.localdomain>
-Date: Sun, 2 Aug 2009 08:49:33 +0300
-Message-ID: <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
-Subject: Re: [PATCH 1/1] rfkill: add the GPS radio type
-From: Tomas Winkler <tomasw@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Aug 2009 03:23:20 -0400
+Subject: Re: [PATCH 10/29] mwl8k: fix mwl8k_configure_filter() parameter
+ lifetime issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090818040039.GA4116@mail.wantstofly.org>
+References: <20090818035233.GO18639@mail.wantstofly.org>
+	 <20090818040039.GA4116@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-OkUNUQ3YlWG5wsf4uijL"
+Date: Tue, 18 Aug 2009 09:23:18 +0200
+Message-Id: <1250580198.30538.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 2, 2009 at 3:04 AM, Marcel Holtmann<marcel@holtmann.org> wrote:
-> Hi Tomas,
->
->> Althoug GPS is a technology w/o transmitting radio
->> and thus not a primary candidate for rfkill switch,
->> rfkill gives unified interface point for devices with
->> wireless technology.
->>
->> The input key is not supplied as it is too be deprecated.
->>
->> Cc: johannes@sipsolutions.net
->> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
->
-> we don't have a GPS subsystem, but even without it, I think this is a
-> good thing to have.
 
-GPS devices are usually serial devices.
+--=-OkUNUQ3YlWG5wsf4uijL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Acked-by: Marcel Holtmann <marcel@holtmann.org>
->
-> Please also send a patch updating the rfkill userspace utility.
+On Tue, 2009-08-18 at 06:00 +0200, Lennert Buytenhek wrote:
 
-On the way....
-Tomas
+> This will clash with:
+>=20
+> 	http://article.gmane.org/gmane.linux.kernel.wireless.general/38141
+>=20
+> But that is easy to fix up.  (The easiest would probably be to not
+> apply the mwl8k part of that patch, and I'll send a followup patch
+> to implement ->prepare_multicast() for mwl8k.)
+
+It's not quite that easy because that patch changes the arguments to the
+functions so the multicast list is no longer available in
+->configure_filter().
+
+johannes
+
+--=-OkUNUQ3YlWG5wsf4uijL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKilbiAAoJEODzc/N7+QmalPMP/AtcR0hL12nRcGQP+g1DzN3k
+ZM/SqBDmsdu1a6bISmoLEv+wWStu7tFuNqqYqrHb4xUB3UED+Brt362gQ6UeQzpQ
+djUC6k4TiqCG2p63OxJNY59eS0gSkyAMlw7s8+5yVIMdoC3zgaGj3M3DZM4JY0Ho
+ypWPKFtb9jYBakspGYfdqimFOfPySVlw6g23qfdEhsLBu46P8k1+MmZAFFD515er
+EzuoeRAvCb0KjjSi/vKu4WxOsNpwuiAFDRc3vt+Mw3+07MIe6O+aXQuEljaCV2VV
+S7hOaAoG7yXXzfr3k1Z6QJSTzrPPmJUTvhvVfU2hLI0nw+tb7jpV8b9Eo/E3Ig8k
+x0fXdYpPiODSfJ1/mrxutu9s5QJ8a6c4GISGOTb7Ve1afkSZlhOeAXYgZlORmzq2
+o/M93tRce1zPsRv2/22Ay6GkG1/yxoGaNNzI8KZIjIzYEKR4My302C3bUVHSBC9Z
+X44lWuNzuJHNSHBrkGa8rAfvVqMXeUFOsj83kaBKwIsZ0p1utiuNMaVmrVIbI1sm
+tIRFRq/2JZa6PgLI7Y0uHeR2CEWz2uO3XzNTvgGfzMNLxRpvYJgBYhGt2Xq62CWi
+FjUpyQKEsGzR2b6JCmqsj59ohquNQT++D++6O3crnvZqHa7KQnDsaAOOOGHzZZkA
+1MwA6GA2VB2ufyfbDePB
+=Ji5U
+-----END PGP SIGNATURE-----
+
+--=-OkUNUQ3YlWG5wsf4uijL--
+
