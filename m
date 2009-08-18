@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53013 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752781AbZHQTqN (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:45757 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841AbZHRDyQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 15:46:13 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v5 13/33] wireless: move AIRO_CS closer to AIRO
-Date: Mon, 17 Aug 2009 15:46:14 -0400
-Message-Id: <1250538374-21468-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 17 Aug 2009 23:54:16 -0400
+Date: Tue, 18 Aug 2009 05:54:17 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 20/29] mwl8k: get rid of mwl8k_stop() workqueue use
+Message-ID: <20090818035417.GY18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/Kconfig |   40 ++++++++++++++++++++--------------------
- 1 files changed, 20 insertions(+), 20 deletions(-)
+ drivers/net/wireless/mwl8k.c |   28 +---------------------------
+ 1 files changed, 1 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index b489d9c..b03035f 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -213,6 +213,26 @@ config AIRO
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 69e6879..6b16542 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2551,41 +2551,15 @@ static int mwl8k_start(struct ieee80211_hw *hw)
+ 	return rc;
+ }
  
- 	  The driver can be compiled as a module and will be named "airo".
- 
-+config AIRO_CS
-+	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
-+	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
-+	select WIRELESS_EXT
-+	select CRYPTO
-+	select CRYPTO_AES
-+	---help---
-+	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
-+	  802.11 wireless cards.  This driver is the same as the Aironet
-+	  driver part of the Linux Pcmcia package.
-+	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
-+	  - with or without encryption) as well as card before the Cisco
-+	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
-+	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
-+	  802.11b cards.
-+
-+	  This driver support both the standard Linux Wireless Extensions
-+	  and Cisco proprietary API, so both the Linux Wireless Tools and the
-+	  Cisco Linux utilities can be used to configure the card.
-+
- config ATMEL_80211
- 	bool "Atmel"
- 	depends on WLAN_80211
-@@ -265,26 +285,6 @@ config AT76C50X_USB
- 
- endif # ATMEL_80211
- 
--config AIRO_CS
--	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
--	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
--	select WIRELESS_EXT
--	select CRYPTO
--	select CRYPTO_AES
--	---help---
--	  This is the standard Linux driver to support Cisco/Aironet PCMCIA
--	  802.11 wireless cards.  This driver is the same as the Aironet
--	  driver part of the Linux Pcmcia package.
--	  It supports the new 802.11b cards from Cisco (Cisco 34X, Cisco 35X
--	  - with or without encryption) as well as card before the Cisco
--	  acquisition (Aironet 4500, Aironet 4800, Aironet 4800B). It also
--	  supports OEM of Cisco such as the DELL TrueMobile 4800 and Xircom
--	  802.11b cards.
+-struct mwl8k_stop_worker {
+-	struct mwl8k_work_struct header;
+-};
 -
--	  This driver support both the standard Linux Wireless Extensions
--	  and Cisco proprietary API, so both the Linux Wireless Tools and the
--	  Cisco Linux utilities can be used to configure the card.
+-static int mwl8k_stop_wt(struct work_struct *wt)
+-{
+-	struct mwl8k_stop_worker *worker = (struct mwl8k_stop_worker *)wt;
+-	struct ieee80211_hw *hw = worker->header.hw;
 -
- config PCMCIA_WL3501
-       tristate "Planet WL3501 PCMCIA cards"
-       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+-	return mwl8k_cmd_802_11_radio_disable(hw);
+-}
+-
+ static void mwl8k_stop(struct ieee80211_hw *hw)
+ {
+-	int rc;
+-	struct mwl8k_stop_worker *worker;
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	int i;
+ 
+-	if (priv->vif != NULL)
+-		return;
++	mwl8k_cmd_802_11_radio_disable(hw);
+ 
+ 	ieee80211_stop_queues(hw);
+ 
+-	worker = kzalloc(sizeof(*worker), GFP_KERNEL);
+-	if (worker == NULL)
+-		return;
+-
+-	worker->header.sleep = 1;
+-
+-	rc = mwl8k_queue_work(hw, &worker->header, mwl8k_stop_wt);
+-	kfree(worker);
+-	if (rc == -ETIMEDOUT)
+-		printk(KERN_ERR "%s() timed out\n", __func__);
+-
+ 	/* Disable interrupts */
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+ 	free_irq(priv->pdev->irq, hw);
 -- 
-1.6.2.5
-
+1.5.6.4
