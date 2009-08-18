@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:63001 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751686AbZH2Pr6 (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:52271 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753244AbZHRJwQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 29 Aug 2009 11:47:58 -0400
-Received: by ewy2 with SMTP id 2so2897955ewy.17
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2009 08:48:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A98D65B.9060103@free.fr>
-References: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
-	 <4A98D65B.9060103@free.fr>
-Date: Sat, 29 Aug 2009 18:47:59 +0300
-Message-ID: <40f31dec0908290847g698a65e2t589a466a13b1b7f5@mail.gmail.com>
-Subject: Re: [ath5k-devel] Ath5k and proprietary extensions
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	ic.felix@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Aug 2009 05:52:16 -0400
+Date: Tue, 18 Aug 2009 11:52:17 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
+Message-ID: <20090818095217.GA6195@mail.wantstofly.org>
+References: <20090818035220.GN18639@mail.wantstofly.org> <1250580509.30538.2.camel@johannes.local> <20090818082537.GK18639@mail.wantstofly.org> <1250583993.30538.3.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250583993.30538.3.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/29 Benoit PAPILLAULT <benoit.papillault@free.fr>:
->
-> I have been working on XR (in madwifi) for some time with no result. I
-> would appreciate to be able to test it in ath5k.
+On Tue, Aug 18, 2009 at 10:26:33AM +0200, Johannes Berg wrote:
 
-All XR related stuff is missing from both Legacy and Sam's HAL + it's
-nasty IMHO. We need to define new rates, send beacons on both 0.25 and
-1Mbits, use that polling mechanism, introduce a new IE etc. It 'll
-need lots of changes and the code will get even more complex + if we
-want to do it right at least the polling mechanism has to go to
-mac80211 and i don't think anyone wants that, imagine if every vendor
-started putting proprietary stuff like that on mac80211 (and there are
-way more nasty vendor specific stuff). I don't want to see
-ath5k/mac80211 become like MadWiFi. If we can find a way to support XR
-on ath5k without touching mac80211 then we can talk about it but right
-now we don't even know how to make it work.
+> > The logic is just:
+> > 
+> > 	if (idle) {
+> > 		issue "radio disable" command
+> > 	} else {
+> > 		issue "radio enable" command
+> > 		set channel
+> > 		set tx power
+> > 		set antenna config
+> > 	}
+> > 
+> > So if a channel change hapens while we are idle, that event won't get
+> > lost -- it'll just happen later.
+> 
+> Ok, yeah, that looks fine.
 
+OK, thanks.
+
+Since your patch is already in, I've replaced this patch by:
+
+
+>From 1af73ff8d1309b924f6f4accd61245b57374dd78 Mon Sep 17 00:00:00 2001
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+Date: Mon, 17 Aug 2009 23:59:40 +0200
+Subject: [PATCH 15/29] mwl8k: implement rfkill
+
+By checking IEEE80211_CONF_CHANGE_IDLE in mwl8k_config().
+
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 177d92f..65eefe8 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2854,6 +2854,12 @@ static int mwl8k_config_wt(struct work_struct *wt)
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	int rc = 0;
+ 
++	if (conf->flags & IEEE80211_CONF_IDLE) {
++		mwl8k_cmd_802_11_radio_disable(hw);
++		priv->current_channel = NULL;
++		goto mwl8k_config_exit;
++	}
++
+ 	if (mwl8k_cmd_802_11_radio_enable(hw)) {
+ 		rc = -EINVAL;
+ 		goto mwl8k_config_exit;
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.5.6.4
