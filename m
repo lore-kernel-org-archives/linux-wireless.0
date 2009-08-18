@@ -1,41 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:40363 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752352AbZHAUyp (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40175 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756165AbZHRDv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 16:54:45 -0400
-Date: Sat, 1 Aug 2009 21:54:45 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
-Message-ID: <20090801205445.GA23751@srcf.ucam.org>
-References: <1249152859-14769-1-git-send-email-mjg@redhat.com> <1249159133.3491.13.camel@localhost.localdomain> <20090801204534.GA23642@srcf.ucam.org> <1249159942.3491.21.camel@localhost.localdomain>
-MIME-Version: 1.0
+	Mon, 17 Aug 2009 23:51:58 -0400
+Date: Tue, 18 Aug 2009 05:52:00 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 07/29] mwl8k: remove MWL8K_WMM_* defines
+Message-ID: <20090818035200.GL18639@mail.wantstofly.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1249159942.3491.21.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 01, 2009 at 01:52:22PM -0700, Marcel Holtmann wrote:
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
 
-> actually if the key is clearly hardwired to WLAN, then it should not
-> even show up as input event at all. This is one of the mis-concepts of
-> the old RFKILL subsystem. No need to send an input event if the platform
-> driver is going to rfkill that device anyway.
-
-There's still a policy decision. Does it kill internal devices, or does 
-it kill all attached wlan devices?
-
-> Remember that in the end it is just a key and whatever the user does
-> with it is users policy. So in summary it is up to the platform driver
-> to emit the proper key. For some it might be still KEY_WLAN, for other
-> it might be KEY_RFKILL. Sounds fair?
-
-I agree on the technical side, but not the naming. KEY_WLAN is an 
-rfkill-related key, so introducing KEY_RFKILL is potentially confusing. 
-KEY_RFKILL_ALL isn't.
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 92b2fce..c9bb9b1 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -188,9 +188,7 @@ struct mwl8k_priv {
+ 
+ 	bool radio_on;
+ 	bool radio_short_preamble;
+-
+-	/* WMM MODE 1 for enabled; 0 for disabled */
+-	bool wmm_mode;
++	bool wmm_enabled;
+ 
+ 	/* Set if PHY config is in progress */
+ 	bool inconfig;
+@@ -276,10 +274,6 @@ static const struct ieee80211_rate mwl8k_rates[] = {
+ 	{ .bitrate = 540, .hw_value = 108, },
+ };
+ 
+-/* WMM */
+-#define MWL8K_WMM_ENABLE		1
+-#define MWL8K_WMM_DISABLE		0
+-
+ /* Slot time */
+ 
+ /* Short Slot: 9us slot time */
+@@ -2028,13 +2022,13 @@ static int mwl8k_set_wmm(struct ieee80211_hw *hw, bool enable)
+ 
+ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_WMM_MODE);
+ 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
+-	cmd->action = enable ? cpu_to_le16(MWL8K_CMD_SET) : 0;
++	cmd->action = cpu_to_le16(!!enable);
+ 
+ 	rc = mwl8k_post_cmd(hw, &cmd->header);
+ 	kfree(cmd);
+ 
+ 	if (!rc)
+-		priv->wmm_mode = enable;
++		priv->wmm_enabled = enable;
+ 
+ 	return rc;
+ }
+@@ -2762,7 +2756,7 @@ static int mwl8k_start_wt(struct work_struct *wt)
+ 	}
+ 
+ 	/* Disable WMM. WMM gets enabled when stack sends WMM parms */
+-	if (mwl8k_set_wmm(hw, MWL8K_WMM_DISABLE)) {
++	if (mwl8k_set_wmm(hw, 0)) {
+ 		rc = -EIO;
+ 		goto mwl8k_start_exit;
+ 	}
+@@ -3260,10 +3254,11 @@ static int mwl8k_conf_tx_wt(struct work_struct *wt)
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	int rc = 0;
+ 
+-	if (priv->wmm_mode == MWL8K_WMM_DISABLE)
+-		if (mwl8k_set_wmm(hw, MWL8K_WMM_ENABLE)) {
++	if (!priv->wmm_enabled) {
++		if (mwl8k_set_wmm(hw, 1)) {
+ 			rc = -EINVAL;
+ 			goto mwl8k_conf_tx_exit;
++		}
+ 	}
+ 
+ 	if (mwl8k_set_edca_params(hw, GET_TXQ(queue), params->cw_min,
+@@ -3433,7 +3428,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	priv->hostcmd_wait = NULL;
+ 	priv->tx_wait = NULL;
+ 	priv->inconfig = false;
+-	priv->wmm_mode = false;
++	priv->wmm_enabled = false;
+ 	priv->pending_tx_pkts = 0;
+ 	strncpy(priv->name, MWL8K_NAME, sizeof(priv->name));
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.5.6.4
