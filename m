@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:44675 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933464AbZHWOkO convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38938 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697AbZHRI0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 10:40:14 -0400
-Received: by bwz19 with SMTP id 19so1099995bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 07:40:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090823001218.GE6762@hash.localnet>
-References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
-	 <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
-	 <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
-	 <20090822124709.GA6762@hash.localnet>
-	 <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
-	 <20090822134044.GC6762@hash.localnet>
-	 <b637ec0b0908221229k5a738f8dgc0aa9e58337c743e@mail.gmail.com>
-	 <20090823001218.GE6762@hash.localnet>
-Date: Sun, 23 Aug 2009 16:40:15 +0200
-Message-ID: <b637ec0b0908230740j284734f7t7ea0536c1fee406f@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-From: Fabio Comolli <fabio.comolli@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 18 Aug 2009 04:26:35 -0400
+Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090818082537.GK18639@mail.wantstofly.org>
+References: <20090818035220.GN18639@mail.wantstofly.org>
+	 <1250580509.30538.2.camel@johannes.local>
+	 <20090818082537.GK18639@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jR6uJCAhyltAZC6cSJWk"
+Date: Tue, 18 Aug 2009 10:26:33 +0200
+Message-Id: <1250583993.30538.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
 
-On Sun, Aug 23, 2009 at 2:12 AM, Bob Copeland<me@bobcopeland.com> wrote:
-> On Sat, Aug 22, 2009 at 09:29:39PM +0200, Fabio Comolli wrote:
->> Hi Bob.
->> Unfortunately the patch doesn't apply at all with compat-wireless,
->> there's no "flush_workqueue" before "local->suspended" there....
->
-> Ah yes, it got moved into ieee80211_stop_device().  Can you put
-> local->suspended and the barrier() ahead of that?
->
+--=-jR6uJCAhyltAZC6cSJWk
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Well, this crashed my system. Backtrace copied by hand:
+On Tue, 2009-08-18 at 10:25 +0200, Lennert Buytenhek wrote:
 
-warning at net/wireless/core.c    wdev_cleanup_work [cfg80211]
+> The logic is just:
+>=20
+> 	if (idle) {
+> 		issue "radio disable" command
+> 	} else {
+> 		issue "radio enable" command
+> 		set channel
+> 		set tx power
+> 		set antenna config
+> 	}
+>=20
+> So if a channel change hapens while we are idle, that event won't get
+> lost -- it'll just happen later.
 
-warn_slowpat_common
-warn_slowpath_null
-wdev_cleanup_work [cfg80211]
-worker_thread
-wdev_cleanup_work [cfg80211]
-autoresolve_wake_function
-worker_thread
-kthread
-kthread
-kernel_thread_helper
+Ok, yeah, that looks fine.
 
+johannes
 
-> Thanks!
+--=-jR6uJCAhyltAZC6cSJWk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Regards,
-Fabio
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJKimW1AAoJEODzc/N7+QmaZEsP+wRICSau3p8vGY+++PtiKMBU
+Ec962b+hS8fHoXN8sUJ37Wywb5VEJ8RDDAIxYFkaCAxBLtwIm8znPpgGV2OXVuKb
+TtIxw98C6zP/FEJV70p2fXAqooAw/ne+wqV+bP6AueKSSyZywAvedAdQNRuhvghJ
+9tMLZY0pt7ciBCX8Zd4LNqA+FfkpVulMc3847FnY3mkjwfybclhF31K8SQPJhYhG
+wxDpY4ttWI9RE+CjcLgyLtCpn5Uou3zJaQhnUbPLgAvGcu5NzbydBZY6q0iR+jek
+NIlsXyp2zfzsp26/A6NyB/qsrODrjKtavH3v0H4ZI7lo880k1W/MclUkROKLdCYd
++Phubc9QeEss3ggVowUsM0/WflRai4vrIrefUcO7GnWwlCs1sLi/k1Vi3tQ72vXv
+DH+YPCDhux7YuAPyae/FpXC/KX1Mtfp284FcrkQ44r2H088O167mhc6NTlVkiEGQ
+vO/TnmqrIHrvQD69purlSXsSf6rXSENEhCbwtCkW7oCWMlko+V1JtxQqs8qtuqon
+zUp/SKX9DfSYvgYCSoad3OQ0V/Qhg7I6KolbE5SkCMXEWp0rpywORJTZ8jm0Juck
+v0PCmxLeB2QyBs5jDGG90c+/JaNTjsm4A0aqaIPpcxOullOROpM6NlubzuxKvO5l
+9fvY+5XmlQ+yMgMOvzYH
+=BUgF
+-----END PGP SIGNATURE-----
 
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
->
+--=-jR6uJCAhyltAZC6cSJWk--
+
