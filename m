@@ -1,125 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58247 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209AbZHJO2Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 10:28:25 -0400
-Subject: Re: [PATCH 1/2] mac802154: add a software MAC 802.15.4
- implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Sergey Lapin <slapin@ossfans.org>
-In-Reply-To: <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com>
-References: <1249913800-10176-1-git-send-email-dbaryshkov@gmail.com>
-	 <1249913800-10176-2-git-send-email-dbaryshkov@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-KsYkkV96P1gPmlwoM3O1"
-Date: Mon, 10 Aug 2009 16:27:46 +0200
-Message-Id: <1249914466.32614.13.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:46112 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751003AbZHRFVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 Aug 2009 01:21:35 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 22:21:37 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19082.14960.701320.200218@gargle.gargle.HOWL>
+Date: Tue, 18 Aug 2009 10:51:52 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix TX poll cancelling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In ath9k_stop(), tx_complete_work was being cancelled twice.
+This patch fixes it. Also, locking sc->mutex should be done
+at the beginning.
 
---=-KsYkkV96P1gPmlwoM3O1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-On Mon, 2009-08-10 at 18:16 +0400, Dmitry Eremin-Solenikov wrote:
-> Some of available devices are just dump radios implementing IEEE 802.15.4
-
-dump -> dumb
-
-> Note this implementaion is neither certified, nor feature complete!
-
-implementation
-
-> + * @tx: Handler that 802.15.4 module calls for each transmitted frame.
-> + *      skb cntains the buffer starting from the IEEE 802.15.4 header.
-> + *      The low-level driver should send the frame based on available
-> + *      configuration.
-> + *      This function should return zero or negative errno.
-
-That return value is strange.
-
-> +++ b/net/Makefile
-> @@ -61,6 +61,7 @@ ifneq ($(CONFIG_DCB),)
->  obj-y				+=3D dcb/
->  endif
->  obj-y				+=3D ieee802154/
-> +obj-y				+=3D mac802154/
-
-I think you should use obj-$(CONFIG_MAC802154) as there's no need to
-recurse into the dir unless that's selected.
-
-But does it make sense to actually have this little code as a separate
-dir/module?
-
-> +	  Note: this implementation is neither certified, nor feature
-> +	  complete! We do not garantee that it is compatible w/ other
-> +	  implementations, etc.
-
-guarantee
-
-But generally, you don't have to write that anyway due to the license.
-
-> +	  If you plan to use HardMAC IEEE 802.15.4 devices, you can
-> +          say N here. Alternatievly you can say M to compile it as
-> +	  module.
-
-white space gone wrong
-
-> +	struct net_device *netdev; /* mwpanX device */
-> +	int open_count;
-> +	/* As in mac80211 slaves list is modified:
-> +	 * 1) under the RTNL
-> +	 * 2) protected by slaves_mtx;
-> +	 * 3) in an RCU manner
-> +	 *
-> +	 * So atomic readers can use any of this protection methods
-> +	 */
-> +	struct list_head	slaves;
-
-heh.
-
-> +static int ieee802154_master_open(struct net_device *dev)
-> +{
-
-We've had no end to trouble with the master netdev, I suggest you look
-into the current mac80211 code and see if you can get rid of it.
-
-> +struct ieee802154_dev *ieee802154_alloc_device(size_t priv_size,
-> +		struct ieee802154_ops *ops)
-> +{
-
-> +	if (!try_module_get(ops->owner)) {
-
-That isn't necessary since the module is just calling your function. In
-fact, doing this removes the ability to rmmod any module using this
-which is bogus.
-
-johannes
-
---=-KsYkkV96P1gPmlwoM3O1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKgC5fAAoJEODzc/N7+QmaSWMP/3s6Mpb1g0XXrIGJPUJ4acNA
-sdT8jOQGGTyVQOnb2qm9sDJ/PCEtXFrEuXAWzF4Xw/q4JW18B4rFhc0jOD109QGI
-ahe62VwJGXzErcWnomm4QE1tXilJ3rpgT8K+H66rP5p7/mo60Rg1JwPsUoGYMBoX
-g0tu9avvKt9f0ACKu0GmrvMiW5yOeAwdP3MzhoeSRAeflbXZ2Zc9F55AX9DxxwDR
-a1D2+42ZG0eI7/tDIU/8Df6pswU5n2CezcUpxUxq+hKcXb+MsRO6wtum2cd3cNm2
-h0e7JOpBCEgM+2rE6N2uaKzMbjjeg6EhITTvvFok5ASkOrjzbJlrpYYOFrB26AgZ
-BeLt3u06aLFvXT+6EqpKkOpGjbFwJwowvu63gw5iOBQWcz2HysBpdcjAy8BmVrQI
-8WUFhDB4A18X6fbedlfCuhyevVhbq9PmU3kCcPFW2pAAlQLwcSvygs9DSLW4k5Gv
-ZQuvisTAHRVD6WyqNzO8Ma7DL6k/31rGLHFRFl1zocIQFvEqiFFpoS4GOt5JSWC3
-FMBfMf+DZYFIrH+rY16fH7QvSCTUbbCJ3gRUwp5J/KhTLawtr520vhVE5bWPfhaV
-k+ALH5ygGhOEgQ1JCxuSMNbLVD9Lbj0BXS2rVAWHxx5u0zain80m8EBgsPGyaeWZ
-x8dWHyNo2P7fGYqaesHR
-=gpG+
------END PGP SIGNATURE-----
-
---=-KsYkkV96P1gPmlwoM3O1--
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e09b9a..c454d19 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2105,6 +2105,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 
++	mutex_lock(&sc->mutex);
++
+ 	aphy->state = ATH_WIPHY_INACTIVE;
+ 
+ 	cancel_delayed_work_sync(&sc->ath_led_blink_work);
+@@ -2117,13 +2119,10 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID) {
+ 		DPRINTF(sc, ATH_DBG_ANY, "Device not present\n");
++		mutex_unlock(&sc->mutex);
+ 		return;
+ 	}
+ 
+-	mutex_lock(&sc->mutex);
+-
+-	cancel_delayed_work_sync(&sc->tx_complete_work);
+-
+ 	if (ath9k_wiphy_started(sc)) {
+ 		mutex_unlock(&sc->mutex);
+ 		return; /* another wiphy still in use */
+-- 
+1.6.4
 
