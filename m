@@ -1,176 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:33270 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752947AbZH0VAh (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40189 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755510AbZHRDxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:37 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 08/13] wl1271: Configure rate policies based on AP rates
-Date: Fri, 28 Aug 2009 00:00:02 +0300
-Message-Id: <1251406807-31495-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 17 Aug 2009 23:53:13 -0400
+Date: Tue, 18 Aug 2009 05:53:14 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 14/29] mwl8k: don't hardcode the number of transmit queues
+Message-ID: <20090818035314.GS18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Use MWL8K_TX_QUEUES instead of a hardcoded "4" in a couple of places.
 
-Configure the rate policies to the firmware based on the rates given by
-the AP.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |    3 ++
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    4 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   31 +++++++++++++++++++++++++++++
- 5 files changed, 38 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mwl8k.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 957da8c..671dc5a 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -369,6 +369,9 @@ struct wl1271 {
- 	/* Our association ID */
- 	u16 aid;
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 86b6b5d..f482922 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1080,17 +1080,17 @@ struct mwl8k_txq_info {
+ };
  
-+	/* The current band */
-+	enum ieee80211_band band;
-+
- 	/* Default key (for WEP) */
- 	u32 default_key;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index f622a40..2ae1081 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -703,7 +703,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
- 	return 0;
- }
- 
--int wl1271_acx_rate_policies(struct wl1271 *wl)
-+int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates)
+ static int mwl8k_scan_tx_ring(struct mwl8k_priv *priv,
+-				struct mwl8k_txq_info txinfo[],
+-				u32 num_queues)
++				struct mwl8k_txq_info *txinfo)
  {
- 	struct acx_rate_policy *acx;
- 	int ret = 0;
-@@ -719,7 +719,7 @@ int wl1271_acx_rate_policies(struct wl1271 *wl)
+ 	int count, desc, status;
+ 	struct mwl8k_tx_queue *txq;
+ 	struct mwl8k_tx_desc *tx_desc;
+ 	int ndescs = 0;
  
- 	/* configure one default (one-size-fits-all) rate class */
- 	acx->rate_class_cnt = 1;
--	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_ALL;
-+	acx->rate_class[0].enabled_rates = enabled_rates;
- 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].aflags = 0;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 9068daa..55850eb 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1209,7 +1209,7 @@ int wl1271_acx_set_preamble(struct wl1271 *wl, enum acx_preamble_type preamble);
- int wl1271_acx_cts_protect(struct wl1271 *wl,
- 			    enum acx_ctsprotect_type ctsprotect);
- int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats);
--int wl1271_acx_rate_policies(struct wl1271 *wl);
-+int wl1271_acx_rate_policies(struct wl1271 *wl, u32 enabled_rates);
- int wl1271_acx_ac_cfg(struct wl1271 *wl);
- int wl1271_acx_tid_cfg(struct wl1271 *wl);
- int wl1271_acx_frag_threshold(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 490df21..eb6b91a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -369,7 +369,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Configure TX rate classes */
--	ret = wl1271_acx_rate_policies(wl);
-+	ret = wl1271_acx_rate_policies(wl, ACX_RATE_MASK_ALL);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 1a5e575..0f5958d 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -583,6 +583,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->ssid_len = 0;
- 	wl->listen_int = 1;
- 	wl->bss_type = MAX_BSS_TYPE;
-+	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	wl->rx_counter = 0;
- 	wl->elp = false;
-@@ -728,6 +729,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	mutex_lock(&wl->mutex);
- 
-+	wl->band = conf->channel->band;
+-	memset(txinfo, 0, num_queues * sizeof(struct mwl8k_txq_info));
++	memset(txinfo, 0, MWL8K_TX_QUEUES * sizeof(struct mwl8k_txq_info));
 +
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
- 		goto out;
-@@ -979,6 +982,22 @@ out:
- 	return ret;
- }
+ 	spin_lock_bh(&priv->tx_lock);
+-	for (count = 0; count < num_queues; count++) {
++	for (count = 0; count < MWL8K_TX_QUEUES; count++) {
+ 		txq = priv->txq + count;
+ 		txinfo[count].len = txq->tx_stats.len;
+ 		txinfo[count].head = txq->tx_head;
+@@ -1135,7 +1135,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw, u32 delay_ms)
+ 	spin_unlock_bh(&priv->tx_lock);
  
-+static u32 wl1271_enabled_rates_get(struct wl1271 *wl, u64 basic_rate_set)
-+{
-+	struct ieee80211_supported_band *band;
-+	u32 enabled_rates = 0;
-+	int bit;
-+
-+	band = wl->hw->wiphy->bands[wl->band];
-+	for (bit = 0; bit < band->n_bitrates; bit++) {
-+		if (basic_rate_set & 0x1)
-+			enabled_rates |= band->bitrates[bit].hw_value;
-+		basic_rate_set >>= 1;
-+	}
-+
-+	return enabled_rates;
-+}
-+
- static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       struct ieee80211_bss_conf *bss_conf,
-@@ -1017,6 +1036,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			}
- 		}
- 	}
-+
- 	if (changed & BSS_CHANGED_ERP_SLOT) {
- 		if (bss_conf->use_short_slot)
- 			ret = wl1271_acx_slot(wl, SLOT_TIME_SHORT);
-@@ -1046,6 +1066,16 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
+ 	if (count) {
+-		struct mwl8k_txq_info txinfo[4];
++		struct mwl8k_txq_info txinfo[MWL8K_TX_QUEUES];
+ 		int index;
+ 		int newcount;
  
-+	if (changed & BSS_CHANGED_BASIC_RATES) {
-+		u32 enabled_rates = wl1271_enabled_rates_get(
-+			wl, bss_conf->basic_rates);
-+		ret = wl1271_acx_rate_policies(wl, enabled_rates);
-+		if (ret < 0) {
-+			wl1271_warning("Set rate policies failed %d", ret);
-+			goto out_sleep;
-+		}
-+	}
-+
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
+@@ -1152,8 +1152,8 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw, u32 delay_ms)
+ 		printk(KERN_ERR "%s(%u) TIMEDOUT:%ums Pend:%u-->%u\n",
+ 		       __func__, __LINE__, delay_ms, count, newcount);
  
-@@ -1240,6 +1270,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->psm_requested = false;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
-+	wl->band = IEEE80211_BAND_2GHZ;
- 
- 	/* We use the default power on sleep time until we know which chip
- 	 * we're using */
+-		mwl8k_scan_tx_ring(priv, txinfo, 4);
+-		for (index = 0; index < 4; index++)
++		mwl8k_scan_tx_ring(priv, txinfo);
++		for (index = 0; index < MWL8K_TX_QUEUES; index++)
+ 			printk(KERN_ERR
+ 				"TXQ:%u L:%u H:%u T:%u FW:%u DRV:%u U:%u\n",
+ 					index,
 -- 
-1.5.6.5
-
+1.5.6.4
