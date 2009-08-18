@@ -1,59 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:42823 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbZHaUlk (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40171 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753786AbZHRDvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 16:41:40 -0400
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
- Implement 	rfkill support)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1251749600.5165.1.camel@localhost.localdomain>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
-	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-	 <1251357267.20531.4.camel@johannes.local>
-	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-	 <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
-	 <43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
-	 <3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
-	 <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
-	 <1251749600.5165.1.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 31 Aug 2009 13:40:51 -0700
-Message-Id: <1251751251.1266.16.camel@localhost.localdomain>
+	Mon, 17 Aug 2009 23:51:43 -0400
+Date: Tue, 18 Aug 2009 05:51:44 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 05/29] mwl8k: remove MWL8K_RADIO_* defines
+Message-ID: <20090818035144.GJ18639@mail.wantstofly.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Instead of passing a flag bitmask to mwl8k_cmd_802_11_radio_control,
+pass the 'enable' and 'force' arguments as separate parameters, and
+introduce wrappers for the common cases of enabling and disabling
+without forcing.
 
-> > OK not so bad except for:
-> > 
-> > > kernel/net/wimax/wimax.ko
-> > 
-> > That's touching another subsystem but we could technically merge wimax
-> > into compat-wireless if Inaky thinks that's a good idea. the point
-> > here is to unify anything that uses rfkill for backport usage.
-> 
-> Oh boy, can of worms
-> 
-> I have my own compat-wimax already, which already handles things for
-> backwards compat (many #ifdef hacks to simplify life) and which is
-> heavily used internally. 
-> 
-> I don't really know how much worth it might be and I know I don't have
-> resources to support both.
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   52 +++++++++++++++++++++--------------------
+ 1 files changed, 27 insertions(+), 25 deletions(-)
 
-for the wireless-compat tree, I would just remove the RFKILL support for
-WiMAX. It is really not worth to support it.
-
-Regards
-
-Marcel
-
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index a3b0e19..f57d28c 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -186,9 +186,10 @@ struct mwl8k_priv {
+ 	struct ieee80211_channel channels[14];
+ 	struct ieee80211_rate rates[12];
+ 
++	bool radio_on;
++
+ 	/* RF preamble: Short, Long or Auto */
+ 	u8	radio_preamble;
+-	u8	radio_state;
+ 
+ 	/* WMM MODE 1 for enabled; 0 for disabled */
+ 	bool wmm_mode;
+@@ -278,9 +279,6 @@ static const struct ieee80211_rate mwl8k_rates[] = {
+ };
+ 
+ /* Radio settings */
+-#define MWL8K_RADIO_FORCE		0x2
+-#define MWL8K_RADIO_ENABLE		0x1
+-#define MWL8K_RADIO_DISABLE		0x0
+ #define MWL8K_RADIO_AUTO_PREAMBLE	0x0005
+ #define MWL8K_RADIO_SHORT_PREAMBLE	0x0003
+ #define MWL8K_RADIO_LONG_PREAMBLE	0x0001
+@@ -1195,7 +1193,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw, u32 delay_ms)
+ 	count = mwl8k_txq_busy(priv);
+ 	if (count) {
+ 		priv->tx_wait = &cmd_wait;
+-		if (priv->radio_state)
++		if (priv->radio_on)
+ 			mwl8k_tx_start(priv);
+ 	}
+ 	spin_unlock_bh(&priv->tx_lock);
+@@ -1318,7 +1316,7 @@ static void mwl8k_txq_reclaim(struct ieee80211_hw *hw, int index, int force)
+ 
+ 		ieee80211_tx_status_irqsafe(hw, skb);
+ 
+-		wake = !priv->inconfig && priv->radio_state;
++		wake = !priv->inconfig && priv->radio_on;
+ 	}
+ 
+ 	if (wake)
+@@ -1726,18 +1724,16 @@ struct mwl8k_cmd_802_11_radio_control {
+ 	__le16 radio_on;
+ } __attribute__((packed));
+ 
+-static int mwl8k_cmd_802_11_radio_control(struct ieee80211_hw *hw, int enable)
++static int
++mwl8k_cmd_802_11_radio_control(struct ieee80211_hw *hw, bool enable, bool force)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+ 	struct mwl8k_cmd_802_11_radio_control *cmd;
+ 	int rc;
+ 
+-	if (((enable & MWL8K_RADIO_ENABLE) == priv->radio_state) &&
+-	    !(enable & MWL8K_RADIO_FORCE))
++	if (enable == priv->radio_on && !force)
+ 		return 0;
+ 
+-	enable &= MWL8K_RADIO_ENABLE;
+-
+ 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+ 	if (cmd == NULL)
+ 		return -ENOMEM;
+@@ -1752,11 +1748,21 @@ static int mwl8k_cmd_802_11_radio_control(struct ieee80211_hw *hw, int enable)
+ 	kfree(cmd);
+ 
+ 	if (!rc)
+-		priv->radio_state = enable;
++		priv->radio_on = enable;
+ 
+ 	return rc;
+ }
+ 
++static int mwl8k_cmd_802_11_radio_disable(struct ieee80211_hw *hw)
++{
++	return mwl8k_cmd_802_11_radio_control(hw, 0, 0);
++}
++
++static int mwl8k_cmd_802_11_radio_enable(struct ieee80211_hw *hw)
++{
++	return mwl8k_cmd_802_11_radio_control(hw, 1, 0);
++}
++
+ static int
+ mwl8k_set_radio_preamble(struct ieee80211_hw *hw, bool short_preamble)
+ {
+@@ -1770,8 +1776,7 @@ mwl8k_set_radio_preamble(struct ieee80211_hw *hw, bool short_preamble)
+ 		MWL8K_RADIO_SHORT_PREAMBLE :
+ 		MWL8K_RADIO_LONG_PREAMBLE);
+ 
+-	return mwl8k_cmd_802_11_radio_control(hw,
+-			MWL8K_RADIO_ENABLE | MWL8K_RADIO_FORCE);
++	return mwl8k_cmd_802_11_radio_control(hw, 1, 1);
+ }
+ 
+ /*
+@@ -2483,7 +2488,7 @@ static irqreturn_t mwl8k_interrupt(int irq, void *dev_id)
+ 
+ 	if (status & MWL8K_A2H_INT_QUEUE_EMPTY) {
+ 		if (!priv->inconfig &&
+-			priv->radio_state &&
++			priv->radio_on &&
+ 			mwl8k_txq_busy(priv))
+ 				mwl8k_tx_start(priv);
+ 	}
+@@ -2661,7 +2666,7 @@ static void mwl8k_config_thread(struct work_struct *wt)
+ 
+ 	spin_lock_irq(&priv->tx_lock);
+ 	priv->inconfig = false;
+-	if (priv->pending_tx_pkts && priv->radio_state)
++	if (priv->pending_tx_pkts && priv->radio_on)
+ 		mwl8k_tx_start(priv);
+ 	spin_unlock_irq(&priv->tx_lock);
+ 	ieee80211_wake_queues(hw);
+@@ -2745,7 +2750,7 @@ static int mwl8k_start_wt(struct work_struct *wt)
+ 	}
+ 
+ 	/* Turn on radio */
+-	if (mwl8k_cmd_802_11_radio_control(hw, MWL8K_RADIO_ENABLE)) {
++	if (mwl8k_cmd_802_11_radio_enable(hw)) {
+ 		rc = -EIO;
+ 		goto mwl8k_start_exit;
+ 	}
+@@ -2839,11 +2844,8 @@ static int mwl8k_stop_wt(struct work_struct *wt)
+ {
+ 	struct mwl8k_stop_worker *worker = (struct mwl8k_stop_worker *)wt;
+ 	struct ieee80211_hw *hw = worker->header.hw;
+-	int rc;
+-
+-	rc = mwl8k_cmd_802_11_radio_control(hw, MWL8K_RADIO_DISABLE);
+ 
+-	return rc;
++	return mwl8k_cmd_802_11_radio_disable(hw);
+ }
+ 
+ static void mwl8k_stop(struct ieee80211_hw *hw)
+@@ -2959,13 +2961,13 @@ static int mwl8k_config_wt(struct work_struct *wt)
+ 	int rc = 0;
+ 
+ 	if (!conf->radio_enabled) {
+-		mwl8k_cmd_802_11_radio_control(hw, MWL8K_RADIO_DISABLE);
++		mwl8k_cmd_802_11_radio_disable(hw);
+ 		priv->current_channel = NULL;
+ 		rc = 0;
+ 		goto mwl8k_config_exit;
+ 	}
+ 
+-	if (mwl8k_cmd_802_11_radio_control(hw, MWL8K_RADIO_ENABLE)) {
++	if (mwl8k_cmd_802_11_radio_enable(hw)) {
+ 		rc = -EINVAL;
+ 		goto mwl8k_config_exit;
+ 	}
+@@ -3490,7 +3492,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 
+ 	/* Set default radio state and preamble */
+ 	priv->radio_preamble = MWL8K_RADIO_DEFAULT_PREAMBLE;
+-	priv->radio_state = MWL8K_RADIO_DISABLE;
++	priv->radio_on = 0;
+ 
+ 	/* Finalize join worker */
+ 	INIT_WORK(&priv->finalize_join_worker, mwl8k_finalize_join_worker);
+@@ -3571,7 +3573,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Turn radio off */
+-	rc = mwl8k_cmd_802_11_radio_control(hw, MWL8K_RADIO_DISABLE);
++	rc = mwl8k_cmd_802_11_radio_disable(hw);
+ 	if (rc) {
+ 		printk(KERN_ERR "%s: Cannot disable\n", priv->name);
+ 		goto err_stop_firmware;
+-- 
+1.5.6.4
