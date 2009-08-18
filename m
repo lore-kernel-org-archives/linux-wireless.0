@@ -1,217 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:41058 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750799AbZHJXzb (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:45772 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757214AbZHRDza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 19:55:31 -0400
-Message-ID: <4A80B363.3090809@redfish-solutions.com>
-Date: Mon, 10 Aug 2009 16:55:15 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	Jon Loeliger <jdl@bigfootnetworks.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] CRDA and cross-compilation
-References: <4A7A8F7E.6020503@redfish-solutions.com> <1249576886.14919.16.camel@mj> 	<43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com> 	<1249580707.14919.29.camel@mj> <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com> 	<4A7BD15E.1030604@redfish-solutions.com> <43e72e890908070905s447a2fc0j2dc086048194db34@mail.gmail.com> 	<4A7CC24D.1000104@redfish-solutions.com> <1249698462.25983.7.camel@mj> 	<4A809B8D.5000309@redfish-solutions.com> <43e72e890908101530h3b024c83t7e73817ed6e28618@mail.gmail.com>
-In-Reply-To: <43e72e890908101530h3b024c83t7e73817ed6e28618@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 17 Aug 2009 23:55:30 -0400
+Date: Tue, 18 Aug 2009 05:55:31 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 27/29] mwl8k: remove mwl8k_queue_work()
+Message-ID: <20090818035531.GF18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Mon, Aug 10, 2009 at 3:13 PM, Philip A.
-> Prindeville<philipp_subx@redfish-solutions.com> wrote:
->> Pavel Roskin wrote:
->>> On Fri, 2009-08-07 at 17:09 -0700, Philip A. Prindeville wrote:
->>>> Luis R. Rodriguez wrote:
->>>>> Please send white space changes first in one patch, ie, that do not
->>>>> change anything other than that. Then send the other stuff.
->>>>>
->>>>>   Luis
->>>> Here it is.
->>> ...
->>>> -else
->>>> + else
->>> ...
->>>> +install-rb: wireless-regdb/regulatory.bin
->>> If you don't understand what you were asked to do, I'll appreciate if
->>> you stop wasting everybody's time.
->>>
->>> Nobody is going to extract useful bits from the patches you send,
->>> especially if you don't provide an adequate description of the changes.
->>>
->>> I was able to cross-compile CDRA for MIPS without any changes other than
->>> those that have already been applied.
->> Since we compile a variety of images that are both Linux and i586 based as are the target and host, detecting instances amongst the 180+ packages contained in our distribution where the build used host parameters instead of target parameters can be painful and tedious.
->>
->> Sometimes it's just best to isolate such code paths with a safe, obvious gating variable.  That's what I've tried to do here.
->>
->> We don't just build images, we also make the entire SVN tree available to others to build in their environments as well (Fedora, Centos, Gentoo, Debian, x86, PPC, x86_64, etc).  We can't possibly test for every scenario our users will encounter, so we make things as safe as we know how.
->>
->> Yes, I'm sure Pavel *was* able to build for his MIPS target in his environment.  That's a bet I can't make for all of our users, however, without these changes.
->>
->> I've split our changes into two functional groups:
->>
->> * allowing a cross-compilation without contamination by the host's own state via pkg-config bleeding into it.
->>
->> * allowing regulatory.bin to be installed via an external Makefile without having to extract internal values from crda/Makefile (i.e. REG_BIN and REG_GIT).
->>
->> These patches assume that Pavel's own "noverify" patch has already been applied.
->>
->> Changes:
->>
->> 1. Remove trailing slashes from directory variables: they're redundant and cause duplicates if they are appended to a path that's already absolute.
->>
->> 2. Move invariant definitions to before any cross-compilation conditional sections for clarity (and to avoid having to duplicate them).
->>
->> 3. Bracket any host (native) compilation sections with conditional based on $(CROSS_COMPILE) being empty.
->>
->> 4. Add 'else' section for cross-compilation using openssl and libnl-1 (or libnl-2 if explicitly selected).
->>
->>
->> --- crda-1.1.0/Makefile 2009-08-10 13:37:36.000000000 -0700
->> +++ crda-1.1.0/Makefile.new     2009-08-10 13:37:11.000000000 -0700
->> @@ -3,10 +3,10 @@
->>  REG_BIN?=/usr/lib/crda/regulatory.bin
->>  REG_GIT?=git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
->>
->> -PREFIX ?= /usr/
->> -MANDIR ?= $(PREFIX)/share/man/
->> +PREFIX ?= /usr
->> +MANDIR ?= $(PREFIX)/share/man
->>
->> -SBINDIR ?= /sbin/
->> +SBINDIR ?= /sbin
->>
->>  # Use a custom CRDA_UDEV_LEVEL when callling make install to
->>  # change your desired level for the udev regulatory.rules
->> @@ -14,7 +14,7 @@
->>  UDEV_LEVEL=$(CRDA_UDEV_LEVEL)-
->>  # You can customize this if your distributions uses
->>  # a different location.
->> -UDEV_RULE_DIR?=/lib/udev/rules.d/
->> +UDEV_RULE_DIR?=/lib/udev/rules.d
->>
->>  # If your distribution requires a custom pubkeys dir
->>  # you must update this variable to reflect where the
->> @@ -22,48 +22,76 @@
->>  # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
->>  PUBKEY_DIR?=pubkeys
->>
->> +MKDIR ?= mkdir -p
->> +INSTALL ?= install
->> +
->>  CFLAGS += -Wall -g
->>
->>  all: all_noverify verify
->>
->>  all_noverify: crda intersect regdbdump
->>
->> -ifeq ($(USE_OPENSSL),1)
->> +ifeq ($(CROSS_COMPILE),)
->> +
->> + ifeq ($(USE_OPENSSL),1)
->>  CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
->>  LDLIBS += `pkg-config --libs openssl`
->>
->>  reglib.o: keys-ssl.c
->>
->> -else
->> + else
->>  CFLAGS += -DUSE_GCRYPT
->>  LDLIBS += -lgcrypt
->>
->>  reglib.o: keys-gcrypt.c
->>
->> -endif
->> -MKDIR ?= mkdir -p
->> -INSTALL ?= install
->> + endif
->>
->>  NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
->>  NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
->>
->> -ifeq ($(NL1FOUND),Y)
->> + ifeq ($(NL1FOUND),Y)
->>  NLLIBNAME = libnl-1
->> -endif
->> + endif
->>
->> -ifeq ($(NL2FOUND),Y)
->> + ifeq ($(NL2FOUND),Y)
->>  CFLAGS += -DCONFIG_LIBNL20
->>  NLLIBS += -lnl-genl
->>  NLLIBNAME = libnl-2.0
->> -endif
->> + endif
->>
->> -ifeq ($(NLLIBNAME),)
->> + ifeq ($(NLLIBNAME),)
->>  $(error Cannot find development files for any supported version of libnl)
->> -endif
->> + endif
->>
->>  NLLIBS += `pkg-config --libs $(NLLIBNAME)`
->>  CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
->>
->> +else
->> +
->> + ifeq ($(USE_OPENSSL),1)
->> +CFLAGS += -DUSE_OPENSSL
->> +LDLIBS += -lssl
->> +
->> +reglib.o: keys-ssl.c
->> +
->> + else
->> +CFLAGS += -DUSE_GCRYPT
->> +LDLIBS += -lgcrypt
->> +
->> +reglib.o: keys-gcrypt.c
->> +
->> + endif
->> +
->> + ifeq ($(USE_LIBNL20),1)
->> +CFLAGS += -DCONFIG_LIBNL20
->> +NLLIBS = -lnl-genl -lnl-2.0
->> + else
->> +NLLIBS = -lnl
->> + endif
->> +
->> +endif
->> +
->>  ifeq ($(V),1)
->>  Q=
->>  NQ=@true
->>
->>
->> Add a couple of rules to (1) download (via GIT) John's working copy of regulatory.bin and (2) install it in the appropriate target destination.  This avoids us having to parse the Makefile for REG_BIN and REG_GIT from an enclosing (nesting) makefile, as is common in distros and buildroot environments in particular.
->>
->> --- crda-1.1.0/Makefile 2009-08-10 13:37:36.000000000 -0700
->> +++ crda-1.1.0/Makefile.new     2009-08-10 13:37:11.000000000 -0700
->> @@ -136,6 +164,14 @@
->>        $(NQ) '  INSTALL  regdbdump.8.gz'
->>        $(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
->>
->> +install-rb: wireless-regdb/regulatory.bin
->> +       $(NQ) '  INSTALL  regulatory.bin'
->> +       $(Q)$(INSTALL) -m 444 -D wireless-regdb/regulatory.bin $(DESTDIR)/$(REG_BIN)
->> +
->> +wireless-regdb/regulatory.bin:
->> +       @rm -rf wireless-regdb
->> +       git clone -q $(REG_GIT) wireless-regdb
->> +
->>  clean:
->>        $(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
->>        udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
-> 
-> This is a glory mess, please stop trying.
-> 
->   Luis
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   75 ------------------------------------------
+ 1 files changed, 0 insertions(+), 75 deletions(-)
 
-You're right: that comment was much more helpful...  does it apply to the first file or the second or both?
-
-And what in particular is a mess?
-
--Philip
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index dea1440..c8aa552 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2425,81 +2425,6 @@ static int mwl8k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	return rc;
+ }
+ 
+-struct mwl8k_work_struct {
+-	/* Initialized by mwl8k_queue_work().  */
+-	struct work_struct wt;
+-
+-	/* Required field passed in to mwl8k_queue_work().  */
+-	struct ieee80211_hw *hw;
+-
+-	/* Required field passed in to mwl8k_queue_work().  */
+-	int (*wfunc)(struct work_struct *w);
+-
+-	/* Initialized by mwl8k_queue_work().  */
+-	struct completion *cmd_wait;
+-
+-	/* Result code.  */
+-	int rc;
+-
+-	/*
+-	 * Whether to sleep for request completion.
+-	 */
+-	bool sleep;
+-};
+-
+-static void mwl8k_config_thread(struct work_struct *wt)
+-{
+-	struct mwl8k_work_struct *worker = (struct mwl8k_work_struct *)wt;
+-	struct ieee80211_hw *hw = worker->hw;
+-	int rc = 0;
+-
+-	rc = mwl8k_fw_lock(hw);
+-	if (!rc) {
+-		rc = worker->wfunc(wt);
+-		mwl8k_fw_unlock(hw);
+-	}
+-
+-	if (worker->sleep) {
+-		worker->rc = rc;
+-		complete(worker->cmd_wait);
+-	} else {
+-		kfree(wt);
+-	}
+-}
+-
+-static int mwl8k_queue_work(struct ieee80211_hw *hw,
+-				struct mwl8k_work_struct *worker,
+-				int (*wfunc)(struct work_struct *w))
+-{
+-	struct mwl8k_priv *priv = hw->priv;
+-	unsigned long timeout = 0;
+-	int rc = 0;
+-
+-	DECLARE_COMPLETION_ONSTACK(cmd_wait);
+-
+-	worker->hw = hw;
+-	worker->cmd_wait = &cmd_wait;
+-	worker->rc = 1;
+-	worker->wfunc = wfunc;
+-
+-	INIT_WORK(&worker->wt, mwl8k_config_thread);
+-	queue_work(priv->config_wq, &worker->wt);
+-
+-	if (worker->sleep) {
+-		timeout = wait_for_completion_timeout(&cmd_wait,
+-			msecs_to_jiffies(10000));
+-
+-		if (timeout)
+-			rc = worker->rc;
+-		else {
+-			cancel_work_sync(&worker->wt);
+-			rc = -ETIMEDOUT;
+-		}
+-	}
+-
+-	return rc;
+-}
+-
+ static int mwl8k_start(struct ieee80211_hw *hw)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+-- 
+1.5.6.4
