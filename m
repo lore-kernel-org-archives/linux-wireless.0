@@ -1,206 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([200.140.247.100]:55210 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004AbZHXSDk convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f196.google.com ([209.85.221.196]:38632 "EHLO
+	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314AbZHRWOG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 14:03:40 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-Date: Mon, 24 Aug 2009 15:03:37 -0300
-Cc: linux-wireless@vger.kernel.org,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>
-References: <200908220038.35564.herton@mandriva.com.br> <4A91F100.9040804@lwfinger.net>
-In-Reply-To: <4A91F100.9040804@lwfinger.net>
+	Tue, 18 Aug 2009 18:14:06 -0400
+Received: by qyk34 with SMTP id 34so2990710qyk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 15:14:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908241503.38020.herton@mandriva.com.br>
+Date: Tue, 18 Aug 2009 15:14:06 -0700
+Message-ID: <8f3763990908181514m439c9c30hd3151cf4b4525363@mail.gmail.com>
+Subject: bug? sme.c:610 __cfg80211_disconnected
+From: ASIC Felix <ic.felix@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=00032557f4ba4165e2047171d638
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Dom 23 Ago 2009, às 22:46:40, Larry Finger escreveu:
-> Herton Ronaldo Krzesinski wrote:
-> > This change implements rfkill support for RTL8187B and RTL8187L devices,
-> > using new cfg80211 rfkill API.
-> > 
-> > Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> > ---
-> 
-> I found a problem with this patch. When I issue an 'rfkill block 1'
-> command, I get the following circular locking warning:
+--00032557f4ba4165e2047171d638
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hmm, this is a issue that was already present before the rfkill patch, but
-seems with it, it became more likely to happen. Please try this patch:
+Hi,
 
-[PATCH] rtl8187: fix circular locking (rtl8187_stop/rtl8187_work)
+found three of these in dmesg, wireless-testing kernel master-2009-08-18
 
-Larry Finger reports following lockdep warning:
+wlan0: deauthenticating by local choice (reason=3)
+------------[ cut here ]------------
+WARNING: at net/wireless/sme.c:610 __cfg80211_disconnected+0x1bc/0x210
+[cfg80211]()
+Hardware name: 1875DLU
+deauth failed: -67
 
-[ INFO: possible circular locking dependency detected ]
-2.6.31-rc6-wl #201
--------------------------------------------------------
-rfkill/30578 is trying to acquire lock:
- (&(&priv->work)->work#2){+.+...}, at: [<ffffffff81051215>]
-__cancel_work_timer+0xd9/0x222
+Any ideas? Seems relatively recent, complete trace in attachment.
 
-but task is already holding lock:
- (&priv->conf_mutex#2){+.+.+.}, at: [<ffffffffa064a024>]
-rtl8187_stop+0x31/0x364 [rtl8187]
+Cheers,
+Felix
 
-which lock already depends on the new lock.
+--00032557f4ba4165e2047171d638
+Content-Type: text/plain; charset=US-ASCII; name="dmesg_sme.txt"
+Content-Disposition: attachment; filename="dmesg_sme.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_fyj6nyb30
 
-the existing dependency chain (in reverse order) is:
-
--> #1 (&priv->conf_mutex#2){+.+.+.}:
-       [<ffffffff81065957>] __lock_acquire+0x12d0/0x1614
-       [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
-       [<ffffffff8127c32f>] mutex_lock_nested+0x56/0x2a8
-       [<ffffffffa064a392>] rtl8187_work+0x3b/0xf2 [rtl8187]
-       [<ffffffff81050758>] worker_thread+0x1fa/0x30a
-       [<ffffffff81054ca5>] kthread+0x8f/0x97
-       [<ffffffff8100cb7a>] child_rip+0xa/0x20
-       [<ffffffffffffffff>] 0xffffffffffffffff
-
--> #0 (&(&priv->work)->work#2){+.+...}:
-       [<ffffffff8106568c>] __lock_acquire+0x1005/0x1614
-       [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
-       [<ffffffff8105124e>] __cancel_work_timer+0x112/0x222
-       [<ffffffff8105136b>] cancel_delayed_work_sync+0xd/0xf
-       [<ffffffffa064a33f>] rtl8187_stop+0x34c/0x364 [rtl8187]
-       [<ffffffffa0242866>] ieee80211_stop_device+0x29/0x61 [mac80211]
-       [<ffffffffa0239194>] ieee80211_stop+0x476/0x530 [mac80211]
-       [<ffffffff8120ce15>] dev_close+0x8a/0xac
-       [<ffffffffa01d9fa7>] cfg80211_rfkill_set_block+0x4a/0x7a [cfg80211]
-       [<ffffffffa01bf4f0>] rfkill_set_block+0x84/0xd9 [rfkill]
-       [<ffffffffa01bfc31>] rfkill_fop_write+0xda/0x124 [rfkill]
-       [<ffffffff810cf286>] vfs_write+0xae/0x14a
-       [<ffffffff810cf3e6>] sys_write+0x47/0x6e
-       [<ffffffff8100ba6b>] system_call_fastpath+0x16/0x1b
-       [<ffffffffffffffff>] 0xffffffffffffffff
-
-The problem here is that rtl8187_stop, while helding priv->conf_mutex,
-runs cancel_delayed_work_sync on an workqueue that runs rtl8187_work,
-which also takes priv->conf_mutex lock. Move cancel_delayed_work_sync
-out of rtl8187_stop priv->conf_mutex locking region.
-
-Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index b6e9fbd..2017ccc 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1018,9 +1018,10 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
- 		dev_kfree_skb_any(skb);
- 
- 	usb_kill_anchored_urbs(&priv->anchored);
-+	mutex_unlock(&priv->conf_mutex);
-+
- 	if (!priv->is_rtl8187b)
- 		cancel_delayed_work_sync(&priv->work);
--	mutex_unlock(&priv->conf_mutex);
- }
- 
- static int rtl8187_add_interface(struct ieee80211_hw *dev,
--- 
-1.6.4.1
-
-> 
-> 
-> =======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.31-rc6-wl #201
-> -------------------------------------------------------
-> rfkill/30578 is trying to acquire lock:
->  (&(&priv->work)->work#2){+.+...}, at: [<ffffffff81051215>]
-> __cancel_work_timer+0xd9/0x222
-> 
-> but task is already holding lock:
->  (&priv->conf_mutex#2){+.+.+.}, at: [<ffffffffa064a024>]
-> rtl8187_stop+0x31/0x364 [rtl8187]
-> 
-> which lock already depends on the new lock.
-> 
-> 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #1 (&priv->conf_mutex#2){+.+.+.}:
->        [<ffffffff81065957>] __lock_acquire+0x12d0/0x1614
->        [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
->        [<ffffffff8127c32f>] mutex_lock_nested+0x56/0x2a8
->        [<ffffffffa064a392>] rtl8187_work+0x3b/0xf2 [rtl8187]
->        [<ffffffff81050758>] worker_thread+0x1fa/0x30a
->        [<ffffffff81054ca5>] kthread+0x8f/0x97
->        [<ffffffff8100cb7a>] child_rip+0xa/0x20
->        [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> -> #0 (&(&priv->work)->work#2){+.+...}:
->        [<ffffffff8106568c>] __lock_acquire+0x1005/0x1614
->        [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
->        [<ffffffff8105124e>] __cancel_work_timer+0x112/0x222
->        [<ffffffff8105136b>] cancel_delayed_work_sync+0xd/0xf
->        [<ffffffffa064a33f>] rtl8187_stop+0x34c/0x364 [rtl8187]
->        [<ffffffffa0242866>] ieee80211_stop_device+0x29/0x61 [mac80211]
->        [<ffffffffa0239194>] ieee80211_stop+0x476/0x530 [mac80211]
->        [<ffffffff8120ce15>] dev_close+0x8a/0xac
->        [<ffffffffa01d9fa7>] cfg80211_rfkill_set_block+0x4a/0x7a [cfg80211]
->        [<ffffffffa01bf4f0>] rfkill_set_block+0x84/0xd9 [rfkill]
->        [<ffffffffa01bfc31>] rfkill_fop_write+0xda/0x124 [rfkill]
->        [<ffffffff810cf286>] vfs_write+0xae/0x14a
->        [<ffffffff810cf3e6>] sys_write+0x47/0x6e
->        [<ffffffff8100ba6b>] system_call_fastpath+0x16/0x1b
->        [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> other info that might help us debug this:
-> 
-> 4 locks held by rfkill/30578:
->  #0:  (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa01bfbbc>]
-> rfkill_fop_write+0x65/0x124 [rfkill]
->  #1:  (rtnl_mutex){+.+.+.}, at: [<ffffffff81215a60>] rtnl_lock+0x12/0x14
->  #2:  (&rdev->devlist_mtx){+.+.+.}, at: [<ffffffffa01d9f89>]
-> cfg80211_rfkill_set_block+0x2c/0x7a [cfg80211]
->  #3:  (&priv->conf_mutex#2){+.+.+.}, at: [<ffffffffa064a024>]
-> rtl8187_stop+0x31/0x364 [rtl8187]
-> 
-> stack backtrace:
-> Pid: 30578, comm: rfkill Not tainted 2.6.31-rc6-wl #201
-> Call Trace:
->  [<ffffffff810641ec>] print_circular_bug_tail+0xc1/0xcc
->  [<ffffffff8106568c>] __lock_acquire+0x1005/0x1614
->  [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
->  [<ffffffff81051215>] ? __cancel_work_timer+0xd9/0x222
->  [<ffffffff8105124e>] __cancel_work_timer+0x112/0x222
->  [<ffffffff81051215>] ? __cancel_work_timer+0xd9/0x222
->  [<ffffffff81063791>] ? mark_held_locks+0x4d/0x6b
->  [<ffffffff8127db94>] ? _spin_unlock_irq+0x2b/0x30
->  [<ffffffff81063a04>] ? trace_hardirqs_on_caller+0x10b/0x12f
->  [<ffffffff81063a35>] ? trace_hardirqs_on+0xd/0xf
->  [<ffffffff8127db94>] ? _spin_unlock_irq+0x2b/0x30
->  [<ffffffffa00de2c4>] ? usb_kill_anchored_urbs+0x46/0x5c [usbcore]
->  [<ffffffff8105136b>] cancel_delayed_work_sync+0xd/0xf
->  [<ffffffffa064a33f>] rtl8187_stop+0x34c/0x364 [rtl8187]
->  [<ffffffffa0242866>] ieee80211_stop_device+0x29/0x61 [mac80211]
->  [<ffffffffa0239194>] ieee80211_stop+0x476/0x530 [mac80211]
->  [<ffffffffa0238d68>] ? ieee80211_stop+0x4a/0x530 [mac80211]
->  [<ffffffff81044a28>] ? local_bh_enable_ip+0xc8/0xcd
->  [<ffffffff8127db65>] ? _spin_unlock_bh+0x2f/0x33
->  [<ffffffff8121d116>] ? dev_deactivate+0x162/0x192
->  [<ffffffff8120ce15>] dev_close+0x8a/0xac
->  [<ffffffffa01d9fa7>] cfg80211_rfkill_set_block+0x4a/0x7a [cfg80211]
->  [<ffffffffa01bf4f0>] rfkill_set_block+0x84/0xd9 [rfkill]
->  [<ffffffffa01bfc31>] rfkill_fop_write+0xda/0x124 [rfkill]
->  [<ffffffff8100ba9c>] ? sysret_check+0x27/0x62
->  [<ffffffff810cf286>] vfs_write+0xae/0x14a
->  [<ffffffff810cf3e6>] sys_write+0x47/0x6e
->  [<ffffffff8100ba6b>] system_call_fastpath+0x16/0x1bf
-> 
-> 
-> Larry
-
--- 
-[]'s
-Herton
+dGg5azogUlggZmlsdGVyIDB4MCBic3NpZCAwMDowYjo4NTo2ZjoyMDo4YyBhaWQgMHgwCmF0aDlr
+OiBCU1MgQ2hhbmdlZCBQUkVBTUJMRSAxCmF0aDlrOiBCU1MgQ2hhbmdlZCBBU1NPQyAxCmF0aDlr
+OiBCc3MgSW5mbyBBU1NPQyAxMywgYnNzaWQ6IDAwOjBiOjg1OjZmOjIwOjhjCmF0aDlrOiBTZXQg
+SFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQgSFcgUlggZmlsdGVyOiAweDAKYXRo
+OWs6IFNldCBIVyBSWCBmaWx0ZXI6IDB4MAphdGg5azogU2V0IEhXIFJYIGZpbHRlcjogMHgwCmF0
+aDlrOiBTZXQgSFcgUlggZmlsdGVyOiAweDAKYXRoOWs6IFNldCBIVyBSWCBmaWx0ZXI6IDB4MAph
+dGg5azogU2V0IEhXIFJYIGZpbHRlcjogMHgwCmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQg
+SFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CndsYW4wOiBkZWF1dGhl
+bnRpY2F0ZWQgZnJvbSAwMDowYjo4NTo2ZjoyMDo4YyAoUmVhc29uOiAxKQphdGg5azogQ29uZmln
+dXJlIHR4IFtxdWV1ZS9oYWxxXSBbMC8zXSwgIGFpZnM6IDIsIGN3X21pbjogMywgY3dfbWF4OiA3
+LCB0eG9wOiA0NwphdGg5azogQ29uZmlndXJlIHR4IFtxdWV1ZS9oYWxxXSBbMS8yXSwgIGFpZnM6
+IDIsIGN3X21pbjogNywgY3dfbWF4OiAxNSwgdHhvcDogOTQKYXRoOWs6IENvbmZpZ3VyZSB0eCBb
+cXVldWUvaGFscV0gWzIvMV0sICBhaWZzOiAzLCBjd19taW46IDE1LCBjd19tYXg6IDEwMjMsIHR4
+b3A6IDAKYXRoOWs6IENvbmZpZ3VyZSB0eCBbcXVldWUvaGFscV0gWzMvMF0sICBhaWZzOiA3LCBj
+d19taW46IDE1LCBjd19tYXg6IDEwMjMsIHR4b3A6IDAKYXRoOWs6IEJTUyBDaGFuZ2VkIFBSRUFN
+QkxFIDAKYXRoOWs6IEJTUyBDaGFuZ2VkIENUUyBQUk9UIDAKYXRoOWs6IEJTUyBDaGFuZ2VkIEFT
+U09DIDAKYXRoOWs6IEJzcyBJbmZvIERJU0FTU09DCmF0aDlrOiBTZXQgSFcgS2V5CndsYW4wOiBk
+ZWF1dGhlbnRpY2F0aW5nIGJ5IGxvY2FsIGNob2ljZSAocmVhc29uPTMpCi0tLS0tLS0tLS0tLVsg
+Y3V0IGhlcmUgXS0tLS0tLS0tLS0tLQpXQVJOSU5HOiBhdCBuZXQvd2lyZWxlc3Mvc21lLmM6NjEw
+IF9fY2ZnODAyMTFfZGlzY29ubmVjdGVkKzB4MWJjLzB4MjEwIFtjZmc4MDIxMV0oKQpIYXJkd2Fy
+ZSBuYW1lOiAxODc1RExVCmRlYXV0aCBmYWlsZWQ6IC02NwpNb2R1bGVzIGxpbmtlZCBpbjogeHRf
+dGltZSB4dF9jb25ubGltaXQgeHRfcmVhbG0gaXB0YWJsZV9yYXcgeHRfY29tbWVudCBpcHRfVUxP
+RyBpcHRfUkVKRUNUIGlwdF9SRURJUkVDVCBpcHRfTkVUTUFQIGlwdF9NQVNRVUVSQURFIGlwdF9M
+T0cgaXB0X0VDTiBpcHRfZWNuIGlwdF9haCBpcHRfYWRkcnR5cGUgbmZfbmF0X3RmdHAgbmZfbmF0
+X3NubXBfYmFzaWMgbmZfbmF0X3NpcCBuZl9uYXRfcHB0cCBuZl9uYXRfcHJvdG9fZ3JlIG5mX25h
+dF9pcmMgbmZfbmF0X2gzMjMgbmZfbmF0X2Z0cCBuZl9uYXRfYW1hbmRhIHRzX2ttcCBuZl9jb25u
+dHJhY2tfYW1hbmRhIG5mX2Nvbm50cmFja190ZnRwIG5mX2Nvbm50cmFja19zaXAgbmZfY29ubnRy
+YWNrX3BwdHAgbmZfY29ubnRyYWNrX3Byb3RvX2dyZSBuZl9jb25udHJhY2tfbmV0bGluayBuZl9j
+b25udHJhY2tfbmV0Ymlvc19ucyBuZl9jb25udHJhY2tfaXJjIG5mX2Nvbm50cmFja19oMzIzIG5m
+X2Nvbm50cmFja19mdHAgeHRfdGNwbXNzIHh0X3JlY2VudCB4dF9wa3R0eXBlIHh0X3BoeXNkZXYg
+eHRfb3duZXIgeHRfTkZRVUVVRSB4dF9ORkxPRyBuZm5ldGxpbmtfbG9nIHh0X211bHRpcG9ydCB4
+dF9NQVJLIHh0X21hcmsgeHRfbWFjIHh0X2xpbWl0IHh0X2xlbmd0aCB4dF9pcHJhbmdlIHh0X2hl
+bHBlciB4dF9oYXNobGltaXQgeHRfRFNDUCB4dF9kc2NwIHh0X2RjY3AgeHRfY29ubnRyYWNrIHh0
+X0NPTk5NQVJLIHh0X2Nvbm5tYXJrIHh0X0NMQVNTSUZZIHh0X3RjcHVkcCB4dF9zdGF0ZSBpcHRh
+YmxlX25hdCBuZl9uYXQgbmZfY29ubnRyYWNrX2lwdjQgbmZfZGVmcmFnX2lwdjQgbmZfY29ubnRy
+YWNrIGFlc19pNTg2IGFlc19nZW5lcmljIGlwdGFibGVfbWFuZ2xlIG5mbmV0bGluayBpcHRhYmxl
+X2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMgaTkxNSBkcm0gaTJjX2FsZ29fYml0IGFmX3BhY2tl
+dCBicmlkZ2Ugc3RwIGxsYyBibmVwIHNjbyByZmNvbW0gbDJjYXAgYmx1ZXRvb3RoIGlwdjYgYmlu
+Zm10X21pc2MgbG9vcCBmdXNlIGNwdWZyZXFfb25kZW1hbmQgY3B1ZnJlcV9jb25zZXJ2YXRpdmUg
+Y3B1ZnJlcV9wb3dlcnNhdmUgYWNwaV9jcHVmcmVxIGZyZXFfdGFibGUgc25kX2ludGVsOHgwIGFy
+YzQgc25kX2FjOTdfY29kZWMgYWM5N19idXMgZWNiIHNuZF9zZXFfZHVtbXkgYXRoOWsgbWFjODAy
+MTEgc25kX3NlcV9vc3Mgc25kX3NlcV9taWRpX2V2ZW50IGF0aCBjZmc4MDIxMSBzbmRfc2VxIHNu
+ZF9zZXFfZGV2aWNlIHNuZF9wY21fb3NzIHNuZF9wY20gc25kX3RpbWVyIHNuZF9taXhlcl9vc3Mg
+dGhpbmtwYWRfYWNwaSB0ZzMgcHJvY2Vzc29yIGludGVsX2FncCBzbmQgYWMgc291bmRjb3JlIHRo
+ZXJtYWwgcmZraWxsIGxlZF9jbGFzcyBidXR0b24gc2cgam95ZGV2IGlUQ09fd2R0IGlUQ09fdmVu
+ZG9yX3N1cHBvcnQgZWhjaV9oY2QgdmlkZW8gb3V0cHV0IGkyY19pODAxIGkyY19jb3JlIGxpYnBo
+eSB5ZW50YV9zb2NrZXQgcnNyY19ub25zdGF0aWMgcGNtY2lhX2NvcmUgc25kX3BhZ2VfYWxsb2Mg
+YmF0dGVyeSBhZ3BnYXJ0IG52cmFtIG5zY19pcmNjIGlyZGEgcGNzcGtyIHNyX21vZCBldmRldiBy
+dGNfY21vcyB1aGNpX2hjZCBjcmNfY2NpdHQgdXNiY29yZSBhdGFfZ2VuZXJpYyBpZGVfcGNpX2dl
+bmVyaWMgaWRlX2dkX21vZCBpZGVfY29yZSBwYXRhX2FjcGkgYXRhX3BpaXggYWhjaSBsaWJhdGEg
+c2RfbW9kIHNjc2lfbW9kIGNyY190MTBkaWYgZXh0MyBqYmQKUGlkOiAxMTg2LCBjb21tOiBwaHkw
+IFRhaW50ZWQ6IEcgICBNICAgICAgIDIuNi4zMS1yYzYtd2wtbW5iU3RyaXAtMzE1ODYtZzgwMjg5
+ZjAgIzY1CkNhbGwgVHJhY2U6CiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nvbm5lY3Rl
+ZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nv
+bm5lY3RlZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGMwMTNjNTNjPl0gd2Fybl9zbG93cGF0
+aF9jb21tb24rMHg2Yy8weGMwCiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nvbm5lY3Rl
+ZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGMwMTNjNWQ2Pl0gd2Fybl9zbG93cGF0aF9mbXQr
+MHgyNi8weDMwCiBbPGY4MmI1NmFjPl0gX19jZmc4MDIxMV9kaXNjb25uZWN0ZWQrMHgxYmMvMHgy
+MTAgW2NmZzgwMjExXQogWzxmODJiMWJmMT5dID8gbmw4MDIxMV9zZW5kX2RlYXV0aCsweDIxLzB4
+MzAgW2NmZzgwMjExXQogWzxmODJiMmRmYz5dIF9fY2ZnODAyMTFfc2VuZF9kZWF1dGgrMHgyMWMv
+MHgyNjAgW2NmZzgwMjExXQogWzxmODNkMDJjMD5dID8gaWVlZTgwMjExX3NldF9kaXNhc3NvYysw
+eDE4MC8weDFlMCBbbWFjODAyMTFdCiBbPGY4MmIyZTllPl0gY2ZnODAyMTFfc2VuZF9kZWF1dGgr
+MHg1ZS8weDcwIFtjZmc4MDIxMV0KIFs8ZjgzZDFmZWI+XSBpZWVlODAyMTFfc3RhX3dvcmsrMHhh
+MGIvMHgxODUwIFttYWM4MDIxMV0KIFs8YzAxNDEyZDg+XSA/IHRhc2tsZXRfYWN0aW9uKzB4NTgv
+MHhjMAogWzxjMDE3ZDk4OD5dID8gaGFuZGxlX0lSUV9ldmVudCsweDU4LzB4MTQwCiBbPGMwMTFi
+ZjNlPl0gPyBhY2tfYXBpY19sZXZlbCsweDdlLzB4MjcwCiBbPGMwMTMwMGMwPl0gPyBycV9vbmxp
+bmVfcnQrMHg1MC8weDcwCiBbPGMwMTM4NzQ1Pl0gPyBkZXF1ZXVlX3Rhc2tfZmFpcisweDI5NS8w
+eDJhMAogWzxjMDEyOGEyZT5dID8gZGVxdWV1ZV90YXNrKzB4MTBlLzB4MTYwCiBbPGMwMTAyNTZh
+Pl0gPyBfX3N3aXRjaF90bysweGJhLzB4MWEwCiBbPGMwMTMzMjk2Pl0gPyBmaW5pc2hfdGFza19z
+d2l0Y2grMHg1Ni8weGMwCiBbPGMwM2E5YWY0Pl0gPyBzY2hlZHVsZSsweDRhNC8weGE1MAogWzxj
+MDE1Mzc3YT5dID8gcHJlcGFyZV90b193YWl0KzB4M2EvMHg3MAogWzxjMDE0ZWRkMT5dIHdvcmtl
+cl90aHJlYWQrMHgxNDEvMHgyMTAKIFs8ZjgzZDE1ZTA+XSA/IGllZWU4MDIxMV9zdGFfd29yaysw
+eDAvMHgxODUwIFttYWM4MDIxMV0KIFs8YzAxNTM1MzA+XSA/IGF1dG9yZW1vdmVfd2FrZV9mdW5j
+dGlvbisweDAvMHg1MAogWzxjMDE0ZWM5MD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgyMTAKIFs8
+YzAxNTMxZGM+XSBrdGhyZWFkKzB4N2MvMHg5MAogWzxjMDE1MzE2MD5dID8ga3RocmVhZCsweDAv
+MHg5MAogWzxjMDEwNDY1Nz5dIGtlcm5lbF90aHJlYWRfaGVscGVyKzB4Ny8weDEwCi0tLVsgZW5k
+IHRyYWNlIGZiZmEzZWExOWM1YWZmNWYgXS0tLQphdGg5azogU2V0IEhXIEtleQphdGg5azogU2V0
+IEhXIFJYIGZpbHRlcjogMHgxMAphdGg5azogU2V0IGNoYW5uZWw6IDI0MTIgTUh6CmF0aDlrOiB0
+eCBjaG1hc2s6IDEsIHJ4IGNobWFzazogMQphdGg5azogKDI0NjIgTUh6KSAtPiAoMjQxMiBNSHop
+LCBjaGFud2lkdGg6IDAKYXRoOWs6IFNldCBjaGFubmVsOiAyNDE3IE1IegphdGg5azogdHggY2ht
+YXNrOiAxLCByeCBjaG1hc2s6IDEKYXRoOWs6ICgyNDEyIE1IeikgLT4gKDI0MTcgTUh6KSwgY2hh
+bndpZHRoOiAwCmF0aDlrOiBTZXQgY2hhbm5lbDogMjQyMiBNSHoKYXRoOWs6IHR4IGNobWFzazog
+MSwgcnggY2htYXNrOiAxCmF0aDlrOiAoMjQxNyBNSHopIC0+ICgyNDIyIE1IeiksIGNoYW53aWR0
+aDogMAphdGg5azogU2V0IGNoYW5uZWw6IDI0MjcgTUh6CmF0aDlrOiB0eCBjaG1hc2s6IDEsIHJ4
+IGNobWFzazogMQphdGg5azogKDI0MjIgTUh6KSAtPiAoMjQyNyBNSHopLCBjaGFud2lkdGg6IDAK
+YXRoOWs6IFNldCBjaGFubmVsOiAyNDMyIE1IegphdGg5azogdHggY2htYXNrOiAxLCByeCBjaG1h
+c2s6IDEKYXRoOWs6ICgyNDI3IE1IeikgLT4gKDI0MzIgTUh6KSwgY2hhbndpZHRoOiAwCmF0aDlr
+OiBTZXQgY2hhbm5lbDogMjQzNyBNSHoKYXRoOWs6IHR4IGNobWFzazogMSwgcnggY2htYXNrOiAx
+CmF0aDlrOiAoMjQzMiBNSHopIC0+ICgyNDM3IE1IeiksIGNoYW53aWR0aDogMAoK
+--00032557f4ba4165e2047171d638--
