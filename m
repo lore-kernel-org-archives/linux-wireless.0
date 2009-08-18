@@ -1,57 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:49908 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754644AbZHUOTc convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51523 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752247AbZHRH2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 10:19:32 -0400
-Received: by vws2 with SMTP id 2so615168vws.4
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 07:19:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
-References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
-	 <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
-Date: Fri, 21 Aug 2009 10:19:33 -0400
-Message-ID: <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-From: Bob Copeland <me@bobcopeland.com>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 18 Aug 2009 03:28:31 -0400
+Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090818035220.GN18639@mail.wantstofly.org>
+References: <20090818035220.GN18639@mail.wantstofly.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eqCR2/PXPQg/4lSdQFyL"
+Date: Tue, 18 Aug 2009 09:28:29 +0200
+Message-Id: <1250580509.30538.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 5:42 PM, Bob Copeland<me@bobcopeland.com> wrote:
-> On Wed, Aug 19, 2009 at 4:47 PM, Fabio Comolli<fabio.comolli@gmail.com> wrote:
->> Hi all.
->> I see the following warning on an eeePC 900 (AR5001) running
->> 2.6.31-rc6 after a suspend/resume cycle:
->>
->> [  292.377941] ------------[ cut here ]------------
->> [  292.377976] WARNING: at net/mac80211/mlme.c:2292
->> ieee80211_sta_work+0x89/0xc39 [mac80211]()
->
->    if (WARN_ON(local->suspended)) ...
 
-Okay, I think I see what is going on here.
+--=-eqCR2/PXPQg/4lSdQFyL
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-  suspend
-    ieee80211_scan_cancel
-       ieee80211_notify_scan_completed
-          ieee80211_mlme_scan_completed
-          ieee80211_ibss_scan_completed
-          ieee80211_mesh_scan_completed
+On Tue, 2009-08-18 at 05:52 +0200, Lennert Buytenhek wrote:
+> Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+> ---
+>  drivers/net/wireless/mwl8k.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index 9f54204..3a201a2 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -2935,7 +2935,7 @@ static int mwl8k_config_wt(struct work_struct *wt)
+>  	struct mwl8k_priv *priv =3D hw->priv;
+>  	int rc =3D 0;
+> =20
+> -	if (!conf->radio_enabled) {
+> +	if (conf->flags & IEEE80211_CONF_IDLE) {
+>  		mwl8k_cmd_802_11_radio_disable(hw);
+>  		priv->current_channel =3D NULL;
+>  		rc =3D 0;
 
-All of these completed() notifications queue work.  That's not a problem
-because we flush the workqueue shortly thereafter.  However, flushing the
-workqueue runs the scheduled work, which can queue _more_ work (sometimes
-on a timer with queue_delayed_work), and none of the work functions in
-2.6.31 currently check for local->quiesced.
+So I think the return; a little below needs to be removed to allow doing
+other things while the radio is off? I'm not sure which actually happen
+but I never audited the code to make sure nothing happens.
 
-Repeat this process once more and we eventually hit the warning.
+johannes
 
-Can we just replace the last flush_workqueue() with cancel_delayed_work_sync()
-or will that break something?
+--=-eqCR2/PXPQg/4lSdQFyL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-Bob Copeland %% www.bobcopeland.com
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKilgaAAoJEODzc/N7+Qma3bkQAMCVVANoNXBRoYNnSm8CZ5Wa
+shXCMogRTlUIWCUIr7DrIPq8cZltyCAYgSdSSgh4Bgp0YZ7rZOY6Ahie+8zTtSxa
+OqpELedARxaKFsocAWcf7N+Oxh3jZi+9qu3nlbMwKbqpw9fppIaKKW5hNtuwG1z0
+dpztjGleasJiImLJriToqKLU7Hsg+lHSK1N4ofVODD3IyncHtKlA28HumFuHxl+C
+pxH3eh2uYI1Pqz0h6zFLjDaanSm8aNJ3aI4pg1g5Eojepmuwmr1N/cks/qrMV3c5
+qnP3RGYsxmdWTIu0gLKGMwLZcWKDISmny6ZOtJsTebCFWNfKVVv6EqUOJvs4DzcG
+tDmT+trCVI7Kg8CD0ytNoQ8OIRL61vj47XMTgRgNOC237v8umvzK6JsN1OMWPPb1
+/o6Az324gNIKPDVPLWgjsThxaXp5ZxyCJUVlnyszGuCT0nNcC6Y8KAbrgBqMNTAm
+aeiiTxGBVEHymA7VF03YnsbDgvDpCDE5Wj20olZlGBGNOb5X6xAtDvkUYSkfyqC0
+1ugZvoGoGCz4MGvU9AI047uT6E8XDMuEdwXPWC9syzZA9Pi/5oKIWy5vvOPuMG4f
+yaLuBlK/ePXPT+RwvIo5LpmnSeSF6wfPk2IgMH6ynKdXuLnZyy7QPVmLfJdu+F4z
+MGlIXNWJfY5TZ2WZoHzY
+=Kd4O
+-----END PGP SIGNATURE-----
+
+--=-eqCR2/PXPQg/4lSdQFyL--
+
