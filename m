@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:24536 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785AbZH0VA2 (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:40191 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671AbZHRDxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:28 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 06/13] wl1271: mask aid bits 14 and 15 in ps-poll template
-Date: Fri, 28 Aug 2009 00:00:00 +0300
-Message-Id: <1251406807-31495-7-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 17 Aug 2009 23:53:19 -0400
+Date: Tue, 18 Aug 2009 05:53:20 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 15/29] mwl8k: no need to hold ->tx_lock while setting the hardware interrupt mask
+Message-ID: <20090818035320.GT18639@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-
-In ps-poll template aid bits 14 and 15 were not masked as required by
-the standard. Mask them so that aid is sent in correct format.
-
-This patch is a direct port of the respective patch for the wl1251
-driver by Kalle Valo.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_cmd.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mwl8k.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 1ee1b2b..bd65b38 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -682,7 +682,10 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, u16 aid)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index f482922..e46cf3c 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -2768,9 +2768,7 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
+ 		printk(KERN_ERR "%s() timed out\n", __func__);
  
- 	memcpy(template.bssid, wl->bssid, ETH_ALEN);
- 	memcpy(template.ta, wl->mac_addr, ETH_ALEN);
--	template.aid = aid;
-+
-+	/* aid in PS-Poll has its two MSBs each set to 1 */
-+	template.aid = cpu_to_le16(1 << 15 | 1 << 14 | aid);
-+
- 	template.fc = cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_PSPOLL);
+ 	/* Disable interrupts */
+-	spin_lock_irq(&priv->tx_lock);
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+-	spin_unlock_irq(&priv->tx_lock);
+ 	free_irq(priv->pdev->irq, hw);
  
- 	return wl1271_cmd_template_set(wl, CMD_TEMPL_PS_POLL, &template,
+ 	/* Stop finalize join worker */
+@@ -3461,9 +3459,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Disable interrupts */
+-	spin_lock_irq(&priv->tx_lock);
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+-	spin_unlock_irq(&priv->tx_lock);
+ 	free_irq(priv->pdev->irq, hw);
+ 
+ 	rc = ieee80211_register_hw(hw);
+@@ -3487,9 +3483,7 @@ err_stop_firmware:
+ 	mwl8k_release_firmware(priv);
+ 
+ err_free_irq:
+-	spin_lock_irq(&priv->tx_lock);
+ 	iowrite32(0, priv->regs + MWL8K_HIU_A2H_INTERRUPT_MASK);
+-	spin_unlock_irq(&priv->tx_lock);
+ 	free_irq(priv->pdev->irq, hw);
+ 
+ err_free_queues:
 -- 
-1.5.6.5
-
+1.5.6.4
