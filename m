@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44235 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbZHRDKI (ORCPT
+Received: from mail-yw0-f173.google.com ([209.85.211.173]:64966 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbZHSSzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:10:08 -0400
-Received: from wireless by sipsolutions.net with local (Exim 4.69)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1MdF5M-0000kY-BD
-	for linux-wireless@vger.kernel.org; Tue, 18 Aug 2009 05:10:08 +0200
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] wireless-regdb: master-2009-08-17
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1MdF5M-0000kY-BD@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Tue, 18 Aug 2009 05:10:08 +0200
+	Wed, 19 Aug 2009 14:55:35 -0400
+Received: by ywh3 with SMTP id 3so127357ywh.22
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 11:55:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1250679220-30392-1-git-send-email-vasanth@atheros.com>
+References: <1250679220-30392-1-git-send-email-vasanth@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 19 Aug 2009 11:55:16 -0700
+Message-ID: <43e72e890908191155j23107975gf244bbc7194cd06b@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Fix bug in retrieving average beacon
+	rssi
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	Jouni.Malinen@atheros.com, linux-wireless@vger.kernel.org,
+	Luis.Rodriguez@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Aug 19, 2009 at 3:53 AM, Vasanthakumar
+Thiagarajan<vasanth@atheros.com> wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-A new release of wireless-regdb (master-2009-08-17) is available at:
+Vasanth, can you provide a little more description here on the commit
+log as to what the issue was?
 
-http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.08.17.tar.bz2
-
-SHA1 sum: ab87bfd0b2f26a8e1213da16ce2add47c831ac66
-
-
-For your convenience the individual regulatory.bin file can be downloaded from:
-
-http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.08.17-regulatory.bin
-
-SHA1 sum fb30b37c3e838f8d71f66a435febfbbef692504f
-
-Here is the short log of the changes included in this 
-release:
-
-Kel Modderman -  wireless-regdb: manual page section mismatch
+  Luis
