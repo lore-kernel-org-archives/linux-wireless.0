@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:45076 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752273AbZHHV4L (ORCPT
+Received: from ausxippc101.us.dell.com ([143.166.85.207]:43751 "EHLO
+	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753290AbZHSXeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 17:56:11 -0400
-Received: by ewy7 with SMTP id 7so1937881ewy.18
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 14:56:11 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 3/7] rt2x00: Align ieee80211 header to 4-byte boundary for PCI devices
-Date: Sat, 8 Aug 2009 23:53:47 +0200
-Cc: users@rt2x00.serialmonkey.com,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908082353.04274.IvDoorn@gmail.com> <200908082353.26986.IvDoorn@gmail.com>
-In-Reply-To: <200908082353.26986.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908082353.47835.IvDoorn@gmail.com>
+	Wed, 19 Aug 2009 19:34:25 -0400
+From: Mario Limonciello <Mario_Limonciello@Dell.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: linux-wireless@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mario Limonciello <Mario_Limonciello@Dell.com>
+Subject: [PATCH] When the "hardware" switch is disabled, don't actually allow changing the softblock status.  
+Date: Wed, 19 Aug 2009 18:34:01 -0500
+Message-Id: <1250724841-12527-1-git-send-email-Mario_Limonciello@Dell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some hardware require the ieee80211 header to be aligned to a
-4-byte boundary before mapping it to the DMA. Otherwise some
-frames (like beacons) will not be send out correctly by the
-device.
+The "hardware" switch is tied directly to a BIOS interface that will connect and 
+disconnect the hardware from the bus.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+If you use the software interface to request the BIOS to make these changes, the HW
+switch will be in an inconsistent state and LEDs may not reflect the state of the HW.
+
+Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/platform/x86/dell-laptop.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 65435c9..e67e339 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -453,9 +453,21 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb)
- 			rt2x00crypto_tx_remove_iv(skb, &txdesc);
- 	}
+diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
+index 90a3d7c..2469ad5 100644
+--- a/drivers/platform/x86/dell-laptop.c
++++ b/drivers/platform/x86/dell-laptop.c
+@@ -180,6 +180,10 @@ static int dell_rfkill_set(int radio, enum rfkill_state state)
+ 	int disable = (state == RFKILL_STATE_UNBLOCKED) ? 0 : 1;
  
-+	/*
-+	 * When DMA allocation is required we should guarentee to the
-+	 * driver that the DMA is aligned to a 4-byte boundary.
-+	 * Aligning the header to this boundary can be done by calling
-+	 * rt2x00queue_payload_align with the header length of 0.
-+	 * However some drivers require L2 padding to pad the payload
-+	 * rather then the header. This could be a requirement for
-+	 * PCI and USB devices, while header alignment only is valid
-+	 * for PCI devices.
-+	 */
- 	if (test_bit(DRIVER_REQUIRE_L2PAD, &queue->rt2x00dev->flags))
- 		rt2x00queue_payload_align(entry->skb, true,
- 					  txdesc.header_length);
-+	else if (test_bit(DRIVER_REQUIRE_DMA, &queue->rt2x00dev->flags))
-+		rt2x00queue_payload_align(entry->skb, false, 0);
+ 	memset(&buffer, 0, sizeof(struct calling_interface_buffer));
++	dell_send_request(&buffer, 17, 11);
++	if (!(buffer.output[1] & BIT(16)))
++		return -EINVAL;
++
+ 	buffer.input[0] = (1 | (radio<<8) | (disable << 16));
+ 	dell_send_request(&buffer, 17, 11);
  
- 	/*
- 	 * It could be possible that the queue was corrupted and this
 -- 
 1.6.3.3
 
