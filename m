@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:64541 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbZHPQkK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 Aug 2009 12:40:10 -0400
-Received: by fxm11 with SMTP id 11so1916389fxm.39
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2009 09:40:11 -0700 (PDT)
-Message-ID: <4A883669.6010504@gmail.com>
-Date: Sun, 16 Aug 2009 18:40:09 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:60501 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751797AbZHSLBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 07:01:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 04:01:45 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Fix bug in retrieving average beacon rssi
+Date: Wed, 19 Aug 2009 16:23:39 +0530
+Message-ID: <1250679220-30392-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Fix a bug in the B2062 channel tune path
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I missed the "+16" part of the instruction in the specs.
-
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/b43/phy_lp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.h |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 1de4a74..5a7b873 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1952,7 +1952,7 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
- 	b43_radio_write(dev, B2062_S_RFPLL_CTL29, tmp6 + ((2 * tmp7) / tmp4));
- 	tmp8 = b43_phy_read(dev, B2062_S_RFPLL_CTL19);
- 	tmp9 = ((2 * tmp3 * (tmp8 + 1)) + (3 * tmp1)) / (6 * tmp1);
--	b43_radio_write(dev, B2062_S_RFPLL_CTL23, tmp9 >> 8);
-+	b43_radio_write(dev, B2062_S_RFPLL_CTL23, (tmp9 >> 8) + 16);
- 	b43_radio_write(dev, B2062_S_RFPLL_CTL24, tmp9 & 0xFF);
- 	
- 	lpphy_b2062_vco_calib(dev);
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 1199245..6273fd0 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -18,15 +18,10 @@
+ #define ANI_H
+ 
+ #define HAL_PROCESS_ANI           0x00000001
+-#define ATH9K_RSSI_EP_MULTIPLIER  (1<<7)
+ 
+ #define DO_ANI(ah) (((ah)->proc_phyerr & HAL_PROCESS_ANI))
+ 
+-#define HAL_EP_RND(x, mul)						\
+-	((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
+-#define BEACON_RSSI(ahp)					\
+-	HAL_EP_RND(ahp->stats.ast_nodestats.ns_avgbrssi,	\
+-		   ATH9K_RSSI_EP_MULTIPLIER)
++#define BEACON_RSSI(ahp) (ahp->stats.ast_nodestats.ns_avgbrssi)
+ 
+ #define ATH9K_ANI_OFDM_TRIG_HIGH          500
+ #define ATH9K_ANI_OFDM_TRIG_LOW           200
 -- 
-1.6.2.4
-
-
+1.5.5.1
 
