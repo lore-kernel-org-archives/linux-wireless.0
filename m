@@ -1,196 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42205 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754206AbZHLQRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:17:07 -0400
-Subject: Re: Libertas: Association request to the driver failed
-From: Dan Williams <dcbw@redhat.com>
-To: Jonathan Cameron <jic23@cam.ac.uk>
-Cc: Roel Kluin <roel.kluin@gmail.com>,
-	Cyrill Gorcunov <gorcunov@gmail.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Daniel Mack <daniel@caiaq.de>
-In-Reply-To: <4A8281AD.1010807@cam.ac.uk>
-References: <20090807191156.GS19257@buzzloop.caiaq.de>
-	 <20090809102417.GH13639@buzzloop.caiaq.de>	<4A7EAED8.9090900@gmail.com>
-	 <200908091310.56919.mb@bu3sch.de>	<20090809191359.GG4805@lenovo>
-	 <4A7FF84C.7070708@gmail.com>  <4A8281AD.1010807@cam.ac.uk>
-Content-Type: text/plain
-Date: Wed, 12 Aug 2009 11:16:43 -0500
-Message-Id: <1250093803.31650.19.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:12291 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbZHSQpz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 12:45:55 -0400
+Message-ID: <4A8C2C6C.2020007@dell.com>
+Date: Wed, 19 Aug 2009 11:46:36 -0500
+From: Mario Limonciello <mario_limonciello@dell.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Alan Jenkins <sourcejedi.lkml@googlemail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	cezary.jackiewicz@gmail.com, linux-acpi@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
+References: <4A89E768.7010207@dell.com>	 <1250558643.30166.109.camel@localhost.localdomain>	 <9b2b86520908180044l72cb8642j6256e246662f7971@mail.gmail.com>	 <9b2b86520908180752k66feda09rf9034a96ac6ef470@mail.gmail.com>	 <4A8AE459.8060102@dell.com>	 <9b2b86520908181408v5f7875b6sea31d8d95cc08c0b@mail.gmail.com>	 <1250631063.16393.14.camel@johannes.local>  <4A8B246D.7050004@dell.com> <1250672475.25419.7.camel@johannes.local>
+In-Reply-To: <1250672475.25419.7.camel@johannes.local>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig2575055CE8844968B0CA0188"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-12 at 08:47 +0000, Jonathan Cameron wrote:
-> Hi All, 
-> 
-> After applying this patch I've been receiving 0x12 response from
-> an access point (association failed: not all rates supported)
-> to association requests.
-> 
-> See below for queries on what is happening,
-> > Several arrays were read before checking whether the index was within
-> > bounds. ARRAY_SIZE() should be used to determine the size of arrays.
-> > 
-> > rates->rates has an arraysize of 1, so calling get_common_rates()
-> > with a rates_size of MAX_RATES (14) was causing reads out of bounds.
-> > 
-> > tmp_size can increment at most to MAX_RATES * ARRAY_SIZE(lbs_bg_rates),
-> > so that should be the number of elements of tmp[].
-> > 
-> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > ---
-> > 
-> >> | Is it a good idea to use dynamic stack arrays in the kernel?
-> >> | What about kmalloc for dynamic allocations?
-> >> | 
-> >> | -- 
-> >> | Greetings, Michael.
-> >>
-> >> I saw one pattern in trace code (not sure if it's
-> >> still there) but personally don't like dynamic
-> >> stack arrays (though at moment the max value
-> >> being passed into routine is known maybe just
-> >> use MAX_RATES instead of (*rates_size)?). Hmm?
-> > 
-> > Good point.
-> > 
-> >> 	-- Cyrill
-> > 
-> > Thanks,
-> > 
-> > I think there was another problem in lbs_associate(),
-> > the memcpy already affected rates->rates.
-> > 
-> > Also in get_common_rates() I think we can safely move the
-> > memset/memcpy, originally after label done, upwards.
-> > 
-> > The patch below, if correct, is to be applied after the revert
-> > 
-> > Roel
-> > 
-> > diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-> > index b9b3741..ba0164a 100644
-> > --- a/drivers/net/wireless/libertas/assoc.c
-> > +++ b/drivers/net/wireless/libertas/assoc.c
-> > @@ -1,6 +1,7 @@
-> >  /* Copyright (C) 2006, Red Hat, Inc. */
-> >  
-> >  #include <linux/types.h>
-> > +#include <linux/kernel.h>
-> >  #include <linux/etherdevice.h>
-> >  #include <linux/ieee80211.h>
-> >  #include <linux/if_arp.h>
-> > @@ -43,41 +44,41 @@ static int get_common_rates(struct lbs_private *priv,
-> >  	u16 *rates_size)
-> >  {
-> >  	u8 *card_rates = lbs_bg_rates;
-> > -	size_t num_card_rates = sizeof(lbs_bg_rates);
-> > -	int ret = 0, i, j;
-> > -	u8 tmp[30];
-> > +	int i, j;
-> > +	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
-> >  	size_t tmp_size = 0;
-> >  
-> >  	/* For each rate in card_rates that exists in rate1, copy to tmp */
-> > -	for (i = 0; card_rates[i] && (i < num_card_rates); i++) {
-> > -		for (j = 0; rates[j] && (j < *rates_size); j++) {
-> > +	for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
-> > +		for (j = 0; j < *rates_size && rates[j]; j++) {
-> >  			if (rates[j] == card_rates[i])
-> >  				tmp[tmp_size++] = card_rates[i];
-> >  		}
-> >  	}
-> >  
-> >  	lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
-> > -	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates, num_card_rates);
-> > +	lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
-> > +			ARRAY_SIZE(lbs_bg_rates));
-> >  	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
-> >  	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
-> >  
-> > +	memset(rates, 0, *rates_size);
-> > +	*rates_size = min_t(u16, tmp_size, *rates_size);
-> > +	memcpy(rates, tmp, *rates_size);
-> > +
-> >  	if (!priv->enablehwauto) {
-> >  		for (i = 0; i < tmp_size; i++) {
-> >  			if (tmp[i] == priv->cur_rate)
-> > -				goto done;
-> > +				break;
-> > +		}
-> > +		if (i == tmp_size) {
-> > +			lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> > +					"compatible with the network.\n",
-> > +					priv->cur_rate);
-> > +			return -1;
-> >  		}
-> > -		lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> > -		       "compatible with the network.\n", priv->cur_rate);
-> > -		ret = -1;
-> > -		goto done;
-> >  	}
-> > -	ret = 0;
-> > -
-> > -done:
-> > -	memset(rates, 0, *rates_size);
-> > -	*rates_size = min_t(int, tmp_size, *rates_size);
-> > -	memcpy(rates, tmp, *rates_size);
-> > -	return ret;
-> > +	return 0;
-> >  }
-> >  
-> >  
-> > @@ -321,8 +322,8 @@ static int lbs_associate(struct lbs_private *priv,
-> >  
-> >  	rates = (struct mrvl_ie_rates_param_set *) pos;
-> >  	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
-> > -	memcpy(&rates->rates, &bss->rates, MAX_RATES);
-> > -	tmplen = MAX_RATES;
-> > +	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
-> Isn't this always going to be 1? Switching back to original version
-> allows association to work for me.
-> 
-> As is, it only allows one rate to be tested as ARRAY_SIZE(rates->rates)
-> is always 1 as it stands.  
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig2575055CE8844968B0CA0188
+Content-Type: multipart/mixed;
+ boundary="------------000501090302000407000407"
 
-No, it was basically supposed to be either the # of rates in rates, or
-MAX_RATES (or something like that).  Basically, it should *never* be 1,
-it should be either the # of 802.11b rates (which is like 5) or the # of
-802.11g rates (which is like 12 or 13 or something).  But never 1.
+This is a multi-part message in MIME format.
+--------------000501090302000407000407
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Dan
+Hi Johannes:
 
-> If this is the desired behaviour please explain why?
-> I'll admit I'm not really sure what should be happening, I've merely
-> been bisecting looking for what was causing a regression for me.
-> 
-> > +	memcpy(&rates->rates, &bss->rates, tmplen);
-> >  	if (get_common_rates(priv, rates->rates, &tmplen)) {
-> >  		ret = -1;
-> >  		goto done;
-> > @@ -598,7 +599,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
-> >  
-> >  	/* Copy Data rates from the rates recorded in scan response */
-> >  	memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
-> > -	ratesize = min_t(u16, sizeof(cmd.bss.rates), MAX_RATES);
-> > +	ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
-> >  	memcpy(cmd.bss.rates, bss->rates, ratesize);
-> >  	if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
-> >  		lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
-> > 
-> > _______________________________________________
-> > libertas-dev mailing list
-> > libertas-dev@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/libertas-dev
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for looking.
 
+Johannes Berg wrote:
+> Ah, heh, thanks Alan for pointing out there was a patch here :)
+>
+>  =20
+>
+> I don't quite understand the "| radio" bit since that seems to be the
+> soft kill bit according to rfkill_set()?
+>  =20
+Yeah you're right, this bit was unnecessary.  I pulled it out.
+> Anyhow, here you reject the request to set the soft bit. I suspect you
+> could let it go through but it would only change the soft bit in the
+> BIOS, nothing else really.
+>
+> Two options:
+> 1) You can let it go though, in that case do that, and remove the sw
+>    block stuff from poll() completely.
+>
+> 2) You can't let it go through. In this case, you need to leave set as
+>    it is, but implement poll like this:
+>
+> 	sw_block =3D rfkill_set_hw_state(rfkill, hw_blocked);
+> 	compal_rfkill_set(data, sw_block);
+>
+> so that when the user soft-blocks the device while hard-blocked, the
+> soft block is still honoured after pushing the button on the laptop.
+>
+>  =20
+OK, the second option sounds more desirable, so I've implemented that.
+
+--=20
+Mario Limonciello
+*Dell | Linux Engineering*
+mario_limonciello@dell.com
+
+--------------000501090302000407000407
+Content-Type: text/x-patch;
+ name="02_add_rfkill_support.diff"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline;
+ filename="02_add_rfkill_support.diff"
+
+=46rom 5f5dc9c1adf041418c6dd273cd4ee83d5ae96e74 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <Mario_Limonciello@Dell.com>
+Date: Wed, 19 Aug 2009 11:41:27 -0500
+Subject: [PATCH 2/3] Add rfkill support to compal-laptop
+
+Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
+Reviewed-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ drivers/platform/x86/compal-laptop.c |   91 ++++++++++++++++++++++++++++=
++++++-
+ 1 files changed, 89 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/platform/x86/compal-laptop.c b/drivers/platform/x86/=
+compal-laptop.c
+index 11003bb..d997de5 100644
+--- a/drivers/platform/x86/compal-laptop.c
++++ b/drivers/platform/x86/compal-laptop.c
+@@ -52,6 +52,7 @@
+ #include <linux/backlight.h>
+ #include <linux/platform_device.h>
+ #include <linux/autoconf.h>
++#include <linux/rfkill.h>
+=20
+ #define COMPAL_DRIVER_VERSION "0.2.6"
+=20
+@@ -64,6 +65,10 @@
+ #define WLAN_MASK	0x01
+ #define BT_MASK 	0x02
+=20
++static struct rfkill *wifi_rfkill;
++static struct rfkill *bt_rfkill;
++static struct platform_device *compal_device;
++
+ static int force;
+ module_param(force, bool, 0);
+ MODULE_PARM_DESC(force, "Force driver load, ignore DMI data");
+@@ -89,6 +94,82 @@ static int get_lcd_level(void)
+ 	return (int) result;
+ }
+=20
++static int compal_rfkill_set(void *data, bool blocked)
++{
++	unsigned long radio =3D (unsigned long) data;
++	u8 result, value;
++
++	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
++
++	if ((result & KILLSWITCH_MASK) =3D=3D 0)
++		return -EINVAL;
++
++	if (!blocked)
++		value =3D (u8) (result | radio);
++	else
++		value =3D (u8) (result & ~radio);
++	ec_write(COMPAL_EC_COMMAND_WIRELESS, value);
++
++	return 0;
++}
++
++static void compal_rfkill_poll(struct rfkill *rfkill, void *data)
++{
++	u8 result;
++	bool hw_blocked;
++	bool sw_blocked;
++
++	ec_read(COMPAL_EC_COMMAND_WIRELESS, &result);
++
++	hw_blocked =3D !(result & KILLSWITCH_MASK);
++	sw_blocked =3D rfkill_set_hw_state(rfkill, hw_blocked);
++	compal_rfkill_set(data,sw_blocked);
++}
++
++static const struct rfkill_ops compal_rfkill_ops =3D {
++	.poll =3D compal_rfkill_poll,
++	.set_block =3D compal_rfkill_set,
++};
++
++static int setup_rfkill(void)
++{
++	int ret;
++
++	wifi_rfkill =3D rfkill_alloc("compal-wifi", &compal_device->dev,
++				RFKILL_TYPE_WLAN, &compal_rfkill_ops,
++				(void *) WLAN_MASK);
++	if (!wifi_rfkill)
++		return -ENOMEM;
++
++	ret =3D rfkill_register(wifi_rfkill);
++	if (ret)
++		goto err_wifi;
++
++	bt_rfkill =3D rfkill_alloc("compal-bluetooth", &compal_device->dev,
++				RFKILL_TYPE_BLUETOOTH, &compal_rfkill_ops,
++				(void *) BT_MASK);
++	if (!bt_rfkill) {
++		ret =3D -ENOMEM;
++		goto err_allocate_bt;
++	}
++	ret =3D rfkill_register(bt_rfkill);
++	if (ret)
++		goto err_register_bt;
++
++	return 0;
++
++err_register_bt:
++	rfkill_destroy(bt_rfkill);
++
++err_allocate_bt:
++	rfkill_unregister(wifi_rfkill);
++
++err_wifi:
++	rfkill_destroy(wifi_rfkill);
++
++	return ret;
++}
++
+ static int set_wlan_state(int state)
+ {
+ 	u8 result, value;
+@@ -258,8 +339,6 @@ static struct platform_driver compal_driver =3D {
+ 	}
+ };
+=20
+-static struct platform_device *compal_device;
+-
+ /* Initialization */
+=20
+ static int dmi_check_cb(const struct dmi_system_id *id)
+@@ -356,6 +435,10 @@ static int __init compal_init(void)
+ 	if (ret)
+ 		goto fail_platform_device2;
+=20
++	ret =3D setup_rfkill();
++	if (ret)
++		printk(KERN_WARNING "compal-laptop: Unable to setup rfkill\n");
++
+ 	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
+ 		" successfully loaded.\n");
+=20
+@@ -387,6 +470,10 @@ static void __exit compal_cleanup(void)
+ 	platform_device_unregister(compal_device);
+ 	platform_driver_unregister(&compal_driver);
+ 	backlight_device_unregister(compalbl_device);
++	rfkill_unregister(wifi_rfkill);
++	rfkill_destroy(wifi_rfkill);
++	rfkill_unregister(bt_rfkill);
++	rfkill_destroy(bt_rfkill);
+=20
+ 	printk(KERN_INFO "compal-laptop: driver unloaded.\n");
+ }
+--=20
+1.6.3.3
+
+
+--------------000501090302000407000407--
+
+--------------enig2575055CE8844968B0CA0188
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkqMLGwACgkQ2CrZjkA73Yu0gACeMgUrMOa31WzD/2PwR2PArWII
+dacAnRS/uB4amCL2Z8pjP0nsAbwG9Cjf
+=Ckqe
+-----END PGP SIGNATURE-----
+
+--------------enig2575055CE8844968B0CA0188--
