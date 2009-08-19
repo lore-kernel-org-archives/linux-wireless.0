@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58436 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932530AbZHEANT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 20:13:19 -0400
-Message-ID: <4A78CE98.70903@gmx.de>
-Date: Wed, 05 Aug 2009 02:13:12 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from cantor2.suse.de ([195.135.220.15]:55146 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752428AbZHSQg2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 12:36:28 -0400
+Date: Wed, 19 Aug 2009 09:33:28 -0700
+From: Greg KH <gregkh@suse.de>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Zhu Yi <yi.zhu@intel.com>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Julia Lawall <julia@diku.dk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: question about ieee80211_tx.c (fwd)
+Message-ID: <20090819163328.GA3057@suse.de>
+References: <Pine.LNX.4.64.0908171000500.20447@pc-004.diku.dk>
+ <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
+ <1250558021.9651.35.camel@debian>
+ <20090818013502.GD20566@suse.de>
+ <1250699528.5351.18.camel@localhost.localdomain>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [PATCH 1/2] ar9170: cleanup of bss_info_changed and beacon config
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1250699528.5351.18.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable/Disable the beacon in ar910_set_beacon_timers() independently
-of ar->vif, but controlled by BSS_CHANGED_BEACON_ENABLED and
-bss_conf->enable_beacon from mac80211.
+On Wed, Aug 19, 2009 at 11:32:08AM -0500, Dan Williams wrote:
+> On Mon, 2009-08-17 at 18:35 -0700, Greg KH wrote:
+> > On Tue, Aug 18, 2009 at 09:13:41AM +0800, Zhu Yi wrote:
+> > > On Mon, 2009-08-17 at 19:50 +0800, Gábor Stefanik wrote:
+> > > > On Mon, Aug 17, 2009 at 10:03 AM, Julia Lawall<julia@diku.dk> wrote:
+> > > > > The files ieee80211_tx.c in the directories
+> > > > > drivers/staging/rtl8192su/ieee80211 and
+> > > > drivers/staging/rtl8192e/ieee80211
+> > > > > both contain the following code in the function
+> > > > > ieee80211_query_protectionmode:
+> > > > >
+> > > > >       if (ieee->mode == IW_MODE_MASTER)
+> > > > >                        goto NO_PROTECTION;
+> > > > >
+> > > > > Elsewhere in these files when there is a comparison against an
+> > > > IW_MODE
+> > > > > value, the field that is compared is iw_mode.  Should that be the
+> > > > case
+> > > > > here as well?
+> > > > >
+> > > > > thanks,
+> > > > > julia
+> > > > 
+> > > > I don't know; rtl8192su & rtl8192e use a modified version of the
+> > > > libipw stack, rather than the mac80211 stack found behind non-staging
+> > > > drivers.
+> > > 
+> > > This is clearly a bug. The question is: who is maintaining this driver
+> > > and why it doesn't use/extend ieee80211/libipw?
+> > 
+> > I maintain it, and I am working to convert it to use the existing
+> > ieee80211 stack that is in the kernel.  Remember, these are drivers in
+> > the staging tree, they are usually "crap" :)
+> 
+> When you say "ieee80211" you mean mac80211, right?
 
----
- drivers/net/wireless/ath/ar9170/ar9170.h |    1 +
- drivers/net/wireless/ath/ar9170/mac.c    |    4 +++-
- drivers/net/wireless/ath/ar9170/main.c   |   15 ++++++++-------
- 3 files changed, 12 insertions(+), 8 deletions(-)
+Sorry, yes, whatever the wireless stack in the main kernel is called
+these days :)
 
-diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
-index e6c3ee3..0db304a 100644
---- a/drivers/net/wireless/ath/ar9170/ar9170.h
-+++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-@@ -177,6 +177,7 @@ struct ar9170 {
- 	/* beaconing */
- 	struct sk_buff *beacon;
- 	struct work_struct beacon_work;
-+	bool enable_beacon;
- 
- 	/* cryptographic engine */
- 	u64 usedkeys;
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index d9f1f46..9f2801c 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -388,7 +388,9 @@ int ar9170_set_beacon_timers(struct ar9170 *ar)
- 	u32 v = 0;
- 	u32 pretbtt = 0;
- 
--	if (ar->vif) {
-+	if (ar->enable_beacon) {
-+		if (WARN_ON(!ar->vif))
-+			return -ENODEV;
- 		v |= ar->vif->bss_conf.beacon_int;
- 
- 		switch (ar->vif->type) {
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 099ed3c..d51b6ad 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -2177,11 +2177,18 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
- 			goto out;
- 	}
- 
--	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
-+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-+		ar->enable_beacon = bss_conf->enable_beacon;
-+	}
-+
-+	if (changed & BSS_CHANGED_BEACON) {
- 		err = ar9170_update_beacon(ar);
- 		if (err)
- 			goto out;
-+	}
- 
-+	if (changed & (BSS_CHANGED_BEACON_ENABLED | BSS_CHANGED_BEACON |
-+		       BSS_CHANGED_BEACON_INT)) {
- 		err = ar9170_set_beacon_timers(ar);
- 		if (err)
- 			goto out;
-@@ -2194,12 +2201,6 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
- #endif /* CONFIG_AR9170_LEDS */
- 	}
- 
--	if (changed & BSS_CHANGED_BEACON_INT) {
--		err = ar9170_set_beacon_timers(ar);
--		if (err)
--			goto out;
--	}
--
- 	if (changed & BSS_CHANGED_HT) {
- 		/* TODO */
- 		err = 0;
--- 
-1.6.0.4
+thanks,
 
+greg k-h
