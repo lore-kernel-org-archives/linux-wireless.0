@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.239]:25270 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964AbZHBWUG (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:32858 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753174AbZHSVm2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 18:20:06 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so923189rvb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 15:20:07 -0700 (PDT)
-Message-ID: <4A761134.3010807@lwfinger.net>
-Date: Sun, 02 Aug 2009 17:20:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 19 Aug 2009 17:42:28 -0400
+Received: by vws2 with SMTP id 2so4013178vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 14:42:29 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-Subject: Re: [PATCH] b43: implement baseband init for LP-PHY <= rev1
-References: <4A760DF5.6050504@gmail.com>
-In-Reply-To: <4A760DF5.6050504@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
+References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
+Date: Wed, 19 Aug 2009 17:42:29 -0400
+Message-ID: <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292
+From: Bob Copeland <me@bobcopeland.com>
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GÃ¡bor Stefanik wrote:
-> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
-> boardflags_hi values to defines.
-> Implement b43_phy_copy for easier copying between registers, as needed
-> by LP-PHY init.
-> 
-> Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Larry Finger <larry.finger@lwfinger.net>
+On Wed, Aug 19, 2009 at 4:47 PM, Fabio Comolli<fabio.comolli@gmail.com> wrote:
+> Hi all.
+> I see the following warning on an eeePC 900 (AR5001) running
+> 2.6.31-rc6 after a suspend/resume cycle:
+>
+> [  292.377941] ------------[ cut here ]------------
+> [  292.377976] WARNING: at net/mac80211/mlme.c:2292
+> ieee80211_sta_work+0x89/0xc39 [mac80211]()
 
-Your mailer mangled the white space and wrapped long lines in the patch.
+    if (WARN_ON(local->suspended)) ...
 
-Larry
+> [  292.378457]  [<c10199da>] ? __wake_up+0x1d/0x3d
+> [  292.378466]  [<c102a529>] ? insert_work+0x8f/0x96
+> [  292.378473]  [<c102a777>] ? queue_work_on+0x24/0x2b
+> [  292.378480]  [<c102a7a5>] ? queue_work+0x1a/0x39
+> [  292.378506]  [<f87e64dc>] ?
+> ieee80211_mlme_notify_scan_completed+0x40/0x66 [mac80211]
+> [  292.378532]  [<f87e3caa>] ? ieee80211_scan_completed+0x2ef/0x2fc [mac80211]
+
+Looks like ieee80211_scan_completed() racing with suspend()?
+
+> ieee80211_mesh_notify_scan_completed+0x4d/0x64 [mac80211]
+> Aug 10 20:08:35 archeee kernel: [ 1440.841185]  [<f84860ce>] ?
+> ieee80211_scan_completed+0x327/0x32f [mac80211]
+
+Same here.
+
+> The effect is that after the warning the interface is unusable until
+> disabled and reenabled with the rfkill switch.
+
+Interesting, I tried and didn't reproduce it, but I wasn't trying
+while scanning before.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
