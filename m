@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60439 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbZHSSn0 (ORCPT
+Received: from fallback-out2.mxes.net ([216.86.168.191]:31616 "EHLO
+	fallback-in2.mxes.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751966AbZHSORb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:43:26 -0400
-Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mario Limonciello <Mario_Limonciello@Dell.com>
-Cc: cezary.jackiewicz@gmail.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
-References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nYXA9SiGEd7OD+CwqUNb"
-Date: Wed, 19 Aug 2009 20:42:56 +0200
-Message-Id: <1250707376.8073.4.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 19 Aug 2009 10:17:31 -0400
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+To: mjg@redhat.com
+Cc: marcel@holtmann.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Subject: [PATCH 5/5] dell-laptop: poll the rfkill hard-block
+Date: Wed, 19 Aug 2009 15:06:51 +0100
+Message-Id: <1250690811-21203-5-git-send-email-alan-jenkins@tuffmail.co.uk>
+In-Reply-To: <4A8C0623.8030808@tuffmail.co.uk>
+References: <4A8C0623.8030808@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is controlled by a hardware switch, so we should poll it in order
+to pick up changes.  (There does not appear to be an interrupt or any
+other notification mechanism).
 
---=-nYXA9SiGEd7OD+CwqUNb
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ drivers/platform/x86/dell-laptop.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-On Wed, 2009-08-19 at 13:36 -0500, Mario Limonciello wrote:
-> Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
-> Reviewed-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-
-> +	ret =3D setup_rfkill();
-> +	if (ret)
-> +		goto fail_rfkill;
-> +
->  	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
->  		" successfully loaded.\n");
-> =20
->  	return 0;
-> =20
-> +fail_rfkill:
->  fail_platform_device2:
-
-Isn't that missing sysfs_remove_group()?
-
-johannes
-
---=-nYXA9SiGEd7OD+CwqUNb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKjEetAAoJEODzc/N7+QmaD/IP/jOs9tXj4Iw4h5kLh2UNKAS6
-n16HcvOKu4EvK/01ag9iCUUxvmbqWvQcN3tv+taTgRpDD8L3Huh355PycoNzN18c
-HbDOp/QYPV0c8YNeLjXH3sHOCwINrp9i8SwW2d5mqE4xocLnV/y9qXRHkYbKWgJG
-IUc0oOf9xC1h/6LuEfKL7OZcG3RyMucPc9nu9hufcmiAx1b/4t7FwuHN4FA7Lyat
-ew+5rhcUiiq/HkUPWUe9S+bso5QmG3KIXn1J0yRuBzWoV9KhqGxKCSccrGL7Size
-EtfJqG3EbGC5dBcoj2NQDBORYuTeZbkdbMUAhs6nP0YaQIJKHe3qy/kvx1mf1JRr
-Q0X4hWg9BiEYl6W3+TEhoi0PCrCeQ/CzY/8aQZ2wriQhEdf7njhsG+Zyop5gW5jY
-pxS2nDArtDYIwQXnsFOfdreZV5wsY9KvZBWuUOiToo+YMdH5OD22zKzanTHtFiNL
-LqlR8pD/OKgZVkrVAkMcb2hDIWzm9xJISAsMdrsgNyID2jAG/3VPI2dXCTGg1g0h
-VU7NnK+Xa/rhTJ3UhUsfYgfahsTaYf5TdmoYDf3ojTZwqzrcXAkWoAwG6UERg69g
-AE2i6QhFazgM9IceHoZsY2ffi/NyemLeO+Wby2VQJ8oRb7z267OJWOT2pvAVWPeb
-qDPYCK9P6VStp8Z6TA3u
-=qCmr
------END PGP SIGNATURE-----
-
---=-nYXA9SiGEd7OD+CwqUNb--
+diff --git a/drivers/platform/x86/dell-laptop.c b/drivers/platform/x86/dell-laptop.c
+index 250c4b1..349cf12 100644
+--- a/drivers/platform/x86/dell-laptop.c
++++ b/drivers/platform/x86/dell-laptop.c
+@@ -195,7 +195,7 @@ static int dell_rfkill_set(void *data, bool blocked)
+ 	return 0;
+ }
+ 
+-static void dell_rfkill_query(struct rfkill *rfkill, void *data)
++static void dell_rfkill_poll(struct rfkill *rfkill, void *data)
+ {
+ 	struct calling_interface_buffer buffer;
+ 	int status;
+@@ -211,7 +211,7 @@ static void dell_rfkill_query(struct rfkill *rfkill, void *data)
+ 
+ static const struct rfkill_ops dell_rfkill_ops = {
+ 	.set_block = dell_rfkill_set,
+-	.query = dell_rfkill_query,
++	.poll = dell_rfkill_poll,
+ };
+ 
+ static int __init dell_setup_rfkill(void)
+-- 
+1.6.3.2
 
