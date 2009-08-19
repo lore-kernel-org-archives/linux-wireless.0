@@ -1,194 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:50844 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752789AbZH0VAY (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33575 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbZHSHbT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 17:00:24 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
-	kalle.valo@nokia.com
-Subject: [PATCH 03/13] wl1271: Security sequence number handling for TX (for WPA)
-Date: Thu, 27 Aug 2009 23:59:57 +0300
-Message-Id: <1251406807-31495-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
-References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 19 Aug 2009 03:31:19 -0400
+Subject: Re: [PATCH] cfg80211: allow cfg80211_connect_result with bssid ==
+ NULL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1250663378-9113-1-git-send-email-yi.zhu@intel.com>
+References: <1250663378-9113-1-git-send-email-yi.zhu@intel.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CtagACjrrcI1FZlRAzWZ"
+Date: Wed, 19 Aug 2009 09:30:45 +0200
+Message-Id: <1250667045.16393.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Add security sequence number handling to the driver TX data path needed
-by WPA.
+--=-CtagACjrrcI1FZlRAzWZ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    5 +++++
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   11 +++++++++--
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    3 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c |   13 +++++++++++--
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   11 +++++++++++
- 5 files changed, 38 insertions(+), 5 deletions(-)
+On Wed, 2009-08-19 at 14:29 +0800, Zhu Yi wrote:
+> In case of connection failure, the bssid info is not a must have.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 55818f9..e575dcc 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -337,6 +337,11 @@ struct wl1271 {
- 	/* Pending TX frames */
- 	struct sk_buff *tx_frames[16];
- 
-+	/* Security sequence number counters */
-+	u8 tx_security_last_seq;
-+	u16 tx_security_seq_16;
-+	u32 tx_security_seq_32;
-+
- 	/* FW Rx counter */
- 	u32 rx_counter;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 2a4351f..1ee1b2b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -228,6 +228,10 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
- 
- 	join->ctrl |= wl->session_counter << WL1271_JOIN_CMD_TX_SESSION_OFFSET;
- 
-+	/* reset TX security counters */
-+	wl->tx_security_last_seq = 0;
-+	wl->tx_security_seq_16 = 0;
-+	wl->tx_security_seq_32 = 0;
- 
- 	ret = wl1271_cmd_send(wl, CMD_START_JOIN, join, sizeof(*join));
- 	if (ret < 0) {
-@@ -759,7 +763,8 @@ out:
- }
- 
- int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--		       u8 key_size, const u8 *key, const u8 *addr)
-+		       u8 key_size, const u8 *key, const u8 *addr,
-+		       u32 tx_seq_32, u16 tx_seq_16)
- {
- 	struct wl1271_cmd_set_keys *cmd;
- 	int ret = 0;
-@@ -777,12 +782,14 @@ int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 	cmd->key_size = key_size;
- 	cmd->key_type = key_type;
- 
-+	cmd->ac_seq_num16[0] = tx_seq_16;
-+	cmd->ac_seq_num32[0] = tx_seq_32;
-+
- 	/* we have only one SSID profile */
- 	cmd->ssid_profile = 0;
- 
- 	cmd->id = id;
- 
--	/* FIXME: this is from wl1251, needs to be checked */
- 	if (key_type == KEY_TKIP) {
- 		/*
- 		 * We get the key in the following form:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 951a844..7c4d3aa 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -49,7 +49,8 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, u16 aid);
- int wl1271_cmd_build_probe_req(struct wl1271 *wl, u8 *ssid, size_t ssid_len);
- int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
- int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--		       u8 key_size, const u8 *key, const u8 *addr);
-+		       u8 key_size, const u8 *key, const u8 *addr,
-+		       u32 tx_seq_32, u16 tx_seq_16);
- 
- enum wl1271_commands {
- 	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d9169b4..7faa65f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -592,6 +592,9 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_blocks_available = 0;
- 	wl->tx_results_count = 0;
- 	wl->tx_packets_count = 0;
-+	wl->tx_security_last_seq = 0;
-+	wl->tx_security_seq_16 = 0;
-+	wl->tx_security_seq_32 = 0;
- 	wl->time_offset = 0;
- 	wl->session_counter = 0;
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
-@@ -824,6 +827,8 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	struct wl1271 *wl = hw->priv;
- 	const u8 *addr;
- 	int ret;
-+	u32 tx_seq_32 = 0;
-+	u16 tx_seq_16 = 0;
- 	u8 key_type;
- 
- 	static const u8 bcast_addr[ETH_ALEN] =
-@@ -862,11 +867,15 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key_type = KEY_TKIP;
- 
- 		key_conf->hw_key_idx = key_conf->keyidx;
-+		tx_seq_32 = wl->tx_security_seq_32;
-+		tx_seq_16 = wl->tx_security_seq_16;
- 		break;
- 	case ALG_CCMP:
- 		key_type = KEY_AES;
- 
- 		key_conf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		tx_seq_32 = wl->tx_security_seq_32;
-+		tx_seq_16 = wl->tx_security_seq_16;
- 		break;
- 	default:
- 		wl1271_error("Unknown key algo 0x%x", key_conf->alg);
-@@ -880,7 +889,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = wl1271_cmd_set_key(wl, KEY_ADD_OR_REPLACE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
--					 addr);
-+					 addr, tx_seq_32, tx_seq_16);
- 		if (ret < 0) {
- 			wl1271_error("Could not add or replace key");
- 			goto out_sleep;
-@@ -891,7 +900,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = wl1271_cmd_set_key(wl, KEY_REMOVE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
--					 addr);
-+					 addr, 0, 0);
- 		if (ret < 0) {
- 			wl1271_error("Could not remove key");
- 			goto out_sleep;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 0c19688..162f026 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -258,6 +258,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	u32 header_len;
-+	u16 seq;
- 	int id = result->id;
- 
- 	/* check for id legality */
-@@ -284,6 +285,16 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	/* info->status.retry_count = result->ack_failures; */
- 	wl->stats.retry_count += result->ack_failures;
- 
-+	/* update security sequence number */
-+	seq = wl->tx_security_seq_16 +
-+		(result->lsb_security_sequence_number -
-+		 wl->tx_security_last_seq);
-+	wl->tx_security_last_seq = result->lsb_security_sequence_number;
-+
-+	if (seq < wl->tx_security_seq_16)
-+		wl->tx_security_seq_32++;
-+	wl->tx_security_seq_16 = seq;
-+
- 	/* get header len */
- 	if (info->control.hw_key &&
- 	    info->control.hw_key->alg == ALG_TKIP)
--- 
-1.5.6.5
+Good point, thanks. In fact, the original __cfg80211_connect_result()
+did handle a NULL bssid, but the event stuff lost it. I think you should
+also pass NULL in core.c when is_zero_ether_addr()?
+
+johannes
+
+--=-CtagACjrrcI1FZlRAzWZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKi6oiAAoJEODzc/N7+Qma/kQQAMosJo4PHHsYSzh58ZboKeT8
+8U3nks2VDsv+605pmvGwk2j1uHENwgMN4K9jlUTPvp/HzCDbNIq6Dwg6wI/ZoJWg
+4tfaib+JJiI28CexlNCJAlE4LSiel5N7JYgdK+JOk4qMKy9Lub++lzBwwPkBCkt8
+K96IWXHH0TRljyELwyHBy4MahYFQ3v4izfcn24ESmj5VxOtUVJgh+XIJ38byUKTN
+RZAh0aJhnChJZoMaxaUUGQJNY3Xxgg7zySNFbHbyfWQeMFYOhHccU/FOnUIfG/5R
+Szbb088+gNtaYH4ZQHWijRuiwOCMTSqQ3v4NUbjM9AZO0O8A+CjfGK3d32Tm5JHu
+BnWPf9ED5AeQkNckuxOyhog91T5nsscf2AI49Fuu5/nKfNwxYlxEWQk/yekiTV0r
+YDOkYz8ysld/yT9gXG8qP07kwh4lQcvS+MKlOyp999gCA5nNgsxom7VQNSPYqkgK
+gI4JLbqTOPJSuD5t5Uw/1+3+LHHJiIgbG6FuqA3OfLrRvWbEHx0J/Ah1V48vHMfE
+dHTif3rgtN+hvUZ8LkUGt9iBIka3DCX1N6m+icsJcydsAr46MvDUV0qJ/uYfTXTO
+z6T20Ov8plBlOpa39vfFXnjTeOsY0dSgH20aQYwUesihglwnSvxEL32qwT2PfIZr
+d6IiWLJH1HjWOAVJsJ6b
+=gRtw
+-----END PGP SIGNATURE-----
+
+--=-CtagACjrrcI1FZlRAzWZ--
 
