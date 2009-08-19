@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:42204 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578AbZHEUYN (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:45606 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbZHSLnT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 16:24:13 -0400
-Received: by mail-ew0-f214.google.com with SMTP id 10so285565ewy.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 13:24:13 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH 1/6] orinoco: prefer_port3 can be a single bit
-Date: Wed,  5 Aug 2009 21:23:27 +0100
-Message-Id: <1249503812-16921-2-git-send-email-kilroyd@googlemail.com>
-In-Reply-To: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
-References: <1249503812-16921-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 19 Aug 2009 07:43:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <1250672475.25419.7.camel@johannes.local>
+References: <4A89E768.7010207@dell.com>
+	 <1250558643.30166.109.camel@localhost.localdomain>
+	 <9b2b86520908180044l72cb8642j6256e246662f7971@mail.gmail.com>
+	 <9b2b86520908180752k66feda09rf9034a96ac6ef470@mail.gmail.com>
+	 <4A8AE459.8060102@dell.com>
+	 <9b2b86520908181408v5f7875b6sea31d8d95cc08c0b@mail.gmail.com>
+	 <1250631063.16393.14.camel@johannes.local> <4A8B246D.7050004@dell.com>
+	 <1250672475.25419.7.camel@johannes.local>
+Date: Wed, 19 Aug 2009 13:43:18 +0200
+Message-ID: <4798d7930908190443g1c4ade81v327474ff8ec26567@mail.gmail.com>
+Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
+From: Cezary Jackiewicz <cezary.jackiewicz@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mario Limonciello <mario_limonciello@dell.com>,
+	Alan Jenkins <sourcejedi.lkml@googlemail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-acpi@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a boolean value set based on firmware capabilities, so move the
-variable to the capabilities section and reduce the structure size.
+> Also, I'm not entirely clear about the semantics -- you've called the
+> bit KILLSWITCH_MASK, but does it really control all technologies as a
+> hard block, i.e. it toggles both the bluetooth and wireless hard block?
 
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
- drivers/net/wireless/orinoco/orinoco.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+In compal's laptop - yes. Switch disables all radios, bluetooth and wifi.
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-index 5f4f5c9..2a4eef1 100644
---- a/drivers/net/wireless/orinoco/orinoco.h
-+++ b/drivers/net/wireless/orinoco/orinoco.h
-@@ -107,10 +107,10 @@ struct orinoco_private {
- 	unsigned int do_fw_download:1;
- 	unsigned int broken_disableport:1;
- 	unsigned int broken_monitor:1;
-+	unsigned int prefer_port3:1;
- 
- 	/* Configuration paramaters */
- 	enum nl80211_iftype iw_mode;
--	int prefer_port3;
- 	u16 encode_alg, wep_restrict, tx_key;
- 	struct orinoco_key keys[ORINOCO_MAX_KEYS];
- 	int bitratemode;
--- 
-1.6.3.3
-
+--
+Cezary
