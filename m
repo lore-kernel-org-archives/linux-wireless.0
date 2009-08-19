@@ -1,206 +1,366 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coruscant.huijgen.tk ([84.245.31.19]:15965 "EHLO
-	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751279AbZHSMn7 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:56561 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbZHSO54 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 08:43:59 -0400
-Message-ID: <4A8BF35E.1090507@huijgen.tk>
-Date: Wed, 19 Aug 2009 14:43:10 +0200
-From: Mark Huijgen <mark.sf.net@huijgen.tk>
+	Wed, 19 Aug 2009 10:57:56 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so810956fga.17
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 07:57:57 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+In-Reply-To: <69e28c910908190430x5223cf6al460e8008c36c3111@mail.gmail.com>
+References: <4A8AE255.9030102@gmail.com> <69e28c910908190430x5223cf6al460e8008c36c3111@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 19 Aug 2009 16:57:37 +0200
+Message-ID: <69e28c910908190757j69eb693cia7ea4ff45959fc8c@mail.gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Implement spec updates and remove resolved
+	FIXMEs
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANN] b43 LP-PHY support (BCM4310/4312/4315) working (partially)!
-References: <69e28c910908181329r4b6b7cc8w3c9c0d79dda3730c@mail.gmail.com> 	<4A8BBB02.4020203@huijgen.tk> <69e28c910908190428s46f3d25dnb2f2d8591f99618f@mail.gmail.com>
-In-Reply-To: <69e28c910908190428s46f3d25dnb2f2d8591f99618f@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> 2009/8/19 Mark Huijgen <mark.sf.net@huijgen.tk>:
->   
->> Gábor Stefanik wrote:
->>     
->>> Hello World!
->>>
->>> Great news for Broadcom BCM4310/4312/4315 (PCI 14e4:4315) users:
->>> LP-PHY support is now at the point where it can be tested for functionality!
->>>
->>> So, go ahead, give it a try, and let's rock!
->>>
->>>       
->> Patches applied, well manually, cause I wasn't able to extract a working
->> version from the emails or the weblink provided. Whats the recommended
->> method to apply these git patches on mailinglists?
->>
->> Here goes:
->>
->> # modprobe b43 verbose=3
->> [ 1596.228088] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor
->> 0x4243)
->> [ 1596.228100] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F,
->> vendor 0x4243)
->> [ 1596.228110] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
->> [ 1596.228120] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
->> [ 1596.248050] ssb: Found rev 1 PMU (capabilities 0x02A62F01)
->> [ 1596.256780] ssb: SPROM revision 8 detected.
->> [ 1596.276093] ssb: Sonics Silicon Backplane found on PCI device
->> 0000:10:00.0
->> [ 1596.281108] b43-phy2: Broadcom 4312 WLAN found (core revision 15)
->> [ 1596.324046] b43-phy2 debug: Found PHY: Analog 6, Type 5, Revision 1
->> [ 1596.324060] b43-phy2 debug: Found Radio: Manuf 0x17F, Version 0x2062,
->> Revision 2
->> [ 1596.348233] phy2: Selected rate control algorithm 'minstrel'
->> [ 1596.348349] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
->> FW13 ]
->>
->> # ifconfig wlan0 up
->> SIOCSIFFLAGS: Input/output error
->>
->> [ 1689.356055] b43 ssb0:0: firmware: requesting b43/ucode15.fw
->> [ 1689.703918] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
->> [ 1689.710418] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
->> [ 1689.852058] b43-phy2: Loading firmware version 410.2160 (2007-05-26
->> 15:32:10)
->> [ 1689.854963] b43-phy2 debug: b2062: Using crystal tab entry 19200 kHz.
->> [ 1689.855468] b43-phy2 debug: RC calib: Failed to switch to channel 7,
->> error = -5
->> [ 1689.860016] b43-phy2 debug: Switch to init channel failed, error = -5.
->>     
+False alert, sorry. Feel free to apply. The "regression" apparently
+resulted from the use of an incorrect firmware image - when Mark
+switched to the same firmware as Larry, his card started working
+again.
+
+2009/8/19 Gábor Stefanik <netrolller.3d@gmail.com>:
+> John, please hold off this patch for now, it appears to be causing
+> regressions. I will investigate this.
 >
-> Hmm, error -5 is EIO, which in the channel switch code is used to
-> represent "PLL charge pump out of range". This is specifically the
-> error I was trying to fix... could you try without the 2 extra
-> patches? Maybe I did something wrong. (Without the 2 patches, channels
-> 1..6 and 9..11 (12...14 not tested) throw this error, but channels 7
-> and 8 work.)
->   
-Same error without the patches, but 1 less error in dmesg. The 'RC
-calib: Failed to switch to channel 7, error = -5' is gone now.
-> Also try extracting firmware from
-> ftp://downloads.netgear.com/files/GPL/WNDR3300-V1.0.29_gpl_src.zip's
-> wl_apsta.o file (newer than the one on mirror.openwrt.org - you may
-> need to add the extraction defines to fwcutter first; there is a
-> script in the fwcutter git tree, probably also in tarballs, that
-> generates extraction lists.) This is the firmware the specs are
-> written for; it's possible that the current firmware is simply not
-> good for LP-PHY (or maybe it needs code based on older specs).
->   
-After running the included python script, patching the cutter and
-extracting firmware, I now get ucode version 478.104 in dmesg. Next test
-is also without the 2 patches. Following log is from modprobe+ifconfig
-wlan0 up:
-
-[14600.712104] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor
-0x4243)
-[14600.712116] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F,
-vendor 0x4243)
-[14600.712126] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
-[14600.712136] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-[14600.732052] ssb: Found rev 1 PMU (capabilities 0x02A62F01)
-[14600.740727] ssb: SPROM revision 8 detected.
-[14600.760093] ssb: Sonics Silicon Backplane found on PCI device
-0000:10:00.0
-[14600.816481] b43-phy5: Broadcom 4312 WLAN found (core revision 15)
-[14600.860044] b43-phy5 debug: Found PHY: Analog 6, Type 5, Revision 1
-[14600.860058] b43-phy5 debug: Found Radio: Manuf 0x17F, Version 0x2062,
-Revision 2
-[14600.884250] phy5: Selected rate control algorithm 'minstrel'
-[14600.884367] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
-FW13 ]
-[14611.192054] b43 ssb0:0: firmware: requesting b43/ucode15.fw
-[14611.206016] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
-[14611.211387] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
-[14611.364058] b43-phy5: Loading firmware version 478.104 (2008-07-01
-00:50:23)
-[14611.367051] b43-phy5 debug: b2062: Using crystal tab entry 19200 kHz.
-[14611.371875] b43-phy5 debug: Switch to init channel failed, error = -5.
-[14611.372406] b43-phy5 ERROR: PHY init: Channel switch to default failed
-
-Still the "SIOCSIFFLAGS: Input/output error" on ifconfig wlan0 up.
-
-
->   
->> [ 1689.860543] b43-phy2 ERROR: PHY init: Channel switch to default failed
+> 2009/8/18 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> Larry has started re-checking all current routines against a new
+>> version of the Broadcom MIPS driver. This patch implements the first
+>> round of changes he documented on the specs wiki.
 >>
->> Interface is not coming up, so cannot scan:
->> # iwlist wlan0 scan
->> wlan0     Interface doesn't support scanning : Network is down
->>     
+>> Also remove a few FIXMEs regarding missing initial values for variables
+>> with dynamic initial values where reading the values has been implemented.
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> drivers/net/wireless/b43/phy_lp.c       |   98
+>> +++++++++++++++++++------------
+>> drivers/net/wireless/b43/phy_lp.h       |   18 +++---
+>> drivers/net/wireless/b43/tables_lpphy.c |   12 ++++-
+>> 3 files changed, 82 insertions(+), 46 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c
+>> b/drivers/net/wireless/b43/phy_lp.c
+>> index 242338f..6c69cdb 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -719,9 +719,39 @@ static void lpphy_set_bb_mult(struct b43_wldev *dev, u8
+>> bb_mult)
+>>        b43_lptab_write(dev, B43_LPTAB16(0, 87), (u16)bb_mult << 8);
+>> }
+>>
+>> -static void lpphy_disable_crs(struct b43_wldev *dev)
+>> +static void lpphy_set_deaf(struct b43_wldev *dev, bool user)
+>> {
+>> +       struct b43_phy_lp *lpphy = dev->phy.lp;
+>> +
+>> +       if (user)
+>> +               lpphy->crs_usr_disable = 1;
+>> +       else
+>> +               lpphy->crs_sys_disable = 1;
+>>        b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x80);
+>> +}
+>> +
+>> +static void lpphy_clear_deaf(struct b43_wldev *dev, bool user)
+>> +{
+>> +       struct b43_phy_lp *lpphy = dev->phy.lp;
+>> +
+>> +       if (user)
+>> +               lpphy->crs_usr_disable = 0;
+>> +       else
+>> +               lpphy->crs_sys_disable = 0;
+>> +
+>> +       if (!lpphy->crs_usr_disable && !lpphy->crs_sys_disable) {
+>> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+>> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
+>> +                                       0xFF1F, 0x60);
+>> +               else
+>> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
+>> +                                       0xFF1F, 0x20);
+>> +       }
+>> +}
+>> +
+>> +static void lpphy_disable_crs(struct b43_wldev *dev, bool user)
+>> +{
+>> +       lpphy_set_deaf(dev, user);
+>>        b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x1);
+>>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFB);
+>> @@ -749,12 +779,9 @@ static void lpphy_disable_crs(struct b43_wldev *dev)
+>>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_2, 0x3FF);
+>> }
+>>
+>> -static void lpphy_restore_crs(struct b43_wldev *dev)
+>> +static void lpphy_restore_crs(struct b43_wldev *dev, bool user)
+>> {
+>> -       if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+>> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x60);
+>> -       else
+>> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x20);
+>> +       lpphy_clear_deaf(dev, user);
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFF80);
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFC00);
+>> }
+>> @@ -800,10 +827,11 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
+>>                b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+>>                                0xF800, rf_gain);
+>>        } else {
+>> -               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x7F00;
+>> +               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x1FC0;
+>> +               pa_gain <<= 2;
+>>                b43_phy_write(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+>>                              (gains.pga << 8) | gains.gm);
+>> -               b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+>> +               b43_phy_maskset(dev, B43_PHY_OFDM(0xFB),
+>>                                0x8000, gains.pad | pa_gain);
+>>                b43_phy_write(dev, B43_PHY_OFDM(0xFC),
+>>                              (gains.pga << 8) | gains.gm);
+>> @@ -817,7 +845,7 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
+>>                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFF7F, 1 <<
+>> 7);
+>>                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xBFFF, 1 <<
+>> 14);
+>>        }
+>> -       b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFBF, 1 << 6);
+>> +       b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFBF, 1 << 6);
+>> }
+>>
+>> static void lpphy_rev0_1_set_rx_gain(struct b43_wldev *dev, u32 gain)
+>> @@ -857,33 +885,33 @@ static void lpphy_rev2plus_set_rx_gain(struct
+>> b43_wldev *dev, u32 gain)
+>>        }
+>> }
+>>
+>> -static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
+>> +static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+>> {
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFEF);
+>>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFBF);
+>>        if (dev->phy.rev >= 2) {
+>>                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
+>> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
+>> -                       return;
+>> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
+>> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFF7);
+>> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+>> +                       b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
+>> +                       b43_phy_mask(dev, B43_PHY_OFDM(0xE5), 0xFFF7);
+>> +               }
+>>        } else {
+>>                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
+>>        }
+>> }
+>>
+>> -static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+>> +static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
+>> {
+>>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1);
+>>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
+>>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x40);
+>>        if (dev->phy.rev >= 2) {
+>>                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
+>> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
+>> -                       return;
+>> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
+>> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x8);
+>> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+>> +                       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
+>> +                       b43_phy_set(dev, B43_PHY_OFDM(0xE5), 0x8);
+>> +               }
+>>        } else {
+>>                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x200);
+>>        }
+>> @@ -1002,26 +1030,22 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32
+>> divisor, u8 precision)
+>> {
+>>        u32 quotient, remainder, rbit, roundup, tmp;
+>>
+>> -       if (divisor == 0) {
+>> -               quotient = 0;
+>> -               remainder = 0;
+>> -       } else {
+>> -               quotient = dividend / divisor;
+>> -               remainder = dividend % divisor;
+>> -       }
+>> +       if (divisor == 0)
+>> +               return 0;
+>> +
+>> +       quotient = dividend / divisor;
+>> +       remainder = dividend % divisor;
+>>
+>>        rbit = divisor & 0x1;
+>>        roundup = (divisor >> 1) + rbit;
+>> -       precision--;
+>>
+>> -       while (precision != 0xFF) {
+>> +       while (precision != 0) {
+>>                tmp = remainder - roundup;
+>>                quotient <<= 1;
+>> -               remainder <<= 1;
+>> -               if (remainder >= roundup) {
+>> +               if (remainder >= roundup)
+>>                        remainder = (tmp << 1) + rbit;
+>> -                       quotient--;
+>> -               }
+>> +               else
+>> +                       remainder <<= 1;
+>>                precision--;
+>>        }
+>>
+>> @@ -1123,11 +1147,11 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>        struct b43_phy_lp *lpphy = dev->phy.lp;
+>>        struct lpphy_iq_est iq_est;
+>>        struct lpphy_tx_gains tx_gains;
+>> -       static const u32 ideal_pwr_table[22] = {
+>> +       static const u32 ideal_pwr_table[21] = {
+>>                0x10000, 0x10557, 0x10e2d, 0x113e0, 0x10f22, 0x0ff64,
+>>                0x0eda2, 0x0e5d4, 0x0efd1, 0x0fbe8, 0x0b7b8, 0x04b35,
+>>                0x01a5e, 0x00a0b, 0x00444, 0x001fd, 0x000ff, 0x00088,
+>> -               0x0004c, 0x0002c, 0x0001a, 0xc0006,
+>> +               0x0004c, 0x0002c, 0x0001a,
+>>        };
+>>        bool old_txg_ovr;
+>>        u8 old_bbmult;
+>> @@ -1145,7 +1169,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>                       "RC calib: Failed to switch to channel 7, error = %d",
+>>                       err);
+>>        }
+>> -       old_txg_ovr = (b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) >> 6) & 1;
+>> +       old_txg_ovr = !!(b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40);
+>>        old_bbmult = lpphy_get_bb_mult(dev);
+>>        if (old_txg_ovr)
+>>                tx_gains = lpphy_get_tx_gains(dev);
+>> @@ -1160,7 +1184,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>        old_txpctl = lpphy->txpctl_mode;
+>>
+>>        lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+>> -       lpphy_disable_crs(dev);
+>> +       lpphy_disable_crs(dev, true);
+>>        loopback = lpphy_loopback(dev);
+>>        if (loopback == -1)
+>>                goto finish;
+>> @@ -1193,7 +1217,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+>> *dev)
+>>        lpphy_stop_ddfs(dev);
+>>
+>> finish:
+>> -       lpphy_restore_crs(dev);
+>> +       lpphy_restore_crs(dev, true);
+>>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, old_rf_ovrval);
+>>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_0, old_rf_ovr);
+>>        b43_phy_write(dev, B43_LPPHY_AFE_CTL_OVRVAL, old_afe_ovrval);
+>> diff --git a/drivers/net/wireless/b43/phy_lp.h
+>> b/drivers/net/wireless/b43/phy_lp.h
+>> index 99cb038..e158d1f 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.h
+>> +++ b/drivers/net/wireless/b43/phy_lp.h
+>> @@ -825,11 +825,11 @@ struct b43_phy_lp {
+>>        enum b43_lpphy_txpctl_mode txpctl_mode;
+>>
+>>        /* Transmit isolation medium band */
+>> -       u8 tx_isolation_med_band; /* FIXME initial value? */
+>> +       u8 tx_isolation_med_band;
+>>        /* Transmit isolation low band */
+>> -       u8 tx_isolation_low_band; /* FIXME initial value? */
+>> +       u8 tx_isolation_low_band;
+>>        /* Transmit isolation high band */
+>> -       u8 tx_isolation_hi_band; /* FIXME initial value? */
+>> +       u8 tx_isolation_hi_band;
+>>
+>>        /* Max transmit power medium band */
+>>        u16 max_tx_pwr_med_band;
+>> @@ -848,7 +848,7 @@ struct b43_phy_lp {
+>>        s16 txpa[3], txpal[3], txpah[3];
+>>
+>>        /* Receive power offset */
+>> -       u8 rx_pwr_offset; /* FIXME initial value? */
+>> +       u8 rx_pwr_offset;
+>>
+>>        /* TSSI transmit count */
+>>        u16 tssi_tx_count;
+>> @@ -864,16 +864,16 @@ struct b43_phy_lp {
+>>        s8 tx_pwr_idx_over; /* FIXME initial value? */
+>>
+>>        /* RSSI vf */
+>> -       u8 rssi_vf; /* FIXME initial value? */
+>> +       u8 rssi_vf;
+>>        /* RSSI vc */
+>> -       u8 rssi_vc; /* FIXME initial value? */
+>> +       u8 rssi_vc;
+>>        /* RSSI gs */
+>> -       u8 rssi_gs; /* FIXME initial value? */
+>> +       u8 rssi_gs;
+>>
+>>        /* RC cap */
+>>        u8 rc_cap; /* FIXME initial value? */
+>>        /* BX arch */
+>> -       u8 bx_arch; /* FIXME initial value? */
+>> +       u8 bx_arch;
+>>
+>>        /* Full calibration channel */
+>>        u8 full_calib_chan; /* FIXME initial value? */
+>> @@ -885,6 +885,8 @@ struct b43_phy_lp {
+>>        /* Used for "Save/Restore Dig Filt State" */
+>>        u16 dig_flt_state[9];
+>>
+>> +       bool crs_usr_disable, crs_sys_disable;
+>> +
+>>        unsigned int pdiv;
+>> };
+>>
+>> diff --git a/drivers/net/wireless/b43/tables_lpphy.c
+>> b/drivers/net/wireless/b43/tables_lpphy.c
+>> index 2721310..60d472f 100644
+>> --- a/drivers/net/wireless/b43/tables_lpphy.c
+>> +++ b/drivers/net/wireless/b43/tables_lpphy.c
+>> @@ -2367,7 +2367,17 @@ static void lpphy_rev2plus_write_gain_table(struct
+>> b43_wldev *dev, int offset,
+>>        tmp  = data.pad << 16;
+>>        tmp |= data.pga << 8;
+>>        tmp |= data.gm;
+>> -       tmp |= 0x7f000000;
+>> +       if (dev->phy.rev >= 3) {
+>> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
+>> +                       tmp |= 0x10 << 24;
+>> +               else
+>> +                       tmp |= 0x70 << 24;
+>> +       } else {
+>> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
+>> +                       tmp |= 0x14 << 24;
+>> +               else
+>> +                       tmp |= 0x7F << 24;
+>> +       }
+>>        b43_lptab_write(dev, B43_LPTAB32(7, 0xC0 + offset), tmp);
+>>        tmp  = data.bb_mult << 20;
+>>        tmp |= data.dac << 28;
+>> --
+>> 1.6.2.4
+>>
+>>
+>>
+>>
 >
-> When testing mac80211 drivers, always use "iw dev wlan0 scan", not
-> "iwlist wlan0 scan". (Though this shouldn't affect your results in
-> this case.)
->   
-OK will do. Never used iw before your other mail about iw phy and friends :)
-> Try bringing up the interface in monitor mode.
-> Also, try changing get_default_chan to return 7 instead of 1.
->   
-Tested default_chan 7, *with* the 2 patches and the interface comes up!
-Scan results show a lot of the AP's around here, but only AP's of
-channel 6 and higher.
-The closest AP here is actually on channel 1 and is not showing. It
-seems there is a problem with channel 1?
+>
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>
 
-Dmesg for modprobe+ifconfig wlan0 up:
-[  478.516094] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor
-0x4243)
-[  478.516106] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F,
-vendor 0x4243)
-[  478.516116] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
-[  478.516125] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
-[  478.536053] ssb: Found rev 1 PMU (capabilities 0x02A62F01)
-[  478.544729] ssb: SPROM revision 8 detected.
-[  478.564094] ssb: Sonics Silicon Backplane found on PCI device
-0000:10:00.0
-[  478.569257] b43-phy3: Broadcom 4312 WLAN found (core revision 15)
-[  478.612046] b43-phy3 debug: Found PHY: Analog 6, Type 5, Revision 1
-[  478.612061] b43-phy3 debug: Found Radio: Manuf 0x17F, Version 0x2062,
-Revision 2
-[  478.636235] phy3: Selected rate control algorithm 'minstrel'
-[  478.636347] Broadcom 43xx driver loaded [ Features: PL, Firmware-ID:
-FW13 ]
-[  483.116055] b43 ssb0:0: firmware: requesting b43/ucode15.fw
-[  483.120545] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
-[  483.127002] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
-[  483.280059] b43-phy3: Loading firmware version 478.104 (2008-07-01
-00:50:23)
-[  483.283053] b43-phy3 debug: b2062: Using crystal tab entry 19200 kHz.
-[  483.296062] b43-phy3 debug: Chip initialized
-[  483.296272] b43-phy3 debug: 64-bit DMA initialized
-[  483.317545] Registered led device: b43-phy3::tx
-[  483.317568] Registered led device: b43-phy3::rx
-[  483.317589] Registered led device: b43-phy3::radio
-[  483.317649] b43-phy3 debug: Wireless interface started
-[  483.317669] b43-phy3 debug: Adding Interface type 2
 
-# wpa_supplicant -Dwext -i wlan0 -c /etc/wpa_supplicant.conf
-ioctl[SIOCSIWAUTH]: Operation not supported
-WEXT auth param 4 value 0x0 - Trying to associate with 00:30:f1:f9:10:45
-(SSID='default' freq=2462 MHz)
-Associated with 00:30:f1:f9:10:45
-WPA: Key negotiation completed with 00:30:f1:f9:10:45 [PTK=TKIP GTK=TKIP]
-CTRL-EVENT-CONNECTED - Connection to 00:30:f1:f9:10:45 completed (auth)
-[id=0 id_str=]
 
-Well, what do you know, it actually does WPA authentication already!
-Means TX must be working too.
-I am also able to get an IP address with a dhcp client.
-
-dmesg from wpa_supplicant part:
-[  618.820622] wlan0: direct probe to AP 00:30:f1:f9:10:45 (try 1)
-[  618.824200] wlan0 direct probe responded
-[  618.824204] wlan0: authenticate with AP 00:30:f1:f9:10:45 (try 1)
-[  618.825886] wlan0: authenticated
-[  618.825902] wlan0: associate with AP 00:30:f1:f9:10:45 (try 1)
-[  618.828148] wlan0: RX AssocResp from 00:30:f1:f9:10:45 (capab=0x431
-status=0 aid=10)
-[  618.828151] wlan0: associated
-
-This AP is on channel 11.
-
-I don't have time for further testing today, but results are promising!
-
-Mark
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
