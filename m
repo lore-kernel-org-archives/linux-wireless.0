@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.229]:14692 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbZHUBHh (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:45040 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752005AbZHSOoP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 21:07:37 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so109659rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 18:07:38 -0700 (PDT)
-Message-ID: <4A8DF356.8000501@lwfinger.net>
-Date: Thu, 20 Aug 2009 20:07:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 19 Aug 2009 10:44:15 -0400
+Message-ID: <4A8C0FBA.50502@tuffmail.co.uk>
+Date: Wed, 19 Aug 2009 15:44:10 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] rtl8187: always set MSR_LINK_ENEDCA flag with RTL8187B
-References: <200908202116.17847.herton@mandriva.com.br>
-In-Reply-To: <200908202116.17847.herton@mandriva.com.br>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: marcel@holtmann.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 6/5] dell-laptop: remove duplicate Kconfig entry under drivers/misc
+References: <4A8C0623.8030808@tuffmail.co.uk> <1250690811-21203-5-git-send-email-alan-jenkins@tuffmail.co.uk> <20090819141322.GA15937@srcf.ucam.org>
+In-Reply-To: <20090819141322.GA15937@srcf.ucam.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski wrote:
-> RTL8187B always needs MSR_LINK_ENEDCA flag to be set even when it is in
-> no link mode, otherwise it'll not be able to associate when this flag is
-> not set after the change "mac80211: fix managed mode BSSID handling"
-> (commit 9cef8737).
-> 
-> By accident, setting BSSID of AP before association makes 8187B to
-> successfuly associate even when ENEDCA flag isn't set, which was the
-> case before the mac80211 change. But now the BSSID of AP we are trying
-> to associate is only available after association is successful, and
-> any attempt to associate without the needed flag doesn't work.
-> 
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> ---
+Matthew Garrett wrote:
+> On Wed, Aug 19, 2009 at 03:06:51PM +0100, Alan Jenkins wrote:
+>   
+>> This is controlled by a hardware switch, so we should poll it in order
+>> to pick up changes.  (There does not appear to be an interrupt or any
+>> other notification mechanism).
+>>     
+>
+> With the exception of this one they all look fine - I'm moving house 
+> next week and won't have access to any Dell hardware for over a month, 
+> so if anyone else could confirm that these work that would be excellent.
+>
+>   
 
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Ok, thanks!
 
-I had just finished bisecting the problem reported in Bug #13960 when
-this patch from Herton appeared in my mailbox, and it fixed the problem.
+Here's something else I just noticed.  I was able to test this one myself.
 
-Larry
+----------------------------------------------------------------------
+>From 7efa12d3ea8bb70897358b4a87f8dedce9b78cca Mon Sep 17 00:00:00 2001
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Date: Wed, 19 Aug 2009 15:32:17 +0100
+Subject: [PATCH] dell-laptop: remove duplicate Kconfig entry under drivers/misc
+
+This showed up as an unselectable option when using xconfig and
+searching for "dell".  It must been overlooked when dell-laptop
+was moved to drivers/platform/x86.
+
+Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+---
+ drivers/misc/Kconfig |   13 -------------
+ 1 files changed, 0 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 68ab39d..22414c5 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -210,19 +210,6 @@ config SGI_GRU_DEBUG
+ 	This option enables addition debugging code for the SGI GRU driver. If
+ 	you are unsure, say N.
+ 
+-config DELL_LAPTOP
+-	tristate "Dell Laptop Extras (EXPERIMENTAL)"
+-	depends on X86
+-	depends on DCDBAS
+-	depends on EXPERIMENTAL
+-	depends on BACKLIGHT_CLASS_DEVICE
+-	depends on RFKILL
+-	depends on POWER_SUPPLY
+-	default n
+-	---help---
+-	This driver adds support for rfkill and backlight control to Dell
+-	laptops.
+-
+ config ISL29003
+ 	tristate "Intersil ISL29003 ambient light sensor"
+ 	depends on I2C && SYSFS
+-- 
+1.6.3.2
+
+
+
