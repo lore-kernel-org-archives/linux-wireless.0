@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f191.google.com ([209.85.211.191]:58958 "EHLO
-	mail-yw0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbZHLQ7V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:59:21 -0400
-Received: by ywh29 with SMTP id 29so198933ywh.33
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:59:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <15d0b9b20908120920sa42235ft4ce0daed4e4f0130@mail.gmail.com>
-References: <15d0b9b20908120920sa42235ft4ce0daed4e4f0130@mail.gmail.com>
-Date: Wed, 12 Aug 2009 18:59:21 +0200
-Message-ID: <15d0b9b20908120959v758ed06bl40fb25b6374e2805@mail.gmail.com>
-Subject: [PATCH 2.6.31-rc5] Staging: rt2870: new USB ID for Belkin N+ F5D8055
-From: Daniele Napolitano <dnax88@gmail.com>
-To: linux-wireless@vger.kernel.org, gregkh@suse.de,
-	akpm@linux-foundation.org, greg@kroah.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:17222 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750934AbZHSG1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 02:27:50 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] cfg80211: allow cfg80211_connect_result with bssid == NULL
+Date: Wed, 19 Aug 2009 14:29:38 +0800
+Message-Id: <1250663378-9113-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New USB ID for Belkin N+ F5D8055 (USB 802.11n adapter).
+In case of connection failure, the bssid info is not a must have.
 
-I've made this patch with drivers/staging branch found here:
-http://git.kernel.org/?p=linux/kernel/git/gregkh/staging-2.6.git
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ net/wireless/sme.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Signed-off-by: Daniele Napolitano <dnax88@gmail.com>
---- drivers/staging/rt2870/rt2870.h	2009-08-12 18:06:42.606925649 +0200
-+++ drivers/staging/rt2870/rt2870.h~	2009-08-12 18:07:11.698931370 +0200
-@@ -102,6 +102,7 @@
- 	{USB_DEVICE(0x14B2,0x3C12)}, /* AL */           \
- 	{USB_DEVICE(0x050D,0x8053)}, /* Belkin */		\
- 	{USB_DEVICE(0x050D,0x815C)}, /* Belkin */		\
-+	{USB_DEVICE(0x050D,0x825a)}, /* Belkin */		\
- 	{USB_DEVICE(0x14B2,0x3C23)}, /* Airlink */		\
- 	{USB_DEVICE(0x14B2,0x3C27)}, /* Airlink */		\
- 	{USB_DEVICE(0x07AA,0x002F)}, /* Corega */		\
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index b78a111..bc9584a 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -435,7 +435,8 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		return;
+ 
+ 	ev->type = EVENT_CONNECT_RESULT;
+-	memcpy(ev->cr.bssid, bssid, ETH_ALEN);
++	if (bssid)
++		memcpy(ev->cr.bssid, bssid, ETH_ALEN);
+ 	ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+ 	ev->cr.req_ie_len = req_ie_len;
+ 	memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
+-- 
+1.6.0.4
+
