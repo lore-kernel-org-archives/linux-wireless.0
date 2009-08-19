@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40907 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754493AbZHNDlu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 23:41:50 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 20:41:52 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-yx0-f175.google.com ([209.85.210.175]:44354 "EHLO
+	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbZHSSny convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 14:43:54 -0400
+Received: by yxe5 with SMTP id 5so5655342yxe.33
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 11:43:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19076.56592.101907.186453@gargle.gargle.HOWL>
-Date: Fri, 14 Aug 2009 09:12:08 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Revert commit in ath9k
+In-Reply-To: <8f3763990908191119l37c7dff3y8884b1228059cb22@mail.gmail.com>
+References: <8f3763990908191119l37c7dff3y8884b1228059cb22@mail.gmail.com>
+Date: Wed, 19 Aug 2009 14:43:55 -0400
+Message-ID: <b6c5339f0908191143y6940d664td6cb39b2021e125b@mail.gmail.com>
+Subject: Re: bug? sme.c:610 __cfg80211_disconnected
+From: Bob Copeland <me@bobcopeland.com>
+To: ASIC Felix <ic.felix@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Wed, Aug 19, 2009 at 2:19 PM, ASIC Felix<ic.felix@gmail.com> wrote:
+> Hi,
+>
+> update:
+>   occurs during rekeying/reauth on wpa2 office network
+>   still present in master-2009-08-19
+>
+> Aug 19 11:04:02 darkslate klogd: WARNING: at net/wireless/sme.c:613
+> __cfg80211_disconnected+0x1bc/0x210 [cfg80211]()
 
-Can you revert the commit - "ath9k: Change DEBUG level for certain interrupts" ?
-This interrupt seems to trigger fairly often and floods the log.
-The driver does seem to work with this message suppressed.
-(which was the original behaviour).
+Please post the entire warning's stack trace inline (i.e.
+not as an attachment).
 
-The actual cause for this bug is still unknown, but until it is
-found and fixed, the earlier behaviour can be retained.
+I looked at your previous email in which you had attached
+the log, and it looked like ath9k was the wireless driver,
+though it could be a bug in {mac,cfg}80211 as well.  It's
+impossible to tell just from this one line though.
 
-Sorry for the trouble. :)
-
-Sujith
+-- 
+Bob Copeland %% www.bobcopeland.com
