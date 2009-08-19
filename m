@@ -1,282 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:50391 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466AbZHSKnb (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:65109 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753154AbZHSWOd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 06:43:31 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ar9170: refactor configure_filter
-Date: Wed, 19 Aug 2009 12:43:47 +0200
-Cc: John Linville <linville@tuxdriver.com>
-References: <200908190126.31928.chunkeey@web.de>
-In-Reply-To: <200908190126.31928.chunkeey@web.de>
+	Wed, 19 Aug 2009 18:14:33 -0400
+Received: by fxm17 with SMTP id 17so135418fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 15:14:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908191243.47742.chunkeey@web.de>
+In-Reply-To: <4A8AE255.9030102@gmail.com>
+References: <4A8AE255.9030102@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 20 Aug 2009 00:14:13 +0200
+Message-ID: <69e28c910908191514w3073d382x927062038f2bb128@mail.gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Implement spec updates and remove resolved
+	FIXMEs
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks to "mac80211: allow configure_filter callback to sleep",
-we no longer have to defer the work to the workqueue.
+Seeing that this is still not in wireless-testing - this patch should
+be applied, the previously mentioned regressions were false alerts
+(Larry tested without this patch and with v478 firmware, which worked;
+while Mark applied this patch and used v410 firmware, which didn't
+work - when Mark upgraded to v478 firmware, his card too came to
+life.) So, please apply.
 
-Signed-off-by: Christian Lamparter <chunkeey@web.de>
----
-please test!
+2009/8/18 Gábor Stefanik <netrolller.3d@gmail.com>:
+> Larry has started re-checking all current routines against a new
+> version of the Broadcom MIPS driver. This patch implements the first
+> round of changes he documented on the specs wiki.
+>
+> Also remove a few FIXMEs regarding missing initial values for variables
+> with dynamic initial values where reading the values has been implemented.
+>
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> drivers/net/wireless/b43/phy_lp.c       |   98
+> +++++++++++++++++++------------
+> drivers/net/wireless/b43/phy_lp.h       |   18 +++---
+> drivers/net/wireless/b43/tables_lpphy.c |   12 ++++-
+> 3 files changed, 82 insertions(+), 46 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/phy_lp.c
+> b/drivers/net/wireless/b43/phy_lp.c
+> index 242338f..6c69cdb 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -719,9 +719,39 @@ static void lpphy_set_bb_mult(struct b43_wldev *dev, u8
+> bb_mult)
+>        b43_lptab_write(dev, B43_LPTAB16(0, 87), (u16)bb_mult << 8);
+> }
+>
+> -static void lpphy_disable_crs(struct b43_wldev *dev)
+> +static void lpphy_set_deaf(struct b43_wldev *dev, bool user)
+> {
+> +       struct b43_phy_lp *lpphy = dev->phy.lp;
+> +
+> +       if (user)
+> +               lpphy->crs_usr_disable = 1;
+> +       else
+> +               lpphy->crs_sys_disable = 1;
+>        b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x80);
+> +}
+> +
+> +static void lpphy_clear_deaf(struct b43_wldev *dev, bool user)
+> +{
+> +       struct b43_phy_lp *lpphy = dev->phy.lp;
+> +
+> +       if (user)
+> +               lpphy->crs_usr_disable = 0;
+> +       else
+> +               lpphy->crs_sys_disable = 0;
+> +
+> +       if (!lpphy->crs_usr_disable && !lpphy->crs_sys_disable) {
+> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
+> +                                       0xFF1F, 0x60);
+> +               else
+> +                       b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL,
+> +                                       0xFF1F, 0x20);
+> +       }
+> +}
+> +
+> +static void lpphy_disable_crs(struct b43_wldev *dev, bool user)
+> +{
+> +       lpphy_set_deaf(dev, user);
+>        b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x1);
+>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFB);
+> @@ -749,12 +779,9 @@ static void lpphy_disable_crs(struct b43_wldev *dev)
+>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_2, 0x3FF);
+> }
+>
+> -static void lpphy_restore_crs(struct b43_wldev *dev)
+> +static void lpphy_restore_crs(struct b43_wldev *dev, bool user)
+> {
+> -       if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x60);
+> -       else
+> -               b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFF1F, 0x20);
+> +       lpphy_clear_deaf(dev, user);
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFF80);
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFC00);
+> }
+> @@ -800,10 +827,11 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
+>                b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+>                                0xF800, rf_gain);
+>        } else {
+> -               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x7F00;
+> +               pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x1FC0;
+> +               pa_gain <<= 2;
+>                b43_phy_write(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+>                              (gains.pga << 8) | gains.gm);
+> -               b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
+> +               b43_phy_maskset(dev, B43_PHY_OFDM(0xFB),
+>                                0x8000, gains.pad | pa_gain);
+>                b43_phy_write(dev, B43_PHY_OFDM(0xFC),
+>                              (gains.pga << 8) | gains.gm);
+> @@ -817,7 +845,7 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
+>                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFF7F, 1 <<
+> 7);
+>                b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xBFFF, 1 <<
+> 14);
+>        }
+> -       b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFBF, 1 << 6);
+> +       b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFBF, 1 << 6);
+> }
+>
+> static void lpphy_rev0_1_set_rx_gain(struct b43_wldev *dev, u32 gain)
+> @@ -857,33 +885,33 @@ static void lpphy_rev2plus_set_rx_gain(struct
+> b43_wldev *dev, u32 gain)
+>        }
+> }
+>
+> -static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
+> +static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+> {
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFEF);
+>        b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFBF);
+>        if (dev->phy.rev >= 2) {
+>                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
+> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
+> -                       return;
+> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
+> -               b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFF7);
+> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+> +                       b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
+> +                       b43_phy_mask(dev, B43_PHY_OFDM(0xE5), 0xFFF7);
+> +               }
+>        } else {
+>                b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
+>        }
+> }
+>
+> -static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+> +static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
+> {
+>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1);
+>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
+>        b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x40);
+>        if (dev->phy.rev >= 2) {
+>                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
+> -               if (b43_current_band(dev->wl) != IEEE80211_BAND_2GHZ)
+> -                       return;
+> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
+> -               b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x8);
+> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
+> +                       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
+> +                       b43_phy_set(dev, B43_PHY_OFDM(0xE5), 0x8);
+> +               }
+>        } else {
+>                b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x200);
+>        }
+> @@ -1002,26 +1030,22 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32
+> divisor, u8 precision)
+> {
+>        u32 quotient, remainder, rbit, roundup, tmp;
+>
+> -       if (divisor == 0) {
+> -               quotient = 0;
+> -               remainder = 0;
+> -       } else {
+> -               quotient = dividend / divisor;
+> -               remainder = dividend % divisor;
+> -       }
+> +       if (divisor == 0)
+> +               return 0;
+> +
+> +       quotient = dividend / divisor;
+> +       remainder = dividend % divisor;
+>
+>        rbit = divisor & 0x1;
+>        roundup = (divisor >> 1) + rbit;
+> -       precision--;
+>
+> -       while (precision != 0xFF) {
+> +       while (precision != 0) {
+>                tmp = remainder - roundup;
+>                quotient <<= 1;
+> -               remainder <<= 1;
+> -               if (remainder >= roundup) {
+> +               if (remainder >= roundup)
+>                        remainder = (tmp << 1) + rbit;
+> -                       quotient--;
+> -               }
+> +               else
+> +                       remainder <<= 1;
+>                precision--;
+>        }
+>
+> @@ -1123,11 +1147,11 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>        struct b43_phy_lp *lpphy = dev->phy.lp;
+>        struct lpphy_iq_est iq_est;
+>        struct lpphy_tx_gains tx_gains;
+> -       static const u32 ideal_pwr_table[22] = {
+> +       static const u32 ideal_pwr_table[21] = {
+>                0x10000, 0x10557, 0x10e2d, 0x113e0, 0x10f22, 0x0ff64,
+>                0x0eda2, 0x0e5d4, 0x0efd1, 0x0fbe8, 0x0b7b8, 0x04b35,
+>                0x01a5e, 0x00a0b, 0x00444, 0x001fd, 0x000ff, 0x00088,
+> -               0x0004c, 0x0002c, 0x0001a, 0xc0006,
+> +               0x0004c, 0x0002c, 0x0001a,
+>        };
+>        bool old_txg_ovr;
+>        u8 old_bbmult;
+> @@ -1145,7 +1169,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>                       "RC calib: Failed to switch to channel 7, error = %d",
+>                       err);
+>        }
+> -       old_txg_ovr = (b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) >> 6) & 1;
+> +       old_txg_ovr = !!(b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40);
+>        old_bbmult = lpphy_get_bb_mult(dev);
+>        if (old_txg_ovr)
+>                tx_gains = lpphy_get_tx_gains(dev);
+> @@ -1160,7 +1184,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>        old_txpctl = lpphy->txpctl_mode;
+>
+>        lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+> -       lpphy_disable_crs(dev);
+> +       lpphy_disable_crs(dev, true);
+>        loopback = lpphy_loopback(dev);
+>        if (loopback == -1)
+>                goto finish;
+> @@ -1193,7 +1217,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
+> *dev)
+>        lpphy_stop_ddfs(dev);
+>
+> finish:
+> -       lpphy_restore_crs(dev);
+> +       lpphy_restore_crs(dev, true);
+>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, old_rf_ovrval);
+>        b43_phy_write(dev, B43_LPPHY_RF_OVERRIDE_0, old_rf_ovr);
+>        b43_phy_write(dev, B43_LPPHY_AFE_CTL_OVRVAL, old_afe_ovrval);
+> diff --git a/drivers/net/wireless/b43/phy_lp.h
+> b/drivers/net/wireless/b43/phy_lp.h
+> index 99cb038..e158d1f 100644
+> --- a/drivers/net/wireless/b43/phy_lp.h
+> +++ b/drivers/net/wireless/b43/phy_lp.h
+> @@ -825,11 +825,11 @@ struct b43_phy_lp {
+>        enum b43_lpphy_txpctl_mode txpctl_mode;
+>
+>        /* Transmit isolation medium band */
+> -       u8 tx_isolation_med_band; /* FIXME initial value? */
+> +       u8 tx_isolation_med_band;
+>        /* Transmit isolation low band */
+> -       u8 tx_isolation_low_band; /* FIXME initial value? */
+> +       u8 tx_isolation_low_band;
+>        /* Transmit isolation high band */
+> -       u8 tx_isolation_hi_band; /* FIXME initial value? */
+> +       u8 tx_isolation_hi_band;
+>
+>        /* Max transmit power medium band */
+>        u16 max_tx_pwr_med_band;
+> @@ -848,7 +848,7 @@ struct b43_phy_lp {
+>        s16 txpa[3], txpal[3], txpah[3];
+>
+>        /* Receive power offset */
+> -       u8 rx_pwr_offset; /* FIXME initial value? */
+> +       u8 rx_pwr_offset;
+>
+>        /* TSSI transmit count */
+>        u16 tssi_tx_count;
+> @@ -864,16 +864,16 @@ struct b43_phy_lp {
+>        s8 tx_pwr_idx_over; /* FIXME initial value? */
+>
+>        /* RSSI vf */
+> -       u8 rssi_vf; /* FIXME initial value? */
+> +       u8 rssi_vf;
+>        /* RSSI vc */
+> -       u8 rssi_vc; /* FIXME initial value? */
+> +       u8 rssi_vc;
+>        /* RSSI gs */
+> -       u8 rssi_gs; /* FIXME initial value? */
+> +       u8 rssi_gs;
+>
+>        /* RC cap */
+>        u8 rc_cap; /* FIXME initial value? */
+>        /* BX arch */
+> -       u8 bx_arch; /* FIXME initial value? */
+> +       u8 bx_arch;
+>
+>        /* Full calibration channel */
+>        u8 full_calib_chan; /* FIXME initial value? */
+> @@ -885,6 +885,8 @@ struct b43_phy_lp {
+>        /* Used for "Save/Restore Dig Filt State" */
+>        u16 dig_flt_state[9];
+>
+> +       bool crs_usr_disable, crs_sys_disable;
+> +
+>        unsigned int pdiv;
+> };
+>
+> diff --git a/drivers/net/wireless/b43/tables_lpphy.c
+> b/drivers/net/wireless/b43/tables_lpphy.c
+> index 2721310..60d472f 100644
+> --- a/drivers/net/wireless/b43/tables_lpphy.c
+> +++ b/drivers/net/wireless/b43/tables_lpphy.c
+> @@ -2367,7 +2367,17 @@ static void lpphy_rev2plus_write_gain_table(struct
+> b43_wldev *dev, int offset,
+>        tmp  = data.pad << 16;
+>        tmp |= data.pga << 8;
+>        tmp |= data.gm;
+> -       tmp |= 0x7f000000;
+> +       if (dev->phy.rev >= 3) {
+> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
+> +                       tmp |= 0x10 << 24;
+> +               else
+> +                       tmp |= 0x70 << 24;
+> +       } else {
+> +               if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
+> +                       tmp |= 0x14 << 24;
+> +               else
+> +                       tmp |= 0x7F << 24;
+> +       }
+>        b43_lptab_write(dev, B43_LPTAB32(7, 0xC0 + offset), tmp);
+>        tmp  = data.bb_mult << 20;
+>        tmp |= data.dac << 28;
+> --
+> 1.6.2.4
+>
+>
+>
+>
 
-changes to v1:
-	- re-based
-	- fixed possible WARN_ON in ieee80211_configure_filter 
-	  on module unload
----
-diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
-index 95f8256..ce40724 100644
---- a/drivers/net/wireless/ath/ar9170/ar9170.h
-+++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-@@ -185,10 +185,8 @@ struct ar9170 {
- 	bool disable_offload;
- 
- 	/* filter settings */
--	struct work_struct filter_config_work;
--	u64 cur_mc_hash, want_mc_hash;
--	u32 cur_filter, want_filter;
--	unsigned long filter_changed;
-+	u64 cur_mc_hash;
-+	u32 cur_filter;
- 	unsigned int filter_state;
- 	bool sniffer_enabled;
- 
-@@ -261,10 +259,6 @@ struct ar9170_tx_info {
- #define IS_STARTED(a)		(((struct ar9170 *)a)->state >= AR9170_STARTED)
- #define IS_ACCEPTING_CMD(a)	(((struct ar9170 *)a)->state >= AR9170_IDLE)
- 
--#define AR9170_FILTER_CHANGED_MODE		BIT(0)
--#define AR9170_FILTER_CHANGED_MULTICAST		BIT(1)
--#define AR9170_FILTER_CHANGED_FRAMEFILTER	BIT(2)
--
- /* exported interface */
- void *ar9170_alloc(size_t priv_size);
- int ar9170_register(struct ar9170 *ar, struct device *pdev);
-@@ -278,8 +272,8 @@ int ar9170_nag_limiter(struct ar9170 *ar);
- int ar9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
- int ar9170_init_mac(struct ar9170 *ar);
- int ar9170_set_qos(struct ar9170 *ar);
--int ar9170_update_multicast(struct ar9170 *ar);
--int ar9170_update_frame_filter(struct ar9170 *ar);
-+int ar9170_update_multicast(struct ar9170 *ar, const u64 mc_hast);
-+int ar9170_update_frame_filter(struct ar9170 *ar, const u32 filter);
- int ar9170_set_operating_mode(struct ar9170 *ar);
- int ar9170_set_beacon_timers(struct ar9170 *ar);
- int ar9170_set_dyn_sifs_ack(struct ar9170 *ar);
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index d9f1f46..6004936 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -238,39 +238,31 @@ static int ar9170_set_mac_reg(struct ar9170 *ar, const u32 reg, const u8 *mac)
- 	return ar9170_regwrite_result();
- }
- 
--int ar9170_update_multicast(struct ar9170 *ar)
-+int ar9170_update_multicast(struct ar9170 *ar, const u64 mc_hash)
- {
- 	int err;
- 
- 	ar9170_regwrite_begin(ar);
--	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_H,
--		ar->want_mc_hash >> 32);
--	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_L,
--		ar->want_mc_hash);
--
-+	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_H, mc_hash >> 32);
-+	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_L, mc_hash);
- 	ar9170_regwrite_finish();
- 	err = ar9170_regwrite_result();
--
- 	if (err)
- 		return err;
- 
--	ar->cur_mc_hash = ar->want_mc_hash;
--
-+	ar->cur_mc_hash = mc_hash;
- 	return 0;
- }
- 
--int ar9170_update_frame_filter(struct ar9170 *ar)
-+int ar9170_update_frame_filter(struct ar9170 *ar, const u32 filter)
- {
- 	int err;
- 
--	err = ar9170_write_reg(ar, AR9170_MAC_REG_FRAMETYPE_FILTER,
--			       ar->want_filter);
--
-+	err = ar9170_write_reg(ar, AR9170_MAC_REG_FRAMETYPE_FILTER, filter);
- 	if (err)
- 		return err;
- 
--	ar->cur_filter = ar->want_filter;
--
-+	ar->cur_filter = filter;
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index d30f33d..658b323 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -1232,8 +1232,6 @@ static int ar9170_op_start(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&ar->mutex);
- 
--	ar->filter_changed = 0;
--
- 	/* reinitialize queues statistics */
- 	memset(&ar->tx_stats, 0, sizeof(ar->tx_stats));
- 	for (i = 0; i < __AR9170_NUM_TXQ; i++)
-@@ -1296,7 +1294,6 @@ static void ar9170_op_stop(struct ieee80211_hw *hw)
- #ifdef CONFIG_AR9170_LEDS
- 	cancel_delayed_work_sync(&ar->led_work);
- #endif
--	cancel_work_sync(&ar->filter_config_work);
- 	cancel_work_sync(&ar->beacon_work);
- 
- 	mutex_lock(&ar->mutex);
-@@ -1973,8 +1970,7 @@ static int ar9170_op_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ar->cur_filter = 0;
--	ar->want_filter = AR9170_MAC_REG_FTF_DEFAULTS;
--	err = ar9170_update_frame_filter(ar);
-+	err = ar9170_update_frame_filter(ar, AR9170_MAC_REG_FTF_DEFAULTS);
- 	if (err)
- 		goto unlock;
- 
-@@ -1992,8 +1988,7 @@ static void ar9170_op_remove_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&ar->mutex);
- 	ar->vif = NULL;
--	ar->want_filter = 0;
--	ar9170_update_frame_filter(ar);
-+	ar9170_update_frame_filter(ar, 0);
- 	ar9170_set_beacon_timers(ar);
- 	dev_kfree_skb(ar->beacon);
- 	ar->beacon = NULL;
-@@ -2065,41 +2060,6 @@ out:
- 	return err;
- }
- 
--static void ar9170_set_filters(struct work_struct *work)
--{
--	struct ar9170 *ar = container_of(work, struct ar9170,
--					 filter_config_work);
--	int err;
--
--	if (unlikely(!IS_STARTED(ar)))
--		return ;
--
--	mutex_lock(&ar->mutex);
--	if (test_and_clear_bit(AR9170_FILTER_CHANGED_MODE,
--			       &ar->filter_changed)) {
--		err = ar9170_set_operating_mode(ar);
--		if (err)
--			goto unlock;
--	}
--
--	if (test_and_clear_bit(AR9170_FILTER_CHANGED_MULTICAST,
--			       &ar->filter_changed)) {
--		err = ar9170_update_multicast(ar);
--		if (err)
--			goto unlock;
--	}
--
--	if (test_and_clear_bit(AR9170_FILTER_CHANGED_FRAMEFILTER,
--			       &ar->filter_changed)) {
--		err = ar9170_update_frame_filter(ar);
--		if (err)
--			goto unlock;
--	}
--
--unlock:
--	mutex_unlock(&ar->mutex);
--}
--
- static u64 ar9170_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
- 				       struct dev_addr_list *mclist)
- {
-@@ -2126,6 +2086,11 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
- {
- 	struct ar9170 *ar = hw->priv;
- 
-+	if (unlikely(!IS_ACCEPTING_CMD(ar)))
-+		return ;
-+
-+	mutex_lock(&ar->mutex);
-+
- 	/* mask supported flags */
- 	*new_flags &= FIF_ALLMULTI | FIF_CONTROL | FIF_BCN_PRBRESP_PROMISC |
- 		      FIF_PROMISC_IN_BSS | FIF_FCSFAIL | FIF_PLCPFAIL;
-@@ -2136,12 +2101,10 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
- 	 */
- 
- 	if (changed_flags & FIF_ALLMULTI && *new_flags & FIF_ALLMULTI)
--			multicast = ~0ULL;
-+		multicast = ~0ULL;
- 
--	if (multicast != ar->want_mc_hash) {
--		ar->want_mc_hash = multicast;
--		set_bit(AR9170_FILTER_CHANGED_MULTICAST, &ar->filter_changed);
--	}
-+	if (multicast != ar->cur_mc_hash)
-+		ar9170_update_multicast(ar, multicast);
- 
- 	if (changed_flags & FIF_CONTROL) {
- 		u32 filter = AR9170_MAC_REG_FTF_PSPOLL |
-@@ -2152,24 +2115,22 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
- 			     AR9170_MAC_REG_FTF_CFE_ACK;
- 
- 		if (*new_flags & FIF_CONTROL)
--			ar->want_filter = ar->cur_filter | filter;
-+			filter |= ar->cur_filter;
- 		else
--			ar->want_filter = ar->cur_filter & ~filter;
-+			filter &= (~ar->cur_filter);
- 
--		set_bit(AR9170_FILTER_CHANGED_FRAMEFILTER,
--			&ar->filter_changed);
-+		ar9170_update_frame_filter(ar, filter);
- 	}
- 
- 	if (changed_flags & FIF_PROMISC_IN_BSS) {
- 		ar->sniffer_enabled = ((*new_flags) & FIF_PROMISC_IN_BSS) != 0;
--		set_bit(AR9170_FILTER_CHANGED_MODE,
--			&ar->filter_changed);
-+		ar9170_set_operating_mode(ar);
- 	}
- 
--	if (likely(IS_STARTED(ar)))
--		ieee80211_queue_work(ar->hw, &ar->filter_config_work);
-+	mutex_unlock(&ar->mutex);
- }
- 
-+
- static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
- 				       struct ieee80211_vif *vif,
- 				       struct ieee80211_bss_conf *bss_conf,
-@@ -2423,9 +2384,6 @@ static void ar9170_sta_notify(struct ieee80211_hw *hw,
- 	default:
- 		break;
- 	}
--
--	if (IS_STARTED(ar) && ar->filter_changed)
--		ieee80211_queue_work(ar->hw, &ar->filter_config_work);
- }
- 
- static int ar9170_get_stats(struct ieee80211_hw *hw,
-@@ -2596,7 +2554,6 @@ void *ar9170_alloc(size_t priv_size)
- 		skb_queue_head_init(&ar->tx_pending[i]);
- 	}
- 	ar9170_rx_reset_rx_mpdu(ar);
--	INIT_WORK(&ar->filter_config_work, ar9170_set_filters);
- 	INIT_WORK(&ar->beacon_work, ar9170_new_beacon);
- 	INIT_DELAYED_WORK(&ar->tx_janitor, ar9170_tx_janitor);
- 	INIT_LIST_HEAD(&ar->tx_ampdu_list);
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
