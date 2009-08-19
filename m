@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55451 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbZHAUlV (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:14754 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbZHSAEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 16:41:21 -0400
-Subject: Re: [PATCH 2/2] rfkill: Add support for KEY_RFKILL_ALL
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bastien Nocera <hadess@hadess.net>
-Cc: Matthew Garrett <mjg@redhat.com>, linux-input@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	dmitry.torokhov@gmail.com
-In-Reply-To: <1249158328.28327.10654.camel@localhost.localdomain>
-References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
-	 <1249152859-14769-2-git-send-email-mjg@redhat.com>
-	 <1249158328.28327.10654.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Sat, 01 Aug 2009 13:41:16 -0700
-Message-Id: <1249159276.3491.15.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Tue, 18 Aug 2009 20:04:21 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so862866eye.37
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 17:04:21 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: orinoco-devel@lists.sourceforge.net,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [RFC v2 0/5] orinoco: use cfg80211 for key manipulation
+Date: Wed, 19 Aug 2009 01:04:08 +0100
+Message-Id: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bastien,
+This series basically works (at least after the last patch is applied)
+with wpa_supplicant in wext mode.
 
-> > +               case KEY_RFKILL_ALL:
-> > +                       rfkill_schedule_toggle(RFKILL_TYPE_WLAN);
-> > +                       rfkill_schedule_toggle(RFKILL_TYPE_BLUETOOTH);
-> > +                       rfkill_schedule_toggle(RFKILL_TYPE_UWB);
-> > +                       rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
-> > +                       break;
-> 
-> RFKILL_TYPE_ALL?
+I had tested with wpa_supplicant in nl80211 mode, but hadn't realised
+it wasn't using connect - I'll need to pick up Zhu Yis' patch and redo
+some testing.
 
-this should be RFKILL_TYPE_ALL indeed. Even if rfkill-input is going to
-be removed. For the time being it needs to toggle all. Especially since
-the example above already forgets RFKILL_TYPE_WWAN.
+Anyway, the nl80211 interface has a small hole which patch 5 partially
+papers over. I'm not that happy with the way it hijacks the AUTH/ASSOC
+state machine, but it works.
 
-Regards
+Other outstanding issues:
+ - It looks like I haven't quite got the connect_roamed callback right:
+   I've got a WARNING I need to investigate in my logs
+ - On disconnecting and reconnecting the card I have to restart
+   wpa_supplicant for things to work. I'm guessing I have to look at
+   driver shutdown, and ensure we send a disconnected event.
 
-Marcel
+Dave.
 
+---
+David Kilroy (5):
+  orinoco: add cfg80211 connect and disconnect
+  orinoco: add cfg80211 join_ibss and leave_ibss
+  orinoco: implement cfg80211 key manipulation functions
+  orinoco: do WE via cfg80211
+  cfg80211: scan before connect if we don't have the bss
+
+ drivers/net/wireless/orinoco/cfg.c     |  497 ++++++++++++++++++++++
+ drivers/net/wireless/orinoco/main.c    |  172 +++++----
+ drivers/net/wireless/orinoco/orinoco.h |    1 +
+ drivers/net/wireless/orinoco/wext.c    |  726 +-------------------------------
+ net/wireless/sme.c                     |  150 +++++--
+ 5 files changed, 717 insertions(+), 829 deletions(-)
 
