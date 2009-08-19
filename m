@@ -1,44 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39619 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932333AbZHGS1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 14:27:12 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] b43: Fix hardware key index handling
-Date: Fri, 7 Aug 2009 20:27:09 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de,
-	gregor kowski <gregor.kowski@gmail.com>
-References: <200908061036.50631.mb@bu3sch.de> <20090807143726.GB7545@tuxdriver.com>
-In-Reply-To: <20090807143726.GB7545@tuxdriver.com>
+Received: from fmmailgate02.web.de ([217.72.192.227]:50391 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbZHSKnb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 06:43:31 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] ar9170: refactor configure_filter
+Date: Wed, 19 Aug 2009 12:43:47 +0200
+Cc: John Linville <linville@tuxdriver.com>
+References: <200908190126.31928.chunkeey@web.de>
+In-Reply-To: <200908190126.31928.chunkeey@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
+Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <200908072027.09771.mb@bu3sch.de>
+Message-Id: <200908191243.47742.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 07 August 2009 16:37:26 John W. Linville wrote:
-> On Thu, Aug 06, 2009 at 10:36:50AM +0200, Michael Buesch wrote:
-> > This fixes the hardware encryption keys index and array size handling.
-> > 
-> > Thanks to Gregor Kowski for reporting this issue.
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> > 
-> > ---
-> > 
-> > This should probably go as a bugfix.
-> > (Does this actually fix the PHY transmission errors? I don't see them anymore...
-> > Note that you need to enable debugging to see them.)
-> 
-> It's getting a bit late in the cycle, especially for a patch so large
-> and (at least to me) non-obvious.  What is the actual bug being fixed?
-> What is the effect of leaving it for 2.6.32?
+Thanks to "mac80211: allow configure_filter callback to sleep",
+we no longer have to defer the work to the workqueue.
 
-AP mode might break under certain conditions (lots of STAs connected).
-Please leave it for .32
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+please test!
 
--- 
-Greetings, Michael.
+changes to v1:
+	- re-based
+	- fixed possible WARN_ON in ieee80211_configure_filter 
+	  on module unload
+---
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 95f8256..ce40724 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -185,10 +185,8 @@ struct ar9170 {
+ 	bool disable_offload;
+ 
+ 	/* filter settings */
+-	struct work_struct filter_config_work;
+-	u64 cur_mc_hash, want_mc_hash;
+-	u32 cur_filter, want_filter;
+-	unsigned long filter_changed;
++	u64 cur_mc_hash;
++	u32 cur_filter;
+ 	unsigned int filter_state;
+ 	bool sniffer_enabled;
+ 
+@@ -261,10 +259,6 @@ struct ar9170_tx_info {
+ #define IS_STARTED(a)		(((struct ar9170 *)a)->state >= AR9170_STARTED)
+ #define IS_ACCEPTING_CMD(a)	(((struct ar9170 *)a)->state >= AR9170_IDLE)
+ 
+-#define AR9170_FILTER_CHANGED_MODE		BIT(0)
+-#define AR9170_FILTER_CHANGED_MULTICAST		BIT(1)
+-#define AR9170_FILTER_CHANGED_FRAMEFILTER	BIT(2)
+-
+ /* exported interface */
+ void *ar9170_alloc(size_t priv_size);
+ int ar9170_register(struct ar9170 *ar, struct device *pdev);
+@@ -278,8 +272,8 @@ int ar9170_nag_limiter(struct ar9170 *ar);
+ int ar9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int ar9170_init_mac(struct ar9170 *ar);
+ int ar9170_set_qos(struct ar9170 *ar);
+-int ar9170_update_multicast(struct ar9170 *ar);
+-int ar9170_update_frame_filter(struct ar9170 *ar);
++int ar9170_update_multicast(struct ar9170 *ar, const u64 mc_hast);
++int ar9170_update_frame_filter(struct ar9170 *ar, const u32 filter);
+ int ar9170_set_operating_mode(struct ar9170 *ar);
+ int ar9170_set_beacon_timers(struct ar9170 *ar);
+ int ar9170_set_dyn_sifs_ack(struct ar9170 *ar);
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index d9f1f46..6004936 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -238,39 +238,31 @@ static int ar9170_set_mac_reg(struct ar9170 *ar, const u32 reg, const u8 *mac)
+ 	return ar9170_regwrite_result();
+ }
+ 
+-int ar9170_update_multicast(struct ar9170 *ar)
++int ar9170_update_multicast(struct ar9170 *ar, const u64 mc_hash)
+ {
+ 	int err;
+ 
+ 	ar9170_regwrite_begin(ar);
+-	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_H,
+-		ar->want_mc_hash >> 32);
+-	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_L,
+-		ar->want_mc_hash);
+-
++	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_H, mc_hash >> 32);
++	ar9170_regwrite(AR9170_MAC_REG_GROUP_HASH_TBL_L, mc_hash);
+ 	ar9170_regwrite_finish();
+ 	err = ar9170_regwrite_result();
+-
+ 	if (err)
+ 		return err;
+ 
+-	ar->cur_mc_hash = ar->want_mc_hash;
+-
++	ar->cur_mc_hash = mc_hash;
+ 	return 0;
+ }
+ 
+-int ar9170_update_frame_filter(struct ar9170 *ar)
++int ar9170_update_frame_filter(struct ar9170 *ar, const u32 filter)
+ {
+ 	int err;
+ 
+-	err = ar9170_write_reg(ar, AR9170_MAC_REG_FRAMETYPE_FILTER,
+-			       ar->want_filter);
+-
++	err = ar9170_write_reg(ar, AR9170_MAC_REG_FRAMETYPE_FILTER, filter);
+ 	if (err)
+ 		return err;
+ 
+-	ar->cur_filter = ar->want_filter;
+-
++	ar->cur_filter = filter;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index d30f33d..658b323 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1232,8 +1232,6 @@ static int ar9170_op_start(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&ar->mutex);
+ 
+-	ar->filter_changed = 0;
+-
+ 	/* reinitialize queues statistics */
+ 	memset(&ar->tx_stats, 0, sizeof(ar->tx_stats));
+ 	for (i = 0; i < __AR9170_NUM_TXQ; i++)
+@@ -1296,7 +1294,6 @@ static void ar9170_op_stop(struct ieee80211_hw *hw)
+ #ifdef CONFIG_AR9170_LEDS
+ 	cancel_delayed_work_sync(&ar->led_work);
+ #endif
+-	cancel_work_sync(&ar->filter_config_work);
+ 	cancel_work_sync(&ar->beacon_work);
+ 
+ 	mutex_lock(&ar->mutex);
+@@ -1973,8 +1970,7 @@ static int ar9170_op_add_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ar->cur_filter = 0;
+-	ar->want_filter = AR9170_MAC_REG_FTF_DEFAULTS;
+-	err = ar9170_update_frame_filter(ar);
++	err = ar9170_update_frame_filter(ar, AR9170_MAC_REG_FTF_DEFAULTS);
+ 	if (err)
+ 		goto unlock;
+ 
+@@ -1992,8 +1988,7 @@ static void ar9170_op_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&ar->mutex);
+ 	ar->vif = NULL;
+-	ar->want_filter = 0;
+-	ar9170_update_frame_filter(ar);
++	ar9170_update_frame_filter(ar, 0);
+ 	ar9170_set_beacon_timers(ar);
+ 	dev_kfree_skb(ar->beacon);
+ 	ar->beacon = NULL;
+@@ -2065,41 +2060,6 @@ out:
+ 	return err;
+ }
+ 
+-static void ar9170_set_filters(struct work_struct *work)
+-{
+-	struct ar9170 *ar = container_of(work, struct ar9170,
+-					 filter_config_work);
+-	int err;
+-
+-	if (unlikely(!IS_STARTED(ar)))
+-		return ;
+-
+-	mutex_lock(&ar->mutex);
+-	if (test_and_clear_bit(AR9170_FILTER_CHANGED_MODE,
+-			       &ar->filter_changed)) {
+-		err = ar9170_set_operating_mode(ar);
+-		if (err)
+-			goto unlock;
+-	}
+-
+-	if (test_and_clear_bit(AR9170_FILTER_CHANGED_MULTICAST,
+-			       &ar->filter_changed)) {
+-		err = ar9170_update_multicast(ar);
+-		if (err)
+-			goto unlock;
+-	}
+-
+-	if (test_and_clear_bit(AR9170_FILTER_CHANGED_FRAMEFILTER,
+-			       &ar->filter_changed)) {
+-		err = ar9170_update_frame_filter(ar);
+-		if (err)
+-			goto unlock;
+-	}
+-
+-unlock:
+-	mutex_unlock(&ar->mutex);
+-}
+-
+ static u64 ar9170_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
+ 				       struct dev_addr_list *mclist)
+ {
+@@ -2126,6 +2086,11 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
+ {
+ 	struct ar9170 *ar = hw->priv;
+ 
++	if (unlikely(!IS_ACCEPTING_CMD(ar)))
++		return ;
++
++	mutex_lock(&ar->mutex);
++
+ 	/* mask supported flags */
+ 	*new_flags &= FIF_ALLMULTI | FIF_CONTROL | FIF_BCN_PRBRESP_PROMISC |
+ 		      FIF_PROMISC_IN_BSS | FIF_FCSFAIL | FIF_PLCPFAIL;
+@@ -2136,12 +2101,10 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
+ 	 */
+ 
+ 	if (changed_flags & FIF_ALLMULTI && *new_flags & FIF_ALLMULTI)
+-			multicast = ~0ULL;
++		multicast = ~0ULL;
+ 
+-	if (multicast != ar->want_mc_hash) {
+-		ar->want_mc_hash = multicast;
+-		set_bit(AR9170_FILTER_CHANGED_MULTICAST, &ar->filter_changed);
+-	}
++	if (multicast != ar->cur_mc_hash)
++		ar9170_update_multicast(ar, multicast);
+ 
+ 	if (changed_flags & FIF_CONTROL) {
+ 		u32 filter = AR9170_MAC_REG_FTF_PSPOLL |
+@@ -2152,24 +2115,22 @@ static void ar9170_op_configure_filter(struct ieee80211_hw *hw,
+ 			     AR9170_MAC_REG_FTF_CFE_ACK;
+ 
+ 		if (*new_flags & FIF_CONTROL)
+-			ar->want_filter = ar->cur_filter | filter;
++			filter |= ar->cur_filter;
+ 		else
+-			ar->want_filter = ar->cur_filter & ~filter;
++			filter &= (~ar->cur_filter);
+ 
+-		set_bit(AR9170_FILTER_CHANGED_FRAMEFILTER,
+-			&ar->filter_changed);
++		ar9170_update_frame_filter(ar, filter);
+ 	}
+ 
+ 	if (changed_flags & FIF_PROMISC_IN_BSS) {
+ 		ar->sniffer_enabled = ((*new_flags) & FIF_PROMISC_IN_BSS) != 0;
+-		set_bit(AR9170_FILTER_CHANGED_MODE,
+-			&ar->filter_changed);
++		ar9170_set_operating_mode(ar);
+ 	}
+ 
+-	if (likely(IS_STARTED(ar)))
+-		ieee80211_queue_work(ar->hw, &ar->filter_config_work);
++	mutex_unlock(&ar->mutex);
+ }
+ 
++
+ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_bss_conf *bss_conf,
+@@ -2423,9 +2384,6 @@ static void ar9170_sta_notify(struct ieee80211_hw *hw,
+ 	default:
+ 		break;
+ 	}
+-
+-	if (IS_STARTED(ar) && ar->filter_changed)
+-		ieee80211_queue_work(ar->hw, &ar->filter_config_work);
+ }
+ 
+ static int ar9170_get_stats(struct ieee80211_hw *hw,
+@@ -2596,7 +2554,6 @@ void *ar9170_alloc(size_t priv_size)
+ 		skb_queue_head_init(&ar->tx_pending[i]);
+ 	}
+ 	ar9170_rx_reset_rx_mpdu(ar);
+-	INIT_WORK(&ar->filter_config_work, ar9170_set_filters);
+ 	INIT_WORK(&ar->beacon_work, ar9170_new_beacon);
+ 	INIT_DELAYED_WORK(&ar->tx_janitor, ar9170_tx_janitor);
+ 	INIT_LIST_HEAD(&ar->tx_ampdu_list);
