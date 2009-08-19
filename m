@@ -1,57 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:32858 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753174AbZHSVm2 convert rfc822-to-8bit (ORCPT
+Received: from an-out-0708.google.com ([209.85.132.243]:5274 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753247AbZHSXc7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 17:42:28 -0400
-Received: by vws2 with SMTP id 2so4013178vws.4
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 14:42:29 -0700 (PDT)
+	Wed, 19 Aug 2009 19:32:59 -0400
+Received: by an-out-0708.google.com with SMTP id d40so4135499and.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 16:33:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
-References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
-Date: Wed, 19 Aug 2009 17:42:29 -0400
-Message-ID: <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-From: Bob Copeland <me@bobcopeland.com>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 19 Aug 2009 16:33:00 -0700
+Message-ID: <445f43ac0908191633xf9348cdu5bbdd3ac08e13260@mail.gmail.com>
+Subject: ath9k mesh beaconing behavior
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 4:47 PM, Fabio Comolli<fabio.comolli@gmail.com> wrote:
-> Hi all.
-> I see the following warning on an eeePC 900 (AR5001) running
-> 2.6.31-rc6 after a suspend/resume cycle:
->
-> [  292.377941] ------------[ cut here ]------------
-> [  292.377976] WARNING: at net/mac80211/mlme.c:2292
-> ieee80211_sta_work+0x89/0xc39 [mac80211]()
+Hi,
 
-    if (WARN_ON(local->suspended)) ...
+Could someone familiar with the ath9k help us solve a problem with
+mesh beaconing?
 
-> [  292.378457]  [<c10199da>] ? __wake_up+0x1d/0x3d
-> [  292.378466]  [<c102a529>] ? insert_work+0x8f/0x96
-> [  292.378473]  [<c102a777>] ? queue_work_on+0x24/0x2b
-> [  292.378480]  [<c102a7a5>] ? queue_work+0x1a/0x39
-> [  292.378506]  [<f87e64dc>] ?
-> ieee80211_mlme_notify_scan_completed+0x40/0x66 [mac80211]
-> [  292.378532]  [<f87e3caa>] ? ieee80211_scan_completed+0x2ef/0x2fc [mac80211]
+For reference, with ath5k the following sequence will bring up a mesh
+interface and start beaconing:
 
-Looks like ieee80211_scan_completed() racing with suspend()?
+modprobe ath5k debug=0x10      # ATH5K_DBG_BEACON
+iw phy phy0 interface add mesh type mp mesh_id kangaroo
+iw dev mesh set channel 11
+ifconfig mesh up
 
-> ieee80211_mesh_notify_scan_completed+0x4d/0x64 [mac80211]
-> Aug 10 20:08:35 archeee kernel: [ 1440.841185]  [<f84860ce>] ?
-> ieee80211_scan_completed+0x327/0x32f [mac80211]
+dmesg:
+[  622.869143] ath5k phy0: (ath5k_beaconq_config:1512): beacon
+queueprops tqi_aifs:0 tqi_cw_min:0 tqi_cw_max:0
+[  622.869234] ath5k phy0: (ath5k_beacon_update_timers:2239):
+reconfigured timers based on HW TSF
+[  622.869234] ath5k phy0: (ath5k_beacon_update_timers:2250): bc_tsf
+ffffffffffffffff hw_tsf 85a8fb61a bc_tu 4294967295 hw_tu 35038189
+nexttbtt 35039000
+[  622.869234] ath5k phy0: (ath5k_beacon_update_timers:2254): intval
+1000 AR5K_BEACON_ENA
+[  623.690964] ath5k phy0: (ath5k_beacon_send:2094): in beacon_send
+[  623.691301] ath5k phy0: (ath5k_beacon_send:2144): TXDP[7] = 5ce5e00
+(c5ce5e00)
+...
 
-Same here.
+With ath9k, the following sequence will bring up a mesh interface and
+*not* start beaconing:
 
-> The effect is that after the warning the interface is unusable until
-> disabled and reenabled with the rfkill switch.
+modprobe ath5k debug=0x100    # ATH_DBG_BEACON
+iw phy phy0 interface add mesh type mp mesh_id kangaroo
+iw dev mesh set channel 11
+ifconfig mesh up
 
-Interesting, I tried and didn't reproduce it, but I wasn't trying
-while scanning before.
+dmesg reports that beaconing has started, but no beacons are observed
+in the air:
 
--- 
-Bob Copeland %% www.bobcopeland.com
+[  518.277283] ath9k: IBSS nexttbtt 29406000 intval 1000 (1000)
+[  518.301884] ath9k: TXDP9 = 68ca000 (c68ca000)
+
+Beacons are only observed after scanning:
+
+iw dev mesh scan
+
+dmesg:
+[  768.944564] ath9k: IBSS nexttbtt 4291335000 intval 1000 (1000)
+[  768.964665] ath9k: TXDP9 = 68ca000 (c68ca000)
+
+Any suggestions will be appreciated.
+
+Thanks,
+
+Javier
