@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39188 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbZHKTbL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 15:31:11 -0400
-Date: Tue, 11 Aug 2009 15:15:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: ext Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] wl1271: fix compiler warnings on 64 bit archs
-Message-ID: <20090811191518.GI2634@tuxdriver.com>
-References: <1249981107-21746-1-git-send-email-luciano.coelho@nokia.com> <20090811200746.cde6aed9.sfr@canb.auug.org.au> <4A81BB47.2020607@nokia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A81BB47.2020607@nokia.com>
+Received: from mga14.intel.com ([143.182.124.37]:32201 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751697AbZHSIGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 04:06:34 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH V2] cfg80211: allow cfg80211_connect_result with bssid == NULL
+Date: Wed, 19 Aug 2009 16:08:22 +0800
+Message-Id: <1250669302-11362-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 11, 2009 at 09:41:11PM +0300, Luciano Coelho wrote:
-> ext Stephen Rothwell wrote:
->> Hi Luciano,
->>
->> On Tue, 11 Aug 2009 11:58:27 +0300 Luciano Coelho <luciano.coelho@nokia.com> wrote:
->>   
->>> +++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
->>> @@ -100,8 +100,8 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
->>>   	wl1271_debug(DEBUG_BOOT, "starting firmware upload");
->>>  -	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d", 
->>> fw_data_len,
->>> -		CHUNK_SIZE);
->>> +	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d",
->>> +		     (u32) fw_data_len, CHUNK_SIZE);
->>>     
->>
->> fw_data_len is a size_t and so should be printed with %zd.
->>
->>   
->>> @@ -148,7 +148,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
->>>  	addr = dest + chunk_num * CHUNK_SIZE;
->>>  	p = buf + chunk_num * CHUNK_SIZE;
->>>  	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%d B) 0x%p to 0x%x",
->>> -		     fw_data_len % CHUNK_SIZE, p, addr);
->>> +		     (u32) fw_data_len % CHUNK_SIZE, p, addr);
->>>     
->>
->> ditto.
->>   
->
-> Thanks! I didn't know about the z length modifier for printf (everyday  
-> learning something new!), I should have checked the manpage.  I'll fix  
-> this and send v2 of my patch.
+In case of connection failure, the bssid info is not a must have.
 
-I've got it fixed-up already...
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+V2: change a __cfg80211_connect_result() caller to used NULL instead of zero addr
 
-John
+ net/wireless/core.c |    4 +++-
+ net/wireless/sme.c  |    3 ++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index e630648..8eddf98 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -12,6 +12,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/notifier.h>
+ #include <linux/device.h>
++#include <linux/etherdevice.h>
+ #include <linux/rtnetlink.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
+@@ -309,7 +310,8 @@ static void cfg80211_process_events(struct wireless_dev *wdev)
+ 		switch (ev->type) {
+ 		case EVENT_CONNECT_RESULT:
+ 			__cfg80211_connect_result(
+-				wdev->netdev, ev->cr.bssid,
++				wdev->netdev, is_zero_ether_addr(ev->cr.bssid) ?
++				NULL : ev->cr.bssid,
+ 				ev->cr.req_ie, ev->cr.req_ie_len,
+ 				ev->cr.resp_ie, ev->cr.resp_ie_len,
+ 				ev->cr.status,
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 8e2ef54..dbd8211 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -458,7 +458,8 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		return;
+ 
+ 	ev->type = EVENT_CONNECT_RESULT;
+-	memcpy(ev->cr.bssid, bssid, ETH_ALEN);
++	if (bssid)
++		memcpy(ev->cr.bssid, bssid, ETH_ALEN);
+ 	ev->cr.req_ie = ((u8 *)ev) + sizeof(*ev);
+ 	ev->cr.req_ie_len = req_ie_len;
+ 	memcpy((void *)ev->cr.req_ie, req_ie, req_ie_len);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.0.4
+
