@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:51737 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755310AbZHTT4L (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60439 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbZHSSn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 15:56:11 -0400
-Date: Thu, 20 Aug 2009 21:56:11 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: fix configure_filter invocation after stop
-Message-ID: <20090820195611.GH6171@mail.wantstofly.org>
-References: <1250790381.9307.5.camel@johannes.local> <1250791340.9307.6.camel@johannes.local>
+	Wed, 19 Aug 2009 14:43:26 -0400
+Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mario Limonciello <Mario_Limonciello@Dell.com>
+Cc: cezary.jackiewicz@gmail.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
+References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-nYXA9SiGEd7OD+CwqUNb"
+Date: Wed, 19 Aug 2009 20:42:56 +0200
+Message-Id: <1250707376.8073.4.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250791340.9307.6.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 20, 2009 at 08:02:20PM +0200, Johannes Berg wrote:
 
-> Since configure_filter can sleep now, any multicast
-> configuration needed to be postponed to a work struct.
-> This, however, lead to a problem that we could queue
-> the work, stop the device and then afterwards invoke
-> configure_filter which may lead to driver hangs and is
-> a bug. To fix this, we can just cancel the filter work
-> since it's unnecessary to do after stopping the hw.
-> 
-> Since there are various places that call drv_stop, and
-> two of them do very similar things, the code for them
-> can be put into a shared function at the same time.
-> 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Reported-by: Lennert Buytenhek <buytenh@wantstofly.org>
+--=-nYXA9SiGEd7OD+CwqUNb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Seems to work for me, I now no longer see firmware commands being
-posted after ->stop() is called.
+On Wed, 2009-08-19 at 13:36 -0500, Mario Limonciello wrote:
+> Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
+> Reviewed-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 
-Tested-by: Lennert Buytenhek <buytenh@marvell.com>
+> +	ret =3D setup_rfkill();
+> +	if (ret)
+> +		goto fail_rfkill;
+> +
+>  	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
+>  		" successfully loaded.\n");
+> =20
+>  	return 0;
+> =20
+> +fail_rfkill:
+>  fail_platform_device2:
+
+Isn't that missing sysfs_remove_group()?
+
+johannes
+
+--=-nYXA9SiGEd7OD+CwqUNb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKjEetAAoJEODzc/N7+QmaD/IP/jOs9tXj4Iw4h5kLh2UNKAS6
+n16HcvOKu4EvK/01ag9iCUUxvmbqWvQcN3tv+taTgRpDD8L3Huh355PycoNzN18c
+HbDOp/QYPV0c8YNeLjXH3sHOCwINrp9i8SwW2d5mqE4xocLnV/y9qXRHkYbKWgJG
+IUc0oOf9xC1h/6LuEfKL7OZcG3RyMucPc9nu9hufcmiAx1b/4t7FwuHN4FA7Lyat
+ew+5rhcUiiq/HkUPWUe9S+bso5QmG3KIXn1J0yRuBzWoV9KhqGxKCSccrGL7Size
+EtfJqG3EbGC5dBcoj2NQDBORYuTeZbkdbMUAhs6nP0YaQIJKHe3qy/kvx1mf1JRr
+Q0X4hWg9BiEYl6W3+TEhoi0PCrCeQ/CzY/8aQZ2wriQhEdf7njhsG+Zyop5gW5jY
+pxS2nDArtDYIwQXnsFOfdreZV5wsY9KvZBWuUOiToo+YMdH5OD22zKzanTHtFiNL
+LqlR8pD/OKgZVkrVAkMcb2hDIWzm9xJISAsMdrsgNyID2jAG/3VPI2dXCTGg1g0h
+VU7NnK+Xa/rhTJ3UhUsfYgfahsTaYf5TdmoYDf3ojTZwqzrcXAkWoAwG6UERg69g
+AE2i6QhFazgM9IceHoZsY2ffi/NyemLeO+Wby2VQJ8oRb7z267OJWOT2pvAVWPeb
+qDPYCK9P6VStp8Z6TA3u
+=qCmr
+-----END PGP SIGNATURE-----
+
+--=-nYXA9SiGEd7OD+CwqUNb--
+
