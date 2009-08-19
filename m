@@ -1,61 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61980 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933014AbZHEJ0y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 05:26:54 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] nl80211: fix attrtype and value for NL80211_ATTR_SUPPORTED_COMMANDS
-Date: Wed,  5 Aug 2009 17:28:30 +0800
-Message-Id: <1249464510-21539-1-git-send-email-yi.zhu@intel.com>
+Received: from coruscant.huijgen.tk ([84.245.31.19]:16485 "EHLO
+	coruscant.huijgen.tk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491AbZHSOAy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 Aug 2009 10:00:54 -0400
+Message-ID: <4A8C056A.4050005@huijgen.tk>
+Date: Wed, 19 Aug 2009 16:00:10 +0200
+From: Mark Huijgen <mark.sf.net@huijgen.tk>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ANN] b43 LP-PHY support (BCM4310/4312/4315) working (partially)!
+References: <69e28c910908181329r4b6b7cc8w3c9c0d79dda3730c@mail.gmail.com> 	<4A8BBB02.4020203@huijgen.tk> <69e28c910908190428s46f3d25dnb2f2d8591f99618f@mail.gmail.com> 	<4A8BF35E.1090507@huijgen.tk> <1250687066.1067.25.camel@johannes.local> 	<69e28c910908190626s46fd0bfer5cc9dec9c5bb1c24@mail.gmail.com> 	<4A8C02D8.7080309@huijgen.tk> <69e28c910908190654v231d66c7k6a223f481f702c7c@mail.gmail.com>
+In-Reply-To: <69e28c910908190654v231d66c7k6a223f481f702c7c@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes the misuse between attrtype and value for the
-CMD list nested in NL80211_ATTR_SUPPORTED_COMMANDS attribute.
+Gábor Stefanik wrote:
+> 2009/8/19 Mark Huijgen <mark.sf.net@huijgen.tk>:
+>   
+>> Gábor Stefanik wrote:
+>>     
+>>> Mark, could you produce a dmesg output with the new firmware, patches
+>>> applied, and channel set to 1? Post the output of dmesg after scanning
+>>> & probably associating, if possible. (Scan/assoc may produce messages
+>>> in dmesg.)
+>>>
+>>>       
+>> I tested this already, but with default chan set to 1, I cannot get the
+>> interface up.
+>> This is somewhere in my mail, but it got a bit messy after I noticed
+>> that after
+>> changing some of the code my modules got installed in another directory
+>> (-dirty).
+>>
+>> I just restarted the notebook, but now the results are different again...
+>>
+>> New firmware, with patches applied and default channel 7:
+>> [   72.160057] b43-phy1: Loading firmware version 478.104 (2008-07-01
+>> 00:50:23)
+>> [   72.163484] b43-phy1 debug: RC calib: Failed to switch to channel 7,
+>> error = -5
+>> [   72.168100] b43-phy1 debug: Switch to init channel failed, error = -5.
+>>
+>> Recompile module with default chan 1, patches still applied and new
+>> firmware,
+>> # modprobe -r b43 && modprobe b43 verbose=3 && ifconfig wlan0 up
+>>
+>> [  430.259877] b43-phy2 debug: Switch to init channel failed, error = -5.
+>>
+>> Recompile again, but with default chan back to 7, still patched and
+>> still new firmware.
+>> So same as in first situation:
+>> # modprobe -r b43 && modprobe b43 verbose=3 && ifconfig wlan0 up
+>>
+>> [  524.748062] b43-phy3 debug: Chip initialized
+>>
+>> And I can get my interface up and working!
+>>
+>> Without this procedure I have not been able to get a working chip. Seems
+>> the partially
+>> initialized state after each try, allows the next try to get a bit
+>> further. And together with
+>> the default channel switching between 1 and 7, I get a working chip, but
+>> a chip that does
+>> not seem to be able to find my AP thats on channel 1.
+>>
+>> If I now change default chan to 1 again, I am getting the same error as
+>> in step 2 above.
+>> I have not been able to get the interface up with default chan set to 1.
+>>
+>> Mark
+>>
+>>
+>>     
+>
+> What do you see in dmesg after running a scan?
+>   
+After step 2, interface cannot be brought up:
+# iw dev wlan0 scan
+command failed: Network is down (-100)
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- net/wireless/nl80211.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+No extra output in dmesg
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0cd5482..086d3fb 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -520,7 +520,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	 do {							\
- 		if (dev->ops->op) {				\
- 			i++;					\
--			NLA_PUT_U32(msg, i, NL80211_CMD_ ## n);	\
-+			NLA_PUT_U32(msg, NL80211_CMD_ ## n, i);	\
- 		}						\
- 	} while (0)
- 
-@@ -539,19 +539,19 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	CMD(join_ibss, JOIN_IBSS);
- 	if (dev->wiphy.netnsok) {
- 		i++;
--		NLA_PUT_U32(msg, i, NL80211_CMD_SET_WIPHY_NETNS);
-+		NLA_PUT_U32(msg, NL80211_CMD_SET_WIPHY_NETNS, i);
- 	}
- 
- #undef CMD
- 
- 	if (dev->ops->connect || dev->ops->auth) {
- 		i++;
--		NLA_PUT_U32(msg, i, NL80211_CMD_CONNECT);
-+		NLA_PUT_U32(msg, NL80211_CMD_CONNECT, i);
- 	}
- 
- 	if (dev->ops->disconnect || dev->ops->deauth) {
- 		i++;
--		NLA_PUT_U32(msg, i, NL80211_CMD_DISCONNECT);
-+		NLA_PUT_U32(msg, NL80211_CMD_DISCONNECT, i);
- 	}
- 
- 	nla_nest_end(msg, nl_cmds);
--- 
-1.6.0.4
+After step 3 (so with default chan 7 again), interface comes up and I
+can scan:
+# iw dev wlan0 scan
+<<list of scan results>>
+
+No extra output generated in dmesg.
+
+I must add that I do not have debugging messages enabled for any
+mac80211 related options, only for b43 module.
+
+Mark
+
 
