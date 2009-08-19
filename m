@@ -1,161 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39349 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932806AbZHNU2R (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:41653 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbZHSHxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:28:17 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v4 19/34] wireless: organize individual drivers alphabetically
-Date: Fri, 14 Aug 2009 16:25:44 -0400
-Message-Id: <1250281559-13041-20-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 19 Aug 2009 03:53:11 -0400
+Subject: Re: [PATCH] cfg80211: fix leaks of wdev->conn->ie
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1250639011-18258-1-git-send-email-kilroyd@googlemail.com>
+References: <1250639011-18258-1-git-send-email-kilroyd@googlemail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-25y5UTdkv1S6ITrWy8iD"
+Date: Wed, 19 Aug 2009 09:52:41 +0200
+Message-Id: <1250668361.25419.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   95 +++++++++++++++++++++---------------------
- 1 files changed, 47 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 51aa041..583eddc 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -14,30 +14,6 @@ menuconfig WLAN_PRE80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
- 
--config STRIP
--	tristate "STRIP (Metricom starmode radio IP)"
--	depends on INET && WLAN_PRE80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y if you have a Metricom radio and intend to use Starmode Radio
--	  IP. STRIP is a radio protocol developed for the MosquitoNet project
--	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
--	  traffic using Metricom radios.  Metricom radios are small, battery
--	  powered, 100kbit/sec packet radio transceivers, about the size and
--	  weight of a cellular telephone. (You may also have heard them called
--	  "Metricom modems" but we avoid the term "modem" because it misleads
--	  many people into thinking that you can plug a Metricom modem into a
--	  phone line and use it as a modem.)
--
--	  You can use STRIP on any Linux machine with a serial port, although
--	  it is obviously most useful for people with laptop computers. If you
--	  think you might get a Metricom radio in the future, there is no harm
--	  in saying Y to STRIP now, except that it makes the kernel a bit
--	  bigger.
--
--	  To compile this as a module, choose M here: the module will be
--	  called strip.
--
- config ARLAN
- 	tristate "Aironet Arlan 655 & IC2200 DS support"
- 	depends on ISA && !64BIT && WLAN_PRE80211
-@@ -89,6 +65,30 @@ config PCMCIA_WAVELAN
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called wavelan_cs.  If unsure, say N.
- 
-+config STRIP
-+	tristate "STRIP (Metricom starmode radio IP)"
-+	depends on INET && WLAN_PRE80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y if you have a Metricom radio and intend to use Starmode Radio
-+	  IP. STRIP is a radio protocol developed for the MosquitoNet project
-+	  (on the WWW at <http://mosquitonet.stanford.edu/>) to send Internet
-+	  traffic using Metricom radios.  Metricom radios are small, battery
-+	  powered, 100kbit/sec packet radio transceivers, about the size and
-+	  weight of a cellular telephone. (You may also have heard them called
-+	  "Metricom modems" but we avoid the term "modem" because it misleads
-+	  many people into thinking that you can plug a Metricom modem into a
-+	  phone line and use it as a modem.)
-+
-+	  You can use STRIP on any Linux machine with a serial port, although
-+	  it is obviously most useful for people with laptop computers. If you
-+	  think you might get a Metricom radio in the future, there is no harm
-+	  in saying Y to STRIP now, except that it makes the kernel a bit
-+	  bigger.
-+
-+	  To compile this as a module, choose M here: the module will be
-+	  called strip.
-+
- config PCMCIA_NETWAVE
- 	tristate "Xircom Netwave AirSurfer Pcmcia wireless support"
- 	depends on PCMCIA && WLAN_PRE80211
-@@ -100,7 +100,6 @@ config PCMCIA_NETWAVE
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called netwave_cs.  If unsure, say N.
- 
--
- menuconfig WLAN_80211
- 	bool "Wireless LAN (IEEE 802.11)"
- 	depends on NETDEVICES
-@@ -509,28 +508,6 @@ config USB_ZD1201
- 
- endif # ZYDAS_80211
- 
--config PCMCIA_RAYCS
--	tristate "Aviator/Raytheon 2.4GHz wireless support"
--	depends on PCMCIA && WLAN_80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
--	  (PC-card) wireless Ethernet networking card to your computer.
--	  Please read the file <file:Documentation/networking/ray_cs.txt> for
--	  details.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called ray_cs.  If unsure, say N.
--
--config PCMCIA_WL3501
--      tristate "Planet WL3501 PCMCIA cards"
--      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--      select WIRELESS_EXT
--       ---help---
--         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
--	 It has basic support for Linux wireless extensions and initial
--	 micro support for ethtool.
--
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -558,8 +535,30 @@ config ADM8211
- 
- 	  Thanks to Infineon-ADMtek for their support of this driver.
- 
--source "drivers/net/wireless/hostap/Kconfig"
-+config PCMCIA_RAYCS
-+	tristate "Aviator/Raytheon 2.4GHz wireless support"
-+	depends on PCMCIA && WLAN_80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
-+	  (PC-card) wireless Ethernet networking card to your computer.
-+	  Please read the file <file:Documentation/networking/ray_cs.txt> for
-+	  details.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called ray_cs.  If unsure, say N.
-+
- source "drivers/net/wireless/orinoco/Kconfig"
-+source "drivers/net/wireless/hostap/Kconfig"
-+
-+config PCMCIA_WL3501
-+      tristate "Planet WL3501 PCMCIA cards"
-+      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-+      select WIRELESS_EXT
-+       ---help---
-+         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
-+	 It has basic support for Linux wireless extensions and initial
-+	 micro support for ethtool.
- 
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
--- 
-1.6.2.5
+--=-25y5UTdkv1S6ITrWy8iD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 2009-08-19 at 00:43 +0100, David Kilroy wrote:
+> This only occurs in the following error situations:
+>  - driver calls connect_result with failure
+>  - error scheduling authentication on connect
+>  - error initiating scan (to get BSSID and channel) on
+>    connect
+>  - userspace calls disconnect while in the SCANNING or
+>    SCAN_AGAIN states
+>=20
+> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>=20
+> I came across this while looking at my orinoco scanning issue. It's
+> possible I'm wrong...
+
+Yes, looks like I forgot these, thanks!
+
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>=20
+>  net/wireless/sme.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 6fb6a70..9ddc00e 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -395,6 +395,8 @@ void __cfg80211_connect_result(struct net_device *dev=
+, const u8 *bssid,
+> =20
+>  	if (status !=3D WLAN_STATUS_SUCCESS) {
+>  		wdev->sme_state =3D CFG80211_SME_IDLE;
+> +		if (wdev->conn)
+> +			kfree(wdev->conn->ie);
+>  		kfree(wdev->conn);
+>  		wdev->conn =3D NULL;
+>  		kfree(wdev->connect_keys);
+> @@ -779,6 +781,7 @@ int __cfg80211_connect(struct cfg80211_registered_dev=
+ice *rdev,
+>  			}
+>  		}
+>  		if (err) {
+> +			kfree(wdev->conn->ie);
+>  			kfree(wdev->conn);
+>  			wdev->conn =3D NULL;
+>  			wdev->sme_state =3D CFG80211_SME_IDLE;
+> @@ -848,6 +851,7 @@ int __cfg80211_disconnect(struct cfg80211_registered_=
+device *rdev,
+>  		    (wdev->conn->state =3D=3D CFG80211_CONN_SCANNING ||
+>  		     wdev->conn->state =3D=3D CFG80211_CONN_SCAN_AGAIN)) {
+>  			wdev->sme_state =3D CFG80211_SME_IDLE;
+> +			kfree(wdev->conn->ie);
+>  			kfree(wdev->conn);
+>  			wdev->conn =3D NULL;
+>  			wdev->ssid_len =3D 0;
+
+
+--=-25y5UTdkv1S6ITrWy8iD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKi69FAAoJEODzc/N7+QmasdMQAJRaDrAZ5QM9fLvB27O0tH8Y
+W3wB8GJMItEZVOlfNhHEZQmKUaYVCvKFlfjvNTvInvjyvFMEtCd1VYLUmqEcMPTF
+/tJpCFZW2HrpoTjNUIeaVd3wtCTbRKlflVGzh4run8mCSu5EIoWKDx4wOl0Rwq5B
+xd5lfjgzyGpUdfiaVs1Zln+OmES7XaPUugXdtgBNV5C2yxGtn1+cvDsJAvoAuBaR
+ZhsnuycFkNdW4HnXZVkXCIHupLrWfV/U9J4C55zJyJzwdo5g7RHmK0SXIrMp+Bdy
+EoSB0PpwUnhIM01xG1JzCWBKcuTs3gEl4XqeAqowHEvM7UKv/IolZ0P6mJVhuubH
+lblLpdeLpffL49fZUBdQrm3AJVcuwSCoT/Hpvep8WqJW8Pluz5nU6BIP3nBCrjzA
+xWyYlLH0A+CRCce5Q8d9LAFdzf3HMJJKgi4HidkHHK0LfwcF4Go/i7kD1U4cxd2D
+AXKpyfNONcfmmfY0IptyjFBJ8xz7ty/sd2LGr8BS/3rqtSoPWpluI+9EthniKK85
+TFv7EQTTTiPyRQc/DRpjKgkx7H+Tp7hWUwCmGS8sX7kxuRPrdbD/7XffjiFJtn/E
+BwtDC2BBkBT6x8qvRLmJYAaziEnzdqQfEwlfBIm1hCcJi2rgQ0uQnoswgS+JvyK2
+RYXwDsQekU5kh7312t+r
+=zXG4
+-----END PGP SIGNATURE-----
+
+--=-25y5UTdkv1S6ITrWy8iD--
 
