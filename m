@@ -1,32 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:52801 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751096AbZHBBGB (ORCPT
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:49413 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbZHSSql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 21:06:01 -0400
-Date: Sat, 1 Aug 2009 22:05:57 -0300
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-input@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org, dmitry.torokhov@gmail.com
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL_ALL
-Message-ID: <20090802010557.GA11073@khazad-dum.debian.net>
-References: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+	Wed, 19 Aug 2009 14:46:41 -0400
+Message-ID: <4A8C48BA.1000009@dell.com>
+Date: Wed, 19 Aug 2009 13:47:22 -0500
+From: Mario Limonciello <mario_limonciello@dell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1249152859-14769-1-git-send-email-mjg@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: cezary.jackiewicz@gmail.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
+References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com> <1250707376.8073.4.camel@johannes.local>
+In-Reply-To: <1250707376.8073.4.camel@johannes.local>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigB6BB6021364367E83410BC28"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 01 Aug 2009, Matthew Garrett wrote:
-> This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
-> system should toggle the state of all rfkillable devices.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigB6BB6021364367E83410BC28
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-What should happen when you press it?  Toggle state, or the same as EV_SW
-SW_RFKILL_ALL OFF (i.e. radios off, killing active) ?
+Johannes:
 
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+Johannes Berg wrote:
+> On Wed, 2009-08-19 at 13:36 -0500, Mario Limonciello wrote:
+>  =20
+>
+>  =20
+>
+> Isn't that missing sysfs_remove_group()?
+>
+> johannes
+>  =20
+The third patch in the (updated) series is dropping the sysfs bits, so
+sysfs_remove_group is removed there.
+--=20
+Mario Limonciello
+*Dell | Linux Engineering*
+mario_limonciello@dell.com
+
+
+--------------enigB6BB6021364367E83410BC28
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iEYEARECAAYFAkqMSLoACgkQ2CrZjkA73YsU6QCgkOtaczvK4YUYRZ0wVPIDa3nu
+Ph4An0md7zA/kWObwbWk6od0dTAn9cDJ
+=yUa8
+-----END PGP SIGNATURE-----
+
+--------------enigB6BB6021364367E83410BC28--
