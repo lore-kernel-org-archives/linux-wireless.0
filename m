@@ -1,97 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54568 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751819AbZHSHtF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 03:49:05 -0400
-Subject: Re: [RFC 5/5] cfg80211: scan before connect if we don't have the
- bss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Kilroy <kilroyd@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1250640253-18434-6-git-send-email-kilroyd@googlemail.com>
-References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
-	 <1250640253-18434-6-git-send-email-kilroyd@googlemail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-lMu9YbHkSvq8W0WZMt1n"
-Date: Wed, 19 Aug 2009 09:48:33 +0200
-Message-Id: <1250668113.16393.25.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:52417 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753920AbZHTU2R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 16:28:17 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 13:28:19 -0700
+Date: Thu, 20 Aug 2009 13:28:17 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Richard Farina <sidhayn@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] atheros: add ar9170.fw 1-stage firmware
+Message-ID: <20090820202817.GB18102@mosca>
+References: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
+ <4A8DAD1D.7090608@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A8DAD1D.7090608@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Aug 20, 2009 at 01:07:57PM -0700, Richard Farina wrote:
+> Luis R. Rodriguez wrote:
+> > This adds support for ar9170 for using a 1-stage firmware.
+> > This means only 1 firmware file is required. AVM Fritz
+> > devices require this.
+> >
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >
+> > Here is a resend, noticed today this wasn't yet in the tree.
+> >
+> >
+> Last I tested this firmware it didn't seem to function nearly as well as
+> the 2 stage firmware, and if present, the 1 stage overrides the 2
+> stage. 
 
---=-lMu9YbHkSvq8W0WZMt1n
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Can you be more specific than that?
 
-On Wed, 2009-08-19 at 01:04 +0100, David Kilroy wrote:
+> Is this an improved version? 
 
-> @@ -791,18 +824,55 @@ int __cfg80211_connect(struct cfg80211_registered_d=
-evice *rdev,
-> =20
->  		return err;
->  	} else {
-> +		struct cfg80211_bss *bss;
-> +
->  		wdev->sme_state =3D CFG80211_SME_CONNECTING;
->  		wdev->connect_keys =3D connkeys;
-> +
-> +		bss =3D cfg80211_get_bss(wdev->wiphy, NULL, connect->bssid,
-> +				       connect->ssid, connect->ssid_len,
-> +				       WLAN_CAPABILITY_ESS,
-> +				       WLAN_CAPABILITY_ESS);
+No, it is the same firmware.
 
-Hmm. What if the bssid isn't set? Then the card might select a different
-BSS than the one we have on the scan list.
+> Does this work properly in your testing?
 
+Works for me, and is also required for usage of AVM Fritz devices.
 
-> +			/* Failed to clone (or scan), so we can't
-> +			 * delay the connect. Free everything up and
-> +			 * go ahead with the connect */
-> +			if (wdev->conn)
-> +				kfree(wdev->conn->ie);
-> +			kfree(wdev->conn);
-> +			wdev->conn =3D NULL;
-
-and that would then run into the warning and the problem anyway? Better
-to just reject with -ENOMEM I think? Also, I really don't think you
-should use wdev->conn anywhere in this code path, because some code
-looks at that to figure out whether or not the cfg80211 SME is used.
-
-> +		} else {
-> +			cfg80211_put_bss(bss);
-
->  		err =3D rdev->ops->connect(&rdev->wiphy, dev, connect);
-
-And it's all racy too -- by the time the driver calls connect_result(),
-the BSS might have expired after it was found here now.
-
-I don't think this is really feasible to implement in cfg80211. Couldn't
-the driver do a probe to the BSS that the device selected, and report
-that before the connect result?
-
-johannes
-
---=-lMu9YbHkSvq8W0WZMt1n
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKi65OAAoJEODzc/N7+QmaiZQQAIICxf/2Dvax40pUuMN6IM+p
-xFEWMx9bOGG4oVYG0kPcvYm5nFzRh/rhcz3hG/ZYBob1oY5RxWKts7SeN9IxJMxC
-lV1zMNVvl0sc1+jJNvLkC1yb5pFfOusJzzT+KApD3kRbdhGH3YJCGv9teWUhMBpj
-jBdtDAbCQFRSq3YKyKOX7AGm15NYkkGx+OqT+aKsRFrIo1xECgpaWO7BgZncLrka
-yKRHc+vUYxUVBcQQ/b8PoaSm1I0rb+PZd2jxW4btFWdJ/lMteBw8jmnpYmsVoBjE
-owlDr9vCKqn/483W6exRkWpETYvpxpdX/+Gm7+reMNX3iNPfpuufO1416dCIpUsc
-mwDLzmXATNguvtNx2aaWy5Dku3j/bJAOJ3ajFu1H9lzSh/25IiDUpm/vQYpnBZZE
-kxmVqwgF+CnTblEx8XdaSzsXV0KvQd6Y4mO+5DsAosXTWweg0zK2R+hdLWCnwQdc
-NWPsrZcq9KDKweIMcBQExczpBfQvSLpRDhq2F1wTBWj8WJjqwMmusLzPRaeNggkv
-G6koRHPg9ID4VGKRytbXSmmpfJfp5cL+WwCx0Kx4uup0mhbnMCcxbjJ9otnkXMFK
-HtEdCTGLFwqRZRKhODBg5MEYY/Zx3p6eEWLaENLQ7tD79ZCpRs73k9NOjA+1wZ6Q
-93XIMWbFUWYrx8AIXdwX
-=eKFx
------END PGP SIGNATURE-----
-
---=-lMu9YbHkSvq8W0WZMt1n--
-
+  Luis
