@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:57946 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832AbZH3SBf (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:36262 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292AbZHTWIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 14:01:35 -0400
-Received: by gxk1 with SMTP id 1so4389501gxk.17
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 11:01:37 -0700 (PDT)
-From: Kunal Gangakhedkar <kunal.gangakhedkar@gmail.com>
-To: Howard Chu <hyc@symas.com>
-Subject: Re: ath9k DMA problems
-Date: Sun, 30 Aug 2009 23:30:47 +0530
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-References: <4A958F45.40109@symas.com> <4A987F0F.9040905@symas.com>
-In-Reply-To: <4A987F0F.9040905@symas.com>
+	Thu, 20 Aug 2009 18:08:23 -0400
+Received: by fxm17 with SMTP id 17so179486fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 15:08:24 -0700 (PDT)
+Message-ID: <4A8DC955.9060100@gmail.com>
+Date: Fri, 21 Aug 2009 00:08:21 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908302330.47391.kunal.gangakhedkar@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>
+CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Rafael Laufer <rlaufer@cs.ucla.edu>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] iwlwifi: Make injection of non-broadcast frames work again
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 Aug 2009 6:36:23 am Howard Chu wrote:
-> Am I the only one having these problems? ath9k hasn't worked well for me
-> since 2.6.29.4; every snapshot since then has suffered from random drops.
-> In 2.6.29.6 it at least would quickly reassociate. The current ones hang
-> within 20-30 minutes of use and never come back. The compat-wireless
-> snapshots have all been equally unusable.
->
-> Howard Chu wrote:
-> > Still seeing occasional hangs using the ath9k in 2.6.31-rc6, and even
-> > worse using compat-wireless 2009-08-22. Today I got this which was even
-> > more interesting:
-> >
-> > [369014.776586] wlan0: associate with AP 00:12:17:26:56:10 (try 1)
-> > [369014.779197] wlan0: RX ReassocResp from 00:12:17:26:56:10 (capab=0x411
-> > status=0 aid=2)
-> > [369014.779197] wlan0: associated
-> > [369472.707961] ath9k: DMA failed to stop in 10 ms AR_CR=0xdeadbeef
-> > AR_DIAG_SW=0xdeadbeef
-> >
-> > This is on an HP dv5z laptop, it reports an AR9280 at boot.
+Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
+("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
+broke injection of non-broadcast frames to unassociated stations
+(causing a SYSASSERT for all such injected frames), due to injected
+frames no longer automatically getting a broadcast station ID assigned,
+and instead ending up with invalid station IDs.
+This patch restores the old behavior, fixing the aforementioned
+regression.
 
-Neither for me - I'm on an HP dv6 series laptop and have AR9285 chip.
-I have also posted my logs to the ath9k-devel list, but yet to receive any 
-further response.
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+This fixes a regression introduced between 2.6.30 and 2.6.31-rc1.
+Please apply to 2.6.31.
 
-The driver seems quite erratic - especially under heavy network load & also 
-after pm-resume.
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Admittedly, I haven't tried compat-wireless at all.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index c6633fe..81a656f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1054,7 +1054,8 @@ int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
+ 	__le16 fc = hdr->frame_control;
+ 
+ 	/* If this frame is broadcast or management, use broadcast station id */
+-	if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
++	if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
++	    iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
+ 		return priv->hw_params.bcast_sta_id;
+ 
+ 	switch (priv->iw_mode) {
+-- 
+1.6.2.4
 
-Kunal
+
+
