@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58694 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932318AbZHUUxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:53:37 -0400
-Message-ID: <4A8F0951.50108@gmx.de>
-Date: Fri, 21 Aug 2009 22:53:37 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from ogre.sisk.pl ([217.79.144.158]:39474 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755250AbZHTV1d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 17:27:33 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: John Dykstra <john.dykstra1@gmail.com>
+Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+Date: Thu, 20 Aug 2009 23:28:24 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera> <1250801571.7176.10.camel@Maple>
+In-Reply-To: <1250801571.7176.10.camel@Maple>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [PATCH 2/2 v2] ar9170: remove unnecessary call to ar9170_set_beacon_timers
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <200908202328.24252.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday 20 August 2009, John Dykstra wrote:
+> On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
+> > Subject         : WARNING: at net/ipv4/af_inet.c:154
+> > inet_sock_destruct+0x164/0x1c0()
+> > Submitter       : Ralf Hildebrandt <ralf.hildebrandt@charite.de>
+> > Date            : 2009-08-18 12:37 (2 days old)
+> 
+> That looks similar to the WARNING discussed in [1].
+> 
+> There was no resolution to that thread.  However, [2] points out
+> possible other occurrences of the problem in 2.6.27, 28 and 29.
+> 
+> --  John
+> 
+> [1]  http://www.spinics.net/lists/netdev/msg103267.html
+> [2]  http://www.spinics.net/lists/netdev/msg104120.html
 
-Signed-off-by: Joerg Albert <jal2@gmx.de>
+Thanks for the information.
 
----
- drivers/net/wireless/ath/ar9170/main.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+So I'll drop this from the list, since it most probably is not a recent thing.
 
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 911e502..5b73194 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -2031,12 +2031,6 @@ static int ar9170_op_config(struct ieee80211_hw *hw, u32 changed)
- 			goto out;
- 	}
- 
--	if (changed & BSS_CHANGED_BEACON_INT) {
--		err = ar9170_set_beacon_timers(ar);
--		if (err)
--			goto out;
--	}
--
- 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
- 
- 		/* adjust slot time for 5 GHz */
--- 
-1.6.0.4
-
+Best,
+Rafael
