@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:55477 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755241AbZHYOkS (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:34595 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbZHTDWY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 10:40:18 -0400
-Received: by ewy2 with SMTP id 2so490055ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 07:40:19 -0700 (PDT)
-From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Fix and simplify Qdiv roundup
-Date: Tue, 25 Aug 2009 16:40:17 +0200
-Message-Id: <1251211217-7816-1-git-send-email-netrolller.3d@gmail.com>
+	Wed, 19 Aug 2009 23:22:24 -0400
+Received: by vws2 with SMTP id 2so4150876vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 20:22:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <445f43ac0908191633xf9348cdu5bbdd3ac08e13260@mail.gmail.com>
+References: <445f43ac0908191633xf9348cdu5bbdd3ac08e13260@mail.gmail.com>
+Date: Wed, 19 Aug 2009 23:22:25 -0400
+Message-ID: <b6c5339f0908192022g7d6a52b1v54f8bed16844c87e@mail.gmail.com>
+Subject: Re: ath9k mesh beaconing behavior
+From: Bob Copeland <me@bobcopeland.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Andrey Yurovsky <andrey@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Qdiv roundup routine is essentially a fixed-point
-division algorithm, using only integer math.
-However, the version in the specs had a major error
-that has been recently fixed (a missing quotient++).
+On Wed, Aug 19, 2009 at 7:33 PM, Javier Cardona<javier@cozybit.com> wrote:
+> Hi,
+>
+> Could someone familiar with the ath9k help us solve a problem with
+> mesh beaconing?
 
-Replace Qdiv roundup with a rewritten, simplified version.
+I am not too familiar with ath9k, but I would suspect that
+there's an ordering issue with when enable_beacon is recognized,
+so beaconing doesn't start until the next reset() is called.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/phy_lp.c |   14 ++++----------
- 1 files changed, 4 insertions(+), 10 deletions(-)
+E.g. this fix for ath5k sounds similar:
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 7e70c07..d0280d5 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1034,7 +1034,7 @@ static int lpphy_loopback(struct b43_wldev *dev)
- 
- static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
- {
--	u32 quotient, remainder, rbit, roundup, tmp;
-+	u32 quotient, remainder;
- 
- 	if (divisor == 0)
- 		return 0;
-@@ -1042,20 +1042,14 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
- 	quotient = dividend / divisor;
- 	remainder = dividend % divisor;
- 
--	rbit = divisor & 0x1;
--	roundup = (divisor >> 1) + rbit;
--
- 	while (precision != 0) {
--		tmp = remainder - roundup;
- 		quotient <<= 1;
--		if (remainder >= roundup)
--			remainder = (tmp << 1) + rbit;
--		else
--			remainder <<= 1;
-+		quotient |= (remainder << 1) / divisor;
-+		remainder = (remainder << 1) % divisor;
- 		precision--;
- 	}
- 
--	if (remainder >= roundup)
-+	if (remainder << 1 >= divisor)
- 		quotient++;
- 
- 	return quotient;
+commit 9718512d81a7f7bd0166d1e033f8395022ecb2e9
+Author: Bob Copeland <me@bobcopeland.com>
+Date:   Wed Jul 29 10:29:03 2009 -0400
+
+    ath5k: update PCU opmode whenever a new interface is added
+
 -- 
-1.5.6
-
+Bob Copeland %% www.bobcopeland.com
