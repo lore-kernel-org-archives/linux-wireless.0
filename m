@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lirone.symas.net ([64.71.152.235]:38773 "EHLO lirone.symas.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752788AbZHZTjL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 15:39:11 -0400
-Received: from [76.91.220.157] (helo=[192.168.1.28])
-	by lirone.symas.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <hyc@symas.com>)
-	id 1MgOKv-0007IL-Jf
-	for linux-wireless@vger.kernel.org; Wed, 26 Aug 2009 12:39:13 -0700
-Message-ID: <4A958F45.40109@symas.com>
-Date: Wed, 26 Aug 2009 12:38:45 -0700
-From: Howard Chu <hyc@symas.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:44251 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755066AbZHTSWD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 14:22:03 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] p54: fix broadcast buffering in AP mode
+Date: Thu, 20 Aug 2009 20:22:01 +0200
+Cc: John Linville <linville@tuxdriver.com>
+References: <200908172124.15399.chunkeey@web.de>
+In-Reply-To: <200908172124.15399.chunkeey@web.de>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k DMA problems
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908202022.01623.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Still seeing occasional hangs using the ath9k in 2.6.31-rc6, and even worse 
-using compat-wireless 2009-08-22. Today I got this which was even more 
-interesting:
+The patch "mac80211: fix PS-poll response race" somehow broke
+broadcast buffering in a funny way.
 
-[369014.776586] wlan0: associate with AP 00:12:17:26:56:10 (try 1)
-[369014.779197] wlan0: RX ReassocResp from 00:12:17:26:56:10 (capab=0x411 
-status=0 aid=2)
-[369014.779197] wlan0: associated
-[369472.707961] ath9k: DMA failed to stop in 10 ms AR_CR=0xdeadbeef 
-AR_DIAG_SW=0xdeadbeef
+During normal operation - stations are awake - the firmware refused
+to transmit broadcast frames and reported P54_TX_PSM_CANCELLED.
+But everything worked as soon as one station entered PSM.
 
-This is on an HP dv5z laptop, it reports an AR9280 at boot.
--- 
-   -- Howard Chu
-   CTO, Symas Corp.           http://www.symas.com
-   Director, Highland Sun     http://highlandsun.com/hyc/
-   Chief Architect, OpenLDAP  http://www.openldap.org/project/
+The reason:
+The stack sets IEEE80211_TX_CTL_SEND_AFTER_DTIM for outgoing
+broadcast frames as soon as a station is marked as sleeping.
+This flag triggers a path which will reroute these frames
+into p54's "content after beacon" queue, which is designed
+to cope with the demands for psm.
+
+This patch restores the old behavior.
+
+IEEE80211_TX_CTL_CLEAR_PS_FILT will once again be used to signalize
+the firmware to ignore the ps canceling for certain frames.
+
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
+---
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index 6fc0b61..b6dda2b 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -623,6 +623,9 @@ static void p54_tx_80211_header(struct p54_common *priv, struct sk_buff *skb,
+ 	if (info->flags & IEEE80211_TX_CTL_PSPOLL_RESPONSE)
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+ 
++	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
++		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
++
+ 	*queue = skb_get_queue_mapping(skb) + P54_QUEUE_DATA;
+ 
+ 	switch (priv->mode) {
