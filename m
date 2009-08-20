@@ -1,82 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:64805 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753054AbZH1UcQ (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:52994 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754433AbZHTO4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 16:32:16 -0400
-Received: by fxm17 with SMTP id 17so1781355fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2009 13:32:18 -0700 (PDT)
-Message-ID: <4A983ED1.9040100@gmail.com>
-Date: Fri, 28 Aug 2009 22:32:17 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+	Thu, 20 Aug 2009 10:56:34 -0400
+Received: by iwn42 with SMTP id 42so422088iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 07:56:35 -0700 (PDT)
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: Add myself to module authors & to LP-PHY file copyright
- notices
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1250755874-32652-1-git-send-email-vasanth@atheros.com>
+References: <1250755874-32652-1-git-send-email-vasanth@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 20 Aug 2009 07:56:13 -0700
+Message-ID: <43e72e890908200756m74be271cvea96932efb4be140@mail.gmail.com>
+Subject: Re: [PATCH v2] ath9k: Fix bug in retrieving average beacon rssi
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Luis.Rodriguez@atheros.com,
+	Jouni.Malinen@atheros.com, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also mark the LP-PHY driver "802.11a/g" instead of "802.11g",
-as LP-PHY is capable of both 2GHz and 5GHz operation.
+On Thu, Aug 20, 2009 at 1:11 AM, Vasanthakumar
+Thiagarajan<vasanth@atheros.com> wrote:
+> Currently the beacon rssi that LPF gives is divided and rounded
+> up by ATH_RSSI_EP_MULTIPLIER twice. This will leave the incorrect rssi
+> in ANI. Having correct rssi in ANI fixes the connection stability at
+> < 30dB rssi range. This patch removes the unncessary computation of average
+> rssi over already valid average rssi. Also removes the redundant macros to
+> find average rssi.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/main.c         |    1 +
- drivers/net/wireless/b43/phy_lp.c       |    3 ++-
- drivers/net/wireless/b43/tables_lpphy.c |    3 ++-
- 3 files changed, 5 insertions(+), 2 deletions(-)
+Thanks Vasanth, John, this has a better description, if its not too
+much trouble can you revert 6b82e95960c858e6babf1def7276847e8da8cc25
+in favor for this one?
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 5cc90a2..f2c5b2d 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -58,6 +58,7 @@ MODULE_DESCRIPTION("Broadcom B43 wireless driver");
- MODULE_AUTHOR("Martin Langer");
- MODULE_AUTHOR("Stefano Brivio");
- MODULE_AUTHOR("Michael Buesch");
-+MODULE_AUTHOR("Gábor Stefanik");
- MODULE_LICENSE("GPL");
- 
- MODULE_FIRMWARE(B43_SUPPORTED_FIRMWARE_ID);
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index fded6e5..5fff30a 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -1,9 +1,10 @@
- /*
- 
-   Broadcom B43 wireless driver
--  IEEE 802.11g LP-PHY driver
-+  IEEE 802.11a/g LP-PHY driver
- 
-   Copyright (c) 2008-2009 Michael Buesch <mb@bu3sch.de>
-+  Copyright (c) 2009 Gábor Stefanik <netrolller.3d@gmail.com>
- 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-diff --git a/drivers/net/wireless/b43/tables_lpphy.c b/drivers/net/wireless/b43/tables_lpphy.c
-index 3464ac0..61027ee 100644
---- a/drivers/net/wireless/b43/tables_lpphy.c
-+++ b/drivers/net/wireless/b43/tables_lpphy.c
-@@ -1,9 +1,10 @@
- /*
- 
-   Broadcom B43 wireless driver
--  IEEE 802.11g LP-PHY and radio device data tables
-+  IEEE 802.11a/g LP-PHY and radio device data tables
- 
-   Copyright (c) 2009 Michael Buesch <mb@bu3sch.de>
-+  Copyright (c) 2009 Gábor Stefanik <netrolller.3d@gmail.com>
- 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
--- 
-1.6.2.4
-
-
-
+  Luis
