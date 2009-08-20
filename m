@@ -1,264 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f205.google.com ([209.85.217.205]:59109 "EHLO
-	mail-gx0-f205.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932455AbZHMUbi convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735AbZHTTgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 16:31:38 -0400
-Received: by gxk1 with SMTP id 1so1407356gxk.17
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 13:31:38 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 13 Aug 2009 13:31:18 -0700
-Message-ID: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
-Subject: Spare warnings - wireless drivers
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Aug 2009 15:36:17 -0400
+Subject: [PATCH v2] cfg80211: check lost scans later, fix bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <1250794011.9307.8.camel@johannes.local>
+References: <1250794011.9307.8.camel@johannes.local>
+Content-Type: text/plain
+Date: Thu, 20 Aug 2009 21:36:16 +0200
+Message-Id: <1250796976.11138.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-b43:
+When we lose a scan, cfg80211 tries to clean up after
+the driver. However, it currently does this too early,
+it does this in GOING_DOWN already instead of DOWN, so
+it may happen with mac80211. Besides fixing this, also
+make it more robust by leaking the scan request so if
+the driver later actually finishes the scan, it won't
+crash. Also check in ___cfg80211_scan_done whether a
+scan request is still pending and exit if not.
 
-  CHECK   drivers/net/wireless/b43/phy_g.c
-drivers/net/wireless/b43/phy_g.c:974:56: warning: cast truncates bits
-from constant value (ffff7fff becomes 7fff)
+Reported-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Tested-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/wireless/core.c |    4 +++-
+ net/wireless/core.h |    2 +-
+ net/wireless/scan.c |   21 ++++++++++++++++++---
+ 3 files changed, 22 insertions(+), 5 deletions(-)
 
-...
-
-  CHECK   drivers/net/wireless/b43/wa.c
-drivers/net/wireless/b43/wa.c:385:60: warning: cast truncates bits
-from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:403:55: warning: cast truncates bits
-from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:405:55: warning: cast truncates bits
-from constant value (ffff00ff becomes ff)
-drivers/net/wireless/b43/wa.c:415:71: warning: cast truncates bits
-from constant value (ffff0fff becomes fff)
-
-
-ip2100:
-
-  CHECK   drivers/net/wireless/ipw2x00/ipw2100.c
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
-drivers/net/wireless/ipw2x00/ipw2100.c:2847:21: warning: symbol 'i'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:2770:16: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:7888:22: warning: symbol 'mode'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:7952:18: warning: symbol 'mode'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8000:18: warning: symbol 'mode'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-  CC [M]  drivers/net/wireless/ipw2x00/ipw2100.o
-  CHECK   drivers/net/wireless/ipw2x00/ipw2200.c
-  CHECK   drivers/net/wireless/ipw2x00/ipw2200.c
-drivers/net/wireless/ipw2x00/ipw2200.c:847:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:891:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:935:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:980:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1016:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1051:13: warning: symbol 'led'
-shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1823:13: warning: symbol
-'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol
-'_min1' shadows an earlier one
-(goes on and on)
-
-  CC [M]  drivers/net/wireless/ipw2x00/ipw2200.o
-  CHECK   drivers/net/wireless/ipw2x00/libipw_module.c
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
-  CC [M]  drivers/net/wireless/ipw2x00/libipw_module.o
-  CHECK   drivers/net/wireless/ipw2x00/libipw_tx.c
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
-  CC [M]  drivers/net/wireless/ipw2x00/libipw_tx.o
-  CHECK   drivers/net/wireless/ipw2x00/libipw_rx.c
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
-  CC [M]  drivers/net/wireless/ipw2x00/libipw_rx.o
-  CHECK   drivers/net/wireless/ipw2x00/libipw_wx.c
-  CC [M]  drivers/net/wireless/ipw2x00/libipw_wx.o
-  CHECK   drivers/net/wireless/ipw2x00/libipw_geo.c
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
+--- wireless-testing.orig/net/wireless/core.c	2009-08-20 20:29:10.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-08-20 20:29:12.000000000 +0200
+@@ -662,7 +662,7 @@ static void wdev_cleanup_work(struct wor
+ 
+ 	if (WARN_ON(rdev->scan_req && rdev->scan_req->dev == wdev->netdev)) {
+ 		rdev->scan_req->aborted = true;
+-		___cfg80211_scan_done(rdev);
++		___cfg80211_scan_done(rdev, true);
+ 	}
+ 
+ 	cfg80211_unlock_rdev(rdev);
+@@ -753,6 +753,8 @@ static int cfg80211_netdev_notifier_call
+ 		default:
+ 			break;
+ 		}
++		break;
++	case NETDEV_DOWN:
+ 		dev_hold(dev);
+ 		schedule_work(&wdev->cleanup_work);
+ 		break;
+--- wireless-testing.orig/net/wireless/core.h	2009-08-20 20:29:10.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-08-20 20:29:12.000000000 +0200
+@@ -370,7 +370,7 @@ void cfg80211_sme_scan_done(struct net_d
+ void cfg80211_sme_rx_auth(struct net_device *dev, const u8 *buf, size_t len);
+ void cfg80211_sme_disassoc(struct net_device *dev, int idx);
+ void __cfg80211_scan_done(struct work_struct *wk);
+-void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev);
++void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
+ void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
+ 
+ struct ieee80211_channel *
+--- wireless-testing.orig/net/wireless/scan.c	2009-08-20 20:29:10.000000000 +0200
++++ wireless-testing/net/wireless/scan.c	2009-08-20 21:34:56.000000000 +0200
+@@ -18,7 +18,7 @@
+ 
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
+ 
+-void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev)
++void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+ {
+ 	struct cfg80211_scan_request *request;
+ 	struct net_device *dev;
+@@ -26,8 +26,13 @@ void ___cfg80211_scan_done(struct cfg802
+ 	union iwreq_data wrqu;
+ #endif
+ 
++	ASSERT_RDEV_LOCK(rdev);
++
+ 	request = rdev->scan_req;
+ 
++	if (!request)
++		return;
++
+ 	dev = request->dev;
+ 
+ 	/*
+@@ -53,7 +58,17 @@ void ___cfg80211_scan_done(struct cfg802
+ 	dev_put(dev);
+ 
+ 	rdev->scan_req = NULL;
+-	kfree(request);
++
++	/*
++	 * OK. If this is invoked with "leak" then we can't
++	 * free this ... but we've cleaned it up anyway. The
++	 * driver failed to call the scan_done callback, so
++	 * all bets are off, it might still be trying to use
++	 * the scan request or not ... if it accesses the dev
++	 * in there (it shouldn't anyway) then it may crash.
++	 */
++	if (!leak)
++		kfree(request);
+ }
+ 
+ void __cfg80211_scan_done(struct work_struct *wk)
+@@ -64,7 +79,7 @@ void __cfg80211_scan_done(struct work_st
+ 			    scan_done_wk);
+ 
+ 	cfg80211_lock_rdev(rdev);
+-	___cfg80211_scan_done(rdev);
++	___cfg80211_scan_done(rdev, false);
+ 	cfg80211_unlock_rdev(rdev);
+ }
+ 
 
 
-iwmc3200wifi:
-
-drivers/net/wireless/iwmc3200wifi/cfg80211.c:241:5: warning: symbol
-'iwm_cfg80211_get_station' was not declared. Should it be static?
-  CC [M]  drivers/net/wireless/iwmc3200wifi/cfg80211.o
-
-
-libertas:
-
-  CHECK   drivers/net/wireless/libertas/assoc.c
-drivers/net/wireless/libertas/assoc.c:48:47: error: bad constant expression
-
-libertas_tf:
-
-  CC [M]  drivers/net/wireless/libertas_tf/main.o
-drivers/net/wireless/libertas_tf/main.c: In function ‘lbtf_rx’:
-drivers/net/wireless/libertas_tf/main.c:506: warning: ‘stats.antenna’
-is used uninitialized in this function
-drivers/net/wireless/libertas_tf/main.c:506: warning: ‘stats.mactime’
-is used uninitialized in this function
-
-Orinoco:
-
-  CHECK   drivers/net/wireless/orinoco/wext.c
-drivers/net/wireless/orinoco/wext.c:1294:9: warning: context imbalance
-in 'orinoco_ioctl_setibssport' - unexpected unlock
-
-prism54:
-
-  CHECK   drivers/net/wireless/prism54/isl_ioctl.c
-drivers/net/wireless/prism54/isl_ioctl.c:2052:27: warning: incorrect
-type in assignment (different address spaces)
-drivers/net/wireless/prism54/isl_ioctl.c:2052:27:    expected void
-[noderef] <asn:1>*pointer
-drivers/net/wireless/prism54/isl_ioctl.c:2052:27:    got char *[assigned] memptr
-drivers/net/wireless/prism54/isl_ioctl.c:2071:27: warning: incorrect
-type in assignment (different address spaces)
-drivers/net/wireless/prism54/isl_ioctl.c:2071:27:    expected void
-[noderef] <asn:1>*pointer
-drivers/net/wireless/prism54/isl_ioctl.c:2071:27:    got char *[assigned] memptr
-
-
-drivers/net/wireless/prism54/oid_mgt.c:424:22: warning: symbol '_data'
-shadows an earlier one
-incude/asm-generic/sections.h:7:13: originally declared here
-
-
-rtl:
-
-  CHECK   drivers/net/wireless/rtl818x/rtl8180_rtl8225.c
-drivers/net/wireless/rtl818x/rtl8180_rtl8225.c:53:33: warning: dubious: x | !y
-
-TI:
-
-  CHECK   drivers/net/wireless/wl12xx/wl1251_boot.c
-drivers/net/wireless/wl12xx/wl1251_boot.c:227:22: warning: symbol
-'interrupt' shadows an earlier one
-/home/mcgrof/wireless-testing/arch/x86/include/asm/hw_irq.h:120:13:
-originally declared here
-
-  CHECK   drivers/net/wireless/wl12xx/wl1251_sdio.c
-drivers/net/wireless/wl12xx/wl1251_sdio.c:68:6: warning: symbol
-'wl1251_sdio_read' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1251_sdio.c:80:6: warning: symbol
-'wl1251_sdio_write' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1251_sdio.c:92:6: warning: symbol
-'wl1251_sdio_reset' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1251_sdio.c:114:6: warning: symbol
-'wl1251_sdio_set_power' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1251_sdio.c:118:29: warning: symbol
-'wl1251_sdio_ops' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1251_sdio.c:126:5: warning: symbol
-'wl1251_sdio_probe' was not declared. Should it be static?
-
-
-strip:
-
-include/net/inet_sock.h:208:17: warning: do-while statement is not a
-compound statement
-drivers/net/wireless/strip.c:490:23: error: bad constant expression
-
-wl3501_cs:
-
-  CC [M]  drivers/net/wireless/wl3501_cs.o
-drivers/net/wireless/wl3501_cs.c: In function ‘wl3501_esbq_exec’:
-drivers/net/wireless/wl3501_cs.c:387: warning: ‘tmp’ is used
-uninitialized in this function
-drivers/net/wireless/wl3501_cs.c:384: note: ‘tmp’ was declared here
-
-mwl8k:
-
-  CHECK   drivers/net/wireless/mwl8k.c
-drivers/net/wireless/mwl8k.c:1600:16: warning: incorrect type in
-assignment (different address spaces)
-drivers/net/wireless/mwl8k.c:1600:16:    expected unsigned short
-[noderef] [usertype] <asn:2>*result
-drivers/net/wireless/mwl8k.c:1600:16:    got unsigned short *<noident>
-drivers/net/wireless/mwl8k.c:1611:23: warning: dereference of noderef expression
-drivers/net/wireless/mwl8k.c:1616:33: warning: dereference of noderef expression
