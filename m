@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:9042 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751730AbZHNVrT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 17:47:19 -0400
-Subject: Re: [PATCH] b43: Fix sparse warnings
-From: Pavel Roskin <proski@gnu.org>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-In-Reply-To: <1250285371.8137.44.camel@mj>
-References: <4a84906b.+IYGhiNLKPSjrrR7%Larry.Finger@lwfinger.net>
-	 <200908142215.38112.mb@bu3sch.de> <1250283133.8137.16.camel@mj>
-	 <200908142300.01397.mb@bu3sch.de>  <1250285371.8137.44.camel@mj>
-Content-Type: text/plain
-Date: Fri, 14 Aug 2009 17:46:54 -0400
-Message-Id: <1250286414.8137.55.camel@mj>
-Mime-Version: 1.0
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:63317 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991AbZHTIwo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 04:52:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <4A8C48BA.1000009@dell.com>
+References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
+	 <1250707376.8073.4.camel@johannes.local> <4A8C48BA.1000009@dell.com>
+Date: Thu, 20 Aug 2009 09:52:44 +0100
+Message-ID: <9b2b86520908200152m28daa816ib8c54a423e63ca1a@mail.gmail.com>
+Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Mario Limonciello <mario_limonciello@dell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	cezary.jackiewicz@gmail.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-08-14 at 17:29 -0400, Pavel Roskin wrote:
-> On Fri, 2009-08-14 at 23:00 +0200, Michael Buesch wrote:
-> > On Friday 14 August 2009 22:52:13 Pavel Roskin wrote:
-> > > On Fri, 2009-08-14 at 22:15 +0200, Michael Buesch wrote:
-> > > 
-> > > > > -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
-> > > > > +			b43_phy_mask(dev, 0x048A, (u16)(~0x8000 & 0xFFFF));
-> > > > 
-> > 
-> > > I would just use 0x7fff here.
-> > 
-> > That does not work if 0x8000 is a #defined bit.
-> 
-> One approach would be to use a macro and tell sparse to ignore it
-> 
-> #define NEGATE(x) (__force typeof(x))(~x)
+On 8/19/09, Mario Limonciello <mario_limonciello@dell.com> wrote:
+> Johannes:
+>
+> Johannes Berg wrote:
+>> On Wed, 2009-08-19 at 13:36 -0500, Mario Limonciello wrote:
+>>
+>>
+>>
+>>
+>> Isn't that missing sysfs_remove_group()?
+>>
+>> johannes
+>>
+> The third patch in the (updated) series is dropping the sysfs bits, so
+> sysfs_remove_group is removed there.
 
-Scratch that.  It has no change to work for constants unless we hardcode
-the size, e.g. by having NEGATE16, NEGATE32 etc.
+That's not ideal.  Each patch should stand on its own; it's bad form
+to introduce a bug in one patch and fix it in the next one.  Even
+something obscure like omitting to free the sysfs group when
+setup_rfkill() fails.
 
-The best I could do is:
+I would suggest merging these two patches into one. That would avoid
+adding sysfs_remove_group() in this patch, just to remove it in the
+next one.  It also avoids the question in this patch, of what happens
+to the rfkill interface if you write to the sysfs file.
 
-#define NEGATE16(x) (0xFFFF & ~x)
-b43_phy_mask(dev, 0x048A, NEGATE16(0x8000));
-
-> Another approach would be to have b43_phy_mask() and similar functions
-> accept int and do the bit cutting in one place.
-
-I tend to think that it would be the best approach.
-
-> It should also be possible to have separate functions e.g.
-> b43_phy_unmask() that would do the negation, so that the caller won't
-> need to do it.
-
-This could make the code hard to read.
-
--- 
-Regards,
-Pavel Roskin
+Alan
