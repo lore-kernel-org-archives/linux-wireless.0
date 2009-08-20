@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:58048 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbZHKMGP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 08:06:15 -0400
-Message-ID: <4A811BC2.4060303@openwrt.org>
-Date: Tue, 11 Aug 2009 09:20:34 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail.atheros.com ([12.36.123.2]:51296 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752979AbZHTITO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 04:19:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 01:19:16 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2] ath9k: Fix bug in retrieving average beacon rssi
+Date: Thu, 20 Aug 2009 13:41:14 +0530
+Message-ID: <1250755874-32652-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] iw: fix typos in MCS set parsing code
-References: <1249973250-9235-1-git-send-email-juhosg@openwrt.org> <1249973644.5903.14.camel@johannes.local>
-In-Reply-To: <1249973644.5903.14.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg írta:
-> On Tue, 2009-08-11 at 08:47 +0200, Gabor Juhos wrote:
->> The current code uses wrong binary operator for masking,
->> and the shift values for the 'tx_max_num_spatial_streams' and
->> 'tx_unequal_modulation' fields are off-by-one.
-> 
->> -			tx_max_num_spatial_streams = (mcs[12] | ((1 << 3) | (1 << 4))) + 1;
->> -			tx_unequal_modulation = !!(mcs[12] & (1 << 5));
->> +			tx_max_num_spatial_streams = (mcs[12] & ((1 << 2) | (1 << 3))) + 1;
->> +			tx_unequal_modulation = !!(mcs[12] & (1 << 4));
-> 
-> Are you sure? The "Supported MCS Set" field is defined as a series of
-> _bits_, and the bits are transmitted the other way around within each
-> byte.
+Currently the beacon rssi that LPF gives is divided and rounded
+up by ATH_RSSI_EP_MULTIPLIER twice. This will leave the incorrect rssi
+in ANI. Having correct rssi in ANI fixes the connection stability at
+< 30dB rssi range. This patch removes the unncessary computation of average
+rssi over already valid average rssi. Also removes the redundant macros to
+find average rssi.
 
-Yes, I'm sure. Here are the relevant definitions from <linux/ieee80211.h>:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
 
-#define IEEE80211_HT_MCS_TX_DEFINED             0x01
-#define IEEE80211_HT_MCS_TX_RX_DIFF             0x02
-/* value 0 == 1 stream etc */
-#define IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK    0x0C
-#define IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT   2
-#define         IEEE80211_HT_MCS_TX_MAX_STREAMS 4
-#define IEEE80211_HT_MCS_TX_UNEQUAL_MODULATION  0x10
+Added more description in commit msg, no code change over v1
 
-Gabor
+ drivers/net/wireless/ath/ath9k/ani.h |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 1199245..6273fd0 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -18,15 +18,10 @@
+ #define ANI_H
+ 
+ #define HAL_PROCESS_ANI           0x00000001
+-#define ATH9K_RSSI_EP_MULTIPLIER  (1<<7)
+ 
+ #define DO_ANI(ah) (((ah)->proc_phyerr & HAL_PROCESS_ANI))
+ 
+-#define HAL_EP_RND(x, mul)						\
+-	((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
+-#define BEACON_RSSI(ahp)					\
+-	HAL_EP_RND(ahp->stats.ast_nodestats.ns_avgbrssi,	\
+-		   ATH9K_RSSI_EP_MULTIPLIER)
++#define BEACON_RSSI(ahp) (ahp->stats.ast_nodestats.ns_avgbrssi)
+ 
+ #define ATH9K_ANI_OFDM_TRIG_HIGH          500
+ #define ATH9K_ANI_OFDM_TRIG_LOW           200
+-- 
+1.5.5.1
 
