@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63784 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752964AbZHMJ3v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 05:29:51 -0400
-Subject: Re: [PATCH] nl80211 connect API support
-From: Zhu Yi <yi.zhu@intel.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Samuel Ortiz <sameo@linux.intel.com>
-In-Reply-To: <20090813091103.GA1826@jm.kir.nu>
-References: <1250153731-17208-1-git-send-email-yi.zhu@intel.com>
-	 <1250153731-17208-2-git-send-email-yi.zhu@intel.com>
-	 <20090813091103.GA1826@jm.kir.nu>
-Content-Type: text/plain
-Date: Thu, 13 Aug 2009 17:29:37 +0800
-Message-Id: <1250155777.4972.9.camel@debian>
-Mime-Version: 1.0
+Received: from qw-out-2122.google.com ([74.125.92.24]:4699 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbZHTPk6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 11:40:58 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so1784550qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 08:40:59 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 20 Aug 2009 08:40:59 -0700
+Message-ID: <8f3763990908200840p28cd6792qa16393dbbbe87e83@mail.gmail.com>
+Subject: Re: ath9k broken in 2.6.31-rc6
+From: ASIC Felix <ic.felix@gmail.com>
+To: tmb-4qZELD6Fgxhg9hUCZPvPmw@public.gmane.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+Hello Thomas,
 
-On Thu, 2009-08-13 at 17:11 +0800, Jouni Malinen wrote:
-> On Thu, Aug 13, 2009 at 04:55:31PM +0800, Zhu Yi wrote:
-> 
-> > -	 * authenticate - Request driver to authenticate
-> > +	 * authenticate - Request driver to authenticate (deprecated)
-> 
-> > +	 * This is an optional function that to make compatibility for wireless
-> > +	 * stack that doesn't support connect API when driver SME is used
-> > +	 * (WPA_DRIVER_FLAGS_SME).
-> 
-> Thanks for the patch. If I understood this correctly, wpa_supplicant
-> would be converted to use the new connect command whenever it is
-> supported. While it is nice to get support for connect added, this is
-> not how it should be done as it breaks all the new work we have been
-> enabling with mac80211. The separate auth/assoc commands should be the
-> default operation and only if the driver does not support this, should
-> the connect command be used.
+your log shows "klogd: AR_INTR_SYNC_LOCAL_TIMEOUT",
+since "master-2009-08-14" I no longer see it in dmesg, I don't know
+with patch fixed it.
 
-The connect API wraps auth/assoc commands in cfg80211 SME. For example,
-when cfg80211 receives NL80211_CMD_CONNECT (cfg80211_connect), it checks
-if connect API is supported or not. If it is not supported (for all
-mac80211 based drivers), it uses the common cfg80211_conn_do_work() to
-do auth/assoc the same way as it handles NL80211_CMD_AUTHENTICATE. So
-from user space point of view, if connect API is supported, it can use
-it directly and let cfg80211 to maintain the state of auth and assoc.
+Perhaps you want to do a quick test with different dates of
+compat-wireless, it now allows compiling Atheros drivers only which
+makes it much quicker.
 
-Thanks,
--yi
+I assume you prepare wlan including ath9k for Mandriva kernels?
 
+(disclaimer: I'm not a driver developer)
+
+Best regards,
+Felix
