@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:35972 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755263AbZHNQFl (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:51737 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755310AbZHTT4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 12:05:41 -0400
-Message-ID: <20090814190539.25214ckjvpb30f28@hayate.sektori.org>
-Date: Fri, 14 Aug 2009 19:05:39 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Zhu Yi" <yi.zhu@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: set SME state machine correctly for roam
-	event
-References: <1250155399-17847-1-git-send-email-yi.zhu@intel.com>
-	<1250157249.21250.0.camel@johannes.local>
-In-Reply-To: <1250157249.21250.0.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+	Thu, 20 Aug 2009 15:56:11 -0400
+Date: Thu, 20 Aug 2009 21:56:11 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] mac80211: fix configure_filter invocation after stop
+Message-ID: <20090820195611.GH6171@mail.wantstofly.org>
+References: <1250790381.9307.5.camel@johannes.local> <1250791340.9307.6.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250791340.9307.6.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Johannes Berg" <johannes@sipsolutions.net>:
+On Thu, Aug 20, 2009 at 08:02:20PM +0200, Johannes Berg wrote:
 
-> On Thu, 2009-08-13 at 17:23 +0800, Zhu Yi wrote:
->> When we receive a successful status in CFG80211_SME_CONNECTED state,
->> it is a roam event. We should mark it as a success result.
->
-> But there's a cfg80211_roamed() call for that? Can the driver not tell
-> the difference? It also sends a different event (ROAMED rather than
-> CONNECTED) to userspace.
->
+> Since configure_filter can sleep now, any multicast
+> configuration needed to be postponed to a work struct.
+> This, however, lead to a problem that we could queue
+> the work, stop the device and then afterwards invoke
+> configure_filter which may lead to driver hangs and is
+> a bug. To fix this, we can just cancel the filter work
+> since it's unnecessary to do after stopping the hw.
+> 
+> Since there are various places that call drv_stop, and
+> two of them do very similar things, the code for them
+> can be put into a shared function at the same time.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Reported-by: Lennert Buytenhek <buytenh@wantstofly.org>
 
-rndis sends 'media connect' indication when device  
-associates/reassociates/"roams and associates with new AP". Specs also  
-say that "must not make a media disconnect indication when  
-reassociating or roaming".
+Seems to work for me, I now no longer see firmware commands being
+posted after ->stop() is called.
 
--Jussi
-
+Tested-by: Lennert Buytenhek <buytenh@marvell.com>
