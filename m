@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:31786 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754545AbZHJBmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 21:42:43 -0400
-Subject: Re: [PATCH] cfg80211: Set WEP ciphers
-From: Zhu Yi <yi.zhu@intel.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Samuel Ortiz <sameo@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1249680982.26088.48.camel@localhost.localdomain>
-References: <20090806190439.GA22647@sortiz.org>
-	 <1249680982.26088.48.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Mon, 10 Aug 2009 09:42:38 +0800
-Message-Id: <1249868558.3967.32.camel@debian>
-Mime-Version: 1.0
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:43619 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422AbZHTHbl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 03:31:41 -0400
+Received: by iwn42 with SMTP id 42so323086iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 00:31:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <eb3ff54b0908200022mf4d2950v366c82698dfe440b@mail.gmail.com>
+References: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
+	<43e72e890908200012x23b7773dvf215676726a514e5@mail.gmail.com>
+	<eb3ff54b0908200022mf4d2950v366c82698dfe440b@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 20 Aug 2009 00:31:22 -0700
+Message-ID: <43e72e890908200031n1bf448deib79766d2e57e538b@mail.gmail.com>
+Subject: Re: Linux Kernel Wireless stack presentation
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-08-08 at 05:36 +0800, Dan Williams wrote:
-> If you're talking about static WEP, then the ciphers are determined by
-> the WEP keys that have been set with iwconfig, and you determine
-> WEP40/WEP104 based on the length of the current WEP TX index.
+On Thu, Aug 20, 2009 at 12:22 AM, Rami Rosen<ramirose@gmail.com> wrote:
+> Luis,
+> First, thanks for your quick response.
+>
+>> * Ditch iwconfig and refer to iw
+>
+> I do mention also iw; for example, in slide 70, slide 111.
+> My impression is that both set of tools, wireless-tools and iw, will
+> coexist for the next
+> near future and maybe beyond.
 
-Exactly. But we need to pass this cipher info to the connect API anyway.
-With cfg80211 key rework [1], driver's add_key callback won't be called
-until it is associated. If driver needs the cipher info for association,
-passing it to the connect API is the only choice.
+Sure, but the sooner wireless-tools if forgotten into oblivion the better.
 
-Thanks,
--yi
-
-1. http://marc.info/?l=linux-wireless&m=124705584228953&w=2
-
+  Luis
