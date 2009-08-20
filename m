@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:54103 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752145AbZHATud (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 15:50:33 -0400
-Date: Sat, 1 Aug 2009 21:50:31 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 4/5] drivers/net/wireless: Use DIV_ROUND_CLOSEST
-Message-ID: <Pine.LNX.4.64.0908012149570.25693@ask.diku.dk>
+Received: from mbox2.netikka.net ([213.250.81.203]:42012 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046AbZHTSLc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 14:11:32 -0400
+Message-ID: <4A8D91D5.4050008@mandriva.org>
+Date: Thu, 20 Aug 2009 21:11:33 +0300
+From: Thomas Backlund <tmb@mandriva.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: ASIC Felix <ic.felix@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k broken in 2.6.31-rc6
+References: <8f3763990908200840p28cd6792qa16393dbbbe87e83@mail.gmail.com>
+In-Reply-To: <8f3763990908200840p28cd6792qa16393dbbbe87e83@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+ASIC Felix skrev:
+> 
+> 
+> Hello Thomas,
+> 
+> your log shows "klogd: AR_INTR_SYNC_LOCAL_TIMEOUT",
+> since "master-2009-08-14" I no longer see it in dmesg, I don't know
+> with patch fixed it.
+> 
 
-The kernel.h macro DIV_ROUND_CLOSEST performs the computation (x + d/2)/d
-but is perhaps more readable.
+Ah, ok thanks for that info...
 
-The semantic patch that makes this change is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+> Perhaps you want to do a quick test with different dates of
+> compat-wireless, it now allows compiling Atheros drivers only which
+> makes it much quicker.
+>
 
-// <smpl>
-@haskernel@
-@@
+I'll take a look on that too...
 
-#include <linux/kernel.h>
+> I assume you prepare wlan including ath9k for Mandriva kernels?
+> 
 
-@depends on haskernel@
-expression x,__divisor;
-@@
+Yep,
+trying to fix some bugs...
 
-- (((x) + ((__divisor) / 2)) / (__divisor))
-+ DIV_ROUND_CLOSEST(x,__divisor)
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+For main kernel we try to stick with upstream kernel.org relases as it, 
+as it's less maintenace that way...
 
----
- drivers/net/wireless/strip.c        |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+So I'd really would like to try and get a working fix into 2.6.31 if 
+possible...
 
-diff --git a/drivers/net/wireless/strip.c b/drivers/net/wireless/strip.c
-index 73300c2..8eabb56 100644
---- a/drivers/net/wireless/strip.c
-+++ b/drivers/net/wireless/strip.c
-@@ -1550,9 +1550,12 @@ static int strip_xmit(struct sk_buff *skb, struct net_device *dev)
- 
- 	if (time_after(jiffies, strip_info->pps_timer + HZ)) {
- 		unsigned long t = jiffies - strip_info->pps_timer;
--		unsigned long rx_pps_count = (strip_info->rx_pps_count * HZ * 8 + t / 2) / t;
--		unsigned long tx_pps_count = (strip_info->tx_pps_count * HZ * 8 + t / 2) / t;
--		unsigned long sx_pps_count = (strip_info->sx_pps_count * HZ * 8 + t / 2) / t;
-+		unsigned long rx_pps_count =
-+			DIV_ROUND_CLOSEST(strip_info->rx_pps_count*HZ*8, t);
-+		unsigned long tx_pps_count =
-+			DIV_ROUND_CLOSEST(strip_info->tx_pps_count*HZ*8, t);
-+		unsigned long sx_pps_count =
-+			DIV_ROUND_CLOSEST(strip_info->sx_pps_count*HZ*8, t);
- 
- 		strip_info->pps_timer = jiffies;
- 		strip_info->rx_pps_count = 0;
+For contrib kernels i could probably switch to wireless-testing in 
+kernel-tmb as that is intended to be more "on the edge"...
+
+--
+Thomas
