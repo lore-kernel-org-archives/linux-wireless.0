@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:33254 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148AbZH1K2S (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:48067 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308AbZHTOqu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 06:28:18 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [RFC PATCH 07/10] rndis_wlan: remove unneeded SIOCSIWCOMMIT
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 28 Aug 2009 13:28:19 +0300
-Message-ID: <20090828102819.15684.90095.stgit@fate.lan>
-In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
-References: <20090828102742.15684.10566.stgit@fate.lan>
+	Thu, 20 Aug 2009 10:46:50 -0400
+Received: by fxm17 with SMTP id 17so490026fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 07:46:50 -0700 (PDT)
+To: gregor kowski <gregor.kowski@gmail.com>
+Cc: bcm43xx-dev@lists.berlios.de, Michael Buesch <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv4] b43 add harware tkip
+References: <83a869cd0908191335u723f62c6p119ec4ed8cfb51c5@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 20 Aug 2009 17:46:47 +0300
+In-Reply-To: <83a869cd0908191335u723f62c6p119ec4ed8cfb51c5@mail.gmail.com> (gregor kowski's message of "Wed\, 19 Aug 2009 22\:35\:45 +0200")
+Message-ID: <87eir6tueg.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+gregor kowski <gregor.kowski@gmail.com> writes:
 
- drivers/net/wireless/rndis_wlan.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+> Update v4 : add a warn_on in b43_op_update_tkip_key, update to last
+> driver change (key API).
+> Update v3 : add a module parameter to enable hw tkip, Coding style
+> fix, locking fix
+> Update v2 : work with qos, implement dump key, fix an issue with setting
+> random value on tkip key clear.
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 919b268..6919c54 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2179,13 +2179,6 @@ static int rndis_dump_station(struct wiphy *wiphy, struct net_device *dev,
-  * wireless extension handlers
-  */
- 
--static int rndis_iw_commit(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	/* dummy op */
--	return 0;
--}
--
- #if 0
- /* Commented code out instead of removing to have more sane patch for review.
-  * Will be removed later in the set.
-@@ -2558,7 +2551,6 @@ static struct iw_statistics *rndis_get_wireless_stats(struct net_device *dev)
- #define IW_IOCTL(x) [(x) - SIOCSIWCOMMIT]
- static const iw_handler rndis_iw_handler[] =
- {
--	IW_IOCTL(SIOCSIWCOMMIT)    = rndis_iw_commit,
- 	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
- 	IW_IOCTL(SIOCSIWFREQ)      = (iw_handler) cfg80211_wext_siwfreq,
- 	IW_IOCTL(SIOCGIWFREQ)      = (iw_handler) cfg80211_wext_giwfreq,
+It's recommended to not include changelog (ie v3, v4 and so on) in the
+patch description. Either add it after "-- \n" mark or send a separate
+cover letter.
 
+-- 
+Kalle Valo
