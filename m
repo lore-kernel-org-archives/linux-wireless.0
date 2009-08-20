@@ -1,39 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51562 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784AbZHJMly convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:34387 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbZHTQUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 08:41:54 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [RFC PATCH] b43: Implement LP-PHY baseband table initialization
-Date: Mon, 10 Aug 2009 14:41:43 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A7F713E.8040405@gmail.com>
-In-Reply-To: <4A7F713E.8040405@gmail.com>
+	Thu, 20 Aug 2009 12:20:01 -0400
+Date: Thu, 20 Aug 2009 12:20:00 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Simon Farnsworth <simon@farnz.org.uk>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	David Quan <David.Quan@atheros.com>,
+	Michael Green <Michael.Green@atheros.com>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>
+Subject: Re: Regulatory problems with ath5k in AP mode
+Message-ID: <20090820162000.GA2602@bombadil.infradead.org>
+References: <h6ced0$hoi$1@ger.gmane.org> <43e72e890908191720m6838e81ei853a27856288db8f@mail.gmail.com> <200908200923.46741.simon@farnz.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908101441.43480.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200908200923.46741.simon@farnz.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 August 2009 03:00:46 Gábor Stefanik wrote:
-> +static const u16 lpphy_sw_control_table[] = {
-> +	0x0128,
-> +	0x0128,
-> +	0x0009,
-> +	0x0009,
-> +	0x0028,
-> +	0x0028,
+Note: this e-mail is on a public mailing list. I'm adding David and Michael.
 
-Is it possible to use more than one value per line for all these tables?
-Make sure to make best use of the 80 columns limit.
-This would significantly decrease the patch/file length. (linewise)
+On Thu, Aug 20, 2009 at 09:23:39AM +0100, Simon Farnsworth wrote:
+> On Thursday 20 August 2009 01:20:58 Luis R. Rodriguez wrote:
+> > On Mon, Aug 17, 2009 at 1:27 PM, Simon Farnsworth<simon@farnz.org.uk> wrote:
+> > > As I'm trying to use the cards for AP mode, I cannot rely on beacons with
+> > > regulatory data being present;
+> >
+> > Regulatory questions are often and I try really hard to answer them
+> > first through documentation so it seems we need to improve
+> > documentation further. To be thorough though I'd first like to ask if
+> > you have read all this:
+> >
+> > Linux regulatory docs:
+> >
+> > http://wireless.kernel.org/en/developers/Regulatory
+> >
+> > Atheros shared module documentation (ath.ko):
+> >
+> > http://wireless.kernel.org/en/users/Drivers/ath
+> >
+> I've read both of those - they're why I'm not simply overriding the EEPROM
+> by hacking ath5k.ko around.
 
--- 
-Greetings, Michael.
+Great to hear.
+
+> > > instead, I have modprobe configured to run
+> > > "iw reg set GB" after cfg80211 is loaded,
+> >
+> > How do you have modprove configured to do that? Are you using
+> > ieee80211_regdom module parameter? If so please consider just using
+> > 'iw' or hostapd configured as you have below.
+> >
+>
+> In /etc/modprobe.d/regulatory, I have a line:
+> install cfg80211 /sbin/modprobe --ignore-install cfg80211 ; /usr/local/sbin/iw reg set GB
+
+Heh, interesting, yeah I guess I have to test such a concoction and I guess using the
+ieee80211_regdom parameter will do the same. Anyway, this is will only help compliance,
+and since you are already setting this on hostapd setting it twice will yield an -EALREADY,
+so I recommend to just do it once and if you do want to set it, set it on hostapd.
+
+> > > My cards both have a regdomain in the EEPROM of 0x0,
+> >
+> > This is something that the manufacturer would have decided on.
+> >
+> > > which my vendor assures
+> > > me is the correct regdomain for cards which don't claim any particular
+> > > regulatory compliance,
+> >
+> > Who exactly did you speak to?
+> >
+> > Atheros uses 0x0 for a default mapping to the US.
+> >
+>
+> I spoke to Mikrotik, who manufactured the R52 card I'm using. They assured
+> me that EEPROM regdomain 0x0 was correct for a card with no knowledge of
+> what regulatory domain it would be sold in, and in any case, told me that
+> it works fine with the driver they have from Atheros, so it must be an
+> upstream kernel bug.
+
+Please kindly inform them that this information is incorrect. 0x0 is to be used
+by Atheros devices to map to the "US", always. Mikrotek just so happens to be
+a manufacturer who sells cards for AP purposes. Ubiquity is another example but
+I am aware Ubiquity sells Atheros *modified* hardware to operate either with
+higher EIRP or on different frequency ranges. Anyway, manufactuers in general
+who sell hardware with intentions of supporting AP mode have to test their
+cards for proper operation and calibration and for regulatory purposes. This
+is why you see these cards come with their own FCC ID attached.
+
+So be aware, 0x0 will always map to the US. If the manufacturer did not intend to
+do that they can provide their own regulatory.bin to customers where they can map
+"US" to their own defined regulatory domain. For you to use their regulatory.bin
+they can make public their RSA public key generated by building a modified
+wireless-regdb so users can compile crda to trust it. The pubkey from the
+manfuacturer can be put into the crda/pubkeys/ before compilation. If the
+manufacturer uses another value to put into the EEPROM they should use whatever
+country that value maps to to build their own regulatory.bin. If the manufacturer
+intended for the card they sell to be used in different countries *and* they
+support letting users change the country they can add those countries they
+have tested for regulatory support and have regulatory certification onto their
+regulatory.bin, in this case the default EEPROM mapping should yield a large
+regulatory domain which allows the full capability they want to allow for on their
+cards. That is if their cards are programmed with 0x0 then since ath.ko will ask
+for regulatory_hint("US") for Atheros devices they must map "US" to a big
+regulatory domain, and next their customers can use 'iw reg set' or embed
+the country code as you have in hostapd.conf so that it then restricts the
+regulatory settings further to fit the country you are in, that is the
+intersection between the big regulatory domain and the one intended. Granted
+this means if they used "0x0" "US" is already taken, so they could either
+provide patches for ath.ko for their customers so that "0x0" does not match
+to "US" all the time but to something else like a debug mode like "ZZ", or
+maybe numbers "50" maybe, although I forget if this will fail right now
+on cfg80211, or simply use another alpah2 for "US" for their customers.
+
+Keep in mind though that the functionality to support country selection for
+AP operation is something that I understand as not welcomed by the FCC so
+I would be careful in considertion supporting this as a manufacturer for users
+in the US.
+
+Anyway the advantage of all this is all this can be supported now through userspace.
+It used to be some manufacturers had to provide patches on top of the supported
+Atheros driver to support custom regulatory domains. Provided the manfucturer has
+tested a regulatory domain this is no longer required and these changes can now
+be done completey in userspace.
+
+Feel free to refer Mikrotek, Ubiquity, or any manufacturer selling Atheros cards
+to support AP mode to the above. They should first test their stuff though :)
+
+> > > thus preventing legal
+> > > use of the WiFi bands, but allowing me illegal use.
+> >
+> > This is no different than considering the case of when you ship an
+> > access point from JP to the US and you start beaconing on channel 13.
+> > You are violating local US regulatory laws if your configuration was
+> > to beacon on channel 13. If you take a US AP to the JP you then are
+> > prevented from usage of the allowed channel 13.
+> >
+> > I realize it may seem silly, and in fact I agree, but that is the law.
+> > If you were to bring an AP from JP to the US *with* a regulatory
+> > domain which matches the JP SKUs and therefore are allowed to beacon
+> > on channel 13 we give you the flexibility in Linux to enhance
+> > compliance and indicate you are on in the US and disable channel 13.
+> > Now, as much as I would love for it to be the case that the other way
+> > around should be enabled it is not, and although technically it is
+> > feasible, it is just not something agreeable to current regulatory
+> > agencies. Maybe one day it will be for 802.11, who knows.
+> >
+> > Anyway in your case since the device sends a regulatory hint for "US"
+> > first, and then you say "GB" the card will *always* respect first
+> > "US", and "GB" is just used to further help compliance.
+> >
+>
+> So, if I understand correctly, this is not considered a bug by you or the
+> card manufacturer, both of whom insist that the other one is wrong. Am I
+> right in thinking that the easiest way to resolve this is to stick with an
+> unmodified kernel, but to use my own regulatory database that treats US as
+> GB?
+
+Your manufacturer has their information incorrect in thinking 0x0 maps to
+some debug mode to allow all channels. 0x0 maps to "US" by default on
+Atheros drivers. See the above explanation for what your manufacturer
+*can* do.
+
+> > > Secondly, I'm seeing different regulatory settings on each card. "iw
+> > > list" shows me that in the 2GHz band, phy1 is being allowed to use 27.0
+> > > dBm on channels 1-11, whereas I'm only allowed to use 20.0 dBm, but I'm
+> > > allowed channels 1-13.
+> >
+> > I did not understand the last part, can you rephrase this again?
+> >
+>
+> Easiest to look at the full iw list output below, and remember that my
+> local regulatory domain is GB, which is also the domain the cards were sold
+> as having.
+
+OK I'll try to do that, but again, I think we already spotted the main issue here:
+your manufacturer should be notified 0x0 is intended by Atheros drivers to map to
+the "US". For support for new upstream Atheros Linux drivers (in the Linux kernel)
+they should revisit how they should support customers for regulatory purposes
+in light of the new regulatory infrastructure which does allow them to modify
+the regulatory database in userspace and sign off on it.
+
+I'll look into the other logs through another thread. Feel free to refer
+manufacturers to this e-mail for documentation purposes.
+
+  Luis
