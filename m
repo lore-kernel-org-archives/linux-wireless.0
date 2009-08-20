@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:40260 "EHLO mx2.redhat.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752091AbZHSQjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 12:39:36 -0400
-Subject: Re: question about ieee80211_tx.c (fwd)
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <gregkh@suse.de>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Julia Lawall <julia@diku.dk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090819163328.GA3057@suse.de>
-References: <Pine.LNX.4.64.0908171000500.20447@pc-004.diku.dk>
-	 <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
-	 <1250558021.9651.35.camel@debian> <20090818013502.GD20566@suse.de>
-	 <1250699528.5351.18.camel@localhost.localdomain>
-	 <20090819163328.GA3057@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 19 Aug 2009 11:39:36 -0500
-Message-Id: <1250699976.5351.21.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33276 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754215AbZHTUem (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 16:34:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: remove ieee80211_rx namespace hack
+Date: Thu, 20 Aug 2009 16:34:15 -0400
+Message-Id: <1250800455-4284-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-19 at 09:33 -0700, Greg KH wrote:
-> On Wed, Aug 19, 2009 at 11:32:08AM -0500, Dan Williams wrote:
-> > On Mon, 2009-08-17 at 18:35 -0700, Greg KH wrote:
-> > > On Tue, Aug 18, 2009 at 09:13:41AM +0800, Zhu Yi wrote:
-> > > > On Mon, 2009-08-17 at 19:50 +0800, Gábor Stefanik wrote:
-> > > > > On Mon, Aug 17, 2009 at 10:03 AM, Julia Lawall<julia@diku.dk> wrote:
-> > > > > > The files ieee80211_tx.c in the directories
-> > > > > > drivers/staging/rtl8192su/ieee80211 and
-> > > > > drivers/staging/rtl8192e/ieee80211
-> > > > > > both contain the following code in the function
-> > > > > > ieee80211_query_protectionmode:
-> > > > > >
-> > > > > >       if (ieee->mode == IW_MODE_MASTER)
-> > > > > >                        goto NO_PROTECTION;
-> > > > > >
-> > > > > > Elsewhere in these files when there is a comparison against an
-> > > > > IW_MODE
-> > > > > > value, the field that is compared is iw_mode.  Should that be the
-> > > > > case
-> > > > > > here as well?
-> > > > > >
-> > > > > > thanks,
-> > > > > > julia
-> > > > > 
-> > > > > I don't know; rtl8192su & rtl8192e use a modified version of the
-> > > > > libipw stack, rather than the mac80211 stack found behind non-staging
-> > > > > drivers.
-> > > > 
-> > > > This is clearly a bug. The question is: who is maintaining this driver
-> > > > and why it doesn't use/extend ieee80211/libipw?
-> > > 
-> > > I maintain it, and I am working to convert it to use the existing
-> > > ieee80211 stack that is in the kernel.  Remember, these are drivers in
-> > > the staging tree, they are usually "crap" :)
-> > 
-> > When you say "ieee80211" you mean mac80211, right?
-> 
-> Sorry, yes, whatever the wireless stack in the main kernel is called
-> these days :)
+With the libipw naming scheme change, it is no longer necessary for
+mac80211 to avoid the ieee80211_rx name clash.
 
-We used to have the ieee80211 that rtl* forked its internal ieee80211
-off of, but we just successfully made that code private to ipw2x00 (now
-called "libipw") earlier this year.  Wanted to make sure any effort was
-correctly targeting mac80211 instead of libipw.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/net/mac80211.h |   11 +----------
+ net/mac80211/rx.c      |    4 ++--
+ 2 files changed, 3 insertions(+), 12 deletions(-)
 
-Dan
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index aac84d7..466859b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1657,12 +1657,6 @@ void ieee80211_free_hw(struct ieee80211_hw *hw);
+  */
+ void ieee80211_restart_hw(struct ieee80211_hw *hw);
+ 
+-/*
+- * trick to avoid symbol clashes with the ieee80211 subsystem,
+- * use the inline below instead
+- */
+-void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-
+ /**
+  * ieee80211_rx - receive frame
+  *
+@@ -1678,10 +1672,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb);
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  */
+-static inline void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+-{
+-	__ieee80211_rx(hw, skb);
+-}
++void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb);
+ 
+ /**
+  * ieee80211_rx_irqsafe - receive frame
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7065fd7..dff2239 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2440,7 +2440,7 @@ static u8 ieee80211_rx_reorder_ampdu(struct ieee80211_local *local,
+  * This is the receive path handler. It is called by a low level driver when an
+  * 802.11 MPDU is received from the hardware.
+  */
+-void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
++void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_rate *rate = NULL;
+@@ -2523,7 +2523,7 @@ void __ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(__ieee80211_rx);
++EXPORT_SYMBOL(ieee80211_rx);
+ 
+ /* This is a version of the rx handler that can be called from hard irq
+  * context. Post the skb on the queue and schedule the tasklet */
+-- 
+1.6.2.5
 
