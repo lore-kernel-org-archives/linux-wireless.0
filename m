@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:39474 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755250AbZHTV1d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 17:27:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: John Dykstra <john.dykstra1@gmail.com>
-Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
-Date: Thu, 20 Aug 2009 23:28:24 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera> <1250801571.7176.10.camel@Maple>
-In-Reply-To: <1250801571.7176.10.camel@Maple>
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:41249 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250AbZHTVEY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 17:04:24 -0400
+Received: by iwn42 with SMTP id 42so95894iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 14:04:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <200908202328.24252.rjw@sisk.pl>
+In-Reply-To: <1250796364.3311.0.camel@macbook.infradead.org>
+References: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
+	<1250796364.3311.0.camel@macbook.infradead.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 20 Aug 2009 14:04:05 -0700
+Message-ID: <43e72e890908201404p3b1344d5gc9c568d84dea9f96@mail.gmail.com>
+Subject: Re: [PATCH] atheros: add ar9170.fw 1-stage firmware
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linux-wireless@vger.kernel.org,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 August 2009, John Dykstra wrote:
-> On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
-> > Subject         : WARNING: at net/ipv4/af_inet.c:154
-> > inet_sock_destruct+0x164/0x1c0()
-> > Submitter       : Ralf Hildebrandt <ralf.hildebrandt@charite.de>
-> > Date            : 2009-08-18 12:37 (2 days old)
-> 
-> That looks similar to the WARNING discussed in [1].
-> 
-> There was no resolution to that thread.  However, [2] points out
-> possible other occurrences of the problem in 2.6.27, 28 and 29.
-> 
-> --  John
-> 
-> [1]  http://www.spinics.net/lists/netdev/msg103267.html
-> [2]  http://www.spinics.net/lists/netdev/msg104120.html
+On Thu, Aug 20, 2009 at 12:26 PM, David Woodhouse<dwmw2@infradead.org> wrote:
+> On Thu, 2009-08-20 at 11:40 -0700, Luis R. Rodriguez wrote:
+>>
+>> Here is a resend, noticed today this wasn't yet in the tree.
+>>
+>>  ar9170.fw |  Bin 0 -> 15960 bytes
+>>  1 files changed, 0 insertions(+), 0 deletions(-)
+>>  create mode 100644 ar9170.fw
+>
+> Needs patch to WHENCE file.
 
-Thanks for the information.
+On second thought people already know where to find this file as
+documented on the wiki, and since users are reporting some issues with
+it we may as well wait for a release of the open fw which is based on
+the same code as the 1 stage fw.
 
-So I'll drop this from the list, since it most probably is not a recent thing.
+So if people can start testing that it would help.
 
-Best,
-Rafael
+ Luis
