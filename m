@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32413 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753136AbZHGEPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 00:15:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 21:15:23 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19067.43624.740010.151237@gargle.gargle.HOWL>
-Date: Fri, 7 Aug 2009 09:45:36 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/12] ath9k: Update beacon RSSI
+Received: from wa-out-1112.google.com ([209.85.146.181]:62088 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681AbZHTUw4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 Aug 2009 16:52:56 -0400
+Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+From: John Dykstra <john.dykstra1@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+In-Reply-To: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera>
+Content-Type: text/plain
+Date: Thu, 20 Aug 2009 20:52:51 +0000
+Message-Id: <1250801571.7176.10.camel@Maple>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ANI uses the beacon RSSI for its operation.
-Update this properly.
+On Wed, 2009-08-19 at 22:20 +0200, Rafael J. Wysocki wrote:
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14002
+> Subject         : WARNING: at net/ipv4/af_inet.c:154
+> inet_sock_destruct+0x164/0x1c0()
+> Submitter       : Ralf Hildebrandt <ralf.hildebrandt@charite.de>
+> Date            : 2009-08-18 12:37 (2 days old)
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+That looks similar to the WARNING discussed in [1].
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index f6a8b1c..1a08c69 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -252,6 +252,10 @@ static int ath_rx_prepare(struct sk_buff *skb, struct ath_desc *ds,
- 	else if (ds->ds_rxstat.rs_rssi > 127)
- 		ds->ds_rxstat.rs_rssi = 127;
- 
-+	/* Update Beacon RSSI, this is used by ANI. */
-+	if (ieee80211_is_beacon(fc))
-+		sc->nodestats.ns_avgbrssi = ds->ds_rxstat.rs_rssi;
-+
- 	rx_status->mactime = ath_extend_tsf(sc, ds->ds_rxstat.rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
--- 
-1.6.4
+There was no resolution to that thread.  However, [2] points out
+possible other occurrences of the problem in 2.6.27, 28 and 29.
+
+--  John
+
+[1]  http://www.spinics.net/lists/netdev/msg103267.html
+[2]  http://www.spinics.net/lists/netdev/msg104120.html
+
 
