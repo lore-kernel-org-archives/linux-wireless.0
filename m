@@ -1,53 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:49069 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033AbZHGQkv (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34663 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753524AbZHTJWl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 12:40:51 -0400
-Received: by pzk34 with SMTP id 34so1718240pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 09:40:51 -0700 (PDT)
-Message-ID: <4A7C58CC.2040708@lwfinger.net>
-Date: Fri, 07 Aug 2009 11:39:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] p54: implement rfkill
-References: <200907192354.15349.chunkeey@web.de> <20090807153602.GG7545@tuxdriver.com>
-In-Reply-To: <20090807153602.GG7545@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 20 Aug 2009 05:22:41 -0400
+Subject: Re: Linux Kernel Wireless stack presentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rami Rosen <ramirose@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
+References: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UxlsWfhTKA5pxtvwfd//"
+Date: Thu, 20 Aug 2009 11:22:10 +0200
+Message-Id: <1250760130.4100.23.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sun, Jul 19, 2009 at 11:54:15PM +0200, Christian Lamparter wrote:
->> This patch gets rid of the deprecated radio_enabled
->>
->> fwio.c: In function ‘p54_setup_mac’:
->> fwio.c:323: warning: ‘radio_enabled’ is deprecated (declared at include/net/mac80211.h:607)
-> 
-> Anyone had a chance to test this?  And report the results to Christian?
 
-Sorry - I missed this one.
+--=-UxlsWfhTKA5pxtvwfd//
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-I just tested it. With the patch, the warning is removed. As far as
-system operation, the following is observed:
+On Thu, 2009-08-20 at 10:02 +0300, Rami Rosen wrote:
 
-1. If b43 is loaded when using p54usb, then the hardware switch will
-kill operation. This behavior is the same with or without this patch.
+> http://tuxology.net/wp-content/uploads/2009/08/wirelessLecHerzelinux.pdf
 
-2. If b43 is unloaded, then p54usb no longer follows the hardware
-switch, but operation can be killed with the rfkill user-space
-utility. Again, this behavior does not depend on the patch.
+had a quick look
 
-Based on the code changes in the patch, it looks as if the radio is
-turned off when the device is blocked, but I have no way to test that.
+ * almost all drivers support passive scanning -- all the modern ones at
+   least -- maybe some old drivers don't, but all using cfg80211 do
+ * your presentation is based on old code -- all the code stuff about
+   scanning is already outdated in wireless-testing
+ * you can scan for multiple specific SSIDs and channels:
+   iw wlan0 scan freq 2412 ssid foo bar baz
+ * iw has a better IE parser, so showing a result from that may be more
+   instructive
+ * code stuff about authentication/association is also outdated already
+ * the STA_MLME_DISABLED stuff no longer exists
+ * AP MLME will never be in the kernel, not just not in the near
+   future :)
+ * raw packets still go through the mac80211 stack, they arrive in
+   monitor_start_xmit() or so
+ * four-address format is not necessarily used only for WDS, the
+   standard doesn't define uses for it (ToDS =3D FromDS =3D 1)
+ * an AP may transmit nullfunc (!) frames to tell clients it has no data
+   buffered, but it never transmits frames with the PM bit on
+ * power timeout 5 is described incorrectly -- it doesn't go to sleep
+   for 5 seconds, it actually stays awake for 5 seconds after each
+   packet transmission -- the time spent asleep is calculated based on
+   the DTIM period etc. Cf. 04fe20372e70685d9f15966216cdffd3795fe590.
+ * STA may wake up in response to TIM[AID] =3D=3D 1 instead of sending
+   PS-poll, which we do depends on the timeout (iwconfig wlan0 power
+   timeout 0 =3D=3D PS-poll, iwconfig wlan0 power timeout 100ms =3D=3D send
+   nullfunc and stay awake for 100ms)
+ * "paramter" typo
+ * ibss is in net/mac80211/ibss.c and has been for quite a while
+ * PM in IBSS is not implemented typically
+ * s/80211.s/802.11s/
+ * s/80211.n/802.11n/
+ * you can change the channel with iw (iw phy set freq ...) but it isn't
+   really useful unless you're AP/monitor (and rejected otherwise)
+ * Fedora no longer updates from wireless-testing afaik
+ * wmaster0 is no longer created
+ * assigning interface_modes doesn't set the mode, it just sets the
+   possible modes :)
+ * you can also call iterate_interfaces_atomic() in irq context
+ * nobody cares about the wireless extensions version any more :)
+ * for sniffing you may care about "iw dev <devname> set monitor <flag>*"
 
-Christian - please add a
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net> to the patch and
-submit. This change should be in 2.6.32.
+Hey that got long!
 
-Larry
+johannes
 
+--=-UxlsWfhTKA5pxtvwfd//
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKjRW+AAoJEODzc/N7+QmaM4oP+wTivpH2W76vmBI8v70CPeF3
+81ziKxZ8xJOeyKcBN41FN2IQDATFIBj6Lw236MVJFrOKgMJ8FLFB0g5bO9TZWQ6D
+luC1v7siBCJc8CIfmf0jXzKnoo5F9RtQegEClxdC9crPX9W9jePD3p1u++GXo6xl
++XrjZK+EWzrXQ+isAVG66Uec5j7yJyLZnMyvA9Y4BmLbEWxbRCAM9MHWyGjrQBVj
+ACRGzk6hLPQ9FQhrNICwE+5XZuv6NTFgkj5CZrJ5RRoHns6cojUAPQRcxjvz0rON
+Onnx/BzP0RGx/jqTtB4tEbBjs0YzCZsXL2lE9u0PQv9c4n+0DfsXyZbj1pDkK2Gr
+Mwf2SUrG9+czcDeejJFTujW/FTx6kRC0+yjFo50YRnQpgNOC5XtgCl3N3mz7Rw/r
+3goo8//Z+sJOjO2kKooadsrCGrJxtMrDahEMpp4XMAIxw+kz6O3UDhO4Erbq4W5T
+9jVQ+tp0hble2IAx6FC1GIjIsVrlHwzG5s/zNJ+kuE/ZVh1rdEAKg+TmuiCR2X/M
+WnJFwwKIPV2kqCKUsItrrei7RKrz10yxHYkHj3tJPD7jfLr3iOZJc6XF9/P9mxjJ
+sJJWVjIhmxs49ND37WBBHqoX4cO4dYAcj0V5TfYgssUd7T/2H2SaLUBJCXhUYACW
+vg4RMhZsooaptuW+K7zy
+=X6N8
+-----END PGP SIGNATURE-----
+
+--=-UxlsWfhTKA5pxtvwfd//--
 
