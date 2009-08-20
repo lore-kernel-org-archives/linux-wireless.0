@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:57264 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933417AbZHHDuW (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:57784 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046AbZHTSBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:50:22 -0400
-Received: by mail-pz0-f196.google.com with SMTP id 34so1943403pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:50:23 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 6/8] mac80211: Early detection of broken mesh paths when using minstrel.
-Date: Fri,  7 Aug 2009 20:38:29 -0700
-Message-Id: <1249702711-32737-7-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702711-32737-6-git-send-email-javier@cozybit.com>
-References: <>
- <1249702711-32737-1-git-send-email-javier@cozybit.com>
- <1249702711-32737-2-git-send-email-javier@cozybit.com>
- <1249702711-32737-3-git-send-email-javier@cozybit.com>
- <1249702711-32737-4-git-send-email-javier@cozybit.com>
- <1249702711-32737-5-git-send-email-javier@cozybit.com>
- <1249702711-32737-6-git-send-email-javier@cozybit.com>
+	Thu, 20 Aug 2009 14:01:20 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so58895eye.37
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 11:01:20 -0700 (PDT)
+Message-ID: <4A8D8F6C.1090804@gmail.com>
+Date: Thu, 20 Aug 2009 19:01:16 +0100
+From: Dave <kilroyd@googlemail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: jussi.kivilinna@mbnet.fi, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 5/5] cfg80211: scan before connect if we don't have the
+ bss
+References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>	 <1250640253-18434-6-git-send-email-kilroyd@googlemail.com>	 <1250668113.16393.25.camel@johannes.local>  <4A8C52BD.5070609@gmail.com> <1250710648.8073.9.camel@johannes.local>
+In-Reply-To: <1250710648.8073.9.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Wed, 2009-08-19 at 20:30 +0100, Dave wrote:
+>>> Hmm. What if the bssid isn't set? Then the card might select a different
+>>> BSS than the one we have on the scan list.
+>> That's correct. For the Agere driver that's also true when bssid is set
+>> - we can't specify which AP the firmware connects to.
+> 
+> Ok. We may want a feature flag for the latter case so we know what's
+> going on, and reject a BSSID setting.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh_hwmp.c        |    1 -
- net/mac80211/rc80211_minstrel.c |    8 +++++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+I'll look into that.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index b4309b2..1cd1e72 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -272,7 +272,6 @@ static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	last_hop_metric = airtime_link_metric_get(local, sta);
--	printk("XXX: last_hop_metric = %d\n", last_hop_metric);
- 	/* Update and check originator routing info */
- 	fresh_info = true;
- 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 3ea9740..0071649 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -51,6 +51,7 @@
- #include <linux/random.h>
- #include <linux/ieee80211.h>
- #include <net/mac80211.h>
-+#include "mesh.h"
- #include "rate.h"
- #include "rc80211_minstrel.h"
- 
-@@ -178,9 +179,14 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 
- 		if ((i != IEEE80211_TX_MAX_RATES - 1) && (ar[i + 1].idx < 0)) {
- 			mi->r[ndx].success += success;
--			if (si)
-+			if (si) {
- 				si->fail_avg = (18050 - mi->r[ndx].probability)
- 					/ 180;
-+				WARN_ON(si->fail_avg > 100);
-+				if (si->fail_avg == 100 &&
-+					ieee80211_vif_is_mesh(&si->sdata->vif))
-+					mesh_plink_broken(si);
-+			}
- 		}
- 	}
- 
--- 
-1.5.4.3
+>>> And it's all racy too -- by the time the driver calls connect_result(),
+>>> the BSS might have expired after it was found here now.
+>> Agreed, but with a 15s expiry period I wouldn't expect this to be a
+>> problem in practice.
+> 
+> Well, the user could scan, take 12 seconds to pick out the AP manually,
+> enter the paramters in another 2.5 seconds, and then it would already
+> happen, I think?
 
+As usual, you're right :)
+
+>> Another alternative is for cfg80211_connect_result to trigger the scan
+>> if it doesn't have the bss, and only complete the connect when the scan
+>> returns. I think I like the sound of this best.
+
+johannes said:
+> Good option too, though then it would be useful to pass the channel
+> pointer if available to scan only on that channel. Of course, if it
+> still can't be found things are really amiss and we should probably
+> disconnect and send a failed event to userspace.
+
+Jussi said:
+> This sounds best, as with rndis, driver can get currently connected
+> bss from device and scan isn't required.
+
+OK, I'll chase this option and see where it goes.
+
+
+Regards,
+
+Dave.
