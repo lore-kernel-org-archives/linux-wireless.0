@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:40038 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbZHLRZx convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:53674 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbZHTHCB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 13:25:53 -0400
-Received: by gxk9 with SMTP id 9so244375gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 10:25:54 -0700 (PDT)
+	Thu, 20 Aug 2009 03:02:01 -0400
+Received: by ewy3 with SMTP id 3so2655435ewy.18
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 00:02:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090812100416.744dc5ba@nehalam>
-References: <20090812100416.744dc5ba@nehalam>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 12 Aug 2009 10:25:34 -0700
-Message-ID: <43e72e890908121025p75b141b6o86c30518bf9de7ea@mail.gmail.com>
-Subject: Re: Multiple SSID
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 20 Aug 2009 10:02:01 +0300
+Message-ID: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
+Subject: Linux Kernel Wireless stack presentation
+From: Rami Rosen <ramirose@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2009 at 10:04 AM, Stephen
-Hemminger<shemminger@vyatta.com> wrote:
-> I have a dumb questions. How does one setup multiple SSID's with
-> current (ie not madwifi) wireless API?
->
-> 1. I assume need to run multiple instances of hostapd with different
->   config. Will that work?
+Folks,
 
-Yes. But the next question is how to create new wlan%d AP interfaces.
-That is answered below.
+  I am giving on Thursday next week a lecture about the Linux Kernel
+Wireless stack in a
+Linux User Group in Herzelia (Israel).
 
-> 2. Since IP address is attached to device (wlan0), how can each SSID
->   have different IP address? Use vlan's?
+  The slides are available online now, so I thought some of you might
+be interested
+to take a look; the presentation is very detailed (over 110 pages).
 
-The new 'iw' [2] utility could be used to create monitor interfaces or
-ad-hoc interfaces for example. We decided to only allow you to create
-an "AP" type of interface with a utility that handles the MLME in
-userspace, such a utility is hostapd. You will need to use the nl80211
-driver with hosatpd [2]. We have documented the supported wireless
-modes in our wiki [3], I suppose that could use some updating.
+see:
+http://tuxology.net/wp-content/uploads/2009/08/wirelessLecHerzelinux.pdf
 
-Anyway I believe AP-enabled devices right now only support creating 1
-AP interfface. I believe the exception to this right now is ath9k
-through the private virtual interface stuff Jouni created, but to be
-honest I have to go and review that to make sure you can create 2 APs.
+and
+http://tuxology.net/herzelinux/
 
-Typically drivers (MadWifi) which supported multiple BSSs (therefore
-with two SSIDs) would allow you to do this by creating BSSes on the
-same channel. The ath9k virtual interface thing allows you to create
-interfaces on *separate* channels, and provides its own scheduler,
-which you can tune, for switching back and forth.
+(I know that this is a bit off topic, but it seems to me that this can interest
+some members of the Linux wireless community)
 
-[1] http://wireless.kernel.org/en/users/Documentation/iw
-[2] http://wireless.kernel.org/en/users/Documentation/hostapd
-[3] http://wireless.kernel.org/en/users/Documentation/modes
-
-> 3. Do vlan's work on wireless (ath9k)?
-
-Not sure what is required to support vlans.
-
-  Luis
+Regards,
+Rami Rosen
