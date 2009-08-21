@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:56039 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbZHXJfM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 05:35:12 -0400
-Received: by bwz19 with SMTP id 19so1349528bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 02:35:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200908241108.43943.mb@bu3sch.de>
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
-	 <f42a38140908230830r45ef1d01l5a9c5a4d0197e81e@mail.gmail.com>
-	 <f42a38140908232303j320f858cw5c0e45cc98a1e440@mail.gmail.com>
-	 <200908241108.43943.mb@bu3sch.de>
-Date: Mon, 24 Aug 2009 17:35:13 +0800
-Message-ID: <f42a38140908240235v9206b79m3055f8a96c3dcb64@mail.gmail.com>
-Subject: Re: Abour linux driver supports BCM4325
-From: feng tian <feng.of.tian@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:9226 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932645AbZHUUe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:28 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/14] iwlwifi: do not allow set tx power over channel power limit
+Date: Fri, 21 Aug 2009 13:34:15 -0700
+Message-Id: <1250886867-4112-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wow, that's really cool.
-We wonder if you can send these codes to us a little earlier, then we
-can start to integrate and test them on our platform.
-That'll save us some time.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Thanks very much.
-BR, Feng.
+When setting tx power in sysfs, check against max channel tx power
+limit instead of IWL_TX_POWER_TARGET_POWER_MAX.
 
->> Where can I get theses codes which supports b43 talking to SDIO chips?
->> Thanks very much.
->
-> They are not ready for public review, yet. We're working on merging them mainline.
-> But it does basically work and we (Albert Herranz) got the SDIO chip on the Nintendo Wii running.
->
->
-> --
-> Greetings, Michael.
->
+Different devices have different max tx power limit; using
+IWL_TX_POWER_TARGET_POWER_MAX can excess the limitaion and give wrong
+information.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 43781dc..faafcae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1708,10 +1708,10 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (tx_power > IWL_TX_POWER_TARGET_POWER_MAX) {
+-		IWL_WARN(priv, "Requested user TXPOWER %d above upper limit %d.\n",
+-			 tx_power,
+-			 IWL_TX_POWER_TARGET_POWER_MAX);
++	if (tx_power > priv->tx_power_channel_lmt) {
++		IWL_WARN(priv,
++			"Requested user TXPOWER %d above upper limit %d.\n",
++			 tx_power, priv->tx_power_channel_lmt);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+1.5.6.3
+
