@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:39315 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487AbZHXNmz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 09:42:55 -0400
-Date: Mon, 24 Aug 2009 15:42:56 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mwl8k: missing endian conversion when printing firmware command result
-Message-ID: <20090824134256.GE6102@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:9226 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932652AbZHUUe3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 11/14] iwlwifi: fix remove key error
+Date: Fri, 21 Aug 2009 13:34:24 -0700
+Message-Id: <1250886867-4112-12-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+
+Fix following error by sending synchronous command and waiting for the command
+to complete.
+
+mac80211-phy0: failed to remove key (0, ff:ff:ff:ff:ff:ff) from hardware (-16).
+
+-16 is EBUSY error. The asynchronous command tests for STATUS_EXIT_PENDING
+while interface is getting down and it returns -EBUSY error if set.
+Changing the host command from asynchronous call to synchronous call
+enables command to be run while interface is going down.
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/mwl8k.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a4336f4..6e017db 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -1474,7 +1474,7 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
- 			printk(KERN_ERR "%s: Command %s error 0x%x\n",
- 			       priv->name,
- 			       mwl8k_cmd_name(cmd->code, buf, sizeof(buf)),
--			       cmd->result);
-+			       le16_to_cpu(cmd->result));
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index c6633fe..a2b9ec8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -520,7 +520,7 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+ 	struct iwl_host_cmd cmd = {
+ 		.id = REPLY_WEPKEY,
+ 		.data = wep_cmd,
+-		.flags = CMD_ASYNC,
++		.flags = CMD_SYNC,
+ 	};
  
- 	return rc;
+ 	memset(wep_cmd, 0, cmd_size +
 -- 
-1.5.6.4
+1.5.6.3
+
