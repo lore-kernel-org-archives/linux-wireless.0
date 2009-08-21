@@ -1,256 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:19708 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757409AbZHGKdz (ORCPT
+Received: from sj-iport-3.cisco.com ([171.71.176.72]:42739 "EHLO
+	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbZHUTGZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:33:55 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 08/23] wl1251: add sdio support
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:33:42 +0300
-Message-ID: <20090807103342.31717.95260.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+	Fri, 21 Aug 2009 15:06:25 -0400
+Message-ID: <4A8EF031.4050604@cs.ucla.edu>
+Date: Fri, 21 Aug 2009 12:06:25 -0700
+From: Rafael Laufer <rlaufer@cs.ucla.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
+References: <4A8DED03.2050502@cs.ucla.edu> <1250842695.13872.5.camel@johannes.local> 	<69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com> 	<4A8EE182.6040709@cs.ucla.edu> <69e28c910908211152k4423d098i92b25078139ee827@mail.gmail.com>
+In-Reply-To: <69e28c910908211152k4423d098i92b25078139ee827@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+Gábor Stefanik wrote:
+> 2009/8/21 Rafael Laufer <rlaufer@cs.ucla.edu>:
+>   
+>> Gábor Stefanik wrote:
+>>     
+>>> Maybe a new IEEE80211_TX_CTL_ or IEEE80211_TX_RC_ flag will also be
+>>> needed, so Radiotap can indicate whether rate_control_get_rate needs
+>>> to be called.
+>>>       
+>> ok, I am resending the patch. I included a new flag called
+>> IEEE80211_TX_CTL_RATE_RADIOTAP to indicate if the rate has
+>> been set in the radiotap header. If not, then the rate control
+>> algorithm is called.
+>>     
+>
+> Isn't it easier to check whether we already have a rate configured?
+> (info->control.rates[0].idx is set to an invalid value before the
+> rate_control_get_rate call AFAIK, unless you set it in the radiotap
+> decoding function before.)
+>   
 
-This adds the wl1251_sdio module, enabling the SDIO interface for
-wl1251, as used by the Google G1 phone and others.
+I guess it is also possible, but in that case you rely on the assumption
+that the rate is invalid before rate_control_get_rate(). If in the
+future this assumption does not hold, the code will break. If, however,
+this is always gonna be true, I can change the code to use your
+suggestion. Personally, I prefer to use another flag so that future
+changes do not affect this code, but let me know what is best.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
-
- drivers/net/wireless/wl12xx/Kconfig       |   11 ++
- drivers/net/wireless/wl12xx/Makefile      |    1 
- drivers/net/wireless/wl12xx/wl1251_sdio.c |  188 +++++++++++++++++++++++++++++
- 3 files changed, 200 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl1251_sdio.c
-
-diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-index e47d076..3c8b2cd 100644
---- a/drivers/net/wireless/wl12xx/Kconfig
-+++ b/drivers/net/wireless/wl12xx/Kconfig
-@@ -27,3 +27,14 @@ config WL1251_SPI
- 
- 	  If you choose to build a module, it'll be called wl1251_spi.
- 	  Say N if unsure.
-+
-+config WL1251_SDIO
-+	tristate "TI wl1251 SDIO support"
-+	depends on WL1251 && MMC
-+	---help---
-+	  This module adds support for the SDIO interface of adapters using
-+	  TI wl1251 chipset.  Select this if your platform is using
-+	  the SDIO bus.
-+
-+	  If you choose to build a module, it'll be called
-+	  wl1251_sdio. Say N if unsure.
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index ebf623a..f7f84d4 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -5,3 +5,4 @@ wl1251-objs		= wl1251_main.o wl1251_event.o \
- 
- obj-$(CONFIG_WL1251)	+= wl1251.o
- obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
-+obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-new file mode 100644
-index 0000000..f1d9e76
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -0,0 +1,188 @@
-+/*
-+ * wl12xx SDIO routines
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ * Copyright (C) 2005 Texas Instruments Incorporated
-+ * Copyright (C) 2008 Google Inc
-+ * Copyright (C) 2009 Bob Copeland (me@bobcopeland.com)
-+ */
-+#include <linux/module.h>
-+#include <linux/crc7.h>
-+#include <linux/mod_devicetable.h>
-+#include <linux/irq.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/platform_device.h>
-+
-+#include "wl1251.h"
-+#include "wl12xx_80211.h"
-+#include "reg.h"
-+#include "wl1251_ps.h"
-+#include "wl1251_io.h"
-+#include "wl1251_tx.h"
-+#include "wl1251_debugfs.h"
-+
-+#ifndef SDIO_VENDOR_ID_TI
-+#define SDIO_VENDOR_ID_TI		0x104c
-+#endif
-+
-+#ifndef SDIO_DEVICE_ID_TI_WL1251
-+#define SDIO_DEVICE_ID_TI_WL1251	0x9066
-+#endif
-+
-+static struct sdio_func *wl_to_func(struct wl1251 *wl)
-+{
-+	return wl->if_priv;
-+}
-+
-+static void wl1251_sdio_interrupt(struct sdio_func *func)
-+{
-+	wl1251_irq(0, sdio_get_drvdata(func));
-+}
-+
-+static const struct sdio_device_id wl1251_devices[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1251) },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(sdio, wl1251_devices);
-+
-+
-+void wl1251_sdio_read(struct wl1251 *wl, int addr, void *buf, size_t len)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	ret = sdio_memcpy_fromio(func, buf, addr, len);
-+	if (ret)
-+		wl1251_error("sdio read failed (%d)", ret);
-+	sdio_release_host(func);
-+}
-+
-+void wl1251_sdio_write(struct wl1251 *wl, int addr, void *buf, size_t len)
-+{
-+	int ret;
-+	struct sdio_func *func = wl_to_func(wl);
-+
-+	sdio_claim_host(func);
-+	ret = sdio_memcpy_toio(func, addr, buf, len);
-+	if (ret)
-+		wl1251_error("sdio write failed (%d)", ret);
-+	sdio_release_host(func);
-+}
-+
-+void wl1251_sdio_reset(struct wl1251 *wl)
-+{
-+}
-+
-+void wl1251_sdio_set_power(bool enable)
-+{
-+}
-+
-+struct wl1251_if_operations wl1251_sdio_ops = {
-+	.read = wl1251_sdio_read,
-+	.write = wl1251_sdio_write,
-+	.reset = wl1251_sdio_reset,
-+};
-+
-+int wl1251_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
-+{
-+	int ret;
-+	struct wl1251 *wl;
-+	struct ieee80211_hw *hw;
-+
-+	hw = wl1251_alloc_hw();
-+	if (IS_ERR(hw))
-+		return PTR_ERR(hw);
-+
-+	wl = hw->priv;
-+
-+	sdio_claim_host(func);
-+	ret = sdio_enable_func(func);
-+	if (ret)
-+		goto release;
-+
-+	sdio_set_block_size(func, 512);
-+
-+	SET_IEEE80211_DEV(hw, &func->dev);
-+	wl->if_priv = func;
-+	wl->if_ops = &wl1251_sdio_ops;
-+	wl->set_power = wl1251_sdio_set_power;
-+
-+	sdio_release_host(func);
-+	ret = wl1251_init_ieee80211(wl);
-+	sdio_claim_host(func);
-+	if (ret)
-+		goto disable;
-+
-+	ret = sdio_claim_irq(func, wl1251_sdio_interrupt);
-+	if (ret)
-+		goto no_irq;
-+
-+	sdio_release_host(func);
-+	sdio_set_drvdata(func, wl);
-+	return ret;
-+
-+no_irq:
-+	wl1251_free_hw(wl);
-+disable:
-+	sdio_disable_func(func);
-+release:
-+	sdio_release_host(func);
-+	return ret;
-+}
-+
-+static void __devexit wl1251_sdio_remove(struct sdio_func *func)
-+{
-+	struct wl1251 *wl = sdio_get_drvdata(func);
-+
-+	wl1251_free_hw(wl);
-+
-+	sdio_claim_host(func);
-+	sdio_release_irq(func);
-+	sdio_disable_func(func);
-+	sdio_release_host(func);
-+}
-+
-+static struct sdio_driver wl1251_sdio_driver = {
-+	.name		= "wl1251_sdio",
-+	.id_table	= wl1251_devices,
-+	.probe		= wl1251_sdio_probe,
-+	.remove		= __devexit_p(wl1251_sdio_remove),
-+};
-+
-+static int __init wl1251_sdio_init(void)
-+{
-+	int err;
-+
-+	err = sdio_register_driver(&wl1251_sdio_driver);
-+	if (err)
-+		wl1251_error("failed to register sdio driver: %d", err);
-+	return err;
-+}
-+
-+static void __exit wl1251_sdio_exit(void)
-+{
-+	sdio_unregister_driver(&wl1251_sdio_driver);
-+	wl1251_notice("unloaded");
-+}
-+
-+module_init(wl1251_sdio_init);
-+module_exit(wl1251_sdio_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
-+MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-
+Rafael
