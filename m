@@ -1,114 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34806 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754679AbZHCTZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:16 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:17 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 15/24] ath9k: distinguish between device initialization and ath_softc init
-Date: Mon, 3 Aug 2009 12:24:47 -0700
-Message-ID: <1249327496-24629-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+Received: from xc.sipsolutions.net ([83.246.72.84]:57293 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755480AbZHUMor (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 08:44:47 -0400
+Subject: [PATCH] mac80211: remove tasklet enable/disable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain
+Date: Fri, 21 Aug 2009 14:44:45 +0200
+Message-Id: <1250858685.5137.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We re-label the device driver initialization routines from the
-ath_softc, the "Software Carrier" fillers. This should make it
-clearer what each of these do.
+Due to the way the tasklets work in mac80211 there's
+no need to ever disable them.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+However, we need to clear the pending packets when
+taking down the last interface because otherwise
+the tx_pending_tasklet might be queued if the
+driver mucks with the queues (which it shouldn't).
+
+I've had a situation occasionally with ar9170 in
+which ksoftirq was using 100% CPU time because
+a disabled tasklet was scheduled, and I think that
+was due to ar9170 receiving a packet while the
+tasklet was disabled. That's strange and it really
+should not do that for other reasons, but there's
+no need to waste that much CPU time over it, it
+should just warn instead.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/ahb.c   |    2 +-
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |   13 ++++++++++---
- drivers/net/wireless/ath/ath9k/pci.c   |    2 +-
- 4 files changed, 13 insertions(+), 6 deletions(-)
+ net/mac80211/driver-ops.h  |   14 +++++++++++++-
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/iface.c       |    9 +--------
+ net/mac80211/main.c        |    2 --
+ net/mac80211/rx.c          |    9 +++++++++
+ 5 files changed, 26 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 0e65c51..5618fc2 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -119,7 +119,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	sc->bus_ops = &ath_ahb_bus_ops;
- 	sc->irq = irq;
+--- wireless-testing.orig/net/mac80211/main.c	2009-08-21 14:28:57.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2009-08-21 14:28:58.000000000 +0200
+@@ -715,12 +715,10 @@ struct ieee80211_hw *ieee80211_alloc_hw(
+ 		skb_queue_head_init(&local->pending[i]);
+ 	tasklet_init(&local->tx_pending_tasklet, ieee80211_tx_pending,
+ 		     (unsigned long)local);
+-	tasklet_disable(&local->tx_pending_tasklet);
  
--	ret = ath_attach(AR5416_AR9100_DEVID, sc);
-+	ret = ath_init_device(AR5416_AR9100_DEVID, sc);
- 	if (ret != 0) {
- 		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
- 		ret = -ENODEV;
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index bda0f30..7a5a157 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -642,7 +642,7 @@ extern struct ieee80211_ops ath9k_ops;
+ 	tasklet_init(&local->tasklet,
+ 		     ieee80211_tasklet_handler,
+ 		     (unsigned long) local);
+-	tasklet_disable(&local->tasklet);
  
- irqreturn_t ath_isr(int irq, void *dev);
- void ath_cleanup(struct ath_softc *sc);
--int ath_attach(u16 devid, struct ath_softc *sc);
-+int ath_init_device(u16 devid, struct ath_softc *sc);
- void ath_detach(struct ath_softc *sc);
- const char *ath_mac_bb_name(u32 mac_bb_version);
- const char *ath_rf_name(u16 rf_version);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 751d803..91bffc9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1292,7 +1292,13 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- 	return ath_reg_notifier_apply(wiphy, request, reg);
- }
- 
--static int ath_init(u16 devid, struct ath_softc *sc)
-+/*
-+ * Initialize and fill ath_softc, ath_sofct is the
-+ * "Software Carrier" struct. Historically it has existed
-+ * to allow the separation between hardware specific
-+ * variables (now in ath_hw) and driver specific variables.
-+ */
-+static int ath_init_softc(u16 devid, struct ath_softc *sc)
- {
- 	struct ath_hw *ah = NULL;
- 	int r = 0, i;
-@@ -1558,7 +1564,8 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
- }
- 
--int ath_attach(u16 devid, struct ath_softc *sc)
-+/* Device driver core initialization */
-+int ath_init_device(u16 devid, struct ath_softc *sc)
- {
- 	struct ieee80211_hw *hw = sc->hw;
- 	int error = 0, i;
-@@ -1566,7 +1573,7 @@ int ath_attach(u16 devid, struct ath_softc *sc)
- 
- 	DPRINTF(sc, ATH_DBG_CONFIG, "Attach ATH hw\n");
- 
--	error = ath_init(devid, sc);
-+	error = ath_init_softc(devid, sc);
- 	if (error != 0)
- 		return error;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index cd4841b..3546504 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -178,7 +178,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->mem = mem;
- 	sc->bus_ops = &ath_pci_bus_ops;
- 
--	if (ath_attach(id->device, sc) != 0) {
-+	if (ath_init_device(id->device, sc) != 0) {
- 		ret = -ENODEV;
- 		goto bad3;
+ 	skb_queue_head_init(&local->skb_queue);
+ 	skb_queue_head_init(&local->skb_queue_unreliable);
+--- wireless-testing.orig/net/mac80211/iface.c	2009-08-21 14:28:57.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-08-21 14:30:33.000000000 +0200
+@@ -277,11 +277,6 @@ static int ieee80211_open(struct net_dev
+ 		}
  	}
--- 
-1.6.3.3
+ 
+-	if (local->open_count == 0) {
+-		tasklet_enable(&local->tx_pending_tasklet);
+-		tasklet_enable(&local->tasklet);
+-	}
+-
+ 	/*
+ 	 * set_multicast_list will be invoked by the networking core
+ 	 * which will check whether any increments here were done in
+@@ -552,11 +547,9 @@ static int ieee80211_stop(struct net_dev
+ 	ieee80211_recalc_ps(local, -1);
+ 
+ 	if (local->open_count == 0) {
++		ieee80211_clear_tx_pending(local);
+ 		ieee80211_stop_device(local);
+ 
+-		tasklet_disable(&local->tx_pending_tasklet);
+-		tasklet_disable(&local->tasklet);
+-
+ 		/* no reconfiguring after stop! */
+ 		hw_reconf_flags = 0;
+ 	}
+--- wireless-testing.orig/net/mac80211/driver-ops.h	2009-08-21 14:28:57.000000000 +0200
++++ wireless-testing/net/mac80211/driver-ops.h	2009-08-21 14:36:43.000000000 +0200
+@@ -12,7 +12,11 @@ static inline int drv_tx(struct ieee8021
+ 
+ static inline int drv_start(struct ieee80211_local *local)
+ {
+-	int ret = local->ops->start(&local->hw);
++	int ret;
++
++	local->started = true;
++	smp_mb();
++	ret = local->ops->start(&local->hw);
+ 	trace_drv_start(local, ret);
+ 	return ret;
+ }
+@@ -21,6 +25,14 @@ static inline void drv_stop(struct ieee8
+ {
+ 	local->ops->stop(&local->hw);
+ 	trace_drv_stop(local);
++
++	/* sync away all work on the tasklet before clearing started */
++	tasklet_disable(&local->tasklet);
++	tasklet_enable(&local->tasklet);
++
++	barrier();
++
++	local->started = false;
+ }
+ 
+ static inline int drv_add_interface(struct ieee80211_local *local,
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-08-21 14:28:57.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2009-08-21 14:37:11.000000000 +0200
+@@ -659,6 +659,9 @@ struct ieee80211_local {
+ 	 */
+ 	bool quiescing;
+ 
++	/* device is started */
++	bool started;
++
+ 	int tx_headroom; /* required headroom for hardware/radiotap */
+ 
+ 	/* Tasklet and skb queue to process calls from IRQ mode. All frames
+--- wireless-testing.orig/net/mac80211/rx.c	2009-08-21 14:28:57.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-08-21 14:35:23.000000000 +0200
+@@ -2465,6 +2465,15 @@ void __ieee80211_rx(struct ieee80211_hw 
+ 		return;
+ 	}
+ 
++	/*
++	 * The same happens when we're not even started,
++	 * but that's worth a warning.
++	 */
++	if (WARN_ON(!local->started)) {
++		kfree_skb(skb);
++		return;
++	}
++
+ 	if (status->flag & RX_FLAG_HT) {
+ 		/* rate_idx is MCS index */
+ 		if (WARN_ON(status->rate_idx < 0 ||
+
 
