@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:33641 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356AbZGaXg4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 19:36:56 -0400
-Received: by yxe5 with SMTP id 5so516858yxe.33
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2009 16:36:56 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:41493 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932602AbZHUVLl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 17:11:41 -0400
+Message-ID: <4A8F0D8D.7000508@gmx.de>
+Date: Fri, 21 Aug 2009 23:11:41 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <4A735FF8.7000503@gmail.com>
-References: <20090729214510.31738.90990@cl-1649.ham-01.de.sixxs.net>
-	<1248904631.1216.1027.camel@rc-desk> <43e72e890907291504o1de0fb31hde287f2af42dcc8@mail.gmail.com>
-	<4A719C44.6050208@gmail.com> <43e72e890907300743nd3a80eck2153d01f4e99ddf9@mail.gmail.com>
-	<4A71D172.1000306@gmail.com> <43e72e890907301006p200032e0i11fdb40fc33fa6d0@mail.gmail.com>
-	<4A7246D0.1040200@gmail.com> <43e72e890907301831ped2ea3wd5173b95be54f912@mail.gmail.com>
-	<4A735FF8.7000503@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 31 Jul 2009 16:36:36 -0700
-Message-ID: <43e72e890907311636v5a659dbapf6e740c9d1c1f317@mail.gmail.com>
-Subject: Re: [Linux Wireless] Update of "en/users/Download" by ReinetteChatre
-To: Roman Macko <rmacko72@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: mac80211: reassociate in STA mode after AP was power-cycled
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 31, 2009 at 2:19 PM, Roman Macko<rmacko72@gmail.com> wrote:
-> Hi Luis,
->
-> here is promised patch
+I had a ar9170usb device in STA mode associated to an AP and power-cycled the AP - slowly enough to get the
+STA disassociated. 
 
-Patch applied, thanks!
+I wonder why the STA doesn't re-associate again to the AP once it's up again. Waited for 5+ minutes.
 
-  Luis
+I see the AP in the output of "iwlist wlan1 scan" and after "ifconfig wlan1 down; ifconfig wlan1 up"
+the STA associates quickly.
+
+wireless-testing from today, v2.6.31-rc6-31653-g0dfdb6f.
+
+Some lines from syslog, between "ifconfig wlan1 up" and powering off the AP:
+
+Aug 21 22:55:33 nc10 kernel: [ 1854.824443] wlan1: direct probe to AP 00:30:f1:d5:2e:69 (try 1)
+Aug 21 22:55:33 nc10 kernel: [ 1854.826914] wlan1 direct probe responded
+Aug 21 22:55:33 nc10 kernel: [ 1854.826930] wlan1: authenticate with AP 00:30:f1:d5:2e:69 (try 1)
+Aug 21 22:55:33 nc10 kernel: [ 1854.830003] wlan1: authenticated
+Aug 21 22:55:33 nc10 kernel: [ 1854.837585] wlan1: associate with AP 00:30:f1:d5:2e:69 (try 1)
+Aug 21 22:55:33 nc10 kernel: [ 1854.839656] wlan1: RX AssocResp from 00:30:f1:d5:2e:69 (capab=0x421 status=0 aid=5)
+Aug 21 22:55:33 nc10 kernel: [ 1854.839670] wlan1: associated
+Aug 21 22:55:33 nc10 kernel: [ 1854.847296] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+Aug 21 22:55:45 nc10 kernel: [ 1867.500169] No probe response from AP 00:30:f1:d5:2e:69 after 500ms, disconnecting.
+
+Regards,
+Jörg.
