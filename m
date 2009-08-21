@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:58044 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917AbZHAShd (ORCPT
+Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:43229 "EHLO
+	rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755149AbZHUJrc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 14:37:33 -0400
-Received: by bwz19 with SMTP id 19so1742856bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 11:37:33 -0700 (PDT)
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	nbd@openwrt.org
-Subject: Re: [PATCH 1/4]: Check EEPROM before tweaking SERDES
-References: <20090731180238.GA7963@makis>
-	<43e72e890907311111k10cce08et84510866c68e0297@mail.gmail.com>
-	<40f31dec0907311118o5460952xd3462b14375eeb72@mail.gmail.com>
-	<43e72e890907311120r76d3db6et91128ccbc3a90c63@mail.gmail.com>
-	<40f31dec0907311127o4bc4de73u1b4b5dfeb66d55b9@mail.gmail.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 01 Aug 2009 21:37:30 +0300
-In-Reply-To: <40f31dec0907311127o4bc4de73u1b4b5dfeb66d55b9@mail.gmail.com> (Nick Kossifidis's message of "Fri\, 31 Jul 2009 21\:27\:51 +0300")
-Message-ID: <87ljm3nzx1.fsf@litku.valot.fi>
+	Fri, 21 Aug 2009 05:47:32 -0400
+Date: Fri, 21 Aug 2009 11:47:32 +0200
+From: Andreas Mohr <andi@lisas.de>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	Johannes Stezenbach <js@sig21.net>
+Subject: ath5k: ath5k_pci_probe(): weirdo code
+Message-ID: <20090821094732.GA970@rhlx01.hs-esslingen.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nick Kossifidis <mickflemm@gmail.com> writes:
+Hello all,
 
->> Yes, but my point is a move can be done in one patch, changes to that
->> code in a separate patch, to help understand what is going on during
->> patch review.
->
-> I think this will pollute the logs, it's a very simple change and commented.
+that 2GHz/5GHz radio information code in ath5k_pci_probe() in 2.6.31-rc6 source
+seems VERY weird.
+ah_radio_5ghz_revision/ah_radio_2ghz_revision conditional evaluation seems
+completely bonkered in several places, unless something is escaping on
+me.
+Then also at this place, why is there no
+else
+{
+  WARN_ONCE(...); // Huh. Unknown/unhandled/impossible revision combo
+}
+branch at the end? (or something less incinerating)
+I've had my few lessons about defensive programming...
+(and applying such stuff liberally in this entire driver wouldn't hurt either)
 
-I'm with Luis here. It makes a lot easier to read patches and find bugs
-if the patches do one thing at a time. Don't worry about the number of
-patches, usually that's not a problem.
 
--- 
-Kalle Valo
+The
+
+        if (!sc->ah->ah_single_chip) {
+                /* Single chip radio (!RF5111) */
+
+part seemed weird logic, too, but I then thought that this code section
+is perhaps _intended_ to be skipped in this case, to simply not log anything
+for single-chip radios
+(but the comment above would be very insufficient/confusing if that is
+the case, and if the entire weird section is _actually_ correct as it stands
+then even lots more rectifying comments about this strange evaluation
+being correct are missing).
+
+Could anyone enlighten me?
+So far it looks like a large part of this code is buggy, but I could be
+wrong.
+
+
+
+BTW, I'm currently on 2.6.31-rc6 on Aspire One, with even more ath5k problems
+than before, connection is dying every couple minutes, extended to every
+couple dozen minutes if I force rate 1M
+(but it looks like "[Bug #13948] ath5k broken after suspend-to-ram"
+http://lkml.org/lkml/2009/8/19/468 is hopefully covering these issues already).
+And I do have CONFIG..._PS (powersave) enabled by default...
+And I do make liberal use of suspend-to-ram, as should everyone.
+
+Thanks,
+
+Andreas Mohr
