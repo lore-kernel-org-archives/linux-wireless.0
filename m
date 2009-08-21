@@ -1,60 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34783 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754332AbZHCTY7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:24:59 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:00 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/24] ath9k: use a switch for revising supported hw mac revisions
-Date: Mon, 3 Aug 2009 12:24:34 -0700
-Message-ID: <1249327496-24629-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:37608 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932694AbZHURYp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 13:24:45 -0400
+Received: by fxm17 with SMTP id 17so580347fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 10:24:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1250872433.30019.14430.camel@rc-desk>
+References: <4A8DC955.9060100@gmail.com> <1250872433.30019.14430.camel@rc-desk>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 21 Aug 2009 19:24:26 +0200
+Message-ID: <69e28c910908211024n1c255b3p160839c60ae0b3a@mail.gmail.com>
+Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
+	again
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Rafael Laufer <rlaufer@cs.ucla.edu>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes adding new hw revisions a one line change here.
+2009/8/21 reinette chatre <reinette.chatre@intel.com>:
+> Hi Gábor,
+>
+> On Thu, 2009-08-20 at 15:08 -0700, Gábor Stefanik wrote:
+>> Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
+>> ("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
+>> broke injection of non-broadcast frames to unassociated stations
+>> (causing a SYSASSERT for all such injected frames), due to injected
+>> frames no longer automatically getting a broadcast station ID assigned,
+>> and instead ending up with invalid station IDs.
+>> This patch restores the old behavior, fixing the aforementioned
+>> regression.
+>
+> The patch you are quoting cannot be the culprit here. As that commit
+> message indicates we never set NL80211_IFTYPE_MONITOR for the interface
+> type, so when that code removed the test for this interface type in
+> iwl_get_sta_id it essentially removed dead code.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   17 ++++++++++-------
- 1 files changed, 10 insertions(+), 7 deletions(-)
+For some odd reason, reverting Wei-Yi Guy's patch makes the bug go
+away... should we do that instead for 2.6.31? (I'm all for it, if this
+patch is not the right thing to do, as Wey-Yi's patch was not a bug
+fix, just a cleanup.) My guess is that the "default to MONITOR mode"
+change is the culprit.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e0bc4c5..8228f41 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -662,13 +662,16 @@ static struct ath_hw *ath9k_hw_do_attach(u16 devid, struct ath_softc *sc,
- 	DPRINTF(sc, ATH_DBG_RESET, "serialize_regmode is %d\n",
- 		ah->config.serialize_regmode);
- 
--	if ((ah->hw_version.macVersion != AR_SREV_VERSION_5416_PCI) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_5416_PCIE) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_9160) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_9100) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_9280) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_9285) &&
--	    (ah->hw_version.macVersion != AR_SREV_VERSION_9287)) {
-+	switch (ah->hw_version.macVersion) {
-+	case AR_SREV_VERSION_5416_PCI:
-+	case AR_SREV_VERSION_5416_PCIE:
-+	case AR_SREV_VERSION_9160:
-+	case AR_SREV_VERSION_9100:
-+	case AR_SREV_VERSION_9280:
-+	case AR_SREV_VERSION_9285:
-+	case AR_SREV_VERSION_9287:
-+		break;
-+	default:
- 		DPRINTF(sc, ATH_DBG_FATAL,
- 			"Mac Chip Rev 0x%02x.%x is not supported by "
- 			"this driver\n", ah->hw_version.macVersion,
+>
+>>       /* If this frame is broadcast or management, use broadcast station id */
+>> -     if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+>> +     if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
+>> +         iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
+>>               return priv->hw_params.bcast_sta_id;
+>
+> I think my comment ties in with what Johannes said. When we are
+> associated (whether in station, adhoc, or AP mode) we want this function
+> to return the correct station ID. We also know that an interface can be
+> in monitor mode while it is in any of these other modes. When this
+> happens we do not want to return the broadcast station id ... we still
+> want to return the station id. Your patch changes this behavior and will
+> in this case always return the broadcast station id.
+
+Maybe we should check info->flags & IEEE80211_TX_CTL_INJECTED
+instead... is there a way to access the ieee80211_tx_info structure
+from this function (e.g. through priv)?
+
+>
+> Reinette
+>
+>
+>
+>
+>
+
+
+
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
