@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:48851 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbZHAIbV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:31:21 -0400
-Received: by ewy10 with SMTP id 10so1990544ewy.37
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 01:31:20 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:45258 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755459AbZHUXgS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 19:36:18 -0400
+Message-ID: <4A8F2F71.1010100@gmx.de>
+Date: Sat, 22 Aug 2009 01:36:17 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <1249115316.2007.0.camel@johannes.local>
-References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
-	 <4A73FA8D.5030804@gmail.com>
-	 <1249114918.26584.18.camel@johannes.local>
-	 <4A73FBBD.3070507@gmail.com> <1249115316.2007.0.camel@johannes.local>
-Date: Sat, 1 Aug 2009 11:31:20 +0300
-Message-ID: <40f31dec0908010131q678f03d2x4ba7b6d5d1b51ff5@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 4/4] ath5k: Use SWI to trigger calibration
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFT] ar9170: use eeprom's frequency calibration values
+References: <200908212252.41053.chunkeey@web.de>
+In-Reply-To: <200908212252.41053.chunkeey@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/1 Johannes Berg <johannes@sipsolutions.net>:
-> On Sat, 2009-08-01 at 10:24 +0200, Jiri Slaby wrote:
->> On 08/01/2009 10:21 AM, Johannes Berg wrote:
->> > Actually, jiffies are unsigned long
->>
->> Yeah, this is what I meant. I agree I messed it up when I didn't write
->> the unsigned explicitly. It might have been confusing, thanks for
->> pointing out.
->
-> And, in addition to what you said, the code shouldn't divide jiffies, it
-> should multiply the timeout, add it to the start time, and then use
-> time_is_after_jiffies() or so.
->
-> johannes
->
+On 08/21/2009 10:52 PM, Christian Lamparter wrote:
+> This patch adds some more bits from the vendor driver, which
+> are supposed to help users with the one-stage/openfw firmwares.
 
-Where can i find documentation on this ?
+The otus driver sets phy registers 672-703 only for the one-stage firmware -
+hal/hpmain.c, line 3445:
 
+        #ifndef ZM_OTUS_LINUX_PHASE_2
+        reg_write(regAddr + i, val);  /* CR672 */
+        #endif
 
+Are you sure it doesn't hurt with the two-stage firmware?
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+Jörg
