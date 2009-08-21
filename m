@@ -1,337 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53346 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757405AbZHGKdg (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:38511 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396AbZHUMNT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:33:36 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 05/23] wl1251: make wl1251_set_partition bus agnostic
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:33:18 +0300
-Message-ID: <20090807103318.31717.78853.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 21 Aug 2009 08:13:19 -0400
+Received: by ewy3 with SMTP id 3so585162ewy.18
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 05:13:19 -0700 (PDT)
+Message-Id: <55FEAD01-712B-4165-9F4D-260BDC3CA14A@envitel.com>
+From: Miguel Garcia-Lopez <mgarcia@envitel.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; delsp=yes
+Subject: USB wireless support for ARM device and old kernel version
+Mime-Version: 1.0 (Apple Message framework v936)
+Date: Fri, 21 Aug 2009 14:12:49 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+Dear all,
 
-The same partition setting code can be used for both SPI and SDIO
-modes, if we remove the spi-specific commands and use the more
-generic buffer write routines.  Do that and move it to io.c
-since it deals with register/memory address offsets.
+We are developing an embedded linux platform using an ARM-based micro  
+and other DSPs from Texas Instruments. Among other things, it supports  
+USB.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+We now need to add a wifi interface to the device, so we're thinking  
+on using a USB wireless device. Now, the problem seems to be re are  
+running a 2.6.10 kernel and most of the suff/drivers I found require  
+much recent versions to work with.
 
- drivers/net/wireless/wl12xx/wl1251_io.c  |   95 +++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_io.h  |   15 ++++
- drivers/net/wireless/wl12xx/wl1251_spi.c |  124 ------------------------------
- drivers/net/wireless/wl12xx/wl1251_spi.h |   15 ----
- 4 files changed, 110 insertions(+), 139 deletions(-)
+I'm thinking on trying to compile the source code for some driver(s)  
+against our kernel sources, but could not really find any working  
+sources since most available driver code and wireless infraestructure  
+seems to either be already merged into more recent versions of the  
+kernel, or require it for compiling.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_io.c b/drivers/net/wireless/wl12xx/wl1251_io.c
-index bc95785..db2cfbf 100644
---- a/drivers/net/wireless/wl12xx/wl1251_io.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_io.c
-@@ -84,3 +84,98 @@ void wl1251_reg_write32(struct wl1251 *wl, int addr, u32 val)
- {
- 	wl1251_write32(wl, wl1251_translate_reg_addr(wl, addr), val);
- }
-+
-+/* Set the partitions to access the chip addresses.
-+ *
-+ * There are two VIRTUAL partitions (the memory partition and the
-+ * registers partition), which are mapped to two different areas of the
-+ * PHYSICAL (hardware) memory.  This function also makes other checks to
-+ * ensure that the partitions are not overlapping.  In the diagram below, the
-+ * memory partition comes before the register partition, but the opposite is
-+ * also supported.
-+ *
-+ *                               PHYSICAL address
-+ *                                     space
-+ *
-+ *                                    |    |
-+ *                                 ...+----+--> mem_start
-+ *          VIRTUAL address     ...   |    |
-+ *               space       ...      |    | [PART_0]
-+ *                        ...         |    |
-+ * 0x00000000 <--+----+...         ...+----+--> mem_start + mem_size
-+ *               |    |         ...   |    |
-+ *               |MEM |      ...      |    |
-+ *               |    |   ...         |    |
-+ *  part_size <--+----+...            |    | {unused area)
-+ *               |    |   ...         |    |
-+ *               |REG |      ...      |    |
-+ *  part_size    |    |         ...   |    |
-+ *      +     <--+----+...         ...+----+--> reg_start
-+ *  reg_size              ...         |    |
-+ *                           ...      |    | [PART_1]
-+ *                              ...   |    |
-+ *                                 ...+----+--> reg_start + reg_size
-+ *                                    |    |
-+ *
-+ */
-+void wl1251_set_partition(struct wl1251 *wl,
-+			  u32 mem_start, u32 mem_size,
-+			  u32 reg_start, u32 reg_size)
-+{
-+	struct wl1251_partition partition[2];
-+
-+	wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
-+		     mem_start, mem_size);
-+	wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
-+		     reg_start, reg_size);
-+
-+	/* Make sure that the two partitions together don't exceed the
-+	 * address range */
-+	if ((mem_size + reg_size) > HW_ACCESS_MEMORY_MAX_RANGE) {
-+		wl1251_debug(DEBUG_SPI, "Total size exceeds maximum virtual"
-+			     " address range.  Truncating partition[0].");
-+		mem_size = HW_ACCESS_MEMORY_MAX_RANGE - reg_size;
-+		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
-+			     mem_start, mem_size);
-+		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
-+			     reg_start, reg_size);
-+	}
-+
-+	if ((mem_start < reg_start) &&
-+	    ((mem_start + mem_size) > reg_start)) {
-+		/* Guarantee that the memory partition doesn't overlap the
-+		 * registers partition */
-+		wl1251_debug(DEBUG_SPI, "End of partition[0] is "
-+			     "overlapping partition[1].  Adjusted.");
-+		mem_size = reg_start - mem_start;
-+		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
-+			     mem_start, mem_size);
-+		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
-+			     reg_start, reg_size);
-+	} else if ((reg_start < mem_start) &&
-+		   ((reg_start + reg_size) > mem_start)) {
-+		/* Guarantee that the register partition doesn't overlap the
-+		 * memory partition */
-+		wl1251_debug(DEBUG_SPI, "End of partition[1] is"
-+			     " overlapping partition[0].  Adjusted.");
-+		reg_size = mem_start - reg_start;
-+		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
-+			     mem_start, mem_size);
-+		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
-+			     reg_start, reg_size);
-+	}
-+
-+	partition[0].start = mem_start;
-+	partition[0].size  = mem_size;
-+	partition[1].start = reg_start;
-+	partition[1].size  = reg_size;
-+
-+	wl->physical_mem_addr = mem_start;
-+	wl->physical_reg_addr = reg_start;
-+
-+	wl->virtual_mem_addr = 0;
-+	wl->virtual_reg_addr = mem_size;
-+
-+	wl->if_ops->write(wl, HW_ACCESS_PART0_SIZE_ADDR, partition,
-+		sizeof(partition));
-+}
-diff --git a/drivers/net/wireless/wl12xx/wl1251_io.h b/drivers/net/wireless/wl12xx/wl1251_io.h
-index 1fa2ab1..b89d2ac 100644
---- a/drivers/net/wireless/wl12xx/wl1251_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_io.h
-@@ -23,6 +23,17 @@
- 
- #include "wl1251.h"
- 
-+#define HW_ACCESS_MEMORY_MAX_RANGE		0x1FFC0
-+
-+#define HW_ACCESS_PART0_SIZE_ADDR           0x1FFC0
-+#define HW_ACCESS_PART0_START_ADDR          0x1FFC4
-+#define HW_ACCESS_PART1_SIZE_ADDR           0x1FFC8
-+#define HW_ACCESS_PART1_START_ADDR          0x1FFCC
-+
-+#define HW_ACCESS_REGISTER_SIZE             4
-+
-+#define HW_ACCESS_PRAM_MAX_RANGE		0x3c000
-+
- static inline u32 wl1251_read32(struct wl1251 *wl, int addr)
- {
- 	u32 response;
-@@ -46,4 +57,8 @@ void wl1251_mem_write32(struct wl1251 *wl, int addr, u32 val);
- u32 wl1251_reg_read32(struct wl1251 *wl, int addr);
- void wl1251_reg_write32(struct wl1251 *wl, int addr, u32 val);
- 
-+void wl1251_set_partition(struct wl1251 *wl,
-+			  u32 part_start, u32 part_size,
-+			  u32 reg_start,  u32 reg_size);
-+
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 61a0852..ceb237b 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -115,130 +115,6 @@ static void wl1251_spi_reset_wake(struct wl1251 *wl)
- 	wl1251_spi_init(wl);
- }
- 
--
--/* Set the SPI partitions to access the chip addresses
-- *
-- * There are two VIRTUAL (SPI) partitions (the memory partition and the
-- * registers partition), which are mapped to two different areas of the
-- * PHYSICAL (hardware) memory.  This function also makes other checks to
-- * ensure that the partitions are not overlapping.  In the diagram below, the
-- * memory partition comes before the register partition, but the opposite is
-- * also supported.
-- *
-- *                               PHYSICAL address
-- *                                     space
-- *
-- *                                    |    |
-- *                                 ...+----+--> mem_start
-- *          VIRTUAL address     ...   |    |
-- *               space       ...      |    | [PART_0]
-- *                        ...         |    |
-- * 0x00000000 <--+----+...         ...+----+--> mem_start + mem_size
-- *               |    |         ...   |    |
-- *               |MEM |      ...      |    |
-- *               |    |   ...         |    |
-- *  part_size <--+----+...            |    | {unused area)
-- *               |    |   ...         |    |
-- *               |REG |      ...      |    |
-- *  part_size    |    |         ...   |    |
-- *      +     <--+----+...         ...+----+--> reg_start
-- *  reg_size              ...         |    |
-- *                           ...      |    | [PART_1]
-- *                              ...   |    |
-- *                                 ...+----+--> reg_start + reg_size
-- *                                    |    |
-- *
-- */
--int wl1251_set_partition(struct wl1251 *wl,
--			  u32 mem_start, u32 mem_size,
--			  u32 reg_start, u32 reg_size)
--{
--	struct wl1251_partition *partition;
--	struct spi_transfer t;
--	struct spi_message m;
--	size_t len, cmd_len;
--	u32 *cmd;
--	int addr;
--
--	cmd_len = sizeof(u32) + 2 * sizeof(struct wl1251_partition);
--	cmd = kzalloc(cmd_len, GFP_KERNEL);
--	if (!cmd)
--		return -ENOMEM;
--
--	spi_message_init(&m);
--	memset(&t, 0, sizeof(t));
--
--	partition = (struct wl1251_partition *) (cmd + 1);
--	addr = HW_ACCESS_PART0_SIZE_ADDR;
--	len = 2 * sizeof(struct wl1251_partition);
--
--	*cmd |= WSPI_CMD_WRITE;
--	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
--	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
--
--	wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
--		     mem_start, mem_size);
--	wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
--		     reg_start, reg_size);
--
--	/* Make sure that the two partitions together don't exceed the
--	 * address range */
--	if ((mem_size + reg_size) > HW_ACCESS_MEMORY_MAX_RANGE) {
--		wl1251_debug(DEBUG_SPI, "Total size exceeds maximum virtual"
--			     " address range.  Truncating partition[0].");
--		mem_size = HW_ACCESS_MEMORY_MAX_RANGE - reg_size;
--		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
--			     mem_start, mem_size);
--		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
--			     reg_start, reg_size);
--	}
--
--	if ((mem_start < reg_start) &&
--	    ((mem_start + mem_size) > reg_start)) {
--		/* Guarantee that the memory partition doesn't overlap the
--		 * registers partition */
--		wl1251_debug(DEBUG_SPI, "End of partition[0] is "
--			     "overlapping partition[1].  Adjusted.");
--		mem_size = reg_start - mem_start;
--		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
--			     mem_start, mem_size);
--		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
--			     reg_start, reg_size);
--	} else if ((reg_start < mem_start) &&
--		   ((reg_start + reg_size) > mem_start)) {
--		/* Guarantee that the register partition doesn't overlap the
--		 * memory partition */
--		wl1251_debug(DEBUG_SPI, "End of partition[1] is"
--			     " overlapping partition[0].  Adjusted.");
--		reg_size = mem_start - reg_start;
--		wl1251_debug(DEBUG_SPI, "mem_start %08X mem_size %08X",
--			     mem_start, mem_size);
--		wl1251_debug(DEBUG_SPI, "reg_start %08X reg_size %08X",
--			     reg_start, reg_size);
--	}
--
--	partition[0].start = mem_start;
--	partition[0].size  = mem_size;
--	partition[1].start = reg_start;
--	partition[1].size  = reg_size;
--
--	wl->physical_mem_addr = mem_start;
--	wl->physical_reg_addr = reg_start;
--
--	wl->virtual_mem_addr = 0;
--	wl->virtual_reg_addr = mem_size;
--
--	t.tx_buf = cmd;
--	t.len = cmd_len;
--	spi_message_add_tail(&t, &m);
--
--	spi_sync(wl->spi, &m);
--
--	kfree(cmd);
--
--	return 0;
--}
--
- static void wl1251_spi_read(struct wl1251 *wl, int addr, void *buf,
- 			    size_t len)
- {
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.h b/drivers/net/wireless/wl12xx/wl1251_spi.h
-index 7c6da21..cb0c228 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.h
-@@ -29,17 +29,6 @@
- #include "wl1251_acx.h"
- #include "reg.h"
- 
--#define HW_ACCESS_MEMORY_MAX_RANGE		0x1FFC0
--
--#define HW_ACCESS_PART0_SIZE_ADDR           0x1FFC0
--#define HW_ACCESS_PART0_START_ADDR          0x1FFC4
--#define HW_ACCESS_PART1_SIZE_ADDR           0x1FFC8
--#define HW_ACCESS_PART1_START_ADDR          0x1FFCC
--
--#define HW_ACCESS_REGISTER_SIZE             4
--
--#define HW_ACCESS_PRAM_MAX_RANGE		0x3c000
--
- #define WSPI_CMD_READ                 0x40000000
- #define WSPI_CMD_WRITE                0x00000000
- #define WSPI_CMD_FIXED                0x20000000
-@@ -69,8 +58,4 @@
- 		((WL1251_BUSY_WORD_LEN - 4) / sizeof(u32))
- #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
- 
--int wl1251_set_partition(struct wl1251 *wl,
--			 u32 part_start, u32 part_size,
--			 u32 reg_start,  u32 reg_size);
--
- #endif /* __WL1251_SPI_H__ */
+Any hints on what to try or driver sources distributions I could try  
+to compile against my 2.6.10 kernel?
+
+Thanks in advance!
+
+--
+Miguel García López
+Director Técnico
+Technical Manager
+.......................................................
+E N V I T E L
+Parque Científico de Madrid - Local 105
+PTM - C/Santiago Grisolía, 2
+28760 Tres Cantos - Madrid - Spain
+T: +34 91 334 06 56
+F: +34 91 358 52 36
+M: +34 649 91 60 60
+.......................................
+mgarcia@envitel.com
+www.envitel.com
+
+
+
+
 
