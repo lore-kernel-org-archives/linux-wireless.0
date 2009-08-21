@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42586 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbZHQKjf (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.237]:45036 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754103AbZHUM3L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 06:39:35 -0400
-Subject: Re: [ANN] iw: v0.9.16
-From: Johannes Berg <johannes@sipsolutions.net>
-To: drago01 <drago01@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <f6ca9fed0908170336u50df5a48v80fa34549fc08e87@mail.gmail.com>
-References: <E1McscB-0004xM-M5@sipsolutions.net>
-	 <f6ca9fed0908170336u50df5a48v80fa34549fc08e87@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YUwC4e1zzkxfj3XCOQdE"
-Date: Mon, 17 Aug 2009 12:39:34 +0200
-Message-Id: <1250505574.15103.4.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 21 Aug 2009 08:29:11 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so245033rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 05:29:13 -0700 (PDT)
+Message-ID: <4A8E9315.3000709@lwfinger.net>
+Date: Fri, 21 Aug 2009 07:29:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] rtl8187: always set MSR_LINK_ENEDCA flag with RTL8187B
+References: <200908202116.17847.herton@mandriva.com.br>	 <4A8DF356.8000501@lwfinger.net> <3ace41890908202054j62fda37ei64262890c6959f95@mail.gmail.com>
+In-Reply-To: <3ace41890908202054j62fda37ei64262890c6959f95@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> 
+> This seems to be related to a problem I reported a while back - see
+> the "compat-wireless won't associate on 2nd load" thread, I wrote on
+> May 31. Supposedly I had that problem about a week before that, the
+> date on the patch from Johannes is May 14, but I just went back to
+> look at the mailing list archive and it looks like there were some
+> problem with applying and John did some fix on 20th. So it seems that
+> it might be the source of my not being able to load compat-wireless a
+> 2nd time; and the description of the problem sounds like it too.
+> 
+> Sorry I haven't been doing much with compat-wireless lately, so I have
+> no firm data whether I have the same problem or not since May - that
+> problem only happens if I switch from one compat-wireless to another
+> compat-wireless, without rebooting - while I have tried
+> compat-wireless in the last two months, I don't think I have followed
+> compat-wireless as closely as I should to have two successive
+> compat-wireless. I probably should go and have a try now.
 
---=-YUwC4e1zzkxfj3XCOQdE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-08-17 at 12:36 +0200, drago01 wrote:
-> On Mon, Aug 17, 2009 at 5:10 AM, <wireless@sipsolutions.net> wrote:
-> >
-> > A new release of iw (v0.9.16) is available at:
-> >
-> > http://wireless.kernel.org/download/iw/iw-0.9.16.tar.bz2
-> >
-> > SHA1 sum: e224b6698802498569854b475ae532d41ddbd719
-> >
-> > Here is the short log of the changes included in this
-> > release:
->=20
-> It is indeed very short ;)
-
-Yeah, must be a bug in the script...
-
-The real shortlog would have been
-
-0.9.16
-Revert "magically set interface up for connect/join"
-mark a key default if none is marked manually
-add iw commands for setting fragmentation and rts threshold
-iw: fix typos in MCS set parsing code
-print out wmm aifsn
-some wmm parameter improvements
-fix typo
-fix bug parsing ACI
-show WMM parameters
-iw: add beacon hint event parsing
-add warning about screenscraping
-add missing newline
-add link command
-magically set interface up for connect/join
+This problem was quite strange. My system would fail when the RTL8187B
+was inserted when the system booted. Unloading the driver did not
+help, but removing/reinstalling the card fixed the problem. As all my
+testing had been to install the card after booting, I never saw the
+failure.
 
 
-johannes
+Larry
 
---=-YUwC4e1zzkxfj3XCOQdE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKiTNjAAoJEODzc/N7+QmaO3UQALD0cYaFnPHxJY870F7DKtOv
-dzbWvDTU13vPGKefA5/LG+RNAjvurQ+wrpq8nTYhPSMPKMOyipnsFOxT5gT3jvEc
-IKi4QwNeWKOYM9Lvp44bawl6XgDWhxIjSFBVbGJcex0VzQ566c6uWqe5smoS9YER
-vy1e9Tlb7hBxBRj4HD1TWsHOPqTokXKJ8LZKLLArXNqgBc80ycFBRIWFEUjhecAu
-gzsgfpheByPWo3zK4pZCRHu5bQdaeDSeYXq+AbkHsI41wD9rJgyFqDfIEdo8AU7a
-ZAXs4w9Cj8JZBlL5/2rjFpc00zbbcQAmnfATlHXW+dkmRP4BXDHF6AXomtbnYhln
-Ppyga6S5nURm6+Xo0AcYv8mS2gA9F/9CEjy2im4itgEy3Jj+um04Zo4GUL4RvJOZ
-aT/DVFxXpGCVmKjWki9zSmGTQKiWRvtd8VHZrgnZkdldgJr6kxWKwcxi0yZhAH4P
-rYZns+iSoeGxyVhIIZdo7bkZqoLuPEqUCDJivDUJthUMYAJfHK1rRUqcwvDlb1TP
-33DHQYUpvYsW/urdQfI5wTWUspdjfzrIlhfKsfiuhLm0nr7E40le2Wm01BxB+b4+
-VBuTbZAjv5fP7nYeTawJP3/tb834oMP0xsuslK2q0fmmVg79aMtnuhsn/71uUFsH
-XGNhOmuGFIsGEZZZUKYP
-=j8Ms
------END PGP SIGNATURE-----
-
---=-YUwC4e1zzkxfj3XCOQdE--
 
