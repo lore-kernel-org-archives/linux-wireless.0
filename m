@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:49052 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543AbZH3NaW convert rfc822-to-8bit (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.229]:14692 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210AbZHUBHh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 09:30:22 -0400
-Received: by ewy2 with SMTP id 2so3320494ewy.17
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 06:30:23 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: Fix TX status reporting
-Date: Sun, 30 Aug 2009 15:30:19 +0200
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908291910.14528.IvDoorn@gmail.com> <4A999024.6060800@free.fr>
-In-Reply-To: <4A999024.6060800@free.fr>
+	Thu, 20 Aug 2009 21:07:37 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so109659rvb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 18:07:38 -0700 (PDT)
+Message-ID: <4A8DF356.8000501@lwfinger.net>
+Date: Thu, 20 Aug 2009 20:07:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908301530.20077.IvDoorn@gmail.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] rtl8187: always set MSR_LINK_ENEDCA flag with RTL8187B
+References: <200908202116.17847.herton@mandriva.com.br>
+In-Reply-To: <200908202116.17847.herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 August 2009, Benoit PAPILLAULT wrote:
-> Ivo van Doorn a écrit :
-> > Not all values of the TX status enumeration were covered during
-> > updating of the TX statistics. This could lead to wrong bitrate
-> > tuning but also wrong behavior in tools like hostapd.
-> >
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> I have a pending patch about TX status that changed the meaning of
-> TXDONE_FALLBACK just a bit... just to avoid this change in fact.
-> I should be able to send those patches in few hours.
+Herton Ronaldo Krzesinski wrote:
+> RTL8187B always needs MSR_LINK_ENEDCA flag to be set even when it is in
+> no link mode, otherwise it'll not be able to associate when this flag is
+> not set after the change "mac80211: fix managed mode BSSID handling"
+> (commit 9cef8737).
 > 
-> In my code, you success/failure of the packet is reported with
-> TXDONE_SUCCESS / TXDONE_FAILURE. The TXDONE_FALLBACK is set
-> independently to indicate that a fallback rate table has been used
-> (and this could be the case for either success or failure).
+> By accident, setting BSSID of AP before association makes 8187B to
+> successfuly associate even when ENEDCA flag isn't set, which was the
+> case before the mac80211 change. But now the BSSID of AP we are trying
+> to associate is only available after association is successful, and
+> any attempt to associate without the needed flag doesn't work.
+> 
+> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> ---
 
-Well that shouldn't block this patch at this time since it is a bugfix which
-is quite important to get minstrel and hostapd working properly.
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Once I have reviewed your patch it can be send upstream immediately or
-in a single batch together with the rt2800pci driver. ;)
+I had just finished bisecting the problem reported in Bug #13960 when
+this patch from Herton appeared in my mailbox, and it fixed the problem.
 
-Ivo
+Larry
