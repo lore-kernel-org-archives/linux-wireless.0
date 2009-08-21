@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:52724 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932858AbZHZMxB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 08:53:01 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [PATCH] rndis_wlan: set cipher suites for cfg80211
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 26 Aug 2009 15:53:02 +0300
-Message-ID: <20090826125302.25900.98016.stgit@fate.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga14.intel.com ([143.182.124.37]:55031 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932390AbZHUUt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:49:27 -0400
+Subject: Re: [PATCH v2] iwlwifi: Make injection of non-broadcast frames
+ work again
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Rafael Laufer <rlaufer@cs.ucla.edu>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A8EEAF9.6020308@gmail.com>
+References: <4A8EEAF9.6020308@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 21 Aug 2009 13:49:27 -0700
+Message-Id: <1250887767.30019.14483.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rndis_wlan does not set cipher suites list for cfg80211 which causes
-wext-compat-range to report rndis_wlan not supporting WPA. Patch adds
-cipher suites list and fixes NetworkManager not being able to connect to
-WPA encrypted APs.
+On Fri, 2009-08-21 at 11:44 -0700, Gábor Stefanik wrote:
+> Commit 1ccb84d87d04df3c76cd4352fe69786d8c7cf016 by Wey-Yi Guy
+> ("iwlwifi: clean up unused NL80211_IFTYPE_MONITOR for Monitor mode")
+> broke injection of non-broadcast frames to unassociated stations
+> (causing a SYSASSERT for all such injected frames), due to injected
+> frames no longer automatically getting a broadcast station ID assigned.
+> This patch restores the old behavior, fixing the aforementioned
+> regression.
+> 
+> Also, consistently check for IEEE80211_TX_CTL_INJECTED instead of
+> iwl_is_monitor_mode in the TX path, as TX_CTL_INJECTED specifically
+> means that a given packet is coming from a monitor interface, while
+> iwl_is_monitor_mode only shows whether a monitor interface exists
+> on the device.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
- drivers/net/wireless/rndis_wlan.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+Thank you
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index c5b921b..f181b00 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -413,6 +413,13 @@ static const struct ieee80211_rate rndis_rates[] = {
- 	{ .bitrate = 540 }
- };
- 
-+static const u32 rndis_cipher_suites[] = {
-+	WLAN_CIPHER_SUITE_WEP40,
-+	WLAN_CIPHER_SUITE_WEP104,
-+	WLAN_CIPHER_SUITE_TKIP,
-+	WLAN_CIPHER_SUITE_CCMP,
-+};
-+
- struct rndis_wlan_encr_key {
- 	int len;
- 	int cipher;
-@@ -441,6 +448,7 @@ struct rndis_wlan_private {
- 	struct ieee80211_supported_band band;
- 	struct ieee80211_channel channels[ARRAY_SIZE(rndis_channels)];
- 	struct ieee80211_rate rates[ARRAY_SIZE(rndis_rates)];
-+	u32 cipher_suites[ARRAY_SIZE(rndis_cipher_suites)];
- 
- 	struct iw_statistics iwstats;
- 	struct iw_statistics privstats;
-@@ -2892,7 +2900,7 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 					| BIT(NL80211_IFTYPE_ADHOC);
- 	wiphy->max_scan_ssids = 1;
- 
--	/* TODO: fill-out band information based on priv->caps */
-+	/* TODO: fill-out band/encr information based on priv->caps */
- 	rndis_wlan_get_caps(usbdev);
- 
- 	memcpy(priv->channels, rndis_channels, sizeof(rndis_channels));
-@@ -2904,6 +2912,11 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
- 	wiphy->bands[IEEE80211_BAND_2GHZ] = &priv->band;
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
- 
-+	memcpy(priv->cipher_suites, rndis_cipher_suites,
-+						sizeof(rndis_cipher_suites));
-+	wiphy->cipher_suites = priv->cipher_suites;
-+	wiphy->n_cipher_suites = ARRAY_SIZE(rndis_cipher_suites);
-+
- 	set_wiphy_dev(wiphy, &usbdev->udev->dev);
- 
- 	if (wiphy_register(wiphy)) {
+Reinette
+
 
