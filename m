@@ -1,93 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32315 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750698AbZHCAoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 20:44:08 -0400
-Subject: Re: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing
- kfree
-From: Zhu Yi <yi.zhu@intel.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
-References: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
-Content-Type: text/plain
-Date: Mon, 03 Aug 2009 08:44:06 +0800
-Message-Id: <1249260246.4069.26.camel@debian>
-Mime-Version: 1.0
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:44380 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932878AbZHUWNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 18:13:50 -0400
+Received: by bwz19 with SMTP id 19so669285bwz.37
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 15:13:50 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sat, 22 Aug 2009 00:13:50 +0200
+Message-ID: <83a869cd0908211513k2e14ba40k251aa8a1e7393a77@mail.gmail.com>
+Subject: [PATCH] mac80211 : fix a race with update_tkip_key
+From: gregor kowski <gregor.kowski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-08-01 at 16:54 +0800, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Error handling code following a kzalloc should free the allocated data.
-> 
-> The semantic match that finds the problem is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @r exists@
-> local idexpression x;
-> statement S;
-> expression E;
-> identifier f,f1,l;
-> position p1,p2;
-> expression *ptr != NULL;
-> @@
-> 
-> x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-> ...
-> if (x == NULL) S
-> <... when != x
->      when != if (...) { <+...x...+> }
-> (
-> x->f1 = E
-> |
->  (x->f1 == NULL || ...)
-> |
->  f(...,x->f1,...)
-> )
-> ...>
-> (
->  return \(0\|<+...x...+>\|ptr\);
-> |
->  return@p2 ...;
-> )
-> 
-> @script:python@
-> p1 << r.p1;
-> p2 << r.p2;
-> @@
-> 
-> print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> index 7707a26..c2106d0 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> @@ -320,6 +320,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
->  	ptr = priv->eeprom;
->  	if (!ptr) {
->  		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-> +		kfree(buf);
->  		return -ENOMEM;
->  	}
->  	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
+The mac80211 tkip code won't call update_tkip_key, if some rx packets
+get received without KEY_FLAG_UPLOADED_TO_HARDWARE. This can happen on
+first packet because the hardware key stuff is called asynchronously with
+todo workqueue.
 
-Probably moving !priv->eeprom check prior to buf kzalloc is better.
+This patch workaround that by tracking if we send the key to hardware.
 
-Thanks,
--yi
+Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
 
+Index: linux-2.6/net/mac80211/tkip.c
+===================================================================
+--- linux-2.6.orig/net/mac80211/tkip.c	2009-06-30 20:27:02.000000000 +0000
++++ linux-2.6/net/mac80211/tkip.c	2009-08-21 22:02:34.000000000 +0000
+@@ -100,7 +100,7 @@
+ 		p1k[3] += tkipS(p1k[2] ^ get_unaligned_le16(tk + 12 + j));
+ 		p1k[4] += tkipS(p1k[3] ^ get_unaligned_le16(tk + 0 + j)) + i;
+ 	}
+-	ctx->initialized = 1;
++	ctx->initialized = TKIP_INITIALIZED_PHASE1;
+ }
+
+ static void tkip_mixing_phase2(const u8 *tk, struct tkip_ctx *ctx,
+@@ -183,7 +183,7 @@
+ 	/* Update the p1k only when the iv16 in the packet wraps around, this
+ 	 * might occur after the wrap around of iv16 in the key in case of
+ 	 * fragmented packets. */
+-	if (iv16 == 0 || !ctx->initialized)
++	if (iv16 == 0 || ctx->initialized == TKIP_INITIALIZED_NONE)
+ 		tkip_mixing_phase1(tk, ctx, hdr->addr2, iv32);
+
+ 	if (type == IEEE80211_TKIP_P1_KEY) {
+@@ -209,7 +209,7 @@
+ 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+
+ 	/* Calculate per-packet key */
+-	if (ctx->iv16 == 0 || !ctx->initialized)
++	if (ctx->iv16 == 0 || ctx->initialized == TKIP_INITIALIZED_NONE)
+ 		tkip_mixing_phase1(tk, ctx, ta, ctx->iv32);
+
+ 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
+@@ -259,7 +259,7 @@
+ 	if ((keyid >> 6) != key->conf.keyidx)
+ 		return TKIP_DECRYPT_INVALID_KEYIDX;
+
+-	if (key->u.tkip.rx[queue].initialized &&
++	if (key->u.tkip.rx[queue].initialized != TKIP_INITIALIZED_NONE &&
+ 	    (iv32 < key->u.tkip.rx[queue].iv32 ||
+ 	     (iv32 == key->u.tkip.rx[queue].iv32 &&
+ 	      iv16 <= key->u.tkip.rx[queue].iv16))) {
+@@ -275,11 +275,11 @@
+
+ 	if (only_iv) {
+ 		res = TKIP_DECRYPT_OK;
+-		key->u.tkip.rx[queue].initialized = 1;
++		key->u.tkip.rx[queue].initialized = TKIP_INITIALIZED_UPDATE_KEY;
+ 		goto done;
+ 	}
+
+-	if (!key->u.tkip.rx[queue].initialized ||
++	if (key->u.tkip.rx[queue].initialized == TKIP_INITIALIZED_NONE ||
+ 	    key->u.tkip.rx[queue].iv32 != iv32) {
+ 		/* IV16 wrapped around - perform TKIP phase 1 */
+ 		tkip_mixing_phase1(tk, &key->u.tkip.rx[queue], ta, iv32);
+@@ -299,18 +299,20 @@
+ 			printk("\n");
+ 		}
+ #endif
+-		if (key->local->ops->update_tkip_key &&
+-			key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+-			u8 bcast[ETH_ALEN] =
+-				{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+-			u8 *sta_addr = key->sta->sta.addr;
+-
+-			if (is_multicast_ether_addr(ra))
+-				sta_addr = bcast;
+-
+-			drv_update_tkip_key(key->local, &key->conf, sta_addr,
+-					    iv32, key->u.tkip.rx[queue].p1k);
+-		}
++	}
++	if (key->local->ops->update_tkip_key &&
++	    key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE &&
++	    key->u.tkip.rx[queue].initialized != TKIP_INITIALIZED_UPDATE_KEY) {
++		u8 bcast[ETH_ALEN] =
++			{0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++		u8 *sta_addr = key->sta->sta.addr;
++
++		if (is_multicast_ether_addr(ra))
++			sta_addr = bcast;
++
++		drv_update_tkip_key(key->local, &key->conf, sta_addr,
++					iv32, key->u.tkip.rx[queue].p1k);
++		key->u.tkip.rx[queue].initialized = TKIP_INITIALIZED_UPDATE_KEY;
+ 	}
+
+ 	tkip_mixing_phase2(tk, &key->u.tkip.rx[queue], iv16, rc4key);
+Index: linux-2.6/net/mac80211/key.h
+===================================================================
+--- linux-2.6.orig/net/mac80211/key.h	2009-08-21 22:03:09.000000000 +0000
++++ linux-2.6/net/mac80211/key.h	2009-08-21 22:03:12.000000000 +0000
+@@ -59,11 +59,17 @@
+ 	KEY_FLAG_TODO_DEFMGMTKEY	= BIT(6),
+ };
+
++enum ieee80211_internal_tkip_initialized {
++	TKIP_INITIALIZED_NONE,
++	TKIP_INITIALIZED_PHASE1,
++	TKIP_INITIALIZED_UPDATE_KEY,
++};
++
+ struct tkip_ctx {
+ 	u32 iv32;
+ 	u16 iv16;
+ 	u16 p1k[5];
+-	int initialized;
++	enum ieee80211_internal_tkip_initialized initialized;
+ };
+
+ struct ieee80211_key {
