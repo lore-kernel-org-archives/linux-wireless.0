@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45320 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756525AbZHNAnF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@web.de>,
-	Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH v2 06/25] wireless: group Conexant / STEricsson drivers in kconfig
-Date: Thu, 13 Aug 2009 20:42:45 -0400
-Message-Id: <1250210584-13374-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:58694 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932318AbZHUUxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:53:37 -0400
+Message-ID: <4A8F0951.50108@gmx.de>
+Date: Fri, 21 Aug 2009 22:53:37 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@web.de>
+Subject: [PATCH 2/2 v2] ar9170: remove unnecessary call to ar9170_set_beacon_timers
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few of these so we keep them under a
-config option which expands upon selection.
 
-Cc: Christian Lamparter <chunkeey@web.de>
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+
 ---
- drivers/net/wireless/Kconfig |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ar9170/main.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 636c864..babd36e 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -284,6 +284,18 @@ config PCMCIA_WL3501
- 	 It has basic support for Linux wireless extensions and initial
- 	 micro support for ethtool.
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 911e502..5b73194 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2031,12 +2031,6 @@ static int ar9170_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto out;
+ 	}
  
-+config CONEXANT_ST_80211
-+	bool "Intersil / Conexant / STEricsson"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Intersil / Conexant and STEricsson
-+	  wireless drivers. All these companies have sell wireless cards which
-+	  have shared common parts one way or another. The drivers for these cards
-+	  include the mac80211 based p54 drivers for PCI, USB and SPI (Nokia N810
-+	  and N800), and and the old PCI FullMAC driver prism54.
-+
-+if CONEXANT_ST_80211
-+
- source "drivers/net/wireless/p54/Kconfig"
+-	if (changed & BSS_CHANGED_BEACON_INT) {
+-		err = ar9170_set_beacon_timers(ar);
+-		if (err)
+-			goto out;
+-	}
+-
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
  
- config PRISM54
-@@ -333,6 +345,8 @@ config PRISM54
- 	  say M here and read <file:Documentation/kbuild/modules.txt>.
- 	  The module will be called prism54.
- 
-+endif # CONEXANT_ST_80211
-+
- config USB_ZD1201
- 	tristate "USB ZD1201 based Wireless device support"
- 	depends on USB && WLAN_80211
+ 		/* adjust slot time for 5 GHz */
 -- 
-1.6.2.5
+1.6.0.4
 
