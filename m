@@ -1,195 +1,311 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:60864 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbZHZSvb (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:47459 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353AbZHUKjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 14:51:31 -0400
-Received: by bwz19 with SMTP id 19so359406bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 11:51:32 -0700 (PDT)
-From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ssb: Implement PMU LDO control and use it in b43
-Date: Wed, 26 Aug 2009 20:51:26 +0200
-Message-Id: <1251312686-32067-3-git-send-email-netrolller.3d@gmail.com>
-In-Reply-To: <1251312686-32067-2-git-send-email-netrolller.3d@gmail.com>
-References: <1251312686-32067-1-git-send-email-netrolller.3d@gmail.com>
- <1251312686-32067-2-git-send-email-netrolller.3d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 21 Aug 2009 06:39:19 -0400
+Subject: [PATCH] cfg80211: clean up properly on interface type change
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Fri, 21 Aug 2009 12:39:17 +0200
+Message-Id: <1250851157.14573.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the "PMU LDO set voltage" and "PMU LDO PA ref enable"
-functions, and use them during LP-PHY baseband init in b43.
+When the interface type changes while connected, and the
+driver does not require the interface to be down for a
+type change, it is currently possible to get very strange
+results unless the driver takes special care, which it
+shouldn't have to.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+To fix this, take care to disconnect/leave IBSS when
+changing the interface type -- even if the driver may fail
+the call. Also process all events that may be pending to
+avoid running into a situation where an event is reported
+but only processed after the type has already changed,
+which would lead to missing events and warnings.
+
+A side effect of this is that you will have disconnected
+or left the IBSS even if the mode change ultimately fails,
+but since the intention was to change it and thus leave or
+disconnect, this is not a problem.
+
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/b43/phy_lp.c         |   10 +--
- drivers/ssb/driver_chipcommon_pmu.c       |   94 +++++++++++++++++++++++++++++
- include/linux/ssb/ssb_driver_chipcommon.h |   10 +++
- 3 files changed, 107 insertions(+), 7 deletions(-)
+ net/wireless/core.c        |   53 ----------------------
+ net/wireless/core.h        |    4 +
+ net/wireless/nl80211.c     |   16 ------
+ net/wireless/util.c        |  105 +++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/wext-compat.c |   16 +-----
+ 5 files changed, 114 insertions(+), 80 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 1a57d33..80f245c 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -234,19 +234,15 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
- 	if ((bus->sprom.boardflags_lo & B43_BFL_FEM) &&
- 	   ((b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) ||
- 	   (bus->sprom.boardflags_hi & B43_BFH_PAREF))) {
--		/* TODO:
--		 * Set the LDO voltage to 0x0028 - FIXME: What is this?
--		 * Call sb_pmu_set_ldo_voltage with 4 and the LDO voltage
--		 *      as arguments
--		 * Call sb_pmu_paref_ldo_enable with argument TRUE
--		 */
-+		ssb_pmu_set_ldo_voltage(&bus->chipco, LDO_PAREF, 0x28);
-+		ssb_pmu_set_ldo_paref(&bus->chipco, true);
- 		if (dev->phy.rev == 0) {
- 			b43_phy_maskset(dev, B43_LPPHY_LP_RF_SIGNAL_LUT,
- 					0xFFCF, 0x0010);
- 		}
- 		b43_lptab_write(dev, B43_LPTAB16(11, 7), 60);
- 	} else {
--		//TODO: Call ssb_pmu_paref_ldo_enable with argument FALSE
-+		ssb_pmu_set_ldo_paref(&bus->chipco, false);
- 		b43_phy_maskset(dev, B43_LPPHY_LP_RF_SIGNAL_LUT,
- 				0xFFCF, 0x0020);
- 		b43_lptab_write(dev, B43_LPTAB16(11, 7), 100);
-diff --git a/drivers/ssb/driver_chipcommon_pmu.c b/drivers/ssb/driver_chipcommon_pmu.c
-index 4aaddee..64abd11 100644
---- a/drivers/ssb/driver_chipcommon_pmu.c
-+++ b/drivers/ssb/driver_chipcommon_pmu.c
-@@ -28,6 +28,21 @@ static void ssb_chipco_pll_write(struct ssb_chipcommon *cc,
- 	chipco_write32(cc, SSB_CHIPCO_PLLCTL_DATA, value);
+--- wireless-testing.orig/net/wireless/core.c	2009-08-21 12:12:03.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-08-21 12:23:54.000000000 +0200
+@@ -293,68 +293,17 @@ static void cfg80211_rfkill_sync_work(st
+ 	cfg80211_rfkill_set_block(rdev, rfkill_blocked(rdev->rfkill));
  }
  
-+static void ssb_chipco_regctl_maskset(struct ssb_chipcommon *cc,
-+				   u32 offset, u32 mask, u32 set)
-+{
-+	u32 value;
-+
-+	chipco_read32(cc, SSB_CHIPCO_REGCTL_ADDR);
-+	chipco_write32(cc, SSB_CHIPCO_REGCTL_ADDR, offset);
-+	chipco_read32(cc, SSB_CHIPCO_REGCTL_ADDR);
-+	value = chipco_read32(cc, SSB_CHIPCO_REGCTL_DATA);
-+	value &= mask;
-+	value |= set;
-+	chipco_write32(cc, SSB_CHIPCO_REGCTL_DATA, value);
-+	chipco_read32(cc, SSB_CHIPCO_REGCTL_DATA);
-+}
-+
- struct pmu0_plltab_entry {
- 	u16 freq;	/* Crystal frequency in kHz.*/
- 	u8 xf;		/* Crystal frequency value for PMU control */
-@@ -506,3 +521,82 @@ void ssb_pmu_init(struct ssb_chipcommon *cc)
- 	ssb_pmu_pll_init(cc);
- 	ssb_pmu_resources_init(cc);
+-static void cfg80211_process_events(struct wireless_dev *wdev)
+-{
+-	struct cfg80211_event *ev;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&wdev->event_lock, flags);
+-	while (!list_empty(&wdev->event_list)) {
+-		ev = list_first_entry(&wdev->event_list,
+-				      struct cfg80211_event, list);
+-		list_del(&ev->list);
+-		spin_unlock_irqrestore(&wdev->event_lock, flags);
+-
+-		wdev_lock(wdev);
+-		switch (ev->type) {
+-		case EVENT_CONNECT_RESULT:
+-			__cfg80211_connect_result(
+-				wdev->netdev, ev->cr.bssid,
+-				ev->cr.req_ie, ev->cr.req_ie_len,
+-				ev->cr.resp_ie, ev->cr.resp_ie_len,
+-				ev->cr.status,
+-				ev->cr.status == WLAN_STATUS_SUCCESS,
+-				NULL);
+-			break;
+-		case EVENT_ROAMED:
+-			__cfg80211_roamed(wdev, ev->rm.bssid,
+-					  ev->rm.req_ie, ev->rm.req_ie_len,
+-					  ev->rm.resp_ie, ev->rm.resp_ie_len);
+-			break;
+-		case EVENT_DISCONNECTED:
+-			__cfg80211_disconnected(wdev->netdev,
+-						ev->dc.ie, ev->dc.ie_len,
+-						ev->dc.reason, true);
+-			break;
+-		case EVENT_IBSS_JOINED:
+-			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid);
+-			break;
+-		}
+-		wdev_unlock(wdev);
+-
+-		kfree(ev);
+-
+-		spin_lock_irqsave(&wdev->event_lock, flags);
+-	}
+-	spin_unlock_irqrestore(&wdev->event_lock, flags);
+-}
+-
+ static void cfg80211_event_work(struct work_struct *work)
+ {
+ 	struct cfg80211_registered_device *rdev;
+-	struct wireless_dev *wdev;
+ 
+ 	rdev = container_of(work, struct cfg80211_registered_device,
+ 			    event_work);
+ 
+ 	rtnl_lock();
+ 	cfg80211_lock_rdev(rdev);
+-	mutex_lock(&rdev->devlist_mtx);
+ 
+-	list_for_each_entry(wdev, &rdev->netdev_list, list)
+-		cfg80211_process_events(wdev);
+-
+-	mutex_unlock(&rdev->devlist_mtx);
++	cfg80211_process_rdev_events(rdev);
+ 	cfg80211_unlock_rdev(rdev);
+ 	rtnl_unlock();
+ }
+--- wireless-testing.orig/net/wireless/core.h	2009-08-21 12:17:02.000000000 +0200
++++ wireless-testing/net/wireless/core.h	2009-08-21 12:23:54.000000000 +0200
+@@ -372,6 +372,10 @@ void cfg80211_sme_disassoc(struct net_de
+ void __cfg80211_scan_done(struct work_struct *wk);
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak);
+ void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
++int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
++			  struct net_device *dev, enum nl80211_iftype ntype,
++			  u32 *flags, struct vif_params *params);
++void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev);
+ 
+ struct ieee80211_channel *
+ rdev_fixed_channel(struct cfg80211_registered_device *rdev,
+--- wireless-testing.orig/net/wireless/nl80211.c	2009-08-21 12:12:03.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2009-08-21 12:23:54.000000000 +0200
+@@ -977,12 +977,6 @@ static int nl80211_set_interface(struct 
+ 		}
+ 	}
+ 
+-	if (!rdev->ops->change_virtual_intf ||
+-	    !(rdev->wiphy.interface_modes & (1 << ntype))) {
+-		err = -EOPNOTSUPP;
+-		goto unlock;
+-	}
+-
+ 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
+ 		if (ntype != NL80211_IFTYPE_MESH_POINT) {
+ 			err = -EINVAL;
+@@ -1008,18 +1002,10 @@ static int nl80211_set_interface(struct 
+ 	}
+ 
+ 	if (change)
+-		err = rdev->ops->change_virtual_intf(&rdev->wiphy, dev,
+-						    ntype, flags, &params);
++		err = cfg80211_change_iface(rdev, dev, ntype, flags, &params);
+ 	else
+ 		err = 0;
+ 
+-	WARN_ON(!err && dev->ieee80211_ptr->iftype != ntype);
+-
+-	if (!err && (ntype != otype)) {
+-		if (otype == NL80211_IFTYPE_ADHOC)
+-			cfg80211_clear_ibss(dev, false);
+-	}
+-
+  unlock:
+ 	dev_put(dev);
+ 	cfg80211_unlock_rdev(rdev);
+--- wireless-testing.orig/net/wireless/util.c	2009-08-21 12:12:03.000000000 +0200
++++ wireless-testing/net/wireless/util.c	2009-08-21 12:23:54.000000000 +0200
+@@ -574,3 +574,108 @@ void cfg80211_upload_connect_keys(struct
+ 	kfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
  }
 +
-+void ssb_pmu_set_ldo_voltage(struct ssb_chipcommon *cc,
-+			     enum ssb_pmu_ldo_volt_id id, u32 voltage)
++static void cfg80211_process_wdev_events(struct wireless_dev *wdev)
 +{
-+	struct ssb_bus *bus = cc->dev->bus;
-+	u32 addr, shift, mask;
++	struct cfg80211_event *ev;
++	unsigned long flags;
 +
-+	switch (bus->chip_id) {
-+	case 0x4328:
-+	case 0x5354:
-+		switch (id) {
-+		case LDO_VOLT1:
-+			addr = 2;
-+			shift = 25;
-+			mask = 0xF;
++	spin_lock_irqsave(&wdev->event_lock, flags);
++	while (!list_empty(&wdev->event_list)) {
++		ev = list_first_entry(&wdev->event_list,
++				      struct cfg80211_event, list);
++		list_del(&ev->list);
++		spin_unlock_irqrestore(&wdev->event_lock, flags);
++
++		wdev_lock(wdev);
++		switch (ev->type) {
++		case EVENT_CONNECT_RESULT:
++			__cfg80211_connect_result(
++				wdev->netdev, ev->cr.bssid,
++				ev->cr.req_ie, ev->cr.req_ie_len,
++				ev->cr.resp_ie, ev->cr.resp_ie_len,
++				ev->cr.status,
++				ev->cr.status == WLAN_STATUS_SUCCESS,
++				NULL);
 +			break;
-+		case LDO_VOLT2:
-+			addr = 3;
-+			shift = 1;
-+			mask = 0xF;
++		case EVENT_ROAMED:
++			__cfg80211_roamed(wdev, ev->rm.bssid,
++					  ev->rm.req_ie, ev->rm.req_ie_len,
++					  ev->rm.resp_ie, ev->rm.resp_ie_len);
 +			break;
-+		case LDO_VOLT3:
-+			addr = 3;
-+			shift = 9;
-+			mask = 0xF;
++		case EVENT_DISCONNECTED:
++			__cfg80211_disconnected(wdev->netdev,
++						ev->dc.ie, ev->dc.ie_len,
++						ev->dc.reason, true);
 +			break;
-+		case LDO_PAREF:
-+			addr = 3;
-+			shift = 17;
-+			mask = 0x3F;
++		case EVENT_IBSS_JOINED:
++			__cfg80211_ibss_joined(wdev->netdev, ev->ij.bssid);
++			break;
++		}
++		wdev_unlock(wdev);
++
++		kfree(ev);
++
++		spin_lock_irqsave(&wdev->event_lock, flags);
++	}
++	spin_unlock_irqrestore(&wdev->event_lock, flags);
++}
++
++void cfg80211_process_rdev_events(struct cfg80211_registered_device *rdev)
++{
++	struct wireless_dev *wdev;
++
++	ASSERT_RTNL();
++	ASSERT_RDEV_LOCK(rdev);
++
++	mutex_lock(&rdev->devlist_mtx);
++
++	list_for_each_entry(wdev, &rdev->netdev_list, list)
++		cfg80211_process_wdev_events(wdev);
++
++	mutex_unlock(&rdev->devlist_mtx);
++}
++
++int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
++			  struct net_device *dev, enum nl80211_iftype ntype,
++			  u32 *flags, struct vif_params *params)
++{
++	int err;
++	enum nl80211_iftype otype = dev->ieee80211_ptr->iftype;
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	/* don't support changing VLANs, you just re-create them */
++	if (otype == NL80211_IFTYPE_AP_VLAN)
++		return -EOPNOTSUPP;
++
++	if (!rdev->ops->change_virtual_intf ||
++	    !(rdev->wiphy.interface_modes & (1 << ntype)))
++		return -EOPNOTSUPP;
++
++	if (ntype != otype) {
++		switch (otype) {
++		case NL80211_IFTYPE_ADHOC:
++			cfg80211_leave_ibss(rdev, dev, false);
++			break;
++		case NL80211_IFTYPE_STATION:
++			cfg80211_disconnect(rdev, dev,
++					    WLAN_REASON_DEAUTH_LEAVING, true);
++			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			/* mesh should be handled? */
 +			break;
 +		default:
-+			SSB_WARN_ON(1);
-+			return;
++			break;
 +		}
-+		break;
-+	case 0x4312:
-+		if (SSB_WARN_ON(id != LDO_PAREF))
-+			return;
-+		addr = 0;
-+		shift = 21;
-+		mask = 0x3F;
-+		break;
-+	default:
-+		return;
++
++		cfg80211_process_rdev_events(rdev);
 +	}
 +
-+	ssb_chipco_regctl_maskset(cc, addr, ~(mask << shift),
-+				  (voltage & mask) << shift);
++	err = rdev->ops->change_virtual_intf(&rdev->wiphy, dev,
++					     ntype, flags, params);
++
++	WARN_ON(!err && dev->ieee80211_ptr->iftype != ntype);
++
++	return err;
 +}
-+
-+void ssb_pmu_set_ldo_paref(struct ssb_chipcommon *cc, bool on)
-+{
-+	struct ssb_bus *bus = cc->dev->bus;
-+	int ldo;
-+
-+	switch (bus->chip_id) {
-+	case 0x4312:
-+		ldo = SSB_PMURES_4312_PA_REF_LDO;
-+		break;
-+	case 0x4328:
-+		ldo = SSB_PMURES_4328_PA_REF_LDO;
-+		break;
-+	case 0x5354:
-+		ldo = SSB_PMURES_5354_PA_REF_LDO;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	if (on)
-+		chipco_set32(cc, SSB_CHIPCO_PMU_MINRES_MSK, 1 << ldo);
-+	else
-+		chipco_mask32(cc, SSB_CHIPCO_PMU_MINRES_MSK, ~(1 << ldo));
-+	chipco_read32(cc, SSB_CHIPCO_PMU_MINRES_MSK); //SPEC FIXME found via mmiotrace - dummy read?
-+}
-+
-+EXPORT_SYMBOL(ssb_pmu_set_ldo_voltage);
-+EXPORT_SYMBOL(ssb_pmu_set_ldo_paref);
-diff --git a/include/linux/ssb/ssb_driver_chipcommon.h b/include/linux/ssb/ssb_driver_chipcommon.h
-index d3b1d18..4e27acf 100644
---- a/include/linux/ssb/ssb_driver_chipcommon.h
-+++ b/include/linux/ssb/ssb_driver_chipcommon.h
-@@ -629,5 +629,15 @@ extern int ssb_chipco_serial_init(struct ssb_chipcommon *cc,
- /* PMU support */
- extern void ssb_pmu_init(struct ssb_chipcommon *cc);
+--- wireless-testing.orig/net/wireless/wext-compat.c	2009-08-21 12:12:03.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2009-08-21 12:23:54.000000000 +0200
+@@ -70,18 +70,8 @@ int cfg80211_wext_siwmode(struct net_dev
+ 	enum nl80211_iftype type;
+ 	int ret;
  
-+enum ssb_pmu_ldo_volt_id {
-+	LDO_PAREF = 0,
-+	LDO_VOLT1,
-+	LDO_VOLT2,
-+	LDO_VOLT3,
-+};
-+
-+void ssb_pmu_set_ldo_voltage(struct ssb_chipcommon *cc,
-+			     enum ssb_pmu_ldo_volt_id id, u32 voltage);
-+void ssb_pmu_set_ldo_paref(struct ssb_chipcommon *cc, bool on);
+-	if (!wdev)
+-		return -EOPNOTSUPP;
+-
+ 	rdev = wiphy_to_dev(wdev->wiphy);
  
- #endif /* LINUX_SSB_CHIPCO_H_ */
--- 
-1.5.6
+-	if (!rdev->ops->change_virtual_intf)
+-		return -EOPNOTSUPP;
+-
+-	/* don't support changing VLANs, you just re-create them */
+-	if (wdev->iftype == NL80211_IFTYPE_AP_VLAN)
+-		return -EOPNOTSUPP;
+-
+ 	switch (*mode) {
+ 	case IW_MODE_INFRA:
+ 		type = NL80211_IFTYPE_STATION;
+@@ -104,9 +94,9 @@ int cfg80211_wext_siwmode(struct net_dev
+ 
+ 	memset(&vifparams, 0, sizeof(vifparams));
+ 
+-	ret = rdev->ops->change_virtual_intf(wdev->wiphy, dev, type,
+-					     NULL, &vifparams);
+-	WARN_ON(!ret && wdev->iftype != type);
++	cfg80211_lock_rdev(rdev);
++	ret = cfg80211_change_iface(rdev, dev, type, NULL, &vifparams);
++	cfg80211_unlock_rdev(rdev);
+ 
+ 	return ret;
+ }
+
 
