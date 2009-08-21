@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45319 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756524AbZHNAnF (ORCPT
+Received: from netsys.kaist.ac.kr ([143.248.239.50]:59709 "EHLO
+	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754794AbZHUI0C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>
-Subject: [PATCH v2 17/25] wireless: remove IEEE 802.11 description on hostapd
-Date: Thu, 13 Aug 2009 20:42:56 -0400
-Message-Id: <1250210584-13374-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 21 Aug 2009 04:26:02 -0400
+Received: from JinsungLeePC (netsys30.kaist.ac.kr [143.248.239.70])
+	by netsys.kaist.ac.kr (8.13.1/8.13.1) with ESMTP id n7L8OFX7022358
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 17:24:15 +0900
+From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
+To: <linux-wireless@vger.kernel.org>
+Subject: Implementing wireless testbed on Linux
+Date: Fri, 21 Aug 2009 17:26:12 +0900
+Message-ID: <029301ca2239$0ac9ad70$205d0850$@kaist.ac.kr>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Its implied as hostap falls under the WLAN_80211 group menu.
+Hello, everyone.
 
-Cc: Jouni Malinen <j@w1.fi>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/hostap/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I'm a Ph.D. student and I'm going to implement wireless testebed consisting
+of more than 20 nodes using WLAN device on Linux.
+Actually, there are a lot of devices and drivers in the world. I can't
+follow all information as you know, which is very difficult job. 
+So, I expect to borrow very valuable knowledge and experience from you.
+Specifically, what I want to do is to set 802.11 MAC parameters such as
+AIFS, CW, TxOp in per-packet basis in user-space.
+In the case of using 802.11n chipset, which card and device driver should I
+choose? At the same time, which version of Linux kernel should be
+appropriate?
+Is there any difference between pci and usb interfaces?
+Definitely, all device and software should be stable and up-to-date.
+Please let me know anything you know related to this issue.
+I'm looking forward to your comments.
+Thanks.
 
-diff --git a/drivers/net/wireless/hostap/Kconfig b/drivers/net/wireless/hostap/Kconfig
-index c15db22..13d074e 100644
---- a/drivers/net/wireless/hostap/Kconfig
-+++ b/drivers/net/wireless/hostap/Kconfig
-@@ -1,5 +1,5 @@
- config HOSTAP
--	tristate "IEEE 802.11 for Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
-+	tristate "Host AP (Prism2/2.5/3 and WEP/TKIP/CCMP)"
- 	depends on WLAN_80211
- 	select WIRELESS_EXT
- 	select CRYPTO
--- 
-1.6.2.5
+----
+Jinsung Lee
+
 
