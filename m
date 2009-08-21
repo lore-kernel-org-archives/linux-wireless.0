@@ -1,232 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45301 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756517AbZHNAnE (ORCPT
+Received: from sj-iport-1.cisco.com ([171.71.176.70]:34978 "EHLO
+	sj-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932482AbZHUSDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 15/25] wireless: move group drivers together
-Date: Thu, 13 Aug 2009 20:42:54 -0400
-Message-Id: <1250210584-13374-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 21 Aug 2009 14:03:46 -0400
+Message-ID: <4A8EE182.6040709@cs.ucla.edu>
+Date: Fri, 21 Aug 2009 11:03:46 -0700
+From: Rafael Laufer <rlaufer@cs.ucla.edu>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
+References: <4A8DED03.2050502@cs.ucla.edu> <1250842695.13872.5.camel@johannes.local> <69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>
+In-Reply-To: <69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The group drivers are now above, individual drivers below.
+Gábor Stefanik wrote:
+> 
+> Maybe a new IEEE80211_TX_CTL_ or IEEE80211_TX_RC_ flag will also be
+> needed, so Radiotap can indicate whether rate_control_get_rate needs
+> to be called.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+ok, I am resending the patch. I included a new flag called 
+IEEE80211_TX_CTL_RATE_RADIOTAP to indicate if the rate has
+been set in the radiotap header. If not, then the rate control
+algorithm is called.
+
+Note that in the future there must be other flags like this to 
+indicate if other parameters, such as power, was also set in
+the radiotap header.
+
+
+Signed-off-by: Rafael Laufer <rlaufer@cs.ucla.edu>
 ---
- drivers/net/wireless/Kconfig |  156 +++++++++++++++++++++---------------------
- 1 files changed, 77 insertions(+), 79 deletions(-)
+ Implementation of the IEEE80211_RADIOTAP_RATE
+ option when parsing radiotap headers to allow
+ rate selection on a per-packet basis. A new
+ flag IEEE80211_TX_CTL_RATE_RADIOTAP is also
+ included to indicate that the rate was set in
+ the radiotap header and therefore the rate
+ control algorithm should not change it.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 6594a3a..4ed50f6 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -110,19 +110,6 @@ menuconfig WLAN_80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
+ include/net/mac80211.h |    4 ++++
+ net/mac80211/tx.c      |   22 +++++++++++++++++++++-
+ 2 files changed, 25 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index aac84d7..819b01e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -272,6 +272,9 @@ struct ieee80211_bss_conf {
+  *	transmit function after the current frame, this can be used
+  *	by drivers to kick the DMA queue only if unset or when the
+  *	queue gets full.
++ * @IEEE80211_TX_CTL_RATE_RADIOTAP: completely internal to mac80211,
++ *	used to indicate that the rate was defined in the received radiotap
++ *	header and therefore the rate control algorithm should not change it.
+  */
+ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_REQ_TX_STATUS		= BIT(0),
+@@ -293,6 +296,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+ 	IEEE80211_TX_CTL_PSPOLL_RESPONSE	= BIT(17),
+ 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
++	IEEE80211_TX_CTL_RATE_RADIOTAP 		= BIT(19),
+ };
  
--config PCMCIA_RAYCS
--	tristate "Aviator/Raytheon 2.4GHz wireless support"
--	depends on PCMCIA && WLAN_80211
--	select WIRELESS_EXT
--	---help---
--	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
--	  (PC-card) wireless Ethernet networking card to your computer.
--	  Please read the file <file:Documentation/networking/ray_cs.txt> for
--	  details.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called ray_cs.  If unsure, say N.
--
- menuconfig MARVELL_80211
- 	bool "Marvell"
- 	depends on WLAN_80211
-@@ -297,15 +284,6 @@ config AT76C50X_USB
- 
- endif # ATMEL_80211
- 
--config PCMCIA_WL3501
--      tristate "Planet WL3501 PCMCIA cards"
--      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
--      select WIRELESS_EXT
--       ---help---
--         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
--	 It has basic support for Linux wireless extensions and initial
--	 micro support for ethtool.
--
- config CONEXANT_ST_80211
- 	bool "Intersil / Conexant / STEricsson"
- 	depends on WLAN_80211
-@@ -400,36 +378,19 @@ config USB_ZD1201
- 
- endif # ZYDAS_80211
- 
--config USB_NET_RNDIS_WLAN
--	tristate "Wireless RNDIS USB support"
--	depends on USB && WLAN_80211 && EXPERIMENTAL
--	depends on CFG80211
--	select USB_USBNET
--	select USB_NET_CDCETHER
--	select USB_NET_RNDIS_HOST
--	select WIRELESS_EXT
-+config BROADCOM_80211
-+	bool "Broadcom"
-+	depends on WLAN_80211
- 	---help---
--	  This is a driver for wireless RNDIS devices.
--	  These are USB based adapters found in devices such as:
-+	  This will enable the support for Broadcom wireless drivers. This
-+	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
- 
--	  Buffalo WLI-U2-KG125S
--	  U.S. Robotics USR5421
--	  Belkin F5D7051
--	  Linksys WUSB54GSv2
--	  Linksys WUSB54GSC
--	  Asus WL169gE
--	  Eminent EM4045
--	  BT Voyager 1055
--	  Linksys WUSB54GSv1
--	  U.S. Robotics USR5420
--	  BUFFALO WLI-USB-G54
-+if BROADCOM_80211
- 
--	  All of these devices are based on Broadcom 4320 chip which is the
--	  only wireless RNDIS chip known to date. Technically RNDIS follows
--	  a specification and although only Broadcom currently supports this
--	  other vendors could technically follow the implementation as well.
-+source "drivers/net/wireless/b43/Kconfig"
-+source "drivers/net/wireless/b43legacy/Kconfig"
- 
--	  If you choose to build a module, it'll be called rndis_wlan.
-+endif # BROADCOM_80211
- 
- config REALTEK_80211
- 	bool "Realtek"
-@@ -527,6 +488,47 @@ config RTL8187_LEDS
- 
- endif # REALTEK_80211
- 
-+menuconfig INTEL_80211
-+	bool "Intel"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Intel wireless drivers. This
-+	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
+ /**
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 10a1099..f675844 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -549,7 +549,12 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	 * If we're associated with the sta at this point we know we can at
+ 	 * least send the frame at the lowest bit rate.
+ 	 */
+-	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
 +
-+if INTEL_80211
-+
-+source "drivers/net/wireless/ipw2x00/Kconfig"
-+source "drivers/net/wireless/iwlwifi/Kconfig"
-+source "drivers/net/wireless/iwmc3200wifi/Kconfig"
-+
-+endif # INTEL_80211
-+
-+source "drivers/net/wireless/ath/Kconfig"
-+source "drivers/net/wireless/rt2x00/Kconfig"
-+source "drivers/net/wireless/wl12xx/Kconfig"
-+
-+config PCMCIA_RAYCS
-+	tristate "Aviator/Raytheon 2.4GHz wireless support"
-+	depends on PCMCIA && WLAN_80211
-+	select WIRELESS_EXT
-+	---help---
-+	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
-+	  (PC-card) wireless Ethernet networking card to your computer.
-+	  Please read the file <file:Documentation/networking/ray_cs.txt> for
-+	  details.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called ray_cs.  If unsure, say N.
-+
-+config PCMCIA_WL3501
-+      tristate "Planet WL3501 PCMCIA cards"
-+      depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-+      select WIRELESS_EXT
-+       ---help---
-+         A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
-+	 It has basic support for Linux wireless extensions and initial
-+	 micro support for ethtool.
-+
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -567,42 +569,38 @@ config MAC80211_HWSIM
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called mac80211_hwsim.  If unsure, say N.
++	/* In monitor mode, if the IEEE80211_RADIOTAP_RATE option is set in 
++	 * the received radiotap header, do not call the rate control algorithm.
++	 */
++	if (likely(!(info->flags & IEEE80211_TX_CTL_RATE_RADIOTAP)))
++		rate_control_get_rate(tx->sdata, tx->sta, &txrc);
  
--source "drivers/net/wireless/p54/Kconfig"
--source "drivers/net/wireless/ath/Kconfig"
--
--menuconfig INTEL_80211
--	bool "Intel"
--	depends on WLAN_80211
--	---help---
--	  This will enable the support for Intel wireless drivers. This
--	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
--
--if INTEL_80211
--
--source "drivers/net/wireless/ipw2x00/Kconfig"
--source "drivers/net/wireless/iwlwifi/Kconfig"
--source "drivers/net/wireless/iwmc3200wifi/Kconfig"
--
--endif # INTEL_80211
--
- source "drivers/net/wireless/hostap/Kconfig"
-+source "drivers/net/wireless/orinoco/Kconfig"
+ 	if (unlikely(info->control.rates[0].idx < 0))
+ 		return TX_DROP;
+@@ -972,6 +977,21 @@ static bool __ieee80211_parse_tx_radiotap(struct ieee80211_tx_data *tx,
+ 				tx->flags |= IEEE80211_TX_FRAGMENTED;
+ 			break;
  
--config BROADCOM_80211
--	bool "Broadcom"
--	depends on WLAN_80211
-+config USB_NET_RNDIS_WLAN
-+	tristate "Wireless RNDIS USB support"
-+	depends on USB && WLAN_80211 && EXPERIMENTAL
-+	depends on CFG80211
-+	select USB_USBNET
-+	select USB_NET_CDCETHER
-+	select USB_NET_RNDIS_HOST
-+	select WIRELESS_EXT
- 	---help---
--	  This will enable the support for Broadcom wireless drivers. This
--	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
--
--if BROADCOM_80211
-+	  This is a driver for wireless RNDIS devices.
-+	  These are USB based adapters found in devices such as:
- 
--source "drivers/net/wireless/b43/Kconfig"
--source "drivers/net/wireless/b43legacy/Kconfig"
-+	  Buffalo WLI-U2-KG125S
-+	  U.S. Robotics USR5421
-+	  Belkin F5D7051
-+	  Linksys WUSB54GSv2
-+	  Linksys WUSB54GSC
-+	  Asus WL169gE
-+	  Eminent EM4045
-+	  BT Voyager 1055
-+	  Linksys WUSB54GSv1
-+	  U.S. Robotics USR5420
-+	  BUFFALO WLI-USB-G54
- 
--endif # BROADCOM_80211
-+	  All of these devices are based on Broadcom 4320 chip which is the
-+	  only wireless RNDIS chip known to date. Technically RNDIS follows
-+	  a specification and although only Broadcom currently supports this
-+	  other vendors could technically follow the implementation as well.
- 
--source "drivers/net/wireless/rt2x00/Kconfig"
--source "drivers/net/wireless/orinoco/Kconfig"
--source "drivers/net/wireless/wl12xx/Kconfig"
-+	  If you choose to build a module, it'll be called rndis_wlan.
- 
- endmenu
++		/* Get the rate parameter from the radiotap header, 
++		 * allowing rate selection on a per-packet basis 
++		 */
++		case IEEE80211_RADIOTAP_RATE:
++			bitrate = (*iterator.this_arg) * 5;
++			for (i = 0; i < sband->n_bitrates; i++) {
++				if (sband->bitrates[i].bitrate == bitrate)
++					break;
++			}
++			if (i != sband->n_bitrates) {
++				info->control.rates[0].idx = i;
++				info->flags |= IEEE80211_TX_CTL_RATE_RADIOTAP;
++			}
++			break;
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
 -- 
-1.6.2.5
+1.6.0.4
 
