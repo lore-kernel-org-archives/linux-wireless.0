@@ -1,57 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12336 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30129 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932350AbZHUSY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 14:24:28 -0400
-Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
- again
-From: reinette chatre <reinette.chatre@intel.com>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <69e28c910908211110h5a326f4cw7e21cc424bc5fbdc@mail.gmail.com>
-References: <4A8DC955.9060100@gmail.com>
-	 <1250872433.30019.14430.camel@rc-desk>
-	 <69e28c910908211024n1c255b3p160839c60ae0b3a@mail.gmail.com>
-	 <1250877589.30019.14474.camel@rc-desk>
-	 <69e28c910908211110h5a326f4cw7e21cc424bc5fbdc@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 21 Aug 2009 11:24:29 -0700
-Message-Id: <1250879069.30019.14482.camel@rc-desk>
+	id S1754215AbZHUNXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 09:23:52 -0400
+Subject: Re: [PATCH] libertas: don't use dynamic-sized array
+From: Dan Williams <dcbw@redhat.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1250701760.5351.42.camel@localhost.localdomain>
+References: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
+	 <1250210080-21960-1-git-send-email-andrey@cozybit.com>
+	 <1250701760.5351.42.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Fri, 21 Aug 2009 08:24:00 -0500
+Message-Id: <1250861040.2876.22.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gábor,
+On Wed, 2009-08-19 at 12:09 -0500, Dan Williams wrote:
+> On Thu, 2009-08-13 at 17:34 -0700, Andrey Yurovsky wrote:
+> > sparse complains about a bad constant expression due to the use of a
+> > dynamic-sized array in get_common_rates().  Allocate and free the array
+> > instead.
+> 
+> Mind testing this patch from libertas-dev?  It should fix this but also
+> clears up some of the confustion:
 
-On Fri, 2009-08-21 at 11:10 -0700, Gábor Stefanik wrote:
+FWIW this patch now tested with sd8686.
 
-> That can be done, yes. It is also a good idea to convert
-> iwl_is_monitor_mode(priv) calls with TX_CTL_INJECTED checks, as
-> mac80211 will set IEEE80211_TX_CTL_INJECTED if and only if the packet
-> arrived from a monitor interface.
+Dan
 
-I don't think that is the intention of that function.
-iwl_is_monitor_mode() needs to return whether the interface is in
-monitor mode or not and being in monitor mode is specifically when some
-filter flags are set up. This is what is tested in this function. 
-
->  (However, when I submitted the first
-> patches to iwlwifi to enable injection, they were rejected
-> specifically because I checked INJECTED in iwl_tx_skb/iwl394_tx_skb,
-> rather than adding a monitor mode case to iwl_get_sta_id... times
-> change I guess.) I'll submit a patch for this.
-
-Sure - you can move the check to iwl_get_sta_id. You will need to
-indicate to that function that the frame is being injected.
-
-Reinette
-
-
-
-
+>                            Subject: 
+> Re: Libertas: Association request to
+> the driver failed
+>                               Date: 
+> Wed, 12 Aug 2009 12:34:17 -0500
+> 
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
+> 
+> 
+> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
+> index 1902b6f..8c05388 100644
+> --- a/drivers/net/wireless/libertas/assoc.c
+> +++ b/drivers/net/wireless/libertas/assoc.c
+> @@ -35,7 +35,8 @@ static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
+>   *
+>   *  @param priv     A pointer to struct lbs_private structure
+>   *  @param rates       the buffer which keeps input and output
+> - *  @param rates_size  the size of rate1 buffer; new size of buffer on return
+> + *  @param rates_size  the size of rates buffer; new size of buffer on return,
+> + *                     which will be less than or equal to original rates_size
+>   *
+>   *  @return            0 on success, or -1 on error
+>   */
+> @@ -43,39 +44,42 @@ static int get_common_rates(struct lbs_private *priv,
+>         u8 *rates,
+>         u16 *rates_size)
+>  {
+> -       u8 *card_rates = lbs_bg_rates;
+> -       int ret = 0, i, j;
+> -       u8 tmp[(ARRAY_SIZE(lbs_bg_rates) - 1) * (*rates_size - 1)];
+> -       size_t tmp_size = 0;
+> -
+> -       /* For each rate in card_rates that exists in rate1, copy to tmp */
+> -       for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
+> -               for (j = 0; j < *rates_size && rates[j]; j++) {
+> -                       if (rates[j] == card_rates[i])
+> -                               tmp[tmp_size++] = card_rates[i];
+> +       int i, j;
+> +       u8 intersection[MAX_RATES];
+> +       u16 intersection_size;
+> +       u16 num_rates = 0;
+> +
+> +       intersection_size = min_t(u16, *rates_size, ARRAY_SIZE(intersection));
+> +
+> +       /* Allow each rate from 'rates' that is supported by the hardware */
+> +       for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && lbs_bg_rates[i]; i++) {
+> +               for (j = 0; j < intersection_size && rates[j]; j++) {
+> +                       if (rates[j] == lbs_bg_rates[i])
+> +                               intersection[num_rates++] = rates[j];
+>                 }
+>         }
+>  
+>         lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
+> -       lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
+> +       lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", lbs_bg_rates,
+>                         ARRAY_SIZE(lbs_bg_rates));
+> -       lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
+> +       lbs_deb_hex(LBS_DEB_JOIN, "common rates", intersection, num_rates);
+>         lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
+>  
+>         if (!priv->enablehwauto) {
+> -               for (i = 0; i < tmp_size; i++) {
+> -                       if (tmp[i] == priv->cur_rate)
+> +               for (i = 0; i < num_rates; i++) {
+> +                       if (intersection[i] == priv->cur_rate)
+>                                 goto done;
+>                 }
+>                 lbs_pr_alert("Previously set fixed data rate %#x isn't "
+>                        "compatible with the network.\n", priv->cur_rate);
+> -               ret = -1;
+> +               return -1;
+>         }
+> +
+>  done:
+>         memset(rates, 0, *rates_size);
+> -       *rates_size = min_t(int, tmp_size, *rates_size);
+> -       memcpy(rates, tmp, *rates_size);
+> -       return ret;
+> +       *rates_size = num_rates;
+> +       memcpy(rates, intersection, num_rates);
+> +       return 0;
+>  }
+>  
+> 
+> @@ -317,8 +321,8 @@ static int lbs_associate(struct lbs_private *priv,
+>  
+>         rates = (struct mrvl_ie_rates_param_set *) pos;
+>         rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
+> -       memcpy(&rates->rates, &bss->rates, MAX_RATES);
+> -       tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
+> +       tmplen = min_t(u16, ARRAY_SIZE(bss->rates), MAX_RATES);
+> +       memcpy(&rates->rates, &bss->rates, tmplen);
+>         if (get_common_rates(priv, rates->rates, &tmplen)) {
+>                 ret = -1;
+>                 goto done;
+> @@ -592,7 +596,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
+>  
+>         /* Copy Data rates from the rates recorded in scan response */
+>         memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
+> -       ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
+> +       ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), ARRAY_SIZE (bss->rates));
+>         memcpy(cmd.bss.rates, bss->rates, ratesize);
+>         if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
+>                 lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
