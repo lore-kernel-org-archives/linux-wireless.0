@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:52271 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244AbZHRJwQ (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:18236 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809AbZHUNWE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 05:52:16 -0400
-Date: Tue, 18 Aug 2009 11:52:17 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
+	Fri, 21 Aug 2009 09:22:04 -0400
+Received: by fg-out-1718.google.com with SMTP id e21so176348fga.17
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 06:22:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1250842889.13872.8.camel@johannes.local>
+References: <4A8DC955.9060100@gmail.com> <1250842889.13872.8.camel@johannes.local>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 21 Aug 2009 15:21:43 +0200
+Message-ID: <69e28c910908210621t3e239f09w6a2037e8c37b40ae@mail.gmail.com>
+Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
+	again
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/29] mwl8k: remove usage of deprecated radio_enabled
-Message-ID: <20090818095217.GA6195@mail.wantstofly.org>
-References: <20090818035220.GN18639@mail.wantstofly.org> <1250580509.30538.2.camel@johannes.local> <20090818082537.GK18639@mail.wantstofly.org> <1250583993.30538.3.camel@johannes.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1250583993.30538.3.camel@johannes.local>
+Cc: John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Rafael Laufer <rlaufer@cs.ucla.edu>,
+	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 18, 2009 at 10:26:33AM +0200, Johannes Berg wrote:
+2009/8/21 Johannes Berg <johannes@sipsolutions.net>:
+> On Fri, 2009-08-21 at 00:08 +0200, Gábor Stefanik wrote:
+>
+>>       /* If this frame is broadcast or management, use broadcast station id */
+>> -     if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
+>> +     if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
+>> +         iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
+>>               return priv->hw_params.bcast_sta_id;
+>
+> Now you still can't transmit frames to another AP when connected to one,
+> which will, for example, be required for 11r. IMHO that code should, in
+> STATION mode, be checking the RA against the BSSID, and if they match
+> use the AP ID, otherwise the bcast ID.
 
-> > The logic is just:
-> > 
-> > 	if (idle) {
-> > 		issue "radio disable" command
-> > 	} else {
-> > 		issue "radio enable" command
-> > 		set channel
-> > 		set tx power
-> > 		set antenna config
-> > 	}
-> > 
-> > So if a channel change hapens while we are idle, that event won't get
-> > lost -- it'll just happen later.
-> 
-> Ok, yeah, that looks fine.
+I'll probably do that, in a separate patch. This patch is a regression
+fix targeted at the next 2.6.31-rc (injection of non-broadcasts works
+fine in 2.6.30, but causes an ucode SYSASSERT in 2.6.31 and up). The
+problem you are describing is not a regression AFAIK, it's something
+that never worked; so it should be targeted @ 2.6.32.
 
-OK, thanks.
+> And remove the warning in the
+> default case, since that's what happens if in pure monitor mode afaict.
 
-Since your patch is already in, I've replaced this patch by:
+>From my limited testing, in monitor mode, the vif type will be
+IFTYPE_STATION, so the default case is never hit. (Is this a bug?)
+
+(BTW now that in mac80211, we internally use IFTYPE_MONITOR in monitor
+mode, as opposed to just checking for a missing STA - why can't we
+propagate this to the drivers, and have a much saner way of informing
+the driver of monitor mode? This is especially a problem for zd1211rw,
+where to get proper monitor mode, ZD_SNIFFER_ON needs to be turned
+on.)
+
+>
+> johannes
+>
 
 
->From 1af73ff8d1309b924f6f4accd61245b57374dd78 Mon Sep 17 00:00:00 2001
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-Date: Mon, 17 Aug 2009 23:59:40 +0200
-Subject: [PATCH 15/29] mwl8k: implement rfkill
 
-By checking IEEE80211_CONF_CHANGE_IDLE in mwl8k_config().
-
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 177d92f..65eefe8 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2854,6 +2854,12 @@ static int mwl8k_config_wt(struct work_struct *wt)
- 	struct mwl8k_priv *priv = hw->priv;
- 	int rc = 0;
- 
-+	if (conf->flags & IEEE80211_CONF_IDLE) {
-+		mwl8k_cmd_802_11_radio_disable(hw);
-+		priv->current_channel = NULL;
-+		goto mwl8k_config_exit;
-+	}
-+
- 	if (mwl8k_cmd_802_11_radio_enable(hw)) {
- 		rc = -EINVAL;
- 		goto mwl8k_config_exit;
 -- 
-1.5.6.4
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
