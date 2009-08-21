@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50669 "EHLO hera.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:15445 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754792AbZHYJ56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 05:57:58 -0400
-Subject: [PATCH] PRISM54: fix compilation warning
-From: Jaswinder Singh Rajput <jaswinder@kernel.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 25 Aug 2009 15:28:45 +0530
-Message-Id: <1251194335.2399.19.camel@Fedora32.jaswinder>
+	id S932597AbZHUVDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 17:03:50 -0400
+Subject: [PATCH 14/14 v2] MAINTAINERS: Update ipw2x00 and iwlwifi entries
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Joe Perches <joe@perches.com>
+In-Reply-To: <1250888170.29546.106.camel@Joe-Laptop.home>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+	 <1250886867-4112-15-git-send-email-reinette.chatre@intel.com>
+	 <1250888170.29546.106.camel@Joe-Laptop.home>
+Content-Type: text/plain
+Date: Fri, 21 Aug 2009 14:03:51 -0700
+Message-Id: <1250888631.30019.14496.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Reinette Chatre <reinette.chatre@intel.com>
 
- CC [M]  drivers/net/wireless/prism54/islpci_eth.o
-drivers/net/wireless/prism54/islpci_eth.c: In function ‘islpci_eth_cleanup_transmit’:
-drivers/net/wireless/prism54/islpci_eth.c:53: warning: cast from pointer to integer of different size
-drivers/net/wireless/prism54/islpci_eth.c: In function ‘islpci_eth_receive’:
-drivers/net/wireless/prism54/islpci_eth.c:453: warning: cast from pointer to integer of different size
+Update MAINTAINERS file to reflect current maintenance status of ipw2x00
+drivers. We remove James's name as he is not involved with this project
+anymore. We also update the Status to "Odd Fixes". This has been true for a
+while now, we have to make it official. There is also a new email address
+with which all relevant people can be reached. The same email address
+should be used for iwlwifi.
 
-Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Cc: James Ketrenos <jketreno@linux.intel.com>
+Acked-by: James Ketrenos <jketreno@linux.intel.com>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 ---
- drivers/net/wireless/prism54/islpci_eth.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+v2: Include full name "Intel Linux Wireless" for general mailing address.
 
-diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/prism54/islpci_eth.c
-index 8f62109..80a9a9c 100644
---- a/drivers/net/wireless/prism54/islpci_eth.c
-+++ b/drivers/net/wireless/prism54/islpci_eth.c
-@@ -50,7 +50,7 @@ islpci_eth_cleanup_transmit(islpci_private *priv,
+ MAINTAINERS |   14 +++++---------
+ 1 files changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8d8d495..a8b8d28 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2653,25 +2653,21 @@ F:	drivers/net/ixgbe/
  
- 		/* check for holes in the arrays caused by multi fragment frames
- 		 * searching for the last fragment of a frame */
--		if (priv->pci_map_tx_address[index] != (dma_addr_t) NULL) {
-+		if (priv->pci_map_tx_address[index]) {
- 			/* entry is the last fragment of a frame
- 			 * free the skb structure and unmap pci memory */
- 			skb = priv->data_low_tx[index];
-@@ -450,7 +450,7 @@ islpci_eth_receive(islpci_private *priv)
- 		    pci_map_single(priv->pdev, (void *) skb->data,
- 				   MAX_FRAGMENT_SIZE_RX + 2,
- 				   PCI_DMA_FROMDEVICE);
--		if (unlikely(priv->pci_map_rx_address[index] == (dma_addr_t) NULL)) {
-+		if (unlikely(!priv->pci_map_rx_address[index])) {
- 			/* error mapping the buffer to device accessable memory address */
- 			DEBUG(SHOW_ERROR_MESSAGES,
- 			      "Error mapping DMA address\n");
+ INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
+ M:	Zhu Yi <yi.zhu@intel.com>
+-M:	James Ketrenos <jketreno@linux.intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
++M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+-L:	ipw2100-devel@lists.sourceforge.net
+-W:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2100.sourceforge.net
+-S:	Supported
++S:	Odd Fixes
+ F:	Documentation/networking/README.ipw2100
+ F:	drivers/net/wireless/ipw2x00/ipw2100.*
+ 
+ INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
+ M:	Zhu Yi <yi.zhu@intel.com>
+-M:	James Ketrenos <jketreno@linux.intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
++M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+-L:	ipw2100-devel@lists.sourceforge.net
+-W:	http://lists.sourceforge.net/mailman/listinfo/ipw2100-devel
+ W:	http://ipw2200.sourceforge.net
+-S:	Supported
++S:	Odd Fixes
+ F:	Documentation/networking/README.ipw2200
+ F:	drivers/net/wireless/ipw2x00/ipw2200.*
+ 
+@@ -2688,8 +2684,8 @@ F:	include/linux/wimax/i2400m.h
+ INTEL WIRELESS WIFI LINK (iwlwifi)
+ M:	Zhu Yi <yi.zhu@intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
++M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+-L:	ipw3945-devel@lists.sourceforge.net
+ W:	http://intellinuxwireless.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+ S:	Supported
 -- 
-1.6.2.5
+1.5.6.3
 
 
 
