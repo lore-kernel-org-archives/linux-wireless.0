@@ -1,68 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40787 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbZHFEgD (ORCPT
+Received: from mail-px0-f196.google.com ([209.85.216.196]:44920 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932662AbZHURZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 00:36:03 -0400
-Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	stephen.chen@atheros.com, linux-usb@vger.kernel.org
-In-Reply-To: <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
-References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
-	 <1249532170.21101.3.camel@localhost.localdomain>
-	 <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 05 Aug 2009 21:35:57 -0700
-Message-Id: <1249533357.21101.5.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Fri, 21 Aug 2009 13:25:50 -0400
+Message-ID: <4A8ED89A.7090609@lwfinger.net>
+Date: Fri, 21 Aug 2009 12:25:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-08-21
+References: <20090821170324.GC8532@tuxdriver.com>
+In-Reply-To: <20090821170324.GC8532@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luiz,
-
-> >> New Atheros USB devices will use 0x0cf3. The first device
-> >> will be ar9271, for which we are adding support for.
-> >>
-> >> Cc: zhifeng.cai@atheros.com
-> >> Cc: stephen.chen@atheros.com
-> >> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >> ---
-> >>
-> >> John, sending this through you as this is only
-> >> specific to wireless, at least at the moment.
-> >>
-> >>  include/linux/pci_ids.h |    1 +
-> >>  1 files changed, 1 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> >> index 73b46b6..27f4e6b 100644
-> >> --- a/include/linux/pci_ids.h
-> >> +++ b/include/linux/pci_ids.h
-> >> @@ -2170,6 +2170,7 @@
-> >>  #define PCI_DEVICE_ID_BCM1250_HT     0x0002
-> >>
-> >>  #define PCI_VENDOR_ID_ATHEROS                0x168c
-> >> +#define PCI_VENDOR_ID_ATHEROS_USB    0x0cf3
-> >
-> > this is confusing the hell out of me. What are you adding here.
+John W. Linville wrote:
+> Dave,
 > 
-> No you're right, my fault.
+> One more straggler for 2.6.31...without this rtl8187b devices simply
+> don't work. :-(
 > 
-> > A USB
-> > vendor id or a PCI one. Is the ar9271 a PCI device or a USB device?
-> 
-> Its only USB.
-> 
-> Thanks... hm I see no USB vendor id headers. Guess we won't need to add this.
+> The patch is small and isolated to rtl8187.  I think we should take
+> it for 2.6.31.
 
-the closest we have is drivers/hid/hid-ids.h and we might just should
-have Greg create a usb-ids.h file.
-
-Regards
-
-Marcel
-
+Note: This patch should fix Bugzilla #13960, which is a regression
+since 2.6.30. The OP has not yet reported back, but it fixed the same
+condition on my computer.
 
