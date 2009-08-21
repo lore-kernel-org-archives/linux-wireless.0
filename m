@@ -1,89 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:52882 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753974AbZHZXqB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 19:46:01 -0400
-Received: by iwn42 with SMTP id 42so425562iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 16:46:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	<43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
-	<3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 Aug 2009 16:45:43 -0700
-Message-ID: <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
-	rfkill support)
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	hal@lists.freedesktop.org, htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:9226 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932551AbZHUUe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:27 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/14] iwlwifi and ipw2x00 driver updates
+Date: Fri, 21 Aug 2009 13:34:13 -0700
+Message-Id: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 3:55 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
-> On Wed, Aug 26, 2009 at 11:28 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Wed, Aug 26, 2009 at 3:11 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->>> (added list hal to To:, since it has become relevant; previous
->>> exchanges of the thread on linux-wireless)
->>>
->>> On Wed, Aug 26, 2009 at 5:29 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->>>> On Wed, Aug 26, 2009 at 3:34 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
->>>>> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
->>>>>
->>>>>> > Or wait ... are you using compat-wireless?
->>>>>>
->>>>>> Yes, I am. I mentioned this and did wonder if the _backport/ part
->>>>>> in /sys/class is important.
->>>>>
->>>>> Sorry, didn't see.
->>>>>
->>>>> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
->>>>> some compat*.h but obviously the kernel won't ever call that notifier,
->>>>> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
->>>>> handle that -- it'll be working fine in a regular tree.
->>>>>
->>>>> Luis, the only way to handle that would be to manually call the PRE_UP
->>>>> notifier from mac80211's subif_open() and if that returns an error
->>>>> (warning: the calling convention is weird) return the error... that's
->>>>> weird but would work.
->>>>>
->>>>> johannes
->>>>>
->>>>
->>>> Hmm, got a bit side-tracked. But hal doesn't know the device having a
->>>> killswitch is still wrong somewhere?
->>>> (i.e. am wondering where we should advertise that ability, or how hal
->>>> works that out)
->>>>
->>>> Hin-Tak
->>>>
->>>
->>> I looked into hal and I can now say that it is certainly not
->>> compat-wireless "rfkill_backport"-aware; apparently all it does is
->>> monitoring entries under /sys/class that it knows about. I made a
->>> quick hack:
->>
->> This is wrong, we just do not need to use rfkill_backport for sysfs
->> stuff, consider sending me patch that removes that hunk for
->> compat-wireless instead and test it.
->>
->>  Luis
->>
->
-> Hmm, I did mention the other option - make rfkill_backport exposes its
-> data structure as '/sys/class/rfkill' instead of
-> '/sys/class/rfkill_backport'. Is there any reason why
-> compat-wireless's rfkill_backport  does not called itself 'rfkill' and
-> unload and replace the old rfkill? That would be much neater, and
-> userland tools like hal won't need to know anything about
-> compat-wireless.
+We include a few fixes surrounding TX power. We support enhanced TX power
+information provided by newer hardware. The fixes to HT continue. We also
+include two general bugfixes: fix error when bringing interface down
+that has hardware key set and cancelling scan when bringing interface
+down.
 
-Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
+We also include two administrative patches to ipw2x00 to update maintenance
+status and contact information.
 
-  Luis
+[PATCH 01/14] iwlwifi: set default tx power user limit to minimal
+[PATCH 02/14] iwlwifi: do not allow set tx power over channel power limit
+[PATCH 03/14] iwlwifi: name changes from "tx_power_channel_lmt" to "tx_power_device_lmt"
+[PATCH 04/14] iwlwifi: error checking for setting tx_power in sysfs
+[PATCH 05/14] iwlwifi: change IWL6000_UCODE_API_MAX to v4
+[PATCH 06/14] iwlwifi: show current tx power
+[PATCH 07/14] iwlwifi: clear rate control flags on non-HT packet
+[PATCH 08/14] iwlwifi: set HT flags in ieee80211_rx_status for received packets
+[PATCH 09/14] iwlwifi: remove duplicated define
+[PATCH 10/14] iwlwifi: read enhanced tx power info from EEPROM image
+[PATCH 11/14] iwlwifi: fix remove key error
+[PATCH 12/14] iwlwifi: fix unloading driver while scanning
+[PATCH 13/14] ipw2x00: update contact information
+[PATCH 14/14] MAINTAINERS: Update ipw2x00 and iwlwifi entries
+
+
+Thank you
+
+Reinette
+
