@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:33534 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbZHSSTo (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.234]:43806 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990AbZHUMNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:19:44 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1538980qwh.37
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2009 11:19:45 -0700 (PDT)
+	Fri, 21 Aug 2009 08:13:15 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so242548rvb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 05:13:16 -0700 (PDT)
+Message-ID: <4A8E8F59.9050706@lwfinger.net>
+Date: Fri, 21 Aug 2009 07:13:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Wed, 19 Aug 2009 11:19:44 -0700
-Message-ID: <8f3763990908191119l37c7dff3y8884b1228059cb22@mail.gmail.com>
-Subject: bug? sme.c:610 __cfg80211_disconnected
-From: ASIC Felix <ic.felix@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: feng tian <feng.of.tian@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Abour linux driver supports BCM4325
+References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+In-Reply-To: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+feng tian wrote:
+> Dear All,
+> 
+> We are working on a project which supports the BCM4325 linux wireless
+> driver. The interface between the BCM chip and SOC(pxa310) is SDIO.
+> I did some searches online and found that there is no available driver
+> for this chip. Do I have to implement this myself? Is there anyone can
+> provide us some related materials?  Thanks very much.
 
-update:
-   occurs during rekeying/reauth on wpa2 office network
-   still present in master-2009-08-19
+The code for the LP PHY, which I believe is present in the 4325, is
+just being written. At the moment, the chip is able to receive on some
+channels, and may be able to transmit. These results are reported on
+this mailing list, and the code is being applied to the wireless
+testing git tree.
 
-Aug 19 11:04:02 darkslate klogd: WARNING: at net/wireless/sme.c:613
-__cfg80211_disconnected+0x1bc/0x210 [cfg80211]()
-
-Cheers,
-Felix
+Larry
