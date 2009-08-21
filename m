@@ -1,130 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:65358 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752207AbZH0STX (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53053 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932161AbZHUOpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 14:19:23 -0400
-Received: by ewy2 with SMTP id 2so1467812ewy.17
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 11:19:24 -0700 (PDT)
-Message-ID: <4A96CE28.3040800@gmail.com>
-Date: Thu, 27 Aug 2009 20:19:20 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC/RFT] b43: Implement antenna diversity support for LP-PHY
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 21 Aug 2009 10:45:24 -0400
+Subject: Re: Plans for an online meeting regarding Radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Richard Farina <sidhayn@gmail.com>,
+	Mike Kershaw <dragorn@kismetwireless.net>,
+	Sam Leffler <sam@freebsd.org>,
+	Rafael Laufer <rlaufer@cs.ucla.edu>,
+	Damien Bergamini <damien.bergamini@free.fr>,
+	Sepherosa Ziehau <sepherosa@gmail.com>,
+	Thomas d'Otreppe <tdotreppe@aircrack-ng.org>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	radiotap <radiotap@radiotap.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	freebsd-mobile <freebsd-mobile@freebsd.org>,
+	misc-openbsd <misc@openbsd.org>, tech-openbsd <tech@openbsd.org>,
+	netbsd-net <tech-net@netbsd.org>,
+	wireshark-dev <wireshark-dev@wireshark.org>
+In-Reply-To: <69e28c910908210741wd3bc391x311523f5b55fd4f1@mail.gmail.com>
+References: <4A8EAFA6.9010608@gmail.com>
+	 <1250865255.4600.6.camel@johannes.local>
+	 <69e28c910908210741wd3bc391x311523f5b55fd4f1@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JaV4Oxpf3uVUP0bg8tdb"
+Date: Fri, 21 Aug 2009 16:45:18 +0200
+Message-Id: <1250865918.4600.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-This intentionally deviates slightly from the spec (writing
-the antenna ID in one pass instead of two) - please test if
-this works. (I don't have the tools to test if it actually
-selects the right antenna.)
 
-The A/G-PHY changes are fallout fixes from the enum change,
-which in turn allows the LP-PHY code to be much simpler.
-The antenna_to_phyctl change is a fix for a potential
-existing bug that this patch may otherwise trigger.
+--=-JaV4Oxpf3uVUP0bg8tdb
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/b43/main.c       |    3 ++-
- drivers/net/wireless/b43/phy_a.c      |    2 +-
- drivers/net/wireless/b43/phy_common.h |   10 +++++-----
- drivers/net/wireless/b43/phy_g.c      |    2 +-
- drivers/net/wireless/b43/phy_lp.c     |   11 ++++++++++-
- 5 files changed, 19 insertions(+), 9 deletions(-)
+On Fri, 2009-08-21 at 16:41 +0200, G=C3=A1bor Stefanik wrote:
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 289e06c..3b038c9 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1456,7 +1456,8 @@ static u16 b43_antenna_to_phyctl(int antenna)
- 		return B43_TXH_PHY_ANT2;
- 	case B43_ANTENNA3:
- 		return B43_TXH_PHY_ANT3;
--	case B43_ANTENNA_AUTO:
-+	case B43_ANTENNA_AUTO0:
-+	case B43_ANTENNA_AUTO1:
- 		return B43_TXH_PHY_ANT01AUTO;
- 	}
- 	B43_WARN_ON(1);
-diff --git a/drivers/net/wireless/b43/phy_a.c b/drivers/net/wireless/b43/phy_a.c
-index 816e028..809ec97 100644
---- a/drivers/net/wireless/b43/phy_a.c
-+++ b/drivers/net/wireless/b43/phy_a.c
-@@ -531,7 +531,7 @@ static void b43_aphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
- 
- 	tmp = b43_phy_read(dev, B43_PHY_BBANDCFG);
- 	tmp &= ~B43_PHY_BBANDCFG_RXANT;
--	tmp |= (autodiv ? B43_ANTENNA_AUTO0 : antenna)
-+	tmp |= (autodiv ? B43_ANTENNA_AUTO1 : antenna)
- 	    << B43_PHY_BBANDCFG_RXANT_SHIFT;
- 	b43_phy_write(dev, B43_PHY_BBANDCFG, tmp);
- 
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index b47a0f5..a6a90df 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -49,11 +49,11 @@ enum b43_interference_mitigation {
- 
- /* Antenna identifiers */
- enum {
--	B43_ANTENNA0,		/* Antenna 0 */
--	B43_ANTENNA1,		/* Antenna 0 */
--	B43_ANTENNA_AUTO1,	/* Automatic, starting with antenna 1 */
--	B43_ANTENNA_AUTO0,	/* Automatic, starting with antenna 0 */
--	B43_ANTENNA2,
-+	B43_ANTENNA0 = 0,	/* Antenna 0 */
-+	B43_ANTENNA1 = 1,	/* Antenna 1 */
-+	B43_ANTENNA_AUTO0 = 2,	/* Automatic, starting with antenna 0 */
-+	B43_ANTENNA_AUTO1 = 3,	/* Automatic, starting with antenna 1 */
-+	B43_ANTENNA2 = 4,
- 	B43_ANTENNA3 = 8,
- 
- 	B43_ANTENNA_AUTO = B43_ANTENNA_AUTO0,
-diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-index c6c9d2f..c6d639d 100644
---- a/drivers/net/wireless/b43/phy_g.c
-+++ b/drivers/net/wireless/b43/phy_g.c
-@@ -2651,7 +2651,7 @@ static void b43_gphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
- 
- 	tmp = b43_phy_read(dev, B43_PHY_BBANDCFG);
- 	tmp &= ~B43_PHY_BBANDCFG_RXANT;
--	tmp |= (autodiv ? B43_ANTENNA_AUTO0 : antenna)
-+	tmp |= (autodiv ? B43_ANTENNA_AUTO1 : antenna)
- 			<< B43_PHY_BBANDCFG_RXANT_SHIFT;
- 	b43_phy_write(dev, B43_PHY_BBANDCFG, tmp);
- 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 837d952..457357a 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -2204,7 +2204,16 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
- 
- static void b43_lpphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
- {
--	//TODO
-+	int autodiv = ;
-+
-+	if (dev->phy.rev >= 2)
-+		return; // rev2+ doesn't support antenna diversity
-+
-+	if (B43_WARN_ON(antenna > B43_ANTENNA_AUTO1))
-+		return;
-+
-+	/* NOTE: The spec breaks this up into 2 writes - please test */
-+	b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFFC, antenna);
- }
- 
- static void b43_lpphy_op_adjust_txpower(struct b43_wldev *dev)
--- 
-1.6.2.4
+> My intention with the meeting is to form an actual proposal that all
+> implementors can agree on. We can produce proposals, and even new
+> standardized fields to no avail, as some implementors (especially
+> OpenBSD) appear to be stuck with implementations that collide with the
+> standard. These implementors need to be "awakened" and entered into
+> the discussions before anything can be done.
 
+There's nothing the standard can do about that. Like I said, we've
+talked about that enough in my opinion.
 
+> > Your own proposal had technical flaws (and in my opinion tried to do to=
+o
+> > much at a time) that you haven't addressed -- doing that would be much
+> > more productive than any such meeting.
+>=20
+> What technical flaws are you trying to point out exactly? (The TX
+> flags field? My point is that it's worthless to "standardize" TX flags
+> by extending it and moving to "Defined fields" if noone is willing to
+> implement it.)
+
+But people are already implementing it, and if they do something else
+that's their problem. The flaw I'm thinking of was over the RTS/CTS
+handling where some people (including myself) had comments. Besides,
+you're supposed to make at least two implementations when proposing a
+standard field.
+
+johannes
+
+--=-JaV4Oxpf3uVUP0bg8tdb
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKjrL7AAoJEODzc/N7+QmahHIP/1MlzeKmu9boxW2wEDfO/0gn
+td56z1fQ1NabN43P/bzwVih9Ia8aa5Z1JVDV7MARTkFRtHdPpuOhgA9h6D6aAzKv
+HeZXyigvajRpMbn2i8t4ZFWull6E4ROoglZKtUsVg1acoPZyBCUl4Zu/DOOViEvk
+FLLLOF50LD6/OGin4g4nrLD2OLo4NDFXOwdUDneJrJVnPnnJAzI/49f5DnPpmOK2
+i7XfD/OHCyIT5VJsDV1+gCDav5Rvmync9dkle3NiENZareINrTc+QtyFdXlQbDyx
+btl+Ha/ZDL2GwYq36wrTOAyu01C3jF8uhpb+cim19VTAUImQXxad+EonIXh3rjo0
+JU2xaLFITadjEf9lwnnXwBmmJpMCdZMYRsDE2Iq4fHnhyDcj5Zye0CI6GGa00DHP
+P3+O6iKsbci/67eQJNvirVUEk6QihLPizpxaQwiJ8EQGUSUQegoIQ/HHePn9v/Ph
+ZTNBoCcZNyeaDBQZQeG61xNQyNXl93hg0FvvB5eRhVZIEWuTu1WYWYikKSvPVERE
+Zgrmar4NssmASwpbojMtO3uUtjv9f/O0wFNwcUtk4YZ9srZdJaDBojzAmvigmPVa
+xUGVQU+rt0UF9GnEov8VkRbcQrXqP2RLDbSWp04Wq8qgWBlrzcxSzItdgC/ktDpZ
+1SKhTx1lbDAYQr+0bbMB
+=QXFI
+-----END PGP SIGNATURE-----
+
+--=-JaV4Oxpf3uVUP0bg8tdb--
 
