@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53181 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757854AbZHQR1d (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932103AbZHUISS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:33 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v5 32/33] wireless: update mac80211 kconfig entry
-Date: Mon, 17 Aug 2009 13:27:31 -0400
-Message-Id: <1250530052-14783-33-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 21 Aug 2009 04:18:18 -0400
+Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rafael Laufer <rlaufer@cs.ucla.edu>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4A8DED03.2050502@cs.ucla.edu>
+References: <4A8DED03.2050502@cs.ucla.edu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gSQs2vxkJZF+6G5lWbPX"
+Date: Fri, 21 Aug 2009 10:18:15 +0200
+Message-Id: <1250842695.13872.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This updates the mac80211 kconfig entry to clarify
-what it is and refer people to our wireless wiki for
-more documentation.
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/Kconfig |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
+--=-gSQs2vxkJZF+6G5lWbPX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 9db4ff8..72006f9 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,5 +1,5 @@
- config MAC80211
--	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
-+	tristate "mac80211 - SoftMAC device support"
- 	depends on CFG80211
- 	select CRYPTO
- 	select CRYPTO_ECB
-@@ -7,8 +7,21 @@ config MAC80211
- 	select CRYPTO_AES
- 	select CRC32
- 	---help---
--	  This option enables the hardware independent IEEE 802.11
--	  networking stack.
-+	  This option enables support for a framework used by IEEE-802.11
-+	  SoftMAC devices. SoftMAC devices allow for a finer control of the
-+	  hardware, allowing for 802.11 frame management to be done in software
-+	  for them, for both parsing and generation of 802.11 wireless frames.
-+	  Most 802.11 devices today tend to be of this type.
-+
-+	  If you have new userspace utitlities which support nl80211 you do not
-+	  need wireless-extensions to support a mac80211 device.
-+
-+	  For more information refer the the wireless wiki entry on mac80211:
-+
-+	  http://wireless.kernel.org/en/developers/Documentation/mac80211
-+
-+	  When built as a module mac80211 will be built as mac80211, if not sure
-+	  you should build this as a module.
- 
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
--- 
-1.6.2.5
+On Thu, 2009-08-20 at 17:40 -0700, Rafael Laufer wrote:
+> This patch implements the IEEE80211_RADIOTAP_RATE=20
+> option when parsing radiotap headers to allow rate=20
+> selection on a per-packet basis.
+>=20
+>=20
+> Signed-off-by: Rafael Laufer <rlaufer@cs.ucla.edu>
+> ---
+>  Implementation of the IEEE80211_RADIOTAP_RATE=20
+>  option when parsing radiotap headers to allow
+>  rate selection on a per-packet basis.
+>=20
+>  net/mac80211/tx.c |   18 +++++++++++++++++-
+>  1 files changed, 17 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 10a1099..41d636b 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -549,7 +549,10 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *t=
+x)
+>  	 * If we're associated with the sta at this point we know we can at
+>  	 * least send the frame at the lowest bit rate.
+>  	 */
+> -	rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+> +
+> +	/* in monitor mode, we already have the rate from the radiotap header *=
+/
+> +	if (likely(!(info->flags & IEEE80211_TX_CTL_INJECTED)))
+> +		rate_control_get_rate(tx->sdata, tx->sta, &txrc);
+
+NAK, the rate is optional in the radiotap header, and if not given then
+regular rate control must be used.
+
+johannes
+
+--=-gSQs2vxkJZF+6G5lWbPX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKjlhEAAoJEODzc/N7+QmaBwAP/3wzbirgHo8pQgtmqNoo/SR9
+oHOSeUYqgTWlK9LaR8P2XSGjax6F/aa3kQ6YLYBFlsst8Rj+jUuXDtlAiNj1baly
+G95GLLLifuRGd04a+o1B85IIMEd24Ozuc1QncZ5BLLzLb2OF4EE7tN+mebBO5lQ6
+9D3Xt0seFmx1WR/BEpcQJaBIINzzTV4QR1jZmBvHsLJdSRDlB01j4fQAz17/z520
+fZdGH7y+q776+dt15WNHHYYUGhNZ089NHlgaTXnEeztaJTTBF/u4L7IqweqU+XAS
+pSR7EhR7jb633DdI780qrBvPJCm266I0iaT55FqvnUyPZoz7XFI1G4pzRFw+m/6d
+AZ9jPxpWxvqs2gt6OorsGk8ozzGn9Zf3BKsHjeKrEgQ8oNS/aKELKs8kuXF9afK/
+6obq6Cu5l/SefvU/NhHvcatRX8rbm2nsLoqJwEiGn6XPfpnms2rsB2593zlHbBap
+YcIuYthznBYLFc9IGjXo/oe7WFQ/zqgjjiWK3ym3zYr5ZRMPGBN5Db0FOv9Gw2Cx
+6YdOZ7AA/Q6IBzzB6GcBF2h+KfgJoWX9B+sCIt462ktcWPSIXjXT0c5dtoeQoWGk
+aAnBvi+OXrvr9upiEJ4dMwXUlRaJpuCSiEHLKqmbvDQY/xUwqm4U0jKzah7oKTh3
+Klw85WHOcsjwK9d2lasa
+=8HJA
+-----END PGP SIGNATURE-----
+
+--=-gSQs2vxkJZF+6G5lWbPX--
 
