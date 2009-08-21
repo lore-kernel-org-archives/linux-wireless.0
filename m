@@ -1,98 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59027 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144AbZHKSqK (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:41251 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932390AbZHUVZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 14:46:10 -0400
-Date: Tue, 11 Aug 2009 14:36:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-08-11
-Message-ID: <20090811183605.GG2634@tuxdriver.com>
+	Fri, 21 Aug 2009 17:25:07 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Joerg Albert <jal2@gmx.de>
+Subject: [PATCH 1/2 v3] ar9170: cleanup of bss_info_changed and beacon config
+Date: Fri, 21 Aug 2009 23:25:07 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4A8F0798.6050908@gmx.de>
+In-Reply-To: <4A8F0798.6050908@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908212325.07664.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+From: Joerg Albert <jal2@gmx.de>
 
-Here are a couple more minor fixes intended for 2.6.31.  Hopefully we
-are winding-down!
-
-Please let me know if there are problems!
-
-John
-
+Add beacon control by BSS_CHANGED_BEACON_ENABLED and
+bss_conf->enable_beacon from mac80211.
+ 
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+Signed-off-by: Christian Lamparter <chunkeey@web.de>
 ---
+About time they show up ;-)
 
-Individual patches are available here:
+changes from v2:
+	- fixed both checkpatch.pl complains
+	- removed a few empty lines.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-
+hope this one is fine...
 ---
-
-The following changes since commit 973507cb8610d4c84f090d5f1f0ca54fa0559d27:
-  roel kluin (1):
-        mlx4_en: Fix read buffer overflow in mlx4_en_complete_rx_desc()
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Christian Lamparter (1):
-      ar9170usb: fix spurious firmware related message
-
-Dan Carpenter (1):
-      ar9170: fix read & write outside array bounds
-
- drivers/net/wireless/ath/ar9170/main.c |    5 +++--
- drivers/net/wireless/ath/ar9170/usb.c  |    6 +++++-
- 2 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 9d38cf6..88c3d85 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -1967,13 +1967,14 @@ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index ce40724..914e471 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -178,6 +178,7 @@ struct ar9170 {
+ 	/* beaconing */
+ 	struct sk_buff *beacon;
+ 	struct work_struct beacon_work;
++	bool enable_beacon;
  
- 	mutex_lock(&ar->mutex);
--	if ((param) && !(queue > __AR9170_NUM_TXQ)) {
-+	if (queue < __AR9170_NUM_TXQ) {
- 		memcpy(&ar->edcf[ar9170_qos_hwmap[queue]],
- 		       param, sizeof(*param));
+ 	/* cryptographic engine */
+ 	u64 usedkeys;
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 6004936..614e321 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -383,24 +383,26 @@ int ar9170_set_beacon_timers(struct ar9170 *ar)
+ 	if (ar->vif) {
+ 		v |= ar->vif->bss_conf.beacon_int;
  
- 		ret = ar9170_set_qos(ar);
--	} else
-+	} else {
- 		ret = -EINVAL;
-+	}
+-		switch (ar->vif->type) {
+-		case NL80211_IFTYPE_MESH_POINT:
+-		case NL80211_IFTYPE_ADHOC:
+-			v |= BIT(25);
+-			break;
+-		case NL80211_IFTYPE_AP:
+-			v |= BIT(24);
+-			pretbtt = (ar->vif->bss_conf.beacon_int - 6) << 16;
+-			break;
+-		default:
++		if (ar->enable_beacon) {
++			switch (ar->vif->type) {
++			case NL80211_IFTYPE_MESH_POINT:
++			case NL80211_IFTYPE_ADHOC:
++				v |= BIT(25);
++				break;
++			case NL80211_IFTYPE_AP:
++				v |= BIT(24);
++				pretbtt = (ar->vif->bss_conf.beacon_int - 6) <<
++					  16;
++				break;
++			default:
+ 			break;
++			}
+ 		}
  
- 	mutex_unlock(&ar->mutex);
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index 754b1f8..007eb85 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -598,11 +598,15 @@ static int ar9170_usb_request_firmware(struct ar9170_usb *aru)
- 
- 	err = request_firmware(&aru->init_values, "ar9170-1.fw",
- 			       &aru->udev->dev);
-+	if (err) {
-+		dev_err(&aru->udev->dev, "file with init values not found.\n");
-+		return err;
-+	}
- 
- 	err = request_firmware(&aru->firmware, "ar9170-2.fw", &aru->udev->dev);
- 	if (err) {
- 		release_firmware(aru->init_values);
--		dev_err(&aru->udev->dev, "file with init values not found.\n");
-+		dev_err(&aru->udev->dev, "firmware file not found.\n");
- 		return err;
+ 		v |= ar->vif->bss_conf.dtim_period << 16;
  	}
  
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ 	ar9170_regwrite_begin(ar);
+-
+ 	ar9170_regwrite(AR9170_MAC_REG_PRETBTT, pretbtt);
+ 	ar9170_regwrite(AR9170_MAC_REG_BCN_PERIOD, v);
+ 	ar9170_regwrite_finish();
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 658b323..c0fc355 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2148,11 +2148,17 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			goto out;
+ 	}
+ 
+-	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
++	if (changed & BSS_CHANGED_BEACON_ENABLED)
++		ar->enable_beacon = bss_conf->enable_beacon;
++
++	if (changed & BSS_CHANGED_BEACON) {
+ 		err = ar9170_update_beacon(ar);
+ 		if (err)
+ 			goto out;
++	}
+ 
++	if (changed & (BSS_CHANGED_BEACON_ENABLED | BSS_CHANGED_BEACON |
++		       BSS_CHANGED_BEACON_INT)) {
+ 		err = ar9170_set_beacon_timers(ar);
+ 		if (err)
+ 			goto out;
+@@ -2165,12 +2171,6 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ #endif /* CONFIG_AR9170_LEDS */
+ 	}
+ 
+-	if (changed & BSS_CHANGED_BEACON_INT) {
+-		err = ar9170_set_beacon_timers(ar);
+-		if (err)
+-			goto out;
+-	}
+-
+ 	if (changed & BSS_CHANGED_HT) {
+ 		/* TODO */
+ 		err = 0;
