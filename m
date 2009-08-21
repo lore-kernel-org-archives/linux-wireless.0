@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:46379 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557AbZHQOYr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 10:24:47 -0400
-Received: by fxm11 with SMTP id 11so2313385fxm.39
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 07:24:47 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: allow configure_filter callback to sleep
-References: <1250518613.15103.7.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 17 Aug 2009 17:24:44 +0300
-In-Reply-To: <1250518613.15103.7.camel@johannes.local> (Johannes Berg's message of "Mon\, 17 Aug 2009 16\:16\:53 +0200")
-Message-ID: <87zl9ytt5f.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:50995 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932650AbZHUUe3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/14] iwlwifi: fix unloading driver while scanning
+Date: Fri, 21 Aug 2009 13:34:25 -0700
+Message-Id: <1250886867-4112-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> Over time, a whole bunch of drivers have come up
-> with their own scheme to delay the configure_filter
-> operation to a workqueue. To be able to simplify
-> things, allow configure_filter to sleep, and add
-> a new prepare_multicast callback that drivers that
-> need the multicast address list implement. This new
-> callback must be atomic, but most drivers either
-> don't care or just calculate a hash which can be
-> done atomically and then uploaded to the hardware
-> non-atomically.
->
-> A cursory look suggests that at76c50x-usb,
+If NetworkManager is busy scanning when user
+tries to unload the module, the driver can not be unloaded
+because HW still scanning.
 
-BTW, at76c50x-usb is broken currently. The change of providing bssid to
-the driver only after association broke it. I don't have time to fix it
-right now, but I try to find some time next week.
+Make sure driver sends abort scan host command to uCode if it
+is in the middle of scanning during driver unload.
 
-> ar9170, mwl8k (which is actually very broken now), rt2x00, wl1251,
-> wl1271 and zd1211 should make use of this new capability.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-This will make things a lot easier for wl1251 and wl1271. Thank you for
-this.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 533b393..00457bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2155,7 +2155,7 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
+-	if (iwl_is_ready_rf(priv)) {
++	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
+ 		/* stop mac, cancel any scan request and clear
+ 		 * RXON_FILTER_ASSOC_MSK BIT
+ 		 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index c4c916d..4f3a108 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -796,7 +796,8 @@ void iwl_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 
+-	if (!iwl_is_ready(priv))
++	if (!test_bit(STATUS_READY, &priv->status) ||
++	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+ 		return;
+ 
+ 	mutex_lock(&priv->mutex);
 -- 
-Kalle Valo
+1.5.6.3
+
