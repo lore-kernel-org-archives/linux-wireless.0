@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:42347 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbZHZTEL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 15:04:11 -0400
-Received: by ewy2 with SMTP id 2so477259ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 12:04:12 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Cleanup rt2x00mac_bss_info_changed()
-Date: Wed, 26 Aug 2009 21:04:08 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908262104.09230.IvDoorn@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:9226 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932616AbZHUUe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:26 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/14] iwlwifi: name changes from "tx_power_channel_lmt" to "tx_power_device_lmt"
+Date: Fri, 21 Aug 2009 13:34:16 -0700
+Message-Id: <1250886867-4112-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since patch "rt2x00: bss_info_changed() callback is allowed to sleep" the
-variable delayed wasn't used anymore. This means it can be removed
-along with the call to schedule_work which depended on that variable.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Changing the name from "tx_power_channel_lmt" to "tx_power_device_lmt";
+to give idea that scope of limit is for overall device, not any
+individual channels
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index a91f316..929b85f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -582,7 +582,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
--	unsigned int delayed = 0;
- 	int update_bssid = 0;
- 
- 	/*
-@@ -645,13 +644,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 */
- 	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT))
- 		rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
--
--	spin_lock(&intf->lock);
--	if (delayed) {
--		intf->delayed_flags |= delayed;
--		schedule_work(&rt2x00dev->intf_work);
--	}
--	spin_unlock(&intf->lock);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_bss_info_changed);
- 
+ drivers/net/wireless/iwlwifi/iwl-core.c |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index faafcae..82dadd0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -543,8 +543,8 @@ int iwlcore_init_geos(struct iwl_priv *priv)
+ 
+ 			geo_ch->flags |= ch->ht40_extension_channel;
+ 
+-			if (ch->max_power_avg > priv->tx_power_channel_lmt)
+-				priv->tx_power_channel_lmt = ch->max_power_avg;
++			if (ch->max_power_avg > priv->tx_power_device_lmt)
++				priv->tx_power_device_lmt = ch->max_power_avg;
+ 		} else {
+ 			geo_ch->flags |= IEEE80211_CHAN_DISABLED;
+ 		}
+@@ -1708,10 +1708,10 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (tx_power > priv->tx_power_channel_lmt) {
++	if (tx_power > priv->tx_power_device_lmt) {
+ 		IWL_WARN(priv,
+ 			"Requested user TXPOWER %d above upper limit %d.\n",
+-			 tx_power, priv->tx_power_channel_lmt);
++			 tx_power, priv->tx_power_device_lmt);
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 0178734..ccea2e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1215,7 +1215,7 @@ struct iwl_priv {
+ 
+ 	/* TX Power */
+ 	s8 tx_power_user_lmt;
+-	s8 tx_power_channel_lmt;
++	s8 tx_power_device_lmt;
+ 
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+-- 
+1.5.6.3
 
