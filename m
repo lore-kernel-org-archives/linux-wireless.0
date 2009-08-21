@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:8563 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756629AbZHZDqi (ORCPT
+Received: from mail-px0-f196.google.com ([209.85.216.196]:54972 "EHLO
+	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751933AbZHUCao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 23:46:38 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so1855859qwh.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 20:46:39 -0700 (PDT)
-Message-ID: <4A94B01E.9040309@gmail.com>
-Date: Tue, 25 Aug 2009 23:46:38 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
- enabled
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
-In-Reply-To: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 20 Aug 2009 22:30:44 -0400
+Received: by pxi34 with SMTP id 34so3671365pxi.4
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2009 19:30:46 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, Luis.Rodriguez@atheros.com,
+	jouni.malinen@atheros.com
+Subject: [PATCH] ath9k: Add support FIF_OTHER_BSS filtering mode.
+Date: Thu, 20 Aug 2009 19:12:07 -0700
+Message-Id: <1250820727-16729-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <>
+References: <>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
-> may oops when the module is unloaded as the workqueue for led_on was
-> not being cancelled.
->
-> This patch fixes the problem reported in
-> http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
->
-> Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
-> ---
->
-> V2 - Do not create a new workqueue.
->
-> John,
->
-> This patch is 2.6.31 material. To the best of my knowledge, a formal bug
-> report was never filed; however, it was reported in the reference given above.
->
->   
-Anyone know what happened here? This bug still seems very much alive in 
-compat-wireless-2.6.31-rc7.  I know the window is closed and this really
-isn't "earthshattering" but a kernel panick is kind of "a big deal".  I 
-seems like it was tested doing a proper modprobe -r but not if you just 
-unplug the usb card.
-When I unplug the usb I get instadeath, very uncool.  If someone can 
-teach me how to get the kernel output from a non-functional system I am 
-happy to provide whatever.
+Support for FIF_OTHER_BSS was missing.  This patch adds support for this
+filtering mode which in turn resolves a problem where mesh interfaces would not
+receive broadcast traffic.
 
-thanks,
-Rick Farina
-> Larry
-> ---
->
-> Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> +++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187_leds.c
-> @@ -208,11 +208,12 @@ void rtl8187_leds_exit(struct ieee80211_
->  {
->  	struct rtl8187_priv *priv = dev->priv;
->  
-> -	rtl8187_unregister_led(&priv->led_tx);
->  	/* turn the LED off before exiting */
->  	queue_delayed_work(dev->workqueue, &priv->led_off, 0);
->  	cancel_delayed_work_sync(&priv->led_off);
-> +	cancel_delayed_work_sync(&priv->led_on);
->  	rtl8187_unregister_led(&priv->led_rx);
-> +	rtl8187_unregister_led(&priv->led_tx);
->  }
->  #endif /* def CONFIG_RTL8187_LED */
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->   
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 7b62c22..52e62da 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -423,11 +423,12 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 	if (sc->rx.rxfilter & FIF_PSPOLL)
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+-	if (sc->sec_wiphy) {
++	if (sc->sec_wiphy || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
+ 		/* TODO: only needed if more than one BSSID is in use in
+ 		 * station/adhoc mode */
+-		/* TODO: for older chips, may need to add ATH9K_RX_FILTER_PROM
+-		 */
++		/* The following may also be needed for other older chips */
++		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
++			rfilt |= ATH9K_RX_FILTER_PROM;
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 	}
+ 
+-- 
+1.5.4.3
 
