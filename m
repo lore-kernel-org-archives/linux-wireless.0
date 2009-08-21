@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:63125 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbZHEVAD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 17:00:03 -0400
-Received: by bwz19 with SMTP id 19so346980bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 14:00:03 -0700 (PDT)
-To: Bob Copeland <me@bobcopeland.com>, luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl12xx: make irq handling interface specific
-References: <20090804033908.GA1903@hash.localnet>
-	<87hbwoniog.fsf@litku.valot.fi> <20090804122229.GA3337@hash.localnet>
-	<877hxionnt.fsf@litku.valot.fi> <20090805135618.GA7468@hash.localnet>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 06 Aug 2009 00:00:00 +0300
-In-Reply-To: <20090805135618.GA7468@hash.localnet> (Bob Copeland's message of "Wed\, 5 Aug 2009 09\:56\:18 -0400")
-Message-ID: <873a86nfhr.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:12007 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932640AbZHUUe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 16:34:28 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/14] iwlwifi: set HT flags in ieee80211_rx_status for received packets
+Date: Fri, 21 Aug 2009 13:34:21 -0700
+Message-Id: <1250886867-4112-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-> In SDIO, the host driver requests the IRQ and invokes a callback to the
-> card driver.  This differs from SPI, so the relevant code needs to be
-> interface-specific.  This patch pushes the irq code down into _spi.c
-> and _sdio.c, and adds enable/disable callbacks.
+Add code to set the HT flags (HT, 40 MHz, Short guard interval) in
+the ieee80211_rx_status field passed to mac80211.  This ensures that mac80211
+processes these HT packets correctly.
 
-[...]
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-> v2: make sdio irq functions void to match wl1251.h
-
-Thanks, I applied this version to my local tree now.
-
-All pending wl1251 patches are now here:
-
-http://www.valot.fi/kalle/wl1251/patches/wl1251-add-sdio/2009-08-05-20:50/
-
-It includes your sdio patches, quite a few patches from our internal
-tree and a workaround to make association work again. With these patches
-dhcp and ping works with wep on wl1251 using spi. So things look good
-again.
-
-I haven't checked the patches at all, there might be some stupidity in
-them. I'll do that tomorrow and try to send them to John ASAP.
-
-Luca, I'm pretty sure that the workaround helps with wl1271 also. Just
-take the wl->channel fix and the filter hack and it should work.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 353d9a2..e34d3fc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -915,6 +915,7 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 	u32 len;
+ 	u32 ampdu_status;
+ 	u16 fc;
++	u32 rate_n_flags;
+ 
+ 	/**
+ 	 * REPLY_RX and REPLY_RX_MPDU_CMD are handled differently.
+@@ -1032,6 +1033,15 @@ void iwl_rx_reply_rx(struct iwl_priv *priv,
+ 	if (phy_res->phy_flags & RX_RES_PHY_FLAGS_SHORT_PREAMBLE_MSK)
+ 		rx_status.flag |= RX_FLAG_SHORTPRE;
+ 
++	/* Set up the HT phy flags */
++	rate_n_flags = le32_to_cpu(phy_res->rate_n_flags);
++	if (rate_n_flags & RATE_MCS_HT_MSK)
++		rx_status.flag |= RX_FLAG_HT;
++	if (rate_n_flags & RATE_MCS_HT40_MSK)
++		rx_status.flag |= RX_FLAG_40MHZ;
++	if (rate_n_flags & RATE_MCS_SGI_MSK)
++		rx_status.flag |= RX_FLAG_SHORT_GI;
++
+ 	if (iwl_is_network_packet(priv, header)) {
+ 		priv->last_rx_rssi = rx_status.signal;
+ 		priv->last_beacon_time =  priv->ucode_beacon_time;
 -- 
-Kalle Valo
+1.5.6.3
+
