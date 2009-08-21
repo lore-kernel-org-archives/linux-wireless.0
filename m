@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:49413 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752486AbZHSSql (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:46:41 -0400
-Message-ID: <4A8C48BA.1000009@dell.com>
-Date: Wed, 19 Aug 2009 13:47:22 -0500
-From: Mario Limonciello <mario_limonciello@dell.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:44021 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932243AbZHUWBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 Aug 2009 18:01:19 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+Date: Sat, 22 Aug 2009 00:02:03 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera> <4A8F12CE.9090601@lwfinger.net>
+In-Reply-To: <4A8F12CE.9090601@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: cezary.jackiewicz@gmail.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
-References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com> <1250707376.8073.4.camel@johannes.local>
-In-Reply-To: <1250707376.8073.4.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigB6BB6021364367E83410BC28"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200908220002.03707.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigB6BB6021364367E83410BC28
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Friday 21 August 2009, Larry Finger wrote:
+> Rafael J. Wysocki wrote:
+> 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13960
+> > Subject		: rtl8187 not connect to wifi
+> > Submitter	: okias <d.okias@gmail.com>
+> > Date		: 2009-08-10 19:16 (10 days old)
+> 
+> The patch for this one was sent from Linville to DaveM earlier today,
+> and should be sent to mainline in the near future.
+> 
+> AFAIK, the OP has not yet tested the patch, but I think I was able to
+> reproduce the problem, and the patch did fit it for me.
 
-Johannes:
+Thanks for the update.
 
-Johannes Berg wrote:
-> On Wed, 2009-08-19 at 13:36 -0500, Mario Limonciello wrote:
->  =20
->
->  =20
->
-> Isn't that missing sysfs_remove_group()?
->
-> johannes
->  =20
-The third patch in the (updated) series is dropping the sysfs bits, so
-sysfs_remove_group is removed there.
---=20
-Mario Limonciello
-*Dell | Linux Engineering*
-mario_limonciello@dell.com
+Can you please close the bug when the patch is merged?
 
-
---------------enigB6BB6021364367E83410BC28
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkqMSLoACgkQ2CrZjkA73YsU6QCgkOtaczvK4YUYRZ0wVPIDa3nu
-Ph4An0md7zA/kWObwbWk6od0dTAn9cDJ
-=yUa8
------END PGP SIGNATURE-----
-
---------------enigB6BB6021364367E83410BC28--
+Rafael
