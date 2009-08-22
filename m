@@ -1,32 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38945 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbZH0L4U (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:63973 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933273AbZHVLUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 07:56:20 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n7RBtbjR005524
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 06:55:51 -0500
-Received: from tikku (essapo-nirac2536.europe.nokia.com [10.162.253.6])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n7RBtQnN024443
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:55:27 +0300
-From: Kalle Valo <kalle.valo@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: Nokia N900 running mac80211
-Date: Thu, 27 Aug 2009 14:55:31 +0300
-Message-ID: <87k50plbd8.fsf@nokia.com>
+	Sat, 22 Aug 2009 07:20:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1250890778-28959-1-git-send-email-Mario_Limonciello@Dell.com>
+References: <1250706969-10382-1-git-send-email-Mario_Limonciello@Dell.com>
+	 <1250890778-28959-1-git-send-email-Mario_Limonciello@Dell.com>
+Date: Sat, 22 Aug 2009 12:20:27 +0100
+Message-ID: <9b2b86520908220420p282c862fn9c44697db010a08d@mail.gmail.com>
+Subject: Re: [PATCH] compal-laptop: Replace sysfs support with rfkill support
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Mario Limonciello <Mario_Limonciello@dell.com>
+Cc: cezary.jackiewicz@gmail.com, linux-wireless@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 8/21/09, Mario Limonciello <Mario_Limonciello@dell.com> wrote:
+> This drops the support for manually groking the files in sysfs
+> to turn on and off the WLAN and BT for Compal laptops in favor
+> of platform rfkill support.
+>
+> It has been combined into a single patch to not introduce regressions
+> in the process of simply adding rfkill support.
+>
+> Signed-off-by: Mario Limonciello <Mario_Limonciello@Dell.com>
 
-wanted to tell you that just released Nokia N900 is using mac80211 and
-wl1251 driver. The kernel is 2.6.28 with few wireless related patches
-backported from newer releases and some hacks related to roaming.
+> @@ -390,23 +314,19 @@ static int __init compal_init(void)
+>
+>  	ret = platform_device_add(compal_device);
+>  	if (ret)
+> -		goto fail_platform_device1;
+> +		goto fail_platform_device;
+>
+> -	ret = sysfs_create_group(&compal_device->dev.kobj,
+> -		&compal_attribute_group);
+> +	ret = setup_rfkill();
+>  	if (ret)
+> -		goto fail_platform_device2;
+> +		goto fail_rfkill;
+>
+>  	printk(KERN_INFO "compal-laptop: driver "COMPAL_DRIVER_VERSION
+>  		" successfully loaded.\n");
+>
+>  	return 0;
+>
+> -fail_platform_device2:
+> -
+> -	platform_device_del(compal_device);
+> -
+> -fail_platform_device1:
+> +fail_rfkill:
+> +fail_platform_device:
+>
+>  	platform_device_put(compal_device);
+>
 
-http://www.nokia.com/press/press-releases/showpressrelease?newsid=1337594
+I guess our mails crossed.  As in the previous patch I think
+platform_device_del() should still be called, in the fail_rfkill case.
 
--- 
-Kalle Valo
+Previously platform_device_del() was required after
+platform_device_add(), if we bailed out because of a failure in
+sysfs_create_group().  I don't think that requirement is removed by
+replacing sysfs_create_group() with setup_rfkill().
+
+Regards
+Alan
