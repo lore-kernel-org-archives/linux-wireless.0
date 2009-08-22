@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:55554 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227AbZHZSLx convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1998 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754201AbZHVNgq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 14:11:53 -0400
-Received: by ewy2 with SMTP id 2so429891ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 11:11:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] rfkill: relicense header file
-Date: Wed, 26 Aug 2009 20:11:48 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	"=?utf-8?q?I=C3=B1aky?= =?utf-8?q?_P=C3=A9rez-Gonz=C3=A1lez?="
-	<inaky.perez-gonzalez@intel.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Tomas Winkler <tomas.winkler@intel.com>
-References: <1251303197.15619.29.camel@johannes.local>
-In-Reply-To: <1251303197.15619.29.camel@johannes.local>
+	Sat, 22 Aug 2009 09:36:46 -0400
+Date: Sat, 22 Aug 2009 09:35:57 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Andreas Mohr <andi@lisas.de>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	Johannes Stezenbach <js@sig21.net>
+Subject: Re: ath5k: ath5k_pci_probe(): weirdo code
+Message-ID: <20090822133557.GB6762@hash.localnet>
+References: <20090821094732.GA970@rhlx01.hs-esslingen.de>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908262011.49492.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090821094732.GA970@rhlx01.hs-esslingen.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 26 August 2009, Johannes Berg wrote:
-> This header file is copied into userspace tools that
-> need not be GPLv2 licensed, make that easier.
+On Fri, Aug 21, 2009 at 11:47:32AM +0200, Andreas Mohr wrote:
+> Hello all,
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> ---
-> Need ACK from everybody listed who ever touched this
-> file according to git. Please?
-> 
->  include/linux/rfkill.h |   25 +++++++++++--------------
->  1 file changed, 11 insertions(+), 14 deletions(-)
-> 
-> --- wireless-testing.orig/include/linux/rfkill.h	2009-08-26 18:09:57.000000000 +0200
-> +++ wireless-testing/include/linux/rfkill.h	2009-08-26 18:10:52.000000000 +0200
-> @@ -6,20 +6,17 @@
->   * Copyright (C) 2007 Dmitry Torokhov
->   * Copyright 2009 Johannes Berg <johannes@sipsolutions.net>
->   *
-> - * This program is free software; you can redistribute it and/or modify
-> - * it under the terms of the GNU General Public License as published by
-> - * the Free Software Foundation; either version 2 of the License, or
-> - * (at your option) any later version.
-> - *
-> - * This program is distributed in the hope that it will be useful,
-> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> - * GNU General Public License for more details.
-> - *
-> - * You should have received a copy of the GNU General Public License
-> - * along with this program; if not, write to the
-> - * Free Software Foundation, Inc.,
-> - * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->   */
->  
->  #include <linux/types.h>
+> that 2GHz/5GHz radio information code in ath5k_pci_probe() in 2.6.31-rc6
+> source seems VERY weird.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+The code looks horribly confusing, it should be moved into attach.c
+and reworked a lot probably.  It looks correct though - it is fixing up
+settings for (really old) multiple radio chip devices, where we can't
+tell by the radio revision alone if it is multiband or not.
 
+ah_radio_{2,5}ghz_revision is what is in the appropriate registers in
+the card, but e.g. the revision in the 5ghz radio register may actually
+refer to the 2ghz radio on some 802.11B-only devices, depending on what
+is in the eeprom.
+
+> Then also at this place, why is there no
+> else
+> {
+>   WARN_ONCE(...); // Huh. Unknown/unhandled/impossible revision combo
+
+Should be caught already in attach.c, but yeah, another warning wouldn't
+hurt.
+
+>         if (!sc->ah->ah_single_chip) {
+>                 /* Single chip radio (!RF5111) */
+> 
+> part seemed weird logic, too, but I then thought that this code section
+> is perhaps _intended_ to be skipped in this case, to simply not log anything
+> for single-chip radios
+
+The comment belongs to the subsequent if() test, where it should probably
+live to be clearer.  All recent devices (including yours) are now single
+chip so this code wouldn't run on your device.
+
+> BTW, I'm currently on 2.6.31-rc6 on Aspire One, with even more ath5k problems
+> than before, connection is dying every couple minutes, extended to every
+> couple dozen minutes if I force rate 1M
+
+Can you supply /debug/ieee80211/phy0/stations/<...>/rc_stats?
+
+> (but it looks like "[Bug #13948] ath5k broken after suspend-to-ram"
+> http://lkml.org/lkml/2009/8/19/468 is hopefully covering these issues already).
+
+Can you verify that the patch mentioned in the bug report works?
+We need to queue that for 2.6.31.
+
+> And I do have CONFIG..._PS (powersave) enabled by default...
+> And I do make liberal use of suspend-to-ram, as should everyone.
+
+As do I.  I don't have a 2425 though, and there are quite some variations
+between each HW revision.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
