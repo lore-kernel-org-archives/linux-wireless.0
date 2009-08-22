@@ -1,96 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55197 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754818AbZHNOPK (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932420AbZHVHsa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 10:15:10 -0400
-Date: Fri, 14 Aug 2009 10:12:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-2.6 2009-08-14
-Message-ID: <20090814141224.GH2650@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 22 Aug 2009 03:48:30 -0400
+Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rafael Laufer <rlaufer@cs.ucla.edu>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A8EE182.6040709@cs.ucla.edu>
+References: <4A8DED03.2050502@cs.ucla.edu>
+	 <1250842695.13872.5.camel@johannes.local>
+	 <69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>
+	 <4A8EE182.6040709@cs.ucla.edu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ofteyx6smudH+4apRYpW"
+Date: Sat, 22 Aug 2009 09:48:28 +0200
+Message-Id: <1250927308.23605.6.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-A couple more squeakers for 2.6.31...one avoids a panic related to
-802.11n, the other avoids some memory corruption with rt2x00 devices.
+--=-ofteyx6smudH+4apRYpW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Please let me know if there are problems!
+On Fri, 2009-08-21 at 11:03 -0700, Rafael Laufer wrote:
 
-John
+> + * @IEEE80211_TX_CTL_RATE_RADIOTAP: completely internal to mac80211,
+> + *	used to indicate that the rate was defined in the received radiotap
+> + *	header and therefore the rate control algorithm should not change it.
 
----
+This should be an internal flag, the driver doesn't care.
 
-Individual patches are available here:
+> +	/* In monitor mode, if the IEEE80211_RADIOTAP_RATE option is set in=20
+> +	 * the received radiotap header, do not call the rate control algorithm=
+.
+> +	 */
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
+coding style
 
----
+> +		/* Get the rate parameter from the radiotap header,=20
+> +		 * allowing rate selection on a per-packet basis=20
+> +		 */
 
-The following changes since commit 839d1624b9dcf31fdc02e47359043bb7bd71d6ca:
-  Francois Romieu (1):
-        8139cp: balance dma_map_single vs dma_unmap_single pair
+coding style
 
-are available in the git repository at:
+> +		case IEEE80211_RADIOTAP_RATE:
+> +			bitrate =3D (*iterator.this_arg) * 5;
+> +			for (i =3D 0; i < sband->n_bitrates; i++) {
+> +				if (sband->bitrates[i].bitrate =3D=3D bitrate)
+> +					break;
+> +			}
+> +			if (i !=3D sband->n_bitrates) {
+> +				info->control.rates[0].idx =3D i;
+> +				info->flags |=3D IEEE80211_TX_CTL_RATE_RADIOTAP;
+> +			}
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+You never set the counter, or any other fields.
 
-Luis R. Rodriguez (1):
-      mac80211: fix panic when splicing unprepared TIDs
+>  		/*
+>  		 * Please update the file
+>  		 * Documentation/networking/mac80211-injection.txt
 
-Pavel Roskin (1):
-      rt2x00: fix memory corruption in rf cache, add a sanity check
+And you even quote the instructions.
 
- drivers/net/wireless/rt2x00/rt2x00.h |    6 ++++--
- net/mac80211/agg-tx.c                |    8 ++++++++
- 2 files changed, 12 insertions(+), 2 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index a498dde..49c9e2c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -849,13 +849,15 @@ struct rt2x00_dev {
- static inline void rt2x00_rf_read(struct rt2x00_dev *rt2x00dev,
- 				  const unsigned int word, u32 *data)
- {
--	*data = rt2x00dev->rf[word];
-+	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
-+	*data = rt2x00dev->rf[word - 1];
- }
- 
- static inline void rt2x00_rf_write(struct rt2x00_dev *rt2x00dev,
- 				   const unsigned int word, u32 data)
- {
--	rt2x00dev->rf[word] = data;
-+	BUG_ON(word < 1 || word > rt2x00dev->ops->rf_size / sizeof(u32));
-+	rt2x00dev->rf[word - 1] = data;
- }
- 
- /*
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 9e5762a..a24e598 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -381,6 +381,14 @@ static void ieee80211_agg_splice_packets(struct ieee80211_local *local,
- 		&local->hw, queue,
- 		IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
- 
-+	if (!(sta->ampdu_mlme.tid_state_tx[tid] & HT_ADDBA_REQUESTED_MSK))
-+		return;
-+
-+	if (WARN(!sta->ampdu_mlme.tid_tx[tid],
-+		 "TID %d gone but expected when splicing aggregates from"
-+		 "the pending queue\n", tid))
-+		return;
-+
- 	if (!skb_queue_empty(&sta->ampdu_mlme.tid_tx[tid]->pending)) {
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		/* mark queue as pending, it is stopped already */
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--=-ofteyx6smudH+4apRYpW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKj6LIAAoJEODzc/N7+Qma9d8QALem5J+nL/99MvxUCyEc3Tc0
+m343Y+18ZYnmHYFE/MM0Bijke+6u+keUuLRdEVpI1up6tcH06ZkLTyp/KXN+rchA
+02jkiHdRES60/A9v2BUaRGWQ1v2ka/0HqIvm2yiq4/Vw8l5vtPjwYkjVmxgewyd6
+ttKLDi2bKD811X7L8X3gwzFhPcAKn9pnWcxLsk+Sj+NFoShPz5iA9MwBykRsZ5Qh
+MV3xO6iKDttLvP5G0U7pQWefGqESYTeSpa1IWPVuaeCmkeYyj8zx1Z9SnTFWECXe
+cItXSz4mq9ESdTd/IObEc0WDkkDqFoxr3bJ5T3jX5zc+0lPBU0K65PBLhemHojlr
+a1IT0tKHrEhxuPc11AdZA5Ocd5cQa4xgIsg7IfDewQmhzbra9Gg12nXQkVJimBAt
+C7CYmk2DZ7PYdfQDHNVM4WxjtymFsVMCqY0cjlZjKWd/Vf+GMfBitq6T21uK8yi0
+KhJjcqdJi91anLRvYrR2FMHyxu+56hQAnHpiMPYjNN2ViP4nJ2RYv/oJY8Ie8OY6
+urlH03+8B3WSH8GibHynSfSoRfNuMUi2v2M7nhp1lYF0mnuM429y1NFCMmuxpdJT
+O/GEH8nH0x5z964Hu8h2awppS5Bc610XLEbeRjzDrMyaoWlTxdbu6bbC8GnxriKH
+l4RIyJjkyTgbRepaztqO
+=/r5V
+-----END PGP SIGNATURE-----
+
+--=-ofteyx6smudH+4apRYpW--
+
