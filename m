@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45797 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750935AbZHZPrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 11:47:08 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:47:10 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 3/8] ath9k: Configure btcoex register during every reset
-Date: Wed, 26 Aug 2009 21:08:45 +0530
-Message-ID: <1251301130-10912-4-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1251301130-10912-3-git-send-email-vasanth@atheros.com>
-References: <1251301130-10912-1-git-send-email-vasanth@atheros.com>
- <1251301130-10912-2-git-send-email-vasanth@atheros.com>
- <1251301130-10912-3-git-send-email-vasanth@atheros.com>
+Received: from fmmailgate01.web.de ([217.72.192.221]:51190 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932905AbZHVVnq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2009 17:43:46 -0400
+From: Christian Lamparter <chunkeey@web.de>
+To: Joerg Albert <jal2@gmx.de>
+Subject: Re: [RFT] ar9170: use eeprom's frequency calibration values
+Date: Sat, 22 Aug 2009 23:43:16 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <200908212252.41053.chunkeey@web.de> <200908220151.19792.chunkeey@web.de> <4A905D2B.9090405@gmx.de>
+In-Reply-To: <4A905D2B.9090405@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908222343.16682.chunkeey@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure btcoex register configured with appropriate values
-after it is initialized with the default values from initvals.h
-during reset.
+On Saturday 22 August 2009 23:03:39 Joerg Albert wrote:
+> On 08/22/2009 01:51 AM, Christian Lamparter wrote:
+> > On Saturday 22 August 2009 01:36:17 Joerg Albert wrote:
+> >> On 08/21/2009 10:52 PM, Christian Lamparter wrote:
+> >>> This patch adds some more bits from the vendor driver, which
+> >>> are supposed to help users with the one-stage/openfw firmwares.
+> >> The otus driver sets phy registers 672-703 only for the one-stage firmware -
+> >> hal/hpmain.c, line 3445:
+> >>
+> >>         #ifndef ZM_OTUS_LINUX_PHASE_2
+> >>         reg_write(regAddr + i, val);  /* CR672 */
+> >>         #endif
+> >>
+> >> Are you sure it doesn't hurt with the two-stage firmware?
+> > no idea, that's why I ask requested input, instead of posting a patch +
+> > sob right away.
+> > 
+> > so far, I haven't heard of or experienced any regressions or anomalies.
+> > Do you already have comments or complains? :)
+> 
+> Your patch works fine here with a WNDA3100, using the two-stage firmware, against
+> a 802.11g AP. After "iwconfig wlan1 rate 54M" I get approx. 22 MBit/s throughput
+> with iperf, same as without the patch.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+same here... and not really surprising.
+According to my sources, the two-stage firmware is
+capable of doing calibration without extra help from
+the host.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c3ecc7e..d7e03f9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2555,6 +2555,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- #endif
- 	}
- 
-+	if (ah->ah_sc->sc_flags & SC_OP_BTCOEX_ENABLED)
-+		ath9k_hw_btcoex_enable(ah);
-+
- 	return 0;
- }
- 
--- 
-1.5.5.1
+> > Unfortunately, my device (WNDA3100) still doesn't work properly
+> > with either version at phy-rates beyond the magic 18MBit barrier.
+> 
+> Strange, same device here (or another hw version? FCC ID: PY307300073)
+> and I see packets @ 54M from the dev in the sniffer. But it also has the
+> invalid regdomain 0x8000 in the eeprom ...
 
+that comment about "18mbit barrier" is only true for the one-stage fw.
+I've no problem getting up and slightly above 80mbits with the original
+two-stage fw.
+
+Regards,
+	Chr
