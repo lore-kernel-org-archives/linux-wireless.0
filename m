@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:58108 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751276AbZGaXPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 19:15:10 -0400
-Message-ID: <4A737AFC.40301@gmx.de>
-Date: Sat, 01 Aug 2009 01:15:08 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from ey-out-2122.google.com ([74.125.78.26]:37672 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933294AbZHVTK5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2009 15:10:57 -0400
+Received: by ey-out-2122.google.com with SMTP id 22so376669eye.37
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 12:10:58 -0700 (PDT)
+Message-ID: <4A9043E5.8070205@gmail.com>
+Date: Sat, 22 Aug 2009 21:15:49 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] compat-2.6:  Makefile: fixed test expressions for target
- install
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>	 <4A733CDE.4060801@gmx.de> <1249066564.20276.3.camel@mj>
-In-Reply-To: <1249066564.20276.3.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] nl80211: jump to out_err upon unsupported iftype
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/31/2009 08:56 PM, Pavel Roskin wrote:
+Jump to out_err when the iftype is not supported.
 
-> No, I didn't mean that.  I meant:
-> 
-> if [ -z "" ] && [ -z "" ]; then echo "both empty"; fi
-> ...
-> We should not rely on any bash features as /bin/sh may not be bash at
-> all.
-
-Agreed. Will repost the patch.
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 634496b..c6fc083 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1998,7 +1998,7 @@ static int nl80211_dump_mpath(struct sk_buff *skb,
+ 
+ 	if (netdev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT) {
+ 		err = -EOPNOTSUPP;
+-		goto out;
++		goto out_err;
+ 	}
+ 
+ 	while (1) {
