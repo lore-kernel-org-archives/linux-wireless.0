@@ -1,164 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f228.google.com ([209.85.220.228]:56289 "EHLO
-	mail-fx0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbZHJSmf (ORCPT
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:59140 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933191AbZHVV7c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 14:42:35 -0400
-Received: by fxm28 with SMTP id 28so1095013fxm.17
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 11:42:35 -0700 (PDT)
-Message-ID: <4A806A19.2070209@gmail.com>
-Date: Mon, 10 Aug 2009 20:42:33 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+	Sat, 22 Aug 2009 17:59:32 -0400
+Received: by ewy3 with SMTP id 3so1478292ewy.18
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 14:59:33 -0700 (PDT)
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: Update LP-PHY rev2+ baseband init to match the specs
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <200908220038.35564.herton@mandriva.com.br>
+References: <200908220038.35564.herton@mandriva.com.br>
+Date: Sat, 22 Aug 2009 22:59:33 +0100
+Message-ID: <3ace41890908221459j70e31c20ufa5ea03973a16e0a@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rev2+ BB init spec has changed behind us, and thus the code is
-no longer up to date. Update the code to match the current specs.
-Also implement "save/restore dig filt state", as required by the
-new specification (implemented as 2 separate functions).
+On Sat, Aug 22, 2009 at 4:38 AM, Herton Ronaldo
+Krzesinski<herton@mandriva.com.br> wrote:
+> This change implements rfkill support for RTL8187B and RTL8187L devices,
+> using new cfg80211 rfkill API.
+>
+> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/phy_lp.c |   73 +++++++++++++++++++++++++++++++++++--
- drivers/net/wireless/b43/phy_lp.h |    3 ++
- 2 files changed, 72 insertions(+), 4 deletions(-)
+Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index d2af924..128d75a 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -195,6 +195,56 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
- 	}
- }
- 
-+static void lpphy_save_dig_flt_state(struct b43_wldev *dev)
-+{
-+	static const u16 addr[] = {
-+		B43_PHY_OFDM(0xC1),
-+		B43_PHY_OFDM(0xC2),
-+		B43_PHY_OFDM(0xC3),
-+		B43_PHY_OFDM(0xC4),
-+		B43_PHY_OFDM(0xC5),
-+		B43_PHY_OFDM(0xC6),
-+		B43_PHY_OFDM(0xC7),
-+		B43_PHY_OFDM(0xC8),
-+		B43_PHY_OFDM(0xCF),
-+	};
-+
-+	static const u16 coeffs[] = {
-+		0xDE5E, 0xE832, 0xE331, 0x4D26,
-+		0x0026, 0x1420, 0x0020, 0xFE08,
-+		0x0008,
-+	};
-+
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	int i;
-+
-+	for (i = 0; i < 9; i++) {
-+		lpphy->dig_flt_state[i] = b43_phy_read(dev, addr[i]);
-+		b43_phy_write(dev, addr[i], coefs[i]);
-+	}
-+}
-+
-+static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
-+{
-+	static const u16 addr[] = {
-+		B43_PHY_OFDM(0xC1),
-+		B43_PHY_OFDM(0xC2),
-+		B43_PHY_OFDM(0xC3),
-+		B43_PHY_OFDM(0xC4),
-+		B43_PHY_OFDM(0xC5),
-+		B43_PHY_OFDM(0xC6),
-+		B43_PHY_OFDM(0xC7),
-+		B43_PHY_OFDM(0xC8),
-+		B43_PHY_OFDM(0xCF),
-+	};
-+
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	int i;
-+
-+	for (i = 0; i < 9; i++)
-+		b43_phy_write(dev, addr[i], lpphy->dig_flt_state[i]);
-+}
-+
- static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- {
- 	struct ssb_bus *bus = dev->dev->bus;
-@@ -209,7 +259,7 @@ static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- 	b43_phy_write(dev, B43_PHY_OFDM(0xF9), 0);
- 	b43_phy_write(dev, B43_LPPHY_TR_LOOKUP_1, 0);
- 	b43_phy_set(dev, B43_LPPHY_ADC_COMPENSATION_CTL, 0x10);
--	b43_phy_maskset(dev, B43_LPPHY_OFDMSYNCTHRESH0, 0xFF00, 0x78);
-+	b43_phy_maskset(dev, B43_LPPHY_OFDMSYNCTHRESH0, 0xFF00, 0xB4);
- 	b43_phy_maskset(dev, B43_LPPHY_DCOFFSETTRANSIENT, 0xF8FF, 0x200);
- 	b43_phy_maskset(dev, B43_LPPHY_DCOFFSETTRANSIENT, 0xFF00, 0x7F);
- 	b43_phy_maskset(dev, B43_LPPHY_GAINDIRECTMISMATCH, 0xFF0F, 0x40);
-@@ -217,7 +267,12 @@ static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- 	b43_phy_mask(dev, B43_LPPHY_CRSGAIN_CTL, ~0x4000);
- 	b43_phy_mask(dev, B43_LPPHY_CRSGAIN_CTL, ~0x2000);
- 	b43_phy_set(dev, B43_PHY_OFDM(0x10A), 0x1);
--	b43_phy_maskset(dev, B43_PHY_OFDM(0x10A), 0xFF01, 0x10);
-+	if (bus->boardinfo.rev >= 0x18) {
-+		b43_lptab_write(dev, B43_LPTAB32(17, 65), 0xEC);
-+		b43_phy_maskset(dev, B43_PHY_OFDM(0x10A), 0xFF01, 0x14);
-+	} else {
-+		b43_phy_maskset(dev, B43_PHY_OFDM(0x10A), 0xFF01, 0x10);
-+	}
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0xDF), 0xFF00, 0xF4);
- 	b43_phy_maskset(dev, B43_PHY_OFDM(0xDF), 0x00FF, 0xF100);
- 	b43_phy_write(dev, B43_LPPHY_CLIPTHRESH, 0x48);
-@@ -247,8 +302,10 @@ static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- 	b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0xFFE0, 0x12);
- 	b43_phy_maskset(dev, B43_LPPHY_GAINMISMATCH, 0x0FFF, 0x9000);
- 
--	b43_lptab_write(dev, B43_LPTAB16(0x08, 0x14), 0);
--	b43_lptab_write(dev, B43_LPTAB16(0x08, 0x12), 0x40);
-+	if ((bus->chip_id == 0x4325) && (bus->chip_rev == 1)) {
-+		b43_lptab_write(dev, B43_LPTAB16(0x08, 0x14), 0);
-+		b43_lptab_write(dev, B43_LPTAB16(0x08, 0x12), 0x40);
-+	}
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
- 		b43_phy_set(dev, B43_LPPHY_CRSGAIN_CTL, 0x40);
-@@ -268,6 +325,14 @@ static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- 	b43_phy_write(dev, B43_LPPHY_AFE_RSSI_CTL_1,
- 		      0x2000 | ((u16)lpphy->rssi_gs << 10) |
- 		      ((u16)lpphy->rssi_vc << 4) | lpphy->rssi_vf);
-+
-+	if ((bus->chip_id == 0x4325) && (bus->chip_rev == 0)) {
-+		b43_phy_set(dev, B43_LPPHY_AFE_ADC_CTL_0, 0x1C);
-+		b43_phy_maskset(dev, B43_LPPHY_AFE_CTL, 0x00FF, 0x8800);
-+		b43_phy_maskset(dev, B43_LPPHY_AFE_ADC_CTL_1, 0xFC3C, 0x0400);
-+	}
-+
-+	lpphy_save_dig_flt_state(dev);
- }
- 
- static void lpphy_baseband_init(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
-index 829b2bb..13d89ea 100644
---- a/drivers/net/wireless/b43/phy_lp.h
-+++ b/drivers/net/wireless/b43/phy_lp.h
-@@ -865,6 +865,9 @@ struct b43_phy_lp {
- 	/* Transmit iqlocal best coeffs */
- 	bool tx_iqloc_best_coeffs_valid;
- 	u8 tx_iqloc_best_coeffs[11];
-+
-+	/* Used for "Save/Restore Dig Filt State" */
-+	u16 dig_flt_state[9];
- };
- 
- 
--- 
-1.6.2.4
+Neat!
 
+I ran a ping to the router while flicking the switch on and off, and
+have 'ping: sendmsg: Network is unreachable' in the middle. dmesg also
+shows
 
+rtl8187: wireless radio switch turned off
+wlan2: deauthenticating by local choice (reason=3)
+rtl8187: wireless radio switch turned on
+
+etc. Work as advertised.
+
+Well done!
+
+Hin-Tak
