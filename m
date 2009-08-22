@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24102 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755060AbZHNQOi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 12:14:38 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 09:14:40 -0700
-Date: Fri, 14 Aug 2009 09:14:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 00/25] wireless: cleanup and reorganize kconfig
-Message-ID: <20090814161438.GA23163@mosca>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
- <200908141000.46793.hs4233@mail.mn-solutions.de>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:46440 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755268AbZHVWGm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2009 18:06:42 -0400
+Received: by ewy3 with SMTP id 3so1480597ewy.18
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 15:06:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <200908141000.46793.hs4233@mail.mn-solutions.de>
+In-Reply-To: <4A8E9315.3000709@lwfinger.net>
+References: <200908202116.17847.herton@mandriva.com.br>
+	 <4A8DF356.8000501@lwfinger.net>
+	 <3ace41890908202054j62fda37ei64262890c6959f95@mail.gmail.com>
+	 <4A8E9315.3000709@lwfinger.net>
+Date: Sat, 22 Aug 2009 23:06:43 +0100
+Message-ID: <3ace41890908221506k4c056a1bt3836bd026951e8dd@mail.gmail.com>
+Subject: Re: [PATCH] rtl8187: always set MSR_LINK_ENEDCA flag with RTL8187B
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2009 at 01:00:46AM -0700, Holger Schurig wrote:
-> On Friday 14 August 2009 02:42:39 Luis R. Rodriguez wrote:
-> 
-> Could you also post one combined patch for all of this?
+On Fri, Aug 21, 2009 at 1:29 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> Hin-Tak Leung wrote:
+>>
 
-Sure, it seems I have to respin once more so will do after that.
+> This problem was quite strange. My system would fail when the RTL8187B
+> was inserted when the system booted. Unloading the driver did not
+> help, but removing/reinstalling the card fixed the problem. As all my
+> testing had been to install the card after booting, I never saw the
+> failure.
 
-  Luis
+Removing/reinstalling the card also reset the usb hub driver, I think,
+and does more than unloading the driver. I don't have that ability
+(rtl8187 built-in), but suspend/resume on my system also works around
+the 'can't load 2nd time' problem.
+
+Anyway, the 'can't load compat-wireless 2nd time' problem seems to
+have gone away - I just loaded it a 2nd time testing the rkfill patch.
+
+Hin-Tak
