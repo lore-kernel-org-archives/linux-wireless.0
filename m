@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:53161 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002AbZH0Jph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 05:45:37 -0400
-Date: Thu, 27 Aug 2009 10:45:39 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Mel Gorman <mel@skynet.ie>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-Subject: Re: [Bug #14016] mm/ipw2200 regression
-Message-ID: <20090827094539.GA21183@csn.ul.ie>
-References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <_yaHeGjHEzG.A.FIH.7sGlKB@chimera> <84144f020908252309u5cff8afdh2214577ca4db9b5d@mail.gmail.com> <20090826082741.GA25955@cmpxchg.org> <20090826093747.GA10955@csn.ul.ie> <20090826074409.606b5124.akpm@linux-foundation.org> <1251364289.3704.176.camel@debian>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:40726 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755802AbZHVT3j convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2009 15:29:39 -0400
+Received: by bwz19 with SMTP id 19so914327bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 12:29:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1251364289.3704.176.camel@debian>
+In-Reply-To: <20090822134044.GC6762@hash.localnet>
+References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
+	 <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
+	 <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
+	 <20090822124709.GA6762@hash.localnet>
+	 <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
+	 <20090822134044.GC6762@hash.localnet>
+Date: Sat, 22 Aug 2009 21:29:39 +0200
+Message-ID: <b637ec0b0908221229k5a738f8dgc0aa9e58337c743e@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292
+From: Fabio Comolli <fabio.comolli@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 05:11:29PM +0800, Zhu Yi wrote:
-> On Wed, 2009-08-26 at 22:44 +0800, Andrew Morton wrote:
-> > 
-> > It is perhaps pretty simple to make the second (GFP_ATOMIC) allocation
-> > go away.  The code is already conveniently structured to do this:
-> > 
-> >         do {
-> >                 chunk = (struct fw_chunk *)(data + offset);
-> >                 offset += sizeof(struct fw_chunk);
-> >                 /* build DMA packet and queue up for sending */
-> >                 /* dma to chunk->address, the chunk->length bytes from
-> > data +
-> >                  * offeset*/
-> >                 /* Dma loading */
-> >                 rc = ipw_fw_dma_add_buffer(priv, shared_phys + offset,
-> > 
-> > le32_to_cpu(chunk->address),
-> > 
-> > le32_to_cpu(chunk->length));
-> >                 if (rc) {
-> >                         IPW_DEBUG_INFO("dmaAddBuffer Failed\n");
-> >                         goto out;
-> >                 }
-> > 
-> >                 offset += le32_to_cpu(chunk->length);
-> >         } while (offset < len);
-> > 
-> > what is the typical/expected value of chunk->length here?  If it's
-> > significantly less than 4096*(2^6), could we convert this function to
-> > use a separate DMAable allocation per fw_chunk?
-> 
-> Unfortunately, the largest chunk size for the latest 3.1 firmware is
-> 0x20040, which also requires order 6 page allocation. I'll try to use
-> the firmware DMA command block (64 slots) to handle the image (each for
-> 4k, totally 256k).
-> 
+Hi Bob.
+Unfortunately the patch doesn't apply at all with compat-wireless,
+there's no "flush_workqueue" before "local->suspended" there....
 
-That would be preferable as trying to make alloc-6 atomic allocations isn't
-going to pan out. As I noted, doing it as GFP_KERNEL is possible but it'll
-manifest as weird stalls periodically when the driver is loaded due to
-reclaim and if the system is swapless, it might not work at all if memory
-is mostly anonymous.
+Please advice.
+Regards,
+Fabio
 
-If the DMA command block doesn't work out, what is the feasibility of holding
-onto the order-6 allocation once the module is loaded instead of allocing
-for the duration of the firmware loading and then freeing it again?
 
--- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+
+
+On Sat, Aug 22, 2009 at 3:40 PM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Sat, Aug 22, 2009 at 03:02:26PM +0200, Fabio Comolli wrote:
+>> Hi Bob.
+>>
+>> I'm not a git user. How can I user wireless-testing without git? Is
+>> there a patch or seomething?
+>
+> No, I'm unaware of a way to get it without git.  Well, okay, try
+> compat-wireless, but be sure to use the 'bleeding edge' compat-wireless,
+> and post the contents of its 'git-describe' file with the warnings so
+> I can be sure we're on the same page.
+>
+> http://wireless.kernel.org/en/users/Download
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
+>
