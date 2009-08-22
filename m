@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:47112 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527AbZH0PUH convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4529 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbZHVMr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 11:20:07 -0400
-Received: by fxm17 with SMTP id 17so996614fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 08:20:08 -0700 (PDT)
+	Sat, 22 Aug 2009 08:47:28 -0400
+Date: Sat, 22 Aug 2009 08:47:09 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292
+Message-ID: <20090822124709.GA6762@hash.localnet>
+References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com> <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com> <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4A96A239.9000406@lwfinger.net>
-References: <4A969572.7060807@gmail.com> <4A96A239.9000406@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 27 Aug 2009 17:19:48 +0200
-Message-ID: <69e28c910908270819n65745ad3x7346ccb8c4850db9@mail.gmail.com>
-Subject: Re: [PATCH] b43: Enable LP-PHY support by default and remove Kconfig
-	warning
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/27 Larry Finger <Larry.Finger@lwfinger.net>:
-> Gábor Stefanik wrote:
->> The most common LP-PHY device, BCM4312, is now fully functional.
->> So, no need to say "probably won't work for you" anymore.
->> It's also not "for debuggers and developers only", as it is
->> perfectly usable for end-users now (at least for BCM4312).
->>
->> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
->> ---
->> This replaces the "remove scary message" patch.
->>
->> drivers/net/wireless/b43/Kconfig |    4 +---
->> 1 files changed, 1 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/Kconfig
->> b/drivers/net/wireless/b43/Kconfig
->> index 237b1aa..2af3b35 100644
->> --- a/drivers/net/wireless/b43/Kconfig
->> +++ b/drivers/net/wireless/b43/Kconfig
->> -82,15 +82,13 @@ config B43_NPHY
-> ===
->
-> My copy of this patch is missing the @@ here. Is that true for everyone?
->
-> Larry
->
+On Fri, Aug 21, 2009 at 10:19:33AM -0400, Bob Copeland wrote:
+> Okay, I think I see what is going on here.
 
-Ah... the joy of Pastebin.
+Well I can't quite convince myself of what exactly is requeing
+sta work; we do cancel everything already as far as I can tell, but
+something is rearming, I just can't tell which.
+
+Fabio, can you please apply this patch against wireless-testing (not
+compat-wireless) and report all the warnings produced when doing a
+suspend/resume?  This should tell us the code paths that are queuing
+work too late.
+
+>From 6eb7d5c3ae8f2f42b164491acd02631858515876 Mon Sep 17 00:00:00 2001
+From: Bob Copeland <me@bobcopeland.com>
+Date: Sat, 22 Aug 2009 08:40:53 -0400
+Subject: [PATCH] mac80211: set suspended before final flush_workqueue
+
+Just a temporary debugging aid.
+---
+ net/mac80211/pm.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index a5d2f1f..231c8be 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -117,13 +117,13 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 	 * shouldn't be doing (or cancel everything in the
+ 	 * stop callback) that but better safe than sorry.
+ 	 */
+-	flush_workqueue(local->workqueue);
+-
+ 	local->suspended = true;
+ 	/* need suspended to be visible before quiescing is false */
+ 	barrier();
+ 	local->quiescing = false;
+ 
++	flush_workqueue(local->workqueue);
++
+ 	return 0;
+ }
+ 
+-- 
+1.6.2.5
+
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Bob Copeland %% www.bobcopeland.com
+
