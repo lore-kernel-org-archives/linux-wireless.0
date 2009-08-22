@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38161 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752789AbZHaTeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 15:34:14 -0400
-Message-ID: <4A9C25AE.9020109@gmx.de>
-Date: Mon, 31 Aug 2009 21:34:06 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from Cheetah.CS.UCLA.EDU ([131.179.128.24]:55330 "EHLO
+	cheetah.cs.ucla.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866AbZHVWSr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 Aug 2009 18:18:47 -0400
+Message-ID: <4A906BA6.3080309@cs.ucla.edu>
+Date: Sat, 22 Aug 2009 15:05:26 -0700
+From: Rafael Laufer <rlaufer@CS.UCLA.EDU>
 MIME-Version: 1.0
-To: Chunkeey@web.de
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ar9170: added phy register initialisation from eeprom
- values
-References: <1789900589@web.de>
-In-Reply-To: <1789900589@web.de>
-Content-Type: text/plain; charset=ISO-8859-15
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
+References: <4A8DED03.2050502@cs.ucla.edu>	 <1250842695.13872.5.camel@johannes.local>	 <69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>	 <4A8EE182.6040709@cs.ucla.edu>	 <69e28c910908211152k4423d098i92b25078139ee827@mail.gmail.com>	 <4A8EF031.4050604@cs.ucla.edu>	 <69e28c910908211257p748e8be5w6078e7e98a205ef6@mail.gmail.com>	 <4A8F01B8.40708@cs.ucla.edu> <1250927425.23605.8.camel@johannes.local>
+In-Reply-To: <1250927425.23605.8.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/2009 11:53 AM, Chunkeey@web.de wrote:
-> ...
-> See Documentation/CodingStyle - Chapter 8
-> 
-> The preferred style for long (multi-line) comments is:
-> /*
->  * look up a certain register in ar5416_phy_init[] and return the init. value
->  * for the band and bandwidth given. Return 0 if register address not found.
->  */
-> ...
+Johannes Berg wrote:
+> On Fri, 2009-08-21 at 13:21 -0700, Rafael Laufer wrote:
+>
+>   
+>> It is strange that a function called "get_rate" would also change other
+>> fields which are at first sight do not look related to rate. Why not
+>> call other functions for that? What is the reasoning behind this?
+>> Different rates have different retry counts or RTS/CTS usage?
+>>     
+> I can't tell if you're kidding or not. This also doesn't get a single
+> rate, but the entire rate control setup.
+>   
+>> As far as I could tell from a quick look in the code,
+>> rate_control_get_rate only sets the fields of info->control.rates,
+>> except for this driver-specific function.
+>>     
+> Right. And now look again what's in control.rates[].
+>   
 
-Thanks for the comments. I agree with all of them and will re-spin a patch.
+ok, I get it now. The flags and count also need to be set. Anything else?
 
-> It's amazing how much **** you can _cut_ from the vendor driver.
+>   
+>> If this function really does other stuff, then a simple solution is to
+>> check if the IEEE80211_TX_CTL_RATE_RADIOTAP flag is set and, in that
+>> case, store the value of info->control.rates[0].idx before calling
+>> rate_control_get_rate, and restoring it afterwards. Make sense?
+>>     
+> Ick, no.
+>   
+though so, it's so ugly
 
-Yes, at first sight it looks really complex but it isn't.
+Rafael
 
-> BTW: does this patch help the 1-stage fw stability, or is it still broken?
-
-Turned out I had a corrupt firmware file. After downloading from Luis' URL it works fine
-with my WNDA3100. Guess I had an earlier version from before 2009/05/28 or firefox corrupted it during download.
-
-What's your setup to get 80+ MBit/s throughput with the two-stage firmware?
-I've used an 802.11g AP so far, but have access to an 802.11n dual-band AP now.
-Guess I should use 5GHz as 2.4 is rather crowded here.
-How can I put ar9170 into 802.11n/40MHz mode?
-
-Regards,
-Jörg.
