@@ -1,180 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:57768 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752055AbZH1K1w (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:35665 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933622AbZHWNYt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 06:27:52 -0400
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Subject: [RFC PATCH 02/10] rndis_wlan: add cfg80211 set_channel
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 28 Aug 2009 13:27:53 +0300
-Message-ID: <20090828102753.15684.40187.stgit@fate.lan>
-In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
-References: <20090828102742.15684.10566.stgit@fate.lan>
+	Sun, 23 Aug 2009 09:24:49 -0400
+Received: by fxm17 with SMTP id 17so1085564fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 06:24:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <200908231455.51140.mb@bu3sch.de>
+References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+	<4A90B086.1020503@lwfinger.net> <1251018830.23605.32.camel@johannes.local>
+	<200908231455.51140.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 23 Aug 2009 15:24:29 +0200
+Message-ID: <69e28c910908230624s1600a9d4k3918875551bfbf4d@mail.gmail.com>
+Subject: Re: Abour linux driver supports BCM4325
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	feng tian <feng.of.tian@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add cfg80211 set_channel and convert wext to use it.
+On Sun, Aug 23, 2009 at 2:55 PM, Michael Buesch<mb@bu3sch.de> wrote:
+> On Sunday 23 August 2009 11:13:50 Johannes Berg wrote:
+>> On Sat, 2009-08-22 at 21:59 -0500, Larry Finger wrote:
+>> > feng tian wrote:
+>> > > Thank you for the information.
+>> > > I get your point. As for the radio and phy driver, I think it's  some
+>> > > command based configurations for the chip via SDIO. And that I can
+>> > > refer to the BCM 43xx PCI driver codes.
+>> > > Wonder if it's feasible. Needs your comments.
+>> > > Thanks
+>> >
+>> > The first step is to be able to read/write the various registers via
+>> > SDIO. That will be similar to the PCI operations. The next step is
+>> > knowing what to read/write and when. We are still working that out for
+>> > PCI. It is not trivial. See the recent postings of patches for the LP
+>> > pHY in the linux-wireless mailing list. These are _NOT_ complete.
+>>
+>> Right.
+>>
+>> You have two completely orthogonal problems:
+>>
+>>  1) changing b43 so it knows how to talk not just to SSB/PCI/PCMCIA
+>>     chips but also SDIO chips
+>
+> We already have working support for that and we're currently merging it mainline.
+> If you want to help, please test the spinlock removal patchset I just posted.
+>
+>>  2) changing b43 so it knows how to talk to your specific radio/PHY
+>>     chip, and LP PHY
+>
+> Also almost working and in the progress of merging mainline.
 
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
----
+Not necessarily true in this case - an important 4325-specific routine
+(SSB PMU recalibration) is still missing. (And I don't tink I'm
+familiar enough with ssb to do that, unfortunately.)
 
- drivers/net/wireless/rndis_wlan.c |  105 +++++--------------------------------
- 1 files changed, 15 insertions(+), 90 deletions(-)
+>
+> --
+> Greetings, Michael.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index c2af5be..ffb195d 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -517,6 +517,9 @@ static int rndis_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 
- static int rndis_leave_ibss(struct wiphy *wiphy, struct net_device *dev);
- 
-+static int rndis_set_channel(struct wiphy *wiphy,
-+	struct ieee80211_channel *chan, enum nl80211_channel_type channel_type);
-+
- static struct cfg80211_ops rndis_config_ops = {
- 	.change_virtual_intf = rndis_change_virtual_intf,
- 	.scan = rndis_scan,
-@@ -527,6 +530,7 @@ static struct cfg80211_ops rndis_config_ops = {
- 	.disconnect = rndis_disconnect,
- 	.join_ibss = rndis_join_ibss,
- 	.leave_ibss = rndis_leave_ibss,
-+	.set_channel = rndis_set_channel,
- };
- 
- static void *rndis_wiphy_privid = &rndis_wiphy_privid;
-@@ -924,46 +928,6 @@ static int level_to_qual(int level)
- }
- 
- 
--static void dsconfig_to_freq(unsigned int dsconfig, struct iw_freq *freq)
--{
--	freq->e = 0;
--	freq->i = 0;
--	freq->flags = 0;
--
--	/* see comment in wireless.h above the "struct iw_freq"
--	 * definition for an explanation of this if
--	 * NOTE: 1000000 is due to the kHz
--	 */
--	if (dsconfig > 1000000) {
--		freq->m = dsconfig / 10;
--		freq->e = 1;
--	} else
--		freq->m = dsconfig;
--
--	/* convert from kHz to Hz */
--	freq->e += 3;
--}
--
--
--static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
--{
--	if (freq->m < 1000 && freq->e == 0) {
--		if (freq->m >= 1 && freq->m <= 14)
--			*dsconfig = ieee80211_dsss_chan_to_freq(freq->m) * 1000;
--		else
--			return -1;
--	} else {
--		int i;
--		*dsconfig = freq->m;
--		for (i = freq->e; i > 0; i--)
--			*dsconfig *= 10;
--		*dsconfig /= 1000;
--	}
--
--	return 0;
--}
--
--
- /*
-  * common functions
-  */
-@@ -2067,6 +2031,15 @@ static int rndis_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
- 	return deauthenticate(usbdev);
- }
- 
-+static int rndis_set_channel(struct wiphy *wiphy,
-+	struct ieee80211_channel *chan, enum nl80211_channel_type channel_type)
-+{
-+	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
-+	struct usbnet *usbdev = priv->usbdev;
-+
-+	return set_channel(usbdev,
-+			ieee80211_frequency_to_channel(chan->center_freq));
-+}
- 
- /*
-  * wireless extension handlers
-@@ -2416,54 +2389,6 @@ static int rndis_iw_set_encode_ext(struct net_device *dev,
- }
- 
- 
--static int rndis_iw_set_freq(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	struct ndis_80211_conf config;
--	unsigned int dsconfig;
--	int len, ret;
--
--	/* this OID is valid only when not associated */
--	if (is_associated(usbdev))
--		return 0;
--
--	dsconfig = 0;
--	if (freq_to_dsconfig(&wrqu->freq, &dsconfig))
--		return -EINVAL;
--
--	len = sizeof(config);
--	ret = rndis_query_oid(usbdev, OID_802_11_CONFIGURATION, &config, &len);
--	if (ret != 0) {
--		devdbg(usbdev, "SIOCSIWFREQ: querying configuration failed");
--		return 0;
--	}
--
--	config.ds_config = cpu_to_le32(dsconfig);
--
--	devdbg(usbdev, "SIOCSIWFREQ: %d * 10^%d", wrqu->freq.m, wrqu->freq.e);
--	return rndis_set_oid(usbdev, OID_802_11_CONFIGURATION, &config,
--								sizeof(config));
--}
--
--
--static int rndis_iw_get_freq(struct net_device *dev,
--    struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct usbnet *usbdev = netdev_priv(dev);
--	struct ndis_80211_conf config;
--	int len, ret;
--
--	len = sizeof(config);
--	ret = rndis_query_oid(usbdev, OID_802_11_CONFIGURATION, &config, &len);
--	if (ret == 0)
--		dsconfig_to_freq(le32_to_cpu(config.ds_config), &wrqu->freq);
--
--	devdbg(usbdev, "SIOCGIWFREQ: %d", wrqu->freq.m);
--	return ret;
--}
--
--
- static int rndis_iw_get_rate(struct net_device *dev,
-     struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
- {
-@@ -2501,8 +2426,8 @@ static const iw_handler rndis_iw_handler[] =
- {
- 	IW_IOCTL(SIOCSIWCOMMIT)    = rndis_iw_commit,
- 	IW_IOCTL(SIOCGIWNAME)      = (iw_handler) cfg80211_wext_giwname,
--	IW_IOCTL(SIOCSIWFREQ)      = rndis_iw_set_freq,
--	IW_IOCTL(SIOCGIWFREQ)      = rndis_iw_get_freq,
-+	IW_IOCTL(SIOCSIWFREQ)      = (iw_handler) cfg80211_wext_siwfreq,
-+	IW_IOCTL(SIOCGIWFREQ)      = (iw_handler) cfg80211_wext_giwfreq,
- 	IW_IOCTL(SIOCSIWMODE)      = (iw_handler) cfg80211_wext_siwmode,
- 	IW_IOCTL(SIOCGIWMODE)      = (iw_handler) cfg80211_wext_giwmode,
- 	IW_IOCTL(SIOCGIWRANGE)     = (iw_handler) cfg80211_wext_giwrange,
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
