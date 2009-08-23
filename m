@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.235]:61956 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754569AbZHNF7d (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:45095 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933827AbZHWPah convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 01:59:33 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so389093rvb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 22:59:34 -0700 (PDT)
-Date: Fri, 14 Aug 2009 11:29:27 +0530
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5] ath9k: Set AR_WA for AR9287 as it improves consistency
-	in throughput.
-Message-ID: <20090814055927.GB3541@myhost.users.atheros.com>
+	Sun, 23 Aug 2009 11:30:37 -0400
+Received: by fxm17 with SMTP id 17so1112435fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 08:30:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200908231455.51140.mb@bu3sch.de>
+References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+	 <4A90B086.1020503@lwfinger.net>
+	 <1251018830.23605.32.camel@johannes.local>
+	 <200908231455.51140.mb@bu3sch.de>
+Date: Sun, 23 Aug 2009 23:30:37 +0800
+Message-ID: <f42a38140908230830r45ef1d01l5a9c5a4d0197e81e@mail.gmail.com>
+Subject: Re: Abour linux driver supports BCM4325
+From: feng tian <feng.of.tian@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>> You have two completely orthogonal problems:
+>>
+>>  1) changing b43 so it knows how to talk not just to SSB/PCI/PCMCIA
+>>     chips but also SDIO chips
+>
+> We already have working support for that and we're currently merging it mainline.
+> If you want to help, please test the spinlock removal patchset I just posted.
+>>  2) changing b43 so it knows how to talk to your specific radio/PHY
+>>     chip, and LP PHY
+>
+> Also almost working and in the progress of merging mainline.
+>
+> --
+> Greetings, Michael.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1d2cc25..4f58112 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3073,7 +3073,7 @@ void ath9k_hw_configpcipowersave(struct ath_hw *ah, int restore)
- 	if (ah->config.pcie_waen) {
- 		REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
- 	} else {
--		if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
-+		if (AR_SREV_9285(ah) || AR_SREV_9271(ah) || AR_SREV_9287(ah))
- 			REG_WRITE(ah, AR_WA, AR9285_WA_DEFAULT);
- 		/*
- 		 * On AR9280 chips bit 22 of 0x4004 needs to be set to
--- 
-1.6.0.1
+Okay, I'll first look into it, and then do some tests.
+Thanks.
 
+BR, Feng
