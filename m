@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:62089 "EHLO
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:44675 "EHLO
 	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbZHSIvY (ORCPT
+	with ESMTP id S933464AbZHWOkO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 04:51:24 -0400
+	Sun, 23 Aug 2009 10:40:14 -0400
+Received: by bwz19 with SMTP id 19so1099995bwz.37
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 07:40:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4A8B246D.7050004@dell.com>
-References: <4A89E768.7010207@dell.com>
-	 <1250558643.30166.109.camel@localhost.localdomain>
-	 <9b2b86520908180044l72cb8642j6256e246662f7971@mail.gmail.com>
-	 <9b2b86520908180752k66feda09rf9034a96ac6ef470@mail.gmail.com>
-	 <4A8AE459.8060102@dell.com>
-	 <9b2b86520908181408v5f7875b6sea31d8d95cc08c0b@mail.gmail.com>
-	 <1250631063.16393.14.camel@johannes.local> <4A8B246D.7050004@dell.com>
-Date: Wed, 19 Aug 2009 09:51:24 +0100
-Message-ID: <9b2b86520908190151p2bf136lb490ab721d320dad@mail.gmail.com>
-Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
-From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
-To: Mario Limonciello <mario_limonciello@dell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	cezary.jackiewicz@gmail.com, linux-acpi@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20090823001218.GE6762@hash.localnet>
+References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
+	 <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
+	 <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
+	 <20090822124709.GA6762@hash.localnet>
+	 <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
+	 <20090822134044.GC6762@hash.localnet>
+	 <b637ec0b0908221229k5a738f8dgc0aa9e58337c743e@mail.gmail.com>
+	 <20090823001218.GE6762@hash.localnet>
+Date: Sun, 23 Aug 2009 16:40:15 +0200
+Message-ID: <b637ec0b0908230740j284734f7t7ea0536c1fee406f@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/mlme.c:2292
+From: Fabio Comolli <fabio.comolli@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8/18/09, Mario Limonciello <mario_limonciello@dell.com> wrote:
-> Hi Guys:
+Hi.
 
-Hi again Mario
-
-> Alan Jenkins wrote:
+On Sun, Aug 23, 2009 at 2:12 AM, Bob Copeland<me@bobcopeland.com> wrote:
+> On Sat, Aug 22, 2009 at 09:29:39PM +0200, Fabio Comolli wrote:
+>> Hi Bob.
+>> Unfortunately the patch doesn't apply at all with compat-wireless,
+>> there's no "flush_workqueue" before "local->suspended" there....
 >
->> ... but you *do* need to unregister wifi_rfkill here, before you go on
->> to destroy it.
->>
->> +err_wifi:
->> +	rfkill_destroy(wifi_rfkill);
->> +
->> +	return ret;
->> +}
->>
->> Regards
->> Alan
->>
-> I think I've addressed this properly now and only go through each of the
-> error handlers as necessary.
+> Ah yes, it got moved into ieee80211_stop_device().  Can you put
+> local->suspended and the barrier() ahead of that?
+>
 
-Yes, that looks better.  I'm still a bit confused about poll(), I'll
-have to leave that for Johannes to verify.  Feel free to add
+Well, this crashed my system. Backtrace copied by hand:
 
-Reviewed-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+warning at net/wireless/core.c    wdev_cleanup_work [cfg80211]
 
-Regards
-Alan
+warn_slowpat_common
+warn_slowpath_null
+wdev_cleanup_work [cfg80211]
+worker_thread
+wdev_cleanup_work [cfg80211]
+autoresolve_wake_function
+worker_thread
+kthread
+kthread
+kernel_thread_helper
+
+
+> Thanks!
+
+Regards,
+Fabio
+
+
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
+>
