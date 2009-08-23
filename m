@@ -1,84 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754766AbZHGSBt (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:58104 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934002AbZHWQwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 14:01:49 -0400
-Subject: Re: [PATCH] mac80211: allow DMA optimisation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200908071855.38921.IvDoorn@gmail.com>
-References: <1249656135.7194.6.camel@johannes.local>
-	 <200908071855.38921.IvDoorn@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3jWhuawD6JcrxrQyte8D"
-Date: Fri, 07 Aug 2009 20:01:46 +0200
-Message-Id: <1249668106.7194.10.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 23 Aug 2009 12:52:21 -0400
+Received: by pzk32 with SMTP id 32so575266pzk.33
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 09:52:22 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sun, 23 Aug 2009 22:22:22 +0530
+Message-ID: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
+Subject: [PATCH] libertas: add NULL check on return value of get_zeroed_page
+From: Kiran Divekar <kirandivekar@gmail.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From fb132b536facfbdc47a24afe538c50662d16b3ad Mon Sep 17 00:00:00 2001
+From: Kiran Divekar <kirandivekar@gmail.com>
+Date: Sun, 23 Aug 2009 22:05:21 +0530
+Subject: [PATCH] add NULL check on return value of get_zeroed_page
 
---=-3jWhuawD6JcrxrQyte8D
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Most of the places in debugfs.c are missing a NULL check on the return value of
+get_zeroed_page API call. Added required NULL check at appropriate places.
 
-On Fri, 2009-08-07 at 18:55 +0200, Ivo van Doorn wrote:
+Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
+---
+ drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-> > If we have a lot of frames to transmit at once, for
-> > instance with fragmentation, it can be an optimisation
-> > to only tell the DMA engine about them on the last
-> > fragment/frame to avoid banging the IO too much. This
-> > patch allows implementation such an optimisation by
-> > telling the driver when more frames can be expected.
->=20
-> Wouldn't this be the same as the
-> 	if (ieee80211_has_morefrags())
-> 		.. kick queue ...
+diff --git a/drivers/net/wireless/libertas/debugfs.c
+b/drivers/net/wireless/libertas/debugfs.c
+index 811ffc3..893a55c 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char
+__user *userbuf,
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
+        ssize_t res;
++       if (!buf)
++               return -ENOMEM;
 
-Initially, yes, but I think we should eventually use it for sending out
-multiple frames after restarting queues etc. For instance after
-scanning, we could send out a bunch of frames at once.
+        pos += snprintf(buf+pos, len-pos, "state = %s\n",
+                                szStates[priv->connect_status]);
+@@ -68,6 +70,8 @@ static ssize_t lbs_getscantable(struct file *file,
+char __user *userbuf,
+        char *buf = (char *)addr;
+        DECLARE_SSID_BUF(ssid);
+        struct bss_descriptor * iter_bss;
++       if (!buf)
++               return -ENOMEM;
 
-> > Currently, this is used by mac80211 only on fragmented
-> > frames, but could also be used in the future on other
-> > frames when the queue was full and there are multiple
-> > frames pending.
-> >
-> > Note that drivers need to be careful when using this
-> > flag, they need to kick their DMA engines not just
-> > when this flag is clear, but also when the queue gets
-> > full so that progress can be made.
->=20
-> What would a good value be for the threshold?
-> rt2x00 currently uses 10% of the queue, which means that
-> 2 or 3 entries are kept available at all times.
+        pos += snprintf(buf+pos, len-pos,
+                "# | ch  | rssi |       bssid       |   cap    | Qual
+| SSID \n");
+@@ -110,6 +114,8 @@ static ssize_t lbs_sleepparams_write(struct file *file,
+        int p1, p2, p3, p4, p5, p6;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
-Well, for fragmentation I think the maximum number of fragments is 9.
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, user_buf, buf_size)) {
+@@ -148,6 +154,8 @@ static ssize_t lbs_sleepparams_read(struct file
+*file, char __user *userbuf,
+        struct sleep_params sp;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
-johannes
+        ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
+        if (ret)
+@@ -433,6 +441,8 @@ static ssize_t lbs_rdmac_read(struct file *file,
+char __user *userbuf,
+        int ret;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
---=-3jWhuawD6JcrxrQyte8D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+        offval.offset = priv->mac_offset;
+        offval.value = 0;
+@@ -457,6 +467,8 @@ static ssize_t lbs_rdmac_write(struct file *file,
+        ssize_t res, buf_size;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
------BEGIN PGP SIGNATURE-----
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -481,6 +493,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
+        struct lbs_offset_value offval;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
-iQIcBAABAgAGBQJKfGwHAAoJEODzc/N7+QmahOoP/3turWD21exYGd//ZkRDmZPb
-P/GQTxqZScSma5T3sCby3TWmvd0sxixhAkg3ecNKhSNOIVJj93mo4GemgkfMEfDK
-zW5Kl4U/F0cMTQ5KkGaaTjcvG6tutIECXtBXAswNk49vEd6D+EfVWmTL9rxEkQot
-O8sz/n6tteoAwqCI1z6hvZLb9QXTdwwqNmeosI/wv+xImL968+dwrqAmHSbybZgb
-Bo9GOQnd0oSLaFKHmXOMw7kmd9S3PsFsf7chzto0xQLke4VK5ICr65nWUIeJsm7U
-nPLcnImmPVicDdiRUAs/Xoy1OKNuHWXYu6jpaLLuP5atiFpwB+3PMvkWw4rypEu0
-XPblJG3K5Kiv2+3yviLoTeKmvRhuLD37OQva5UWpU+0mRWPH/zXwy+w8vrNt8DMO
-FrbxBTSmJYp4C+rYXfReyX8rgtENnLpGgWlJYR2hU969eJD/0dU/2pGXARlZ0rnl
-C7YS40cKXOpHypFb7CRYE7pWK0Hryows0xkf0fU51T+apyoZf3PtraQfmnI6LDmt
-XHiXLTIjhJCHzMq+Qq96nXZZiyaPoOO5HMY+FiVHG9qAZG4ApPXues8gNio1bUeD
-25wBDoMRDE+gdmNLjCioGg74pc4uNgt8C/iPiVpXpv0fbSzprD0T9g/+EL7QseSb
-Gk6krMf4qNWSBSUvE0QG
-=i5n6
------END PGP SIGNATURE-----
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -515,6 +529,8 @@ static ssize_t lbs_rdbbp_read(struct file *file,
+char __user *userbuf,
+        int ret;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
---=-3jWhuawD6JcrxrQyte8D--
+        offval.offset = priv->bbp_offset;
+        offval.value = 0;
+@@ -540,6 +556,8 @@ static ssize_t lbs_rdbbp_write(struct file *file,
+        ssize_t res, buf_size;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
 
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -564,6 +582,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
+        struct lbs_offset_value offval;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
+
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -598,6 +618,8 @@ static ssize_t lbs_rdrf_read(struct file *file,
+char __user *userbuf,
+        int ret;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
+
+        offval.offset = priv->rf_offset;
+        offval.value = 0;
+@@ -623,6 +645,8 @@ static ssize_t lbs_rdrf_write(struct file *file,
+        ssize_t res, buf_size;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
+
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -647,6 +671,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
+        struct lbs_offset_value offval;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
+
+        buf_size = min(count, len - 1);
+        if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -853,6 +879,8 @@ static ssize_t lbs_debugfs_read(struct file *file,
+char __user *userbuf,
+        struct debug_data *d;
+        unsigned long addr = get_zeroed_page(GFP_KERNEL);
+        char *buf = (char *)addr;
++       if (!buf)
++               return -ENOMEM;
+
+        p = buf;
+
+--
+1.5.3.4
+
+-----
+-Kiran Divekar.
+http://www.geeksofpune.org/
+http://www.geocities.com/kirandivekar/
