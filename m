@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:49214 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbZHaScG (ORCPT
+Received: from fmmailgate05.web.de ([217.72.192.243]:59493 "EHLO
+	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753094AbZHXUdU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:32:06 -0400
-Received: by fxm17 with SMTP id 17so2947380fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 11:32:07 -0700 (PDT)
+	Mon, 24 Aug 2009 16:33:20 -0400
+Date: Mon, 24 Aug 2009 22:33:16 +0200
+Message-Id: <1779655662@web.de>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-References: <h7eo7q$7ks$1@ger.gmane.org>
-	 <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	 <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-Date: Mon, 31 Aug 2009 19:32:07 +0100
-Message-ID: <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Chunkeey@web.de
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Bob Copeland <bcopeland@gmail.com>
+Cc: Chr <chunkeey@web.de>, Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: Kernel Panic in __ieee80211_tx with p43usb as AP
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 7:02 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Mon, Aug 31, 2009 at 10:55 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->> On Sun, Aug 30, 2009 at 9:44 PM, Tobias
->> Schlemmer<keinstein_junior@gmx.net> wrote:
->>> Hi,
->>>
->>> I have some problem with my rtl8187b device. It is included in my laptop
->>> running Ubuntu linux 2.6.28. I've tested several compat-wireless releases
->>> including 2.6.30 and 2.6.31-rc7.
->>
->> Hmm, are compat-wireless versioned against kernels?
->
-> The stable ones are:
->
-> http://wireless.kernel.org/en/users/Download/stable/
->
->  Luis
->
+> On Mon, Aug 24, 2009 at 4:07 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> > static inline int drv_tx(struct ieee80211_local *local, struct sk_buff
+> > *skb)
+> > {
+> >        return local->ops->tx(&local->hw, skb);
+> > }
+> >
+> > Are there any suggest changes that would let me debug this problem
+> > without crashing the kernel?
+> 
+> Could be a callback into mac80211, e.g. ieee80211_get_tx_rate()
+> returning null (I haven't looked at any p54 code, I just know I've hit
+> one there before with ath5k).
 
-Thanks - it is new addition to the web-site :-), I see. Anyway, Larry
-and Herton have made more changes/improvements in rtl8187 in
-latest-and-greatest than 2.6.31-rc7...
+huu. at this point the frame already has a valid rate.
+I guessing the dump is missing some more lines and 
+it crashes somewhere deep down in the driver.
+But, I'm not yet sure where exactly... do you think
+you can capture a full oops?
+
+Regards,
+   Chr
+________________________________________________________________
+Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
+für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
+
