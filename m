@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:38926 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753415AbZHaRdv (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:44917 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183AbZHXSKJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 13:33:51 -0400
-Received: by fxm17 with SMTP id 17so2905702fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 10:33:52 -0700 (PDT)
-Message-ID: <4A9C097C.6050509@lwfinger.net>
-Date: Mon, 31 Aug 2009 12:33:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 24 Aug 2009 14:10:09 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+Date: Mon, 24 Aug 2009 15:10:10 -0300
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <200908220038.35564.herton@mandriva.com.br> <3ace41890908221459j70e31c20ufa5ea03973a16e0a@mail.gmail.com> <3ace41890908231238h32b85839qe74bce2852103402@mail.gmail.com>
+In-Reply-To: <3ace41890908231238h32b85839qe74bce2852103402@mail.gmail.com>
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Inter 5300 AGN with unsupported EEPROM
-References: <4A9B0BF8.3040505@lwfinger.net> <1251737294.13180.4.camel@rc-desk>
-In-Reply-To: <1251737294.13180.4.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200908241510.10968.herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Reinette,
-
-reinette chatre wrote:
+Em Dom 23 Ago 2009, às 16:38:43, Hin-Tak Leung escreveu:
+> On Sat, Aug 22, 2009 at 10:59 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+> > On Sat, Aug 22, 2009 at 4:38 AM, Herton Ronaldo
+> > Krzesinski<herton@mandriva.com.br> wrote:
+> >> This change implements rfkill support for RTL8187B and RTL8187L devices,
+> >> using new cfg80211 rfkill API.
+> >>
+> >> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> >
+> > Tested-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+> >
+> > Neat!
+> >
+> > I ran a ping to the router while flicking the switch on and off, and
+> > have 'ping: sendmsg: Network is unreachable' in the middle. dmesg also
+> > shows
 > 
-> All production cards are supported by the driver. I thus do not know how
-> an unsupported card can be obtained from a reputable dealer. Would it be
-> possible to obtain images of both sides of this card showing all numbers
-> clearly? You can send this to me off list and I can see if it is
-> possible to determine what type of card we are dealing with here.
+> It appears that I wrote prematurely - flicking the switch with the
+> patch seems to just do the equivalent of ifconfig down.
 
+Yes, the equivalent of ifconfig down is what cfg80211 rfkill does in this case.
 
-The info I posted was in error. The computer came from Best Buy, but
-he got the card on E-Bay. I'll see what I can do about getting the
-pictures.
+> (before the patch, the switch has no effect). However, NetworkManager
+> soon notices the interface going down and ifup it again. So I have
+> simply got a 30s to 1 minute disruption in connectivity.
 
-Thanks for your attention,
+This is strange, may be NetworkManager does something extra and for some reason
+manages to wake up the interface again? I thought it would be unable to "if up"
+the interface since -ERFKILL should be returned to it when switch is off...
 
-Larry
+> 
+> Is this intentional? I thought it is supposed to actually switch off
+> the hardware, or is this how the code supposed to work?
+> Maybe some component needs to let NM knows not to reenanble the device.
+
+About taking interface down, thats expected, but I don't know about
+NetworkManager, I was expecting it to be unable to "if up" the interface again.
+
+> 
+> Hin-Tak
+> 
+
+-- 
+[]'s
+Herton
