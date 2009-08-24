@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41430 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbZHBHps (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44509 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbZHXOpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 03:45:48 -0400
-Subject: Re: [PATCH 1/1] rfkill: add the GPS radio type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
-References: <1249169809-11853-1-git-send-email-tomas.winkler@intel.com>
-	 <1249171448.3491.32.camel@localhost.localdomain>
-	 <1ba2fa240908012249s348a2412wca21de44f9b8cb71@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-2dqEVKMjHwJ19EgHU41y"
-Date: Sun, 02 Aug 2009 09:45:43 +0200
-Message-Id: <1249199143.2007.2.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 24 Aug 2009 10:45:12 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1MfanJ-0003m5-Q1
+	for linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 10:45:13 -0400
+Received: from linville-t400.local (linville-t400.local [127.0.0.1])
+	by linville-t400.local (8.14.3/8.14.3) with ESMTP id n7OEaMjA010784
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 10:36:22 -0400
+Received: (from linville@localhost)
+	by linville-t400.local (8.14.3/8.14.3/Submit) id n7OEaMjX010782
+	for linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 10:36:22 -0400
+Date: Mon, 24 Aug 2009 10:36:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: [davem@davemloft.net: consider 2.6.31 a done deal...]
+Message-ID: <20090824143622.GC8998@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+FYI...obviously, this goes for wireless fixes for 2.6.31 as well...
 
---=-2dqEVKMjHwJ19EgHU41y
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+----- Forwarded message from David Miller <davem@davemloft.net> -----
 
-On Sun, 2009-08-02 at 08:49 +0300, Tomas Winkler wrote:
+> Date: Sun, 23 Aug 2009 23:21:11 -0700 (PDT)
+> From: David Miller <davem@davemloft.net>
+> To: netdev@vger.kernel.org
+> Subject: consider 2.6.31 a done deal...
+> X-Mailer: Mew version 6.2.51 on Emacs 22.1 / Mule 5.0 (SAKAKI)
+> 
+> 
+> At least that should be your mindset when you submit changes
+> at this point.  With the net-2.6 pull request I just sent to
+> Linus, I really don't want to see anything submitted for
+> net-2.6 unless it is EARTH SHATTERING.
+> 
+> And chances are, the "super important" bug fix you might have for your
+> driver is absolutely not EARTH SHATTERING.
+> 
+> So don't even try to slip it by me.  Ok? :-)
+> 
+> net-next-2.6 submissions, on the other hand, are very highly
+> encouraged :-)
+> 
+> Thanks!
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-> > we don't have a GPS subsystem, but even without it, I think this is a
-> > good thing to have.
->=20
-> GPS devices are usually serial devices.
+----- End forwarded message -----
 
-Yeah, this is interesting -- do we want something like /dev/urfkill
-(cf. /dev/uinput), so that gpsd or whatever is controlling the GPS (same
-applies for 3G) can be controlled with rfkill?
-
-johannes
-
---=-2dqEVKMjHwJ19EgHU41y
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKdUQbAAoJEODzc/N7+QmaHakQAJ8MRsCtp01GCDyUubCtZvZY
-jfTcB3PHGUUQtvuckq6Z8sZQBYwc9/8qcFP7cD/02RcWIn8JYgMHmL/lENAMM3zB
-f9FT2+qZzw4frxHUI1FENiaaMwUAyd0aOGn3pKHuBNbDaRNvrD2lPciBZe1A3uw9
-PI7u71IvU5gr3SA6bdXifb8TTA+tfcUGBA0UV8ikhnNV8pVK+aH9UPzcFNkQFh4z
-HP1FGfvvYc4SZdVXb66nhYS8v9mgNWtaSrWY0GjS28jIN2mhKD88SBD4SF6RX9Ju
-YY47srkzKUgm8vk+AykpF5jQet9A27v5QNGYcgM7Ry7R9hVY+AU20UiqIS2bWWsu
-N96X1U8u/34DqFClBRCsA60XXG5JFxd2AXMghEfFY94S3xIUoELtEMtO6c5AcOOe
-JiP9tsAzcwPWi/Q+OQHgkqC2K5iS2oBVdcIsHe06jqL6WA91jo62c53qdC41iQG7
-Zu9CwoMdBOiWfmpf1bLj//3S1nbI4a12THHbE/szjt1sZInTBXEdm7X4gW5KqJAO
-N3gP/ORb3BuPzTGTAjCPoyUEionvkbiJJPMklrNJw9fN/8nVj19okcEoYULIvAlw
-EmkWiSix4cJZZcWBNHH9S2Cj/EWITx0/BxQYy3hyUt8mA4kYqydlIBSvzAHTo0c0
-hSYLSYw45ZmSBusfo/eo
-=C5AM
------END PGP SIGNATURE-----
-
---=-2dqEVKMjHwJ19EgHU41y--
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
