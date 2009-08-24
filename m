@@ -1,33 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:37593 "EHLO vs166246.vserver.de"
+Received: from c60.cesmail.net ([216.154.195.49]:19756 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753292AbZHTRPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 Aug 2009 13:15:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RESEND] [PATCH] b43 : remove old kidx API
-Date: Thu, 20 Aug 2009 19:15:13 +0200
-Cc: gregor kowski <gregor.kowski@gmail.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <83a869cd0907271343g6111794ejff963258a52f546@mail.gmail.com> <20090820145213.GB2657@tuxdriver.com>
-In-Reply-To: <20090820145213.GB2657@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908201915.13498.mb@bu3sch.de>
+	id S1753063AbZHXSUS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2009 14:20:18 -0400
+Subject: Re: [PATCH] mac80211: Fix output of minstrels rc_stats
+From: Pavel Roskin <proski@gnu.org>
+To: Joe Perches <joe@perches.com>
+Cc: Arnd Hannemann <hannemann@nets.rwth-aachen.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1251136676.3873.28.camel@Joe-Laptop.home>
+References: <1251135778-27288-1-git-send-email-hannemann@nets.rwth-aachen.de>
+	 <1251136676.3873.28.camel@Joe-Laptop.home>
+Content-Type: text/plain
+Date: Mon, 24 Aug 2009 14:20:15 -0400
+Message-Id: <1251138015.13464.2.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 20 August 2009 16:52:13 John W. Linville wrote:
-> On Mon, Jul 27, 2009 at 10:43:36PM +0200, gregor kowski wrote:
-> > Remove old kidx API.
-> > This simplify the code, and fix a potential key overflow.
+On Mon, 2009-08-24 at 10:57 -0700, Joe Perches wrote:
+> On Mon, 2009-08-24 at 19:42 +0200, Arnd Hannemann wrote:
+> > An integer overflow in the minstrel debug code prevented the
+> > throughput to be displayed correctly. This patch fixes that,
+> > by swaping the division and multiplication.
 > > 
-> > Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
+> > Signed-off-by: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+> > ---
+> >  net/mac80211/rc80211_minstrel_debugfs.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+> > index 98f4807..caf9453 100644
+> > --- a/net/mac80211/rc80211_minstrel_debugfs.c
+> > +++ b/net/mac80211/rc80211_minstrel_debugfs.c
+> > @@ -83,7 +83,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+> >  		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+> >  				(mr->bitrate & 1 ? ".5" : "  "));
+> >  
+> > -		tp = ((mr->cur_tp * 96) / 18000) >> 10;
+> > +		tp = ((mr->cur_tp / 18000) * 96) >> 10;
 > 
-> Is this patch still relevant?
+> Maybe do_div instead?
 
-no 
+How about this?
+
+tp = mr->cur_tp / ((18000 << 10) / 96);
+
+((18000 << 10) / 96) is exactly 192000.
 
 -- 
-Greetings, Michael.
+Regards,
+Pavel Roskin
