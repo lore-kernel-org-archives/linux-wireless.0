@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50365 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44563 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbZH3Wpi (ORCPT
+	with ESMTP id S1751078AbZHXUPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 18:45:38 -0400
-Date: Sun, 30 Aug 2009 18:35:10 -0400
+	Mon, 24 Aug 2009 16:15:13 -0400
+Date: Mon, 24 Aug 2009 16:00:19 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw2100-devel@lists.sourceforge.net,
-	akpm <akpm@linux-foundation.org>
-Subject: Re: [PATCH -next] ipw2200: fix kconfig dependencies
-Message-ID: <20090830223510.GB2087@tuxdriver.com>
-References: <4A9ADFA1.5030706@oracle.com>
+To: Kiran Divekar <kirandivekar@gmail.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] libertas: add NULL check on return value of
+	get_zeroed_page
+Message-ID: <20090824200019.GD8998@tuxdriver.com>
+References: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A9ADFA1.5030706@oracle.com>
+In-Reply-To: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 30, 2009 at 01:22:57PM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+On Sun, Aug 23, 2009 at 10:22:22PM +0530, Kiran Divekar wrote:
+> From fb132b536facfbdc47a24afe538c50662d16b3ad Mon Sep 17 00:00:00 2001
+> From: Kiran Divekar <kirandivekar@gmail.com>
+> Date: Sun, 23 Aug 2009 22:05:21 +0530
+> Subject: [PATCH] add NULL check on return value of get_zeroed_page
 > 
-> Fix kconfig dependencies for ipw2x00 drivers, fixes build errors:
+> Most of the places in debugfs.c are missing a NULL check on the return value of
+> get_zeroed_page API call. Added required NULL check at appropriate places.
 > 
-> ERROR: "wiphy_free" [drivers/net/wireless/ipw2x00/libipw.ko] undefined!
-> ERROR: "wiphy_unregister" [drivers/net/wireless/ipw2x00/libipw.ko] undefined!
-> ERROR: "wiphy_new" [drivers/net/wireless/ipw2x00/libipw.ko] undefined!
-> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
-> ERROR: "wiphy_register" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
 
-Oops!  My bad...thanks, Randy!
+#1 -- Don't post the output of git format-patch directly like this.  Use git
+	send-email instead.
+
+> ---
+>  drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
+>  1 files changed, 28 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/debugfs.c
+> b/drivers/net/wireless/libertas/debugfs.c
+> index 811ffc3..893a55c 100644
+> --- a/drivers/net/wireless/libertas/debugfs.c
+> +++ b/drivers/net/wireless/libertas/debugfs.c
+> @@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char
+> __user *userbuf,
+>         unsigned long addr = get_zeroed_page(GFP_KERNEL);
+>         char *buf = (char *)addr;
+>         ssize_t res;
+> +       if (!buf)
+> +               return -ENOMEM;
+> 
+>         pos += snprintf(buf+pos, len-pos, "state = %s\n",
+>                                 szStates[priv->connect_status]);
+
+#2 -- Don't use an MUA that alters whitespace in the message.
+
+Feel free to repost...
 
 John
 -- 
