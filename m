@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4399 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230AbZH1VkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 17:40:12 -0400
-Message-ID: <4A984EBA.9040608@canonical.com>
-Date: Fri, 28 Aug 2009 15:40:10 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: reinette chatre <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station inserted
-References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>	 <1251445557.4189.14.camel@johannes.local>	 <1251474321.3805.73.camel@rc-desk> <1251493298.3456.34.camel@johannes.local>
-In-Reply-To: <1251493298.3456.34.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:35038 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753234AbZHXSvd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2009 14:51:33 -0400
+Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
+ by mta-2.ms.rz.RWTH-Aachen.de
+ (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
+ with ESMTP id <0KOW00MP79PYYHG0@mta-2.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 20:51:34 +0200 (CEST)
+From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+To: linux-wireless@vger.kernel.org
+Cc: joe@perches.com, proski@gnu.org,
+	Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+Subject: [PATCH v2] mac80211: Fix output of minstrels rc_stats
+Date: Mon, 24 Aug 2009 20:51:46 +0200
+Message-id: <1251139906-31813-1-git-send-email-hannemann@nets.rwth-aachen.de>
+In-reply-to: <1251138015.13464.2.camel@mj>
+References: <1251138015.13464.2.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Hi Reinette,
-> 
->> This work is motivated by an attempt to untangle the iwlwifi station
->> management to be able to use mac80211's sta notify callback. From 4965
->> and up the rate scaling in the device is done per station, so an entry
->> in the station table is required for the rate scaling initialization to
->> succeed. 
-> 
-> Interesting. I've been thinking about making it go the other way --
-> remove rate scaling hooks completely. wl1271 apparently has rate scaling
-> completely in the firmware, so the RS algorithm on the host is just
-> overhead. I've been thinking putting 4965+ RS into the _driver_ makes
-> more sense since it really does a lot in the firmware and not on the
-> host.
-> 
-> Do you think we should try to go that route? I'd think it would probably
-> be a hardware flag ("no RS algo please") and then we'd skip all the
-> hooks and put things into the driver. The advantage is that we don't
-> care about the mac80211 API any more, things get cleaner and we can just
-> do all RS init from sta_notify().
-> 
+An integer overflow in the minstrel debug code prevented the
+throughput to be displayed correctly. This patch fixes that,
+by permutating operations like proposed by Pavel Roskin.
 
-Wouldn't that make it difficult to experiment with external rate scaling 
-algorithms? Not that minstrel or the other in-driver rate scaling 
-algorithms always get it right, but they are certainly more transparent 
-(and changeable) then firmware.
+Signed-off-by: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+---
+ net/mac80211/rc80211_minstrel_debugfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-rtg
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 98f4807..3d72ec5 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -83,7 +83,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
+ 
+-		tp = ((mr->cur_tp * 96) / 18000) >> 10;
++		tp = mr->cur_tp / ((18000 << 10) / 96);
+ 		prob = mr->cur_prob / 18;
+ 		eprob = mr->probability / 18;
+ 
 -- 
-Tim Gardner tim.gardner@canonical.com
+1.6.4.1
+
