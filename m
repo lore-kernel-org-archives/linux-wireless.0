@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46986 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581AbZH0Xe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 19:34:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2] mac80211: initialize rate control after station inserted
-Date: Thu, 27 Aug 2009 16:34:54 -0700
-Message-Id: <1251416094-10420-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
-References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+Received: from fmmailgate05.web.de ([217.72.192.243]:54013 "EHLO
+	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708AbZHXRY0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2009 13:24:26 -0400
+Date: Mon, 24 Aug 2009 19:24:26 +0200
+Message-Id: <1779292525@web.de>
+MIME-Version: 1.0
+From: Chunkeey@web.de
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Max Filippov <jcmvbkbc@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: =?iso-8859-15?Q?Re:_[Fwd:_[Bug_13725]_p54_gets_a_"tx_refused_but_queue?=
+ =?iso-8859-15?Q?_active"_WARNING_from_mac80211]?=
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+> Christian and Johannes,
+> 
+> A dongle running p54usb gets a "tx refused but queue active" WARNING
+> when used as an AP using hostapd and running 2.6.31-rc6 from Linus's
+> tree, even with my patch that fixed this problem in STA mode.
+> Christian, have you tested this configuration? Johannes - any thoughts?
 
-Station information may be needed by rate control algorithms, so call rate
-scaling initialization after adding the station.
+well, this particular WARN_ON can probably be fixed by reverting the following patch:
+"p54: call p54_wake_free_queues on every p54_free_skb and p54_rx_frame_sent"
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- net/mac80211/ibss.c |    3 ++-
- net/mac80211/mlme.c |    4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+however, based on Max commit description this patch is necessary for p54spi to
+work properly. So, I'm not going to touch it...
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 920ec87..040d184 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -413,11 +413,12 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
- 
--	rate_control_rate_init(sta);
- 
- 	if (sta_info_insert(sta))
- 		return NULL;
- 
-+	rate_control_rate_init(sta);
-+
- 	return sta;
- }
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 97a278a..307b33c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1554,8 +1554,6 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 
- 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
- 
--	rate_control_rate_init(sta);
--
- 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
- 		set_sta_flags(sta, WLAN_STA_MFP);
- 
-@@ -1572,6 +1570,8 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
-+	rate_control_rate_init(sta);
-+
- 	rcu_read_unlock();
- 
- 	if (elems.wmm_param)
--- 
-1.5.6.3
+The best thing he can do now is to use compat-wireless.
+(Or since he uses a -rc kernel anyway, why not wireless-testing?)
+wireless-testing/cw does not only have a newer driver,
+but also mac80211 improvements for power-saving clients.
+________________________________________________________________
+Neu: WEB.DE Doppel-FLAT mit Internet-Flatrate + Telefon-Flatrate
+für nur 19,99 Euro/mtl.!* http://produkte.web.de/go/02/
 
