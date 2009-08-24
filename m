@@ -1,107 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45803 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbZHZPrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 11:47:12 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:47:15 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 5/8] ath9k: Determine btcoex scheme type based on chip version
-Date: Wed, 26 Aug 2009 21:08:47 +0530
-Message-ID: <1251301130-10912-6-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1251301130-10912-5-git-send-email-vasanth@atheros.com>
-References: <1251301130-10912-1-git-send-email-vasanth@atheros.com>
- <1251301130-10912-2-git-send-email-vasanth@atheros.com>
- <1251301130-10912-3-git-send-email-vasanth@atheros.com>
- <1251301130-10912-4-git-send-email-vasanth@atheros.com>
- <1251301130-10912-5-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from xc.sipsolutions.net ([83.246.72.84]:58130 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751724AbZHXTvV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 Aug 2009 15:51:21 -0400
+Subject: Re: Few warnings from master-2009-08-17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890908241243w6b6de4d9o6e2fc22e5c814f5e@mail.gmail.com>
+References: <43e72e890908171804t2279c750j7baeaf37ad4ff205@mail.gmail.com>
+	 <1250847779.17888.5.camel@johannes.local>
+	 <43e72e890908241121j43683b75x38ef7c2ef3a71463@mail.gmail.com>
+	 <1251142659.12661.0.camel@johannes.local>
+	 <43e72e890908241243w6b6de4d9o6e2fc22e5c814f5e@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z6jJoEkd4FDYfuPHdOhW"
+Date: Mon, 24 Aug 2009 21:50:51 +0200
+Message-Id: <1251143451.12661.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.h |    7 +++++++
- drivers/net/wireless/ath/ath9k/hw.c     |   12 ++++++++++--
- drivers/net/wireless/ath/ath9k/main.c   |    4 +++-
- 3 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index c80492b..cdfa80d 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -20,7 +20,14 @@
- #define ATH_WLANACTIVE_GPIO	5
- #define ATH_BTACTIVE_GPIO	6
- 
-+enum ath_btcoex_scheme {
-+	ATH_BTCOEX_CFG_NONE,
-+	ATH_BTCOEX_CFG_2WIRE,
-+	ATH_BTCOEX_CFG_3WIRE,
-+};
-+
- struct ath_btcoex_info {
-+	enum ath_btcoex_scheme btcoex_scheme;
- 	u8 wlanactive_gpio;
- 	u8 btactive_gpio;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 3bb6abd..7b4bc8b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3489,6 +3489,7 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-+	struct ath_btcoex_info *btcoex_info = &ah->ah_sc->btcoex_info;
- 
- 	u16 capField = 0, eeval;
- 
-@@ -3666,8 +3667,15 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 
- 	if (AR_SREV_9280_10_OR_LATER(ah) && btcoex_enable) {
- 		pCap->hw_caps |= ATH9K_HW_CAP_BT_COEX;
--		ah->ah_sc->btcoex_info.btactive_gpio = ATH_BTACTIVE_GPIO;
--		ah->ah_sc->btcoex_info.wlanactive_gpio = ATH_WLANACTIVE_GPIO;
-+		btcoex_info->btactive_gpio = ATH_BTACTIVE_GPIO;
-+		btcoex_info->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
-+
-+		if (AR_SREV_9285(ah))
-+			btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_3WIRE;
-+		else
-+			btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_2WIRE;
-+	} else {
-+		btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_NONE;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 878d3be..8a2f000 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1509,7 +1509,8 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc)
- 			ARRAY_SIZE(ath9k_5ghz_chantable);
- 	}
- 
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX)
-+	if ((ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX) &&
-+	    (sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE))
- 		ath9k_hw_btcoex_init(ah);
- 
- 	return 0;
-@@ -1993,6 +1994,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
- 
- 	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX) &&
-+	    (sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) &&
- 	    !(sc->sc_flags & SC_OP_BTCOEX_ENABLED))
- 		ath9k_hw_btcoex_enable(sc->sc_ah);
- 
--- 
-1.5.5.1
+--=-Z6jJoEkd4FDYfuPHdOhW
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-08-24 at 12:43 -0700, Luis R. Rodriguez wrote:
+
+> > Ok, but I don't see the warning after that.
+>=20
+> Well it was in the e-mail. Here is some log, not sure if it was the
+> exact same one from that day but it does seem the capture the entire
+> thing:
+>=20
+> [ 1058.261102] No probe response from AP  <AP-mac-address> after 500ms, t=
+ry 1
+> [ 1058.761100] No probe response from AP  <AP-mac-address> after 500ms, t=
+ry 2
+> [ 1059.261122] No probe response from AP  <AP-mac-address> after 500ms, t=
+ry 3
+> [ 1059.761105] No probe response from AP  <AP-mac-address> after 500ms, t=
+ry 4
+> [ 1060.261105] No probe response from AP  <AP-mac-address> after
+> 500ms, disconnecting.
+> [ 1060.264257] phy1: device now idle
+> [ 1060.268293] phy1: Removed STA  <AP-mac-address>
+> [ 1060.290788] phy1: Destroyed STA  <AP-mac-address>
+> [ 1060.290961] wlan6: deauthenticating by local choice (reason=3D3)
+> [ 1060.291025] ------------[ cut here ]------------
+> [ 1060.291057] WARNING: at net/wireless/sme.c:610
+> __cfg80211_disconnected+0x1fb/0x260 [cfg80211]()
+
+Well, yes, I just can't reproduce the warning. Need better instructions
+how you do that.
+
+johannes
+
+--=-Z6jJoEkd4FDYfuPHdOhW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKku8XAAoJEODzc/N7+QmaLkcP/R4+AVLMbqcphlxO26fpo9wI
+qlLITvQeSPQUVu8Tp6LT4fUdGb/oTYba9G+WFtWiRh7Tff4pYPZe7hk4trNNdJuu
+B9zxm1/GdUjXlkLBLfidF2szL+cGGbLbDpSqnYXjU13OvDBHau3L2p2d0VQZXRlo
+5j35+fJ3j53sM0e+wEUzMM4T2s6IgkuIoQJPWmiaRHCs+9Y6Tv/IbiAZ3Es+K7+C
+i9UtMDgMfwcsDDtsnjSq5Bv7e6vSTSqSzFGEzjbc5dKuWm8wTPDiVsEpZKfd6/GR
+9Ch+gtAZzLIJiuTUuZFWsvHq37sKOEatPMlZbS8sijQIQL2PseB/lgPYh280TVvg
+KbrMRxOutCo5yDwJdniqGDrvBHuIpfYtI0EHBz5c/1D8TFzMad3DGi9lRM8aYaen
+HxIxysh00fe38VObO21rzp3CSev5wdxeOWCscl3eVc0f2GpPzYAPcJFj2LQy4cu0
+RVoTgdsjTea3dluop77zLM3cI8PNoWiekTTQH4CWovtxHPy2Ql1eeICU2jCqcKnM
+DHAe2UY+LUaPHtHiSHN3qgW3t1HZZ5cHBoc4OZJ0MS5D8E+U0LrZDuEPWQIaIkCm
+XqiU+SNEsXTu21A46qpBF+mSZvYjNIa1jG+vI31NqNpshuzFePijycRvRG/vbzh6
+YpKnqqXSz4+Z1XWMRUU2
+=wbNR
+-----END PGP SIGNATURE-----
+
+--=-Z6jJoEkd4FDYfuPHdOhW--
 
