@@ -1,59 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41490 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755416AbZHMTbt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752914AbZHXTiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Daniel Drake <dsd@gentoo.org>,
-	Stephen Chen <stephen.chen@atheros.com>
-Subject: [PATCH 07/20] wireless: group ZyDAS wireless drivers in kconfig
-Date: Thu, 13 Aug 2009 15:31:36 -0400
-Message-Id: <1250191909-21682-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 24 Aug 2009 15:38:09 -0400
+Subject: Re: Few warnings from master-2009-08-17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890908241121j43683b75x38ef7c2ef3a71463@mail.gmail.com>
+References: <43e72e890908171804t2279c750j7baeaf37ad4ff205@mail.gmail.com>
+	 <1250847779.17888.5.camel@johannes.local>
+	 <43e72e890908241121j43683b75x38ef7c2ef3a71463@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-XdXo/6HtwQbQKtYwAwqA"
+Date: Mon, 24 Aug 2009 21:37:39 +0200
+Message-Id: <1251142659.12661.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Stephen Chen <stephen.chen@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 2ab6271..a74aab2 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -347,6 +347,15 @@ config PRISM54
- 
- endif # CONEXANT_ST_80211
- 
-+menuconfig ZYDAS_80211
-+	bool "ZyDAS 802.11bg Wireless Cards"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for ZyDAS wireless drivers. This includes
-+	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
-+
-+if ZYDAS_80211
-+
- source "drivers/net/wireless/zd1211rw/Kconfig"
- 
- config USB_ZD1201
-@@ -367,6 +376,8 @@ config USB_ZD1201
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called zd1201.
- 
-+endif # ZYDAS_80211
-+
- config USB_NET_RNDIS_WLAN
- 	tristate "Wireless RNDIS USB support"
- 	depends on USB && WLAN_80211 && EXPERIMENTAL
--- 
-1.6.2.5
+--=-XdXo/6HtwQbQKtYwAwqA
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, 2009-08-24 at 11:21 -0700, Luis R. Rodriguez wrote:
+
+> [ 1058.261102] No probe response from AP <AP-mac-address> after 500ms, tr=
+y 1
+> [ 1058.761100] No probe response from AP <AP-mac-address> after 500ms, tr=
+y 2
+> [ 1059.261122] No probe response from AP <AP-mac-address> after 500ms, tr=
+y 3
+> [ 1059.761105] No probe response from AP <AP-mac-address> after 500ms, tr=
+y 4
+> [ 1060.261105] No probe response from AP <AP-mac-address> after 500ms,
+> disconnecting.
+> [ 1060.264257] phy1: device now idle
+> [ 1060.268293] phy1: Removed STA <AP-mac-address>
+> [ 1060.290788] phy1: Destroyed STA <AP-mac-address>
+> [ 1060.290961] wlan6: deauthenticating by local choice (reason=3D3)
+
+Ok, but I don't see the warning after that.
+
+johannes
+
+--=-XdXo/6HtwQbQKtYwAwqA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKkuv/AAoJEODzc/N7+QmaquoQAIYF+GqYATMJ7qLipuqb1nTc
+uK9aMHwJUvsS1HSmDNuIhMcYvqQL9sZ4GduROtkIhAEVtxBRSmm/R35hYhLIauBW
+SuOpanENGUC6YM6si3bI6FWq+iOlo28m19rEQKFOm4bXalSnbh0t6LM8UkmEOcZl
+C6u/KHmbdRejvU/r5Igx5nClhrOzDF+pnFT+gZm5r8pxuG2UeOAtlM9BrWHWXgLB
+Tthg9sGFNSoKCaMuSOt76+dW+fR6LGo+EdRDVWC6mHFgG3t/b6BHBuT9fufW/IhX
+dlla/nrOL/Xi4jlf7ILy1cCX4KcMuMqVjXqE7wqemi0LDpZA6euW3CxHiZ7UCMag
+lNy5PZiD3msgxZAata0kX1d6j/yH0l1DGeNNIRamoQYedFB11UxI9g3pxoWrIK1t
+77z0A07IfwpB1Voc8Ha7Xod0h5WB1dW3AuH1scDsRnnDdao7duDDz0UfTBQTu6Ig
+CgNybvS+fNYGc4muqxrkg01X41XRFvPuTMSBIBcVWIHDCwgQ4pbxZRLygoPAiVBb
+Jbw/hqPx3TDfDHMh+Dx94nmXHrWAuU6uNdcZjblG0GgHxCUie/Y7gBrnHYFgsRyC
+q15TkJGCE9nlwDfCUKrSpwB/tAWSALPZDeysfKoGfpXVxeRi+e9uNnCw/hSlDGQz
+r3Ui62W6KktSTMgfTqu4
+=RJgh
+-----END PGP SIGNATURE-----
+
+--=-XdXo/6HtwQbQKtYwAwqA--
 
