@@ -1,69 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.236]:31937 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933568AbZHHDu0 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37335 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113AbZHXJqi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 23:50:26 -0400
-Received: by rv-out-0506.google.com with SMTP id k40so287461rvb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 20:50:28 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH 7/8] mac80211: Assign a default mesh beaconing interval.
-Date: Fri,  7 Aug 2009 20:38:30 -0700
-Message-Id: <1249702711-32737-8-git-send-email-javier@cozybit.com>
-In-Reply-To: <1249702711-32737-7-git-send-email-javier@cozybit.com>
-References: <>
- <1249702711-32737-1-git-send-email-javier@cozybit.com>
- <1249702711-32737-2-git-send-email-javier@cozybit.com>
- <1249702711-32737-3-git-send-email-javier@cozybit.com>
- <1249702711-32737-4-git-send-email-javier@cozybit.com>
- <1249702711-32737-5-git-send-email-javier@cozybit.com>
- <1249702711-32737-6-git-send-email-javier@cozybit.com>
- <1249702711-32737-7-git-send-email-javier@cozybit.com>
+	Mon, 24 Aug 2009 05:46:38 -0400
+Subject: [PATCH] mac80211: fix RX skb leaks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Mon, 24 Aug 2009 11:46:30 +0200
+Message-Id: <1251107190.12007.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Incidentally, this fixes mesh beaconing in mac80211_hwsim devices.
+In mac80211's RX path some of the warnings that
+warn about drivers passing invalid status values
+leak the skb, fix that by refactoring the code.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- net/mac80211/mesh.c |    6 ++++--
- net/mac80211/mesh.h |    1 +
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ net/mac80211/rx.c |   34 +++++++++++++++-------------------
+ 1 file changed, 15 insertions(+), 19 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5202d7c..3b49d39 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -525,9 +525,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_local *local = sdata->local;
+--- wireless-testing.orig/net/mac80211/rx.c	2009-08-24 11:42:11.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-08-24 11:43:32.000000000 +0200
+@@ -2447,17 +2447,13 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
  
- 	ifmsh->housekeeping = true;
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	queue_work(local->hw, &ifmsh->work);
-+	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
--						BSS_CHANGED_BEACON_ENABLED);
-+						BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_BEACON_INT);
+-	if (status->band < 0 ||
+-	    status->band >= IEEE80211_NUM_BANDS) {
+-		WARN_ON(1);
+-		return;
+-	}
++	if (WARN_ON(status->band < 0 ||
++		    status->band >= IEEE80211_NUM_BANDS))
++		goto drop;
+ 
+ 	sband = local->hw.wiphy->bands[status->band];
+-	if (!sband) {
+-		WARN_ON(1);
+-		return;
+-	}
++	if (WARN_ON(!sband))
++		goto drop;
+ 
+ 	/*
+ 	 * If we're suspending, it is possible although not too likely
+@@ -2466,25 +2462,21 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 	 * that might, for example, cause stations to be added or other
+ 	 * driver callbacks be invoked.
+ 	 */
+-	if (unlikely(local->quiescing || local->suspended)) {
+-		kfree_skb(skb);
+-		return;
+-	}
++	if (unlikely(local->quiescing || local->suspended))
++		goto drop;
+ 
+ 	/*
+ 	 * The same happens when we're not even started,
+ 	 * but that's worth a warning.
+ 	 */
+-	if (WARN_ON(!local->started)) {
+-		kfree_skb(skb);
+-		return;
+-	}
++	if (WARN_ON(!local->started))
++		goto drop;
+ 
+ 	if (status->flag & RX_FLAG_HT) {
+ 		/* rate_idx is MCS index */
+ 		if (WARN_ON(status->rate_idx < 0 ||
+ 			    status->rate_idx >= 76))
+-			return;
++			goto drop;
+ 		/* HT rates are not in the table - use the highest legacy rate
+ 		 * for now since other parts of mac80211 may not yet be fully
+ 		 * MCS aware. */
+@@ -2492,7 +2484,7 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 	} else {
+ 		if (WARN_ON(status->rate_idx < 0 ||
+ 			    status->rate_idx >= sband->n_bitrates))
+-			return;
++			goto drop;
+ 		rate = &sband->bitrates[status->rate_idx];
+ 	}
+ 
+@@ -2531,6 +2523,10 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 		__ieee80211_rx_handle_packet(hw, skb, rate);
+ 
+ 	rcu_read_unlock();
++
++	return;
++ drop:
++	kfree_skb(skb);
  }
+ EXPORT_SYMBOL(ieee80211_rx);
  
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 6cb3db8..b6ea100 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -174,6 +174,7 @@ struct mesh_rmc {
-  */
- #define MESH_PATH_REFRESH_TIME			1000
- #define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
-+#define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
- 
- #define MESH_MAX_PREQ_RETRIES 4
- #define MESH_PATH_EXPIRE (600 * HZ)
--- 
-1.5.4.3
+
 
