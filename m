@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54216 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389AbZHFSqF (ORCPT
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:59977 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753146AbZHXShH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:46:05 -0400
-Date: Thu, 6 Aug 2009 14:32:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Fabio Comolli <fabio.comolli@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless@vger.kernel.org
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-	ieee80211_sta_work+0x97/0xd2d [mac80211]()
-Message-ID: <20090806183247.GI26809@tuxdriver.com>
-References: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b637ec0b0908061130w399eb1c6oc3a31640a76398c5@mail.gmail.com>
+	Mon, 24 Aug 2009 14:37:07 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Received: from ironport-out-1.rz.rwth-aachen.de ([134.130.5.40])
+ by mta-2.ms.rz.RWTH-Aachen.de
+ (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep 26 2008))
+ with ESMTP id <0KOW004C591WMA00@mta-2.ms.rz.RWTH-Aachen.de> for
+ linux-wireless@vger.kernel.org; Mon, 24 Aug 2009 20:37:08 +0200 (CEST)
+Message-id: <4A92DDAB.6040503@nets.rwth-aachen.de>
+Date: Mon, 24 Aug 2009 20:36:27 +0200
+From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Joe Perches <joe@perches.com>,
+	Arnd Hannemann <Arnd.Hannemann@nets.rwth-aachen.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Fix output of minstrels rc_stats
+References: <1251135778-27288-1-git-send-email-hannemann@nets.rwth-aachen.de>
+ <1251136676.3873.28.camel@Joe-Laptop.home> <1251138015.13464.2.camel@mj>
+In-reply-to: <1251138015.13464.2.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What driver are you using?
-
-On Thu, Aug 06, 2009 at 08:30:23PM +0200, Fabio Comolli wrote:
-> Just got this after a resume from suspend-to-ram. Wifi needed to be
-> disabled and reenabled (with hardware Fn+F2 key - this is an eeePC900)
-> to function  again.
+Pavel Roskin schrieb:
+> On Mon, 2009-08-24 at 10:57 -0700, Joe Perches wrote:
+>> On Mon, 2009-08-24 at 19:42 +0200, Arnd Hannemann wrote:
+>>> An integer overflow in the minstrel debug code prevented the
+>>> throughput to be displayed correctly. This patch fixes that,
+>>> by swaping the division and multiplication.
+>>>
+>>> Signed-off-by: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
+>>> ---
+>>>  net/mac80211/rc80211_minstrel_debugfs.c |    2 +-
+>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+>>> index 98f4807..caf9453 100644
+>>> --- a/net/mac80211/rc80211_minstrel_debugfs.c
+>>> +++ b/net/mac80211/rc80211_minstrel_debugfs.c
+>>> @@ -83,7 +83,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+>>>  		p += sprintf(p, "%3u%s", mr->bitrate / 2,
+>>>  				(mr->bitrate & 1 ? ".5" : "  "));
+>>>  
+>>> -		tp = ((mr->cur_tp * 96) / 18000) >> 10;
+>>> +		tp = ((mr->cur_tp / 18000) * 96) >> 10;
+>> Maybe do_div instead?
 > 
+> How about this?
 > 
-> [  919.858759] ------------[ cut here ]------------
-> [  919.858787] WARNING: at net/mac80211/mlme.c:2292
-> ieee80211_sta_work+0x97/0xd2d [mac80211]()
-> [  919.858791] Hardware name: 900
-> [  919.858793] Modules linked in: uvcvideo videodev v4l1_compat arc4
-> ecb ath5k mac80211 ath cfg80211
-> [  919.860022] Pid: 793, comm: phy0 Tainted: G   M       2.6.31-rc5 #11
-> [  919.860025] Call Trace:
-> [  919.860035]  [<c10209cf>] warn_slowpath_common+0x65/0x7c
-> [  919.860058]  [<f83d621e>] ? ieee80211_sta_work+0x97/0xd2d [mac80211]
-> [  919.860064]  [<c10209f3>] warn_slowpath_null+0xd/0x10
-> [  919.860086]  [<f83d621e>] ieee80211_sta_work+0x97/0xd2d [mac80211]
-> [  919.860092]  [<c101bb2b>] ? __wake_up+0x2f/0x56
-> [  919.860097]  [<c101bb39>] ? __wake_up+0x3d/0x56
-> [  919.860103]  [<c102eb04>] ? insert_work+0x96/0x9f
-> [  919.860108]  [<c102ed63>] ? __queue_work+0x32/0x49
-> [  919.860113]  [<c102eda1>] ? queue_work_on+0x27/0x2f
-> [  919.860119]  [<c102f52f>] ? queue_work+0x2d/0x45
-> [  919.860140]  [<f83d3324>] ?
-> ieee80211_ibss_notify_scan_completed+0x63/0x68 [mac80211]
-> [  919.860162]  [<f83d1059>] ? ieee80211_scan_completed+0x320/0x328 [mac80211]
-> [  919.860184]  [<f83d1160>] ? ieee80211_scan_work+0xb5/0x171 [mac80211]
-> [  919.860190]  [<c102f075>] worker_thread+0x15d/0x204
-> [  919.860211]  [<f83d6187>] ? ieee80211_sta_work+0x0/0xd2d [mac80211]
-> [  919.860218]  [<c1032217>] ? autoremove_wake_function+0x0/0x2f
-> [  919.860223]  [<c102ef18>] ? worker_thread+0x0/0x204
-> [  919.860229]  [<c1031fab>] kthread+0x63/0x68
-> [  919.860234]  [<c1031f48>] ? kthread+0x0/0x68
-> [  919.860240]  [<c1002f93>] kernel_thread_helper+0x7/0x10
-> [  919.860244] ---[ end trace 7a3a8d08c5a7bedf ]---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> tp = mr->cur_tp / ((18000 << 10) / 96);
+> 
+> ((18000 << 10) / 96) is exactly 192000.
 > 
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Hmm don't seems to be equivalent with the original statement:
+
+  a = 61027734;
+  b = ((a * 96) / 18000) >> 10;
+  c = a / ((18000 << 10) / 96);
+  printf("%u %u\n", b, c);
+
+Outputs:
+ 84 317
+
+
+Best regards,
+Arnd
+
+
