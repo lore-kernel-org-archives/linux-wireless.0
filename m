@@ -1,21 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:29055 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbZHaVCL (ORCPT
+Received: from xi.wantstofly.org ([80.101.37.227]:39308 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484AbZHXNmW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 17:02:11 -0400
-MIME-Version: 1.0
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 31 Aug 2009 23:01:50 +0200
-Message-ID: <69e28c910908311401j70c0ed27h3222d934baf2bf75@mail.gmail.com>
-Subject: Test message, please ignore.
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 24 Aug 2009 09:42:22 -0400
+Date: Mon, 24 Aug 2009 15:42:22 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: [PATCH 0/4] mwl8k: three bug fixes, and a cosmetic fix
+Message-ID: <20090824134222.GB6102@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I suspect that this will trigger a response from a spambot.
-
-reset
+Some more patches for wireless-testing:
+- A bug fix to fix an inverted error test in mwl8k_bss_info_changed().
+  This was accidentally introduced in the last batch of changes.
+- Two minor bug fixes for issues that exist in 2.6.31 as well, but
+  aren't really important enough to justify applying there.
+- A cosmetic fix to clarify the difference between driver and device
+  info during probe.
