@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:53462 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932540AbZHLLHb (ORCPT
+Received: from rv-out-0506.google.com ([209.85.198.224]:21781 "EHLO
+	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752799AbZHXQl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 07:07:31 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH] iwl3945: fix compilation error in
-	iwl3945_pass_packet_to_mac80211()
-To: linville@tuxdriver.com
-Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Date: Wed, 12 Aug 2009 14:07:27 +0300
-Message-ID: <20090812110727.4963.99515.stgit@tikku>
+	Mon, 24 Aug 2009 12:41:29 -0400
+Received: by rv-out-0506.google.com with SMTP id f6so755423rvb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2009 09:41:31 -0700 (PDT)
+Message-ID: <4A92C269.9010301@lwfinger.net>
+Date: Mon, 24 Aug 2009 11:40:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Chr <chunkeey@web.de>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: [Fwd: [Bug 13725] p54 gets a "tx refused but queue active" WARNING
+ from mac80211]
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "iwlwifi: Traffic type and counter for debugFs" broke iwl3945 in
-a case when CONFIG_IWLWIFI_LEDS is disabled:
+Christian and Johannes,
 
-drivers/net/wireless/iwlwifi/iwl-3945.c:580: error: 'hdr' undeclared (first use in this function)
+A dongle running p54usb gets a "tx refused but queue active" WARNING
+when used as an AP using hostapd and running 2.6.31-rc6 from Linus's
+tree, even with my patch that fixed this problem in STA mode.
+Christian, have you tested this configuration? Johannes - any thoughts?
 
-Fix it by removing the ifdef check for hdr variable.
+I'm trying to reproduce the problem.
 
-Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
----
+Larry
 
- drivers/net/wireless/iwlwifi/iwl-3945.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+======================================================================
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index ae7f163..ba5ef83 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -544,9 +544,7 @@ static void iwl3945_pass_packet_to_mac80211(struct iwl_priv *priv,
- 				   struct ieee80211_rx_status *stats)
- {
- 	struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb->skb->data;
--#ifdef CONFIG_IWLWIFI_LEDS
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)IWL_RX_DATA(pkt);
--#endif
- 	struct iwl3945_rx_frame_hdr *rx_hdr = IWL_RX_HDR(pkt);
- 	struct iwl3945_rx_frame_end *rx_end = IWL_RX_END(pkt);
- 	short len = le16_to_cpu(rx_hdr->len);
+-------- Original Message --------
+Subject: [Bug 13725] p54 gets a "tx refused but queue active" WARNING
+from mac80211
+Date: Mon, 24 Aug 2009 15:22:34 GMT
+From: bugzilla-daemon@bugzilla.kernel.org
+To: Larry.Finger@lwfinger.net
+References: <bug-13725-734@http.bugzilla.kernel.org/>
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13725
+
+
+
+
+
+--- Comment #3 from cortez8591@gmail.com  2009-08-24 15:22:33 ---
+I'm using p54usb dongle with hostapd to share my Internet connection.
+After
+client connects with station and start browsing/downloading it takes
+0.5 - 1min
+and suddenly network sharing stops working. The only error message
+comes from
+dmesg and it is the error mentioned before. System load was from 0.10
+to 0.30
+max.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You reported the bug.
 
