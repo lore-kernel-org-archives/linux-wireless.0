@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:26348 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932AbZH0SP3 (ORCPT
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:44693 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753617AbZHXWhr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 14:15:29 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so311032qwh.37
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 11:15:31 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH] iw: fix NL80211_STA_INFO_PLINK_STATE printing in station dump
-Date: Thu, 27 Aug 2009 11:15:20 -0700
-Message-Id: <1251396920-3954-1-git-send-email-brian@cozybit.com>
-In-Reply-To: <iw1>
-References: <iw1>
+	Mon, 24 Aug 2009 18:37:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com>
+References: <1251149659-32212-1-git-send-email-tomas.winkler@intel.com>
+	 <43e72e890908241436o5f30cfe6xa7bdda8b25ac082@mail.gmail.com>
+	 <1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com>
+Date: Mon, 24 Aug 2009 18:37:47 -0400
+Message-ID: <b6c5339f0908241537r5e531c8bi2c560ed68f4f04a3@mail.gmail.com>
+Subject: Re: [PATCH 1/1] iwmc3200: add more SDIO device ids
+From: Bob Copeland <me@bobcopeland.com>
+To: Tomas Winkler <tomasw@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, davem@davemloft.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NL80211_STA_INFO_PLINK_STATE is a u8, not a u16.  This bug was causing
-unexpected output on big endian machines.
+On Mon, Aug 24, 2009 at 6:20 PM, Tomas Winkler<tomasw@gmail.com> wrote:
+> I don't have strong opinion about it but this is the current habit
+> IIRC there was a mail thread that explicitly asked to move SDIO IDs
+> there,  of course I cannot locate it right now :(
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- station.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+This one:
+http://marc.info/?l=linux-wireless&m=124489211911222&w=2
 
-diff --git a/station.c b/station.c
-index 0fff92d..a4865f9 100644
---- a/station.c
-+++ b/station.c
-@@ -127,7 +127,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		printf("\n\tmesh plid:\t%d",
- 			nla_get_u16(sinfo[NL80211_STA_INFO_PLID]));
- 	if (sinfo[NL80211_STA_INFO_PLINK_STATE]) {
--		switch (nla_get_u16(sinfo[NL80211_STA_INFO_PLINK_STATE])) {
-+		switch (nla_get_u8(sinfo[NL80211_STA_INFO_PLINK_STATE])) {
- 		case LISTEN:
- 			strcpy(state_name, "LISTEN");
- 			break;
+Of course, Pierre is no longer maintainer and there are only a few
+IDs there, so I don't think anyone will shout either way.
+
 -- 
-1.6.0.4
-
+Bob Copeland %% www.bobcopeland.com
