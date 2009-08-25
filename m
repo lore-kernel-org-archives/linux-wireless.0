@@ -1,141 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52946 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893AbZHMEEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 00:04:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 21:04:13 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:50895 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752906AbZHYORt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 10:17:49 -0400
+Received: by fxm17 with SMTP id 17so2129304fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 07:17:50 -0700 (PDT)
+From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: LP-PHY: Fix a few typos in the RC calibration code
+Date: Tue, 25 Aug 2009 16:17:48 +0200
+Message-Id: <1251209868-7681-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19075.37072.217575.619146@gargle.gargle.HOWL>
-Date: Thu, 13 Aug 2009 09:34:32 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] ath9k: Remove duplicate variables
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-diversity_control and antenna_switch_swap are already
-present in ath9k_ops_config. Remove duplicate occurrences
-in ath_hw.
+The RC calibration code has some typos - fix them.
+Also, make the default channel 7, as channel 1 is still
+broken (only channels 7 and 8, and occasionally 9 work).
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  |    7 ++-----
- drivers/net/wireless/ath/ath9k/hw.h  |   16 +++++++---------
- drivers/net/wireless/ath/ath9k/phy.c |   12 +++++-------
- 3 files changed, 14 insertions(+), 21 deletions(-)
+ drivers/net/wireless/b43/phy_lp.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0e83e98..6eef7b4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -407,7 +407,7 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.cck_trig_high = 200;
- 	ah->config.cck_trig_low = 100;
- 	ah->config.enable_ani = 1;
--	ah->config.diversity_control = 0;
-+	ah->config.diversity_control = ATH9K_ANT_VARIABLE;
- 	ah->config.antenna_switch_swap = 0;
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 2d3a5d8..7e70c07 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -44,7 +44,7 @@ static inline u16 channel2freq_lp(u8 channel)
+ static unsigned int b43_lpphy_op_get_default_chan(struct b43_wldev *dev)
+ {
+ 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+-		return 1;
++		return 7; //FIXME temporary - channel 1 is broken
+ 	return 36;
+ }
  
- 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
-@@ -452,9 +452,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 	ah->regulatory.power_limit = MAX_RATE_POWER;
- 	ah->regulatory.tp_scale = ATH9K_TP_SCALE_MAX;
- 	ah->atim_window = 0;
--	ah->diversity_control = ah->config.diversity_control;
--	ah->antenna_switch_swap =
--		ah->config.antenna_switch_swap;
- 	ah->sta_id1_defaults = AR_STA_ID1_CRPT_MIC_ENABLE;
- 	ah->beacon_interval = 100;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
-@@ -3891,7 +3888,7 @@ bool ath9k_hw_setantennaswitch(struct ath_hw *ah,
- 			break;
- 		}
- 	} else {
--		ah->diversity_control = settings;
-+		ah->config.diversity_control = settings;
- 	}
+@@ -705,7 +705,7 @@ static void lpphy_set_rc_cap(struct b43_wldev *dev)
+ 	u8 rc_cap = (lpphy->rc_cap & 0x1F) >> 1;
  
- 	return true;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 0e65873..0336981 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -127,6 +127,12 @@ enum wireless_mode {
- 	ATH9K_MODE_MAX,
- };
+ 	if (dev->phy.rev == 1) //FIXME check channel 14!
+-		rc_cap = max_t(u8, rc_cap + 5, 15);
++		rc_cap = min_t(u8, rc_cap + 5, 15);
  
-+enum ath9k_ant_setting {
-+	ATH9K_ANT_VARIABLE = 0,
-+	ATH9K_ANT_FIXED_A,
-+	ATH9K_ANT_FIXED_B
-+};
-+
- enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_MIC_AESCCM                 = BIT(0),
- 	ATH9K_HW_CAP_MIC_CKIP                   = BIT(1),
-@@ -191,7 +197,7 @@ struct ath9k_ops_config {
- 	u32 cck_trig_high;
- 	u32 cck_trig_low;
- 	u32 enable_ani;
--	u16 diversity_control;
-+	enum ath9k_ant_setting diversity_control;
- 	u16 antenna_switch_swap;
- 	int serialize_regmode;
- 	bool intr_mitigation;
-@@ -330,12 +336,6 @@ enum ath9k_power_mode {
- 	ATH9K_PM_UNDEFINED
- };
+ 	b43_radio_write(dev, B2062_N_RXBB_CALIB2,
+ 			max_t(u8, lpphy->rc_cap - 4, 0x80));
+@@ -1008,6 +1008,7 @@ static int lpphy_loopback(struct b43_wldev *dev)
  
--enum ath9k_ant_setting {
--	ATH9K_ANT_VARIABLE = 0,
--	ATH9K_ANT_FIXED_A,
--	ATH9K_ANT_FIXED_B
--};
--
- enum ath9k_tp_scale {
- 	ATH9K_TP_SCALE_MAX = 0,
- 	ATH9K_TP_SCALE_50,
-@@ -437,8 +437,6 @@ struct ath_hw {
- 	u32 txurn_interrupt_mask;
- 	bool chip_fullsleep;
- 	u32 atim_window;
--	u16 antenna_switch_swap;
--	enum ath9k_ant_setting diversity_control;
- 
- 	/* Calibration */
- 	enum ath9k_cal_types supp_cals;
-diff --git a/drivers/net/wireless/ath/ath9k/phy.c b/drivers/net/wireless/ath/ath9k/phy.c
-index 59bb3ce..63bf9a3 100644
---- a/drivers/net/wireless/ath/ath9k/phy.c
-+++ b/drivers/net/wireless/ath/ath9k/phy.c
-@@ -353,18 +353,16 @@ ath9k_hw_decrease_chain_power(struct ath_hw *ah, struct ath9k_channel *chan)
- 	u32 bank6SelMask;
- 	u32 *bank6Temp = ah->bank6Temp;
- 
--	switch (ah->diversity_control) {
-+	switch (ah->config.diversity_control) {
- 	case ATH9K_ANT_FIXED_A:
- 		bank6SelMask =
--		    (ah->
--		     antenna_switch_swap & ANTSWAP_AB) ? REDUCE_CHAIN_0 :
--		    REDUCE_CHAIN_1;
-+		    (ah->config.antenna_switch_swap & ANTSWAP_AB) ?
-+			REDUCE_CHAIN_0 : REDUCE_CHAIN_1;
- 		break;
- 	case ATH9K_ANT_FIXED_B:
- 		bank6SelMask =
--		    (ah->
--		     antenna_switch_swap & ANTSWAP_AB) ? REDUCE_CHAIN_1 :
--		    REDUCE_CHAIN_0;
-+		    (ah->config.antenna_switch_swap & ANTSWAP_AB) ?
-+			REDUCE_CHAIN_1 : REDUCE_CHAIN_0;
- 		break;
- 	case ATH9K_ANT_VARIABLE:
- 		return;
+ 	b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x3);
+ 	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
++	b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 1);
+ 	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFFE);
+ 	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x800);
+ 	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0x800);
+@@ -1213,7 +1214,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+ 			mean_sq_pwr = ideal_pwr - normal_pwr;
+ 			mean_sq_pwr *= mean_sq_pwr;
+ 			inner_sum += mean_sq_pwr;
+-			if ((i = 128) || (inner_sum < mean_sq_pwr_min)) {
++			if ((i == 128) || (inner_sum < mean_sq_pwr_min)) {
+ 				lpphy->rc_cap = i;
+ 				mean_sq_pwr_min = inner_sum;
+ 			}
 -- 
-1.6.4
+1.5.6
 
