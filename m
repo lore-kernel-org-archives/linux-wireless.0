@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:39873 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895AbZHZUq1 convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:37208 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932344AbZHYX0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 16:46:27 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] ssb: Implement PMU LDO control and use it in b43
-Date: Wed, 26 Aug 2009 22:46:24 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1251312686-32067-1-git-send-email-netrolller.3d@gmail.com> <1251312686-32067-2-git-send-email-netrolller.3d@gmail.com> <1251312686-32067-3-git-send-email-netrolller.3d@gmail.com>
-In-Reply-To: <1251312686-32067-3-git-send-email-netrolller.3d@gmail.com>
+	Tue, 25 Aug 2009 19:26:21 -0400
+Message-ID: <4A9472CC.2020508@lwfinger.net>
+Date: Tue, 25 Aug 2009 18:25:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908262246.26668.mb@bu3sch.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.31-rc6-git5: Reported regressions from 2.6.30
+References: <jCYznkTxcLB.A.EPH.eNIjKB@chimera> <4A8F12CE.9090601@lwfinger.net> <200908220002.03707.rjw@sisk.pl>
+In-Reply-To: <200908220002.03707.rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 26 August 2009 20:51:26 Gábor Stefanik wrote:
-> Implement the "PMU LDO set voltage" and "PMU LDO PA ref enable"
-> functions, and use them during LP-PHY baseband init in b43.
+Rafael J. Wysocki wrote:
+> On Friday 21 August 2009, Larry Finger wrote:
+>> Rafael J. Wysocki wrote:
+>>
+>>> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13960
+>>> Subject		: rtl8187 not connect to wifi
+>>> Submitter	: okias <d.okias@gmail.com>
+>>> Date		: 2009-08-10 19:16 (10 days old)
+>> The patch for this one was sent from Linville to DaveM earlier today,
+>> and should be sent to mainline in the near future.
+>>
+>> AFAIK, the OP has not yet tested the patch, but I think I was able to
+>> reproduce the problem, and the patch did fit it for me.
 > 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> Thanks for the update.
+> 
+> Can you please close the bug when the patch is merged?
 
-ack
+The patch hit mainline as commit
+1a9937b7f07ab6e35515e32a7625f0ba50ab7670. The bug has been closed.
 
--- 
-Greetings, Michael.
+Larry
