@@ -1,62 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36290 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754121AbZHFSsX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:48:23 -0400
-Subject: Re: [PATCH] rndis_wlan: wait association to complete
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-In-Reply-To: <20090806181746.31308.15687.stgit@fate.lan>
-References: <20090806181746.31308.15687.stgit@fate.lan>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-a98L1s+ImLZMxch+qJyq"
-Date: Thu, 06 Aug 2009 20:46:25 +0200
-Message-Id: <1249584385.28278.124.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:40342 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756066AbZHYT3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 15:29:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 12:29:46 -0700
+Date: Tue, 25 Aug 2009 12:29:44 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Richard Farina <sidhayn@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] atheros: add ar9170.fw 1-stage firmware
+Message-ID: <20090825192944.GB7357@mosca>
+References: <1250793627-22396-1-git-send-email-lrodriguez@atheros.com>
+ <4A8DAD1D.7090608@gmail.com>
+ <20090820202817.GB18102@mosca>
+ <4A943AFE.1000500@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A943AFE.1000500@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Aug 25, 2009 at 12:26:54PM -0700, Richard Farina wrote:
+> Luis R. Rodriguez wrote:
+> > On Thu, Aug 20, 2009 at 01:07:57PM -0700, Richard Farina wrote:
+> >
+> >> Luis R. Rodriguez wrote:
+> >>
+> >>> This adds support for ar9170 for using a 1-stage firmware.
+> >>> This means only 1 firmware file is required. AVM Fritz
+> >>> devices require this.
+> >>>
+> >>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> >>> ---
+> >>>
+> >>> Here is a resend, noticed today this wasn't yet in the tree.
+> >>>
+> >>>
+> >>>
+> >> Last I tested this firmware it didn't seem to function nearly as well as
+> >> the 2 stage firmware, and if present, the 1 stage overrides the 2
+> >> stage.
+> >>
+> >
+> > Can you be more specific than that?
+> >
+> >
+> >> Is this an improved version?
+> >>
+> >
+> > No, it is the same firmware.
+> >
+> >
+> >> Does this work properly in your testing?
+> >>
+> >
+> > Works for me, and is also required for usage of AVM Fritz devices.
+> >
+> >
+> I apologize for my confusion.  Since we spoke on irc I am now clear that
+> this specific ar9170 firmware is slightly different than the open source
+> one available in git and seems a bit more stable than the 2 stage I was
+> previously using.  I have tested monitor mode and packet injection which
+> are the only things that interest me about this device at the moment and
+> both appear slightly more stable using the 1 stage firmware. Please do
+> add the firmware located at
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/firmware/ar9170/ar9170.fw
+> to the linux firmware git repo.  I believe that it would be a benefit to
+> many.
+> 
+> ACKED BY: Rick Farina
+> TESTED BY: Rick Farina
+> 
+> On a similar note, the open firmware has had issues reported by many
+> with speed and stability so I wouldn't recommend using it yet, but this
+> is mostly based on the complaints I've heard rather than my own personal
+> testing so remember a grain of salt.
 
---=-a98L1s+ImLZMxch+qJyq
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Thanks for the clarification, yeah I do believe the open fw needs more work,
+the code base is the same though so it remains unclear what could be the
+issue. Anyway I'll push this through and if hopefully more interested people 
+can work on the open fw. I'll respin with the WHENCE changed.
 
-On Thu, 2009-08-06 at 21:17 +0300, Jussi Kivilinna wrote:
-> Fix WPA authentication problems by waiting to association to complete.
-> Otherwise userspace (wpa_supplicant) receives authentication packets befo=
-re
-> association events from driver.
-
-> +	/* If we return now, userspace would get association events too late
-> +	 * (after receiving first packets from access point). This causes
-> +	 * WPA authentication to fail.
-
-This is a bit weird, shouldn't you just send the event later then?
-
-johannes
-
---=-a98L1s+ImLZMxch+qJyq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKeyT+AAoJEODzc/N7+QmaMY8P/3tAPr8t0qrGgwzwk/krM3yv
-chLK3vXBVGvPHcBF6Rn4WHOdS00a9O7VuesA0FoBrmCFSZnwuK12zVOlHrzk7Nhq
-MBMRg913kHYv5hYsnvxeB4Gjg2ddAgNXcK0qtO0iHn4VN4Fx8ujmIYb3gS4Fu1+k
-7eXLw5MbDI1kht8NC4zdVnd5+F9AzhgJPRqBcGgHDFn+0Y5TGz8xE5XADIHNPI64
-DGcnGVzc6hcDFBr7OHeZ8zYZG15BJsIoA8nLNuyKX0NkEA4ELGo6WMBu2m+NAzj7
-q7bXGhKT5tkC+bjiS5QyGyg1xuJI7B/6niPnQv4dUAUfkiklWjipNovVTrL1gLYP
-soNYnIQ20LUYdxQBM8TkHzDQgK5bXHVvm4FZzvp4VfYA8Qsxpk/p6ED00bfJ0OCw
-oqhTE6bMhIe2fR7dz72OlEttr/IVsNnuB9swITrXY38k9gkuZYkxT59AlV/UAQkQ
-FasNKY62Yi52/L+3pWwBAyYhIBtLVZgmQDy3YiGPgovGsaCzGJKkAuwThSKtkXXG
-/V5mCQYTaP0iv42WS2miLBPxAhK4P9IU38j/2ywoNvmOPLzVAJcoIc0L8HcT7c+4
-S/Y9WdbRFcVzyEu3etl6IVaOgVl5wb0FS7/EEhbsmD0mLwxxvbRTKsv/6Z9fkysP
-pXP5V9GD9yClsWXvOkBT
-=YukH
------END PGP SIGNATURE-----
-
---=-a98L1s+ImLZMxch+qJyq--
-
+  Luis
