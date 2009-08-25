@@ -1,71 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:41197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374AbZHHInL (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:56967 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754719AbZHYIPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 04:43:11 -0400
-Subject: Re: [PATCH v4] cfg80211: validate channel settings across
- interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1249712383.30019.5561.camel@rc-desk>
-References: <1249649261.4215.7.camel@johannes.local>
-	 <1249649433.7194.0.camel@johannes.local>
-	 <1249652951.7194.2.camel@johannes.local>
-	 <1249658555.7194.8.camel@johannes.local>
-	 <1249712383.30019.5561.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yzdvPVoJH9/j8e6wDD6s"
-Date: Sat, 08 Aug 2009 10:43:04 +0200
-Message-Id: <1249720984.31670.9.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 25 Aug 2009 04:15:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <1251143422-13905-1-git-send-email-Mario_Limonciello@Dell.com>
+References: <9b2b86520908220420p282c862fn9c44697db010a08d@mail.gmail.com>
+	 <1251143422-13905-1-git-send-email-Mario_Limonciello@Dell.com>
+Date: Tue, 25 Aug 2009 09:15:10 +0100
+Message-ID: <9b2b86520908250115r2281fd66w8536f4e3817ea8b9@mail.gmail.com>
+Subject: Re: [PATCH] compal-laptop: Replace sysfs support with rfkill support
+From: Alan Jenkins <sourcejedi.lkml@googlemail.com>
+To: Mario Limonciello <Mario_Limonciello@dell.com>
+Cc: cezary.jackiewicz@gmail.com, linux-wireless@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8/24/09, Mario Limonciello <Mario_Limonciello@dell.com> wrote:
+> This drops the support for manually groking the files in sysfs
+> to turn on and off the WLAN and BT for Compal laptops in favor
+> of platform rfkill support.
+>
+> It has been combined into a single patch to not introduce regressions
+> in the process of simply adding rfkill support
 
---=-yzdvPVoJH9/j8e6wDD6s
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Ok, that looks better.
 
-Hi,
-
-> I am able to bring the interface up and scan, but when I try to
-> associate I get a hang.
->=20
-> For example, when I run:
-> $ iwconfig wlan0 channel <ch> essid <essid>
->=20
-> then the command prompt never returns and system becomes progressively
-> unresponsive. The logs do not contain any details of the problem.
-
-Hmm, yes, that's a pretty obvious deadlock, I obviously didn't test
-managed-mode 'iwconfig wlan0 channel' setting. I'll send a fix, I'm
-sorry.
-
-johannes
-
---=-yzdvPVoJH9/j8e6wDD6s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKfTqVAAoJEODzc/N7+QmaESEP/1OsfK6XwLTSXY2o/0Yvby0Y
-zATpxNGmfylmDWV4LyH6eoYPMemRZPQkTn30FxjYwUoYMmvFvgDq8VdRdmFF7U7v
-OczENE8ChoSwlTvkFkJfysiRu8SF1mbmDt6SztT47YDychp0FRioZqqOqMPDCtfR
-SLqe0yVNeZ482+oJ/PhUw1DivdOVXITRdTxKyAjPae49Fj5WRrhtW+/u2/6mYt7Y
-Aq6i9a+BAIKpwcez8KcvJSDT2E8xtHPQ3BGCk3fZhgd0ta2k3RUCssKiaAYVbatg
-TCmp/KLqW7O+w7P5xLhit02lb07LhP8DSs0ekEq/61f3sQx8Syu9P575Zw9nmjBz
-vQ1uaMcpAp7WwjseZODRALQtY/ZJzLmrEK/ul48x+1PzdNom5kS3gim4yzHFtjwA
-qfjtUlG7EutHyhlrN4BbB9gT461h/Oyc7tfTkpSBejgEj8mcXacykDoZAA5Lta+y
-SRZ7NV4I7eUHvud0nkk3U3/GJjwS97L1vbBY15fcivGGwZf+qNNd3KHEglYduLJE
-CSPnAJ9SvjcHmv4iE6f5pIjn2oYNmnfIU8QBU65wjvPP65XGgVs+wepvpnfR2tYg
-Bsl79USVVxB83U7jBiXvntmm3AIGsOU2XGV6Hwb9BHW/o01eHCnqYdeaR3HENGqw
-eoRBZthUwJbJDO50AQ8/
-=CSwP
------END PGP SIGNATURE-----
-
---=-yzdvPVoJH9/j8e6wDD6s--
-
+Thanks
+Alan
