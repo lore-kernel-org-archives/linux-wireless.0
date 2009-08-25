@@ -1,178 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:58104 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934002AbZHWQwV (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40251 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811AbZHYJ2m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 12:52:21 -0400
-Received: by pzk32 with SMTP id 32so575266pzk.33
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 09:52:22 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sun, 23 Aug 2009 22:22:22 +0530
-Message-ID: <1fe543780908230952v5738f6bck943627d0de6c1383@mail.gmail.com>
-Subject: [PATCH] libertas: add NULL check on return value of get_zeroed_page
-From: Kiran Divekar <kirandivekar@gmail.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 25 Aug 2009 05:28:42 -0400
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: htl10@users.sourceforge.net
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <950315.98615.qm@web23105.mail.ird.yahoo.com>
+References: <950315.98615.qm@web23105.mail.ird.yahoo.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zs1KzhIa+UMZm+akdKaD"
+Date: Tue, 25 Aug 2009 11:27:57 +0200
+Message-Id: <1251192477.10667.3.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From fb132b536facfbdc47a24afe538c50662d16b3ad Mon Sep 17 00:00:00 2001
-From: Kiran Divekar <kirandivekar@gmail.com>
-Date: Sun, 23 Aug 2009 22:05:21 +0530
-Subject: [PATCH] add NULL check on return value of get_zeroed_page
 
-Most of the places in debugfs.c are missing a NULL check on the return value of
-get_zeroed_page API call. Added required NULL check at appropriate places.
+--=-zs1KzhIa+UMZm+akdKaD
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
----
- drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
- 1 files changed, 28 insertions(+), 0 deletions(-)
+On Tue, 2009-08-25 at 06:51 +0000, Hin-Tak Leung wrote:
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c
-b/drivers/net/wireless/libertas/debugfs.c
-index 811ffc3..893a55c 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char
-__user *userbuf,
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-        ssize_t res;
-+       if (!buf)
-+               return -ENOMEM;
+> dmesg and rfkill/state corresponds exactly to what the sliding switch
+> does (in the on position, dmesg says it is on, states says 2, in the
+> off position, dmesg says it is off, state says 1). NM basically
+> ignores rfkill/state, and just if'up the device whenever it notices
+> the device has gone down.
 
-        pos += snprintf(buf+pos, len-pos, "state = %s\n",
-                                szStates[priv->connect_status]);
-@@ -68,6 +70,8 @@ static ssize_t lbs_getscantable(struct file *file,
-char __user *userbuf,
-        char *buf = (char *)addr;
-        DECLARE_SSID_BUF(ssid);
-        struct bss_descriptor * iter_bss;
-+       if (!buf)
-+               return -ENOMEM;
+NM can't ignore the state since cfg80211 enforces it.
 
-        pos += snprintf(buf+pos, len-pos,
-                "# | ch  | rssi |       bssid       |   cap    | Qual
-| SSID \n");
-@@ -110,6 +114,8 @@ static ssize_t lbs_sleepparams_write(struct file *file,
-        int p1, p2, p3, p4, p5, p6;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+Can you please use rfkill (http://git.sipsolutions.net/rfkill.git) to
+see what's going on? Like print out events while you slide the button
+and use NM etc.
 
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, user_buf, buf_size)) {
-@@ -148,6 +154,8 @@ static ssize_t lbs_sleepparams_read(struct file
-*file, char __user *userbuf,
-        struct sleep_params sp;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+One thing that would be possible -- does your poll callback work while
+the interface is down? Try to tell NM to turn off the wireless network,
+and see whether the state ever changes with your slider.
 
-        ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
-        if (ret)
-@@ -433,6 +441,8 @@ static ssize_t lbs_rdmac_read(struct file *file,
-char __user *userbuf,
-        int ret;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+johannes
 
-        offval.offset = priv->mac_offset;
-        offval.value = 0;
-@@ -457,6 +467,8 @@ static ssize_t lbs_rdmac_write(struct file *file,
-        ssize_t res, buf_size;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+--=-zs1KzhIa+UMZm+akdKaD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -481,6 +493,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
-        struct lbs_offset_value offval;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+-----BEGIN PGP SIGNATURE-----
 
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -515,6 +529,8 @@ static ssize_t lbs_rdbbp_read(struct file *file,
-char __user *userbuf,
-        int ret;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+iQIcBAABAgAGBQJKk66XAAoJEODzc/N7+QmaD5gP+wezvZjR05RtOT56XQTHrDgR
+JbZ6NgL9GZy9Jn9/GVyAuHV3Vpd6XRN+ec+TwMLfRwvejhJ7JFr/4Dj+V1XtfMda
+JcmRnwtn42dQaesi14S7Hxo82uLV2U3a50AI7Nt1sPenu5BA2U6HBqZrxjccw1Xn
+A6+qG9blxgmJY/T9EL38xZ9lUVWGqahAzav83PEwxraB0FrN/6bFmhGgo2CIbW/H
+HZDQq8PuLVVDYO9NdWmst0mGkiluUwN3b4vKZDBcprWfDShJy+1fGNjtC2gU2O34
+xV/F4PZLk+KhhsvPAPLSwGb72hPQKGWTzQD2fBooRWkMcIsZfP9Nfd0aoS0v3np9
+ISjyV4T8AVzfdTroGkrEJgEDE8uxZx2/a1mhAY4usQ3DH7RMPtPt7n4ujAdLrPC0
+8390Ycyk/XlxgifFxan+7HgAM7dG3zmLHfGRAfOzZfWGHCIDKnQqKOhDMbTvI0+q
+/qkfja/S327/xTmj36LHyIcF+zS657bKhnq1OxRXiWi9P3TM6v4v1DWIlASyCF9q
+AVWIJuNCIMqi7hhAe4Z4A1Ruy3fP79NVys8ZUX5Q1OINsFCmk9fcD082XOw4+8hU
+IYfCbz46MKymD63TX28juIgjaNgJA+PeoCF+zqMfQmOwV0nXLozR26kVGnmLMxik
+dJmwShVivxBeBuiq5xkY
+=u04u
+-----END PGP SIGNATURE-----
 
-        offval.offset = priv->bbp_offset;
-        offval.value = 0;
-@@ -540,6 +556,8 @@ static ssize_t lbs_rdbbp_write(struct file *file,
-        ssize_t res, buf_size;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
+--=-zs1KzhIa+UMZm+akdKaD--
 
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -564,6 +582,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
-        struct lbs_offset_value offval;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
-
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -598,6 +618,8 @@ static ssize_t lbs_rdrf_read(struct file *file,
-char __user *userbuf,
-        int ret;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
-
-        offval.offset = priv->rf_offset;
-        offval.value = 0;
-@@ -623,6 +645,8 @@ static ssize_t lbs_rdrf_write(struct file *file,
-        ssize_t res, buf_size;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
-
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -647,6 +671,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
-        struct lbs_offset_value offval;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
-
-        buf_size = min(count, len - 1);
-        if (copy_from_user(buf, userbuf, buf_size)) {
-@@ -853,6 +879,8 @@ static ssize_t lbs_debugfs_read(struct file *file,
-char __user *userbuf,
-        struct debug_data *d;
-        unsigned long addr = get_zeroed_page(GFP_KERNEL);
-        char *buf = (char *)addr;
-+       if (!buf)
-+               return -ENOMEM;
-
-        p = buf;
-
---
-1.5.3.4
-
------
--Kiran Divekar.
-http://www.geeksofpune.org/
-http://www.geocities.com/kirandivekar/
