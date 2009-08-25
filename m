@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57463 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752095AbZHaUOO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 16:14:14 -0400
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
- Implement 	rfkill support)
-From: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
-	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-	 <1251357267.20531.4.camel@johannes.local>
-	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-	 <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
-	 <43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
-	 <3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
-	 <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 31 Aug 2009 13:13:20 -0700
-Message-Id: <1251749600.5165.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:50135 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbZHYHQf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 03:16:35 -0400
+Received: by fxm17 with SMTP id 17so1878380fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 00:16:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <f42a38140908240235v9206b79m3055f8a96c3dcb64@mail.gmail.com>
+References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+	 <f42a38140908230830r45ef1d01l5a9c5a4d0197e81e@mail.gmail.com>
+	 <f42a38140908232303j320f858cw5c0e45cc98a1e440@mail.gmail.com>
+	 <200908241108.43943.mb@bu3sch.de>
+	 <f42a38140908240235v9206b79m3055f8a96c3dcb64@mail.gmail.com>
+Date: Tue, 25 Aug 2009 15:16:36 +0800
+Message-ID: <f42a38140908250016g72207b64h9d2a33cb73a78b1f@mail.gmail.com>
+Subject: Re: Abour linux driver supports BCM4325
+From: feng tian <feng.of.tian@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-08-31 at 13:25 -0600, Luis R. Rodriguez wrote:
+Dear Michael,
 
-> OK not so bad except for:
-> 
-> > kernel/net/wimax/wimax.ko
-> 
-> That's touching another subsystem but we could technically merge wimax
-> into compat-wireless if Inaky thinks that's a good idea. the point
-> here is to unify anything that uses rfkill for backport usage.
+Another question:
+We can't get the actual "datasheet" of BCM 4325. The pdf from broadcom
+is so rough, and we also sent email to ask more detailed spec, but no
+feedback.
+What kind of datasheet of BCM4325 are you using now?
+Could you please share this with us?
 
-Oh boy, can of worms
+Thank you very much.
 
-I have my own compat-wimax already, which already handles things for
-backwards compat (many #ifdef hacks to simplify life) and which is
-heavily used internally. 
-
-I don't really know how much worth it might be and I know I don't have
-resources to support both.
-
-> > If everything that depends on rkill is bundled with
-> > compat-wireless, there is probablt no need for the symbol and sysfs
-> > renaming hacks.
-> 
-> Right which is why I think this may be reasonable to do. Any thoughts Inaky?
->   Luis
-
--- 
--- Inaky
-
-
+BR, Feng
