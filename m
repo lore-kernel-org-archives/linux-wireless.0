@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:18292 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753895AbZHGVqX (ORCPT
+Received: from mail.mailasail.com ([212.227.250.41]:41433 "EHLO
+	mail1.nippynetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755940AbZHYT0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 17:46:23 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so588418eyd.37
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 14:46:23 -0700 (PDT)
-Message-ID: <4A7CA188.1070706@gmail.com>
-Date: Fri, 07 Aug 2009 23:50:00 +0200
-From: Roel Kluin <roel.kluin@gmail.com>
+	Tue, 25 Aug 2009 15:26:08 -0400
+Message-ID: <4A943AD0.2050406@wildgooses.com>
+Date: Tue, 25 Aug 2009 20:26:08 +0100
+From: Ed W <lists@wildgooses.com>
 MIME-Version: 1.0
-To: Jouni Malinen <jmalinen@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] ath9k: Fix read buffer overflow
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Cross compiling currently broken?
+References: <4A94319B.9030903@wildgooses.com> <43e72e890908251208r1451b54bt36b431ba5942917a@mail.gmail.com>
+In-Reply-To: <43e72e890908251208r1451b54bt36b431ba5942917a@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevent a read of powInfo[-1] in the first iteration.
+Hi
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-The last hunk I already sent in a previous patch.
+> I use /lib/modules/xyz/build just fine.
+>   
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a2fda70..ef4bf89 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -150,10 +150,10 @@ static void ath9k_hw_get_legacy_target_powers(struct ath_hw *ah,
- 						       IS_CHAN_2GHZ(chan))) {
- 				matchIndex = i;
- 				break;
--			} else if ((freq < ath9k_hw_fbin2freq(powInfo[i].bChannel,
--						      IS_CHAN_2GHZ(chan))) &&
--				   (freq > ath9k_hw_fbin2freq(powInfo[i - 1].bChannel,
--						      IS_CHAN_2GHZ(chan)))) {
-+			} else if (freq < ath9k_hw_fbin2freq(powInfo[i].bChannel,
-+						      IS_CHAN_2GHZ(chan)) && i > 0 &&
-+				   freq > ath9k_hw_fbin2freq(powInfo[i - 1].bChannel,
-+						      IS_CHAN_2GHZ(chan))) {
- 				lowIndex = i - 1;
- 				break;
- 			}
-@@ -268,10 +268,10 @@ static void ath9k_hw_get_target_powers(struct ath_hw *ah,
- 				matchIndex = i;
- 				break;
- 			} else
--				if ((freq < ath9k_hw_fbin2freq(powInfo[i].bChannel,
--						       IS_CHAN_2GHZ(chan))) &&
--				    (freq > ath9k_hw_fbin2freq(powInfo[i - 1].bChannel,
--						       IS_CHAN_2GHZ(chan)))) {
-+				if (freq < ath9k_hw_fbin2freq(powInfo[i].bChannel,
-+						       IS_CHAN_2GHZ(chan)) && i > 0 &&
-+				    freq > ath9k_hw_fbin2freq(powInfo[i - 1].bChannel,
-+						       IS_CHAN_2GHZ(chan))) {
- 					lowIndex = i - 1;
- 					break;
- 				}
-@@ -460,7 +460,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
- 		integer = swab32(eep->modalHeader.antCtrlCommon);
- 		eep->modalHeader.antCtrlCommon = integer;
+Can you adapt your environment to be a little closer to mine?
+
+For example if you don't have /lib/modules/'uname -r` available do you 
+get the nasty errors that I see?
+
+> mcgrof@tux ~/devel/compat-wireless-2.6 (git::master)$ make
+> KLIB=/lib/modules/2.6.27-02062726-generic/build/
+> KLIB_BUILD=/lib/modules/2.6.27-02062726-generic/build/
+>   
+
+Is the above all on one line?  Assuming so then can you please try this:
+
+> mcgrof@tux ~/devel/compat-wireless-2.6 (git::master)$ make
+> KLIB=/lib/modules/2.6.27-02062726-generic/build/
+> KLIB_BUILD=/lib/modules/2.6.27-02062726-generic/build/ install-modules
+>   
+
+I would expect your modules to end up in
+
+/lib/modules/2.6.27-02062726-generic/build/lib/modules/2.6.27-02062726-generic/build/
+
+(If you read the above you can presumably see what has happened)
  
--		for (i = 0; i < AR5416_MAX_CHAINS; i++) {
-+		for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
- 			integer = swab32(eep->modalHeader.antCtrlChain[i]);
- 			eep->modalHeader.antCtrlChain[i] = integer;
- 		}
-@@ -914,7 +914,7 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 			ctlMode, numCtlModes, isHt40CtlMode,
- 			(pCtlMode[ctlMode] & EXT_ADDITIVE));
- 
--		for (i = 0; (i < AR5416_NUM_CTLS) &&
-+		for (i = 0; (i < AR5416_EEP4K_NUM_CTLS) &&
- 				pEepData->ctlIndex[i]; i++) {
- 			DPRINTF(ah->ah_sc, ATH_DBG_EEPROM,
- 				"  LOOP-Ctlidx %d: cfgCtl 0x%2.2x "
+
+Is this the case for you?
+
+Your make output varies from mine (compat-wireless-2009-8-24), one of us 
+obviously has somewhat newer build file - perhaps the make file just 
+changed?
+
+Thanks for your comments
+
+Ed W
