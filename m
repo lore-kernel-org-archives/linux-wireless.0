@@ -1,66 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46774 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:50394 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755111AbZHDM0g (ORCPT
+	with ESMTP id S1752906AbZHYOe3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 08:26:36 -0400
-Subject: Re: [PATCH] cfg80211: clear SSID on disconnect
+	Tue, 25 Aug 2009 10:34:29 -0400
+Subject: [PATCH] mac80211: fix scan cancel on ifdown
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Albert <jal2@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20090804T082338-799@post.gmane.org>
-References: <1249311832.4561.2.camel@johannes.local>
-	 <loom.20090804T064513-963@post.gmane.org>
-	 <1249370029.9415.1.camel@johannes.local>
-	 <loom.20090804T082338-799@post.gmane.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-5oO3br+byrMGqTOlOXsh"
-Date: Tue, 04 Aug 2009 14:26:06 +0200
-Message-Id: <1249388766.9415.6.camel@johannes.local>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Tue, 25 Aug 2009 16:33:47 +0200
+Message-Id: <1251210827.10667.6.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When an interface is taken down while a scan is
+pending -- i.e. a scan request was accepted but
+not yet acted upon due to other work being in
+progress -- we currently do not properly cancel
+that scan and end up getting stuck. Fix this by
+doing better checks when an interface is taken
+down.
 
---=-5oO3br+byrMGqTOlOXsh
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/iface.c |   26 ++------------------------
+ net/mac80211/scan.c  |    9 ++++++---
+ 2 files changed, 8 insertions(+), 27 deletions(-)
 
-On Tue, 2009-08-04 at 08:24 +0000, Joerg Albert wrote:
-> Johannes Berg <johannes@...> writes:
->=20
->=20
-> =20
-> > Aha. yes, the same assignment is _also_ missing in
-> > __cfg80211_connect_result(), can you add it there manually (in the
-> > status !=3D WLAN_STATUS_SUCCESS block at the end) and see what happens?
->=20
-> Yes, that helped in my case.
+--- wireless-testing.orig/net/mac80211/iface.c	2009-08-25 14:39:06.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2009-08-25 14:39:42.000000000 +0200
+@@ -497,30 +497,8 @@ static int ieee80211_stop(struct net_dev
+ 		}
+ 		/* fall through */
+ 	default:
+-		if (local->scan_sdata == sdata) {
+-			if (!local->ops->hw_scan)
+-				cancel_delayed_work_sync(&local->scan_work);
+-			/*
+-			 * The software scan can no longer run now, so we can
+-			 * clear out the scan_sdata reference. However, the
+-			 * hardware scan may still be running. The complete
+-			 * function must be prepared to handle a NULL value.
+-			 */
+-			local->scan_sdata = NULL;
+-			/*
+-			 * The memory barrier guarantees that another CPU
+-			 * that is hardware-scanning will now see the fact
+-			 * that this interface is gone.
+-			 */
+-			smp_mb();
+-			/*
+-			 * If software scanning, complete the scan but since
+-			 * the scan_sdata is NULL already don't send out a
+-			 * scan event to userspace -- the scan is incomplete.
+-			 */
+-			if (test_bit(SCAN_SW_SCANNING, &local->scanning))
+-				ieee80211_scan_completed(&local->hw, true);
+-		}
++		if (local->scan_sdata == sdata)
++			ieee80211_scan_cancel(local);
+ 
+ 		/*
+ 		 * Disable beaconing for AP and mesh, IBSS can't
+--- wireless-testing.orig/net/mac80211/scan.c	2009-08-25 14:37:44.000000000 +0200
++++ wireless-testing/net/mac80211/scan.c	2009-08-25 15:50:07.000000000 +0200
+@@ -280,6 +280,7 @@ void ieee80211_scan_completed(struct iee
+ 	if (local->scan_req != local->int_scan_req)
+ 		cfg80211_scan_done(local->scan_req, aborted);
+ 	local->scan_req = NULL;
++	local->scan_sdata = NULL;
+ 
+ 	was_hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
+ 	local->scanning = 0;
+@@ -660,6 +661,7 @@ void ieee80211_scan_work(struct work_str
+ 		int rc;
+ 
+ 		local->scan_req = NULL;
++		local->scan_sdata = NULL;
+ 
+ 		rc = __ieee80211_start_scan(sdata, req);
+ 		mutex_unlock(&local->scan_mtx);
+@@ -742,7 +744,7 @@ int ieee80211_request_internal_scan(stru
+ 
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+-	bool swscan;
++	bool abortscan;
+ 
+ 	cancel_delayed_work_sync(&local->scan_work);
+ 
+@@ -751,9 +753,10 @@ void ieee80211_scan_cancel(struct ieee80
+ 	 * queued -- mostly at suspend under RTNL.
+ 	 */
+ 	mutex_lock(&local->scan_mtx);
+-	swscan = test_bit(SCAN_SW_SCANNING, &local->scanning);
++	abortscan = test_bit(SCAN_SW_SCANNING, &local->scanning) ||
++		    (!local->scanning && local->scan_req);
+ 	mutex_unlock(&local->scan_mtx);
+ 
+-	if (swscan)
++	if (abortscan)
+ 		ieee80211_scan_completed(&local->hw, true);
+ }
 
-The v2 patch I posted to this thread should fix the issue then, and also
-fix two more places where it could occur.
-
-johannes
-
---=-5oO3br+byrMGqTOlOXsh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKeCjbAAoJEODzc/N7+Qma8bwP/2RaRyFLhbpY6nJWeclVi+SE
-ViZshBuco/vRq+pT+4Cb2xtxEhuF7q2gYq7jOQbALopdJXaJmLl5NqLY6B3r9duP
-53qF0Mk4Iss+qgwDIa+9RCtbpvtlFtXHOi6/fPcjT5jNMQowLTcdnN5QfD0jNxD7
-RbqDvptOYKa+C0VZ1fGX6A4/tg4t60kbbx0g+jY4z1MRX+3EcWlD1LfcIlcZFlut
-mlc0xzlOWDRUOtbAZe63WavjfeC/SYD7de/zqhIXjjZi7gcwOlxuw940eGtOGvE+
-73KWmNSAQanOcXdkp/LyE/wkM5usv9N9ae2mmeWegaTVTIrJUwN0LucJWbpeXwDI
-1WLMFLgt0tLDyD/Ptu0NF+CeONaJ/spB/7LXS8poR5u05eW6QinEki3LGgL+M39K
-x+z09BFpC3cHTwu4OBqjjB3ZCe9MDRNN/0YHUszqhH6STWW7lcjyjhhuinq1CF59
-Eda3cwePlA7acePTyoNAGbXi81uGHhwLQNxaiRaX90scLlnQ1cE0rHRIRoi4kbCS
-DgROrIa/F5JEo3uaMFZILI/ZgGBUDmbQFbd9/9c4icMU0ECjYHzTbpndzeU+i3Ne
-TxBf9/V6uGAT1PIl/ejW4SW7Vua6v/z9R7Iv4K1RhdBkepCFD79Xxw+QTLdkBch/
-lJmLSzQFxusKWPlLvQrH
-=VN/b
------END PGP SIGNATURE-----
-
---=-5oO3br+byrMGqTOlOXsh--
 
