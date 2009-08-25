@@ -1,348 +1,413 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41350 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986AbZH3UpF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 16:45:05 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1MhrGo-00052I-Io
-	for linux-wireless@vger.kernel.org; Sun, 30 Aug 2009 22:45:02 +0200
-Received: from f051051035.adsl.alicedsl.de ([78.51.51.35])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 22:45:02 +0200
-Received: from keinstein_junior by f051051035.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 22:45:02 +0200
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51271 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755646AbZHYSPQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 14:15:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-From: Tobias Schlemmer <keinstein_junior@gmx.net>
-Subject: rtl8187b Problem with tx level 
-Date: Sun, 30 Aug 2009 22:44:03 +0200
-Message-ID: <h7eo7q$7ks$1@ger.gmane.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020703040604020104060300"
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libipw: initiate cfg80211 API conversion
+Date: Tue, 25 Aug 2009 14:12:25 -0400
+Message-Id: <1251223945-9761-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020703040604020104060300
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Initiate the conversion of libipw to the new cfg80211 configuration API.
 
-Hi,
+For now, leave CONFIG_IPW2200_PROMISCUOUS stuff alone.  Eventually
+migrate it to cfg80211 when the add/del/change_virtual_intf methods
+are implemented.
 
-I have some problem with my rtl8187b device. It is included in my laptop 
-running Ubuntu linux 2.6.28. I've tested several compat-wireless 
-releases including 2.6.30 and 2.6.31-rc7.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c       |    6 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c       |  141 +++++++++++++++++++++-----
+ drivers/net/wireless/ipw2x00/libipw.h        |    8 +-
+ drivers/net/wireless/ipw2x00/libipw_module.c |   42 +++++++-
+ 4 files changed, 161 insertions(+), 36 deletions(-)
 
-The problem is that the network adapter looses the connection to the 
-access point at very low distances. It seems to be as if the driver is 
-too optimistic about tx power. I monitored the singnal strength on the 
-access point (Buffalo running DD-WRT). When I associate the laptop with 
-it the recieved signal strength starts full and drops rapidly in the 
-first seconds. At the end it is about 0 at a distance of 4m. At this 
-moment no ping will arrive the destination. Tests with other access 
-points show similar results.
-
-After several attempts to get different drivers working I used an Ubuntu 
-8.04 boot CD this morning which seems to work out of the box. It has 
-kernel 2.6.24 using a module called r8187. I compared these two drivers 
-and got much better signal strengths, at least more stable connections. 
-Maybe it's interesting that the two drivers report different signal 
-strength (compat-wireless reports about 10dBm higher values than the old 
-driver) also in signal quality the compat wireless driver seems to be 
-more optimistic.
-
-Interestingly iwconfig always reports TX power of 20dBm, regardless of 
-the actual tx power, but always a TX rate of 1M. Setting the latter to a 
-higher value results in packet loss.
-
-As I leave for holidays on Tuesday I can give further information only 
-tomorrow and in two weeks.
-
-Tobias
-
---------------020703040604020104060300
-Content-Type: text/plain;
- name="eventlog"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="eventlog"
-
-Log of iw event -t 
-Sun Aug 30 21:26:57 2009
-
-iwdied with signal 2
-
-Sun Aug 30 21:27:22 2009
-----------------
-1251660460.087134: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660481.753561: wlan0 (phy #0): disassoc 00:16:44:fb:52:6c -> 00:17:3f:7e:ab:08 reason 1: Unspecified
-1251660486.831135: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660487.041865: wlan0 (phy #0): auth 00:17:3f:7e:ab:08 -> 00:16:44:fb:52:6c status: 0: Successful
-1251660487.050600: wlan0 (phy #0): assoc 00:17:3f:7e:ab:08 -> 00:16:44:fb:52:6c status: 0: Successful
-1251660588.213505: wlan0 (phy #0): deauth 00:16:44:fb:52:6c -> 00:17:3f:7e:ab:08 reason 3: Deauthenticated because sending station is leaving (or has left) the IBSS or ESS
-1251660600.900453: wlan0 (phy #0): scan aborted: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660607.237699: wlan0 (phy #0): disassoc 00:16:44:fb:52:6c -> 00:17:3f:7e:ab:08 reason 1: Unspecified
-1251660613.427166: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660614.348485: wlan0 (phy #0): auth: timed out
-1251660620.263160: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660621.152487: wlan0 (phy #0): auth: timed out
-1251660626.311193: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660627.200489: wlan0 (phy #0): auth: timed out
-1251660632.359167: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660633.248491: wlan0 (phy #0): auth: timed out
-1251660638.415165: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660639.304490: wlan0 (phy #0): auth: timed out
-1251660644.467730: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660645.356493: wlan0 (phy #0): auth: timed out
-1251660650.519172: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660651.419254: wlan0 (phy #0): auth: timed out
-1251660656.587182: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660657.512517: wlan0 (phy #0): auth: timed out
-1251660662.655181: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660663.532509: wlan0 (phy #0): auth: timed out
-1251660668.711181: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660669.588513: wlan0 (phy #0): auth: timed out
-1251660674.779164: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660675.656519: wlan0 (phy #0): auth: timed out
-1251660680.943163: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660681.836528: wlan0 (phy #0): auth: timed out
-1251660686.879163: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660687.768520: wlan0 (phy #0): auth: timed out
-1251660692.927168: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660693.816525: wlan0 (phy #0): auth: timed out
-1251660698.975165: wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
-1251660699.400865: wlan0 (phy #0): auth 00:17:3f:7e:ab:08 -> 00:16:44:fb:52:6c status: 0: Successful
-1251660699.412964: wlan0 (phy #0): assoc 00:17:3f:7e:ab:08 -> 00:16:44:fb:52:6c status: 0: Successful
-
-
---------------020703040604020104060300
-Content-Type: text/x-log;
- name="kernel-short.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="kernel-short.log"
-
-[  346.940054] usb 1-1: new high speed USB device using ehci_hcd and address 4
-[  347.086851] usb 1-1: configuration #1 chosen from 1 choice
-[  347.418280] cfg80211: Calling CRDA for country: EU
-[  348.348579] phy0: Selected rate control algorithm 'minstrel'
-[  348.349108] phy0: hwaddr e3c7a080, RTL8187BvE V0 + rtl8225z2
-[  348.349131] usbcore: registered new interface driver rtl8187
-[  361.807409] phy0: device now idle
-[  361.878423] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  361.893826] phy0: device no longer idle - scanning
-[  364.225226] phy0: device now idle
-[  364.806379] phy0: device no longer idle - scanning
-[  366.893227] phy0: device now idle
-[  390.835706] phy0: device no longer idle - scanning
-[  392.917362] phy0: device now idle
-[  412.002426] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  412.371061] phy0: device no longer idle - scanning
-[  414.498373] wlan0: authenticate with AP e3c7b708
-[  414.498397] wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-[  414.499742] phy0: device now idle
-[  417.572157] phy0: device no longer idle - scanning
-[  419.649259] phy0: device now idle
-[  419.718250] phy0: device no longer idle - in use
-[  419.785249] wlan0: authenticate with AP e3c7b708
-[  419.786755] wlan0: authenticated
-[  419.786756] wlan0: associate with AP e3c7b708
-[  419.789134] wlan0: RX AssocResp from e3f8201a (capab=0x411 status=0 aid=3)
-[  419.789138] wlan0: associated
-[  419.789142] phy0: Allocated STA e3c00a08
-[  419.789403] phy0: Inserted STA e3c00a08
-[  419.790372] wlan0: switched to short barker preamble (BSSID=e3c7b708)
-[  419.790374] wlan0: switched to short slot time (BSSID=e3c7b708)
-[  419.795862] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[  420.664625] padlock: VIA PadLock not detected.
-[  426.992527] wlan0: setting MTU 1492
-[  429.796020] wlan0: no IPv6 routers present
-[  465.032820] usb 2-2: USB disconnect, address 2
-[  520.958259] wlan0: deauthenticating by local choice (reason=3)
-[  520.959293] phy0: device now idle
-[  521.037304] phy0: Removed STA e3c00a08
-[  521.037411] phy0: Destroyed STA e3c00a08
-[  524.902800] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  533.450798] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  533.452844] phy0: device no longer idle - scanning
-[  533.645340] phy0: device now idle
-[  537.890760] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  537.890876] phy0: device no longer idle - scanning
-[  539.982438] wlan0: direct probe to AP e3c7b708 try 1
-[  539.982476] wlan0: privacy configuration mismatch and mixed-cell disabled - disassociate
-[  539.983926] phy0: device now idle
-[  543.973724] phy0: device no longer idle - scanning
-[  546.270791] phy0: device now idle
-[  546.358314] phy0: device no longer idle - in use
-[  546.425311] wlan0: direct probe to AP e3c7b708 try 1
-[  546.624050] wlan0: direct probe to AP e3c7b708 try 2
-[  546.824039] wlan0: direct probe to AP e3c7b708 try 3
-[  547.024037] wlan0: direct probe to AP e3c7b708 timed out
-[  547.024044] phy0: device now idle
-[  551.030732] phy0: device no longer idle - scanning
-[  553.093323] phy0: device now idle
-[  553.162315] phy0: device no longer idle - in use
-[  553.229316] wlan0: direct probe to AP e3c7b708 try 1
-[  553.428042] wlan0: direct probe to AP e3c7b708 try 2
-[  553.628037] wlan0: direct probe to AP e3c7b708 try 3
-[  553.828036] wlan0: direct probe to AP e3c7b708 timed out
-[  553.828043] phy0: device now idle
-[  557.082433] phy0: device no longer idle - scanning
-[  559.141327] phy0: device now idle
-[  559.210312] phy0: device no longer idle - in use
-[  559.277319] wlan0: direct probe to AP e3c7b708 try 1
-[  559.476045] wlan0: direct probe to AP e3c7b708 try 2
-[  559.676044] wlan0: direct probe to AP e3c7b708 try 3
-[  559.876044] wlan0: direct probe to AP e3c7b708 timed out
-
-
---------------020703040604020104060300
-Content-Type: text/plain;
- name="lsusb"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="lsusb"
-
-Bus 001 Device 004: ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B Wireless 802.11g 54Mbps Network Adapter
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0        64
-  idVendor           0x0bda Realtek Semiconductor Corp.
-  idProduct          0x8189 RTL8187B Wireless 802.11g 54Mbps Network Adapter
-  bcdDevice            2.00
-  iManufacturer           1 Manufacturer_Realtek
-  iProduct                2 
-  iSerial                 3 00e04c000001
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           81
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          4 Wireless Network Card
-    bmAttributes         0x80
-      (Bus Powered)
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           9
-      bInterfaceClass       255 Vendor Specific Class
-      bInterfaceSubClass    255 Vendor Specific Subclass
-      bInterfaceProtocol    255 Vendor Specific Protocol
-      iInterface              2 
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x83  EP 3 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x04  EP 4 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x05  EP 5 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x06  EP 6 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x07  EP 7 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x89  EP 9 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0a  EP 10 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0b  EP 11 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x0c  EP 12 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-Device Qualifier (for other device speed):
-  bLength                10
-  bDescriptorType         6
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0        64
-  bNumConfigurations      1
-Device Status:     0x0000
-  (Bus Powered)
-
-
---------------020703040604020104060300--
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 8caa07a..7745738 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6029,7 +6029,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	struct ipw2100_priv *priv;
+ 	struct net_device *dev;
+ 
+-	dev = alloc_ieee80211(sizeof(struct ipw2100_priv));
++	dev = alloc_ieee80211(sizeof(struct ipw2100_priv), 0);
+ 	if (!dev)
+ 		return NULL;
+ 	priv = libipw_priv(dev);
+@@ -6342,7 +6342,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 		sysfs_remove_group(&pci_dev->dev.kobj,
+ 				   &ipw2100_attribute_group);
+ 
+-		free_ieee80211(dev);
++		free_ieee80211(dev, 0);
+ 		pci_set_drvdata(pci_dev, NULL);
+ 	}
+ 
+@@ -6400,7 +6400,7 @@ static void __devexit ipw2100_pci_remove_one(struct pci_dev *pci_dev)
+ 		if (dev->base_addr)
+ 			iounmap((void __iomem *)dev->base_addr);
+ 
+-		free_ieee80211(dev);
++		free_ieee80211(dev, 0);
+ 	}
+ 
+ 	pci_release_regions(pci_dev);
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 0ccec9f..3f8372d 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -103,6 +103,25 @@ static int antenna = CFG_SYS_ANTENNA_BOTH;
+ static int rtap_iface = 0;     /* def: 0 -- do not create rtap interface */
+ #endif
+ 
++static struct ieee80211_rate ipw2200_rates[] = {
++	{ .bitrate = 10 },
++	{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 60 },
++	{ .bitrate = 90 },
++	{ .bitrate = 120 },
++	{ .bitrate = 180 },
++	{ .bitrate = 240 },
++	{ .bitrate = 360 },
++	{ .bitrate = 480 },
++	{ .bitrate = 540 }
++};
++
++#define ipw2200_a_rates		(ipw2200_rates + 4)
++#define ipw2200_num_a_rates	8
++#define ipw2200_bg_rates	(ipw2200_rates + 0)
++#define ipw2200_num_bg_rates	12
+ 
+ #ifdef CONFIG_IPW2200_QOS
+ static int qos_enable = 0;
+@@ -8640,24 +8659,6 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
+  *
+  */
+ 
+-static int ipw_wx_get_name(struct net_device *dev,
+-			   struct iw_request_info *info,
+-			   union iwreq_data *wrqu, char *extra)
+-{
+-	struct ipw_priv *priv = libipw_priv(dev);
+-	mutex_lock(&priv->mutex);
+-	if (priv->status & STATUS_RF_KILL_MASK)
+-		strcpy(wrqu->name, "radio off");
+-	else if (!(priv->status & STATUS_ASSOCIATED))
+-		strcpy(wrqu->name, "unassociated");
+-	else
+-		snprintf(wrqu->name, IFNAMSIZ, "IEEE 802.11%c",
+-			 ipw_modes[priv->assoc_request.ieee_mode]);
+-	IPW_DEBUG_WX("Name: %s\n", wrqu->name);
+-	mutex_unlock(&priv->mutex);
+-	return 0;
+-}
+-
+ static int ipw_set_channel(struct ipw_priv *priv, u8 channel)
+ {
+ 	if (channel == 0) {
+@@ -9957,7 +9958,7 @@ static int ipw_wx_sw_reset(struct net_device *dev,
+ /* Rebase the WE IOCTLs to zero for the handler array */
+ #define IW_IOCTL(x) [(x)-SIOCSIWCOMMIT]
+ static iw_handler ipw_wx_handlers[] = {
+-	IW_IOCTL(SIOCGIWNAME) = ipw_wx_get_name,
++	IW_IOCTL(SIOCGIWNAME) = (iw_handler) cfg80211_wext_giwname,
+ 	IW_IOCTL(SIOCSIWFREQ) = ipw_wx_set_freq,
+ 	IW_IOCTL(SIOCGIWFREQ) = ipw_wx_get_freq,
+ 	IW_IOCTL(SIOCSIWMODE) = ipw_wx_set_mode,
+@@ -11401,16 +11402,100 @@ static void ipw_bg_down(struct work_struct *work)
+ /* Called by register_netdev() */
+ static int ipw_net_init(struct net_device *dev)
+ {
++	int i, rc = 0;
+ 	struct ipw_priv *priv = libipw_priv(dev);
++	const struct libipw_geo *geo = libipw_get_geo(priv->ieee);
++	struct wireless_dev *wdev = &priv->ieee->wdev;
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (ipw_up(priv)) {
+-		mutex_unlock(&priv->mutex);
+-		return -EIO;
++		rc = -EIO;
++		goto out;
+ 	}
+ 
++	memcpy(wdev->wiphy->perm_addr, priv->mac_addr, ETH_ALEN);
++
++	/* fill-out priv->ieee->bg_band */
++	if (geo->bg_channels) {
++		struct ieee80211_supported_band *bg_band = &priv->ieee->bg_band;
++
++		bg_band->band = IEEE80211_BAND_2GHZ;
++		bg_band->n_channels = geo->bg_channels;
++		bg_band->channels =
++			kzalloc(geo->bg_channels *
++				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		/* translate geo->bg to bg_band.channels */
++		for (i = 0; i < geo->bg_channels; i++) {
++			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
++			bg_band->channels[i].center_freq = geo->bg[i].freq;
++			bg_band->channels[i].hw_value = geo->bg[i].channel;
++			bg_band->channels[i].max_power = geo->bg[i].max_power;
++			if (geo->bg[i].flags & LIBIPW_CH_PASSIVE_ONLY)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_PASSIVE_SCAN;
++			if (geo->bg[i].flags & LIBIPW_CH_NO_IBSS)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_NO_IBSS;
++			if (geo->bg[i].flags & LIBIPW_CH_RADAR_DETECT)
++				bg_band->channels[i].flags |=
++					IEEE80211_CHAN_RADAR;
++			/* No equivalent for LIBIPW_CH_80211H_RULES,
++			   LIBIPW_CH_UNIFORM_SPREADING, or
++			   LIBIPW_CH_B_ONLY... */
++		}
++		/* point at bitrate info */
++		bg_band->bitrates = ipw2200_bg_rates;
++		bg_band->n_bitrates = ipw2200_num_bg_rates;
++
++		wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = bg_band;
++	}
++
++	/* fill-out priv->ieee->a_band */
++	if (geo->a_channels) {
++		struct ieee80211_supported_band *a_band = &priv->ieee->a_band;
++
++		a_band->band = IEEE80211_BAND_5GHZ;
++		a_band->n_channels = geo->a_channels;
++		a_band->channels =
++			kzalloc(geo->a_channels *
++				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		/* translate geo->bg to a_band.channels */
++		for (i = 0; i < geo->a_channels; i++) {
++			a_band->channels[i].band = IEEE80211_BAND_2GHZ;
++			a_band->channels[i].center_freq = geo->a[i].freq;
++			a_band->channels[i].hw_value = geo->a[i].channel;
++			a_band->channels[i].max_power = geo->a[i].max_power;
++			if (geo->a[i].flags & LIBIPW_CH_PASSIVE_ONLY)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_PASSIVE_SCAN;
++			if (geo->a[i].flags & LIBIPW_CH_NO_IBSS)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_NO_IBSS;
++			if (geo->a[i].flags & LIBIPW_CH_RADAR_DETECT)
++				a_band->channels[i].flags |=
++					IEEE80211_CHAN_RADAR;
++			/* No equivalent for LIBIPW_CH_80211H_RULES,
++			   LIBIPW_CH_UNIFORM_SPREADING, or
++			   LIBIPW_CH_B_ONLY... */
++		}
++		/* point at bitrate info */
++		a_band->bitrates = ipw2200_a_rates;
++		a_band->n_bitrates = ipw2200_num_a_rates;
++
++		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = a_band;
++	}
++
++	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
++
++	/* With that information in place, we can now register the wiphy... */
++	if (wiphy_register(wdev->wiphy)) {
++		rc = -EIO;
++		goto out;
++	}
++
++out:
+ 	mutex_unlock(&priv->mutex);
+-	return 0;
++	return rc;
+ }
+ 
+ /* PCI driver stuff */
+@@ -11540,7 +11625,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 	if (priv->prom_net_dev)
+ 		return -EPERM;
+ 
+-	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv));
++	priv->prom_net_dev = alloc_ieee80211(sizeof(struct ipw_prom_priv), 1);
+ 	if (priv->prom_net_dev == NULL)
+ 		return -ENOMEM;
+ 
+@@ -11559,7 +11644,7 @@ static int ipw_prom_alloc(struct ipw_priv *priv)
+ 
+ 	rc = register_netdev(priv->prom_net_dev);
+ 	if (rc) {
+-		free_ieee80211(priv->prom_net_dev);
++		free_ieee80211(priv->prom_net_dev, 1);
+ 		priv->prom_net_dev = NULL;
+ 		return rc;
+ 	}
+@@ -11573,7 +11658,7 @@ static void ipw_prom_free(struct ipw_priv *priv)
+ 		return;
+ 
+ 	unregister_netdev(priv->prom_net_dev);
+-	free_ieee80211(priv->prom_net_dev);
++	free_ieee80211(priv->prom_net_dev, 1);
+ 
+ 	priv->prom_net_dev = NULL;
+ }
+@@ -11601,7 +11686,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	struct ipw_priv *priv;
+ 	int i;
+ 
+-	net_dev = alloc_ieee80211(sizeof(struct ipw_priv));
++	net_dev = alloc_ieee80211(sizeof(struct ipw_priv), 0);
+ 	if (net_dev == NULL) {
+ 		err = -ENOMEM;
+ 		goto out;
+@@ -11749,7 +11834,7 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+       out_free_ieee80211:
+-	free_ieee80211(priv->net_dev);
++	free_ieee80211(priv->net_dev, 0);
+       out:
+ 	return err;
+ }
+@@ -11816,7 +11901,7 @@ static void __devexit ipw_pci_remove(struct pci_dev *pdev)
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+-	free_ieee80211(priv->net_dev);
++	free_ieee80211(priv->net_dev, 0);
+ 	free_firmware();
+ }
+ 
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index cefb942..8f91d34 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -31,6 +31,7 @@
+ #include <linux/ieee80211.h>
+ 
+ #include <net/lib80211.h>
++#include <net/cfg80211.h>
+ 
+ #define LIBIPW_VERSION "git-1.1.13"
+ 
+@@ -783,12 +784,15 @@ struct libipw_geo {
+ 
+ struct libipw_device {
+ 	struct net_device *dev;
++	struct wireless_dev wdev;
+ 	struct libipw_security sec;
+ 
+ 	/* Bookkeeping structures */
+ 	struct libipw_stats ieee_stats;
+ 
+ 	struct libipw_geo geo;
++	struct ieee80211_supported_band bg_band;
++	struct ieee80211_supported_band a_band;
+ 
+ 	/* Probe / Beacon management */
+ 	struct list_head network_free_list;
+@@ -1014,8 +1018,8 @@ static inline int libipw_is_cck_rate(u8 rate)
+ }
+ 
+ /* ieee80211.c */
+-extern void free_ieee80211(struct net_device *dev);
+-extern struct net_device *alloc_ieee80211(int sizeof_priv);
++extern void free_ieee80211(struct net_device *dev, int monitor);
++extern struct net_device *alloc_ieee80211(int sizeof_priv, int monitor);
+ extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+ extern void libipw_networks_age(struct libipw_device *ieee,
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index eb2b608..a0e9f6a 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -62,6 +62,9 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
+ 
++struct cfg80211_ops libipw_config_ops = { };
++void *libipw_wiphy_privid = &libipw_wiphy_privid;
++
+ static int libipw_networks_allocate(struct libipw_device *ieee)
+ {
+ 	if (ieee->networks)
+@@ -140,7 +143,7 @@ int libipw_change_mtu(struct net_device *dev, int new_mtu)
+ }
+ EXPORT_SYMBOL(libipw_change_mtu);
+ 
+-struct net_device *alloc_ieee80211(int sizeof_priv)
++struct net_device *alloc_ieee80211(int sizeof_priv, int monitor)
+ {
+ 	struct libipw_device *ieee;
+ 	struct net_device *dev;
+@@ -157,10 +160,31 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
+ 
+ 	ieee->dev = dev;
+ 
++	if (!monitor) {
++		ieee->wdev.wiphy = wiphy_new(&libipw_config_ops, 0);
++		if (!ieee->wdev.wiphy) {
++			LIBIPW_ERROR("Unable to allocate wiphy.\n");
++			goto failed_free_netdev;
++		}
++
++		ieee->dev->ieee80211_ptr = &ieee->wdev;
++		ieee->wdev.iftype = NL80211_IFTYPE_STATION;
++
++		/* Fill-out wiphy structure bits we know...  Not enough info
++		   here to call set_wiphy_dev or set MAC address or channel info
++		   -- have to do that in ->ndo_init... */
++		ieee->wdev.wiphy->privid = libipw_wiphy_privid;
++
++		ieee->wdev.wiphy->max_scan_ssids = 1;
++		ieee->wdev.wiphy->max_scan_ie_len = 0;
++		ieee->wdev.wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION)
++						| BIT(NL80211_IFTYPE_ADHOC);
++	}
++
+ 	err = libipw_networks_allocate(ieee);
+ 	if (err) {
+ 		LIBIPW_ERROR("Unable to allocate beacon storage: %d\n", err);
+-		goto failed_free_netdev;
++		goto failed_free_wiphy;
+ 	}
+ 	libipw_networks_initialize(ieee);
+ 
+@@ -193,19 +217,31 @@ struct net_device *alloc_ieee80211(int sizeof_priv)
+ 
+ 	return dev;
+ 
++failed_free_wiphy:
++	if (!monitor)
++		wiphy_free(ieee->wdev.wiphy);
+ failed_free_netdev:
+ 	free_netdev(dev);
+ failed:
+ 	return NULL;
+ }
+ 
+-void free_ieee80211(struct net_device *dev)
++void free_ieee80211(struct net_device *dev, int monitor)
+ {
+ 	struct libipw_device *ieee = netdev_priv(dev);
+ 
+ 	lib80211_crypt_info_free(&ieee->crypt_info);
+ 
+ 	libipw_networks_free(ieee);
++
++	/* free cfg80211 resources */
++	if (!monitor) {
++		wiphy_unregister(ieee->wdev.wiphy);
++		kfree(ieee->a_band.channels);
++		kfree(ieee->bg_band.channels);
++		wiphy_free(ieee->wdev.wiphy);
++	}
++
+ 	free_netdev(dev);
+ }
+ 
+-- 
+1.6.2.5
 
