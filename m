@@ -1,42 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53454 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752833AbZHFSbH (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:43300 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755274AbZHYUsy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:31:07 -0400
-Date: Thu, 6 Aug 2009 14:16:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dave Jones <davej@redhat.com>, Greg KH <greg@kroah.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	zhifeng.cai@atheros.com, stephen.chen@atheros.com,
-	linux-usb@vger.kernel.org
-Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
-Message-ID: <20090806181626.GF26809@tuxdriver.com>
-References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com> <1249532170.21101.3.camel@localhost.localdomain> <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com> <1249533357.21101.5.camel@localhost.localdomain> <20090806050932.GA25015@kroah.com> <20090806181546.GA11589@redhat.com>
+	Tue, 25 Aug 2009 16:48:54 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Fix and simplify Qdiv roundup
+Date: Tue, 25 Aug 2009 22:48:47 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1251211217-7816-1-git-send-email-netrolller.3d@gmail.com>
+In-Reply-To: <1251211217-7816-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090806181546.GA11589@redhat.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908252248.49591.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 06, 2009 at 02:15:46PM -0400, Dave Jones wrote:
-> On Wed, Aug 05, 2009 at 10:09:32PM -0700, Greg Kroah-Hartman wrote:
->  > > the closest we have is drivers/hid/hid-ids.h and we might just should
->  > > have Greg create a usb-ids.h file.
->  >
->  > Ick, no, there's no such file for a good reason.  Put your device ids in
->  > the driver files, no need to share it across the whole kernel.
+On Tuesday 25 August 2009 16:40:17 Gábor Stefanik wrote:
+> The Qdiv roundup routine is essentially a fixed-point
+> division algorithm, using only integer math.
+> However, the version in the specs had a major error
+> that has been recently fixed (a missing quotient++).
 > 
-> I agree. In fact, I'd go further, and say that the bulk of what we have
-> in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
-> entries in that file are used by multiple files in the kernel.
+> Replace Qdiv roundup with a rewritten, simplified version.
 
-Not much point in duplicating the vendor IDs among drivers.  I agree
-that sharing the device IDs has no obvious benefit.
+Don't we have some sort of standard library function somewhere in
+the kernel for this? If not, what about creating one?
 
-John
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+>  drivers/net/wireless/b43/phy_lp.c |   14 ++++----------
+>  1 files changed, 4 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index 7e70c07..d0280d5 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1034,7 +1034,7 @@ static int lpphy_loopback(struct b43_wldev *dev)
+>  
+>  static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
+>  {
+> -	u32 quotient, remainder, rbit, roundup, tmp;
+> +	u32 quotient, remainder;
+>  
+>  	if (divisor == 0)
+>  		return 0;
+> @@ -1042,20 +1042,14 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
+>  	quotient = dividend / divisor;
+>  	remainder = dividend % divisor;
+>  
+> -	rbit = divisor & 0x1;
+> -	roundup = (divisor >> 1) + rbit;
+> -
+>  	while (precision != 0) {
+> -		tmp = remainder - roundup;
+>  		quotient <<= 1;
+> -		if (remainder >= roundup)
+> -			remainder = (tmp << 1) + rbit;
+> -		else
+> -			remainder <<= 1;
+> +		quotient |= (remainder << 1) / divisor;
+> +		remainder = (remainder << 1) % divisor;
+>  		precision--;
+>  	}
+>  
+> -	if (remainder >= roundup)
+> +	if (remainder << 1 >= divisor)
+>  		quotient++;
+>  
+>  	return quotient;
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Greetings, Michael.
