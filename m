@@ -1,71 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12071 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755712AbZHJQ2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 12:28:22 -0400
-Date: Mon, 10 Aug 2009 09:28:23 -0700
-From: Jesse Barnes <jesse.barnes@intel.com>
-To: Dave Jones <davej@redhat.com>
-Cc: Greg KH <greg@kroah.com>, Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	stephen.chen@atheros.com, linux-usb@vger.kernel.org,
-	jbarnes@virtuousgeek.org
-Subject: Re: [PATCH] Document pci_ids.h addition policy.
-Message-ID: <20090810092823.4f697e55@jbarnes-g45>
-In-Reply-To: <20090806191359.GA4345@redhat.com>
-References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
-	<1249532170.21101.3.camel@localhost.localdomain>
-	<43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
-	<1249533357.21101.5.camel@localhost.localdomain>
-	<20090806050932.GA25015@kroah.com>
-	<20090806181546.GA11589@redhat.com>
-	<20090806183326.GA28433@kroah.com>
-	<20090806191359.GA4345@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from n75.bullet.mail.sp1.yahoo.com ([98.136.44.51]:23933 "HELO
+	n75.bullet.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752419AbZHYG56 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 02:57:58 -0400
+Message-ID: <950315.98615.qm@web23105.mail.ird.yahoo.com>
+Date: Tue, 25 Aug 2009 06:51:48 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4A935C2D.5010308@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 6 Aug 2009 15:13:59 -0400
-Dave Jones <davej@redhat.com> wrote:
+--- On Tue, 25/8/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-> On Thu, Aug 06, 2009 at 11:33:26AM -0700, Greg Kroah-Hartman wrote:
->  
->  > > I agree. In fact, I'd go further, and say that the bulk of what
->  > > we have in pci_ids.h is also pointlessly shared. Only a tiny
->  > > fraction of the device entries in that file are used by multiple
->  > > files in the kernel.
->  > 
->  > I agree with that as well, which is why when I was PCI maintainer,
->  > I didn't allow any new additions to the pci_ids.h file, unless it
->  > was going to be an id that was shared by different drivers.  That
->  > cut the new additions down to about none :)
+> Hin-Tak Leung wrote:
+> > --- On Tue, 25/8/09, Larry Finger <Larry.Finger@lwfinger.net>
+> wrote:
+> > 
+> >>> [PATCH] rtl8187: fix circular locking
+> >> (rtl8187_stop/rtl8187_work)
+> >>
+> >> This patch fixes the problem. You can add a
+> Tested-by to
+> >> it.
+> > 
+> > Hmm, I am still wondering about why NM insists on if
+> up'ing the device. I read bits of things and apparently hal
+> is supposed to know the device is rfkill'ed and let NM know.
+> But lshal is not listing the device as having an killswitch.
+> I don't know how hal is supposed to work out that info
+> though. 
+> > 
+> > also I noted that
+> /sys/class/rfkill_backport/rfkill0/state goes from 1 to 2
+> when I slide the switch to the 'off' position. Some says it
+> should be 0?
+> > Don't know if hal is affected by its being
+> rfkill_backport (compat-wireless) rather than rfkill (stock
+> vendor kernel). well, it should look there if it isn't :-).
+> > 
+> > It looks like it is a hal problem...
 > 
-> Perhaps documenting this is a good idea to prevent things being moved
-> there, as it still seems to be happening judging from the git log.
+> The interpretation is as follows:
+> 0 - blocked by software such as 'rfkill block 1'
+> 1 - unblocked
+> 2 - blocked by hardware
 > 
-> Signed-off-by: Dave Jones <davej@redhat.com>
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 73b46b6..f9156fd 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2,6 +2,9 @@
->   *	PCI Class, Vendor and Device IDs
->   *
->   *	Please keep sorted.
-> + *
-> + *	Do not add new entries to this file unless the definitions
-> + *	are shared between multiple drivers.
->   */
->  
->  /* Device classes and subclasses */
-> 
+> Your state is doing exactly what I would expect. When NM
+> brings the
+> device up, does the above state change? Does dmesg show
+> anything?
 
-Applied to linux-next, thanks.  I'll try to be more strict about this
-too (I've reminded a few people of this informal policy already).
+dmesg and rfkill/state corresponds exactly to what the sliding switch does (in the on position, dmesg says it is on, states says 2, in the off position, dmesg says it is off, state says 1). NM basically ignores rfkill/state, and just if'up the device whenever it notices the device has gone down.
 
--- 
-Jesse Barnes, Intel Open Source Technology Center
+hal is supposed to have knowledge of the rfkill state (which it hasn't, from what I see of the lshal output - there is no killswitch entry in there), and let NM through dbus know to not bother the device. At the moment I think it is somewhere in hal that's not working properly.
+
+
+      
+
