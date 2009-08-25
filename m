@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55146 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752428AbZHSQg2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 12:36:28 -0400
-Date: Wed, 19 Aug 2009 09:33:28 -0700
-From: Greg KH <gregkh@suse.de>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Julia Lawall <julia@diku.dk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question about ieee80211_tx.c (fwd)
-Message-ID: <20090819163328.GA3057@suse.de>
-References: <Pine.LNX.4.64.0908171000500.20447@pc-004.diku.dk>
- <69e28c910908170450l65d493dbnb1d2e8f14d29dadc@mail.gmail.com>
- <1250558021.9651.35.camel@debian>
- <20090818013502.GD20566@suse.de>
- <1250699528.5351.18.camel@localhost.localdomain>
+Received: from mail-vw0-f172.google.com ([209.85.212.172]:49993 "EHLO
+	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754900AbZHYSpL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 Aug 2009 14:45:11 -0400
+Received: by vws2 with SMTP id 2so2888399vws.4
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 11:45:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1250699528.5351.18.camel@localhost.localdomain>
+In-Reply-To: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
+References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 25 Aug 2009 14:45:12 -0400
+Message-ID: <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 11:32:08AM -0500, Dan Williams wrote:
-> On Mon, 2009-08-17 at 18:35 -0700, Greg KH wrote:
-> > On Tue, Aug 18, 2009 at 09:13:41AM +0800, Zhu Yi wrote:
-> > > On Mon, 2009-08-17 at 19:50 +0800, Gábor Stefanik wrote:
-> > > > On Mon, Aug 17, 2009 at 10:03 AM, Julia Lawall<julia@diku.dk> wrote:
-> > > > > The files ieee80211_tx.c in the directories
-> > > > > drivers/staging/rtl8192su/ieee80211 and
-> > > > drivers/staging/rtl8192e/ieee80211
-> > > > > both contain the following code in the function
-> > > > > ieee80211_query_protectionmode:
-> > > > >
-> > > > >       if (ieee->mode == IW_MODE_MASTER)
-> > > > >                        goto NO_PROTECTION;
-> > > > >
-> > > > > Elsewhere in these files when there is a comparison against an
-> > > > IW_MODE
-> > > > > value, the field that is compared is iw_mode.  Should that be the
-> > > > case
-> > > > > here as well?
-> > > > >
-> > > > > thanks,
-> > > > > julia
-> > > > 
-> > > > I don't know; rtl8192su & rtl8192e use a modified version of the
-> > > > libipw stack, rather than the mac80211 stack found behind non-staging
-> > > > drivers.
-> > > 
-> > > This is clearly a bug. The question is: who is maintaining this driver
-> > > and why it doesn't use/extend ieee80211/libipw?
-> > 
-> > I maintain it, and I am working to convert it to use the existing
-> > ieee80211 stack that is in the kernel.  Remember, these are drivers in
-> > the staging tree, they are usually "crap" :)
-> 
-> When you say "ieee80211" you mean mac80211, right?
+On Tue, Aug 25, 2009 at 2:25 PM, Luis R.
+Rodriguez<lrodriguez@atheros.com> wrote:
+> This was printing the wrong value on the warning. While at it
+> lets expand this warning to provide a little more useful
+> information for debugging such as the band and hardware rate
+> index when possible and clarify what the warning is actually
+> printing.
 
-Sorry, yes, whatever the wireless stack in the main kernel is called
-these days :)
+>        rix = sc->rate_idx[sc->curband->band][hw_rix];
+> -       if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
+> +       if (WARN(rix < 0, "invalid driver rate index: %x "
+> +                "(hw_rix: %x band: %s)\n", rix, hw_rix,
+> +                sc->curband->band ? "5 GHz" : "2.4 GHz"))
 
-thanks,
+rix will always be -1 here so no real need to print it.
 
-greg k-h
+I'm pretty sure band is going to be "the wrong one," because all
+instances of this warning I've seen have been valid rate indexes,
+like 1 mbit rates when scanning 5 ghz, which could indicate some
+race condition with flushing the rx queue on channel changes.  I
+haven't yet seen a hw rate we didn't know about.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
