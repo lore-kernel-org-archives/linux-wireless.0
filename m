@@ -1,81 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53907 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752544AbZHQPf1 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:52882 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974AbZHZXqB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 11:35:27 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 08:35:30 -0700
-Date: Mon, 17 Aug 2009 08:35:28 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v4 10/34] wireless: group Broadcom drivers on kconfig
-Message-ID: <20090817153528.GD4352@mosca>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
- <1250281559-13041-11-git-send-email-lrodriguez@atheros.com>
- <69e28c910908150509i158bf2a6r33de5899cdc8bd13@mail.gmail.com>
- <43e72e890908151505s6cd9fea0p722de5a781a8ba8b@mail.gmail.com>
- <69e28c910908160615r7bcb3966s9c09319f607f64b1@mail.gmail.com>
+	Wed, 26 Aug 2009 19:46:01 -0400
+Received: by iwn42 with SMTP id 42so425562iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 16:46:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <69e28c910908160615r7bcb3966s9c09319f607f64b1@mail.gmail.com>
+In-Reply-To: <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	<43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
+	<3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 Aug 2009 16:45:43 -0700
+Message-ID: <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
+	rfkill support)
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	hal@lists.freedesktop.org, htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 16, 2009 at 06:15:43AM -0700, Gábor Stefanik wrote:
-> 2009/8/16 Luis R. Rodriguez <lrodriguez@atheros.com>:
-> > 2009/8/15 Gábor Stefanik <netrolller.3d@gmail.com>:
-> >> On Fri, Aug 14, 2009 at 10:25 PM, Luis R.
-> >> Rodriguez<lrodriguez@atheros.com> wrote:
-> >>> This moves Broadcom wireless drivers into their own menu.
-> >>> There are only 2 Broadcom specific drivers so we group
-> >>> them into a menu which can expand. Although rndis_wlan
-> >>> also supports Broadcom devices, RNDIS is a spec and other
-> >>> vendors could technically implement solutions with it
-> >>> as well so we keep that separate as users most likely
-> >>> won't look for those devices under a Broadcom tag.
-> >>>
-> >>> Cc: Michael Buesch <mb@bu3sch.de>
-> >>> Cc: Gábor Stefanik <netrolller.3d@gmail.com>
-> >>> Cc: Johannes Berg <johannes@sipsolutions.net>
-> >>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >>> ---
-> >>>  drivers/net/wireless/Kconfig |   13 +++++++++++++
-> >>>  1 files changed, 13 insertions(+), 0 deletions(-)
-> >>>
-> >>> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-> >>> index c2e88dc..150565d 100644
-> >>> --- a/drivers/net/wireless/Kconfig
-> >>> +++ b/drivers/net/wireless/Kconfig
-> >>> @@ -561,8 +561,21 @@ source "drivers/net/wireless/iwmc3200wifi/Kconfig"
-> >>>  endif # INTEL_80211
-> >>>
-> >>>  source "drivers/net/wireless/hostap/Kconfig"
-> >>> +
-> >>> +config BROADCOM_80211
-> >>> +       bool "Broadcom"
-> >>> +       depends on WLAN_80211
-> >>> +       ---help---
-> >>> +         This will enable the support for Broadcom wireless drivers. This
-> >>> +         includes b43 driver, b43legacy driver and the rndis_wlan driver.
-> >>
-> >> NAK. Again, rndis_wlan is Microsoft, not Broadcom.
-> >
-> > Yes, the patch does not group rndis with broadcom, please re-read the patch.
-> >
-> >  Luis
-> >
-> 
-> But it does say "This includes b43 driver, b43legacy driver and the
-> rndis_wlan driver.", which is wrong.
+On Wed, Aug 26, 2009 at 3:55 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+> On Wed, Aug 26, 2009 at 11:28 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+>> On Wed, Aug 26, 2009 at 3:11 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>>> (added list hal to To:, since it has become relevant; previous
+>>> exchanges of the thread on linux-wireless)
+>>>
+>>> On Wed, Aug 26, 2009 at 5:29 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>>>> On Wed, Aug 26, 2009 at 3:34 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+>>>>> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
+>>>>>
+>>>>>> > Or wait ... are you using compat-wireless?
+>>>>>>
+>>>>>> Yes, I am. I mentioned this and did wonder if the _backport/ part
+>>>>>> in /sys/class is important.
+>>>>>
+>>>>> Sorry, didn't see.
+>>>>>
+>>>>> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
+>>>>> some compat*.h but obviously the kernel won't ever call that notifier,
+>>>>> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
+>>>>> handle that -- it'll be working fine in a regular tree.
+>>>>>
+>>>>> Luis, the only way to handle that would be to manually call the PRE_UP
+>>>>> notifier from mac80211's subif_open() and if that returns an error
+>>>>> (warning: the calling convention is weird) return the error... that's
+>>>>> weird but would work.
+>>>>>
+>>>>> johannes
+>>>>>
+>>>>
+>>>> Hmm, got a bit side-tracked. But hal doesn't know the device having a
+>>>> killswitch is still wrong somewhere?
+>>>> (i.e. am wondering where we should advertise that ability, or how hal
+>>>> works that out)
+>>>>
+>>>> Hin-Tak
+>>>>
+>>>
+>>> I looked into hal and I can now say that it is certainly not
+>>> compat-wireless "rfkill_backport"-aware; apparently all it does is
+>>> monitoring entries under /sys/class that it knows about. I made a
+>>> quick hack:
+>>
+>> This is wrong, we just do not need to use rfkill_backport for sysfs
+>> stuff, consider sending me patch that removes that hunk for
+>> compat-wireless instead and test it.
+>>
+>> Â Luis
+>>
+>
+> Hmm, I did mention the other option - make rfkill_backport exposes its
+> data structure as '/sys/class/rfkill' instead of
+> '/sys/class/rfkill_backport'. Is there any reason why
+> compat-wireless's rfkill_backport Â does not called itself 'rfkill' and
+> unload and replace the old rfkill? That would be much neater, and
+> userland tools like hal won't need to know anything about
+> compat-wireless.
 
-Ah indeed. Thanks for the review.
+Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
 
   Luis
