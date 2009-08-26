@@ -1,104 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37335 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbZHXJqi (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:57734 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbZHZPOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 05:46:38 -0400
-Subject: [PATCH] mac80211: fix RX skb leaks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 24 Aug 2009 11:46:30 +0200
-Message-Id: <1251107190.12007.9.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 26 Aug 2009 11:14:49 -0400
+Received: by bwz19 with SMTP id 19so201288bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:14:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1251297273.15619.11.camel@johannes.local>
+References: <850984.89698.qm@web23108.mail.ird.yahoo.com>
+	 <1251297273.15619.11.camel@johannes.local>
+Date: Wed, 26 Aug 2009 16:07:52 +0100
+Message-ID: <3ace41890908260807t736848d8x57dff6cf3ac581c6@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mac80211's RX path some of the warnings that
-warn about drivers passing invalid status values
-leak the skb, fix that by refactoring the code.
+On Wed, Aug 26, 2009 at 3:34 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
+>
+>> > Or wait ... are you using compat-wireless?
+>>
+>> Yes, I am. I mentioned this and did wonder if the _backport/ part
+>> in /sys/class is important.
+>
+> Sorry, didn't see.
+>
+> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
+> some compat*.h but obviously the kernel won't ever call that notifier,
+> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
+> handle that -- it'll be working fine in a regular tree.
+>
+> Luis, the only way to handle that would be to manually call the PRE_UP
+> notifier from mac80211's subif_open() and if that returns an error
+> (warning: the calling convention is weird) return the error... that's
+> weird but would work.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/rx.c |   34 +++++++++++++++-------------------
- 1 file changed, 15 insertions(+), 19 deletions(-)
+Okay, that explains it. So I can have a Tested-by: ... I just grep for
+NETDEV_PRE_UP in compat-wireless and it is only in
+include/net/compat-2.6.31.h (not in 2.6.30) and I am on 2.6.30.5-X . I
+can grab the rawhide 2.6.31 rpms and try it quickly;
+and possibly look at some ugly quick hack backport that? Stay tuned.
 
---- wireless-testing.orig/net/mac80211/rx.c	2009-08-24 11:42:11.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2009-08-24 11:43:32.000000000 +0200
-@@ -2447,17 +2447,13 @@ void ieee80211_rx(struct ieee80211_hw *h
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 
--	if (status->band < 0 ||
--	    status->band >= IEEE80211_NUM_BANDS) {
--		WARN_ON(1);
--		return;
--	}
-+	if (WARN_ON(status->band < 0 ||
-+		    status->band >= IEEE80211_NUM_BANDS))
-+		goto drop;
- 
- 	sband = local->hw.wiphy->bands[status->band];
--	if (!sband) {
--		WARN_ON(1);
--		return;
--	}
-+	if (WARN_ON(!sband))
-+		goto drop;
- 
- 	/*
- 	 * If we're suspending, it is possible although not too likely
-@@ -2466,25 +2462,21 @@ void ieee80211_rx(struct ieee80211_hw *h
- 	 * that might, for example, cause stations to be added or other
- 	 * driver callbacks be invoked.
- 	 */
--	if (unlikely(local->quiescing || local->suspended)) {
--		kfree_skb(skb);
--		return;
--	}
-+	if (unlikely(local->quiescing || local->suspended))
-+		goto drop;
- 
- 	/*
- 	 * The same happens when we're not even started,
- 	 * but that's worth a warning.
- 	 */
--	if (WARN_ON(!local->started)) {
--		kfree_skb(skb);
--		return;
--	}
-+	if (WARN_ON(!local->started))
-+		goto drop;
- 
- 	if (status->flag & RX_FLAG_HT) {
- 		/* rate_idx is MCS index */
- 		if (WARN_ON(status->rate_idx < 0 ||
- 			    status->rate_idx >= 76))
--			return;
-+			goto drop;
- 		/* HT rates are not in the table - use the highest legacy rate
- 		 * for now since other parts of mac80211 may not yet be fully
- 		 * MCS aware. */
-@@ -2492,7 +2484,7 @@ void ieee80211_rx(struct ieee80211_hw *h
- 	} else {
- 		if (WARN_ON(status->rate_idx < 0 ||
- 			    status->rate_idx >= sband->n_bitrates))
--			return;
-+			goto drop;
- 		rate = &sband->bitrates[status->rate_idx];
- 	}
- 
-@@ -2531,6 +2523,10 @@ void ieee80211_rx(struct ieee80211_hw *h
- 		__ieee80211_rx_handle_packet(hw, skb, rate);
- 
- 	rcu_read_unlock();
-+
-+	return;
-+ drop:
-+	kfree_skb(skb);
- }
- EXPORT_SYMBOL(ieee80211_rx);
- 
+Thanks for the help.
 
-
+Hin-Tak
