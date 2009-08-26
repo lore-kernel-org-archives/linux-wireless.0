@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:14754 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbZHSAEV (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:42347 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804AbZHZTEL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 20:04:21 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so862866eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 17:04:21 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: orinoco-devel@lists.sourceforge.net,
-	David Kilroy <kilroyd@googlemail.com>
-Subject: [RFC v2 0/5] orinoco: use cfg80211 for key manipulation
-Date: Wed, 19 Aug 2009 01:04:08 +0100
-Message-Id: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+	Wed, 26 Aug 2009 15:04:11 -0400
+Received: by ewy2 with SMTP id 2so477259ewy.17
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 12:04:12 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] rt2x00: Cleanup rt2x00mac_bss_info_changed()
+Date: Wed, 26 Aug 2009 21:04:08 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908262104.09230.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series basically works (at least after the last patch is applied)
-with wpa_supplicant in wext mode.
+Since patch "rt2x00: bss_info_changed() callback is allowed to sleep" the
+variable delayed wasn't used anymore. This means it can be removed
+along with the call to schedule_work which depended on that variable.
 
-I had tested with wpa_supplicant in nl80211 mode, but hadn't realised
-it wasn't using connect - I'll need to pick up Zhu Yis' patch and redo
-some testing.
-
-Anyway, the nl80211 interface has a small hole which patch 5 partially
-papers over. I'm not that happy with the way it hijacks the AUTH/ASSOC
-state machine, but it works.
-
-Other outstanding issues:
- - It looks like I haven't quite got the connect_roamed callback right:
-   I've got a WARNING I need to investigate in my logs
- - On disconnecting and reconnecting the card I have to restart
-   wpa_supplicant for things to work. I'm guessing I have to look at
-   driver shutdown, and ensure we send a disconnected event.
-
-Dave.
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-David Kilroy (5):
-  orinoco: add cfg80211 connect and disconnect
-  orinoco: add cfg80211 join_ibss and leave_ibss
-  orinoco: implement cfg80211 key manipulation functions
-  orinoco: do WE via cfg80211
-  cfg80211: scan before connect if we don't have the bss
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index a91f316..929b85f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -582,7 +582,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct rt2x00_intf *intf = vif_to_intf(vif);
+-	unsigned int delayed = 0;
+ 	int update_bssid = 0;
+ 
+ 	/*
+@@ -645,13 +644,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 	 */
+ 	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT))
+ 		rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
+-
+-	spin_lock(&intf->lock);
+-	if (delayed) {
+-		intf->delayed_flags |= delayed;
+-		schedule_work(&rt2x00dev->intf_work);
+-	}
+-	spin_unlock(&intf->lock);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_bss_info_changed);
+ 
 
- drivers/net/wireless/orinoco/cfg.c     |  497 ++++++++++++++++++++++
- drivers/net/wireless/orinoco/main.c    |  172 +++++----
- drivers/net/wireless/orinoco/orinoco.h |    1 +
- drivers/net/wireless/orinoco/wext.c    |  726 +-------------------------------
- net/wireless/sme.c                     |  150 +++++--
- 5 files changed, 717 insertions(+), 829 deletions(-)
 
