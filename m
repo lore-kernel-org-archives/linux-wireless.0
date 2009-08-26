@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13445 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756607AbZHZDJN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 23:09:13 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 20:09:15 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19092.42878.732123.601667@gargle.gargle.HOWL>
-Date: Wed, 26 Aug 2009 08:39:50 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] ath9k: Fix bugs in programming registers during PA CAL
+Received: from xc.sipsolutions.net ([83.246.72.84]:49851 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753357AbZHZUPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 16:15:50 -0400
+Subject: [PATCH] iwlwifi: fix ICT irq table endianness
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain
+Date: Wed, 26 Aug 2009 22:15:13 +0200
+Message-Id: <1251317713.14690.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* First PA driver (PDPADRV1) was not powered down properly.
-* Compensation capacitor for dynamic PA was programmed incorrectly.
+The ICT IRQ table is a set of __le32 values, not u32 values,
+so when reading it we need to take into account that it has
+to be converted to CPU endianness. This was causing a lot of
+trouble on my powerpc box where various things would simply
+not work for no apparent reason with 5xxx cards, but worked
+with 4965 -- which doesn't use the ICT table.
 
-Also, remove a stray REG_READ.
-
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Oddly, the __le32 pointer doesn't help one bit, sparse
+doesn't warn. Oh well. This makes lots of things work
+better for me :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 47a024d..f9de16c 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -901,13 +901,13 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 1);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
- 	ccomp_org = MS(REG_READ(ah, AR9285_AN_RF2G6), AR9285_AN_RF2G6_CCOMP);
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 7);
-+	REG_RMW_FIELD(ah, AR9285_AN_RF2G6, AR9285_AN_RF2G6_CCOMP, 0xf);
+ drivers/net/wireless/iwlwifi/iwl-core.c |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-dev.h	2009-08-26 20:37:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-dev.h	2009-08-26 20:37:06.000000000 +0200
+@@ -1170,7 +1170,7 @@ struct iwl_priv {
+ 	struct iwl_hw_params hw_params;
  
- 	REG_WRITE(ah, AR9285_AN_TOP2, 0xca0358a0);
- 	udelay(30);
-@@ -919,7 +919,6 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
- 		regVal |= (1 << (19 + i));
- 		REG_WRITE(ah, 0x7834, regVal);
- 		udelay(1);
--		regVal = REG_READ(ah, 0x7834);
- 		regVal &= (~(0x1 << (19 + i)));
- 		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
- 		regVal |= (reg_field << (19 + i));
--- 
-1.6.4
+ 	/* INT ICT Table */
+-	u32 *ict_tbl;
++	__le32 *ict_tbl;
+ 	dma_addr_t ict_tbl_dma;
+ 	dma_addr_t aligned_ict_tbl_dma;
+ 	int ict_index;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2009-08-26 20:39:14.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2009-08-26 20:40:36.000000000 +0200
+@@ -1823,7 +1823,7 @@ int iwl_reset_ict(struct iwl_priv *priv)
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	iwl_disable_interrupts(priv);
+ 
+-	memset(&priv->ict_tbl[0],0, sizeof(u32) * ICT_COUNT);
++	memset(&priv->ict_tbl[0], 0, sizeof(u32) * ICT_COUNT);
+ 
+ 	val = priv->aligned_ict_tbl_dma >> PAGE_SHIFT;
+ 
+@@ -1901,13 +1901,13 @@ irqreturn_t iwl_isr_ict(int irq, void *d
+ 	/* read all entries that not 0 start with ict_index */
+ 	while (priv->ict_tbl[priv->ict_index]) {
+ 
+-		val |= priv->ict_tbl[priv->ict_index];
++		val |= le32_to_cpu(priv->ict_tbl[priv->ict_index]);
+ 		IWL_DEBUG_ISR(priv, "ICT index %d value 0x%08X\n",
+-					priv->ict_index,
+-					priv->ict_tbl[priv->ict_index]);
++				priv->ict_index,
++				le32_to_cpu(priv->ict_tbl[priv->ict_index]));
+ 		priv->ict_tbl[priv->ict_index] = 0;
+ 		priv->ict_index = iwl_queue_inc_wrap(priv->ict_index,
+-								ICT_COUNT);
++						     ICT_COUNT);
+ 
+ 	}
+ 
+
 
