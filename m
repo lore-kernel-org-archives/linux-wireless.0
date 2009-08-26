@@ -1,102 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755280AbZHHJEI (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54403 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751247AbZHZOyI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 05:04:08 -0400
-Subject: [PATCH] cfg80211: fix locking for SIWFREQ
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Sat, 08 Aug 2009 11:03:58 +0200
-Message-Id: <1249722238.31670.17.camel@johannes.local>
+	Wed, 26 Aug 2009 10:54:08 -0400
+Date: Wed, 26 Aug 2009 07:53:37 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>
+Subject: Re: 2.6.31-rc7-git2: Reported regressions 2.6.29 -> 2.6.30
+Message-Id: <20090826075337.4230d82c.akpm@linux-foundation.org>
+In-Reply-To: <b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
+References: <JuOd1ZASH0B.A.YGB.0zGlKB@chimera>
+	<b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"cfg80211: validate channel settings across interfaces"
-contained a locking bug -- in the managed-mode SIWFREQ
-call it would end up running into a lock recursion.
+On Wed, 26 Aug 2009 10:47:13 +0200 Rafa__ Mi__ecki <zajec5@gmail.com> wrote:
 
-This fixes it by not checking that particular interface
-for a channel that it needs to stay on, which is as it
-should be as that's the interface we're setting the
-channel for.
+> 2009/8/25 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry __ __ __ : http://bugzilla.kernel.org/show_bug.cgi?id=13514
+> > Subject __ __ __ __ : acer_wmi causes stack corruption
+> > Submitter __ __ __ : Rus <harbour@sfinx.od.ua>
+> > Date __ __ __ __ __ __: 2009-06-12 08:13 (75 days old)
+> 
+> It has patch, just Len doesn't seem to... don't know, read the topic?
+> http://patchwork.kernel.org/patch/29082/
+> 
+> Can we ping Len somehow to push this patch directly to Linus's tree?
+> 
 
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Reported-by: Kalle Valo <kalle.valo@iki.fi>
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/chan.c        |    3 ++-
- net/wireless/core.h        |    1 +
- net/wireless/nl80211.c     |    2 +-
- net/wireless/wext-compat.c |    2 +-
- net/wireless/wext-sme.c    |    2 +-
- 5 files changed, 6 insertions(+), 4 deletions(-)
+I'm not seeing any linux-acpi emails from Len since August 14.
 
---- wireless-testing.orig/net/wireless/chan.c	2009-08-08 10:53:52.000000000 +0200
-+++ wireless-testing/net/wireless/chan.c	2009-08-08 10:54:10.000000000 +0200
-@@ -42,13 +42,14 @@ rdev_fixed_channel(struct cfg80211_regis
- }
- 
- int rdev_set_freq(struct cfg80211_registered_device *rdev,
-+		  struct wireless_dev *for_wdev,
- 		  int freq, enum nl80211_channel_type channel_type)
- {
- 	struct ieee80211_channel *chan;
- 	struct ieee80211_sta_ht_cap *ht_cap;
- 	int result;
- 
--	if (rdev_fixed_channel(rdev, NULL))
-+	if (rdev_fixed_channel(rdev, for_wdev))
- 		return -EBUSY;
- 
- 	if (!rdev->ops->set_channel)
---- wireless-testing.orig/net/wireless/core.h	2009-08-08 10:54:29.000000000 +0200
-+++ wireless-testing/net/wireless/core.h	2009-08-08 10:54:37.000000000 +0200
-@@ -374,6 +374,7 @@ struct ieee80211_channel *
- rdev_fixed_channel(struct cfg80211_registered_device *rdev,
- 		   struct wireless_dev *for_wdev);
- int rdev_set_freq(struct cfg80211_registered_device *rdev,
-+		  struct wireless_dev *for_wdev,
- 		  int freq, enum nl80211_channel_type channel_type);
- 
- #endif /* __NET_WIRELESS_CORE_H */
---- wireless-testing.orig/net/wireless/nl80211.c	2009-08-08 10:54:51.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2009-08-08 10:54:58.000000000 +0200
-@@ -721,7 +721,7 @@ static int nl80211_set_wiphy(struct sk_b
- 		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
- 
- 		mutex_lock(&rdev->devlist_mtx);
--		result = rdev_set_freq(rdev, freq, channel_type);
-+		result = rdev_set_freq(rdev, NULL, freq, channel_type);
- 		mutex_unlock(&rdev->devlist_mtx);
- 		if (result)
- 			goto bad_res;
---- wireless-testing.orig/net/wireless/wext-compat.c	2009-08-08 10:54:52.000000000 +0200
-+++ wireless-testing/net/wireless/wext-compat.c	2009-08-08 10:55:04.000000000 +0200
-@@ -766,7 +766,7 @@ int cfg80211_wext_siwfreq(struct net_dev
- 		if (freq == 0)
- 			return -EINVAL;
- 		mutex_lock(&rdev->devlist_mtx);
--		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
-+		err = rdev_set_freq(rdev, NULL, freq, NL80211_CHAN_NO_HT);
- 		mutex_unlock(&rdev->devlist_mtx);
- 		return err;
- 	}
---- wireless-testing.orig/net/wireless/wext-sme.c	2009-08-08 10:54:52.000000000 +0200
-+++ wireless-testing/net/wireless/wext-sme.c	2009-08-08 10:55:08.000000000 +0200
-@@ -106,7 +106,7 @@ int cfg80211_mgd_wext_siwfreq(struct net
- 
- 	/* SSID is not set, we just want to switch channel */
- 	if (chan && !wdev->wext.connect.ssid_len) {
--		err = rdev_set_freq(rdev, freq, NL80211_CHAN_NO_HT);
-+		err = rdev_set_freq(rdev, wdev, freq, NL80211_CHAN_NO_HT);
- 		goto out;
- 	}
- 
+So I merged this patch and shall send it along with
 
+thermal_sys-check-get_temp-return-value.patch
+acpi-dont-call-acpi_processor_init-if-acpi-is-disabled.patch
 
+in to Linus today.
