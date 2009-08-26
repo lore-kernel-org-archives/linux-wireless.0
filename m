@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:29956 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932299AbZHUT6D convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:48091 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074AbZHZFMY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 15:58:03 -0400
-Received: by fg-out-1718.google.com with SMTP id e12so246784fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 12:58:04 -0700 (PDT)
+	Wed, 26 Aug 2009 01:12:24 -0400
+Received: by pzk32 with SMTP id 32so2089855pzk.33
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 22:12:26 -0700 (PDT)
+Message-ID: <4A94C3E9.6070409@lwfinger.net>
+Date: Wed, 26 Aug 2009 00:11:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4A8EF031.4050604@cs.ucla.edu>
-References: <4A8DED03.2050502@cs.ucla.edu> <1250842695.13872.5.camel@johannes.local>
-	<69e28c910908210630m47eda1eegcd502c212736decd@mail.gmail.com>
-	<4A8EE182.6040709@cs.ucla.edu> <69e28c910908211152k4423d098i92b25078139ee827@mail.gmail.com>
-	<4A8EF031.4050604@cs.ucla.edu>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 21 Aug 2009 21:57:43 +0200
-Message-ID: <69e28c910908211257p748e8be5w6078e7e98a205ef6@mail.gmail.com>
-Subject: Re: [PATCH] Implementation of the IEEE80211_RADIOTAP_RATE option
-To: Rafael Laufer <rlaufer@cs.ucla.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+To: Richard Farina <sidhayn@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
+ enabled
+References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net> <4A94B01E.9040309@gmail.com>
+In-Reply-To: <4A94B01E.9040309@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/21 Rafael Laufer <rlaufer@cs.ucla.edu>:
-> Gábor Stefanik wrote:
->> 2009/8/21 Rafael Laufer <rlaufer@cs.ucla.edu>:
+Richard Farina wrote:
+> Larry Finger wrote:
+>> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+>> may oops when the module is unloaded as the workqueue for led_on was
+>> not being cancelled.
 >>
->>> Gábor Stefanik wrote:
->>>
->>>> Maybe a new IEEE80211_TX_CTL_ or IEEE80211_TX_RC_ flag will also be
->>>> needed, so Radiotap can indicate whether rate_control_get_rate needs
->>>> to be called.
->>>>
->>> ok, I am resending the patch. I included a new flag called
->>> IEEE80211_TX_CTL_RATE_RADIOTAP to indicate if the rate has
->>> been set in the radiotap header. If not, then the rate control
->>> algorithm is called.
->>>
+>> This patch fixes the problem reported in
+>> http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
 >>
->> Isn't it easier to check whether we already have a rate configured?
->> (info->control.rates[0].idx is set to an invalid value before the
->> rate_control_get_rate call AFAIK, unless you set it in the radiotap
->> decoding function before.)
+>> Reported-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
+>> ---
 >>
->
-> I guess it is also possible, but in that case you rely on the assumption
-> that the rate is invalid before rate_control_get_rate(). If in the
-> future this assumption does not hold, the code will break. If, however,
-> this is always gonna be true, I can change the code to use your
-> suggestion. Personally, I prefer to use another flag so that future
-> changes do not affect this code, but let me know what is best.
->
-> Rafael
->
+>> V2 - Do not create a new workqueue.
+>>
+>> John,
+>>
+>> This patch is 2.6.31 material. To the best of my knowledge, a formal bug
+>> report was never filed; however, it was reported in the reference
+>> given above.
+>>
+>>   
+> Anyone know what happened here? This bug still seems very much alive in
+> compat-wireless-2.6.31-rc7.  I know the window is closed and this really
+> isn't "earthshattering" but a kernel panick is kind of "a big deal".  I
+> seems like it was tested doing a proper modprobe -r but not if you just
+> unplug the usb card.
 
-Actually, that's a good point.
+This kind of accusation is not the best way to get your problem solved.
 
-One thing to watch out for is that the actual rate index is not the
-only thing the rate controller sets - it is also responsible for
-things like retry count & RTS/CTS usage. Those are controlled by other
-radiotap fields. So, if any of these values is unset in radiotap, you
-will need to call rate control for them, or auto-generate them in
-other ways. Otherwise you may end up with e.g. an incorrect retry
-count.
+> When I unplug the usb I get instadeath, very uncool.  If someone can
+> teach me how to get the kernel output from a non-functional system I am
+> happy to provide whatever.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+This patch has been in wireless testing since August 3. I have no idea
+why it wouldn't be in compat-wireless since then. In addition, I have
+unplugged/plugged my RTL8187B device many times with no problem.
+
+I just downloaded compat-wireless-2009-08-26 - it has the patch
+included. You certainly could have checked your source to determine that.
+
+To get something from a system that is crashing, you should switch to
+the logging console by pressing CTRL/ALT/F10 before you do whatever it
+takes to crash it. You will not get a full dump, but hopefully, there
+will be enough of the stack visible when the panic occurs. Either copy
+down the stack list, or take a picture of the screen and post a link
+to it. FYI, you can get back to the graphical screen with CTRL/ALT/F7.
+
+If you have a wired connection in addition to the wireless one, and
+you have a second Linux host, you can also capture the dump using
+netconsole. Using this facility is not easy, so we'll go the other
+route first.
+
+When you report what info you have, please tell what architecture you
+are running (i386, x86_64, ppc,...) and whether your device is an
+RTL8187L or RTL8187B. It may not matter, but who knows.
+
+Larry
+
