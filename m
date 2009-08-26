@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49204 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106AbZHCWqF (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:59154 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539AbZHZSPv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 18:46:05 -0400
-Date: Mon, 3 Aug 2009 18:38:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-08-03
-Message-ID: <20090803223834.GA26385@tuxdriver.com>
-References: <20090803205954.GE11441@tuxdriver.com> <43e72e890908031406u1e15f074h173e4806daab343f@mail.gmail.com>
+	Wed, 26 Aug 2009 14:15:51 -0400
+Message-ID: <20090826211551.14002pzogxthwfk0@hayate.sektori.org>
+Date: Wed, 26 Aug 2009 21:15:51 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Holger Schurig" <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rndis_wlan: set cipher suites for cfg80211
+References: <20090826125302.25900.98016.stgit@fate.lan>
+	<200908261521.30050.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200908261521.30050.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890908031406u1e15f074h173e4806daab343f@mail.gmail.com>
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 03, 2009 at 02:06:19PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Aug 3, 2009 at 1:59 PM, John W. Linville<linville@tuxdriver.com> wrote:
-> > Dave,
-> >
-> > Here is another round of fixes intended for 2.6.31.  The one from
-> > Reinette fixes an rfkill-related bug described in bugzilla 13742.  The one
-> > from Luis has a lengthy changelog, but boils down to correcting some
-> > regulatory enforcement issues that would prevent some devices from
-> > working in some localities.  The rest are simple and obvious.
-> >
-> > Please let me know if there are problems!
-> >
-> > Thanks,
-> >
-> > John
-> >
-> > ---
-> >
-> > Individual patches are available here:
-> >
-> >        http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
-> 
-> John, just noticed the patches in this link do not correspond.
+Quoting "Holger Schurig" <hs4233@mail.mn-solutions.de>:
 
-Thanks -- corrected now (as soon as the resync happens)...
+>> +static const u32 rndis_cipher_suites[] = {
+>> +	WLAN_CIPHER_SUITE_WEP40,
+>> +	WLAN_CIPHER_SUITE_WEP104,
+>> +	WLAN_CIPHER_SUITE_TKIP,
+>> +	WLAN_CIPHER_SUITE_CCMP,
+>> +};
+>> +
+>
+> Okay, this is static, a.k.a. set-in-stone. Then why ...
+>
+>> +	memcpy(priv->cipher_suites, rndis_cipher_suites,
+>> +						sizeof(rndis_cipher_suites));
+>
+> ... copy this to priv?
+>
+>> +	wiphy->cipher_suites = priv->cipher_suites;
+>> +	wiphy->n_cipher_suites = ARRAY_SIZE(rndis_cipher_suites);
+>
+> Wouldn't
+>
+> +   wiphy->cipher_suide = rndis_cipher_suites;
+> +   wiphy->n_cipher_suites = ARRAY_SIZE(rndis_cipher_suites);
+>
+> do the job?  That way you can drop priv->cipher_suites.
+>
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			¡Viva Honduras Libre!
+Yes, that works just fine, and first version was that way. Reason is  
+that rndis_wlan should really check device capabilities and set cipher  
+suites
+depending by theim (so then per device priv->cipher_suite is needed).  
+Current static array is not problem as currently there is only one  
+chip that uses rndis_wlan and array matches its capabilities.  
+priv->channel/rndis_channels and priv->rate/rndis_rates are the same  
+and I plan to add caps checking code later.
+
+-Jussi
+
