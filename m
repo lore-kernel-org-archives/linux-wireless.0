@@ -1,82 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f222.google.com ([209.85.218.222]:42007 "EHLO
-	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750886AbZHRUIa (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55839 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbZHZPPY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 16:08:30 -0400
-Received: by bwz22 with SMTP id 22so3257769bwz.18
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 13:08:30 -0700 (PDT)
-Message-ID: <4A8B0A3F.6040106@gmail.com>
-Date: Tue, 18 Aug 2009 22:08:31 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+	Wed, 26 Aug 2009 11:15:24 -0400
+Date: Wed, 26 Aug 2009 11:03:23 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
+	enabled
+Message-ID: <20090826150323.GA2807@tuxdriver.com>
+References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net> <4A94B01E.9040309@gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Two small spec updates
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4A94B01E.9040309@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The specs are beginning to support rev3 LP-PHYs - implement one of
-the changes needed for rev3 support.
-Also, in the new MIPS driver, the "Japan TX filter" was renamed to
-"analog TX filter init" - however, calling it "init" is confusing,
-so name it "set analog filter", with a comment for easier future
-identification.
+On Tue, Aug 25, 2009 at 11:46:38PM -0400, Richard Farina wrote:
+> Larry Finger wrote:
+>> When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+>> may oops when the module is unloaded as the workqueue for led_on was
+>> not being cancelled.
+>>
+>> This patch fixes the problem reported in
+>> http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
+>>
+>> Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
+>> ---
+>>
+>> V2 - Do not create a new workqueue.
+>>
+>> John,
+>>
+>> This patch is 2.6.31 material. To the best of my knowledge, a formal bug
+>> report was never filed; however, it was reported in the reference given above.
+>>
+>>   
+> Anyone know what happened here? This bug still seems very much alive in  
+> compat-wireless-2.6.31-rc7.  I know the window is closed and this really
+> isn't "earthshattering" but a kernel panick is kind of "a big deal".  I  
+> seems like it was tested doing a proper modprobe -r but not if you just  
+> unplug the usb card.
+> When I unplug the usb I get instadeath, very uncool.  If someone can  
+> teach me how to get the kernel output from a non-functional system I am  
+> happy to provide whatever.
 
-Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
----
- drivers/net/wireless/b43/phy_lp.c |   17 ++++++++++++-----
- 1 files changed, 12 insertions(+), 5 deletions(-)
+commit 3da7429ce92abd79b14e2275a28be144ce2c3013
+Author: Larry Finger <Larry.Finger@lwfinger.net>
+Date:   Tue Jul 14 15:55:16 2009 -0500
 
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 6c69cdb..65f0010 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -609,9 +609,14 @@ static void lpphy_2063_init(struct b43_wldev *dev)
- 	b43_radio_write(dev, B2063_PA_SP7, 0);
- 	b43_radio_write(dev, B2063_TX_RF_SP6, 0x20);
- 	b43_radio_write(dev, B2063_TX_RF_SP9, 0x40);
--	b43_radio_write(dev, B2063_PA_SP3, 0xa0);
--	b43_radio_write(dev, B2063_PA_SP4, 0xa0);
--	b43_radio_write(dev, B2063_PA_SP2, 0x18);
-+	if (dev->phy.rev == 2) {
-+		b43_radio_write(dev, B2063_PA_SP3, 0xa0);
-+		b43_radio_write(dev, B2063_PA_SP4, 0xa0);
-+		b43_radio_write(dev, B2063_PA_SP2, 0x18);
-+	} else {
-+		b43_radio_write(dev, B2063_PA_SP3, 0x20);
-+		b43_radio_write(dev, B2063_PA_SP2, 0x20);
-+	}
- }
- 
- struct lpphy_stx_table_entry {
-@@ -1996,7 +2001,9 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
- 	return err;
- }
- 
--static void lpphy_japan_filter(struct b43_wldev *dev, int channel)
-+
-+/* This was previously called lpphy_japan_filter */
-+static void lpphy_set_analog_filter(struct b43_wldev *dev, int channel)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
- 	u16 tmp = (channel == 14); //SPEC FIXME check japanwidefilter!
-@@ -2165,7 +2172,7 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
- 		err = lpphy_b2062_tune(dev, new_channel);
- 		if (err)
- 			return err;
--		lpphy_japan_filter(dev, new_channel);
-+		lpphy_set_analog_filter(dev, new_channel);
- 		lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
- 	}
- 
+    rtl8187: Fix for kernel oops when unloading with LEDs enabled
+    
+    When rtl8187 is unloaded and CONFIG_RTL8187_LEDS is set, the kernel
+    may oops when the module is unloaded as the workqueue for led_on was
+    not being cancelled.
+    
+    This patch fixes the problem reported in
+    http://marc.info/?l=linux-wireless&m=124742957615781&w=2.
+    
+    Reported-by: Gábor Stefanik <netrolller.3d@gmail.com>
+    Signed-off-by: Larry Finger <Larry.Finger@lwfinger>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+The above commit is in linux-2.6 since v2.6.31-rc2.  If it isn't in
+compat-wireless, I have no idea why.
+
+Hth...
+
+John
 -- 
-1.6.2.4
-
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
