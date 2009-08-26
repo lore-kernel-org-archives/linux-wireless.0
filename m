@@ -1,36 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:39311 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752468AbZHXNme (ORCPT
+Received: from n8.bullet.re3.yahoo.com ([68.142.237.93]:24317 "HELO
+	n8.bullet.re3.yahoo.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756496AbZHZNdj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 09:42:34 -0400
-Date: Mon, 24 Aug 2009 15:42:36 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mwl8k: fix inverted error test in mwl8k_bss_info_changed()
-Message-ID: <20090824134236.GC6102@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 26 Aug 2009 09:33:39 -0400
+Message-ID: <850984.89698.qm@web23108.mail.ird.yahoo.com>
+Date: Wed, 26 Aug 2009 13:33:39 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+To: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1251277063.10667.10.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+--- On Wed, 26/8/09, Johannes Berg <johannes@sipsolutions.net> wrote:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 41a708c..4d3353c 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -2617,7 +2617,7 @@ static void mwl8k_bss_info_changed(struct ieee80211_hw *hw,
- 	priv->capture_beacon = false;
- 
- 	rc = mwl8k_fw_lock(hw);
--	if (!rc)
-+	if (rc)
- 		return;
- 
- 	if (info->assoc) {
--- 
-1.5.6.4
+> On Wed, 2009-08-26 at 03:43 +0100,
+> Hin-Tak Leung wrote:
+> 
+> > The rfkill event hard just goes 1 and 0 whenever I
+> slide the switch,
+> > regardless of what NM does . e.g. NM set to disable
+> networking has no
+> > effect on the 1/0 switch (it happens just depending on
+> the slide
+> > switch and nothing else), and nothing changes when NM
+> noticed
+> > rfkill'ed if down & decided to if'up and
+> reassociate.
+> 
+> Right, I just wanted to make sure the switch could be
+> correctly read
+> while the interface is down.
+> 
+> > Basically the rfkill event state just depends on the
+> slide switch,
+> > regardless of NM (if it is set to enable wireless
+> networking, it just
+> > if up the device again; if it is set to disable, it
+> just stayed
+> > disable & the device stay down, but the event
+> state continues to
+> > respond to the slide switch).
+> 
+> Ok. But this isn't making a lot of sense to me, since
+> cfg80211 should
+> refuse to UP the device when it's rfkilled.
+> 
+> Or wait ... are you using compat-wireless?
+
+Yes, I am. I mentioned this and did wonder if the _backport/ part in /sys/class is important.
+
+Hin-Tak
+
+
+      
+
