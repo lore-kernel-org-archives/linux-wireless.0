@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58399 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbZHJPQH (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:64141 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754027AbZHZWGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 11:16:07 -0400
-Date: Mon, 10 Aug 2009 11:11:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivan Kuten <ivan.kuten@promwad.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Yauhen Kharuzhy <yauhen.kharuzhy@promwad.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: fix alignment problem in scan request
-Message-ID: <20090810151107.GC2733@tuxdriver.com>
-References: <1249660447.7194.9.camel@johannes.local> <4A800E17.3000002@promwad.com>
+	Wed, 26 Aug 2009 18:06:48 -0400
+Received: by iwn42 with SMTP id 42so401161iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 15:06:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4A800E17.3000002@promwad.com>
+In-Reply-To: <43e72e890908261333m1d576fdhaa16088affec5426@mail.gmail.com>
+References: <850984.89698.qm@web23108.mail.ird.yahoo.com> <1251297273.15619.11.camel@johannes.local>
+	<43e72e890908261333m1d576fdhaa16088affec5426@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 Aug 2009 15:06:30 -0700
+Message-ID: <43e72e890908261506h6b9ec4efq2d190388663d4671@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: htl10@users.sourceforge.net,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 10, 2009 at 03:09:59PM +0300, Ivan Kuten wrote:
-> Johannes,
-> 
-> I can test only on compat-wireless.
+On Wed, Aug 26, 2009 at 1:33 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Wed, Aug 26, 2009 at 7:34 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+>> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
+>>
+>>> > Or wait ... are you using compat-wireless?
+>>>
+>>> Yes, I am. I mentioned this and did wonder if the _backport/ part
+>>> in /sys/class is important.
+>>
+>> Sorry, didn't see.
+>>
+>> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
+>> some compat*.h but obviously the kernel won't ever call that notifier,
+>> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
+>> handle that -- it'll be working fine in a regular tree.
+>>
+>> Luis, the only way to handle that would be to manually call the PRE_UP
+>> notifier from mac80211's subif_open() and if that returns an error
+>> (warning: the calling convention is weird) return the error... that's
+>> weird but would work.
+>
+> Neat, thanks. Not sure if I'll get to this this anytime soon, but if
+> someone is interested in it please give it a shot and send a patch.
+> That would be nice.
 
-Did you have to quote the whole patch (and top-post) for that?
-Any reason you can't apply patches to compat-wireless?
+What if we *also* just do that from mac80211 as well upstream?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
