@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:51419 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbZHLVID (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49118 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756671AbZHZJus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 17:08:03 -0400
-Received: by vws2 with SMTP id 2so291447vws.4
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 14:08:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890908121148l2cde20a9xb2c045e03574ffaa@mail.gmail.com>
-References: <1250096290-11058-1-git-send-email-lrodriguez@atheros.com>
-	 <4A83064A.2080609@gmail.com>
-	 <43e72e890908121148l2cde20a9xb2c045e03574ffaa@mail.gmail.com>
-Date: Wed, 12 Aug 2009 17:08:03 -0400
-Message-ID: <b6c5339f0908121408q4f3382e3rabd4def2de14c56c@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH] ath5k: fix requested allocated RX skb size
-	for DMA
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 Aug 2009 05:50:48 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1MgF9S-0004j9-9D
+	for linux-wireless@vger.kernel.org; Wed, 26 Aug 2009 11:50:48 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] rfkill: v0.2
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1MgF9S-0004j9-9D@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Wed, 26 Aug 2009 11:50:46 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2009 at 2:48 PM, Luis R.
-Rodriguez<lrodriguez@atheros.com> wrote:
-> On Wed, Aug 12, 2009 at 11:13 AM, Jiri Slaby<jirislaby@gmail.com> wrote:
->> What was the exact purpose of this? My guess is that we should map
->> starting at a next cache line boundary and put this aligned address to
->> the device instead?
->
-> I've heard two theories:
->
-> 1) AR5210 *required* it otherwise bad we would get bad data
-> 2) Performance considerations
 
->From what I can tell Jiri has the right guess:
+A new release of rfkill (v0.2) is available at:
 
-  // ?? nice pointer arithmetic... should use PTR_ALIGN here?
-  off = ((unsigned long) skb->data) % sc->cachelsz;
-  if (off != 0)
-      skb_reserve(skb, sc->cachelsz);
+http://wireless.kernel.org/download/rfkill/rfkill-0.2.tar.bz2
 
-in other words, when we allocate, round up to the next cache line
-greater than IEEE80211_MAX_LEN, then add an extra cache_line-1
-bytes so we can map starting from it.
+SHA1 sum: fc8f36efd4827219ca7169f8c55572a4c9e1c3b7
 
-dev_alloc_skb already does some padding and alignment, and it's
-configurable on a per-arch basis (though looks like only powerpc
-sets it to L1 cache size, everywhere else it's 32 bytes.)
+Here is the short log of the changes included in this 
+release:
 
-I guess if someone is bored some benchmarking would be useful.
+Johannes Berg (4):
+      remove iteration and let the kernel do it
+      add manpage
+      sync with kernel, add GPS
+      version 0.2
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Tim Gardner (3):
+      Added a utility function to acquire a list of events.
+      Added rfkill_block_all()
+      Added support for block/unblock wireless types.
+
