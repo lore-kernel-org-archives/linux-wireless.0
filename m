@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:57734 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071AbZHZPOt (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:54089 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbZHZTLF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 11:14:49 -0400
-Received: by bwz19 with SMTP id 19so201288bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:14:50 -0700 (PDT)
+	Wed, 26 Aug 2009 15:11:05 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Cc: "dwmw2@infradead.org" <dwmw2@infradead.org>,
+	Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Aug 2009 12:11:05 -0700
+Subject: libertas wext.c: IW_ENCODE_NOKEY for WEP keys [resend as plain text]
+Message-ID: <477F20668A386D41ADCC57781B1F704306D2369E90@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1251297273.15619.11.camel@johannes.local>
-References: <850984.89698.qm@web23108.mail.ird.yahoo.com>
-	 <1251297273.15619.11.camel@johannes.local>
-Date: Wed, 26 Aug 2009 16:07:52 +0100
-Message-ID: <3ace41890908260807t736848d8x57dff6cf3ac581c6@mail.gmail.com>
-Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 3:34 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
->
->> > Or wait ... are you using compat-wireless?
->>
->> Yes, I am. I mentioned this and did wonder if the _backport/ part
->> in /sys/class is important.
->
-> Sorry, didn't see.
->
-> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
-> some compat*.h but obviously the kernel won't ever call that notifier,
-> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
-> handle that -- it'll be working fine in a regular tree.
->
-> Luis, the only way to handle that would be to manually call the PRE_UP
-> notifier from mac80211's subif_open() and if that returns an error
-> (warning: the calling convention is weird) return the error... that's
-> weird but would work.
+Hi all,
+ 
+There was a commit to unset the IW_ENCODE_NOKEY flag for WEP keys.
+ 
+"libertas: Don't set IW_ENCODE_NOKEY when returning WEP keys."
+  
+ 
+Without this change, the IW_ENCODE_NOKEY flag is set for WEP keys and then iwconfig command would display "****-****-**" as "Encryption key".
+  
+After this change, the IW_ENCODE_NOKEY flag is NOT set for WEP keys and then iwconfig command will display plain text of the WEP key ("1234-5678-90" in my case, below).
+ 
+eth1      IEEE 802.11b/g  ESSID:"Cisco1-G"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1D:45:CE:20:D0
+          Bit Rate:54 Mb/s   Tx-Power=15 dBm
+          Retry short limit:8   RTS thr=2347 B   Fragment thr=2346 B
+ 
+          Encryption key:1234-5678-90   Security mode:open
+ 
+          Power Management:off
+          Link Quality=92/100  Signal level=-66 dBm  Noise level=-94 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+ 
+ 
+ 
+Was there any reason to not set IW_ENCODE_NOKEY for WEP keys?
+Is it feasible to set IW_ENCODE_NOKEY for WEP switch case?
+ 
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -1165,6 +1165,7 @@ static int lbs_get_encode(struct net_device *dev,
+                dwrq->flags |= (index + 1);
+                /* Return WEP enabled */
+                dwrq->flags &= ~IW_ENCODE_DISABLED;
++               dwrq->flags |= IW_ENCODE_NOKEY;
+        } else if ((priv->secinfo.WPAenabled)
+                   || (priv->secinfo.WPA2enabled)) {
+                /* return WPA enabled */
+ 
 
-Okay, that explains it. So I can have a Tested-by: ... I just grep for
-NETDEV_PRE_UP in compat-wireless and it is only in
-include/net/compat-2.6.31.h (not in 2.6.30) and I am on 2.6.30.5-X . I
-can grab the rawhide 2.6.31 rpms and try it quickly;
-and possibly look at some ugly quick hack backport that? Stay tuned.
+Thanks for your help,
+ 
+Bing
 
-Thanks for the help.
-
-Hin-Tak
