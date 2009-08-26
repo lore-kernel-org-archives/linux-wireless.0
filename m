@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:45593 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933666AbZHWPEA convert rfc822-to-8bit (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:39959 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751430AbZHZUrI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 Aug 2009 11:04:00 -0400
-Received: by bwz19 with SMTP id 19so1105216bwz.37
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2009 08:04:01 -0700 (PDT)
+	Wed, 26 Aug 2009 16:47:08 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: Remove scary message from LP-PHY's Kconfig
+Date: Wed, 26 Aug 2009 22:47:05 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+In-Reply-To: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <b637ec0b0908230740j284734f7t7ea0536c1fee406f@mail.gmail.com>
-References: <b637ec0b0908191347k4695d528s37940731d3bffc1a@mail.gmail.com>
-	 <b6c5339f0908191442j6b5733f3rb28967060abdbace@mail.gmail.com>
-	 <b6c5339f0908210719o2323d590w4a9f6a01d5ecb2d6@mail.gmail.com>
-	 <20090822124709.GA6762@hash.localnet>
-	 <b637ec0b0908220602v3b9c2a35ob1e44d70f131890c@mail.gmail.com>
-	 <20090822134044.GC6762@hash.localnet>
-	 <b637ec0b0908221229k5a738f8dgc0aa9e58337c743e@mail.gmail.com>
-	 <20090823001218.GE6762@hash.localnet>
-	 <b637ec0b0908230740j284734f7t7ea0536c1fee406f@mail.gmail.com>
-Date: Sun, 23 Aug 2009 17:03:59 +0200
-Message-ID: <b637ec0b0908230803x4ba1ed0pf3345ebb7c4691d@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/mlme.c:2292
-From: Fabio Comolli <fabio.comolli@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908262247.07735.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, some more info.
-After the warning the system is usable but wireless doesn't work. The
-hang happens when I activate the rfkill swich.
+On Wednesday 26 August 2009 21:48:52 Gábor Stefanik wrote:
+> From: root Gábor Stefanik <netrolller.3d@gmail.com>
+> 
+> The most common LP-PHY device, BCM4312, is now fully functional.
+> So, no need to say "probably won't work for you" anymore.
+> It's also not "for debuggers and developers only", as it is
+> perfectly usable for end-users now (at least for BCM4312).
 
-This happens even after a fresh boot. After activating the rfkill
-switch the console fills with:
+Please also add
+default y
 
-   unregister_netdevice: waiting for device wlan0 to become free
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+> This should only be applied once the "Qdiv roundup" and the "Fix and update"
+> patches reach the tree, as those 2 patches are needed to make the BCM4312
+> really work.
+> 
+>  drivers/net/wireless/b43/Kconfig |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+> index 87d10c8..1c0999b 100644
+> --- a/drivers/net/wireless/b43/Kconfig
+> +++ b/drivers/net/wireless/b43/Kconfig
+> @@ -88,9 +88,6 @@ config B43_PHY_LP
+>  	  and embedded devices. It supports 802.11a/g
+>  	  (802.11a support is optional, and currently disabled).
+>  
+> -	  This is heavily experimental, and probably will not work for you.
+> -	  Say N unless you want to help debug the driver.
+> -
+>  # This config option automatically enables b43 LEDS support,
+>  # if it's possible.
+>  config B43_LEDS
 
-with a line every 5 seconds or so. At this time the system is
-completely unresponsive.
-
-Regards,
-Fabio
 
 
-
-
-
-On Sun, Aug 23, 2009 at 4:40 PM, Fabio Comolli<fabio.comolli@gmail.com> wrote:
-> Hi.
->
-> On Sun, Aug 23, 2009 at 2:12 AM, Bob Copeland<me@bobcopeland.com> wrote:
->> On Sat, Aug 22, 2009 at 09:29:39PM +0200, Fabio Comolli wrote:
->>> Hi Bob.
->>> Unfortunately the patch doesn't apply at all with compat-wireless,
->>> there's no "flush_workqueue" before "local->suspended" there....
->>
->> Ah yes, it got moved into ieee80211_stop_device().  Can you put
->> local->suspended and the barrier() ahead of that?
->>
->
-> Well, this crashed my system. Backtrace copied by hand:
->
-> warning at net/wireless/core.c    wdev_cleanup_work [cfg80211]
->
-> warn_slowpat_common
-> warn_slowpath_null
-> wdev_cleanup_work [cfg80211]
-> worker_thread
-> wdev_cleanup_work [cfg80211]
-> autoresolve_wake_function
-> worker_thread
-> kthread
-> kthread
-> kernel_thread_helper
->
->
->> Thanks!
->
-> Regards,
-> Fabio
->
->
->>
->> --
->> Bob Copeland %% www.bobcopeland.com
->>
->>
->
+-- 
+Greetings, Michael.
