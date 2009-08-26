@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39352 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934703AbZHERBD (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:45694 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753469AbZHZVoj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 13:01:03 -0400
-Date: Wed, 5 Aug 2009 12:50:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: xxiao <austinxxh-ath9k@yahoo.com>
-Cc: devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Subject: Re: Status of 802.11s in wireless-testing?
-Message-ID: <20090805165021.GA20338@tuxdriver.com>
-References: <2f1373ed0908042145pc83adc5qd968e3bf8d0ce3c7@mail.gmail.com> <175701.5780.qm@web55308.mail.re4.yahoo.com>
+	Wed, 26 Aug 2009 17:44:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: LP-PHY: Revert to the original PHY register write routine
+Date: Wed, 26 Aug 2009 23:44:34 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1251322728-7034-1-git-send-email-netrolller.3d@gmail.com>
+In-Reply-To: <1251322728-7034-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <175701.5780.qm@web55308.mail.re4.yahoo.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908262344.36295.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 05, 2009 at 09:08:54AM -0700, xxiao wrote:
-> I didn't see patches from open80211s project for a while, which
-> means it will break as the rest mac80211/drivers are evolving quickly.
+On Wednesday 26 August 2009 23:38:48 Gábor Stefanik wrote:
+> From: root <root@NR3DMain.NR3D>
+> 
+> After some discussion on IRC about the PHY register write change,
+> I am not sure anymore if this is the right thing to do.
+> 
+> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+> ---
+>  drivers/net/wireless/b43/phy_lp.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index 80f245c..a57c40d 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1496,7 +1496,8 @@ static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
+>  
+>  static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
+>  {
+> -	b43_write32(dev, B43_MMIO_PHY_CONTROL, ((u32)value << 16) | reg);
+> +	b43_write32(dev, B43_MMIO_PHY_CONTROL, reg);
+> +	b43_write32(dev, B43_MMIO_PHY_DATA, value);
 
-You may be right, but it _should_not_ mean that -- at least not
-necessarily.  Yes, there will be accidental breakage from time to time.
-But developers ought to keep mesh in mind when making changes and
-they should be "on the hook" to fix whatever breaks.
+You just introduced a bug (need 16bit write).
+As I said. I'm OK with it, if it works. Just submit it as separate patch in the future.
 
-John
+>  }
+>  
+>  static void b43_lpphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
+
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-			�Viva Honduras Libre!
+Greetings, Michael.
