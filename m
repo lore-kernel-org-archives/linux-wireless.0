@@ -1,461 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1461 "EHLO mga11.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:64472 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754707AbZHRRZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 13:25:05 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] ipw2x00: fix sparse warnings
-Date: Tue, 18 Aug 2009 10:25:05 -0700
-Message-Id: <1250616305-14916-1-git-send-email-reinette.chatre@intel.com>
+	id S1751480AbZHZUU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 16:20:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 13:21:00 -0700
+Date: Wed, 26 Aug 2009 13:20:58 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<Jouni.Malinen@atheros.com>
+Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
+Message-ID: <20090826202058.GA7096@mosca>
+References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
+ <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
+ <20090825185842.GA7357@mosca>
+ <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
+ <20090825233827.GA10998@mosca>
+ <b6c5339f0908260708l38208046o43330d9eda808b1e@mail.gmail.com>
+ <20090826162941.GA4417@mosca>
+ <b6c5339f0908261003g40ed910amc347305e4604ee4a@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <b6c5339f0908261003g40ed910amc347305e4604ee4a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Wed, Aug 26, 2009 at 10:03:09AM -0700, Bob Copeland wrote:
+> On Wed, Aug 26, 2009 at 12:29 PM, Luis R.
+> Rodriguez<lrodriguez@atheros.com> wrote:
+> 
+> > Not sure I follow. Let me explain the logic here a little better.
+> > ath5k_reset() had a check to see if we switched channels. The check
+> > is above, and I moved it ath5k_chan_set() called by the config callback.
+> > Reason for this is channel change *only* occurs through the config callback
+> > so we can be certain no other path will call reset with a channel change
+> > request.
+> 
+> But previously we did all this stuff for _every_ reset except the first
+> one, 
 
-This fixes:
+Actually we did it in every ath5k_reset() if and only if chan was not NULL.
+We called ath5k_reset() from 3 places:
 
-  CHECK   drivers/net/wireless/ipw2x00/ipw2100.c
-drivers/net/wireless/ipw2x00/ipw2100.c:7888:22: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:7952:18: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8000:18: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:188:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2100.c:8268:27: originally declared here
-  CC [M]  drivers/net/wireless/ipw2x00/ipw2100.o
-  CHECK   drivers/net/wireless/ipw2x00/ipw2200.c
-drivers/net/wireless/ipw2x00/ipw2200.c:847:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:891:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:935:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:980:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1016:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1051:13: warning: symbol 'led' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:92:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:1823:13: warning: symbol 'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min1' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: warning: symbol '_min2' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:4268:19: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:6228:28: warning: symbol 'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:6369:20: warning: symbol 'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:6857:12: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:87:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:7964:13: warning: symbol 'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:8720:12: warning: symbol 'channel' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:86:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:9662:13: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:87:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:9720:13: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:87:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:9826:13: warning: symbol 'mode' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:87:12: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:10318:21: warning: symbol 'remaining_bytes' shadows an earlier one
-drivers/net/wireless/ipw2x00/ipw2200.c:10184:13: originally declared here
-drivers/net/wireless/ipw2x00/ipw2200.c:8338:45: warning: cast to restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:4414:21: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/ipw2x00/ipw2200.c:4414:21:    expected restricted __le16 [usertype] size
-drivers/net/wireless/ipw2x00/ipw2200.c:4414:21:    got unsigned short [unsigned] [usertype] <noident>
-drivers/net/wireless/ipw2x00/ipw2200.c:6105:33: warning: incorrect type in initializer (different base types)
-drivers/net/wireless/ipw2x00/ipw2200.c:6105:33:    expected restricted __le16 [usertype] tx_rates
-drivers/net/wireless/ipw2x00/ipw2200.c:6105:33:    got unsigned short [unsigned] [usertype] rates_mask
-drivers/net/wireless/ipw2x00/ipw2200.c:6124:29: warning: bad assignment (>>=) to restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:6130:31: warning: restricted __le16 degrades to integer
-drivers/net/wireless/ipw2x00/ipw2200.c:6140:23: warning: restricted __le16 degrades to integer
-drivers/net/wireless/ipw2x00/ipw2200.c:6149:54: warning: restricted __le16 degrades to integer
-drivers/net/wireless/ipw2x00/ipw2200.c:6151:37: warning: invalid assignment: &=
-drivers/net/wireless/ipw2x00/ipw2200.c:6151:37:    left side has type restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:6151:37:    right side has type int
-drivers/net/wireless/ipw2x00/ipw2200.c:6154:54: warning: restricted __le16 degrades to integer
-drivers/net/wireless/ipw2x00/ipw2200.c:6156:37: warning: invalid assignment: &=
-drivers/net/wireless/ipw2x00/ipw2200.c:6156:37:    left side has type restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:6156:37:    right side has type int
-drivers/net/wireless/ipw2x00/ipw2200.c:6159:55: warning: restricted __le16 degrades to integer
-drivers/net/wireless/ipw2x00/ipw2200.c:6161:37: warning: invalid assignment: &=
-drivers/net/wireless/ipw2x00/ipw2200.c:6161:37:    left side has type restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:6161:37:    right side has type int
-drivers/net/wireless/ipw2x00/ipw2200.c:6164:29: warning: invalid assignment: |=
-drivers/net/wireless/ipw2x00/ipw2200.c:6164:29:    left side has type restricted __le16
-drivers/net/wireless/ipw2x00/ipw2200.c:6164:29:    right side has type unsigned short
-drivers/net/wireless/ipw2x00/ipw2200.c:7853:29: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/ipw2x00/ipw2200.c:7853:29:    expected signed char [signed] [usertype] [explicitly-signed] rt_dbmnoise
-drivers/net/wireless/ipw2x00/ipw2200.c:7853:29:    got restricted __le16 [usertype] noise
-drivers/net/wireless/ipw2x00/ipw2200.c:7967:25: warning: incorrect type in initializer (different base types)
-drivers/net/wireless/ipw2x00/ipw2200.c:7967:25:    expected signed char [signed] [usertype] [explicitly-signed] noise
-drivers/net/wireless/ipw2x00/ipw2200.c:7967:25:    got restricted __le16 [usertype] noise
+  * Init
+  * Channel change
+  * Reset tasklet for hw issues
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
-After this patch one warning remains:
+chan was only null upon init as you point out, so you are right in that
+I overlooked that we currently do this also upon hw issues.
 
-include/net/inet_sock.h:208:17: warning: do-while statement is not a compound statement
+> now we only do it for channel change resets.  It may make sense your
+> way, but I'd rather see that as a separate patch rather than part of a
+> cleanup.
 
-This has already been addressed by upstream patch discussed at
-http://thread.gmane.org/gmane.linux.kernel/861983
+Absolutely, I overlooked this, thanks for picking that up.
 
- drivers/net/wireless/ipw2x00/ipw2100.c |   14 ++++---
- drivers/net/wireless/ipw2x00/ipw2200.c |   73 ++++++++++++++++----------------
- 2 files changed, 44 insertions(+), 43 deletions(-)
+> (Also, chan_change is used to skip a bunch of phy register writes
+> that we only need to do once, not sure if that changes here).
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 7424323..dee50ed 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -185,7 +185,7 @@ MODULE_AUTHOR(DRV_COPYRIGHT);
- MODULE_LICENSE("GPL");
- 
- static int debug = 0;
--static int mode = 0;
-+static int network_mode = 0;
- static int channel = 0;
- static int associate = 0;
- static int disable = 0;
-@@ -195,7 +195,7 @@ static struct ipw2100_fw ipw2100_firmware;
- 
- #include <linux/moduleparam.h>
- module_param(debug, int, 0444);
--module_param(mode, int, 0444);
-+module_param_named(mode, network_mode, int, 0444);
- module_param(channel, int, 0444);
- module_param(associate, int, 0444);
- module_param(disable, int, 0444);
-@@ -2844,7 +2844,7 @@ static int __ipw2100_tx_process(struct ipw2100_priv *priv)
- 
- #ifdef CONFIG_IPW2100_DEBUG
- 	{
--		int i = txq->oldest;
-+		i = txq->oldest;
- 		IPW_DEBUG_TX("TX%d V=%p P=%04X T=%04X L=%d\n", i,
- 			     &txq->drv[i],
- 			     (u32) (txq->nic + i * sizeof(struct ipw2100_bd)),
-@@ -6076,7 +6076,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	priv->ieee->ieee802_1x = 1;
- 
- 	/* Set module parameters */
--	switch (mode) {
-+	switch (network_mode) {
- 	case 1:
- 		priv->ieee->iw_mode = IW_MODE_ADHOC;
- 		break;
-@@ -8179,10 +8179,11 @@ static struct iw_statistics *ipw2100_wx_wireless_stats(struct net_device *dev)
- 	int rssi_qual;
- 	int tx_qual;
- 	int beacon_qual;
-+	int quality;
- 
- 	struct ipw2100_priv *priv = ieee80211_priv(dev);
- 	struct iw_statistics *wstats;
--	u32 rssi, quality, tx_retries, missed_beacons, tx_failures;
-+	u32 rssi, tx_retries, missed_beacons, tx_failures;
- 	u32 ord_len = sizeof(u32);
- 
- 	if (!priv)
-@@ -8265,7 +8266,8 @@ static struct iw_statistics *ipw2100_wx_wireless_stats(struct net_device *dev)
- 			beacon_qual = (20 - missed_beacons) *
- 			    (PERFECT - VERY_GOOD) / 20 + VERY_GOOD;
- 
--		quality = min(beacon_qual, min(tx_qual, rssi_qual));
-+		quality = min(tx_qual, rssi_qual);
-+		quality = min(beacon_qual, quality);
- 
- #ifdef CONFIG_IPW2100_DEBUG
- 		if (beacon_qual == quality)
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 07f171c..8e18d53 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -83,13 +83,13 @@ MODULE_LICENSE("GPL");
- 
- static int cmdlog = 0;
- static int debug = 0;
--static int channel = 0;
--static int mode = 0;
-+static int default_channel = 0;
-+static int network_mode = 0;
- 
- static u32 ipw_debug_level;
- static int associate;
- static int auto_create = 1;
--static int led = 0;
-+static int led_support = 0;
- static int disable = 0;
- static int bt_coexist = 0;
- static int hwcrypto = 0;
-@@ -4265,9 +4265,10 @@ static void ipw_gather_stats(struct ipw_priv *priv)
- 	IPW_DEBUG_STATS("Signal level : %3d%% (%d dBm)\n",
- 			signal_quality, rssi);
- 
--	quality = min(beacon_quality,
--		      min(rate_quality,
--			  min(tx_quality, min(rx_quality, signal_quality))));
-+	quality = min(rx_quality, signal_quality);
-+	quality = min(tx_quality, quality);
-+	quality = min(rate_quality, quality);
-+	quality = min(beacon_quality, quality);
- 	if (quality == beacon_quality)
- 		IPW_DEBUG_STATS("Quality (%d%%): Clamped to missed beacons.\n",
- 				quality);
-@@ -4411,7 +4412,6 @@ static void ipw_rx_notification(struct ipw_priv *priv,
- {
- 	DECLARE_SSID_BUF(ssid);
- 	u16 size = le16_to_cpu(notif->size);
--	notif->size = le16_to_cpu(notif->size);
- 
- 	IPW_DEBUG_NOTIF("type = %i (%d bytes)\n", notif->subtype, size);
- 
-@@ -6101,11 +6101,10 @@ static void ipw_debug_config(struct ipw_priv *priv)
- static void ipw_set_fixed_rate(struct ipw_priv *priv, int mode)
- {
- 	/* TODO: Verify that this works... */
--	struct ipw_fixed_rate fr = {
--		.tx_rates = priv->rates_mask
--	};
-+	struct ipw_fixed_rate fr;
- 	u32 reg;
- 	u16 mask = 0;
-+	u16 new_tx_rates = priv->rates_mask;
- 
- 	/* Identify 'current FW band' and match it with the fixed
- 	 * Tx rates */
-@@ -6117,54 +6116,56 @@ static void ipw_set_fixed_rate(struct ipw_priv *priv, int mode)
- 			/* Invalid fixed rate mask */
- 			IPW_DEBUG_WX
- 			    ("invalid fixed rate mask in ipw_set_fixed_rate\n");
--			fr.tx_rates = 0;
-+			new_tx_rates = 0;
- 			break;
- 		}
- 
--		fr.tx_rates >>= IEEE80211_OFDM_SHIFT_MASK_A;
-+		new_tx_rates >>= IEEE80211_OFDM_SHIFT_MASK_A;
- 		break;
- 
- 	default:		/* 2.4Ghz or Mixed */
- 		/* IEEE_B */
- 		if (mode == IEEE_B) {
--			if (fr.tx_rates & ~IEEE80211_CCK_RATES_MASK) {
-+			if (new_tx_rates & ~IEEE80211_CCK_RATES_MASK) {
- 				/* Invalid fixed rate mask */
- 				IPW_DEBUG_WX
- 				    ("invalid fixed rate mask in ipw_set_fixed_rate\n");
--				fr.tx_rates = 0;
-+				new_tx_rates = 0;
- 			}
- 			break;
- 		}
- 
- 		/* IEEE_G */
--		if (fr.tx_rates & ~(IEEE80211_CCK_RATES_MASK |
-+		if (new_tx_rates & ~(IEEE80211_CCK_RATES_MASK |
- 				    IEEE80211_OFDM_RATES_MASK)) {
- 			/* Invalid fixed rate mask */
- 			IPW_DEBUG_WX
- 			    ("invalid fixed rate mask in ipw_set_fixed_rate\n");
--			fr.tx_rates = 0;
-+			new_tx_rates = 0;
- 			break;
- 		}
- 
--		if (IEEE80211_OFDM_RATE_6MB_MASK & fr.tx_rates) {
-+		if (IEEE80211_OFDM_RATE_6MB_MASK & new_tx_rates) {
- 			mask |= (IEEE80211_OFDM_RATE_6MB_MASK >> 1);
--			fr.tx_rates &= ~IEEE80211_OFDM_RATE_6MB_MASK;
-+			new_tx_rates &= ~IEEE80211_OFDM_RATE_6MB_MASK;
- 		}
- 
--		if (IEEE80211_OFDM_RATE_9MB_MASK & fr.tx_rates) {
-+		if (IEEE80211_OFDM_RATE_9MB_MASK & new_tx_rates) {
- 			mask |= (IEEE80211_OFDM_RATE_9MB_MASK >> 1);
--			fr.tx_rates &= ~IEEE80211_OFDM_RATE_9MB_MASK;
-+			new_tx_rates &= ~IEEE80211_OFDM_RATE_9MB_MASK;
- 		}
- 
--		if (IEEE80211_OFDM_RATE_12MB_MASK & fr.tx_rates) {
-+		if (IEEE80211_OFDM_RATE_12MB_MASK & new_tx_rates) {
- 			mask |= (IEEE80211_OFDM_RATE_12MB_MASK >> 1);
--			fr.tx_rates &= ~IEEE80211_OFDM_RATE_12MB_MASK;
-+			new_tx_rates &= ~IEEE80211_OFDM_RATE_12MB_MASK;
- 		}
- 
--		fr.tx_rates |= mask;
-+		new_tx_rates |= mask;
- 		break;
- 	}
- 
-+	fr.tx_rates = cpu_to_le16(new_tx_rates);
-+
- 	reg = ipw_read32(priv, IPW_MEM_FIXED_OVERRIDE);
- 	ipw_write_reg32(priv, reg, *(u32 *) & fr);
- }
-@@ -7850,7 +7851,7 @@ static void ipw_handle_data_packet_monitor(struct ipw_priv *priv,
- 
- 	/* Convert signal to DBM */
- 	ipw_rt->rt_dbmsignal = antsignal;
--	ipw_rt->rt_dbmnoise = frame->noise;
-+	ipw_rt->rt_dbmnoise = (s8) le16_to_cpu(frame->noise);
- 
- 	/* Convert the channel data and set the flags */
- 	ipw_rt->rt_channel = cpu_to_le16(ieee80211chan2mhz(received_channel));
-@@ -7964,7 +7965,7 @@ static void ipw_handle_promiscuous_rx(struct ipw_priv *priv,
- 	u16 channel = frame->received_channel;
- 	u8 phy_flags = frame->antennaAndPhy;
- 	s8 signal = frame->rssi_dbm - IPW_RSSI_TO_DBM;
--	s8 noise = frame->noise;
-+	s8 noise = (s8) le16_to_cpu(frame->noise);
- 	u8 rate = frame->rate;
- 	short len = le16_to_cpu(pkt->u.frame.length);
- 	struct sk_buff *skb;
-@@ -8335,7 +8336,7 @@ static void ipw_rx(struct ipw_priv *priv)
- 					.rssi = pkt->u.frame.rssi_dbm -
- 					    IPW_RSSI_TO_DBM,
- 					.signal =
--					    le16_to_cpu(pkt->u.frame.rssi_dbm) -
-+					    pkt->u.frame.rssi_dbm -
- 					    IPW_RSSI_TO_DBM + 0x100,
- 					.noise =
- 					    le16_to_cpu(pkt->u.frame.noise),
-@@ -8517,7 +8518,7 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
- 
- 	/* We default to disabling the LED code as right now it causes
- 	 * too many systems to lock up... */
--	if (!led)
-+	if (!led_support)
- 		priv->config |= CFG_NO_LED;
- 
- 	if (associate)
-@@ -8539,10 +8540,10 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
- 		IPW_DEBUG_INFO("Radio disabled.\n");
- 	}
- 
--	if (channel != 0) {
-+	if (default_channel != 0) {
- 		priv->config |= CFG_STATIC_CHANNEL;
--		priv->channel = channel;
--		IPW_DEBUG_INFO("Bind to static channel %d\n", channel);
-+		priv->channel = default_channel;
-+		IPW_DEBUG_INFO("Bind to static channel %d\n", default_channel);
- 		/* TODO: Validate that provided channel is in range */
- 	}
- #ifdef CONFIG_IPW2200_QOS
-@@ -8550,7 +8551,7 @@ static int ipw_sw_reset(struct ipw_priv *priv, int option)
- 		     burst_duration_CCK, burst_duration_OFDM);
- #endif				/* CONFIG_IPW2200_QOS */
- 
--	switch (mode) {
-+	switch (network_mode) {
- 	case 1:
- 		priv->ieee->iw_mode = IW_MODE_ADHOC;
- 		priv->net_dev->type = ARPHRD_ETHER;
-@@ -10181,7 +10182,6 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
- #endif
- 	struct clx2_queue *q = &txq->q;
- 	u8 id, hdr_len, unicast;
--	u16 remaining_bytes;
- 	int fc;
- 
- 	if (!(priv->status & STATUS_ASSOCIATED))
-@@ -10220,7 +10220,6 @@ static int ipw_tx_skb(struct ipw_priv *priv, struct ieee80211_txb *txb,
- 
- 	tfd->u.data.cmd_id = DINO_CMD_TX;
- 	tfd->u.data.len = cpu_to_le16(txb->payload_size);
--	remaining_bytes = txb->payload_size;
- 
- 	if (priv->assoc_request.ieee_mode == IPW_B_MODE)
- 		tfd->u.data.tx_flags_ext |= DCT_FLAG_EXT_MODE_CCK;
-@@ -11946,13 +11945,13 @@ MODULE_PARM_DESC(associate, "auto associate when scanning (default off)");
- module_param(auto_create, int, 0444);
- MODULE_PARM_DESC(auto_create, "auto create adhoc network (default on)");
- 
--module_param(led, int, 0444);
-+module_param_named(led, led_support, int, 0444);
- MODULE_PARM_DESC(led, "enable led control on some systems (default 0 off)");
- 
- module_param(debug, int, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
- 
--module_param(channel, int, 0444);
-+module_param_named(channel, default_channel, int, 0444);
- MODULE_PARM_DESC(channel, "channel to limit associate to (default 0 [ANY])");
- 
- #ifdef CONFIG_IPW2200_PROMISCUOUS
-@@ -11978,10 +11977,10 @@ MODULE_PARM_DESC(burst_duration_OFDM, "set OFDM burst value");
- #endif				/* CONFIG_IPW2200_QOS */
- 
- #ifdef CONFIG_IPW2200_MONITOR
--module_param(mode, int, 0444);
-+module_param_named(mode, network_mode, int, 0444);
- MODULE_PARM_DESC(mode, "network mode (0=BSS,1=IBSS,2=Monitor)");
- #else
--module_param(mode, int, 0444);
-+module_param_named(mode, network_mode, int, 0444);
- MODULE_PARM_DESC(mode, "network mode (0=BSS,1=IBSS)");
- #endif
- 
--- 
-1.5.6.3
+Yeah since I also used ath5k_reset_init() on the reset hw issue tasklet and
+that does pass false for channel_change this patch would have changed that
+as well, so I'll fix that.
 
+> >> There's just no synchronization of this stuff, not too surprising there
+> >> are races.
+> >
+> > config calls for reset seem to be with sc->lock. ath9k uses a mutex to
+> > protect races between mac80211 callback calls, ath5k seems to use the
+> > sc->lock *sometimes*, a good review of that may help but for channel
+> > change this seems protected unless I missed something. Since channel
+> > change goes through the config callback and since the callback protects
+> > through sc->lock I can't see how we'd race against changing channels.
+> 
+> rx_tasklet doesn't (can't) take the mutex though.  Here's the race:
+> 
+> cpu 1                       cpu 2
+>                             1mbit packet received, ack intr and queue it
+> client changes to 5ghz band
+> hw->conf.channel = 36
+>                             ath5k_rx_tasklet runs
+>                             hmm, we got 1mbit packet on channel 36, wtf
+> ath5k_chan_change()
+> 
+> This is still racy with curband variables of course, but IMO the
+> proposed change actually makes the race wider (in current code, we only
+> update the band after we disable the interrupts, but the tasklet can
+> still run on queued packets).
+
+I don't want to bother looking ath ath5k solutions to the race, I rather
+we try to fix this if possible with a generic solution on mac80211. I suspect
+ath5k is not the only one with this possible race.
+
+> The right thing to do is either process or drop all of those packets
+
+Would be nice if we did not have to, those packets can be very valuable
+considering we now support spreading our scan over time.
+
+> with interrupts disabled before updating the band/channel (rx_drainq),
+
+That would be nice, so prior to channel change we need to ensure we:
+
+  * Disable interrupts
+  * Disable RX
+  * Process all pending frames in RX queue
+
+It is the last part that it seems we are missing. Running tasklet_schedule()
+will ensure we can schedule the tasklet but it does not ensure we will
+wait until it has run at least once. Johill pointed out tasklet_disable()
+followed by a tasklet_enable() would do it, but seems rather odd.
+
+But do we need this?
+
+In the rx tasklet we need band to access the right rate table -- this is
+how we got into this conversation but if you think about it you also need
+to ensure your harware hasn't already flipped to another band otherwise
+you can start sending mac80211 frames for a different band. This certainly
+matters for rate control but haven't reviewed all the details of where
+inconsistancy between the hw->conf.channel and the skbs received by
+mac80211 are.
+
+Processing RXd frames prior to switching channels seems like a good idea
+regardless.
+
+>From what I see Atheros RX descriptors do not have the frequency on which the
+frame was received on so you do need some sort of house keeping.
+mac80211/cfg80211 does this for us so I'd like to try to avoid doing more
+on drivers if possible.
+
+Since cfg80211 modifies hw->conf.channel prior to calling drv_config() it
+is possible for the driver to not reliably use this variable either right now.
+
+So how about a generic rx_drain() callback for mac80211 drivers and document
+that on it we need disable RXing frames, disable interrupts for RX,
+and then either have the driver drop pending frames (worst case) or process them.
+mac80211 could then use this prior to drv_config() if we are changing channels.
+
+> or protect that channel info with a spinlock.   Or perhaps we can
+> figure it out directly from the rx descriptor -- I looked at this
+> briefly and didn't think there was enough info there, but didn't spend
+> much time on it.
+
+I looked too and did not find it. I can't find a reason to have it in
+hardware descriptors though, given that you could just drain rx prior to
+a switch.
+
+Only argument I can see which may affect draining RX prior to channel
+change is it could delay the time it takes for you to switch. Either way
+this seems just a lot cleaner to support.
+
+Thoughts?
+
+  Luis
