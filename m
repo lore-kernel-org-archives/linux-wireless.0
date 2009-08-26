@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:64016 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388AbZH3Ncs (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:59152 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753232AbZHZHZk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 09:32:48 -0400
-Received: by ewy2 with SMTP id 2so3321508ewy.17
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 06:32:49 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: Reorganize padding & L2 padding
-Date: Sun, 30 Aug 2009 15:32:47 +0200
-Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908292030.45659.IvDoorn@gmail.com> <4A9990A8.1080002@free.fr>
-In-Reply-To: <4A9990A8.1080002@free.fr>
+	Wed, 26 Aug 2009 03:25:40 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: [PATCH 1/1] iwmc3200: add more SDIO device ids
+Date: Wed, 26 Aug 2009 09:25:03 +0200
+Cc: Tomas Winkler <tomasw@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, davem@davemloft.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
+References: <1251149659-32212-1-git-send-email-tomas.winkler@intel.com> <1ba2fa240908241520q5be2060co145ec0745954dcf0@mail.gmail.com> <1251156118.2950.82.camel@localhost.localdomain>
+In-Reply-To: <1251156118.2950.82.camel@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908301532.47769.IvDoorn@gmail.com>
+  charset="iso-8859-15"
+Message-Id: <200908260925.03437.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > +void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int
-> > header_length) +{ +    struct skb_frame_desc *skbdesc =
-> > get_skb_frame_desc(skb); +    unsigned int l2pad = 4 - (header_length
-> > & 3);
-> This formula is incorrect, it should be at least (4 -
-> (header_length%4)%4). I have a fix in my pending patches...
-> If header_length is 0 => l2pad should be 0 as well.
+On Tuesday 25 August 2009 01:21:58 Marcel Holtmann wrote:
+> My personal vote is for keeping all IDs inside the drivers.
+> And I also prefer to keep the plain hex values and just put a
+> comment above them which device this is. Something like this:
+>
+> static struct usb_device_id btusb_table[] = {
+> 	/* Generic Bluetooth USB device */
+> 	{ USB_DEVICE_INFO(0xe0, 0x01, 0x01) },
 
-Header_length should never be 0 (that was fixed by this patch), so that should
-not be a problem. I'll review your patch so it can be send as update later. But I
-do think this patch can be merged into linux-wireless in regardless.
++1
 
-Ivo
+When I have an unknown device (and not compiled all modules) it's 
+so much easier to do an
 
-P.S. Your mail client is really messing up the replies by removing end-of-line
-characters. :S
+grep -ri 057c drivers/usb
+
+then to do the same on include/ and then again to find the driver 
+that uses this id. For the same reason, I prefer 0x057c in the 
+source and not 0x57c.
+
+-- 
+http://www.holgerschurig.de
