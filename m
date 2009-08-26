@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:41043 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250AbZHQUCd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 16:02:33 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so725944fga.17
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 13:02:34 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:45804 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751655AbZHZPrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 11:47:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:47:17 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 6/8] ath9k: Remove hw capability bit meant for btcoex
+Date: Wed, 26 Aug 2009 21:08:48 +0530
+Message-ID: <1251301130-10912-7-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1251301130-10912-6-git-send-email-vasanth@atheros.com>
+References: <1251301130-10912-1-git-send-email-vasanth@atheros.com>
+ <1251301130-10912-2-git-send-email-vasanth@atheros.com>
+ <1251301130-10912-3-git-send-email-vasanth@atheros.com>
+ <1251301130-10912-4-git-send-email-vasanth@atheros.com>
+ <1251301130-10912-5-git-send-email-vasanth@atheros.com>
+ <1251301130-10912-6-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20090817195718.GK5500@tuxdriver.com>
-References: <4A85B8DE.3000704@gmail.com> <69e28c910908171232i6828d42bh3aac1d236f789c91@mail.gmail.com>
-	<20090817195718.GK5500@tuxdriver.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 17 Aug 2009 22:02:14 +0200
-Message-ID: <69e28c910908171302s3aed3181w38ba402ca7dfa13d@mail.gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Fix setting TX power control mode during RC
-	calibration
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/17 John W. Linville <linville@tuxdriver.com>:
-> On Mon, Aug 17, 2009 at 09:32:42PM +0200, Gábor Stefanik wrote:
->> 2009/8/14 Gábor Stefanik <netrolller.3d@gmail.com>:
->> > Call set_tx_power_control with a LPPHY_TXPCTL rather than an
->> > LPPHY_TX_PWR_CTL_CMD_MODE.
->> >
->> > Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
->> > ---
->> > This should fix the WARN_ON testers were seeing during init.
->> >
->> > drivers/net/wireless/b43/phy_lp.c |    2 +-
->> > 1 files changed, 1 insertions(+), 1 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/b43/phy_lp.c
->> > b/drivers/net/wireless/b43/phy_lp.c
->> > index adfa7bf..558224b 100644
->> > --- a/drivers/net/wireless/b43/phy_lp.c
->> > +++ b/drivers/net/wireless/b43/phy_lp.c
->> > @@ -1080,7 +1080,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
->> > *dev)
->> >        old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
->> >                                        B43_LPPHY_TX_PWR_CTL_CMD_MODE;
->> >
->> > -       lpphy_set_tx_power_control(dev, B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
->> > +       lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
->> >        lpphy_disable_crs(dev);
->> >        loopback = lpphy_loopback(dev);
->> >        if (loopback == -1)
->> > --
->> > 1.6.2.4
->> >
->>
->> John, any news on this one? I can't see it in wireless testing.
->
-> Larry said:
->
-> With this one, I still get WARNING: at
-> drivers/net/wireless/b43/phy_lp.c:1006
-> lpphy_set_tx_power_control+0xbf/0xdd [b43]().
->
+We don't need a hw cap bit for btcoex anymore as btcoex scheme type
+is enough to do this.
 
-Previously, he was getting 2 warnings. This fixes one of them, the
-other one is handled by commit
-1181d724fc2897f11f95bf6ebc86ae111390929c ("Fix another TX power
-control abuse").
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h   |    1 -
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++-----
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7b4bc8b..c80be8c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3666,7 +3666,6 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_2GHZ);
+ 
+ 	if (AR_SREV_9280_10_OR_LATER(ah) && btcoex_enable) {
+-		pCap->hw_caps |= ATH9K_HW_CAP_BT_COEX;
+ 		btcoex_info->btactive_gpio = ATH_BTACTIVE_GPIO;
+ 		btcoex_info->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 259936c..de10de8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -151,7 +151,6 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_ENHANCEDPM                 = BIT(14),
+ 	ATH9K_HW_CAP_AUTOSLEEP                  = BIT(15),
+ 	ATH9K_HW_CAP_4KB_SPLITTRANS             = BIT(16),
+-	ATH9K_HW_CAP_BT_COEX			= BIT(17)
+ };
+ 
+ enum ath9k_capability_type {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8a2f000..215c672 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -440,7 +440,7 @@ static void ath_start_ani(struct ath_softc *sc)
+ void ath_update_chainmask(struct ath_softc *sc, int is_ht)
+ {
+ 	if ((sc->sc_flags & SC_OP_SCANNING) || is_ht ||
+-	    (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX)) {
++	    (sc->btcoex_info.btcoex_scheme != ATH_BTCOEX_CFG_NONE)) {
+ 		sc->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
+ 		sc->rx_chainmask = sc->sc_ah->caps.rx_chainmask;
+ 	} else {
+@@ -1509,8 +1509,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc)
+ 			ARRAY_SIZE(ath9k_5ghz_chantable);
+ 	}
+ 
+-	if ((ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX) &&
+-	    (sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE))
++	if (sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE)
+ 		ath9k_hw_btcoex_init(ah);
+ 
+ 	return 0;
+@@ -1993,8 +1992,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 
+-	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX) &&
+-	    (sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) &&
++	if ((sc->btcoex_info.btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) &&
+ 	    !(sc->sc_flags & SC_OP_BTCOEX_ENABLED))
+ 		ath9k_hw_btcoex_enable(sc->sc_ah);
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.5.5.1
+
