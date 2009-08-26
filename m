@@ -1,80 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:6305 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752633AbZHSSim (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:49207 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151AbZHZUdy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 14:38:42 -0400
-Message-ID: <4A8C46DB.8040904@dell.com>
-Date: Wed, 19 Aug 2009 13:39:23 -0500
-From: Mario Limonciello <mario_limonciello@dell.com>
+	Wed, 26 Aug 2009 16:33:54 -0400
+Received: by iwn42 with SMTP id 42so368036iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 13:33:56 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1251297273.15619.11.camel@johannes.local>
+References: <850984.89698.qm@web23108.mail.ird.yahoo.com> <1251297273.15619.11.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 Aug 2009 13:33:36 -0700
+Message-ID: <43e72e890908261333m1d576fdhaa16088affec5426@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: Alan Jenkins <sourcejedi.lkml@googlemail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	cezary.jackiewicz@gmail.com, linux-acpi@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] Add rfkill support to compal-laptop
-References: <4A89E768.7010207@dell.com>	 <1250558643.30166.109.camel@localhost.localdomain>	 <9b2b86520908180044l72cb8642j6256e246662f7971@mail.gmail.com>	 <9b2b86520908180752k66feda09rf9034a96ac6ef470@mail.gmail.com>	 <4A8AE459.8060102@dell.com>	 <9b2b86520908181408v5f7875b6sea31d8d95cc08c0b@mail.gmail.com>	 <1250631063.16393.14.camel@johannes.local>  <4A8B246D.7050004@dell.com>	 <1250672475.25419.7.camel@johannes.local>  <4A8C2C6C.2020007@dell.com> <1250702012.8073.1.camel@johannes.local>
-In-Reply-To: <1250702012.8073.1.camel@johannes.local>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig5A57CF88BCAD1AC6B4DB370D"
+Cc: htl10@users.sourceforge.net,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig5A57CF88BCAD1AC6B4DB370D
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Johannes:
-
-Johannes Berg wrote:
-> Hi Mario,
+On Wed, Aug 26, 2009 at 7:34 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-08-26 at 13:33 +0000, Hin-Tak Leung wrote:
 >
-> First, let me say I agree with Alan, the option 1 is more desirable if
-> possible to do with the hardware. But this looks ok from an rfkill POV
-> now, except there's a small bug:
+>> > Or wait ... are you using compat-wireless?
+>>
+>> Yes, I am. I mentioned this and did wonder if the _backport/ part
+>> in /sys/class is important.
 >
->  =20
-It looks like option 1 works properly on my hardware, so I've switched
-the other code around.
+> Sorry, didn't see.
 >
-> That doesn't error out, so
+> Anyway, that's pretty clearly the reason -- Luis added NETDEV_PRE_UP to
+> some compat*.h but obviously the kernel won't ever call that notifier,
+> so cfg80211 doesn't get a chance to reject the IFUP. No idea how to
+> handle that -- it'll be working fine in a regular tree.
 >
->  =20
->
-> this will crash without NULL checks.
->
-> (and you have to explicitly assign NULL in setup_rfkill() too, when
-> bluetooth fails and wifi is freed)
->
->  =20
-OK, i've cleaned that up to just error out on the module if rfkill
-doesn't get initialized right.
-> johannes
->  =20
-I've resent separately, and think I have git send-email working, so
-hopefully won't have to attach in the future.
---=20
-Mario Limonciello
-*Dell | Linux Engineering*
-mario_limonciello@dell.com
+> Luis, the only way to handle that would be to manually call the PRE_UP
+> notifier from mac80211's subif_open() and if that returns an error
+> (warning: the calling convention is weird) return the error... that's
+> weird but would work.
 
+Neat, thanks. Not sure if I'll get to this this anytime soon, but if
+someone is interested in it please give it a shot and send a patch.
+That would be nice.
 
---------------enig5A57CF88BCAD1AC6B4DB370D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iEYEARECAAYFAkqMRtsACgkQ2CrZjkA73YsZhgCgm+ZhkjIR2LMEVe0Oqr3Ziyxr
-SJkAnRYT316wWHMYM6pzJ8eTnnysGqRw
-=1+Ll
------END PGP SIGNATURE-----
-
---------------enig5A57CF88BCAD1AC6B4DB370D--
+  Luis
