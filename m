@@ -1,265 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:43777 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519AbZHIXad convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([200.140.247.100]:35423 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbZHZQyN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 19:30:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.31-rc5-git5: Reported regressions from 2.6.30
-Cc: Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <AuPdDySr74O.A.5LC.Pj1fKB@chimera>
-Date: Sun,  9 Aug 2009 22:36:49 +0200 (CEST)
+	Wed, 26 Aug 2009 12:54:13 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: John W Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: [PATCH 1/2] rtl8187: fix circular locking (rtl8187_stop/rtl8187_work)
+Date: Wed, 26 Aug 2009 13:54:08 -0300
+Message-Id: <1251305649-12508-1-git-send-email-herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.30, for which there
-are no fixes in the mainline I know of.  If any of them have been fixed already,
-please let me know.
-
-If you know of any other unresolved regressions from 2.6.30, please let me know
-either and I'll add them to the list.  Also, please let me know if any of the
-entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2009-08-10       89       27          24
-  2009-08-02       76       36          28
-  2009-07-27       70       51          43
-  2009-07-07       35       25          21
-  2009-06-29       22       22          15
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13950
-Subject		: Oops when USB Serial disconnected while in use
-Submitter	: Bruno Prémont <bonbons@linux-vserver.org>
-Date		: 2009-08-08 17:47 (2 days old)
-References	: http://marc.info/?l=linux-kernel&m=124975432900466&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13947
-Subject		: Libertas: Association request to the driver failed
-Submitter	: Daniel Mack <daniel@caiaq.de>
-Date		: 2009-08-07 19:11 (3 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=57921c312e8cef72ba35a4cfe870b376da0b1b87
-References	: http://marc.info/?l=linux-kernel&m=124967234311481&w=4
-Handled-By	: Roel Kluin <roel.kluin@gmail.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13943
-Subject		: WARNING: at net/mac80211/mlme.c:2292 with ath5k
-Submitter	: Fabio Comolli <fabio.comolli@gmail.com>
-Date		: 2009-08-06 20:15 (4 days old)
-References	: http://marc.info/?l=linux-kernel&m=124958978600600&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13942
-Subject		: Troubles with AoE and uninitialized object
-Submitter	: Bruno Prémont <bonbons@linux-vserver.org>
-Date		: 2009-08-04 10:12 (6 days old)
-References	: http://marc.info/?l=linux-kernel&m=124938117104811&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13941
-Subject		: x86 Geode issue
-Submitter	: Martin-Éric Racine <q-funk@iki.fi>
-Date		: 2009-08-03 12:58 (7 days old)
-References	: http://marc.info/?l=linux-kernel&m=124930434732481&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13940
-Subject		: iwlagn and sky2 stopped working, ACPI-related
-Submitter	: Ricardo Jorge da Fonseca Marques Ferreira <storm@sys49152.net>
-Date		: 2009-08-07 22:33 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=124968457731107&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13935
-Subject		: 2.6.31-rcX breaks Apple MightyMouse (Bluetooth version)
-Submitter	: Adrian Ulrich <kernel@blinkenlights.ch>
-Date		: 2009-08-08 22:08 (2 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=fa047e4f6fa63a6e9d0ae4d7749538830d14a343
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13914
-Subject		: e1000e reports invalid NVM Checksum on 82566DM-2 (bisected)
-Submitter	:  <jsbronder@gentoo.org>
-Date		: 2009-08-04 18:06 (6 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13906
-Subject		: Huawei E169 GPRS connection causes Ooops
-Submitter	: Clemens Eisserer <linuxhippy@gmail.com>
-Date		: 2009-08-04 09:02 (6 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13899
-Subject		: Oops from tar, 2.6.31-rc5, 32 bit on quad core phenom.
-Submitter	: Gene Heskett <gene.heskett@verizon.net>
-Date		: 2009-08-01 13:04 (9 days old)
-References	: http://marc.info/?l=linux-kernel&m=124913190304149&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13895
-Subject		: 2.6.31-rc4 - slab entry tak_delay_info leaking ???
-Submitter	: Paul Rolland <rol@as2917.net>
-Date		: 2009-07-29 08:20 (12 days old)
-References	: http://marc.info/?l=linux-kernel&m=124884847925375&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13869
-Subject		: Radeon framebuffer (w/o KMS) corruption at boot.
-Submitter	: Duncan <1i5t5.duncan@cox.net>
-Date		: 2009-07-29 16:44 (12 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13848
-Subject		: iwlwifi (4965) regression since 2.6.30
-Submitter	: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Date		: 2009-07-26 7:57 (15 days old)
-References	: http://marc.info/?l=linux-kernel&m=124859658502866&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13846
-Subject		: LEDs switched off permanently by power saving with rt61pci driver
-Submitter	: Chris Clayton <chris2553@googlemail.com>
-Date		: 2009-07-13 8:27 (28 days old)
-References	: http://marc.info/?l=linux-kernel&m=124747418828398&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13837
-Subject		: Input : regression - touchpad not detected
-Submitter	: Dave Young <hidave.darkstar@gmail.com>
-Date		: 2009-07-17 07:13 (24 days old)
-References	: http://marc.info/?l=linux-kernel&m=124780763701571&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13836
-Subject		: suspend script fails, related to stdout?
-Submitter	: Tomas M. <tmezzadra@gmail.com>
-Date		: 2009-07-17 21:24 (24 days old)
-References	: http://marc.info/?l=linux-kernel&m=124785853811667&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13833
-Subject		: Kernel Oops when trying to suspend with ubifs mounted on block2mtd mtd device
-Submitter	: Tobias Diedrich <ranma@tdiedrich.de>
-Date		: 2009-07-15 14:20 (26 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=15bce40cb3133bcc07d548013df97e4653d363c1
-References	: http://marc.info/?l=linux-kernel&m=124766049207807&w=4
-		  http://marc.info/?l=linux-kernel&m=124704927819769&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13819
-Subject		: system freeze when switching to console
-Submitter	: Reinette Chatre <reinette.chatre@intel.com>
-Date		: 2009-07-23 17:57 (18 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13809
-Subject		: oprofile: possible circular locking dependency detected
-Submitter	: Jerome Marchand <jmarchan@redhat.com>
-Date		: 2009-07-22 13:35 (19 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13740
-Subject		: X server crashes with 2.6.31-rc2 when options are changed
-Submitter	: Michael S. Tsirkin <m.s.tsirkin@gmail.com>
-Date		: 2009-07-07 15:19 (34 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13733
-Subject		: 2.6.31-rc2: irq 16: nobody cared
-Submitter	: Niel Lambrechts <niel.lambrechts@gmail.com>
-Date		: 2009-07-06 18:32 (35 days old)
-References	: http://marc.info/?l=linux-kernel&m=124690524027166&w=4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13716
-Subject		: The AIC-7892P controller does not work any more
-Submitter	: Andrej Podzimek <andrej@podzimek.org>
-Date		: 2009-07-05 19:23 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13713
-Subject		: [drm/i915] Possible regression due to commit "Change GEM throttling to be 20ms (...)"
-Submitter	:  <kazikcz@gmail.com>
-Date		: 2009-07-05 10:49 (36 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=b962442e46a9340bdbc6711982c59ff0cc2b5afb
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13645
-Subject		: NULL pointer dereference at (null) (level2_spare_pgt)
-Submitter	: poornima nayak <mpnayak@linux.vnet.ibm.com>
-Date		: 2009-06-17 17:56 (54 days old)
-References	: http://lkml.org/lkml/2009/6/17/194
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13948
-Subject		: ath5k broken after suspend-to-ram
-Submitter	: Johannes Stezenbach <js@sig21.net>
-Date		: 2009-08-07 21:51 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=124968192727854&w=4
-Handled-By	: Nick Kossifidis <mickflemm@gmail.com>
-Patch		: http://patchwork.kernel.org/patch/38550/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13946
-Subject		: x86 MCE malfunction on Thinkpad T42p
-Submitter	: Johannes Stezenbach <js@sig21.net>
-Date		: 2009-08-07 17:09 (3 days old)
-References	: http://marc.info/?l=linux-kernel&m=124966500232399&w=4
-Handled-By	: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Patch		: http://patchwork.kernel.org/patch/37908/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13944
-Subject		: MD raid regression
-Submitter	: Mike Snitzer <snitzer@redhat.com>
-Date		: 2009-08-05 15:06 (5 days old)
-First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=449aad3e25358812c43afc60918c5ad3819488e7
-References	: http://marc.info/?l=linux-kernel&m=124948481218857&w=4
-Handled-By	: NeilBrown <neilb@suse.de>
-Patch		: http://patchwork.kernel.org/patch/39521/
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.30,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=13615
-
-Please let me know if there are any Bugzilla entries that should be added to
-the list in there.
-
-Thanks,
-Rafael
+Larry Finger reports following lockdep warning:
+
+[ INFO: possible circular locking dependency detected ]
+2.6.31-rc6-wl #201
+-------------------------------------------------------
+rfkill/30578 is trying to acquire lock:
+ (&(&priv->work)->work#2){+.+...}, at: [<ffffffff81051215>]
+__cancel_work_timer+0xd9/0x222
+
+but task is already holding lock:
+ (&priv->conf_mutex#2){+.+.+.}, at: [<ffffffffa064a024>]
+rtl8187_stop+0x31/0x364 [rtl8187]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #1 (&priv->conf_mutex#2){+.+.+.}:
+       [<ffffffff81065957>] __lock_acquire+0x12d0/0x1614
+       [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
+       [<ffffffff8127c32f>] mutex_lock_nested+0x56/0x2a8
+       [<ffffffffa064a392>] rtl8187_work+0x3b/0xf2 [rtl8187]
+       [<ffffffff81050758>] worker_thread+0x1fa/0x30a
+       [<ffffffff81054ca5>] kthread+0x8f/0x97
+       [<ffffffff8100cb7a>] child_rip+0xa/0x20
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+-> #0 (&(&priv->work)->work#2){+.+...}:
+       [<ffffffff8106568c>] __lock_acquire+0x1005/0x1614
+       [<ffffffff81065d54>] lock_acquire+0xb9/0xdd
+       [<ffffffff8105124e>] __cancel_work_timer+0x112/0x222
+       [<ffffffff8105136b>] cancel_delayed_work_sync+0xd/0xf
+       [<ffffffffa064a33f>] rtl8187_stop+0x34c/0x364 [rtl8187]
+       [<ffffffffa0242866>] ieee80211_stop_device+0x29/0x61 [mac80211]
+       [<ffffffffa0239194>] ieee80211_stop+0x476/0x530 [mac80211]
+       [<ffffffff8120ce15>] dev_close+0x8a/0xac
+       [<ffffffffa01d9fa7>] cfg80211_rfkill_set_block+0x4a/0x7a [cfg80211]
+       [<ffffffffa01bf4f0>] rfkill_set_block+0x84/0xd9 [rfkill]
+       [<ffffffffa01bfc31>] rfkill_fop_write+0xda/0x124 [rfkill]
+       [<ffffffff810cf286>] vfs_write+0xae/0x14a
+       [<ffffffff810cf3e6>] sys_write+0x47/0x6e
+       [<ffffffff8100ba6b>] system_call_fastpath+0x16/0x1b
+       [<ffffffffffffffff>] 0xffffffffffffffff
+
+The problem here is that rtl8187_stop, while helding priv->conf_mutex,
+runs cancel_delayed_work_sync on an workqueue that runs rtl8187_work,
+which also takes priv->conf_mutex lock. Move cancel_delayed_work_sync
+out of rtl8187_stop priv->conf_mutex locking region.
+
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 5830f6c..75b63ac 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1017,9 +1017,10 @@ static void rtl8187_stop(struct ieee80211_hw *dev)
+ 		dev_kfree_skb_any(skb);
+ 
+ 	usb_kill_anchored_urbs(&priv->anchored);
++	mutex_unlock(&priv->conf_mutex);
++
+ 	if (!priv->is_rtl8187b)
+ 		cancel_delayed_work_sync(&priv->work);
+-	mutex_unlock(&priv->conf_mutex);
+ }
+ 
+ static int rtl8187_add_interface(struct ieee80211_hw *dev,
+-- 
+1.6.4.1
 
