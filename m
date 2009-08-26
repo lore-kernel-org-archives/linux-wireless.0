@@ -1,65 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:42757 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755996AbZHNVbS (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.27]:6578 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbZHZQkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 17:31:18 -0400
-Received: by pxi34 with SMTP id 34so461187pxi.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2009 14:31:19 -0700 (PDT)
-Message-ID: <4A85D7A3.9020009@lwfinger.net>
-Date: Fri, 14 Aug 2009 16:31:15 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 26 Aug 2009 12:40:47 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so75344eya.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 09:40:48 -0700 (PDT)
+Message-ID: <4A956594.7010205@tuffmail.co.uk>
+Date: Wed, 26 Aug 2009 17:40:52 +0100
+From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
 MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] b43: LP-PHY: Fix another TX power control abuse
-References: <4A85D070.6070702@gmail.com>
-In-Reply-To: <4A85D070.6070702@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	=?UTF-8?B?ScOxYWt5IFDDqXJl?= =?UTF-8?B?ei1Hb256w6FsZXo=?=
+	<inaky.perez-gonzalez@intel.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Michael Buesch <mb@bu3sch.de>,
+	Tomas Winkler <tomas.winkler@intel.com>
+Subject: Re: [PATCH] rfkill: relicense header file
+References: <1251303197.15619.29.camel@johannes.local>
+In-Reply-To: <1251303197.15619.29.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> This should fix the remaining WARN_ON.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Johannes Berg wrote:
+> This header file is copied into userspace tools that
+> need not be GPLv2 licensed, make that easier.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Cc: Michael Buesch <mb@bu3sch.de>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
 > ---
-> drivers/net/wireless/b43/phy_lp.c |    7 ++++---
-> 1 files changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/phy_lp.c
-> b/drivers/net/wireless/b43/phy_lp.c
-> index bf89173..3872a31 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -1059,7 +1059,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->     bool old_txg_ovr;
->     u8 old_bbmult;
->     u16 old_rf_ovr, old_rf_ovrval, old_afe_ovr, old_afe_ovrval,
-> -        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl, old_txpctl;
-> +        old_rf2_ovr, old_rf2_ovrval, old_phy_ctl;
-> +    enum b43_lpphy_txpctl_mode old_txpctl;
->     u32 normal_pwr, ideal_pwr, mean_sq_pwr, tmp = 0, mean_sq_pwr_min = 0;
->     int loopback, i, j, inner_sum;
-> 
-> @@ -1077,8 +1078,8 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev
-> *dev)
->     old_rf2_ovr = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2);
->     old_rf2_ovrval = b43_phy_read(dev, B43_LPPHY_RF_OVERRIDE_2_VAL);
->     old_phy_ctl = b43_phy_read(dev, B43_LPPHY_LP_PHY_CTL);
-> -    old_txpctl = b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_CMD) &
-> -                    B43_LPPHY_TX_PWR_CTL_CMD_MODE;
-> +    lpphy_read_tx_pctl_mode_from_hardware(dev);
-> +    old_txpctl = lpphy->txpctl_mode;
-> 
->     lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
->     lpphy_disable_crs(dev);
+> Need ACK from everybody listed who ever touched this
+> file according to git. Please?
+>
+>  include/linux/rfkill.h |   25 +++++++++++--------------
+>  1 file changed, 11 insertions(+), 14 deletions(-)
+>
+> --- wireless-testing.orig/include/linux/rfkill.h	2009-08-26 18:09:57.000000000 +0200
+> +++ wireless-testing/include/linux/rfkill.h	2009-08-26 18:10:52.000000000 +0200
+> @@ -6,20 +6,17 @@
+>   * Copyright (C) 2007 Dmitry Torokhov
+>   * Copyright 2009 Johannes Berg <johannes@sipsolutions.net>
+>   *
+> - * This program is free software; you can redistribute it and/or modify
+> - * it under the terms of the GNU General Public License as published by
+> - * the Free Software Foundation; either version 2 of the License, or
+> - * (at your option) any later version.
+> - *
+> - * This program is distributed in the hope that it will be useful,
+> - * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> - * GNU General Public License for more details.
+> - *
+> - * You should have received a copy of the GNU General Public License
+> - * along with this program; if not, write to the
+> - * Free Software Foundation, Inc.,
+> - * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+> + * Permission to use, copy, modify, and/or distribute this software for any
+> + * purpose with or without fee is hereby granted, provided that the above
+> + * copyright notice and this permission notice appear in all copies.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>   */
+>  
+>  #include <linux/types.h>
+>   
 
-Yes, this one got rid of the warnings.
-
-Larry
-
+ACK
