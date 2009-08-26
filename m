@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41503 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753916AbZHMTbu (ORCPT
+Received: from mail-bw0-f222.google.com ([209.85.218.222]:61919 "EHLO
+	mail-bw0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753726AbZHZVqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:50 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 08/20] wireless: group Realtek wireless on kconfig
-Date: Thu, 13 Aug 2009 15:31:37 -0400
-Message-Id: <1250191909-21682-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 26 Aug 2009 17:46:19 -0400
+Received: by bwz22 with SMTP id 22so501085bwz.18
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 14:46:20 -0700 (PDT)
+From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] b43: LP-PHY: Revert to the original PHY register write routine
+Date: Wed, 26 Aug 2009 23:46:18 +0200
+Message-Id: <1251323178-7173-1-git-send-email-netrolller.3d@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+After some discussion on IRC about the PHY register write change,
+I am not sure anymore if this is the right thing to do.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index a74aab2..e6d2674 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -407,6 +407,15 @@ config USB_NET_RNDIS_WLAN
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+v3: Use 16-bit writes.
+
+ drivers/net/wireless/b43/phy_lp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 80f245c..a57c40d 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1496,7 +1496,8 @@ static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
  
- 	  If you choose to build a module, it'll be called rndis_wlan.
+ static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
+ {
+-	b43_write32(dev, B43_MMIO_PHY_CONTROL, ((u32)value << 16) | reg);
++	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
++	b43_write16(dev, B43_MMIO_PHY_DATA, value);
+ }
  
-+menuconfig REALTEK_80211
-+	bool "Realtek Wireless Cards"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Realtek wireless drivers. This includes
-+	  the PCI rtl8180 driver and the USB rtl8187 driver.
-+
-+if REALTEK_80211
-+
- config RTL8180
- 	tristate "Realtek 8180/8185 PCI support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-@@ -492,6 +501,8 @@ config RTL8187_LEDS
- 	depends on RTL8187 && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = RTL8187)
- 	default y
- 
-+endif # REALTEK_80211
-+
- config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
+ static void b43_lpphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
 -- 
-1.6.2.5
+1.5.6
 
