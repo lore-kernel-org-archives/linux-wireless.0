@@ -1,95 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:4646 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752990AbZHYK3R (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:63082 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754174AbZHZW0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 06:29:17 -0400
-Received: by ey-out-2122.google.com with SMTP id 22so783863eye.37
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 03:29:18 -0700 (PDT)
+	Wed, 26 Aug 2009 18:26:24 -0400
+Received: by iwn42 with SMTP id 42so406586iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 15:26:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1250760130.4100.23.camel@johannes.local>
-References: <eb3ff54b0908200002s4dc0dbf7kc28dda3fa7afaeb9@mail.gmail.com>
-	 <1250760130.4100.23.camel@johannes.local>
-Date: Tue, 25 Aug 2009 13:29:18 +0300
-Message-ID: <eb3ff54b0908250329s3e1a4715u27c82512fff520d5@mail.gmail.com>
-Subject: Re: Linux Kernel Wireless stack presentation
-From: Rami Rosen <ramirose@gmail.com>
+In-Reply-To: <1251324755.20531.0.camel@johannes.local>
+References: <850984.89698.qm@web23108.mail.ird.yahoo.com> <1251297273.15619.11.camel@johannes.local>
+	<43e72e890908261333m1d576fdhaa16088affec5426@mail.gmail.com>
+	<43e72e890908261506h6b9ec4efq2d190388663d4671@mail.gmail.com>
+	<1251324755.20531.0.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 Aug 2009 15:26:06 -0700
+Message-ID: <43e72e890908261526g538eea56l873314e576331449@mail.gmail.com>
+Subject: Re: [RFC/RFT] rtl8187: Implement rfkill support
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: htl10@users.sourceforge.net,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-
-> iwconfig wlan0 power timeout 0 == PS-poll,
-
-I am not sure I fully understand what you mean here by
-"iwconfig wlan0 power timeout 0 == PS-poll". As far as I understand,
-"iwconfig wlan0 power timeout 0" invokes ieee80211_change_ps(); this method
-notifies the driver about disabling PS (by
-ieee80211_hw_config(...IEEE80211_CONF_CHANGE_PS))
-and sets the flags to have ~IEEE80211_CONF_PS; It also cancells the
-dynamic_ps_enable_work work_queue thread. But what PS-POLL has to do with it ?
-I am not sure I understand how PSPOLL is relevant here.
-
-It could be that I missunderstand you in some point here.
-
-Regards,
-Rami Rosen
-
-
-On Thu, Aug 20, 2009 at 12:22 PM, Johannes
-Berg<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-08-20 at 10:02 +0300, Rami Rosen wrote:
+On Wed, Aug 26, 2009 at 3:12 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-08-26 at 15:06 -0700, Luis R. Rodriguez wrote:
 >
->> http://tuxology.net/wp-content/uploads/2009/08/wirelessLecHerzelinux.pdf
+>> > Neat, thanks. Not sure if I'll get to this this anytime soon, but if
+>> > someone is interested in it please give it a shot and send a patch.
+>> > That would be nice.
+>>
+>> What if we *also* just do that from mac80211 as well upstream?
 >
-> had a quick look
->
->  * almost all drivers support passive scanning -- all the modern ones at
->   least -- maybe some old drivers don't, but all using cfg80211 do
->  * your presentation is based on old code -- all the code stuff about
->   scanning is already outdated in wireless-testing
->  * you can scan for multiple specific SSIDs and channels:
->   iw wlan0 scan freq 2412 ssid foo bar baz
->  * iw has a better IE parser, so showing a result from that may be more
->   instructive
->  * code stuff about authentication/association is also outdated already
->  * the STA_MLME_DISABLED stuff no longer exists
->  * AP MLME will never be in the kernel, not just not in the near
->   future :)
->  * raw packets still go through the mac80211 stack, they arrive in
->   monitor_start_xmit() or so
->  * four-address format is not necessarily used only for WDS, the
->   standard doesn't define uses for it (ToDS = FromDS = 1)
->  * an AP may transmit nullfunc (!) frames to tell clients it has no data
->   buffered, but it never transmits frames with the PM bit on
->  * power timeout 5 is described incorrectly -- it doesn't go to sleep
->   for 5 seconds, it actually stays awake for 5 seconds after each
->   packet transmission -- the time spent asleep is calculated based on
->   the DTIM period etc. Cf. 04fe20372e70685d9f15966216cdffd3795fe590.
->  * STA may wake up in response to TIM[AID] == 1 instead of sending
->   PS-poll, which we do depends on the timeout (iwconfig wlan0 power
->   timeout 0 == PS-poll, iwconfig wlan0 power timeout 100ms == send
->   nullfunc and stay awake for 100ms)
->  * "paramter" typo
->  * ibss is in net/mac80211/ibss.c and has been for quite a while
->  * PM in IBSS is not implemented typically
->  * s/80211.s/802.11s/
->  * s/80211.n/802.11n/
->  * you can change the channel with iw (iw phy set freq ...) but it isn't
->   really useful unless you're AP/monitor (and rejected otherwise)
->  * Fedora no longer updates from wireless-testing afaik
->  * wmaster0 is no longer created
->  * assigning interface_modes doesn't set the mode, it just sets the
->   possible modes :)
->  * you can also call iterate_interfaces_atomic() in irq context
->  * nobody cares about the wireless extensions version any more :)
->  * for sniffing you may care about "iw dev <devname> set monitor <flag>*"
->
-> Hey that got long!
->
-> johannes
->
+> Why?
+
+I was thinking of the case where someone hit rfkill between dev_open()
+and mac80211's subif_open() but I am either not sure if this is
+possible.
+
+> It's fine as it is, and we don't want to clutter all cfg80211
+> drivers with it.
+
+If there is a real value to adding it to mac80211 then we wouldn't
+need to tug around a hunk for it on compat.
+
+  Luis
