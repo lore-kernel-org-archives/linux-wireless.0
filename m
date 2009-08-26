@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53096 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756455AbZHQR1b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Zhu Yi <yi.zhu@intel.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH v5 01/33] wireless: move iwmc3200wifi closer to the other intel drivers
-Date: Mon, 17 Aug 2009 13:27:00 -0400
-Message-Id: <1250530052-14783-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+Received: from lirone.symas.net ([64.71.152.235]:38773 "EHLO lirone.symas.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752788AbZHZTjL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 15:39:11 -0400
+Received: from [76.91.220.157] (helo=[192.168.1.28])
+	by lirone.symas.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69)
+	(envelope-from <hyc@symas.com>)
+	id 1MgOKv-0007IL-Jf
+	for linux-wireless@vger.kernel.org; Wed, 26 Aug 2009 12:39:13 -0700
+Message-ID: <4A958F45.40109@symas.com>
+Date: Wed, 26 Aug 2009 12:38:45 -0700
+From: Howard Chu <hyc@symas.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k DMA problems
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Zhu Yi <yi.zhu@intel.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Still seeing occasional hangs using the ath9k in 2.6.31-rc6, and even worse 
+using compat-wireless 2009-08-22. Today I got this which was even more 
+interesting:
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index dda7cc2..72dbac6 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -497,6 +497,7 @@ source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/ath/Kconfig"
- source "drivers/net/wireless/ipw2x00/Kconfig"
- source "drivers/net/wireless/iwlwifi/Kconfig"
-+source "drivers/net/wireless/iwmc3200wifi/Kconfig"
- source "drivers/net/wireless/hostap/Kconfig"
- source "drivers/net/wireless/b43/Kconfig"
- source "drivers/net/wireless/b43legacy/Kconfig"
-@@ -504,6 +505,5 @@ source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- source "drivers/net/wireless/wl12xx/Kconfig"
--source "drivers/net/wireless/iwmc3200wifi/Kconfig"
- 
- endmenu
+[369014.776586] wlan0: associate with AP 00:12:17:26:56:10 (try 1)
+[369014.779197] wlan0: RX ReassocResp from 00:12:17:26:56:10 (capab=0x411 
+status=0 aid=2)
+[369014.779197] wlan0: associated
+[369472.707961] ath9k: DMA failed to stop in 10 ms AR_CR=0xdeadbeef 
+AR_DIAG_SW=0xdeadbeef
+
+This is on an HP dv5z laptop, it reports an AR9280 at boot.
 -- 
-1.6.2.5
-
+   -- Howard Chu
+   CTO, Symas Corp.           http://www.symas.com
+   Director, Highland Sun     http://highlandsun.com/hyc/
+   Chief Architect, OpenLDAP  http://www.openldap.org/project/
