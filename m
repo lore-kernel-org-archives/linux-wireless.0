@@ -1,36 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:55106 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbZH0Knj (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:56513 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752586AbZHZSv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 Aug 2009 06:43:39 -0400
-Message-ID: <20090827134340.190465b7qixz4wao@naisho.dyndns.info>
-Date: Thu, 27 Aug 2009 13:43:40 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rndis_wlan: increase scan timer delay
-References: <20090827073854.27662.68095.stgit@fate.lan>
-In-Reply-To: <20090827073854.27662.68095.stgit@fate.lan>
+	Wed, 26 Aug 2009 14:51:27 -0400
+Received: by fxm17 with SMTP id 17so358129fxm.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 11:51:28 -0700 (PDT)
+From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] b43: LP-PHY: Fix and simplify Qdiv roundup
+Date: Wed, 26 Aug 2009 20:51:24 +0200
+Message-Id: <1251312686-32067-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please, don't merge this after all. Blocks scan too long and breaks  
-NetworkManager/wpa_supplicant.
+The Qdiv roundup routine is essentially a fixed-point
+division algorithm, using only integer math.
+However, the version in the specs had a major error
+that has been recently fixed (a missing quotient++).
 
-Quoting "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>:
+Replace Qdiv roundup with a rewritten, simplified version.
 
-> Increase scan delay from 1 sec to 6 sec. Spec says that scan by
-> OID_802_11_BSSID_LIST_SCAN completes in 6 seconds.
-> Before rfkill patch too short delay was not problem as device was
-> always active (radio on) and performing background scanning.
->
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+v2: Remove divide/modulo operations from the inner loop.
 
+ drivers/net/wireless/b43/phy_lp.c |   19 ++++++++-----------
+ 1 files changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 7e70c07..5306f2c 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -1032,9 +1032,10 @@ static int lpphy_loopback(struct b43_wldev *dev)
+ 	return index;
+ }
+ 
++/* Fixed-point division algorithm using only integer math. */
+ static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
+ {
+-	u32 quotient, remainder, rbit, roundup, tmp;
++	u32 quotient, remainder;
+ 
+ 	if (divisor == 0)
+ 		return 0;
+@@ -1042,20 +1043,16 @@ static u32 lpphy_qdiv_roundup(u32 dividend, u32 divisor, u8 precision)
+ 	quotient = dividend / divisor;
+ 	remainder = dividend % divisor;
+ 
+-	rbit = divisor & 0x1;
+-	roundup = (divisor >> 1) + rbit;
+-
+-	while (precision != 0) {
+-		tmp = remainder - roundup;
++	while (precision > 0) {
+ 		quotient <<= 1;
+-		if (remainder >= roundup)
+-			remainder = (tmp << 1) + rbit;
+-		else
+-			remainder <<= 1;
++		if (remainder << 1 >= divisor) {
++			quotient++;
++			remainder = (remainder << 1) - divisor;
++		}
+ 		precision--;
+ 	}
+ 
+-	if (remainder >= roundup)
++	if (remainder << 1 >= divisor)
+ 		quotient++;
+ 
+ 	return quotient;
+-- 
+1.5.6
 
