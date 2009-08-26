@@ -1,143 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30129 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754215AbZHUNXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 09:23:52 -0400
-Subject: Re: [PATCH] libertas: don't use dynamic-sized array
-From: Dan Williams <dcbw@redhat.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1250701760.5351.42.camel@localhost.localdomain>
-References: <43e72e890908131331q371320a3gf1ab53ea27574549@mail.gmail.com>
-	 <1250210080-21960-1-git-send-email-andrey@cozybit.com>
-	 <1250701760.5351.42.camel@localhost.localdomain>
-Content-Type: text/plain
-Date: Fri, 21 Aug 2009 08:24:00 -0500
-Message-Id: <1250861040.2876.22.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-vw0-f195.google.com ([209.85.212.195]:51192 "EHLO
+	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756485AbZHZOIy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 10:08:54 -0400
+Received: by vws33 with SMTP id 33so132023vws.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 07:08:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090825233827.GA10998@mosca>
+References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
+	 <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
+	 <20090825185842.GA7357@mosca>
+	 <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
+	 <20090825233827.GA10998@mosca>
+Date: Wed, 26 Aug 2009 10:08:55 -0400
+Message-ID: <b6c5339f0908260708l38208046o43330d9eda808b1e@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-19 at 12:09 -0500, Dan Williams wrote:
-> On Thu, 2009-08-13 at 17:34 -0700, Andrey Yurovsky wrote:
-> > sparse complains about a bad constant expression due to the use of a
-> > dynamic-sized array in get_common_rates().  Allocate and free the array
-> > instead.
-> 
-> Mind testing this patch from libertas-dev?  It should fix this but also
-> clears up some of the confustion:
+On Tue, Aug 25, 2009 at 7:38 PM, Luis R. Rodriguez<lrodriguez@atheros.com>
+> First thing I saw upon a quick review was we were relying on our own
+> curband for RX instead of the cfg80211 hw->conf band. Now granted
+> that *may* be updated properly, and it seems that may be the case,
 
-FWIW this patch now tested with sd8686.
+Looks good at first glance, except it conflicts with changes I
+recently posted.  I'm all for getting rid of driver copies of stuff
+in the stack.
 
-Dan
-
->                            Subject: 
-> Re: Libertas: Association request to
-> the driver failed
->                               Date: 
-> Wed, 12 Aug 2009 12:34:17 -0500
-> 
-> Signed-off-by: Dan Williams <dcbw@redhat.com>
-> 
-> 
-> diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-> index 1902b6f..8c05388 100644
-> --- a/drivers/net/wireless/libertas/assoc.c
-> +++ b/drivers/net/wireless/libertas/assoc.c
-> @@ -35,7 +35,8 @@ static const u8 bssid_off[ETH_ALEN]  __attribute__ ((aligned (2))) =
->   *
->   *  @param priv     A pointer to struct lbs_private structure
->   *  @param rates       the buffer which keeps input and output
-> - *  @param rates_size  the size of rate1 buffer; new size of buffer on return
-> + *  @param rates_size  the size of rates buffer; new size of buffer on return,
-> + *                     which will be less than or equal to original rates_size
->   *
->   *  @return            0 on success, or -1 on error
->   */
-> @@ -43,39 +44,42 @@ static int get_common_rates(struct lbs_private *priv,
->         u8 *rates,
->         u16 *rates_size)
->  {
-> -       u8 *card_rates = lbs_bg_rates;
-> -       int ret = 0, i, j;
-> -       u8 tmp[(ARRAY_SIZE(lbs_bg_rates) - 1) * (*rates_size - 1)];
-> -       size_t tmp_size = 0;
+> -       /* NB: setup here so ath5k_rate_update is happy */
+> -       if (test_bit(AR5K_MODE_11A, ah->ah_modes))
+> -               ath5k_setcurmode(sc, AR5K_MODE_11A);
+> -       else
+> -               ath5k_setcurmode(sc, AR5K_MODE_11B);
 > -
-> -       /* For each rate in card_rates that exists in rate1, copy to tmp */
-> -       for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && card_rates[i]; i++) {
-> -               for (j = 0; j < *rates_size && rates[j]; j++) {
-> -                       if (rates[j] == card_rates[i])
-> -                               tmp[tmp_size++] = card_rates[i];
-> +       int i, j;
-> +       u8 intersection[MAX_RATES];
-> +       u16 intersection_size;
-> +       u16 num_rates = 0;
-> +
-> +       intersection_size = min_t(u16, *rates_size, ARRAY_SIZE(intersection));
-> +
-> +       /* Allow each rate from 'rates' that is supported by the hardware */
-> +       for (i = 0; i < ARRAY_SIZE(lbs_bg_rates) && lbs_bg_rates[i]; i++) {
-> +               for (j = 0; j < intersection_size && rates[j]; j++) {
-> +                       if (rates[j] == lbs_bg_rates[i])
-> +                               intersection[num_rates++] = rates[j];
->                 }
->         }
->  
->         lbs_deb_hex(LBS_DEB_JOIN, "AP rates    ", rates, *rates_size);
-> -       lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", card_rates,
-> +       lbs_deb_hex(LBS_DEB_JOIN, "card rates  ", lbs_bg_rates,
->                         ARRAY_SIZE(lbs_bg_rates));
-> -       lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
-> +       lbs_deb_hex(LBS_DEB_JOIN, "common rates", intersection, num_rates);
->         lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
->  
->         if (!priv->enablehwauto) {
-> -               for (i = 0; i < tmp_size; i++) {
-> -                       if (tmp[i] == priv->cur_rate)
-> +               for (i = 0; i < num_rates; i++) {
-> +                       if (intersection[i] == priv->cur_rate)
->                                 goto done;
->                 }
->                 lbs_pr_alert("Previously set fixed data rate %#x isn't "
->                        "compatible with the network.\n", priv->cur_rate);
-> -               ret = -1;
-> +               return -1;
->         }
-> +
->  done:
->         memset(rates, 0, *rates_size);
-> -       *rates_size = min_t(int, tmp_size, *rates_size);
-> -       memcpy(rates, tmp, *rates_size);
-> -       return ret;
-> +       *rates_size = num_rates;
-> +       memcpy(rates, intersection, num_rates);
-> +       return 0;
->  }
->  
-> 
-> @@ -317,8 +321,8 @@ static int lbs_associate(struct lbs_private *priv,
->  
->         rates = (struct mrvl_ie_rates_param_set *) pos;
->         rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
-> -       memcpy(&rates->rates, &bss->rates, MAX_RATES);
-> -       tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
-> +       tmplen = min_t(u16, ARRAY_SIZE(bss->rates), MAX_RATES);
-> +       memcpy(&rates->rates, &bss->rates, tmplen);
->         if (get_common_rates(priv, rates->rates, &tmplen)) {
->                 ret = -1;
->                 goto done;
-> @@ -592,7 +596,7 @@ static int lbs_adhoc_join(struct lbs_private *priv,
->  
->         /* Copy Data rates from the rates recorded in scan response */
->         memset(cmd.bss.rates, 0, sizeof(cmd.bss.rates));
-> -       ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), MAX_RATES);
-> +       ratesize = min_t(u16, ARRAY_SIZE(cmd.bss.rates), ARRAY_SIZE (bss->rates));
->         memcpy(cmd.bss.rates, bss->rates, ratesize);
->         if (get_common_rates(priv, cmd.bss.rates, &ratesize)) {
->                 lbs_deb_join("ADHOC_JOIN: get_common_rates returned error.\n");
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+I take it ath5k_rate_update didn't really care?
+
+>  ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+>  {
+>        ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "(%u MHz) -> (%u MHz)\n",
+> -               sc->curchan->center_freq, chan->center_freq);
+> +               sc->hw->conf.channel->center_freq, chan->center_freq);
+
+So, does hw->conf.channel change before we're told to change channel,
+or after?
+
+> -       if (chan) {
+> -               ath5k_hw_set_imr(ah, 0);
+> -               ath5k_txq_cleanup(sc);
+> -               ath5k_rx_stop(sc);
+> -
+> -               sc->curchan = chan;
+> -               sc->curband = &sc->sbands[chan->band];
+> -       }
+
+Unless I missed something I think we still want:
+
+    if (chan_change)
+        ath5k_chan_set(...);
+
+> -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
+> +       ret = ath5k_hw_reset(ah, sc->opmode, chan, chan_change);
+
+There's just no synchronization of this stuff, not too surprising there
+are races.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
