@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41801 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788AbZH1NPV (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:35842 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751480AbZHZULL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 09:15:21 -0400
-Date: Fri, 28 Aug 2009 09:11:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC PATCH 00/10] complete cfg80211 conversion
-Message-ID: <20090828131132.GA32694@tuxdriver.com>
-References: <20090828102742.15684.10566.stgit@fate.lan>
+	Wed, 26 Aug 2009 16:11:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: Re: 2.6.31-rc7-git2: Reported regressions 2.6.29 -> 2.6.30
+Date: Wed, 26 Aug 2009 22:11:39 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Len Brown <lenb@kernel.org>
+References: <JuOd1ZASH0B.A.YGB.0zGlKB@chimera> <b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
+In-Reply-To: <b170af450908260147o60427997ne6b9872198893c41@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200908262211.39228.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 28, 2009 at 01:27:42PM +0300, Jussi Kivilinna wrote:
-> This patchset completes cfg80211 conversion of rndis_wlan. Tested connect with 
-> wext-compat: WPA/WPA2-PSK, WEP work with station mode. Adhoc work with
-> and without WEP. Throught nl80211 pretty much untested.
+On Wednesday 26 August 2009, Rafał Miłecki wrote:
+> 2009/8/25 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=13514
+> > Subject         : acer_wmi causes stack corruption
+> > Submitter       : Rus <harbour@sfinx.od.ua>
+> > Date            : 2009-06-12 08:13 (75 days old)
+> 
+> It has patch, just Len doesn't seem to... don't know, read the topic?
+> http://patchwork.kernel.org/patch/29082/
+> 
+> Can we ping Len somehow to push this patch directly to Linus's tree?
 
-Awesome!  Hooray!
+I have updated the bug entry, hopefully Len will notice it now.
 
-What is keeping this as RFC?  Time is short for inclusion in 2.6.32...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks,
+Rafael
