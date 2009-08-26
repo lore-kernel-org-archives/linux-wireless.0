@@ -1,261 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:34394 "EHLO venema.h4ckr.net"
+Received: from mail.atheros.com ([12.36.123.2]:45795 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754196AbZHJAbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 Aug 2009 20:31:34 -0400
-Date: Mon, 10 Aug 2009 03:31:31 +0300
-From: Nick Kossifidis <mick@madwifi-project.org>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, jirislaby@gmail.com, me@bobcopeland.com,
-	mcgrof@gmail.com, nbd@openwrt.org
-Subject: [PATCH 5/5] ath5k: Use SWI to trigger calibration
-Message-ID: <20090810003131.GE7079@makis>
+	id S1751568AbZHZPrD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 11:47:03 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 08:47:06 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 1/8] ath9k: Split ath9k_hw_btcoex_enable() into two logical pieces
+Date: Wed, 26 Aug 2009 21:08:43 +0530
+Message-ID: <1251301130-10912-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1251301130-10912-1-git-send-email-vasanth@atheros.com>
+References: <1251301130-10912-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Get rid of calibration timer, instead use a software interrupt
-  to schedule the calibration tasklet.
+This function currently does initialization + enable the
+btcoex support. Split it into two logical functions which
+does the above operations separately. Btcoex initialization
+is done during attach time and enabling this feature is done
+in start(). Also, add code to disable btcoex support in stop().
 
- a) We don't need a timer for this, there is no need for accuracy
-   even with round_jiffies i think this is a waste of resources.
-   Also we don't need to run calibration if we are idle (no
-   interrupts).
-
- b) When we add ANI support we 'll just extend the poll function
-   and calibration tasklet and handle all periodic phy calibration
-   on one place (much cleaner).
-
- c) Having calibration on a tasklet is better since during calibration
-   we can't transmit or receive (antennas are detached to measure
-   noise floor), previously calibration could run in parallel with
-   tx/rx and interfere (packet loss).
-
- v2: kill tasklet on stop_hw, stop/wake queues
- v3: use time_is_before_eq_jiffies to compare timestamp with current
-     time
-
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++++++
- drivers/net/wireless/ath/ath5k/base.c  |   36 +++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath5k/base.h  |    3 +-
- drivers/net/wireless/ath/ath5k/phy.c   |   23 ++++++++++++++++++++
- 4 files changed, 67 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c    |   17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/hw.h    |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c  |   11 +++++++++--
+ 4 files changed, 28 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 1047a6c..c09402e 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -919,6 +919,12 @@ enum ath5k_int {
- 	AR5K_INT_NOCARD	= 0xffffffff
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7705da1..0868800 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -521,6 +521,7 @@ struct ath_led {
+ #define SC_OP_WAIT_FOR_PSPOLL_DATA BIT(17)
+ #define SC_OP_WAIT_FOR_TX_ACK   BIT(18)
+ #define SC_OP_BEACON_SYNC       BIT(19)
++#define SC_OP_BTCOEX_ENABLED    BIT(20)
  
-+/* Software interrupts used for calibration */
-+enum ath5k_software_interrupt {
-+	AR5K_SWI_FULL_CALIBRATION = 0x01,
-+	AR5K_SWI_SHORT_CALIBRATION = 0x02,
-+};
-+
- /*
-  * Power management
-  */
-@@ -1123,6 +1129,15 @@ struct ath5k_hw {
- 	/* noise floor from last periodic calibration */
- 	s32			ah_noise_floor;
+ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4f3d5ea..d81e826 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -4073,7 +4073,7 @@ void ath9k_hw_set11nmac2040(struct ath_hw *ah, enum ath9k_ht_macmode mode)
+ /*  Bluetooth Coexistence  */
+ /***************************/
  
-+	/* Calibration timestamp */
-+	unsigned long		ah_cal_tstamp;
-+
-+	/* Calibration interval (secs) */
-+	u8			ah_cal_intval;
-+
-+	/* Software interrupt mask */
-+	u8			ah_swi_mask;
-+
- 	/*
- 	 * Function pointers
- 	 */
-@@ -1276,6 +1291,7 @@ extern int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *chann
- /* PHY calibration */
- extern int ath5k_hw_phy_calibrate(struct ath5k_hw *ah, struct ieee80211_channel *channel);
- extern int ath5k_hw_noise_floor_calibration(struct ath5k_hw *ah, short freq);
-+extern void ath5k_hw_calibration_poll(struct ath5k_hw *ah);
- /* Spur mitigation */
- bool ath5k_hw_chan_has_spur_noise(struct ath5k_hw *ah,
- 				struct ieee80211_channel *channel);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 0370cba..acbcfc2 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -59,7 +59,7 @@
- #include "reg.h"
- #include "debug.h"
- 
--static int ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
-+static u8 ath5k_calinterval = 10; /* Calibrate PHY every 10 secs (TODO: Fixme) */
- static int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-@@ -376,7 +376,7 @@ static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
- static void 	ath5k_tasklet_reset(unsigned long data);
- 
--static void 	ath5k_calibrate(unsigned long data);
-+static void 	ath5k_tasklet_calibrate(unsigned long data);
- 
- /*
-  * Module init/exit functions
-@@ -799,8 +799,8 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
- 	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
-+	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
- 	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
--	setup_timer(&sc->calib_tim, ath5k_calibrate, (unsigned long)sc);
- 
- 	ret = ath5k_eeprom_read_mac(ah, mac);
- 	if (ret) {
-@@ -2364,7 +2364,7 @@ ath5k_init(struct ath5k_softc *sc)
- 	sc->curband = &sc->sbands[sc->curchan->band];
- 	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
- 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
--		AR5K_INT_FATAL | AR5K_INT_GLOBAL;
-+		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_SWI;
- 	ret = ath5k_reset(sc, NULL);
- 	if (ret)
- 		goto done;
-@@ -2381,8 +2381,8 @@ ath5k_init(struct ath5k_softc *sc)
- 	/* Set ack to be sent at low bit-rates */
- 	ath5k_hw_set_ack_bitrate_high(ah, false);
- 
--	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
--			msecs_to_jiffies(ath5k_calinterval * 1000)));
-+	/* Set PHY calibration inteval */
-+	ah->ah_cal_intval = ath5k_calinterval;
- 
- 	ret = 0;
- done:
-@@ -2475,10 +2475,10 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 	mmiowb();
- 	mutex_unlock(&sc->lock);
- 
--	del_timer_sync(&sc->calib_tim);
- 	tasklet_kill(&sc->rxtq);
- 	tasklet_kill(&sc->txtq);
- 	tasklet_kill(&sc->restq);
-+	tasklet_kill(&sc->calib);
- 	tasklet_kill(&sc->beacontq);
- 
- 	ath5k_rfkill_hw_stop(sc->ah);
-@@ -2534,6 +2534,9 @@ ath5k_intr(int irq, void *dev_id)
- 			if (status & AR5K_INT_BMISS) {
- 				/* TODO */
- 			}
-+			if (status & AR5K_INT_SWI) {
-+				tasklet_schedule(&sc->calib);
-+			}
- 			if (status & AR5K_INT_MIB) {
- 				/*
- 				 * These stats are also used for ANI i think
-@@ -2550,6 +2553,8 @@ ath5k_intr(int irq, void *dev_id)
- 	if (unlikely(!counter))
- 		ATH5K_WARN(sc, "too many interrupts, giving up for now\n");
- 
-+	ath5k_hw_calibration_poll(ah);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -2566,11 +2571,19 @@ ath5k_tasklet_reset(unsigned long data)
-  * for temperature/environment changes.
-  */
- static void
--ath5k_calibrate(unsigned long data)
-+ath5k_tasklet_calibrate(unsigned long data)
+-void ath9k_hw_btcoex_enable(struct ath_hw *ah)
++void ath9k_hw_btcoex_init(struct ath_hw *ah)
  {
- 	struct ath5k_softc *sc = (void *)data;
- 	struct ath5k_hw *ah = sc->ah;
+ 	/* connect bt_active to baseband */
+ 	REG_CLR_BIT(ah, AR_GPIO_INPUT_EN_VAL,
+@@ -4090,8 +4090,23 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
  
-+	/* Only full calibration for now */
-+	if (ah->ah_swi_mask != AR5K_SWI_FULL_CALIBRATION)
-+		return;
-+
-+	/* Stop queues so that calibration
-+	 * doesn't interfere with tx */
-+	ieee80211_stop_queues(sc->hw);
-+
- 	ATH5K_DBG(sc, ATH5K_DEBUG_CALIBRATE, "channel %u/%x\n",
- 		ieee80211_frequency_to_channel(sc->curchan->center_freq),
- 		sc->curchan->hw_value);
-@@ -2588,8 +2601,11 @@ ath5k_calibrate(unsigned long data)
- 			ieee80211_frequency_to_channel(
- 				sc->curchan->center_freq));
+ 	/* Configure the desired gpio port for input */
+ 	ath9k_hw_cfg_gpio_input(ah, ah->btactive_gpio);
++}
  
--	mod_timer(&sc->calib_tim, round_jiffies(jiffies +
--			msecs_to_jiffies(ath5k_calinterval * 1000)));
-+	ah->ah_swi_mask = 0;
-+
-+	/* Wake queues */
-+	ieee80211_wake_queues(sc->hw);
-+
- }
- 
- 
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 778e422..667bd9d 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -177,6 +177,8 @@ struct ath5k_softc {
- 
- 	struct ath5k_rfkill	rf_kill;
- 
-+	struct tasklet_struct	calib;		/* calibration tasklet */
-+
- 	spinlock_t		block;		/* protects beacon */
- 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
- 	struct ath5k_buf	*bbuf;		/* beacon buffer */
-@@ -187,7 +189,6 @@ struct ath5k_softc {
- 	unsigned int		nexttbtt;	/* next beacon time in TU */
- 	struct ath5k_txq	*cabq;		/* content after beacon */
- 
--	struct timer_list	calib_tim;	/* calibration timer */
- 	int 			power_level;	/* Requested tx power in dbm */
- 	bool			assoc;		/* assocate state */
- 	bool			enable_beacon;	/* true if beacons are on */
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 6afba98..298fcf0 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1104,6 +1104,29 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
-   PHY calibration
- \*****************/
- 
-+void
-+ath5k_hw_calibration_poll(struct ath5k_hw *ah)
++void ath9k_hw_btcoex_enable(struct ath_hw *ah)
 +{
-+	/* Calibration interval in jiffies */
-+	unsigned long cal_intval;
+ 	/* Configure the desired GPIO port for TX_FRAME output */
+ 	ath9k_hw_cfg_output(ah, ah->wlanactive_gpio,
+ 			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
 +
-+	cal_intval = msecs_to_jiffies(ah->ah_cal_intval * 1000);
-+
-+	/* Initialize timestamp if needed */
-+	if (!ah->ah_cal_tstamp)
-+		ah->ah_cal_tstamp = jiffies;
-+
-+	/* For now we always do full calibration
-+	 * Mark software interrupt mask and fire software
-+	 * interrupt (bit gets auto-cleared) */
-+	if (time_is_before_eq_jiffies(ah->ah_cal_tstamp + cal_intval)) {
-+		ah->ah_cal_tstamp = jiffies;
-+		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
-+	}
-+
++	ah->ah_sc->sc_flags |= SC_OP_BTCOEX_ENABLED;
 +}
 +
- /**
-  * ath5k_hw_noise_floor_calibration - perform PHY noise floor calibration
-  *
++void ath9k_hw_btcoex_disable(struct ath_hw *ah)
++{
++	ath9k_hw_set_gpio(ah, ah->wlanactive_gpio, 0);
++
++	ath9k_hw_cfg_output(ah, ah->wlanactive_gpio,
++			AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++
++	ah->ah_sc->sc_flags &= ~SC_OP_BTCOEX_ENABLED;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b24150a..e634cb4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -614,6 +614,8 @@ bool ath9k_hw_intrpend(struct ath_hw *ah);
+ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked);
+ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
+ 
++void ath9k_hw_btcoex_init(struct ath_hw *ah);
+ void ath9k_hw_btcoex_enable(struct ath_hw *ah);
++void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index eb8d673..878d3be 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1509,8 +1509,8 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc)
+ 			ARRAY_SIZE(ath9k_5ghz_chantable);
+ 	}
+ 
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX)
+-		ath9k_hw_btcoex_enable(sc->sc_ah);
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX)
++		ath9k_hw_btcoex_init(ah);
+ 
+ 	return 0;
+ bad2:
+@@ -1992,6 +1992,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 
++	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_BT_COEX) &&
++	    !(sc->sc_flags & SC_OP_BTCOEX_ENABLED))
++		ath9k_hw_btcoex_enable(sc->sc_ah);
++
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+@@ -2138,6 +2142,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	wiphy_rfkill_stop_polling(sc->hw->wiphy);
+ 
++	if (sc->sc_flags & SC_OP_BTCOEX_ENABLED)
++		ath9k_hw_btcoex_disable(sc->sc_ah);
++
+ 	/* disable HAL and put h/w to sleep */
+ 	ath9k_hw_disable(sc->sc_ah);
+ 	ath9k_hw_configpcipowersave(sc->sc_ah, 1);
+-- 
+1.5.5.1
+
