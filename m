@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wf-out-1314.google.com ([209.85.200.175]:64056 "EHLO
-	wf-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbZHKAfq (ORCPT
+Received: from gv-out-0910.google.com ([216.239.58.185]:4507 "EHLO
+	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbZHZTsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 20:35:46 -0400
-Received: by wf-out-1314.google.com with SMTP id 26so1230603wfd.4
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 17:35:47 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>, andrey@cozybit.com,
-	johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Subject: [PATCH] mac80211: Fix unresolved mesh frames queued without valid control.vif
-Date: Mon, 10 Aug 2009 17:24:20 -0700
-Message-Id: <1249950260-26536-1-git-send-email-javier@cozybit.com>
-In-Reply-To: <>
-References: <>
+	Wed, 26 Aug 2009 15:48:55 -0400
+Received: by gv-out-0910.google.com with SMTP id r4so5235gve.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 12:48:55 -0700 (PDT)
+From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: Remove scary message from LP-PHY's Kconfig
+Date: Wed, 26 Aug 2009 21:48:52 +0200
+Message-Id: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh frames that could not be immediately resolved were queued with a NULL
-info->control.vif.  This patch moves the call to mesh_nexthop_lookup closer to
-the point where it is handed over to ieee80211_tx().  This ensures that the
-unresolved frames are ready to be sent once the path is resolved.
----
- net/mac80211/tx.c |   18 ++++++++++--------
- 1 files changed, 10 insertions(+), 8 deletions(-)
+From: root Gábor Stefanik <netrolller.3d@gmail.com>
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index b9f5be6..56dc8df 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1413,14 +1413,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
+The most common LP-PHY device, BCM4312, is now fully functional.
+So, no need to say "probably won't work for you" anymore.
+It's also not "for debuggers and developers only", as it is
+perfectly usable for end-users now (at least for BCM4312).
+
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+This should only be applied once the "Qdiv roundup" and the "Fix and update"
+patches reach the tree, as those 2 patches are needed to make the BCM4312
+really work.
+
+ drivers/net/wireless/b43/Kconfig |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 87d10c8..1c0999b 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -88,9 +88,6 @@ config B43_PHY_LP
+ 	  and embedded devices. It supports 802.11a/g
+ 	  (802.11a support is optional, and currently disabled).
  
- 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
--	if (ieee80211_vif_is_mesh(&sdata->vif) &&
--	    ieee80211_is_data(hdr->frame_control)) {
--		if (!is_multicast_ether_addr(hdr->addr1))
--			if (mesh_nexthop_lookup(skb, sdata)) {
--				dev_put(sdata->dev);
--				return;
--			}
--	} else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
-+	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
- 		int hdrlen;
- 		u16 len_rthdr;
- 
-@@ -1477,6 +1470,15 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	info->control.vif = &sdata->vif;
- 
-+	if (ieee80211_vif_is_mesh(&sdata->vif) &&
-+	    ieee80211_is_data(hdr->frame_control) &&
-+		!is_multicast_ether_addr(hdr->addr1))
-+			if (mesh_nexthop_lookup(skb, sdata)) {
-+				/* skb queued: don't free */
-+				dev_put(sdata->dev);
-+				return;
-+			}
-+
- 	ieee80211_select_queue(local, skb);
- 	ieee80211_tx(sdata, skb, false);
- 	dev_put(sdata->dev);
+-	  This is heavily experimental, and probably will not work for you.
+-	  Say N unless you want to help debug the driver.
+-
+ # This config option automatically enables b43 LEDS support,
+ # if it's possible.
+ config B43_LEDS
 -- 
-1.5.4.3
+1.5.6
 
