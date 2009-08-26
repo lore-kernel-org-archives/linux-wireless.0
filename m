@@ -1,35 +1,586 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f196.google.com ([209.85.216.196]:43105 "EHLO
-	mail-px0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933429AbZHWDAi (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:49521 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753220AbZHZUrc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 Aug 2009 23:00:38 -0400
-Received: by pxi34 with SMTP id 34so4637306pxi.4
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2009 20:00:39 -0700 (PDT)
-Message-ID: <4A90B086.1020503@lwfinger.net>
-Date: Sat, 22 Aug 2009 21:59:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 26 Aug 2009 16:47:32 -0400
+Received: by bwz19 with SMTP id 19so443147bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 13:47:32 -0700 (PDT)
 MIME-Version: 1.0
-To: feng tian <feng.of.tian@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Abour linux driver supports BCM4325
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>	 <4A8E8F59.9050706@lwfinger.net>	 <1250858409.5137.2.camel@johannes.local>	 <f42a38140908212242h1ce0339fw1243dbacf54000ab@mail.gmail.com>	 <4A90005B.3030101@lwfinger.net>	 <1250964823.23605.22.camel@johannes.local> <f42a38140908221927qabc3f25t60f348f7c4a446c9@mail.gmail.com>
-In-Reply-To: <f42a38140908221927qabc3f25t60f348f7c4a446c9@mail.gmail.com>
+In-Reply-To: <200908262242.50729.mb@bu3sch.de>
+References: <1251312686-32067-1-git-send-email-netrolller.3d@gmail.com>
+	<1251312686-32067-2-git-send-email-netrolller.3d@gmail.com>
+	<200908262242.50729.mb@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 26 Aug 2009 22:47:12 +0200
+Message-ID: <69e28c910908261347u375f2f5cu74672b9f4b073738@mail.gmail.com>
+Subject: Re: [PATCH] b43: Fix and update LP-PHY code
+To: Michael Buesch <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-feng tian wrote:
-> Thank you for the information.
-> I get your point. As for the radio and phy driver, I think it's  some
-> command based configurations for the chip via SDIO. And that I can
-> refer to the BCM 43xx PCI driver codes.
-> Wonder if it's feasible. Needs your comments.
-> Thanks
+2009/8/26 Michael Buesch <mb@bu3sch.de>:
+> On Wednesday 26 August 2009 20:51:25 Gábor Stefanik wrote:
+>> -Fix a few nasty typos (b43_phy_* operations instead of b43_radio_*)
+>>  in the channel tune routines.
+>> -Fix some typos & spec errors found by MMIO tracing.
+>> -Optimize b43_phy_write & b43_phy_mask/set/maskset to use
+>>  only the minimal number of MMIO accesses. (Write is possible
+>>  using a single 32-bit MMIO write, while set/mask/maskset can
+>>  be done in 3 16-bit MMIOs).
+>
+> Why does it matter? PHY access is not done in any hotpath. So why
+> not prefer simple code over optimized code?
 
-The first step is to be able to read/write the various registers via
-SDIO. That will be similar to the PCI operations. The next step is
-knowing what to read/write and when. We are still working that out for
-PCI. It is not trivial. See the recent postings of patches for the LP
-pHY in the linux-wireless mailing list. These are _NOT_ complete.
+This is how the MIPS/hybrid driver does it, I simply updated the code
+for parity.
+
+>
+>> -Set the default channel back to 1, as the bug forcing us to use
+>>  channel 7 is now fixed.
+>
+> And, everything in its own patch, please. I don't see a reason for
+> patching unrelated things in one big patch.
+
+Well, this patch is already in wireless-testing, so doing that would
+now involve reverting this patch, applying a version without the
+channel change, and applying the channel change - certainly more
+confusing than the status quo.
+
+>
+>>
+>> With this, the device comes up, scans, associates, transmits,
+>> receives, monitors and injects on all channels - in other words,
+>> it's fully functional. Sensitivity and TX power are still sub-optimal,
+>> due to the lack of calibration (that's next on my list).
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/phy_common.c   |   27 +++++++--
+>>  drivers/net/wireless/b43/phy_common.h   |    3 +
+>>  drivers/net/wireless/b43/phy_lp.c       |   91 +++++++++++++++++--------------
+>>  drivers/net/wireless/b43/phy_lp.h       |    3 +
+>>  drivers/net/wireless/b43/tables_lpphy.c |   79 +++++++++++++++------------
+>>  5 files changed, 122 insertions(+), 81 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+>> index 51686ec..6e704be 100644
+>> --- a/drivers/net/wireless/b43/phy_common.c
+>> +++ b/drivers/net/wireless/b43/phy_common.c
+>> @@ -249,20 +249,35 @@ void b43_phy_copy(struct b43_wldev *dev, u16 destreg, u16 srcreg)
+>>
+>>  void b43_phy_mask(struct b43_wldev *dev, u16 offset, u16 mask)
+>>  {
+>> -     b43_phy_write(dev, offset,
+>> -                   b43_phy_read(dev, offset) & mask);
+>> +     if (dev->phy.ops->phy_maskset) {
+>> +             assert_mac_suspended(dev);
+>> +             dev->phy.ops->phy_maskset(dev, offset, mask, 0);
+>> +     } else {
+>> +             b43_phy_write(dev, offset,
+>> +                           b43_phy_read(dev, offset) & mask);
+>> +     }
+>>  }
+>>
+>>  void b43_phy_set(struct b43_wldev *dev, u16 offset, u16 set)
+>>  {
+>> -     b43_phy_write(dev, offset,
+>> -                   b43_phy_read(dev, offset) | set);
+>> +     if (dev->phy.ops->phy_maskset) {
+>> +             assert_mac_suspended(dev);
+>> +             dev->phy.ops->phy_maskset(dev, offset, 0xFFFF, set);
+>> +     } else {
+>> +             b43_phy_write(dev, offset,
+>> +                           b43_phy_read(dev, offset) | set);
+>> +     }
+>>  }
+>>
+>>  void b43_phy_maskset(struct b43_wldev *dev, u16 offset, u16 mask, u16 set)
+>>  {
+>> -     b43_phy_write(dev, offset,
+>> -                   (b43_phy_read(dev, offset) & mask) | set);
+>> +     if (dev->phy.ops->phy_maskset) {
+>> +             assert_mac_suspended(dev);
+>> +             dev->phy.ops->phy_maskset(dev, offset, mask, set);
+>> +     } else {
+>> +             b43_phy_write(dev, offset,
+>> +                           (b43_phy_read(dev, offset) & mask) | set);
+>> +     }
+>>  }
+>>
+>>  int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
+>> diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+>> index 9f9f23c..b47a0f5 100644
+>> --- a/drivers/net/wireless/b43/phy_common.h
+>> +++ b/drivers/net/wireless/b43/phy_common.h
+>> @@ -95,6 +95,8 @@ enum b43_txpwr_result {
+>>   *                   Must not be NULL.
+>>   * @phy_write:               Write to a PHY register.
+>>   *                   Must not be NULL.
+>> + * @phy_maskset:     Maskset a PHY register, taking shortcuts.
+>> + *                   If it is NULL, a generic algorithm is used.
+>>   * @radio_read:              Read from a Radio register.
+>>   *                   Must not be NULL.
+>>   * @radio_write:     Write to a Radio register.
+>> @@ -154,6 +156,7 @@ struct b43_phy_operations {
+>>       /* Register access */
+>>       u16 (*phy_read)(struct b43_wldev *dev, u16 reg);
+>>       void (*phy_write)(struct b43_wldev *dev, u16 reg, u16 value);
+>> +     void (*phy_maskset)(struct b43_wldev *dev, u16 reg, u16 mask, u16 set);
+>>       u16 (*radio_read)(struct b43_wldev *dev, u16 reg);
+>>       void (*radio_write)(struct b43_wldev *dev, u16 reg, u16 value);
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+>> index 5306f2c..1a57d33 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.c
+>> +++ b/drivers/net/wireless/b43/phy_lp.c
+>> @@ -44,7 +44,7 @@ static inline u16 channel2freq_lp(u8 channel)
+>>  static unsigned int b43_lpphy_op_get_default_chan(struct b43_wldev *dev)
+>>  {
+>>       if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+>> -             return 7; //FIXME temporary - channel 1 is broken
+>> +             return 1;
+>>       return 36;
+>>  }
+>>
+>> @@ -182,8 +182,8 @@ static void lpphy_adjust_gain_table(struct b43_wldev *dev, u32 freq)
+>>       temp[1] = temp[0] + 0x1000;
+>>       temp[2] = temp[0] + 0x2000;
+>>
+>> -     b43_lptab_write_bulk(dev, B43_LPTAB16(12, 0), 3, temp);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB16(13, 0), 3, temp);
+>> +     b43_lptab_write_bulk(dev, B43_LPTAB16(12, 0), 3, temp);
+>>  }
+>>
+>>  static void lpphy_table_init(struct b43_wldev *dev)
+>> @@ -223,8 +223,8 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>>       b43_phy_maskset(dev, B43_LPPHY_VERYLOWGAINDB, 0xFF00, 0x0006);
+>>       b43_phy_mask(dev, B43_LPPHY_RX_RADIO_CTL, 0xFFFE);
+>>       b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0xFFE0, 0x0005);
+>> -     b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0xFC10, 0x0180);
+>> -     b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0x83FF, 0x3800);
+>> +     b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0xFC1F, 0x0180);
+>> +     b43_phy_maskset(dev, B43_LPPHY_CLIPCTRTHRESH, 0x83FF, 0x3C00);
+>>       b43_phy_maskset(dev, B43_LPPHY_GAINDIRECTMISMATCH, 0xFFF0, 0x0005);
+>>       b43_phy_maskset(dev, B43_LPPHY_GAIN_MISMATCH_LIMIT, 0xFFC0, 0x001A);
+>>       b43_phy_maskset(dev, B43_LPPHY_CRS_ED_THRESH, 0xFF00, 0x00B3);
+>> @@ -237,7 +237,7 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>>               /* TODO:
+>>                * Set the LDO voltage to 0x0028 - FIXME: What is this?
+>>                * Call sb_pmu_set_ldo_voltage with 4 and the LDO voltage
+>> -              *      as arguments
+>> +              *      as arguments
+>>                * Call sb_pmu_paref_ldo_enable with argument TRUE
+>>                */
+>>               if (dev->phy.rev == 0) {
+>> @@ -340,11 +340,11 @@ static void lpphy_baseband_rev0_1_init(struct b43_wldev *dev)
+>>       if (dev->phy.rev == 1) {
+>>               tmp = b43_phy_read(dev, B43_LPPHY_CLIPCTRTHRESH);
+>>               tmp2 = (tmp & 0x03E0) >> 5;
+>> -             tmp2 |= tmp << 5;
+>> +             tmp2 |= tmp2 << 5;
+>>               b43_phy_write(dev, B43_LPPHY_4C3, tmp2);
+>> -             tmp = b43_phy_read(dev, B43_LPPHY_OFDMSYNCTHRESH0);
+>> +             tmp = b43_phy_read(dev, B43_LPPHY_GAINDIRECTMISMATCH);
+>>               tmp2 = (tmp & 0x1F00) >> 8;
+>> -             tmp2 |= tmp << 5;
+>> +             tmp2 |= tmp2 << 5;
+>>               b43_phy_write(dev, B43_LPPHY_4C4, tmp2);
+>>               tmp = b43_phy_read(dev, B43_LPPHY_VERYLOWGAINDB);
+>>               tmp2 = tmp & 0x00FF;
+>> @@ -761,7 +761,7 @@ static void lpphy_disable_crs(struct b43_wldev *dev, bool user)
+>>       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
+>>       b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFB);
+>>       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x4);
+>> -     b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFF7);
+>> +     b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFF7);
+>>       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x8);
+>>       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0x10);
+>>       b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
+>> @@ -956,7 +956,7 @@ static void lpphy_run_ddfs(struct b43_wldev *dev, int i_on, int q_on,
+>>       b43_phy_maskset(dev, B43_LPPHY_AFE_DDFS, 0xFF9F, scale_idx << 5);
+>>       b43_phy_mask(dev, B43_LPPHY_AFE_DDFS, 0xFFFB);
+>>       b43_phy_set(dev, B43_LPPHY_AFE_DDFS, 0x2);
+>> -     b43_phy_set(dev, B43_LPPHY_AFE_DDFS, 0x20);
+>> +     b43_phy_set(dev, B43_LPPHY_LP_PHY_CTL, 0x20);
+>>  }
+>>
+>>  static bool lpphy_rx_iq_est(struct b43_wldev *dev, u16 samples, u8 time,
+>> @@ -968,7 +968,7 @@ static bool lpphy_rx_iq_est(struct b43_wldev *dev, u16 samples, u8 time,
+>>       b43_phy_write(dev, B43_LPPHY_IQ_NUM_SMPLS_ADDR, samples);
+>>       b43_phy_maskset(dev, B43_LPPHY_IQ_ENABLE_WAIT_TIME_ADDR, 0xFF00, time);
+>>       b43_phy_mask(dev, B43_LPPHY_IQ_ENABLE_WAIT_TIME_ADDR, 0xFEFF);
+>> -     b43_phy_set(dev, B43_LPPHY_IQ_ENABLE_WAIT_TIME_ADDR, 0xFDFF);
+>> +     b43_phy_set(dev, B43_LPPHY_IQ_ENABLE_WAIT_TIME_ADDR, 0x200);
+>>
+>>       for (i = 0; i < 500; i++) {
+>>               if (!(b43_phy_read(dev,
+>> @@ -1135,9 +1135,9 @@ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
+>>       }
+>>       if (dev->phy.rev >= 2) {
+>>               if (mode == B43_LPPHY_TXPCTL_HW)
+>> -                     b43_phy_maskset(dev, B43_PHY_OFDM(0xD0), 0xFD, 0x2);
+>> +                     b43_phy_set(dev, B43_PHY_OFDM(0xD0), 0x2);
+>>               else
+>> -                     b43_phy_maskset(dev, B43_PHY_OFDM(0xD0), 0xFD, 0);
+>> +                     b43_phy_mask(dev, B43_PHY_OFDM(0xD0), 0xFFFD);
+>>       }
+>>       lpphy_write_tx_pctl_mode_to_hardware(dev);
+>>  }
+>> @@ -1169,7 +1169,7 @@ static void lpphy_rev0_1_rc_calib(struct b43_wldev *dev)
+>>       err = b43_lpphy_op_switch_channel(dev, 7);
+>>       if (err) {
+>>               b43dbg(dev->wl,
+>> -                    "RC calib: Failed to switch to channel 7, error = %d",
+>> +                    "RC calib: Failed to switch to channel 7, error = %d\n",
+>>                      err);
+>>       }
+>>       old_txg_ovr = !!(b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40);
+>> @@ -1500,8 +1500,15 @@ static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
+>>
+>>  static void b43_lpphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
+>>  {
+>> +     b43_write32(dev, B43_MMIO_PHY_CONTROL, ((u32)value << 16) | reg);
+>> +}
+>> +
+>> +static void b43_lpphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
+>> +                              u16 set)
+>> +{
+>>       b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
+>> -     b43_write16(dev, B43_MMIO_PHY_DATA, value);
+>> +     b43_write16(dev, B43_MMIO_PHY_DATA,
+>> +                 (b43_read16(dev, B43_MMIO_PHY_DATA) & mask) | set);
+>>  }
+>>
+>>  static u16 b43_lpphy_op_radio_read(struct b43_wldev *dev, u16 reg)
+>> @@ -1920,8 +1927,8 @@ static void lpphy_b2062_reset_pll_bias(struct b43_wldev *dev)
+>>
+>>  static void lpphy_b2062_vco_calib(struct b43_wldev *dev)
+>>  {
+>> -     b43_phy_write(dev, B2062_S_RFPLL_CTL21, 0x42);
+>> -     b43_phy_write(dev, B2062_S_RFPLL_CTL21, 0x62);
+>> +     b43_radio_write(dev, B2062_S_RFPLL_CTL21, 0x42);
+>> +     b43_radio_write(dev, B2062_S_RFPLL_CTL21, 0x62);
+>>       udelay(200);
+>>  }
+>>
+>> @@ -1980,7 +1987,7 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
+>>       tmp6 = tmp5 / tmp4;
+>>       tmp7 = tmp5 % tmp4;
+>>       b43_radio_write(dev, B2062_S_RFPLL_CTL29, tmp6 + ((2 * tmp7) / tmp4));
+>> -     tmp8 = b43_phy_read(dev, B2062_S_RFPLL_CTL19);
+>> +     tmp8 = b43_radio_read(dev, B2062_S_RFPLL_CTL19);
+>>       tmp9 = ((2 * tmp3 * (tmp8 + 1)) + (3 * tmp1)) / (6 * tmp1);
+>>       b43_radio_write(dev, B2062_S_RFPLL_CTL23, (tmp9 >> 8) + 16);
+>>       b43_radio_write(dev, B2062_S_RFPLL_CTL24, tmp9 & 0xFF);
+>> @@ -2019,17 +2026,17 @@ static void lpphy_b2063_vco_calib(struct b43_wldev *dev)
+>>  {
+>>       u16 tmp;
+>>
+>> -     b43_phy_mask(dev, B2063_PLL_SP1, ~0x40);
+>> -     tmp = b43_phy_read(dev, B2063_PLL_JTAG_CALNRST) & 0xF8;
+>> -     b43_phy_write(dev, B2063_PLL_JTAG_CALNRST, tmp);
+>> +     b43_radio_mask(dev, B2063_PLL_SP1, ~0x40);
+>> +     tmp = b43_radio_read(dev, B2063_PLL_JTAG_CALNRST) & 0xF8;
+>> +     b43_radio_write(dev, B2063_PLL_JTAG_CALNRST, tmp);
+>>       udelay(1);
+>> -     b43_phy_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x4);
+>> +     b43_radio_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x4);
+>>       udelay(1);
+>> -     b43_phy_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x6);
+>> +     b43_radio_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x6);
+>>       udelay(1);
+>> -     b43_phy_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x7);
+>> +     b43_radio_write(dev, B2063_PLL_JTAG_CALNRST, tmp | 0x7);
+>>       udelay(300);
+>> -     b43_phy_set(dev, B2063_PLL_SP1, 0x40);
+>> +     b43_radio_set(dev, B2063_PLL_SP1, 0x40);
+>>  }
+>>
+>>  static int lpphy_b2063_tune(struct b43_wldev *dev,
+>> @@ -2124,31 +2131,31 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
+>>               scale = 0;
+>>               tmp5 = ((tmp4 + (tmp3 >> 1)) / tmp3) - 8;
+>>       }
+>> -     b43_phy_maskset(dev, B2063_PLL_JTAG_PLL_CP2, 0xFFC0, tmp5);
+>> -     b43_phy_maskset(dev, B2063_PLL_JTAG_PLL_CP2, 0xFFBF, scale << 6);
+>> +     b43_radio_maskset(dev, B2063_PLL_JTAG_PLL_CP2, 0xFFC0, tmp5);
+>> +     b43_radio_maskset(dev, B2063_PLL_JTAG_PLL_CP2, 0xFFBF, scale << 6);
+>>
+>>       tmp6 = lpphy_qdiv_roundup(100 * val1, val3, 16);
+>>       tmp6 *= (tmp5 * 8) * (scale + 1);
+>>       if (tmp6 > 150)
+>>               tmp6 = 0;
+>>
+>> -     b43_phy_maskset(dev, B2063_PLL_JTAG_PLL_CP3, 0xFFE0, tmp6);
+>> -     b43_phy_maskset(dev, B2063_PLL_JTAG_PLL_CP3, 0xFFDF, scale << 5);
+>> +     b43_radio_maskset(dev, B2063_PLL_JTAG_PLL_CP3, 0xFFE0, tmp6);
+>> +     b43_radio_maskset(dev, B2063_PLL_JTAG_PLL_CP3, 0xFFDF, scale << 5);
+>>
+>> -     b43_phy_maskset(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0xFFFB, 0x4);
+>> +     b43_radio_maskset(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0xFFFB, 0x4);
+>>       if (crystal_freq > 26000000)
+>> -             b43_phy_set(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0x2);
+>> +             b43_radio_set(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0x2);
+>>       else
+>> -             b43_phy_mask(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0xFD);
+>> +             b43_radio_mask(dev, B2063_PLL_JTAG_PLL_XTAL_12, 0xFD);
+>>
+>>       if (val1 == 45)
+>> -             b43_phy_set(dev, B2063_PLL_JTAG_PLL_VCO1, 0x2);
+>> +             b43_radio_set(dev, B2063_PLL_JTAG_PLL_VCO1, 0x2);
+>>       else
+>> -             b43_phy_mask(dev, B2063_PLL_JTAG_PLL_VCO1, 0xFD);
+>> +             b43_radio_mask(dev, B2063_PLL_JTAG_PLL_VCO1, 0xFD);
+>>
+>> -     b43_phy_set(dev, B2063_PLL_SP2, 0x3);
+>> +     b43_radio_set(dev, B2063_PLL_SP2, 0x3);
+>>       udelay(1);
+>> -     b43_phy_mask(dev, B2063_PLL_SP2, 0xFFFC);
+>> +     b43_radio_mask(dev, B2063_PLL_SP2, 0xFFFC);
+>>       lpphy_b2063_vco_calib(dev);
+>>       b43_radio_write(dev, B2063_COMM15, old_comm15);
+>>
+>> @@ -2158,10 +2165,9 @@ static int lpphy_b2063_tune(struct b43_wldev *dev,
+>>  static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>                                      unsigned int new_channel)
+>>  {
+>> +     struct b43_phy_lp *lpphy = dev->phy.lp;
+>>       int err;
+>>
+>> -     b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
+>> -
+>>       if (dev->phy.radio_ver == 0x2063) {
+>>               err = lpphy_b2063_tune(dev, new_channel);
+>>               if (err)
+>> @@ -2174,6 +2180,9 @@ static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
+>>               lpphy_adjust_gain_table(dev, channel2freq_lp(new_channel));
+>>       }
+>>
+>> +     lpphy->channel = new_channel;
+>> +     b43_write16(dev, B43_MMIO_CHANNEL, new_channel);
+>> +
+>>       return 0;
+>>  }
+>>
+>> @@ -2185,10 +2194,9 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
+>>       lpphy_baseband_init(dev);
+>>       lpphy_radio_init(dev);
+>>       lpphy_calibrate_rc(dev);
+>> -     err = b43_lpphy_op_switch_channel(dev,
+>> -                             b43_lpphy_op_get_default_chan(dev));
+>> +     err = b43_lpphy_op_switch_channel(dev, 7);
+>>       if (err) {
+>> -             b43dbg(dev->wl, "Switch to init channel failed, error = %d.\n",
+>> +             b43dbg(dev->wl, "Switch to channel 7 failed, error = %d.\n",
+>>                      err);
+>>       }
+>>       lpphy_tx_pctl_init(dev);
+>> @@ -2222,6 +2230,7 @@ const struct b43_phy_operations b43_phyops_lp = {
+>>       .init                   = b43_lpphy_op_init,
+>>       .phy_read               = b43_lpphy_op_read,
+>>       .phy_write              = b43_lpphy_op_write,
+>> +     .phy_maskset            = b43_lpphy_op_maskset,
+>>       .radio_read             = b43_lpphy_op_radio_read,
+>>       .radio_write            = b43_lpphy_op_radio_write,
+>>       .software_rfkill        = b43_lpphy_op_software_rfkill,
+>> diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
+>> index e158d1f..c3232c1 100644
+>> --- a/drivers/net/wireless/b43/phy_lp.h
+>> +++ b/drivers/net/wireless/b43/phy_lp.h
+>> @@ -888,6 +888,9 @@ struct b43_phy_lp {
+>>       bool crs_usr_disable, crs_sys_disable;
+>>
+>>       unsigned int pdiv;
+>> +
+>> +     /* The channel we are tuned to */
+>> +     u8 channel;
+>>  };
+>>
+>>  enum tssi_mux_mode {
+>> diff --git a/drivers/net/wireless/b43/tables_lpphy.c b/drivers/net/wireless/b43/tables_lpphy.c
+>> index 60d472f..c784def 100644
+>> --- a/drivers/net/wireless/b43/tables_lpphy.c
+>> +++ b/drivers/net/wireless/b43/tables_lpphy.c
+>> @@ -624,30 +624,35 @@ u32 b43_lptab_read(struct b43_wldev *dev, u32 offset)
+>>  void b43_lptab_read_bulk(struct b43_wldev *dev, u32 offset,
+>>                        unsigned int nr_elements, void *_data)
+>>  {
+>> -     u32 type, value;
+>> +     u32 type;
+>>       u8 *data = _data;
+>>       unsigned int i;
+>>
+>>       type = offset & B43_LPTAB_TYPEMASK;
+>> +     offset &= ~B43_LPTAB_TYPEMASK;
+>> +     B43_WARN_ON(offset > 0xFFFF);
+>> +
+>> +     b43_phy_write(dev, B43_LPPHY_TABLE_ADDR, offset);
+>> +
+>>       for (i = 0; i < nr_elements; i++) {
+>> -             value = b43_lptab_read(dev, offset);
+>>               switch (type) {
+>>               case B43_LPTAB_8BIT:
+>> -                     *data = value;
+>> +                     *data = b43_phy_read(dev, B43_LPPHY_TABLEDATALO) & 0xFF;
+>>                       data++;
+>>                       break;
+>>               case B43_LPTAB_16BIT:
+>> -                     *((u16 *)data) = value;
+>> +                     *((u16 *)data) = b43_phy_read(dev, B43_LPPHY_TABLEDATALO);
+>>                       data += 2;
+>>                       break;
+>>               case B43_LPTAB_32BIT:
+>> -                     *((u32 *)data) = value;
+>> +                     *((u32 *)data) = b43_phy_read(dev, B43_LPPHY_TABLEDATAHI);
+>> +                     *((u32 *)data) <<= 16;
+>> +                     *((u32 *)data) |= b43_phy_read(dev, B43_LPPHY_TABLEDATALO);
+>>                       data += 4;
+>>                       break;
+>>               default:
+>>                       B43_WARN_ON(1);
+>>               }
+>> -             offset++;
+>>       }
+>>  }
+>>
+>> @@ -688,26 +693,34 @@ void b43_lptab_write_bulk(struct b43_wldev *dev, u32 offset,
+>>       unsigned int i;
+>>
+>>       type = offset & B43_LPTAB_TYPEMASK;
+>> +     offset &= ~B43_LPTAB_TYPEMASK;
+>> +     B43_WARN_ON(offset > 0xFFFF);
+>> +
+>> +     b43_phy_write(dev, B43_LPPHY_TABLE_ADDR, offset);
+>> +
+>>       for (i = 0; i < nr_elements; i++) {
+>>               switch (type) {
+>>               case B43_LPTAB_8BIT:
+>>                       value = *data;
+>>                       data++;
+>> +                     B43_WARN_ON(value & ~0xFF);
+>> +                     b43_phy_write(dev, B43_LPPHY_TABLEDATALO, value);
+>>                       break;
+>>               case B43_LPTAB_16BIT:
+>>                       value = *((u16 *)data);
+>>                       data += 2;
+>> +                     B43_WARN_ON(value & ~0xFFFF);
+>> +                     b43_phy_write(dev, B43_LPPHY_TABLEDATALO, value);
+>>                       break;
+>>               case B43_LPTAB_32BIT:
+>>                       value = *((u32 *)data);
+>>                       data += 4;
+>> +                     b43_phy_write(dev, B43_LPPHY_TABLEDATAHI, value >> 16);
+>> +                     b43_phy_write(dev, B43_LPPHY_TABLEDATALO, value);
+>>                       break;
+>>               default:
+>>                       B43_WARN_ON(1);
+>> -                     value = 0;
+>>               }
+>> -             b43_lptab_write(dev, offset, value);
+>> -             offset++;
+>>       }
+>>  }
+>>
+>> @@ -777,7 +790,7 @@ static const u8 lpphy_pll_fraction_table[] = {
+>>       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+>>  };
+>>
+>> -static const u16 lpphy_iq_local_table[] = {
+>> +static const u16 lpphy_iqlo_cal_table[] = {
+>>       0x0200, 0x0300, 0x0400, 0x0600, 0x0800, 0x0b00, 0x1000, 0x1001, 0x1002,
+>>       0x1003, 0x1004, 0x1005, 0x1006, 0x1007, 0x1707, 0x2007, 0x2d07, 0x4007,
+>>       0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+>> @@ -789,10 +802,17 @@ static const u16 lpphy_iq_local_table[] = {
+>>       0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+>>       0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x4000, 0x0000, 0x0000,
+>>       0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+>> -     0x0000, 0x0000,
+>> +     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+>>  };
+>>
+>> -static const u16 lpphy_ofdm_cck_gain_table[] = {
+>> +static const u16 lpphy_rev0_ofdm_cck_gain_table[] = {
+>> +     0x0001, 0x0001, 0x0001, 0x0001, 0x1001, 0x2001, 0x3001, 0x4001, 0x5001,
+>> +     0x6001, 0x7001, 0x7011, 0x7021, 0x2035, 0x2045, 0x2055, 0x2065, 0x2075,
+>> +     0x006d, 0x007d, 0x014d, 0x015d, 0x115d, 0x035d, 0x135d, 0x055d, 0x155d,
+>> +     0x0d5d, 0x1d5d, 0x2d5d, 0x555d, 0x655d, 0x755d,
+>> +};
+>> +
+>> +static const u16 lpphy_rev1_ofdm_cck_gain_table[] = {
+>>       0x5000, 0x6000, 0x7000, 0x0001, 0x1001, 0x2001, 0x3001, 0x4001, 0x5001,
+>>       0x6001, 0x7001, 0x7011, 0x7021, 0x2035, 0x2045, 0x2055, 0x2065, 0x2075,
+>>       0x006d, 0x007d, 0x014d, 0x015d, 0x115d, 0x035d, 0x135d, 0x055d, 0x155d,
+>> @@ -2263,11 +2283,18 @@ void lpphy_rev0_1_table_init(struct b43_wldev *dev)
+>>       b43_lptab_write_bulk(dev, B43_LPTAB8(6, 0),
+>>               ARRAY_SIZE(lpphy_pll_fraction_table), lpphy_pll_fraction_table);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB16(0, 0),
+>> -             ARRAY_SIZE(lpphy_iq_local_table), lpphy_iq_local_table);
+>> -     b43_lptab_write_bulk(dev, B43_LPTAB16(13, 0),
+>> -             ARRAY_SIZE(lpphy_ofdm_cck_gain_table), lpphy_ofdm_cck_gain_table);
+>> -     b43_lptab_write_bulk(dev, B43_LPTAB16(12, 0),
+>> -             ARRAY_SIZE(lpphy_ofdm_cck_gain_table), lpphy_ofdm_cck_gain_table);
+>> +             ARRAY_SIZE(lpphy_iqlo_cal_table), lpphy_iqlo_cal_table);
+>> +     if (dev->phy.rev == 0) {
+>> +             b43_lptab_write_bulk(dev, B43_LPTAB16(13, 0),
+>> +                     ARRAY_SIZE(lpphy_rev0_ofdm_cck_gain_table), lpphy_rev0_ofdm_cck_gain_table);
+>> +             b43_lptab_write_bulk(dev, B43_LPTAB16(12, 0),
+>> +                     ARRAY_SIZE(lpphy_rev0_ofdm_cck_gain_table), lpphy_rev0_ofdm_cck_gain_table);
+>> +     } else {
+>> +             b43_lptab_write_bulk(dev, B43_LPTAB16(13, 0),
+>> +                     ARRAY_SIZE(lpphy_rev1_ofdm_cck_gain_table), lpphy_rev1_ofdm_cck_gain_table);
+>> +             b43_lptab_write_bulk(dev, B43_LPTAB16(12, 0),
+>> +                     ARRAY_SIZE(lpphy_rev1_ofdm_cck_gain_table), lpphy_rev1_ofdm_cck_gain_table);
+>> +}
+>>       b43_lptab_write_bulk(dev, B43_LPTAB16(15, 0),
+>>               ARRAY_SIZE(lpphy_gain_delta_table), lpphy_gain_delta_table);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB32(10, 0),
+>> @@ -2281,22 +2308,6 @@ void lpphy_rev2plus_table_init(struct b43_wldev *dev)
+>>
+>>       B43_WARN_ON(dev->phy.rev < 2);
+>>
+>> -     /*
+>> -      * FIXME This code follows the specs, but it looks wrong:
+>> -      * In each pass, it writes 4 bytes to an offset in table ID 7,
+>> -      * then increments the offset by 1 for the next pass. This results
+>> -      * in the first 3 bytes of each pass except the first one getting
+>> -      * written to a location that has already been zeroed in the previous
+>> -      * pass.
+>> -      * This is what the vendor driver does, but it still looks suspicious.
+>> -      *
+>> -      * This should probably suffice:
+>> -      *
+>> -      * for (i = 0; i < 704; i+=4)
+>> -      *      b43_lptab_write(dev, B43_LPTAB32(7, i), 0)
+>> -      *
+>> -      * This should be tested once the code is functional.
+>> -      */
+>>       for (i = 0; i < 704; i++)
+>>               b43_lptab_write(dev, B43_LPTAB32(7, i), 0);
+>>
+>> @@ -2323,7 +2334,7 @@ void lpphy_rev2plus_table_init(struct b43_wldev *dev)
+>>       b43_lptab_write_bulk(dev, B43_LPTAB8(6, 0),
+>>               ARRAY_SIZE(lpphy_pll_fraction_table), lpphy_pll_fraction_table);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB16(0, 0),
+>> -             ARRAY_SIZE(lpphy_iq_local_table), lpphy_iq_local_table);
+>> +             ARRAY_SIZE(lpphy_iqlo_cal_table), lpphy_iqlo_cal_table);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB32(9, 0),
+>>               ARRAY_SIZE(lpphy_papd_eps_table), lpphy_papd_eps_table);
+>>       b43_lptab_write_bulk(dev, B43_LPTAB32(10, 0),
+>
+>
+>
+> --
+> Greetings, Michael.
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
