@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41416 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853AbZHaSAa (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:40237 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895AbZHZUt4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:00:30 -0400
-Date: Mon, 31 Aug 2009 13:45:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	=?iso-8859-1?Q?I=F1aky_P=E9rez-Gonz=E1lez?=
-	<inaky.perez-gonzalez@intel.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Subject: Re: [PATCH] rfkill: relicense header file
-Message-ID: <20090831174542.GA5631@tuxdriver.com>
-References: <1251303197.15619.29.camel@johannes.local>
+	Wed, 26 Aug 2009 16:49:56 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH] b43: Fix and update LP-PHY code
+Date: Wed, 26 Aug 2009 22:49:50 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1251312686-32067-1-git-send-email-netrolller.3d@gmail.com> <200908262242.50729.mb@bu3sch.de> <69e28c910908261347u375f2f5cu74672b9f4b073738@mail.gmail.com>
+In-Reply-To: <69e28c910908261347u375f2f5cu74672b9f4b073738@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1251303197.15619.29.camel@johannes.local>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908262249.52408.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 06:13:17PM +0200, Johannes Berg wrote:
-> This header file is copied into userspace tools that
-> need not be GPLv2 licensed, make that easier.
+On Wednesday 26 August 2009 22:47:12 Gábor Stefanik wrote:
+> 2009/8/26 Michael Buesch <mb@bu3sch.de>:
+> > On Wednesday 26 August 2009 20:51:25 Gábor Stefanik wrote:
+> >> -Fix a few nasty typos (b43_phy_* operations instead of b43_radio_*)
+> >>  in the channel tune routines.
+> >> -Fix some typos & spec errors found by MMIO tracing.
+> >> -Optimize b43_phy_write & b43_phy_mask/set/maskset to use
+> >>  only the minimal number of MMIO accesses. (Write is possible
+> >>  using a single 32-bit MMIO write, while set/mask/maskset can
+> >>  be done in 3 16-bit MMIOs).
+> >
+> > Why does it matter? PHY access is not done in any hotpath. So why
+> > not prefer simple code over optimized code?
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
-> Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> ---
-> Need ACK from everybody listed who ever touched this
-> file according to git. Please?
+> This is how the MIPS/hybrid driver does it, I simply updated the code
+> for parity.
 
-Michael?  Jaswinder?
+I think _if_ we do it (I'm not sure if it's worth it), we should certainly
+do it in a completely separate patch.
+
+> 
+> >
+> >> -Set the default channel back to 1, as the bug forcing us to use
+> >>  channel 7 is now fixed.
+> >
+> > And, everything in its own patch, please. I don't see a reason for
+> > patching unrelated things in one big patch.
+> 
+> Well, this patch is already in wireless-testing, so doing that would
+
+When did I ack it?
+Note that I _do_ have a life and I was not able to check mail for the past 9 hours.
+So please give me an ack latency of one day, at least.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Greetings, Michael.
