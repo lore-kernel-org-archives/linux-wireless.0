@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49531 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757062AbZHNURB convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:50846 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756871AbZHZG5j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:17:01 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Implement channel switching for rev0/1/B2062 radio
-Date: Fri, 14 Aug 2009 22:16:59 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A849075.7000000@gmail.com>
-In-Reply-To: <4A849075.7000000@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908142217.00061.mb@bu3sch.de>
+	Wed, 26 Aug 2009 02:57:39 -0400
+Subject: Re: [ANN] rfkill: v0.2
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <646765f40908252017v27f34c48hab7dc9edc23694a3@mail.gmail.com>
+References: <E1Mg8tl-0005Rh-8w@sipsolutions.net>
+	 <646765f40908252017v27f34c48hab7dc9edc23694a3@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 25 Aug 2009 23:56:43 -0700
+Message-Id: <1251269803.2950.94.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 14 August 2009 00:15:17 Gábor Stefanik wrote:
-> -Move pdiv from lpphy_2062_init to struct b43_phy_lp.
-> -Add channel table for the B2062 radio.
-> -Add code for tuning the B2062 radio to channel.
-> -Add error handling to op_switch_channel, and use it for both radios.
-> 
-> Rev0/1/B2062 will now hopefully show some signs of life, though
-> it won't work at full performance, as calibration is still missing.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Hi Julian,
 
-ack
+> > A new release of rfkill (v0.2) is available at:
+> >
+> > http://wireless.kernel.org/download/rfkill/rfkill-0.2.tar.bz2
+> >
+> > SHA1 sum: fc8f36efd4827219ca7169f8c55572a4c9e1c3b7
+> >
+> > Here is the short log of the changes included in this
+> > release:
+> >
+> > Johannes Berg -  version 0.2
+> 
+> Unless you're just bumping the version number, this is a rather slim release.
 
--- 
-Greetings, Michael.
+seriously, what do you expect from this tool? It is a pretty simple tool
+and nothing fancy :)
+
+Regards
+
+Marcel
+
+
