@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56779 "EHLO vs166246.vserver.de"
+Received: from mga09.intel.com ([134.134.136.24]:46986 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932260AbZHDU1t convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 16:27:49 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] remove wrong probe_resp_plcp write
-Date: Tue, 4 Aug 2009 22:27:45 +0200
-Cc: gregor kowski <gregor.kowski@gmail.com>,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-References: <83a869cd0907311335h3065547aqc736573a663b6d42@mail.gmail.com> <200907312238.15705.mb@bu3sch.de> <20090804160558.GC4995@tuxdriver.com>
-In-Reply-To: <20090804160558.GC4995@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908042227.46237.mb@bu3sch.de>
+	id S1751527AbZH0Xe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 19:34:58 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] cfg80211: initialize rate control after station inserted
+Date: Thu, 27 Aug 2009 16:34:53 -0700
+Message-Id: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 04 August 2009 18:05:58 John W. Linville wrote:
-> On Fri, Jul 31, 2009 at 10:38:14PM +0200, Michael Buesch wrote:
-> > On Friday 31 July 2009 22:35:49 gregor kowski wrote:
-> > > The tkip hw support uncovered a bug in b43_write_probe_resp_template : it is
-> > > writing at the wrong shm offset, it is in the B43_SHM_SH_TKIPTSCTTAK zone. This
-> > > patch comments these writes.
-> > > 
-> > > Signed-off-by: Gregor Kowski <gregor.kowski@gmail.com>
-> > 
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
->   CC [M]  drivers/net/wireless/b43/main.o
-> drivers/net/wireless/b43/main.c:1432: warning: ‘b43_write_probe_resp_plcp’ defined but not used
-> 
-> Comment it out too?  Or are you going to fix the block that has been
-> commented-out here?
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-No, please add
-#if 0
-void b43_write_probe_resp_plcp(...)
-{
-...
-}
-#endif /* 0 */
+Station information may be needed by rate control algorithms, so call rate
+scaling initialization after adding the station.
 
-to comment out the function, too.
-The probe response offload is currently not supported by mac80211.
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/mac80211/cfg.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5608f6c..598db11 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -729,8 +729,6 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	sta_apply_parameters(local, sta, params);
+ 
+-	rate_control_rate_init(sta);
+-
+ 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		sdata->vif.type == NL80211_IFTYPE_AP;
+ 
+@@ -742,13 +740,17 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 		if (err == -EEXIST && layer2_update) {
+ 			/* Need to update layer 2 devices on reassociation */
+ 			sta = sta_info_get(local, mac);
+-			if (sta)
++			if (sta) {
++				rate_control_rate_init(sta);
+ 				ieee80211_send_layer2_update(sta);
++			}
+ 		}
+ 		rcu_read_unlock();
+ 		return err;
+ 	}
+ 
++	rate_control_rate_init(sta);
++
+ 	if (layer2_update)
+ 		ieee80211_send_layer2_update(sta);
+ 
 -- 
-Greetings, Michael.
+1.5.6.3
+
