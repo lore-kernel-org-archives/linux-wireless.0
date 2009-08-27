@@ -1,78 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:14569 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754724AbZHMPGb (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:50839 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752787AbZH0VAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 11:06:31 -0400
-Received: by wa-out-1112.google.com with SMTP id j5so198119wah.21
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2009 08:06:33 -0700 (PDT)
-Message-ID: <4A842BF5.8090704@lwfinger.net>
-Date: Thu, 13 Aug 2009 10:06:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] b43: LP-PHY: Initialize TX power control
-References: <4A842934.2060206@gmail.com>
-In-Reply-To: <4A842934.2060206@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 27 Aug 2009 17:00:21 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
+Subject: [PATCH 02/13] wl1271: Correction to TX block allocation calculation
+Date: Thu, 27 Aug 2009 23:59:56 +0300
+Message-Id: <1251406807-31495-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> The HW TX power control init still needs work.
-> The SW init is complete according to the specs.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> v2: Address Michael's comments, and update for the dummy transmission
-> changes.
-> 
-> This depends on both the rev0/1 RC calibration patch and the
-> updated V4 dummy transmission patch I submitted earlier.
-> 
-> Larry, please review the SPEC TODO/SPEC FIXME comments!
-> 
-> drivers/net/wireless/b43/phy_lp.c |  105
-> ++++++++++++++++++++++++++++++++++---
-> drivers/net/wireless/b43/phy_lp.h |    5 ++
-> 2 files changed, 103 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/phy_lp.c
-> b/drivers/net/wireless/b43/phy_lp.c
-> index 2441a8d..b4e51f0 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -1257,18 +1257,109 @@ static void lpphy_calibration(struct b43_wldev
-> *dev)
->     b43_mac_enable(dev);
-> }
-> 
-> +static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum
-> tssi_mux_mode mode)
-> +{
-> +    if (mode != TSSI_MUX_EXT) {
-> +        b43_radio_set(dev, B2063_PA_SP1, 0x2);
-> +        b43_phy_set(dev, B43_PHY_OFDM(0xF3), 0x1000);
-> +        b43_radio_write(dev, B2063_PA_CTL10, 0x51);
-> +        if (mode == TSSI_MUX_POSTPA) {
-> +            b43_radio_mask(dev, B2063_PA_SP1, 0xFFFE);
-> +            b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFC7);
-> +        } else {
-> +            b43_radio_maskset(dev, B2063_PA_SP1, 0xFFFE, 0x1);
-> +            b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVRVAL,
-> +                    0xFFC7, 0x20);
-> +        }
-> +    } else {
-> +        //SPEC TODO
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Put a WARN_ON(1) here. This branch would be an error. No, I don't
-understand it either!
+Correct the TX path implementation to allocate sufficient blocks in the
+firmware for TX packets.
 
-Larry
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index ff22125..0c19688 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -58,7 +58,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
+ 	/* approximate the number of blocks required for this packet
+ 	   in the firmware */
+ 	/* FIXME: try to figure out what is done here and make it cleaner */
+-	total_blocks = (skb->len) >> TX_HW_BLOCK_SHIFT_DIV;
++	total_blocks = (total_len) >> TX_HW_BLOCK_SHIFT_DIV;
+ 	excluded = (total_blocks << 2) + (skb->len & 0xff) + 34;
+ 	total_blocks += (excluded > 252) ? 2 : 1;
+ 	total_blocks += TX_HW_BLOCK_SPARE;
+-- 
+1.5.6.5
 
