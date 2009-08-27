@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:4507 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753135AbZHZTsz (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:47112 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527AbZH0PUH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 15:48:55 -0400
-Received: by gv-out-0910.google.com with SMTP id r4so5235gve.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 12:48:55 -0700 (PDT)
-From: =?utf-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: Remove scary message from LP-PHY's Kconfig
-Date: Wed, 26 Aug 2009 21:48:52 +0200
-Message-Id: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+	Thu, 27 Aug 2009 11:20:07 -0400
+Received: by fxm17 with SMTP id 17so996614fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 08:20:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4A96A239.9000406@lwfinger.net>
+References: <4A969572.7060807@gmail.com> <4A96A239.9000406@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 27 Aug 2009 17:19:48 +0200
+Message-ID: <69e28c910908270819n65745ad3x7346ccb8c4850db9@mail.gmail.com>
+Subject: Re: [PATCH] b43: Enable LP-PHY support by default and remove Kconfig
+	warning
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>, Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: root GÃ¡bor Stefanik <netrolller.3d@gmail.com>
+2009/8/27 Larry Finger <Larry.Finger@lwfinger.net>:
+> Gábor Stefanik wrote:
+>> The most common LP-PHY device, BCM4312, is now fully functional.
+>> So, no need to say "probably won't work for you" anymore.
+>> It's also not "for debuggers and developers only", as it is
+>> perfectly usable for end-users now (at least for BCM4312).
+>>
+>> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+>> ---
+>> This replaces the "remove scary message" patch.
+>>
+>> drivers/net/wireless/b43/Kconfig |    4 +---
+>> 1 files changed, 1 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/Kconfig
+>> b/drivers/net/wireless/b43/Kconfig
+>> index 237b1aa..2af3b35 100644
+>> --- a/drivers/net/wireless/b43/Kconfig
+>> +++ b/drivers/net/wireless/b43/Kconfig
+>> -82,15 +82,13 @@ config B43_NPHY
+> ===
+>
+> My copy of this patch is missing the @@ here. Is that true for everyone?
+>
+> Larry
+>
 
-The most common LP-PHY device, BCM4312, is now fully functional.
-So, no need to say "probably won't work for you" anymore.
-It's also not "for debuggers and developers only", as it is
-perfectly usable for end-users now (at least for BCM4312).
+Ah... the joy of Pastebin.
 
-Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
----
-This should only be applied once the "Qdiv roundup" and the "Fix and update"
-patches reach the tree, as those 2 patches are needed to make the BCM4312
-really work.
-
- drivers/net/wireless/b43/Kconfig |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
-index 87d10c8..1c0999b 100644
---- a/drivers/net/wireless/b43/Kconfig
-+++ b/drivers/net/wireless/b43/Kconfig
-@@ -88,9 +88,6 @@ config B43_PHY_LP
- 	  and embedded devices. It supports 802.11a/g
- 	  (802.11a support is optional, and currently disabled).
- 
--	  This is heavily experimental, and probably will not work for you.
--	  Say N unless you want to help debug the driver.
--
- # This config option automatically enables b43 LEDS support,
- # if it's possible.
- config B43_LEDS
 -- 
-1.5.6
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
