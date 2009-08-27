@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33142 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:46986 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751861AbZHEFjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 01:39:03 -0400
-Subject: Re: [PATCH] wireless: display wext SSID when connected by cfg80211
-From: Zhu Yi <yi.zhu@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1249450543.6902.1.camel@johannes.local>
-References: <1249437950-8059-1-git-send-email-yi.zhu@intel.com>
-	 <1249449590.4168.16.camel@johannes.local>
-	 <1249450026.4069.111.camel@debian> <1249450543.6902.1.camel@johannes.local>
-Content-Type: text/plain
-Date: Wed, 05 Aug 2009 13:39:01 +0800
-Message-Id: <1249450741.4069.114.camel@debian>
-Mime-Version: 1.0
+	id S1751581AbZH0Xe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 19:34:58 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/2] mac80211: initialize rate control after station inserted
+Date: Thu, 27 Aug 2009 16:34:54 -0700
+Message-Id: <1251416094-10420-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-08-05 at 13:35 +0800, Johannes Berg wrote:
-> On Wed, 2009-08-05 at 13:27 +0800, Zhu Yi wrote:
-> 
-> > Yeah, I'm lazy to parse the current_bss.pub->information_elements for
-> > SSID in the first instance. Should we implement some beacon parsing in
-> > cfg80211 or move ieee802_11_parse_elems from mac80211?
-> 
-> There's ieee80211_bss_get_ie() in cfg80211, which doesn't give you the
-> length/data in two separate values, but otherwise behaves pretty
-> similarly. IOW, something like
-> 
-> const u8 *ssid = ieee80211_bss_get_ie(bss /* or &bss->pub */, WLAN_EID_SSID);
-> if (ssid) {
-> 	ssid_len = ssid[1];
-> 	ssid_data = ssid + 2;
-> }
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Ah, I missed that. Will send out a patch.
+Station information may be needed by rate control algorithms, so call rate
+scaling initialization after adding the station.
 
-Thanks,
--yi
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ net/mac80211/ibss.c |    3 ++-
+ net/mac80211/mlme.c |    4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 920ec87..040d184 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -413,11 +413,12 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
+-	rate_control_rate_init(sta);
+ 
+ 	if (sta_info_insert(sta))
+ 		return NULL;
+ 
++	rate_control_rate_init(sta);
++
+ 	return sta;
+ }
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 97a278a..307b33c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1554,8 +1554,6 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
+ 
+-	rate_control_rate_init(sta);
+-
+ 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
+ 		set_sta_flags(sta, WLAN_STA_MFP);
+ 
+@@ -1572,6 +1570,8 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	rate_control_rate_init(sta);
++
+ 	rcu_read_unlock();
+ 
+ 	if (elems.wmm_param)
+-- 
+1.5.6.3
 
