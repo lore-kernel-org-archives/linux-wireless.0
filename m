@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:61281 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbZHAIT3 (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:55298 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbZH0VgA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 Aug 2009 04:19:29 -0400
-Received: by bwz19 with SMTP id 19so1566713bwz.37
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2009 01:19:28 -0700 (PDT)
-Message-ID: <4A73FA8D.5030804@gmail.com>
-Date: Sat, 01 Aug 2009 10:19:25 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Thu, 27 Aug 2009 17:36:00 -0400
+Received: by iwn42 with SMTP id 42so745747iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:36:02 -0700 (PDT)
 MIME-Version: 1.0
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	nbd@openwrt.org, proski@gnu.org
-Subject: Re: [PATCH 4/4] ath5k: Use SWI to trigger calibration
-References: <20090731181020.GE7963@makis> <20090801054649.GA8390@makis>
-In-Reply-To: <20090801054649.GA8390@makis>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1251408741.22482.14.camel@johannes.local>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	<1251406807-31495-14-git-send-email-luciano.coelho@nokia.com>
+	<1251408741.22482.14.camel@johannes.local>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 27 Aug 2009 14:35:42 -0700
+Message-ID: <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
+Subject: Re: [PATCH 13/13] wl1271: added Juuso Oikarinen as module author
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/01/2009 07:46 AM, Nick Kossifidis wrote:
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1104,6 +1104,26 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
->    PHY calibration
->  \*****************/
->  
-> +void
-> +ath5k_hw_calibration_poll(struct ath5k_hw *ah)
-> +{
-> +	u32 current_time = (jiffies / HZ);
+On Thu, Aug 27, 2009 at 2:32 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Fri, 2009-08-28 at 00:00 +0300, Luciano Coelho wrote:
+>> Add Juuso as one of the module authors, since he's working heavily on this
+>> module as well.
+>>
+>> Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>> ---
+>>  drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
+>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+>> index a97d434..4163eac 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+>> @@ -1449,4 +1449,5 @@ module_init(wl1271_init);
+>>  module_exit(wl1271_exit);
+>>
+>>  MODULE_LICENSE("GPL");
+>> -MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+>> +MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>, "
+>> +           "Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+>
+> Use multiple MODULE_AUTHORs instead.
 
-jiffies are long. And they start from negative to catch such issues. You
-were lucky and/or tested after 5 minutes of uptime ;).
+Where is that defined?
 
-> +	u32 cal_intval = ah->ah_cal_intval;
-> +
-> +	if (!ah->ah_cal_tstamp)
-> +		ah->ah_cal_tstamp = current_time;
-> +
-> +	/* For now we always do full calibration
-> +	 * Mark software interrupt mask and fire software
-> +	 * interrupt (bit gets auto-cleared) */
-> +	if ((current_time - ah->ah_cal_tstamp) >= cal_intval) {
-
-Aiee, this should be converted to time_after(). You don't count with a
-wrap here. (The same as above.)
-
-> +		ah->ah_cal_tstamp = current_time;
-> +		ah->ah_swi_mask = AR5K_SWI_FULL_CALIBRATION;
-> +		AR5K_REG_ENABLE_BITS(ah, AR5K_CR, AR5K_CR_SWI);
-> +	}
-> +
-> +}
-
+  Luis
