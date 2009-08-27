@@ -1,158 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:64472 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbZHZUU6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 16:20:58 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 13:21:00 -0700
-Date: Wed, 26 Aug 2009 13:20:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<Jouni.Malinen@atheros.com>
-Subject: Re: [PATCH] ath5k: fix print on warning on ath5k_hw_to_driver_rix()
-Message-ID: <20090826202058.GA7096@mosca>
-References: <1251224728-7180-1-git-send-email-lrodriguez@atheros.com>
- <b6c5339f0908251145h3a075b86hab00d2223f9acc58@mail.gmail.com>
- <20090825185842.GA7357@mosca>
- <b6c5339f0908251222h5fb281c3vf3ecea8b27eb02ed@mail.gmail.com>
- <20090825233827.GA10998@mosca>
- <b6c5339f0908260708l38208046o43330d9eda808b1e@mail.gmail.com>
- <20090826162941.GA4417@mosca>
- <b6c5339f0908261003g40ed910amc347305e4604ee4a@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <b6c5339f0908261003g40ed910amc347305e4604ee4a@mail.gmail.com>
+Received: from smtp.nokia.com ([192.100.105.134]:33277 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028AbZH0VAl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 17:00:41 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
+Subject: [PATCH 10/13] wl1271: Corrections to TX path
+Date: Fri, 28 Aug 2009 00:00:04 +0300
+Message-Id: <1251406807-31495-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 10:03:09AM -0700, Bob Copeland wrote:
-> On Wed, Aug 26, 2009 at 12:29 PM, Luis R.
-> Rodriguez<lrodriguez@atheros.com> wrote:
-> 
-> > Not sure I follow. Let me explain the logic here a little better.
-> > ath5k_reset() had a check to see if we switched channels. The check
-> > is above, and I moved it ath5k_chan_set() called by the config callback.
-> > Reason for this is channel change *only* occurs through the config callback
-> > so we can be certain no other path will call reset with a channel change
-> > request.
-> 
-> But previously we did all this stuff for _every_ reset except the first
-> one, 
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Actually we did it in every ath5k_reset() if and only if chan was not NULL.
-We called ath5k_reset() from 3 places:
+Corrections to the TX path - use correct number of maximum descriptors
+(32 instead of 16) and correct checking and setting of excessive retries
+on completion.
 
-  * Init
-  * Channel change
-  * Reset tasklet for hw issues
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |    1 -
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +---
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    8 +++-----
+ 4 files changed, 7 insertions(+), 10 deletions(-)
 
-chan was only null upon init as you point out, so you are right in that
-I overlooked that we currently do this also upon hw issues.
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 05eb29c..0b4744d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -123,6 +123,8 @@ enum {
+ #define WL1271_DEFAULT_BEACON_INT  100
+ #define WL1271_DEFAULT_DTIM_PERIOD 1
+ 
++#define ACX_TX_DESCRIPTORS    32
++
+ enum wl1271_state {
+ 	WL1271_STATE_OFF,
+ 	WL1271_STATE_ON,
+@@ -346,7 +348,7 @@ struct wl1271 {
+ 	struct work_struct filter_work;
+ 
+ 	/* Pending TX frames */
+-	struct sk_buff *tx_frames[16];
++	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
+ 
+ 	/* Security sequence number counters */
+ 	u8 tx_security_last_seq;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 55850eb..c177345 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -170,7 +170,6 @@ enum {
+ #define  DP_RX_PACKET_RING_CHUNK_NUM 2
+ #define  DP_TX_PACKET_RING_CHUNK_NUM 2
+ #define  DP_TX_COMPLETE_TIME_OUT 20
+-#define  FW_TX_CMPLT_BLOCK_SIZE 16
+ 
+ #define TX_MSDU_LIFETIME_MIN       0
+ #define TX_MSDU_LIFETIME_MAX       3000
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f5e757d..416fd9c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1294,9 +1294,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
+ 	wl->band = IEEE80211_BAND_2GHZ;
+ 
+-	/* We use the default power on sleep time until we know which chip
+-	 * we're using */
+-	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
++	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		wl->tx_frames[i] = NULL;
+ 
+ 	spin_lock_init(&wl->wl_lock);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index 1ad1bc3..5d3aa4b 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -33,8 +33,7 @@
+ static int wl1271_tx_id(struct wl1271 *wl, struct sk_buff *skb)
+ {
+ 	int i;
+-
+-	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
++	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		if (wl->tx_frames[i] == NULL) {
+ 			wl->tx_frames[i] = skb;
+ 			return i;
+@@ -262,14 +261,13 @@ out:
+ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 				      struct wl1271_tx_hw_res_descr *result)
+ {
+-
+ 	struct ieee80211_tx_info *info;
+ 	struct sk_buff *skb;
+ 	u16 seq;
+ 	int id = result->id;
+ 
+ 	/* check for id legality */
+-	if (id >= TX_HW_RESULT_QUEUE_LEN || wl->tx_frames[id] == NULL) {
++	if (id >= ACX_TX_DESCRIPTORS || wl->tx_frames[id] == NULL) {
+ 		wl1271_warning("TX result illegal id: %d", id);
+ 		return;
+ 	}
+@@ -382,7 +380,7 @@ void wl1271_tx_flush(struct wl1271 *wl)
+ 		ieee80211_tx_status(wl->hw, skb);
+ 	}
+ 
+-	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
++	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		if (wl->tx_frames[i] != NULL) {
+ 			skb = wl->tx_frames[i];
+ 			info = IEEE80211_SKB_CB(skb);
+-- 
+1.5.6.5
 
-> now we only do it for channel change resets.  It may make sense your
-> way, but I'd rather see that as a separate patch rather than part of a
-> cleanup.
-
-Absolutely, I overlooked this, thanks for picking that up.
-
-> (Also, chan_change is used to skip a bunch of phy register writes
-> that we only need to do once, not sure if that changes here).
-
-Yeah since I also used ath5k_reset_init() on the reset hw issue tasklet and
-that does pass false for channel_change this patch would have changed that
-as well, so I'll fix that.
-
-> >> There's just no synchronization of this stuff, not too surprising there
-> >> are races.
-> >
-> > config calls for reset seem to be with sc->lock. ath9k uses a mutex to
-> > protect races between mac80211 callback calls, ath5k seems to use the
-> > sc->lock *sometimes*, a good review of that may help but for channel
-> > change this seems protected unless I missed something. Since channel
-> > change goes through the config callback and since the callback protects
-> > through sc->lock I can't see how we'd race against changing channels.
-> 
-> rx_tasklet doesn't (can't) take the mutex though.  Here's the race:
-> 
-> cpu 1                       cpu 2
->                             1mbit packet received, ack intr and queue it
-> client changes to 5ghz band
-> hw->conf.channel = 36
->                             ath5k_rx_tasklet runs
->                             hmm, we got 1mbit packet on channel 36, wtf
-> ath5k_chan_change()
-> 
-> This is still racy with curband variables of course, but IMO the
-> proposed change actually makes the race wider (in current code, we only
-> update the band after we disable the interrupts, but the tasklet can
-> still run on queued packets).
-
-I don't want to bother looking ath ath5k solutions to the race, I rather
-we try to fix this if possible with a generic solution on mac80211. I suspect
-ath5k is not the only one with this possible race.
-
-> The right thing to do is either process or drop all of those packets
-
-Would be nice if we did not have to, those packets can be very valuable
-considering we now support spreading our scan over time.
-
-> with interrupts disabled before updating the band/channel (rx_drainq),
-
-That would be nice, so prior to channel change we need to ensure we:
-
-  * Disable interrupts
-  * Disable RX
-  * Process all pending frames in RX queue
-
-It is the last part that it seems we are missing. Running tasklet_schedule()
-will ensure we can schedule the tasklet but it does not ensure we will
-wait until it has run at least once. Johill pointed out tasklet_disable()
-followed by a tasklet_enable() would do it, but seems rather odd.
-
-But do we need this?
-
-In the rx tasklet we need band to access the right rate table -- this is
-how we got into this conversation but if you think about it you also need
-to ensure your harware hasn't already flipped to another band otherwise
-you can start sending mac80211 frames for a different band. This certainly
-matters for rate control but haven't reviewed all the details of where
-inconsistancy between the hw->conf.channel and the skbs received by
-mac80211 are.
-
-Processing RXd frames prior to switching channels seems like a good idea
-regardless.
-
->From what I see Atheros RX descriptors do not have the frequency on which the
-frame was received on so you do need some sort of house keeping.
-mac80211/cfg80211 does this for us so I'd like to try to avoid doing more
-on drivers if possible.
-
-Since cfg80211 modifies hw->conf.channel prior to calling drv_config() it
-is possible for the driver to not reliably use this variable either right now.
-
-So how about a generic rx_drain() callback for mac80211 drivers and document
-that on it we need disable RXing frames, disable interrupts for RX,
-and then either have the driver drop pending frames (worst case) or process them.
-mac80211 could then use this prior to drv_config() if we are changing channels.
-
-> or protect that channel info with a spinlock.   Or perhaps we can
-> figure it out directly from the rx descriptor -- I looked at this
-> briefly and didn't think there was enough info there, but didn't spend
-> much time on it.
-
-I looked too and did not find it. I can't find a reason to have it in
-hardware descriptors though, given that you could just drain rx prior to
-a switch.
-
-Only argument I can see which may affect draining RX prior to channel
-change is it could delay the time it takes for you to switch. Either way
-this seems just a lot cleaner to support.
-
-Thoughts?
-
-  Luis
