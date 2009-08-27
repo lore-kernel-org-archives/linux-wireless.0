@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:49000 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbZHGUvU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 16:51:20 -0400
-Received: by pzk34 with SMTP id 34so1824821pzk.4
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2009 13:51:21 -0700 (PDT)
-Message-ID: <4A7C9383.2040705@lwfinger.net>
-Date: Fri, 07 Aug 2009 15:50:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chr <chunkeey@web.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Deauthentications with p54usb
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:26029 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596AbZH0P3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 11:29:24 -0400
+Subject: Re: [PATCH] iwlagn: show_version() displays confusing/wrong
+ firmware version
+From: reinette chatre <reinette.chatre@intel.com>
+To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: "Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87r5uxb8fi.fsf@nemi.mork.no>
+References: <1251379989-20728-1-git-send-email-bjorn@mork.no>
+	 <1251385041.3805.17.camel@rc-desk>  <87r5uxb8fi.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 Aug 2009 08:29:12 -0700
+Message-Id: <1251386952.3805.23.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian,
+Hi Bjørn,
 
-I've been working with b43 of late and had not run p54usb until I
-tested the rfkill code earlier today. Now I'm getting
-deauthentications with reason=7 that I did not get with b43 using the
-same AP in roughly the same geometric relationship.
+On Thu, 2009-08-27 at 08:09 -0700, Bjørn Mork wrote:
+> reinette chatre <reinette.chatre@intel.com> writes:
+> > Which kernel/repo is your patch based on?
+> 
+> Oh, sorry for not including that vital information.  I'm afraid it is
+> against Linus' tree at 
+> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+> and not any of the wireless/networking trees.
 
-I don't know if this is a regression, or not. The current kernel is
-2.6.31-rc5-wl. I'll boot 2.6.30-wl to test if the older one is OK.
+Since 2.6.31 is considered a done deal and this is surely not the
+required "earth shattering" fix (see [1]) I cannot push this as a fix
+into Linus's repo at this time. This display problem will not exist in
+2.6.32.
 
-The logged data below shows nothing but the timing of the disconnects.
+Reinette
 
-Larry
+[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/38579
 
-============
-
-Aug  7 15:28:33 larrylap kernel: wlan0: deauthenticated from
-00:1a:70:46:ba:b1 (Reason: 7)
-Aug  7 15:28:35 larrylap kernel: wlan0: direct probe to AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:28:35 larrylap kernel: wlan0 direct probe responded
-Aug  7 15:28:35 larrylap kernel: wlan0: authenticate with AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:28:35 larrylap kernel: wlan0: authenticated
-Aug  7 15:28:35 larrylap kernel: wlan0: associate with AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:28:35 larrylap kernel: wlan0: RX AssocResp from
-00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=1)
-Aug  7 15:28:35 larrylap kernel: wlan0: associated
-Aug  7 15:29:59 larrylap kernel: wlan0: deauthenticated from
-00:1a:70:46:ba:b1 (Reason: 7)
-Aug  7 15:30:01 larrylap kernel: wlan0: direct probe to AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:30:01 larrylap kernel: wlan0 direct probe responded
-Aug  7 15:30:01 larrylap kernel: wlan0: authenticate with AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:30:01 larrylap kernel: wlan0: authenticated
-Aug  7 15:30:01 larrylap kernel: wlan0: associate with AP
-00:1a:70:46:ba:b1 (try 1)
-Aug  7 15:30:01 larrylap kernel: wlan0: RX AssocResp from
-00:1a:70:46:ba:b1 (capab=0x431 status=0 aid=1)
-Aug  7 15:30:01 larrylap kernel: wlan0: associated
