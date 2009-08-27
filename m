@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39772 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751474AbZHRIpy (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.26]:26348 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbZH0SP3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 04:45:54 -0400
-Subject: Re: [PATCH] mac80211: Decouple fail_avg stats used by mesh from
- rate control algorithm.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, andrey@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-In-Reply-To: <1250554555-32259-1-git-send-email-javier@cozybit.com>
-References: <1250554180-30646-1-git-send-email-javier@cozybit.com>
-	 <1250554555-32259-1-git-send-email-javier@cozybit.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-gJ9Rf60E84WTP3asTqMO"
-Date: Tue, 18 Aug 2009 10:45:51 +0200
-Message-Id: <1250585151.1313.0.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 27 Aug 2009 14:15:29 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so311032qwh.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 11:15:31 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH] iw: fix NL80211_STA_INFO_PLINK_STATE printing in station dump
+Date: Thu, 27 Aug 2009 11:15:20 -0700
+Message-Id: <1251396920-3954-1-git-send-email-brian@cozybit.com>
+In-Reply-To: <iw1>
+References: <iw1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+NL80211_STA_INFO_PLINK_STATE is a u8, not a u16.  This bug was causing
+unexpected output on big endian machines.
 
---=-gJ9Rf60E84WTP3asTqMO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ station.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Mon, 2009-08-17 at 17:15 -0700, Javier Cardona wrote:
-> Mesh uses the tx failure average to compute the (m)path metric.  This use=
-d to
-> be done inside the rate control module.  This patch breaks the dependency
-> between the mesh stack and the rate control algorithm.  Mesh will now wor=
-k
-> independently of the chosen rate control algorithm.
->=20
-> The mesh stack keeps a moving average of the average transmission losses =
-for
-> each mesh peer station.  If the fail average exceeds a certain threshold,=
- the
-> peer link is marked as broken.
-
-Looks good, means it can also work for ath9k etc. eventually.
-
-johannes
-
---=-gJ9Rf60E84WTP3asTqMO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKimo7AAoJEODzc/N7+QmaUSQP/2VdGlF2VQxbkxpVNmygjtkd
-BY9lM6E/fzcfIp8HN7rs3zoB++v5vFDxkDQThjwf0MMItdS+raUDXNG+Sc15RP5W
-3ZrkxLYNUaPJf3erRkN4GwjTyh3TVDimKPpNkHpszg/1TxDeN4Zb1JeNZwn6EsIC
-IILns40dQIw0bYmivUbGejZnLU1VpAz68GCMKCPbjSw0Yqhon9/78IMBi4APg8ze
-q4ESBpiyMnI3bmvPndBXY6ubR81kjUEJMvGLPIolg9am7sLb6oqO9D1PLM30GaWe
-eIC/LPK5gkcAIOV4S/eAARhw15QIS7LlFiJ/+T2VF4YADrfJ/NDEgljhEkRfIwkl
-gxboeCI1UfCplPt8jGr/0SypBBqupMt+dlue3nZewJGZN6dSKsWOVZOKNyDe67Jq
-7xhWe4w688v/dVziAcwAs1Qh1wDL3yEh4dFv0rBP6NsuUhPVs1oGtGK/gbjntftY
-MdOFUdRIH/8NjeVYizByhoKzAAQUR3lDzsZ02sPp5+i/pzlbM+RvV82d/GgNSa8n
-sXg/brchw9dDSHg4CuPrSms7QhDeH9m8tVLPkVw5hZWWvXnyb+5vi6oVbpgZUbpn
-xoeNT0rpx9UsaDFMAiWWJz5OyEfyCtFMVzF3KED6vIwvs2S+MkF7JKWYKvkEEyIu
-wBhlUoHKh44EsvvNvy43
-=20wD
------END PGP SIGNATURE-----
-
---=-gJ9Rf60E84WTP3asTqMO--
+diff --git a/station.c b/station.c
+index 0fff92d..a4865f9 100644
+--- a/station.c
++++ b/station.c
+@@ -127,7 +127,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		printf("\n\tmesh plid:\t%d",
+ 			nla_get_u16(sinfo[NL80211_STA_INFO_PLID]));
+ 	if (sinfo[NL80211_STA_INFO_PLINK_STATE]) {
+-		switch (nla_get_u16(sinfo[NL80211_STA_INFO_PLINK_STATE])) {
++		switch (nla_get_u8(sinfo[NL80211_STA_INFO_PLINK_STATE])) {
+ 		case LISTEN:
+ 			strcpy(state_name, "LISTEN");
+ 			break;
+-- 
+1.6.0.4
 
