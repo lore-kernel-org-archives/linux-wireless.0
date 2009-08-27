@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:37085 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452AbZH3M6c (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:39390 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbZH0StE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 08:58:32 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Subject: Re: ipw2200: firmware DMA loading rework
-Date: Sun, 30 Aug 2009 14:37:42 +0200
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Mel Gorman <mel@csn.ul.ie>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Mel Gorman <mel@skynet.ie>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <20090826074409.606b5124.akpm@linux-foundation.org> <1251430951.3704.181.camel@debian>
-In-Reply-To: <1251430951.3704.181.camel@debian>
+	Thu, 27 Aug 2009 14:49:04 -0400
+Received: by ewy2 with SMTP id 2so1493456ewy.17
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 11:49:05 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] rt2x00: Cleanup rt2x00mac_bss_info_changed()
+Date: Thu, 27 Aug 2009 20:49:03 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200908262104.09230.IvDoorn@gmail.com> <1251358806.20531.9.camel@johannes.local>
+In-Reply-To: <1251358806.20531.9.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200908301437.42133.bzolnier@gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200908272049.04046.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 28 August 2009 05:42:31 Zhu Yi wrote:
-> Bartlomiej Zolnierkiewicz reported an atomic order-6 allocation failure
-> for ipw2200 firmware loading in kernel 2.6.30. High order allocation is
-
-s/2.6.30/2.6.31-rc6/
-
-The issue has always been there but it was some recent change that
-explicitly triggered the allocation failures (after 2.6.31-rc1).
-
-> likely to fail and should always be avoided.
+On Thursday 27 August 2009, Johannes Berg wrote:
+> On Wed, 2009-08-26 at 21:04 +0200, Ivo van Doorn wrote:
+> > Since patch "rt2x00: bss_info_changed() callback is allowed to sleep" the
+> > variable delayed wasn't used anymore. This means it can be removed
+> > along with the call to schedule_work which depended on that variable.
 > 
-> The patch fixes this problem by replacing the original order-6
-> pci_alloc_consistent() with an array of order-1 pages from a pci pool.
-> This utilized the ipw2200 DMA command blocks (up to 64 slots). The
-> maximum firmware size support remains the same (64*8K).
-> 
-> This patch fixes bug http://bugzilla.kernel.org/show_bug.cgi?id=14016
-> 
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Mel Gorman <mel@csn.ul.ie>
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> I just wanted to say thanks for doing all the cleanups. It's really nice
+> to see all my work on making callbacks non-atomic pay off in that way :)
 
-Thanks for the fix (also kudos to other people helping with the bugreport),
-it works fine so far and looks OK to me:
+yeah those kind of optimizations really help with the drivers. :)
 
-Tested-and-reviewed-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+I still have some other cleanups, but this was the easiest and most obvious one,
+the others involve changing locking mechanisms so need better verification.
+
+Ivo
+
