@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41144 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927AbZHaTQ6 convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1381 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356AbZH0TSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 15:16:58 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rfkill: relicense header file
-Date: Mon, 31 Aug 2009 21:16:49 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	=?iso-8859-1?q?I=F1aky_P=E9rez-Gonz=E1lez?=
-	<inaky.perez-gonzalez@intel.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Jaswinder Singh Rajput <jaswinder@kernel.org>,
-	Tomas Winkler <tomas.winkler@intel.com>
-References: <1251303197.15619.29.camel@johannes.local> <20090831174542.GA5631@tuxdriver.com>
-In-Reply-To: <20090831174542.GA5631@tuxdriver.com>
+	Thu, 27 Aug 2009 15:18:12 -0400
+Date: Thu, 27 Aug 2009 15:17:15 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Subject: Re: [PATCH 4/4] ath5k: add hardware CCMP encyption support
+Message-ID: <20090827191715.GA30419@hash.localnet>
+References: <1251169233-24169-1-git-send-email-me@bobcopeland.com> <1251169233-24169-5-git-send-email-me@bobcopeland.com> <1251338971.17295.17.camel@mj>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200908312116.51897.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1251338971.17295.17.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 31 August 2009 19:45:43 John W. Linville wrote:
-> On Wed, Aug 26, 2009 at 06:13:17PM +0200, Johannes Berg wrote:
-> > This header file is copied into userspace tools that
-> > need not be GPLv2 licensed, make that easier.
-> > 
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> > Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> > Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> > Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
-> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> > Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
-> > Cc: John W. Linville <linville@tuxdriver.com>
-> > Cc: Michael Buesch <mb@bu3sch.de>
-> > Cc: Tomas Winkler <tomas.winkler@intel.com>
-> > ---
-> > Need ACK from everybody listed who ever touched this
-> > file according to git. Please?
-> 
-> Michael?  Jaswinder?
-> 
+Subject: [PATCH] ath5k: clarify srev comparison for CCMP check
 
-No problem. I don't think there's anything copyrightable by me in that file.
+As Pavel Roskin noted, the check for mac version as copied from
+legacy_hal made no sense.  This replaces it with the equivalent
+and makes up a suitable #define for the mac version legacy_hal
+checked.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+
+On Wed, Aug 26, 2009 at 10:09:31PM -0400, Pavel Roskin wrote:
+> On Mon, 2009-08-24 at 23:00 -0400, Bob Copeland wrote:
+> > +	ah->ah_aes_support =
+> > +		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
+> > +		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5) &&
+> > +		 (ah->ah_mac_version > (AR5K_SREV_AR5212 >> 4) ||
+> > +		  (ah->ah_mac_version == (AR5K_SREV_AR5212 >> 4) &&
+> > +		   ah->ah_mac_revision >= (AR5K_SREV_AR5211 >> 4))));
+> 
+> The above use of ah->ah_mac_revision is clearly incorrect.  You are
+> comparing a revision with a symbol for a version.
+> 
+> I suggest that you use ah_mac_srev instead.  Before this patch,
+> ah_mac_revision was a write-only variable and was a good candidate for
+> removal.
+> 
+> The last three quoted lines are equivalent to (ah->ah_mac_srev >= 0x54)
+
+Ok, here's a fixup.  I'm not sure if 0x54 was really intended since we
+don't know what srev that is, but this assumes legacy hal is correct.
+
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    1 +
+ drivers/net/wireless/ath/ath5k/attach.c |    7 ++-----
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index cdc79cd..1275ba0 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -306,6 +306,7 @@ struct ath5k_srev_name {
+ #define AR5K_SREV_AR5311B	0x30 /* Spirit */
+ #define AR5K_SREV_AR5211	0x40 /* Oahu */
+ #define AR5K_SREV_AR5212	0x50 /* Venice */
++#define AR5K_SREV_AR5212_V4	0x54 /* ??? */
+ #define AR5K_SREV_AR5213	0x55 /* ??? */
+ #define AR5K_SREV_AR5213A	0x59 /* Hainan */
+ #define AR5K_SREV_AR2413	0x78 /* Griffin lite */
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 109ab7b..4819f39 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -318,12 +318,9 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc, u8 mac_version)
+ 
+ 	/* Crypto settings */
+ 	ee = &ah->ah_capabilities.cap_eeprom;
+-	ah->ah_aes_support =
++	ah->ah_aes_support = srev >= AR5K_SREV_AR5212_V4 &&
+ 		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
+-		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5) &&
+-		 (ah->ah_mac_version > (AR5K_SREV_AR5212 >> 4) ||
+-		  (ah->ah_mac_version == (AR5K_SREV_AR5212 >> 4) &&
+-		   ah->ah_mac_revision >= (AR5K_SREV_AR5211 >> 4))));
++		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5));
+ 
+ 	if (srev >= AR5K_SREV_AR2414) {
+ 		ah->ah_combined_mic = true;
+-- 
+1.6.2.5
+
+
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
+
