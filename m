@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:40423 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933286AbZHECjZ (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:65450 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbZH0Jnk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 22:39:25 -0400
-Received: by pzk34 with SMTP id 34so3253972pzk.4
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2009 19:39:26 -0700 (PDT)
-Message-ID: <4A78F0DC.4070104@lwfinger.net>
-Date: Tue, 04 Aug 2009 21:39:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 27 Aug 2009 05:43:40 -0400
+Received: by ewy2 with SMTP id 2so1014009ewy.17
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 02:43:41 -0700 (PDT)
 MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V3] b43: implement baseband init for LP-PHY <= rev1
-References: <4A78C336.9000503@gmail.com>
-In-Reply-To: <4A78C336.9000503@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1251357267.20531.4.camel@johannes.local>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
+	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
+	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
+	 <1251357267.20531.4.camel@johannes.local>
+Date: Thu, 27 Aug 2009 10:43:40 +0100
+Message-ID: <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
+	rfkill support)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, hal@lists.freedesktop.org,
+	htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> Implement baseband init for rev.0 and rev.1 LP PHYs. Convert
-> boardflags_hi values to defines.
-> Implement b43_phy_copy for easier copying between registers, as needed
-> by LP-PHY init.
-> 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> Cc: Michael Buesch <mb@bu3sch.de>
-> Cc: Larry Finger <larry.finger@lwfinger.net>
-> ---
-> V3:
-> -Added FIXME to the b43_hf_write call.
-> -The b43_hf_write call now uses a #defined value, rather than a magic
-> number.
+On Thu, Aug 27, 2009 at 8:14 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-08-26 at 16:45 -0700, Luis R. Rodriguez wrote:
+>
+>> Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
+>
+> Yes, but I never understood why that matters. If you've got
+> compat-wireless "rfkill" loaded then the original rfkill can't be loaded
+> anyway. And their symbols would probably clash anyway if the original is
+> built in, in which case you can't use compat.
+>
+> You haven't renamed cfg80211's sysfs either, so why rfkill?
+>
+> johannes
+>
 
-It looks to me that V2 was put into wireless-testing. You will need to
-prepare a separate patch to make the V2 => V3 changes.
-
-Larry
-
+There are a couple of wimax drivers which depends on rfkill... or
+bluetooth drivers? I think one likely reason is that there are valid
+situations or hardware combinations which requires having both of them
+loaded. (but that's a whole can of worms )
