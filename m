@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34789 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754630AbZHCTZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:04 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 06/24] ath9k: move cache setting of softc ah prior to attach
-Date: Mon, 3 Aug 2009 12:24:38 -0700
-Message-ID: <1249327496-24629-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:45787 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752128AbZH0JdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 05:33:11 -0400
+Received: by fxm17 with SMTP id 17so792005fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 02:33:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <200908251253.48176.mb@bu3sch.de>
+References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
+	 <f42a38140908240235v9206b79m3055f8a96c3dcb64@mail.gmail.com>
+	 <f42a38140908250016g72207b64h9d2a33cb73a78b1f@mail.gmail.com>
+	 <200908251253.48176.mb@bu3sch.de>
+Date: Thu, 27 Aug 2009 17:33:12 +0800
+Message-ID: <f42a38140908270233r3c1aef6ne900fd3426465158@mail.gmail.com>
+Subject: Re: Abour linux driver supports BCM4325
+From: feng tian <feng.of.tian@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do this in case attach and friends try to get back to
-ah from the softc somehow.
+Hi Michael,
+We found that broadcom drops some BCM codes which support SDIO
+interface on following url:
+"http://android.git.kernel.org/?p=platform/system/wlan/broadcom.git;a=summary"
+Just FYI.
+Hope this can help.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+BR, Feng.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fa2c230..605d328 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1332,6 +1332,7 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 
- 	ah->ah_sc = sc;
- 	ah->hw_version.devid = devid;
-+	sc->sc_ah = ah;
- 
- 	r = ath9k_hw_attach(ah, sc);
- 	if (r) {
-@@ -1340,7 +1341,6 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 			"initialization status: %d\n", r);
- 		goto bad;
- 	}
--	sc->sc_ah = ah;
- 
- 	/* Get the hardware key cache size. */
- 	sc->keymax = ah->caps.keycache_size;
--- 
-1.6.3.3
-
+2009/8/25 Michael Buesch <mb@bu3sch.de>:
+> On Tuesday 25 August 2009 09:16:36 feng tian wrote:
+>> Dear Michael,
+>>
+>> Another question:
+>> We can't get the actual "datasheet" of BCM 4325. The pdf from broadcom
+>> is so rough, and we also sent email to ask more detailed spec, but no
+>> feedback.
+>> What kind of datasheet of BCM4325 are you using now?
+>> Could you please share this with us?
+>>
+>> Thank you very much.
+>>
+>> BR, Feng
+>>
+>>
+>
+> http://bcm-v4.sipsolutions.net/
+>
+> --
+> Greetings, Michael.
+>
