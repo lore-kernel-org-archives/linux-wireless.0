@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:47646 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbZHHV4K (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:41627 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661AbZH0ORW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 Aug 2009 17:56:10 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so695183eyd.37
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2009 14:56:10 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/7] rt2x00: Use IEEE80211_TX_CTL_MORE_FRAMES flag
-Date: Sat, 8 Aug 2009 23:53:26 +0200
-Cc: users@rt2x00.serialmonkey.com,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <200908082353.04274.IvDoorn@gmail.com>
-In-Reply-To: <200908082353.04274.IvDoorn@gmail.com>
+	Thu, 27 Aug 2009 10:17:22 -0400
+Received: by bwz19 with SMTP id 19so993897bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 07:17:23 -0700 (PDT)
+Message-ID: <4A969572.7060807@gmail.com>
+Date: Thu, 27 Aug 2009 16:17:22 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908082353.26986.IvDoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] b43: Enable LP-PHY support by default and remove Kconfig
+ warning
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the IEEE80211_TX_CTL_MORE_FRAMES flag to help determining
-if the DMA queue should be kicked. At the moment this is combined
-with the ieee80211_has_morefrags() but we might remove that later.
+The most common LP-PHY device, BCM4312, is now fully functional.
+So, no need to say "probably won't work for you" anymore.
+It's also not "for debuggers and developers only", as it is
+perfectly usable for end-users now (at least for BCM4312).
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+This replaces the "remove scary message" patch.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 44e5b32..65435c9 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -324,7 +324,8 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	/*
- 	 * Check if more fragments are pending
- 	 */
--	if (ieee80211_has_morefrags(hdr->frame_control)) {
-+	if (ieee80211_has_morefrags(hdr->frame_control) ||
-+	    (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)) {
- 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
- 		__set_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags);
- 	}
+ drivers/net/wireless/b43/Kconfig |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 237b1aa..2af3b35 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+ -82,15 +82,13 @@ config B43_NPHY
+ config B43_PHY_LP
+ 	bool "Support for low-power (LP-PHY) devices (EXPERIMENTAL)"
+ 	depends on B43 && EXPERIMENTAL
++	default y
+ 	---help---
+ 	  Support for the LP-PHY.
+ 	  The LP-PHY is a low-power PHY built into some notebooks
+ 	  and embedded devices. It supports 802.11a/g
+ 	  (802.11a support is optional, and currently disabled).
+ 
+-	  This is heavily experimental, and probably will not work for you.
+-	  Say N unless you want to help debug the driver.
+-
+ # This config option automatically enables b43 LEDS support,
+ # if it's possible.
+ config B43_LEDS
 -- 
-1.6.3.3
+1.6.2.4
 
