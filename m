@@ -1,23 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:39308 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484AbZHXNmW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 Aug 2009 09:42:22 -0400
-Date: Mon, 24 Aug 2009 15:42:22 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] mwl8k: three bug fixes, and a cosmetic fix
-Message-ID: <20090824134222.GB6102@mail.wantstofly.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52927 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752608AbZH0OJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 10:09:02 -0400
+Subject: Re: [PATCH] rndis_wlan: increase scan timer delay
+From: Dan Williams <dcbw@redhat.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20090827134340.190465b7qixz4wao@naisho.dyndns.info>
+References: <20090827073854.27662.68095.stgit@fate.lan>
+	 <20090827134340.190465b7qixz4wao@naisho.dyndns.info>
+Content-Type: text/plain
+Date: Thu, 27 Aug 2009 09:09:13 -0500
+Message-Id: <1251382153.11788.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some more patches for wireless-testing:
-- A bug fix to fix an inverted error test in mwl8k_bss_info_changed().
-  This was accidentally introduced in the last batch of changes.
-- Two minor bug fixes for issues that exist in 2.6.31 as well, but
-  aren't really important enough to justify applying there.
-- A cosmetic fix to clarify the difference between driver and device
-  info during probe.
+On Thu, 2009-08-27 at 13:43 +0300, Jussi Kivilinna wrote:
+> Please, don't merge this after all. Blocks scan too long and breaks  
+> NetworkManager/wpa_supplicant.
+
+Hmm, it shouldn't.  I've seen other cards (ath5k a/b/g) take 5 to 8
+seconds to scan when they scan all the bands.  iwlwifi sometimes takes 5
+seconds to scan as well.  That should all be valid.
+
+Can you get some wpa_supplicant runs with "-dddt" that show the problem
+you're having?  NM uses the supplicant for all scanning activity.  It
+shouldn't really "break" NM, so if it does I'd like to fix that.
+
+Dan
+
