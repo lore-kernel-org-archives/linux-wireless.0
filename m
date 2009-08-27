@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f172.google.com ([209.85.212.172]:41338 "EHLO
-	mail-vw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754090AbZHLQvy convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:34533 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033AbZH0VUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:51:54 -0400
-Received: by vws2 with SMTP id 2so136724vws.4
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:51:55 -0700 (PDT)
+	Thu, 27 Aug 2009 17:20:41 -0400
+Message-ID: <4A96F8A0.2060604@nokia.com>
+Date: Fri, 28 Aug 2009 00:20:32 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908120945l14f6590ev38f7083a1b1dae8@mail.gmail.com>
-References: <43e72e890908120945l14f6590ev38f7083a1b1dae8@mail.gmail.com>
-Date: Wed, 12 Aug 2009 12:51:55 -0400
-Message-ID: <b6c5339f0908120951u76c9ac9amfb006ba4960a07c9@mail.gmail.com>
-Subject: Re: ath5k warning on bitrate
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Oikarinen Juuso (Nokia-D-MSW/Tampere)" <juuso.oikarinen@nokia.com>,
+	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>
+Subject: Re: [PATCH 00/13] wl1271: patch set with various improvements
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 12, 2009 at 12:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> I have some patches on top of this for ath5k but I doubt they were the
-> culprit. The warning comes from the second check:
+Coelho Luciano (Nokia-D/Helsinki) wrote:
+> Hi John,
+>
+> Here is a bunch of patches with some improvements to the wl1271 driver.  A few
+> of them fix some issues with TX, some workaround for problems we have
+> identified and other general improvements.  I'm also adding Juuso Oikarinen as
+> one of the module authors, since he's one of the main wl1271 developers as
+> well.
+>   
 
->        rix = sc->rate_idx[sc->curband->band][hw_rix];
->        if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
->                rix = 0;
+John,
 
-Just another case of sc->curband being wrong when processing this.
+Please ignore this series.  As Luis has noticed, I've messed up and sent 
+the wrong series.  I'll have to review this stuff and send v2.
 
-> [  402.717626] ath5k phy0: noise floor calibration timeout (2462MHz)
-
-Because of a scan.  Did we break the thing that flushed rx processing
-on channel changes?
+Oh, the woes of being forced to work with old kernel versions... :(
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Cheers,
+Luca.
+
