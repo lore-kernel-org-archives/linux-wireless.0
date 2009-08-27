@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f213.google.com ([209.85.217.213]:44823 "EHLO
-	mail-gx0-f213.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbZHEScb (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:58696 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbZH0MW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 14:32:31 -0400
-Received: by gxk9 with SMTP id 9so380934gxk.13
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 11:32:32 -0700 (PDT)
+	Thu, 27 Aug 2009 08:22:26 -0400
+Received: by fxm17 with SMTP id 17so877701fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 05:22:27 -0700 (PDT)
+To: =?iso-8859-15?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: Remove scary message from LP-PHY's Kconfig
+References: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 27 Aug 2009 15:22:23 +0300
+In-Reply-To: <1251316132-392-1-git-send-email-netrolller.3d@gmail.com>
+ (=?iso-8859-15?Q?=22G=E1bor?= Stefanik"'s message of "Wed\, 26 Aug 2009
+ 21\:48\:52 +0200")
+Message-ID: <87y6p5sayo.fsf@litku.valot.fi>
 MIME-Version: 1.0
-In-Reply-To: <4A741B7B.7070200@gmx.de>
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>
-	<4A733CDE.4060801@gmx.de> <1249066564.20276.3.camel@mj> <4A737AFC.40301@gmx.de>
-	<43e72e890907311622u1059be72y7c833f888b11cf56@mail.gmail.com>
-	<4A741B7B.7070200@gmx.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 5 Aug 2009 11:32:12 -0700
-Message-ID: <43e72e890908051132k764d7af1n3e7243824ae0dd4d@mail.gmail.com>
-Subject: Re: [PATCH] compat-2.6: Makefile: fixed test expressions for target
-	install
-To: Joerg Albert <jal2@gmx.de>
-Cc: Pavel Roskin <proski@gnu.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 1, 2009 at 3:39 AM, Joerg Albert<jal2@gmx.de> wrote:
-> On 08/01/2009 01:22 AM, Luis R. Rodriguez wrote:
->>
->> Actually please do keep relying on /bin/bash, all the scripts on
->> compat-wireless do depend on /bin/bash, I don't expect users of
->> dash/etc to use compat-wireless.
->>
->> If we want to make compat-wireless be shell agnostic we'd need to
->> address all the other scripts. I rather not deal with that now unless
->> we really think that is also a good idea and someone is up for the
->> task.
->
-> IMHO we could make bug fixes to the Makefile/scripts shell agnostic if it's
-> not much effort and
-> doesn't break readability, which is neither the case here.
+Gábor Stefanik <netrolller.3d@gmail.com> writes:
 
-Applied, thanks.
+> From: root Gábor Stefanik <netrolller.3d@gmail.com>
 
-  Luis
+You have extra "root" word here. You really like sudo ;)
+
+-- 
+Kalle Valo
