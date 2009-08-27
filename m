@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48069 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754629AbZHJOFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 10:05:38 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: chris2553@googlemail.com
-Subject: Re: [Bug #13846] LEDs switched off permanently by power saving with rt61pci driver
-Date: Mon, 10 Aug 2009 16:06:27 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-References: <AuPdDySr74O.A.5LC.Pj1fKB@chimera> <u1L1PAbl8zG.A.EjD.3j1fKB@chimera> <200908101111.16762.chris2553@googlemail.com>
-In-Reply-To: <200908101111.16762.chris2553@googlemail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37264 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752706AbZH0OAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 10:00:20 -0400
+Date: Thu, 27 Aug 2009 09:52:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Nokia N900 running mac80211
+Message-ID: <20090827135216.GB2961@tuxdriver.com>
+References: <87k50plbd8.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200908101606.27144.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87k50plbd8.fsf@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 10 August 2009, Chris Clayton wrote:
-> Hi Rafael,
+On Thu, Aug 27, 2009 at 02:55:31PM +0300, Kalle Valo wrote:
+> Hello,
 > 
-> On Sunday 09 August 2009, Rafael J. Wysocki wrote:
-> > This message has been generated automatically as a part of a report
-> > of recent regressions.
-> >
-> > The following bug entry is on the current list of known regressions
-> > from 2.6.30.  Please verify if it still should be listed and let me know
-> > (either way).
-> >
+> wanted to tell you that just released Nokia N900 is using mac80211 and
+> wl1251 driver. The kernel is 2.6.28 with few wireless related patches
+> backported from newer releases and some hacks related to roaming.
 > 
-> Ivo sent a test patch for this and I tested it., but without success. I reported my findings but 
-> didn't get a reply. See http://marc.info/?l=linux-wireless&m=124940189007154&w=4.
-> 
-> I suspect the failure is due to the same PS hardware probelms that were at the route of my original 
-> report.. Unless one of the wireless folks say otherwise, I think we should close this on the basis 
-> of busted hardware. I'm happy to simply eject the card and re-insert it now that I have some udev 
-> scripts to tear down the wireless configuration on the ejection and set it uop again when the card 
-> is re-inserted.
+> http://www.nokia.com/press/press-releases/showpressrelease?newsid=1337594
 
-Thanks, closed.
+Hey, that is cool!  Let's hope other manufacturers learn to embrace
+the open code in the kernel and abandon closed-source options that
+merely reimplement functionality that we already provide.
 
-Rafael
+Let's also hope that this continues to motivate Nokia to support you
+are your coworkers in making strong contributions to the kernel in
+wireless and other areas.
+
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
