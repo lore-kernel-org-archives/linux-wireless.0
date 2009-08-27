@@ -1,117 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:42174 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754170AbZHLQQC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:16:02 -0400
-Subject: Re: Libertas: Association request to the driver failed
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, Daniel Mack <daniel@caiaq.de>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20090811182426.GE2634@tuxdriver.com>
-References: <20090807191156.GS19257@buzzloop.caiaq.de>
-	 <20090807193610.GK7545@tuxdriver.com>
-	 <20090808123512.GZ19257@buzzloop.caiaq.de> <4A7D8AB6.9030707@gmail.com>
-	 <4A7E9596.4070901@gmail.com> <20090809102417.GH13639@buzzloop.caiaq.de>
-	 <4A7EAED8.9090900@gmail.com> <20090810175939.GH2733@tuxdriver.com>
-	 <4A811776.8090003@gmail.com>  <20090811182426.GE2634@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 12 Aug 2009 11:15:37 -0500
-Message-Id: <1250093737.31650.17.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.233]:50845 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839AbZH0VAY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 17:00:24 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
+Subject: [PATCH 05/13] wl1271: Implement delayed entry into ELP
+Date: Thu, 27 Aug 2009 23:59:59 +0300
+Message-Id: <1251406807-31495-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-08-11 at 14:24 -0400, John W. Linville wrote:
-> Comments from the libertas crowd?  This seems a bit long for this
-> part of the cycle.
-> 
-> Should we just revert the original patch, then reapply it with this
-> one for 2.6.32?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-I'd feel more comfortable with that.  Roel did find a real problem, but
-we need to make sure the fix doesn't break stuff since it appears the
-rate code is more complicated than we thought.
+Implement delayed entry into ELP. This will promote the following:
+ - Less redundant sleep/wake cycles (better perf)
+ - Avoids known firmware issues with going to ELP too fast after an
+   operation
 
-Dan
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_ps.c   |   46 ++++++++++++++++++++---------
+ drivers/net/wireless/wl12xx/wl1271_ps.h   |    2 +-
+ 4 files changed, 35 insertions(+), 15 deletions(-)
 
-
-> John
-> 
-> On Tue, Aug 11, 2009 at 09:02:14AM +0200, Roel Kluin wrote:
-> > The size of the tmp buffer was too small, causing a regression
-> > 
-> > rates->rates has an arraysize of 1, so a memcpy with
-> > MAX_RATES (14) was already causing reads out of bounds.
-> > 
-> > In get_common_rates() the memset/memcpy can be moved upwards.
-> > 
-> > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > Tested-by: Daniel Mack <daniel@caiaq.de>
-> > ---
-> > > Delta patch, please...
-> > 
-> > Here,
-> > 
-> > diff --git a/drivers/net/wireless/libertas/assoc.c b/drivers/net/wireless/libertas/assoc.c
-> > index d699737..ba0164a 100644
-> > --- a/drivers/net/wireless/libertas/assoc.c
-> > +++ b/drivers/net/wireless/libertas/assoc.c
-> > @@ -44,8 +44,8 @@ static int get_common_rates(struct lbs_private *priv,
-> >  	u16 *rates_size)
-> >  {
-> >  	u8 *card_rates = lbs_bg_rates;
-> > -	int ret = 0, i, j;
-> > -	u8 tmp[(ARRAY_SIZE(lbs_bg_rates) - 1) * (*rates_size - 1)];
-> > +	int i, j;
-> > +	u8 tmp[MAX_RATES * ARRAY_SIZE(lbs_bg_rates)];
-> >  	size_t tmp_size = 0;
-> >  
-> >  	/* For each rate in card_rates that exists in rate1, copy to tmp */
-> > @@ -62,20 +62,23 @@ static int get_common_rates(struct lbs_private *priv,
-> >  	lbs_deb_hex(LBS_DEB_JOIN, "common rates", tmp, tmp_size);
-> >  	lbs_deb_join("TX data rate 0x%02x\n", priv->cur_rate);
-> >  
-> > +	memset(rates, 0, *rates_size);
-> > +	*rates_size = min_t(u16, tmp_size, *rates_size);
-> > +	memcpy(rates, tmp, *rates_size);
-> > +
-> >  	if (!priv->enablehwauto) {
-> >  		for (i = 0; i < tmp_size; i++) {
-> >  			if (tmp[i] == priv->cur_rate)
-> > -				goto done;
-> > +				break;
-> > +		}
-> > +		if (i == tmp_size) {
-> > +			lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> > +					"compatible with the network.\n",
-> > +					priv->cur_rate);
-> > +			return -1;
-> >  		}
-> > -		lbs_pr_alert("Previously set fixed data rate %#x isn't "
-> > -		       "compatible with the network.\n", priv->cur_rate);
-> > -		ret = -1;
-> >  	}
-> > -done:
-> > -	memset(rates, 0, *rates_size);
-> > -	*rates_size = min_t(int, tmp_size, *rates_size);
-> > -	memcpy(rates, tmp, *rates_size);
-> > -	return ret;
-> > +	return 0;
-> >  }
-> >  
-> >  
-> > @@ -319,8 +322,8 @@ static int lbs_associate(struct lbs_private *priv,
-> >  
-> >  	rates = (struct mrvl_ie_rates_param_set *) pos;
-> >  	rates->header.type = cpu_to_le16(TLV_TYPE_RATES);
-> > -	memcpy(&rates->rates, &bss->rates, MAX_RATES);
-> >  	tmplen = min_t(u16, ARRAY_SIZE(rates->rates), MAX_RATES);
-> > +	memcpy(&rates->rates, &bss->rates, tmplen);
-> >  	if (get_common_rates(priv, rates->rates, &tmplen)) {
-> >  		ret = -1;
-> >  		goto done;
-> > 
-> 
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index e575dcc..c455dcb 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -373,6 +373,7 @@ struct wl1271 {
+ 	bool elp;
+ 
+ 	struct completion *elp_compl;
++	struct delayed_work elp_work;
+ 
+ 	/* we can be in psm, but not in elp, we have to differentiate */
+ 	bool psm;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 4fb6138..1a5e575 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1227,6 +1227,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	skb_queue_head_init(&wl->tx_queue);
+ 
+ 	INIT_WORK(&wl->filter_work, wl1271_filter_work);
++	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	wl->channel = WL1271_DEFAULT_CHANNEL;
+ 	wl->scanning = false;
+ 	wl->default_key = 0;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index 1dc74b0..7a3b53e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -27,25 +27,43 @@
+ 
+ #define WL1271_WAKEUP_TIMEOUT 500
+ 
+-/* Routines to toggle sleep mode while in ELP */
+-void wl1271_ps_elp_sleep(struct wl1271 *wl)
++void wl1271_elp_work(struct work_struct *work)
+ {
++	struct delayed_work *dwork;
++	struct wl1271 *wl;
++
++	dwork = container_of(work, struct delayed_work, work);
++	wl = container_of(dwork, struct wl1271, elp_work);
++
++	wl1271_debug(DEBUG_PSM, "elp work");
++
++	mutex_lock(&wl->mutex);
++
+ 	/*
+-	 * FIXME: due to a problem in the firmware (causing a firmware
+-	 * crash), ELP entry is prevented below. Remove the "true" to
+-	 * re-enable ELP entry.
++	 * FIXME: below, by means of the "true", ELP has been disabled for now
++	 * to work around a firmware bug. To be enabled upon receiving a new
++	 * firmware version.
+ 	 */
+ 	if (true || wl->elp || !wl->psm)
+-		return;
++		goto out;
+ 
+-	/*
+-	 * Go to ELP unless there is work already pending - pending work
+-	 * will immediately wakeup the chipset anyway.
+-	 */
+-	if (!work_pending(&wl->irq_work) && !work_pending(&wl->tx_work)) {
+-		wl1271_debug(DEBUG_PSM, "chip to elp");
+-		wl1271_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
+-		wl->elp = true;
++	wl1271_debug(DEBUG_PSM, "chip to elp");
++	wl1271_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
++	wl->elp = true;
++
++out:
++	mutex_unlock(&wl->mutex);
++}
++
++#define ELP_ENTRY_DELAY  5
++
++/* Routines to toggle sleep mode while in ELP */
++void wl1271_ps_elp_sleep(struct wl1271 *wl)
++{
++	if (wl->psm) {
++		cancel_delayed_work(&wl->elp_work);
++		queue_delayed_work(wl->hw->workqueue, &wl->elp_work,
++				   msecs_to_jiffies(ELP_ENTRY_DELAY));
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.h b/drivers/net/wireless/wl12xx/wl1271_ps.h
+index de2bd3c..779653d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.h
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.h
+@@ -30,6 +30,6 @@
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode);
+ void wl1271_ps_elp_sleep(struct wl1271 *wl);
+ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
+-
++void wl1271_elp_work(struct work_struct *work);
+ 
+ #endif /* __WL1271_PS_H__ */
+-- 
+1.5.6.5
 
