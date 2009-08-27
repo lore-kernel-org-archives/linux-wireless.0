@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:35033 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532AbZHJIPr (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:33250 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752847AbZH0VA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 04:15:47 -0400
+	Thu, 27 Aug 2009 17:00:28 -0400
 From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: kalle.valo@iki.fi, joe@perches.com
-Subject: [PATCH v2] MAINTAINERS: add information for wl1271 wireless driver
-Date: Mon, 10 Aug 2009 11:15:13 +0300
-Message-Id: <1249892113-25090-1-git-send-email-luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
+Subject: [PATCH 01/13] wl1271: remove unecessary qual parameter from rx status
+Date: Thu, 27 Aug 2009 23:59:55 +0300
+Message-Id: <1251406807-31495-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add maintainer information section for the wl1271 wireless driver and fix the
-information for wl1271.
+The qual element in ieee80211_rx_status is not used anymore, so we don't need
+to set it in the wl1271_rx_status() function.  This saves a bit of time in
+the RX path.
 
 Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- MAINTAINERS |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_rx.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f2f7156..3c22ee0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5570,7 +5570,16 @@ L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
--F:	drivers/net/wireless/wl12xx/wl1251*
-+F:	drivers/net/wireless/wl12xx/*
-+X:	drivers/net/wireless/wl12xx/wl1271*
-+
-+WL1271 WIRELESS DRIVER
-+M:	Luciano Coelho <luciano.coelho@nokia.com>
-+L:	linux-wireless@vger.kernel.org
-+W:	http://wireless.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-+S:	Maintained
-+F:	drivers/net/wireless/wl12xx/wl1271*
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index ad8b690..5d8d401 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -91,12 +91,6 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 	 */
+ 	status->signal = desc->rssi;
  
- WL3501 WIRELESS PCMCIA CARD DRIVER
- M:	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+-	/* FIXME: Should this be optimized? */
+-	status->qual = (desc->rssi - WL1271_RX_MIN_RSSI) * 100 /
+-		(WL1271_RX_MAX_RSSI - WL1271_RX_MIN_RSSI);
+-	status->qual = min(status->qual, 100);
+-	status->qual = max(status->qual, 0);
+-
+ 	/*
+ 	 * FIXME: In wl1251, the SNR should be divided by two.  In wl1271 we
+ 	 * need to divide by two for now, but TI has been discussing about
 -- 
-1.6.0.4
+1.5.6.5
 
