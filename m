@@ -1,132 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 136-022.dsl.LABridge.com ([206.117.136.22]:4496 "EHLO
-	mail.perches.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717AbZHFSwm (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:51520 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754766AbZH0CaF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 14:52:42 -0400
-Subject: Re: [PATCH] pci_ids.h: add new Atheros USB vendor ID
-From: Joe Perches <joe@perches.com>
-To: Dave Jones <davej@redhat.com>
-Cc: Greg KH <greg@kroah.com>, Marcel Holtmann <marcel@holtmann.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	stephen.chen@atheros.com, linux-usb@vger.kernel.org
-In-Reply-To: <20090806181546.GA11589@redhat.com>
-References: <1249523981-26601-1-git-send-email-lrodriguez@atheros.com>
-	 <1249532170.21101.3.camel@localhost.localdomain>
-	 <43e72e890908052126v53aa1b4sb7a48e19f98fdfa6@mail.gmail.com>
-	 <1249533357.21101.5.camel@localhost.localdomain>
-	 <20090806050932.GA25015@kroah.com>  <20090806181546.GA11589@redhat.com>
-Content-Type: text/plain
-Date: Thu, 06 Aug 2009 11:50:39 -0700
-Message-Id: <1249584639.3467.60.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+	Wed, 26 Aug 2009 22:30:05 -0400
+Received: by bwz19 with SMTP id 19so622553bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 19:30:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <45e8e6c40908261903r1e495ee6tb69277d99aa83e2b@mail.gmail.com>
+References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
+	<4A94B01E.9040309@gmail.com> <4A94C3E9.6070409@lwfinger.net>
+	<4A95AA64.20502@gmail.com> <3ace41890908261538s6818b56ax56cca5af18398dbc@mail.gmail.com>
+	<4A95C128.5000405@gmail.com> <45e8e6c40908261903r1e495ee6tb69277d99aa83e2b@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 27 Aug 2009 04:29:46 +0200
+Message-ID: <69e28c910908261929o64da49b7qefc89bb46a243e33@mail.gmail.com>
+Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
+	enabled
+To: Andrey Yurovsky <andrey@cozybit.com>
+Cc: Richard Farina <sidhayn@gmail.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-08-06 at 14:15 -0400, Dave Jones wrote:
-> On Wed, Aug 05, 2009 at 10:09:32PM -0700, Greg Kroah-Hartman wrote:
->  > > the closest we have is drivers/hid/hid-ids.h and we might just should
->  > > have Greg create a usb-ids.h file.
->  > Ick, no, there's no such file for a good reason.  Put your device ids in
->  > the driver files, no need to share it across the whole kernel.
-> I agree. In fact, I'd go further, and say that the bulk of what we have
-> in pci_ids.h is also pointlessly shared. Only a tiny fraction of the device
-> entries in that file are used by multiple files in the kernel.
+On Thu, Aug 27, 2009 at 4:03 AM, Andrey Yurovsky<andrey@cozybit.com> wrote:
+> Hi Richard,
+>
+> On Wed, Aug 26, 2009 at 4:11 PM, Richard Farina<sidhayn@gmail.com> wrote:
+>> Again, I'm not trying to point my finger blaming someone, I'm trying to help
+>> fix a problem.  I am traveling for the next few days, when I get home to my
+>> camera I hope you are all calm enough to help me troubleshoot this bug so we
+>> can find a solution instead of accusing each other of accusing each other.
+>
+> you may want to try kexec in place of having to take photos of the
+> kernel panic output.  This will enable you to load a crash-recovery
+> kernel, which will be booted automatically once you've successfully
+> reproduced the problem.  From there you can use gdb together with
+> /proc/vmcore and your kernel image to reconstruct what you'd see in
+> dmesg and paste the entire oops.  Please see
+> Documentation/kdump/kdump.txt for more details and use
+> Documentation/kdump/gdbmacros.txt to give gdb a "dmesg" macro.
 
-I created some scripts a while ago to go through the
-kernel to convert struct pci_device definitions to use
-PCI_VDEVICE and PCI_DEVICE.
+Or use the "crash" utility (a wrapper for gdb), which can directly
+extract the kernel log from vmcore.
 
-I could move definitions out of the pci_ids.h file at
-the same time and closer to their actual use if those
-definitions were not globally used.  Maybe move them
-by module or by specific file.
-
-Perhaps like this example unsigned, not to be applied,
-patch below:
-
-diff --git a/drivers/usb/host/ohci-pci.c b/drivers/usb/host/ohci-pci.c
-index d2ba04d..e978eb8 100644
---- a/drivers/usb/host/ohci-pci.c
-+++ b/drivers/usb/host/ohci-pci.c
-@@ -264,30 +264,12 @@ static void amd_iso_dev_put(void)
- 
- /* List of quirks for OHCI */
- static const struct pci_device_id ohci_pci_quirks[] = {
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x740c),
--		.driver_data = (unsigned long)ohci_quirk_amd756,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_OPTI, 0xc861),
--		.driver_data = (unsigned long)ohci_quirk_opti,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_NS, PCI_ANY_ID),
--		.driver_data = (unsigned long)ohci_quirk_ns,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_COMPAQ, 0xa0f8),
--		.driver_data = (unsigned long)ohci_quirk_zfmicro,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA_2, 0x01b6),
--		.driver_data = (unsigned long)ohci_quirk_toshiba_scc,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_NEC, PCI_DEVICE_ID_NEC_USB),
--		.driver_data = (unsigned long)ohci_quirk_nec,
--	},
-+	{ PCI_UNNAMED_DEVICE(AMD, 0x740c), .driver_data = (unsigned long)ohci_quirk_amd756 },
-+	{ PCI_UNNAMED_DEVICE(OPTI, 0xc861), .driver_data = (unsigned long)ohci_quirk_opti },
-+	{ PCI_UNNAMED_DEVICE(NS, PCI_ANY_ID), .driver_data = (unsigned long)ohci_quirk_ns },
-+	{ PCI_UNNAMED_DEVICE(COMPAQ, 0xa0f8), .driver_data = (unsigned long)ohci_quirk_zfmicro },
-+	{ PCI_UNNAMED_DEVICE(TOSHIBA_2, 0x01b6), .driver_data = (unsigned long)ohci_quirk_toshiba_scc },
-+	{ PCI_NAMED_DEVICE(NEC, NEC_USB), .driver_data = (unsigned long)ohci_quirk_nec },
- 	{
- 		/* Toshiba portege 4000 */
- 		.vendor		= PCI_VENDOR_ID_AL,
-@@ -296,22 +278,10 @@ static const struct pci_device_id ohci_pci_quirks[] = {
- 		.subdevice	= 0x0004,
- 		.driver_data	= (unsigned long) broken_suspend,
- 	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_ITE, 0x8152),
--		.driver_data = (unsigned long) broken_suspend,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_ATI, 0x4397),
--		.driver_data = (unsigned long)ohci_quirk_amd700,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_ATI, 0x4398),
--		.driver_data = (unsigned long)ohci_quirk_amd700,
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_ATI, 0x4399),
--		.driver_data = (unsigned long)ohci_quirk_amd700,
--	},
-+	{ PCI_UNNAMED_DEVICE(ITE, 0x8152), .driver_data = (kernel_ulong_t)broken_suspend },
-+	{ PCI_UNNAMED_DEVICE(ATI, 0x4397), .driver_data = (kernel_ulong_t)ohci_quirk_amd700 },
-+	{ PCI_UNNAMED_DEVICE(ATI, 0x4398), .driver_data = (kernel_ulong_t)ohci_quirk_amd700 },
-+	{ PCI_UNNAMED_DEVICE(ATI, 0x4399), .driver_data = (kernel_ulong_t)ohci_quirk_amd700 },
- 
- 	/* FIXME for some of the early AMD 760 southbridges, OHCI
- 	 * won't work at all.  blacklist them.
-diff --git a/drivers/usb/host/whci/hcd.c b/drivers/usb/host/whci/hcd.c
-index e019a50..91e6563 100644
---- a/drivers/usb/host/whci/hcd.c
-+++ b/drivers/usb/host/whci/hcd.c
-@@ -351,7 +351,7 @@ static void __exit whci_hc_driver_exit(void)
- module_exit(whci_hc_driver_exit);
- 
- /* PCI device ID's that we handle (so it gets loaded) */
--static struct pci_device_id whci_hcd_id_table[] = {
-+static const struct pci_device_id whci_hcd_id_table[]  = {
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_WIRELESS_WHCI, ~0) },
- 	{ /* empty last entry */ }
- };
+>
+>  -Andrey
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
