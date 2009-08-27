@@ -1,71 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:46859 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752735AbZHLOw3 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:38288 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbZH0Gwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 10:52:29 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 1/3] mac80211: refactor dynamic power save check
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Wed, 12 Aug 2009 17:52:01 +0300
-Message-ID: <20090812145200.23691.17281.stgit@tikku>
+	Thu, 27 Aug 2009 02:52:42 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+Subject: Re: [PATCH] rndis_wlan: set cipher suites for cfg80211
+Date: Thu, 27 Aug 2009 08:52:04 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <20090826125302.25900.98016.stgit@fate.lan> <200908261521.30050.hs4233@mail.mn-solutions.de> <20090826211551.14002pzogxthwfk0@hayate.sektori.org>
+In-Reply-To: <20090826211551.14002pzogxthwfk0@hayate.sektori.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908270852.05023.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Wednesday 26 August 2009 20:15:51 Jussi Kivilinna wrote:
+> Reason is that rndis_wlan should really check device
+> capabilities and set cipher suites
+> depending by theim 
 
-Refactor dynamic power save checks to a function of it's own for better
-readibility. No functional changes.
+Ahh. I was under the impression that chips since two or three 
+year always support WEP, WPA and WPA2. And that only the orinoco 
+driver (or drivers for similar old chips) need to check the 
+firmware/chip to see what is available.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- net/mac80211/tx.c |   24 +++++++++++++++++++++---
- 1 files changed, 21 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 10a1099..03005f9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1384,6 +1384,26 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
- 	return 0;
- }
- 
-+static bool is_dynamic_ps_enabled(struct ieee80211_local *local)
-+{
-+	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+		/* driver doesn't support power save */
-+		return false;
-+
-+	if (local->hw.conf.dynamic_ps_timeout <= 0)
-+		/* dynamic power save disabled */
-+		return false;
-+
-+	if (local->scanning)
-+		/* we are scanning, don't enable power save */
-+		return false;
-+
-+	if (!local->ps_sdata)
-+		return false;
-+
-+	return true;
-+}
-+
- static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb)
- {
-@@ -1396,9 +1416,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 
- 	dev_hold(sdata->dev);
- 
--	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
--	    local->hw.conf.dynamic_ps_timeout > 0 &&
--	    !(local->scanning) && local->ps_sdata) {
-+	if (is_dynamic_ps_enabled(local)) {
- 		if (local->hw.conf.flags & IEEE80211_CONF_PS) {
- 			ieee80211_stop_queues_by_reason(&local->hw,
- 					IEEE80211_QUEUE_STOP_REASON_PS);
-
+-- 
+http://www.holgerschurig.de
