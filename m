@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:48492 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778AbZHES5r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 Aug 2009 14:57:47 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so215939eyd.37
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2009 11:57:47 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 TX frame alignment
-Date: Wed, 5 Aug 2009 20:57:45 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200908041905.11632.IvDoorn@gmail.com> <1249407436.24787.6.camel@johannes.local>
-In-Reply-To: <1249407436.24787.6.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200908052057.45715.IvDoorn@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:60817 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751498AbZH0JLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 05:11:30 -0400
+Subject: Re: [Bug #14016] mm/ipw2200 regression
+From: Zhu Yi <yi.zhu@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mel@csn.ul.ie>, Johannes Weiner <hannes@cmpxchg.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Mel Gorman <mel@skynet.ie>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+In-Reply-To: <20090826074409.606b5124.akpm@linux-foundation.org>
+References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera>
+	 <_yaHeGjHEzG.A.FIH.7sGlKB@chimera>
+	 <84144f020908252309u5cff8afdh2214577ca4db9b5d@mail.gmail.com>
+	 <20090826082741.GA25955@cmpxchg.org>	<20090826093747.GA10955@csn.ul.ie>
+	 <20090826074409.606b5124.akpm@linux-foundation.org>
+Content-Type: text/plain
+Date: Thu, 27 Aug 2009 17:11:29 +0800
+Message-Id: <1251364289.3704.176.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> > Do you know if for outgoing frames the header should always
-> > be 4-byte aligned?
+On Wed, 2009-08-26 at 22:44 +0800, Andrew Morton wrote:
 > 
-> I know that there's no alignment guarantee.
->
-> > I have a bugreport from users claiming that master mode
-> > is failing for rt2500pci because the beacons passed to the
-> > driver are not 4-byte aligned which causes the device not
-> > to send out the beacons correctly.
-> > 
-> > I'm just wondering if this is something that should be fixed
-> > in the driver or in mac80211.
+> It is perhaps pretty simple to make the second (GFP_ATOMIC) allocation
+> go away.  The code is already conveniently structured to do this:
 > 
-> I don't think we can fix that in mac80211, since we don't know whether
-> or not any alignment is required. We could align beacon frames, I
-> suppose, since those are created on the fly, but not data frames.
+>         do {
+>                 chunk = (struct fw_chunk *)(data + offset);
+>                 offset += sizeof(struct fw_chunk);
+>                 /* build DMA packet and queue up for sending */
+>                 /* dma to chunk->address, the chunk->length bytes from
+> data +
+>                  * offeset*/
+>                 /* Dma loading */
+>                 rc = ipw_fw_dma_add_buffer(priv, shared_phys + offset,
+> 
+> le32_to_cpu(chunk->address),
+> 
+> le32_to_cpu(chunk->length));
+>                 if (rc) {
+>                         IPW_DEBUG_INFO("dmaAddBuffer Failed\n");
+>                         goto out;
+>                 }
+> 
+>                 offset += le32_to_cpu(chunk->length);
+>         } while (offset < len);
+> 
+> what is the typical/expected value of chunk->length here?  If it's
+> significantly less than 4096*(2^6), could we convert this function to
+> use a separate DMAable allocation per fw_chunk?
 
-Ok, I'll look into a patch for making sure rt2x00 aligns all frames
-correctly before mapping the DMA.
+Unfortunately, the largest chunk size for the latest 3.1 firmware is
+0x20040, which also requires order 6 page allocation. I'll try to use
+the firmware DMA command block (64 slots) to handle the image (each for
+4k, totally 256k).
 
 Thanks,
+-yi
 
-Ivo
