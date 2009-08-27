@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46005 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932849AbZHNUaE (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:63407 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751850AbZH0PYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 Aug 2009 16:30:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v4 32/34] wireless: make mac80211 select cfg80211
-Date: Fri, 14 Aug 2009 16:25:57 -0400
-Message-Id: <1250281559-13041-33-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
-References: <1250281559-13041-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 27 Aug 2009 11:24:23 -0400
+Received: by mail-ew0-f206.google.com with SMTP id 2so1299828ewy.17
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 08:24:25 -0700 (PDT)
+Message-ID: <4A96A527.5040605@gmail.com>
+Date: Thu, 27 Aug 2009 17:24:23 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
+MIME-Version: 1.0
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>
+CC: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] b43: Enable LP-PHY support by default and remove Kconfig
+ warning
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can now remove that comment about mac80211 requiring
-cfg80211 and do that for the user.
+The most common LP-PHY device, BCM4312, is now fully functional.
+So, no need to say "probably won't work for you" anymore.
+It's also not "for debuggers and developers only", as it is
+perfectly usable for end-users now (at least for BCM4312).
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
 ---
- net/mac80211/Kconfig |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+This replaces the "remove scary message" patch.
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index d4d3dca..6293b21 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,6 +1,6 @@
- config MAC80211
- 	tristate "mac80211 - SoftMAC device support"
--	depends on CFG80211
-+	select CFG80211
- 	select CRYPTO
- 	select CRYPTO_ECB
- 	select CRYPTO_ARC4
-@@ -28,10 +28,6 @@ config MAC80211
- 	  When built as a module mac80211 will be built as mac80211.ko, if not sure
- 	  you should build this as a module.
+V2: Fix pastebin damage.
+
+ drivers/net/wireless/b43/Kconfig |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 237b1aa..2af3b35 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -82,15 +82,13 @@ config B43_NPHY
+ config B43_PHY_LP
+ 	bool "Support for low-power (LP-PHY) devices (EXPERIMENTAL)"
+ 	depends on B43 && EXPERIMENTAL
++	default y
+ 	---help---
+ 	  Support for the LP-PHY.
+ 	  The LP-PHY is a low-power PHY built into some notebooks
+ 	  and embedded devices. It supports 802.11a/g
+ 	  (802.11a support is optional, and currently disabled).
  
+-	  This is heavily experimental, and probably will not work for you.
+-	  Say N unless you want to help debug the driver.
 -
--comment "CFG80211 needs to be enabled for MAC80211"
--	depends on CFG80211=n
--
- menu "Rate control algorithm selection"
- 	depends on MAC80211 != n
- 
+ # This config option automatically enables b43 LEDS support,
+ # if it's possible.
+ config B43_LEDS
 -- 
-1.6.2.5
+1.6.2.4
+
 
