@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:54445 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753102AbZH1Uju convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f195.google.com ([209.85.212.195]:61903 "EHLO
+	mail-vw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178AbZH0DnI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 16:39:50 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: b43: LP-PHY: Fix TX gain tables
-Date: Fri, 28 Aug 2009 22:39:43 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A983FB2.2020509@gmail.com>
-In-Reply-To: <4A983FB2.2020509@gmail.com>
+	Wed, 26 Aug 2009 23:43:08 -0400
+Received: by vws33 with SMTP id 33so592681vws.33
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 20:43:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908282239.45007.mb@bu3sch.de>
+In-Reply-To: <20090827023000.21926.90867.stgit@mj.roinet.com>
+References: <20090827023000.21926.90867.stgit@mj.roinet.com>
+Date: Wed, 26 Aug 2009 23:43:09 -0400
+Message-ID: <b6c5339f0908262043x490cd51eh297d9289f58acd31@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath5k: fix uninitialized value use in
+	ath5k_eeprom_read_turbo_modes()
+From: Bob Copeland <me@bobcopeland.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 28 August 2009 22:36:02 Gábor Stefanik wrote:
-> The rev1 2GHz and rev2 5GHz gain tables were incorrectly documented
-> on the specs originally. Update these gaintables to match the cor-
-> rected specs.
-> 
-> Signed-off-by: Gábor Stefanik <netroller.3d@gmail.com>
+On Wed, Aug 26, 2009 at 10:30 PM, Pavel Roskin<proski@gnu.org> wrote:
+> The `val' variable in ath5k_eeprom_read_turbo_modes() is used
+> uninitialized. �gcc 4.4.1 with -fno-inline-functions-called-once reports
+> it:
+>
+> eeprom.c: In function 'ath5k_eeprom_read_turbo_modes':
+> eeprom.c:441: warning: 'val' may be used uninitialized in this function
 
-ack
+Thanks!
+
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
 -- 
-Greetings, Michael.
+Bob Copeland %% www.bobcopeland.com
