@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.216.174]:48427 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754556AbZH0CC6 convert rfc822-to-8bit (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:51002 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752352AbZH0P23 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 22:02:58 -0400
-Received: by pxi4 with SMTP id 4so713297pxi.21
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 19:03:00 -0700 (PDT)
+	Thu, 27 Aug 2009 11:28:29 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "Zhu\, Yi" <yi.zhu@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlagn: show_version() displays confusing/wrong firmware version
+References: <1251379989-20728-1-git-send-email-bjorn@mork.no>
+	<1251385041.3805.17.camel@rc-desk>
+Date: Thu, 27 Aug 2009 17:09:05 +0200
+In-Reply-To: <1251385041.3805.17.camel@rc-desk> (reinette chatre's message of
+	"Thu, 27 Aug 2009 07:57:21 -0700")
+Message-ID: <87r5uxb8fi.fsf@nemi.mork.no>
 MIME-Version: 1.0
-In-Reply-To: <4A95C128.5000405@gmail.com>
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
-	 <4A94B01E.9040309@gmail.com> <4A94C3E9.6070409@lwfinger.net>
-	 <4A95AA64.20502@gmail.com>
-	 <3ace41890908261538s6818b56ax56cca5af18398dbc@mail.gmail.com>
-	 <4A95C128.5000405@gmail.com>
-Date: Wed, 26 Aug 2009 19:03:00 -0700
-Message-ID: <45e8e6c40908261903r1e495ee6tb69277d99aa83e2b@mail.gmail.com>
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
-	enabled
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Richard,
+reinette chatre <reinette.chatre@intel.com> writes:
 
-On Wed, Aug 26, 2009 at 4:11 PM, Richard Farina<sidhayn@gmail.com> wrote:
-> Again, I'm not trying to point my finger blaming someone, I'm trying to help
-> fix a problem. �I am traveling for the next few days, when I get home to my
-> camera I hope you are all calm enough to help me troubleshoot this bug so we
-> can find a solution instead of accusing each other of accusing each other.
+> Hi Bjørn,
+>
+> Which kernel/repo is your patch based on?
 
-you may want to try kexec in place of having to take photos of the
-kernel panic output.  This will enable you to load a crash-recovery
-kernel, which will be booted automatically once you've successfully
-reproduced the problem.  From there you can use gdb together with
-/proc/vmcore and your kernel image to reconstruct what you'd see in
-dmesg and paste the entire oops.  Please see
-Documentation/kdump/kdump.txt for more details and use
-Documentation/kdump/gdbmacros.txt to give gdb a "dmesg" macro.
+Oh, sorry for not including that vital information.  I'm afraid it is
+against Linus' tree at 
+git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+and not any of the wireless/networking trees.
 
-  -Andrey
+"git log drivers/net/wireless/iwlwifi/iwl-agn.c" shows this as the last
+commit affecting iwl-agn.c before my change:
+
+commit 872ed1902f511a8947021c562f5728a5bf0640b5
+Author: Reinette Chatre <reinette.chatre@intel.com>
+Date:   Thu Jul 9 10:33:37 2009 -0700
+
+    iwlwifi: only show active power level via sysfs
+    
+
+
+Bjørn
