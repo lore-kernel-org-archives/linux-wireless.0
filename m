@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:38815 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbZHZHGp convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:45695 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100AbZH0Vrr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 03:06:45 -0400
-Received: by fxm17 with SMTP id 17so2660011fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 00:06:46 -0700 (PDT)
+	Thu, 27 Aug 2009 17:47:47 -0400
+Received: by iwn42 with SMTP id 42so748860iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:47:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <E1Mg8tl-0005Rh-8w@sipsolutions.net>
-References: <E1Mg8tl-0005Rh-8w@sipsolutions.net>
-Date: Wed, 26 Aug 2009 10:06:46 +0300
-Message-ID: <1ba2fa240908260006q833a2as1fd597d3e7239549@mail.gmail.com>
-Subject: Re: [ANN] rfkill: v0.2
-From: Tomas Winkler <tomasw@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	<1251406807-31495-14-git-send-email-luciano.coelho@nokia.com>
+	<1251408741.22482.14.camel@johannes.local> <43e72e890908271435t3b873a9pc6c2fc69a0cba5ca@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 27 Aug 2009 14:47:29 -0700
+Message-ID: <43e72e890908271447o26348e6docc126b440aa80724@mail.gmail.com>
+Subject: Re: [PATCH 13/13] wl1271: added Juuso Oikarinen as module author
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com,
+	kalle.valo@nokia.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 6:10 AM, <wireless@sipsolutions.net> wrote:
+On Thu, Aug 27, 2009 at 2:35 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Thu, Aug 27, 2009 at 2:32 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+>> On Fri, 2009-08-28 at 00:00 +0300, Luciano Coelho wrote:
+>>> Add Juuso as one of the module authors, since he's working heavily on this
+>>> module as well.
+>>>
+>>> Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>>> ---
+>>>  drivers/net/wireless/wl12xx/wl1271_main.c |    3 ++-
+>>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+>>> index a97d434..4163eac 100644
+>>> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+>>> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+>>> @@ -1449,4 +1449,5 @@ module_init(wl1271_init);
+>>>  module_exit(wl1271_exit);
+>>>
+>>>  MODULE_LICENSE("GPL");
+>>> -MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
+>>> +MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>, "
+>>> +           "Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+>>
+>> Use multiple MODULE_AUTHORs instead.
 >
-> A new release of rfkill (v0.2) is available at:
->
-> http://wireless.kernel.org/download/rfkill/rfkill-0.2.tar.bz2
->
-> SHA1 sum: fc8f36efd4827219ca7169f8c55572a4c9e1c3b7
->
-> Here is the short log of the changes included in this
-> release:
->
-> Johannes Berg -  version 0.2
+> Where is that defined?
 
-Thanks for the GPS updated, I should sent you patch myself. :)
+Hah nevermind, my mind read MODULE_AUTHORS() :)
 
-Tomas
+  Luis
