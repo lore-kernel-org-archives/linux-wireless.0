@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:48319 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125AbZHBHlD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 Aug 2009 03:41:03 -0400
-Received: by ewy10 with SMTP id 10so2372222ewy.37
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2009 00:41:02 -0700 (PDT)
-Message-ID: <4A7543CC.2010206@gmail.com>
-Date: Sun, 02 Aug 2009 09:44:12 +0200
-From: Roel Kluin <roel.kluin@gmail.com>
-MIME-Version: 1.0
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH] libertas: Read buffer overflow
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:9731 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745AbZH0CJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 Aug 2009 22:09:34 -0400
+Subject: Re: [PATCH 4/4] ath5k: add hardware CCMP encyption support
+From: Pavel Roskin <proski@gnu.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+In-Reply-To: <1251169233-24169-5-git-send-email-me@bobcopeland.com>
+References: <1251169233-24169-1-git-send-email-me@bobcopeland.com>
+	 <1251169233-24169-5-git-send-email-me@bobcopeland.com>
+Content-Type: text/plain
+Date: Wed, 26 Aug 2009 22:09:31 -0400
+Message-Id: <1251338971.17295.17.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check whether index is within bounds before testing the element.
+On Mon, 2009-08-24 at 23:00 -0400, Bob Copeland wrote:
+> +	ah->ah_aes_support =
+> +		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
+> +		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5) &&
+> +		 (ah->ah_mac_version > (AR5K_SREV_AR5212 >> 4) ||
+> +		  (ah->ah_mac_version == (AR5K_SREV_AR5212 >> 4) &&
+> +		   ah->ah_mac_revision >= (AR5K_SREV_AR5211 >> 4))));
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-diff --git a/drivers/net/wireless/libertas/11d.c b/drivers/net/wireless/libertas/11d.c
-index 9a5408e..5c69681 100644
---- a/drivers/net/wireless/libertas/11d.c
-+++ b/drivers/net/wireless/libertas/11d.c
-@@ -47,7 +47,7 @@ static u8 lbs_region_2_code(u8 *region)
- {
- 	u8 i;
- 
--	for (i = 0; region[i] && i < COUNTRY_CODE_LEN; i++)
-+	for (i = 0; i < COUNTRY_CODE_LEN && region[i]; i++)
- 		region[i] = toupper(region[i]);
- 
- 	for (i = 0; i < ARRAY_SIZE(region_code_mapping); i++) {
+The above use of ah->ah_mac_revision is clearly incorrect.  You are
+comparing a revision with a symbol for a version.
+
+I suggest that you use ah_mac_srev instead.  Before this patch,
+ah_mac_revision was a write-only variable and was a good candidate for
+removal.
+
+The last three quoted lines are equivalent to (ah->ah_mac_srev >= 0x54)
+
+-- 
+Regards,
+Pavel Roskin
