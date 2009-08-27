@@ -1,122 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37038 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932530AbZHUUqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:46:17 -0400
-Message-ID: <4A8F0798.6050908@gmx.de>
-Date: Fri, 21 Aug 2009 22:46:16 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from smtp.nokia.com ([192.100.105.134]:38945 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbZH0L4U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 07:56:20 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n7RBtbjR005524
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 06:55:51 -0500
+Received: from tikku (essapo-nirac2536.europe.nokia.com [10.162.253.6])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n7RBtQnN024443
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 14:55:27 +0300
+From: Kalle Valo <kalle.valo@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: Nokia N900 running mac80211
+Date: Thu, 27 Aug 2009 14:55:31 +0300
+Message-ID: <87k50plbd8.fsf@nokia.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@web.de>
-Subject: [PATCH 1/2 v2] ar9170: cleanup of bss_info_changed and beacon config
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add beacon control by BSS_CHANGED_BEACON_ENABLED and
-bss_conf->enable_beacon from mac80211.
+Hello,
 
-Signed-off-by: Joerg Albert <jal2@gmx.de>
+wanted to tell you that just released Nokia N900 is using mac80211 and
+wl1251 driver. The kernel is 2.6.28 with few wireless related patches
+backported from newer releases and some hacks related to roaming.
 
----
+http://www.nokia.com/press/press-releases/showpressrelease?newsid=1337594
 
-As suggested by Christian this version preserves the old behaviour for STA mode.
-
- drivers/net/wireless/ath/ar9170/ar9170.h |    1 +
- drivers/net/wireless/ath/ar9170/mac.c    |   24 ++++++++++++++----------
- drivers/net/wireless/ath/ar9170/main.c   |   15 ++++++++-------
- 3 files changed, 23 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
-index ce40724..914e471 100644
---- a/drivers/net/wireless/ath/ar9170/ar9170.h
-+++ b/drivers/net/wireless/ath/ar9170/ar9170.h
-@@ -178,6 +178,7 @@ struct ar9170 {
- 	/* beaconing */
- 	struct sk_buff *beacon;
- 	struct work_struct beacon_work;
-+	bool enable_beacon;
- 
- 	/* cryptographic engine */
- 	u64 usedkeys;
-diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
-index 6004936..71eeef5 100644
---- a/drivers/net/wireless/ath/ar9170/mac.c
-+++ b/drivers/net/wireless/ath/ar9170/mac.c
-@@ -383,20 +383,24 @@ int ar9170_set_beacon_timers(struct ar9170 *ar)
- 	if (ar->vif) {
- 		v |= ar->vif->bss_conf.beacon_int;
- 
--		switch (ar->vif->type) {
--		case NL80211_IFTYPE_MESH_POINT:
--		case NL80211_IFTYPE_ADHOC:
--			v |= BIT(25);
--			break;
--		case NL80211_IFTYPE_AP:
--			v |= BIT(24);
--			pretbtt = (ar->vif->bss_conf.beacon_int - 6) << 16;
--			break;
--		default:
-+		if (ar->enable_beacon) {
-+
-+			switch (ar->vif->type) {
-+			case NL80211_IFTYPE_MESH_POINT:
-+			case NL80211_IFTYPE_ADHOC:
-+				v |= BIT(25);
-+				break;
-+			case NL80211_IFTYPE_AP:
-+				v |= BIT(24);
-+				pretbtt = (ar->vif->bss_conf.beacon_int - 6) << 16;
-+				break;
-+			default:
- 			break;
-+			}
- 		}
- 
- 		v |= ar->vif->bss_conf.dtim_period << 16;
-+
- 	}
- 
- 	ar9170_regwrite_begin(ar);
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index 658b323..911e502 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -2148,11 +2148,18 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
- 			goto out;
- 	}
- 
--	if (changed & (BSS_CHANGED_BEACON | BSS_CHANGED_BEACON_ENABLED)) {
-+	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-+		ar->enable_beacon = bss_conf->enable_beacon;
-+	}
-+
-+	if (changed & BSS_CHANGED_BEACON) {
- 		err = ar9170_update_beacon(ar);
- 		if (err)
- 			goto out;
-+	}
- 
-+	if (changed & (BSS_CHANGED_BEACON_ENABLED | BSS_CHANGED_BEACON |
-+		       BSS_CHANGED_BEACON_INT)) {
- 		err = ar9170_set_beacon_timers(ar);
- 		if (err)
- 			goto out;
-@@ -2165,12 +2172,6 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
- #endif /* CONFIG_AR9170_LEDS */
- 	}
- 
--	if (changed & BSS_CHANGED_BEACON_INT) {
--		err = ar9170_set_beacon_timers(ar);
--		if (err)
--			goto out;
--	}
--
- 	if (changed & BSS_CHANGED_HT) {
- 		/* TODO */
- 		err = 0;
 -- 
-1.6.0.4
-
+Kalle Valo
