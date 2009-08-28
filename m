@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42492 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752650AbZHFH2L (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:57213 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751908AbZH1J7T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 Aug 2009 03:28:11 -0400
-Subject: Re: [PATCH] nl80211: fix attrtype and value for
- NL80211_ATTR_SUPPORTED_COMMANDS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1249523206.4069.146.camel@debian>
-References: <1249464510-21539-1-git-send-email-yi.zhu@intel.com>
-	 <1249486901.6902.6.camel@johannes.local> <1249523206.4069.146.camel@debian>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-GJqeRm+zAL9DEhz/QZ+p"
-Date: Thu, 06 Aug 2009 09:28:01 +0200
-Message-Id: <1249543681.555.0.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 28 Aug 2009 05:59:19 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 7/8] rndis_wlan: set ieee80211_ptr->iftype in
+	rndis_change_virtual_intf
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Aug 2009 12:59:21 +0300
+Message-ID: <20090828095921.10554.51249.stgit@fate.lan>
+In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
+References: <20090828095849.10554.58857.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
---=-GJqeRm+zAL9DEhz/QZ+p
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+ drivers/net/wireless/rndis_wlan.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-On Thu, 2009-08-06 at 09:46 +0800, Zhu Yi wrote:
-
-> I'm trying to find if a command (i.e. NL80211_CMD_CONNECT) is supported
-> or not. I think I can use nla_find_nested() if the command is an
-> attribute. But I can also do the find myself if it is an array like now.
-
-Ok, that would have worked too, but I'm pretty sure I documented it the
-way I also implemented it.
-
-johannes
-
---=-GJqeRm+zAL9DEhz/QZ+p
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKeoX+AAoJEODzc/N7+Qma9M8QAKyTrWeSz02fa38rmqnFyG0N
-kr75qyv4hg1jyIZ8Xv6fXBZJEqYxD4RTwQs+jmteOT65rYRLv6vhSu1jFU3woMxW
-n8BD9MIha+A7w/yF6uGXIaD7J+2fAUrRw8fQZom2S59cGMSNubBETmYCdEVEl0nr
-saiOveVlm7B0lYvT+WPuZgAy4DsltKf0b7y4Y4LqkPYqWuwmFizm97sWB4B0+LTS
-viwl5zDcweQdoLKyK6YTsb3TGZHFejzslLYeWOpwIKt5leX1vUd1hMgrbJMtzHZF
-xjqqjYLMqNFijXzvDGbXztzlU/hy8ih10ZwoKQytMvWRPZEwoqZxKidNZlp2M4mD
-di1wTioIFH5/6mqDK9s2SrBbgOk8MTnV91eNQvB1m7iWBcvFSM4qLeNwH1U+scSD
-Rx5vLMUitg0TxB0IDMqvDspSG4cEOz/ONGCLg1mFd2U9CtZc9OOClBFEj2KsXD9C
-2mZOtcdDLgHzT1waUj9FJhnuMDgzhGdR7LFC8bI0s8yCLGLl3piZZmcvrWejQQyQ
-hIq4YYJLn7Jdnugv00kME5s/BotFxPAnxhikE1IELXQd6yZrBwJMGTrLJCPwPA8N
-6/DwnoWcfxKctH8Ozl41WUKYzjeKqMFRa4xCB26uJxk8LlIRpCy0I3zyrog7BhA5
-YSHuI83C+PJFaIrIPG4m
-=6Aba
------END PGP SIGNATURE-----
-
---=-GJqeRm+zAL9DEhz/QZ+p--
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index c28fde5..d117620 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1526,7 +1526,8 @@ static int rndis_change_virtual_intf(struct wiphy *wiphy,
+ 					enum nl80211_iftype type, u32 *flags,
+ 					struct vif_params *params)
+ {
+-	struct usbnet *usbdev = netdev_priv(dev);
++	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
++	struct usbnet *usbdev = priv->usbdev;
+ 	int mode;
+ 
+ 	switch (type) {
+@@ -1540,6 +1541,8 @@ static int rndis_change_virtual_intf(struct wiphy *wiphy,
+ 		return -EINVAL;
+ 	}
+ 
++	priv->wdev.iftype = type;
++
+ 	return set_infra_mode(usbdev, mode);
+ }
+ 
 
