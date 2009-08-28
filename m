@@ -1,58 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f214.google.com ([209.85.219.214]:64142 "EHLO
-	mail-ew0-f214.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932113AbZHQQ4b (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:48458 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966AbZH1MYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 12:56:31 -0400
-Received: by ewy10 with SMTP id 10so3097919ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2009 09:56:31 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 5/7] rt2x00: wireless CLI ID and packet ID must not be 0
-Date: Mon, 17 Aug 2009 18:55:15 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>
-References: <200908171853.24256.IvDoorn@gmail.com> <200908171854.19205.IvDoorn@gmail.com> <200908171854.50790.IvDoorn@gmail.com>
-In-Reply-To: <200908171854.50790.IvDoorn@gmail.com>
+	Fri, 28 Aug 2009 08:24:53 -0400
+Date: Fri, 28 Aug 2009 17:47:59 +0530
+From: Kiran Divekar <kirandivekar@gmail.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] libertas: add NULL check on return value of get_zeroed_page
+Message-ID: <20090828121759.GA7766@ossifrage.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200908171855.15390.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the TX descriptor the Packet ID must not be 0,
-so add 1 to the ID. The wireless CLI ID is not allowed
-to be 0 either, but also must be initialized with the
-wcid value rather then keyid.
+Most of the places in debugfs.c are missing a NULL check on the return value of
+get_zeroed_page API call. Added required NULL check at appropriate places.
 
-Based on a patch for rt2800pci from Benoit
-
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Kiran Divekar <kirandivekar@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/libertas/debugfs.c |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 6de2eda..3633e58 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1995,11 +1995,11 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&word, TXWI_W1_BW_WIN_SIZE, txdesc->ba_size);
- 	rt2x00_set_field32(&word, TXWI_W1_WIRELESS_CLI_ID,
- 			   test_bit(ENTRY_TXD_ENCRYPT, &txdesc->flags) ?
--			       txdesc->key_idx : 0xff);
-+			       (skbdesc->entry->entry_idx + 1) : 0xff);
- 	rt2x00_set_field32(&word, TXWI_W1_MPDU_TOTAL_BYTE_COUNT,
- 			   skb->len - txdesc->l2pad);
- 	rt2x00_set_field32(&word, TXWI_W1_PACKETID,
--			   skbdesc->entry->entry_idx);
-+			   skbdesc->entry->queue->qid + 1);
- 	rt2x00_desc_write(txwi, 1, word);
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 811ffc3..893a55c 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -45,6 +45,8 @@ static ssize_t lbs_dev_info(struct file *file, char __user *userbuf,
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
+ 	ssize_t res;
++	if (!buf)
++		return -ENOMEM;
  
- 	/*
+ 	pos += snprintf(buf+pos, len-pos, "state = %s\n",
+ 				szStates[priv->connect_status]);
+@@ -68,6 +70,8 @@ static ssize_t lbs_getscantable(struct file *file, char __user *userbuf,
+ 	char *buf = (char *)addr;
+ 	DECLARE_SSID_BUF(ssid);
+ 	struct bss_descriptor * iter_bss;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	pos += snprintf(buf+pos, len-pos,
+ 		"# | ch  | rssi |       bssid       |   cap    | Qual | SSID \n");
+@@ -110,6 +114,8 @@ static ssize_t lbs_sleepparams_write(struct file *file,
+ 	int p1, p2, p3, p4, p5, p6;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, user_buf, buf_size)) {
+@@ -148,6 +154,8 @@ static ssize_t lbs_sleepparams_read(struct file *file, char __user *userbuf,
+ 	struct sleep_params sp;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
+ 	if (ret)
+@@ -433,6 +441,8 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
+ 	int ret;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	offval.offset = priv->mac_offset;
+ 	offval.value = 0;
+@@ -457,6 +467,8 @@ static ssize_t lbs_rdmac_write(struct file *file,
+ 	ssize_t res, buf_size;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -481,6 +493,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
+ 	struct lbs_offset_value offval;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -515,6 +529,8 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
+ 	int ret;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	offval.offset = priv->bbp_offset;
+ 	offval.value = 0;
+@@ -540,6 +556,8 @@ static ssize_t lbs_rdbbp_write(struct file *file,
+ 	ssize_t res, buf_size;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -564,6 +582,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
+ 	struct lbs_offset_value offval;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -598,6 +618,8 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
+ 	int ret;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	offval.offset = priv->rf_offset;
+ 	offval.value = 0;
+@@ -623,6 +645,8 @@ static ssize_t lbs_rdrf_write(struct file *file,
+ 	ssize_t res, buf_size;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -647,6 +671,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
+ 	struct lbs_offset_value offval;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+@@ -853,6 +879,8 @@ static ssize_t lbs_debugfs_read(struct file *file, char __user *userbuf,
+ 	struct debug_data *d;
+ 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
+ 	char *buf = (char *)addr;
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	p = buf;
+ 
 -- 
-1.6.4
+1.5.3.4
 
