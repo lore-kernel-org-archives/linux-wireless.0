@@ -1,141 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50995 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932664AbZHUUea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 16:34:30 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/14] ipw2x00: update contact information
-Date: Fri, 21 Aug 2009 13:34:26 -0700
-Message-Id: <1250886867-4112-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
-References: <1250886867-4112-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54382 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbZH1PpY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2009 11:45:24 -0400
+Date: Fri, 28 Aug 2009 11:44:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, mickflemm@gmail.com,
+	proski@gnu.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, ic.felix@gmail.com
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use
+	in ath5k_eeprom_read_turbo_modes()
+Message-ID: <20090828154410.GB32694@tuxdriver.com>
+References: <20090827023000.21926.90867.stgit@mj.roinet.com> <40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com> <b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com> <43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com> <20090827213921.GB30419@hash.localnet> <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Thu, Aug 27, 2009 at 04:14:56PM -0700, Luis R. Rodriguez wrote:
+> On Thu, Aug 27, 2009 at 2:39 PM, Bob Copeland<me@bobcopeland.com> wrote:
+> > On Thu, Aug 27, 2009 at 11:25:03AM -0700, Luis R. Rodriguez wrote:
+> >> > Well, we also don't use the turbo modes at all and that's where the
+> >> > error is (IIRC) so it shouldn't have any impact. :)
+> >>
+> >> Again, why don't we just remove all that fucking turbo cruft?
+> >
+> > OK with me since no one seems to care enough to implement mac80211
+> > support.  I left some of the #defines in place as they are useful
+> > documentation.  Approx. 80 of the lines removed are comments.
+> >
+> >   text    data     bss     dec     hex filename
+> >  136746     480      56  137282   21842 ath5k_old.ko
+> >  134913     480      56  135449   21119 ath5k_new.ko
+> >
+> > Disclaimer: only barely tested.
+> 
+> Sexy, thanks!
+> 
+> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Intel Linux wireless folks can be reached via this address.
+I think I am on the side of removing the non-standard extensions.
+FWIW, I'll need a patch posted with a proper Subject and
+Signed-off-by...
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/ipw2x00/ipw2100.c       |    2 +-
- drivers/net/wireless/ipw2x00/ipw2100.h       |    2 +-
- drivers/net/wireless/ipw2x00/ipw2200.c       |    2 +-
- drivers/net/wireless/ipw2x00/ipw2200.h       |    2 +-
- drivers/net/wireless/ipw2x00/libipw_geo.c    |    2 +-
- drivers/net/wireless/ipw2x00/libipw_module.c |    2 +-
- drivers/net/wireless/ipw2x00/libipw_tx.c     |    2 +-
- drivers/net/wireless/ipw2x00/libipw_wx.c     |    2 +-
- 8 files changed, 8 insertions(+), 8 deletions(-)
+I think Nick has some valid points.  His position sounds similar to
+that expressed to me by Felix and some others that it would be nice
+if we could more easily accomodate some of the features of madwifi
+that have made it attractive to researchers and experimenters.
+Perhaps NL80211_CMD_TESTMODE relates to this desire?
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 33bdb20..8caa07a 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -19,7 +19,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
-   Portions of this file are based on the sample_* files provided by Wireless
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index af175bd..1eab0d6 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -19,7 +19,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 3617e3c..0ccec9f 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -25,7 +25,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.h b/drivers/net/wireless/ipw2x00/ipw2200.h
-index 4448bad..bf0eeb2 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.h
-@@ -19,7 +19,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/libipw_geo.c b/drivers/net/wireless/ipw2x00/libipw_geo.c
-index d04979b..65e8c17 100644
---- a/drivers/net/wireless/ipw2x00/libipw_geo.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_geo.c
-@@ -19,7 +19,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index 00c3640..eb2b608 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -25,7 +25,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- *******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/libipw_tx.c b/drivers/net/wireless/ipw2x00/libipw_tx.c
-index 3b807be..8cbe62a 100644
---- a/drivers/net/wireless/ipw2x00/libipw_tx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_tx.c
-@@ -19,7 +19,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index f79ce57..4d89f66 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -25,7 +25,7 @@
-   file called LICENSE.
- 
-   Contact Information:
--  James P. Ketrenos <ipw2100-admin@linux.intel.com>
-+  Intel Linux Wireless <ilw@linux.intel.com>
-   Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- 
- ******************************************************************************/
+Just a thought...
+
+John
 -- 
-1.5.6.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
