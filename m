@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:26197 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755214AbZHKSqc (ORCPT
+Received: from sinikuusama.dnainternet.net ([83.102.40.134]:37485 "EHLO
+	sinikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751912AbZH1J7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 Aug 2009 14:46:32 -0400
-Date: Tue, 11 Aug 2009 11:45:18 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: ext Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] wl1271: fix compiler warnings on 64 bit archs
-Message-Id: <20090811114518.d45d4006.randy.dunlap@oracle.com>
-In-Reply-To: <4A81BB47.2020607@nokia.com>
-References: <1249981107-21746-1-git-send-email-luciano.coelho@nokia.com>
-	<20090811200746.cde6aed9.sfr@canb.auug.org.au>
-	<4A81BB47.2020607@nokia.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 28 Aug 2009 05:59:25 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 8/8] rndis_wlan: enable infrastructure before setting random
+	essid
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Aug 2009 12:59:26 +0300
+Message-ID: <20090828095926.10554.15679.stgit@fate.lan>
+In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
+References: <20090828095849.10554.58857.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 11 Aug 2009 21:41:11 +0300 Luciano Coelho wrote:
+Random essid must be set to turn on radio when not connected. If device is
+in ad-hoc mode, this results 'media connect' indications with the random
+essid which should be ignored.
 
-> ext Stephen Rothwell wrote:
-> > Hi Luciano,
-> >
-> > On Tue, 11 Aug 2009 11:58:27 +0300 Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> >   
-> >> +++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-> >> @@ -100,8 +100,8 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
-> >>  
-> >>  	wl1271_debug(DEBUG_BOOT, "starting firmware upload");
-> >>  
-> >> -	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d", fw_data_len,
-> >> -		CHUNK_SIZE);
-> >> +	wl1271_debug(DEBUG_BOOT, "fw_data_len %d chunk_size %d",
-> >> +		     (u32) fw_data_len, CHUNK_SIZE);
-> >>     
-> >
-> > fw_data_len is a size_t and so should be printed with %zd.
-> >
-> >   
-> >> @@ -148,7 +148,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
-> >>  	addr = dest + chunk_num * CHUNK_SIZE;
-> >>  	p = buf + chunk_num * CHUNK_SIZE;
-> >>  	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%d B) 0x%p to 0x%x",
-> >> -		     fw_data_len % CHUNK_SIZE, p, addr);
-> >> +		     (u32) fw_data_len % CHUNK_SIZE, p, addr);
-> >>     
-> >
-> > ditto.
-> >   
-> 
-> Thanks! I didn't know about the z length modifier for printf (everyday 
-> learning something new!), I should have checked the manpage.  I'll fix 
-> this and send v2 of my patch.
-
-man page is fine, but you can also check (in the kernel source tree)
-Documentation/printk-formats.txt
-
-
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-~Randy
-LPC 2009, Sept. 23-25, Portland, Oregon
-http://linuxplumbersconf.org/2009/
+
+ drivers/net/wireless/rndis_wlan.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index d117620..c5a674d 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -921,6 +921,7 @@ static int freq_to_dsconfig(struct iw_freq *freq, unsigned int *dsconfig)
+ /*
+  * common functions
+  */
++static int set_infra_mode(struct usbnet *usbdev, int mode);
+ static void restore_keys(struct usbnet *usbdev);
+ static int rndis_check_bssid_list(struct usbnet *usbdev);
+ 
+@@ -1014,6 +1015,11 @@ static int disassociate(struct usbnet *usbdev, int reset_ssid)
+ 	/* disassociate causes radio to be turned off; if reset_ssid
+ 	 * is given, set random ssid to enable radio */
+ 	if (reset_ssid) {
++		/* Set device to infrastructure mode so we don't get ad-hoc
++		 * 'media connect' indications with the random ssid.
++		 */
++		set_infra_mode(usbdev, NDIS_80211_INFRA_INFRA);
++
+ 		ssid.length = cpu_to_le32(sizeof(ssid.essid));
+ 		get_random_bytes(&ssid.essid[2], sizeof(ssid.essid)-2);
+ 		ssid.essid[0] = 0x1;
+
