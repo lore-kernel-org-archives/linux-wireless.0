@@ -1,38 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45305 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbZHJSBI (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:59939 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbZH1K2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 14:01:08 -0400
-Date: Mon, 10 Aug 2009 13:52:25 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, andrey@cozybit.com,
-	devel@lists.open80211s.org
-Subject: Re: Mesh fixes and improvements
-Message-ID: <20090810175225.GF2733@tuxdriver.com>
-References: <1249702711-32737-1-git-send-email-javier@cozybit.com> <1249722543.31670.19.camel@johannes.local> <445f43ac0908082155n7cdde6e2p7656177fc2952be@mail.gmail.com>
+	Fri, 28 Aug 2009 06:28:08 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [RFC PATCH 05/10] rndis_wlan: add cfg80211 dump_station
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 28 Aug 2009 13:28:09 +0300
+Message-ID: <20090828102808.15684.14742.stgit@fate.lan>
+In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
+References: <20090828102742.15684.10566.stgit@fate.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <445f43ac0908082155n7cdde6e2p7656177fc2952be@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 08, 2009 at 09:55:56PM -0700, Javier Cardona wrote:
-> On Sat, Aug 8, 2009 at 2:09 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
-> >> Also, I'm not sure if "Simulate-transmission-losses-on-plinks-to-..." should be
-> >> merged upstream, but we find it really useful to test mesh configurations.
-> >> Please comment if you have different opinions on its adequacy or
-> >> implementation.
-> >
-> > As I said elsewhere in this thread I don't think that should be in,
-> > especially not, as Kalle points out, using nl80211.
-> 
-> Understood.  I'll withdraw that patch and regenerate the series...
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-Dropping the series based on the above comment...
+ drivers/net/wireless/rndis_wlan.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 1be0172..ac873d0 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -531,6 +531,9 @@ static int rndis_set_default_key(struct wiphy *wiphy, struct net_device *netdev,
+ static int rndis_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 					u8 *mac, struct station_info *sinfo);
+ 
++static int rndis_dump_station(struct wiphy *wiphy, struct net_device *dev,
++			       int idx, u8 *mac, struct station_info *sinfo);
++
+ static struct cfg80211_ops rndis_config_ops = {
+ 	.change_virtual_intf = rndis_change_virtual_intf,
+ 	.scan = rndis_scan,
+@@ -546,6 +549,7 @@ static struct cfg80211_ops rndis_config_ops = {
+ 	.del_key = rndis_del_key,
+ 	.set_default_key = rndis_set_default_key,
+ 	.get_station = rndis_get_station,
++	.dump_station = rndis_dump_station,
+ };
+ 
+ static void *rndis_wiphy_privid = &rndis_wiphy_privid;
+@@ -2155,6 +2159,22 @@ static int rndis_get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++static int rndis_dump_station(struct wiphy *wiphy, struct net_device *dev,
++			       int idx, u8 *mac, struct station_info *sinfo)
++{
++	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
++	struct usbnet *usbdev = priv->usbdev;
++
++	if (idx != 0)
++		return -ENOENT;
++
++	memcpy(mac, priv->bssid, ETH_ALEN);
++
++	rndis_fill_station_info(usbdev, sinfo);
++
++	return 0;
++}
++
+ /*
+  * wireless extension handlers
+  */
+
