@@ -1,295 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:45418 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbZHJStG (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752771AbZH1VBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 14:49:06 -0400
-Received: by bwz19 with SMTP id 19so2755572bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2009 11:49:05 -0700 (PDT)
-Message-ID: <4A806B9E.5010105@gmail.com>
-Date: Mon, 10 Aug 2009 20:49:02 +0200
-From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH RFC] ssb: Implement the remaining rev.8 SPROM vars needed
- for LP-PHY
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 28 Aug 2009 17:01:43 -0400
+Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
+ inserted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251474321.3805.73.camel@rc-desk>
+References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+	 <1251445557.4189.14.camel@johannes.local>
+	 <1251474321.3805.73.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ABrZ9h7QBOGsNuF5DvGM"
+Date: Fri, 28 Aug 2009 23:01:37 +0200
+Message-Id: <1251493298.3456.34.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also add a "SPEX32" macro for extracting 32-bit SPROM variables.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
----
-I'm not quite sure that the SPEX32 macro is sane endianness-wise;
-please review it carefully. (In the future, we will probably need
-a SPEX64 macro too, to correctly extract boardflags.)
+--=-ABrZ9h7QBOGsNuF5DvGM
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/ssb/pci.c            |   53 +++++++++++++++++++++++++++++++++-
- include/linux/ssb/ssb.h      |   44 +++++++++++++++++++++++----
- include/linux/ssb/ssb_regs.h |   66 +++++++++++++++++++++++++++++++++++++----
- 3 files changed, 148 insertions(+), 15 deletions(-)
+Hi Reinette,
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 40ea417..50811e4 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -169,8 +169,14 @@ err_pci:
- /* Get the word-offset for a SSB_SPROM_XXX define. */
- #define SPOFF(offset)	(((offset) - SSB_SPROM_BASE) / sizeof(u16))
- /* Helper to extract some _offset, which is one of the SSB_SPROM_XXX defines. */
--#define SPEX(_outvar, _offset, _mask, _shift)	\
-+#define SPEX16(_outvar, _offset, _mask, _shift)	\
- 	out->_outvar = ((in[SPOFF(_offset)] & (_mask)) >> (_shift))
-+#define SPEX32(_outvar, _offset, _mask, _shift)	\
-+	out->_outvar = ((((in[SPOFF((_offset)+2)] << sizeof(u16)) | \
-+			   in[SPOFF(_offset)]) & (_mask)) >> (_shift))
-+#define SPEX(_outvar, _offset, _mask, _shift) \
-+	SPEX16(_outvar, _offset, _mask, _shift)
-+
- 
- static inline u8 ssb_crc8(u8 crc, u8 data)
- {
-@@ -480,6 +486,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 	SPEX(country_code, SSB_SPROM8_CCODE, 0xFFFF, 0);
- 	SPEX(boardflags_lo, SSB_SPROM8_BFLLO, 0xFFFF, 0);
- 	SPEX(boardflags_hi, SSB_SPROM8_BFLHI, 0xFFFF, 0);
-+	SPEX(boardflags2_lo, SSB_SPROM8_BFL2LO, 0xFFFF, 0);
-+	SPEX(boardflags2_hi, SSB_SPROM8_BFL2HI, 0xFFFF, 0);
- 	SPEX(ant_available_a, SSB_SPROM8_ANTAVAIL, SSB_SPROM8_ANTAVAIL_A,
- 	     SSB_SPROM8_ANTAVAIL_A_SHIFT);
- 	SPEX(ant_available_bg, SSB_SPROM8_ANTAVAIL, SSB_SPROM8_ANTAVAIL_BG,
-@@ -490,12 +498,55 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 	SPEX(maxpwr_a, SSB_SPROM8_MAXP_A, SSB_SPROM8_MAXP_A_MASK, 0);
- 	SPEX(itssi_a, SSB_SPROM8_MAXP_A, SSB_SPROM8_ITSSI_A,
- 	     SSB_SPROM8_ITSSI_A_SHIFT);
-+	SPEX(maxpwr_ah, SSB_SPROM8_MAXP_AHL, SSB_SPROM8_MAXP_AH_MASK, 0);
-+	SPEX(maxpwr_al, SSB_SPROM8_MAXP_AHL, SSB_SPROM8_MAXP_AL_MASK,
-+	     SSB_SPROM8_MAXP_AL_SHIFT);
- 	SPEX(gpio0, SSB_SPROM8_GPIOA, SSB_SPROM8_GPIOA_P0, 0);
- 	SPEX(gpio1, SSB_SPROM8_GPIOA, SSB_SPROM8_GPIOA_P1,
- 	     SSB_SPROM8_GPIOA_P1_SHIFT);
- 	SPEX(gpio2, SSB_SPROM8_GPIOB, SSB_SPROM8_GPIOB_P2, 0);
- 	SPEX(gpio3, SSB_SPROM8_GPIOB, SSB_SPROM8_GPIOB_P3,
- 	     SSB_SPROM8_GPIOB_P3_SHIFT);
-+	SPEX(tri2g, SSB_SPROM8_TRI25G, SSB_SPROM8_TRI2G, 0);
-+	SPEX(tri5g, SSB_SPROM8_TRI25G, SSB_SPROM8_TRI5G,
-+	     SSB_SPROM8_TRI5G_SHIFT);
-+	SPEX(tri5gl, SSB_SPROM8_TRI5GHL, SSB_SPROM8_TRI5GL, 0);
-+	SPEX(tri5gh, SSB_SPROM8_TRI5GHL, SSB_SPROM8_TRI5GH,
-+	     SSB_SPROM8_TRI5GH_SHIFT);
-+	SPEX(rxpo2g, SSB_SPROM8_RXPO, SSB_SPROM8_RXPO2G, 0);
-+	SPEX(rxpo5g, SSB_SPROM8_RXPO, SSB_SPROM8_RXPO5G,
-+	     SSB_SPROM8_RXPO5G_SHIFT);
-+	SPEX(rssismf2g, SSB_SPROM8_RSSIPARM2G, SSB_SPROM8_RSSISMF2G, 0);
-+	SPEX(rssismc2g, SSB_SPROM8_RSSIPARM2G, SSB_SPROM8_RSSISMC2G,
-+	     SSB_SPROM8_RSSISMC2G_SHIFT);
-+	SPEX(rssisav2g, SSB_SPROM8_RSSIPARM2G, SSB_SPROM8_RSSISAV2G,
-+	     SSB_SPROM8_RSSISAV2G_SHIFT);
-+	SPEX(bxa2g, SSB_SPROM8_RSSIPARM2G, SSB_SPROM8_BXA2G,
-+	     SSB_SPROM8_BXA2G_SHIFT);
-+	SPEX(rssismf5g, SSB_SPROM8_RSSIPARM5G, SSB_SPROM8_RSSISMF5G, 0);
-+	SPEX(rssismc5g, SSB_SPROM8_RSSIPARM5G, SSB_SPROM8_RSSISMC5G,
-+	     SSB_SPROM8_RSSISMC5G_SHIFT);
-+	SPEX(rssisav5g, SSB_SPROM8_RSSIPARM5G, SSB_SPROM8_RSSISAV5G,
-+	     SSB_SPROM8_RSSISAV5G_SHIFT);
-+	SPEX(bxa5g, SSB_SPROM8_RSSIPARM5G, SSB_SPROM8_BXA5G,
-+	     SSB_SPROM8_BXA5G_SHIFT);
-+	SPEX(pa0b0, SSB_SPROM8_PA0B0, 0xFFFF, 0);
-+	SPEX(pa0b1, SSB_SPROM8_PA0B1, 0xFFFF, 0);
-+	SPEX(pa0b2, SSB_SPROM8_PA0B2, 0xFFFF, 0);
-+	SPEX(pa1b0, SSB_SPROM8_PA1B0, 0xFFFF, 0);
-+	SPEX(pa1b1, SSB_SPROM8_PA1B1, 0xFFFF, 0);
-+	SPEX(pa1b2, SSB_SPROM8_PA1B2, 0xFFFF, 0);
-+	SPEX(pa1lob0, SSB_SPROM8_PA1LOB0, 0xFFFF, 0);
-+	SPEX(pa1lob1, SSB_SPROM8_PA1LOB1, 0xFFFF, 0);
-+	SPEX(pa1lob2, SSB_SPROM8_PA1LOB2, 0xFFFF, 0);
-+	SPEX(pa1hib0, SSB_SPROM8_PA1HIB0, 0xFFFF, 0);
-+	SPEX(pa1hib1, SSB_SPROM8_PA1HIB1, 0xFFFF, 0);
-+	SPEX(pa1hib2, SSB_SPROM8_PA1HIB2, 0xFFFF, 0);
-+	SPEX(cck2gpo, SSB_SPROM8_CCK2GPO, 0xFFFF, 0);
-+	SPEX32(ofdm2gpo, SSB_SPROM8_OFDM2GPO, 0xFFFFFFFF, 0);
-+	SPEX32(ofdm5glpo, SSB_SPROM8_OFDM5GLPO, 0xFFFFFFFF, 0);
-+	SPEX32(ofdm5gpo, SSB_SPROM8_OFDM5GPO, 0xFFFFFFFF, 0);
-+	SPEX32(ofdm5ghpo, SSB_SPROM8_OFDM5GHPO, 0xFFFFFFFF, 0);
- 
- 	/* Extract the antenna gain values. */
- 	SPEX(antenna_gain.ghz24.a0, SSB_SPROM8_AGAIN01,
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 5ae8fa2..17ffc1f 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -27,24 +27,54 @@ struct ssb_sprom {
- 	u8 et1mdcport;		/* MDIO for enet1 */
- 	u8 board_rev;		/* Board revision number from SPROM. */
- 	u8 country_code;	/* Country Code */
--	u8 ant_available_a;	/* A-PHY antenna available bits (up to 4) */
--	u8 ant_available_bg;	/* B/G-PHY antenna available bits (up to 4) */
-+	u8 ant_available_a;	/* 2GHz antenna available bits (up to 4) */
-+	u8 ant_available_bg;	/* 5GHz antenna available bits (up to 4) */
- 	u16 pa0b0;
- 	u16 pa0b1;
- 	u16 pa0b2;
- 	u16 pa1b0;
- 	u16 pa1b1;
- 	u16 pa1b2;
-+	u16 pa1lob0;
-+	u16 pa1lob1;
-+	u16 pa1lob2;
-+	u16 pa1hib0;
-+	u16 pa1hib1;
-+	u16 pa1hib2;
- 	u8 gpio0;		/* GPIO pin 0 */
- 	u8 gpio1;		/* GPIO pin 1 */
- 	u8 gpio2;		/* GPIO pin 2 */
- 	u8 gpio3;		/* GPIO pin 3 */
--	u16 maxpwr_a;		/* A-PHY Amplifier Max Power (in dBm Q5.2) */
--	u16 maxpwr_bg;		/* B/G-PHY Amplifier Max Power (in dBm Q5.2) */
-+	u16 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
-+	u16 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
-+	u16 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
-+	u16 maxpwr_ah;		/* 5.8GHz Amplifier Max Power (in dBm Q5.2) */
- 	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
- 	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
--	u16 boardflags_lo;	/* Boardflags (low 16 bits) */
--	u16 boardflags_hi;	/* Boardflags (high 16 bits) */
-+	u8 tri2g;		/* 2.4GHz TX isolation */
-+	u8 tri5gl;		/* 5.2GHz TX isolation */
-+	u8 tri5g;		/* 5.3GHz TX isolation */
-+	u8 tri5gh;		/* 5.8GHz TX isolation */
-+	u8 rxpo2g;		/* 2GHz RX power offset */
-+	u8 rxpo5g;		/* 5GHz RX power offset */
-+	u8 rssisav2g;		/* 2GHz RSSI params */
-+	u8 rssismc2g;
-+	u8 rssismf2g;
-+	u8 bxa2g;		/* 2GHz BX arch */
-+	u8 rssisav5g;		/* 5GHz RSSI params */
-+	u8 rssismc5g;
-+	u8 rssismf5g;
-+	u8 bxa5g;		/* 5GHz BX arch */
-+	u16 cck2gpo;		/* CCK power offset */
-+	u32 ofdm2gpo;		/* 2.4GHz OFDM power offset */
-+	u32 ofdm5glpo;		/* 5.2GHz OFDM power offset */
-+	u32 ofdm5gpo;		/* 5.3GHz OFDM power offset */
-+	u32 ofdm5ghpo;		/* 5.8GHz OFDM power offset */
-+	u16 boardflags_lo;	/* Board flags (bits 0-15) */
-+	u16 boardflags_hi;	/* Board flags (bits 16-31) */
-+	u16 boardflags2_lo;	/* Board flags (bits 32-47) */
-+	u16 boardflags2_hi;	/* Board flags (bits 48-63) */
-+	/* TODO store board flags in a single u64 */
- 
- 	/* Antenna gain values for up to 4 antennas
- 	 * on each band. Values in dBm/4 (Q5.2). Negative gain means the
-@@ -58,7 +88,7 @@ struct ssb_sprom {
- 		} ghz5;		/* 5GHz band */
- 	} antenna_gain;
- 
--	/* TODO - add any parameters needed from rev 2, 3, or 4 SPROMs */
-+	/* TODO - add any parameters needed from rev 2, 3, 4, 5 or 8 SPROMs */
- };
- 
- /* Information about the PCB the circuitry is soldered on. */
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index a01b982..9ae9082 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -162,7 +162,7 @@
- 
- /* SPROM shadow area. If not otherwise noted, fields are
-  * two bytes wide. Note that the SPROM can _only_ be read
-- * in two-byte quantinies.
-+ * in two-byte quantities.
-  */
- #define SSB_SPROMSIZE_WORDS		64
- #define SSB_SPROMSIZE_BYTES		(SSB_SPROMSIZE_WORDS * sizeof(u16))
-@@ -327,8 +327,11 @@
- #define  SSB_SPROM5_GPIOB_P3_SHIFT	8
- 
- /* SPROM Revision 8 */
--#define SSB_SPROM8_BFLLO		0x1084	/* Boardflags (low 16 bits) */
--#define SSB_SPROM8_BFLHI		0x1086	/* Boardflags Hi */
-+#define SSB_SPROM8_BOARDREV		0x1082	/* Board revision */
-+#define SSB_SPROM8_BFLLO		0x1084	/* Board flags (bits 0-15) */
-+#define SSB_SPROM8_BFLHI		0x1086	/* Board flags (bits 16-31) */
-+#define SSB_SPROM8_BFL2LO		0x1088	/* Board flags (bits 32-47) */
-+#define SSB_SPROM8_BFL2HI		0x108A	/* Board flags (bits 48-63) */
- #define SSB_SPROM8_IL0MAC		0x108C	/* 6 byte MAC address */
- #define SSB_SPROM8_CCODE		0x1092	/* 2 byte country code */
- #define SSB_SPROM8_ANTAVAIL		0x109C  /* Antenna available bitfields*/
-@@ -354,14 +357,63 @@
- #define  SSB_SPROM8_GPIOB_P2		0x00FF	/* Pin 2 */
- #define  SSB_SPROM8_GPIOB_P3		0xFF00	/* Pin 3 */
- #define  SSB_SPROM8_GPIOB_P3_SHIFT	8
--#define SSB_SPROM8_MAXP_BG		0x10C0  /* Max Power BG in path 1 */
--#define  SSB_SPROM8_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
-+#define SSB_SPROM8_RSSIPARM2G		0x10A4	/* RSSI params for 2GHz */
-+#define  SSB_SPROM8_RSSISMF2G		0x000F
-+#define  SSB_SPROM8_RSSISMC2G		0x00F0
-+#define  SSB_SPROM8_RSSISMC2G_SHIFT	4
-+#define  SSB_SPROM8_RSSISAV2G		0x0700
-+#define  SSB_SPROM8_RSSISAV2G_SHIFT	8
-+#define  SSB_SPROM8_BXA2G		0x1800
-+#define  SSB_SPROM8_BXA2G_SHIFT		11
-+#define SSB_SPROM8_RSSIPARM5G		0x10A6	/* RSSI params for 5GHz */
-+#define  SSB_SPROM8_RSSISMF5G		0x000F
-+#define  SSB_SPROM8_RSSISMC5G		0x00F0
-+#define  SSB_SPROM8_RSSISMC5G_SHIFT	4
-+#define  SSB_SPROM8_RSSISAV5G		0x0700
-+#define  SSB_SPROM8_RSSISAV5G_SHIFT	8
-+#define  SSB_SPROM8_BXA5G		0x1800
-+#define  SSB_SPROM8_BXA5G_SHIFT		11
-+#define SSB_SPROM8_TRI25G		0x10A8	/* TX isolation 2.4&5.3GHz */
-+#define  SSB_SPROM8_TRI2G		0x00FF	/* TX isolation 2.4GHz */
-+#define  SSB_SPROM8_TRI5G		0xFF00	/* TX isolation 5.3GHz */
-+#define  SSB_SPROM8_TRI5G_SHIFT		8
-+#define SSB_SPROM8_TRI5GHL		0x10AA	/* TX isolation 5.2/5.8GHz */
-+#define  SSB_SPROM8_TRI5GL		0x00FF	/* TX isolation 5.2GHz */
-+#define  SSB_SPROM8_TRI5GH		0xFF00	/* TX isolation 5.8GHz */
-+#define  SSB_SPROM8_TRI5GH_SHIFT	8
-+#define SSB_SPROM8_RXPO			0x10AC  /* RX power offsets */
-+#define  SSB_SPROM8_RXPO2G		0x00FF	/* 2GHz RX power offset */
-+#define  SSB_SPROM8_RXPO5G		0xFF00	/* 5GHz RX power offset */
-+#define  SSB_SPROM8_RXPO5G_SHIFT	8
-+#define SSB_SPROM8_MAXP_BG		0x10C0  /* Max Power 2GHz in path 1 */
-+#define  SSB_SPROM8_MAXP_BG_MASK	0x00FF  /* Mask for Max Power 2GHz */
- #define  SSB_SPROM8_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
- #define  SSB_SPROM8_ITSSI_BG_SHIFT	8
--#define SSB_SPROM8_MAXP_A		0x10C8  /* Max Power A in path 1 */
--#define  SSB_SPROM8_MAXP_A_MASK		0x00FF  /* Mask for Max Power A */
-+#define SSB_SPROM8_PA0B0		0x10C2	/* 2GHz power amp settings */
-+#define SSB_SPROM8_PA0B1		0x10C4
-+#define SSB_SPROM8_PA0B2		0x10C6
-+#define SSB_SPROM8_MAXP_A		0x10C8  /* Max Power 5.3GHz */
-+#define  SSB_SPROM8_MAXP_A_MASK		0x00FF  /* Mask for Max Power 5.3GHz */
- #define  SSB_SPROM8_ITSSI_A		0xFF00	/* Mask for path 1 itssi_a */
- #define  SSB_SPROM8_ITSSI_A_SHIFT	8
-+#define SSB_SPROM8_MAXP_AHL		0x10CA  /* Max Power 5.2/5.8GHz */
-+#define  SSB_SPROM8_MAXP_AH_MASK	0x00FF  /* Mask for Max Power 5.8GHz */
-+#define  SSB_SPROM8_MAXP_AL_MASK	0xFF00  /* Mask for Max Power 5.2GHz */
-+#define  SSB_SPROM8_MAXP_AL_SHIFT	8
-+#define SSB_SPROM8_PA1B0		0x10CC	/* 5.3GHz power amp settings */
-+#define SSB_SPROM8_PA1B1		0x10CE
-+#define SSB_SPROM8_PA1B2		0x10D0
-+#define SSB_SPROM8_PA1LOB0		0x10D2	/* 5.2GHz power amp settings */
-+#define SSB_SPROM8_PA1LOB1		0x10D4
-+#define SSB_SPROM8_PA1LOB2		0x10D6
-+#define SSB_SPROM8_PA1HIB0		0x10D8	/* 5.8GHz power amp settings */
-+#define SSB_SPROM8_PA1HIB1		0x10DA
-+#define SSB_SPROM8_PA1HIB2		0x10DC
-+#define SSB_SPROM8_CCK2GPO		0x1140	/* CCK power offset */
-+#define SSB_SPROM8_OFDM2GPO		0x1142	/* 2.4GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GPO		0x1146	/* 5.3GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GLPO		0x114A	/* 5.2GHz OFDM power offset */
-+#define SSB_SPROM8_OFDM5GHPO		0x114E	/* 5.8GHz OFDM power offset */
- 
- /* Values for SSB_SPROM1_BINF_CCODE */
- enum {
--- 
-1.6.2.4
+> This work is motivated by an attempt to untangle the iwlwifi station
+> management to be able to use mac80211's sta notify callback. From 4965
+> and up the rate scaling in the device is done per station, so an entry
+> in the station table is required for the rate scaling initialization to
+> succeed.=20
 
+Interesting. I've been thinking about making it go the other way --
+remove rate scaling hooks completely. wl1271 apparently has rate scaling
+completely in the firmware, so the RS algorithm on the host is just
+overhead. I've been thinking putting 4965+ RS into the _driver_ makes
+more sense since it really does a lot in the firmware and not on the
+host.
+
+Do you think we should try to go that route? I'd think it would probably
+be a hardware flag ("no RS algo please") and then we'd skip all the
+hooks and put things into the driver. The advantage is that we don't
+care about the mac80211 API any more, things get cleaner and we can just
+do all RS init from sta_notify().
+
+I've also been thinking if there's a way to make sta_notify() able to
+sleep but so far I don't see one unfortunately.
+
+Thoughts?
+
+Anyhow, thanks for the explanation.
+
+> > > @@ -742,13 +740,17 @@ static int ieee80211_add_station(struct wiphy *=
+wiphy, struct net_device *dev,
+> > >  		if (err =3D=3D -EEXIST && layer2_update) {
+> > >  			/* Need to update layer 2 devices on reassociation */
+> > >  			sta =3D sta_info_get(local, mac);
+> > > -			if (sta)
+> > > +			if (sta) {
+> > > +				rate_control_rate_init(sta);
+> > >  				ieee80211_send_layer2_update(sta);
+> > > +			}
+> > >  		}
+> >=20
+> > Why is this necessary? It should already have been called for this
+> > station earlier?
+>=20
+> maybe - I just tried to have the code behave exactly as before, just
+> with the rate scale initialization called later. Even before this patch,
+> rate scaling initialization would be called if the station already
+> exists.=20
+>=20
+> If it is not necessary I can remove it.
+
+No, right, I understand now.
+
+> Right now iwlwifi is adding stations inside the rate scaling code in
+> order to work around this issue. I'd like to clean this up and only use
+> the sta notify callback.
+
+Makes sense, thanks, I appreciate that -- should be a good cleanup to
+the driver and reduce the number of places that try to add a station and
+make the driver more streamlined.
+
+> > Same in ibss.c (not quoting it here) where you're only moving it to
+> > after sta_info_insert()
+>=20
+> This was my goal actually.
+
+Yeah, I finally understood :)
+
+> >  -- all that seems to do is add race conditions,
+> > allowing other code to find not-yet-initialised stations.
+>=20
+> I did not realize that this can happen. Can you please elaborate?
+
+As soon as sta_insert() got called, a packet transmitted to that station
+can be processed, find the sta info, and it seems we could end up
+calling rate_control_get_rate() before the init was done, through a race
+condition.
+
+johannes
+
+--=-ABrZ9h7QBOGsNuF5DvGM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKmEWuAAoJEODzc/N7+QmaPC0P/3+9Yfn8LHdMAxgYeiKpNlNQ
+YIzVpgUfo0I6zDQvAVCh6MPW2uDghwA7RfD0trdHXC0Apcq+cX/LBX+RKI8J4Mwf
+mcy5Ckalrgy79T+tcDqCfGkcEbbALy+05/1n7vFH6S08avh6XTLjsEkEvPUFNFX5
+fANIDxBSPXjbICCDlKf/rbANcvKBouknvmzYEvx0QLiiW0ry6LEerxn6PSS+2GGN
+b42hOnEzvE7An8l5u0XgZBQ+E+tStvcWItfW4z6/O2QNwsMl2pwGrsJjAuxnaGGR
+qLZLY5TGh/3Sy0V4D5S0m3/K/u445GdIytSWs3VTiA5KWS/jwV+18/2WKdA+Vjon
+amZ5367bomevtKTD9M6N/fouxqs2UobBrig0wKFLyEvwiJizO3SExNmQs0o9/GZT
+SpVbY06isQYBlnpmD8OqVGVVNAVFQB/qc7C7QMIKvvxLk51BBbovXrmXHlVYVlS7
+7IfIEsi7Liej/2Q6WuoTGj+6Crunt+n5XtPBooAFCJOA2YZS1iSE641jtXGFwBuo
+MyJw3ipUpDP/gD/1Rn5iMGw4wz61QxtQCPIcNLwEZ2fE1roUWYRgrdLly+pdHJ6Y
+i2k0K8MnNzY4ZXz8uAV0IR2w3xLnoMOOPhqKS8C24RCZXI8TbTCSVYMsKYwchqMW
+lU7AUM3W7AUFbnBWB/eL
+=3kA/
+-----END PGP SIGNATURE-----
+
+--=-ABrZ9h7QBOGsNuF5DvGM--
 
