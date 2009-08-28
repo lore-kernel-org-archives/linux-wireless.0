@@ -1,85 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xi.wantstofly.org ([80.101.37.227]:40187 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbZHRDxF (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:51949 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbZH1J7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 23:53:05 -0400
-Date: Tue, 18 Aug 2009 05:53:07 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: [PATCH 13/29] mwl8k: don't touch 'command done' interrupt during firmware load
-Message-ID: <20090818035307.GR18639@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 28 Aug 2009 05:59:09 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 5/8] rndis_wlan: move link up/down work to separate functions
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Aug 2009 12:59:10 +0300
+Message-ID: <20090828095910.10554.65637.stgit@fate.lan>
+In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
+References: <20090828095849.10554.58857.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since firmware load commands don't generate 'command done' interrupts
-like normal commands do, polling for command done interrupts just
-unnecessarily slows down the firmware load process.  Removing this bit
-of code speeds up loading a typical firmware image from 840 msec to
-180 msec.
+Move link up/down work to separate functions and use local array
+for allocating memory for info structure instead of kzmalloc.
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/net/wireless/mwl8k.c |   24 +-----------------------
- 1 files changed, 1 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f4b197b..86b6b5d 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -411,7 +411,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+ drivers/net/wireless/rndis_wlan.c |  101 ++++++++++++++++++++-----------------
+ 1 files changed, 55 insertions(+), 46 deletions(-)
+
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index cb362b0..dc3083b 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2319,68 +2319,77 @@ static const struct iw_handler_def rndis_iw_handlers = {
+ };
+ 
+ 
+-static void rndis_wlan_worker(struct work_struct *work)
++static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
  {
- 	void __iomem *regs = priv->regs;
- 	dma_addr_t dma_addr;
--	int rc;
- 	int loops;
+-	struct rndis_wlan_private *priv =
+-		container_of(work, struct rndis_wlan_private, work);
+-	struct usbnet *usbdev = priv->usbdev;
+-	union iwreq_data evt;
+-	unsigned char bssid[ETH_ALEN];
+ 	struct ndis_80211_assoc_info *info;
+-	int assoc_size = sizeof(*info) + IW_CUSTOM_MAX + 32;
++	union iwreq_data evt;
++	u8 assoc_buf[sizeof(*info) + IW_CUSTOM_MAX + 32];
++	u8 bssid[ETH_ALEN];
+ 	int ret, offset;
  
- 	dma_addr = pci_map_single(priv->pdev, data, length, PCI_DMA_TODEVICE);
-@@ -425,7 +424,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
- 	iowrite32(MWL8K_H2A_INT_DUMMY,
- 		regs + MWL8K_HIU_H2A_INTERRUPT_EVENTS);
- 
--	rc = -ETIMEDOUT;
- 	loops = 1000;
- 	do {
- 		u32 int_code;
-@@ -433,7 +431,6 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
- 		int_code = ioread32(regs + MWL8K_HIU_INT_CODE);
- 		if (int_code == MWL8K_INT_CODE_CMD_FINISHED) {
- 			iowrite32(0, regs + MWL8K_HIU_INT_CODE);
--			rc = 0;
- 			break;
+-	if (test_and_clear_bit(WORK_LINK_UP, &priv->work_pending)) {
+-		netif_carrier_on(usbdev->net);
+-
+-		info = kzalloc(assoc_size, GFP_KERNEL);
+-		if (!info)
+-			goto get_bssid;
+-
+-		/* Get association info IEs from device and send them back to
+-		 * userspace. */
+-		ret = get_association_info(usbdev, info, assoc_size);
+-		if (!ret) {
+-			evt.data.length = le32_to_cpu(info->req_ie_length);
+-			if (evt.data.length > 0) {
+-				offset = le32_to_cpu(info->offset_req_ies);
+-				wireless_send_event(usbdev->net,
+-					IWEVASSOCREQIE, &evt,
+-					(char *)info + offset);
+-			}
+-
+-			evt.data.length = le32_to_cpu(info->resp_ie_length);
+-			if (evt.data.length > 0) {
+-				offset = le32_to_cpu(info->offset_resp_ies);
+-				wireless_send_event(usbdev->net,
+-					IWEVASSOCRESPIE, &evt,
+-					(char *)info + offset);
+-			}
++	memset(assoc_buf, 0, sizeof(assoc_buf));
++	info = (void *)assoc_buf;
++
++	netif_carrier_on(usbdev->net);
++
++	/* Get association info IEs from device and send them back to
++	 * userspace. */
++	ret = get_association_info(usbdev, info, sizeof(assoc_buf));
++	if (!ret) {
++		evt.data.length = le32_to_cpu(info->req_ie_length);
++		if (evt.data.length > 0) {
++			offset = le32_to_cpu(info->offset_req_ies);
++			wireless_send_event(usbdev->net,
++				IWEVASSOCREQIE, &evt,
++				(char *)info + offset);
  		}
  
-@@ -442,26 +439,7 @@ mwl8k_send_fw_load_cmd(struct mwl8k_priv *priv, void *data, int length)
+-		kfree(info);
+-
+-get_bssid:
+-		ret = get_bssid(usbdev, bssid);
+-		if (!ret) {
+-			evt.data.flags = 0;
+-			evt.data.length = 0;
+-			memcpy(evt.ap_addr.sa_data, bssid, ETH_ALEN);
+-			wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
++		evt.data.length = le32_to_cpu(info->resp_ie_length);
++		if (evt.data.length > 0) {
++			offset = le32_to_cpu(info->offset_resp_ies);
++			wireless_send_event(usbdev->net,
++				IWEVASSOCRESPIE, &evt,
++				(char *)info + offset);
+ 		}
  
- 	pci_unmap_single(priv->pdev, dma_addr, length, PCI_DMA_TODEVICE);
+ 		usbnet_resume_rx(usbdev);
+ 	}
  
--	/*
--	 * Clear 'command done' interrupt bit.
--	 */
--	loops = 1000;
--	do {
--		u32 status;
+-	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending)) {
+-		netif_carrier_off(usbdev->net);
 -
--		status = ioread32(priv->regs +
--				MWL8K_HIU_A2H_INTERRUPT_STATUS);
--		if (status & MWL8K_A2H_INT_OPC_DONE) {
--			iowrite32(~MWL8K_A2H_INT_OPC_DONE,
--				priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
--			ioread32(priv->regs + MWL8K_HIU_A2H_INTERRUPT_STATUS);
--			break;
--		}
--
--		udelay(1);
--	} while (--loops);
--
--	return rc;
-+	return loops ? 0 : -ETIMEDOUT;
++	ret = get_bssid(usbdev, bssid);
++	if (!ret) {
+ 		evt.data.flags = 0;
+ 		evt.data.length = 0;
+-		memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
++		memcpy(evt.ap_addr.sa_data, bssid, ETH_ALEN);
+ 		wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
+ 	}
+ 
++	usbnet_resume_rx(usbdev);
++}
++
++static void rndis_wlan_do_link_down_work(struct usbnet *usbdev)
++{
++	union iwreq_data evt;
++
++	netif_carrier_off(usbdev->net);
++
++	evt.data.flags = 0;
++	evt.data.length = 0;
++	memset(evt.ap_addr.sa_data, 0, ETH_ALEN);
++	wireless_send_event(usbdev->net, SIOCGIWAP, &evt, NULL);
++}
++
++static void rndis_wlan_worker(struct work_struct *work)
++{
++	struct rndis_wlan_private *priv =
++		container_of(work, struct rndis_wlan_private, work);
++	struct usbnet *usbdev = priv->usbdev;
++
++	if (test_and_clear_bit(WORK_LINK_UP, &priv->work_pending))
++		rndis_wlan_do_link_up_work(usbdev);
++
++	if (test_and_clear_bit(WORK_LINK_DOWN, &priv->work_pending))
++		rndis_wlan_do_link_down_work(usbdev);
++
+ 	if (test_and_clear_bit(WORK_SET_MULTICAST_LIST, &priv->work_pending))
+ 		set_multicast_list(usbdev);
  }
- 
- static int mwl8k_load_fw_image(struct mwl8k_priv *priv,
--- 
-1.5.6.4
+
