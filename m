@@ -1,386 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45305 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756516AbZHNAnE (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:36970 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbZH1AJY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 16/25] wireless: organize group drivers alphabetically
-Date: Thu, 13 Aug 2009 20:42:55 -0400
-Message-Id: <1250210584-13374-17-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 27 Aug 2009 20:09:24 -0400
+Received: by iwn42 with SMTP id 42so780206iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 17:09:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
+References: <20090827023000.21926.90867.stgit@mj.roinet.com>
+	<40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com>
+	<b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com>
+	<43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com>
+	<20090827213921.GB30419@hash.localnet> <43e72e890908271614p58feb9bn2130e1c963685a55@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 27 Aug 2009 17:09:06 -0700
+Message-ID: <43e72e890908271709u288eaef9g23bcf077038a310f@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use in
+	ath5k_eeprom_read_turbo_modes()
+To: Bob Copeland <me@bobcopeland.com>
+Cc: mickflemm@gmail.com, proski@gnu.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, ic.felix@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |  286 +++++++++++++++++++++---------------------
- 1 files changed, 144 insertions(+), 142 deletions(-)
+On Thu, Aug 27, 2009 at 4:14 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Thu, Aug 27, 2009 at 2:39 PM, Bob Copeland<me@bobcopeland.com> wrote:
+>> On Thu, Aug 27, 2009 at 11:25:03AM -0700, Luis R. Rodriguez wrote:
+>>> > Well, we also don't use the turbo modes at all and that's where the
+>>> > error is (IIRC) so it shouldn't have any impact. :)
+>>>
+>>> Again, why don't we just remove all that fucking turbo cruft?
+>>
+>> OK with me since no one seems to care enough to implement mac80211
+>> support.  I left some of the #defines in place as they are useful
+>> documentation.  Approx. 80 of the lines removed are comments.
+>>
+>>   text    data     bss     dec     hex filename
+>>  136746     480      56  137282   21842 ath5k_old.ko
+>>  134913     480      56  135449   21119 ath5k_new.ko
+>>
+>> Disclaimer: only barely tested.
+>
+> Sexy, thanks!
+>
+> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>
+>>        { AR5K_PHY(14),
+>> -          { 0x00000007, 0x00000007, 0x0000000b, 0x0000000b } },
+>> +          { 0x00000007, 0x0000000b, 0x0000000b } },
+>
+> Apart from this one initval all other ar5211_ini_mode[] values between
+> 802.11a and 802.11g are the same! Which means we could potentially
+> save (35 lines here * 4 bytes) + (3 entries for AR5K_PHY(14) * 4) =
+> 152 bytes here if we just converge 11a and 11g as just OFDM data for
+> this ini array and remove AR5K_PHY(14) entry and deal with it as a
+> final write. I wonder if AR5K_PHY(14) (0x9838) was a typo for 11a or
+> 11g. I'll try to dig to see what this is, perhaps its not a good idea
+> to move this out and set this later, not sure if this is inline for
+> the rf buffer trigger stuff, I'll poke.
+>
+> All other ini arrays differ in more than 1 line so probably not worth mucking.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 4ed50f6..a267887 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -110,77 +110,73 @@ menuconfig WLAN_80211
- 	  This option does not affect the kernel build, it only
- 	  lets you choose drivers.
- 
--menuconfig MARVELL_80211
--	bool "Marvell"
--	depends on WLAN_80211
--	---help---
--	  This will enable the support for Marvell wireless drivers. This includes
--	  the drivers: libertas, libertas_tf, and mwl8k.
-+source "drivers/net/wireless/ath/Kconfig"
- 
--if MARVELL_80211
--config LIBERTAS
--	tristate "Marvell 8xxx Libertas WLAN driver support"
-+config ATMEL_80211
-+	bool "Atmel"
- 	depends on WLAN_80211
--	select WIRELESS_EXT
--	select LIB80211
--	select FW_LOADER
- 	---help---
--	  A library for Marvell Libertas 8xxx devices.
--
--config LIBERTAS_USB
--	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
--	depends on LIBERTAS && USB
--	---help---
--	  A driver for Marvell Libertas 8388 USB devices.
-+	  This will enable the support for Atmel wireless drivers.
- 
--config LIBERTAS_CS
--	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
--	depends on LIBERTAS && PCMCIA
--	select FW_LOADER
--	---help---
--	  A driver for Marvell Libertas 8385 CompactFlash devices.
-+if ATMEL_80211
- 
--config LIBERTAS_SDIO
--	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
--	depends on LIBERTAS && MMC
--	---help---
--	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
-+config ATMEL
-+      tristate "Atmel at76c50x chipset  802.11b support"
-+      depends on (PCI || PCMCIA) && WLAN_80211
-+      select WIRELESS_EXT
-+      select FW_LOADER
-+      select CRC32
-+       ---help---
-+        A driver 802.11b wireless cards based on the Atmel fast-vnet
-+        chips. This driver supports standard Linux wireless extensions.
- 
--config LIBERTAS_SPI
--	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
--	depends on LIBERTAS && SPI
--	---help---
--	  A driver for Marvell Libertas 8686 SPI devices.
-+        Many  cards based on this chipset do not have flash memory
-+        and need their firmware loaded at start-up. If yours is
-+        one of these, you will need to provide a firmware image
-+        to be loaded into the card by the driver. The Atmel
-+        firmware package can be downloaded from
-+        <http://www.thekelleys.org.uk/atmel>
- 
--config LIBERTAS_DEBUG
--	bool "Enable full debugging output in the Libertas module."
--	depends on LIBERTAS
--	---help---
--	  Debugging support.
-+config PCI_ATMEL
-+      tristate "Atmel at76c506 PCI cards"
-+      depends on ATMEL && PCI
-+       ---help---
-+        Enable support for PCI and mini-PCI cards containing the
-+        Atmel at76c506 chip.
- 
--config LIBERTAS_THINFIRM
--	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
--	depends on WLAN_80211 && MAC80211
-+config PCMCIA_ATMEL
-+	tristate "Atmel at76c502/at76c504 PCMCIA cards"
-+	depends on ATMEL && PCMCIA
-+	select WIRELESS_EXT
- 	select FW_LOADER
-+	select CRC32
- 	---help---
--	  A library for Marvell Libertas 8xxx devices using thinfirm.
-+	  Enable support for PCMCIA cards containing the
-+	  Atmel at76c502 and at76c504 chips.
- 
--config LIBERTAS_THINFIRM_USB
--	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
--	depends on LIBERTAS_THINFIRM && USB
--	---help---
--	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
-+config AT76C50X_USB
-+        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
-+        depends on MAC80211 && WLAN_80211 && USB
-+        select FW_LOADER
-+        ---help---
-+          Enable support for USB Wireless devices using Atmel at76c503,
-+          at76c505 or at76c505a chips.
- 
--config MWL8K
--	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
--	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+endif # ATMEL_80211
-+
-+config BROADCOM_80211
-+	bool "Broadcom wireless driver support"
-+	depends on WLAN_80211
- 	---help---
--	  This driver supports Marvell TOPDOG 802.11 wireless cards.
-+	  This will enable the support for Broadcom wireless drivers. This
-+	  includes b43 driver and the b43legacy driver.
- 
--	  To compile this driver as a module, choose M here: the module
--	  will be called mwl8k.  If unsure, say N.
-+if BROADCOM_80211
- 
--endif # MARVELL_80211
-+source "drivers/net/wireless/b43/Kconfig"
-+source "drivers/net/wireless/b43legacy/Kconfig"
-+
-+endif # BROADCOM_80211
- 
- config CISCO_80211
- 	bool "Cisco"
-@@ -232,57 +228,20 @@ config AIRO_CS
- 
- endif # CISCO_80211
- 
--config ATMEL_80211
--	bool "Atmel"
-+menuconfig INTEL_80211
-+	bool "Intel"
- 	depends on WLAN_80211
- 	---help---
--	  This will enable the support for Atmel wireless drivers.
--
--if ATMEL_80211
--
--config ATMEL
--      tristate "Atmel at76c50x chipset  802.11b support"
--      depends on (PCI || PCMCIA) && WLAN_80211
--      select WIRELESS_EXT
--      select FW_LOADER
--      select CRC32
--       ---help---
--        A driver 802.11b wireless cards based on the Atmel fast-vnet
--        chips. This driver supports standard Linux wireless extensions.
--
--        Many  cards based on this chipset do not have flash memory
--        and need their firmware loaded at start-up. If yours is
--        one of these, you will need to provide a firmware image
--        to be loaded into the card by the driver. The Atmel
--        firmware package can be downloaded from
--        <http://www.thekelleys.org.uk/atmel>
--
--config PCI_ATMEL
--      tristate "Atmel at76c506 PCI cards"
--      depends on ATMEL && PCI
--       ---help---
--        Enable support for PCI and mini-PCI cards containing the
--        Atmel at76c506 chip.
-+	  This will enable the support for Intel wireless drivers. This
-+	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
- 
--config PCMCIA_ATMEL
--	tristate "Atmel at76c502/at76c504 PCMCIA cards"
--	depends on ATMEL && PCMCIA
--	select WIRELESS_EXT
--	select FW_LOADER
--	select CRC32
--	---help---
--	  Enable support for PCMCIA cards containing the
--	  Atmel at76c502 and at76c504 chips.
-+if INTEL_80211
- 
--config AT76C50X_USB
--        tristate "Atmel at76c503/at76c505/at76c505a USB cards"
--        depends on MAC80211 && WLAN_80211 && USB
--        select FW_LOADER
--        ---help---
--          Enable support for USB Wireless devices using Atmel at76c503,
--          at76c505 or at76c505a chips.
-+source "drivers/net/wireless/ipw2x00/Kconfig"
-+source "drivers/net/wireless/iwlwifi/Kconfig"
-+source "drivers/net/wireless/iwmc3200wifi/Kconfig"
- 
--endif # ATMEL_80211
-+endif # INTEL_80211
- 
- config CONEXANT_ST_80211
- 	bool "Intersil / Conexant / STEricsson"
-@@ -347,50 +306,79 @@ config PRISM54
- 
- endif # CONEXANT_ST_80211
- 
--config ZYDAS_80211
--	bool "ZyDAS"
-+menuconfig MARVELL_80211
-+	bool "Marvell"
- 	depends on WLAN_80211
- 	---help---
--	  This will enable the support for ZyDAS wireless drivers. This includes
--	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
-+	  This will enable the support for Marvell wireless drivers. This includes
-+	  the drivers: libertas, libertas_tf, and mwl8k.
- 
--if ZYDAS_80211
-+if MARVELL_80211
-+config LIBERTAS
-+	tristate "Marvell 8xxx Libertas WLAN driver support"
-+	depends on WLAN_80211
-+	select WIRELESS_EXT
-+	select LIB80211
-+	select FW_LOADER
-+	---help---
-+	  A library for Marvell Libertas 8xxx devices.
- 
--source "drivers/net/wireless/zd1211rw/Kconfig"
-+config LIBERTAS_USB
-+	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
-+	depends on LIBERTAS && USB
-+	---help---
-+	  A driver for Marvell Libertas 8388 USB devices.
- 
--config USB_ZD1201
--	tristate "USB ZD1201 based Wireless device support"
--	depends on USB && WLAN_80211
--	select WIRELESS_EXT
-+config LIBERTAS_CS
-+	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
-+	depends on LIBERTAS && PCMCIA
- 	select FW_LOADER
- 	---help---
--	  Say Y if you want to use wireless LAN adapters based on the ZyDAS
--	  ZD1201 chip.
-+	  A driver for Marvell Libertas 8385 CompactFlash devices.
- 
--	  This driver makes the adapter appear as a normal Ethernet interface,
--	  typically on wlan0.
-+config LIBERTAS_SDIO
-+	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
-+	depends on LIBERTAS && MMC
-+	---help---
-+	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
- 
--	  The zd1201 device requires external firmware to be loaded.
--	  This can be found at http://linux-lc100020.sourceforge.net/
-+config LIBERTAS_SPI
-+	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
-+	depends on LIBERTAS && SPI
-+	---help---
-+	  A driver for Marvell Libertas 8686 SPI devices.
- 
--	  To compile this driver as a module, choose M here: the
--	  module will be called zd1201.
-+config LIBERTAS_DEBUG
-+	bool "Enable full debugging output in the Libertas module."
-+	depends on LIBERTAS
-+	---help---
-+	  Debugging support.
- 
--endif # ZYDAS_80211
-+config LIBERTAS_THINFIRM
-+	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
-+	depends on WLAN_80211 && MAC80211
-+	select FW_LOADER
-+	---help---
-+	  A library for Marvell Libertas 8xxx devices using thinfirm.
- 
--config BROADCOM_80211
--	bool "Broadcom"
--	depends on WLAN_80211
-+config LIBERTAS_THINFIRM_USB
-+	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
-+	depends on LIBERTAS_THINFIRM && USB
- 	---help---
--	  This will enable the support for Broadcom wireless drivers. This
--	  includes b43 driver, b43legacy driver and the rndis_wlan driver.
-+	  A driver for Marvell Libertas 8388 USB devices using thinfirm.
- 
--if BROADCOM_80211
-+config MWL8K
-+	tristate "Marvell 88W8xxx PCI/PCIe Wireless support"
-+	depends on MAC80211 && PCI && WLAN_80211 && EXPERIMENTAL
-+	---help---
-+	  This driver supports Marvell TOPDOG 802.11 wireless cards.
- 
--source "drivers/net/wireless/b43/Kconfig"
--source "drivers/net/wireless/b43legacy/Kconfig"
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called mwl8k.  If unsure, say N.
- 
--endif # BROADCOM_80211
-+endif # MARVELL_80211
-+
-+source "drivers/net/wireless/rt2x00/Kconfig"
- 
- config REALTEK_80211
- 	bool "Realtek"
-@@ -488,24 +476,38 @@ config RTL8187_LEDS
- 
- endif # REALTEK_80211
- 
--menuconfig INTEL_80211
--	bool "Intel"
-+source "drivers/net/wireless/wl12xx/Kconfig
-+
-+config ZYDAS_80211
-+	bool "ZyDAS"
- 	depends on WLAN_80211
- 	---help---
--	  This will enable the support for Intel wireless drivers. This
--	  includes ipw2100, ipw2200, iwl3945, iwlagn, and iwmc3200wifi
-+	  This will enable the support for ZyDAS wireless drivers. This includes
-+	  the 802.11g zd1211rw usb driver and the older 802.11b zd1201 usb driver.
- 
--if INTEL_80211
-+if ZYDAS_80211
- 
--source "drivers/net/wireless/ipw2x00/Kconfig"
--source "drivers/net/wireless/iwlwifi/Kconfig"
--source "drivers/net/wireless/iwmc3200wifi/Kconfig"
-+source "drivers/net/wireless/zd1211rw/Kconfig"
- 
--endif # INTEL_80211
-+config USB_ZD1201
-+	tristate "USB ZD1201 based Wireless device support"
-+	depends on USB && WLAN_80211
-+	select WIRELESS_EXT
-+	select FW_LOADER
-+	---help---
-+	  Say Y if you want to use wireless LAN adapters based on the ZyDAS
-+	  ZD1201 chip.
- 
--source "drivers/net/wireless/ath/Kconfig"
--source "drivers/net/wireless/rt2x00/Kconfig"
--source "drivers/net/wireless/wl12xx/Kconfig"
-+	  This driver makes the adapter appear as a normal Ethernet interface,
-+	  typically on wlan0.
-+
-+	  The zd1201 device requires external firmware to be loaded.
-+	  This can be found at http://linux-lc100020.sourceforge.net/
-+
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called zd1201.
-+
-+endif # ZYDAS_80211
- 
- config PCMCIA_RAYCS
- 	tristate "Aviator/Raytheon 2.4GHz wireless support"
--- 
-1.6.2.5
+OK so upon review here is what I can determine from the above:
 
+AR5211 supports 802.11a and 802.11b, so I suspect the 11g stuff was
+kept there for testing purposes, all of that is actually unused. I say
+we remove 11g stuff for AR5211 as well and save ourselves those bytes.
+
+And for the record -- reordering the mode stuff seems fine except care
+must be taken to ensure all those writes are done prior to
+AR5K_PHY_ACT aka 0x981c aka AR5K_PHY(7).
+
+The rf buffer stuff I mentioned earlier would not apply here as that
+is related to other stuff.
+
+  Luis
