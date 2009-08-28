@@ -1,64 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:52977 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971AbZHaSlW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:41:22 -0400
-Received: by iwn42 with SMTP id 42so1921796iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 11:41:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 31 Aug 2009 11:41:03 -0700
-Message-ID: <43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:54871 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751228AbZH1Dmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 Aug 2009 23:42:33 -0400
+Subject: ipw2200: firmware DMA loading rework
+From: Zhu Yi <yi.zhu@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mel@csn.ul.ie>, Johannes Weiner <hannes@cmpxchg.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Mel Gorman <mel@skynet.ie>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+In-Reply-To: <20090826074409.606b5124.akpm@linux-foundation.org>
+References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera>
+	 <_yaHeGjHEzG.A.FIH.7sGlKB@chimera>
+	 <84144f020908252309u5cff8afdh2214577ca4db9b5d@mail.gmail.com>
+	 <20090826082741.GA25955@cmpxchg.org>	<20090826093747.GA10955@csn.ul.ie>
+	 <20090826074409.606b5124.akpm@linux-foundation.org>
+Content-Type: text/plain
+Date: Fri, 28 Aug 2009 11:42:31 +0800
+Message-Id: <1251430951.3704.181.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 11:32 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
-> On Mon, Aug 31, 2009 at 7:02 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> On Mon, Aug 31, 2009 at 10:55 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->>> On Sun, Aug 30, 2009 at 9:44 PM, Tobias
->>> Schlemmer<keinstein_junior@gmx.net> wrote:
->>>> Hi,
->>>>
->>>> I have some problem with my rtl8187b device. It is included in my laptop
->>>> running Ubuntu linux 2.6.28. I've tested several compat-wireless releases
->>>> including 2.6.30 and 2.6.31-rc7.
->>>
->>> Hmm, are compat-wireless versioned against kernels?
->>
->> The stable ones are:
->>
->> http://wireless.kernel.org/en/users/Download/stable/
->>
->>  Luis
->>
->
-> Thanks - it is new addition to the web-site :-), I see.
+Bartlomiej Zolnierkiewicz reported an atomic order-6 allocation failure
+for ipw2200 firmware loading in kernel 2.6.30. High order allocation is
+likely to fail and should always be avoided.
 
-Yup, and when 2.6.32-rc1 is released we'll have another
-compat-wireless tarball made from that as well.
+The patch fixes this problem by replacing the original order-6
+pci_alloc_consistent() with an array of order-1 pages from a pci pool.
+This utilized the ipw2200 DMA command blocks (up to 64 slots). The
+maximum firmware size support remains the same (64*8K).
 
-> Anyway, Larry
-> and Herton have made more changes/improvements in rtl8187 in
-> latest-and-greatest than 2.6.31-rc7...
+This patch fixes bug http://bugzilla.kernel.org/show_bug.cgi?id=14016
 
-Thanks for the heads up, what I recommend is you edit the
-wireless.kernel.org wiki page for rtl8187 and put there a section of
-'recommended version' and explain what kernel release you expect to
-work the best, and if you do recommend latest and greatest put that on
-the wiki. This is what we did for ath9k as ath9k changes kept coming
-in for ath9k through kernel releases and distributions were still on
-old versions of it. What I hope is eventually users will just know to
-check wireless.kernel.org driver page for details for their own
-drivers.
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mel@csn.ul.ie>
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |  120 ++++++++++++++++++--------------
+ 1 files changed, 67 insertions(+), 53 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 6dcac73..f593fbb 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -2874,45 +2874,27 @@ static int ipw_fw_dma_add_command_block(struct ipw_priv *priv,
+ 	return 0;
+ }
+ 
+-static int ipw_fw_dma_add_buffer(struct ipw_priv *priv,
+-				 u32 src_phys, u32 dest_address, u32 length)
++static int ipw_fw_dma_add_buffer(struct ipw_priv *priv, dma_addr_t *src_address,
++				 int nr, u32 dest_address, u32 len)
+ {
+-	u32 bytes_left = length;
+-	u32 src_offset = 0;
+-	u32 dest_offset = 0;
+-	int status = 0;
++	int ret, i;
++	u32 size;
++
+ 	IPW_DEBUG_FW(">> \n");
+-	IPW_DEBUG_FW_INFO("src_phys=0x%x dest_address=0x%x length=0x%x\n",
+-			  src_phys, dest_address, length);
+-	while (bytes_left > CB_MAX_LENGTH) {
+-		status = ipw_fw_dma_add_command_block(priv,
+-						      src_phys + src_offset,
+-						      dest_address +
+-						      dest_offset,
+-						      CB_MAX_LENGTH, 0, 0);
+-		if (status) {
++	IPW_DEBUG_FW_INFO("nr=%d dest_address=0x%x len=0x%x\n",
++			  nr, dest_address, len);
++
++	for (i = 0; i < nr; i++) {
++		size = min_t(u32, len - i * CB_MAX_LENGTH, CB_MAX_LENGTH);
++		ret = ipw_fw_dma_add_command_block(priv, src_address[i],
++						   dest_address +
++						   i * CB_MAX_LENGTH, size,
++						   0, 0);
++		if (ret) {
+ 			IPW_DEBUG_FW_INFO(": Failed\n");
+ 			return -1;
+ 		} else
+ 			IPW_DEBUG_FW_INFO(": Added new cb\n");
+-
+-		src_offset += CB_MAX_LENGTH;
+-		dest_offset += CB_MAX_LENGTH;
+-		bytes_left -= CB_MAX_LENGTH;
+-	}
+-
+-	/* add the buffer tail */
+-	if (bytes_left > 0) {
+-		status =
+-		    ipw_fw_dma_add_command_block(priv, src_phys + src_offset,
+-						 dest_address + dest_offset,
+-						 bytes_left, 0, 0);
+-		if (status) {
+-			IPW_DEBUG_FW_INFO(": Failed on the buffer tail\n");
+-			return -1;
+-		} else
+-			IPW_DEBUG_FW_INFO
+-			    (": Adding new cb - the buffer tail\n");
+ 	}
+ 
+ 	IPW_DEBUG_FW("<< \n");
+@@ -3160,59 +3142,91 @@ static int ipw_load_ucode(struct ipw_priv *priv, u8 * data, size_t len)
+ 
+ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+ {
+-	int rc = -1;
++	int ret = -1;
+ 	int offset = 0;
+ 	struct fw_chunk *chunk;
+-	dma_addr_t shared_phys;
+-	u8 *shared_virt;
++	int total_nr = 0;
++	int i;
++	struct pci_pool *pool;
++	u32 *virts[CB_NUMBER_OF_ELEMENTS_SMALL];
++	dma_addr_t phys[CB_NUMBER_OF_ELEMENTS_SMALL];
+ 
+ 	IPW_DEBUG_TRACE("<< : \n");
+-	shared_virt = pci_alloc_consistent(priv->pci_dev, len, &shared_phys);
+ 
+-	if (!shared_virt)
++	pool = pci_pool_create("ipw2200", priv->pci_dev, CB_MAX_LENGTH, 0, 0);
++	if (!pool) {
++		IPW_ERROR("pci_pool_create failed\n");
+ 		return -ENOMEM;
+-
+-	memmove(shared_virt, data, len);
++	}
+ 
+ 	/* Start the Dma */
+-	rc = ipw_fw_dma_enable(priv);
++	ret = ipw_fw_dma_enable(priv);
+ 
+ 	/* the DMA is already ready this would be a bug. */
+ 	BUG_ON(priv->sram_desc.last_cb_index > 0);
+ 
+ 	do {
++		u32 chunk_len;
++		u8 *start;
++		int size;
++		int nr = 0;
++
+ 		chunk = (struct fw_chunk *)(data + offset);
+ 		offset += sizeof(struct fw_chunk);
++		chunk_len = le32_to_cpu(chunk->length);
++		start = data + offset;
++
++		nr = (chunk_len + CB_MAX_LENGTH - 1) / CB_MAX_LENGTH;
++		for (i = 0; i < nr; i++) {
++			virts[total_nr] = pci_pool_alloc(pool, GFP_KERNEL,
++							 &phys[total_nr]);
++			if (!virts[total_nr]) {
++				ret = -ENOMEM;
++				goto out;
++			}
++			size = min_t(u32, chunk_len - i * CB_MAX_LENGTH,
++				     CB_MAX_LENGTH);
++			memcpy(virts[total_nr], start, size);
++			start += size;
++			total_nr++;
++			/* We don't support fw chunk larger than 64*8K */
++			BUG_ON(total_nr > CB_NUMBER_OF_ELEMENTS_SMALL);
++		}
++
+ 		/* build DMA packet and queue up for sending */
+ 		/* dma to chunk->address, the chunk->length bytes from data +
+ 		 * offeset*/
+ 		/* Dma loading */
+-		rc = ipw_fw_dma_add_buffer(priv, shared_phys + offset,
+-					   le32_to_cpu(chunk->address),
+-					   le32_to_cpu(chunk->length));
+-		if (rc) {
++		ret = ipw_fw_dma_add_buffer(priv, &phys[total_nr - nr],
++					    nr, le32_to_cpu(chunk->address),
++					    chunk_len);
++		if (ret) {
+ 			IPW_DEBUG_INFO("dmaAddBuffer Failed\n");
+ 			goto out;
+ 		}
+ 
+-		offset += le32_to_cpu(chunk->length);
++		offset += chunk_len;
+ 	} while (offset < len);
+ 
+ 	/* Run the DMA and wait for the answer */
+-	rc = ipw_fw_dma_kick(priv);
+-	if (rc) {
++	ret = ipw_fw_dma_kick(priv);
++	if (ret) {
+ 		IPW_ERROR("dmaKick Failed\n");
+ 		goto out;
+ 	}
+ 
+-	rc = ipw_fw_dma_wait(priv);
+-	if (rc) {
++	ret = ipw_fw_dma_wait(priv);
++	if (ret) {
+ 		IPW_ERROR("dmaWaitSync Failed\n");
+ 		goto out;
+ 	}
+-      out:
+-	pci_free_consistent(priv->pci_dev, len, shared_virt, shared_phys);
+-	return rc;
++ out:
++	for (i = 0; i < total_nr; i++)
++		pci_pool_free(pool, virts[i], phys[i]);
++
++	pci_pool_destroy(pool);
++
++	return ret;
+ }
+ 
+ /* stop nic */
+-- 
+1.5.3.6
+
+
+
