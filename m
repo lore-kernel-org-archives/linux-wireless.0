@@ -1,113 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56100 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752759AbZHCJN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 05:13:26 -0400
-Subject: Re: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing
- kfree
-From: Zhu Yi <yi.zhu@intel.com>
-To: Julia Lawall <julia@diku.dk>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0908031109590.8435@pc-004.diku.dk>
-References: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
-	 <1249260246.4069.26.camel@debian>
-	 <Pine.LNX.4.64.0908031109590.8435@pc-004.diku.dk>
-Content-Type: text/plain
-Date: Mon, 03 Aug 2009 17:13:25 +0800
-Message-Id: <1249290805.4069.46.camel@debian>
-Mime-Version: 1.0
+Received: from sypressi.dnainternet.net ([83.102.40.135]:44128 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbZH1K2X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2009 06:28:23 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [RFC PATCH 08/10] rndis_wlan: convert mic failure wireless event to
+	cfg80211
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 28 Aug 2009 13:28:24 +0300
+Message-ID: <20090828102824.15684.18948.stgit@fate.lan>
+In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
+References: <20090828102742.15684.10566.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-08-03 at 17:11 +0800, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Move orthogonal error handling code up before a kzalloc, so that it 
-> doesn't have to free the allocated data.
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-Acked-by: Zhu Yi <yi.zhu@intel.com>
+ drivers/net/wireless/rndis_wlan.c |   32 +++++++++++++++++---------------
+ 1 files changed, 17 insertions(+), 15 deletions(-)
 
-Thanks,
--yi
-
-> The semantic match that finds the problem is as follows:
-> (http://www.emn.fr/x-info/coccinelle/)
-> 
-> // <smpl>
-> @r exists@
-> local idexpression x;
-> statement S;
-> expression E;
-> identifier f,f1,l;
-> position p1,p2;
-> expression *ptr != NULL;
-> @@
-> 
-> x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-> ...
-> if (x == NULL) S
-> <... when != x
->      when != if (...) { <+...x...+> }
-> (
-> x->f1 = E
-> |
->  (x->f1 == NULL || ...)
-> |
->  f(...,x->f1,...)
-> )
-> ...>
-> (
->  return \(0\|<+...x...+>\|ptr\);
-> |
->  return@p2 ...;
-> )
-> 
-> @script:python@
-> p1 << r.p1;
-> p2 << r.p2;
-> @@
-> 
-> print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> index 7707a26..6748a3f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-> @@ -310,18 +310,18 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
->  		return -ENODATA;
->  	}
->  
-> +	ptr = priv->eeprom;
-> +	if (!ptr) {
-> +		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-> +		return -ENOMEM;
-> +	}
-> +
->  	/* 4 characters for byte 0xYY */
->  	buf = kzalloc(buf_size, GFP_KERNEL);
->  	if (!buf) {
->  		IWL_ERR(priv, "Can not allocate Buffer\n");
->  		return -ENOMEM;
->  	}
-> -
-> -	ptr = priv->eeprom;
-> -	if (!ptr) {
-> -		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-> -		return -ENOMEM;
-> -	}
->  	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
->  			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
->  			? "OTP" : "EEPROM");
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 6919c54..01cd341 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2720,9 +2720,10 @@ static void rndis_wlan_auth_indication(struct usbnet *usbdev,
+ {
+ 	u8 *buf;
+ 	const char *type;
+-	int flags, buflen;
++	int flags, buflen, key_id;
+ 	bool pairwise_error, group_error;
+ 	struct ndis_80211_auth_request *auth_req;
++	enum nl80211_key_type key_type;
+ 
+ 	/* must have at least one array entry */
+ 	if (len < offsetof(struct ndis_80211_status_indication, u) +
+@@ -2758,23 +2759,24 @@ static void rndis_wlan_auth_indication(struct usbnet *usbdev,
+ 		devinfo(usbdev, "authentication indication: %s (0x%08x)", type,
+ 				le32_to_cpu(auth_req->flags));
+ 
+-		if (pairwise_error || group_error) {
+-			union iwreq_data wrqu;
+-			struct iw_michaelmicfailure micfailure;
++		if (pairwise_error) {
++			key_type = NL80211_KEYTYPE_PAIRWISE;
++			key_id = -1;
+ 
+-			memset(&micfailure, 0, sizeof(micfailure));
+-			if (pairwise_error)
+-				micfailure.flags |= IW_MICFAILURE_PAIRWISE;
+-			if (group_error)
+-				micfailure.flags |= IW_MICFAILURE_GROUP;
++			cfg80211_michael_mic_failure(usbdev->net,
++							auth_req->bssid,
++							key_type, key_id, NULL,
++							GFP_KERNEL);
++		}
+ 
+-			memcpy(micfailure.src_addr.sa_data, auth_req->bssid,
+-				ETH_ALEN);
++		if (group_error) {
++			key_type = NL80211_KEYTYPE_GROUP;
++			key_id = -1;
+ 
+-			memset(&wrqu, 0, sizeof(wrqu));
+-			wrqu.data.length = sizeof(micfailure);
+-			wireless_send_event(usbdev->net, IWEVMICHAELMICFAILURE,
+-						&wrqu, (u8 *)&micfailure);
++			cfg80211_michael_mic_failure(usbdev->net,
++							auth_req->bssid,
++							key_type, key_id, NULL,
++							GFP_KERNEL);
+ 		}
+ 
+ 		buflen -= le32_to_cpu(auth_req->length);
 
