@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:42307 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbZHaRZN (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:53345 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158AbZH1K22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 13:25:13 -0400
-Received: by mail-ew0-f206.google.com with SMTP id 2so542184ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 10:25:16 -0700 (PDT)
+	Fri, 28 Aug 2009 06:28:28 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [RFC PATCH 09/10] rndis_wlan: disable IWEVPMKIDCAND wireless event
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 28 Aug 2009 13:28:30 +0300
+Message-ID: <20090828102830.15684.65092.stgit@fate.lan>
+In-Reply-To: <20090828102742.15684.10566.stgit@fate.lan>
+References: <20090828102742.15684.10566.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <4A9BFCCB.6040808@ufra.edu.br>
-References: <4A9BFCCB.6040808@ufra.edu.br>
-Date: Mon, 31 Aug 2009 18:25:15 +0100
-Message-ID: <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>
-Subject: Re: zd1211rw on ppc (iBook G4)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 5:39 PM, Leonardo H. Souza
-Hamada<leonardo.hamada@ufra.edu.br> wrote:
-> Hi list,
->
-> On linux-2.6.24-gentoo-r3, the zd1211rw driver was working as eth1.
->
-> This is a big-endian machine.
->
-> On 2.6.30-gentoo-r5, 'ifconfig -a' shows the relevant entries below:
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-> Likely is a issue similar reported previously:
-> http://marc.info/?l=linux-wireless&m=124906700820860&w=2
->
-> Quick peek at the source diffs between previous version reveals some
-> changes.
+ drivers/net/wireless/rndis_wlan.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-Are you talking about a regression - i.e. it used to work *on the same
-architecture*, but not any more? If that's the case you can probably
-start with 2.6.24 and various compat-wireless on to narrow down which
-changes break.  The post you referred to is different - vendor driver
-vs rw driver.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 01cd341..512000b 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2821,14 +2821,16 @@ static void rndis_wlan_pmkid_cand_list_indication(struct usbnet *usbdev,
+ 		return;
+ 
+ 	for (i = 0; i < le32_to_cpu(cand_list->num_candidates); i++) {
+-		struct iw_pmkid_cand pcand;
+-		union iwreq_data wrqu;
+ 		struct ndis_80211_pmkid_candidate *cand =
+ 						&cand_list->candidate_list[i];
+ 
+ 		devdbg(usbdev, "cand[%i]: flags: 0x%08x, bssid: %pM",
+ 				i, le32_to_cpu(cand->flags), cand->bssid);
+ 
++#if 0
++		struct iw_pmkid_cand pcand;
++		union iwreq_data wrqu;
++
+ 		memset(&pcand, 0, sizeof(pcand));
+ 		if (le32_to_cpu(cand->flags) & 0x01)
+ 			pcand.flags |= IW_PMKID_CAND_PREAUTH;
+@@ -2839,6 +2841,7 @@ static void rndis_wlan_pmkid_cand_list_indication(struct usbnet *usbdev,
+ 		wrqu.data.length = sizeof(pcand);
+ 		wireless_send_event(usbdev->net, IWEVPMKIDCAND, &wrqu,
+ 								(u8 *)&pcand);
++#endif
+ 	}
+ }
+ 
+
