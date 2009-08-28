@@ -1,72 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:19799 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757432AbZHGKfS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:35:18 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 19/23] wl1251: use workqueue provided by mac80211
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:35:04 +0300
-Message-ID: <20090807103504.31717.20634.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:1885 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750954AbZH1PpT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2009 11:45:19 -0400
+Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
+ inserted
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251445557.4189.14.camel@johannes.local>
+References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+	 <1251445557.4189.14.camel@johannes.local>
+Content-Type: text/plain
+Date: Fri, 28 Aug 2009 08:45:21 -0700
+Message-Id: <1251474321.3805.73.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Hi Johannes,
 
-wl1251 should use workqueue created by mac80211 to not block the events
-workqueue too long.
+On Fri, 2009-08-28 at 00:45 -0700, Johannes Berg wrote:
+> Thanks. I'll comment on both patches together. Can you please also tell
+> us what the problem is this is solving? I'm a bit lost.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+This work is motivated by an attempt to untangle the iwlwifi station
+management to be able to use mac80211's sta notify callback. From 4965
+and up the rate scaling in the device is done per station, so an entry
+in the station table is required for the rate scaling initialization to
+succeed. 
 
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+> I think both of these patches should just rolled into one since this is
+> also a mac80211 patch -- even if it's for the bit that interacts with
+> cfg80211.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 568b640..c5f2d9d 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -375,7 +375,7 @@ static int wl1251_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
--	schedule_work(&wl->tx_work);
-+	ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
- 	/*
- 	 * The workqueue is slow to process the tx_queue and we need stop
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index f7e451f..20668e2 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -55,7 +55,7 @@ static void wl1251_sdio_interrupt(struct sdio_func *func)
- 	wl1251_debug(DEBUG_IRQ, "IRQ");
- 
- 	/* FIXME should be synchronous for sdio */
--	schedule_work(&wl->irq_work);
-+	ieee80211_queue_work(wl->hw, &wl->irq_work);
- }
- 
- static const struct sdio_device_id wl1251_devices[] = {
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 7d1031b..e088334 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -39,7 +39,7 @@ static irqreturn_t wl1251_irq(int irq, void *cookie)
- 
- 	wl = cookie;
- 
--	schedule_work(&wl->irq_work);
-+	ieee80211_queue_work(wl->hw, &wl->irq_work);
- 
- 	return IRQ_HANDLED;
- }
+ok - will do (if it is determined that they are needed).
+
+> 
+> However, I don't think I actually understand the changes.
+> 
+> >  	sta_apply_parameters(local, sta, params);
+> >  
+> > -	rate_control_rate_init(sta);
+> > -
+> >  	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+> >  		sdata->vif.type == NL80211_IFTYPE_AP;
+> >  
+> > @@ -742,13 +740,17 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+> >  		if (err == -EEXIST && layer2_update) {
+> >  			/* Need to update layer 2 devices on reassociation */
+> >  			sta = sta_info_get(local, mac);
+> > -			if (sta)
+> > +			if (sta) {
+> > +				rate_control_rate_init(sta);
+> >  				ieee80211_send_layer2_update(sta);
+> > +			}
+> >  		}
+> 
+> Why is this necessary? It should already have been called for this
+> station earlier?
+
+maybe - I just tried to have the code behave exactly as before, just
+with the rate scale initialization called later. Even before this patch,
+rate scaling initialization would be called if the station already
+exists. 
+
+If it is not necessary I can remove it.
+
+> 
+> >  		rcu_read_unlock();
+> >  		return err;
+> >  	}
+> >  
+> > +	rate_control_rate_init(sta);
+> > +
+> 
+> Also, I don't see anything between the old place that it was called and
+> the new place you're moving it to that could possibly change the station
+> parameters?
+
+Station parameters may not have changed, but at this point the driver
+has been notified that this station exists and it is now able to do the
+rate scaling initialization correctly.
+
+Right now iwlwifi is adding stations inside the rate scaling code in
+order to work around this issue. I'd like to clean this up and only use
+the sta notify callback.
+
+> 
+> Same in ibss.c (not quoting it here) where you're only moving it to
+> after sta_info_insert()
+
+This was my goal actually.
+
+>  -- all that seems to do is add race conditions,
+> allowing other code to find not-yet-initialised stations.
+
+I did not realize that this can happen. Can you please elaborate?
+
+> So the only place I could see a change being necessary would be mlme.c,
+> but then only moving rate_control_rate_init() to after the flags
+> settings, not to after the insert.
+
+Here too I moved it to after the insert for the same reason as above.
+
+
+Reinette
+
 
