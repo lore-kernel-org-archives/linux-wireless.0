@@ -1,62 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:63078 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbZH1FVk (ORCPT
+Received: from sypressi.dnainternet.net ([83.102.40.135]:53614 "EHLO
+	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbZH1J7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 Aug 2009 01:21:40 -0400
-Received: by iwn42 with SMTP id 42so841029iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2009 22:21:42 -0700 (PDT)
+	Fri, 28 Aug 2009 05:59:14 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 6/8] rndis_wlan: use is_zero_ether_addr() and
+	is_broadcast_ether_addr()
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Aug 2009 12:59:15 +0300
+Message-ID: <20090828095915.10554.78334.stgit@fate.lan>
+In-Reply-To: <20090828095849.10554.58857.stgit@fate.lan>
+References: <20090828095849.10554.58857.stgit@fate.lan>
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0908272117s27b3a59ep5f18c85aa179793d@mail.gmail.com>
-References: <20090827023000.21926.90867.stgit@mj.roinet.com>
-	<40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com>
-	<b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com>
-	<43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com>
-	<40f31dec0908272001u1a67cbf3ycc5d9588dd48915d@mail.gmail.com>
-	<43e72e890908272057s28ee11c6x624e8a08c6bd17e9@mail.gmail.com>
-	<40f31dec0908272117s27b3a59ep5f18c85aa179793d@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 27 Aug 2009 22:21:22 -0700
-Message-ID: <43e72e890908272221s39df68abq8e146c2d3566b415@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use in
-	ath5k_eeprom_read_turbo_modes()
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: Bob Copeland <bcopeland@gmail.com>, Pavel Roskin <proski@gnu.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 9:17 PM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+Use is_zero_ether_addr() and is_broadcast_ether_addr() instead of
+memcmp against ffff_bssid/zero_bssid.
 
-> Many people use turbo mode and it's not an ugly proprietary extension, static
-> turbo mode is close to just having 40MHz channels,
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
 
-Its not following any spec and I suspect it will create pretty noise
-on existing wireless networks. 11n has at least some precautions to
-try to be friendly, such as trying using primary and extension
-channels to match nearby APs. I don't believe Atheros Turbo has such
-things.
+ drivers/net/wireless/rndis_wlan.c |   17 ++++++-----------
+ 1 files changed, 6 insertions(+), 11 deletions(-)
 
-> we can use the same way to
-> switch to it as with 5 and 10MHz channels.
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index dc3083b..c28fde5 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -514,11 +514,6 @@ static struct cfg80211_ops rndis_config_ops = {
+ static void *rndis_wiphy_privid = &rndis_wiphy_privid;
+ 
+ 
+-static const unsigned char zero_bssid[ETH_ALEN] = {0,};
+-static const unsigned char ffff_bssid[ETH_ALEN] = { 0xff, 0xff, 0xff,
+-							0xff, 0xff, 0xff };
+-
+-
+ static struct rndis_wlan_private *get_rndis_wlan_priv(struct usbnet *dev)
+ {
+ 	return (struct rndis_wlan_private *)dev->driver_priv;
+@@ -995,7 +990,7 @@ static int is_associated(struct usbnet *usbdev)
+ 
+ 	ret = get_bssid(usbdev, bssid);
+ 
+-	return(ret == 0 && memcmp(bssid, zero_bssid, ETH_ALEN) != 0);
++	return (ret == 0 && !is_zero_ether_addr(bssid));
+ }
+ 
+ 
+@@ -1293,8 +1288,8 @@ static int add_wpa_key(struct usbnet *usbdev, const u8 *key, int key_len,
+ 		devdbg(usbdev, "add_wpa_key: recv seq flag without buffer");
+ 		return -EINVAL;
+ 	}
+-	is_addr_ok = addr && memcmp(addr, zero_bssid, ETH_ALEN) != 0 &&
+-			memcmp(addr, ffff_bssid, ETH_ALEN) != 0;
++	is_addr_ok = addr && !is_zero_ether_addr(addr) &&
++					!is_broadcast_ether_addr(addr);
+ 	if ((flags & NDIS_80211_ADDKEY_PAIRWISE_KEY) && !is_addr_ok) {
+ 		devdbg(usbdev, "add_wpa_key: pairwise but bssid invalid (%pM)",
+ 			addr);
+@@ -1379,8 +1374,8 @@ static int restore_key(struct usbnet *usbdev, int key_idx)
+ 		/*if (priv->encr_tx_key_index == key_idx)
+ 			flags |= NDIS_80211_ADDKEY_TRANSMIT_KEY;*/
+ 
+-		if (memcmp(key.bssid, zero_bssid, ETH_ALEN) != 0 &&
+-				memcmp(key.bssid, ffff_bssid, ETH_ALEN) != 0)
++		if (!is_zero_ether_addr(key.bssid) &&
++				!is_broadcast_ether_addr(key.bssid))
+ 			flags |= NDIS_80211_ADDKEY_PAIRWISE_KEY;
+ 
+ 		return add_wpa_key(usbdev, key.material, key.len, key_idx,
+@@ -1430,7 +1425,7 @@ static int remove_key(struct usbnet *usbdev, int index, u8 bssid[ETH_ALEN])
+ 		remove_key.index = cpu_to_le32(index);
+ 		if (bssid) {
+ 			/* pairwise key */
+-			if (memcmp(bssid, ffff_bssid, ETH_ALEN) != 0)
++			if (!is_broadcast_ether_addr(bssid))
+ 				remove_key.index |=
+ 					NDIS_80211_ADDKEY_PAIRWISE_KEY;
+ 			memcpy(remove_key.bssid, bssid,
 
-5 and 10 MHz seem to be defined and used as per 802.11 and those seem
-reasonable to support.
-
-> Most code is there, we are ready to support 5/10/40MHz channels on the
-> driver part
-
-Great.
-
-> as soon as we are done with cfg80211/mac80211 compatibility so why drop it ?
-
-We can drop Turbo, but it seems reasonable to keep 5 MHz and 10 MHz support.
-
-> Having multiple drivers won't help users, i thought that MadWiFi was "dead"
-> and we were working on a complete alternative.
-
-MadWifi is dead.
-
-  Luis
