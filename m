@@ -1,63 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49435 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752443AbZHCVI1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 17:08:27 -0400
-Subject: Re: iwlagn: possible regressions from 2.6.29 in 2.6.30
-From: reinette chatre <reinette.chatre@intel.com>
-To: Paul Collins <paul@burly.ondioline.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87tz1thrzk.fsf@bulky.wgtn.ondioline.org>
-References: <874oty9tlf.fsf@bulky.wgtn.ondioline.org>
-	 <1246378651.17896.523.camel@rc-desk>	<87k52t9ynp.fsf@jenny.ondioline.org>
-	 <87tz1thrzk.fsf@bulky.wgtn.ondioline.org>
-Content-Type: text/plain
-Date: Mon, 03 Aug 2009 14:08:13 -0700
-Message-Id: <1249333693.30019.4285.camel@rc-desk>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44530 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbZH1JKh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 Aug 2009 05:10:37 -0400
+Subject: Re: [PATCH 13/13] wl1271: added Juuso Oikarinen as module author
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Oikarinen Juuso (Nokia-D-MSW/Tampere)" <juuso.oikarinen@nokia.com>,
+	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>
+In-Reply-To: <4A979D06.2000205@nokia.com>
+References: <1251406807-31495-1-git-send-email-luciano.coelho@nokia.com>
+	 <1251406807-31495-14-git-send-email-luciano.coelho@nokia.com>
+	 <1251408741.22482.14.camel@johannes.local>  <4A979D06.2000205@nokia.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-X6Dt1YiXqWGexxcQOLOX"
+Date: Fri, 28 Aug 2009 11:10:04 +0200
+Message-Id: <1251450604.3456.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paul,
 
-Hi Paul,
+--=-X6Dt1YiXqWGexxcQOLOX
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2009-07-03 at 23:39 -0700, Paul Collins wrote:
-> Paul Collins <paul@burly.ondioline.org> writes:
-> 
-> > reinette chatre <reinette.chatre@intel.com> writes:
-> >>> When I say "packets > 250 bytes" I mean 250-byte packets as claimed by
-> >>> "ping -s 222 mygateway":
-> >>> 
-> >>>         PING cornelius.lan (10.2.4.1) 222(250) bytes of data.
-> >>> 
-> >>> The above will work, but "ping -s 223 cornelius" yields no replies.
-> >>
-> >> Are you saying this works before suspend, but not after resume? What do
-> >> you usually do to get this working again?
-> >
-> > Yes, normally it works great; I can ping with packet sizes up to the
-> > MTU.  However, after suspend/resume and reassociation, "ping -s 223" or
-> > greater does not work.  I get replies with "-s 222" or less,
-> > i.e. packets of 250 bytes or less.
-> >
-> > To get it working again I do "ifdown wlan0" followed by "ifup wlan0",
-> > which does the equivalent of "ip set link wlan0 down/up" and applying
-> > the network configuration.
-> >
-> > I will give the patch a shot when I get home.
-> 
-> I thought at first that the patch had moved the problem from reliably
-> reproducible to intermittently reproducible, but it looks like it was
-> simply intermittently reproducible the whole time.  So, no change with
-> the patch applied.
+On Fri, 2009-08-28 at 12:01 +0300, Luciano Coelho wrote:
 
-We have not yet been able to look into this issue - could you please
-submit a bug at intellinuxwireless.org/bugzilla so that we can track it
-there? 
+> Is that the right way to do it? At least in include/linux/module.h it=20
+> says this:
+>=20
+> /* Author, ideally of form NAME[, NAME]*[ and NAME] */
+> #define MODULE_AUTHOR(_author) MODULE_INFO(author, _author)
 
-Thank you
+Interesting, but I suspect that should just be changed.
 
-Reinette
+If you use multiple MODULE_AUTHOR, they will be shown as such:
 
+$ /sbin/modinfo ar9170usb | grep author
+author:         Christian Lamparter <chunkeey@web.de>
+author:         Johannes Berg <johannes@sipsolutions.net>
+
+
+If you use just one, it would be one long author: line with all of them.
+I think the multiple line case is much nicer.
+
+johannes
+
+--=-X6Dt1YiXqWGexxcQOLOX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKl57oAAoJEODzc/N7+Qma8tMQAKt4keCrwZU7N4g78b+ud6Lb
+YlAdgot866Vw6E12BJ95GI/AQyw0lApFfoYR6AtR4voC4hCbZxmlwhBBH0WlfP0J
+EtARpJI3W5y+IykpeRL4fJLHqZ6gIgaTmKitqId/t0Qnpd3bUWFacHzcIQAobMzw
+Tq2Uugjx4l3NiOEYSqgxNkLQLMo8AQ3e/UXvGUzSs/QhX8LMHVUxB+pzPAhmwrwf
+DWjfztvWpcr9V8D4e/wyf5NzU7JM2sN9YqRW7Xn9F8htVMB8D2r+83FzVtZWbj97
+5NlnFt5UO8RhvvISsg9v5LvFUGQ2Y4JFpR972J0iXiD3paNmVI50CNZIbnPvLgDK
+0yt4rNQxIACkC6AfUCr8K61Pqx4R8WZu4YGa49ZI0d01HVpBGLbL7BmJ4vdJ8Ndg
+oICXuyvebuAE3WdXJX9c3om9Im8OUh15L2l2aOGMomrChiBEcCA7gbPGeuvqSpzc
+9U/m+9ur+T55is5skmZ1FObDKDTWlsI9pGTHexuGjkd5i2pOHzFhyR8Fc/Js0szR
+pwTYIbTxOGkQChTk8IeaVfcQd6XjVW4pbXXFUle77NXgIqBcYj6nrmdfhnCdQd2q
+aFQxFNB3G1wwSIcERdSUoDCUCpg7VCVG6TD3I2pJwBs3JeXvnmbz9nlbDExGxijw
+WDcIxRStpEeuk49lpvF/
+=8Luv
+-----END PGP SIGNATURE-----
+
+--=-X6Dt1YiXqWGexxcQOLOX--
 
