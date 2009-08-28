@@ -1,228 +1,368 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:39034 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754019AbZHJWNo (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:41539 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbZH1UgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 Aug 2009 18:13:44 -0400
-Message-ID: <4A809B8D.5000309@redfish-solutions.com>
-Date: Mon, 10 Aug 2009 15:13:33 -0700
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+	Fri, 28 Aug 2009 16:36:02 -0400
+Received: by fxm17 with SMTP id 17so1782830fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2009 13:36:03 -0700 (PDT)
+Message-ID: <4A983FB2.2020509@gmail.com>
+Date: Fri, 28 Aug 2009 22:36:02 +0200
+From: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jon Loeliger <jdl@bigfootnetworks.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] CRDA and cross-compilation
-References: <4A7A8F7E.6020503@redfish-solutions.com>	 <1249569993.6446.2.camel@jdl-desktop> 	<1249576886.14919.16.camel@mj>	 <43e72e890908060956j3548c23ak4cf98d11c32efec0@mail.gmail.com>	 <1249580707.14919.29.camel@mj>	 <43e72e890908061142w41d3c0e8x1dc81ffd3ac5b8ae@mail.gmail.com>	 <4A7BD15E.1030604@redfish-solutions.com>	 <43e72e890908070905s447a2fc0j2dc086048194db34@mail.gmail.com>	 <4A7CC24D.1000104@redfish-solutions.com> <1249698462.25983.7.camel@mj>
-In-Reply-To: <1249698462.25983.7.camel@mj>
-Content-Type: multipart/mixed;
- boundary="------------030709070800070202030904"
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+CC: Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: b43: LP-PHY: Fix TX gain tables
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030709070800070202030904
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+The rev1 2GHz and rev2 5GHz gain tables were incorrectly documented
+on the specs originally. Update these gaintables to match the cor-
+rected specs.
 
-Pavel Roskin wrote:
-> On Fri, 2009-08-07 at 17:09 -0700, Philip A. Prindeville wrote:
->> Luis R. Rodriguez wrote:
->>> Please send white space changes first in one patch, ie, that do not
->>> change anything other than that. Then send the other stuff.
->>>
->>>   Luis
->> Here it is.
-> ...
->> -else
->> + else
-> ...
->> +install-rb: wireless-regdb/regulatory.bin
-> 
-> If you don't understand what you were asked to do, I'll appreciate if
-> you stop wasting everybody's time.
-> 
-> Nobody is going to extract useful bits from the patches you send,
-> especially if you don't provide an adequate description of the changes.
-> 
-> I was able to cross-compile CDRA for MIPS without any changes other than
-> those that have already been applied.
+Signed-off-by: Gábor Stefanik <netroller.3d@gmail.com>
+---
+ drivers/net/wireless/b43/tables_lpphy.c |  306 +++++++++++++++---------------
+ 1 files changed, 153 insertions(+), 153 deletions(-)
 
-Since we compile a variety of images that are both Linux and i586 based as are the target and host, detecting instances amongst the 180+ packages contained in our distribution where the build used host parameters instead of target parameters can be painful and tedious.
-
-Sometimes it's just best to isolate such code paths with a safe, obvious gating variable.  That's what I've tried to do here.
-
-We don't just build images, we also make the entire SVN tree available to others to build in their environments as well (Fedora, Centos, Gentoo, Debian, x86, PPC, x86_64, etc).  We can't possibly test for every scenario our users will encounter, so we make things as safe as we know how.
-
-Yes, I'm sure Pavel *was* able to build for his MIPS target in his environment.  That's a bet I can't make for all of our users, however, without these changes.
-
-I've split our changes into two functional groups:
-
-* allowing a cross-compilation without contamination by the host's own state via pkg-config bleeding into it.
-
-* allowing regulatory.bin to be installed via an external Makefile without having to extract internal values from crda/Makefile (i.e. REG_BIN and REG_GIT).
-
-These patches assume that Pavel's own "noverify" patch has already been applied.
-
---------------030709070800070202030904
-Content-Type: text/plain;
- name="crda-cross-compile.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="crda-cross-compile.patch"
-
-Changes:
-
-1. Remove trailing slashes from directory variables: they're redundant and cause duplicates if they are appended to a path that's already absolute.
-
-2. Move invariant definitions to before any cross-compilation conditional sections for clarity (and to avoid having to duplicate them).
-
-3. Bracket any host (native) compilation sections with conditional based on $(CROSS_COMPILE) being empty.
-
-4. Add 'else' section for cross-compilation using openssl and libnl-1 (or libnl-2 if explicitly selected).
-
-
---- crda-1.1.0/Makefile	2009-08-10 13:37:36.000000000 -0700
-+++ crda-1.1.0/Makefile.new	2009-08-10 13:37:11.000000000 -0700
-@@ -3,10 +3,10 @@
- REG_BIN?=/usr/lib/crda/regulatory.bin
- REG_GIT?=git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
+diff --git a/drivers/net/wireless/b43/tables_lpphy.c b/drivers/net/wireless/b43/tables_lpphy.c
+index b24521c..0312b31 100644
+--- a/drivers/net/wireless/b43/tables_lpphy.c
++++ b/drivers/net/wireless/b43/tables_lpphy.c
+@@ -1613,11 +1613,62 @@ static struct lpphy_tx_gain_table_entry lpphy_rev1_nopa_tx_gain_table[] = {
+ };
  
--PREFIX ?= /usr/
--MANDIR ?= $(PREFIX)/share/man/
-+PREFIX ?= /usr
-+MANDIR ?= $(PREFIX)/share/man
+ static struct lpphy_tx_gain_table_entry lpphy_rev1_2ghz_tx_gain_table[] = {
+-	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 85, },
+-	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 81, },
+-	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 78, },
+-	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 76, },
+-	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 74, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 90, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 88, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 85, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 83, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 81, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 78, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 76, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 74, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 15, .dac = 0, .bb_mult = 59, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 14, .dac = 0, .bb_mult = 59, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 13, .dac = 0, .bb_mult = 59, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 12, .dac = 0, .bb_mult = 59, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 11, .dac = 0, .bb_mult = 59, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 72, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 70, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 68, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 66, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 64, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 62, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 60, },
++	{ .gm = 4, .pga = 15, .pad = 10, .dac = 0, .bb_mult = 59, },
+ 	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 72, },
+ 	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 70, },
+ 	{ .gm = 4, .pga = 15, .pad = 9, .dac = 0, .bb_mult = 68, },
+@@ -1690,57 +1741,6 @@ static struct lpphy_tx_gain_table_entry lpphy_rev1_2ghz_tx_gain_table[] = {
+ 	{ .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 64, },
+ 	{ .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 62, },
+ 	{ .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 60, },
+-	{ .gm = 4, .pga = 10, .pad = 6, .dac = 0, .bb_mult = 59, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 72, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 70, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 68, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 66, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 62, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 60, },
+-	{ .gm = 4, .pga = 10, .pad = 5, .dac = 0, .bb_mult = 59, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 70, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 68, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 66, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 63, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 61, },
+-	{ .gm = 4, .pga = 9, .pad = 5, .dac = 0, .bb_mult = 59, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 71, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 69, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 67, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 65, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 63, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 62, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 60, },
+-	{ .gm = 4, .pga = 9, .pad = 4, .dac = 0, .bb_mult = 58, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 70, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 68, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 66, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 65, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 63, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 61, },
+-	{ .gm = 4, .pga = 8, .pad = 4, .dac = 0, .bb_mult = 59, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 68, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 66, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 62, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 61, },
+-	{ .gm = 4, .pga = 7, .pad = 4, .dac = 0, .bb_mult = 59, },
+-	{ .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 67, },
+-	{ .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 65, },
+-	{ .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 63, },
+-	{ .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 62, },
+-	{ .gm = 4, .pga = 7, .pad = 3, .dac = 0, .bb_mult = 60, },
+-	{ .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 65, },
+-	{ .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 63, },
+-	{ .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 61, },
+-	{ .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 60, },
+-	{ .gm = 4, .pga = 6, .pad = 3, .dac = 0, .bb_mult = 58, },
+-	{ .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 68, },
+-	{ .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 66, },
+-	{ .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 4, .pga = 5, .pad = 3, .dac = 0, .bb_mult = 62, },
+ };
  
--SBINDIR ?= /sbin/
-+SBINDIR ?= /sbin
+ static struct lpphy_tx_gain_table_entry lpphy_rev1_5ghz_tx_gain_table[] = {
+@@ -2168,103 +2168,103 @@ static struct lpphy_tx_gain_table_entry lpphy_rev2_5ghz_tx_gain_table[] = {
+ 	{ .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 68, },
+ 	{ .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 66, },
+ 	{ .gm = 255, .pga = 255, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 248, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 241, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 234, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 227, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 221, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 215, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 208, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 203, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 197, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 191, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 186, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 181, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 175, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 170, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 166, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 161, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 156, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 152, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 148, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 143, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 139, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 135, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 132, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 128, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 124, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 121, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 117, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 114, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 111, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 108, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 104, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 102, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 99, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 96, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 93, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 90, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 88, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 85, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 83, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 81, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 78, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 76, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 74, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 72, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 70, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 68, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 66, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 64, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 64, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 62, .pad = 255, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 62, .pad = 248, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 60, .pad = 248, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 60, .pad = 241, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 59, .pad = 241, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 59, .pad = 234, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 57, .pad = 234, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 57, .pad = 227, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 55, .pad = 227, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 55, .pad = 221, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 54, .pad = 221, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 54, .pad = 215, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 52, .pad = 215, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 52, .pad = 208, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 51, .pad = 208, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 51, .pad = 203, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 49, .pad = 203, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 49, .pad = 197, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 48, .pad = 197, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 48, .pad = 191, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 47, .pad = 191, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 47, .pad = 186, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 45, .pad = 186, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 45, .pad = 181, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 44, .pad = 181, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 44, .pad = 175, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 43, .pad = 175, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 43, .pad = 170, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 42, .pad = 170, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 42, .pad = 166, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 40, .pad = 166, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 40, .pad = 161, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 39, .pad = 161, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 39, .pad = 156, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 38, .pad = 156, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 38, .pad = 152, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 37, .pad = 152, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 37, .pad = 148, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 36, .pad = 148, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 36, .pad = 143, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 35, .pad = 143, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 35, .pad = 139, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 34, .pad = 139, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 34, .pad = 135, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 33, .pad = 135, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 33, .pad = 132, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 32, .pad = 132, .dac = 0, .bb_mult = 64, },
+-	{ .gm = 255, .pga = 32, .pad = 128, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 248, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 241, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 234, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 227, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 221, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 215, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 208, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 203, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 197, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 191, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 186, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 181, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 175, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 170, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 166, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 161, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 156, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 152, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 148, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 143, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 139, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 135, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 132, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 128, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 124, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 121, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 117, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 114, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 111, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 108, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 104, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 102, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 99, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 96, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 93, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 90, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 88, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 85, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 83, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 81, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 78, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 76, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 74, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 72, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 70, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 68, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 66, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 64, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 64, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 255, .pad = 62, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 248, .pad = 62, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 248, .pad = 60, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 241, .pad = 60, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 241, .pad = 59, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 234, .pad = 59, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 234, .pad = 57, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 227, .pad = 57, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 227, .pad = 55, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 221, .pad = 55, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 221, .pad = 54, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 215, .pad = 54, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 215, .pad = 52, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 208, .pad = 52, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 208, .pad = 51, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 203, .pad = 51, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 203, .pad = 49, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 197, .pad = 49, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 197, .pad = 48, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 191, .pad = 48, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 191, .pad = 47, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 186, .pad = 47, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 186, .pad = 45, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 181, .pad = 45, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 181, .pad = 44, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 175, .pad = 44, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 175, .pad = 43, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 170, .pad = 43, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 170, .pad = 42, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 166, .pad = 42, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 166, .pad = 40, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 161, .pad = 40, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 161, .pad = 39, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 156, .pad = 39, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 156, .pad = 38, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 152, .pad = 38, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 152, .pad = 37, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 148, .pad = 37, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 148, .pad = 36, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 143, .pad = 36, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 143, .pad = 35, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 139, .pad = 35, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 139, .pad = 34, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 135, .pad = 34, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 135, .pad = 33, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 132, .pad = 33, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 132, .pad = 32, .dac = 0, .bb_mult = 64, },
++	{ .gm = 255, .pga = 128, .pad = 32, .dac = 0, .bb_mult = 64, },
+ };
  
- # Use a custom CRDA_UDEV_LEVEL when callling make install to
- # change your desired level for the udev regulatory.rules
-@@ -14,7 +14,7 @@
- UDEV_LEVEL=$(CRDA_UDEV_LEVEL)-
- # You can customize this if your distributions uses
- # a different location.
--UDEV_RULE_DIR?=/lib/udev/rules.d/
-+UDEV_RULE_DIR?=/lib/udev/rules.d
- 
- # If your distribution requires a custom pubkeys dir
- # you must update this variable to reflect where the
-@@ -22,48 +22,76 @@
- # with make PUBKEY_DIR=/usr/lib/crda/pubkeys
- PUBKEY_DIR?=pubkeys
- 
-+MKDIR ?= mkdir -p
-+INSTALL ?= install
-+
- CFLAGS += -Wall -g
- 
- all: all_noverify verify
- 
- all_noverify: crda intersect regdbdump
- 
--ifeq ($(USE_OPENSSL),1)
-+ifeq ($(CROSS_COMPILE),)
-+
-+ ifeq ($(USE_OPENSSL),1)
- CFLAGS += -DUSE_OPENSSL `pkg-config --cflags openssl`
- LDLIBS += `pkg-config --libs openssl`
- 
- reglib.o: keys-ssl.c
- 
--else
-+ else
- CFLAGS += -DUSE_GCRYPT
- LDLIBS += -lgcrypt
- 
- reglib.o: keys-gcrypt.c
- 
--endif
--MKDIR ?= mkdir -p
--INSTALL ?= install
-+ endif
- 
- NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
- NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
- 
--ifeq ($(NL1FOUND),Y)
-+ ifeq ($(NL1FOUND),Y)
- NLLIBNAME = libnl-1
--endif
-+ endif
- 
--ifeq ($(NL2FOUND),Y)
-+ ifeq ($(NL2FOUND),Y)
- CFLAGS += -DCONFIG_LIBNL20
- NLLIBS += -lnl-genl
- NLLIBNAME = libnl-2.0
--endif
-+ endif
- 
--ifeq ($(NLLIBNAME),)
-+ ifeq ($(NLLIBNAME),)
- $(error Cannot find development files for any supported version of libnl)
--endif
-+ endif
- 
- NLLIBS += `pkg-config --libs $(NLLIBNAME)`
- CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
- 
-+else
-+
-+ ifeq ($(USE_OPENSSL),1)
-+CFLAGS += -DUSE_OPENSSL
-+LDLIBS += -lssl
-+
-+reglib.o: keys-ssl.c
-+
-+ else
-+CFLAGS += -DUSE_GCRYPT
-+LDLIBS += -lgcrypt
-+
-+reglib.o: keys-gcrypt.c
-+
-+ endif
-+
-+ ifeq ($(USE_LIBNL20),1)
-+CFLAGS += -DCONFIG_LIBNL20
-+NLLIBS = -lnl-genl -lnl-2.0
-+ else
-+NLLIBS = -lnl
-+ endif
-+
-+endif
-+
- ifeq ($(V),1)
- Q=
- NQ=@true
+ void lpphy_rev0_1_table_init(struct b43_wldev *dev)
+-- 
+1.6.2.4
 
 
---------------030709070800070202030904
-Content-Type: text/plain;
- name="crda-regbin-install.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="crda-regbin-install.patch"
 
-Add a couple of rules to (1) download (via GIT) John's working copy of regulatory.bin and (2) install it in the appropriate target destination.  This avoids us having to parse the Makefile for REG_BIN and REG_GIT from an enclosing (nesting) makefile, as is common in distros and buildroot environments in particular.
-
---- crda-1.1.0/Makefile	2009-08-10 13:37:36.000000000 -0700
-+++ crda-1.1.0/Makefile.new	2009-08-10 13:37:11.000000000 -0700
-@@ -136,6 +164,14 @@
- 	$(NQ) '  INSTALL  regdbdump.8.gz'
- 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
- 
-+install-rb: wireless-regdb/regulatory.bin
-+	$(NQ) '  INSTALL  regulatory.bin'
-+	$(Q)$(INSTALL) -m 444 -D wireless-regdb/regulatory.bin $(DESTDIR)/$(REG_BIN)
-+
-+wireless-regdb/regulatory.bin:
-+	@rm -rf wireless-regdb
-+	git clone -q $(REG_GIT) wireless-regdb
-+
- clean:
- 	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
- 	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
-
-
---------------030709070800070202030904--
