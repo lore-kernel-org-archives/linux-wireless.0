@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41492 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755417AbZHMTbt (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:63100 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750943AbZH1Cnn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 15:31:49 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 11/20] wireless: group Atmel wireless together on kconfig
-Date: Thu, 13 Aug 2009 15:31:40 -0400
-Message-Id: <1250191909-21682-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
-References: <1250191909-21682-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 27 Aug 2009 22:43:43 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 27 Aug 2009 19:43:25 -0700
+Message-ID: <43e72e890908271943s6dca1257g1f1e56d0347cc21d@mail.gmail.com>
+Subject: ar9271 mailing list and driver project page
+To: devel@linuxdriverproject.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+I'd like to announce the ar9271 development project will make use of
+the Linux driver project mailing list as it is not upstream yet.
+ar9271 development now also has a home page:
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 1a8e9bd..694b632 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -213,6 +213,14 @@ config AIRO
- 
- 	  The driver can be compiled as a module and will be named "airo".
- 
-+menuconfig ATMEL_80211
-+	bool "Atmel Wireless Cards"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Atmel wireless drivers.
-+
-+if ATMEL_80211
-+
- config ATMEL
-       tristate "Atmel at76c50x chipset  802.11b support"
-       depends on (PCI || PCMCIA) && WLAN_80211
-@@ -255,6 +263,8 @@ config AT76C50X_USB
-           Enable support for USB Wireless devices using Atmel at76c503,
-           at76c505 or at76c505a chips.
- 
-+endif # ATMEL_80211
-+
- config AIRO_CS
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
- 	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
--- 
-1.6.2.5
+http://wireless.kernel.org/en/users/Drivers/ar9271
 
+You can subscribe to this page for updates. I've tried to do a big
+brain dump on documentation from what I understand of ar9271
+HTC/HIF/WMI stuff so far. If you'd like to get followups on ar9271 I
+suggest you either subscribe to the wiki page or subscribe to the
+Linux driver development mailing list as no patches or information
+will be posted to linux-wireless until it is ready for upstream
+inclusion.
+
+  Luis
