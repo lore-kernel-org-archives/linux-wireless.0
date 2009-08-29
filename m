@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32411 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753003AbZHGEPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 00:15:20 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2009 21:15:22 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:55478 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752203AbZH2LdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Aug 2009 07:33:24 -0400
+Message-ID: <4A991203.8070407@gmx.de>
+Date: Sat, 29 Aug 2009 13:33:23 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19067.43622.886009.551755@gargle.gargle.HOWL>
-Date: Fri, 7 Aug 2009 09:45:34 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/12] ath9k: Change DEBUG level for certain interrupts
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [RFT] ar9170: use eeprom's frequency calibration values
+References: <200908212252.41053.chunkeey@web.de> <1250927567.23605.9.camel@johannes.local>
+In-Reply-To: <1250927567.23605.9.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Occurrence of AR_ISR_RXORN, AR_INTR_SYNC_RADM_CPL_TIMEOUT
-and AR_INTR_SYNC_LOCAL_TIMEOUT should be visible.
+On 08/22/2009 09:52 AM, Johannes Berg wrote:
+> On Fri, 2009-08-21 at 22:52 +0200, Christian Lamparter wrote:
+> 
+>> Johannes, in phy.c (now at line) line 429
+>>
+>> int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band)
+>> {
+>> [...]
+>>         /* XXX: use EEPROM data here! */
+>>
+>>         err = ar9170_init_power_cal(ar);
+>>         if (err)
+>> [...]
+>> }
+>>
+>> do you still know what EEPROM data is missing here? 
+> 
+> Sorry, no, I don't remember, and can't seem to find it either in otus
+> right now.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Maybe this refers to the values in eepromBoardData initialized from the eeprom in otus/hal/hpmain.c, lines 522 ff.
+and written into the registers in line 828?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6514dc7..0e83e98 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3182,7 +3182,7 @@ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked)
- 		}
- 
- 		if (isr & AR_ISR_RXORN) {
--			DPRINTF(ah->ah_sc, ATH_DBG_INTERRUPT,
-+			DPRINTF(ah->ah_sc, ATH_DBG_ANY,
- 				"receive FIFO overrun interrupt\n");
- 		}
- 
-@@ -3218,14 +3218,14 @@ bool ath9k_hw_getisr(struct ath_hw *ah, enum ath9k_int *masked)
- 			*masked |= ATH9K_INT_FATAL;
- 		}
- 		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
--			DPRINTF(ah->ah_sc, ATH_DBG_INTERRUPT,
-+			DPRINTF(ah->ah_sc, ATH_DBG_ANY,
- 				"AR_INTR_SYNC_RADM_CPL_TIMEOUT\n");
- 			REG_WRITE(ah, AR_RC, AR_RC_HOSTIF);
- 			REG_WRITE(ah, AR_RC, 0);
- 			*masked |= ATH9K_INT_FATAL;
- 		}
- 		if (sync_cause & AR_INTR_SYNC_LOCAL_TIMEOUT) {
--			DPRINTF(ah->ah_sc, ATH_DBG_INTERRUPT,
-+			DPRINTF(ah->ah_sc, ATH_DBG_ANY,
- 				"AR_INTR_SYNC_LOCAL_TIMEOUT\n");
- 		}
- 
--- 
-1.6.4
+I guess they should come from the modal_header[] in struct ar9170_eeprom, but I cannot map the 
+offset in hpmain.c for hpPriv->eepromImage[] into the modal_header's members.
+
+Regards,
+Joerg
+
 
