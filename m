@@ -1,68 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:18236 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbZHUNWE convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:57342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857AbZH2Jed (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 09:22:04 -0400
-Received: by fg-out-1718.google.com with SMTP id e21so176348fga.17
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 06:22:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1250842889.13872.8.camel@johannes.local>
-References: <4A8DC955.9060100@gmail.com> <1250842889.13872.8.camel@johannes.local>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 21 Aug 2009 15:21:43 +0200
-Message-ID: <69e28c910908210621t3e239f09w6a2037e8c37b40ae@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: Make injection of non-broadcast frames work
-	again
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Rafael Laufer <rlaufer@cs.ucla.edu>,
-	ipw3945-devel <ipw3945-devel@lists.sourceforge.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 29 Aug 2009 05:34:33 -0400
+Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
+ inserted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251497929.3805.173.camel@rc-desk>
+References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+	 <1251445557.4189.14.camel@johannes.local>
+	 <1251474321.3805.73.camel@rc-desk>
+	 <1251493298.3456.34.camel@johannes.local>
+	 <1251497929.3805.173.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jPGC7eqvSGFTmpVLvhok"
+Date: Sat, 29 Aug 2009 11:34:29 +0200
+Message-Id: <1251538470.19422.23.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/21 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2009-08-21 at 00:08 +0200, Gábor Stefanik wrote:
->
->>       /* If this frame is broadcast or management, use broadcast station id */
->> -     if (!ieee80211_is_data(fc) ||  is_multicast_ether_addr(hdr->addr1))
->> +     if (!ieee80211_is_data(fc) || is_multicast_ether_addr(hdr->addr1) ||
->> +         iwl_is_monitor_mode(priv)) /* Injected frames need broadcast too */
->>               return priv->hw_params.bcast_sta_id;
->
-> Now you still can't transmit frames to another AP when connected to one,
-> which will, for example, be required for 11r. IMHO that code should, in
-> STATION mode, be checking the RA against the BSSID, and if they match
-> use the AP ID, otherwise the bcast ID.
 
-I'll probably do that, in a separate patch. This patch is a regression
-fix targeted at the next 2.6.31-rc (injection of non-broadcasts works
-fine in 2.6.30, but causes an ucode SYSASSERT in 2.6.31 and up). The
-problem you are describing is not a regression AFAIK, it's something
-that never worked; so it should be targeted @ 2.6.32.
+--=-jPGC7eqvSGFTmpVLvhok
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> And remove the warning in the
-> default case, since that's what happens if in pure monitor mode afaict.
+Hi Reinette,
 
->From my limited testing, in monitor mode, the vif type will be
-IFTYPE_STATION, so the default case is never hit. (Is this a bug?)
+> > Interesting. I've been thinking about making it go the other way --
+> > remove rate scaling hooks completely. wl1271 apparently has rate scalin=
+g
+> > completely in the firmware, so the RS algorithm on the host is just
+> > overhead. I've been thinking putting 4965+ RS into the _driver_ makes
+> > more sense since it really does a lot in the firmware and not on the
+> > host.
+>=20
+> Yes, it does do a lot in firmware. Unfortunately I am not too familiar
+> with the details (yet).
 
-(BTW now that in mac80211, we internally use IFTYPE_MONITOR in monitor
-mode, as opposed to just checking for a missing STA - why can't we
-propagate this to the drivers, and have a much saner way of informing
-the driver of monitor mode? This is especially a problem for zd1211rw,
-where to get proper monitor mode, ZD_SNIFFER_ON needs to be turned
-on.)
+As far as I know/can tell, you basically upload the LQ command to the
+firmware for each station and it in a way controls the parameters. What
+exactly it does I'm not sure, but I am pretty sure that we don't have up
+to 16 retries programmed into the TX descriptor for each packet, but we
+can do that many retries.
 
->
-> johannes
->
+iwl_tx_cmd contains only a single rate_n_flags field, and then there's
+TX_CMD_FLG_STA_RATE_MSK, there's a comment on that definition that
+explains some more.
 
+> > I've also been thinking if there's a way to make sta_notify() able to
+> > sleep but so far I don't see one unfortunately.
+>=20
+> Having it sleep will help a lot. When a station is added we need to tell
+> the device about it. Since the call cannot sleep we cannot really tell
+> mac80211 if this failed because the failure will only be known at a
+> later time. I have not yet figured out how to deal with this case.
 
+Yeah, that would help. On the other hand, mac80211 isn't actually
+prepared to deal with that. In fact, sta_notify has no return value. And
+I'm not really sure how to deal with errors from it. Leaving AP aside
+for a minute, I think we probably can't do anything. If we exceed the
+capacity of the microcode's station memory, I think the best we can do
+is just not use rate control for that station, and use the broadcast
+station. It won't really happen anyway. And software crypto, of course.
+So there's not much to be done.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Now looking at AP again, it _might_ make sense to tell hostapd "sorry we
+can't really talk to that station well", but on the other hand I suspect
+it's not a case we should really consider. I'd say we can export the
+number of stations so that hostapd can actually try not to exceed the
+limit in the first place.
+
+As such, having the sta_notify callback sleep will not actually help
+much.
+
+I'd say we do the following: At startup, we program the broadcast STA
+into the device so we always have that, and do that synchronously so if
+that fails for some stupid reason. I think we already do that.
+
+Then, we use a station private area that mac80211 can allocate for us to
+store the STA_ID for each station. Set this to the broadcast STA ID,
+which is always valid in some sense, at sta_notify(add) time. Then,
+asynchronously, tell the device about the station. Once that command
+finishes, look up the sta struct again and set the STA_ID to the new ID
+that we used in the device. This way, a sta struct will always have a
+valid sta ID in it.
+
+Now, when we need to set a key for a station, we actually get the
+station struct. Thus, we can keep two separate flag in the station
+struct that tells us whether the STA_ADD was successful. If this flag is
+unset, then we reject the add_key with -ENOSPC. Or when we detect that
+the key command was too fast after the sta_notify we can wait for the
+ADD_STA to finish in the key notification since that can sleep.
+
+And then rate stuff we can just also do as part of the async sta add
+command, so that the sta ID is only set after we have the sta programmed
+into the device and also initialised rate control properly for it.
+Ultimately the rate control algorithm could do nothing at all, and then
+we can remove it completely.
+
+> > As soon as sta_insert() got called, a packet transmitted to that statio=
+n
+> > can be processed, find the sta info, and it seems we could end up
+> > calling rate_control_get_rate() before the init was done, through a rac=
+e
+> > condition.
+>=20
+> oh - I see - that's bad. Although, that may explain why iwlwifi is
+> adding stations in get_rate() also.=20
+
+No, the explanation for that is "history" :) The rate algorithm was
+written before mac80211 actually _had_ the sta_notify command, and it
+was (and still is, as you've pointed out in these patches) the first
+place that is notified about the new station. But I think we don't
+really need that.
+
+johannes
+
+--=-jPGC7eqvSGFTmpVLvhok
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKmPYjAAoJEODzc/N7+QmaoBgQAMnaXK67gQmt+ngRo7oPftfJ
+j++5K9gkQ0CX4Qis8l4gxkeGbUcBTh8cDeGCEScDel0G2mDN2Yo3uBTQ57yy2GoW
+kxvqnyi2afjl1MzRsByPFUZTOvjm3iKTtVgIy0ZvviwSBvdsOJGX3bzC7QPOyWmN
+o70wl6SqLXJsDBobUjsGzDgbRWHbI6YOYl/6TqDINcTJajIGxILDlSAxESDRDHfK
+Ouu3Ae9xSGenMewJMqz0CnUr2JP8PVU7SyinTaiWwl+bEiD9I56xlWMaCnIVwBW6
+Packkr011tGqDV7rtlLkmkgiij2pOdoOcc610kveQOarTHPaC12JL0lvMThuq5IV
+bPUQKN5Mm3EzDMhhrTugPMp+67X9ZYDxuPiGCCVw1gxg6nP41Mj2vwzk+cp6BsWg
+ZQscKdc0UUVDDJsbnkXOfRli/UQcIjunh4kv48pOw3JjwImrdNBJPKjGOY9USnPe
+R1AnIk+fMaqbZR2glhdaXV1hOF/2maT+xZvep1Jv6GpJvfgGqdsUFFFMhKMdasy3
+6iqAhsa7DIvblqUeavWolitOBYJZyihC2uAUorEPuECN7gS0uRisAdx8S4+yQrUw
+ZoFCI4e9ej0PFpoH0vG7TCoMW40JgDTFEfOcciP9c/dhRNH0jLXyJXqlM5kLvj1F
+BDKoHPaMqqlyX2/vSQtY
+=rD4Q
+-----END PGP SIGNATURE-----
+
+--=-jPGC7eqvSGFTmpVLvhok--
+
