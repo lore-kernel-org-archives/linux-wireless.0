@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f175.google.com ([209.85.210.175]:39725 "EHLO
-	mail-yx0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026AbZHLQqL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 12:46:11 -0400
-Received: by yxe5 with SMTP id 5so188396yxe.33
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 09:46:12 -0700 (PDT)
+Received: from smtp1-g21.free.fr ([212.27.42.1]:49097 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750759AbZH2Ubk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 Aug 2009 16:31:40 -0400
+Message-ID: <4A999024.6060800@free.fr>
+Date: Sat, 29 Aug 2009 22:31:32 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 12 Aug 2009 09:45:52 -0700
-Message-ID: <43e72e890908120945l14f6590ev38f7083a1b1dae8@mail.gmail.com>
-Subject: ath5k warning on bitrate
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: Fix TX status reporting
+References: <200908291910.14528.IvDoorn@gmail.com>
+In-Reply-To: <200908291910.14528.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have some patches on top of this for ath5k but I doubt they were the
-culprit. The warning comes from the second check:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-static inline int
-ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
-{
-        int rix;
+Ivo van Doorn a écrit :
+> Not all values of the TX status enumeration were covered during
+> updating of the TX statistics. This could lead to wrong bitrate
+> tuning but also wrong behavior in tools like hostapd.
+>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+I have a pending patch about TX status that changed the meaning of
+TXDONE_FALLBACK just a bit... just to avoid this change in fact.
+I should be able to send those patches in few hours.
 
-        /* return base rate on errors */
-        if (WARN(hw_rix < 0 || hw_rix >= AR5K_MAX_RATES,
-                        "hw_rix out of bounds: %x\n", hw_rix))
-                return 0;
+In my code, you success/failure of the packet is reported with
+TXDONE_SUCCESS / TXDONE_FAILURE. The TXDONE_FALLBACK is set
+independently to indicate that a fallback rate table has been used
+(and this could be the case for either success or failure).
 
-        rix = sc->rate_idx[sc->curband->band][hw_rix];
-        if (WARN(rix < 0, "invalid hw_rix: %x\n", hw_rix))
-                rix = 0;
+Regards,
+Benoit
 
-        return rix;
-}
+> --- drivers/net/wireless/rt2x00/rt2x00dev.c |   28
+> ++++++++++++++++------------ 1 files changed, 16 insertions(+), 12
+> deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> b/drivers/net/wireless/rt2x00/rt2x00dev.c index 5db613f..71761b3
+> 100644 --- a/drivers/net/wireless/rt2x00/rt2x00dev.c +++
+> b/drivers/net/wireless/rt2x00/rt2x00dev.c @@ -206,6 +206,7 @@ void
+> rt2x00lib_txdone(struct queue_entry *entry, unsigned int
+> header_length = ieee80211_get_hdrlen_from_skb(entry->skb); u8
+> rate_idx, rate_flags, retry_rates; unsigned int i; +    bool success;
+>
+> /* * Unmap the skb. @@ -234,13 +235,18 @@ void
+> rt2x00lib_txdone(struct queue_entry *entry,
+> rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TXDONE, entry->skb);
+>
+> /* -     * Update TX statistics. +     * Determine if the frame has been
+> successfully transmitted. */ -    rt2x00dev->link.qual.tx_success += +
+> success = test_bit(TXDONE_SUCCESS, &txdesc->flags) || -
+> test_bit(TXDONE_UNKNOWN, &txdesc->flags); -
+> rt2x00dev->link.qual.tx_failed += -        test_bit(TXDONE_FAILURE,
+> &txdesc->flags); +        test_bit(TXDONE_UNKNOWN, &txdesc->flags) ||
+> +        test_bit(TXDONE_FALLBACK, &txdesc->flags); + +    /* +     *
+Update
+> TX statistics. +     */ +    rt2x00dev->link.qual.tx_success += success;
+> +    rt2x00dev->link.qual.tx_failed += !success;
+>
+> rate_idx = skbdesc->tx_rate_idx; rate_flags =
+> skbdesc->tx_rate_flags; @@ -263,22 +269,20 @@ void
+> rt2x00lib_txdone(struct queue_entry *entry,
+> tx_info->status.rates[i].flags = rate_flags;
+> tx_info->status.rates[i].count = 1; } -    if (i <
+> (IEEE80211_TX_MAX_RATES -1)) +    if (i < (IEEE80211_TX_MAX_RATES -
+> 1)) tx_info->status.rates[i].idx = -1; /* terminate */
+>
+> if (!(tx_info->flags & IEEE80211_TX_CTL_NO_ACK)) { -        if
+> (test_bit(TXDONE_SUCCESS, &txdesc->flags) || -
+> test_bit(TXDONE_UNKNOWN, &txdesc->flags)) +        if (success)
+> tx_info->flags |= IEEE80211_TX_STAT_ACK; -        else if
+> (test_bit(TXDONE_FAILURE, &txdesc->flags)) +        else
+> rt2x00dev->low_level_stats.dot11ACKFailureCount++; }
+>
+> if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) { -        if
+> (test_bit(TXDONE_SUCCESS, &txdesc->flags) || -
+> test_bit(TXDONE_UNKNOWN, &txdesc->flags)) +        if (success)
+> rt2x00dev->low_level_stats.dot11RTSSuccessCount++; -        else if
+> (test_bit(TXDONE_FAILURE, &txdesc->flags)) +        else
+> rt2x00dev->low_level_stats.dot11RTSFailureCount++; }
+>
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-[  402.717626] ath5k phy0: noise floor calibration timeout (2462MHz)
-[ 1443.232473] ------------[ cut here ]------------
-[ 1443.232473] WARNING: at drivers/net/wireless/ath/ath5k/base.c:1140
-ath5k_tasklet_rx+0x562/0x670 [ath5k]()
-[ 1443.232473] Hardware name: 7660A14
-[ 1443.232473] invalid hw_rix: 1b
-[ 1443.232473] Modules linked in: aes_generic binfmt_misc ppdev bridge
-stp bnep kvm_intel kvm lp parport snd_hda_codec_analog joydev arc4 ecb
-snd_hda_intel snd_hda_codec snd_pcm_oss snd_mixer_oss snd_pcm ath5k
-pcmcia snd_seq_dummy mac80211 ath snd_seq_oss snd_seq_midi_event
-thinkpad_acpi yenta_socket psmouse cfg80211 rsrc_nonstatic pcspkr
-snd_seq nvram serio_raw led_class pcmcia_core btusb snd_timer
-snd_seq_device snd soundcore snd_page_alloc ohci1394 ieee1394 e1000e
-fbcon tileblit font bitblit softcursor i915 drm i2c_algo_bit video
-output intel_agp
-[ 1443.232473] Pid: 0, comm: swapper Not tainted 2.6.31-rc5-wl #129
-[ 1443.232473] Call Trace:
-[ 1443.232473]  <IRQ>  [<ffffffff81057398>] warn_slowpath_common+0x78/0xb0
-[ 1443.232473]  [<ffffffff8105742c>] warn_slowpath_fmt+0x3c/0x40
-[ 1443.232473]  [<ffffffffa026be22>] ath5k_tasklet_rx+0x562/0x670 [ath5k]
-[ 1443.232473]  [<ffffffff810313b9>] ? default_spin_lock_flags+0x9/0x10
-[ 1443.232473]  [<ffffffff8105ca20>] tasklet_action+0xd0/0xe0
-[ 1443.232473]  [<ffffffff8105dd4d>] __do_softirq+0xbd/0x200
-[ 1443.232473]  [<ffffffff8101308c>] call_softirq+0x1c/0x30
-[ 1443.232473]  [<ffffffff81014805>] do_softirq+0x55/0x90
-[ 1443.232473]  [<ffffffff8105dab5>] irq_exit+0x85/0x90
-[ 1443.232473]  [<ffffffff81013f80>] do_IRQ+0x70/0xe0
-[ 1443.232473]  [<ffffffff810128d3>] ret_from_intr+0x0/0x11
-[ 1443.232473]  <EOI>  [<ffffffff812c256a>] ? acpi_idle_enter_bm+0x28b/0x2bf
-[ 1443.232473]  [<ffffffff812c2563>] ? acpi_idle_enter_bm+0x284/0x2bf
-[ 1443.232473]  [<ffffffff813e088b>] ? cpuidle_idle_call+0x9b/0xf0
-[ 1443.232473]  [<ffffffff81010e12>] ? cpu_idle+0xb2/0x100
-[ 1443.232473]  [<ffffffff814e819b>] ? start_secondary+0x18e/0x193
-[ 1443.232473] ---[ end trace 95c5af437c1ab783 ]---
+iEYEARECAAYFAkqZkB8ACgkQOR6EySwP7oKnaQCglW+lu167n88CR3Chv1i4uF1P
+I1kAoLrVvvXCbmzWN8M2/wHtyTSCnUZu
+=IJEh
+-----END PGP SIGNATURE-----
+
