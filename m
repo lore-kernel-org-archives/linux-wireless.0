@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53183 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757858AbZHQR1d (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35059
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751713AbZH2GF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 Aug 2009 13:27:33 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Sat, 29 Aug 2009 02:05:28 -0400
+Date: Fri, 28 Aug 2009 23:05:42 -0700 (PDT)
+Message-Id: <20090828.230542.249636196.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v5 33/33] wireless: remove mac80211 rate selection extra menu
-Date: Mon, 17 Aug 2009 13:27:32 -0400
-Message-Id: <1250530052-14783-34-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-08-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090828191039.GC32694@tuxdriver.com>
+References: <20090828191039.GC32694@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can just display this upon enabling mac80211 with an
-'if MAC80211 != n' check.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 28 Aug 2009 15:10:39 -0400
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/Kconfig |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+> Dave,
+> 
+> One more late-breaker for 2.6.31...
+> 
+> This patch is rather large for this stage of the cycle, but it
+> corrects a regression disussed recently on LKML, documented in bug
+> 14016 at bugzilla.kernel.org.  This jist of it is that the ipw2200
+> firmware loading routine was using an order 6 memory allocation that was
+> failing with newer allocators under some circumstances.
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 72006f9..8300d19 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -26,8 +26,7 @@ config MAC80211
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
- 
--menu "Rate control algorithm selection"
--	depends on MAC80211 != n
-+if MAC80211 != n
- 
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EMBEDDED
-@@ -74,7 +73,7 @@ config MAC80211_RC_DEFAULT
- 	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default ""
- 
--endmenu
-+endif
- 
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
--- 
-1.6.2.5
-
+Pulled, thanks.
