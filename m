@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:46002 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757424AbZHGKfk (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:63001 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686AbZH2Pr6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:35:40 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 21/23] wl1251: remove Luciano as maintainer
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:35:19 +0300
-Message-ID: <20090807103518.31717.48612.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+	Sat, 29 Aug 2009 11:47:58 -0400
+Received: by ewy2 with SMTP id 2so2897955ewy.17
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2009 08:48:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4A98D65B.9060103@free.fr>
+References: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
+	 <4A98D65B.9060103@free.fr>
+Date: Sat, 29 Aug 2009 18:47:59 +0300
+Message-ID: <40f31dec0908290847g698a65e2t589a466a13b1b7f5@mail.gmail.com>
+Subject: Re: [ath5k-devel] Ath5k and proprietary extensions
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Benoit PAPILLAULT <benoit.papillault@free.fr>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	ic.felix@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+2009/8/29 Benoit PAPILLAULT <benoit.papillault@free.fr>:
+>
+> I have been working on XR (in madwifi) for some time with no result. I
+> would appreciate to be able to test it in ath5k.
 
-Luciano is maintaining wl1271 part.
+All XR related stuff is missing from both Legacy and Sam's HAL + it's
+nasty IMHO. We need to define new rates, send beacons on both 0.25 and
+1Mbits, use that polling mechanism, introduce a new IE etc. It 'll
+need lots of changes and the code will get even more complex + if we
+want to do it right at least the polling mechanism has to go to
+mac80211 and i don't think anyone wants that, imagine if every vendor
+started putting proprietary stuff like that on mac80211 (and there are
+way more nasty vendor specific stuff). I don't want to see
+ath5k/mac80211 become like MadWiFi. If we can find a way to support XR
+on ath5k without touching mac80211 then we can talk about it but right
+now we don't even know how to make it work.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
----
-
- drivers/net/wireless/wl12xx/wl1251_main.c |    3 +--
- drivers/net/wireless/wl12xx/wl1251_sdio.c |    3 +--
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    3 +--
- 3 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 3fe8b65..7148934 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -1427,5 +1427,4 @@ EXPORT_SYMBOL_GPL(wl1251_free_hw);
- 
- MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
- MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
--MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-+MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index 9577ed6..9423f22 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -202,5 +202,4 @@ module_init(wl1251_sdio_init);
- module_exit(wl1251_sdio_exit);
- 
- MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
--MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-+MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 612d565..14eff2b 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -341,5 +341,4 @@ module_init(wl1251_spi_init);
- module_exit(wl1251_spi_exit);
- 
- MODULE_LICENSE("GPL");
--MODULE_AUTHOR("Kalle Valo <Kalle.Valo@nokia.com>");
--MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
-+MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
-
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
