@@ -1,80 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45317 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756523AbZHNAnF (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:54580 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752582AbZH3K2b convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	"Johannes Berg\"" <johannes@sipsolutions.net>
-Subject: [PATCH v2 18/25] wireless: move mac80211_hwsim to top level wireless driver menu
-Date: Thu, 13 Aug 2009 20:42:57 -0400
-Message-Id: <1250210584-13374-19-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 30 Aug 2009 06:28:31 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: [PATCH v2] b43: LP-PHY: Begin implementing calibration & software RFKILL support
+Date: Sun, 30 Aug 2009 12:28:15 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <4A99C4BB.7080806@gmail.com>
+In-Reply-To: <4A99C4BB.7080806@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200908301228.16845.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211_hwsim is not a device driver for real hardware it is a
-driver we can use to simulate a real device for testing mac80211.
-Move it to the top wireless driver menu by removing its dependency
-on WLAN_80211.
+On Sunday 30 August 2009 02:15:55 Gábor Stefanik wrote:
+>  static void lpphy_pr41573_workaround(struct b43_wldev *dev)
+>  {
+>  	struct b43_phy_lp *lpphy = dev->phy.lp;
+> @@ -1357,28 +1488,440 @@ static void lpphy_pr41573_workaround(struct b43_wldev *dev)
+>  		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
+>  				    saved_tab_size, saved_tab);
+>  	}
+> +	b43_put_phy_into_reset(dev);
 
-While at it move it outside of the WLAN_80211 section as we'll
-be touching all those later.
+Are you sure you really want this?
+This function completely disables the PHY on the backplane and keeps the physical
+PHY reset pin asserted (even after return from the function).
+So the PHY will physically be powered down from this point on. The following
+PHY accesses could even hang the machine, because the PHY won't respond to
+register accesses anymore.
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg" <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   26 +++++++++++++-------------
- 1 files changed, 13 insertions(+), 13 deletions(-)
+We currently only use this function on A/G Multi-PHY devices to permanently
+hard-disable the PHY that's not used.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index a267887..59e4664 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -558,19 +558,6 @@ config ADM8211
- 
- 	  Thanks to Infineon-ADMtek for their support of this driver.
- 
--config MAC80211_HWSIM
--	tristate "Simulated radio testing tool for mac80211"
--	depends on MAC80211 && WLAN_80211
--	---help---
--	  This driver is a developer testing tool that can be used to test
--	  IEEE 802.11 networking stack (mac80211) functionality. This is not
--	  needed for normal wireless LAN usage and is only for testing. See
--	  Documentation/networking/mac80211_hwsim for more information on how
--	  to use this tool.
--
--	  To compile this driver as a module, choose M here: the module will be
--	  called mac80211_hwsim.  If unsure, say N.
--
- source "drivers/net/wireless/hostap/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- 
-@@ -605,4 +592,17 @@ config USB_NET_RNDIS_WLAN
- 
- 	  If you choose to build a module, it'll be called rndis_wlan.
- 
-+config MAC80211_HWSIM
-+	tristate "Simulated radio testing tool for mac80211"
-+	depends on MAC80211
-+	---help---
-+	  This driver is a developer testing tool that can be used to test
-+	  IEEE 802.11 networking stack (mac80211) functionality. This is not
-+	  needed for normal wireless LAN usage and is only for testing. See
-+	  Documentation/networking/mac80211_hwsim for more information on how
-+	  to use this tool.
-+
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called mac80211_hwsim.  If unsure, say N.
-+
- endmenu
+> +	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFF8);
+> +	lpphy_table_init(dev); //FIXME is table init needed?
+> +	lpphy_baseband_init(dev);
+> +	b43_lpphy_op_software_rfkill(dev, false);
+> +	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
+> +	if (dev->phy.rev < 2) {
+> +		b43_lptab_write_bulk(dev, B43_LPTAB32(10, 0x140),
+> +				     saved_tab_size, saved_tab);
+> +	} else {
+> +		b43_lptab_write_bulk(dev, B43_LPTAB32(7, 0x140),
+> +				     saved_tab_size, saved_tab);
+> +	}
+> +	b43_write16(dev, B43_MMIO_CHANNEL, lpphy->channel);
+> +	lpphy->tssi_npt = tssi_npt;
+> +	lpphy->tssi_idx = tssi_idx;
+> +	lpphy_set_analog_filter(dev, lpphy->channel);
+> +	if (tx_pwr_idx_over != -1)
+> +		lpphy_set_tx_power_by_index(dev, tx_pwr_idx_over);
+> +	if (lpphy->rc_cap)
+> +		lpphy_set_rc_cap(dev);
+> +	b43_lpphy_op_set_rx_antenna(dev, lpphy->antenna);
+> +	lpphy_set_tx_power_control(dev, txpctl_mode);
+> +	kfree(saved_tab);
+> +}
+
 -- 
-1.6.2.5
-
+Greetings, Michael.
