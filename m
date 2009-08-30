@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43199 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbZHSTAK (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:49052 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753543AbZH3NaW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 Aug 2009 15:00:10 -0400
-Date: Wed, 19 Aug 2009 14:54:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v5 00/33] wireless: kconfig updates
-Message-ID: <20090819185431.GI5905@tuxdriver.com>
-References: <1250530052-14783-1-git-send-email-lrodriguez@atheros.com> <20090819150138.GB5905@tuxdriver.com> <20090819180235.GA7126@mosca> <20090819183506.GG5905@tuxdriver.com> <43e72e890908191150h6fa8a811u30c57420afd17e08@mail.gmail.com>
+	Sun, 30 Aug 2009 09:30:22 -0400
+Received: by ewy2 with SMTP id 2so3320494ewy.17
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 06:30:23 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: Fix TX status reporting
+Date: Sun, 30 Aug 2009 15:30:19 +0200
+Cc: Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <200908291910.14528.IvDoorn@gmail.com> <4A999024.6060800@free.fr>
+In-Reply-To: <4A999024.6060800@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890908191150h6fa8a811u30c57420afd17e08@mail.gmail.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908301530.20077.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 19, 2009 at 11:50:34AM -0700, Luis R. Rodriguez wrote:
-> On Wed, Aug 19, 2009 at 11:35 AM, John W.
-> Linville<linville@tuxdriver.com> wrote:
-> > On Wed, Aug 19, 2009 at 11:02:35AM -0700, Luis R. Rodriguez wrote:
-> >> On Wed, Aug 19, 2009 at 08:01:38AM -0700, John W. Linville wrote:
+On Saturday 29 August 2009, Benoit PAPILLAULT wrote:
+> Ivo van Doorn a écrit :
+> > Not all values of the TX status enumeration were covered during
+> > updating of the TX statistics. This could lead to wrong bitrate
+> > tuning but also wrong behavior in tools like hostapd.
 > >
-> >> > I'm sorry, I know you've put some effort into this.  A lot of it seems
-> >> > fine, even welcome.  But I don't really see the point of grouping
-> >> > everything by manufacturer -- it just seems to add an extra level of
-> >> > organization for no particular reason...?
-> >>
-> >> Well at first I didn't really intend to group them by manufacturer really,
-> >> I just tried to get rid of clutter and wanted to group related drivers
-> >> together to make it easier to find for users. After a few iterations the
-> >> manufacturer grouping just happened naturally, and later it also just seemed
-> >> natural to remove the typical postfix "wireless device support" or the like.
-> >>
-> >> I welcome others to try to clean the stuff up some more in a different
-> >> way but I think you may end up with something very similar.
-> >
-> > Can we just drop the "INTEL_80211" and the like, keeping the comments
-> > and basic organization in the Kconfig files as you have them?
+> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> I have a pending patch about TX status that changed the meaning of
+> TXDONE_FALLBACK just a bit... just to avoid this change in fact.
+> I should be able to send those patches in few hours.
 > 
-> Well so to group all of Intel stuff we do need this, at least I can't
-> think of a way to do it. If we don't want to group intel stuff then we
-> can remove it. Is there a downside to this grouping, for example?
+> In my code, you success/failure of the packet is reported with
+> TXDONE_SUCCESS / TXDONE_FAILURE. The TXDONE_FALLBACK is set
+> independently to indicate that a fallback rate table has been used
+> (and this could be the case for either success or failure).
 
-Is there an upside to it?  Putting them side-by-side in Kconfig
-is fine, but do people really want to (de-)select Intel drivers as
-a group?
+Well that shouldn't block this patch at this time since it is a bugfix which
+is quite important to get minstrel and hostapd working properly.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Once I have reviewed your patch it can be send upstream immediately or
+in a single batch together with the rt2800pci driver. ;)
+
+Ivo
