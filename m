@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:39102 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211AbZHZWiF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 Aug 2009 18:38:05 -0400
-Received: by ewy2 with SMTP id 2so666549ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2009 15:38:06 -0700 (PDT)
+Received: from smtp1-g21.free.fr ([212.27.42.1]:57921 "EHLO smtp1-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752649AbZH3TsC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Aug 2009 15:48:02 -0400
+Message-ID: <4A9AD768.8040109@free.fr>
+Date: Sun, 30 Aug 2009 21:47:52 +0200
+From: Benoit PAPILLAULT <benoit.papillault@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <4A95AA64.20502@gmail.com>
-References: <4a5cf0b4.F1C7R/E9sD5tpPd2%Larry.Finger@lwfinger.net>
-	 <4A94B01E.9040309@gmail.com> <4A94C3E9.6070409@lwfinger.net>
-	 <4A95AA64.20502@gmail.com>
-Date: Wed, 26 Aug 2009 23:38:06 +0100
-Message-ID: <3ace41890908261538s6818b56ax56cca5af18398dbc@mail.gmail.com>
-Subject: Re: [PATCH] rtl8187: Fix for kernel oops when unloading with LEDs
-	enabled
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: Reorganize padding & L2 padding
+References: <200908292030.45659.IvDoorn@gmail.com> <4A9990A8.1080002@free.fr> <200908301532.47769.IvDoorn@gmail.com>
+In-Reply-To: <200908301532.47769.IvDoorn@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 26, 2009 at 10:34 PM, Richard Farina<sidhayn@gmail.com> wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-> I apologize if you thought there was an accusation here, that certainly was
-> not my intention. With all due respect assuming that I'm
-> a jerk is neither safe nor polite.  In your original patch for this I find
-> the following text:
+Ivo van Doorn a écrit :
+>>> +void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int
+>>> header_length) +{ +    struct skb_frame_desc *skbdesc =
+>>> get_skb_frame_desc(skb); +    unsigned int l2pad = 4 - (header_length
+>>> & 3);
+>> This formula is incorrect, it should be at least (4 -
+>> (header_length%4)%4). I have a fix in my pending patches...
+>> If header_length is 0 => l2pad should be 0 as well.
+> 
+> Header_length should never be 0 (that was fixed by this patch), so that should
+> not be a problem. I'll review your patch so it can be send as update later. But I
+> do think this patch can be merged into linux-wireless in regardless.
+> 
+> Ivo
+> 
+> P.S. Your mail client is really messing up the replies by removing end-of-line
+> characters. :S
 
-> Yes, I realize that, which is why I said the "bug is still alive" not "the
-> patch is not applied".  I even went out of my way to describe how the
-> testing was different...
+Sorry about my mail client (there was an HTML conversion). It should be
+fixed now.
 
-While I thought Larry's reply was a bit brief, I looked back on the
-thread and I think I am on Larry's side. All you mentioned was that
-you had a crash on unplug, and then you automatically assume that it
-is because the most recent crash-related fix (which Larry kindly made)
-did not work. You have no proof that your problem is even the same as
-what the fix tried to solve. You did not try to go back to a non-LED
-enabled compat-wireless, for example.
+Regards,
+Benoit
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-To be honest, I think you 'went out of your way' to try to pin your
-problem on one of the developers, so that your problem is guaranteed
-to receive attention. That's not very fair...
-
-That said, I think this thread has gone on long enough - all that
-happened is that (1) you had a crash on unplug, (2) you tried to pin
-it on Larry, (3) many people has checked and verified that what Larry
-did went in, (4) we still don't know whether your crash is related to
-the LED change or not.
-
-Since we still don't know whether your crash is related to any
-LED-related change or not, this thread is not going well.
+iEYEARECAAYFAkqa12MACgkQOR6EySwP7oIviQCdHXzTBbHuFuJE5BulKy1+a80z
+rHMAnA4nL9XEz7sYAK5ifcQypJkNkcki
+=Rg+z
+-----END PGP SIGNATURE-----
