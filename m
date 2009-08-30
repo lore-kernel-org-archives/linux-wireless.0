@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34786 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754596AbZHCTZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 15:25:00 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2009 12:25:01 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 03/24] ath9k: propagate hw initialization errors
-Date: Mon, 3 Aug 2009 12:24:35 -0700
-Message-ID: <1249327496-24629-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
-References: <1249327496-24629-1-git-send-email-lrodriguez@atheros.com>
+Received: from ey-out-2122.google.com ([74.125.78.27]:59341 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696AbZH3XcK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 Aug 2009 19:32:10 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so716028eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 16:32:12 -0700 (PDT)
+Message-ID: <4A9B0BF8.3040505@lwfinger.net>
+Date: Sun, 30 Aug 2009 18:32:08 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: reinette chatre <reinette.chatre@intel.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Inter 5300 AGN with unsupported EEPROM
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were never propagating hw initialization errors, lets
-do that now and also use -EOPNOTSUPP when device revision is
-not supported yet.
+Reinette,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c   |    2 +-
- drivers/net/wireless/ath/ath9k/main.c |    7 +++----
- 2 files changed, 4 insertions(+), 5 deletions(-)
+While helping on the openSUSE wireless forum, I ran across another
+unit with the same unsupported EEPROM as in the thread at
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1997.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8228f41..2e09204 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1223,7 +1223,7 @@ struct ath_hw *ath9k_hw_attach(u16 devid, struct ath_softc *sc, int *error)
- 		ah = ath9k_hw_do_attach(devid, sc, error);
- 		break;
- 	default:
--		*error = -ENXIO;
-+		*error = -EOPNOTSUPP;
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 292ac2b..ada5fef 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1295,7 +1295,6 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- static int ath_init(u16 devid, struct ath_softc *sc)
- {
- 	struct ath_hw *ah = NULL;
--	int status;
- 	int error = 0, i;
- 	int csz = 0;
- 
-@@ -1323,11 +1322,11 @@ static int ath_init(u16 devid, struct ath_softc *sc)
- 	/* XXX assert csz is non-zero */
- 	sc->cachelsz = csz << 2;	/* convert to bytes */
- 
--	ah = ath9k_hw_attach(devid, sc, &status);
-+	ah = ath9k_hw_attach(devid, sc, &error);
- 	if (ah == NULL) {
- 		DPRINTF(sc, ATH_DBG_FATAL,
--			"Unable to attach hardware; HAL status %d\n", status);
--		error = -ENXIO;
-+			"Unable to attach hardware; "
-+			"initialization status: %d\n", error);
- 		goto bad;
- 	}
- 	sc->sc_ah = ah;
--- 
-1.6.3.3
+The thread at openSUSE is at
+ http://forums.opensuse.org/network-internet/wireless/420589-intel-5300-wifi-minipci-card-asus-g71gx-rx05-bestbuy-3.html
+
+Most of the thread is useless as the OP wouldn't supply critical data
+and persisted in various rants, but on the 3rd page, he finally
+provided the output of 'dmesg | grep iwl', which was
+
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
+iwlagn: Copyright(c) 2003-2008 Intel Corporation
+iwlagn 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+iwlagn 0000:07:00.0: setting latency timer to 64
+iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=0x24
+iwlagn: Unsuported EEPROM VER=0x114 < 0x11a CALIB=0x3 < 0x4
+iwlagn 0000:07:00.0: PCI INT A disabled
+iwlagn: probe of 0000:07:00.0 failed with error -22
+
+The OP states that this device came from Best Buy. What is the current
+scoop on this EEPROM version?
+
+Thanks,
+
+Larry
 
