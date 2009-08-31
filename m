@@ -1,123 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:44907 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750857AbZIKGHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 02:07:00 -0400
-Date: Fri, 11 Sep 2009 08:06:59 +0200
-From: Pierre Ossman <pierre@ossman.eu>
-To: Albert Herranz <albert_herranz@yahoo.es>
-Cc: akpm@linux-foundation.org, linux-mmc@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Albert Herranz <albert_herranz@yahoo.es>
-Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
-Message-ID: <20090911080659.2ac822fc@mjolnir.ossman.eu>
-In-Reply-To: <1252587402-7382-2-git-send-email-albert_herranz@yahoo.es>
-References: <1252587402-7382-1-git-send-email-albert_herranz@yahoo.es>
-	<1252587402-7382-2-git-send-email-albert_herranz@yahoo.es>
+Received: from mga14.intel.com ([143.182.124.37]:18084 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751014AbZHaXL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 19:11:27 -0400
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
+ Implement 	rfkill support)
+From: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	 <1251357267.20531.4.camel@johannes.local>
+	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+	 <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
+	 <43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
+	 <3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
+	 <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
+	 <1251749600.5165.1.camel@localhost.localdomain>
+	 <1251751251.1266.16.camel@localhost.localdomain>
+	 <43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
+	 <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 16:10:32 -0700
+Message-Id: <1251760232.5165.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-14467-1252649223-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Mon, 2009-08-31 at 17:05 -0600, Luis R. Rodriguez wrote:
+> On Mon, Aug 31, 2009 at 2:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> > On Mon, Aug 31, 2009 at 1:40 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+> >> Hi Luis,
+> >>
+> >>> > OK not so bad except for:
+> >>> >
+> >>> > > kernel/net/wimax/wimax.ko
+> >>> >
+> >>> > That's touching another subsystem but we could technically merge wimax
+> >>> > into compat-wireless if Inaky thinks that's a good idea. the point
+> >>> > here is to unify anything that uses rfkill for backport usage.
+> >>>
+> >>> Oh boy, can of worms
+> >>>
+> >>> I have my own compat-wimax already, which already handles things for
+> >>> backwards compat (many #ifdef hacks to simplify life) and which is
+> >>> heavily used internally.
+> >>>
+> >>> I don't really know how much worth it might be and I know I don't have
+> >>> resources to support both.
+> >>
+> >> for the wireless-compat tree, I would just remove the RFKILL support for
+> >> WiMAX. It is really not worth to support it.
+> >
+> > Works for me, we then still need to address (if we really care) the
+> > platform stuff. If someone is interested feel free to send patches to
+> > add those, I figure as long we get down to the latest supported stable
+> > kernel it should be good. The latest supported stable kernel is always
+> > on display on kernel,org, today being 2.6.27.
+> 
+> BTW inaky -- this is actually up to you, are you wiling to live with
+> no rfkill for compat?
 
---=_freyr.ossman.eu-14467-1252649223-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I don't really mind -- but it could be a problem for anyone trying to
+use it. Not that I recommend not being able to switch the radio off :)
+however, the WiMAX stack has APIs for it too, so at least there is a
+workaround.
 
-On Thu, 10 Sep 2009 14:56:42 +0200
-Albert Herranz <albert_herranz@yahoo.es> wrote:
+But remember, I won't be able to support it at all.
 
-> Some manufacturers provide vendor information in non-vendor specific CIS
-> tuples. For example, Broadcom uses an Extended Function tuple to provide
-> the MAC address on some of their network cards, as in the case of the
-> Nintendo Wii WLAN daughter card.
->=20
-> This patch allows passing correct tuples unknown to the SDIO core to
-> a matching SDIO driver instead of rejecting them and failing.
->=20
-> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
-> ---
+-- 
+-- Inaky
 
-The description for this patch should be made clearer. The title
-suggests it adds functionality that's already in place. It should be
-something along the lines of "Also pass malformed tuples to card
-drivers".
 
-In the sake of sanity, you might want to add this behaviour to all
-parsers, not just the FUNCE one.
-
-I'm also unclear on how this is supposed to work. What does the
-broadcom tuple look like? This patch looks like it will silence a lot
-of legitimate warnings, and possibly pollute the card structures with
-bogus data.
-
-> diff --git a/drivers/mmc/core/sdio_cis.c b/drivers/mmc/core/sdio_cis.c
-> index 963f293..87934ac 100644
-> --- a/drivers/mmc/core/sdio_cis.c
-> +++ b/drivers/mmc/core/sdio_cis.c
-> @@ -123,8 +123,9 @@ static int cistpl_funce_func(struct sdio_func *func,
->  	vsn =3D func->card->cccr.sdio_vsn;
->  	min_size =3D (vsn =3D=3D SDIO_SDIO_REV_1_00) ? 28 : 42;
-> =20
-> +	/* let the SDIO driver take care of unknown tuples */
->  	if (size < min_size || buf[0] !=3D 1)
-
-Misleading comment, the tuple is not unknown.
-
-> -		return -EINVAL;
-> +		return -EILSEQ;
-> =20
-
-What does this change improve?
-
->  	/* TPLFE_MAX_BLK_SIZE */
->  	func->max_blksize =3D buf[12] | (buf[13] << 8);
-> @@ -154,13 +155,7 @@ static int cistpl_funce(struct mmc_card *card, struc=
-t sdio_func *func,
->  	else
->  		ret =3D cistpl_funce_common(card, buf, size);
-> =20
-> -	if (ret) {
-> -		printk(KERN_ERR "%s: bad CISTPL_FUNCE size %u "
-> -		       "type %u\n", mmc_hostname(card->host), size, buf[0]);
-> -		return ret;
-> -	}
-> -
-> -	return 0;
-> +	return ret;
->  }
-> =20
->  typedef int (tpl_parse_t)(struct mmc_card *, struct sdio_func *,
-
-Silencing a legitimate error.
-
-> +		if (ret =3D=3D -EILSEQ) {
-> +			/* this tuple is unknown to the core */
-
-Misleading comment, the tuple might be known but malformed.
-
-Rgds
---=20
-     -- Pierre Ossman
-
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
-
---=_freyr.ossman.eu-14467-1252649223-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEARECAAYFAkqp6QUACgkQ7b8eESbyJLhuFQCeNbHWxpp9q5Uhe+vrorQXlCHd
-+bMAoLadCNvhVOWHqAYZi0yXMKqcW4Ef
-=yAX+
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-14467-1252649223-0001-2--
