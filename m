@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.mailasail.com ([212.227.250.41]:58390 "EHLO
-	mail1.nippynetworks.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbZHYMyQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 Aug 2009 08:54:16 -0400
-Received: from localhost (mail1.nippynetworks.com [127.0.2.1])
-	by mail1.nippynetworks.com (Postfix) with ESMTP id 4EFF5B51E08
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 13:46:49 +0100 (BST)
-Received: from mail1.nippynetworks.com ([127.0.2.1])
-	by localhost (mail1.nippynetworks.com [127.0.2.1]) (amavisd-new, port 10024)
-	with LMTP id 9IcjFyM+eC-m for <linux-wireless@vger.kernel.org>;
-	Tue, 25 Aug 2009 13:46:49 +0100 (BST)
-Received: from ed-wildgooses-macbook-pro.local (office.nippynetworks.com [94.194.201.187])
-	(Authenticated sender: edward@wildgooses.com)
-	by mail1.nippynetworks.com (Postfix) with ESMTPSA id EA230B51E07
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2009 13:46:48 +0100 (BST)
-Message-ID: <4A93DD37.5060206@wildgooses.com>
-Date: Tue, 25 Aug 2009 13:46:47 +0100
-From: Ed W <lists@wildgooses.com>
+Received: from mail.atheros.com ([12.36.123.2]:44622 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750872AbZHaM0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 08:26:50 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 05:26:53 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH] ath9k: Do an AHB reset before doing RTC reset
+Date: Mon, 31 Aug 2009 17:48:36 +0530
+Message-ID: <1251721116-25758-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Compiling against different kernel
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I am building a kernel for an embedded 32bit x86 kernel on my x86_64 
-machine.  I have a 32bit x86 build environment in a chroot, but 
-obviously "uname" still looks like the host
+Doing an RTC reset when DMA is active may corrupt memory,
+make sure no DMA is active at this moment by doing an
+AHB reset.
 
-I try to compile compat-wireless (2009-08-24) like this:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-make ARCH=x86 KLIB=/usr/src/linux-2.6.30.5-grsecurity-2.1.14-aufs/ 
-KLIB_BUILD=/usr/src/linux-2.6.30.5-grsecurity-2.1.14-aufs/
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e340dac..71f27f3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1712,8 +1712,15 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
++	if (!AR_SREV_9100(ah))
++		REG_WRITE(ah, AR_RC, AR_RC_AHB);
++
+ 	REG_WRITE(ah, AR_RTC_RESET, 0);
+ 	udelay(2);
++
++	if (!AR_SREV_9100(ah))
++		REG_WRITE(ah, AR_RC, 0);
++
+ 	REG_WRITE(ah, AR_RTC_RESET, 1);
+ 
+ 	if (!ath9k_hw_wait(ah,
+-- 
+1.5.5.1
 
-I get:
-
-FATAL: Could not load 
-/lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-file or directory
-FATAL: Could not load 
-/lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-file or directory
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-FATAL: Could not load 
-/lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-file or directory
-FATAL: Could not load 
-/lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-file or directory
-make -C /usr/src/linux-2.6.30.5-grsecurity-2.1.14-aufs/ 
-M=/usr/src/compat-wireless-2009-08-24 modules
-..etc..
-
-(where it's clearly trying to find the modules dir for the running 64bit 
-kernel, rather than the
-I'm looking through the makefile, but I can't see how it's trying to 
-adapt depmod to use the correct modules.dep?
-
-Can someone please help with the correct incantation to cross compile?
-
-Thanks
-
-Ed W
