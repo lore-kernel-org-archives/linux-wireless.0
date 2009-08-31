@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37882 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203AbZI3OPw (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:36718 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113AbZHaXQE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 10:15:52 -0400
-Date: Wed, 30 Sep 2009 10:09:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gonsolo <gonsolo@gmail.com>
-Cc: Daniel J Blueman <daniel.blueman@gmail.com>,
-	kernel-team@lists.ubuntu.com,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k suspend
-Message-ID: <20090930140905.GA3193@tuxdriver.com>
-References: <4AC22B64.8050909@googlemail.com> <6278d2220909300536u7934d7dan286d219b5cf7e5a@mail.gmail.com> <4AC35CA0.5070401@googlemail.com>
+	Mon, 31 Aug 2009 19:16:04 -0400
+Received: by bwz19 with SMTP id 19so3138077bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:16:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4AC35CA0.5070401@googlemail.com>
+In-Reply-To: <4A9C42C5.6050400@lwfinger.net>
+References: <h7eo7q$7ks$1@ger.gmane.org>
+	 <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
+	 <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
+	 <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
+	 <43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
+	 <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
+	 <4A9C3C59.5010305@lwfinger.net>
+	 <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+	 <4A9C42C5.6050400@lwfinger.net>
+Date: Tue, 1 Sep 2009 00:16:04 +0100
+Message-ID: <3ace41890908311616k4040d59fub051d21e822604d0@mail.gmail.com>
+Subject: Re: rtl8187b Problem with tx level
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 03:26:56PM +0200, Gonsolo wrote:
->>> Is it possible to add
->>> http://patchwork.kernel.org/patch/38550/
->>> to karmic? Otherwise karmic would be broken for me/my notebook/my
->>> wireless pccard.
+2009/8/31 Larry Finger <Larry.Finger@lwfinger.net>:
+> Gábor Stefanik wrote:
 >>
->> Since Karmic tracks the 2.6.31 -stable kernels, it's worth reporting
->> this upstream (CC'd) instead, particularly if it's a regression from a
->> previous kernel version, using the same ath5k driver...?
+>> The driver is not actually closed-source; they just don't provide any
+>> drivers on their site anymore, instead they send their reference
+>> drivers to OEMs, expecting the OEMs to release their own versions
+>> (with sources - most vendors who do release Linux drivers in fact only
+>> release sources, without binaries). The reason for this appears to be
+>> that Realtek now encourages vendors to sell RTL81xx wireless chips
+>> with modified USB IDs. (Or are you seeing a binary-only driver on
+>> realtek.com.tw? That would definitely be a GPL violation, given that
+>> they use a modified version of the GPLed libipw stack.)
 >
-> I did that, too. ;) Hopefully it will be in 2.6.31.2.
+>
+> No driver at all. I looked at the Toshiba site, but found only Windows
+> drivers. Which OEM has the driver available?
+>
+> Larry
 
-Maybe I missed it, but did you actually request the -stable team to
-take the patch?  -stable helps more than just Ubuntu... :-)
-
-Greg (or Chris or...), the patch in question is here:
-
-commit edd7fc7003f31da48d06e215a93ea966a22c2a03
-Author: Nick Kossifidis <mick@madwifi-project.org>
-Date:   Mon Aug 10 03:29:02 2009 +0300
-
-    ath5k: Wakeup fixes
-    
-    * Don't put chip to full sleep because there are problems during
-       wakeup. Instead hold MAC/Baseband on warm reset state via a new
-       function ath5k_hw_on_hold.
-    
-     * Minor cleanups
-    
-    Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
-    Tested-by: Ben Greear <greearb@candelatech.com>
-    Tested-by: Johannes Stezenbach <js@sig21.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+The r8187 is distributed from OEMs - stand to reason, as realtek don't
+really sell their own brand on high-street shops? We got one release
+e-mailed to us, and there are a few floating around on the internet
+under some laptop or usb hardware vendors. It is available under this,
+for example: http://service.one.de/index.php?&direction=0&order=&directory=NOTEBOOKS/ONE_A1XX/LINUX/Source-code/Wireless
+r8187mesh is the one in the mesh directory.
