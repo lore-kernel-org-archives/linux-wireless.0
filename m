@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60481 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751354AbZIWX1U (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:60124 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048AbZHaXF3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 19:27:20 -0400
-Subject: Re: Synching trees for BT 3.0 and a possible compat-bluetooth
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Jothikumar Mothilal <jothikumar.mothilal@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kevin Hayes <kevin@atheros.com>
-In-Reply-To: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
-References: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 23 Sep 2009 16:27:06 -0700
-Message-Id: <1253748426.2931.9.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Mon, 31 Aug 2009 19:05:29 -0400
+Received: by iwn42 with SMTP id 42so2002026iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:05:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	<1251357267.20531.4.camel@johannes.local> <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+	<3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
+	<43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
+	<3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
+	<43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
+	<1251749600.5165.1.camel@localhost.localdomain> <1251751251.1266.16.camel@localhost.localdomain>
+	<43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 31 Aug 2009 16:05:11 -0700
+Message-ID: <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
+	rfkill support)
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Mon, Aug 31, 2009 at 2:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> On Mon, Aug 31, 2009 at 1:40 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+>> Hi Luis,
+>>
+>>> > OK not so bad except for:
+>>> >
+>>> > > kernel/net/wimax/wimax.ko
+>>> >
+>>> > That's touching another subsystem but we could technically merge wimax
+>>> > into compat-wireless if Inaky thinks that's a good idea. the point
+>>> > here is to unify anything that uses rfkill for backport usage.
+>>>
+>>> Oh boy, can of worms
+>>>
+>>> I have my own compat-wimax already, which already handles things for
+>>> backwards compat (many #ifdef hacks to simplify life) and which is
+>>> heavily used internally.
+>>>
+>>> I don't really know how much worth it might be and I know I don't have
+>>> resources to support both.
+>>
+>> for the wireless-compat tree, I would just remove the RFKILL support for
+>> WiMAX. It is really not worth to support it.
+>
+> Works for me, we then still need to address (if we really care) the
+> platform stuff. If someone is interested feel free to send patches to
+> add those, I figure as long we get down to the latest supported stable
+> kernel it should be good. The latest supported stable kernel is always
+> on display on kernel,org, today being 2.6.27.
 
-> I forgot to poke about BT 3.0 synching at the summit. To work on
-> bluetooth 3.0 we'll need some synching of trees between
-> wireless-testing and Marcel's bluetooth tree. Also a compat-bluetooth
-> might be in order to accomplish the same as we do with
-> compat-wireless, only it would seem logical to consider tying to just
-> merge this with compat-wireless to get the features required for
-> bluetooth 3.0; to do this having one tree with both would be nice with
-> the added benefit of all the same compat-2.6.3x.[ch] files being
-> reused. Synching of the trees would be required only when a feature on
-> one tree is not yet available on the latest rc kernel (provided marcel
-> rebases on Linus' latest rc as well, not sure), this will probably be
-> important during initial implementation, not sure how much divergence
-> we should expect after this goes through a release through Linus.
-> 
-> So any thoughts on synching bluetooth and wireless-testing other than
-> doing so on a private tree for development purposes?
+BTW inaky -- this is actually up to you, are you wiling to live with
+no rfkill for compat?
 
-we don't need this right now. For the initial development of the WiFi
-AMP, we will use the fact that you can create HCI RAW devices from a
-driver. These are skipped by BlueZ and only show up in hciconfig. That
-should be enough for testing.
-
-Regards
-
-Marcel
-
-
+  Luis
