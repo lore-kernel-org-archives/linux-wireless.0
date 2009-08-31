@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:41302 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754068AbZHGVu1 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:23772 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbZHaVS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 17:50:27 -0400
-From: Christian Lamparter <chunkeey@web.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Deauthentications with p54usb
-Date: Fri, 7 Aug 2009 23:50:25 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <4A7C9383.2040705@lwfinger.net>
-In-Reply-To: <4A7C9383.2040705@lwfinger.net>
+	Mon, 31 Aug 2009 17:18:26 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so584691fge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:18:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908072350.26193.chunkeey@web.de>
+In-Reply-To: <4A9C3C59.5010305@lwfinger.net>
+References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
+	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
+	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
+	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
+	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
+	<4A9C3C59.5010305@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 31 Aug 2009 23:18:08 +0200
+Message-ID: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+Subject: Re: rtl8187b Problem with tx level
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> Hin-Tak Leung wrote:
+>>
+>> I just took a look at the history - there aren't obvious bug fixes, a
+>> bunch of work queue-related changes from you & Johannes; feature-wise,
+>> Larry added LED blinking after 2.6.30, and Herton added rfkill support
+>> quite recently after 2.6.31-rc7 . But no, there isn't any change that
+>> would affect tx level beyond 2.6.31-rc7, I think.
+>
+> Your analysis matches my recollection.
+>
+> Apparently RealTek is supplying a closed-source driver for RTL8187B
+> these days. There are no sources for the B on their web site. In
+> addition, the one that Tobias loaded tainted his kernel.
+>
+> Larry
 
-On Friday 07 August 2009 22:50:11 Larry Finger wrote:
+The driver is not actually closed-source; they just don't provide any
+drivers on their site anymore, instead they send their reference
+drivers to OEMs, expecting the OEMs to release their own versions
+(with sources - most vendors who do release Linux drivers in fact only
+release sources, without binaries). The reason for this appears to be
+that Realtek now encourages vendors to sell RTL81xx wireless chips
+with modified USB IDs. (Or are you seeing a binary-only driver on
+realtek.com.tw? That would definitely be a GPL violation, given that
+they use a modified version of the GPLed libipw stack.)
 
-> I've been working with b43 of late and had not run p54usb until I
-> tested the rfkill code earlier today. Now I'm getting
-> deauthentications with reason=7 that I did not get with b43 using the
-> same AP in roughly the same geometric relationship.
-
-hmm, so the SNR of b43 and p54 are comparable?
-
-good...
-
-reason 7 must be:
-WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
-
-and class 3 frames are (according to 802.11-2007 11.3.c)
-	- "normal" data frames
-	(- some MLMEs - probably not relevant )
-	- control frame:
-		=> especially: Power Save Poll.
-
-your log doesn't hold any records about a disassoc event from the AP.
-so, my first guess would be that you're hitting yet another
-power saving related issue.  And as far as I know b43 does not do that yet.
-So, can you please give the device another go without ps?
-
-(BTW: mac80211 prints a debug text (if enabled in kconfig),
- whenever the device goes or leaves the hibernation mode...
- do you see any of those too?) 
-> I don't know if this is a regression, or not. The current kernel is
-> 2.6.31-rc5-wl. I'll boot 2.6.30-wl to test if the older one is OK.
-> 
-> The logged data below shows nothing but the timing of the disconnects.
-
-does the time between reassoc & _deauth_ vary, or is it always ~24 secs?)
-do you experience this behavior on an idle or loaded link?
-  
-Regards,
-	Chr
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
