@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:33263 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932492AbZHDHOW (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:52228 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbZHaVKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 03:14:22 -0400
-Subject: Re: [PATCH] cfg80211: clear SSID on disconnect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Albert <jal2@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <loom.20090804T064513-963@post.gmane.org>
-References: <1249311832.4561.2.camel@johannes.local>
-	 <loom.20090804T064513-963@post.gmane.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Lpw/qFFNnD7zyHS2Q8VE"
-Date: Tue, 04 Aug 2009 09:13:49 +0200
-Message-Id: <1249370029.9415.1.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 31 Aug 2009 17:10:52 -0400
+Received: by fxm17 with SMTP id 17so3061918fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:10:53 -0700 (PDT)
+Message-ID: <4A9C3C59.5010305@lwfinger.net>
+Date: Mon, 31 Aug 2009 16:10:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8187b Problem with tx level
+References: <h7eo7q$7ks$1@ger.gmane.org>	 <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>	 <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>	 <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>	 <43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com> <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
+In-Reply-To: <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hin-Tak Leung wrote:
+> 
+> I just took a look at the history - there aren't obvious bug fixes, a
+> bunch of work queue-related changes from you & Johannes; feature-wise,
+> Larry added LED blinking after 2.6.30, and Herton added rfkill support
+> quite recently after 2.6.31-rc7 . But no, there isn't any change that
+> would affect tx level beyond 2.6.31-rc7, I think.
 
---=-Lpw/qFFNnD7zyHS2Q8VE
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Your analysis matches my recollection.
 
-On Tue, 2009-08-04 at 06:55 +0000, Joerg Albert wrote:
+Apparently RealTek is supplying a closed-source driver for RTL8187B
+these days. There are no sources for the B on their web site. In
+addition, the one that Tobias loaded tainted his kernel.
 
-> Sorry, but this didn't help with the ar9170 problem. I still get a call
-> to  ar9170_op_bss_info_changed() after ifconfig wlan1 down.
-> I put a printk at your change in sme.c and it's not called.
->=20
-> Please be aware that in managed mode my adapter stays in state SCANNING, =
-'cause
-> there is not AP around with essid huhu_m:
-
-Aha. yes, the same assignment is _also_ missing in
-__cfg80211_connect_result(), can you add it there manually (in the
-status !=3D WLAN_STATUS_SUCCESS block at the end) and see what happens?
-
-johannes
-
---=-Lpw/qFFNnD7zyHS2Q8VE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKd9+qAAoJEODzc/N7+Qmaw5cP/irqw6K9DpBJAgjyk0Mozvgj
-7/jus2oIbKf566EAx92yw7A0yfovGhAzfIdaQUEkcH7FZo18O24kWnYPzMQha2AE
-0EnlOiQYLrilSY7/z+5G6Xg2Mmj3wJTDE0lW36pYMTzV80HJ4GUi759KSauMxklP
-t3u1iahxRCJFAMSmqcoBgqhnc/lWt/r6boiljYq5SrQPQWTmwtbo7MJc5eXh6UYz
-JsKqheiZLCxOE0uzEgY/HHuzOfg+mg8Er7b8ZN1SPfZerAInqmmsuBArgmOqg2kQ
-8sY7kE967bB4lDfKbg75SshXaKFyqW2oZDqGE8oDqB+NjLwRijLR7vuAfRoeHAlT
-hrZzQw1wyqjxNNyHWmXV3fcn48RdF7uG1bsWRBY5HGlh4TnlW0tOLh3ZTQpzsf1W
-tq7tEM3sVKmqN5GUdYt74qv+srJKzcitPRC8WJUy/rixEOqdDO3js9+cHQykK98C
-Pbday6S9IfyLS2nWxlQAiokE1n8iPWCeOAOi87WjoyuI1IkLudbZCEbeOAHuLQmz
-yeBem78XFLI6rZBQBc/UdsbTu6tjr/57BYDJRhiUbY9ZkRneunKv1pJDHeB5hEyj
-AFOw3R1rqfmTz1nIuQUiEZT4E7OKZ49omegD+/EBRgzdnt1mBxSYDKOT3q4gz/SS
-LydZxgo98UabkmLQetLx
-=bsZG
------END PGP SIGNATURE-----
-
---=-Lpw/qFFNnD7zyHS2Q8VE--
+Larry
 
