@@ -1,126 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48844 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932477AbZHDGz7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 Aug 2009 02:55:59 -0400
-Subject: Re: [DISCUSS] Implement non standard channel widths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4A77D1F5.5050706@erley.org>
-References: <4A74D5F5.8090409@erley.org>
-	 <1249201869.2007.45.camel@johannes.local>  <4A77D1F5.5050706@erley.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-XdEE+J6UOjWNnzaNSar/"
-Date: Tue, 04 Aug 2009 08:55:26 +0200
-Message-Id: <1249368926.4561.14.camel@johannes.local>
+Received: from lo.gmane.org ([80.91.229.12]:42285 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751077AbZHaQwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 12:52:10 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1MiA72-0005Ge-A7
+	for linux-wireless@vger.kernel.org; Mon, 31 Aug 2009 18:52:12 +0200
+Received: from e179057049.adsl.alicedsl.de ([85.179.57.49])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 18:52:12 +0200
+Received: from keinstein_junior by e179057049.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 18:52:12 +0200
+To: linux-wireless@vger.kernel.org
+From: Tobias Schlemmer <keinstein_junior@gmx.net>
+Subject: Re: rtl8187b Problem with tx level
+Date: Mon, 31 Aug 2009 18:51:49 +0200
+Message-ID: <h7gv36$tu0$1@ger.gmane.org>
+References: <h7eo7q$7ks$1@ger.gmane.org> <4A9B0479.209@lwfinger.net> <h7g6rd$dvb$1@ger.gmane.org> <4A9BF11D.1060205@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070507050107030903050301"
+In-Reply-To: <4A9BF11D.1060205@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------070507050107030903050301
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
---=-XdEE+J6UOjWNnzaNSar/
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Larry Finger schrieb:
+> There may be additional info following this.
+> 
+> In looking at my copy of the r8187 driver code, I see some branches
+> that may not be in our driver, but I need to see what ID info their
+> driver sees.
 
-On Tue, 2009-08-04 at 02:15 -0400, Pat Erley wrote:
+Hm… the output is attached. It seems not to be very informative to me. 
+But maybe you can read more.
 
-> > Also keep in mind that there _are_ standard uses for smaller bandwidth
-> > channels, Jouni has helpfully collected them on
-> > http://wireless.kernel.org/en/developers/Documentation/ChannelList
->=20
-> Yeah, I fully understand that there are other frequency ranges that this
-> will be useful in.  My actual goal is using it in the 900mhz spectrum.
+> Have a good vacation.
 
-Right. But then I think your hw can _only_ operate in 900mhz, so I
-suppose you're just saying 'channel 5' anyway, and the hardware has an
-offset of, say, 1500 MHz.
+Thank you very much.
 
-> Great, Thanks for the input.  I'm busy tonight, but I'll take a look=20
-> tomorrow and try to start this, at least in a pseudo mock-up.  I have
-> a basic idea how I'll attack this:
->=20
-> 1. add bitfield
-> 2. duplicate all functionality as pertains to bitfield
-> 3. update drivers to use bitfield/export their supported modes
-> 4. remove old functionality, rename bitfield
->=20
->=20
-> That of course simplifies the actual amount of work it encompases, but
-> I believe going with this sort of approach will prevent breaking git
-> bisection.
+Tobias
 
-As long as you do it all in one go it won't break bisection either, but
-you're welcome to do it this way instead :)
+--------------070507050107030903050301
+Content-Type: text/plain;
+ name="kernel-log-r8187.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="kernel-log-r8187.txt"
 
-> Would we want the bitfield sparse, to allow for the insertion of other
-> modes of operation we hadn't thought of?
-
-I think so, yeah.
-
->   Also, should it be used like
-> how the NL80211_IF_TYPE_* flags are used, in that ALL supported features
-> should be added if it's to be used?  Specifically, we're going to assume
-> that if a driver exports it's supported modes, it will include stuff like
-> NO_HT if it supports operation without HT (which I think ALL devices that
-> comply with the 802.11{a,b,g,n} specs would support.  It should probably
-> be a long term goal to then add this to all drivers, period, so that
-> we won't have to make any assumptions about what a driver supports from
-> the mac80211 layer. =20
-
-Yes. I just think that's a HUGE amount of work to be doing, hence
-proposing the "if (types =3D=3D 0) types =3D ..." thing. That way only driv=
-ers
-who need the new channel types need updating, and we can print a message
-there asking drivers to be updated, or so. You could even print the
-driver name by following the wiphy's parent device, if present :)
-
-> Also, would we want to add a log message when switching from/to=20
-> non-standard operating modes?  Something like have a bit that marks the
-> highest standard mode, then any additional modes(currently 5/10 mhz only
-> could later be extended to adding HT/bonding/xspan in narrower channels)
-> would come after that and have something like:
->=20
->=20
-> if(mode > MAX_OPMODE)
-> 	printk(some facility, "Switching to opmode %s "
->                               "which is not standardized", mode);
->=20
-> (Of course, greatly simplified).
-
-I don't know -- most of these modes _are_ (being) standardised.
-
-The biggest issue I see is scanning -- but that currently gives you the
-frequency list, so I guess we could extend that to pass the frequency
-and channel width, and assume 20mhz if not given. Unfortunately, I used
-an array of u32's there so we'd need to introduce a new nl80211
-attribute for that.
-
-Also, the channel passed to scan results needs to include the width, so
-we don't try to connect to a 20mhz BSS with 5mhz channel width.
-
-johannes
-
---=-XdEE+J6UOjWNnzaNSar/
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKd9tbAAoJEODzc/N7+QmaOI4P/2kN+OdKeR6pdgauXmSTggr6
-8HRu0IqKebebBKHzzolq77aGOba660bnB7Ce3CEwHIxzHJw+StBcoQ2EreCoDFSg
-wOq2Wji47U9gQ5JFK61WS74J9Xr0WN7NPCeW+WZUI/jD4jyyDTIkPvfrTQcKiaPx
-5KZzst0DSptCgoLCKLM4uvirwoYnJtJU+CmqkCCDnMypkXuaZbYs+k6Akht6utZR
-HjBxlQIcpzUfVLKODXWQXrq/9SBqRZuU+KiAeEAcnWxJzkqTK5VnBcLolXka35lU
-5606Ej/Vn75Xm6qoTf3Gc3Yg8QYIME0tzfqMVIH2jQ+xe/8t2b2avM7bQkFVFQcB
-xgp9Wtt9/NsGLiAH2eDJCCljM+SA8ZbGSAUsNKqr8UW2Td/FDfy3cMVi66uPsy2T
-MtRKR3OsVLHoCFd2e3Ppfjlw1J4tOtt3nxgIZLkPKwV2ASDomx38NRUGfgBAtvCF
-OqaPDAvsYHzswJzXlMaMb+A0D1YFtrA3BlrqTXrx7+woQW/VVBE27boxo+PHes6A
-qaArllcLqGWJ25U+GvfC3vZgFfTdqQSwpwM0VmgZvYyqfX7RocWRS+d512LlP+Dt
-InLnQgacfBmpDhqKDJVm2DggIV0M2ahdDzPC5Rd3ZHUfNUv1s3wpyjYknQfwcJxb
-KV7N/R34ny5QNXSsOjfM
-=Ybbr
------END PGP SIGNATURE-----
-
---=-XdEE+J6UOjWNnzaNSar/--
+WyAgMTY4LjI3NDg5M10gdXNiIDMtMTogbmV3IGhpZ2ggc3BlZWQgVVNCIGRldmljZSB1c2lu
+ZyBlaGNpX2hjZCBhbmQgYWRkcmVzcyA0ClsgIDE2OC40MTQ1OTldIHVzYiAzLTE6IGNvbmZp
+Z3VyYXRpb24gIzEgY2hvc2VuIGZyb20gMSBjaG9pY2UKWyAgMTY4LjQ3NTk3NV0gaWVlZTgw
+MjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnTlVMTCcKWyAgMTY4LjQ4MzkwOV0g
+aWVlZTgwMjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnQ0NNUCcKWyAgMTY4LjQ5
+MTY4MF0gaWVlZTgwMjExX2NyeXB0OiByZWdpc3RlcmVkIGFsZ29yaXRobSAnV0VQJwpbICAx
+NjguNDk1NTYyXSBpZWVlODAyMTFfY3J5cHQ6IHJlZ2lzdGVyZWQgYWxnb3JpdGhtICdUS0lQ
+JwpbICAxNjguNTM1OTU5XSByODE4N21zaDogbW9kdWxlIGxpY2Vuc2UgJ1Byb3ByaWV0YXJ5
+JyB0YWludHMga2VybmVsLgpbICAxNjguNTM2MDM4XSByODE4N21zaDogbm8gdmVyc2lvbiBm
+b3IgIm5vdGlmeV93eF9hc3NvY19ldmVudCIgZm91bmQ6IGtlcm5lbCB0YWludGVkLgpbICAx
+NjguNTU4MTQwXSAKWyAgMTY4LjU1ODE0Ml0gTGludXgga2VybmVsIGRyaXZlciBmb3IgUlRM
+ODE4Ny9SVEw4MTg3QiBiYXNlZCBXTEFOIGNhcmRzClsgIDE2OC41NTgxNDZdIENvcHlyaWdo
+dCAoYykgMjAwNC0yMDA1LCBBbmRyZWEgTWVyZWxsbwpbICAxNjguNTU4MTQ4XSBydGw4MTg3
+OiBJbml0aWFsaXppbmcgbW9kdWxlClsgIDE2OC41NTgxNDldIHJ0bDgxODc6IFdpcmVsZXNz
+IGV4dGVuc2lvbnMgdmVyc2lvbiAyMgpbICAxNjguNTU4MTUwXSBydGw4MTg3OiBJbml0aWFs
+aXppbmcgcHJvYyBmaWxlc3lzdGVtClsgIDE2OC42MzUyNDZdIHJ0bDgxODc6IFJlcG9ydGVk
+IEVFUFJPTSBjaGlwIGlzIGEgOTNjNDYgKDFLYml0KQpbICAxNjguODYwMjQ0XSBydGw4MTg3
+OiBDYXJkIE1BQyBhZGRyZXNzIGlzIDAwOjE2OjQ0OmZiOjUyOjZkClsgIDE2OS4xOTgyNDFd
+IHJ0bDgxODc6IFBBUEUgZnJvbSBDT05GSUcyOiAwClsgIDE2OS4yMzU5ODldIHJ0bDgxODc6
+IEVFUFJPTSBDdXN0b21lciBJRDogMDAKWyAgMTY5LjIzNTk5MF0gClsgIDE2OS4yMzY0NzJd
+IHJ0bDgxODc6IERyaXZlciBwcm9iZSBjb21wbGV0ZWQKWyAgMTY5LjIzNjQ3M10gClsgIDE2
+OS4yMzY0OTBdIHVzYmNvcmU6IHJlZ2lzdGVyZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgcnRs
+ODE4NwpbICAyODYuODA0MzkxXSBORVQ6IFJlZ2lzdGVyZWQgcHJvdG9jb2wgZmFtaWx5IDE3
+ClsgIDI4Ny4xNDkxMjRdIHJ0bDgxODc6IENhcmQgc3VjY2Vzc2Z1bGx5IHJlc2V0ClsgIDI5
+NS42MTk3MDJdIFdJUkVMRVNTX01PREVfRwpbICAyOTUuNjkwOTQyXSBBRERSQ09ORihORVRE
+RVZfVVApOiB3bGFuMDogbGluayBpcyBub3QgcmVhZHkKWyAgMzYwLjcyNzIwNl0gcnRsODE4
+MF9jbG9zZSBwcm9jZXNzIApbICAzNjAuNzI3MjE5XSBydGw4MTgwX2Rvd24gcHJvY2VzcyAK
+WyAgMzYwLjc0MDMwN10gcnRsODE4NzogTWFuZ2VtZW50IFJYIHByb2Nlc3MgYWJvcnRlZCBk
+dWUgdG8gZXhwbGljaXQgc2h1dGRvd24KWyAgMzYxLjE5MTEzNl0gcnRsODE4NzogQ2FyZCBz
+dWNjZXNzZnVsbHkgcmVzZXQKWyAgMzY5Ljk2NjE4MF0gV0lSRUxFU1NfTU9ERV9HClsgIDM3
+MC4wNjE5NDhdIEFERFJDT05GKE5FVERFVl9VUCk6IHdsYW4wOiBsaW5rIGlzIG5vdCByZWFk
+eQpbICAzNzAuNDc5MjQ1XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICAzNzAuNjM2MzY2XSBM
+aW5raW5nIHdpdGggZGVsZXRlZApbICAzNzAuNzM1ODY1XSBMaW5raW5nIHdpdGggZGVsZXRl
+ZApbICAzNzMuMjg2Mzc3XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICAzNzMuMzQ1MTU0XSBB
+c3NvY2lhdGVkIHN1Y2Nlc3NmdWxseQpbICAzNzMuMzQ1MTYxXSBVc2luZyBHIHJhdGVzClsg
+IDM3My40MDY1OTRdIEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiB3bGFuMDogbGluayBiZWNv
+bWVzIHJlYWR5ClsgIDM3NC4xNjk3MjFdIGFsZyBuYW1lOkNDTVAKWyAgMzc2LjIxMDMyOV0g
+cGFkbG9jazogVklBIFBhZExvY2sgbm90IGRldGVjdGVkLgpbICAzNzYuOTU5NDcxXSBhbGcg
+bmFtZTpUS0lQClsgIDM4My41Mjk3NDZdIHdsYW4wOiBubyBJUHY2IHJvdXRlcnMgcHJlc2Vu
+dApbICAzODMuODE3NzM0XSBydGw4MTgwX2Nsb3NlIHByb2Nlc3MgClsgIDM4My44MTc3NDFd
+IHJ0bDgxODBfZG93biBwcm9jZXNzIApbICAzODMuODMwMTQ5XSBydGw4MTg3OiBNYW5nZW1l
+bnQgUlggcHJvY2VzcyBhYm9ydGVkIGR1ZSB0byBleHBsaWNpdCBzaHV0ZG93bgpbICAzODQu
+NzI3NTI1XSBydGw4MTg3OiBDYXJkIHN1Y2Nlc3NmdWxseSByZXNldApbICAzOTMuNTI4Mjcx
+XSBXSVJFTEVTU19NT0RFX0cKWyAgMzkzLjU5ODQ2NF0gTGlua2luZyB3aXRoIGRlbGV0ZWQK
+WyAgMzkzLjU5OTc1Ml0gQUREUkNPTkYoTkVUREVWX1VQKTogd2xhbjA6IGxpbmsgaXMgbm90
+IHJlYWR5ClsgIDM5My44MjE3MTJdIExpbmtpbmcgd2l0aCBkZWxldGVkClsgIDM5NC4wMTQ3
+MDldIExpbmtpbmcgd2l0aCBkZWxldGVkClsgIDM5NC4wNzA3NzldIEFzc29jaWF0ZWQgc3Vj
+Y2Vzc2Z1bGx5ClsgIDM5NC4wNzA3ODVdIFVzaW5nIEcgcmF0ZXMKWyAgMzk0LjEyODEwNF0g
+QUREUkNPTkYoTkVUREVWX0NIQU5HRSk6IHdsYW4wOiBsaW5rIGJlY29tZXMgcmVhZHkKWyAg
+Mzk0LjQ5NTU3N10gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgMzk0LjU1MzI3NF0gQXNzb2Np
+YXRlZCBzdWNjZXNzZnVsbHkKWyAgMzk0LjU1MzI4MF0gVXNpbmcgRyByYXRlcwpbICAzOTQu
+NTYxMDc1XSBydGw4MTgwX2Nsb3NlIHByb2Nlc3MgClsgIDM5NC41NjEwNzddIHJ0bDgxODBf
+ZG93biBwcm9jZXNzIApbICAzOTQuNTc2NjQ0XSBydGw4MTg3OiBNYW5nZW1lbnQgUlggcHJv
+Y2VzcyBhYm9ydGVkIGR1ZSB0byBleHBsaWNpdCBzaHV0ZG93bgpbICAzOTQuOTkyNTY2XSBy
+dGw4MTg3OiBDYXJkIHN1Y2Nlc3NmdWxseSByZXNldApbICA0MDMuMzY1MTUyXSBXSVJFTEVT
+U19NT0RFX0cKWyAgNDAzLjQ1MTcxOV0gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgNDAzLjYx
+MzcxN10gTGlua2luZyB3aXRoIGRlbGV0ZWQKWyAgNDAzLjY3NTI4OF0gQXNzb2NpYXRlZCBz
+dWNjZXNzZnVsbHkKWyAgNDAzLjY3NTI5NF0gVXNpbmcgRyByYXRlcwpbICA0MDMuODI3MzQy
+XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MDMuOTgzNDY0XSBMaW5raW5nIHdpdGggZGVs
+ZXRlZApbICA0MDQuMDM5OTA5XSBBc3NvY2lhdGVkIHN1Y2Nlc3NmdWxseQpbICA0MDQuMDM5
+OTE1XSBVc2luZyBHIHJhdGVzClsgIDQxMy41MzE5MTNdIHdsYW4wOiBubyBJUHY2IHJvdXRl
+cnMgcHJlc2VudApbICA0MTkuMjYxMTU2XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MTku
+NDA5NDU5XSBMaW5raW5nIHdpdGggZGVsZXRlZApbICA0MTkuNDcwNzIzXSBBc3NvY2lhdGVk
+IHN1Y2Nlc3NmdWxseQpbICA0MTkuNDcwNzI5XSBVc2luZyBHIHJhdGVzClsgIDQyMC4yMzgy
+ODRdIGFsZyBuYW1lOkNDTVAKWyAgNDIwLjIzODMwOF0gYWxnIG5hbWU6VEtJUAo=
+--------------070507050107030903050301--
 
