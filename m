@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45392 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbZHCIrz (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1746 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901AbZHaMyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 04:47:55 -0400
-Subject: Re: ar9170usb crashes during iwconfig for ad-hoc mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joerg Albert <jal2@gmx.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1249289084.2007.54.camel@johannes.local>
-References: <4A759341.1090006@gmx.de>  <4A7612F8.80802@gmx.de>
-	 <1249289084.2007.54.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mjwbgvGaI8S6iU0y/oWu"
-Date: Mon, 03 Aug 2009 10:47:54 +0200
-Message-Id: <1249289274.4561.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 31 Aug 2009 08:54:46 -0400
+Date: Mon, 31 Aug 2009 08:53:12 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, proski@gnu.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	ic.felix@gmail.com, Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Ath5k and proprietary extensions
+Message-ID: <20090831125312.GB11006@hash.localnet>
+References: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Aug 29, 2009 at 07:51:29AM +0300, Nick Kossifidis wrote:
+> Most code is there for half/quarter and (static) turbo operation, we
+> just have to deal with pll programming, clock settings etc. Question
+> is how do we use it, NL80211_CMD_TESTMODE is an option i guess and in
+> case no one else thinks that we could use a channel width API (or
+> extend what we have) for setting 5/10/40MHz width through cfg80211, we
+> can just stick to NL80211_CMD_TESTMODE.
 
---=-mjwbgvGaI8S6iU0y/oWu
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Well, we will have a channel width API, I think; several people
+have expresed an interest in doing so.
 
-On Mon, 2009-08-03 at 10:44 +0200, Johannes Berg wrote:
+Your summary is useful, and I really don't have any qualms about
+keeping the non-standard stuff as long as someone has plans to
+write the code to support it.  I personally have no interest
+in using those features, but of course I only speak for me.
 
-> > >     ifconfig wlan1 down
-> > >     iwconfig wlan1 mode managed essid huhu
-> > >     ifconfig wlan1 up
-> > >     ifconfig wlan1 down
-> > >     iwconfig wlan1 mode ad-hoc essid huhu_a channel 1
+If we do remove turbo code for now, we can leave the initvals, as
+they are such a pain to verify.  But I'm not sure half a page of
+text is worth the churn.
 
-> No, it's a bug in cfg80211 :)
-
-But it's not making sense to me. I'll have to try to reproduce it. In
-any case, we shouldn't be calling in to mac80211 from cfg80211 while the
-interface is down.
-
-johannes
-
---=-mjwbgvGaI8S6iU0y/oWu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKdqQ2AAoJEODzc/N7+Qma5WUQAKl5VsfbdRXJn681M352BedU
-6wDW15CnkA6ZHSG57liIqK6YoF2eCLFwk1dhWW0+pxl/hwr35PghsZpjMk8LhBwD
-bJYTfykAk7PnfwNLbqpOWiXYmDUef4i4OIy4LNDlLoJXuj4qXWa1237oXItxy4JL
-eJRGKgzu9RB/cV4VClU76QiB+FtrnZ8+0EBchgl5/uzQND5+Fa5R6KJW9x4M/+0r
-sFgX9p43cW7fY3m9WHlTTBJeleqVFlONFWrOLtgqvRi8+/zeb/4mHlhsNeTeNC/F
-CZ2H7oyA4X9/vWNKxDpzjYV4l1EOzLhih6ZHhjEoK3GKw6kJC6vxDHljHvfzRM1B
-KTCeNvE9KhXdFNmA02epdLXNKu2kugOEdCHI7W82P62xtLArIHkqk2nKuOdqovyj
-esVTgZeaGKmlyXtktH96G6UxRFHlaTExz9AMDC08rh4ZWUxJ7qAXMfYf6YoC3vuo
-l0oHv0AUzNxKFBw9F1NWZ9Nn+TBaPZwuTYuZQiTrKotuu8pBapwGMVXU+fLO/m2/
-Ik8wp/3rnFhcYF2iBn9QGj1eIcqS0gFuCXMLVJGPD5wq6kTsPdbQkut+csTbryBE
-Uvw2cS8Je/MXep1hBlYEOs3RSq7a+E8SY1XaDQTK58/jV+CpU6cbnVpA67crvZY8
-tZnvGUmxT9nNGT12EBTT
-=Yga2
------END PGP SIGNATURE-----
-
---=-mjwbgvGaI8S6iU0y/oWu--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
