@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:58119 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755321AbZICOSX convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:61488 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbZHaXe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 10:18:23 -0400
+	Mon, 31 Aug 2009 19:34:59 -0400
+Received: by iwn42 with SMTP id 42so2009551iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:35:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20090903115521.GB12597@tuxdriver.com>
-References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
-	 <20090903115521.GB12597@tuxdriver.com>
-Date: Thu, 3 Sep 2009 16:18:24 +0200
-Message-ID: <a32f33a40909030718v494f8fech6ba3c854b5c84ef8@mail.gmail.com>
-Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Amit Kucheria <amit.kucheria@canonical.com>,
-	List Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1251760232.5165.28.camel@localhost.localdomain>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	<3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
+	<43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
+	<3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
+	<43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
+	<1251749600.5165.1.camel@localhost.localdomain> <1251751251.1266.16.camel@localhost.localdomain>
+	<43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
+	<43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
+	<1251760232.5165.28.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 31 Aug 2009 16:34:41 -0700
+Message-ID: <43e72e890908311634y5643818ate9d1b28cbbefa2b2@mail.gmail.com>
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
+	rfkill support)
+To: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 3, 2009 at 1:55 PM, John W. Linville<linville@tuxdriver.com> wrote:
-> On Thu, Sep 03, 2009 at 02:42:20PM +0300, Amit Kucheria wrote:
->> USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
->> defined. Remove it from rt2500usb.
+On Mon, Aug 31, 2009 at 4:10 PM, Inaky
+Perez-Gonzalez<inaky.perez-gonzalez@intel.com> wrote:
+> On Mon, 2009-08-31 at 17:05 -0600, Luis R. Rodriguez wrote:
+>> On Mon, Aug 31, 2009 at 2:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+>> > On Mon, Aug 31, 2009 at 1:40 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
+>> >> Hi Luis,
+>> >>
+>> >>> > OK not so bad except for:
+>> >>> >
+>> >>> > > kernel/net/wimax/wimax.ko
+>> >>> >
+>> >>> > That's touching another subsystem but we could technically merge wimax
+>> >>> > into compat-wireless if Inaky thinks that's a good idea. the point
+>> >>> > here is to unify anything that uses rfkill for backport usage.
+>> >>>
+>> >>> Oh boy, can of worms
+>> >>>
+>> >>> I have my own compat-wimax already, which already handles things for
+>> >>> backwards compat (many #ifdef hacks to simplify life) and which is
+>> >>> heavily used internally.
+>> >>>
+>> >>> I don't really know how much worth it might be and I know I don't have
+>> >>> resources to support both.
+>> >>
+>> >> for the wireless-compat tree, I would just remove the RFKILL support for
+>> >> WiMAX. It is really not worth to support it.
+>> >
+>> > Works for me, we then still need to address (if we really care) the
+>> > platform stuff. If someone is interested feel free to send patches to
+>> > add those, I figure as long we get down to the latest supported stable
+>> > kernel it should be good. The latest supported stable kernel is always
+>> > on display on kernel,org, today being 2.6.27.
 >>
->> Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
->> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+>> BTW inaky -- this is actually up to you, are you wiling to live with
+>> no rfkill for compat?
 >
-> IIRC there are IDs that are used by different devices where rt73usb
-> covers one device and the rt2500usb covers another.  Are you sure
-> this is not one of those?
+> I don't really mind -- but it could be a problem for anyone trying to
+> use it.
 
-Yes, I believe this particular ID was already discussed some time ago
-on this list. This is one of the infamous duplicate IDs. (Fortunately not
-one of those infamous Linksys devices with 5 different chipsets for the
-same ID).
+Hm sure and there is still also the issue of users of wimax enabled on
+older kernels and using rfkill there. That is, users not using
+compat-wimax but using just compat-wireless and expecting rfkill to
+work smoothly between wimax and compat-wireless.
 
-Ivo
+I am not sure of the details of the platform rfkill drivers or how
+wimax or wireless drivers use these.. Perhaps there are no issues, I
+haven't really cared to look into it.
+
+> Not that I recommend not being able to switch the radio off :)
+> however, the WiMAX stack has APIs for it too, so at least there is a
+> workaround.
+
+You mean a way to rfkill without rfkill?
+
+> But remember, I won't be able to support it at all.
+
+To support what specifically?
+
+  Luis
