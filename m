@@ -1,134 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f196.google.com ([209.85.221.196]:38632 "EHLO
-	mail-qy0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbZHRWOG (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:42307 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbZHaRZN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 18:14:06 -0400
-Received: by qyk34 with SMTP id 34so2990710qyk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2009 15:14:06 -0700 (PDT)
+	Mon, 31 Aug 2009 13:25:13 -0400
+Received: by mail-ew0-f206.google.com with SMTP id 2so542184ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 10:25:16 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 18 Aug 2009 15:14:06 -0700
-Message-ID: <8f3763990908181514m439c9c30hd3151cf4b4525363@mail.gmail.com>
-Subject: bug? sme.c:610 __cfg80211_disconnected
-From: ASIC Felix <ic.felix@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=00032557f4ba4165e2047171d638
+In-Reply-To: <4A9BFCCB.6040808@ufra.edu.br>
+References: <4A9BFCCB.6040808@ufra.edu.br>
+Date: Mon, 31 Aug 2009 18:25:15 +0100
+Message-ID: <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>
+Subject: Re: zd1211rw on ppc (iBook G4)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---00032557f4ba4165e2047171d638
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On Mon, Aug 31, 2009 at 5:39 PM, Leonardo H. Souza
+Hamada<leonardo.hamada@ufra.edu.br> wrote:
+> Hi list,
+>
+> On linux-2.6.24-gentoo-r3, the zd1211rw driver was working as eth1.
+>
+> This is a big-endian machine.
+>
+> On 2.6.30-gentoo-r5, 'ifconfig -a' shows the relevant entries below:
 
-Hi,
+> Likely is a issue similar reported previously:
+> http://marc.info/?l=linux-wireless&m=124906700820860&w=2
+>
+> Quick peek at the source diffs between previous version reveals some
+> changes.
 
-found three of these in dmesg, wireless-testing kernel master-2009-08-18
-
-wlan0: deauthenticating by local choice (reason=3)
-------------[ cut here ]------------
-WARNING: at net/wireless/sme.c:610 __cfg80211_disconnected+0x1bc/0x210
-[cfg80211]()
-Hardware name: 1875DLU
-deauth failed: -67
-
-Any ideas? Seems relatively recent, complete trace in attachment.
-
-Cheers,
-Felix
-
---00032557f4ba4165e2047171d638
-Content-Type: text/plain; charset=US-ASCII; name="dmesg_sme.txt"
-Content-Disposition: attachment; filename="dmesg_sme.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_fyj6nyb30
-
-dGg5azogUlggZmlsdGVyIDB4MCBic3NpZCAwMDowYjo4NTo2ZjoyMDo4YyBhaWQgMHgwCmF0aDlr
-OiBCU1MgQ2hhbmdlZCBQUkVBTUJMRSAxCmF0aDlrOiBCU1MgQ2hhbmdlZCBBU1NPQyAxCmF0aDlr
-OiBCc3MgSW5mbyBBU1NPQyAxMywgYnNzaWQ6IDAwOjBiOjg1OjZmOjIwOjhjCmF0aDlrOiBTZXQg
-SFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQgSFcgUlggZmlsdGVyOiAweDAKYXRo
-OWs6IFNldCBIVyBSWCBmaWx0ZXI6IDB4MAphdGg5azogU2V0IEhXIFJYIGZpbHRlcjogMHgwCmF0
-aDlrOiBTZXQgSFcgUlggZmlsdGVyOiAweDAKYXRoOWs6IFNldCBIVyBSWCBmaWx0ZXI6IDB4MAph
-dGg5azogU2V0IEhXIFJYIGZpbHRlcjogMHgwCmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQg
-SFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CmF0aDlrOiBTZXQgSFcgS2V5CndsYW4wOiBkZWF1dGhl
-bnRpY2F0ZWQgZnJvbSAwMDowYjo4NTo2ZjoyMDo4YyAoUmVhc29uOiAxKQphdGg5azogQ29uZmln
-dXJlIHR4IFtxdWV1ZS9oYWxxXSBbMC8zXSwgIGFpZnM6IDIsIGN3X21pbjogMywgY3dfbWF4OiA3
-LCB0eG9wOiA0NwphdGg5azogQ29uZmlndXJlIHR4IFtxdWV1ZS9oYWxxXSBbMS8yXSwgIGFpZnM6
-IDIsIGN3X21pbjogNywgY3dfbWF4OiAxNSwgdHhvcDogOTQKYXRoOWs6IENvbmZpZ3VyZSB0eCBb
-cXVldWUvaGFscV0gWzIvMV0sICBhaWZzOiAzLCBjd19taW46IDE1LCBjd19tYXg6IDEwMjMsIHR4
-b3A6IDAKYXRoOWs6IENvbmZpZ3VyZSB0eCBbcXVldWUvaGFscV0gWzMvMF0sICBhaWZzOiA3LCBj
-d19taW46IDE1LCBjd19tYXg6IDEwMjMsIHR4b3A6IDAKYXRoOWs6IEJTUyBDaGFuZ2VkIFBSRUFN
-QkxFIDAKYXRoOWs6IEJTUyBDaGFuZ2VkIENUUyBQUk9UIDAKYXRoOWs6IEJTUyBDaGFuZ2VkIEFT
-U09DIDAKYXRoOWs6IEJzcyBJbmZvIERJU0FTU09DCmF0aDlrOiBTZXQgSFcgS2V5CndsYW4wOiBk
-ZWF1dGhlbnRpY2F0aW5nIGJ5IGxvY2FsIGNob2ljZSAocmVhc29uPTMpCi0tLS0tLS0tLS0tLVsg
-Y3V0IGhlcmUgXS0tLS0tLS0tLS0tLQpXQVJOSU5HOiBhdCBuZXQvd2lyZWxlc3Mvc21lLmM6NjEw
-IF9fY2ZnODAyMTFfZGlzY29ubmVjdGVkKzB4MWJjLzB4MjEwIFtjZmc4MDIxMV0oKQpIYXJkd2Fy
-ZSBuYW1lOiAxODc1RExVCmRlYXV0aCBmYWlsZWQ6IC02NwpNb2R1bGVzIGxpbmtlZCBpbjogeHRf
-dGltZSB4dF9jb25ubGltaXQgeHRfcmVhbG0gaXB0YWJsZV9yYXcgeHRfY29tbWVudCBpcHRfVUxP
-RyBpcHRfUkVKRUNUIGlwdF9SRURJUkVDVCBpcHRfTkVUTUFQIGlwdF9NQVNRVUVSQURFIGlwdF9M
-T0cgaXB0X0VDTiBpcHRfZWNuIGlwdF9haCBpcHRfYWRkcnR5cGUgbmZfbmF0X3RmdHAgbmZfbmF0
-X3NubXBfYmFzaWMgbmZfbmF0X3NpcCBuZl9uYXRfcHB0cCBuZl9uYXRfcHJvdG9fZ3JlIG5mX25h
-dF9pcmMgbmZfbmF0X2gzMjMgbmZfbmF0X2Z0cCBuZl9uYXRfYW1hbmRhIHRzX2ttcCBuZl9jb25u
-dHJhY2tfYW1hbmRhIG5mX2Nvbm50cmFja190ZnRwIG5mX2Nvbm50cmFja19zaXAgbmZfY29ubnRy
-YWNrX3BwdHAgbmZfY29ubnRyYWNrX3Byb3RvX2dyZSBuZl9jb25udHJhY2tfbmV0bGluayBuZl9j
-b25udHJhY2tfbmV0Ymlvc19ucyBuZl9jb25udHJhY2tfaXJjIG5mX2Nvbm50cmFja19oMzIzIG5m
-X2Nvbm50cmFja19mdHAgeHRfdGNwbXNzIHh0X3JlY2VudCB4dF9wa3R0eXBlIHh0X3BoeXNkZXYg
-eHRfb3duZXIgeHRfTkZRVUVVRSB4dF9ORkxPRyBuZm5ldGxpbmtfbG9nIHh0X211bHRpcG9ydCB4
-dF9NQVJLIHh0X21hcmsgeHRfbWFjIHh0X2xpbWl0IHh0X2xlbmd0aCB4dF9pcHJhbmdlIHh0X2hl
-bHBlciB4dF9oYXNobGltaXQgeHRfRFNDUCB4dF9kc2NwIHh0X2RjY3AgeHRfY29ubnRyYWNrIHh0
-X0NPTk5NQVJLIHh0X2Nvbm5tYXJrIHh0X0NMQVNTSUZZIHh0X3RjcHVkcCB4dF9zdGF0ZSBpcHRh
-YmxlX25hdCBuZl9uYXQgbmZfY29ubnRyYWNrX2lwdjQgbmZfZGVmcmFnX2lwdjQgbmZfY29ubnRy
-YWNrIGFlc19pNTg2IGFlc19nZW5lcmljIGlwdGFibGVfbWFuZ2xlIG5mbmV0bGluayBpcHRhYmxl
-X2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMgaTkxNSBkcm0gaTJjX2FsZ29fYml0IGFmX3BhY2tl
-dCBicmlkZ2Ugc3RwIGxsYyBibmVwIHNjbyByZmNvbW0gbDJjYXAgYmx1ZXRvb3RoIGlwdjYgYmlu
-Zm10X21pc2MgbG9vcCBmdXNlIGNwdWZyZXFfb25kZW1hbmQgY3B1ZnJlcV9jb25zZXJ2YXRpdmUg
-Y3B1ZnJlcV9wb3dlcnNhdmUgYWNwaV9jcHVmcmVxIGZyZXFfdGFibGUgc25kX2ludGVsOHgwIGFy
-YzQgc25kX2FjOTdfY29kZWMgYWM5N19idXMgZWNiIHNuZF9zZXFfZHVtbXkgYXRoOWsgbWFjODAy
-MTEgc25kX3NlcV9vc3Mgc25kX3NlcV9taWRpX2V2ZW50IGF0aCBjZmc4MDIxMSBzbmRfc2VxIHNu
-ZF9zZXFfZGV2aWNlIHNuZF9wY21fb3NzIHNuZF9wY20gc25kX3RpbWVyIHNuZF9taXhlcl9vc3Mg
-dGhpbmtwYWRfYWNwaSB0ZzMgcHJvY2Vzc29yIGludGVsX2FncCBzbmQgYWMgc291bmRjb3JlIHRo
-ZXJtYWwgcmZraWxsIGxlZF9jbGFzcyBidXR0b24gc2cgam95ZGV2IGlUQ09fd2R0IGlUQ09fdmVu
-ZG9yX3N1cHBvcnQgZWhjaV9oY2QgdmlkZW8gb3V0cHV0IGkyY19pODAxIGkyY19jb3JlIGxpYnBo
-eSB5ZW50YV9zb2NrZXQgcnNyY19ub25zdGF0aWMgcGNtY2lhX2NvcmUgc25kX3BhZ2VfYWxsb2Mg
-YmF0dGVyeSBhZ3BnYXJ0IG52cmFtIG5zY19pcmNjIGlyZGEgcGNzcGtyIHNyX21vZCBldmRldiBy
-dGNfY21vcyB1aGNpX2hjZCBjcmNfY2NpdHQgdXNiY29yZSBhdGFfZ2VuZXJpYyBpZGVfcGNpX2dl
-bmVyaWMgaWRlX2dkX21vZCBpZGVfY29yZSBwYXRhX2FjcGkgYXRhX3BpaXggYWhjaSBsaWJhdGEg
-c2RfbW9kIHNjc2lfbW9kIGNyY190MTBkaWYgZXh0MyBqYmQKUGlkOiAxMTg2LCBjb21tOiBwaHkw
-IFRhaW50ZWQ6IEcgICBNICAgICAgIDIuNi4zMS1yYzYtd2wtbW5iU3RyaXAtMzE1ODYtZzgwMjg5
-ZjAgIzY1CkNhbGwgVHJhY2U6CiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nvbm5lY3Rl
-ZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nv
-bm5lY3RlZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGMwMTNjNTNjPl0gd2Fybl9zbG93cGF0
-aF9jb21tb24rMHg2Yy8weGMwCiBbPGY4MmI1NmFjPl0gPyBfX2NmZzgwMjExX2Rpc2Nvbm5lY3Rl
-ZCsweDFiYy8weDIxMCBbY2ZnODAyMTFdCiBbPGMwMTNjNWQ2Pl0gd2Fybl9zbG93cGF0aF9mbXQr
-MHgyNi8weDMwCiBbPGY4MmI1NmFjPl0gX19jZmc4MDIxMV9kaXNjb25uZWN0ZWQrMHgxYmMvMHgy
-MTAgW2NmZzgwMjExXQogWzxmODJiMWJmMT5dID8gbmw4MDIxMV9zZW5kX2RlYXV0aCsweDIxLzB4
-MzAgW2NmZzgwMjExXQogWzxmODJiMmRmYz5dIF9fY2ZnODAyMTFfc2VuZF9kZWF1dGgrMHgyMWMv
-MHgyNjAgW2NmZzgwMjExXQogWzxmODNkMDJjMD5dID8gaWVlZTgwMjExX3NldF9kaXNhc3NvYysw
-eDE4MC8weDFlMCBbbWFjODAyMTFdCiBbPGY4MmIyZTllPl0gY2ZnODAyMTFfc2VuZF9kZWF1dGgr
-MHg1ZS8weDcwIFtjZmc4MDIxMV0KIFs8ZjgzZDFmZWI+XSBpZWVlODAyMTFfc3RhX3dvcmsrMHhh
-MGIvMHgxODUwIFttYWM4MDIxMV0KIFs8YzAxNDEyZDg+XSA/IHRhc2tsZXRfYWN0aW9uKzB4NTgv
-MHhjMAogWzxjMDE3ZDk4OD5dID8gaGFuZGxlX0lSUV9ldmVudCsweDU4LzB4MTQwCiBbPGMwMTFi
-ZjNlPl0gPyBhY2tfYXBpY19sZXZlbCsweDdlLzB4MjcwCiBbPGMwMTMwMGMwPl0gPyBycV9vbmxp
-bmVfcnQrMHg1MC8weDcwCiBbPGMwMTM4NzQ1Pl0gPyBkZXF1ZXVlX3Rhc2tfZmFpcisweDI5NS8w
-eDJhMAogWzxjMDEyOGEyZT5dID8gZGVxdWV1ZV90YXNrKzB4MTBlLzB4MTYwCiBbPGMwMTAyNTZh
-Pl0gPyBfX3N3aXRjaF90bysweGJhLzB4MWEwCiBbPGMwMTMzMjk2Pl0gPyBmaW5pc2hfdGFza19z
-d2l0Y2grMHg1Ni8weGMwCiBbPGMwM2E5YWY0Pl0gPyBzY2hlZHVsZSsweDRhNC8weGE1MAogWzxj
-MDE1Mzc3YT5dID8gcHJlcGFyZV90b193YWl0KzB4M2EvMHg3MAogWzxjMDE0ZWRkMT5dIHdvcmtl
-cl90aHJlYWQrMHgxNDEvMHgyMTAKIFs8ZjgzZDE1ZTA+XSA/IGllZWU4MDIxMV9zdGFfd29yaysw
-eDAvMHgxODUwIFttYWM4MDIxMV0KIFs8YzAxNTM1MzA+XSA/IGF1dG9yZW1vdmVfd2FrZV9mdW5j
-dGlvbisweDAvMHg1MAogWzxjMDE0ZWM5MD5dID8gd29ya2VyX3RocmVhZCsweDAvMHgyMTAKIFs8
-YzAxNTMxZGM+XSBrdGhyZWFkKzB4N2MvMHg5MAogWzxjMDE1MzE2MD5dID8ga3RocmVhZCsweDAv
-MHg5MAogWzxjMDEwNDY1Nz5dIGtlcm5lbF90aHJlYWRfaGVscGVyKzB4Ny8weDEwCi0tLVsgZW5k
-IHRyYWNlIGZiZmEzZWExOWM1YWZmNWYgXS0tLQphdGg5azogU2V0IEhXIEtleQphdGg5azogU2V0
-IEhXIFJYIGZpbHRlcjogMHgxMAphdGg5azogU2V0IGNoYW5uZWw6IDI0MTIgTUh6CmF0aDlrOiB0
-eCBjaG1hc2s6IDEsIHJ4IGNobWFzazogMQphdGg5azogKDI0NjIgTUh6KSAtPiAoMjQxMiBNSHop
-LCBjaGFud2lkdGg6IDAKYXRoOWs6IFNldCBjaGFubmVsOiAyNDE3IE1IegphdGg5azogdHggY2ht
-YXNrOiAxLCByeCBjaG1hc2s6IDEKYXRoOWs6ICgyNDEyIE1IeikgLT4gKDI0MTcgTUh6KSwgY2hh
-bndpZHRoOiAwCmF0aDlrOiBTZXQgY2hhbm5lbDogMjQyMiBNSHoKYXRoOWs6IHR4IGNobWFzazog
-MSwgcnggY2htYXNrOiAxCmF0aDlrOiAoMjQxNyBNSHopIC0+ICgyNDIyIE1IeiksIGNoYW53aWR0
-aDogMAphdGg5azogU2V0IGNoYW5uZWw6IDI0MjcgTUh6CmF0aDlrOiB0eCBjaG1hc2s6IDEsIHJ4
-IGNobWFzazogMQphdGg5azogKDI0MjIgTUh6KSAtPiAoMjQyNyBNSHopLCBjaGFud2lkdGg6IDAK
-YXRoOWs6IFNldCBjaGFubmVsOiAyNDMyIE1IegphdGg5azogdHggY2htYXNrOiAxLCByeCBjaG1h
-c2s6IDEKYXRoOWs6ICgyNDI3IE1IeikgLT4gKDI0MzIgTUh6KSwgY2hhbndpZHRoOiAwCmF0aDlr
-OiBTZXQgY2hhbm5lbDogMjQzNyBNSHoKYXRoOWs6IHR4IGNobWFzazogMSwgcnggY2htYXNrOiAx
-CmF0aDlrOiAoMjQzMiBNSHopIC0+ICgyNDM3IE1IeiksIGNoYW53aWR0aDogMAoK
---00032557f4ba4165e2047171d638--
+Are you talking about a regression - i.e. it used to work *on the same
+architecture*, but not any more? If that's the case you can probably
+start with 2.6.24 and various compat-wireless on to narrow down which
+changes break.  The post you referred to is different - vendor driver
+vs rw driver.
