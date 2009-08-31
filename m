@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40337 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932113AbZHDDOM (ORCPT
+Received: from L01SLCSMTP01.calltower.com ([69.4.184.248]:39675 "EHLO
+	L01SLCSMTP01.calltower.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752145AbZHaPut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 23:14:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, zhifeng.cai@atheros.com,
-	ath9k-devel@lists.ath9k.org, stephen.chen@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/3] ath9k: add ar9271 revision and subrevision ID helpers
-Date: Mon,  3 Aug 2009 23:14:10 -0400
-Message-Id: <1249355652-10031-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1249355652-10031-1-git-send-email-lrodriguez@atheros.com>
-References: <1249355652-10031-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 31 Aug 2009 11:50:49 -0400
+Subject: Re: [ath5k-devel] [PATCH 1/2] ath5k: fix uninitialized value use
+ in ath5k_eeprom_read_turbo_modes()
+From: Jon Loeliger <jdl@bigfootnetworks.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <bcopeland@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <43e72e890908272221s39df68abq8e146c2d3566b415@mail.gmail.com>
+References: <20090827023000.21926.90867.stgit@mj.roinet.com>
+	 <40f31dec0908270558y2a3a565bvcc7e470b7f2644c6@mail.gmail.com>
+	 <b6c5339f0908271117q3a893d4dma9df0ac441091dbf@mail.gmail.com>
+	 <43e72e890908271125x378da3abw41e7f73dd8fbfe81@mail.gmail.com>
+	 <40f31dec0908272001u1a67cbf3ycc5d9588dd48915d@mail.gmail.com>
+	 <43e72e890908272057s28ee11c6x624e8a08c6bd17e9@mail.gmail.com>
+	 <40f31dec0908272117s27b3a59ep5f18c85aa179793d@mail.gmail.com>
+	 <43e72e890908272221s39df68abq8e146c2d3566b415@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 10:49:55 -0500
+Message-Id: <1251733795.23917.1.camel@jdl-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These will be used later to add support for ar9271.
+On Thu, 2009-08-27 at 22:21 -0700, Luis R. Rodriguez wrote:
 
-Cc: Stephen Chen <stephen.chen@atheros.com>
-Cc: Zhifeng Cai <zhifeng.cai@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/reg.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+> > Having multiple drivers won't help users, i thought that MadWiFi was "dead"
+> > and we were working on a complete alternative.
+> 
+> MadWifi is dead.
+> 
+>   Luis
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 8302aeb..37cbf03 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -744,6 +744,9 @@
- #define AR_SREV_VERSION_9287                  0x180
- #define AR_SREV_REVISION_9287_10              0
- #define AR_SREV_REVISION_9287_11              1
-+#define AR_SREV_VERSION_9271			0x140
-+#define AR_SREV_REVISION_9271_10		0
-+#define AR_SREV_REVISION_9271_11		1
- 
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
-@@ -815,6 +818,15 @@
- 	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
- 	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9287_11)))
- 
-+#define AR_SREV_9271(_ah) \
-+    (((_ah))->hw_version.macVersion == AR_SREV_VERSION_9271)
-+#define AR_SREV_9271_10(_ah) \
-+    (AR_SREV_9271(_ah) && \
-+     ((_ah)->hw_version.macRev == AR_SREV_REVISION_9271_10))
-+#define AR_SREV_9271_11(_ah) \
-+    (AR_SREV_9271(_ah) && \
-+     ((_ah)->hw_version.macRev == AR_SREV_REVISION_9271_11))
-+
- #define AR_RADIO_SREV_MAJOR                   0xf0
- #define AR_RAD5133_SREV_MAJOR                 0xc0
- #define AR_RAD2133_SREV_MAJOR                 0xd0
--- 
-1.6.3.3
+An interesting pronouncement.  Do you mean "Dead to Linux"?
+Or "Dead to the world, including FreeBSD"?
+
+jdl
+
 
