@@ -1,115 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.216.194]:51086 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753585AbZIJGbc (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:36097 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431AbZHaXLf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 02:31:32 -0400
-Received: by pxi32 with SMTP id 32so1583645pxi.4
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 23:31:35 -0700 (PDT)
-Message-ID: <4AA89BB2.1080205@gmail.com>
-Date: Wed, 09 Sep 2009 23:24:50 -0700
-From: John Daiker <daikerjohn@gmail.com>
+	Mon, 31 Aug 2009 19:11:35 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so606072fge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:11:37 -0700 (PDT)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 dma error
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> 	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com> <4AA890F9.90604@gmail.com>
-In-Reply-To: <4AA890F9.90604@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <3ace41890908311602g4a976ec5k4f1f5145662cf183@mail.gmail.com>
+References: <4A9BFCCB.6040808@ufra.edu.br> <4A9C0ADC.6050607@ufra.edu.br>
+	<3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
+	<200908312127.57610.mb@bu3sch.de> <3ace41890908311235i62ab0510neb8b2021c3f2945e@mail.gmail.com>
+	<69e28c910908311414s191aafa6ib0bdae8ed4ace27d@mail.gmail.com>
+	<3ace41890908311602g4a976ec5k4f1f5145662cf183@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 1 Sep 2009 01:11:17 +0200
+Message-ID: <69e28c910908311611t1666370csa55d16a8623f0648@mail.gmail.com>
+Subject: Re: zd1211rw on ppc (iBook G4)
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	"Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/09/2009 10:39 PM, John Daiker wrote:
-> On 09/08/2009 11:06 AM, Gábor Stefanik wrote:
->> On Tue, Sep 8, 2009 at 7:50 PM, John Daiker<daikerjohn@gmail.com> wrote:
->>> On 09/08/2009 07:54 AM, Larry Finger wrote:
+(Restoring CCs from original message.)
+
+2009/9/1 Hin-Tak Leung <hintak.leung@gmail.com>:
+> 2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> On Mon, Aug 31, 2009 at 9:35 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+>>> On Mon, Aug 31, 2009 at 8:27 PM, Michael Buesch<mb@bu3sch.de> wrote:
+>>>> On Monday 31 August 2009 20:26:22 Hin-Tak Leung wrote:
+>>>>> It would appear that the rw driver's ieee80211->mac80211 conversion
+>>>>> has broken big- endian platforms, at a first guess.
 >>>>
->>>> Michael Buesch wrote:
->>>>>
->>>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->>>>>>
->>>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->>>>>> then the controller keep restarting...
->>>>>>
->>>>>> Please tell what I can provide or test, Thanks.
->>>>>
->>>>> Is this a regression? If so, please bisect.
+>>>> Last time I tested the device worked fine on my powerbook with zd1211rw/mac80211.
+>>>> But that's maybe two or three release cycles in the past.
 >>>>
->>>> It is something specific to his system as I don't see anything like
->>>> this. In addition, there are some users on the openSUSE forums that
->>>> have implemented the latest compat-wireless and switched away from
->>>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
->>>> them.
->>>>
->>>> Please reboot so that we see the ssb output as well. Use the command
->>>>
->>>> dmesg | egrep "ssb|b43"
->>>>
->>>> That way we will be able to see exactly what kind of device you have
->>>> and what revisions are in it. AFAIK, the testing to date has been
->>>> limited to Rev 1 PHYs and Rev 2 radios.
->>>>
->>>> Larry
+>>>> --
+>>>> Greetings, Michael.
 >>>>
 >>>
->>> I can confirm the same issue. I have a HP Mini 1116NR with a Broadcom
->>> 4312.
->>> Looks to be a PHY 1, Radio 2:
->>>
->>> --snip--
->>> [ 456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
->>> [ 456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
->>> Revision 2
->>> --snip--
->>>
->>> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel
->>> config, and
->>> lspci -vv and lspci -nn
->>>
->>> Note: With the dmesg output, I had unloaded the b43 module previous
->>> 'modprobe -r b43' and then loaded it again with debug output:
->>> 'modprobe b43
->>> verbose=3'
->>>
->>> John Daiker
->>>
+>>> The rw ieee80211->mac80211 conversion happens in 2.6.27->26.28 ...
+>>> Iguess the question is whether it was 2.6.28 or 2.6.27 you had success
+>>> with? That's unfortunately two *and* three cycles in the past,
+>>> respectively :-).
 >>
->> Again, please test with v478 or v5xx firmware.
->>
+>> I seem to remember that the conversion happened between 2.6.24 and
+>> 2.6.25 - the 2.6.26 injection patch on patches.aircrack-ng.org is also
+>> clearly for the mac80211 version.
 >
-> I've tried with the v478 firmware (was using 410.2160 earlier). I do not
-> see the 'Fatal DMA error' messages anymore.
+> Some part persists till 2.6.28 - I was running git diff between
+> different tags like this:
 >
-> On another note, however, I can't connect to a network. The device seems
-> to alternate between being idle, and scanning for APs.
+> git diff v2.6.27:drivers/net/wireless/zd1211rw/
+> v2.6.28:drivers/net/wireless/zd1211rw/
+> diff --git a/Makefile b/Makefile
+> index cc36126..1907eaf 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -1,6 +1,6 @@
+>  obj-$(CONFIG_ZD1211RW) += zd1211rw.o
 >
-> --snip--
-> [ 73.273722] phy0: device no longer idle - scanning
-> [ 74.561178] phy0: device now idle
-> [ 79.545776] phy0: device no longer idle - scanning
-> [ 80.828232] phy0: device now idle
-> [ 85.817930] phy0: device no longer idle - scanning
-> [ 87.100240] phy0: device now idle
-> [ 92.090713] phy0: device no longer idle - scanning
-> [ 93.372367] phy0: device now idle
-> [ 98.362829] phy0: device no longer idle - scanning
-> [ 99.644362] phy0: device now idle
-> --snip--
+> -zd1211rw-objs := zd_chip.o zd_ieee80211.o zd_mac.o \
+> +zd1211rw-objs := zd_chip.o zd_mac.o \
+>                zd_rf_al2230.o zd_rf_rf2959.o \
+>                zd_rf_al7230b.o zd_rf_uw2453.o \
+>                zd_rf.o zd_usb.o
+> diff --git a/zd_chip.c b/zd_chip.c
+> index 0acb5c3..e0ac58b 100644
+> --- a/zd_chip.c
+> +++ b/zd_chip.c
+> @@ -28,7 +28,6 @@
 >
-> I've attached the relevant portion of my dmesg output for your review.
+>  #include "zd_def.h"
+>  #include "zd_chip.h"
+> -#include "zd_ieee80211.h"
+>  #include "zd_mac.h"
+>  #include "zd_rf.h"
 >
-> Where would I got about finding the v5xx firmware?
->
-> JD
 
-Found the v5xx firmware along with a patch by Daniel Lenski for 
-b43-fwcutter on the bcm43xx mailing list.  I've tried both versions 
-(508.102 and 508.1107) without any luck.  I see the same 'idle -> 
-scanning -> idle' loop as before.
+AFAIK that was a cleanup from the changeover to mac80211 - originally,
+zd_ieee80211 housed the bindings to ieee80211softmac. After the
+conversion to mac80211, some mac80211 bindings ended up in zd_mac, the
+others in zd_ieee80211. In 2.6.28, the two files were merged.
 
-Any other ideas?
-
-JD
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
