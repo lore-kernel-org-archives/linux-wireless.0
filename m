@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33248 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933522AbZINVHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 17:07:07 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: bcm43xx-dev@lists.berlios.de
-Subject: Re: [PATCH] b43: Add LP PHY Analog Switch Support
-Date: Mon, 14 Sep 2009 23:07:04 +0200
-Cc: Thomas Ilnseher <illth@gmx.de>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1252962093.4696.45.camel@luzifer.localnet>
-In-Reply-To: <1252962093.4696.45.camel@luzifer.localnet>
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:51265 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903AbZHaXiB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 19:38:01 -0400
+Received: by iwn42 with SMTP id 42so2010270iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:38:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909142307.05860.mb@bu3sch.de>
+In-Reply-To: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
+	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
+	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
+	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
+	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
+	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 31 Aug 2009 16:37:43 -0700
+Message-ID: <43e72e890908311637r7b079e9fj2ac6b77f2b59eb79@mail.gmail.com>
+Subject: Re: rtl8187b Problem with tx level
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 September 2009 23:01:33 Thomas Ilnseher wrote:
-> The current verison of b43 uses "b43_phyop_switch_analog_generic" for A,
-> G and LP phys.
-> 
-> According to the spec, this is the wrong behaviour for the LP PHY
-> (see: http://bcm-v4.sipsolutions.net/802.11/PHY/Anacore )
-> 
-> While no problems on the x86 plattform where seen, this leads to a crash
-> on the BCM5354 SoC (MIPS 32 LE plattform).
-> This patch implements the analog switch for LP PHYs according to the
-> specs. It fixes the crash
-> 
-> signed-off-by: Thomas Ilnseher <illth@gmx.de>
-> ---
-> diff -uNr b/drivers/net/wireless/b43/phy_lp.c
-> a/drivers/net/wireless/b43/phy_lp.c
-> --- b/drivers/net/wireless/b43/phy_lp.c 2009-09-14 06:14:18.000000000 +0200
-> +++ a/drivers/net/wireless/b43/phy_lp.c 2009-09-14 21:03:15.158507573 +0200
-> @@ -2228,6 +2228,16 @@
->         return B43_TXPWR_RES_DONE;
->  }
->  
-> +void b43_lpphy_op_switch_analog(struct b43_wldev *dev, bool on)
-> +{
-> +       if (on) {
-> +               b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xfff8);
-> +       } else {
-> +               b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0x0007);
-> +               b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 0x0007);
-> +       }
-> +}
-> +
->  const struct b43_phy_operations b43_phyops_lp = {
->         .allocate               = b43_lpphy_op_allocate,
->         .free                   = b43_lpphy_op_free,
-> @@ -2239,7 +2249,7 @@
->         .radio_read             = b43_lpphy_op_radio_read,
->         .radio_write            = b43_lpphy_op_radio_write,
->         .software_rfkill        = b43_lpphy_op_software_rfkill,
-> -       .switch_analog          = b43_phyop_switch_analog_generic,
-> +       .switch_analog          = b43_lpphy_op_switch_analog,
->         .switch_channel         = b43_lpphy_op_switch_channel,
->         .get_default_chan       = b43_lpphy_op_get_default_chan,
->         .set_rx_antenna         = b43_lpphy_op_set_rx_antenna,
-> 
+2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+>> Hin-Tak Leung wrote:
+>>>
+>>> I just took a look at the history - there aren't obvious bug fixes, a
+>>> bunch of work queue-related changes from you & Johannes; feature-wise,
+>>> Larry added LED blinking after 2.6.30, and Herton added rfkill support
+>>> quite recently after 2.6.31-rc7 . But no, there isn't any change that
+>>> would affect tx level beyond 2.6.31-rc7, I think.
+>>
+>> Your analysis matches my recollection.
+>>
+>> Apparently RealTek is supplying a closed-source driver for RTL8187B
+>> these days. There are no sources for the B on their web site. In
+>> addition, the one that Tobias loaded tainted his kernel.
+>>
+>> Larry
+>
+> The driver is not actually closed-source; they just don't provide any
+> drivers on their site anymore, instead they send their reference
+> drivers to OEMs, expecting the OEMs to release their own versions
+> (with sources - most vendors who do release Linux drivers in fact only
+> release sources, without binaries). The reason for this appears to be
+> that Realtek now encourages vendors to sell RTL81xx wireless chips
+> with modified USB IDs. (Or are you seeing a binary-only driver on
+> realtek.com.tw? That would definitely be a GPL violation, given that
+> they use a modified version of the GPLed libipw stack.)
 
-ack
+Gabor, do you speak to RealkTek folks? It seems what may be best for
+OEMs and RealTek themselves is to post drivers for inclusion into
+staging first and then for interested parties to port them properly.
 
--- 
-Greetings, Michael.
+  Luis
