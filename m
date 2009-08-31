@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45296 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756513AbZHNAnE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 Aug 2009 20:43:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2 12/25] wireless: group Atmel wireless together on kconfig
-Date: Thu, 13 Aug 2009 20:42:51 -0400
-Message-Id: <1250210584-13374-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
-References: <1250210584-13374-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:48457 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751386AbZHaQsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 12:48:13 -0400
+Subject: Re: Inter 5300 AGN with unsupported EEPROM
+From: reinette chatre <reinette.chatre@intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4A9B0BF8.3040505@lwfinger.net>
+References: <4A9B0BF8.3040505@lwfinger.net>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 09:48:14 -0700
+Message-Id: <1251737294.13180.4.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a few of these so we keep them under a config option
-which expands upon selection.
+Hi Larry,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/Kconfig |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+On Sun, 2009-08-30 at 16:32 -0700, Larry Finger wrote:
+> Most of the thread is useless as the OP wouldn't supply critical data
+> and persisted in various rants, but on the 3rd page, he finally
+> provided the output of 'dmesg | grep iwl', which was
+> 
+> iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, 1.3.27ks
+> iwlagn: Copyright(c) 2003-2008 Intel Corporation
+> iwlagn 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> iwlagn 0000:07:00.0: setting latency timer to 64
+> iwlagn: Detected Intel Wireless WiFi Link 5300AGN REV=0x24
+> iwlagn: Unsuported EEPROM VER=0x114 < 0x11a CALIB=0x3 < 0x4
+> iwlagn 0000:07:00.0: PCI INT A disabled
+> iwlagn: probe of 0000:07:00.0 failed with error -22
+> 
+> The OP states that this device came from Best Buy. What is the current
+> scoop on this EEPROM version?
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index a1bdb51..823dc71 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -213,6 +213,14 @@ config AIRO
- 
- 	  The driver can be compiled as a module and will be named "airo".
- 
-+config ATMEL_80211
-+	bool "Atmel"
-+	depends on WLAN_80211
-+	---help---
-+	  This will enable the support for Atmel wireless drivers.
-+
-+if ATMEL_80211
-+
- config ATMEL
-       tristate "Atmel at76c50x chipset  802.11b support"
-       depends on (PCI || PCMCIA) && WLAN_80211
-@@ -255,6 +263,8 @@ config AT76C50X_USB
-           Enable support for USB Wireless devices using Atmel at76c503,
-           at76c505 or at76c505a chips.
- 
-+endif # ATMEL_80211
-+
- config AIRO_CS
- 	tristate "Cisco/Aironet 34X/35X/4500/4800 PCMCIA cards"
- 	depends on PCMCIA && (BROKEN || !M32R) && WLAN_80211
--- 
-1.6.2.5
+All production cards are supported by the driver. I thus do not know how
+an unsupported card can be obtained from a reputable dealer. Would it be
+possible to obtain images of both sides of this card showing all numbers
+clearly? You can send this to me off list and I can see if it is
+possible to determine what type of card we are dealing with here.
+
+Thank you
+
+Reinette
+
 
