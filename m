@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f188.google.com ([209.85.211.188]:63518 "EHLO
-	mail-yw0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503AbZH3PQM (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:45235 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbZHaSn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 Aug 2009 11:16:12 -0400
-Received: by ywh26 with SMTP id 26so4979021ywh.5
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2009 08:16:14 -0700 (PDT)
-Message-ID: <4A9A965F.8020200@lwfinger.net>
-Date: Sun, 30 Aug 2009 10:10:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 31 Aug 2009 14:43:26 -0400
+Received: by mail-bw0-f219.google.com with SMTP id 19so2968529bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 11:43:28 -0700 (PDT)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] b43: LP-PHY: Begin implementing calibration & software
- RFKILL support
-References: <4A99C4BB.7080806@gmail.com> <200908301228.16845.mb@bu3sch.de>
-In-Reply-To: <200908301228.16845.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
+	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
+	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
+	 <1251357267.20531.4.camel@johannes.local>
+	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+Date: Mon, 31 Aug 2009 19:43:27 +0100
+Message-ID: <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
+	rfkill support)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, hal@lists.freedesktop.org,
+	htl10@users.sourceforge.net,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Sunday 30 August 2009 02:15:55 Gábor Stefanik wrote:
->>  static void lpphy_pr41573_workaround(struct b43_wldev *dev)
->>  {
->>  	struct b43_phy_lp *lpphy = dev->phy.lp;
->> @@ -1357,28 +1488,440 @@ static void lpphy_pr41573_workaround(struct b43_wldev *dev)
->>  		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
->>  				    saved_tab_size, saved_tab);
->>  	}
->> +	b43_put_phy_into_reset(dev);
-> 
-> Are you sure you really want this?
-> This function completely disables the PHY on the backplane and keeps the physical
-> PHY reset pin asserted (even after return from the function).
-> So the PHY will physically be powered down from this point on. The following
-> PHY accesses could even hang the machine, because the PHY won't respond to
-> register accesses anymore.
-> 
-> We currently only use this function on A/G Multi-PHY devices to permanently
-> hard-disable the PHY that's not used.
+On Thu, Aug 27, 2009 at 10:43 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+> On Thu, Aug 27, 2009 at 8:14 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
+>> On Wed, 2009-08-26 at 16:45 -0700, Luis R. Rodriguez wrote:
+>>
+>>> Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
+>>
+>> Yes, but I never understood why that matters. If you've got
+>> compat-wireless "rfkill" loaded then the original rfkill can't be loaded
+>> anyway. And their symbols would probably clash anyway if the original is
+>> built in, in which case you can't use compat.
+>>
+>> You haven't renamed cfg80211's sysfs either, so why rfkill?
+>>
+>> johannes
+>>
+>
+> There are a couple of wimax drivers which depends on rfkill... or
+> bluetooth drivers? I think one likely reason is that there are valid
+> situations or hardware combinations which requires having both of them
+> loaded. (but that's a whole can of worms )
 
-The PHY reset routine in
-http://bcm-v4.sipsolutions.net/802.11/PHY/Reset, which I just updated
-for the latest N PHY changes, appears to be a different routine than
-b43_put_phy_into_reset(). The names are confusing.
+Argh, I just have a stacktrace after reboot - toshiba_acpi.ko (on a
+toshiba laptop) requires the stock-kernel rfkill-* symbols, and rfkill
+won't load because of my modified compat-wireless rfkill_backport.ko
+which takes up /sys/class/rfkill rather than
+/sys/class/rfkill_backport . There's your reason from sysfs renaming.
+I wonder why/how I could unload rfkill.ko earlier, since the *_acpi.ko
+needs it - maybe I had acpi unloaded as a side-effect also.
 
-Larry
+I guess we'll need hal to treat /sys/class/rfkill_backport like
+/sys/class/rfkill  then - will file a bug somewhere on freedesktop,
+although I hear hal is on its way out....
