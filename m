@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:63735 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbZHaViP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 17:38:15 -0400
-Received: by ewy2 with SMTP id 2so712158ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:38:16 -0700 (PDT)
-Message-ID: <4A9C42C5.6050400@lwfinger.net>
-Date: Mon, 31 Aug 2009 16:38:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Hin-Tak Leung <hintak.leung@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8187b Problem with tx level
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com> 	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com> 	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com> 	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com> 	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com> 	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-In-Reply-To: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:50236 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750927AbZHaRH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 13:07:29 -0400
+Subject: Re: [PATCH 1/2] cfg80211: initialize rate control after station
+ inserted
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251538470.19422.23.camel@johannes.local>
+References: <1251416094-10420-1-git-send-email-reinette.chatre@intel.com>
+	 <1251445557.4189.14.camel@johannes.local>
+	 <1251474321.3805.73.camel@rc-desk>
+	 <1251493298.3456.34.camel@johannes.local>
+	 <1251497929.3805.173.camel@rc-desk>
+	 <1251538470.19422.23.camel@johannes.local>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 10:07:31 -0700
+Message-Id: <1251738451.13180.14.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
+Hi Johannes,
+
+On Sat, 2009-08-29 at 02:34 -0700, Johannes Berg wrote:
+> I'd say we do the following: At startup, we program the broadcast STA
+> into the device so we always have that, and do that synchronously so if
+> that fails for some stupid reason. I think we already do that.
+
+The station management in the driver is not entirely synchronous. That
+is, adding a station and removing a station are not the only two
+commands affecting the device's station knowledge. The often used "rxon"
+command, when used without the association flag, always clears the
+station table. This command is used frequently while not associated. So,
+knowing when to add the broadcast station is not exact and is the reason
+why it is currently done as part of the sending of the rxon command.
+What I have been doing as part of testing here was to have a new
+"restore stations" call which is called after sending the rxon command
+to get device and driver in sync again wrt station management. If we
+include something like this in the driver then it will be possible to
+implement your proposal to add the broadcast station at the beginning.
+
+> Then, we use a station private area that mac80211 can allocate for us to
+> store the STA_ID for each station. Set this to the broadcast STA ID,
+> which is always valid in some sense, at sta_notify(add) time. Then,
+> asynchronously, tell the device about the station. Once that command
+> finishes, look up the sta struct again and set the STA_ID to the new ID
+> that we used in the device. This way, a sta struct will always have a
+> valid sta ID in it.
 > 
-> The driver is not actually closed-source; they just don't provide any
-> drivers on their site anymore, instead they send their reference
-> drivers to OEMs, expecting the OEMs to release their own versions
-> (with sources - most vendors who do release Linux drivers in fact only
-> release sources, without binaries). The reason for this appears to be
-> that Realtek now encourages vendors to sell RTL81xx wireless chips
-> with modified USB IDs. (Or are you seeing a binary-only driver on
-> realtek.com.tw? That would definitely be a GPL violation, given that
-> they use a modified version of the GPLed libipw stack.)
+> Now, when we need to set a key for a station, we actually get the
+> station struct. Thus, we can keep two separate flag in the station
+> struct that tells us whether the STA_ADD was successful. If this flag is
+> unset, then we reject the add_key with -ENOSPC. Or when we detect that
+> the key command was too fast after the sta_notify we can wait for the
+> ADD_STA to finish in the key notification since that can sleep.
+> 
+> And then rate stuff we can just also do as part of the async sta add
+> command, so that the sta ID is only set after we have the sta programmed
+> into the device and also initialised rate control properly for it.
+> Ultimately the rate control algorithm could do nothing at all, and then
+> we can remove it completely.
 
+Thank you very much for these great suggestions. I'll look into this
+implementation.
 
-No driver at all. I looked at the Toshiba site, but found only Windows
-drivers. Which OEM has the driver available?
+Reinette
 
-Larry
 
 
