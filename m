@@ -1,115 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:42285 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754629AbZHCPgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 11:36:16 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.31-rc5: Reported regressions from 2.6.30
-Date: Mon, 3 Aug 2009 17:36:29 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Adrian Bunk <bunk@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Mikael Pettersson <mikpe@it.uu.se>
-References: <Su1q3S6JjyO.A.jeB.hcgdKB@chimera> <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
-In-Reply-To: <alpine.LFD.2.01.0908021456430.3352@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200908031736.30745.rjw@sisk.pl>
+Received: from senator.holtmann.net ([87.106.208.187]:42823 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbZHaUlk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 16:41:40 -0400
+Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
+ Implement 	rfkill support)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251749600.5165.1.camel@localhost.localdomain>
+References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
+	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
+	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
+	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
+	 <1251357267.20531.4.camel@johannes.local>
+	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
+	 <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
+	 <43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
+	 <3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
+	 <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
+	 <1251749600.5165.1.camel@localhost.localdomain>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 13:40:51 -0700
+Message-Id: <1251751251.1266.16.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 03 August 2009, Linus Torvalds wrote:
-> 
-> On Sun, 2 Aug 2009, Rafael J. Wysocki wrote:
+Hi Luis,
+
+> > OK not so bad except for:
 > > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13896
-> > Subject		: 2.6.31-rc4 broke expect and gcc's testsuite
-> > Submitter	: Mikael Pettersson <mikpe@it.uu.se>
-> > Date		: 2009-07-29 11:00 (5 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124885806406520&w=4
-> 
-> I bet this is the same tty bug that got fixed by Ogawa in commit 
-> e043e42bdb. -rc5 has that fix. Mikael?
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13842
-> > Subject		: Oops when writing to /sys/block/ram0/queue/max_sectors_kb
-> > Submitter	: Jens Rosenboom <jens@mcbone.net>
-> > Date		: 2009-07-23 15:30 (11 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124836574403032&w=4
-> 
-> Commit a4e7d46407d73f35d217013b363b79a8f8eafcaa fixed this one.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13826
-> > Subject		: thinkpad boots with backlight low
-> > Submitter	: Pavel Machek <pavel@ucw.cz>
-> > Date		: 2009-07-15 15:13 (19 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124756359126830&w=4
-> > Handled-By	: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-> 
-> This should be commit 59fe4fe34d7afdf63208124f313be9056feaa2f4.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13815
-> > Subject		: emacs -nw compilation doesn't show the error message
-> > Submitter	: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> > Date		: 2009-07-23 06:22 (11 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d945cb9cce20ac7143c2de8d88b187f62db99bdc
-> 
-> Same old pty bug, same fix: commit e043e42bdb.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13813
-> > Subject		: Hangups in n_tty_read()
-> > Submitter	: Johannes Weiner <hannes@cmpxchg.org>
-> > Date		: 2009-07-16 18:48 (18 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124777019920579&w=4
-> 
-> Hmm. Worth testing that same fix, although the symptoms here are not 
-> exactly the same.
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13812
-> > Subject		: Ooops on uplug
-> > Submitter	: Daniel Mack <daniel@caiaq.de>
-> > Date		: 2009-07-20 17:51 (14 days old)
-> > References	: http://marc.info/?l=linux-kernel&m=124811234302786&w=4
-> > Handled-By	: Alan Stern <stern@rowland.harvard.edu>
-> > 		  Alan Cox <alan@linux.intel.com>
-> 
-> Commit c56d3000861 should fix this.
-> 
-> > Regressions with patches
-> > ------------------------
+> > > kernel/net/wimax/wimax.ko
 > > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13891
-> > Subject		: PCI resources allocation problem on HP nx6325
-> > Submitter	: Rafael J. Wysocki <rjw@sisk.pl>
-> > Date		: 2009-08-02 13:37 (1 days old)
-> > Handled-By	: Linus Torvalds <torvalds@linux-foundation.org>
-> > Patch		: http://patchwork.kernel.org/patch/38774/
+> > That's touching another subsystem but we could technically merge wimax
+> > into compat-wireless if Inaky thinks that's a good idea. the point
+> > here is to unify anything that uses rfkill for backport usage.
 > 
-> Ok, this is committed as 79896cf42f6a96d7e14f2dc3473443d68d74031d.
+> Oh boy, can of worms
 > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13825
-> > Subject		: eeepc-laptop: fix hot-unplug on resume
-> > Submitter	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> > Date		: 2009-06-29 13:12 (35 days old)
-> > References	: http://lkml.org/lkml/2009/6/29/150
-> > Handled-By	: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> > Patch		: http://patchwork.kernel.org/patch/32926/
+> I have my own compat-wimax already, which already handles things for
+> backwards compat (many #ifdef hacks to simplify life) and which is
+> heavily used internally. 
 > 
-> commit 7334546a52c6764df120459509b1f803a073eacc
+> I don't really know how much worth it might be and I know I don't have
+> resources to support both.
 
-Thanks a lot!
+for the wireless-compat tree, I would just remove the RFKILL support for
+WiMAX. It is really not worth to support it.
 
-All closed except for http://bugzilla.kernel.org/show_bug.cgi?id=13813.
+Regards
 
-Best,
-Rafael
+Marcel
+
+
