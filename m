@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rv-out-0506.google.com ([209.85.198.234]:43806 "EHLO
-	rv-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753990AbZHUMNP (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:47709 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbZHaSCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 Aug 2009 08:13:15 -0400
-Received: by rv-out-0506.google.com with SMTP id f6so242548rvb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2009 05:13:16 -0700 (PDT)
-Message-ID: <4A8E8F59.9050706@lwfinger.net>
-Date: Fri, 21 Aug 2009 07:13:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 31 Aug 2009 14:02:23 -0400
+Received: by iwn42 with SMTP id 42so1907811iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 11:02:25 -0700 (PDT)
 MIME-Version: 1.0
-To: feng tian <feng.of.tian@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Abour linux driver supports BCM4325
-References: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
-In-Reply-To: <f42a38140908202319y5c352aa3s37fec67e5cb8d7a3@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
+References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 31 Aug 2009 11:02:05 -0700
+Message-ID: <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
+Subject: Re: rtl8187b Problem with tx level
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-feng tian wrote:
-> Dear All,
-> 
-> We are working on a project which supports the BCM4325 linux wireless
-> driver. The interface between the BCM chip and SOC(pxa310) is SDIO.
-> I did some searches online and found that there is no available driver
-> for this chip. Do I have to implement this myself? Is there anyone can
-> provide us some related materials?  Thanks very much.
+On Mon, Aug 31, 2009 at 10:55 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
+> On Sun, Aug 30, 2009 at 9:44 PM, Tobias
+> Schlemmer<keinstein_junior@gmx.net> wrote:
+>> Hi,
+>>
+>> I have some problem with my rtl8187b device. It is included in my laptop
+>> running Ubuntu linux 2.6.28. I've tested several compat-wireless releases
+>> including 2.6.30 and 2.6.31-rc7.
+>
+> Hmm, are compat-wireless versioned against kernels?
 
-The code for the LP PHY, which I believe is present in the 4325, is
-just being written. At the moment, the chip is able to receive on some
-channels, and may be able to transmit. These results are reported on
-this mailing list, and the code is being applied to the wireless
-testing git tree.
+The stable ones are:
 
-Larry
+http://wireless.kernel.org/en/users/Download/stable/
+
+  Luis
