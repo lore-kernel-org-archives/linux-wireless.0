@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:2247 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759390AbZHRRGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 Aug 2009 13:06:34 -0400
-Subject: Re: status of AP mode in iwlwifi?
-From: reinette chatre <reinette.chatre@intel.com>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <45e8e6c40908171413s72d8a245vfab18283ae85eecf@mail.gmail.com>
-References: <45e8e6c40908171413s72d8a245vfab18283ae85eecf@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 18 Aug 2009 10:06:34 -0700
-Message-Id: <1250615194.30019.14169.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:63735 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155AbZHaViP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 17:38:15 -0400
+Received: by ewy2 with SMTP id 2so712158ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 14:38:16 -0700 (PDT)
+Message-ID: <4A9C42C5.6050400@lwfinger.net>
+Date: Mon, 31 Aug 2009 16:38:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Hin-Tak Leung <hintak.leung@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tobias Schlemmer <keinstein_junior@gmx.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8187b Problem with tx level
+References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com> 	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com> 	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com> 	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com> 	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com> 	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+In-Reply-To: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrey,
-
-On Mon, 2009-08-17 at 14:13 -0700, Andrey Yurovsky wrote:
-> Hi folks.  What's the status of AP mode in iwlwifi?  I used it some
-> time in the past but I see that it's disabled in wireless-testing now.
->  Is there an issue with AP mode in this driver?  Can it be re-enabled?
-
-Some details can be found in the patch that disabled AP mode (see
-below). It cannot be re-enabled until the issues mentioned in this patch
-have been addressed ... and the AP mode requirements mentioned in
-http://wireless.kernel.org/en/developers/Documentation/mac80211/API
-needs to be reviewed also.
-
-commit 44b73f240da0d18a2d17afca488e8c80496d92ca
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Mon Dec 1 18:50:27 2008 +0100
-
-    iwlwifi: disable AP mode
-    
-    iwlwifi does not support AP mode in any way. For one, it doesn't even
-    buffer multicast/broadcast frames properly. We didn't allow zd1211rw AP
-    mode to be enabled without this, so iwlwifi shouldn't be allowed to
-    advertise AP mode either.
-    
-    It also doesn't work at all, it doesn't even answer to probe requests,
-    I'm guessing the packet injection code was disabled again.
-    
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Gábor Stefanik wrote:
+> 
+> The driver is not actually closed-source; they just don't provide any
+> drivers on their site anymore, instead they send their reference
+> drivers to OEMs, expecting the OEMs to release their own versions
+> (with sources - most vendors who do release Linux drivers in fact only
+> release sources, without binaries). The reason for this appears to be
+> that Realtek now encourages vendors to sell RTL81xx wireless chips
+> with modified USB IDs. (Or are you seeing a binary-only driver on
+> realtek.com.tw? That would definitely be a GPL violation, given that
+> they use a modified version of the GPLed libipw stack.)
 
 
-Reinette
+No driver at all. I looked at the Toshiba site, but found only Windows
+drivers. Which OEM has the driver available?
+
+Larry
 
 
