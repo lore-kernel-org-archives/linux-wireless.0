@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53675 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757429AbZHGKe6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41417 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301AbZHaSAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 Aug 2009 06:34:58 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 14/23] wl1251: initialise default channel to zero
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 07 Aug 2009 13:34:27 +0300
-Message-ID: <20090807103426.31717.54343.stgit@tikku>
-In-Reply-To: <20090807102732.31717.84006.stgit@tikku>
-References: <20090807102732.31717.84006.stgit@tikku>
+	Mon, 31 Aug 2009 14:00:30 -0400
+Date: Mon, 31 Aug 2009 13:53:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Mark Huijgen <mark@huijgen.tk>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] b43: LP-PHY: Begin implementing calibration &
+	software RFKILL support
+Message-ID: <20090831175331.GB5631@tuxdriver.com>
+References: <4A99C4BB.7080806@gmail.com> <200908301228.16845.mb@bu3sch.de> <4A9A965F.8020200@lwfinger.net> <200908301755.40557.mb@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200908301755.40557.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Sun, Aug 30, 2009 at 05:55:40PM +0200, Michael Buesch wrote:
+> On Sunday 30 August 2009 17:10:23 Larry Finger wrote:
+> > Michael Buesch wrote:
+> > > On Sunday 30 August 2009 02:15:55 Gábor Stefanik wrote:
+> > >>  static void lpphy_pr41573_workaround(struct b43_wldev *dev)
+> > >>  {
+> > >>  	struct b43_phy_lp *lpphy = dev->phy.lp;
+> > >> @@ -1357,28 +1488,440 @@ static void lpphy_pr41573_workaround(struct b43_wldev *dev)
+> > >>  		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
+> > >>  				    saved_tab_size, saved_tab);
+> > >>  	}
+> > >> +	b43_put_phy_into_reset(dev);
+> > > 
+> > > Are you sure you really want this?
+> > > This function completely disables the PHY on the backplane and keeps the physical
+> > > PHY reset pin asserted (even after return from the function).
+> > > So the PHY will physically be powered down from this point on. The following
+> > > PHY accesses could even hang the machine, because the PHY won't respond to
+> > > register accesses anymore.
+> > > 
+> > > We currently only use this function on A/G Multi-PHY devices to permanently
+> > > hard-disable the PHY that's not used.
+> > 
+> > The PHY reset routine in
+> > http://bcm-v4.sipsolutions.net/802.11/PHY/Reset, which I just updated
+> > for the latest N PHY changes, appears to be a different routine than
+> > b43_put_phy_into_reset(). The names are confusing.
+> 
+> b43_put_phy_into_reset() is opencoded in the specifications in various init
+> routines. There's no separate specs page for that function.
+> But I think the code is straightforward and easy to understand.
 
-Because wl->channel was initialised to one, the first join command in
-wl1251_op_config() always failed.
+So is this patch right or not?  Should I hold onto it for 2.6.33
+(i.e. after the 2.6.32 merge window)?
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
----
-
- drivers/net/wireless/wl12xx/wl1251.h      |    2 ++
- drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
- 2 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl12xx/wl1251.h
-index 86d2abe..998e4b6 100644
---- a/drivers/net/wireless/wl12xx/wl1251.h
-+++ b/drivers/net/wireless/wl12xx/wl1251.h
-@@ -398,6 +398,8 @@ void wl1251_disable_interrupts(struct wl1251 *wl);
- #define WL1251_DEFAULT_BEACON_INT 100
- #define WL1251_DEFAULT_DTIM_PERIOD 1
- 
-+#define WL1251_DEFAULT_CHANNEL 0
-+
- #define CHIP_ID_1251_PG10	           (0x7010101)
- #define CHIP_ID_1251_PG11	           (0x7020101)
- #define CHIP_ID_1251_PG12	           (0x7030101)
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index d031692..2514c94 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -461,6 +461,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->psm = 0;
- 	wl->tx_queue_stopped = false;
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
-+	wl->channel = WL1251_DEFAULT_CHANNEL;
- 
- 	wl1251_debugfs_reset(wl);
- 
-@@ -1302,7 +1303,6 @@ out:
- }
- EXPORT_SYMBOL_GPL(wl1251_init_ieee80211);
- 
--#define WL1251_DEFAULT_CHANNEL 1
- struct ieee80211_hw *wl1251_alloc_hw(void)
- {
- 	struct ieee80211_hw *hw;
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
