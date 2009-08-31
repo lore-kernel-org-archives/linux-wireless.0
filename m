@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:45235 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbZHaSn0 (ORCPT
+Received: from bu3sch.de ([62.75.166.246]:41144 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750927AbZHaTQ6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 14:43:26 -0400
-Received: by mail-bw0-f219.google.com with SMTP id 19so2968529bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 11:43:28 -0700 (PDT)
+	Mon, 31 Aug 2009 15:16:58 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] rfkill: relicense header file
+Date: Mon, 31 Aug 2009 21:16:49 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	=?iso-8859-1?q?I=F1aky_P=E9rez-Gonz=E1lez?=
+	<inaky.perez-gonzalez@intel.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Tomas Winkler <tomas.winkler@intel.com>
+References: <1251303197.15619.29.camel@johannes.local> <20090831174542.GA5631@tuxdriver.com>
+In-Reply-To: <20090831174542.GA5631@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	 <43e72e890908261528m23b8fe78w209e305f27e68fa1@mail.gmail.com>
-	 <3ace41890908261555g339e65d1n6627cc3d1713287e@mail.gmail.com>
-	 <43e72e890908261645n24a040cds84f012095a40c15b@mail.gmail.com>
-	 <1251357267.20531.4.camel@johannes.local>
-	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-Date: Mon, 31 Aug 2009 19:43:27 +0100
-Message-ID: <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
-	rfkill support)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, hal@lists.freedesktop.org,
-	htl10@users.sourceforge.net,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200908312116.51897.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 27, 2009 at 10:43 AM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
-> On Thu, Aug 27, 2009 at 8:14 AM, Johannes Berg<johannes@sipsolutions.net> wrote:
->> On Wed, 2009-08-26 at 16:45 -0700, Luis R. Rodriguez wrote:
->>
->>> Johannes, did kernels < 2.6.31 have /sys/class/rfkill ?
->>
->> Yes, but I never understood why that matters. If you've got
->> compat-wireless "rfkill" loaded then the original rfkill can't be loaded
->> anyway. And their symbols would probably clash anyway if the original is
->> built in, in which case you can't use compat.
->>
->> You haven't renamed cfg80211's sysfs either, so why rfkill?
->>
->> johannes
->>
->
-> There are a couple of wimax drivers which depends on rfkill... or
-> bluetooth drivers? I think one likely reason is that there are valid
-> situations or hardware combinations which requires having both of them
-> loaded. (but that's a whole can of worms )
+On Monday 31 August 2009 19:45:43 John W. Linville wrote:
+> On Wed, Aug 26, 2009 at 06:13:17PM +0200, Johannes Berg wrote:
+> > This header file is copied into userspace tools that
+> > need not be GPLv2 licensed, make that easier.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> > Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
+> > Cc: John W. Linville <linville@tuxdriver.com>
+> > Cc: Michael Buesch <mb@bu3sch.de>
+> > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > ---
+> > Need ACK from everybody listed who ever touched this
+> > file according to git. Please?
+> 
+> Michael?  Jaswinder?
+> 
 
-Argh, I just have a stacktrace after reboot - toshiba_acpi.ko (on a
-toshiba laptop) requires the stock-kernel rfkill-* symbols, and rfkill
-won't load because of my modified compat-wireless rfkill_backport.ko
-which takes up /sys/class/rfkill rather than
-/sys/class/rfkill_backport . There's your reason from sysfs renaming.
-I wonder why/how I could unload rfkill.ko earlier, since the *_acpi.ko
-needs it - maybe I had acpi unloaded as a side-effect also.
+No problem. I don't think there's anything copyrightable by me in that file.
 
-I guess we'll need hal to treat /sys/class/rfkill_backport like
-/sys/class/rfkill  then - will file a bug somewhere on freedesktop,
-although I hear hal is on its way out....
+-- 
+Greetings, Michael.
