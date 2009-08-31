@@ -1,103 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kso.tls-tautenburg.de ([194.94.209.8]:9813 "EHLO
-	kso.tls-tautenburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932518AbZHLK6n (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33878 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752854AbZHaTfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 Aug 2009 06:58:43 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by kso.tls-tautenburg.de (Postfix) with ESMTP id BF110507B4
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 12:46:44 +0200 (CEST)
-Received: from kso.tls-tautenburg.de ([127.0.0.1])
-	by localhost (kso.tls-tautenburg.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 2EZYhdZ7qKtm for <linux-wireless@vger.kernel.org>;
-	Wed, 12 Aug 2009 12:46:40 +0200 (CEST)
-Received: from [194.94.209.48] (unknown [194.94.209.48])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by kso.tls-tautenburg.de (Postfix) with ESMTP
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2009 12:46:40 +0200 (CEST)
-Message-ID: <4A829D90.2080208@tls-tautenburg.de>
-Date: Wed, 12 Aug 2009 12:46:40 +0200
-From: Bringfried Stecklum <stecklum@tls-tautenburg.de>
+	Mon, 31 Aug 2009 15:35:38 -0400
+Date: Mon, 31 Aug 2009 15:33:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@kernel.org>, linux-kernel@vger.kernel.org,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memleaks, acpi + ext4 + tty
+Message-ID: <20090831193345.GG5631@tuxdriver.com>
+References: <43e72e890908272225w79ec5bf6kc7ef1160e5a088ae@mail.gmail.com> <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com> <43e72e890908280952j410293fbm47b4b9d566e26c14@mail.gmail.com> <43e72e890908281450k78cc1a2fmd4fd033ae0f4176f@mail.gmail.com> <43e72e890908281509o44930348w581b865107ea3e98@mail.gmail.com> <43e72e890908310123w5d361ed5tff58a7663044bdcd@mail.gmail.com> <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com> <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com> <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compile error: compat-wireless-2009-08-12
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When trying to compile the latest compat-wireless package on an Ubuntu 8.10
-64bit system running linux kernel 2.6.27-12 I get the following error
+On Mon, Aug 31, 2009 at 12:30:15PM -0700, Luis R. Rodriguez wrote:
+> On Mon, Aug 31, 2009 at 11:37 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
 
-stecklum@extragalactix:~/System/src/compat-wireless-2009-08-12$ make
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.27-12-mygeneric/build 
-M=/home/stecklum/System/src/compat-wireless-2009-08-12 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
-...
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/main.c: 
-In function ‘b43_request_firmware’:
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/main.c:2103: 
-warning: format not a string literal and no format arguments
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/tables.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_common.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_g.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/phy_a.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/sysfs.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/xmit.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/lo.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/wa.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/dma.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pio.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/rfkill.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/leds.o
-   CC [M] 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.o
-In file included from 
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:30:
-include/pcmcia/cistpl.h:610:1: warning: "pcmcia_parse_tuple" redefined
-In file included from 
-/home/stecklum/System/src/compat-wireless-2009-08-12/include/net/compat.h:19,
-                  from <command-line>:0:
-/home/stecklum/System/src/compat-wireless-2009-08-12/include/net/compat-2.6.28.h:32:1: 
-warning: this is the location of the previous definition
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91:41: 
-error: macro "pcmcia_parse_tuple" requires 3 arguments, but only 2 given
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c: 
-In function ‘b43_pcmcia_probe’:
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91: 
-error: ‘pcmcia_parse_tuple’ undeclared (first use in this function)
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91: 
-error: (Each undeclared identifier is reported only once
-/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.c:91: 
-error: for each function it appears in.)
-make[4]: *** 
-[/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43/pcmcia.o] 
-Error 1
-make[3]: *** 
-[/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless/b43] 
-Error 2
-make[2]: *** 
-[/home/stecklum/System/src/compat-wireless-2009-08-12/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/stecklum/System/src/compat-wireless-2009-08-12] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.27-12-mygeneric'
-make: *** [modules] Error 2
+> > OK I tried this, I even 'rm -rf * ; git checkout -f' and ..
+> > merge-2009-08-28 tag yields the same issues, long lag upon bootup with
+> > some kmemleaks I cannot even get to check. So somehow something is
+> > different between merge-2009-08-28 and Linus' rc8. This is just
+> > bizarre so to be even safer I'm just going to do a fresh git clone on
+> > wireless-testing.
+> 
+> Hey John so I tested wireless-testing on the merge-2009-08-28 tag on a
+> fresh git pull and verified this is indeed busted for me. Although I
+> had tried hpa's linux-2.6-allstable on HEAD just to be sure I am now
+> building Linus' tree from a fresh git clone on the v2.6.31-rc8 tag
+> just to be double check this was indeed not a 2.6.31-rc8 issue but
+> instead *something* on wireless-testing. What that something is is
+> unclear to me still, I guess after all these tests I'll run a manual
+> diff as git doesn't seem to be picking anything up.
 
-Regards,
+As you determined, there is no difference between merge-2009-08-28
+and v2.6.31-rc8.  If one works and the other doesn't, then the main
+thing not working will be git...
 
-	Bringfried
+What is linux-2.6-allstable?  My guess is that the culprit is between
+v2.6.31-rc8 and whatever is at the head of linux-2.6-allstable.
 
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
