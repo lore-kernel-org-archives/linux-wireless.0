@@ -1,105 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57005 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754222AbZHCJLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 Aug 2009 05:11:47 -0400
-Date: Mon, 3 Aug 2009 11:11:45 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH 6/10] drivers/net/wireless/iwlwifi: introduce missing
- kfree
-In-Reply-To: <1249260246.4069.26.camel@debian>
-Message-ID: <Pine.LNX.4.64.0908031109590.8435@pc-004.diku.dk>
-References: <Pine.LNX.4.64.0908011054010.23408@ask.diku.dk>
- <1249260246.4069.26.camel@debian>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56480 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788AbZHaUAX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 16:00:23 -0400
+Date: Mon, 31 Aug 2009 15:47:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@kernel.org>, linux-kernel@vger.kernel.org,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memleaks, acpi + ext4 + tty
+Message-ID: <20090831194753.GH5631@tuxdriver.com>
+References: <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com> <43e72e890908280952j410293fbm47b4b9d566e26c14@mail.gmail.com> <43e72e890908281450k78cc1a2fmd4fd033ae0f4176f@mail.gmail.com> <43e72e890908281509o44930348w581b865107ea3e98@mail.gmail.com> <43e72e890908310123w5d361ed5tff58a7663044bdcd@mail.gmail.com> <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com> <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com> <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com> <20090831193345.GG5631@tuxdriver.com> <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Mon, Aug 31, 2009 at 12:43:01PM -0700, Luis R. Rodriguez wrote:
+> On Mon, Aug 31, 2009 at 12:33 PM, John W.
+> Linville<linville@tuxdriver.com> wrote:
 
-Move orthogonal error handling code up before a kzalloc, so that it 
-doesn't have to free the allocated data.
+> > My guess is that the culprit is between
+> > v2.6.31-rc8 and whatever is at the head of linux-2.6-allstable.
+> 
+> But the issue is *not* in linux-2.6-allstable, it is only present on
+> wireless-testing, and I went as far back as merge-2009-08-28. I was
+> using whatever tag was available prior to you moving to rc8, and that
+> worked.
 
-The semantic match that finds the problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+OK, then I can only guess that something went wrong in your bisection
+(e.g. dirty build, something not marked properly, etc).  That, or
+different .config files between your linux-2.6-allstable build and
+the merge-2009-08-28 build of wireless-testing?
 
-// <smpl>
-@r exists@
-local idexpression x;
-statement S;
-expression E;
-identifier f,f1,l;
-position p1,p2;
-expression *ptr != NULL;
-@@
-
-x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-...
-if (x == NULL) S
-<... when != x
-     when != if (...) { <+...x...+> }
-(
-x->f1 = E
-|
- (x->f1 == NULL || ...)
-|
- f(...,x->f1,...)
-)
-...>
-(
- return \(0\|<+...x...+>\|ptr\);
-|
- return@p2 ...;
-)
-
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
-
-print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 7707a26..6748a3f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -310,18 +310,18 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
- 		return -ENODATA;
- 	}
- 
-+	ptr = priv->eeprom;
-+	if (!ptr) {
-+		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
-+		return -ENOMEM;
-+	}
-+
- 	/* 4 characters for byte 0xYY */
- 	buf = kzalloc(buf_size, GFP_KERNEL);
- 	if (!buf) {
- 		IWL_ERR(priv, "Can not allocate Buffer\n");
- 		return -ENOMEM;
- 	}
--
--	ptr = priv->eeprom;
--	if (!ptr) {
--		IWL_ERR(priv, "Invalid EEPROM/OTP memory\n");
--		return -ENOMEM;
--	}
- 	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
- 			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
- 			? "OTP" : "EEPROM");
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
