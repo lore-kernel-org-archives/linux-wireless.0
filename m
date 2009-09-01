@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:43259 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250AbZINJUw (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:62891 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985AbZIASAi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 05:20:52 -0400
-Received: by iwn8 with SMTP id 8so1235303iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 02:20:55 -0700 (PDT)
+	Tue, 1 Sep 2009 14:00:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <43e72e890909140149t7459b36fgbcca27adb7937d9b@mail.gmail.com>
-References: <43e72e890909140149t7459b36fgbcca27adb7937d9b@mail.gmail.com>
+In-Reply-To: <1251786829.8830.277.camel@debian>
+References: <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com> <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
+	<20090831193345.GG5631@tuxdriver.com> <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
+	<20090831194753.GH5631@tuxdriver.com> <43e72e890908311302s58743978wd8950f167a871cfb@mail.gmail.com>
+	<43e72e890908311654t5d9489d3w9a817cffab5cb8f8@mail.gmail.com>
+	<1251764791.2158.7.camel@dhcp231-106.rdu.redhat.com> <43e72e890908311731h626a5b9bu486653c755cda2fa@mail.gmail.com>
+	<1251786829.8830.277.camel@debian>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 14 Sep 2009 02:20:35 -0700
-Message-ID: <43e72e890909140220r101ce489je671153c0ba56e4b@mail.gmail.com>
-Subject: Re: pending patches for atheros - all-in-one file - 2009-09-14
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, devel@linuxdriverproject.org
-Cc: Sujith <Sujith.Manoharan@atheros.com>
+Date: Tue, 1 Sep 2009 11:00:21 -0700
+Message-ID: <43e72e890909011100o7a9478a3ua03bd3ee8da89615@mail.gmail.com>
+Subject: Re: memleaks, acpi + ext4 + tty
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Eric Paris <eparis@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eric Paris <eparis@parisplace.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 14, 2009 at 1:49 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> This file has all pending patches from my series + sujiths ANI fix patch:
+On Mon, Aug 31, 2009 at 11:33 PM, Zhu Yi<yi.zhu@intel.com> wrote:
+> On Tue, 2009-09-01 at 08:31 +0800, Luis R. Rodriguez wrote:
+>> >>
+>> http://git.infradead.org/users/eparis/notify.git/commit/b962e7312ae87006aed6f68ceee94bdf8db08338
+>> >>
+>> >> FWIW for that patch:
+>> >>
+>> >> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> >>
+>> >> So -- you if you're like me and had issues with bootup lag on
+>> >> wireless-testing, you can probably fix your wireless-testing by
+>> >> pulling his patches:
+>> >>
+>> >> git pull git://git.infradead.org/users/eparis/notify.git for-linus
+>> >>
+>> >> I saw Linus had some other fixes but I'll wait for rc9 for that as
+>> my
+>> >> box seems reasonably stable right now.
+>> >
+>> > Yes, -rc8 broke pretty badly for a number of people.  Linus did pull
+>> all
+>> > of the fixes that I know of.  I wouldn't suggest pulling just that
+>> one
+>> > commit.  All 3 of the post -rc8 patches in my tree fix -rc8
+>> > regressions   :(
+>>
+>> Thanks, the note -- so I guess best is to just pull from Linus ontop
+>> of wireless-testing.
 >
-> http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-pending-2009-09-14.patch
+> I confirm I'm also suffered with the problem on today's wireless-testing
+> tip (udevadm --settle hangs on boot) and the above patch does fix the
+> issue for me. Thanks both for identify and fix the problem.
 
-Except it doesn't obviously have the updated ath5k ops patch I just
-posted nor the last const patch, here is the new all-in-one with these
-changes:
-
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-14v2.patch
+Just a heads up -- the relevant fixes are now merged on
+wireless-testing, thanks John.
 
   Luis
