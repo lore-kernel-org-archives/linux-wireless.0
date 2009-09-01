@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:49281 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753464AbZIUHrI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 03:47:08 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] nl80211: introduce NL80211_ATTR_SCAN_EXPIRE
-Date: Mon, 21 Sep 2009 09:46:19 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-References: <200909181849.22302.hs4233@mail.mn-solutions.de> <200909210842.59852.hs4233@mail.mn-solutions.de> <1253517333.4458.7.camel@johannes.local>
-In-Reply-To: <1253517333.4458.7.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909210946.19675.hs4233@mail.mn-solutions.de>
+Received: from hera.kernel.org ([140.211.167.34]:34488 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751312AbZIAD4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 23:56:51 -0400
+Subject: Re: [PATCH] rfkill: relicense header file
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
+	=?ISO-8859-1?Q?I=F1aky_P=E9rez-Gonz=E1lez?=
+	<inaky.perez-gonzalez@intel.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Tomas Winkler <tomas.winkler@intel.com>
+In-Reply-To: <20090831174542.GA5631@tuxdriver.com>
+References: <1251303197.15619.29.camel@johannes.local>
+	 <20090831174542.GA5631@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Sep 2009 09:19:01 +0530
+Message-Id: <1251776941.3045.0.camel@ht.satnam>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's not actually the same, and you didn't explain that well.
-> You care about the disappear case, but you made it sound like
-> you cared about the _reappear_ case.
+On Mon, 2009-08-31 at 13:45 -0400, John W. Linville wrote:
+> On Wed, Aug 26, 2009 at 06:13:17PM +0200, Johannes Berg wrote:
+> > This header file is copied into userspace tools that
+> > need not be GPLv2 licensed, make that easier.
+> > 
+> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> > Cc: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> > Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+> > Cc: Iñaky Pérez-González <inaky.perez-gonzalez@intel.com>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> > Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>
+> > Cc: John W. Linville <linville@tuxdriver.com>
+> > Cc: Michael Buesch <mb@bu3sch.de>
+> > Cc: Tomas Winkler <tomas.winkler@intel.com>
+> > ---
+> > Need ACK from everybody listed who ever touched this
+> > file according to git. Please?
+> 
+> Michael?  Jaswinder?
+> 
 
-Okay, sorry. I thought you read my other mails about 
-scan-life-time and that thus the context was/is clear.
+No Problem, sorry for delay.
 
+Thanks,
+--
+JSR
 
-The base issue is: SCAN_TRIGGER does normally not a "clean scan", 
-it normally adds entries to the BSS list or updates existing 
-ones.
-
-Entries in the BSS list are only deleted after 15 seconds.
-
-
-
-However, in 15 seconds you can easily leave the range of AP_OLD 
-and be in the range of a completely AP_NEW. But it can also be 
-the case that the (now stale!) signal of AP_OLD is higher than 
-the (real) signal of AP_NEW. In this case wpa_supplicant tries 
-to associate to AP_OLD, which is out-of-sight. And that takes 
-unneeded time.
-
-
-I simple tried to mimick this scenario in the office, by 
-switching off an AP (just that I didn't really switch it off, 
-because the boot-times of Cisco-APs are soooooooo sloooooow).
-
-About your "It's not actually the same": I think that my 
-laboratory experiment very well shows this behavior, e.g. see my 
-2nd message with subject "Life-time of scan-results?":
-
-1253275108.958746: Trying to authenticate with 00:13:19:80:da:30 
-(SSID='MNHS' freq=2412 MHz)
-
-Bit this is the "vanished" AP_OLD. With wireshark on a second 
-WLAN card I saw the attemps of mac80211 to associate to this 
-now-out-of-sight AP. This takes some tries from mac80211, then a 
-timeout on wpa_supplicant, than a new scan, then a new attempt. 
-All of those delays completely unnecessary if there would have 
-been a way to not get stale data via SCAN_DUMP.
-
-
-
-So, clearly I have a visible problem and need to fix that.
-
-I could fix that by making SCAN_TRIGGER always delete all stale 
-(cached) entries. Then I wouldn't need NL80211_ATTR_SCAN_EXPIRE.
-
-However, a scan because "I want to look what is around" might be 
-different to a scan because "I need fresh data of APs around for 
-associating". And so I thought I make that configurable.
-
-
-I hope this now makes more sense.
