@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:40234 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757485AbZIRUTh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 16:19:37 -0400
+Received: from mail.atheros.com ([12.36.123.2]:11453 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745AbZIAPre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:47:34 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:47:37 -0700
+Date: Tue, 1 Sep 2009 08:47:35 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 3/7] wireless: update cfg80211 kconfig entry
+Message-ID: <20090901154735.GC8261@mosca>
+References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+ <1251818566-9264-4-git-send-email-lrodriguez@atheros.com>
+ <4A9D3FA8.9020800@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1253299494.26521.664.camel@rc-desk>
-References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
-	 <1253122055.26521.431.camel@rc-desk>
-	 <8db1092f0909161036t5bae781eqa6f0a0df308ec4cd@mail.gmail.com>
-	 <1253124149.26521.438.camel@rc-desk>
-	 <8db1092f0909161259i5e007282i42f426bc2d0fc0c4@mail.gmail.com>
-	 <1253139186.26521.449.camel@rc-desk>
-	 <8db1092f0909162332r4ffeef09jdb87f7fc69ff8e9e@mail.gmail.com>
-	 <1253299494.26521.664.camel@rc-desk>
-Date: Fri, 18 Sep 2009 22:19:39 +0200
-Message-ID: <8db1092f0909181319h3dfec7cya391df705b7723b2@mail.gmail.com>
-Subject: Re: [Ilw] Re: WARNING: at net/mac80211/scan.c:267
-	ieee80211_scan_completed+0x299/0x2b0 [mac80211]()
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4A9D3FA8.9020800@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/18 reinette chatre <reinette.chatre@intel.com>:
-> Hi Maciej,
->
-> On Wed, 2009-09-16 at 23:32 -0700, Maciej Rutecki wrote:
->
->> [  249.340094] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
->> [  249.345339] wlan0 direct probe responded
->> [  249.345347] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
->> [  249.347122] wlan0: authenticated
->> [  249.347152] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
->> [  249.349703] wlan0: RX AssocResp from 00:1b:11:f6:0f:28 (capab=0x431
->> status=0 aid=1)
->> [  249.349711] wlan0: associated
->> [  253.411858] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason:
->> 6)
->
-> This still appears to be the main issue here, that AP deauthenticates.
-> Could you run wpa_supplicant with debugging (-dddt) ? When you have
-> these logs, could you please open a bug report at
-> http://bugzilla.intellinuxwireless.org/ to enable us to track it?
+On Tue, Sep 01, 2009 at 08:37:12AM -0700, Larry Finger wrote:
+> Luis R. Rodriguez wrote:
+> > cfg80211 is now *the* wireless configuration API. Lets also
+> > give a little explanation as to what it is and refer people to
+> > the wireless wiki for more information.
+> >
+> > Cc: Johannes Berg <johannes@sipsolutions.net>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  net/wireless/Kconfig |   11 ++++++++++-
+> >  1 files changed, 10 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+> > index aea7e68..9fd570b 100644
+> > --- a/net/wireless/Kconfig
+> > +++ b/net/wireless/Kconfig
+> > @@ -1,6 +1,15 @@
+> >  config CFG80211
+> > -     tristate "Improved wireless configuration API"
+> > +     tristate "cfg80211 - wireless configuration API"
+> >       depends on RFKILL || !RFKILL
+> > +     ---help---
+> > +       cfg80211 is the Linux wireless LAN (802.11) configuration API.
+> > +       Enable this if you have a wireless device.
+> > +
+> > +       For more information refer to documentation on the wireless wiki:
+> > +
+> > +       http://wireless.kernel.org/en/developers/Documentation/cfg80211
+> > +
+> > +       When built as a module cfg80211 will be built as cfg80211
+> 
+> First of all, I think this modest change is much better than the
+> previous set of patches, and that the additional info you provide for
+> mac80211 and friends will be useful for those who don't live with
+> 802.11 wifi all day long.
+> 
+> That said, I find the above statement to be a little clumsy. Perhaps
+> it should be "When built as a module, it will be called cfg80211". The
+> same comment also applies to patch 6 for mac80211.
 
-Sure, bug report:
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2089
+Thanks, will resend.
 
-Debug information also available:
-http://unixy.pl/maciek/download/kernel/2.6.31-git4/wpa_debug.txt
-
-Regards
--- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+  Luis
