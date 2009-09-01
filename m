@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451AbZI1J3x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 05:29:53 -0400
-Subject: Re: [PATCH 2/2] cfg80211: fix wireless handlers assignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: Hugh Dickins <hugh.dickins@tiscali.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1254126117.6583.19.camel@johannes.local>
-References: <1254126117.6583.19.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9X0nEpfe4IJA6fRaYfpU"
-Date: Mon, 28 Sep 2009 11:29:39 +0200
-Message-Id: <1254130179.6583.21.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:11589 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753557AbZIAPyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:54:24 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:54:27 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
+Date: Tue, 1 Sep 2009 08:54:25 -0700
+Message-ID: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This updates the mac80211 kconfig entry to clarify
+what it is and refer people to our wireless wiki for
+more documentation.
 
---=-9X0nEpfe4IJA6fRaYfpU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
-On Mon, 2009-09-28 at 10:21 +0200, Johannes Berg wrote:
-> The point we assign dev->wireless_handlers at is too
-> late, we need to do that before netdev_register_kobject()
-> gets called, so use the new NETDEV_PRE_INIT notifier.
-> The result of adding wireless_handlers too late is the
-> disappearance of /sys/class/net/wlan0/wireless which a
-> bunch of distro scripts still require.
+Changed description of when built as a module as pointed out
+by Larry.
 
-Ignore please, I have a better, self-contained fix.
+ net/mac80211/Kconfig |   19 ++++++++++++++++---
+ 1 files changed, 16 insertions(+), 3 deletions(-)
 
-johannes
-
---=-9X0nEpfe4IJA6fRaYfpU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKwIIAAAoJEODzc/N7+QmaGhcP/iA023BLXtzstg1qNJgRdiQu
-vJmJag3jMJZrZ99EvfbaNewsBs5SV95m5vhVNQiUrEKrAHwcOwFJvftKUd2TW7Fo
-QfM5haFNfmTTkMuFZRQrhYJmZ3SXwoZk4HUsQJQ0TiaPwLjsCjJq7/FCruT2h54q
-emo3rc3qURx9tWYLiOG3i67kR6EviyoWDAr9ESFvQtxRisIb4JD9xozWCcn/D2vN
-vcUQrEOoSt6DsNjbGpspGD/pQmxM92jq9ttDqGLzdqlcPcaS/L1RXkXzR8UBCBzY
-4iWZHGKyHFSngPuDXL85Ce0/rcTg0+oXi+qx+q2CPekfsTPbfrqcDGN1ab6uik7B
-X6Sq5mZe5AsyqC1gYms0fITm7EJTmCGaEkG4XHGXOzw5NMZbUT9Z3si4TtoChuVQ
-I0rfgiTEVRQmr7w1pO+nFbcHNBWjLfjO69ijzzhVLIyCifjDYP6kOXZzmYjmcULJ
-d7y9fCtQOh1ig/xNXkI5sf/7ByvfYTzhU1i5HvvRIkeSYnfI7otW76NEY8KklCJy
-MQXCp8BwsOotTgjU4mRQ5ToBOO/ZllKweVxUochr0CMZ36papIprdCjuToSd6K1f
-FAxIEgNAQvb2IFUvlW+8S5rluO5xbLTWCEtY+hpAR6bxxagDTcRdZguf9XlP/r80
-plbNre9tXoR8xLT7Sp+R
-=5ffI
------END PGP SIGNATURE-----
-
---=-9X0nEpfe4IJA6fRaYfpU--
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 9db4ff8..72006f9 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -1,5 +1,5 @@
+ config MAC80211
+-	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
++	tristate "mac80211 - SoftMAC device support"
+ 	depends on CFG80211
+ 	select CRYPTO
+ 	select CRYPTO_ECB
+@@ -7,8 +7,21 @@ config MAC80211
+ 	select CRYPTO_AES
+ 	select CRC32
+ 	---help---
+-	  This option enables the hardware independent IEEE 802.11
+-	  networking stack.
++	  This option enables support for a framework used by IEEE-802.11
++	  SoftMAC devices. SoftMAC devices allow for a finer control of the
++	  hardware, allowing for 802.11 frame management to be done in software
++	  for them, for both parsing and generation of 802.11 wireless frames.
++	  Most 802.11 devices today tend to be of this type.
++
++	  If you have new userspace utitlities which support nl80211 you do not
++	  need wireless-extensions to support a mac80211 device.
++
++	  For more information refer the the wireless wiki entry on mac80211:
++
++	  http://wireless.kernel.org/en/developers/Documentation/mac80211
++
++	  When built as a module it will be called as mac80211, if not sure
++	  you should build this as a module.
+ 
+ comment "CFG80211 needs to be enabled for MAC80211"
+ 	depends on CFG80211=n
+-- 
+1.6.3.3
 
