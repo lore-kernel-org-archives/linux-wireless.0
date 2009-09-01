@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:45061 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbZINObm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 10:31:42 -0400
-Received: by fxm17 with SMTP id 17so875704fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 07:31:44 -0700 (PDT)
-Message-ID: <4AAE53C8.1060100@lwfinger.net>
-Date: Mon, 14 Sep 2009 09:31:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Vignette consultant <vignette75@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8187B wireless driver issue
-References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>	 <4AAE3DF7.7060504@lwfinger.net> <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
-In-Reply-To: <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:10088 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752312AbZIAA36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 Aug 2009 20:29:58 -0400
+Subject: Re: memleaks, acpi + ext4 + tty
+From: Eric Paris <eparis@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Eric Paris <eparis@parisplace.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@kernel.org>, linux-kernel@vger.kernel.org,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890908311654t5d9489d3w9a817cffab5cb8f8@mail.gmail.com>
+References: <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com>
+	 <43e72e890908281509o44930348w581b865107ea3e98@mail.gmail.com>
+	 <43e72e890908310123w5d361ed5tff58a7663044bdcd@mail.gmail.com>
+	 <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com>
+	 <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com>
+	 <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
+	 <20090831193345.GG5631@tuxdriver.com>
+	 <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
+	 <20090831194753.GH5631@tuxdriver.com>
+	 <43e72e890908311302s58743978wd8950f167a871cfb@mail.gmail.com>
+	 <43e72e890908311654t5d9489d3w9a817cffab5cb8f8@mail.gmail.com>
+Content-Type: text/plain
+Date: Mon, 31 Aug 2009 20:26:31 -0400
+Message-Id: <1251764791.2158.7.camel@dhcp231-106.rdu.redhat.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vignette consultant wrote:
->  Hi
+On Mon, 2009-08-31 at 16:54 -0700, Luis R. Rodriguez wrote:
+> On Mon, Aug 31, 2009 at 1:02 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> > On Mon, Aug 31, 2009 at 12:47 PM, John W.
+> > Linville<linville@tuxdriver.com> wrote:
+> >> On Mon, Aug 31, 2009 at 12:43:01PM -0700, Luis R. Rodriguez wrote:
+> >>> On Mon, Aug 31, 2009 at 12:33 PM, John W.
+> >>> Linville<linville@tuxdriver.com> wrote:
+> >>
+> >>> > My guess is that the culprit is between
+> >>> > v2.6.31-rc8 and whatever is at the head of linux-2.6-allstable.
+> >>>
+> >>> But the issue is *not* in linux-2.6-allstable, it is only present on
+> >>> wireless-testing, and I went as far back as merge-2009-08-28. I was
+> >>> using whatever tag was available prior to you moving to rc8, and that
+> >>> worked.
+> >>
+> >> OK, then I can only guess that something went wrong in your bisection
+> >> (e.g. dirty build, something not marked properly, etc).
+> >
+> > Well so remember I did a clean git clone of wireless-testing and the
+> > issue was still there, but I determined just now it seems rc8 from
+> > Linus does indeed also have the issue. For some reason the issue was
+> > not present on hpa's rc8 on linux-2.6-allstable. Will double check on
+> > that again.
 > 
->  I just built linux kernel 2.6.31 on ubuntu 9.0.4 2.6.28-11 server.
-> The dhcpclient wlan0 still is unable to get ip address.
+> OK so hpa's tree just had all of Linus' stuff pulled, not just rc8. It
+> turns out Eric Paris' inotify patches are required to fix 2.6.31-rc8
+> for me.. I tested just one patch and it fixed my bootup lag:
 > 
->  I don't see any message in dmesg log for wlan0. The laptop uses
-> RTL8187 built-in usb card.
+> http://git.infradead.org/users/eparis/notify.git/commit/b962e7312ae87006aed6f68ceee94bdf8db08338
 > 
->  The Vista is able to connect through wireless dhcp without any
-> problem. The linux is not.
+> FWIW for that patch:
 > 
->  How can I trace the root cause of this issue.
+> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> 
+> So -- you if you're like me and had issues with bootup lag on
+> wireless-testing, you can probably fix your wireless-testing by
+> pulling his patches:
+> 
+> git pull git://git.infradead.org/users/eparis/notify.git for-linus
+> 
+> I saw Linus had some other fixes but I'll wait for rc9 for that as my
+> box seems reasonably stable right now.
 
-How are you controlling the network? Is it with NetworkManager?
+Yes, -rc8 broke pretty badly for a number of people.  Linus did pull all
+of the fixes that I know of.  I wouldn't suggest pulling just that one
+commit.  All 3 of the post -rc8 patches in my tree fix -rc8
+regressions   :(
 
-Please post the output of the command 'iwconfig'. If you get a
-"command not found" message, you will need to provide the full path
-such as /sbin/iwconfig. Also, does scanning work? Use the command
-'sudo iwlist scan'. That command may also require a full path.
-
-Larry
