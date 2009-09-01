@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:60167 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756896AbZINTwj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 15:52:39 -0400
-Date: Mon, 14 Sep 2009 21:52:39 +0200
-From: Pierre Ossman <pierre-list@ossman.eu>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Albert Herranz <albert_herranz@yahoo.es>,
-	bcm43xx-dev@lists.berlios.de, linux-mmc@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC 2/3] sdio: pass unknown cis tuples to sdio drivers
-Message-ID: <20090914215239.724a1d93@mjolnir.ossman.eu>
-In-Reply-To: <200909072056.00673.mb@bu3sch.de>
-References: <80555.93921.qm@web28308.mail.ukl.yahoo.com>
-	<200909072056.00673.mb@bu3sch.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-32615-1252957963-0001-2"
+Received: from mail.atheros.com ([12.36.123.2]:11375 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754492AbZIAPqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:46:31 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:46:34 -0700
+Date: Tue, 1 Sep 2009 08:46:33 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/7] wireless: update wireless kconfig description
+Message-ID: <20090901154633.GB8261@mosca>
+References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+ <1251818566-9264-3-git-send-email-lrodriguez@atheros.com>
+ <1251819096.22442.17.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1251819096.22442.17.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Tue, Sep 01, 2009 at 08:31:36AM -0700, Johannes Berg wrote:
+> On Tue, 2009-09-01 at 08:22 -0700, Luis R. Rodriguez wrote:
+> > "Wireless" is a misnomer 802.11 as there are plently
+> > of other wireless technologies. Be more specific and refer
+> > people to our good hearty wireless wiki for documentation.
+> > 
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  net/Kconfig |    8 +++++++-
+> >  1 files changed, 7 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/Kconfig b/net/Kconfig
+> > index 041c35e..31c208d 100644
+> > --- a/net/Kconfig
+> > +++ b/net/Kconfig
+> > @@ -260,9 +260,15 @@ config FIB_RULES
+> >  	bool
+> >  
+> >  menuconfig WIRELESS
+> > -	bool "Wireless"
+> > +	bool "IEEE 802.11 - Wireless LAN"
+> 
+> But this also has WEXT under it which supports pre-802.11 technologies,
+> no? 
 
---=_freyr.ossman.eu-32615-1252957963-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Heh yeah, good point.
 
-On Mon, 7 Sep 2009 20:55:58 +0200
-Michael Buesch <mb@bu3sch.de> wrote:
+> Might not matter at this point though.
 
-> On Monday 07 September 2009 20:47:12 Albert Herranz wrote:
-> >=20
-> >      =20
->=20
-> Please also submit to the SDIO maintainer.
->=20
+Probably not, its more 802.11 than pre now.
 
-There isn't one anymore, so submitting to this list is the correct
-method.
-
-Rgds
---=20
-     -- Pierre Ossman
-
-  WARNING: This correspondence is being monitored by the
-  Swedish government. Make sure your server uses encryption
-  for SMTP traffic and consider using PGP for end-to-end
-  encryption.
-
---=_freyr.ossman.eu-32615-1252957963-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEARECAAYFAkqunwkACgkQ7b8eESbyJLgplgCfcjc8swFlpzlDgXAhc9dW8eoW
-niEAoNI26XB0wTwofxFQev0Y6BPYiAHC
-=EEY8
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-32615-1252957963-0001-2--
+  Luis
