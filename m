@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2474 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368AbZI3MZJ (ORCPT
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:64461 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395AbZIATUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 08:25:09 -0400
-Date: Wed, 30 Sep 2009 08:24:51 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Frans Pop <elendil@planet.nl>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
-Message-ID: <20090930122451.GA17280@hash.localnet>
-References: <200909300952.29106.elendil@planet.nl>
+	Tue, 1 Sep 2009 15:20:01 -0400
+Received: by iwn42 with SMTP id 42so114992iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 12:20:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200909300952.29106.elendil@planet.nl>
+In-Reply-To: <1251832064.24846.2.camel@johannes.local>
+References: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
+	<20090901163300.GA29047@jm.kir.nu> <20090901171848.GF8261@mosca>
+	<69e28c910909011028i25fba508t9e68fb24168193eb@mail.gmail.com>
+	<20090901173822.GG8261@mosca> <69e28c910909011047p2ecb7f9fg84b4089a70d1be5c@mail.gmail.com>
+	<20090901180147.GA4272@mosca> <1251832064.24846.2.camel@johannes.local>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 1 Sep 2009 12:19:43 -0700
+Message-ID: <43e72e890909011219l76a594a8u9471114a120fe67c@mail.gmail.com>
+Subject: Re: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
-> This is on a laptop I don't use much, but with .31 wireless has always
-> been (and still is) reliable (.31-rc5 is the last kernel I built for it).
-> On my other laptop wireless (iwlagn) works fine with .32-rc1.
+On Tue, Sep 1, 2009 at 12:07 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Tue, 2009-09-01 at 11:01 -0700, Luis R. Rodriguez wrote:
+>
+>> Software MAC sounds reasonable to me. Anyone else?
+>
+> Except we're not actually talking about the MAC at all. The MAC is still
+> in the hardware.
 
-Although iwlagn works, I would think this kind of thing:
+How how about just:
 
-> ath0: authenticated
-> ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
-> ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
-> ath0: associated
-> ath0: deauthenticating by local choice (reason=3)
-> ath0: direct probe to AP 00:14:c1:38:e5:15 (try 1)
-> ath0 direct probe responded
-> ath0: authenticate with AP 00:14:c1:38:e5:15 (try 1)
-> ath0: authenticated
-> ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
-> ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
+"mac80211 - IEEE 802.11 frame processing"
 
-...is some kind of issue with userspace or wext rather than the driver.
-Ath5k only had a dozen or so patches this time around, so it should be
-easy to bisect if it's a problem in the driver.  One possibility is
-hardware CCMP support but I've been using it here for some time.
+Then as for referring to these type of devices I am not aware of other
+vocabulary for them other than SoftMAC or its derivative names.
 
-By the way, name it what you will, but the standard is wlan0 these days :)
-
-> So the difference looks to be how I boot: if I do a *cold* boot directly
-> into .32, wireless fails; if I *reboot* from .31 into .32, wireless
-> comes up correctly. Reboot from .32 to .32 fails too.
-
-Is that repeatable?
-
-Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
-linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+  Luis
