@@ -1,93 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54087 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246AbZIZMpl (ORCPT
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:38409 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754349AbZIAMcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 08:45:41 -0400
-Subject: [PATCH] mac80211: improve/fix mlme messages
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 26 Sep 2009 14:45:41 +0200
-Message-Id: <1253969141.5122.16.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 1 Sep 2009 08:32:55 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 1/4] rndis_wlan: use bool for on/off switches
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 01 Sep 2009 15:32:55 +0300
+Message-ID: <20090901123255.9213.57970.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's useful to know the MAC address when being
-disassociated; fix a typo (missing colon) and
-move some messages so we get them only when they
-are actually taking effect.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-Might help in .32 but I'll let you make that call.
 
- net/mac80211/mlme.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rndis_wlan.c |   28 ++++++++++++++--------------
+ 1 files changed, 14 insertions(+), 14 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2009-09-26 14:35:33.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2009-09-26 14:37:16.000000000 +0200
-@@ -1388,8 +1388,8 @@ ieee80211_rx_mgmt_disassoc(struct ieee80
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 402d367..dc2804f 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -466,7 +466,7 @@ struct rndis_wlan_private {
+ 	u32  param_workaround_interval;
  
- 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
- 
--	printk(KERN_DEBUG "%s: disassociated (Reason: %u)\n",
--			sdata->dev->name, reason_code);
-+	printk(KERN_DEBUG "%s: disassociated from %pM (Reason: %u)\n",
-+			sdata->dev->name, mgmt->sa, reason_code);
- 
- 	ieee80211_set_disassoc(sdata, false);
- 	return RX_MGMT_CFG80211_DISASSOC;
-@@ -1675,7 +1675,7 @@ static void ieee80211_rx_mgmt_probe_resp
- 
- 	/* direct probe may be part of the association flow */
- 	if (wk && wk->state == IEEE80211_MGD_STATE_PROBE) {
--		printk(KERN_DEBUG "%s direct probe responded\n",
-+		printk(KERN_DEBUG "%s: direct probe responded\n",
- 		       sdata->dev->name);
- 		wk->tries = 0;
- 		wk->state = IEEE80211_MGD_STATE_AUTH;
-@@ -2502,9 +2502,6 @@ int ieee80211_mgd_deauth(struct ieee8021
- 	struct ieee80211_mgd_work *wk;
- 	const u8 *bssid = NULL;
- 
--	printk(KERN_DEBUG "%s: deauthenticating by local choice (reason=%d)\n",
--	       sdata->dev->name, req->reason_code);
--
- 	mutex_lock(&ifmgd->mtx);
- 
- 	if (ifmgd->associated && &ifmgd->associated->cbss == req->bss) {
-@@ -2532,6 +2529,9 @@ int ieee80211_mgd_deauth(struct ieee8021
- 
- 	mutex_unlock(&ifmgd->mtx);
- 
-+	printk(KERN_DEBUG "%s: deauthenticating from %pM by local choice (reason=%d)\n",
-+	       sdata->dev->name, bssid, req->reason_code);
-+
- 	ieee80211_send_deauth_disassoc(sdata, bssid,
- 			IEEE80211_STYPE_DEAUTH, req->reason_code,
- 			cookie);
-@@ -2545,9 +2545,6 @@ int ieee80211_mgd_disassoc(struct ieee80
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
--	printk(KERN_DEBUG "%s: disassociating by local choice (reason=%d)\n",
--	       sdata->dev->name, req->reason_code);
--
- 	mutex_lock(&ifmgd->mtx);
- 
- 	/*
-@@ -2561,6 +2558,9 @@ int ieee80211_mgd_disassoc(struct ieee80
- 		return -ENOLINK;
+ 	/* hardware state */
+-	int radio_on;
++	bool radio_on;
+ 	int infra_mode;
+ 	bool connected;
+ 	u8 bssid[ETH_ALEN];
+@@ -966,8 +966,8 @@ static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
+ 	}
+ 	if (ret == 0) {
+ 		memcpy(&priv->essid, ssid, sizeof(priv->essid));
+-		priv->radio_on = 1;
+-		devdbg(usbdev, "set_essid: radio_on = 1");
++		priv->radio_on = true;
++		devdbg(usbdev, "set_essid: radio_on = true");
  	}
  
-+	printk(KERN_DEBUG "%s: disassociating from %pM by local choice (reason=%d)\n",
-+	       sdata->dev->name, req->bss->bssid, req->reason_code);
-+
- 	ieee80211_set_disassoc(sdata, false);
+ 	return ret;
+@@ -1028,7 +1028,7 @@ static bool is_associated(struct usbnet *usbdev)
+ }
  
- 	mutex_unlock(&ifmgd->mtx);
-
+ 
+-static int disassociate(struct usbnet *usbdev, int reset_ssid)
++static int disassociate(struct usbnet *usbdev, bool reset_ssid)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ndis_80211_ssid ssid;
+@@ -1037,8 +1037,8 @@ static int disassociate(struct usbnet *usbdev, int reset_ssid)
+ 	if (priv->radio_on) {
+ 		ret = rndis_set_oid(usbdev, OID_802_11_DISASSOCIATE, NULL, 0);
+ 		if (ret == 0) {
+-			priv->radio_on = 0;
+-			devdbg(usbdev, "disassociate: radio_on = 0");
++			priv->radio_on = false;
++			devdbg(usbdev, "disassociate: radio_on = false");
+ 
+ 			if (reset_ssid)
+ 				msleep(100);
+@@ -1234,7 +1234,7 @@ static int deauthenticate(struct usbnet *usbdev)
+ {
+ 	int ret;
+ 
+-	ret = disassociate(usbdev, 1);
++	ret = disassociate(usbdev, true);
+ 	set_default_iw_params(usbdev);
+ 	return ret;
+ }
+@@ -1634,7 +1634,7 @@ static int rndis_set_tx_power(struct wiphy *wiphy, enum tx_power_setting type,
+ 	 */
+ 	if (type == TX_POWER_AUTOMATIC || dbm == get_bcm4320_power_dbm(priv)) {
+ 		if (!priv->radio_on)
+-			disassociate(usbdev, 1); /* turn on radio */
++			disassociate(usbdev, true); /* turn on radio */
+ 
+ 		return 0;
+ 	}
+@@ -1923,7 +1923,7 @@ static int rndis_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ 
+ err_turn_radio_on:
+-	disassociate(usbdev, 1);
++	disassociate(usbdev, true);
+ 
+ 	return ret;
+ }
+@@ -2031,7 +2031,7 @@ static int rndis_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 	return ret;
+ 
+ err_turn_radio_on:
+-	disassociate(usbdev, 1);
++	disassociate(usbdev, true);
+ 
+ 	return ret;
+ }
+@@ -2823,8 +2823,8 @@ static int rndis_wlan_bind(struct usbnet *usbdev, struct usb_interface *intf)
+ 			WIPHY_PARAM_FRAG_THRESHOLD | WIPHY_PARAM_RTS_THRESHOLD);
+ 
+ 	/* turn radio on */
+-	priv->radio_on = 1;
+-	disassociate(usbdev, 1);
++	priv->radio_on = true;
++	disassociate(usbdev, true);
+ 	netif_carrier_off(usbdev->net);
+ 
+ 	return 0;
+@@ -2846,7 +2846,7 @@ static void rndis_wlan_unbind(struct usbnet *usbdev, struct usb_interface *intf)
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 
+ 	/* turn radio off */
+-	disassociate(usbdev, 0);
++	disassociate(usbdev, false);
+ 
+ 	cancel_delayed_work_sync(&priv->dev_poller_work);
+ 	cancel_delayed_work_sync(&priv->scan_work);
+@@ -2894,7 +2894,7 @@ static int rndis_wlan_stop(struct usbnet *usbdev)
+ 
+ 	devdbg(usbdev, "rndis_wlan_stop");
+ 
+-	retval = disassociate(usbdev, 0);
++	retval = disassociate(usbdev, false);
+ 
+ 	priv->work_pending = 0;
+ 	cancel_delayed_work_sync(&priv->dev_poller_work);
 
