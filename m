@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51616 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176AbZI1UPv (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:45188 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755202AbZIAVlU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 16:15:51 -0400
-Date: Mon, 28 Sep 2009 16:14:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlagn: fix panic in iwl{5000,4965}_rx_reply_tx
-Message-ID: <20090928201419.GE4737@tuxdriver.com>
-References: <1253695894-4553-1-git-send-email-sgruszka@redhat.com> <1253828287.26521.999.camel@rc-desk>
+	Tue, 1 Sep 2009 17:41:20 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so214976fge.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 14:41:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1253828287.26521.999.camel@rc-desk>
+In-Reply-To: <4A9D7E79.6090000@csail.mit.edu>
+References: <4A9D7E79.6090000@csail.mit.edu>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 1 Sep 2009 23:41:02 +0200
+Message-ID: <69e28c910909011441l411bc8a1xcc968ce8c220b422@mail.gmail.com>
+Subject: Re: phy0: release an RX reorder frame due to timeout on earlier
+	frames
+To: Michael Kaminsky <kaminsky@csail.mit.edu>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni.malinen@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 02:38:07PM -0700, reinette chatre wrote:
-> Hi Stanislaw,
-> 
-> On Wed, 2009-09-23 at 01:51 -0700, Stanislaw Gruszka wrote:
-> > In some cases firmware can give us bad value of index in transmit
-> > buffers array. This patch add sanity check for such values and return
-> > from processing function instantly when it happens.
-> > 
-> > https://bugzilla.redhat.com/show_bug.cgi?id=521931
-> > 
-> > Patch was tested by reporter on iwl5000. I think check can be also
-> > helpful for 4965.
-> > 
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > ---
-> 
-> I looked at the bugzilla entry and I think that there may be another fix
-> required here. After the driver submitted the five frames it received a
-> surprisingly large number of tx responses from firmware, with one of
-> these causing the problem. The bad value from the firmware may be a
-> result of something else done incorrectly by driver here since the
-> firmware has been trying for more than 40 times at this point to inform
-> driver about tx results.
-> 
-> I commented in that bugzilla and we can continue to debug this issue
-> there. Until then I'd like to hold off on this patch.
+On Tue, Sep 1, 2009 at 10:05 PM, Michael Kaminsky<kaminsky@csail.mit.edu> wrote:
+> I'm running a git checkout of iwlwifi-2.6.git from around Aug. 10
+> (d229b68..).  I filed a bug report at
+>
+>  http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2076
+>
+> and I was asked to post my situation to this list.
+>
+> I'm seeing regular "outages" when using 11n where no packets seem to go
+> through (card is an Intel 5300).  When this happens, I see the following
+> in my dmesg output:
+>
+>  phy0: release an RX reorder frame due to timeout on earlier frames
+>
+> (To see this message, you need to compile with CONFIG_MAC80211_HT_DEBUG.
+> The message comes from net/mac80211/rx.c.)
+>
+> There's dmesg log attached to the above bug report which gives a
+> high-level picture (no extra debugging) of what happens.  I associate
+> (with HT), things work for a little while, and then this message is
+> printed out (at which point the network stops working).  If I manually
+> re-associate, things work again.  If I do nothing, eventually the driver
+> re-associates by itself, and things also work again.  Letting the driver
+> re-associate automatically, though, can take a while (e.g, sometimes
+> close to a minute).  Note that in my environment, there are multiple APs
+> serving the same ESSID.  This error seems to happen quite regularly.
+>
+> Thanks,
+>
+> Michael
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Hmmm...well, I already sent it to Dave/Linus -- it's in 2.6.32-rc1...
+Try also enabling iwlwifi debugging - enable CONFIG_IWLWIFI_DEBUG,
+then load iwlagn with modparam "debug=0x43fff".
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
