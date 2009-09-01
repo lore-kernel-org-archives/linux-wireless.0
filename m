@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netsys.kaist.ac.kr ([143.248.239.50]:42060 "EHLO
-	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbZITEmh (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:56948 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095AbZIAQG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2009 00:42:37 -0400
-Received: from JinsungLeePC (netsys30.kaist.ac.kr [143.248.239.70])
-	by netsys.kaist.ac.kr (8.13.1/8.13.1) with ESMTP id n8K4eThP008757
-	for <linux-wireless@vger.kernel.org>; Sun, 20 Sep 2009 13:40:29 +0900
-From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
-To: <linux-wireless@vger.kernel.org>
-Subject: Question about carrier sensing
-Date: Sun, 20 Sep 2009 13:42:47 +0900
-Message-ID: <0eb001ca39ac$cd466020$67d32060$@kaist.ac.kr>
+	Tue, 1 Sep 2009 12:06:56 -0400
+Message-ID: <4A9D469B.9060005@lwfinger.net>
+Date: Tue, 01 Sep 2009 11:06:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	aquilaver@yahoo.com, linux-kernel@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	Kai Engert <kengert@redhat.com>,
+	Jean Tourrilhes <jt@hpl.hp.com>,
+	Tim de Waal <tim.dewaal@yahoo.com>,
+	Roy Marples <uberlord@gentoo.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Christian Lamparter <chunkeey@web.de>,
+	=?UTF-8?B?QmrDtnJuIFN0ZWluYnJpbms=?= <B.Steinbrink@gmx.de>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] wireless: mark prism54 as deprecated and mark for removal
+References: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, all.
+Luis R. Rodriguez wrote:
+> The preferred modules is p54 which also supports FullMAC
 
+This needs to be "modules are" or "module is". I know p54 is really a
+family, but I think you specifically mean p54pci here.
 
-I'm experimenting using MadWifi driver and Wistron CM6/CM9 cards, which all
-use the Atheros chipset.
-But, I found that there is some strange phenomenon on carrier sensing, which
-doesn't follow the standard.
-I let the two nearby transmitters just transmit the packets: one transmitter
-has zero cw value and the other has positive cw values: 10, 100, 1000 where
-cw is the maximum contention window size, thus the device selects the
-backoff counter randomly from [0, cw].
-If the carrier sensing really works, we would observe that the transmitter
-with zero cw value takes all while the other don't at all, right?
-Interestingly, the experimental result shows that the transmitter with
-positive value has very infrequent but chances to transmit once in a while
-during the whole experiment, and further the larger cw value, the much less
-chance the transmitter has to transmit. So, it seems to work though.
-Do you have any idea or similar experience?
-Thanks.
+> PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
+> to remove this is no one really is testing prism54 anymore,
+> and while it works p54 provides support for the same hardware.
+                     ===
+p54pci?
 
+> It should be noted I have been told some FullMAC devices may not
+> have worked with the SoftMAC driver but to date we have yet to
+> recieve a single bug report regarding this. If there are users
+  =======
+receive
 
---
-Regards,
-Jinsung Lee
---
+> out there please let us know!
+  =========
 
+Those words can be removed.
 
+Otherwise, ACK.
+
+Larry
 
