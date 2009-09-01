@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:12055 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:10861 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751931AbZIXViG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 17:38:06 -0400
-Subject: Re: [PATCH] iwlagn: fix panic in iwl{5000,4965}_rx_reply_tx
-From: reinette chatre <reinette.chatre@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1253695894-4553-1-git-send-email-sgruszka@redhat.com>
-References: <1253695894-4553-1-git-send-email-sgruszka@redhat.com>
+	id S1753989AbZIAPWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:22:47 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:22:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/7] wireless: update wireless kconfig description
+Date: Tue, 1 Sep 2009 08:22:41 -0700
+Message-ID: <1251818566-9264-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Thu, 24 Sep 2009 14:38:07 -0700
-Message-Id: <1253828287.26521.999.camel@rc-desk>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+"Wireless" is a misnomer 802.11 as there are plently
+of other wireless technologies. Be more specific and refer
+people to our good hearty wireless wiki for documentation.
 
-On Wed, 2009-09-23 at 01:51 -0700, Stanislaw Gruszka wrote:
-> In some cases firmware can give us bad value of index in transmit
-> buffers array. This patch add sanity check for such values and return
-> from processing function instantly when it happens.
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=521931
-> 
-> Patch was tested by reporter on iwl5000. I think check can be also
-> helpful for 4965.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/Kconfig |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-I looked at the bugzilla entry and I think that there may be another fix
-required here. After the driver submitted the five frames it received a
-surprisingly large number of tx responses from firmware, with one of
-these causing the problem. The bad value from the firmware may be a
-result of something else done incorrectly by driver here since the
-firmware has been trying for more than 40 times at this point to inform
-driver about tx results.
-
-I commented in that bugzilla and we can continue to debug this issue
-there. Until then I'd like to hold off on this patch.
-
-Reinette
-
+diff --git a/net/Kconfig b/net/Kconfig
+index 041c35e..31c208d 100644
+--- a/net/Kconfig
++++ b/net/Kconfig
+@@ -260,9 +260,15 @@ config FIB_RULES
+ 	bool
+ 
+ menuconfig WIRELESS
+-	bool "Wireless"
++	bool "IEEE 802.11 - Wireless LAN"
+ 	depends on !S390
+ 	default y
++	---help---
++	  This allows you to enable different parts of the networking subsystem
++	  to support IEEE 802.11 Wireless LAN networks. For news and
++	  documentation refer to the wireless wiki:
++
++	  http://wireless.kernel.org
+ 
+ if WIRELESS
+ 
+-- 
+1.6.3.3
 
