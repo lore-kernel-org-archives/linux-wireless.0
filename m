@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:17599 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbZIKGSn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 02:18:43 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so1825061fge.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 23:18:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4AA9B46E.8020100@canonical.com>
-References: <4AA9B46E.8020100@canonical.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 11 Sep 2009 08:18:26 +0200
-Message-ID: <69e28c910909102318u465f6c75w46a2404a8e8d9f08@mail.gmail.com>
-Subject: Re: [b43] About supporting of BCM4312 [14e4:4315] with Low Power PHY
-To: Bryan Wu <bryan.wu@canonical.com>
-Cc: mb@bu3sch.de, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:43557 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751253AbZIAGdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 02:33:49 -0400
+Subject: Re: memleaks, acpi + ext4 + tty
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Eric Paris <eparis@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eric Paris <eparis@parisplace.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"H. Peter Anvin" <hpa@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <43e72e890908311731h626a5b9bu486653c755cda2fa@mail.gmail.com>
+References: <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com>
+	 <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com>
+	 <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com>
+	 <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
+	 <20090831193345.GG5631@tuxdriver.com>
+	 <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
+	 <20090831194753.GH5631@tuxdriver.com>
+	 <43e72e890908311302s58743978wd8950f167a871cfb@mail.gmail.com>
+	 <43e72e890908311654t5d9489d3w9a817cffab5cb8f8@mail.gmail.com>
+	 <1251764791.2158.7.camel@dhcp231-106.rdu.redhat.com>
+	 <43e72e890908311731h626a5b9bu486653c755cda2fa@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 01 Sep 2009 14:33:49 +0800
+Message-Id: <1251786829.8830.277.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This chip works (though not quite "supported", that is, can't
-guarantee that it will work for you, and speed is not up to par with
-wl_hybrid) in wireless-testing. It should also work in
-compat-wireless, though compat-wireless is having problems with 64-bit
-DMA lately (probably also affects the G-PHY 4311/02). Specifically,
-the Dell 1397 (half-mini version of the 1395) and the HP 459263-002
-are known to work.
+On Tue, 2009-09-01 at 08:31 +0800, Luis R. Rodriguez wrote:
+> >>
+> http://git.infradead.org/users/eparis/notify.git/commit/b962e7312ae87006aed6f68ceee94bdf8db08338
+> >>
+> >> FWIW for that patch:
+> >>
+> >> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> >>
+> >> So -- you if you're like me and had issues with bootup lag on
+> >> wireless-testing, you can probably fix your wireless-testing by
+> >> pulling his patches:
+> >>
+> >> git pull git://git.infradead.org/users/eparis/notify.git for-linus
+> >>
+> >> I saw Linus had some other fixes but I'll wait for rc9 for that as
+> my
+> >> box seems reasonably stable right now.
+> >
+> > Yes, -rc8 broke pretty badly for a number of people.  Linus did pull
+> all
+> > of the fixes that I know of.  I wouldn't suggest pulling just that
+> one
+> > commit.  All 3 of the post -rc8 patches in my tree fix -rc8
+> > regressions   :(
+> 
+> Thanks, the note -- so I guess best is to just pull from Linus ontop
+> of wireless-testing.
 
-On Fri, Sep 11, 2009 at 4:22 AM, Bryan Wu <bryan.wu@canonical.com> wrote:
-> Dear Michael and Stefano,
->
-> I have a project which integrate Broadcom Wifi chip. But the mainline b43 still does not support this chip, because it has Low Power PHY.
->
-> Here is my lspci -vvnn output for this device:
-> ------
-> 07:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g [14e4:4315] (rev 01)
->        Subsystem: Dell Device [1028:000c]
->        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->        Latency: 0, Cache Line Size: 32 bytes
->        Interrupt: pin A routed to IRQ 17
->        Region 0: Memory at f0100000 (64-bit, non-prefetchable) [size=16K]
->        Capabilities: [40] Power Management version 3
->                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
->        Capabilities: [58] Vendor Specific Information <?>
->        Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
->                Address: 0000000000000000  Data: 0000
->        Capabilities: [d0] Express (v1) Endpoint, MSI 00
->                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
->                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
->                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->                        RlxdOrd- ExtTag+ PhantFunc- AuxPwr- NoSnoop-
->                        MaxPayload 128 bytes, MaxReadReq 128 bytes
->                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
->                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <64us
->                        ClockPM+ Suprise- LLActRep- BwNot-
->                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->        Kernel driver in use: b43-pci-bridge
->        Kernel modules: ssb
-> ------
->
-> Do you guys know how to support this device in 2.6.31 kernel? Need I backport some code from wireless-testing? I enabled the PHY_LP config manually in 2.6.31 kernel and b43 driver recognized the hardware wifi device, but it still
-> does not work at all.
->
-> Or there is no choice but Broadcom's STA driver? I do not like such non-GPL stuff.
->
-> Thanks a lot
-> --
-> Bryan Wu <bryan.wu@canonical.com>
-> Kernel Developer    +86.138-1617-6545 Mobile
-> Ubuntu Kernel Team | Hardware Enablement Team
-> Canonical Ltd.      www.canonical.com
-> Ubuntu - Linux for human beings | www.ubuntu.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I confirm I'm also suffered with the problem on today's wireless-testing
+tip (udevadm --settle hangs on boot) and the above patch does fix the
+issue for me. Thanks both for identify and fix the problem.
 
+Thanks,
+-yi
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
