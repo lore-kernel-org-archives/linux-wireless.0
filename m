@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40784 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbZI0S1y (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:33693 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754495AbZIAMdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 14:27:54 -0400
-Subject: [PATCH 2/2] cfg80211: fix wireless handlers assignment
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Sep 2009 20:27:55 +0200
-Message-Id: <1254076075.6583.6.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 1 Sep 2009 08:33:09 -0400
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Subject: [PATCH 4/4] rndis_wlan: remove 'select WIRELESS_EXT' in Kconfig
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 01 Sep 2009 15:33:11 +0300
+Message-ID: <20090901123311.9213.65635.stgit@fate.lan>
+In-Reply-To: <20090901123255.9213.57970.stgit@fate.lan>
+References: <20090901123255.9213.57970.stgit@fate.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The point we assign dev->wireless_handlers at is too
-late, we need to do that before netdev_register_kobject()
-gets called, so use the new NETDEV_PRE_INIT notifier.
-The result of adding wireless_handlers too late is the
-disappearance of /sys/class/net/wlan0/wireless which a
-bunch of distro scripts still require.
+Since rndis_wlan is now converted to cfg80211, WIRELESS_EXT isn't
+required anymore.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
-This should fix the regression Hugh reported (of course requires the
-other patch which unfortunately I forgot to CC you, Hugh, I'll send you
-a copy in private).
 
- net/wireless/core.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/Kconfig |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
---- wireless-testing.orig/net/wireless/core.c	2009-09-27 15:12:20.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2009-09-27 15:12:54.000000000 +0200
-@@ -641,6 +641,12 @@ static int cfg80211_netdev_notifier_call
- 	WARN_ON(wdev->iftype == NL80211_IFTYPE_UNSPECIFIED);
- 
- 	switch (state) {
-+	case NETDEV_PRE_INIT:
-+#ifdef CONFIG_WIRELESS_EXT
-+		if (!dev->wireless_handlers)
-+			dev->wireless_handlers = &cfg80211_wext_handler;
-+#endif
-+		break;
- 	case NETDEV_REGISTER:
- 		/*
- 		 * NB: cannot take rdev->mtx here because this may be
-@@ -666,8 +672,6 @@ static int cfg80211_netdev_notifier_call
- 		wdev->sme_state = CFG80211_SME_IDLE;
- 		mutex_unlock(&rdev->devlist_mtx);
- #ifdef CONFIG_WIRELESS_EXT
--		if (!dev->wireless_handlers)
--			dev->wireless_handlers = &cfg80211_wext_handler;
- 		wdev->wext.default_key = -1;
- 		wdev->wext.default_mgmt_key = -1;
- 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index dda7cc2..623897f 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -337,7 +337,6 @@ config USB_NET_RNDIS_WLAN
+ 	select USB_USBNET
+ 	select USB_NET_CDCETHER
+ 	select USB_NET_RNDIS_HOST
+-	select WIRELESS_EXT
+ 	---help---
+ 	  This is a driver for wireless RNDIS devices.
+ 	  These are USB based adapters found in devices such as:
 
