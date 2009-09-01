@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-filter-1-a-1.mail.uk.tiscali.com ([212.74.100.52]:7760 "EHLO
-	mk-filter-1-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751952AbZIZPdN (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:20217 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754644AbZIASBq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 11:33:13 -0400
-Date: Sat, 26 Sep 2009 16:33:14 +0100 (BST)
-From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.31-git wireless broken
-In-Reply-To: <1253973831.5122.33.camel@johannes.local>
-Message-ID: <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
- <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
-  <1253816614.3868.406.camel@johannes.local>  <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
-  <1253856038.3868.500.camel@johannes.local>  <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
-  <1253868214.3868.713.camel@johannes.local>  <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
-  <1253970049.5122.31.camel@johannes.local> <1253973831.5122.33.camel@johannes.local>
+	Tue, 1 Sep 2009 14:01:46 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 11:01:49 -0700
+Date: Tue, 1 Sep 2009 11:01:47 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
+Message-ID: <20090901180147.GA4272@mosca>
+References: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
+ <20090901163300.GA29047@jm.kir.nu>
+ <20090901171848.GF8261@mosca>
+ <69e28c910909011028i25fba508t9e68fb24168193eb@mail.gmail.com>
+ <20090901173822.GG8261@mosca>
+ <69e28c910909011047p2ecb7f9fg84b4089a70d1be5c@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <69e28c910909011047p2ecb7f9fg84b4089a70d1be5c@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 26 Sep 2009, Johannes Berg wrote:
-> On Sat, 2009-09-26 at 15:00 +0200, Johannes Berg wrote:
-> > 
-> > I'm downloading a livecd to figure out what might be going wrong.
+On Tue, Sep 01, 2009 at 10:47:43AM -0700, Gábor Stefanik wrote:
+> 2009/9/1 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> > On Tue, Sep 01, 2009 at 10:28:35AM -0700, Gábor Stefanik wrote:
+> >> On Tue, Sep 1, 2009 at 7:18 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+> >> > On Tue, Sep 01, 2009 at 09:33:00AM -0700, Jouni Malinen wrote:
+> >> >> On Tue, Sep 01, 2009 at 08:54:25AM -0700, Luis R. Rodriguez wrote:
+> >> >> > +       SoftMAC devices. SoftMAC devices allow for a finer control of the
+> >> >>
+> >> >> Again, I don't really like the term "SoftMAC" here..
+> >> >
+> >> > What's a better term?
+> >> >
+> >>
+> >> "Software-based", "Software-MAC", "Software-defined", or anything that
+> >> neither implies that the stack is designed for PrismGT (the
+> >> capitalization "SoftMAC" comes from Intersil AFAIK), nor allows
+> >> confusion with ieee80211softmac (which could result if we write it
+> >> with all small letters as "softmac").
+> >
+> > Indeed, I picked up 'SoftMAC' and 'FullMAC' terminology from the prism54 days
+> > after they decided to move in that direction as others were or already had. For
+> > better or for worse I have been using 'SoftMAC' throughout wireless.kernel.org
+> > documentation to distinguish between 'FullMAC' cards. I really have not been
+> > able to find any other suitable replacements, are there legal reasons to not use
+> > such terms?
+> >
+> > I thought 'mac80211' name was brilliant as it highlighted the main focus for the
+> > module, to focus on the MAC frame processing, I just cannot think of any
+> > description for it other than something to support SoftMAC cards.
 > 
-> It appears that just uses
-> 	test -d /sys/class/net/wlan0/wireless
-> 
-> but that should be ok, unless that's actually a link now for some reason
-> -- can you verify what happens there? And double-check you have
-> CONFIG_WIRELESS_EXT_SYSFS please, the config you sent me did have it
-> tho.
+> The description isn't the problem - the term "SoftMAC" is, due to its
+> connections with ieee80211softmac. Even "Software MAC" would be better
+> here.
 
-I do have CONFIG_WIRELESS_EXT_SYSFS=y,
-and I do have /sys/class/net/wlan0/ containing various things,
-but I don't have any /sys/class/net/wlan0/wireless with recent kernels.
+Software MAC sounds reasonable to me. Anyone else?
 
-Hugh
+  Luis
