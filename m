@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:65355 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbZIYTLG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 15:11:06 -0400
-Received: by fxm18 with SMTP id 18so2446264fxm.17
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 12:11:09 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:10864 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754253AbZIAPWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:22:50 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:22:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/7] wireless: update reg debug kconfig entry
+Date: Tue, 1 Sep 2009 08:22:43 -0700
+Message-ID: <1251818566-9264-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890909241311j552ee33ata80ba24c386a316b@mail.gmail.com>
-References: <20090924180048.14503.9579.stgit@tikku>
-	 <20090924180251.14503.64152.stgit@tikku>
-	 <43e72e890909241135j21f687a7oc4f929d2134b6310@mail.gmail.com>
-	 <da94abde0909241210m69bd619sce62645c3aca9aae@mail.gmail.com>
-	 <43e72e890909241311j552ee33ata80ba24c386a316b@mail.gmail.com>
-Date: Fri, 25 Sep 2009 12:11:09 -0700
-Message-ID: <da94abde0909251211x347bbd30xdfe2bd05bc1e07e5@mail.gmail.com>
-Subject: Re: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in
-	wiphy
-From: Kalle Valo <kalle.valo@iki.fi>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 1:11 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Thu, Sep 24, 2009 at 12:10 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
->
->> BTW, is there an easy way to get the module name for the interface?
->> That's also helpful information for the user.
->
-> If you can map the interface to PCI ID then I think its possible,
-> lspci -k seems to do it.
+Refer to the wireless wiki for more information.
 
-Not all drivers use PCI, we have USB, SDIO, SPI and so on.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/Kconfig |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-> It would be a nice addition to iw output as well IMHO.
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 9fd570b..08f6733 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -49,6 +49,10 @@ config CFG80211_REG_DEBUG
+ 	default n
+ 	---help---
+ 	  You can enable this if you want to debug regulatory changes.
++	  For more information on cfg80211 regulatory refer to the wireless
++	  wiki:
++
++	  http://wireless.kernel.org/en/developers/Regulatory
+ 
+ 	  If unsure, say N.
+ 
+-- 
+1.6.3.3
 
-I agree. I'm not going to work on adding the driver name right now,
-but maybe in the future.
-
-Kalle
