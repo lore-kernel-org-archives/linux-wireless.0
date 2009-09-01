@@ -1,70 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38315 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752840AbZIZC5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 22:57:20 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: cannot compile compate-wirless snapshots
-Date: Sat, 26 Sep 2009 04:57:20 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909260457.21103.malte.gell@gmx.de>
+Received: from mail.deathmatch.net ([72.66.92.28]:3525 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755236AbZIAWPK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 18:15:10 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	stable@kernel.org
+Subject: [PATCH] cfg80211: fix looping soft lockup in find_ie()
+Date: Tue,  1 Sep 2009 18:12:11 -0400
+Message-Id: <1251843131-19655-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+The find_ie() function uses a size_t for the len parameter, and
+directly uses len as a loop variable.  If any received packets
+are malformed, it is possible for the decrease of len to overflow,
+and since the result is unsigned, the loop will not terminate.
+Change it to a signed int so the loop conditional works for
+negative values.
 
-actually I can build the stable compat-wirless-2.6.30.ta.bz2 just fine.
+This fixes the following soft lockup:
 
-But I get make errors, when I try to build the daily snapshot, see below. I 
-use openSUSE on a 2.6.27 kernel.
+[38573.102007] BUG: soft lockup - CPU#0 stuck for 61s! [phy0:2230]
+[38573.102007] Modules linked in: aes_i586 aes_generic fuse af_packet ipt_REJECT xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_state iptable_filter ip_tables x_tables acpi_cpufreq binfmt_misc dm_mirror dm_region_hash dm_log dm_multipath dm_mod kvm_intel kvm uinput i915 arc4 ecb drm snd_hda_codec_idt ath5k snd_hda_intel hid_apple mac80211 usbhid appletouch snd_hda_codec snd_pcm ath cfg80211 snd_timer i2c_algo_bit ohci1394 video snd processor ieee1394 rfkill ehci_hcd sg sky2 backlight snd_page_alloc uhci_hcd joydev output ac thermal button battery sr_mod applesmc cdrom input_polldev evdev unix [last unloaded: scsi_wait_scan]
+[38573.102007] irq event stamp: 2547724535
+[38573.102007] hardirqs last  enabled at (2547724534): [<c1002ffc>] restore_all_notrace+0x0/0x18
+[38573.102007] hardirqs last disabled at (2547724535): [<c10038f4>] apic_timer_interrupt+0x28/0x34
+[38573.102007] softirqs last  enabled at (92950144): [<c103ab48>] __do_softirq+0x108/0x210
+[38573.102007] softirqs last disabled at (92950274): [<c1348e74>] _spin_lock_bh+0x14/0x80
+[38573.102007]
+[38573.102007] Pid: 2230, comm: phy0 Tainted: G        W  (2.6.31-rc7-wl #8) MacBook1,1
+[38573.102007] EIP: 0060:[<f8ea2d50>] EFLAGS: 00010292 CPU: 0
+[38573.102007] EIP is at cmp_ies+0x30/0x180 [cfg80211]
+[38573.102007] EAX: 00000082 EBX: 00000000 ECX: ffffffc1 EDX: d8efd014
+[38573.102007] ESI: ffffff7c EDI: 0000004d EBP: eee2dc50 ESP: eee2dc3c
+[38573.102007]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+[38573.102007] CR0: 8005003b CR2: d8efd014 CR3: 01694000 CR4: 000026d0
+[38573.102007] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+[38573.102007] DR6: ffff0ff0 DR7: 00000400
+[38573.102007] Call Trace:
+[38573.102007]  [<f8ea2f8d>] cmp_bss+0xed/0x100 [cfg80211]
+[38573.102007]  [<f8ea33e4>] cfg80211_bss_update+0x84/0x410 [cfg80211]
+[38573.102007]  [<f8ea3884>] cfg80211_inform_bss_frame+0x114/0x180 [cfg80211]
+[38573.102007]  [<f97255ff>] ieee80211_bss_info_update+0x4f/0x180 [mac80211]
+[38573.102007]  [<f972b118>] ieee80211_rx_bss_info+0x88/0xf0 [mac80211]
+[38573.102007]  [<f9739297>] ? ieee802_11_parse_elems+0x27/0x30 [mac80211]
+[38573.102007]  [<f972b224>] ieee80211_rx_mgmt_probe_resp+0xa4/0x1c0 [mac80211]
+[38573.102007]  [<f972bc59>] ieee80211_sta_rx_queued_mgmt+0x919/0xc50 [mac80211]
+[38573.102007]  [<c1009707>] ? sched_clock+0x27/0xa0
+[38573.102007]  [<c1009707>] ? sched_clock+0x27/0xa0
+[38573.102007]  [<c105ffd0>] ? mark_held_locks+0x60/0x80
+[38573.102007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
+[38573.102007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
+[38573.102007]  [<c1348bce>] ? _spin_unlock_irqrestore+0x3e/0x70
+[38573.102007]  [<c12c1c0f>] ? skb_dequeue+0x4f/0x70
+[38573.102007]  [<f972c021>] ieee80211_sta_work+0x91/0xb80 [mac80211]
+[38573.102007]  [<c1009707>] ? sched_clock+0x27/0xa0
+[38573.102007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
+[38573.102007]  [<c10479af>] worker_thread+0x18f/0x320
+[38573.102007]  [<c104794e>] ? worker_thread+0x12e/0x320
+[38573.102007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
+[38573.102007]  [<f972bf90>] ? ieee80211_sta_work+0x0/0xb80 [mac80211]
+[38573.102007]  [<c104cbb0>] ? autoremove_wake_function+0x0/0x50
+[38573.102007]  [<c1047820>] ? worker_thread+0x0/0x320
+[38573.102007]  [<c104c854>] kthread+0x84/0x90
+[38573.102007]  [<c104c7d0>] ? kthread+0x0/0x90
+[38573.102007]  [<c1003ab7>] kernel_thread_helper+0x7/0x10
 
-Thanx, Malte
+Cc: stable@kernel.org
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ net/wireless/scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 7043de6..19c5a9a 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -141,7 +141,7 @@ void cfg80211_bss_expire(struct cfg80211_registered_device *dev)
+ 		dev->bss_generation++;
+ }
+ 
+-static u8 *find_ie(u8 num, u8 *ies, size_t len)
++static u8 *find_ie(u8 num, u8 *ies, int len)
+ {
+ 	while (len > 2 && ies[0] != num) {
+ 		len -= ies[1] + 2;
+-- 
+1.5.4.1
 
 
-2[malte_gell@linux-61r3]12535 04:50~/download/src/wifi/compat-
-wireless-2009-09-25> make
-make -C /lib/modules/2.6.27.29-0.1-k7/build 
-M=/home/malte_gell/download/src/wifi/compat-wireless-2009-09-25 modules
-make[1]: Entering directory `/usr/src/linux-2.6.27.29-0.1'
-  CC [M]  /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath/main.o
-In file included from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:152: error: redefinition of 
-'struct tracepoint'
-In file included from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:182:1: warning: "DEFINE_TRACE" 
-redefined
-In file included from include/linux/module.h:19,
-                 from include/linux/textsearch.h:7,
-                 from include/linux/skbuff.h:26,
-                 from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:10,
-                 from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-include/linux/tracepoint.h:86:1: warning: this is the location of the previous 
-definition
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:186: error: redefinition of 
-'tracepoint_update_probe_range'
-include/linux/tracepoint.h:100: error: previous definition of 
-'tracepoint_update_probe_range' was here
-make[4]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath/main.o] Error 1
-make[3]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath] Error 2
-make[2]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25] Error 2
-make[1]: Leaving directory `/usr/src/linux-2.6.27.29-0.1'
-make: *** [modules] Error 2
