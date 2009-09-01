@@ -1,66 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:52460 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709AbZIHFJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 01:09:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: rostedt@goodmis.org
-Subject: Re: Stop using tasklets for bottom halves
-Date: Tue, 8 Sep 2009 07:08:58 +0200
-Cc: Stephen Hemminger <shemminger@vyatta.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com> <1252376254.21261.2052.camel@gandalf.stny.rr.com> <200909080650.43181.mb@bu3sch.de>
-In-Reply-To: <200909080650.43181.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909080708.59702.mb@bu3sch.de>
+Received: from xc.sipsolutions.net ([83.246.72.84]:53418 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754696AbZIAPzO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Sep 2009 11:55:14 -0400
+Subject: Re: [PATCH 5/7] wireless: update WIRELESS_EXT kconfig entry
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <4A9D436E.20509@lwfinger.net>
+References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+	 <1251818566-9264-6-git-send-email-lrodriguez@atheros.com>
+	 <4A9D436E.20509@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-H71N8onA+fr7dINej0My"
+Date: Tue, 01 Sep 2009 17:54:43 +0200
+Message-Id: <1251820483.24846.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 08 September 2009 06:50:41 Michael Buesch wrote:
-> On Tuesday 08 September 2009 04:17:34 Steven Rostedt wrote:
-> > > Process context is too slow.
-> > 
-> > Well, I'm hoping to prove the opposite. I'm working on some stuff that I
-> > plan to present at Linux Plumbers. I've been too distracted by other
-> > things, but hopefully I'll have some good numbers to present by then.
-> 
-> I recently converted the b43 driver to threaded interrupt handlers and
-> a workqueue based TX mechanism. (My motivation was porting b43 to the SDIO bus that
-> needs to sleep, so requires process context).
-> 
-> There are two things that I noticed. When looking at the "idle" percentage in "top"
-> it regressed quite a bit when using threaded IRQ handlers. It shows about 8% less
-> idle. This is with threaded IRQs patched in, but without WQ TX mechanism. Applying
-> the WQ TX mechanism does not show any noticeable effect in "top".
-> 
-> I'm not quite sure where the 8% slowdown on threaded IRQ handlers come from. I'm not
-> really certain that it's _really_ a regression and not just a statistics accounting quirk.
-> Why does threaded IRQs slow down stuff and threaded TX does not at all? That does not
-> make sense at all to me.
-> 
-> I think there's no real reason for process context being slow in general. It's just that
-> we have additional context switches. But these are fast on Linux.
-> 
 
-Ok, I just did another test. I used a workqueue instead of the standard kernel threaded
-IRQ infrastructure. Now the slowdown is only about 4% in "top". Maybe that shows room
-for improvement in the threaded IRQ implementation...
+--=-H71N8onA+fr7dINej0My
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-B43 does call mac80211's "irqsafe" TX-status and RX functions. They schedule
-additional tasklets. That is not required, however. Maybe I should remove that stuff and
-retry my tests. That should also improve stuff a bit.
+On Tue, 2009-09-01 at 10:53 -0500, Larry Finger wrote:
 
-And yes, I notice that "top" is actually crap for testing performance issues. :)
+> > @@ -98,8 +98,16 @@ config WIRELESS_EXT
+> >  	bool "Wireless extensions"
+> >  	default y
+> >  	---help---
+> > -	  This option enables the legacy wireless extensions
+> > -	  (wireless network interface configuration via ioctls.)
+> > +	  This option enables the legacy wireless extensions.
+> > +	  Wireless extensions was the first 802.11 wireless configuration
+> > +	  API used by the networking subsystem. You will not need this unless
+> > +	  you have old userspace utilities or old wireless devices which
+> > +	  have not yet been ported to cfg80211.
+>=20
+> I would like this to read "You will need this if you have old
+> userspace utilities or old wireless devices that have not yet been
+> ported to cfg80211."
 
--- 
-Greetings, Michael.
+Don't those "select WIRELESS_EXT" anyway so you don't have a choice?
+
+johannes
+
+--=-H71N8onA+fr7dINej0My
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKnUO/AAoJEODzc/N7+Qma0H0P/0PdDJV6pSHTww6MRqdOqw/M
+R/CqdVxTInsLrKgTVRBwirakk2Th9SePiIbhLtwEQXwaWZQ3sNc0+jjUW3yZDUD2
+3XZnHkcdsEGd8FCAeFxIvKg3qjBBmL4ClOn9W1winjEVHTeW4GV0xNoehJYEgQTK
+Gc656lU4h7b+C5rKMv0i8IiUcBTo4Gw0/yA9cavaJNr6mH5NYFheUExQrah+L8w+
+an3FCAAlqV4mg9yXKAFVdKoTmz91MW1Nq7kOznImdZ8BmU8rIrp5WEB/eXSEWIsW
+ZzCNV8G3c599NCdTjz4vKMuEG4iogk4q72A3R2Obv+w4ozKx3ExBb/iyGDIRThDU
+WlAesEyK5HiuGevACeBWbAb33T3c70zF0iRhoJebi/jlVcCgjIHKN8oXnRGSjCZy
+sN4PMgm5ETBLtOFylSLxsC6nmtVWF8Hm5OJXGnugysyOaqb8dJriDpcpj+ZwayYb
+05fjSUCXFU2n/rYKcUnHxuBzJINLC/l5FnnZOWXA7ZYBDLJNXaDejdXU7jOD+pb9
+VhEI5kOVhS5S64a48Q1rVuxVQhAbaWyJ5ZaS8sbLoer9bc17p3GAcim6eflJMkvS
+9Gw5PiDfg6rhcrD/N9vvFUadGcvi1Aw4kyuKjUCl56Ig0Fg3SfxMfvQYUUxD4xHc
+PhINdCaleFg/ZNYU3Rpy
+=i+ZP
+-----END PGP SIGNATURE-----
+
+--=-H71N8onA+fr7dINej0My--
+
