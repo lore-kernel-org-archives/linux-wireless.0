@@ -1,131 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:15787 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752184AbZI2CfU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 22:35:20 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so192942eyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 19:35:22 -0700 (PDT)
+Received: from mail.gmx.net ([213.165.64.20]:36498 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751188AbZIBXDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2009 19:03:00 -0400
+Message-ID: <4A9EF9A3.1020904@gmx.de>
+Date: Thu, 03 Sep 2009 01:02:59 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Date: Tue, 29 Sep 2009 03:35:22 +0100
-Message-ID: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
-Subject: compat-wireless master-2009-09-28 breakage and suggested fixes
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] ar9170: added phy register initialisation from eeprom
+ values
+References: <1789900589@web.de> <4A9C25AE.9020109@gmx.de> <22ee4e770908311437y4954a79eje48976a0203f1806@mail.gmail.com>
+In-Reply-To: <22ee4e770908311437y4954a79eje48976a0203f1806@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
 
-A couple of breakages against current wireless testing head:
+This patch adds the initialisation of some PHY registers
+from the modal_header[] values in the EEPROM
+(see otus/hal/hpmain.c, line 333 ff.)
 
-compat-release  - master-2009-09-23-1-gd1e5747
-git-describe  v2.6.32-rc1-39226-g63dbea4
-master-tag master-2009-09-28
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+---
 
------------
-make[1]: Entering directory `/usr/src/kernels/2.6.30.8-67.fc11.x86_64'
-  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.o
-In file included from
-/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.c:29:
-/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/ieee80211_i.h:1053:
-error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before
-‘ieee80211_monitor_start_xmit’
-/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/ieee80211_i.h:1055:
-error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before
-‘ieee80211_subif_start_xmit’
-make[3]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.o]
-Error 1
-make[2]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211] Error 2
-make[1]: *** [_module_/home/Hin-Tak/tmp-git/compat-wireless-2.6] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.30.8-67.fc11.x86_64'
-make: *** [modules] Error 2
-----------
+ Compared to v1 I've included Christian's suggestions and removed
+ three unnecessary defval assignments for "ant * control".
 
-----------
-  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.o
-/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.c: In
-function ‘ieee80211_if_add’:
-/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.c:815:
-error: implicit declaration of function ‘SET_NETDEV_DEVTYPE’
-make[3]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.o]
-Error 1
-make[2]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211] Error 2
-make[1]: *** [_module_/home/Hin-Tak/tmp-git/compat-wireless-2.6] Error 2
-----------
+ This patch seems to depend on Christian's
+ "[RFT] ar9170: use eeprom's frequency calibration values"
+ (2009-08-21), I get a poor throughput here without it (1-stage fw,
+ 802.11g AP).
 
-The first error can be fixed by inserting the netdev_tx_t enum:
+ drivers/net/wireless/ath/ar9170/phy.c |  136 ++++++++++++++++++++++++++++++++-
+ 1 files changed, 135 insertions(+), 1 deletions(-)
 
-----------------
-$ diff -u ../wireless-testing/net/mac80211/ieee80211_i.h
-net/mac80211/ieee80211_i.h
---- ../wireless-testing/net/mac80211/ieee80211_i.h	2009-09-29
-01:21:11.000000000 +0100
-+++ net/mac80211/ieee80211_i.h	2009-09-29 02:43:26.000000000 +0100
-@@ -28,6 +28,24 @@
- #include "key.h"
- #include "sta_info.h"
-
-+#ifdef NETDEV_TX_OK
-+#undef NETDEV_TX_OK
-+#endif
-+#ifdef NETDEV_TX_BUSY
-+#undef NETDEV_TX_BUSY
-+#endif
-+#ifdef NETDEV_TX_LOCKED
-+#undef NETDEV_TX_LOCKED
-+#endif
+diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+index df86f70..8fb1fa8 100644
+--- a/drivers/net/wireless/ath/ar9170/phy.c
++++ b/drivers/net/wireless/ath/ar9170/phy.c
+@@ -396,6 +396,138 @@ static struct ar9170_phy_init ar5416_phy_init[] = {
+ 	{ 0x1c9384, 0xf3307ff0, 0xf3307ff0, 0xf3307ff0, 0xf3307ff0, }
+ };
+ 
++/*
++ * look up a certain register in ar5416_phy_init[] and return the init. value
++ * for the band and bandwidth given. Return 0 if register address not found.
++ */
++static u32 ar9170_get_default_phy_reg_val(u32 reg, bool is_2ghz, bool is_40mhz)
++{
++	unsigned int i;
++	for (i = 0; i < ARRAY_SIZE(ar5416_phy_init); i++) {
++		if (ar5416_phy_init[i].reg != reg)
++			continue;
 +
-+/* Driver transmit return codes */
-+enum netdev_tx {
-+       NETDEV_TX_OK = 0,       /* driver took care of packet */
-+       NETDEV_TX_BUSY,         /* driver tx path was busy*/
-+       NETDEV_TX_LOCKED = -1,  /* driver tx lock was already taken */
-+};
-+typedef enum netdev_tx netdev_tx_t;
++		if (is_2ghz) {
++			if (is_40mhz)
++				return ar5416_phy_init[i]._2ghz_40;
++			else
++				return ar5416_phy_init[i]._2ghz_20;
++		} else {
++			if (is_40mhz)
++				return ar5416_phy_init[i]._5ghz_40;
++			else
++				return ar5416_phy_init[i]._5ghz_20;
++		}
++	}
++	return 0;
++}
 +
- struct ieee80211_local;
-
- /* Maximum number of broadcast/multicast frames to buffer when some of the
-------------------
-
-The 2nd by adding SET_NETDEV_DEVTYPE():
-----------
---- ../wireless-testing/net/mac80211/iface.c	2009-09-29 01:21:11.000000000 +0100
-+++ net/mac80211/iface.c	2009-09-29 02:50:54.000000000 +0100
-@@ -22,6 +22,8 @@
- #include "led.h"
- #include "driver-ops.h"
-
-+#define SET_NETDEV_DEVTYPE(net, devtype)       ((net)->dev.type = (devtype))
++/*
++ * initialize some phy regs from eeprom values in modal_header[]
++ * acc. to band and bandwith
++ */
++static int ar9170_init_phy_from_eeprom(struct ar9170 *ar,
++				bool is_2ghz, bool is_40mhz)
++{
++	static const u8 xpd2pd[16] = {
++		0x2, 0x2, 0x2, 0x1, 0x2, 0x2, 0x6, 0x2,
++		0x2, 0x3, 0x7, 0x2, 0xB, 0x2, 0x2, 0x2
++	};
++	u32 defval, newval;
++	/* pointer to the modal_header acc. to band */
++	struct ar9170_eeprom_modal *m = &ar->eeprom.modal_header[is_2ghz];
 +
- /**
-  * DOC: Interface list locking
-  *
--------------
++	ar9170_regwrite_begin(ar);
++
++	/* ant common control (index 0) */
++	newval = le32_to_cpu(m->antCtrlCommon);
++	ar9170_regwrite(0x1c5964, newval);
++
++	/* ant control chain 0 (index 1) */
++	newval = le32_to_cpu(m->antCtrlChain[0]);
++	ar9170_regwrite(0x1c5960, newval);
++
++	/* ant control chain 2 (index 2) */
++	newval = le32_to_cpu(m->antCtrlChain[1]);
++	ar9170_regwrite(0x1c7960, newval);
++
++	/* SwSettle (index 3) */
++	if (!is_40mhz) {
++		defval = ar9170_get_default_phy_reg_val(0x1c5844,
++							is_2ghz, is_40mhz);
++		newval = (defval & ~0x3f80) | 
++			((m->switchSettling & 0x7f) << 7);
++		ar9170_regwrite(0x1c5844, newval);
++	}
++
++	/* adcDesired, pdaDesired (index 4) */
++	defval = ar9170_get_default_phy_reg_val(0x1c5850, is_2ghz, is_40mhz);
++	newval = (defval & ~0xffff) | ((u8)m->pgaDesiredSize << 8) |
++		((u8)m->adcDesiredSize);
++	ar9170_regwrite(0x1c5850, newval);
++
++	/* TxEndToXpaOff, TxFrameToXpaOn (index 5) */
++	defval = ar9170_get_default_phy_reg_val(0x1c5834, is_2ghz, is_40mhz);
++	newval = (m->txEndToXpaOff << 24) | (m->txEndToXpaOff << 16) |
++		(m->txFrameToXpaOn << 8) | m->txFrameToXpaOn;
++	ar9170_regwrite(0x1c5834, newval);
++
++	/* TxEndToRxOn (index 6) */
++	defval = ar9170_get_default_phy_reg_val(0x1c5828, is_2ghz, is_40mhz);
++	newval = (defval & ~0xff0000) | (m->txEndToRxOn << 16);
++	ar9170_regwrite(0x1c5828, newval);
++
++	/* thresh62 (index 7) */
++	defval = ar9170_get_default_phy_reg_val(0x1c8864, is_2ghz, is_40mhz);
++	newval = (defval & ~0x7f000) | (m->thresh62 << 12);
++	ar9170_regwrite(0x1c8864, newval);
++
++	/* tx/rx attenuation chain 0 (index 8) */
++	defval = ar9170_get_default_phy_reg_val(0x1c5848, is_2ghz, is_40mhz);
++	newval = (defval & ~0x3f000) | ((m->txRxAttenCh[0] & 0x3f) << 12);
++	ar9170_regwrite(0x1c5848, newval);
++
++	/* tx/rx attenuation chain 2 (index 9) */
++	defval = ar9170_get_default_phy_reg_val(0x1c7848, is_2ghz, is_40mhz);
++	newval = (defval & ~0x3f000) | ((m->txRxAttenCh[1] & 0x3f) << 12);
++	ar9170_regwrite(0x1c7848, newval);
++
++	/* tx/rx margin chain 0 (index 10) */
++	defval = ar9170_get_default_phy_reg_val(0x1c620c, is_2ghz, is_40mhz);
++	newval = (defval & ~0xfc0000) | ((m->rxTxMarginCh[0] & 0x3f) << 18);
++	/* bsw margin chain 0 for 5GHz only */
++	if (!is_2ghz)
++		newval = (newval & ~0x3c00) | ((m->bswMargin[0] & 0xf) << 10);
++	ar9170_regwrite(0x1c620c, newval);
++
++	/* tx/rx margin chain 2 (index 11) */
++	defval = ar9170_get_default_phy_reg_val(0x1c820c, is_2ghz, is_40mhz);
++	newval = (defval & ~0xfc0000) | ((m->rxTxMarginCh[1] & 0x3f) << 18);
++	ar9170_regwrite(0x1c820c, newval);
++
++	/* iqCall, iqCallq chain 0 (index 12) */
++	defval = ar9170_get_default_phy_reg_val(0x1c5920, is_2ghz, is_40mhz);
++	newval = (defval & ~0x7ff) | (((u8)m->iqCalICh[0] & 0x3f) << 5) |
++		((u8)m->iqCalQCh[0] & 0x1f);
++	ar9170_regwrite(0x1c5920, newval);
++
++	/* iqCall, iqCallq chain 2 (index 13) */
++	defval = ar9170_get_default_phy_reg_val(0x1c7920, is_2ghz, is_40mhz);
++	newval = (defval & ~0x7ff) | (((u8)m->iqCalICh[1] & 0x3f) << 5) |
++		((u8)m->iqCalQCh[1] & 0x1f);
++	ar9170_regwrite(0x1c7920, newval);
++
++	/* xpd gain mask (index 14) */
++	defval = ar9170_get_default_phy_reg_val(0x1c6258, is_2ghz, is_40mhz);
++	newval = (defval & ~0xf0000) | (xpd2pd[m->xpdGain & 0xf] << 16);
++	ar9170_regwrite(0x1c6258, newval);
++
++
++	ar9170_regwrite_finish();
++
++	return ar9170_regwrite_result();
++}
++
+ int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band)
+ {
+ 	int i, err;
+@@ -426,7 +558,9 @@ int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band)
+ 	if (err)
+ 		return err;
+ 
+-	/* XXX: use EEPROM data here! */
++	err = ar9170_init_phy_from_eeprom(ar, is_2ghz, is_40mhz);
++	if (err)
++		return err;
+ 
+ 	err = ar9170_init_power_cal(ar);
+ 	if (err)
+-- 
+1.6.0.4
 
-The first change is due to this:
 
-commit d0cf9c0dadcdc89a755bcb301cfc9c796eb28ccf
-Author: Stephen Hemminger <shemminger@vyatta.com>
-Date:   Mon Aug 31 19:50:57 2009 +0000
-
-    wireless: convert drivers to netdev_tx_t
-
-and the 2nd change due to this:
-
-commit 384912ed194e43c03ad1cdaa09b0b1e488c34d46
-Author: Marcel Holtmann <marcel@holtmann.org>
-Date:   Mon Aug 31 21:08:19 2009 +0000
-
-    net: Add DEVTYPE support for Ethernet based devices
-
-Both of these changes are traced back to changes in
-<linux/netdevice.h> , which compat-wireless does not ship. What's your
-policy on these kind of changes to compat-wireless?
-(the 2nd SET_NETDEV_DEVTYPE change probably can be spanned by an
-ifndef SET_NETDEV_DEVTYPE, and roll into
-"compat/patches/01-netdev.patch"? Should the first kind of change also
-go into compat/patches/01-netdev.patch?)
