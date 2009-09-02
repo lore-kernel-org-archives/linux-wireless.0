@@ -1,103 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39565 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbZIXK3S (ORCPT
+Received: from mail-iw0-f176.google.com ([209.85.223.176]:61038 "EHLO
+	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753632AbZIBWSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 06:29:18 -0400
-Subject: Re: [PATCH, v2]: nl80211: report age of scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200909241221.01456.hs4233@mail.mn-solutions.de>
-References: <200909241221.01456.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WoxSOJ+ja24762lUe7Qd"
-Date: Thu, 24 Sep 2009 12:29:19 +0200
-Message-Id: <1253788159.3868.23.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 2 Sep 2009 18:18:47 -0400
+Received: by iwn6 with SMTP id 6so531859iwn.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 15:18:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090902214601.GB5614@mosca>
+References: <20090901170030.GE8261@mosca> <20090902071849.GM4363@almesberger.net>
+	<20090902214601.GB5614@mosca>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 2 Sep 2009 15:18:28 -0700
+Message-ID: <43e72e890909021518s411c3e0ap2ec94f9ff6c01b68@mail.gmail.com>
+Subject: Re: ar6k driver
+To: Werner Almesberger <werner@openmoko.org>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>, Len.Widra@atheros.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 2, 2009 at 2:46 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+> On Wed, Sep 02, 2009 at 12:18:49AM -0700, Werner Almesberger wrote:
+>> Luis R. Rodriguez wrote:
+>> > I know I found it last time I looked through the openmoko wiki but
+>> > it took me a lot of time to actually find the git tree and then
+>> > the branch name. Today I gave up looking for it so resorting to
+>> > asking you for the git url.
+>>
+>> Yeah, it can be a little hard to find, particularly the right branch :-)
+>>
+>> The repository is here:
+>> git://git.openmoko.org/git/openmoko.git
+>>
+>> The branch with the latest code is origin/andy-tracking
+>>
+>> Finally, my HIF is here:
+>> drivers/ar6000/hif/hif2.c
+>
+> Thanks, I've created a new page for ar6k on the wireless.kernel.org wiki so
+> we don't loose track of this and so that this can be easier to find for others.
+>
+> http://wireless.kernel.org/en/users/Drivers/ar6k
+>
+> I've updated the openmoko wiki respectively:
+>
+> http://wiki.openmoko.org/wiki/AR6K
 
---=-WoxSOJ+ja24762lUe7Qd
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hm, seems origin/andy-tracking branch is gone:
 
-On Thu, 2009-09-24 at 12:21 +0200, Holger Schurig wrote:
-> Linux keeps scan results up to 15 seconds. This can be a problem for fast
-> moving clients: they get back stale data. But if the kernel reports the a=
-ge
-> of the BSS items, then user-space can simply weed out old entries by itse=
-lf.
->=20
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+mcgrof@tux ~/devel/openmoko (git::org.openmoko.dev)$ git branch -r
+  origin/HEAD -> origin/org.openmoko.dev
+  origin/historic/org.openembedded.dev
+  origin/historic/org.openmoko.asu.dev
+  origin/historic/org.openmoko.asu.stable
+  origin/historic/org.openmoko.asu.testing
+  origin/org.openmoko.dev
+  origin/org.openmoko.stable
 
-Fine with me, I don't care if there is a #define or not.
+Any ideas which one I should use, or is the master branch OK?
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-
-johannes
-
->=20
-> ---
->=20
-> v2: renamed NL80211_BSS_AGE_MS to NL80211_BSS_SEEN_MS_AGO to underline th=
-at
->     it's a relativene time
->=20
-> --- linux-wl.orig/include/linux/nl80211.h
-> +++ linux-wl/include/linux/nl80211.h
-> @@ -1277,6 +1277,7 @@
->   * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe response/bea=
-con
->   *	in unspecified units, scaled to 0..100 (u8)
->   * @NL80211_BSS_STATUS: status, if this BSS is "used"
-> + * @NL80211_BSS_SEEN_MS_AGO: age of this BSS entry in ms
->   * @__NL80211_BSS_AFTER_LAST: internal
->   * @NL80211_BSS_MAX: highest BSS attribute
->   */
-> @@ -1291,6 +1292,7 @@
->  	NL80211_BSS_SIGNAL_MBM,
->  	NL80211_BSS_SIGNAL_UNSPEC,
->  	NL80211_BSS_STATUS,
-> +	NL80211_BSS_SEEN_MS_AGO,
-> =20
->  	/* keep last */
->  	__NL80211_BSS_AFTER_LAST,
-> --- linux-wl.orig/net/wireless/nl80211.c
-> +++ linux-wl/net/wireless/nl80211.c
-> @@ -3105,6 +3105,8 @@
->  		NLA_PUT_U16(msg, NL80211_BSS_BEACON_INTERVAL, res->beacon_interval);
->  	NLA_PUT_U16(msg, NL80211_BSS_CAPABILITY, res->capability);
->  	NLA_PUT_U32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq);
-> +	NLA_PUT_U32(msg, NL80211_BSS_SEEN_MS_AGO,
-> +		jiffies_to_msecs(jiffies - intbss->ts));
-> =20
->  	switch (rdev->wiphy.signal_type) {
->  	case CFG80211_SIGNAL_TYPE_MBM:
->=20
-
-
---=-WoxSOJ+ja24762lUe7Qd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKu0n3AAoJEODzc/N7+QmaZ14QANQO6dg9QnbhOMh/RvXLk7cp
-kuboBEwj6ark9kf3yhDHqJdY9plzMwK3UV0zbLSQzrGJ+1wAc3yIlfA9CQ+hjXRX
-6lGXVcioJ67lXEl83pGq2Auo4XIbKGxfXiqrlJU0Aq2iBxID9z7Sl7EoSlZuoXKG
-qqlZ9/lMZZOJg8tUIdtKfe6qVZd7Z7hM0spSiDGPSnRC+kiGYCBB0pnQNOWnOzFO
-u3ZupgnOJ30yrvZukF7NfSQYC8G94Y1I4rKC6tauhFaeS2YLNjleCkDhEBP9G0gj
-6/g/4Udlq+lwL9f39m8PfEfnAg3gSW5Aogoofpjr8NPukYl0oPAwfggPvAqp2YGs
-ouRa/Pmdpf8zniIcDMNIEsHh7v7OTDV0WydayxCvNFLqJQWxFZD6XvBijCzp1NFs
-3OXZTT/qxpeUuPiDB8jn53vYnOWmACznmOq62zauWwUYfpwmDGGYzhvfjn1/Wj2w
-m/ScWC72zfc96m7+FSFsb76EkgxrgXY66sAViU4rR39KrMxvn9lrKrLiI6AOSrjk
-E8oog2+wUxbmVwnn7IJ75RXmbdbIp9JBUeYcBhe0+3KTmSS10MhBKkwMfzLpjIJR
-cmmnC0892lzjUDVOdEef7yArkZnM6aGtKqMCdFTXaGqPnkcf/jr6ubPnZLpmbxBH
-tdShv8W6GAGgUwiMxFZa
-=Rgk5
------END PGP SIGNATURE-----
-
---=-WoxSOJ+ja24762lUe7Qd--
-
+  Luis
