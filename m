@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f189.google.com ([209.85.216.189]:50681 "EHLO
-	mail-px0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbZIKFSp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 01:18:45 -0400
-Date: Thu, 10 Sep 2009 22:13:00 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-input@vger.kernel.org, linux-wireless@vger.kernel.org,
-	marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20090911051259.GC23210@core.coreip.homeip.net>
-References: <1252603292-20830-1-git-send-email-mjg@redhat.com>
+Received: from mail.tpi.com ([70.99.223.143]:1646 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752131AbZIBQSy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2009 12:18:54 -0400
+Message-ID: <4A9E9AEE.4060409@canonical.com>
+Date: Wed, 02 Sep 2009 10:18:54 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1252603292-20830-1-git-send-email-mjg@redhat.com>
+To: Jeremy Wolcott <jeremy.wolcott@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless and DKMS
+References: <4A9E7FBE.6060705@gmail.com>
+In-Reply-To: <4A9E7FBE.6060705@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 10, 2009 at 06:21:31PM +0100, Matthew Garrett wrote:
-> Most laptops have keys that are intended to toggle all device state, not
-> just wifi. These are currently generally mapped to KEY_WLAN. As a result,
-> rfkill will only kill or enable wifi in response to the key press. This
-> confuses users and can make it difficult for them to enable bluetooth
-> and wwan devices.
+Jeremy Wolcott wrote:
+> Has anybody tried to get compat-wireless working with DKMS?  This would 
+> be really handy for me since I run Ubuntu and they have been pushing 
+> kernel updates pretty frequently lately, but I need the newest 
+> compat-wireless to run my Atheros card in master mode via ath5k...
 > 
-> This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
-
-The new name in description does not match the code...
-
-> system should toggle the state of all rfkillable devices.
-
-Hmm, rfkill changes usually go through net tree so unless they want me
-to push it though I'll just ACK the new keycode.
-
+> I tried for quite a while today and the build just won't work.  (The 
+> 'make clean' step returns error 2, and then the build itself fails with 
+> "(directory it's building in) is a directory.  Stop.")  I think it's 
+> because the Makefile for compat-wireless uses the PWD environment 
+> variable, but I'm not well-versed enough in Makefiles to fix it up so 
+> that it'll work from a different directory (DKMS builds modules in 
+> /var/lib/dkms/MODULE_NAME/VERSION/build instead of wherever I unpacked 
+> the source).
 > 
-> Signed-off-by: Matthew Garrett <mjg@redhat.com>
-
-Acked-by: Dmitry Torokhov <dtor@mail.ru>
-
-> ---
->  include/linux/input.h |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+> Any advice would be appreciated...
 > 
-> diff --git a/include/linux/input.h b/include/linux/input.h
-> index 8b3bc3e..20a622e 100644
-> --- a/include/linux/input.h
-> +++ b/include/linux/input.h
-> @@ -595,6 +595,8 @@ struct input_absinfo {
->  #define KEY_NUMERIC_STAR	0x20a
->  #define KEY_NUMERIC_POUND	0x20b
->  
-> +#define KEY_RFKILL		0x20c /* Key that controls all radios */
-> +
->  /* We avoid low common keys in module aliases so they don't get huge. */
->  #define KEY_MIN_INTERESTING	KEY_MUTE
->  #define KEY_MAX			0x2ff
+> Thanks,
+> 
+> -Jeremy
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+I've been packaging compat-wireless in linux-backports-modules-2.6.31 on 
+a semi-spasmodic basis. Current version contains wireless-testing 
+master-2009-09-01.
+
+rtg
 -- 
-Dmitry
+Tim Gardner tim.gardner@canonical.com
