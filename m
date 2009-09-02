@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:51758 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbZIBK2t (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37091 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752971AbZIBRbM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 06:28:49 -0400
-Received: by ewy2 with SMTP id 2so650792ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 03:28:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4A9D4DD8.5020300@lwfinger.net>
-References: <h7eo7q$7ks$1@ger.gmane.org>
-	 <43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	 <3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-	 <43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-	 <3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-	 <4A9C3C59.5010305@lwfinger.net>
-	 <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-	 <4A9C42C5.6050400@lwfinger.net>
-	 <3ace41890908311616k4040d59fub051d21e822604d0@mail.gmail.com>
-	 <4A9D4DD8.5020300@lwfinger.net>
-Date: Wed, 2 Sep 2009 11:28:49 +0100
-Message-ID: <3ace41890909020328n7c967664sadca9f07b60e2847@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Sep 2009 13:31:12 -0400
+Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Andrew Lutomirski <luto@mit.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1251911825.13180.173.camel@rc-desk>
+References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+	 <1251906970.13180.137.camel@rc-desk>
+	 <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
+	 <1251910457.13180.160.camel@rc-desk>
+	 <1251911029.2999.0.camel@johannes.local>
+	 <1251911825.13180.173.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Zvx+w1m4CuO6yQs9T2u5"
+Date: Wed, 02 Sep 2009 19:30:29 +0200
+Message-Id: <1251912629.2999.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 1, 2009 at 5:37 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
-> Hin-Tak Leung wrote:
->>
->> The r8187 is distributed from OEMs - stand to reason, as realtek don't
->> really sell their own brand on high-street shops? We got one release
->> e-mailed to us, and there are a few floating around on the internet
->> under some laptop or usb hardware vendors. It is available under this,
->> for example: http://service.one.de/index.php?&direction=0&order=&directory=NOTEBOOKS/ONE_A1XX/LINUX/Source-code/Wireless
->> r8187mesh is the one in the mesh directory.
->
-> Thanks for this link. I got this code and I am in the process of
-> comparing it with the current rtl8187. So far, I find that the code
-> that sets the TX power levels is identical with ours.
->
-> Larry
 
-We had a later version of the driver, and either you or Herton had
-looked at that already... the mesh code isn't being looked at though.
+--=-Zvx+w1m4CuO6yQs9T2u5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Hin-Tak
+Hi Reinette,
+
+> The file itself was removed, but from what I understand the same
+> functionality can now be obtained from sleep_level_override.=20
+
+Indeed.
+
+> Users who
+> previously used power_level can thus now use sleep_level_override, but
+> with sleep_level_override not existing in 2.6.31 they will have no
+> alternative if we remove power_level.
+>=20
+> > So it
+> > may be fair to remove it for .31 since there you can't use it anyway.
+>=20
+> You can still use it to manually set power index used by device to
+> reduce power usage.
+
+I was under the impression that Andrew said this actually didn't work.
+
+johannes
+
+--=-Zvx+w1m4CuO6yQs9T2u5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKnquxAAoJEODzc/N7+QmahdsP/0tn7gLnk2iT9imsx8LKZ+Bq
+hEnIGHI42c6ZNB+r7ntH9Yc7HV4NRGqVpD7HqYhcuOldFOJHZuQgauh0C3PdDqVr
+wrsGhWdzAxAIMeyMqnVhj+/qUJe6WbIuJQIJiEuVThUNMTZf0Ua0W993nCdGuFgL
+8n/I8C2Ma+8PYFS0aoHrWnRTm8CLh5szojjGn8hktg2CrhPehrN6qYcSIGnet/yP
+Iojsxb9kvrPDyk3OjlocMSkuCe5v9YxWN229pt8adkiHt9g6g7HvW+/f/YVOEWrX
+IeVWogk63K7Tt7U862SPDK5q5bXMDIfWd1s6+fAhHYNBciNJN8WBx0vvWTU+Fgx0
+nRRvOdCgYSIGa+BHhY/XaJ5F18xP1JXgXY8gFzSCejcdQFVBIyIaGZj84l4uTFPP
+PatXmXYWPtA6q8LGxGwHLTYcPsbwZgzAoDNyWgjnNEUy+UNE299twWTWltTsAYFi
+Bq/FltiUW1A/wDlx4WVvQ33a2ju0mcAHQQZ3YwVBlcx6dvUMHOgVU7leXLSBI7I2
+0rbGBac05FrZBUELsgkDQwsct0GcPWHGNHvdqQ9OdHzlVDW7V9xAQaRBbBjVQrvq
+dSSnH/3ScIFgFfkNLTYwWB7SAKqKbTXDSUv57jx/4vGYrkBPDlBjyJD3t3sWWsgC
+hcwLZZrkBkpfYbG7szKt
+=YnLi
+-----END PGP SIGNATURE-----
+
+--=-Zvx+w1m4CuO6yQs9T2u5--
+
