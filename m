@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:10596 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811AbZI2HYQ (ORCPT
+Received: from mail-yw0-f188.google.com ([209.85.211.188]:48648 "EHLO
+	mail-yw0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbZIBKUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 03:24:16 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Bing Zhao <bzhao@marvell.com>
-Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
-Date: Tue, 29 Sep 2009 09:24:07 +0200
-Cc: Dan Williams <dcbw@redhat.com>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com> <1253458691.11702.46.camel@localhost.localdomain> <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
+	Wed, 2 Sep 2009 06:20:43 -0400
+Received: by ywh26 with SMTP id 26so1083565ywh.5
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 03:20:44 -0700 (PDT)
+Date: Wed, 2 Sep 2009 15:50:55 +0530
+From: Vivek Natarajan <vivek.natraj@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Reconfigure beacon timers after the scan is
+	completed.
+Message-ID: <20090902102055.GA3075@myhost.users.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909290924.07758.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> iwconfig wlan0 power period 0   -> enable deep sleep (enter
-> deep sleep immediately) 
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> iwconfig wlan0 power period 5   -> enable auto deep sleep
-> (enter deep sleep automatically after 5s idle time) 
-
-> iwconfig wlan0 power period -1  -> disable deep sleep / auto
-> deep sleep 
-
-ACK from my side (not that I'm the maintainer ...)
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index efee193..c2efdf2 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2773,6 +2773,7 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ 	sc->sc_flags &= ~SC_OP_SCANNING;
+ 	sc->sc_flags |= SC_OP_FULL_RESET;
+ 	spin_unlock_bh(&sc->ani_lock);
++	ath_beacon_config(sc, NULL);
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
 -- 
-http://www.holgerschurig.de
+1.6.0.1
+
