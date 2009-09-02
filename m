@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23406 "EHLO mga09.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:34882 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754660AbZI3SQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 14:16:36 -0400
-Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
-From: reinette chatre <reinette.chatre@intel.com>
-To: "tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4AC39D6F.5070308@canonical.com>
-References: <4AC39D6F.5070308@canonical.com>
-Content-Type: text/plain
-Date: Wed, 30 Sep 2009 11:16:26 -0700
-Message-Id: <1254334586.26521.1617.camel@rc-desk>
-Mime-Version: 1.0
+	id S1753100AbZIBVqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2009 17:46:00 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 14:46:03 -0700
+Date: Wed, 2 Sep 2009 14:46:01 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Werner Almesberger <werner@openmoko.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<Len.Widra@atheros.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: ar6k driver
+Message-ID: <20090902214601.GB5614@mosca>
+References: <20090901170030.GE8261@mosca>
+ <20090902071849.GM4363@almesberger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20090902071849.GM4363@almesberger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tim,
-
-On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
-> I've got a user complaining that the iwl-1000 firmware version required
-> by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
-> only firmware available from http://intellinuxwireless.org/?n=Downloads
-> is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
+On Wed, Sep 02, 2009 at 12:18:49AM -0700, Werner Almesberger wrote:
+> Luis R. Rodriguez wrote:
+> > I know I found it last time I looked through the openmoko wiki but
+> > it took me a lot of time to actually find the git tree and then
+> > the branch name. Today I gave up looking for it so resorting to
+> > asking you for the git url.
 > 
-> BugLink: http://bugs.launchpad.net/bugs/439285
+> Yeah, it can be a little hard to find, particularly the right branch :-)
 > 
+> The repository is here:
+> git://git.openmoko.org/git/openmoko.git
+> 
+> The branch with the latest code is origin/andy-tracking
+> 
+> Finally, my HIF is here:
+> drivers/ar6000/hif/hif2.c
 
-2.6.31 needs a few more patches to fully support 1000 series, among
-these is the patch that can parse a new ucode header format and another
-patch to update the ucode API. 
+Thanks, I've created a new page for ar6k on the wireless.kernel.org wiki so
+we don't loose track of this and so that this can be easier to find for others.
 
-Depending on the requirements it may be easier to backport those patches
-or to just use compat-wireless. That will be the user's decision.
+http://wireless.kernel.org/en/users/Drivers/ar6k
 
-Here is the list of patches:
+I've updated the openmoko wiki respectively:
 
-commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
-Author: Jay Sternberg <jay.e.sternberg@intel.com>
-Date:   Fri Jul 17 09:30:16 2009 -0700
+http://wiki.openmoko.org/wiki/AR6K
 
-    iwlwifi: Handle new firmware file with ucode build number in header
-
-commit cce53aa347c1e023d967b1cb1aa393c725aedba5
-Author: Jay Sternberg <jay.e.sternberg@intel.com>
-Date:   Fri Jul 17 09:30:22 2009 -0700
-
-    iwlwifi: update 1000 series API version to match firmware
-
-commit 02c06e4abc0680afd31bf481a803541556757fb6
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Fri Jul 17 09:30:14 2009 -0700
-
-    iwlagn: modify digital SVR for 1000
-
-commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
-Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date:   Thu Aug 13 13:30:54 2009 -0700
-
-    iwlwifi: traverse linklist to find the valid OTP block
-
-commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
-Author: Reinette Chatre <reinette.chatre@intel.com>
-Date:   Fri Jul 24 11:13:12 2009 -0700
-
-    iwlagn: fix null pointer access during ucode load on 1000
-
-Reinette
-
-
-
-
+  Luis
