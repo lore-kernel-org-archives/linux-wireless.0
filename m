@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp2.ultrahosting.com ([74.213.174.253]:46685 "EHLO
-	smtp.ultrahosting.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932275AbZINSGo (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:37073 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016AbZIBQst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 14:06:44 -0400
-Date: Mon, 14 Sep 2009 14:04:11 -0400 (EDT)
-From: Christoph Lameter <cl@linux-foundation.org>
-To: Mel Gorman <mel@csn.ul.ie>
-cc: Zhu Yi <yi.zhu@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Wed, 2 Sep 2009 12:48:49 -0400
+Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Andrew Lutomirski <luto@mit.edu>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-In-Reply-To: <20090914175942.GH11778@csn.ul.ie>
-Message-ID: <alpine.DEB.1.10.0909141403390.5676@V090114053VZO-1>
-References: <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252526738.30150.91.camel@rc-desk> <20090910090206.GA22276@csn.ul.ie> <1252617290.30150.321.camel@rc-desk>
- <20090911084717.GB32497@csn.ul.ie> <1252897270.5650.169.camel@debian> <alpine.DEB.1.10.0909141141200.24447@V090114053VZO-1> <20090914175942.GH11778@csn.ul.ie>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1251906970.13180.137.camel@rc-desk>
+References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+	 <1251906970.13180.137.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Ao8NfL0RDu5IMKwt88uh"
+Date: Wed, 02 Sep 2009 18:48:03 +0200
+Message-Id: <1251910084.24846.29.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 14 Sep 2009, Mel Gorman wrote:
 
-> The allocation of buffers >= PAGE_SIZE even when allocated with
-> kmalloc() are page-aligned though right? It's not an explicit guarantee
-> but is it not always the case?
+--=-Ao8NfL0RDu5IMKwt88uh
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Its typically the case but debug options may misalign the object. The
-guarantee for kmalloc caches is to be cacheline aligned.
+On Wed, 2009-09-02 at 08:56 -0700, reinette chatre wrote:
+
+> 2.6.32 will have power save support disabled also.
+
+Only by default -- there you can actually enable it as a user with
+"iwconfig wlan0 power timeout 100ms" to turn it on -- unless that patch
+didn't go in?
+
+johannes
+
+--=-Ao8NfL0RDu5IMKwt88uh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKnqG/AAoJEODzc/N7+Qmaqu8P/2CsRlzupU3jLYEwKy8+6xpR
+1mhzxlYOTKa+j4+OmphSByBkWRCnymbd+rN8nqi/A60q2z2rWnHUMCoWaqMYzTHq
+9Z0V4rC65kOraIiqJgOsLJvh1QAowW3Zhb42FtaPZmb679CnOmb4bkhvmww1wUo8
+RFfDVI5fIOUyzJlqbkGKnDWLqOPYiL1L+mdnOaReK/YYDWphXvoIQ6EqLN26r2q1
+VC1pV+eeQrvE1mnig7OxJ/gjSUMMO3kuvmcV83a1wkq+rTwb7WzOF4ldb5p+Y7F5
+W5BVY10jNnFjqHcoUl96q0x5rPUa6EFdlwDkfcU/24ZXiqzxWG7MxA+ECH/rEhkj
+ebmK6wRrHO7+uEOqY8nx2IxpmZAkp23Nhov0afQpWgE7T/szq/XX7vgS30yWTJwN
+uGG5Otq23ODkTsu327lb2sSzdRS5WSEZp7NZClTZtd5gPx8Tsqlsy0B5J9Y2GZS1
+62jgzwT61effC3fsM8qW0vec2uA8XDde+tjSGVXUyqTqZruUSqeyTe77kiBrA3Mw
+mSY4sD9l3eAUYn8ZG2L55cM99QJNJoD2OqQeeUgNVuypGEC/XXxjaJp5GLmOn/FO
+pfsILEtAO11jqxeZ2/NCh3Hivip3Qs8uMsfm2z+fGbg3z66Yrc0dKSnwbNruhRvw
+Dff8oeNhMu82kZp2jNJw
+=VMhx
+-----END PGP SIGNATURE-----
+
+--=-Ao8NfL0RDu5IMKwt88uh--
 
