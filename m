@@ -1,75 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:47113 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830AbZI2S1g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 14:27:36 -0400
-Received: by fxm18 with SMTP id 18so4712992fxm.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 11:27:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890909290200h4dbefddah131851675dc06097@mail.gmail.com>
-References: <200909260457.21103.malte.gell@gmx.de> <4ABDE7AC.1090409@hauke-m.de>
-	<200909291050.54388.malte.gell@gmx.de> <3ace41890909290200h4dbefddah131851675dc06097@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 29 Sep 2009 20:27:20 +0200
-Message-ID: <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
-Subject: Re: cannot compile compate-wirless snapshots
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Malte Gell <malte.gell@gmx.de>, Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:18695 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752390AbZIBP4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2009 11:56:09 -0400
+Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
+From: reinette chatre <reinette.chatre@intel.com>
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 02 Sep 2009 08:56:10 -0700
+Message-Id: <1251906970.13180.137.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2009 at 11:00 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Tue, Sep 29, 2009 at 9:50 AM, Malte Gell <malte.gell@gmx.de> wrote:
->>
->> Hauke Mehrtens <hauke@hauke-m.de> wrote
->>
->>
->>> Does this file exists in your installation?
->>> /lib/modules/`uname -r`/build/include/linux/tracepoint.h ?
->>
->> Yes, but, look:
->>
->> cd /usr/src/linux
->>
->> grep -i tracepoint .config
->>
->> # CONFIG_TRACEPOINTS is not set
->>
->> Do I need to set it to yes?
->>
->> Malte
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> No. You should not manually edit any kernel config file (the
-> compat-wireless module should be built against a config matching your
-> running kernel, not a massaged version of it) and what is in
-> /usr/src/linux is irrelevant , because that is not your running
-> kernel.
->
-> The relevant config is probably /boot/config-`uname -r`, but, please
-> do *not* modify it.
->
+Hi Andy,
 
-It should be in /proc/config.gz. (/boot/config-* is an Ubuntuism.)
+On Wed, 2009-09-02 at 07:53 -0700, Andrew Lutomirski wrote:
+> Right now, enabling power saving on iwlwifi is impossible, because
+> mac80211 won't tell iwlwifi that power saving is on (since
+> IEEE80211_HW_SUPPORTS_PS is not set) and iwlwifi will ignore the
+> user's power_level setting until mac80211 asks for power saving.
+> Setting this flag allows the user to manually enable power saving if
+> desired.
+> 
+> Signed-off-by: Andy Lutomirski <luto@mit.edu>
+> 
+> ---
 
-> I already wrote - your best bet is simply deleting all the 'error
-> redefintion' parts from net/compat-2.6.28.h, since your kernel tree is
-> somewhere between 2.6.27 and 2.6.28 . (and also delete some part of
-> net/compat-2.6.28.c when possible later linker error arises).
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+nack.
+
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2053 and
+http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=2051 are two
+examples of what happens if power save support is enabled. In addition
+to this we are also seeing issues with 4965 that are described in the
+commit that disabled powersave in 2.6.31 in the first place
+(286d94906587901851906a5e2ddc09bc1a7ba1d9).
 
 
+> This fixes what looks to me like a regression: power_level used to
+> work but now fails silently.  In 2.6.32 I think this code is going
+> away, but this patch seems like a safe stopgap measure.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+2.6.32 will have power save support disabled also.
+
+Reinette
+
+
