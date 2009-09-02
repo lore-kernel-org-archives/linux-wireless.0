@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21658 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:57100 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760658AbZIQD6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 23:58:17 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:58:21 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19121.46045.975544.100257@gargle.gargle.HOWL>
-Date: Thu, 17 Sep 2009 09:28:21 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/12] ath9k: Fix bug in chain handling
+	id S1752967AbZIBRRD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Sep 2009 13:17:03 -0400
+Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrew Lutomirski <luto@mit.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1251911029.2999.0.camel@johannes.local>
+References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+	 <1251906970.13180.137.camel@rc-desk>
+	 <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
+	 <1251910457.13180.160.camel@rc-desk>
+	 <1251911029.2999.0.camel@johannes.local>
+Content-Type: text/plain
+Date: Wed, 02 Sep 2009 10:17:05 -0700
+Message-Id: <1251911825.13180.173.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+Hi Johannes,
 
-* This patch fixes a bug in calculating the scaled
-  power for three chain chipsets.
+On Wed, 2009-09-02 at 10:03 -0700, Johannes Berg wrote:
+> On Wed, 2009-09-02 at 09:54 -0700, reinette chatre wrote:
+> > On Wed, 2009-09-02 at 09:41 -0700, Andrew Lutomirski wrote:
+> > > Fair enough.  Would you accept a patch to remove power_level from sysfs instead?
+> > No. This file is used when users want to manually reduce the power used
+> > by device. This is the file you want to change if you want to extend
+> > your battery life.
+> Actually, we have already removed that file for 2.6.32 I think? 
 
-* Also, a delay is needed after setting DAC low-power mode in
-  TOP1 RF register (Top Level Register Bits).
+The file itself was removed, but from what I understand the same
+functionality can now be obtained from sleep_level_override. Users who
+previously used power_level can thus now use sleep_level_override, but
+with sleep_level_override not existing in 2.6.31 they will have no
+alternative if we remove power_level.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+> So it
+> may be fair to remove it for .31 since there you can't use it anyway.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index ae7fb5d..4071fc9 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -509,6 +509,8 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
- 			REG_RMW_FIELD(ah, AR_AN_TOP1, AR_AN_TOP1_DACIPMODE,
- 				      eep->baseEepHeader.dacLpMode);
- 
-+		udelay(100);
-+
- 		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL, AR_PHY_FRAME_CTL_TX_CLIP,
- 			      pModal->miscBits >> 2);
- 
-@@ -902,7 +904,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 						  u16 powerLimit)
- {
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
-+#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
- 
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
--- 
-1.6.4.3
+You can still use it to manually set power index used by device to
+reduce power usage.
+
+Reinette
+
 
