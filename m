@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.241]:8667 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbZIQMq1 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbZIBRE0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 08:46:27 -0400
-Received: by an-out-0708.google.com with SMTP id d40so488060and.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2009 05:46:30 -0700 (PDT)
-Message-ID: <4AB22FA3.2030004@lwfinger.net>
-Date: Thu, 17 Sep 2009 07:46:27 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Bryan Wu <bryan.wu@canonical.com>, mb@bu3sch.de,
-	stefano.brivio@polimi.it, linux-wireless@vger.kernel.org
-Subject: Re: [b43] About supporting of BCM4312 [14e4:4315] with Low Power
- PHY
-References: <4AA9B46E.8020100@canonical.com> <69e28c910909102318u465f6c75w46a2404a8e8d9f08@mail.gmail.com> 	<4AB0EDEB.9010803@canonical.com> <69e28c910909160813h2a91ff32hb5fa836f1f7a4963@mail.gmail.com> 	<4AB1AE43.6000602@canonical.com> <4AB1FAAB.1050103@canonical.com> <69e28c910909170535r26aabb14mfbd3e31223f56618@mail.gmail.com>
-In-Reply-To: <69e28c910909170535r26aabb14mfbd3e31223f56618@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Sep 2009 13:04:26 -0400
+Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Andrew Lutomirski <luto@mit.edu>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1251910457.13180.160.camel@rc-desk>
+References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
+	 <1251906970.13180.137.camel@rc-desk>
+	 <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
+	 <1251910457.13180.160.camel@rc-desk>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3qSARCWQ7Bln3fiQqNiY"
+Date: Wed, 02 Sep 2009 19:03:49 +0200
+Message-Id: <1251911029.2999.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> Try to enable mac80211/cfg80211 debug messages. Also enable SSB
-> debugging. (If mac80211 debugging is on, then you are hitting a
-> {mac|cfg|nl|lib}80211 bug, as your dmesg should contain entries like
-> "device is no longer idle".)
-> 
-> To Larry: Software RFKILL is not yet implemented for LP-PHY - it is
-> part of my calibration patch, which had other errors (software RFKILL
-> is a prereq for calibration). Feel free to split it out into a
-> separate patch if anyone needs it - I can't do it right now; no
-> working Linux system (due to the vmware problem).
 
-I have noticed that there is no notification of the radio switch being
-off with the 4315; however, the radio is killed by the switch.
+--=-3qSARCWQ7Bln3fiQqNiY
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-If I have time, I'll look at it, but I'm going to be travelling for 8
-days and may not have much time.
+On Wed, 2009-09-02 at 09:54 -0700, reinette chatre wrote:
+> Hi Andrew,
+>=20
+> On Wed, 2009-09-02 at 09:41 -0700, Andrew Lutomirski wrote:
+>=20
+> > Fair enough.  Would you accept a patch to remove power_level from sysfs=
+ instead?
+>=20
+> No. This file is used when users want to manually reduce the power used
+> by device. This is the file you want to change if you want to extend
+> your battery life.
 
-Larry
+Actually, we have already removed that file for 2.6.32 I think? So it
+may be fair to remove it for .31 since there you can't use it anyway.
+
+johannes
+
+--=-3qSARCWQ7Bln3fiQqNiY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKnqVxAAoJEODzc/N7+QmakWMQAIS9arc14lSrJCP7KyG2D1UU
+ShqT5FyvDhPJZ7MAJ8hGL4nCDMy4aAfOfm4koE0rC8Eq7nbeEZ2hRjz+565XL1TE
+ThrbYB+NH34E5Ewm8Bdxrw3WqVxiFpcvYDE9yVRpEpavH+YtLc+g2hwYoz7M3RAx
+nmtQsFdjGHDvazk1IGHxpFW96XHeRdVJPqgddwnfZIi2dLP0vnb/h9dvmO1icVLM
+Ytxn1Pp8tjp4XCJsqkFw4+oSC819/t39Ci/NPO0QtzgSSnM1XdHgVBDgVoe08mnM
+iQFnsN7SIfiNBofFQTNpi/AkK30I9oBRq9je9+OeJB//Bw3DMwVZrwvi4Ef4YtVg
+CaJQgJ1Xx3k8RRAMvcFwoTKNZhm02GL2IKTnUYXtgyxfSEbB6iiWTTK2FTHnnRS+
+YV2GIm6xZMxdSLK0cIUGD6MtLnBPrIRoml/mcpepOZPp3ZFrjHa0cnn6+Zvm/ZHV
+cANlnwGjsPbJpoaVwA26EOwvMl2MDpt3AQwk86a49JykfL1xK2MxGC1t6biVebg9
+ixQHFQC66kZhket2z/F01/rt/g6LlgM4w/xZSxC5Ev6kVikJGJGoECr2fmyshLnw
+eUhW6kjL4/kojWrXjINFmSMqhDLZv//Y6utkXsmCOBkhSoaROUR3lKxB0ewSfmLI
+Rrc56yPjV2PiS6wrFaH/
+=9I4T
+-----END PGP SIGNATURE-----
+
+--=-3qSARCWQ7Bln3fiQqNiY--
 
