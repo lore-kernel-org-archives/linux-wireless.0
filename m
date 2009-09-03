@@ -1,118 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:57475 "EHLO mga14.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:4369 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754291AbZIKRuf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:50:35 -0400
-Subject: [PATCH 13/13 v2.6.32] iwlwifi: disable powersave for 4965
-From: reinette chatre <reinette.chatre@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1252690699-25796-14-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-	 <1252690699-25796-14-git-send-email-reinette.chatre@intel.com>
+	id S1755319AbZICPLt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 11:11:49 -0400
+Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+From: Pavel Roskin <proski@gnu.org>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amit Kucheria <amit.kucheria@canonical.com>,
+	List Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <a32f33a40909030718v494f8fech6ba3c854b5c84ef8@mail.gmail.com>
+References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+	 <20090903115521.GB12597@tuxdriver.com>
+	 <a32f33a40909030718v494f8fech6ba3c854b5c84ef8@mail.gmail.com>
 Content-Type: text/plain
-Date: Fri, 11 Sep 2009 10:50:37 -0700
-Message-Id: <1252691437.30150.402.camel@rc-desk>
+Date: Thu, 03 Sep 2009 11:11:39 -0400
+Message-Id: <1251990699.6521.12.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Thu, 2009-09-03 at 16:18 +0200, Ivo Van Doorn wrote:
+> On Thu, Sep 3, 2009 at 1:55 PM, John W. Linville<linville@tuxdriver.com> wrote:
+> > On Thu, Sep 03, 2009 at 02:42:20PM +0300, Amit Kucheria wrote:
+> >> USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
+> >> defined. Remove it from rt2500usb.
+> >>
+> >> Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
+> >> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> >
+> > IIRC there are IDs that are used by different devices where rt73usb
+> > covers one device and the rt2500usb covers another.  Are you sure
+> > this is not one of those?
+> 
+> Yes, I believe this particular ID was already discussed some time ago
+> on this list. This is one of the infamous duplicate IDs. (Fortunately not
+> one of those infamous Linksys devices with 5 different chipsets for the
+> same ID).
 
-There's a bug in 4965 powersave that appears to
-be related to the way it keeps track of its data
-during sleep, but we haven't found it yet. Due to
-that, using powersave may spontaneously cause the
-device to SYSASSERT when transitioning from sleep
-to wake. Therefore, disable powersave for 4965,
-until (if ever, unfortunately) we can identify
-and fix the problem.
+The famous Linksys devices can be distinguished by the textual PCMCIA
+ID.  In this case, there is no reliable way to distinguish the devices
+without trying the drivers.  I tried and could not find any difference
+between "lsusb -v" output for the devices said to be supported by
+rt2500usb and rt73usb.
 
-Cf. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1982
-which was closed, but now has re-appeared with
-IDLE mode, which probably means we never really
-fixed it.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
-
-This version of the patch applies to 2.6.32. Please use previous
-version for wireless-testing.
-
-Thank you very much
-
- drivers/net/wireless/iwlwifi/iwl-4965.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c  |    9 ++++++---
- drivers/net/wireless/iwlwifi/iwl-core.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-power.c |    5 +++--
- 4 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 63df1e4..d61d5a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2346,6 +2346,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
- 	.mod_params = &iwl4965_mod_params,
- 	.use_isr_legacy = true,
- 	.ht_greenfield_support = false,
-+	.broken_powersave = true,
- };
- 
- /* Module firmware */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5c6cee2..e447c1a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1565,9 +1565,12 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
--		    IEEE80211_HW_SPECTRUM_MGMT |
--		    IEEE80211_HW_SUPPORTS_PS |
--		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+		    IEEE80211_HW_SPECTRUM_MGMT;
-+
-+	if (!priv->cfg->broken_powersave)
-+		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
-+			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index cab148d..5e1f700 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -256,6 +256,7 @@ struct iwl_cfg {
- 	const u16 max_ll_items;
- 	const bool shadow_ram_support;
- 	const bool ht_greenfield_support;
-+	const bool broken_powersave;
- };
- 
- /***************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 4ec6a83..60be976 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -292,8 +292,9 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
- 	else
- 		dtimper = 1;
- 
--	/* TT power setting overwrites everything */
--	if (tt->state >= IWL_TI_1)
-+	if (priv->cfg->broken_powersave)
-+		iwl_power_sleep_cam_cmd(priv, &cmd);
-+	else if (tt->state >= IWL_TI_1)
- 		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
- 	else if (!enabled)
- 		iwl_power_sleep_cam_cmd(priv, &cmd);
 -- 
-1.5.6.3
-
-
-
+Regards,
+Pavel Roskin
