@@ -1,38 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:57598 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752308AbZIHSaL (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:63101 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbZICM1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 14:30:11 -0400
-Received: by fxm17 with SMTP id 17so2858138fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:30:13 -0700 (PDT)
-Message-ID: <4AA6A2B3.2010300@lwfinger.net>
-Date: Tue, 08 Sep 2009 13:30:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 3 Sep 2009 08:27:30 -0400
+Date: Thu, 3 Sep 2009 15:27:27 +0300
+From: Amit Kucheria <amit.kucheria@canonical.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: List Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+Message-ID: <20090903122727.GA4465@matterhorn.verdurent.com>
+References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+ <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: John Daiker <daikerjohn@gmail.com>, Michael Buesch <mb@bu3sch.de>,
-	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 dma error
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> 	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> 	<4AA69F61.2040300@lwfinger.net> <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com>
-In-Reply-To: <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-G�bor Stefanik wrote:
-> On Tue, Sep 8, 2009 at 8:16 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
->> Your PHY and your radio are the same as mine. In fact, the one thing I
->> noticed is that you are using i386 architecture, whereas mine is
->> x86_64. I have not tested with i386.
->>
->> Has anyone run the LP PHY modifications with 32-bit architecture?
+On 09 Sep 03, Ivo Van Doorn wrote:
+> > USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
+> > defined. Remove it from rt2500usb.
+> >
+> > Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
+> > Cc: Ivo van Doorn <IvDoorn@gmail.com>
 > 
-> Yes, me. (With the exact same card as John.)
+> NACK
+> 
+> Users have reported that this is a valid rt2500usb ID. You can thank the
+> manufacturer of the dongle to produce dongles with the same USB ID but
+> with different chipsets.
+> 
+> Ivo
 
-Is it a maximum memory issue? How much for you?
+Interesting. On my laptop, without this patch both the drivers are loaded
+(lsmod), rt2500usb aborts without allocating a device successfully but I am
+unable to associate to the AP.
 
-John and Dave: Same question.
+With the patch, I am atleast able to associate to the AP. Perhaps there is
+some other side-effect.
 
-Larry
+Regards,
+Amit
+
+> > ---
+> >  drivers/net/wireless/rt2x00/rt2500usb.c |    1 -
+> >  1 files changed, 0 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > index ce75426..2e9fac7 100644
+> > --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> > +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> > @@ -2020,7 +2020,6 @@ static struct usb_device_id rt2500usb_device_table[] = {
+> >        /* Ralink */
+> >        { USB_DEVICE(0x148f, 0x1706), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >        { USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > -       { USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >        { USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
+> >        /* Sagem */
+> >        { USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
+> > --
+> > 1.6.3.3
+> >
+> >
+
+-- 
+-------------------------------------------------------------------------
+Amit Kucheria,				 Kernel Developer, Verdurent
+-------------------------------------------------------------------------
