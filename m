@@ -1,68 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:64590 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbZI1VwS (ORCPT
+Received: from netsys.kaist.ac.kr ([143.248.239.50]:49259 "EHLO
+	netsys.kaist.ac.kr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963AbZICDiI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 17:52:18 -0400
-Received: by ewy7 with SMTP id 7so4872406ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 14:52:21 -0700 (PDT)
+	Wed, 2 Sep 2009 23:38:08 -0400
+Received: from JinsungLeePC (netsys30.kaist.ac.kr [143.248.239.70])
+	by netsys.kaist.ac.kr (8.13.1/8.13.1) with ESMTP id n833aGRo018936
+	for <linux-wireless@vger.kernel.org>; Thu, 3 Sep 2009 12:36:16 +0900
+From: "Jinsung Lee" <ljs@netsys.kaist.ac.kr>
+To: <linux-wireless@vger.kernel.org>
+Subject: 802.11a multicast rate setting
+Date: Thu, 3 Sep 2009 12:38:06 +0900
+Message-ID: <031201ca2c47$f334bba0$d99e32e0$@kaist.ac.kr>
 MIME-Version: 1.0
-In-Reply-To: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
-References: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
-Date: Mon, 28 Sep 2009 22:52:21 +0100
-Message-ID: <3ace41890909281452x3170c8c6g5dc56cff85663099@mail.gmail.com>
-Subject: Re: Question on general wireless testing tree compilation.
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Balaji Ravindran <b@w1an.in>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 25, 2009 at 6:21 AM, Balaji Ravindran <b@w1an.in> wrote:
-> Hi Everyone,
->
-> Sorry for a very amateur question. Could anyone just help me get started
-> with compiling the linux kernel from the wireless-testing tree? I just
-> pulled the local wireless-testing repo, trying to navigate through the code,
-> and wanted to compile the kernel, and to boot up to it. Could anyone just
-> help me get started?
->
-> I followed the instructions from
-> http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
-> and ended up with a compile error in 'make', while trying to create the
-> bzimage. (error is on make: initramfs_data.cpi.o failed)
->
-> Is there any other easy way to compile the kernel/debug.
->
->
-> Thanks
->
-> Balaji R
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Hi, everyone.
 
-As the other replier has already stated, including the last few lines
-of the message before the error would be nice.
+If using ath5k or ath9k when the WLAN card supports 802.11a mode, is it
+possible to change multicast (or broadcast) rate into under 6Mbps, like the
+case of 802.11b mode?
+e.g. 1Mbps or 2Mbps.
+Thank you and best regards,
 
-Also, if you haven't built your own kernel before, it is probably
-better to start from a known configuration rather than from scratch.
-While all the tutorial, etc tells you to do 'make mrproper ; make
-menuconfig/xconfig; make' , there are occasionally some missing
-dependencies which aren't explicitly hooked up, so it might be easier
-to do, instead of make menuconfig/xconfig, in the middle, copy your
-distro's config (or your current running kernel's config) from either
-/boot/config-* (packaged from your distro) or /proc/config.gz (for a
-kernel which remembers its own config - it is a kernel config opton),
-to .config in your source tree, run make oldconfig (which only ask
-your questions about *difference* between the tree and the running
-kernel), before running make menuconfig/xconfig. This way, you are
-starting from a valid and know-working configuration for your
-hardware/archecture.
 
-Also, compat-wireless (which just replaces the wireless-related kernel
-modules) is sometimes a quicker/easier alternative to the whole
-wireless-testing.
+----
+Jinsung Lee
+
+
+
