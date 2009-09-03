@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:56733 "EHLO lo.gmane.org"
+Received: from c60.cesmail.net ([216.154.195.49]:64954 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751591AbZIYU0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 16:26:07 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1MrHMo-0002ZE-Kn
-	for linux-wireless@vger.kernel.org; Fri, 25 Sep 2009 22:26:10 +0200
-Received: from passportsystems.com ([68.178.128.95])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 22:26:10 +0200
-Received: from rudicus by passportsystems.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 22:26:10 +0200
-To: linux-wireless@vger.kernel.org
-From: Matthew Ryan <rudicus@gmail.com>
-Subject: Re: Porting AR6K to use cfg80211
-Date: Fri, 25 Sep 2009 20:25:48 +0000 (UTC)
-Message-ID: <loom.20090925T222532-791@post.gmane.org>
-References: <loom.20090925T193922-290@post.gmane.org> <200909252005.23746.mb@bu3sch.de>
+	id S1753642AbZICRqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 13:46:07 -0400
+Subject: Re: 802.11a multicast rate setting
+From: Pavel Roskin <proski@gnu.org>
+To: Jinsung Lee <ljs@netsys.kaist.ac.kr>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <031201ca2c47$f334bba0$d99e32e0$@kaist.ac.kr>
+References: <031201ca2c47$f334bba0$d99e32e0$@kaist.ac.kr>
+Content-Type: text/plain
+Date: Thu, 03 Sep 2009 13:46:00 -0400
+Message-Id: <1251999960.7822.0.camel@mj>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@...> writes:
-
+On Thu, 2009-09-03 at 12:38 +0900, Jinsung Lee wrote:
+> Hi, everyone.
 > 
-> On Friday 25 September 2009 19:40:52 Matthew Ryan wrote:
-> > I was curious if I could get a few expert opinions on if its possible to port
-> > this driver to use mac80211, and how difficult/ what pitfalls there may be.
-> 
-> The device is fullmac, so it does not require mac80211.
-> I guess however, ar6k can be ported to use cfg80211.
-> 
+> If using ath5k or ath9k when the WLAN card supports 802.11a mode, is it
+> possible to change multicast (or broadcast) rate into under 6Mbps, like the
+> case of 802.11b mode?
+> e.g. 1Mbps or 2Mbps.
 
-Do you know of any examples in the source tree which are fullmac, but utilize
-cfg80211 that I could use as a base to get started?
+No, such rates are not available for 802.11a.
 
-Thanks,
-
-Matt
-
-
-
+-- 
+Regards,
+Pavel Roskin
