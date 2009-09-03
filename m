@@ -1,103 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56387 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752755AbZIOV1w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 17:27:52 -0400
-Message-ID: <4AB006D9.40601@gmx.de>
-Date: Tue, 15 Sep 2009 23:27:53 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ar9170: handle overflow in tsf_low register during get_tsf
-References: <4AAFF89D.1000804@gmx.de> <200909152300.06026.chunkeey@googlemail.com>
-In-Reply-To: <200909152300.06026.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:38524 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756059AbZICSRh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 14:17:37 -0400
+Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
+ reports
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	linux-kernel@vger.kernel.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
+References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
+	 <1251962791.3336.3.camel@johannes.local>
+	 <43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8SVsRaDgTkfpfHnoZCbH"
+Date: Thu, 03 Sep 2009 20:17:17 +0200
+Message-Id: <1252001837.9336.2.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ar9170_op_get_tsf: handle a carry from TSF_L into TSF_H
-by reading TSF_H twice.
 
-Signed-off-by: Joerg Albert <jal2@gmx.de>
----
-Sorry for the re-spin. 
+--=-8SVsRaDgTkfpfHnoZCbH
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/ath/ar9170/cmd.c  |    3 +--
- drivers/net/wireless/ath/ar9170/cmd.h  |    1 +
- drivers/net/wireless/ath/ar9170/main.c |   24 ++++++++++++++++--------
- 3 files changed, 18 insertions(+), 10 deletions(-)
+On Thu, 2009-09-03 at 11:13 -0700, Luis R. Rodriguez wrote:
 
-diff --git a/drivers/net/wireless/ath/ar9170/cmd.c b/drivers/net/wireless/ath/ar9170/cmd.c
-index f57a620..cf6f5c4 100644
---- a/drivers/net/wireless/ath/ar9170/cmd.c
-+++ b/drivers/net/wireless/ath/ar9170/cmd.c
-@@ -72,8 +72,7 @@ int ar9170_write_reg(struct ar9170 *ar, const u32 reg, const u32 val)
- 	return err;
- }
- 
--static int ar9170_read_mreg(struct ar9170 *ar, int nregs,
--			    const u32 *regs, u32 *out)
-+int ar9170_read_mreg(struct ar9170 *ar, int nregs, const u32 *regs, u32 *out)
- {
- 	int i, err;
- 	__le32 *offs, *res;
-diff --git a/drivers/net/wireless/ath/ar9170/cmd.h b/drivers/net/wireless/ath/ar9170/cmd.h
-index a4f0e50..826c45e 100644
---- a/drivers/net/wireless/ath/ar9170/cmd.h
-+++ b/drivers/net/wireless/ath/ar9170/cmd.h
-@@ -44,6 +44,7 @@
- int ar9170_write_mem(struct ar9170 *ar, const __le32 *data, size_t len);
- int ar9170_write_reg(struct ar9170 *ar, const u32 reg, const u32 val);
- int ar9170_read_reg(struct ar9170 *ar, u32 reg, u32 *val);
-+int ar9170_read_mreg(struct ar9170 *ar, int nregs, const u32 *regs, u32 *out);
- int ar9170_echo_test(struct ar9170 *ar, u32 v);
- 
- /*
-diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-index c1f8c69..f45c530 100644
---- a/drivers/net/wireless/ath/ar9170/main.c
-+++ b/drivers/net/wireless/ath/ar9170/main.c
-@@ -2190,22 +2190,30 @@ static u64 ar9170_op_get_tsf(struct ieee80211_hw *hw)
- {
- 	struct ar9170 *ar = hw->priv;
- 	int err;
--	u32 tsf_low;
--	u32 tsf_high;
- 	u64 tsf;
-+#define NR 3
-+	static const u32 addr[NR] = { AR9170_MAC_REG_TSF_H,
-+				    AR9170_MAC_REG_TSF_L,
-+				    AR9170_MAC_REG_TSF_H };
-+	u32 val[NR];
-+	int loops = 0;
- 
- 	mutex_lock(&ar->mutex);
--	err = ar9170_read_reg(ar, AR9170_MAC_REG_TSF_L, &tsf_low);
--	if (!err)
--		err = ar9170_read_reg(ar, AR9170_MAC_REG_TSF_H, &tsf_high);
-+
-+	while (loops++ < 10) {
-+		err = ar9170_read_mreg(ar, NR, addr, val);
-+		if (err || val[0] == val[2])
-+			break;
-+	}
-+
- 	mutex_unlock(&ar->mutex);
- 
- 	if (WARN_ON(err))
- 		return 0;
--
--	tsf = tsf_high;
--	tsf = (tsf << 32) | tsf_low;
-+	tsf = val[0];
-+	tsf = (tsf << 32) | val[1];
- 	return tsf;
-+#undef NR
- }
- 
- static int ar9170_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
--- 
-1.6.0.4
+> What I meant is it gobbles it up and spits another thing out. When it
+> gobbles it up the routine then uses kref_put().
+>=20
+> > Why can it not track this?
+>=20
+> It probably can, just not sure if it follows kref_put(), I was under
+> the impression here it doesn't and because of it we were getting false
+> positives. Catalin, can you confirm?
+
+Ah I'd think that if it can't track it then that's because we use a
+pointer to the middle of the struct to keep track of it much of the
+time.
+
+johannes
+
+--=-8SVsRaDgTkfpfHnoZCbH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKoAgqAAoJEODzc/N7+QmaJqkQAJ4JIzLJDmWS6Wx6WI2mmVnz
+ku+ON9OhOUtSIQXtr67UiIFhYUMe4+DCiqfNxaJ8QoalY/F+Qqf0zeLhneXJs3TZ
+X0Ch+dC/3U9rKWlpOApGMSJaJjnKUyb/hfPrRLBnwNVbSoyeXptkkEzjW6ZWqx2o
+yg1drotgroho1KxZVl2a1katemcPXzumMnmkbd44dOr9F0H8QD9K+/yJwgfzu8pp
+5dSntyRFcyPP/5SRbiia5nTwZALxwJvwli3gS7WemnBozQQB+V4uCao1sIwTCaau
+ddGXbpHqT0/5nF/s2fB6e+a/5ZQ/oNa6v02iCIhnlncfHkXZRjlYnEnvn2mz/m6m
+i8kThUM6b2e+uH08Oq65kYvMGEx3HkPCgRm/zFfWXcgwTMMtz1T/2NfuC+Cmo+mI
+zAUHYwqMMC7LbonNCk9JxIW+1iwFL55Q2bgthKE4c6jBSipFs+J9GnuYKZiUUtbI
+S9hrXDCGYPOzwVMzu+Z20AFX1W+lJ0jIYLZGKHvCQzHcSIdlyvzOi8dp7iFtBBWy
+ZLTs8reQ7aU+mBcUgzV22s3K9Ll2cfxL3emm9O+aGl30R5i9OQHXTH05oSXRo4tk
+1jm0IFA/Z36j9hcZt/ESPAqCGYCTlSkks7320wtEC1pTqA1l96wOk8BhN2PH3qTB
+rXCK2HBW6tUyFv/3NoY4
+=uP1G
+-----END PGP SIGNATURE-----
+
+--=-8SVsRaDgTkfpfHnoZCbH--
 
