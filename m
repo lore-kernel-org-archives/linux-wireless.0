@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:39371 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754269AbZIHKyL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 06:54:11 -0400
-Date: Tue, 8 Sep 2009 11:54:15 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org
-Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090908105415.GD28127@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <84144f020909060114s74de2d2y850745dd82ece753@mail.gmail.com> <200909061028.48442.elendil@planet.nl> <1252226116.11274.10.camel@penberg-laptop>
+Received: from mail-yw0-f192.google.com ([209.85.211.192]:57975 "EHLO
+	mail-yw0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932461AbZICWyj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 18:54:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1252226116.11274.10.camel@penberg-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 3 Sep 2009 15:54:21 -0700
+Message-ID: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
+Subject: Atheros Linux wireless drivers home page - and two new driver
+	projects
+To: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Cc: Len Widra <Len.Widra@atheros.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Werner Almesberger <werner@openmoko.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>, Greg KH <greg@kroah.com>,
+	rshlinux@gmail.com, b_yogesh_snowy@yahoo.com,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Harald Welte <laforge@openmoko.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 06, 2009 at 11:35:16AM +0300, Pekka Enberg wrote:
-> On Sun, 2009-09-06 at 10:28 +0200, Frans Pop wrote:
-> > On Sunday 06 September 2009, Pekka Enberg wrote:
-> > > On Sun, Sep 6, 2009 at 10:40 AM, Frans Pop<elendil@planet.nl> wrote:
-> > > > Got a couple of page allocation failures today while viewing fairly
-> > > > large images. System was struggling for a bit to reorganize memory
-> > > > and swap, but nothing really serious. Everything recovered fairly
-> > > > quickly.
-> > > >
-> > > > Anything to look into?
-> > > >
-> > > > System: HP 2510p; 2.6.31-rc7-56-g7c0a57d; Debian stable, KDE desktop
-> > > >
-> > > > 10:00.0 Network controller [0280]: Intel Corporation PRO/Wireless
-> > > > 4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
-> > >
-> > > Can you post your .config, please?
-> > 
-> > Attached. Thanks.
-> 
-> OK, so SLUB_DEBUG_ON is disabled so it's probably not a SLUB problem.
-> Mel, there's quite a few page allocation failure reports recently which
-> makes me wonder if we broke something with the page allocator
-> optimization patches? Do you think the anti-fragmentation fixlet you did
-> for nommu would help here?
-> 
+I'm pleased to announce the new home page to Atheros Linux wireless drivers:
 
-No, because that change only affected the case where the system had very
-little memory. The last time that there was a sudden major increase in
-allocation failures, it was actually was page reclaim was broken -
-specifically kswapd was no longer doing the job that was expected of it.
-The symptoms where applications stalling because they were entering
-direct reclaim. I haven't looked very closely at this bug report yet
-(catching up from being offline the last 5 days).
+http://wireless.kernel.org/en/users/Drivers/Atheros
 
-Have there been any reclaim changes that might account for something like this?
+To get updates just subscribe to the wiki. There you will find
+information regarding any old legacy Atheros driver and any proper
+upstream driver.
 
-My feeling is also that a number of these page allocation failures have
-been related to wireless drivers. Is that accurate? If so, have there
-been changes made to the wireless stack in this cycle that would have
-increased the order of pages allocated?
+I'd like to also take the time to announce two devices for which
+support is currently being developed for: ar5523 and ar9271. Both
+ar5523 and ar9271 device support is currently being worked on either
+by the community or by Atheros itself. Both of these driver projects
+will be using th Linux driver project [1] to gain traction. Patches
+and development discussions regarding these two drivers prior to
+getting upstream into drivers/net/wireless/ will take place on the
+Linux driver project mailing list [2]. For direct one-on-one
+communication for support and development we will rely on the
+#linux-wireless IRC channel on irc.freenode.net. Both devices are USB
+but differ greatly, please visit the ar5523 page [2] and the ar9271
+page [3] for further device specifics and more information.
 
--- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+The model of development for ar9271 device support is rather new -- we
+are not targeting staging, instead we target using the strength of
+community development at an extremely early stage, as early as is
+possible, even before the device is functional. If we get a device
+driver functional prior to meeting upstream requirements then so be it
+-- and the driver does gets stuffed into drivers/staging. End goal is
+to get it into proper drivers/net/wireless/ but obviously it will not
+hurt to get users some device functionality prior to that.
+
+The time of turnaround to getting users supported either through
+drivers/staging or drivers/net/wireless/ will ultimately depend on the
+resources dedicated to it. Right now I know only Stefan
+Lippers-Hollmann is working on ar5523 support and I'm the only one
+working on ar9271 support. With your help I am in hopes this will
+change soon.
+
+[1] http://www.linuxdriverproject.org/twiki/bin/view
+[2] http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
+[3] http://wireless.kernel.org/en/users/Drivers/ar5523
+[4] http://wireless.kernel.org/en/users/Drivers/ar9271
+
+  Luis
