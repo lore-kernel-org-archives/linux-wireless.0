@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbZIQRnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:53 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/13] iwlwifi driver updates 09/17/2009
-Date: Thu, 17 Sep 2009 10:43:43 -0700
-Message-Id: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:44474 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754992AbZICUVo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 16:21:44 -0400
+Received: by bwz19 with SMTP id 19so229599bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2009 13:21:45 -0700 (PDT)
+To: <gregkh@suse.de>
+Cc: greg@kroah.com, linux-wireless@vger.kernel.org
+Subject: Re: patch staging-remove-at76_usb-wireless-driver.patch added to gregkh-2.6 tree
+References: <12520044192286@kroah.org>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 03 Sep 2009 23:21:43 +0300
+In-Reply-To: <12520044192286@kroah.org> (gregkh@suse.de's message of "Thu\, 03 Sep 2009 12\:00\:19 -0700")
+Message-ID: <87tyzj93u0.fsf@litku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We include more patches to support enabling of 6000 and 1000 series
-hardware. We add aggregation tables to rate scaling algorithm for improved
-performance. There is also now an additional LED mode if users do not want
-a blinking LED but just an LED reflecting RF state.
+<gregkh@suse.de> writes:
 
-We include two fixes targeting 2.6.32: 12/13 removes sleeping code from a
-spinlock section to prevent potential deadlock, 13/13 reduce significant
-unnecessary noise when skb allocation fails in atomic context, this was
-discussed in email thread linked to in commit message.
+> From: Greg Kroah-Hartman <gregkh@suse.de>
+> Subject: Staging: remove at76_usb wireless driver.
+>
+> There is already an in-kernel driver for this hardware (since 2.6.30),
+> at76c50x-usb, and it supports all of the same devices.  So this driver
+> can now be deleted.
+>
+> Cc: Kalle Valo <kalle.valo@iki.fi> 
+> Cc: linux-wireless <linux-wireless@vger.kernel.org>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-[PATCH 01/13] iwlwifi: Use RTS/CTS as the preferred protection mechanism for 6000 series
-[PATCH 02/13] iwlwifi: allow user change protection mechanism for HT
-[PATCH 03/13] iwlwifi: EEPROM version for 1000 and 6000 series
-[PATCH 04/13] iwlwifi: use S_IRUGO and S_IWUSR in module parameters
-[PATCH 05/13] iwlwifi: clean up rs_tx_status
-[PATCH 06/13] iwlwifi: do not clear TX info flags when receiving BlockAckResponse
-[PATCH 07/13] iwlwifi: add aggregation tables to the rate scaling algorithm
-[PATCH 08/13] iwlwifi: send cmd to uCode to configure valid tx antenna
-[PATCH 09/13] iwlwifi: update PCI Subsystem ID for 1000 series
-[PATCH 10/13] iwlwifi: update PCI Subsystem ID for 6000 series
-[PATCH 11/13] iwlwifi: add LED mode to support different LED behavior
-[PATCH 12/13 v2.6.32 and w-t] iwlwifi: do not send sync command while holding spinlock
-[PATCH 13/13 v2.6.32 and w-t] iwlwifi: reduce noise when skb allocation fails
+Thanks.
 
+Acked-by: Kalle Valo <kalle.valo@iki.fi>
 
-Thank you
-
-Reinette
-
+-- 
+Kalle Valo
