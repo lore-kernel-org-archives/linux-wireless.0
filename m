@@ -1,115 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:44526 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751595AbZIHRej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 13:34:39 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b44/b43/b43legacy: Fix switch warnings introduced by SSB-SDIO
-Date: Tue, 8 Sep 2009 19:33:31 +0200
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Albert Herranz <albert_herranz@yahoo.es>
+Received: from fg-out-1718.google.com ([72.14.220.155]:63313 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754000AbZICLy0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 07:54:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909081933.31981.mb@bu3sch.de>
+In-Reply-To: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+Date: Thu, 3 Sep 2009 13:54:27 +0200
+Message-ID: <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Amit Kucheria <amit.kucheria@canonical.com>
+Cc: List Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some gcc warnings for switch statements.
+> USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
+> defined. Remove it from rt2500usb.
+>
+> Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+NACK
 
+Users have reported that this is a valid rt2500usb ID. You can thank the
+manufacturer of the dongle to produce dongles with the same USB ID but
+with different chipsets.
 
-Index: wireless-testing/drivers/net/b44.c
-===================================================================
---- wireless-testing.orig/drivers/net/b44.c	2009-09-08 19:21:34.000000000 +0200
-+++ wireless-testing/drivers/net/b44.c	2009-09-08 19:21:37.000000000 +0200
-@@ -1302,10 +1302,13 @@ static void b44_chip_reset(struct b44 *b
- 		     & MDIO_CTRL_MAXF_MASK)));
- 		break;
- 	case SSB_BUSTYPE_PCI:
--	case SSB_BUSTYPE_PCMCIA:
- 		bw32(bp, B44_MDIO_CTRL, (MDIO_CTRL_PREAMBLE |
- 		     (0x0d & MDIO_CTRL_MAXF_MASK)));
- 		break;
-+	case SSB_BUSTYPE_PCMCIA:
-+	case SSB_BUSTYPE_SDIO:
-+		WARN_ON(1); /* A device with this bus does not exist. */
-+		break;
- 	}
- 
- 	br32(bp, B44_MDIO_CTRL);
-@@ -1763,10 +1766,13 @@ static void b44_get_drvinfo (struct net_
- 	case SSB_BUSTYPE_PCI:
- 		strncpy(info->bus_info, pci_name(bus->host_pci), sizeof(info->bus_info));
- 		break;
--	case SSB_BUSTYPE_PCMCIA:
- 	case SSB_BUSTYPE_SSB:
- 		strncpy(info->bus_info, "SSB", sizeof(info->bus_info));
- 		break;
-+	case SSB_BUSTYPE_PCMCIA:
-+	case SSB_BUSTYPE_SDIO:
-+		WARN_ON(1); /* A device with this bus does not exist. */
-+		break;
- 	}
- }
- 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-08 19:19:01.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-08 19:25:30.000000000 +0200
-@@ -4099,16 +4099,20 @@ static void b43_imcfglo_timeouts_workaro
- 	    bus->pcicore.dev->id.revision <= 5) {
- 		/* IMCFGLO timeouts workaround. */
- 		tmp = ssb_read32(dev->dev, SSB_IMCFGLO);
--		tmp &= ~SSB_IMCFGLO_REQTO;
--		tmp &= ~SSB_IMCFGLO_SERTO;
- 		switch (bus->bustype) {
- 		case SSB_BUSTYPE_PCI:
- 		case SSB_BUSTYPE_PCMCIA:
-+			tmp &= ~SSB_IMCFGLO_REQTO;
-+			tmp &= ~SSB_IMCFGLO_SERTO;
- 			tmp |= 0x32;
- 			break;
- 		case SSB_BUSTYPE_SSB:
-+			tmp &= ~SSB_IMCFGLO_REQTO;
-+			tmp &= ~SSB_IMCFGLO_SERTO;
- 			tmp |= 0x53;
- 			break;
-+		default:
-+			break;
- 		}
- 		ssb_write32(dev->dev, SSB_IMCFGLO, tmp);
- 	}
-Index: wireless-testing/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/main.c	2009-08-23 00:06:40.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43legacy/main.c	2009-09-08 19:26:03.000000000 +0200
-@@ -3106,16 +3106,20 @@ static void b43legacy_imcfglo_timeouts_w
- 	    bus->pcicore.dev->id.revision <= 5) {
- 		/* IMCFGLO timeouts workaround. */
- 		tmp = ssb_read32(dev->dev, SSB_IMCFGLO);
--		tmp &= ~SSB_IMCFGLO_REQTO;
--		tmp &= ~SSB_IMCFGLO_SERTO;
- 		switch (bus->bustype) {
- 		case SSB_BUSTYPE_PCI:
- 		case SSB_BUSTYPE_PCMCIA:
-+			tmp &= ~SSB_IMCFGLO_REQTO;
-+			tmp &= ~SSB_IMCFGLO_SERTO;
- 			tmp |= 0x32;
- 			break;
- 		case SSB_BUSTYPE_SSB:
-+			tmp &= ~SSB_IMCFGLO_REQTO;
-+			tmp &= ~SSB_IMCFGLO_SERTO;
- 			tmp |= 0x53;
- 			break;
-+		default:
-+			break;
- 		}
- 		ssb_write32(dev->dev, SSB_IMCFGLO, tmp);
- 	}
+Ivo
 
--- 
-Greetings, Michael.
+> ---
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index ce75426..2e9fac7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -2020,7 +2020,6 @@ static struct usb_device_id rt2500usb_device_table[] = {
+>        /* Ralink */
+>        { USB_DEVICE(0x148f, 0x1706), USB_DEVICE_DATA(&rt2500usb_ops) },
+>        { USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
+> -       { USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
+>        { USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
+>        /* Sagem */
+>        { USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
+> --
+> 1.6.3.3
+>
+>
