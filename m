@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49941 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751111AbZIEJUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2009 05:20:33 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: linville@tuxdriver.com
-Subject: [PATCH] ssb: Fail ssb modinit, if attach of the buses failed.
-Date: Sat, 5 Sep 2009 11:18:47 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909051118.49489.mb@bu3sch.de>
+Received: from bombadil.infradead.org ([18.85.46.34]:42240 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754397AbZICGLK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 02:11:10 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak reports
+Date: Thu,  3 Sep 2009 02:11:06 -0400
+Message-Id: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSB modinit should not succeed, if busattach failed.
+This was giving false positives. We use eventually free this
+through kref_put(), things are not so obvious through
+cfg80211_bss_update().
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/ssb/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ net/wireless/scan.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/drivers/ssb/main.c
-+++ wireless-testing/drivers/ssb/main.c
-@@ -1358,8 +1358,10 @@ static int __init ssb_modinit(void)
- 	ssb_buses_lock();
- 	err = ssb_attach_queued_buses();
- 	ssb_buses_unlock();
--	if (err)
-+	if (err) {
- 		bus_unregister(&ssb_bustype);
-+		goto out;
-+	}
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 19c5a9a..79f7a5d 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -495,6 +495,9 @@ cfg80211_inform_bss(struct wiphy *wiphy,
  
- 	err = b43_pci_ssb_bridge_init();
- 	if (err) {
-@@ -1375,7 +1377,7 @@ static int __init ssb_modinit(void)
- 		/* don't fail SSB init because of this */
- 		err = 0;
- 	}
--
-+out:
- 	return err;
- }
- /* ssb must be initialized after PCI but before the ssb drivers.
-
+ 	kref_init(&res->ref);
+ 
++	/* cfg80211_bss_update() eats up res - we ensure we free it there */
++	kmemleak_ignore(res);
++
+ 	res = cfg80211_bss_update(wiphy_to_dev(wiphy), res, 0);
+ 	if (!res)
+ 		return NULL;
 -- 
-Greetings, Michael.
+1.6.3.3
+
