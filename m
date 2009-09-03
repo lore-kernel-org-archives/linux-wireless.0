@@ -1,74 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:19743 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbZIRHi0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 03:38:26 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
-Date: Fri, 18 Sep 2009 09:37:42 +0200
-Cc: Andrey Yurovsky <andrey@cozybit.com>,
-	Bing Zhao <bzhao@marvell.com>, Dan Williams <dcbw@redhat.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com> <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com> <20090917161154.GA877@Chamillionaire.breakpoint.cc>
-In-Reply-To: <20090917161154.GA877@Chamillionaire.breakpoint.cc>
+Received: from mail.atheros.com ([12.36.123.2]:28389 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932213AbZICUnR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 16:43:17 -0400
+Date: Thu, 3 Sep 2009 13:43:19 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
+ reports
+Message-ID: <20090903204319.GC3701@mosca>
+References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
+ <1251962791.3336.3.camel@johannes.local>
+ <43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
+ <1252001837.9336.2.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909180937.42727.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1252001837.9336.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I agree on this. Debugfs is for debug only and should stay
-> that way. What do other driver in regard to this?
+On Thu, Sep 03, 2009 at 11:17:17AM -0700, Johannes Berg wrote:
+> On Thu, 2009-09-03 at 11:13 -0700, Luis R. Rodriguez wrote:
+> 
+> > What I meant is it gobbles it up and spits another thing out. When it
+> > gobbles it up the routine then uses kref_put().
+> > 
+> > > Why can it not track this?
+> > 
+> > It probably can, just not sure if it follows kref_put(), I was under
+> > the impression here it doesn't and because of it we were getting false
+> > positives. Catalin, can you confirm?
+> 
+> Ah I'd think that if it can't track it then that's because we use a
+> pointer to the middle of the struct to keep track of it much of the
+> time.
 
-I see this now as an example where a Manufacturer (Marvell) 
-starts to work with the community, has a nice feature (probably 
-bacause of customer-request) and cannot get this into the kernel 
-because of this issue :-)
+So you agree with the patch but not the commit log entry?
 
-
-Debugfs isn't suitable for anything except debugging. It is, per 
-definition, an interface for developers that want to debug it. 
-The idea is that a kernel for end-user devices won't even have 
-debugfs compiled in.
-
-If libertas currently does use debugfs for something != 
-debugging?  I don't know, but than that has been a lapse, an 
-oversight. Let's not do that oversight again.
-
-
-So you can use
-
-* iwpriv
-* sysfs
-* kernel module parameters
-* nl80211/cfg80211
-* Maybe the new "stable debugfs" proposed by Rostedt (see the
-  Article "A stable debugfs" on http://lwn.net/Articles/350463/,
-  but here it's not even clear that this will come).
-
-For me, iwpriv seems the best candidate as long as libertas 
-doesn't have a cfg80211/nl80211 interface.
-
-
-
-> I hardly belive that the libertas driver is the only "deep
-> sleep" user. 
-
-I think that ATH6K WLAN devices might be candidates for this, 
-too. If the interface is "iwpriv XXX deepsleep 0" / "iwpriv XXX 
-deepsleep 1" I don't see a reason they could do it similar.
-
-
-> iwconfig has an interface for this I think:
-> |interface power {period N|timeout N|saving N|off}
-
-That's something very differently.
-
-
--- 
-http://www.holgerschurig.de
+  Luis
