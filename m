@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:47443 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbZI3VRd (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:54817 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755464AbZICOTw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 17:17:33 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so572712eyf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 14:17:36 -0700 (PDT)
+	Thu, 3 Sep 2009 10:19:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <1253965154.5122.7.camel@johannes.local>
-References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
-	 <200909210845.51247.hs4233@mail.mn-solutions.de>
-	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
-	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
-	 <1253859759.3868.569.camel@johannes.local>
-	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
-	 <1253965154.5122.7.camel@johannes.local>
-Date: Wed, 30 Sep 2009 22:17:36 +0100
-Message-ID: <3ace41890909301417j5966336dn197a45cf66c2cd1e@mail.gmail.com>
-Subject: Re: Problems with "cfg80211: fix SME connect" commit
-From: Hin-Tak Leung <hintak.leung@gmail.com>
+In-Reply-To: <1251984455.3336.24.camel@johannes.local>
+References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+	 <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
+	 <20090903122727.GA4465@matterhorn.verdurent.com>
+	 <1251984455.3336.24.camel@johannes.local>
+Date: Thu, 3 Sep 2009 16:19:53 +0200
+Message-ID: <a32f33a40909030719t43ca7fabpe2c9f77f94999b53@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+From: Ivo Van Doorn <ivdoorn@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Albert Herranz <albert_herranz@yahoo.es>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: Amit Kucheria <amit.kucheria@canonical.com>,
+	List Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 26, 2009 at 12:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Thu, Sep 3, 2009 at 3:27 PM, Johannes Berg<johannes@sipsolutions.net> wrote:
+> On Thu, 2009-09-03 at 15:27 +0300, Amit Kucheria wrote:
+>> On 09 Sep 03, Ivo Van Doorn wrote:
+>> > > USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
+>> > > defined. Remove it from rt2500usb.
+>> > >
+>> > > Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
+>> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+>> >
+>> > NACK
+>> >
+>> > Users have reported that this is a valid rt2500usb ID. You can thank the
+>> > manufacturer of the dongle to produce dongles with the same USB ID but
+>> > with different chipsets.
+>> >
+>> > Ivo
+>>
+>> Interesting. On my laptop, without this patch both the drivers are loaded
+>> (lsmod), rt2500usb aborts without allocating a device successfully but I am
+>> unable to associate to the AP.
+>
+> Sounds like the detection logic is somehow messing with the device, or
+> rt2500usb isn't actually freeing the device for rt73usb to bind?
 
-> The extra deauth is because cfg80211 already starts the auth with the
-> BSS before wpa_supplicant set the BSSID, and then when setting the BSSID
-> it asks for deauth, but before we ever actually did anything... I think
-> we'll just have to live with that, since it's hard to fix in the layered
-> design we have now.
+That would be odd, I believe it is working with other devices with
+duplicate ID's
+where first rt2500usb is loaded and then rt73usb. As far as connecting to the
+device, the first thing rt2x00 does is reading the EEPROM and checking the
+chipset. So no registers are being written which could upset a rt73usb device.
 
-Hmm, I looked at the AP log, and the deauth is there... also I think
-due to recent changes, association takes longer now. Is there
-something that can be done in userland, for example?
-
-Hin-Tak
+Ivo
