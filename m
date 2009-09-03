@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:17012 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbZI1TIy (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:51120 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbZICDKI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 15:08:54 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so139332eyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 12:08:57 -0700 (PDT)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: [PATCH] compat-2.6: adding notes on installing to non-running kernel
-Date: Mon, 28 Sep 2009 20:08:54 +0100
-Message-Id: <1254164934-1735-1-git-send-email-HinTak.Leung@gmail.com>
+	Wed, 2 Sep 2009 23:10:08 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.69)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1Mj2i9-0004BM-Iy
+	for linux-wireless@vger.kernel.org; Thu, 03 Sep 2009 05:10:09 +0200
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] rfkill: v0.3
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1Mj2i9-0004BM-Iy@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Thu, 03 Sep 2009 05:10:09 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-adding notes on installing to non-running kernel
 
-Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
----
- README |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+A new release of rfkill (v0.3) is available at:
 
-diff --git a/README b/README
-index 7c6c2cd..380fc5a 100644
---- a/README
-+++ b/README
-@@ -142,6 +142,15 @@ compat-wireless-2.6 drivers for it you can use this syntax:
- 
- make KLIB=/home/mcgrof/kernels/linux-2.6.23.9 KLIB_BUILD=/home/mcgrof/kernels/linux-2.6.23.9
- 
-+If you have a kernel installed, which is not your currently running kernel (e.g. via
-+distro updates; plus its corresponding kernel-dev package), you can use this syntax:
-+
-+make  KLIB=/lib/modules/2.6.30.6-53.fc11.x86_64
-+
-+  and to install to your system's root path for the non-running kernel:
-+
-+make  KLIB=/lib/modules/2.6.30.6-53.fc11.x86_64 KMODPATH_ARG='INSTALL_MOD_PATH=' install
-+
- Bugs
- -----
- 
--- 
-1.6.2.5
+http://wireless.kernel.org/download/rfkill/rfkill-0.3.tar.bz2
+
+SHA1 sum: db559ef788af5cd996fa70c0b12507559f5ce257
+
+Here is the short log of the changes included in this 
+release:
+
+Johannes Berg (4):
+      add copyright notices
+      remove copyright notice from file
+      resync rfkill.h with kernel
+      version 0.3
 
