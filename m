@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:28742 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047AbZI3A5n (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:42423 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756098AbZICS2e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 20:57:43 -0400
-Received: by ey-out-2122.google.com with SMTP id 4so393891eyf.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 17:57:46 -0700 (PDT)
+	Thu, 3 Sep 2009 14:28:34 -0400
+Received: by iwn5 with SMTP id 5so90512iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2009 11:28:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200909300017.20949.malte.gell@gmx.de>
-References: <999306.93095.qm@web23102.mail.ird.yahoo.com>
-	 <200909291145.35972.malte.gell@gmx.de>
-	 <3ace41890909290328l14620ed6o4939488e268d76a3@mail.gmail.com>
-	 <200909300017.20949.malte.gell@gmx.de>
-Date: Wed, 30 Sep 2009 01:57:45 +0100
-Message-ID: <3ace41890909291757g29851b15v64cb55241ad3d69@mail.gmail.com>
-Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need
-	help to create driver for Netgear WN111v2
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Malte Gell <malte.gell@gmx.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1251991187.6521.22.camel@mj>
+References: <19103.25725.707217.596352@gargle.gargle.HOWL>
+	<1251991187.6521.22.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 3 Sep 2009 11:28:17 -0700
+Message-ID: <43e72e890909031128k4ce1f7b5i5c42ebaa73498c70@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k: Fix channelFlags for 2GHZ
+To: Pavel Roskin <proski@gnu.org>
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2009 at 11:17 PM, Malte Gell <malte.gell@gmx.de> wrote:
+On Thu, Sep 3, 2009 at 8:19 AM, Pavel Roskin<proski@gnu.org> wrote:
+> On Thu, 2009-09-03 at 12:08 +0530, Sujith wrote:
+>> CHANNEL_G has to be set for 2GHZ channels since
+>> IS_CHAN_G() checks for this in channelFlags and not in
+>> chanmode. To make things messier, ath9k_hw_process_ini()
+>> checks for CHANNEL_G in chanmode and not in channelFlags.
+>> The supreme, brain-searing fix is to set the
+>> flag in both cases.
 >
-> "Hin-Tak Leung" <hintak.leung@gmail.com> wrote
+> My impression is that's a workaround for a bug that lies elsewhere.  I
+> don't think we should apply such patches.
 >
->>
->> Argh... try changing this line  in config.mk
->>
->> ifndef CONFIG_COMPAT_WIRELESS_28
->>
->> to ...27.
+> chanmode and channelFlags seem to duplicate each other.  I would use an
+> enum for distinctive allowed modes and macros to query if the particular
+> mode has a specific feature (band, modulation, bandwidth etc).
 >
-> Hello,
->
-> it was a pain with my Kernel 2.6.27.29 I now updated to kernel 2.6.31-44 (from
-> openSUSE) and voila, it now works like a charm! I compiled the bleeding edge
-> compat-wireless and it just works fine now! As I initially suspected, 2.6.27
-> only made trouble.
->
-> Regards
-> Malte
->
+> The enum could use ORed constants for optimization, but such constants
+> should be used only through the macros.
 
-Glad to hear.
+I should mention ath9k_update_ichannel() was the last thing I intended
+on porting for the new regulatory changes we did on ath9k, when we
+ditched the old regulatory code, but I left it as it did involve quite
+a lot more changes in the code. When I reviewed this it seemed we
+could just rely on the hw->conf.channel->band for many things but in
+some cases we needed some defines for hw.
 
-Hin-Tak
+So -- I'd personally welcome this change as a better alternative needs
+better planning, and more testing.
+
+  Luis
