@@ -1,79 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:49636 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:60998 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194AbZICN17 (ORCPT
+	with ESMTP id S1751290AbZICH1L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 09:27:59 -0400
-Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+	Thu, 3 Sep 2009 03:27:11 -0400
+Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
+ reports
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Amit Kucheria <amit.kucheria@canonical.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
-	List Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090903122727.GA4465@matterhorn.verdurent.com>
-References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
-	 <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
-	 <20090903122727.GA4465@matterhorn.verdurent.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UmUxuO13z/WtU84s0z3I"
-Date: Thu, 03 Sep 2009 15:27:35 +0200
-Message-Id: <1251984455.3336.24.camel@johannes.local>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
+References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+9yvJaL0W/agTYkG+fFE"
+Date: Thu, 03 Sep 2009 09:26:31 +0200
+Message-Id: <1251962791.3336.3.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-UmUxuO13z/WtU84s0z3I
+--=-+9yvJaL0W/agTYkG+fFE
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2009-09-03 at 15:27 +0300, Amit Kucheria wrote:
-> On 09 Sep 03, Ivo Van Doorn wrote:
-> > > USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it i=
-s already
-> > > defined. Remove it from rt2500usb.
-> > >
-> > > Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
-> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
-> >=20
-> > NACK
-> >=20
-> > Users have reported that this is a valid rt2500usb ID. You can thank th=
-e
-> > manufacturer of the dongle to produce dongles with the same USB ID but
-> > with different chipsets.
-> >=20
-> > Ivo
+On Thu, 2009-09-03 at 02:11 -0400, Luis R. Rodriguez wrote:
+> This was giving false positives. We use eventually free this
+> through kref_put(), things are not so obvious through
+> cfg80211_bss_update().
 >=20
-> Interesting. On my laptop, without this patch both the drivers are loaded
-> (lsmod), rt2500usb aborts without allocating a device successfully but I =
-am
-> unable to associate to the AP.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/wireless/scan.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 19c5a9a..79f7a5d 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -495,6 +495,9 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+> =20
+>  	kref_init(&res->ref);
+> =20
+> +	/* cfg80211_bss_update() eats up res - we ensure we free it there */
+> +	kmemleak_ignore(res);
+> +
+>  	res =3D cfg80211_bss_update(wiphy_to_dev(wiphy), res, 0);
+>  	if (!res)
+>  		return NULL;
 
-Sounds like the detection logic is somehow messing with the device, or
-rt2500usb isn't actually freeing the device for rt73usb to bind?
+That's not making sense. cfg80211_bss_update() doesn't actually take a
+reference, it adds a new one for itself and then we return one to the
+caller. Why can it not track this?
+
+Actually it looks like we do leak one in net/mac80211/ibss.c.
 
 johannes
 
---=-UmUxuO13z/WtU84s0z3I
+--=-+9yvJaL0W/agTYkG+fFE
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKn8RBAAoJEODzc/N7+Qma4gAQAKXh/jjxoFltEjuJFDfVTnHk
-6j0Rgcbg+1zFXB1MzffNduRIkqE+8ZPIUORpyLfpFDD3H69RxP4wgEbcqlzmptaL
-Sik3ClK9//J7revTMHwhzNVnLODiTJOa3MYqTWDFEAHsezlSY0PMpdCxKgv92SCD
-hz+dAZySzHsiSYShLrf6NcI4nbDDxmt+jfwjNaVFHRwN8pRwmnxoKg+uIs0YqB8d
-4IuX9xnbre414ffV/vC0klB57V/6a6s4qad+ZPqNJIwp1TyE5VGpXfiGXwbJX4Ka
-72Pox2/AGQu0iLxdu3NyBekOTHmyp2kQ0D4KyA3onIhx0c9grZHYFETucrxcLus5
-fTAXwDSTGEKbVyCiPNWA5DZVVCNnc0tL82JCARDZI5pt9x3HkxyiF3Cez4s+dKx4
-dLd+N2I+/0QBxp7dhXyw0iZlbj/wtrY4zE9KaUJP1KM1cC+gxuGd4TQSLch4tho1
-Nxs7ojxvTNOuZ9NP/8wM0uruRWxU/wy4xG1QpUtpi2byRwW9J49QGERtxkPO6Dta
-dalhi9VwWQZ+9Wak5Hes4bwzR4ntViGfsQkfBW2rZIqPdscYrV7utLhBVTPt9V8t
-UbhRaIxaHh8YIUqCJzByIoyIOGoa5J6q9EWhH99paJNoW5UpJKos83BR0vTDZCju
-OLWPDe1MqVGRFOcarm8r
-=TUqu
+iQIcBAABAgAGBQJKn2+hAAoJEODzc/N7+QmaJJcP+waRZoMq1thDsBh58t6ly6L+
+vqus3RxdyUz8QIoTXbqM6GWFQA2AvRNL+CRCYr2B/IkjCDPACskRkIr217HzFNiT
+GvvpiVmjLWZuUnge3Tk4bzP9pFHlg3FsqttJ1BTwAJw3NXZbDZ2AlJlp54doXvDi
+gdogrNh6W5kToAd3c0c3mPhYNZfqhOuqsy19SmcUKNf7O1CIxadv+xdX0J8vncD+
+KyzzTDb6l+T+c2X6t4T04dEWUu8xOa+r9u5wsEX073Dv3pp9VEFD8S/DCI1LPj30
+v/XL0gU7Pa81VGC5wSBNg6tS3RrGEh84UkmgM/X7EnNRO9mDhFy42C/enh3HlfMy
+TuP5EZsjOWGc8G+3QzUiINrkPFLDojdEGDEP9FEID32GzS/PwtIsiBAqVIJ+2zGY
+HPxTv9CC6NTU3RkPNh5xO5zlZDVJK/UCmsQ4/y3+Y6cCQ7Jnvqd+apShhqPcgA+3
+P6mJHac4fY375+gRWrif6b/cM1r/f1xl9OS6IE2groOVw8ajNC9o4mgALk6MEwof
+IOpWTB0QuL8saXbZD9CRdFykG1x0LVl7A0Ygqd+2LOHz4qMKy1N9o7REmNI3H2vT
+IuXYmFJPZSgNHdu5gCdHKyIxmMCh7s8q1j5HoR0XBjGry/pQJVxWFMEZsjp3TVEE
+HEDzppFR+MVq50oCnHrR
+=OZPL
 -----END PGP SIGNATURE-----
 
---=-UmUxuO13z/WtU84s0z3I--
+--=-+9yvJaL0W/agTYkG+fFE--
 
