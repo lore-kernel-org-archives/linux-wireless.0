@@ -1,85 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:60383 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbZIPNgT convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:49636 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194AbZICN17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 09:36:19 -0400
-Received: by ewy2 with SMTP id 2so1417983ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 06:36:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200909161220.11538.hs4233@mail.mn-solutions.de>
-References: <200909161220.11538.hs4233@mail.mn-solutions.de>
-Date: Wed, 16 Sep 2009 16:36:20 +0300
-Message-ID: <40f31dec0909160636j6a2022eaxdfef4889e6aafec@mail.gmail.com>
-Subject: Re: question: ATH5K, antenna-mode and fall-throught in
-	ath5k_hw_set_fast_div()
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 3 Sep 2009 09:27:59 -0400
+Subject: Re: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amit Kucheria <amit.kucheria@canonical.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	List Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090903122727.GA4465@matterhorn.verdurent.com>
+References: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+	 <a32f33a40909030454y51905525g15a65cc8364b8eb5@mail.gmail.com>
+	 <20090903122727.GA4465@matterhorn.verdurent.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UmUxuO13z/WtU84s0z3I"
+Date: Thu, 03 Sep 2009 15:27:35 +0200
+Message-Id: <1251984455.3336.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/16 Holger Schurig <hs4233@mail.mn-solutions.de>:
-> Hi !
->
-> I have a device (fork-lift-terminal) where there is a PCCARD with
-> an Atheros chip inside it. The PCCARD has an built-in antenna and
-> a socket, where a cable goes to the external antenna.
->
-> Using madwifi, I always did:
->
->        echo 2 >/proc/sys/dev/wifi0/rxantenna
->        echo 2 >/proc/sys/dev/wifi0/txantenna
->        echo 0 >/proc/sys/dev/wifi0/diversity
->
-> Now, with ath5k I'm planning to do this:
->
-> --- linux-wl.orig/drivers/net/wireless/ath/ath5k/base.c 2009-09-16 10:43:45.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/ath/ath5k/base.c      2009-09-16 10:44:10.000000000 +0200
-> @@ -2850,5 +2850,5 @@ ath5k_config(struct ieee80211_hw *hw, u3
->         * then we must allow the user to set how many tx antennas we
->         * have available
->         */
-> -       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
-> +       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_B);
->
->
-> ... as long as there is no offical interface for setting antenna
-> mode. A bit crude, but ... :-)
->
 
-An official interface is on the way, until then that's indeed the way
-to switch to a fixed antenna ;-)
+--=-UmUxuO13z/WtU84s0z3I
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->
-> However, when looking for the antenna-related code-paths, I found
-> this:
->
-> ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
-> {
->        switch (ee_mode) {
->        case AR5K_EEPROM_MODE_11G:
->                /* XXX: This is set to
->                 * disabled on initvals !!! */
->        case AR5K_EEPROM_MODE_11A:
->        ...
->
->
-> In my case, ee_mode happens to be AR5K_EEPROM_MODE_11G, but I don't
-> understand the implication of this comment. Is the XXX something
-> to worry?  My card is a B/G only card, so I wonder if the
-> fall-through into the MODE_11A case is ok ?!?
->
+On Thu, 2009-09-03 at 15:27 +0300, Amit Kucheria wrote:
+> On 09 Sep 03, Ivo Van Doorn wrote:
+> > > USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it i=
+s already
+> > > defined. Remove it from rt2500usb.
+> > >
+> > > Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
+> > > Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> >=20
+> > NACK
+> >=20
+> > Users have reported that this is a valid rt2500usb ID. You can thank th=
+e
+> > manufacturer of the dongle to produce dongles with the same USB ID but
+> > with different chipsets.
+> >=20
+> > Ivo
+>=20
+> Interesting. On my laptop, without this patch both the drivers are loaded
+> (lsmod), rt2500usb aborts without allocating a device successfully but I =
+am
+> unable to associate to the AP.
 
-As you see there is no break there so we treat G and A modes (OFDM)
-the same, comment is there to let developers know that
-AR5K_PHY_AGCCTL_OFDM_DIV_DIS is already disabled on initvals for G
-mode (however AR5K_PHY_FAST_ANT_DIV_EN is enabled so diversity is
-enabled) but it doesn't seem to make a difference anyway.
+Sounds like the detection logic is somehow messing with the device, or
+rt2500usb isn't actually freeing the device for rt73usb to bind?
 
+johannes
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+--=-UmUxuO13z/WtU84s0z3I
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKn8RBAAoJEODzc/N7+Qma4gAQAKXh/jjxoFltEjuJFDfVTnHk
+6j0Rgcbg+1zFXB1MzffNduRIkqE+8ZPIUORpyLfpFDD3H69RxP4wgEbcqlzmptaL
+Sik3ClK9//J7revTMHwhzNVnLODiTJOa3MYqTWDFEAHsezlSY0PMpdCxKgv92SCD
+hz+dAZySzHsiSYShLrf6NcI4nbDDxmt+jfwjNaVFHRwN8pRwmnxoKg+uIs0YqB8d
+4IuX9xnbre414ffV/vC0klB57V/6a6s4qad+ZPqNJIwp1TyE5VGpXfiGXwbJX4Ka
+72Pox2/AGQu0iLxdu3NyBekOTHmyp2kQ0D4KyA3onIhx0c9grZHYFETucrxcLus5
+fTAXwDSTGEKbVyCiPNWA5DZVVCNnc0tL82JCARDZI5pt9x3HkxyiF3Cez4s+dKx4
+dLd+N2I+/0QBxp7dhXyw0iZlbj/wtrY4zE9KaUJP1KM1cC+gxuGd4TQSLch4tho1
+Nxs7ojxvTNOuZ9NP/8wM0uruRWxU/wy4xG1QpUtpi2byRwW9J49QGERtxkPO6Dta
+dalhi9VwWQZ+9Wak5Hes4bwzR4ntViGfsQkfBW2rZIqPdscYrV7utLhBVTPt9V8t
+UbhRaIxaHh8YIUqCJzByIoyIOGoa5J6q9EWhH99paJNoW5UpJKos83BR0vTDZCju
+OLWPDe1MqVGRFOcarm8r
+=TUqu
+-----END PGP SIGNATURE-----
+
+--=-UmUxuO13z/WtU84s0z3I--
+
