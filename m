@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40163 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbZIYEqH (ORCPT
+Received: from mail-yx0-f182.google.com ([209.85.210.182]:61912 "EHLO
+	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753873AbZIDBGK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 00:46:07 -0400
-Date: Fri, 25 Sep 2009 00:42:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
-Message-ID: <20090925044258.GA2722@tuxdriver.com>
-References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
+	Thu, 3 Sep 2009 21:06:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
+In-Reply-To: <200909040250.20632.chunkeey@googlemail.com>
+References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
+	<69e28c910909031634l55d44e93sa052b3d78413dd44@mail.gmail.com>
+	<200909040250.20632.chunkeey@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 3 Sep 2009 18:05:50 -0700
+Message-ID: <43e72e890909031805j2a6a3ee5nafecf125da12d3e0@mail.gmail.com>
+Subject: Re: Atheros Linux wireless drivers home page - and two new driver
+	projects
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	Len Widra <Len.Widra@atheros.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Werner Almesberger <werner@openmoko.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>, Greg KH <greg@kroah.com>,
+	rshlinux@gmail.com, b_yogesh_snowy@yahoo.com,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Harald Welte <laforge@openmoko.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 01:20:35PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Sep 24, 2009 at 11:02 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> > Here's my suggestion how to provide firmware and hardware version to
-> > user space. First I was thinking adding a new nl80211 command and
-> > it looked so ugly that I decided include the versions in struct wiphy
-> > instead.
-> >
-> > Please comment.
-> 
-> What was the conclusion on ethtool stuff again? I forgot.
+2009/9/3 Christian Lamparter <chunkeey@googlemail.com>:
+> On Friday 04 September 2009 01:34:19 Gábor Stefanik wrote:
+>>
+>> About ar9271: is this device already in the market, or the chip itself
+>> is also still in development?
+>>
+> yes, ar9271 devices are available in Europe.
+> (e.g: TP-Link TL-WN721N (about 12 euros))
 
-IIRC, I suggested that the cfg80211 driver API (or just the wiphy
-data structure) could be extended for appropriate bits like this,
-then cfg80211 could catch ethtool operations in a way similar to how
-it catches wireless extensions now.
+Thanks I've added this to the wiki on a new supported products page --
+if others are aware of other devices please feel free to add them
+there.
 
-I was thinking to look at this after I get home, maybe next week.
-Others are welcome to beat me to it, of course. :-)
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
