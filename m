@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754554AbZIKRiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:18 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/13] iwlwifi: remove un-supported eeprom parameters
-Date: Fri, 11 Sep 2009 10:38:09 -0700
-Message-Id: <1252690699-25796-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:42975 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934277AbZIDV7R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2009 17:59:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <43e72e890909041421m243bbea6i95c26ab21dc8732d@mail.gmail.com>
+References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
+	<1251962791.3336.3.camel@johannes.local> <43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
+	<1252001837.9336.2.camel@johannes.local> <20090903204319.GC3701@mosca>
+	<1252040671.9336.10.camel@johannes.local> <1252052757.26413.9.camel@pc1117.cambridge.arm.com>
+	<43e72e890909041421m243bbea6i95c26ab21dc8732d@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 4 Sep 2009 14:58:59 -0700
+Message-ID: <43e72e890909041458u505ce89tf38743dd6305bf7b@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
+	reports
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Fri, Sep 4, 2009 at 2:21 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
 
-Remove few of the parameters not used and no longer valid in EEPROM.
+> BTW I should not I got this kmemleak report after using the clear
+> command by painting objects black. I'll test it now with your
+> suggested changes.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+So I pulled your git://linux-arm.org/linux-2.6 master into my tree and
+didn't even need a 'clear' command now, the output of
+/sys/kernel/debug/kmemleak is empty :), so I suspect you have quite a
+few changes which should help avoid getting false positives.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 6b68db7..90e2b4e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -370,12 +370,10 @@ struct iwl_eeprom_calib_info {
- #define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
- #define EEPROM_VERSION                      (2*0x44)	/* 2  bytes */
- #define EEPROM_SKU_CAP                      (2*0x45)	/* 1  bytes */
--#define EEPROM_LEDS_MODE                    (2*0x45+1)	/* 1  bytes */
- #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
- #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
- #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
- #define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
--#define EEPROM_ANTENNA_SWITCH_TYPE          (2*0x4A+1)	/* 1  bytes */
- 
- /* The following masks are to be applied on EEPROM_RADIO_CONFIG */
- #define EEPROM_RF_CFG_TYPE_MSK(x)   (x & 0x3)         /* bits 0-1   */
--- 
-1.5.6.3
+Will these changes make it for 2.6.32?
 
+  Luis
