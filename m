@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38653
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755325AbZIJJrr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 05:47:47 -0400
-Date: Thu, 10 Sep 2009 02:48:04 -0700 (PDT)
-Message-Id: <20090910.024804.30388483.davem@davemloft.net>
-To: tm@dev-zero.ch
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] rtl8180: change PCI DMA mask to DMA_BIT_MASK(32) to
- solve "No suitable DMA available" problems on sparc64.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1252575463.30576.59.camel@localhost>
-References: <1252575463.30576.59.camel@localhost>
+Received: from mga02.intel.com ([134.134.136.20]:4854 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932476AbZIDDVD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Sep 2009 23:21:03 -0400
+Subject: Re: [PATCH V2] nl80211 connect API support
+From: Zhu Yi <yi.zhu@intel.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Samuel Ortiz <sameo@linux.intel.com>
+In-Reply-To: <20090903184459.GA11492@jm.kir.nu>
+References: <1250489084-13368-1-git-send-email-yi.zhu@intel.com>
+	 <20090903184459.GA11492@jm.kir.nu>
+Content-Type: text/plain
+Date: Fri, 04 Sep 2009 11:21:03 +0800
+Message-Id: <1252034463.5650.8.camel@debian>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tiziano Müller <tm@dev-zero.ch>
-Date: Thu, 10 Sep 2009 11:37:43 +0200
+On Fri, 2009-09-04 at 02:44 +0800, Jouni Malinen wrote:
+> It looks like there is still some misunderstanding regarding the SME
+> design in wpa_supplicant. It was designed to be used when the driver
+> does provide the separate authentication and association commands. There
+> is not much point in trying to convert the SME implementation to work
+> with the case where connect command is used. It is just duplicating
+> functionality that is already present in the old associate
+> (pre-auth/assoc SME case) operation.
 
-> Hi there
+I searched WPA_DRIVER_FLAGS_SME is set only by driver_nl80211. So I
+thought you might also want the connect API more visible for the whole
+wpa_supplicant. But it turns I was wrong.
+
+> I took about half of the patch, i.e., the changes to add driver
+> capability query, connect events, and actual connect/disconnect
+> functions. Instead of the changes in sme.c and driver interface, I glued
+> the new functions together within driver_nl80211.c since rest of
+> wpa_supplicant do not really need to (nor should) know about yet another
+> driver operation for connecting in a single step. The driver
+> capabilities are used to select which functions to use within
+> driver_nl80211.c. Since the WPA_DRIVER_FLAGS_SME is now set based on
+> driver capabilities, core wpa_supplicant code is able to switch between
+> the SME (separate auth/assoc calls) and single associate ("connect" in
+> nl80211 terminology) call.
 > 
-> I had problems to get my rtl8185 PCI card running on Sparc64: I always
-> got an error about "No suitable DMA available" followed by an error
-> that no device could be detected. When comparing the rtl8180 driver to
-> others I noticed that others are mostly using DMA_BIT_MASK so I changed
-> the custom mask to DMA_BIT_MASK(32) which fixed my issue.
+> I did not go through the details of sme_connect() function, but I would
+> expect that it was providing the same conversion from configuration to
+> driver parameters that was already done in wpa_supplicant.c. If there
+> was something else there, it should be added to the version in
+> wpa_supplicant.c instead of introducing a new, duplicated function.
+> 
+> It looks like the end result works fine at least with mac80211_hwsim
+> (with hardcoded driver capability detection that does not find the
+> separate authenticate command). This version is now in my git repository
+> and it would be good if you could verify that it works with your driver,
+> too.
 
-Looks correct to me.
+I confirm it also works for iwmc3200wifi. Tested for WEP, PSK and EAP.
 
-I wonder what it was trying to achieve by clearing the low 8 bits
-:-)
+Thanks,
+-yi
 
-Acked-by: David S. Miller <davem@davemloft.net>
