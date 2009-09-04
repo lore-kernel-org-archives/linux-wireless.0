@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:41456 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749AbZINIpM (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:61909 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934277AbZIDWPf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:45:12 -0400
-Received: by fxm17 with SMTP id 17so674704fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:45:15 -0700 (PDT)
-Message-ID: <4AAE0297.20401@gmail.com>
-Date: Mon, 14 Sep 2009 10:45:11 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 4 Sep 2009 18:15:35 -0400
+Received: by iwn5 with SMTP id 5so371776iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2009 15:15:38 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] ath5k: allocate ath5k_hw prior to initializing
- hw
-References: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com> <1252917123-11559-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252917123-11559-3-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 4 Sep 2009 15:15:18 -0700
+Message-ID: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
+Subject: kmemleak reports on wireless-testing master-2009-09-04 + kmemleak
+	tree
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2009 10:32 AM, Luis R. Rodriguez wrote:
-> --- a/drivers/net/wireless/ath/ath.h
-> +++ b/drivers/net/wireless/ath/ath.h
-> @@ -51,7 +51,7 @@ struct ath_common {
->  	u8 curbssid[ETH_ALEN];
->  	u8 bssidmask[ETH_ALEN];
->  	struct ath_regulatory regulatory;
-> -	struct ath_ops *ops;
-> +	const struct ath_ops *ops;
+I get these with today's wireless-testing + pulling Catalin's kmemleak
+tree. I nothing upon bootup, and then after a while I force a scan and
+get (besides some other acpi stuff):
 
-If I'm looking correctly, this will emit a warning for ath9k.
+unreferenced object 0xffff880039c7d700 (size 256):
+  comm "events/1", pid 10, jiffies 4295050369
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
+    [<ffffffff81118a83>] kmem_cache_alloc_node+0x193/0x200
+    [<ffffffff8141dc6a>] __alloc_skb+0x4a/0x180
+    [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
+    [<ffffffffa01b7084>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
+    [<ffffffffa01b70d6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
+    [<ffffffff8106de80>] worker_thread+0x1d0/0x380
+    [<ffffffff81073266>] kthread+0xa6/0xb0
+    [<ffffffff810130ca>] child_rip+0xa/0x20
+    [<ffffffffffffffff>] 0xffffffffffffffff
+unreferenced object 0xffff8800322bd000 (size 4096):
+  comm "events/1", pid 10, jiffies 4295050369
+  hex dump (first 32 bytes):
+    38 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00  8...............
+    00 00 01 00 03 00 00 00 43 10 01 00 00 00 00 00  ........C.......
+  backtrace:
+    [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
+    [<ffffffff811198fb>] __kmalloc_node_track_caller+0x1ab/0x220
+    [<ffffffff8141dc9b>] __alloc_skb+0x7b/0x180
+    [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
+    [<ffffffffa01b7084>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
+    [<ffffffffa01b70d6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
+    [<ffffffff8106de80>] worker_thread+0x1d0/0x380
+    [<ffffffff81073266>] kthread+0xa6/0xb0
+    [<ffffffff810130ca>] child_rip+0xa/0x20
+    [<ffffffffffffffff>] 0xffffffffffffffff
+
+  Luis
