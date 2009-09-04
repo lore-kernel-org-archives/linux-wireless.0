@@ -1,108 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12896 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:34165 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751542AbZIIKEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 06:04:20 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 03:04:23 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/4] ath9k: Enable btcoex based on the subsystem id of the device
-Date: Wed, 9 Sep 2009 15:25:50 +0530
-Message-ID: <1252490152-19284-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1252490152-19284-1-git-send-email-vasanth@atheros.com>
-References: <1252490152-19284-1-git-send-email-vasanth@atheros.com>
+	id S934283AbZIDU6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Sep 2009 16:58:15 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH 4/5] b43: Remove PIO RX workqueue
+Date: Fri, 4 Sep 2009 22:56:19 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Albert Herranz <albert_herranz@yahoo.es>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909042256.20125.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   23 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c     |    3 ++-
- drivers/net/wireless/ath/ath9k/hw.h     |    4 ++++
- 4 files changed, 30 insertions(+), 1 deletions(-)
+This removes the PIO RX work. It's not needed anymore, because
+we can sleep in the threaded interrupt handler.
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index e8bfb01..55f607b 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -19,6 +19,29 @@
- static const struct ath_btcoex_config ath_bt_config = { 0, true, true,
- 			ATH_BT_COEX_MODE_SLOTTED, true, true, 2, 5, true };
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
+
+Index: wireless-testing/drivers/net/wireless/b43/pio.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/pio.c	2009-09-04 22:18:53.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/pio.c	2009-09-04 22:18:54.000000000 +0200
+@@ -32,9 +32,6 @@
+ #include <linux/delay.h>
  
-+static const u16 ath_subsysid_tbl[] = {
-+	AR9280_COEX2WIRE_SUBSYSID,
-+	AT9285_COEX3WIRE_SA_SUBSYSID,
-+	AT9285_COEX3WIRE_DA_SUBSYSID
-+};
-+
-+/*
-+ * Checks the subsystem id of the device to see if it
-+ * supports btcoex
-+ */
-+bool ath_btcoex_supported(u16 subsysid)
-+{
-+	int i;
-+
-+	if (!subsysid)
-+		return false;
-+
-+	for (i = 0; i < ARRAY_SIZE(ath_subsysid_tbl); i++)
-+		if (subsysid == ath_subsysid_tbl[i])
-+			return true;
-+
-+	return false;
-+}
  
- /*
-  * Detects if there is any priority bt traffic
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 4556819..f1baf66 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -79,6 +79,7 @@ struct ath_btcoex_info {
- 	struct ath_gen_timer *no_stomp_timer; /*Timer for no BT stomping*/
- };
+-static void b43_pio_rx_work(struct work_struct *work);
+-
+-
+ static u16 generate_cookie(struct b43_pio_txqueue *q,
+ 			   struct b43_pio_txpacket *pack)
+ {
+@@ -182,7 +179,6 @@ static struct b43_pio_rxqueue *b43_setup
+ 	q->rev = dev->dev->id.revision;
+ 	q->mmio_base = index_to_pioqueue_base(dev, index) +
+ 		       pio_rxqueue_offset(dev);
+-	INIT_WORK(&q->rx_work, b43_pio_rx_work);
  
-+bool ath_btcoex_supported(u16 subsysid);
- int ath9k_hw_btcoex_init(struct ath_hw *ah);
- void ath9k_hw_btcoex_enable(struct ath_hw *ah);
- void ath9k_hw_btcoex_disable(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 97a09db..8d77817 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3690,7 +3690,8 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	pCap->num_antcfg_2ghz =
- 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_2GHZ);
+ 	/* Enable Direct FIFO RX (PIO) on the engine. */
+ 	b43_dma_direct_fifo_rx(dev, index, 1);
+@@ -247,13 +243,6 @@ void b43_pio_free(struct b43_wldev *dev)
+ 	destroy_queue_tx(pio, tx_queue_AC_BK);
+ }
  
--	if (AR_SREV_9280_10_OR_LATER(ah) && btcoex_enable) {
-+	if (AR_SREV_9280_10_OR_LATER(ah) &&
-+	    ath_btcoex_supported(ah->hw_version.subsysid)) {
- 		btcoex_info->btactive_gpio = ATH_BTACTIVE_GPIO;
- 		btcoex_info->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
+-void b43_pio_stop(struct b43_wldev *dev)
+-{
+-	if (!b43_using_pio_transfers(dev))
+-		return;
+-	cancel_work_sync(&dev->pio.rx_queue->rx_work);
+-}
+-
+ int b43_pio_init(struct b43_wldev *dev)
+ {
+ 	struct b43_pio *pio = &dev->pio;
+@@ -745,30 +734,19 @@ rx_error:
+ 	return 1;
+ }
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 64ea547..9106a0b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -45,6 +45,10 @@
- #define AR5416_DEVID_AR9287_PCI  0x002D
- #define AR5416_DEVID_AR9287_PCIE 0x002E
+-/* RX workqueue. We can sleep, yay! */
+-static void b43_pio_rx_work(struct work_struct *work)
++void b43_pio_rx(struct b43_pio_rxqueue *q)
+ {
+-	struct b43_pio_rxqueue *q = container_of(work, struct b43_pio_rxqueue,
+-						 rx_work);
+-	unsigned int budget = 50;
++	unsigned int count = 0;
+ 	bool stop;
  
-+#define AR9280_COEX2WIRE_SUBSYSID	0x309b
-+#define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
-+#define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
-+
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
- #define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+-	do {
+-		mutex_lock(&q->dev->wl->mutex);
++	while (1) {
+ 		stop = (pio_rx_frame(q) == 0);
+-		mutex_unlock(&q->dev->wl->mutex);
+-		cond_resched();
+ 		if (stop)
+ 			break;
+-	} while (--budget);
+-}
+-
+-/* Called with IRQs disabled. */
+-void b43_pio_rx(struct b43_pio_rxqueue *q)
+-{
+-	/* Due to latency issues we must run the RX path in
+-	 * a workqueue to be able to schedule between packets. */
+-	ieee80211_queue_work(q->dev->wl->hw, &q->rx_work);
++		cond_resched();
++		if (WARN_ON_ONCE(++count > 10000))
++			break;
++	}
+ }
+ 
+ static void b43_pio_tx_suspend_queue(struct b43_pio_txqueue *q)
+Index: wireless-testing/drivers/net/wireless/b43/pio.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/pio.h	2009-09-04 22:18:53.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/pio.h	2009-09-04 22:18:54.000000000 +0200
+@@ -104,9 +104,6 @@ struct b43_pio_rxqueue {
+ 	struct b43_wldev *dev;
+ 	u16 mmio_base;
+ 
+-	/* Work to reduce latency issues on RX. */
+-	struct work_struct rx_work;
+-
+ 	/* Shortcut to the 802.11 core revision. This is to
+ 	 * avoid horrible pointer dereferencing in the fastpaths. */
+ 	u8 rev;
+@@ -160,7 +157,6 @@ static inline void b43_piorx_write32(str
+ 
+ 
+ int b43_pio_init(struct b43_wldev *dev);
+-void b43_pio_stop(struct b43_wldev *dev);
+ void b43_pio_free(struct b43_wldev *dev);
+ 
+ int b43_pio_tx(struct b43_wldev *dev, struct sk_buff *skb);
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-04 22:18:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-04 22:18:54.000000000 +0200
+@@ -3883,7 +3883,6 @@ redo:
+ 	while (skb_queue_len(&wl->tx_queue))
+ 		dev_kfree_skb(skb_dequeue(&wl->tx_queue));
+ 
+-	b43_pio_stop(dev);
+ 	b43_mac_suspend(dev);
+ 	free_irq(dev->dev->irq, dev);
+ 	b43dbg(wl, "Wireless interface stopped\n");
+
 -- 
-1.5.5.1
-
+Greetings, Michael.
