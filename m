@@ -1,71 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:52191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbZILNMZ (ORCPT
+Received: from smtp19.orange.fr ([80.12.242.17]:32178 "EHLO smtp19.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934278AbZIDVvV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Sep 2009 09:12:25 -0400
-Subject: Re: [PATCH 07/13] iwlwifi: clean up ht config a little
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <69e28c910909111046m23414728nb9b56c53960340ea@mail.gmail.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-	 <1252690699-25796-8-git-send-email-reinette.chatre@intel.com>
-	 <69e28c910909111046m23414728nb9b56c53960340ea@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ldXEBb6yPjJIiFSt62ZN"
-Date: Sat, 12 Sep 2009 07:12:19 -0600
-Message-Id: <1252761139.23427.22.camel@johannes.local>
+	Fri, 4 Sep 2009 17:51:21 -0400
+Subject: Re: Atheros Linux wireless drivers home page - and two new driver
+ projects
+From: Xavier Bestel <xavier.bestel@free.fr>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Pavel Roskin <proski@gnu.org>, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, Len Widra <Len.Widra@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Werner Almesberger <werner@openmoko.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>, Greg KH <greg@kroah.com>,
+	rshlinux@gmail.com, b_yogesh_snowy@yahoo.com,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Harald Welte <laforge@openmoko.org>
+In-Reply-To: <43e72e890909040951y6a1e639bl771a63389665ca2a@mail.gmail.com>
+References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
+	 <1252065236.14338.179.camel@skunk> <1252080405.24673.11.camel@mj>
+	 <1252081080.31087.7.camel@skunk>
+	 <43e72e890909040951y6a1e639bl771a63389665ca2a@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Sat, 05 Sep 2009 00:00:47 +0200
+Message-Id: <1252101647.11934.0.camel@bip>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-ldXEBb6yPjJIiFSt62ZN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2009-09-11 at 19:46 +0200, G=C3=A1bor Stefanik wrote:
-> On Fri, Sep 11, 2009 at 7:38 PM, Reinette Chatre
-> <reinette.chatre@intel.com> wrote:
-> > From: Johannes Berg <johannes@sipsolutions.net>
+Le vendredi 04 septembre 2009 à 09:51 -0700, Luis R. Rodriguez a écrit :
+> On Fri, Sep 4, 2009 at 9:18 AM, Xavier Bestel<xavier.bestel@free.fr> wrote:
 > >
-> > is_ht can be bool instead of u8, and there's
-> > no need to use IWL_CHANNEL_WIDTH_* constants
-> > in supported_chan_width when that could just
-> > be named is_40mhz instead.
->=20
-> What about is_ht40?
+> > On Fri, 2009-09-04 at 12:06 -0400, Pavel Roskin wrote:
+> >> On Fri, 2009-09-04 at 13:53 +0200, Xavier Bestel wrote:
+> >> > On Thu, 2009-09-03 at 15:54 -0700, Luis R. Rodriguez wrote:
+> >> > > I'm pleased to announce the new home page to Atheros Linux wireless drivers:
+> >> > >
+> >> > > http://wireless.kernel.org/en/users/Drivers/Atheros
+> >> >
+> >> > ath5k is marked as not master-mode capable. I thought this had been
+> >> > fixed for 2.6.31 ?
+> >>
+> >> The above page makes no such statements.  I have fixed
+> >> http://wireless.kernel.org/en/users/Drivers/ath5k
+> >
+> > Right, thanks.
+> >
+> >> https://madwifi-project.org/wiki/UserDocs/ath5kAccessPoint still needs a
+> >> lot of work, or maybe it should be removed as obsolete.
+> >
+> > Yes, I miss access-point functionality in NetworkManager :)
+> 
+> BTW a GSoC project this year was to add AP support to Network Manager.
+> As far I can tell the Witold Sowa finished this so you should be able
+> to test this.
 
-Wrong approach. If you want to clean it up further, I would suggest
-replacing both "is_ht" and "is_40mhz" by the channel type as passed by
-mac80211, or using conf_is_ht40() etc. instead. Didn't feel motivated
-enough at this point though and just wanted to get rid of the extra
-constants.
+Awesome.
 
-johannes
+> Witold, can you update the wiki page on this project with details as
+> to how people can test this?
+> 
+> http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
+> 
+>   Luis
+> 
 
---=-ldXEBb6yPjJIiFSt62ZN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKq54vAAoJEODzc/N7+QmafIAP/2ufHU10pWJ7qBCMzEoHzu/6
-IEz7lb6847HtFTxCQo3iqvTNdSbvAwOZndgwZKmBb6jZ0t5G5TscnmUA6mzCWuTU
-PXIlF5f3vCafcpCEVnsCpdNrGOe6DgoO/VYffbs+5aBZezTwCKPjWyTXgGmFEsuy
-qtnWYO3v/0zIYxPKVvqIw++gq3GlfyjJdMMQ7BB7Or60MP8gvDimo32HyWZCQlFG
-gHGQcx1kLe7Iusv8MVXDkMTA7EeMiWGaXLiBPitI7DNrZQdqJAhigLxIUR/7jJAF
-oJzfBgiBLp8fq+m4MWLAr/tdolJTz/YWTeKQ/6fTJ6dtiB0u+rdCux2W4Rrif6aC
-MH6yjIS9mv7wnPxwkF/caj3E5MRUWPVo5q/+g+X1yE3AE3JJkCCc7ahTWoLyaz3c
-K6zKpxkNf7FM8lMvYHqjT1vXWys/AC8y7GBQr3oXuMIu5Ytvk5Nf55Pspkrzs5E+
-Uj/6XZ3xvhkROlgyTNonJFWIYPc0oah/GTHbYxxUVph3qy7xcGGhuyhQQwiXetuq
-CbRqk0ce9qII/CEeOs8QTDoobvHhyQbRQSIIPZM0g05Fgz5JKs68ap4ihUZlSzvw
-LasBZtBkepMX3XwY45fqsIft+1kO7djKB+4FMp+zB1aS92NC3HHgRxKZG4etLW56
-WzvatdCiMtPznwdHP7GK
-=bxAW
------END PGP SIGNATURE-----
-
---=-ldXEBb6yPjJIiFSt62ZN--
 
