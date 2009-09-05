@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34842 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751750AbZIZBuM convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:42929 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757284AbZIEKzF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 21:50:12 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: ar9170 makes machine hang when shut down
-Date: Sat, 26 Sep 2009 03:50:07 +0200
-References: <200909242155.19485.malte.gell@gmx.de> <200909251132.18546.malte.gell@gmx.de> <4ABD2504.9010202@gmx.de>
-In-Reply-To: <4ABD2504.9010202@gmx.de>
+	Sat, 5 Sep 2009 06:55:05 -0400
+Received: by ewy2 with SMTP id 2so1036042ewy.17
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 03:55:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200909260350.07465.malte.gell@gmx.de>
+Date: Sat, 5 Sep 2009 12:55:05 +0200
+Message-ID: <2d0a357f0909050355r381b12fei33930141cfbd8893@mail.gmail.com>
+Subject: compat-wireless-2009-09-05: error: implicit declaration of function
+	?kmemleak_ignore?
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Luis,
 
-Joerg Albert <jal2@gmx.de> wrote
+todays compat-wireless (2009-09-05) is broken.
 
-Thanks to you and Luis for explanation.
+Error looks like this:
+[...]
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/mac80211/rc80211_minstrel.o
+  LD [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/mac80211/mac80211.o
+  LD      /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/rfkill/built-in.o
+  LD      /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/built-in.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/core.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/sysfs.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/radiotap.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/util.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/reg.o
+  CC [M]  /home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/scan.o
+/home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/scan.c:
+In function ‘cfg80211_inform_bss’:
+/home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/scan.c:503:
+error: implicit declaration of function ‘kmemleak_ignore’
+make[5]: *** [/home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless/scan.o]
+Error 1
+make[4]: *** [/home/sd/src/compat-wireless/compat-wireless-2009-09-05/net/wireless]
+Error 2
+make[3]: *** [_module_/home/sd/src/compat-wireless/compat-wireless-2009-09-05]
+Error 2
+make[2]: *** [sub-make] Error 2
+make[1]: *** [all] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.31-rc8-radeonkms-686'
 
-> You are right. I had a look into the source rpm for the packets your url
->  pointed to. The ar9170 driver inside compat-wireless dates back to end of
->  February 2009, at that time the driver was called ar9170, it got the "usb"
->  prefix later.
+This fixed the issue here:
 
-Prefix? I guess it is more a suffix at the end, isn't it...?
- 
-> You might try arusb_lnx (the vendor driver) from the other package (no idea
->  how OpenSuSE handles two drivers for the same hardware), 
+----- SNIP -----
+--- net/wireless/scan.c.orig	2009-09-05 06:57:36.000000000 +0200
++++ net/wireless/scan.c	2009-09-05 12:38:09.644616605 +0200
+@@ -15,6 +15,7 @@
+ #include "core.h"
+ #include "nl80211.h"
+ #include "wext-compat.h"
++#include <linux/kmemleak.h>
 
-It seems it does not handle it at all... i was able to 1st load arusb_lnx but 
-it did not work, maybe they reduced it just to a dummy thing? Ok, I'm surely 
-wrong about that, at least arubs_lnx just did nothing. ar9170 only works.
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
+----- SNAP -----
 
-
->  but the best way
->  to get support from this list would be to compile a decent compat-wireless
->  by your own and report bugs etc. to the list. A lot of stuff changed since
->  February.
-
-Yep, I tried before, but when i try to compile the latest compat-wireless I 
-get this:
-
-./scripts/driver-select ar9170
-
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.27.29-0.1-k7/build 
-M=/home/malte_gell/download/src/wifi/compat-wireless-2009-09-25 modules
-make[1]: Entering directory `/usr/src/linux-2.6.27.29-0.1'
-  LD      /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath/built-in.o
-  CC [M]  /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath/main.o
-In file included from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:152: error: redefinition of 
-‘struct tracepoint’
-In file included from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:182:1: warning: "DEFINE_TRACE" 
-redefined
-In file included from include/linux/module.h:19,
-                 from include/linux/textsearch.h:7,
-                 from include/linux/skbuff.h:26,
-                 from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:10,
-                 from /home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat.h:19,
-                 from <command-line>:0:
-include/linux/tracepoint.h:86:1: warning: this is the location of the previous 
-definition
-/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/include/net/compat-2.6.28.h:186: error: redefinition of 
-‘tracepoint_update_probe_range’
-include/linux/tracepoint.h:100: error: previous definition of 
-‘tracepoint_update_probe_range’ was here
-make[4]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath/main.o] Fehler 1
-make[3]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless/ath] Fehler 2
-make[2]: *** [/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25/drivers/net/wireless] Fehler 2
-make[1]: *** [_module_/home/malte_gell/download/src/wifi/compat-
-wireless-2009-09-25] Fehler 2
-make[1]: Leaving directory `/usr/src/linux-2.6.27.29-0.1'
-make: *** [modules] Fehler 2
-
-
-openSUSE 11.1 runs a 2.6.27 kernel, doesn't ar9170 need a 2.6.29 kernel? 
-Somehow SUSE manages it in their packages, so I used the SUSE source rpm, but 
-of course compat-wirless is more recent, but I can't compile it...
-
-Thanx
-Malte
+Kind Regards,
+Sedat
