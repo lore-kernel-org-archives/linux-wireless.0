@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:52279 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751863AbZICLmW (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46842 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbZIEJ1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 07:42:22 -0400
-From: Amit Kucheria <amit.kucheria@canonical.com>
-To: List Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	Amit Kucheria <amit.kucheria@canonical.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>
-Subject: [PATCH] rt2x00: Get rid of duplicate usb id from rt2500usb
-Date: Thu,  3 Sep 2009 14:42:20 +0300
-Message-Id: <1251978140-4992-1-git-send-email-amit.kucheria@canonical.com>
+	Sat, 5 Sep 2009 05:27:03 -0400
+Subject: Re: kmemleak reports on wireless-testing master-2009-09-04 +
+ kmemleak  tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>
+In-Reply-To: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
+References: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-rI2zjJ8rZHQ8PNb+OOT8"
+Date: Sat, 05 Sep 2009 11:27:01 +0200
+Message-Id: <1252142821.1175.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB_DEVICE(0x148f, 0x2573) is served by the rt73usb driver where it is already
-defined. Remove it from rt2500usb.
 
-Signed-off-by: Amit Kucheria <amit.kucheria@canonical.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+--=-rI2zjJ8rZHQ8PNb+OOT8
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index ce75426..2e9fac7 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -2020,7 +2020,6 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x1706), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x2570), USB_DEVICE_DATA(&rt2500usb_ops) },
--	{ USB_DEVICE(0x148f, 0x2573), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	{ USB_DEVICE(0x148f, 0x9020), USB_DEVICE_DATA(&rt2500usb_ops) },
- 	/* Sagem */
- 	{ USB_DEVICE(0x079b, 0x004b), USB_DEVICE_DATA(&rt2500usb_ops) },
--- 
-1.6.3.3
+On Fri, 2009-09-04 at 15:15 -0700, Luis R. Rodriguez wrote:
+> I get these with today's wireless-testing + pulling Catalin's kmemleak
+> tree. I nothing upon bootup, and then after a while I force a scan and
+> get (besides some other acpi stuff):
+>=20
+> unreferenced object 0xffff880039c7d700 (size 256):
+>   comm "events/1", pid 10, jiffies 4295050369
+>   hex dump (first 32 bytes):
+>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+>     [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
+>     [<ffffffff81118a83>] kmem_cache_alloc_node+0x193/0x200
+>     [<ffffffff8141dc6a>] __alloc_skb+0x4a/0x180
+>     [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
+
+Do you have CONFIG_COMPAT? And if you do, can you figure out whether
+this is "skb" or "compskb"?
+
+johannes
+
+--=-rI2zjJ8rZHQ8PNb+OOT8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKoi7iAAoJEODzc/N7+QmaPyoQAJzjNoZH1S0npUEr3Rirq2dw
+YWXcklqluYyOuC5LNqvRgKng/5kFZChUuxa5J55DPnxDNWukrwZCug+4Qg5BLhfO
+82UnV49SnQNvAmoVFOLkeP0iI7MMum07tvAvYlBfPxNygHl1+keWBtnDATbfJ9/D
+JwfHHQ0UZ7hjRUajr8PXkx65yKUKPMIdfCfkJnnhDEeSnruT7G1DWuqddKp+t+8d
+6Z48ma/Go+0gLASn6TWZYh6Hj/Ajai2wkEFAq+rAho5oR6TXDLASVKo3KB7a3zbm
+DkGjEHkH0hXgEDvH8W600ApTPN0gTaFWqTRUH159bi7ijIZd19Z1JrqFzYx103Pz
+ZxFNMvW3YRxdHcr1e6o4+Pn/Jz83m4enHevqMbIgoatEfGMrN/d2r6O+iXz3A3y1
+oCUIGC/OPCkhlaS7XTpjm32VDLt9QPsuoaaS3R5nXctgw9rWK2oa1lLLBy1UZS2M
+fXZRTcp9BNUlylz2OWPXVlMuiKrb3Hz7lDc3mtUxS1W5BmqOpRHJGW2HMugqIi1C
+LqwsEDc5g0lL/qsawYVdeh9CRht+ueyQvQJi2QpooHQC1QR3TocqVvywgpJtee2W
+3BKWOM00Npvoz5SMtSDEwiXkOMAAYLcZ1jXMlyIYkaDtNlgqLv9oBbbwGg7yfJOu
+9IkZfsR9cbnmN86lxB4B
+=JU1O
+-----END PGP SIGNATURE-----
+
+--=-rI2zjJ8rZHQ8PNb+OOT8--
 
