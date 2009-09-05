@@ -1,98 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:42305 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbZI2RM7 (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:53861 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962AbZIETiL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 13:12:59 -0400
-Date: Tue, 29 Sep 2009 19:12:51 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-Subject: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
-Message-ID: <20090929171249.GB14405@elf.ucw.cz>
+	Sat, 5 Sep 2009 15:38:11 -0400
+Received: by iwn5 with SMTP id 5so532325iwn.4
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 12:38:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AA25846.70007@gmx.de>
+References: <4AA25846.70007@gmx.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 5 Sep 2009 12:37:53 -0700
+Message-ID: <43e72e890909051237l45766654w4484192a537485d5@mail.gmail.com>
+Subject: Re: otus: conformance test limits implementation for MKK and ETSI
+To: Joerg Albert <jal2@gmx.de>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"otus-devel@lists.madwifi-project.org"
+	<otus-devel@lists.madwifi-project.org>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 5, 2009 at 5:23 AM, Joerg Albert<jal2@gmx.de> wrote:
+> Hi,
+>
+> I've read [1] about the ctl groups, looked into otus' hal/hpmain.c (lines 3700 ff.)
+> and dumped the ctl index and data in the eeprom of my WNDA3100
+>
+> It seems like the otus driver skips ctl (and heavy clip) application for the groups CTL_MKK and
+> CTL_ETSI. On the other hand I've found ctl data for these groups in the eeprom (see attachment).
+> Is this intended behaviour or a bug in the otus driver?
 
+Not too sure but most likely a mistake on the driver, the CTLs should
+always be read and used.
 
-Happened while playing with wireless.
+  Luis
 
-Kernel is:
-
-Linux version 2.6.31 (pavel@amd) (gcc version 4.3.3 (Debian 4.3.3-10)
-) #72 SMP Thu Sep 10 21:56:19 CEST 2009
-KERNEL supported cpus:
-
-(Could we get kernels between release and -rc1 mark themselves
-somehow?)
-									Pavel
-...
-Registered led device: iwl-phy0::radio
-Registered led device: iwl-phy0::assoc
-Registered led device: iwl-phy0::RX
-Registered led device: iwl-phy0::TX
-wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SSID
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: Trigger new scan to find an IBSS to join
-wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
-wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
-skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
-data:e4c3edf0 tail:0xe4c3ee72 end:0xe4c3ee70 dev:<NULL>
-------------[ cut here ]------------
-kernel BUG at net/core/skbuff.c:127!
-invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
-last sysfs file:
-/sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/device:01/PNP0C09:00/PNP0C0A:00/power_supply/BAT0/status
-Modules linked in:
-
-Pid: 1353, comm: iwl3945 Not tainted (2.6.31 #72) 17097HU
-EIP: 0060:[<c06d7189>] EFLAGS: 00010286 CPU: 0
-EIP is at skb_put+0x89/0x90
-EAX: 00000079 EBX: e4c3ee72 ECX: c0230881 EDX: 01eef000
-ESI: 00000024 EDI: f5e20fc0 EBP: f5dcde04 ESP: f5dcddd8
- DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-Process iwl3945 (pid: 1353, ti=f5dcc000 task=f72e4698
-task.ti=f5dcc000)
-Stack:
- c0a28c24 c07b4113 00000082 00000024 e4c3edf0 e4c3edf0 e4c3ee72
-e4c3ee70
-<0> c09ac8b9 0000009c 66666667 f5dcde74 c07b4113 00000037 00000007
-00000282
-<0> 00000002 00000000 00000040 00000006 00000064 f5e1bbc0 f5e1be23
-c03e82b1
-Call Trace:
- [<c07b4113>] ? __ieee80211_sta_join_ibss+0x143/0x3d0
- [<c07b4113>] ? __ieee80211_sta_join_ibss+0x143/0x3d0
- [<c03e82b1>] ? extract_entropy+0x51/0xa0
- [<c07b4677>] ? ieee80211_sta_find_ibss+0x227/0x450
- [<c07fcdc2>] ? mutex_lock_nested+0x1c2/0x230
- [<c07b48b7>] ? ieee80211_ibss_notify_scan_completed+0x17/0x80
- [<c07b4909>] ? ieee80211_ibss_notify_scan_completed+0x69/0x80
- [<c07b1b85>] ? ieee80211_scan_completed+0xc5/0x450
- [<c0239e29>] ? del_timer_sync+0x59/0x70
- [<c0239dd0>] ? del_timer_sync+0x0/0x70
- [<c052a4df>] ? iwl_bg_scan_completed+0x3f/0x80
- [<c024089d>] ? worker_thread+0x16d/0x280
- [<c024083a>] ? worker_thread+0x10a/0x280
- [<c052a4a0>] ? iwl_bg_scan_completed+0x0/0x80
- [<c02449d0>] ? autoremove_wake_function+0x0/0x50
- [<c0240730>] ? worker_thread+0x0/0x280
- [<c02446dc>] ? kthread+0x7c/0x90
- [<c0244660>] ? kthread+0x0/0x90
- [<c020385f>] ? kernel_thread_helper+0x7/0x18
-Code: 44 24 14 8b 81 a0 00 00 00 89 74 24 0c 89 44 24 10 8b 41 50 c7
-04 24 24 8c a2 c0 89 44 24 08 8b
-45 04 89 44 24 04 e8 a7 40 12 00 <0f> 0b eb fe 8d 76 00 55 89 e5 57 56
-53 83 ec 18 89 45 e4 89 55
-EIP: [<c06d7189>] skb_put+0x89/0x90 SS:ESP 0068:f5dcddd8
----[ end trace 5d5762000564cd5a ]---
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+>
+> [1] http://linuxwireless.org/en/users/Drivers/ath
+>
+> WNDA3100
+> ========
+>
+>  ar9170_calc_ctl: ctl_grp 0x10 freq 2412
+>  ar9170_calc_ctl: eeprom ctl_index: 0x10
+>   chain 0: 76(0x1a) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>   chain 1: 76(0x1a) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x16
+>   chain 0: 76(0x19) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>   chain 1: 76(0x19) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x18
+>   chain 0: 78(0x18) 86(0x59) 102(0x1e) 142(0x62) 158(0x62) 178(0x22) 191(0x62) 199(0x62)
+>   chain 1: 78(0x18) 86(0x59) 102(0x1e) 142(0x62) 158(0x62) 178(0x22) 191(0x62) 199(0x62)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x11
+>   chain 0: 112(0x26) 117(0x66) 162(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x26) 117(0x66) 162(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x12
+>   chain 0: 112(0x24) 117(0x64) 162(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x24) 117(0x64) 162(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x15
+>   chain 0: 112(0x23) 117(0x64) 162(0x21) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x23) 117(0x64) 162(0x21) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x17
+>   chain 0: 122(0x1d) 127(0x64) 147(0x64) 152(0x1b) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 122(0x1d) 127(0x64) 147(0x64) 152(0x1b) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x40
+>   chain 0: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x46
+>   chain 0: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x41
+>   chain 0: 112(0x24) 117(0x64) 172(0x24) 184(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x24) 117(0x64) 172(0x24) 184(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x42
+>   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x45
+>   chain 0: 112(0x22) 117(0x62) 152(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x22) 117(0x62) 152(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x30
+>   chain 0: 76(0x22) 92(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>   chain 1: 76(0x22) 92(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x36
+>   chain 0: 76(0x22) 80(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>   chain 1: 76(0x22) 80(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x38
+>   chain 0: 78(0x22) 86(0x62) 102(0x22) 142(0x62) 158(0x62) 174(0x22) 0(0x00) 0(0x00)
+>   chain 1: 78(0x22) 86(0x62) 102(0x22) 142(0x62) 158(0x62) 174(0x22) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x31
+>   chain 0: 112(0x26) 117(0x66) 172(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x26) 117(0x66) 172(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x32
+>   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x35
+>   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x37
+>   chain 0: 122(0x23) 127(0x63) 147(0x63) 152(0x23) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 122(0x23) 127(0x63) 147(0x63) 152(0x23) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x00
+>   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x00
+>   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x00
+>   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x00
+>   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_calc_ctl: eeprom ctl_index: 0x00
+>   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
+>  ar9170_get_max_edge_power: freq 2412 max_edge_power 38
+>  ar9170_get_max_edge_power: freq 2412 max_edge_power 36
+>  ar9170_get_max_edge_power: freq 2412 max_edge_power 35
+>  ar9170_calc_ctl: ctl_mode 5 pwr_cal[0] 24 -> 23
+>  ar9170_get_max_edge_power: freq 2422 max_edge_power 29
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[0] 23 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[1] 22 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[2] 22 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[3] 22 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[4] 22 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[5] 22 -> 1d
+>  ar9170_calc_ctl: ctl_mode 7 pwr_cal[6] 20 -> 1d
+>
+>
