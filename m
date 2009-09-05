@@ -1,42 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35313 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381AbZIXEB3 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:59928 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934532AbZIECI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 00:01:29 -0400
-Date: Wed, 23 Sep 2009 23:54:03 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing broken
-Message-ID: <20090924035356.GC2726@tuxdriver.com>
-References: <da94abde0909231800v75b05677ka6b8570a73b6055c@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <da94abde0909231800v75b05677ka6b8570a73b6055c@mail.gmail.com>
+	Fri, 4 Sep 2009 22:08:28 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1227371fge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2009 19:08:29 -0700 (PDT)
+Subject: Re: driver_nl80211 broken again
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1251147515.20161.3.camel@johannes.local>
+References: <1251117161.22951.4.camel@maxim-laptop>
+	 <1251122885.12007.12.camel@johannes.local>
+	 <1251144381.9374.4.camel@maxim-laptop>
+	 <1251147515.20161.3.camel@johannes.local>
+Content-Type: text/plain
+Date: Sat, 05 Sep 2009 05:08:23 +0300
+Message-Id: <1252116503.2398.26.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 23, 2009 at 06:00:41PM -0700, Kalle Valo wrote:
-> Hi,
+On Mon, 2009-08-24 at 22:58 +0200, Johannes Berg wrote:
+> On Mon, 2009-08-24 at 23:06 +0300, Maxim Levitsky wrote:
 > 
-> I upgraded to latest wireless-testing and noticed that I can't connect
-> anymore with my iwl3945. master-2009-09-16 still works. My syslog has
-> this:
+> > This is typical output of iwconfig, after failure
+> > (and I know that this output means trouble):
 > 
-> Sep 24 03:53:28 tikku kernel: [  719.479190] phy0: device no longer
-> idle - scanning
-> Sep 24 03:53:31 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
-> Sep 24 03:53:31 tikku wpa_supplicant[12381]: Trying to associate with
-> 00:03:52:d9:27:10 (SSID='ibahn' freq=2452 MHz)
+> Hmm, thanks for the info and especially the log. Unfortunately, I can't
+> reproduce this at all.
+> 
+> Can you run wpa_supplicant with timing info (add -t to the command line)
+> and at the same time run "iw event -t" please?
+> 
+> johannes
 
-Kalle,
+I have finally got to the bottom of this, ad it doesn't look good.
+There are two bugs that overlap:
 
-I know you aren't in a great situation for this, but could you try
-a bisect?  Or, you might just try reverting "iwlwifi: reduce noise
-when skb allocation" as a start...
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1 - when connecting again to the access point (same or another), 
+wpa_supplicant does the following:
+
+deassoc
+auth
+assoc
+
+So it assumes that deassoc command disconnects completely, but it not
+longer true.
+Yet, I have tried to make its dissassoc function do both, but it failed.
+I used following patch:
+
+
+diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
+index c68dd82..50afeeb 100644
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -1278,8 +1278,10 @@ void wpa_supplicant_disassociate(struct wpa_supplicant *wpa_s,
+        if (!is_zero_ether_addr(wpa_s->bssid)) {
+                if (wpa_s->drv_flags & WPA_DRIVER_FLAGS_USER_SPACE_MLME)
+                        ieee80211_sta_disassociate(wpa_s, reason_code);
+-               else
++               else {
+                        wpa_drv_disassociate(wpa_s, wpa_s->bssid, reason_code);
++                       wpa_drv_deauthenticate(wpa_s, wpa_s->bssid, reason_code);
++               }
+                addr = wpa_s->bssid;
+        }
+        wpa_clear_keys(wpa_s, addr);
+
+
+I got this.
+
+
+EAPOL: startWhen --> 0
+EAPOL: disable timer tick
+wpa_driver_nl80211_disassociate
+wpa_driver_nl80211_deauthenticate
+nl80211: MLME command failed: ret=-67 (Link has been severed)
+
+
+
+However, this "hack", did the trick:
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 97a278a..60c4355 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2561,7 +2561,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+                return -ENOLINK;
+        }
+ 
+-       ieee80211_set_disassoc(sdata, false);
++       ieee80211_set_disassoc(sdata, true);
+ 
+        mutex_unlock(&ifmgd->mtx);
+ 
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 79d2eec..fec34a7 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -222,7 +222,7 @@ static void __cfg80211_send_disassoc(struct net_device *dev,
+                for (i = 0; i < MAX_AUTH_BSSES; i++) {
+                        if (wdev->authtry_bsses[i] || wdev->auth_bsses[i])
+                                continue;
+-                       wdev->auth_bsses[i] = wdev->current_bss;
++                       /*wdev->auth_bsses[i] = wdev->current_bss;*/
+                        wdev->current_bss = NULL;
+                        done = true;
+                        cfg80211_sme_disassoc(dev, i);
+
+
+With this ugly hack, everything works just fine. 
+-----------------------------------------------------------------------------------------------
+2 - independent of the above, the ieee80211_set_disassoc
+doesn't work right if deauth==false.
+
+
+If it is, then a work item is added to station work thread, and it is
+never removed:
+
+	} else {
+		struct ieee80211_mgd_work *wk = ifmgd->old_associate_work;
+
+		wk->state = IEEE80211_MGD_STATE_IDLE;
+		list_add(&wk->list, &ifmgd->work_list);
+	}
+
+
+iee80211_sta_work just ignores the IEEE80211_MGD_STATE_IDLE, thus it
+work item remains forever.
+
+This breaks scanning, since __ieee80211_start_scan will refuses to run
+until, ifmgd->work_list is empty.
+
+
+
+Best regards,
+	Maxim Levitsky
+
