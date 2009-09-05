@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:55466 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479AbZIRIBU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 04:01:20 -0400
-Received: by iwn8 with SMTP id 8so577936iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 01:01:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
-References: <19121.45772.489140.407518@gargle.gargle.HOWL>
-	<43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 18 Sep 2009 01:01:03 -0700
-Message-ID: <43e72e890909180101se65a608k1c11c53434cb74e@mail.gmail.com>
-Subject: Re: [PATCH 00/12] ath9k bug fixes
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:50568 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345AbZIEKEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Sep 2009 06:04:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1Mjs7t-00081S-S6
+	for linux-wireless@vger.kernel.org; Sat, 05 Sep 2009 12:04:09 +0200
+Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 12:04:09 +0200
+Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 12:04:09 +0200
+To: linux-wireless@vger.kernel.org
+From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
+Subject: Re: Atheros Linux wireless drivers home page - and two new driver  projects
+Date: Sat, 05 Sep 2009 11:03:46 +0100
+Message-ID: <wftyzhwvwd.fsf@calligramme.charmers>
+References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
+	<1252065236.14338.179.camel@skunk> <1252080405.24673.11.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 18, 2009 at 12:59 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Wed, Sep 16, 2009 at 8:53 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
->> John,
->>
->> A bunch of patches fixing various bugs in the driver.
->> These apply on top of wireless-testing.
->>
->> Luis would rebase his pending patches on top of these
->> and resend them.
->
-> John, here is my rebase of my 48 patches on top of this series. I
-> won't post them and instead give you this handy git am'able file.
->
-> http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18-mcgrof-rebased.patch
->
-> If you really need me to post them again please let me know.
->
-> If you want to get both sujith's collection series + mine in one file
-> here they are:
->
-> http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18.patch
+Pavel Roskin <proski@gnu.org> writes:
+> I have fixed http://wireless.kernel.org/en/users/Drivers/ath5k
 
-But I expect my series to only be applied after 2.6.32-rc1 is released.
+Jolly good; I've been using it for a while, though it occasionally
+fails. Did my message about ath5k + hostapd occasionally sulks get
+through?
 
-  Luis
+-- 
+Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
+
+
