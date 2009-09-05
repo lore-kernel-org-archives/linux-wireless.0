@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39928 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754759AbZIAQdM (ORCPT
+Received: from mail-yw0-f175.google.com ([209.85.211.175]:62522 "EHLO
+	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168AbZIEQUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 12:33:12 -0400
-Date: Tue, 1 Sep 2009 19:33:00 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
-Message-ID: <20090901163300.GA29047@jm.kir.nu>
-References: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 5 Sep 2009 12:20:31 -0400
+Received: by ywh5 with SMTP id 5so2307146ywh.4
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 09:20:33 -0700 (PDT)
+Message-ID: <4AA28FC5.6030508@lwfinger.net>
+Date: Sat, 05 Sep 2009 11:20:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
+To: Michael Buesch <mb@bu3sch.de>
+CC: John Linville <linville@tuxdriver.com>,
+	Albert Herranz <albert_herranz@yahoo.es>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
+Subject: Re: [PATCH 0/5] b43: Prepare driver for sleeping busses
+References: <200909042247.37655.mb@bu3sch.de>
+In-Reply-To: <200909042247.37655.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 08:54:25AM -0700, Luis R. Rodriguez wrote:
-> This updates the mac80211 kconfig entry to clarify
-> what it is and refer people to our wireless wiki for
-> more documentation.
+Michael Buesch wrote:
+> This patchset is the first series to remove atomic sections
+> from the b43 driver to allow running b43 on a slow bus like
+> SDIO that needs to sleep for register accesses.
 
-> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+I have installed this patch set and find no problems. It compiles
+correctly after each step is installed, which ensures proper
+bisection. The code appears to work correctly.
 
-> -	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
-> +	tristate "mac80211 - SoftMAC device support"
+I also tested the stand-alone version of interrupt threading without
+problems.
 
-Uh.. Do we really need to call this SoftMAC or well have that in the
-title? I prefer the current text or if you want to, just move the
-mac80211 into the beginning..
-
-
-> +	  This option enables support for a framework used by IEEE-802.11
-
-s/IEEE-802.11/IEEE 802.11/
-
-> +	  SoftMAC devices. SoftMAC devices allow for a finer control of the
-
-Again, I don't really like the term "SoftMAC" here..
-
-> +	  hardware, allowing for 802.11 frame management to be done in software
-> +	  for them, for both parsing and generation of 802.11 wireless frames.
-> +	  Most 802.11 devices today tend to be of this type.
-
-s/802.11/IEEE 802.11/g
-
-> +	  If you have new userspace utitlities which support nl80211 you do not
-
-s/utitlities/utilities/
-
-> +	  need wireless-extensions to support a mac80211 device.
-
-s/wireless-extensions/wireless extensions/
-
-> +	  When built as a module it will be called as mac80211, if not sure
-> +	  you should build this as a module.
-
-s/, if/. If/
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
