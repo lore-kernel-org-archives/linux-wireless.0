@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web28316.mail.ukl.yahoo.com ([87.248.110.135]:42357 "HELO
-	web28316.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752851AbZIJVpN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 17:45:13 -0400
-Message-ID: <213140.53030.qm@web28316.mail.ukl.yahoo.com>
-Date: Thu, 10 Sep 2009 21:45:14 +0000 (GMT)
-From: Albert Herranz <albert_herranz@yahoo.es>
-Subject: Re: [PATCH] b43: Add Soft-MAC SDIO device support
-To: Michael Buesch <mb@bu3sch.de>,
-	=?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <69e28c910909101423j535c9cffq5b1be1cb00877645@mail.gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:49941 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111AbZIEJUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Sep 2009 05:20:33 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] ssb: Fail ssb modinit, if attach of the buses failed.
+Date: Sat, 5 Sep 2009 11:18:47 +0200
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909051118.49489.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- El jue, 10/9/09, Gábor Stefanik <netrolller.3d@gmail.com> escribió:
-> > This adds support for Soft-MAC SDIO devices to b43.
-> > The driver still lacks some fixes for SDIO devices, so
-> it's currently
-> > marked as BROKEN.
-> 
-> Is it actually completely broken; or already testable, just
-> incomplete?
-> 
+SSB modinit should not succeed, if busattach failed.
 
-It doesn't work yet as posted to the ML. So I'd say, it is not testable.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-We'll work to bring it into an usable form, then mark it unbroken.
+---
+ drivers/ssb/main.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Cheers,
-Albert
+--- wireless-testing.orig/drivers/ssb/main.c
++++ wireless-testing/drivers/ssb/main.c
+@@ -1358,8 +1358,10 @@ static int __init ssb_modinit(void)
+ 	ssb_buses_lock();
+ 	err = ssb_attach_queued_buses();
+ 	ssb_buses_unlock();
+-	if (err)
++	if (err) {
+ 		bus_unregister(&ssb_bustype);
++		goto out;
++	}
+ 
+ 	err = b43_pci_ssb_bridge_init();
+ 	if (err) {
+@@ -1375,7 +1377,7 @@ static int __init ssb_modinit(void)
+ 		/* don't fail SSB init because of this */
+ 		err = 0;
+ 	}
+-
++out:
+ 	return err;
+ }
+ /* ssb must be initialized after PCI but before the ssb drivers.
 
-
-
-      
+-- 
+Greetings, Michael.
