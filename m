@@ -1,72 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037AbZIXIFl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 04:05:41 -0400
-Subject: Re: Problems with "cfg80211: fix SME connect" commit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Albert Herranz <albert_herranz@yahoo.es>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4AB7A5BB.1050300@yahoo.es>
-References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
-	 <200909210845.51247.hs4233@mail.mn-solutions.de>
-	 <4AB7A5BB.1050300@yahoo.es>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-G+ubo3cPwClBX8CfhgPX"
-Date: Thu, 24 Sep 2009 10:05:38 +0200
-Message-Id: <1253779538.3868.14.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:56477 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751358AbZIEOHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Sep 2009 10:07:48 -0400
+Message-ID: <4AA270B3.5060001@gmx.de>
+Date: Sat, 05 Sep 2009 16:07:47 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath,ar9170: implemented conformance test limit calc.
+ for tx power
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+apply the conformance test limits (CTL) stored in the eeprom upon 
+the values calculated for the tx power (ar->power_*).
 
---=-G+ubo3cPwClBX8CfhgPX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This is based on the implementation in the vendor driver
+(hal/hpmain.c, line 3700 ff.) with one difference:
+If any ctl mode isn't found in the eeprom, we fall back to the "lower",
+legacy modes (5GHT20,11A or 2GHT20,11G,11B). Otus only did 5GHT20->11A.
 
-On Mon, 2009-09-21 at 18:11 +0200, Albert Herranz wrote:
+Currently CTL are applied for the FCC group only.
 
-> Adding back "cfg80211: fix SME connect" and applying "cfg80211: don't
-> overwrite privacy setting" fixes the connection issue, but with a
-> introduces a small difference vs the previous working version.
-> There is now an extra "deauthenticating by local choice (reason=3D3)"
-> message in the logs.
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+---
 
-> [   13.969153] b43-phy0 debug: Adding Interface type 2
-> [   16.679249] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
+The above diff is due to my AVM Fritz! USB stick having no *HT* CTL groups
+in the eeprom at all.
+Furthermore I moved the "TODO: heavy clip ..." to an, IMHO, better place.
 
-> * master-20090916 + "cfg80211: don't overwrite privacy setting"
+ 
+ drivers/net/wireless/ath/ar9170/phy.c |  165 ++++++++++++++++++++++++++++++++-
+ 1 files changed, 164 insertions(+), 1 deletions(-)
 
-> [   13.218613] b43-phy0 debug: Adding Interface type 2
-> [   15.832582] wlan1: deauthenticating by local choice (reason=3D3)
-> [   16.131599] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
-
-Very odd. Can you edit the deauthenticating message to show the
-BSSID/MAC address?
-
-johannes
-
---=-G+ubo3cPwClBX8CfhgPX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKuyhMAAoJEODzc/N7+QmaNyEP/1N6h5vRpzVl3NsN9rAjFgE/
-BPQ4/mbVy0T6riA+AJj4hV473hR5DEnpeiweth8NQHthaUAfyQXoWdJNtg6FmI4P
-0RJSnz4kzaUuVcEDrBTJUvl0pT6KLVXN+ADY5FHxWBUBB/vkBAYFIrwKsSAdlPIY
-ubPDdyY3HbcMl8c1D95/njfEoXanLUlSaciHxeTxY8MBpYC2/A+zWk4b91p0p+WK
-0HDPAkmcWZq6XqUkP8F8TAxMkzG+fEHO1RxYjhff6rfU1ruNUtC7u/yZ+KdhOpOA
-coRmLSJzEt9WVHlFmcAQWGNCraN19ZmMCB9O+iHruSBClbu86Yl2VNcZldo94w1E
-FvRXnraBlT4qbfF56mDLFeDd89d8psfvlfdt1CjzXZ+/TbbaK4IzE/bxD4Nx8hPL
-aFOfoPbNj/kJTMBW2LkWnLKyCd/rRpVKK7vomR3Hti3e1C0Ud8ZEaZY5EQF3fJFo
-USNjK/6cmVIM15CcfUuTo5qxDIWqyzaLbUMP+RuxNjh6QeJY26LUEfUFqfZfaWng
-u/41+IzUARsu6Pst7ooWxvPe3mddzvDNI/OojRaoyNb/YYzL2aYSIv0yLSrEu8K9
-+D+LqADSW/BzyfAJYaUm+iLffPTR7zxW/us5SGP6NykW4QehdAI3Cx03S04duj1T
-ABqfljYmN3+EfXDEtBLG
-=gGju
------END PGP SIGNATURE-----
-
---=-G+ubo3cPwClBX8CfhgPX--
+diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+index 108ebfe..b3e5cf3 100644
+--- a/drivers/net/wireless/ath/ar9170/phy.c
++++ b/drivers/net/wireless/ath/ar9170/phy.c
+@@ -556,7 +556,6 @@ int ar9170_init_phy(struct ar9170 *ar, enum ieee80211_band band)
+ 	if (err)
+ 		return err;
+ 
+-	/* TODO: (heavy clip) regulatory domain power level fine-tuning. */
+ 	err = ar9170_init_phy_from_eeprom(ar, is_2ghz, is_40mhz);
+ 	if (err)
+ 		return err;
+@@ -1238,6 +1237,164 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
+ 	return ar9170_regwrite_result();
+ }
+ 
++static u8 ar9170_get_max_edge_power(struct ar9170 *ar,
++				    struct ar9170_calctl_edges edges[],
++				    u32 freq)
++{
++/* TODO: move somewhere else */
++#define AR5416_MAX_RATE_POWER        63
++
++	int i;
++	u8 rc = AR5416_MAX_RATE_POWER;
++	u8 f;
++	if (freq < 3000)
++		f = freq - 2300;
++	else
++		f = (freq - 4800) / 5;
++
++	for (i = 0; i < AR5416_NUM_BAND_EDGES; i++) {
++		if (edges[i].channel == 0xff)
++			break;
++		if (f == edges[i].channel) {
++			/* exact freq match */
++			rc = edges[i].power_flags & ~AR9170_CALCTL_EDGE_FLAGS;
++			break;
++		}
++		if (i > 0 && f < edges[i].channel) {
++			if (f > edges[i-1].channel &&
++			    edges[i-1].power_flags & AR9170_CALCTL_EDGE_FLAGS) {
++				/* lower channel has the inband flag set */
++				rc = edges[i-1].power_flags &
++					~AR9170_CALCTL_EDGE_FLAGS;
++			}
++			break;
++		}
++	}
++
++	if (i == AR5416_NUM_BAND_EDGES) {
++		if (f > edges[i-1].channel &&
++		    edges[i-1].power_flags & AR9170_CALCTL_EDGE_FLAGS) {
++			/* lower channel has the inband flag set */
++			rc = edges[i-1].power_flags &
++				~AR9170_CALCTL_EDGE_FLAGS;
++		}
++	}
++	return rc;
++}
++
++/* calculate the conformance test limits and apply them to ar->power*
++ * (derived from otus hal/hpmain.c, line 3706 ff.)
++ */
++static void ar9170_calc_ctl(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
++{
++	u8 ctl_grp; /* CTL group */
++	u8 ctl_idx; /* CTL index */
++	int i, j;
++	struct ctl_modes {
++		u8 ctl_mode;
++		u8 max_power;
++		u8 *pwr_cal_data;
++		int pwr_cal_len;
++	} *modes;
++
++	/* order is relevant in the mode_list_*: we fall back to the
++	 * lower indices if any mode is missed in the EEPROM.
++	 */
++	struct ctl_modes mode_list_2ghz[] = {
++		{ CTL_11B, 0, ar->power_2G_cck, 4 },
++		{ CTL_11G, 0, ar->power_2G_ofdm, 4 },
++		{ CTL_2GHT20, 0, ar->power_2G_ht20, 8 },
++		{ CTL_2GHT40, 0, ar->power_2G_ht40, 8 },
++	};
++	struct ctl_modes mode_list_5ghz[] = {
++		{ CTL_11A, 0, ar->power_5G_leg, 4 },
++		{ CTL_5GHT20, 0, ar->power_5G_ht20, 8 },
++		{ CTL_5GHT40, 0, ar->power_5G_ht40, 8 },
++	};
++	int nr_modes;
++
++#define EDGES(c, n) (ar->eeprom.ctl_data[c].control_edges[n])
++
++	/* TODO: investigate the differences between OTUS'
++	 * hpreg.c::zfHpGetRegulatoryDomain() and
++	 * ath/regd.c::ath_regd_get_band_ctl() -
++	 * e.g. for FCC3_WORLD the OTUS procedure
++	 * always returns CTL_FCC, while the one in ath/ delivers
++	 * CTL_ETSI for 2GHz and CTL_FCC for 5GHz.
++	 */
++	ctl_grp = ath_regd_get_band_ctl(&ar->common.regulatory,
++					ar->hw->conf.channel->band);
++
++	/* ctl group not found - either invalid band (NO_CTL) or ww roaming */
++	if (ctl_grp == NO_CTL || ctl_grp == SD_NO_CTL)
++		ctl_grp = CTL_FCC;
++
++	if (ctl_grp != CTL_FCC)
++		/* skip CTL and heavy clip for CTL_MKK and CTL_ETSI */
++		return;
++
++	if (ar->hw->conf.channel->band == IEEE80211_BAND_2GHZ) {
++		modes = mode_list_2ghz;
++		nr_modes = ARRAY_SIZE(mode_list_2ghz);
++	} else {
++		modes = mode_list_5ghz;
++		nr_modes = ARRAY_SIZE(mode_list_5ghz);
++	}
++
++	for (i = 0; i < nr_modes; i++) {
++		u8 c = ctl_grp | modes[i].ctl_mode;
++		for (ctl_idx = 0; ctl_idx < AR5416_NUM_CTLS; ctl_idx++)
++			if (c == ar->eeprom.ctl_index[ctl_idx])
++				break;
++		if (ctl_idx < AR5416_NUM_CTLS) {
++			int f_off = 0;
++
++			/* adjust freq for 40MHz */
++			if (modes[i].ctl_mode == CTL_2GHT40 ||
++			    modes[i].ctl_mode == CTL_5GHT40) {
++				if (bw == AR9170_BW_40_BELOW)
++					f_off = -10;
++				else
++					f_off = 10;
++			}
++
++			modes[i].max_power =
++				ar9170_get_max_edge_power(ar, EDGES(ctl_idx, 1),
++							  freq+f_off);
++
++			/* TODO: check if the regulatory max. power is
++			 *  controlled by cfg80211 for DFS
++			 * (hpmain applies it to max_power itself for DFS freq)
++			 */
++
++		} else {
++			/* Workaround in otus driver, hpmain.c, line 3906:
++			 * if no data for 5GHT20 are found, take the
++			 * legacy 5G value.
++			 * We extend this here to fallback from any other *HT or
++			 * 11G, too.
++			 */
++			int k = i;
++
++			modes[i].max_power = AR5416_MAX_RATE_POWER;
++			while (k-- > 0) {
++				if (modes[k].max_power !=
++				    AR5416_MAX_RATE_POWER) {
++					modes[i].max_power = modes[k].max_power;
++					break;
++				}
++			}
++		}
++
++		/* apply max power to pwr_cal_data (ar->power_*) */
++		for (j = 0; j < modes[i].pwr_cal_len; j++) {
++			modes[i].pwr_cal_data[j] = min(modes[i].pwr_cal_data[j],
++						       modes[i].max_power);
++		}
++	}
++#undef EDGES
++}
++
+ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+ {
+ 	struct ar9170_calibration_target_power_legacy *ctpl;
+@@ -1340,6 +1497,12 @@ static int ar9170_set_power_cal(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+ 					ctph[idx + 1].power[n]);
+ 	}
+ 
++
++	/* calc. conformance test limits and apply to ar->power*[] */
++	ar9170_calc_ctl(ar, freq, bw);
++
++	/* TODO: (heavy clip) regulatory domain power level fine-tuning. */
++
+ 	/* set ACK/CTS TX power */
+ 	ar9170_regwrite_begin(ar);
+ 
+-- 
+1.6.0.4
 
