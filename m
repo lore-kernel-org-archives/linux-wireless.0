@@ -1,71 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13134 "EHLO mx1.redhat.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:49017 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752258AbZIVX3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 19:29:24 -0400
-Subject: Re: getting "ath5k phy0: noise floor calibration timeout"
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <200909210902.23723.hs4233@mail.mn-solutions.de>
-References: <200909210902.23723.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Tue, 22 Sep 2009 16:29:21 -0700
-Message-Id: <1253662161.2510.59.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1758705AbZIFVMb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 17:12:31 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.31-rc9: Reported regressions 2.6.29 -> 2.6.30
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <aIL9jMAYJnG.A.WjH.M3BpKB@chimera>
+Date: Sun,  6 Sep 2009 20:10:03 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-09-21 at 09:02 +0200, Holger Schurig wrote:
-> I kept my laptop the week-end on. The devices was unused during
-> that time. I got a bunch output into my syslog:
+This message contains a list of some regressions introduced between 2.6.29 and
+2.6.30, for which there are no fixes in the mainline I know of.  If any of them
+have been fixed already, please let me know.
 
-I get that all the time, and have since 2.6.27 or earlier.  If it's a
-real bug, we should fix it, but if it's just an informational message,
-maybe we should silence it?
+If you know of any other unresolved regressions introduced between 2.6.29
+and 2.6.30, please let me know either and I'll add them to the list.
+Also, please let me know if any of the entries below are invalid.
 
-Dan
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
-> Sep 18 17:30:03 laptop kernel: ##HS cfg80211_bss_expire:129 0
-> Sep 18 17:30:03 laptop kernel: ##HS expire 00:1b:d4:44:35:90
-> Sep 18 17:30:03 laptop kernel: ##HS expire 00:13:19:80:da:30
-> Sep 18 17:30:03 laptop kernel: ##HS expire 00:1b:53:11:dc:40
-> Sep 18 18:15:04 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 18 18:26:12 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 11:12:09 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 11:29:36 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 11:47:57 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 12:31:05 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 13:06:42 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 14:07:51 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 14:10:31 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 19 14:12:00 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 00:06:20 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 07:46:24 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 16:36:43 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 16:47:43 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 16:52:43 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 17:01:43 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 20 20:07:57 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:22:55 laptop last message repeated 2 times
-> Sep 21 06:26:00 laptop last message repeated 2 times
-> Sep 21 06:28:26 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:33:14 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:38:34 laptop last message repeated 2 times
-> Sep 21 06:40:21 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:41:40 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:43:44 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 06:55:17 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 07:03:10 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 07:04:35 laptop last message repeated 2 times
-> Sep 21 07:06:11 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 07:16:58 laptop kernel: ath5k phy0: noise floor calibration timeout (2412MHz)
-> Sep 21 07:21:37 laptop last message repeated 2 times
-> 
-> Is this anything where I should care?  Or can I just
-> ignore that?  If the latter is the case, should I add a
-> patch that only three consecutive calibration timeouts
-> produce a message, so that the log doesn't get "spammed" ?
-> 
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2009-09-06      153       27          27
+  2009-08-26      152       33          30
+  2009-08-20      150       35          32
+  2009-08-10      148       39          37
+  2009-08-02      145       44          39
+  2009-07-27      143       48          45
+  2009-07-07      138       50          46
+  2009-06-29      133       46          43
+  2009-06-07      110       35          31
+  2009-05-31      100       32          27
+  2009-05-24       92       34          27
+  2009-05-16       81       36          33
+  2009-04-25       55       36          26
+  2009-04-17       37       35          28
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14105
+Subject		: pcmcia cards stop working after resuming from snapshot cycle (hibernation)
+Submitter	: Martin Steigerwald <Martin@Lichtvoll.de>
+Date		: 2009-09-01 19:44 (6 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14049
+Subject		: joydev: blacklist digitizers avoids recognition of Saitek X52 joysticks
+Submitter	: Janos Laube <janos.dev@gmail.com>
+Date		: 2009-08-24 14:18 (14 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=d07a9cba6be5c0e947afc1014b5a62182a86f1f1
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13958
+Subject		: ath5k Atheros AR5001 low signal
+Submitter	: Marco Siviero <darker1985@slacky.it>
+Date		: 2009-08-10 15:03 (28 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13949
+Subject		: XFS regression
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2009-08-08 8:39 (30 days old)
+References	: http://marc.info/?l=linux-kernel&m=124972079229959&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13898
+Subject		: Intel 3945ABG - problems on 2.6.30.X
+Submitter	: dienet <dienet@poczta.fm>
+Date		: 2009-07-31 15:17 (38 days old)
+References	: http://marc.info/?l=linux-kernel&m=124905346729959&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13797
+Subject		: iBook G4 doesn't suspend since 2ed8d2b3a8
+Submitter	: Jörg Sommer <joerg@alea.gnuu.de>
+Date		: 2009-07-18 20:18 (51 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13795
+Subject		: abnormal boot and no suspend due to 'async' (fastboot)
+Submitter	: Rafal Kaczynski <fscnoboot@wp.pl>
+Date		: 2009-07-18 17:19 (51 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13780
+Subject		: NULL pointer dereference loading powernowk8
+Submitter	: Kurt Roeckx <kurt@roeckx.be>
+Date		: 2009-07-15 18:00 (54 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13770
+Subject		: System freeze on XFS filesystem recovery on an external disk
+Submitter	: Jean-Luc Coulon <jean.luc.coulon@gmail.com>
+Date		: 2009-07-14 10:31 (55 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13739
+Subject		: 2.6.30 leaking keys on console switch
+Submitter	: Andi Kleen <andi@firstfloor.org>
+Date		: 2009-07-07 8:44 (62 days old)
+References	: http://marc.info/?l=linux-kernel&m=124695628924382&w=4
+Handled-By	: Jiri Kosina <jkosina@suse.cz>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13682
+Subject		: The webcam stopped working when upgrading from 2.6.29 to 2.6.30
+Submitter	: Nathanael Schaeffer <nathanael.schaeffer@gmail.com>
+Date		: 2009-06-30 13:34 (69 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13583
+Subject		: pdflush uses 5% CPU on otherwise idle system
+Submitter	: Paul Martin <pm@debian.org>
+Date		: 2009-06-19 13:33 (80 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13581
+Subject		: ath9k doesn't work with newer kernels
+Submitter	: Matteo <rootkit85@yahoo.it>
+Date		: 2009-06-19 12:04 (80 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13564
+Subject		: random general protection fault at boot time caused by khubd.
+Submitter	: Pauli <suokkos@gmail.com>
+Date		: 2009-06-18 12:44 (81 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13558
+Subject		: Tracelog during resume
+Submitter	: Cijoml Cijomlovic Cijomlov <cijoml@volny.cz>
+Date		: 2009-06-17 11:32 (82 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13512
+Subject		: D43 on 2.6.30 doesn't suspend anymore
+Submitter	: Daniel Smolik <marvin@mydatex.cz>
+Date		: 2009-06-11 20:12 (88 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13502
+Subject		: GPE storm causes polling mode, which causes /proc/acpi/battery read to take 4 seconds - MacBookPro4,1
+Submitter	:  <sveina@gmail.com>
+Date		: 2009-06-10 20:04 (89 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13408
+Subject		: Performance regression in 2.6.30-rc7
+Submitter	: Diego Calleja <diegocg@gmail.com>
+Date		: 2009-05-30 18:51 (100 days old)
+References	: http://lkml.org/lkml/2009/5/30/146
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13407
+Subject		: adb trackpad disappears after suspend to ram
+Submitter	: Jan Scholz <scholz@fias.uni-frankfurt.de>
+Date		: 2009-05-28 7:59 (102 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2ed8d2b3a81bdbb0418301628ccdb008ac9f40b7
+References	: http://marc.info/?l=linux-kernel&m=124349762314976&w=4
+Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13401
+Subject		: pktcdvd writing is really slow with CFQ scheduler (bisected)
+Submitter	: Laurent Riffard <laurent.riffard@free.fr>
+Date		: 2009-05-28 18:43 (102 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13362
+Subject		: rt2x00: slow wifi with correct basic rate bitmap
+Submitter	: Alejandro Riveira <ariveira@gmail.com>
+Date		: 2009-05-22 13:32 (108 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13351
+Subject		: 2.6.30 - 2.6.31 corrupts my system after suspend resume with readonly mounted hard disk
+Submitter	:  <unggnu@googlemail.com>
+Date		: 2009-05-20 14:09 (110 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=78a8b35bc7abf8b8333d6f625e08c0f7cc1c3742
+Handled-By	: Yinghai Lu <yinghai@kernel.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13341
+Subject		: Random Oops at boot at loading ip6tables rules
+Submitter	:  <patrick@ostenberg.de>
+Date		: 2009-05-19 09:08 (111 days old)
+Handled-By	: Rusty Russell <rusty@rustcorp.com.au>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13328
+Subject		: b44: eth0: BUG! Timeout waiting for bit 00000002 of register 42c to clear.
+Submitter	: Francis Moreau <francis.moro@gmail.com>
+Date		: 2009-05-03 16:22 (127 days old)
+References	: http://marc.info/?l=linux-kernel&m=124136778012280&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13318
+Subject		: AGP doesn't work anymore on nforce2
+Submitter	: Karsten Mehrhoff <kawime@gmx.de>
+Date		: 2009-04-30 8:51 (130 days old)
+First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=59de2bebabc5027f93df999d59cc65df591c3e6e
+References	: http://marc.info/?l=linux-kernel&m=124108156417560&w=4
+Handled-By	: Shaohua Li <shaohua.li@intel.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13306
+Subject		: hibernate slow on _second_ run
+Submitter	: Johannes Berg <johannes@sipsolutions.net>
+Date		: 2009-05-14 09:34 (116 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=13180
+Subject		: 2.6.30-rc2: WARNING at i915_gem.c for i915_gem_idle
+Submitter	: Niel Lambrechts <niel.lambrechts@gmail.com>
+Date		: 2009-04-21 21:35 (139 days old)
+References	: http://marc.info/?l=linux-kernel&m=124034980819102&w=4
+		  http://lkml.org/lkml/2009/4/27/290
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.29 and 2.6.30, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=13070
+
+Please let me know if there are any Bugzilla entries that should be added to
+the list in there.
+
+Thanks,
+Rafael
 
