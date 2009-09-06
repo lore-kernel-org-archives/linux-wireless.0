@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44857 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756037AbZIRJgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:36:02 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:36:06 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:47146 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758069AbZIFR6Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 13:58:25 -0400
+Date: Sun, 06 Sep 2009 12:58:16 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Fix build error on i386 for net/wireless/scan.o
+Message-ID: <4aa3f838.ef04Hi2n3Fg54rE9%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21639.405779.433713@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:06:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/9] ath9k: Allow PSPOLL only when the interface is configured in AP mode
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+With i386 architecture, building the kernel v2.6.31-rc8-34797-g4910edb
+fails with the following error:
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+  CC [M]  net/wireless/scan.o
+net/wireless/scan.c: In function ‘cfg80211_inform_bss’:
+net/wireless/scan.c:499: error: implicit declaration of function ‘kmemleak_ignore’
+make[2]: *** [net/wireless/scan.o] Error 1
+
+On x86_64, the build succeeds. Fix by including the appropriate header.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3a2204d..c880a55 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -423,7 +423,10 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	else
- 		rfilt |= ATH9K_RX_FILTER_BEACON;
- 
--	if (sc->rx.rxfilter & FIF_PSPOLL)
-+	if ((AR_SREV_9280_10_OR_LATER(sc->sc_ah) ||
-+	    AR_SREV_9285_10_OR_LATER(sc->sc_ah)) &&
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_AP) &&
-+	    (sc->rx.rxfilter & FIF_PSPOLL))
- 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
- 
- 	if (conf_is_ht(&sc->hw->conf))
--- 
-1.6.4.4
-
+Index: wireless-testing/net/wireless/scan.c
+===================================================================
+--- wireless-testing.orig/net/wireless/scan.c
++++ wireless-testing/net/wireless/scan.c
+@@ -9,6 +9,7 @@
+ #include <linux/wireless.h>
+ #include <linux/nl80211.h>
+ #include <linux/etherdevice.h>
++#include <linux/kmemleak.h>
+ #include <net/arp.h>
+ #include <net/cfg80211.h>
+ #include <net/iw_handler.h>
