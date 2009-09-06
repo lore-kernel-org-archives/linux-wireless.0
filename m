@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web28315.mail.ukl.yahoo.com ([87.248.110.134]:40152 "HELO
-	web28315.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753616AbZITSDV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2009 14:03:21 -0400
-Message-ID: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
-Date: Sun, 20 Sep 2009 11:03:24 -0700 (PDT)
-From: Albert Herranz <albert_herranz@yahoo.es>
-Subject: Problems with "cfg80211: fix SME connect" commit
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
+Received: from ey-out-2122.google.com ([74.125.78.27]:16001 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693AbZIFOn0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 10:43:26 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so802238eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2009 07:43:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <43e72e890909051252n33b36b61n4dc3484a73851610@mail.gmail.com>
+References: <43e72e890909051252n33b36b61n4dc3484a73851610@mail.gmail.com>
+Date: Sun, 6 Sep 2009 16:43:28 +0200
+Message-ID: <2d0a357f0909060743t37d9aba2k5fe79baf34581396@mail.gmail.com>
+Subject: Re: compat-wireless fixed
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Riccardo Gori <goric@trivenet.it>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Just as a feedback:
+Building compat-wireless (2009-09-06) against 2.6.31-rc9 fails with
+the same error-message as yesterday.
+Fixed as described on [1]
 
-Patch "cfg80211: fix SME connect" breaks my setup (WPA2/AES-CCMP between my b43 card and my AP).
+-SD
 
-When the patch is applied, the usual kernel messages "direct probe" and "authenticate" never happen, and IP address adquisition via dhcp fails:
+[1] http://marc.info/?l=linux-wireless&m=125214811222548&w=2
 
-[   12.709769] b43-phy0 debug: Chip initialized
-[   12.725621] b43-phy0 debug: PIO initialized
-[   12.733015] b43-phy0 debug: QoS disabled
-[   12.913516] b43-phy0 debug: Wireless interface started
-[   13.021170] b43-phy0 debug: Adding Interface type 2
-
-When the patch is reverted everything works again:
-
-[   13.222940] b43-phy0 debug: Chip initialized
-[   13.291359] b43-phy0 debug: PIO initialized
-[   13.330116] b43-phy0 debug: QoS disabled
-[   13.861636] b43-phy0 debug: Wireless interface started
-[   13.969153] b43-phy0 debug: Adding Interface type 2
-[   16.679249] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
-[   16.700998] wlan1 direct probe responded
-[   16.707013] wlan1: authenticate with AP 00:12:17:15:e7:79 (try 1)
-[   16.720205] wlan1: authenticated
-[   16.726261] wlan1: associate with AP 00:12:17:15:e7:79 (try 1)
-[   16.740697] wlan1: RX AssocResp from 00:12:17:15:e7:79 (capab=0x431 status=0 aid=1)
-[   16.758042] wlan1: associated
-
-Any clues?
-
-Thanks,
-Albert
-
-
-
-      
+On Sat, Sep 5, 2009 at 9:52 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
+> Haven't tried building it myself but I think it should be fixed now.
+>
+> git-describe for wireless-testing.git says: v2.6.31-rc8-34797-g4910edb
+> This is a bleeding edge compat-wireless release based on: master-2009-09-04
+> This is compat-release: master-2009-09-04
+>
+>  Luis
+>
