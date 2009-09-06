@@ -1,244 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:11274 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755721AbZIKRiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:20 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/13] iwlwifi: clarify and clean up chain settings
-Date: Fri, 11 Sep 2009 10:38:17 -0700
-Message-Id: <1252690699-25796-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:61580 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754683AbZIFHlB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 03:41:01 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-kernel@vger.kernel.org
+Subject: iwlagn: order 2 page allocation failures
+Date: Sun, 6 Sep 2009 09:40:59 +0200
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909060941.01810.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Got a couple of page allocation failures today while viewing fairly
+large images. System was struggling for a bit to reorganize memory
+and swap, but nothing really serious. Everything recovered fairly
+quickly.
 
-The chain settings we currently use in iwlwifi are
-rather confusing -- and we also go by the wrong
-settings entirely under certain circumstances. To
-clean it up, create a new variable in the current
-HT config -- single_chain_sufficient -- that tells
-us whether we need more than one chain. Calculate
-that based on the AP and operating mode (no IBSS
-HT implemented -- so no need for multiple chains,
-for station mode we use the AP's capabilities).
+Anything to look into?
 
-Additionally, since APs always send disabled SM PS
-mode, keeping track of their sm_ps mode isn't very
-useful -- doubly not so for our _own_ RX config
-since that should depend on our, not the AP's, SM
-PS mode.
+System: HP 2510p; 2.6.31-rc7-56-g7c0a57d; Debian stable, KDE desktop
 
-Finally, document that our configuration of the
-number of RX chains used is currently wrong when
-in powersave (by adding a comment).
+10:00.0 Network controller [0280]: Intel Corporation PRO/Wireless 4965 AG or AGN
+           [Kedron] Network Connection [8086:4229] (rev 61)
 
-All together this removes the two remaining items
-in struct iwl_ht_config that were done wrong there.
+Cheers,
+FJP
 
-For the future, the number of RX chains and some
-SM PS handshaking needs to be added to mac80211,
-which then needs to tell us, and the new variable
-current_ht_config.single_chain_sufficient should
-also be calculated by mac80211.
+kernel: swapper: page allocation failure. order:2, mode:0x4020
+kernel: Pid: 0, comm: swapper Not tainted 2.6.31-rc7 #15
+kernel: Call Trace:
+kernel:  <IRQ>  [<ffffffff8107909a>] __alloc_pages_nodemask+0x542/0x58a
+kernel:  [<ffffffff811d8a29>] ? skb_queue_tail+0x41/0x4a
+kernel:  [<ffffffff812568c2>] ? _spin_unlock+0x9/0xb
+kernel:  [<ffffffff811da2e1>] ? __alloc_skb+0x3c/0x15b
+kernel:  [<ffffffffa0356644>] ? iwl_rx_allocate+0xac/0x208 [iwlcore]
+kernel:  [<ffffffff8107913d>] __get_free_pages+0x12/0x41
+kernel:  [<ffffffff810982b1>] __kmalloc_track_caller+0x3b/0xec
+kernel:  [<ffffffff811da30b>] __alloc_skb+0x66/0x15b
+kernel:  [<ffffffffa0356644>] iwl_rx_allocate+0xac/0x208 [iwlcore]
+kernel:  [<ffffffffa03567b6>] iwl_rx_replenish_now+0x16/0x23 [iwlcore]
+kernel:  [<ffffffffa037d8e3>] iwl_rx_handle+0x356/0x39a [iwlagn]
+kernel:  [<ffffffffa00212a2>] ? scsi_io_completion+0x3a8/0x3d1 [scsi_mod]
+kernel:  [<ffffffffa037de27>] iwl_irq_tasklet_legacy+0x500/0x74f [iwlagn]
+kernel:  [<ffffffff8103dff0>] tasklet_action+0x71/0xbc
+kernel:  [<ffffffff8103e877>] __do_softirq+0x9b/0x12c
+kernel:  [<ffffffff8100cb7c>] call_softirq+0x1c/0x28
+kernel:  [<ffffffff8100e694>] do_softirq+0x34/0x72
+kernel:  [<ffffffff8103e601>] irq_exit+0x3f/0x79
+kernel:  [<ffffffff8100dd95>] do_IRQ+0xa3/0xba
+kernel:  [<ffffffff8100c413>] ret_from_intr+0x0/0xa
+kernel:  <EOI>  [<ffffffffa0262720>] ? acpi_idle_enter_simple+0x101/0x12f [processor]
+kernel:  [<ffffffffa0262716>] ? acpi_idle_enter_simple+0xf7/0x12f [processor]
+kernel:  [<ffffffff811cd6d8>] ? cpuidle_idle_call+0x8c/0xc4
+kernel:  [<ffffffff8100ae0f>] ? cpu_idle+0x52/0x93
+kernel:  [<ffffffff81245f4d>] ? rest_init+0x61/0x63
+kernel:  [<ffffffff81411c3f>] ? start_kernel+0x348/0x353
+kernel:  [<ffffffff8141129a>] ? x86_64_start_reservations+0xaa/0xae
+kernel:  [<ffffffff8141137f>] ? x86_64_start_kernel+0xe1/0xe8
+kernel: Mem-Info:
+kernel: DMA per-cpu:
+kernel: CPU    0: hi:    0, btch:   1 usd:   0
+kernel: CPU    1: hi:    0, btch:   1 usd:   0
+kernel: DMA32 per-cpu:
+kernel: CPU    0: hi:  186, btch:  31 usd: 172
+kernel: CPU    1: hi:  186, btch:  31 usd:  86
+kernel: Active_anon:314043 active_file:2401 inactive_anon:105396
+kernel:  inactive_file:2026 unevictable:407 dirty:0 writeback:3949 unstable:0
+kernel:  free:10313 slab:10486 mapped:2860 pagetables:4100 bounce:0
+kernel: DMA free:7924kB min:40kB low:48kB high:60kB active_anon:2828kB inactive_anon:3296kB
+        active_file:736kB inactive_file:664kB unevictable:0kB present:15336kB pages_scanned:0
+        all_unreclaimable? no
+kernel: lowmem_reserve[]: 0 1976 1976 1976
+kernel: DMA32 free:33328kB min:5664kB low:7080kB high:8496kB active_anon:1253344kB inactive_anon:418288kB
+        active_file:8868kB inactive_file:7440kB unevictable:1628kB present:2023748kB pages_scanned:0
+        all_unreclaimable? no
+kernel: lowmem_reserve[]: 0 0 0 0
+kernel: DMA: 913*4kB 36*8kB 1*16kB 0*32kB 0*64kB 1*128kB 1*256kB 1*512kB 1*1024kB 1*2048kB 0*4096kB = 7924kB
+kernel: DMA32: 7198*4kB 501*8kB 1*16kB 0*32kB 0*64kB 0*128kB 0*256kB 1*512kB 0*1024kB 0*2048kB 0*4096kB = 33328kB
+kernel: 63958 total pagecache pages
+kernel: 59163 pages in swap cache
+kernel: Swap cache stats: add 310806, delete 251643, find 16810381/16825997
+kernel: Free swap  = 1534944kB
+kernel: Total swap = 2097144kB
+kernel: 518064 pages RAM
+kernel: 10324 pages reserved
+kernel: 78783 pages shared
+kernel: 442988 pages non-shared
+kernel: iwlagn 0000:10:00.0: Can not allocate SKB buffers
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Acked-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |  105 +++++++++++++++----------------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 +-
- 2 files changed, 51 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d9a757a..5c6cee2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -607,8 +607,7 @@ EXPORT_SYMBOL(iwlcore_free_geos);
- static bool is_single_rx_stream(struct iwl_priv *priv)
- {
- 	return !priv->current_ht_config.is_ht ||
--	       ((priv->current_ht_config.mcs.rx_mask[1] == 0) &&
--		(priv->current_ht_config.mcs.rx_mask[2] == 0));
-+	       priv->current_ht_config.single_chain_sufficient;
- }
- 
- static u8 iwl_is_channel_extension(struct iwl_priv *priv,
-@@ -936,12 +935,8 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
- 
--	IWL_DEBUG_ASSOC(priv, "supported HT rate 0x%X 0x%X 0x%X "
--			"rxon flags 0x%X operation mode :0x%X "
-+	IWL_DEBUG_ASSOC(priv, "rxon flags 0x%X operation mode :0x%X "
- 			"extension channel offset 0x%x\n",
--			ht_conf->mcs.rx_mask[0],
--			ht_conf->mcs.rx_mask[1],
--			ht_conf->mcs.rx_mask[2],
- 			le32_to_cpu(rxon->flags), ht_conf->ht_protection,
- 			ht_conf->extension_chan_offset);
- 	return;
-@@ -960,12 +955,8 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
-  */
- static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- {
--	bool is_single = is_single_rx_stream(priv);
--	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
--
- 	/* # of Rx chains to use when expecting MIMO. */
--	if (is_single || (!is_cam && (priv->current_ht_config.sm_ps ==
--						 WLAN_HT_CAP_SM_PS_STATIC)))
-+	if (is_single_rx_stream(priv))
- 		return IWL_NUM_RX_CHAINS_SINGLE;
- 	else
- 		return IWL_NUM_RX_CHAINS_MULTIPLE;
-@@ -973,27 +964,17 @@ static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- 
- static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
- {
--	int idle_cnt;
- 	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
-+
- 	/* # Rx chains when idling and maybe trying to save power */
--	switch (priv->current_ht_config.sm_ps) {
--	case WLAN_HT_CAP_SM_PS_STATIC:
--	case WLAN_HT_CAP_SM_PS_DYNAMIC:
--		idle_cnt = (is_cam) ? IWL_NUM_IDLE_CHAINS_DUAL :
--					IWL_NUM_IDLE_CHAINS_SINGLE;
--		break;
--	case WLAN_HT_CAP_SM_PS_DISABLED:
--		idle_cnt = (is_cam) ? active_cnt : IWL_NUM_IDLE_CHAINS_SINGLE;
--		break;
--	case WLAN_HT_CAP_SM_PS_INVALID:
--	default:
--		IWL_ERR(priv, "invalid mimo ps mode %d\n",
--			   priv->current_ht_config.sm_ps);
--		WARN_ON(1);
--		idle_cnt = -1;
--		break;
--	}
--	return idle_cnt;
-+
-+	/*
-+	 * XXX: this is incorrect!!
-+	 *	we always indicate to the AP that
-+	 *	our SM PS mode is "disabled"
-+	 */
-+
-+	return is_cam ? active_cnt : IWL_NUM_IDLE_CHAINS_SINGLE;
- }
- 
- /* up to 4 chains */
-@@ -1673,8 +1654,6 @@ int iwl_init_drv(struct iwl_priv *priv)
- 
- 	priv->iw_mode = NL80211_IFTYPE_STATION;
- 
--	priv->current_ht_config.sm_ps = WLAN_HT_CAP_SM_PS_DISABLED;
--
- 	/* Choose which receivers/antennas to use */
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
-@@ -2406,10 +2385,9 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- EXPORT_SYMBOL(iwl_mac_conf_tx);
- 
- static void iwl_ht_conf(struct iwl_priv *priv,
--			    struct ieee80211_bss_conf *bss_conf)
-+			struct ieee80211_bss_conf *bss_conf)
- {
- 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
--	struct ieee80211_sta_ht_cap *ht_cap;
- 	struct ieee80211_sta *sta;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter: \n");
-@@ -2417,31 +2395,48 @@ static void iwl_ht_conf(struct iwl_priv *priv,
- 	if (!ht_conf->is_ht)
- 		return;
- 
--
--	/*
--	 * It is totally wrong to base global information on something
--	 * that is valid only when associated, alas, this driver works
--	 * that way and I don't know how to fix it.
--	 */
--
--	rcu_read_lock();
--	sta = ieee80211_find_sta(priv->hw, priv->bssid);
--	if (!sta) {
--		rcu_read_unlock();
--		return;
--	}
--	ht_cap = &sta->ht_cap;
--
--	ht_conf->sm_ps = (u8)((ht_cap->cap & IEEE80211_HT_CAP_SM_PS) >> 2);
--
--	memcpy(&ht_conf->mcs, &ht_cap->mcs, 16);
--
- 	ht_conf->ht_protection =
- 		bss_conf->ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION;
- 	ht_conf->non_GF_STA_present =
- 		!!(bss_conf->ht_operation_mode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
- 
--	rcu_read_unlock();
-+	ht_conf->single_chain_sufficient = false;
-+
-+	switch (priv->iw_mode) {
-+	case NL80211_IFTYPE_STATION:
-+		rcu_read_lock();
-+		sta = ieee80211_find_sta(priv->hw, priv->bssid);
-+		if (sta) {
-+			struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-+			int maxstreams;
-+
-+			maxstreams = (ht_cap->mcs.tx_params &
-+				      IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
-+					>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
-+			maxstreams += 1;
-+
-+			if ((ht_cap->mcs.rx_mask[1] == 0) &&
-+			    (ht_cap->mcs.rx_mask[2] == 0))
-+				ht_conf->single_chain_sufficient = true;
-+			if (maxstreams <= 1)
-+				ht_conf->single_chain_sufficient = true;
-+		} else {
-+			/*
-+			 * If at all, this can only happen through a race
-+			 * when the AP disconnects us while we're still
-+			 * setting up the connection, in that case mac80211
-+			 * will soon tell us about that.
-+			 */
-+			ht_conf->single_chain_sufficient = true;
-+		}
-+		rcu_read_unlock();
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		ht_conf->single_chain_sufficient = true;
-+		break;
-+	default:
-+		break;
-+	}
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index e161f8d..0c80692 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -506,8 +506,7 @@ struct iwl_ht_config {
- 	/* self configuration data */
- 	bool is_ht;
- 	bool is_40mhz;
--	u8 sm_ps;
--	struct ieee80211_mcs_info mcs;
-+	bool single_chain_sufficient;
- 	/* BSS related data */
- 	u8 extension_chan_offset;
- 	u8 ht_protection;
--- 
-1.5.6.3
-
+kernel: swapper: page allocation failure. order:2, mode:0x4020
+kernel: Pid: 0, comm: swapper Not tainted 2.6.31-rc7 #15
+kernel: Call Trace:
+kernel:  <IRQ>  [<ffffffff8107909a>] __alloc_pages_nodemask+0x542/0x58a
+kernel:  [<ffffffff812545d1>] ? printk+0x67/0x6e
+kernel:  [<ffffffffa0356644>] ? iwl_rx_allocate+0xac/0x208 [iwlcore]
+kernel:  [<ffffffff8107913d>] __get_free_pages+0x12/0x41
+kernel:  [<ffffffff810982b1>] __kmalloc_track_caller+0x3b/0xec
+kernel:  [<ffffffff811da30b>] __alloc_skb+0x66/0x15b
+kernel:  [<ffffffffa0356644>] iwl_rx_allocate+0xac/0x208 [iwlcore]
+kernel:  [<ffffffffa03567b6>] iwl_rx_replenish_now+0x16/0x23 [iwlcore]
+kernel:  [<ffffffffa037d90e>] iwl_rx_handle+0x381/0x39a [iwlagn]
+kernel:  [<ffffffffa00212a2>] ? scsi_io_completion+0x3a8/0x3d1 [scsi_mod]
+kernel:  [<ffffffffa037de27>] iwl_irq_tasklet_legacy+0x500/0x74f [iwlagn]
+kernel:  [<ffffffff8103dff0>] tasklet_action+0x71/0xbc
+kernel:  [<ffffffff8103e877>] __do_softirq+0x9b/0x12c
+kernel:  [<ffffffff8100cb7c>] call_softirq+0x1c/0x28
+kernel:  [<ffffffff8100e694>] do_softirq+0x34/0x72
+kernel:  [<ffffffff8103e601>] irq_exit+0x3f/0x79
+kernel:  [<ffffffff8100dd95>] do_IRQ+0xa3/0xba
+kernel:  [<ffffffff8100c413>] ret_from_intr+0x0/0xa
+kernel:  <EOI>  [<ffffffffa0262720>] ? acpi_idle_enter_simple+0x101/0x12f [processor]
+kernel:  [<ffffffffa0262716>] ? acpi_idle_enter_simple+0xf7/0x12f [processor]
+kernel:  [<ffffffff811cd6d8>] ? cpuidle_idle_call+0x8c/0xc4
+kernel:  [<ffffffff8100ae0f>] ? cpu_idle+0x52/0x93
+kernel:  [<ffffffff81245f4d>] ? rest_init+0x61/0x63
+kernel:  [<ffffffff81411c3f>] ? start_kernel+0x348/0x353
+kernel:  [<ffffffff8141129a>] ? x86_64_start_reservations+0xaa/0xae
+kernel:  [<ffffffff8141137f>] ? x86_64_start_kernel+0xe1/0xe8
+kernel: Mem-Info:
+kernel: DMA per-cpu:
+kernel: CPU    0: hi:    0, btch:   1 usd:   0
+kernel: CPU    1: hi:    0, btch:   1 usd:   0
+kernel: DMA32 per-cpu:
+kernel: CPU    0: hi:  186, btch:  31 usd: 172
+kernel: CPU    1: hi:  186, btch:  31 usd:  86
+kernel: Active_anon:314043 active_file:2401 inactive_anon:105396
+kernel:  inactive_file:2026 unevictable:407 dirty:0 writeback:3949 unstable:0
+kernel:  free:10313 slab:10486 mapped:2860 pagetables:4100 bounce:0
+kernel: DMA free:7924kB min:40kB low:48kB high:60kB active_anon:2828kB inactive_anon:3296kB
+        active_file:736kB inactive_file:664kB unevictable:0kB present:15336kB pages_scanned:0
+        all_unreclaimable? no
+kernel: lowmem_reserve[]: 0 1976 1976 1976
+kernel: DMA32 free:33328kB min:5664kB low:7080kB high:8496kB active_anon:1253344kB inactive_anon:418288kB
+        active_file:8868kB inactive_file:7440kB unevictable:1628kB present:2023748kB pages_scanned:0
+        all_unreclaimable? no
+kernel: lowmem_reserve[]: 0 0 0 0
+kernel: DMA: 913*4kB 36*8kB 1*16kB 0*32kB 0*64kB 1*128kB 1*256kB 1*512kB 1*1024kB 1*2048kB 0*4096kB = 7924kB
+kernel: DMA32: 7198*4kB 501*8kB 1*16kB 0*32kB 0*64kB 0*128kB 0*256kB 1*512kB 0*1024kB 0*2048kB 0*4096kB = 33328kB
+kernel: 63958 total pagecache pages
+kernel: 59163 pages in swap cache
+kernel: Swap cache stats: add 310806, delete 251643, find 16810381/16825997
+kernel: Free swap  = 1534944kB
+kernel: Total swap = 2097144kB
+kernel: 518064 pages RAM
+kernel: 10324 pages reserved
+kernel: 78783 pages shared
+kernel: 442988 pages non-shared
+kernel: iwlagn 0000:10:00.0: Can not allocate SKB buffers
