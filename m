@@ -1,166 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
+Received: from bu3sch.de ([62.75.166.246]:56752 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754831AbZIKRiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/13] iwlwifi: separate set_hw_params function for 6000 series
-Date: Fri, 11 Sep 2009 10:38:11 -0700
-Message-Id: <1252690699-25796-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+	id S1758085AbZIFSLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 14:11:10 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Luis Rodriguez <mcgrof@gmail.com>
+Subject: [COMPAT PATCH] b43: Threaded interrupts wrapper
+Date: Sun, 6 Sep 2009 20:07:26 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+MIME-Version: 1.0
+Message-Id: <200909062007.27279.mb@bu3sch.de>
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_fp/oKWctQxZ0TsT"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+--Boundary-00=_fp/oKWctQxZ0TsT
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Separate set_hw_params() function for 6000
-series from 5000/1000 series because:
-    1) 6000 series use different set of sensitivity range table
-    2) 6000 series has different uCode image size
+A patch converting b43 to threaded interrupts will be merged soon.
+This will completely break b43 on compat-wireless, because working
+threaded IRQ support requires kernel >= 2.6.31.
 
-Also include the new sensitivity parameters needed by sensitivity
-algorithm.
+This patchset implements a workqueue based workaround wrapper, which
+works on kernels with and without threaded IRQ support.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c  |   12 +----
- drivers/net/wireless/iwlwifi/iwl-6000.c  |   71 +++++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-calib.c |    2 +-
- 3 files changed, 73 insertions(+), 12 deletions(-)
+It's split up into a generic header and a b43 specific patch.
+The generic header needs to be put somewhere into the compat include search
+path. The b43 specific patch needs to be applied to compat-b43.
+(The #include for the header file will also need to be adjusted)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index ea215bb..e4acfc3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -833,16 +833,8 @@ int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
- 	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
- 
--	switch (priv->hw_rev & CSR_HW_REV_TYPE_MSK) {
--	case CSR_HW_REV_TYPE_6x00:
--	case CSR_HW_REV_TYPE_6x50:
--		priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
--		priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
--		break;
--	default:
--		priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
--		priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
--	}
-+	priv->hw_params.max_data_size = IWL50_RTC_DATA_SIZE;
-+	priv->hw_params.max_inst_size = IWL50_RTC_INST_SIZE;
- 
- 	priv->hw_params.max_bsm_size = 0;
- 	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 36655c2..957205c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -44,6 +44,7 @@
- #include "iwl-sta.h"
- #include "iwl-helpers.h"
- #include "iwl-5000-hw.h"
-+#include "iwl-6000-hw.h"
- 
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 4
-@@ -100,8 +101,76 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
- 	/* else do nothing, uCode configured */
- }
- 
-+static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
-+	.min_nrg_cck = 97,
-+	.max_nrg_cck = 0, /* not used, set to 0 */
-+	.auto_corr_min_ofdm = 80,
-+	.auto_corr_min_ofdm_mrc = 128,
-+	.auto_corr_min_ofdm_x1 = 105,
-+	.auto_corr_min_ofdm_mrc_x1 = 192,
-+
-+	.auto_corr_max_ofdm = 145,
-+	.auto_corr_max_ofdm_mrc = 232,
-+	.auto_corr_max_ofdm_x1 = 145,
-+	.auto_corr_max_ofdm_mrc_x1 = 232,
-+
-+	.auto_corr_min_cck = 125,
-+	.auto_corr_max_cck = 175,
-+	.auto_corr_min_cck_mrc = 160,
-+	.auto_corr_max_cck_mrc = 310,
-+	.nrg_th_cck = 97,
-+	.nrg_th_ofdm = 100,
-+};
-+
-+static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
-+{
-+	if ((priv->cfg->mod_params->num_of_queues > IWL50_NUM_QUEUES) ||
-+	    (priv->cfg->mod_params->num_of_queues < IWL_MIN_NUM_QUEUES)) {
-+		IWL_ERR(priv,
-+			"invalid queues_num, should be between %d and %d\n",
-+			IWL_MIN_NUM_QUEUES, IWL50_NUM_QUEUES);
-+		return -EINVAL;
-+	}
-+
-+	priv->hw_params.max_txq_num = priv->cfg->mod_params->num_of_queues;
-+	priv->hw_params.dma_chnl_num = FH50_TCSR_CHNL_NUM;
-+	priv->hw_params.scd_bc_tbls_size =
-+			IWL50_NUM_QUEUES * sizeof(struct iwl5000_scd_bc_tbl);
-+	priv->hw_params.tfd_size = sizeof(struct iwl_tfd);
-+	priv->hw_params.max_stations = IWL5000_STATION_COUNT;
-+	priv->hw_params.bcast_sta_id = IWL5000_BROADCAST_ID;
-+
-+	priv->hw_params.max_data_size = IWL60_RTC_DATA_SIZE;
-+	priv->hw_params.max_inst_size = IWL60_RTC_INST_SIZE;
-+
-+	priv->hw_params.max_bsm_size = 0;
-+	priv->hw_params.ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
-+					BIT(IEEE80211_BAND_5GHZ);
-+	priv->hw_params.rx_wrt_ptr_reg = FH_RSCSR_CHNL0_WPTR;
-+
-+	priv->hw_params.tx_chains_num = num_of_ant(priv->cfg->valid_tx_ant);
-+	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
-+	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
-+	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
-+
-+	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
-+		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
-+
-+	/* Set initial sensitivity parameters */
-+	/* Set initial calibration set */
-+	priv->hw_params.sens = &iwl6000_sensitivity;
-+	priv->hw_params.calib_init_cfg =
-+			BIT(IWL_CALIB_XTAL)		|
-+			BIT(IWL_CALIB_LO)		|
-+			BIT(IWL_CALIB_TX_IQ) 		|
-+			BIT(IWL_CALIB_TX_IQ_PERD)	|
-+			BIT(IWL_CALIB_BASE_BAND);
-+
-+	return 0;
-+}
-+
- static struct iwl_lib_ops iwl6000_lib = {
--	.set_hw_params = iwl5000_hw_set_hw_params,
-+	.set_hw_params = iwl6000_hw_set_hw_params,
- 	.txq_update_byte_cnt_tbl = iwl5000_txq_update_byte_cnt_tbl,
- 	.txq_inval_byte_cnt_tbl = iwl5000_txq_inval_byte_cnt_tbl,
- 	.txq_set_sched = iwl5000_txq_set_sched,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index c4b565a..6e73317 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -516,7 +516,7 @@ void iwl_init_sensitivity(struct iwl_priv *priv)
- 	for (i = 0; i < NRG_NUM_PREV_STAT_L; i++)
- 		data->nrg_silence_rssi[i] = 0;
- 
--	data->auto_corr_ofdm = 90;
-+	data->auto_corr_ofdm =  ranges->auto_corr_min_ofdm;
- 	data->auto_corr_ofdm_mrc = ranges->auto_corr_min_ofdm_mrc;
- 	data->auto_corr_ofdm_x1  = ranges->auto_corr_min_ofdm_x1;
- 	data->auto_corr_ofdm_mrc_x1 = ranges->auto_corr_min_ofdm_mrc_x1;
+
 -- 
-1.5.6.3
+Greetings, Michael.
 
+--Boundary-00=_fp/oKWctQxZ0TsT
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="011-b43-use-compat-threaded-irq.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="011-b43-use-compat-threaded-irq.patch"
+
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-06 19:48:52.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-06 19:54:28.000000000 +0200
+@@ -3841,7 +3841,7 @@ redo:
+ 	/* Synchronize the interrupt handlers. Unlock to avoid deadlocks. */
+ 	orig_dev = dev;
+ 	mutex_unlock(&wl->mutex);
+-	synchronize_irq(dev->dev->irq);
++	compat_synchronize_threaded_irq(&dev->irq_compat);
+ 	mutex_lock(&wl->mutex);
+ 	dev = wl->current_dev;
+ 	if (!dev)
+@@ -3858,7 +3858,7 @@ redo:
+ 		dev_kfree_skb(skb_dequeue(&wl->tx_queue));
+ 
+ 	b43_mac_suspend(dev);
+-	free_irq(dev->dev->irq, dev);
++	compat_free_threaded_irq(&dev->irq_compat);
+ 	b43_leds_exit(dev);
+ 	b43dbg(wl, "Wireless interface stopped\n");
+ 
+@@ -3873,9 +3873,11 @@ static int b43_wireless_core_start(struc
+ 	B43_WARN_ON(b43_status(dev) != B43_STAT_INITIALIZED);
+ 
+ 	drain_txstatus_queue(dev);
+-	err = request_threaded_irq(dev->dev->irq, b43_interrupt_handler,
+-				   b43_interrupt_thread_handler,
+-				   IRQF_SHARED, KBUILD_MODNAME, dev);
++	err = compat_request_threaded_irq(&dev->irq_compat,
++					  dev->dev->irq,
++					  b43_interrupt_handler,
++					  b43_interrupt_thread_handler,
++					  IRQF_SHARED, KBUILD_MODNAME, dev);
+ 	if (err) {
+ 		b43err(dev->wl, "Cannot request IRQ-%d\n", dev->dev->irq);
+ 		goto out;
+@@ -4576,6 +4578,7 @@ static int b43_setup_bands(struct b43_wl
+ 
+ static void b43_wireless_core_detach(struct b43_wldev *dev)
+ {
++	compat_destroy_threaded_irq(&dev->irq_compat);
+ 	/* We release firmware that late to not be required to re-request
+ 	 * is all the time when we reinit the core. */
+ 	b43_release_firmware(dev);
+Index: wireless-testing/drivers/net/wireless/b43/b43.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/b43.h	2009-09-06 19:48:52.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/b43.h	2009-09-06 19:49:46.000000000 +0200
+@@ -7,6 +7,7 @@
+ #include <linux/hw_random.h>
+ #include <linux/ssb/ssb.h>
+ #include <net/mac80211.h>
++#include <linux/compat-threaded-irq.h>
+ 
+ #include "debugfs.h"
+ #include "leds.h"
+@@ -818,6 +819,8 @@ struct b43_wldev {
+ #ifdef CONFIG_B43_DEBUG
+ 	struct b43_dfsentry *dfsentry;
+ #endif
++
++	struct compat_threaded_irq irq_compat;
+ };
+ 
+ static inline struct b43_wl *hw_to_b43_wl(struct ieee80211_hw *hw)
+
+--Boundary-00=_fp/oKWctQxZ0TsT
+Content-Type: text/x-chdr;
+  charset="iso 8859-15";
+  name="compat-threaded-irq.h"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="compat-threaded-irq.h"
+
+#ifndef LINUX_COMPAT_THREADED_IRQ_H_
+#define LINUX_COMPAT_THREADED_IRQ_H_
+
+#include <linux/workqueue.h>
+#include <linux/interrupt.h>
+#include <linux/version.h>
+
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+# define USE_COMP_THREADED_IRQ	1
+# warning "Using compat threaded IRQ"
+#else
+# define USE_COMP_THREADED_IRQ	0
+#endif
+
+
+struct compat_threaded_irq {
+	unsigned int irq;
+	irq_handler_t handler;
+	irq_handler_t thread_fn;
+	void *dev_id;
+	char wq_name[64];
+	struct workqueue_struct *wq;
+	struct work_struct work;
+};
+
+static inline
+void compat_irq_work(struct work_struct *work)
+{
+	struct compat_threaded_irq *comp = container_of(work, struct compat_threaded_irq, work);
+
+	comp->thread_fn(comp->irq, comp->dev_id);
+}
+
+static inline
+irqreturn_t compat_irq_dispatcher(int irq, void *dev_id)
+{
+	struct compat_threaded_irq *comp = dev_id;
+	irqreturn_t res;
+
+	res = comp->handler(irq, comp->dev_id);
+	if (res == IRQ_WAKE_THREAD) {
+		queue_work(comp->wq, &comp->work);
+		res = IRQ_HANDLED;
+	}
+
+	return res;
+}
+
+static inline
+int compat_request_threaded_irq(struct compat_threaded_irq *comp,
+				unsigned int irq,
+				irq_handler_t handler,
+				irq_handler_t thread_fn,
+				unsigned long flags,
+				const char *name,
+				void *dev_id)
+{
+	comp->irq = irq;
+	comp->handler = handler;
+	comp->thread_fn = thread_fn;
+	comp->dev_id = dev_id;
+	INIT_WORK(&comp->work, compat_irq_work);
+
+#if USE_COMP_THREADED_IRQ
+	if (!comp->wq) {
+		snprintf(comp->wq_name, sizeof(comp->wq_name),
+			 "compirq/%u-%s", irq, name);
+		comp->wq = create_singlethread_workqueue(comp->wq_name);
+		if (!comp->wq) {
+			printk(KERN_ERR "Failed to create compat-threaded-IRQ workqueue %s\n",
+			       comp->wq_name);
+			return -ENOMEM;
+		}
+	}
+	return request_irq(irq, compat_irq_dispatcher, flags, name, comp);
+#else
+	return request_threaded_irq(irq, handler, thread_fn, flags, name, dev_id);
+#endif
+}
+
+static inline
+void compat_free_threaded_irq(struct compat_threaded_irq *comp)
+{
+#if USE_COMP_THREADED_IRQ
+	free_irq(comp->irq, comp);
+#else
+	free_irq(comp->irq, comp->dev_id);
+#endif
+}
+
+static inline
+void compat_destroy_threaded_irq(struct compat_threaded_irq *comp)
+{
+#if USE_COMP_THREADED_IRQ
+	if (comp->wq)
+		destroy_workqueue(comp->wq);
+	comp->wq = NULL;
+#endif
+}
+
+static inline
+void compat_synchronize_threaded_irq(struct compat_threaded_irq *comp)
+{
+	synchronize_irq(comp->irq);
+#if USE_COMP_THREADED_IRQ
+	cancel_work_sync(&comp->work);
+#endif
+}
+
+#endif /* LINUX_COMPAT_THREADED_IRQ_H_ */
+
+--Boundary-00=_fp/oKWctQxZ0TsT--
