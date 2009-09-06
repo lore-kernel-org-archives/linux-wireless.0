@@ -1,42 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51570 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592AbZIIDKH (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:50197 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757587AbZIFNO0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 23:10:07 -0400
-Received: from wireless by sipsolutions.net with local (Exim 4.69)
-	(envelope-from <wireless@sipsolutions.net>)
-	id 1MlDZQ-00045h-Ul
-	for linux-wireless@vger.kernel.org; Wed, 09 Sep 2009 05:10:08 +0200
-To: linux-wireless@vger.kernel.org
-Subject: [ANN] wireless-regdb: master-2009-09-08
-Reply-to: linux-wireless@vger.kernel.org
-Message-Id: <E1MlDZQ-00045h-Ul@sipsolutions.net>
-From: wireless@sipsolutions.net
-Date: Wed, 09 Sep 2009 05:10:08 +0200
+	Sun, 6 Sep 2009 09:14:26 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so796154eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2009 06:14:27 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Subject: rt2x00: Hardcode TX ack timeout and consume time
+Date: Sun, 6 Sep 2009 15:14:23 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909061514.23611.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rt2x00: Hardcode TX ack timeout and consume time
 
-A new release of wireless-regdb (master-2009-09-08) is available at:
+The calculated values for the ACK timeout and ACK
+consume time are different then the values as
+used by the Legacy drivers.
 
-http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2009.09.08.tar.bz2
+After testing from James Ledwith it appeared that
+the calculated values caused a high amount of TX
+failures, and the values from the Legacy drivers
+were the most optimal to prevent TX failure due to
+excessive retries.
 
-SHA1 sum: 182af543939be630f2d106028966aabffc145b91
+The symptoms of this problem:
+ - Rate control module always falls back to 1Mbs
+ - Low throughput when bitrate was fixed
 
+Possible side-effects (not confirmed but highly likely)
+ - Problems with DHCP
+ - Broken connections due to lack of probe response
 
-For your convenience the individual regulatory.bin file can be downloaded from:
+This should fix at least:
+Kernel bugzilla reports: [13362], [13009], [9273]
+Fedora bugzilla reports: [443203]
+but possible some additional bugs as well.
 
-http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2009.09.08-regulatory.bin
-
-SHA1 sum 9a4b9cdb1d9147dba37a4d44b0d73e3015574a2e
-
-Here is the short log of the changes included in this 
-release:
-
-John W. Linville (1):
-      wireless-regdb: update regulatory.bin based on preceding changes.
-
-Luis R. Rodriguez (1):
-      wireless-regdb: TH gets 5 GHz enabled as of new regulatory rules
-
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+John, this patch has not yet been confirmed by any of the above bugzilla reports,
+but I do think this should be merged as soon as possible to 2.6.31 since this issue
+has been marked as regression for quite some time now. :)
+Thanks.
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 164df93..798f625 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -331,9 +331,8 @@ static void rt2400pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	preamble_mask = erp->short_preamble << 3;
+ 
+ 	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, erp->ack_timeout);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME,
+-			   erp->ack_consume_time);
++	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x1ff);
++	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0x13a);
+ 	rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
+ 	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index 4186582..2e872ac 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -337,9 +337,8 @@ static void rt2500pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	preamble_mask = erp->short_preamble << 3;
+ 
+ 	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, erp->ack_timeout);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME,
+-			   erp->ack_consume_time);
++	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x162);
++	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0xa2);
+ 	rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
+ 	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index b04f59b..22dd6d9 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -488,10 +488,6 @@ static void rt2500usb_config_erp(struct rt2x00_dev *rt2x00dev,
+ {
+ 	u16 reg;
+ 
+-	rt2500usb_register_read(rt2x00dev, TXRX_CSR1, &reg);
+-	rt2x00_set_field16(&reg, TXRX_CSR1_ACK_TIMEOUT, erp->ack_timeout);
+-	rt2500usb_register_write(rt2x00dev, TXRX_CSR1, reg);
+-
+ 	rt2500usb_register_read(rt2x00dev, TXRX_CSR10, &reg);
+ 	rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE,
+ 			   !!erp->short_preamble);
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 1307873..9fe770f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -580,8 +580,7 @@ static void rt2800usb_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 
+ 	rt2x00usb_register_read(rt2x00dev, TX_TIMEOUT_CFG, &reg);
+-	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_RX_ACK_TIMEOUT,
+-			   DIV_ROUND_UP(erp->ack_timeout, erp->slot_time));
++	rt2x00_set_field32(&reg, TX_TIMEOUT_CFG_RX_ACK_TIMEOUT, 0x20);
+ 	rt2x00usb_register_write(rt2x00dev, TX_TIMEOUT_CFG, reg);
+ 
+ 	rt2x00usb_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 7bede90..196de8a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -424,9 +424,6 @@ struct rt2x00lib_erp {
+ 	int short_preamble;
+ 	int cts_protection;
+ 
+-	int ack_timeout;
+-	int ack_consume_time;
+-
+ 	u32 basic_rates;
+ 
+ 	int slot_time;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 3501788..40a201e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -94,17 +94,6 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	erp.difs = bss_conf->use_short_slot ? SHORT_DIFS : DIFS;
+ 	erp.eifs = bss_conf->use_short_slot ? SHORT_EIFS : EIFS;
+ 
+-	erp.ack_timeout = PLCP + erp.difs + GET_DURATION(ACK_SIZE, 10);
+-	erp.ack_consume_time = SIFS + PLCP + GET_DURATION(ACK_SIZE, 10);
+-
+-	if (bss_conf->use_short_preamble) {
+-		erp.ack_timeout += SHORT_PREAMBLE;
+-		erp.ack_consume_time += SHORT_PREAMBLE;
+-	} else {
+-		erp.ack_timeout += PREAMBLE;
+-		erp.ack_consume_time += PREAMBLE;
+-	}
+-
+ 	erp.basic_rates = bss_conf->basic_rates;
+ 	erp.beacon_int = bss_conf->beacon_int;
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index f4b4b86..b20e3ea 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -598,7 +598,7 @@ static void rt61pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 
+ 	rt2x00pci_register_read(rt2x00dev, TXRX_CSR0, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR0_RX_ACK_TIMEOUT, erp->ack_timeout);
++	rt2x00_set_field32(&reg, TXRX_CSR0_RX_ACK_TIMEOUT, 0x32);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 90e1172..1cbd9b4 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -561,7 +561,7 @@ static void rt73usb_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 
+ 	rt2x00usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR0_RX_ACK_TIMEOUT, erp->ack_timeout);
++	rt2x00_set_field32(&reg, TXRX_CSR0_RX_ACK_TIMEOUT, 0x32);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR0, reg);
+ 
