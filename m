@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:29303 "EHLO c60.cesmail.net"
+Received: from bu3sch.de ([62.75.166.246]:39633 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078AbZIKEdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 00:33:03 -0400
-Message-ID: <20090911003705.n9vun04fks8480wk-cebfxv@webmail.spamcop.net>
-Date: Fri, 11 Sep 2009 00:37:05 -0400
-From: Pavel Roskin <proski@gnu.org>
-To: John Ranson <ranson@analager.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Differences between wireless-testing and mainline
-References: <bcd1ba70909101959u4581537ci684a2c45bc17c965@mail.gmail.com>
-In-Reply-To: <bcd1ba70909101959u4581537ci684a2c45bc17c965@mail.gmail.com>
+	id S1756088AbZIFMuY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 08:50:24 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: PCMCIA is not experimental anymore
+Date: Sun, 6 Sep 2009 14:49:43 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+  charset="us-ascii"
+Message-Id: <200909061449.45455.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting John Ranson <ranson@analager.net>:
+PCMCIA support works well and is not experimental anymore.
 
-> Is there a good way to keep track of the differences between the
-> mainline kernel and wireless testing?  I'm running wireless testing to
-> minimize firmware errors with my iwl4965 card. When mainline
-> incorporates the code that I'm running, I would like to switch back.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-git whatchanged wireless-testing/base..wireless-testing/master
+---
+ drivers/net/wireless/b43/Kconfig |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-wireless-testing/base is usually the latest release or release  
-candidate from the mainline.
-
-If you want a better granularity, e.g. you are ready to switch to the  
-mainline before rc1, you'll need to track the mainline and look for  
-the patches you care about.
-
-You can also pick up the patches you need from wireless-testing and  
-apply them to the mainline repository.  If you do it with STGit, it  
-will tell you that the patches have been merged by telling you that  
-the local patches have become empty after the update.
+--- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
++++ wireless-testing/drivers/net/wireless/b43/Kconfig
+@@ -42,8 +42,8 @@ config B43_PCICORE_AUTOSELECT
+ 	default y
+ 
+ config B43_PCMCIA
+-	bool "Broadcom 43xx PCMCIA device support (EXPERIMENTAL)"
+-	depends on B43 && SSB_PCMCIAHOST_POSSIBLE && EXPERIMENTAL
++	bool "Broadcom 43xx PCMCIA device support"
++	depends on B43 && SSB_PCMCIAHOST_POSSIBLE
+ 	select SSB_PCMCIAHOST
+ 	---help---
+ 	  Broadcom 43xx PCMCIA device support.
 
 -- 
-Regards,
-Pavel Roskin
+Greetings, Michael.
