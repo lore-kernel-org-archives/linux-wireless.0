@@ -1,42 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:54540 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753319AbZIGOe5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 10:34:57 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] cfg80211: add missing #include <linux/kmemleak.h>
-Date: Mon, 7 Sep 2009 16:34:33 +0200
-Cc: John W Linville <linville@tuxdriver.com>
+Received: from bu3sch.de ([62.75.166.246]:46410 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757587AbZIFNoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 09:44:24 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH] b43: Really disable QoS, if requested
+Date: Sun, 6 Sep 2009 15:42:45 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <200909071634.33669.hs4233@mail.mn-solutions.de>
+Message-Id: <200909061542.46256.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+Currently, when QoS-disable is requested, we would leave QoS enabled
+in firmware, but only queue frames on one queue.
+Change that and also tell firmware about disabled QoS, so it
+completely ignores all the QoS parameters. Also don't upload the parameters,
+if QoS is disabled.
 
----
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Fixes this error:
 
-  CC [M]  net/wireless/scan.o
-net/wireless/scan.c: In function 'cfg80211_inform_bss':
-net/wireless/scan.c:499: error: implicit declaration of function 'kmemleak_ignore'
-
-Index: linux-wl/net/wireless/scan.c
+Index: wireless-testing/drivers/net/wireless/b43/main.c
 ===================================================================
---- linux-wl.orig/net/wireless/scan.c   2009-09-07 15:25:01.000000000 +0200
-+++ linux-wl/net/wireless/scan.c        2009-09-07 15:25:09.000000000 +0200
-@@ -9,6 +9,7 @@
- #include <linux/wireless.h>
- #include <linux/nl80211.h>
- #include <linux/etherdevice.h>
-+#include <linux/kmemleak.h>
- #include <net/arp.h>
- #include <net/cfg80211.h>
- #include <net/iw_handler.h>
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-06 15:37:47.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-06 15:38:03.000000000 +0200
+@@ -3093,7 +3093,6 @@ static int b43_op_tx(struct ieee80211_hw
+ 	return NETDEV_TX_OK;
+ }
+ 
+-/* Locking: wl->irq_lock */
+ static void b43_qos_params_upload(struct b43_wldev *dev,
+ 				  const struct ieee80211_tx_queue_params *p,
+ 				  u16 shm_offset)
+@@ -3102,6 +3101,9 @@ static void b43_qos_params_upload(struct
+ 	int bslots, tmp;
+ 	unsigned int i;
+ 
++	if (!dev->qos_enabled)
++		return;
++
+ 	bslots = b43_read16(dev, B43_MMIO_RNG) & p->cw_min;
+ 
+ 	memset(&params, 0, sizeof(params));
+@@ -3147,6 +3149,9 @@ static void b43_qos_upload_all(struct b4
+ 	struct b43_qos_params *params;
+ 	unsigned int i;
+ 
++	if (!dev->qos_enabled)
++		return;
++
+ 	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
+ 		     ARRAY_SIZE(wl->qos_params));
+ 
+@@ -3206,6 +3211,16 @@ static void b43_qos_clear(struct b43_wl 
+ /* Initialize the core's QOS capabilities */
+ static void b43_qos_init(struct b43_wldev *dev)
+ {
++	if (!dev->qos_enabled) {
++		/* Disable QOS support. */
++		b43_hf_write(dev, b43_hf_read(dev) & ~B43_HF_EDCF);
++		b43_write16(dev, B43_MMIO_IFSCTL,
++			    b43_read16(dev, B43_MMIO_IFSCTL)
++			    & ~B43_MMIO_IFSCTL_USE_EDCF);
++		b43dbg(dev->wl, "QoS disabled\n");
++		return;
++	}
++
+ 	/* Upload the current QOS parameters. */
+ 	b43_qos_upload_all(dev);
+ 
+@@ -3214,6 +3229,7 @@ static void b43_qos_init(struct b43_wlde
+ 	b43_write16(dev, B43_MMIO_IFSCTL,
+ 		    b43_read16(dev, B43_MMIO_IFSCTL)
+ 		    | B43_MMIO_IFSCTL_USE_EDCF);
++	b43dbg(dev->wl, "QoS enabled\n");
+ }
+ 
+ static int b43_op_conf_tx(struct ieee80211_hw *hw, u16 _queue,
 
-
+-- 
+Greetings, Michael.
