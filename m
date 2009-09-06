@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55095 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754144AbZIPRRf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 13:17:35 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Markus Becker <mab@comnets.uni-bremen.de>
-Subject: Re: linuxwireless Driver information: zd1211rw
-Date: Wed, 16 Sep 2009 19:17:36 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200909161804.04296.mab@comnets.uni-bremen.de>
-In-Reply-To: <200909161804.04296.mab@comnets.uni-bremen.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200909161917.37581.s.L-H@gmx.de>
+Received: from courier.cs.helsinki.fi ([128.214.9.1]:36520 "EHLO
+	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbZIFIfQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Sep 2009 04:35:16 -0400
+Subject: Re: iwlagn: order 2 page allocation failures
+From: Pekka Enberg <penberg@cs.helsinki.fi>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, Mel Gorman <mel@csn.ul.ie>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org
+In-Reply-To: <200909061028.48442.elendil@planet.nl>
+References: <200909060941.01810.elendil@planet.nl>
+	 <84144f020909060114s74de2d2y850745dd82ece753@mail.gmail.com>
+	 <200909061028.48442.elendil@planet.nl>
+Date: Sun, 06 Sep 2009 11:35:16 +0300
+Message-Id: <1252226116.11274.10.camel@penberg-laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-
-On Wednesday 16 September 2009, Markus Becker wrote:
-> Hello,
+On Sun, 2009-09-06 at 10:28 +0200, Frans Pop wrote:
+> On Sunday 06 September 2009, Pekka Enberg wrote:
+> > On Sun, Sep 6, 2009 at 10:40 AM, Frans Pop<elendil@planet.nl> wrote:
+> > > Got a couple of page allocation failures today while viewing fairly
+> > > large images. System was struggling for a bit to reorganize memory
+> > > and swap, but nothing really serious. Everything recovered fairly
+> > > quickly.
+> > >
+> > > Anything to look into?
+> > >
+> > > System: HP 2510p; 2.6.31-rc7-56-g7c0a57d; Debian stable, KDE desktop
+> > >
+> > > 10:00.0 Network controller [0280]: Intel Corporation PRO/Wireless
+> > > 4965 AG or AGN [Kedron] Network Connection [8086:4229] (rev 61)
+> >
+> > Can you post your .config, please?
 > 
-> is the information on the page 
-> http://www.linuxwireless.org/en/users/Drivers/zd1211rw about the Debian 
-> firmware package still true?
-> 
-> "Firmware is pulled from userspace, get the files here.
-> Debian users beware: don't use the the zd1211-firmware package, as this is for 
-> Debian's fork of the vendor-based driver"
-> 
-> The current debian package contains the same files as in the link 
-> http://sourceforge.net/project/showfiles.php?group_id=129083
+> Attached. Thanks.
 
-zd1211-firmware (2.16.0.0-0.1) unstable; urgency=low
+OK, so SLUB_DEBUG_ON is disabled so it's probably not a SLUB problem.
+Mel, there's quite a few page allocation failure reports recently which
+makes me wonder if we broke something with the page allocator
+optimization patches? Do you think the anti-fragmentation fixlet you did
+for nommu would help here?
 
-  * NMU
-[...]
-  * Use symlink farm to provide the firmware in the locations used by the
-    zd1211rw in-kernel driver, as well as the zd1211 extra-kernel driver.
-    Closes: #383604
-  * Should be suitable for etch release now. Closes: #411912
-[...]
+			Pekka
 
- -- Joey Hess <joeyh@debian.org>  Wed, 21 Feb 2007 15:09:09 -0500
-
-(the symlink farm is gone by now and the the package only keeps 
- compatibility with in-kernel zd1211rw, all what's left is the version
- number derived from the vendor-based driver)
-
-In other words, the past two major Debian releases (shipping with kernel 
-2.6.18/ etch and 2.6.26/ lenny respectively) had a working firmware package
-available from the non-free section.
-
-Kernel 2.6.18, which was the first to ship with zd1211rw, was released on 
-Tue, Sep 19 20:42:06 2006 -0700, so the advice pointing at a broken 
-firmware package in Debian's unreleased branches was true for roughly 4 
-months and never affected a released version (sarge shipped with kernel 
-2.6.8, etch with 2.6.18 and zd1211-firmware 2.16.0.0-0.1).
-
-Regards
-	Stefan Lippers-Hollmann
