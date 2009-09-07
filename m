@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44154 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbZIASPZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 14:15:25 -0400
-Date: Tue, 1 Sep 2009 14:07:54 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
-Message-ID: <20090901180753.GJ7650@tuxdriver.com>
-References: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com> <20090901163300.GA29047@jm.kir.nu> <20090901171848.GF8261@mosca> <69e28c910909011028i25fba508t9e68fb24168193eb@mail.gmail.com> <20090901173822.GG8261@mosca> <69e28c910909011047p2ecb7f9fg84b4089a70d1be5c@mail.gmail.com> <20090901180147.GA4272@mosca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20090901180147.GA4272@mosca>
+Received: from Viola.Opus1.COM ([192.245.12.8]:3168 "EHLO Viola.Opus1.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750936AbZIGTTE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 15:19:04 -0400
+Date: Mon, 07 Sep 2009 12:10:31 -0700
+From: Ehud Gavron <Gavron@wetwork.net>
+Subject: Re: [PATCH RFC 1/3] sdio: recognize io card without powercycle
+In-reply-to: <200909072105.31439.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Chris Ball <cjb@laptop.org>, linux-wireless@vger.kernel.org,
+	Albert Herranz <albert_herranz@yahoo.es>,
+	linux-mmc@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Message-id: <4AA55AA7.70207@wetwork.net>
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1; format=flowed
+References: <369914.76148.qm@web28315.mail.ukl.yahoo.com> <200909072055.24589.mb@bu3sch.de> <m3hbvey40u.fsf@pullcord.laptop.org> <200909072105.31439.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 11:01:47AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Sep 01, 2009 at 10:47:43AM -0700, Gábor Stefanik wrote:
 
-> > The description isn't the problem - the term "SoftMAC" is, due to its
-> > connections with ieee80211softmac. Even "Software MAC" would be better
-> > here.
-> 
-> Software MAC sounds reasonable to me. Anyone else?
 
-Seems fine -- IMHO "soft MAC" would be fine as well...
+Michael Buesch wrote:
+> On Monday 07 September 2009 20:59:45 Chris Ball wrote:
+>   
+>> Hi Michael,
+>>
+>>    > Please submit this to the SDIO maintainer.
+>>
+>> MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND SDIO SUBSYSTEM
+>> S:  Orphan
+>> L:  linux-mmc@vger.kernel.org
+>> F:  drivers/mmc/
+>> F:  include/linux/mmc/
+>>
+>> So, these patches are in the right place.
+>>     
+>
+> So who is going to pick it up? Just sending them to a random list is not
+> going to magically merge them into the kernel.
+>
+>   
+This wouldn't happen if you were more human.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Did you see Stefanik crying at the bottom the stairway last night?
+
+E
