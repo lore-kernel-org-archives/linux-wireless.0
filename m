@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52514 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755233AbZINIhZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:39713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858AbZIGUzZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:37:25 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 10/11] ath9k: move ATH9K_RSSI_BAD to hw.h
-Date: Mon, 14 Sep 2009 04:37:27 -0400
-Message-Id: <1252917448-10744-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
-References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 7 Sep 2009 16:55:25 -0400
+Subject: Re: iw: strange output
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <69e28c910909071108t1956b0dfj7f96cac84d9088d6@mail.gmail.com>
+References: <200909071711.18632.hs4233@mail.mn-solutions.de>
+	 <69e28c910909071108t1956b0dfj7f96cac84d9088d6@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UqkIcxY353m3flQvyiA/"
+Date: Mon, 07 Sep 2009 22:55:23 +0200
+Message-Id: <1252356923.1175.46.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac.c is now core driver independent.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/Makefile |    7 +++----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
- drivers/net/wireless/ath/ath9k/hw.h     |    2 ++
- drivers/net/wireless/ath/ath9k/mac.c    |    2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+--=-UqkIcxY353m3flQvyiA/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index f85dc82..2f21c67 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -1,6 +1,4 @@
--ATH9K_HW_FIX +=	eeprom.o \
--		mac.o \
--
-+ATH9K_HW_FIX +=	eeprom.o
- ATH9K_HW +=	hw.o \
- 		eeprom_def.o \
- 		eeprom_4k.o \
-@@ -8,7 +6,8 @@ ATH9K_HW +=	hw.o \
- 		calib.o \
- 		ani.o \
- 		phy.o \
--		btcoex.o
-+		btcoex.o \
-+		mac.o \
- 
- ath9k-y +=	$(ATH9K_HW) \
- 		$(ATH9K_HW_FIX) \
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9aff11d..8768e60 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -288,7 +288,6 @@ struct ath_tx_control {
- 
- #define ATH_RSSI_LPF_LEN 		10
- #define RSSI_LPF_THRESHOLD		-20
--#define ATH9K_RSSI_BAD			0x80
- #define ATH_RSSI_EP_MULTIPLIER     (1<<7)
- #define ATH_EP_MUL(x, mul)         ((x) * (mul))
- #define ATH_RSSI_IN(x)             (ATH_EP_MUL((x), ATH_RSSI_EP_MULTIPLIER))
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index df1920c..be9763e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -55,6 +55,8 @@
- 
- #define	ATH_DEFAULT_NOISE_FLOOR -95
- 
-+#define ATH9K_RSSI_BAD			0x80
-+
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) \
- 	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 1796ac7..3be658d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -14,7 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
--#include "ath9k.h"
-+#include "hw.h"
- 
- static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 					struct ath9k_tx_queue_info *qi)
--- 
-1.6.3.3
+On Mon, 2009-09-07 at 20:08 +0200, G=C3=A1bor Stefanik wrote:
+
+> > P.S.: when I'm using nl80211 driver for wpa_supplicant, I seem
+> > to be associated, but no ping goes throught.
+>=20
+> I can also confirm that. It appears to be a regression from the "big
+> state machine monster is no more" change.
+
+Works fine here in a whole bunch of cases, you're both going to have to
+be more specific.
+
+johannes
+
+--=-UqkIcxY353m3flQvyiA/
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKpXM4AAoJEODzc/N7+QmaSzAP/AzAdPGV6+5YP1U6VJ+vcoxH
+YLuc69JCHY6HFApRi9EYJKmv+aQ5C6vcByIhXaF82OJSUD4QZlNU73rn/OhZMv6l
+9qlZblYlb7UTtuD3MLPlVVm6xV/Wn4nfDV3Na4emTDTggWulQ3O2QmVnINHx5fEE
+DUS6NJsTGXqB18v1LKnkMlMSWG5HyxmeImVLISbAgH5MNKVPirfQtqDREemfWcu/
+pevaZQIpOJRKMCsQOSEjRKU5s3ZM3aCLBaCVOSxq8RrLkkiJpV6ZqewFakckT7ie
+N3ghYpt1i81F89LpT6I+NOeDtTY4Qt4ELGAiWA6ZCGLbL0OZ4Cn6FB+G/gdj2Xx/
+p41klWNSyMseTWQwmQAetZbpPTY2pgl4RRnujDIjphPLczauSdgMNUzeZiiG+KZO
+FUETiMN0EMd7C1k3REFj6W1o3QnsE7s1OuvwMCMZJ5mMDxdnl188PHWv7boXONRY
+5K5tDYpaIXOsZ0QRsFbeCbymYs1hJ0cWV7pNx2WRo3BblUazJGu+ZnHu9W8vvkeY
+Zvry8CgrH7zEGny7SqjyQ3/yJ0tNIrOLlCyotUDj6UVLOG+wcYNe0x3ClrZ92Ugj
+JLNoElHANk5CU+jW3j4wEAe6u/96nqlQijgeGk4IBBUHcM6enjGll0THLjMYEoFS
+wDEg8OkE6dTMPyEJlQaS
+=fLuK
+-----END PGP SIGNATURE-----
+
+--=-UqkIcxY353m3flQvyiA/--
 
