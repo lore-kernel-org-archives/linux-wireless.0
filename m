@@ -1,60 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44843 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751322AbZIRJdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:33:03 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:33:07 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:37212 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784AbZIGKpA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 06:45:00 -0400
+Received: by fxm17 with SMTP id 17so1897201fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2009 03:45:02 -0700 (PDT)
+To: Jason Andryuk <jandryuk@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: at76c50x-usb Broken was: [PATCH] mac80211: allow configure_filter  callback to sleep
+References: <c4d76b3b0909050711o5f423115qaf1e5c80fded024d@mail.gmail.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Mon, 07 Sep 2009 13:45:00 +0300
+In-Reply-To: <c4d76b3b0909050711o5f423115qaf1e5c80fded024d@mail.gmail.com> (Jason Andryuk's message of "Sat\, 5 Sep 2009 10\:11\:33 -0400")
+Message-ID: <87fxaz2fv7.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21462.191695.91617@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:03:10 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH/REVIEW 0/9] ath9k update
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Jason Andryuk <jandryuk@gmail.com> writes:
 
-A bunch of fixes/cleanups.
+> On Mon, Aug 17, 2009 at 10:24 AM, Kalle Valo<kalle.valo@iki.fi> wrote:
+>> BTW, at76c50x-usb is broken currently. The change of providing bssid to
+>> the driver only after association broke it. I don't have time to fix it
+>> right now, but I try to find some time next week.
+>
+> Do you know the commit that broke at76c50x-usb?  Was it "mac80211:
+> unify config_interface and bss_info_changed" or something else?
 
-These patches apply over the pending ath9k patches:
-  - The inital series of bug fixes.
-  - Luis' series.
+Actually I believe it was this patch:
 
-Please apply.
+  commit 9cef873798dfcdc10ff40b02abf1de935ceeba85
+  Author: Johannes Berg <johannes@sipsolutions.net>
+  Date:   Thu May 14 13:10:14 2009 +0200
 
-Thanks,
-Sujith
+    mac80211: fix managed mode BSSID handling
+    
+    Currently, we will ask the driver to configure right away
+    when somebody changes the desired BSSID. That's totally
+    strange because then we will configure the driver without
+    even knowing whether the BSS exists. Change this to only
+    configure the BSSID when associated, and configure a zero
+    BSSID when not associated.
 
-Senthil Balasubramanian (5):
-  ath9k: Allow PSPOLL only when the interface is configured in AP mode.
-  ath9k: Handle ATH9K_BEACON_RESET_TSF properly
-  ath9k: Reduce PLL Settle time and eliminate redundant PLL calls.
-  ath9k: Advertise midband for AR5416 devices
-  ath9k: Fix bugs in handling TX power
+I implemented a hack to at76c50x-usb where it checks bssid to see if
+association has started and should it use CMD_SCAN or CMD_JOIN. Now that
+bssid is set after association at76 broke. I haven't checked yet if this
+is really the case, though.
 
-Sujith (2):
-  ath9k: Update INI release for AR9287
-  ath9k: Fix RTC reset for AR5416
+IIRC the reason for the hack was that I didn't manage to get CMD_JOIN
+working unless there was a valid bssid.
 
-Vasanthakumar Thiagarajan (1):
-  ath9k: Update initvals
-
-Vivek Natarajan (1):
-  ath9k: Add Calibration checks
-
- drivers/net/wireless/ath/ath9k/calib.c      |   82 ++++++++++++++--------
- drivers/net/wireless/ath/ath9k/eeprom.h     |    6 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c  |    4 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c |  102 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.c         |   36 +++++++--
- drivers/net/wireless/ath/ath9k/hw.h         |    4 +-
- drivers/net/wireless/ath/ath9k/initvals.h   |   72 +++++++++++--------
- drivers/net/wireless/ath/ath9k/phy.c        |   25 +++++--
- drivers/net/wireless/ath/ath9k/recv.c       |    5 +-
- 9 files changed, 253 insertions(+), 83 deletions(-)
-
+-- 
+Kalle Valo
