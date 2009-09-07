@@ -1,39 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:45098 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699AbZI2XiQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 19:38:16 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: 2.6.32-rc2: wlan rt73 dead
-Date: Wed, 30 Sep 2009 01:39:05 +0200
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <20090929170615.GA5539@fancy-poultry.org> <20090929200413.GA5950@fancy-poultry.org> <1254267140.3959.1.camel@johannes.local>
-In-Reply-To: <1254267140.3959.1.camel@johannes.local>
+Received: from web28315.mail.ukl.yahoo.com ([87.248.110.134]:22475 "HELO
+	web28315.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754060AbZIGSxi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 14:53:38 -0400
+Message-ID: <369914.76148.qm@web28315.mail.ukl.yahoo.com>
+Date: Mon, 7 Sep 2009 18:46:58 +0000 (GMT)
+From: Albert Herranz <albert_herranz@yahoo.es>
+Subject: [PATCH RFC 1/3] sdio: recognize io card without powercycle
+To: bcm43xx-dev@lists.berlios.de
+Cc: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <200909300139.06019.rjw@sisk.pl>
+Content-Type: multipart/mixed; boundary="0-1437562912-1252349218=:76148"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 September 2009, Johannes Berg wrote:
-> On Tue, 2009-09-29 at 22:04 +0200, Heinz Diehl wrote:
-> > On 29.09.2009, John W. Linville wrote: 
-> > 
-> > > Could you do a git bisect?
-> > 
-> > I have never used git in my whole life, but I'll read the documentation
-> > and try.
-> 
-> While it's a good skill, don't waste your time. You're running opensuse,
-> I suppose, and having the same problem as Hugh:
-> http://bugzilla.kernel.org/show_bug.cgi?id=14263
-> 
-> Rafael: I'm pretty sure this (14272) is a dupe of 14263.
+--0-1437562912-1252349218=:76148
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks, marked as a duplicate and closed.
+=0A=0A=0A      
+--0-1437562912-1252349218=:76148
+Content-Type: text/x-patch; name="0116-sdio-recognize-io-card-without-powercycle.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="0116-sdio-recognize-io-card-without-powercycle.patch"
 
-Rafael
+RnJvbSA1Yzk3NDYyYWU5MTg4NTI0ZmFhMGM1N2ZhOGI1YmY4ZTllMGMxMjVj
+IE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBbGJlcnQgSGVycmFu
+eiA8YWxiZXJ0X2hlcnJhbnpAeWFob28uZXM+CkRhdGU6IFR1ZSwgMTggQXVn
+IDIwMDkgMjE6MDY6MzIgKzAyMDAKU3ViamVjdDogW1BBVENIXSBzZGlvOiBy
+ZWNvZ25pemUgaW8gY2FyZCB3aXRob3V0IHBvd2VyY3ljbGUKClNESU8gU2lt
+cGxpZmllZCBTcGVjaWZpY2F0aW9uIChhdCBsZWFzdCBWMi4wMCkgc3RhdGVz
+IHRoYXQgaXQgaXMgc3Ryb25nbHkKcmVjb21tZW5kZWQgdGhhdCB0aGUgaG9z
+dCBleGVjdXRlcyBlaXRoZXIgYSBwb3dlciByZXNldCBvciBpc3N1ZXMgYSBD
+TUQ1MgooSS9PIFJlc2V0KSB0byByZS1pbml0aWFsaXplIGFuIEkvTyBjYXJk
+LgpBZGRpdGlvbmFsbHksIHRoZSBDTUQ1MiBtdXN0IGJlIGlzc3VlZCBmaXJz
+dCBiZWNhdXNlIGl0IGNhbm5vdCBiZSBpc3N1ZWQKYWZ0ZXIgYSBDTUQwLgoK
+V2l0aCB0aGlzIHBhdGNoIHRoZSBOaW50ZW5kbyBXaWkgU0RJTy1iYXNlZCBX
+TEFOIGNhcmQgaXMgZGV0ZWN0ZWQgYWZ0ZXIgYQpzeXN0ZW0gcmVzZXQsIHdp
+dGhvdXQgcmVxdWlyaW5nIGEgY29tcGxldGUgc3lzdGVtIHBvd2VyY3ljbGUu
+CgpTaWduZWQtb2ZmLWJ5OiBBbGJlcnQgSGVycmFueiA8YWxiZXJ0X2hlcnJh
+bnpAeWFob28uZXM+Ci0tLQogZHJpdmVycy9tbWMvY29yZS9jb3JlLmMgICAg
+IHwgICAgMSArCiBkcml2ZXJzL21tYy9jb3JlL3NkaW9fb3BzLmMgfCAgIDM2
+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLQogZHJpdmVy
+cy9tbWMvY29yZS9zZGlvX29wcy5oIHwgICAgMSArCiAzIGZpbGVzIGNoYW5n
+ZWQsIDMyIGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9tbWMvY29yZS9jb3JlLmMgYi9kcml2ZXJzL21tYy9j
+b3JlL2NvcmUuYwppbmRleCBkODRjODgwLi5jNzY4ZjcwIDEwMDY0NAotLS0g
+YS9kcml2ZXJzL21tYy9jb3JlL2NvcmUuYworKysgYi9kcml2ZXJzL21tYy9j
+b3JlL2NvcmUuYwpAQCAtODkwLDYgKzg5MCw3IEBAIHZvaWQgbW1jX3Jlc2Nh
+bihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspCiAJbW1jX2NsYWltX2hvc3Qo
+aG9zdCk7CiAKIAltbWNfcG93ZXJfdXAoaG9zdCk7CisJc2Rpb19nb19pZGxl
+KGhvc3QpOwogCW1tY19nb19pZGxlKGhvc3QpOwogCiAJbW1jX3NlbmRfaWZf
+Y29uZChob3N0LCBob3N0LT5vY3JfYXZhaWwpOwpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9tbWMvY29yZS9zZGlvX29wcy5jIGIvZHJpdmVycy9tbWMvY29yZS9z
+ZGlvX29wcy5jCmluZGV4IDRlYjc4MjUuLjE0ZDMyMDQgMTAwNjQ0Ci0tLSBh
+L2RyaXZlcnMvbW1jL2NvcmUvc2Rpb19vcHMuYworKysgYi9kcml2ZXJzL21t
+Yy9jb3JlL3NkaW9fb3BzLmMKQEAgLTY3LDEzICs2NywxMyBAQCBpbnQgbW1j
+X3NlbmRfaW9fb3BfY29uZChzdHJ1Y3QgbW1jX2hvc3QgKmhvc3QsIHUzMiBv
+Y3IsIHUzMiAqcm9jcikKIAlyZXR1cm4gZXJyOwogfQogCi1pbnQgbW1jX2lv
+X3J3X2RpcmVjdChzdHJ1Y3QgbW1jX2NhcmQgKmNhcmQsIGludCB3cml0ZSwg
+dW5zaWduZWQgZm4sCi0JdW5zaWduZWQgYWRkciwgdTggaW4sIHU4KiBvdXQp
+CitzdGF0aWMgaW50IG1tY19pb19yd19kaXJlY3RfaG9zdChzdHJ1Y3QgbW1j
+X2hvc3QgKmhvc3QsIGludCB3cml0ZSwgdW5zaWduZWQgZm4sCisJdW5zaWdu
+ZWQgYWRkciwgdTggaW4sIHU4ICpvdXQpCiB7CiAJc3RydWN0IG1tY19jb21t
+YW5kIGNtZDsKIAlpbnQgZXJyOwogCi0JQlVHX09OKCFjYXJkKTsKKwlCVUdf
+T04oIWhvc3QpOwogCUJVR19PTihmbiA+IDcpOwogCiAJLyogc2FuaXR5IGNo
+ZWNrICovCkBAIC05MCwxMSArOTAsMTEgQEAgaW50IG1tY19pb19yd19kaXJl
+Y3Qoc3RydWN0IG1tY19jYXJkICpjYXJkLCBpbnQgd3JpdGUsIHVuc2lnbmVk
+IGZuLAogCWNtZC5hcmcgfD0gaW47CiAJY21kLmZsYWdzID0gTU1DX1JTUF9T
+UElfUjUgfCBNTUNfUlNQX1I1IHwgTU1DX0NNRF9BQzsKIAotCWVyciA9IG1t
+Y193YWl0X2Zvcl9jbWQoY2FyZC0+aG9zdCwgJmNtZCwgMCk7CisJZXJyID0g
+bW1jX3dhaXRfZm9yX2NtZChob3N0LCAmY21kLCAwKTsKIAlpZiAoZXJyKQog
+CQlyZXR1cm4gZXJyOwogCi0JaWYgKG1tY19ob3N0X2lzX3NwaShjYXJkLT5o
+b3N0KSkgeworCWlmIChtbWNfaG9zdF9pc19zcGkoaG9zdCkpIHsKIAkJLyog
+aG9zdCBkcml2ZXIgYWxyZWFkeSByZXBvcnRlZCBlcnJvcnMgKi8KIAl9IGVs
+c2UgewogCQlpZiAoY21kLnJlc3BbMF0gJiBSNV9FUlJPUikKQEAgLTEwNiw3
+ICsxMDYsNyBAQCBpbnQgbW1jX2lvX3J3X2RpcmVjdChzdHJ1Y3QgbW1jX2Nh
+cmQgKmNhcmQsIGludCB3cml0ZSwgdW5zaWduZWQgZm4sCiAJfQogCiAJaWYg
+KG91dCkgewotCQlpZiAobW1jX2hvc3RfaXNfc3BpKGNhcmQtPmhvc3QpKQor
+CQlpZiAobW1jX2hvc3RfaXNfc3BpKGhvc3QpKQogCQkJKm91dCA9IChjbWQu
+cmVzcFswXSA+PiA4KSAmIDB4RkY7CiAJCWVsc2UKIAkJCSpvdXQgPSBjbWQu
+cmVzcFswXSAmIDB4RkY7CkBAIC0xMTUsNiArMTE1LDEzIEBAIGludCBtbWNf
+aW9fcndfZGlyZWN0KHN0cnVjdCBtbWNfY2FyZCAqY2FyZCwgaW50IHdyaXRl
+LCB1bnNpZ25lZCBmbiwKIAlyZXR1cm4gMDsKIH0KIAoraW50IG1tY19pb19y
+d19kaXJlY3Qoc3RydWN0IG1tY19jYXJkICpjYXJkLCBpbnQgd3JpdGUsIHVu
+c2lnbmVkIGZuLAorCXVuc2lnbmVkIGFkZHIsIHU4IGluLCB1OCAqb3V0KQor
+eworCUJVR19PTighY2FyZCk7CisJcmV0dXJuIG1tY19pb19yd19kaXJlY3Rf
+aG9zdChjYXJkLT5ob3N0LCB3cml0ZSwgZm4sIGFkZHIsIGluLCBvdXQpOwor
+fQorCiBpbnQgbW1jX2lvX3J3X2V4dGVuZGVkKHN0cnVjdCBtbWNfY2FyZCAq
+Y2FyZCwgaW50IHdyaXRlLCB1bnNpZ25lZCBmbiwKIAl1bnNpZ25lZCBhZGRy
+LCBpbnQgaW5jcl9hZGRyLCB1OCAqYnVmLCB1bnNpZ25lZCBibG9ja3MsIHVu
+c2lnbmVkIGJsa3N6KQogewpAQCAtMTgyLDMgKzE4OSwyMCBAQCBpbnQgbW1j
+X2lvX3J3X2V4dGVuZGVkKHN0cnVjdCBtbWNfY2FyZCAqY2FyZCwgaW50IHdy
+aXRlLCB1bnNpZ25lZCBmbiwKIAlyZXR1cm4gMDsKIH0KIAoraW50IHNkaW9f
+Z29faWRsZShzdHJ1Y3QgbW1jX2hvc3QgKmhvc3QpCit7CisJaW50IHJldDsK
+Kwl1OCBhYm9ydDsKKworCS8qIFNESU8gU2ltcGxpZmllZCBTcGVjaWZpY2F0
+aW9uIFYyLjAsIDQuNCBSZXNldCBmb3IgU0RJTyAqLworCisJcmV0ID0gbW1j
+X2lvX3J3X2RpcmVjdF9ob3N0KGhvc3QsIDAsIDAsIFNESU9fQ0NDUl9BQk9S
+VCwgMCwgJmFib3J0KTsKKwlpZiAocmV0KQorCQlhYm9ydCA9IDB4MDg7CisJ
+ZWxzZQorCQlhYm9ydCB8PSAweDA4OworCisJcmV0ID0gbW1jX2lvX3J3X2Rp
+cmVjdF9ob3N0KGhvc3QsIDEsIDAsIFNESU9fQ0NDUl9BQk9SVCwgYWJvcnQs
+IE5VTEwpOworCXJldHVybiByZXQ7Cit9CisKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbW1jL2NvcmUvc2Rpb19vcHMuaCBiL2RyaXZlcnMvbW1jL2NvcmUvc2Rp
+b19vcHMuaAppbmRleCBlMmU3NGIwLi45YjU0NmM3IDEwMDY0NAotLS0gYS9k
+cml2ZXJzL21tYy9jb3JlL3NkaW9fb3BzLmgKKysrIGIvZHJpdmVycy9tbWMv
+Y29yZS9zZGlvX29wcy5oCkBAIC0xNyw2ICsxNyw3IEBAIGludCBtbWNfaW9f
+cndfZGlyZWN0KHN0cnVjdCBtbWNfY2FyZCAqY2FyZCwgaW50IHdyaXRlLCB1
+bnNpZ25lZCBmbiwKIAl1bnNpZ25lZCBhZGRyLCB1OCBpbiwgdTgqIG91dCk7
+CiBpbnQgbW1jX2lvX3J3X2V4dGVuZGVkKHN0cnVjdCBtbWNfY2FyZCAqY2Fy
+ZCwgaW50IHdyaXRlLCB1bnNpZ25lZCBmbiwKIAl1bnNpZ25lZCBhZGRyLCBp
+bnQgaW5jcl9hZGRyLCB1OCAqYnVmLCB1bnNpZ25lZCBibG9ja3MsIHVuc2ln
+bmVkIGJsa3N6KTsKK2ludCBzZGlvX2dvX2lkbGUoc3RydWN0IG1tY19ob3N0
+ICpob3N0KTsKIAogI2VuZGlmCiAKLS0gCjEuNi4wLjQKCg==
+
+--0-1437562912-1252349218=:76148--
