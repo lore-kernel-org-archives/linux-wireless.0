@@ -1,29 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52994
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752873AbZIJAgQ (ORCPT
+Received: from web28308.mail.ukl.yahoo.com ([87.248.110.127]:32797 "HELO
+	web28308.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754217AbZIGSxv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 20:36:16 -0400
-Date: Wed, 09 Sep 2009 17:36:32 -0700 (PDT)
-Message-Id: <20090909.173632.96420544.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2009-09-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20090910001025.GA19645@tuxdriver.com>
-References: <20090910001025.GA19645@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 7 Sep 2009 14:53:51 -0400
+Message-ID: <80555.93921.qm@web28308.mail.ukl.yahoo.com>
+Date: Mon, 7 Sep 2009 18:47:12 +0000 (GMT)
+From: Albert Herranz <albert_herranz@yahoo.es>
+Subject: [PATCH RFC 2/3] sdio: pass unknown cis tuples to sdio drivers
+To: bcm43xx-dev@lists.berlios.de
+Cc: linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="0-1081116690-1252349232=:93921"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 9 Sep 2009 20:10:25 -0400
+--0-1081116690-1252349232=:93921
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> One last batch of wireless bits for the 2.6.32 merge window... :-)
-> 
-> This includes a number of ath9k updates related especially to bluetooth
-> coexistance, as well as a number of b43 changes related to support of SDIO
-> and the associated SSB over SDIO bus support.
+=0A=0A=0A      
+--0-1081116690-1252349232=:93921
+Content-Type: text/x-patch; name="0117-sdio-pass-unknown-cis-tuples-to-sdio-drivers.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="0117-sdio-pass-unknown-cis-tuples-to-sdio-drivers.patch"
 
-Pulled, thanks John!
+RnJvbSBiYjg4ODQ2MWRjZWI4NWU0M2I5YzFmYzk1NTlmMDEyZGZlYjE5Njg4
+IE1vbiBTZXAgMTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBbGJlcnQgSGVycmFu
+eiA8YWxiZXJ0X2hlcnJhbnpAeWFob28uZXM+CkRhdGU6IFR1ZSwgMTggQXVn
+IDIwMDkgMjE6MjQ6MTEgKzAyMDAKU3ViamVjdDogW1BBVENIXSBzZGlvOiBw
+YXNzIHVua25vd24gY2lzIHR1cGxlcyB0byBzZGlvIGRyaXZlcnMKClNvbWUg
+bWFudWZhY3R1cmVzIHByb3ZpZGUgdmVuZG9yIGluZm9ybWF0aW9uIGluIG5v
+bi12ZW5kb3Igc3BlY2lmaWMgQ0lTCnR1cGxlcy4gRm9yIGV4YW1wbGUsIEJy
+b2FkY29tIHVzZXMgYW4gRXh0ZW5kZWQgRnVuY3Rpb24gdHVwbGUgdG8gcHJv
+dmlkZQp0aGUgTUFDIGFkZHJlc3Mgb24gc29tZSBvZiB0aGVpciBuZXR3b3Jr
+IGNhcmRzLCBhcyBpbiB0aGUgY2FzZSBvZiB0aGUKTmludGVuZG8gV2lpIFdM
+QU4gZGF1Z2h0ZXIgY2FyZC4KClRoaXMgcGF0Y2ggYWxsb3dzIHBhc3Npbmcg
+Y29ycmVjdCB0dXBsZXMgdW5rbm93biB0byB0aGUgU0RJTyBjb3JlIHRvCmEg
+bWF0Y2hpbmcgU0RJTyBkcml2ZXIgaW5zdGVhZCBvZiByZWplY3RpbmcgdGhl
+bSBhbmQgZmFpbGluZy4KClNpZ25lZC1vZmYtYnk6IEFsYmVydCBIZXJyYW56
+IDxhbGJlcnRfaGVycmFuekB5YWhvby5lcz4KLS0tCiBkcml2ZXJzL21tYy9j
+b3JlL3NkaW9fY2lzLmMgfCAgIDQ2ICsrKysrKysrKysrKysrKysrKysrKysr
+LS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxlcyBjaGFuZ2VkLCAyNSBpbnNl
+cnRpb25zKCspLCAyMSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2
+ZXJzL21tYy9jb3JlL3NkaW9fY2lzLmMgYi9kcml2ZXJzL21tYy9jb3JlL3Nk
+aW9fY2lzLmMKaW5kZXggOTYzZjI5My4uODc5MzRhYyAxMDA2NDQKLS0tIGEv
+ZHJpdmVycy9tbWMvY29yZS9zZGlvX2Npcy5jCisrKyBiL2RyaXZlcnMvbW1j
+L2NvcmUvc2Rpb19jaXMuYwpAQCAtMTIzLDggKzEyMyw5IEBAIHN0YXRpYyBp
+bnQgY2lzdHBsX2Z1bmNlX2Z1bmMoc3RydWN0IHNkaW9fZnVuYyAqZnVuYywK
+IAl2c24gPSBmdW5jLT5jYXJkLT5jY2NyLnNkaW9fdnNuOwogCW1pbl9zaXpl
+ID0gKHZzbiA9PSBTRElPX1NESU9fUkVWXzFfMDApID8gMjggOiA0MjsKIAor
+CS8qIGxldCB0aGUgU0RJTyBkcml2ZXIgdGFrZSBjYXJlIG9mIHVua25vd24g
+dHVwbGVzICovCiAJaWYgKHNpemUgPCBtaW5fc2l6ZSB8fCBidWZbMF0gIT0g
+MSkKLQkJcmV0dXJuIC1FSU5WQUw7CisJCXJldHVybiAtRUlMU0VROwogCiAJ
+LyogVFBMRkVfTUFYX0JMS19TSVpFICovCiAJZnVuYy0+bWF4X2Jsa3NpemUg
+PSBidWZbMTJdIHwgKGJ1ZlsxM10gPDwgOCk7CkBAIC0xNTQsMTMgKzE1NSw3
+IEBAIHN0YXRpYyBpbnQgY2lzdHBsX2Z1bmNlKHN0cnVjdCBtbWNfY2FyZCAq
+Y2FyZCwgc3RydWN0IHNkaW9fZnVuYyAqZnVuYywKIAllbHNlCiAJCXJldCA9
+IGNpc3RwbF9mdW5jZV9jb21tb24oY2FyZCwgYnVmLCBzaXplKTsKIAotCWlm
+IChyZXQpIHsKLQkJcHJpbnRrKEtFUk5fRVJSICIlczogYmFkIENJU1RQTF9G
+VU5DRSBzaXplICV1ICIKLQkJICAgICAgICJ0eXBlICV1XG4iLCBtbWNfaG9z
+dG5hbWUoY2FyZC0+aG9zdCksIHNpemUsIGJ1ZlswXSk7Ci0JCXJldHVybiBy
+ZXQ7Ci0JfQotCi0JcmV0dXJuIDA7CisJcmV0dXJuIHJldDsKIH0KIAogdHlw
+ZWRlZiBpbnQgKHRwbF9wYXJzZV90KShzdHJ1Y3QgbW1jX2NhcmQgKiwgc3Ry
+dWN0IHNkaW9fZnVuYyAqLApAQCAtMjUzLDIxICsyNDgsMTIgQEAgc3RhdGlj
+IGludCBzZGlvX3JlYWRfY2lzKHN0cnVjdCBtbWNfY2FyZCAqY2FyZCwgc3Ry
+dWN0IHNkaW9fZnVuYyAqZnVuYykKIAkJZm9yIChpID0gMDsgaSA8IEFSUkFZ
+X1NJWkUoY2lzX3RwbF9saXN0KTsgaSsrKQogCQkJaWYgKGNpc190cGxfbGlz
+dFtpXS5jb2RlID09IHRwbF9jb2RlKQogCQkJCWJyZWFrOwotCQlpZiAoaSA+
+PSBBUlJBWV9TSVpFKGNpc190cGxfbGlzdCkpIHsKLQkJCS8qIHRoaXMgdHVw
+bGUgaXMgdW5rbm93biB0byB0aGUgY29yZSAqLwotCQkJdGhpcy0+bmV4dCA9
+IE5VTEw7Ci0JCQl0aGlzLT5jb2RlID0gdHBsX2NvZGU7Ci0JCQl0aGlzLT5z
+aXplID0gdHBsX2xpbms7Ci0JCQkqcHJldiA9IHRoaXM7Ci0JCQlwcmV2ID0g
+JnRoaXMtPm5leHQ7Ci0JCQlwcmludGsoS0VSTl9ERUJVRwotCQkJICAgICAg
+ICIlczogcXVldWluZyBDSVMgdHVwbGUgMHglMDJ4IGxlbmd0aCAldVxuIiwK
+LQkJCSAgICAgICBtbWNfaG9zdG5hbWUoY2FyZC0+aG9zdCksIHRwbF9jb2Rl
+LCB0cGxfbGluayk7Ci0JCX0gZWxzZSB7CisJCWlmIChpIDwgQVJSQVlfU0la
+RShjaXNfdHBsX2xpc3QpKSB7CiAJCQljb25zdCBzdHJ1Y3QgY2lzX3RwbCAq
+dHBsID0gY2lzX3RwbF9saXN0ICsgaTsKIAkJCWlmICh0cGxfbGluayA8IHRw
+bC0+bWluX3NpemUpIHsKIAkJCQlwcmludGsoS0VSTl9FUlIKLQkJCQkgICAg
+ICAgIiVzOiBiYWQgQ0lTIHR1cGxlIDB4JTAyeCAobGVuZ3RoID0gJXUsIGV4
+cGVjdGVkID49ICV1KVxuIiwKKwkJCQkgICAgICAgIiVzOiBiYWQgQ0lTIHR1
+cGxlIDB4JTAyeCIKKwkJCQkgICAgICAgIiAobGVuZ3RoID0gJXUsIGV4cGVj
+dGVkID49ICV1KVxuIiwKIAkJCQkgICAgICAgbW1jX2hvc3RuYW1lKGNhcmQt
+Pmhvc3QpLAogCQkJCSAgICAgICB0cGxfY29kZSwgdHBsX2xpbmssIHRwbC0+
+bWluX3NpemUpOwogCQkJCXJldCA9IC1FSU5WQUw7CkBAIC0yNzUsNyArMjYx
+LDI1IEBAIHN0YXRpYyBpbnQgc2Rpb19yZWFkX2NpcyhzdHJ1Y3QgbW1jX2Nh
+cmQgKmNhcmQsIHN0cnVjdCBzZGlvX2Z1bmMgKmZ1bmMpCiAJCQkJcmV0ID0g
+dHBsLT5wYXJzZShjYXJkLCBmdW5jLAogCQkJCQkJIHRoaXMtPmRhdGEsIHRw
+bF9saW5rKTsKIAkJCX0KLQkJCWtmcmVlKHRoaXMpOworCQkJLyogYWxyZWFk
+eSBzdWNjZXNzZnVsbHkgcGFyc2VkLCBub3QgbmVlZGVkIGFueW1vcmUgKi8K
+KwkJCWlmICghcmV0KQorCQkJCWtmcmVlKHRoaXMpOworCQl9IGVsc2Ugewor
+CQkJLyogdW5rbm93biB0dXBsZSAqLworCQkJcmV0ID0gLUVJTFNFUTsKKwkJ
+fQorCisJCWlmIChyZXQgPT0gLUVJTFNFUSkgeworCQkJLyogdGhpcyB0dXBs
+ZSBpcyB1bmtub3duIHRvIHRoZSBjb3JlICovCisJCQl0aGlzLT5uZXh0ID0g
+TlVMTDsKKwkJCXRoaXMtPmNvZGUgPSB0cGxfY29kZTsKKwkJCXRoaXMtPnNp
+emUgPSB0cGxfbGluazsKKwkJCSpwcmV2ID0gdGhpczsKKwkJCXByZXYgPSAm
+dGhpcy0+bmV4dDsKKwkJCXByX2RlYnVnKCIlczogcXVldWluZyBDSVMgdHVw
+bGUgMHglMDJ4IGxlbmd0aCAldVxuIiwKKwkJCQkgbW1jX2hvc3RuYW1lKGNh
+cmQtPmhvc3QpLCB0cGxfY29kZSwgdHBsX2xpbmspOworCQkJLyoga2VlcCBv
+biBhbmFseXppbmcgdHVwbGVzICovCisJCQlyZXQgPSAwOwogCQl9CiAKIAkJ
+cHRyICs9IHRwbF9saW5rOwotLSAKMS42LjAuNAoK
+
+--0-1081116690-1252349232=:93921--
