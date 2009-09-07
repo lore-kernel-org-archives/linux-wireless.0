@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11579 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753764AbZIAPxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:53:48 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:53:51 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 3/7] wireless: update cfg80211 kconfig entry
-Date: Tue, 1 Sep 2009 08:53:49 -0700
-Message-ID: <1251820429-11003-1-git-send-email-lrodriguez@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.154]:35769 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbZIGSJP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 14:09:15 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so808558fge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2009 11:09:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <200909071711.18632.hs4233@mail.mn-solutions.de>
+References: <200909071711.18632.hs4233@mail.mn-solutions.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 7 Sep 2009 20:08:56 +0200
+Message-ID: <69e28c910909071108t1956b0dfj7f96cac84d9088d6@mail.gmail.com>
+Subject: Re: iw: strange output
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 is now *the* wireless configuration API. Lets also
-give a little explanation as to what it is and refer people to
-the wireless wiki for more information.
+On Mon, Sep 7, 2009 at 5:11 PM, Holger
+Schurig<hs4233@mail.mn-solutions.de> wrote:
+> I'm using
+>
+> * wpasupplicant: hostap_0_6_7-490-g52eb293
+> * iw: v0.9.17-1-gdbaabba
+> * linux-wl: v2.6.31-rc8-34797-g4910edb
+> * some ath5k.ko supported card
+>
+>
+> For wpa_supplicant, I'm currently using the wext driver.
+>
+> When I associate while "iw event" is running, I see the following
+> strange output:
+>
+> eth1 (phy #0): scan finished: 2412, "g\xc6isQ\xffJ\xec)\xcd\xba\xab\xf2\xfb\xe3F|\xc2T\xf8\x1b\xe8\xe7\x8dvZ.c3\x9f\xc9\x9a"
+>
+> Is that garbage at the end intentional?
+>
+>
+>
+>
+> P.S.: when I'm using nl80211 driver for wpa_supplicant, I seem
+> to be associated, but no ping goes throught.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+I can also confirm that. It appears to be a regression from the "big
+state machine monster is no more" change.
 
-Changes description of when we build cfg80211 as a module
-as pointed out by Larry.
+>
+> --
+> http://www.holgerschurig.de
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
- net/wireless/Kconfig |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index aea7e68..9fd570b 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -1,6 +1,15 @@
- config CFG80211
--	tristate "Improved wireless configuration API"
-+	tristate "cfg80211 - wireless configuration API"
- 	depends on RFKILL || !RFKILL
-+	---help---
-+	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
-+	  Enable this if you have a wireless device.
-+
-+	  For more information refer to documentation on the wireless wiki:
-+
-+	  http://wireless.kernel.org/en/developers/Documentation/cfg80211
-+
-+	  When built as a module it will be called cfg80211.
- 
- config NL80211_TESTMODE
- 	bool "nl80211 testmode command"
+
 -- 
-1.6.3.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
