@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:62853 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbZIVWmH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 18:42:07 -0400
-Received: by iwn8 with SMTP id 8so73594iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2009 15:42:10 -0700 (PDT)
+Received: from void.printf.net ([89.145.121.20]:42370 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbZIGTrB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 15:47:01 -0400
+From: Chris Ball <cjb@laptop.org>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Albert Herranz <albert_herranz@yahoo.es>,
+	bcm43xx-dev@lists.berlios.de, linux-mmc@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 1/3] sdio: recognize io card without powercycle
+References: <369914.76148.qm@web28315.mail.ukl.yahoo.com>
+	<200909072055.24589.mb@bu3sch.de>
+Date: Mon, 07 Sep 2009 14:59:45 -0400
+In-Reply-To: <200909072055.24589.mb@bu3sch.de> (Michael Buesch's message of
+	"Mon, 7 Sep 2009 20:55:22 +0200")
+Message-ID: <m3hbvey40u.fsf@pullcord.laptop.org>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 22 Sep 2009 15:41:50 -0700
-Message-ID: <43e72e890909221541u67fa291fq353327d1d55841f2@mail.gmail.com>
-Subject: Flush TX - wireless summit topic
-To: Bob Copeland <me@bobcopeland.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another thing we spoke about at the wireless summit was flushing TX
-prior to changing channel / scan. Bob, remember the issue with ath5k
-on the band not coinciding on received skbs since we don't do a DMA RX
-flush prior to channel change? Well one theory discussed was that we
-would see that issue disappear if we actually did a proper TX flush
-prior to channel change since we expect we would not see further
-incoming frames from our AP if we told it we were going to PS (sending
-a null func frame). If we implement a proper TX flush then the theory
-goes that we wouldn't need to do any sort of DMA flush as we would not
-have any frames pending.
+Hi Michael,
 
-So a plan here would be to give that a shot.
+   > Please submit this to the SDIO maintainer.
 
-  Luis
+MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND SDIO SUBSYSTEM
+S:  Orphan
+L:  linux-mmc@vger.kernel.org
+F:  drivers/mmc/
+F:  include/linux/mmc/
+
+So, these patches are in the right place.
+
+- Chris.
+-- 
+Chris Ball   <cjb@laptop.org>
+One Laptop Per Child
