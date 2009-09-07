@@ -1,80 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:48402 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbZIHCRg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 22:17:36 -0400
-Subject: Re: Stop using tasklets for bottom halves
-From: Steven Rostedt <rostedt@goodmis.org>
-Reply-To: rostedt@goodmis.org
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-In-Reply-To: <20090907171406.6a4b6116@nehalam>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-	 <20090907171406.6a4b6116@nehalam>
-Content-Type: text/plain
-Date: Mon, 07 Sep 2009 22:17:34 -0400
-Message-Id: <1252376254.21261.2052.camel@gandalf.stny.rr.com>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:58386 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751407AbZIGSzY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 14:55:24 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH RFC 1/3] sdio: recognize io card without powercycle
+Date: Mon, 7 Sep 2009 20:55:22 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-mmc@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+References: <369914.76148.qm@web28315.mail.ukl.yahoo.com>
+In-Reply-To: <369914.76148.qm@web28315.mail.ukl.yahoo.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909072055.24589.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-09-07 at 17:14 -0700, Stephen Hemminger wrote:
-> On Mon, 7 Sep 2009 15:58:50 -0700
-> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+On Monday 07 September 2009 20:46:58 Albert Herranz wrote:
 > 
-> > A while ago I had read about an effort to consider removing tasklets
-> > [1] or at least trying to not use them. I'm unaware of the progress in
-> > this respect but since reading that article have always tried to
-> > evaluate whether or not we need tasklets on wireless drivers. I have
-> > also wondered whether work in irq context in other parts of the kernel
-> > can be moved to process context, a curious example being timers. I'll
-> > personally be trying to using only process context on bottom halves on
-> > future drivers but I figured it may be a good time to ask how serious
-> > was avoiding tasklets or using wrappers in the future to avoid irq
-> > context is or is it advised. Do we have a general agreement this is a
-> > good step forward to take? Has anyone made tests or changes on a
-> > specific driver from irq context to process context and proven there
-> > are no significant advantages of using irq context where you would
-> > have expected it?
-> > 
-> > Wireless in particular should IMHO not require taskets for anything
-> > time sensitive that I can think about except perhaps changing channels
-> > quickly and to do that appropriately also process pending RX frames
-> > prior to a switch. It remains to be seen experimentally whether or not
-> > using a workqueue for RX processing would affect the time to switch
-> > channels negatively but I doubt it would be significant. I hope to
-> > test that with ath9k_htc.
-> > 
-> > What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
-> > challenges which would yet need to be proven would not face issues
-> > when processing bottom halves in process context?
-> > 
-> > [1] http://lwn.net/Articles/239633/
-> > 
-> >   Luis
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe netdev" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
-> use NAPI.
-> 
-> Process context is too slow.
+>       
 
-Well, I'm hoping to prove the opposite. I'm working on some stuff that I
-plan to present at Linux Plumbers. I've been too distracted by other
-things, but hopefully I'll have some good numbers to present by then.
+Please submit this to the SDIO maintainer.
 
--- Steve
-
-
+-- 
+Greetings, Michael.
