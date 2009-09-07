@@ -1,97 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25958 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752660AbZIIUFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 16:05:36 -0400
-Subject: Re: iwlagn: order 2 page allocation failures
-From: reinette chatre <reinette.chatre@intel.com>
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <20090909165545.GK24614@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl>
-	 <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie>
-	 <200909091759.33655.elendil@planet.nl>  <20090909165545.GK24614@csn.ul.ie>
-Content-Type: text/plain
-Date: Wed, 09 Sep 2009 13:05:38 -0700
-Message-Id: <1252526738.30150.91.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-iw0-f204.google.com ([209.85.223.204]:59729 "EHLO
+	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172AbZIGVg4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 17:36:56 -0400
+Received: by iwn42 with SMTP id 42so1032669iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2009 14:36:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b55cabb00909070639s4a6f3c1cl8c3e2eccceaf81e8@mail.gmail.com>
+References: <b55cabb00909070639s4a6f3c1cl8c3e2eccceaf81e8@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Date: Mon, 7 Sep 2009 14:36:39 -0700
+Message-ID: <43e72e890909071436ub99bddbx3dd531d09f322b4a@mail.gmail.com>
+Subject: Re: compat-wireless-old for ARM
+To: AMAR SAHUKAR <amarsahu7@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mel and Frans, 
+On Mon, Sep 7, 2009 at 6:39 AM, AMAR SAHUKAR<amarsahu7@gmail.com> wrote:
+> Hi,
+>          I wanted to know the procedure to follow for installing
+> compat-wireless-old on ARM platform. I am using a Netgear WG111V3 usb dongle
+> which uses a rtl8187 chipset. I will be pleased if you can help me with
+> this.
 
-Thank you very much for digging into this.
+compat-wireless-old has not been updated for ages. Today is possible
+to bring compat-wireless (instead of compat-wireless-old) down to
+older kernels we previously could not since we no longer are using the
+netdevice multiqueue support. I was able to bring compat-wireless down
+to 2.6.25 -- at least compile-wise, there is also code present to help
+bring it down to older kernels, we just need someone to test/help
+finish the rest.
 
-On Wed, 2009-09-09 at 09:55 -0700, Mel Gorman wrote:
-> Conceivably a better candidate for this problem is commit
-> 4752c93c30441f98f7ed723001b1a5e3e5619829 introduced in May 2009. If there
-> are less than RX_QUEUE_SIZE/2 left, it starts replenishing buffers. Mohamed,
-> is it absolutly necessary it use GFP_ATOMIC there? If an allocation fails,
-> does it always mean frames are dropped or could it just replenish what it
-> can and try again later printing a warning only if allocation failures are
-> resulting in packet loss?
-
-I agree that this patch may be the reason we are seeing this issue. We
-would like to keep using GFP_ATOMIC here, but it is not necessary for an
-allocation failure to be so noisy since the function doing the
-allocation (iwl_rx_allocate) is always followed by a call to
-iwl_rx_queue_restock which will schedule a refill if the buffers are
-running low. We can thus use ___GFP_NOWARN for the allocations in
-iwl_rx_allocate and leave it to the restocking to find the needed memory
-when it tried its allocations using GFP_KERNEL.
-
-I do think it is useful to let user know about these allocation
-failures, even if it does not result in packet loss. Wrapping it in
-net_ratelimit() will help though.
-
-How about the patch below?
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index b90adcb..f0ee72e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -252,10 +252,11 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 
- 		/* Alloc a new receive buffer */
- 		skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
--						priority);
-+				priority | __GFP_NOWARN);
- 
- 		if (!skb) {
--			IWL_CRIT(priv, "Can not allocate SKB buffers\n");
-+			if (net_ratelimit())
-+				IWL_CRIT(priv, "Can not allocate SKB buffer.\n");
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
- 			 * more buffers it will schedule replenish */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 0909668..5d9fb78 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1147,10 +1147,10 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
- 		/* Alloc a new receive buffer */
--		skb = alloc_skb(priv->hw_params.rx_buf_size, priority);
-+		skb = alloc_skb(priv->hw_params.rx_buf_size, priority | __GFP_NOWARN);
- 		if (!skb) {
- 			if (net_ratelimit())
--				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
-+				IWL_CRIT(priv, "Can not allocate SKB buffer.\n");
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
- 			 * more buffers it will schedule replenish */
-
-
+  Luis
