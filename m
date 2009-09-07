@@ -1,120 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web28302.mail.ukl.yahoo.com ([87.248.110.121]:42619 "HELO
-	web28302.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753424AbZIKHwJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 03:52:09 -0400
-Message-ID: <354996.83066.qm@web28302.mail.ukl.yahoo.com>
-Date: Fri, 11 Sep 2009 07:52:11 +0000 (GMT)
-From: Albert Herranz <albert_herranz@yahoo.es>
-Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mmc@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20090910203951.041d5c17.akpm@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:40427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968AbZIGQbB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 12:31:01 -0400
+Subject: Re: [PATCH] cfg80211: add missing #include <linux/kmemleak.h>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <200909071634.33669.hs4233@mail.mn-solutions.de>
+References: <200909071634.33669.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8pU4duCe2JJz0XoJ1X61"
+Date: Mon, 07 Sep 2009 18:31:01 +0200
+Message-Id: <1252341061.1175.41.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- El vie, 11/9/09, Andrew Morton <akpm@linux-foundation.org> escribió:
-> > Some manufacturers provide vendor information in
-> non-vendor specific CIS
-> > tuples. For example, Broadcom uses an Extended
-> Function tuple to provide
-> > the MAC address on some of their network cards, as in
-> the case of the
-> > Nintendo Wii WLAN daughter card.
-> > 
-> > This patch allows passing correct tuples unknown to
-> the SDIO core to
-> > a matching SDIO driver instead of rejecting them and
-> failing.
-> > 
-> 
-> This looks leaky to me.
-> 
 
-Hi Andrew, thanks for the review.
-I hope I can clarify a bit what the patch does in the next comments.
+--=-8pU4duCe2JJz0XoJ1X61
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> :         if (i < ARRAY_SIZE(cis_tpl_list)) {
-> :             const struct cis_tpl *tpl = cis_tpl_list + i;
-> :             if (tpl_link < tpl->min_size) {
-> :                 printk(KERN_ERR
-> :                        "%s: bad CIS tuple 0x%02x"
-> :                        " (length = %u, expected >= %u)\n",
-> :                        mmc_hostname(card->host),
-> :                        tpl_code, tpl_link, tpl->min_size);
-> :                 ret = -EINVAL;
-> 
-> ret == -EINVAL
-> 
+On Mon, 2009-09-07 at 16:34 +0200, Holger Schurig wrote:
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-At this point ret is not -EINVAL. If it was -EINVAL the code would have had exit at this snipped before:
+> +#include <linux/kmemleak.h>
 
-                if (ret) {
-                        kfree(this);
-                        break;
-                }
+As we've been saying, the change that added the kmemleak annotation
+needs to be reverted instead.
 
+johannes
 
-> :             } else if (tpl->parse) {
-> :                 ret = tpl->parse(card, func,
-> :                                  this->data, tpl_link);
-> :             }
-> :             /* already successfully parsed, not needed anymore */
-> :             if (!ret)
-> :                 kfree(this);
-> 
-> `this' doesn't get freed
-> 
+--=-8pU4duCe2JJz0XoJ1X61
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Yes, that's the whole point of the patch. It must be freed _only_ if the SDIO core parsed it. If the SDIO core cannot parse it then it gets passed to the SDIO driver via the SDIO func struct tuple list (later).
+-----BEGIN PGP SIGNATURE-----
 
-> :         } else {
-> :            /* unknown tuple */
-> :            ret = -EILSEQ;
-> :         }
-> :
-> :         if (ret == -EILSEQ) {
-> 
-> `this' doesn't get remembered.
-> 
+iQIcBAABAgAGBQJKpTVCAAoJEODzc/N7+Qmai2gP+wflCubZjLsV1nZC3WPv3Mzy
+TAlsFj46uJdTInrZFBXrRJ5YqRg1YqbMhT7yZMJuIXL8pByxhFEq5ihgcGmlMrJ2
+71tpxWbSQ/gp0VWvKihg934on2z8uN7EfqVPQGFCKCYleFqT1JjKk4/Yd6AY89M6
+sVG8r7yFmkAUbdI4+x0USrdK6vB+u63XQpUwOAQ+TLBmngBHpXtf5Gybisq7lFgM
+d+/KQ2jMF2kV4hCpQ5oLvqa+lP3y4epNa5UH8CR7T58efxzuJYpNY7BIyy/Dxuv+
+pzRgx5kKwQL0hqu8t6Xclou/JWGT2/yGy9voXaeXG+GbEVtfPdF9Co5FCfHwRDhC
+Zdvbe0UDvVYvn9k/JQLFyVzRfEuB+6jUHk6MYu57Pidn777E7DtOLRbHyBWpkLRf
+YfOtJ2EOjh2CIdPkoh1wc9tZB8C/JtJv9hTG5KQALs2AIE9pOtTdWWUTTu/LM8bw
+c/ca+ekEi0BqHQ/jXP3sPpNJGmacGmc4el7iM0icClKkK90zzc7IQEmFDw9zB+Cg
+Et9QfybjWl//tR0exAF5mlOIUoUfxwTwpYiQrM8kmX58jKjTvPUmvpm8YDfYkZRq
+JA/Hqr5mr373jH40hSLDH3niQHmn+3WQgF+OW2LxxuymtLd4nDCtBQRMsR9xVeeP
+CZ00vvcW8hqDsGbm7tFu
+=EH6X
+-----END PGP SIGNATURE-----
 
-When ret is -EILSEQ `this' is linked to the SDIO func tuple list (later).
+--=-8pU4duCe2JJz0XoJ1X61--
 
-> :            /* this tuple is unknown to the core */
-> :            this->next = NULL;
-> :            this->code = tpl_code;
-> :            this->size = tpl_link;
-> :            *prev = this;
-> :            prev = &this->next;
-> :            pr_debug("%s: queuing CIS tuple 0x%02x length %u\n",
-> :                     mmc_hostname(card->host), tpl_code, tpl_link);
-> :            /* keep on analyzing tuples */
-> :            ret = 0;
-> :         }
-> : 
-> :         ptr += tpl_link;
-> 
-> `this' leaks.
-> 
-
-`this' doesn't leak. `this' has been linked to the SDIO func tuple list in:
-
-*prev = this;
-
-
-> :     } while (!ret);
-> 
-> Please check?
-> 
-
-Thanks a lot for you comments,
-Albert
-
-
-
-      
