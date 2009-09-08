@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53913 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754380AbZIKUMd (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:43987 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbZIHR1S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 16:12:33 -0400
-Date: Fri, 11 Sep 2009 13:11:45 -0700 (PDT)
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-cc: devel@driverdev.osuosl.org, ath9k-devel@venema.h4ckr.net,
-	Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
-In-Reply-To: <43e72e890909111043m78411058i86e61909a35412f@mail.gmail.com>
-Message-ID: <alpine.LFD.2.01.0909111308120.3654@localhost.localdomain>
-References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>  <1252632895-11914-4-git-send-email-lrodriguez@atheros.com>  <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>  <4AA9F22C.3090007@gmail.com> <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
-  <alpine.LFD.2.01.0909110720210.3654@localhost.localdomain> <43e72e890909111043m78411058i86e61909a35412f@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 8 Sep 2009 13:27:18 -0400
+Subject: Re: Stop using tasklets for bottom halves
+From: Steven Rostedt <rostedt@goodmis.org>
+Reply-To: rostedt@goodmis.org
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com,
+	Thomas Gleixner <tglx@linutronix.de>
+In-Reply-To: <20090908100144.6e06872b@nehalam>
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+	 <20090907171406.6a4b6116@nehalam>
+	 <1252376254.21261.2052.camel@gandalf.stny.rr.com>
+	 <20090908091143.1e613963@nehalam>
+	 <1252428023.15626.30.camel@gandalf.stny.rr.com>
+	 <20090908100144.6e06872b@nehalam>
+Content-Type: text/plain
+Date: Tue, 08 Sep 2009 13:27:18 -0400
+Message-Id: <1252430838.5493.5.camel@gandalf.stny.rr.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[ added Thomas Gleixner to Cc]
 
-
-On Fri, 11 Sep 2009, Luis R. Rodriguez wrote:
+On Tue, 2009-09-08 at 10:01 -0700, Stephen Hemminger wrote:
+> On Tue, 08 Sep 2009 12:40:23 -0400
+> Steven Rostedt <rostedt@goodmis.org> wrote:
 > 
-> > In fact, if you know what kind of IO op it is (ie "it's always MMIO"),
-> > you'd be even better using "writel()" directly,
+> > On Tue, 2009-09-08 at 09:11 -0700, Stephen Hemminger wrote:
+> > 
+> > > > > Process context is too slow.
+> > > > 
+> > > > Well, I'm hoping to prove the opposite. I'm working on some stuff that I
+> > > > plan to present at Linux Plumbers. I've been too distracted by other
+> > > > things, but hopefully I'll have some good numbers to present by then.
+> > > > 
+> > > 
+> > > 
+> > > That's great, does it keep the good properties of NAPI (irq disabling
+> > > and throttling?)
+> > 
+> > Not exactly sure what you mean by throttling, but I'm assuming it will.
+> > 
+> > As for irqs disabling, I'm trying to avoid doing that. Note, the device
+> > will have its interrupts disabled, but not all other devices will.
+> > 
+> > -- Steve
+> > 
+> > 
 > 
-> Heh.. you realize I tried to document such a thing a while ago and it
-> seems you opposed it [1]?
+> The way NAPI works is that in irq routine, the device disables interrupts
+> then schedules processing packets, when processing is done irq's are re-enabled.
+> This means that if machine is being flooded, irq's stay off, and the packets
+> get discarded (because device hardware ring is full), rather than in software
+> (because software receive queue is full).
 
-If it's mapped with "pci_iomap()" you should use ioread*/iowrite*. 
+That sounds exactly like what threaded IRQs will do. When an interrupt
+comes in, the device driver will disable the device interrupts, and then
+the device irq thread handler is awoken.
 
-But if you know it's always MMIO, and you use just ioremap() to map it, 
-and then readl/writel.
+The device irq handler will handle all the packets. If new packets come
+in, and the hardware ring buffer is full, those packets will be dropped.
+When the irq handler thread is done processing all pending packets, it
+will re-enable the device's interrupts and go to sleep.
 
-It's the _mixing_ of the two that I object to:
- - pci_iomap() - can do either MMIO of PIO
- - readl/writel - always just MMIO
-should preferably not be mixed.
+Yeah, looking at the NAPI code, it does seem to follow what threaded
+interrupts do.
 
-(Sure it will _work_, but I wouldn't encourage it)
+-- Steve
 
-			Linus
+
