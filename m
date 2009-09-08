@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11453 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754745AbZIAPre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:47:34 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:47:37 -0700
-Date: Tue, 1 Sep 2009 08:47:35 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/7] wireless: update cfg80211 kconfig entry
-Message-ID: <20090901154735.GC8261@mosca>
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
- <1251818566-9264-4-git-send-email-lrodriguez@atheros.com>
- <4A9D3FA8.9020800@lwfinger.net>
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:42160 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbZIHGD4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 02:03:56 -0400
+Received: by fxm17 with SMTP id 17so2371182fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2009 23:03:58 -0700 (PDT)
+From: "Marcel" <marcelcastrobr@gmail.com>
+To: "'Luis R. Rodriguez'" <mcgrof@winlab.rutgers.edu>,
+	"'AMAR SAHUKAR'" <amarsahu7@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <b55cabb00909070639s4a6f3c1cl8c3e2eccceaf81e8@mail.gmail.com> <43e72e890909071436ub99bddbx3dd531d09f322b4a@mail.gmail.com>
+Subject: RE: compat-wireless-old for ARM
+Date: Tue, 8 Sep 2009 08:10:59 +0200
+Message-ID: <70EB52E9BF7F43BBBBC899826FD0D3C4@inin.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A9D3FA8.9020800@lwfinger.net>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+In-Reply-To: <43e72e890909071436ub99bddbx3dd531d09f322b4a@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 08:37:12AM -0700, Larry Finger wrote:
-> Luis R. Rodriguez wrote:
-> > cfg80211 is now *the* wireless configuration API. Lets also
-> > give a little explanation as to what it is and refer people to
-> > the wireless wiki for more information.
-> >
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  net/wireless/Kconfig |   11 ++++++++++-
-> >  1 files changed, 10 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> > index aea7e68..9fd570b 100644
-> > --- a/net/wireless/Kconfig
-> > +++ b/net/wireless/Kconfig
-> > @@ -1,6 +1,15 @@
-> >  config CFG80211
-> > -     tristate "Improved wireless configuration API"
-> > +     tristate "cfg80211 - wireless configuration API"
-> >       depends on RFKILL || !RFKILL
-> > +     ---help---
-> > +       cfg80211 is the Linux wireless LAN (802.11) configuration API.
-> > +       Enable this if you have a wireless device.
-> > +
-> > +       For more information refer to documentation on the wireless wiki:
-> > +
-> > +       http://wireless.kernel.org/en/developers/Documentation/cfg80211
-> > +
-> > +       When built as a module cfg80211 will be built as cfg80211
-> 
-> First of all, I think this modest change is much better than the
-> previous set of patches, and that the additional info you provide for
-> mac80211 and friends will be useful for those who don't live with
-> 802.11 wifi all day long.
-> 
-> That said, I find the above statement to be a little clumsy. Perhaps
-> it should be "When built as a module, it will be called cfg80211". The
-> same comment also applies to patch 6 for mac80211.
+Hello Luis,
+	Do you think it should be viable to bring it down to kernel 2.6.22
+using armeb?
+	If so, I can help to test since I am very interested in ath5k.
+Regards
+Marcel
 
-Thanks, will resend.
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org
+[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Luis R. Rodriguez
+Sent: den 7 september 2009 23:37
+To: AMAR SAHUKAR
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless-old for ARM
+
+On Mon, Sep 7, 2009 at 6:39 AM, AMAR SAHUKAR<amarsahu7@gmail.com> wrote:
+> Hi,
+>          I wanted to know the procedure to follow for installing
+> compat-wireless-old on ARM platform. I am using a Netgear WG111V3 usb
+dongle
+> which uses a rtl8187 chipset. I will be pleased if you can help me with
+> this.
+
+compat-wireless-old has not been updated for ages. Today is possible
+to bring compat-wireless (instead of compat-wireless-old) down to
+older kernels we previously could not since we no longer are using the
+netdevice multiqueue support. I was able to bring compat-wireless down
+to 2.6.25 -- at least compile-wise, there is also code present to help
+bring it down to older kernels, we just need someone to test/help
+finish the rest.
 
   Luis
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
