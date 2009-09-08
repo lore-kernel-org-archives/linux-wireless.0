@@ -1,89 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f210.google.com ([209.85.218.210]:63553 "EHLO
-	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbZI1TpZ convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:63485 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbZIHI1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 15:45:25 -0400
-Received: by bwz6 with SMTP id 6so1526081bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 12:45:28 -0700 (PDT)
+	Tue, 8 Sep 2009 04:27:38 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id A7E4C148005
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2009 10:27:40 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id IigAPE9+rART for <linux-wireless@vger.kernel.org>;
+	Tue,  8 Sep 2009 10:27:40 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95FA395.dip0.t-ipconnect.de [217.95.163.149])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 4FA72148008
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2009 10:27:39 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 287061E004F
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Sep 2009 10:27:30 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Possible WEP encryption error with wpa_supplicant -Dnl80211
+Date: Tue, 8 Sep 2009 10:27:14 +0200
+References: <200909081016.37204.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200909081016.37204.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-In-Reply-To: <20090928184111.GB4737@tuxdriver.com>
-References: <200909032025.31260.chunkeey@googlemail.com>
-	 <20090918170211.8acce2cc.akpm@linux-foundation.org>
-	 <4AB4CCD0.5080003@gmx.de> <20090928184111.GB4737@tuxdriver.com>
-Date: Mon, 28 Sep 2009 21:45:28 +0200
-Message-ID: <22ee4e770909281245g3346a800n940c28199e429abf@mail.gmail.com>
-Subject: Re: [PATCH] ar9170: implement frequency calibration for
-	one-stage/openfw
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Joerg Albert <jal2@gmx.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909081027.14299.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/28 John W. Linville <linville@tuxdriver.com>:
-> On Sat, Sep 19, 2009 at 02:21:36PM +0200, Joerg Albert wrote:
->> On 09/19/2009 02:02 AM, Andrew Morton wrote:
->> > On Thu, 3 Sep 2009 20:25:31 +0200
->> > Christian Lamparter <chunkeey@googlemail.com> wrote:
->> >
->> >> This patch ports some code from the vendor driver, which is
->> >> supposed to upload the right calibration values for the
->> >> chosen frequency.
->> >>
->> >> In theory, this should give a better range and throughput
->> >> for all users with the open, or one-stage firmware.
->> >>
->> >> ...
->> >>
->> >> +          for (i = 0; i < 76; i++) {
->> >> +                  u32 phy_data;
->> >> +                  u8 tmp;
->> >> +
->> >> +                  if (i < 25) {
->> >> +                          tmp = ar9170_interpolate_val(i, &pwrs[0][0],
->> >> +                                                       &vpds[0][0]);
->> >> +                  } else {
->> >> +                          tmp = ar9170_interpolate_val(i - 12,
->> >> +                                                       &pwrs[1][0],
->> >> +                                                       &vpds[1][0]);
->> >> +                  }
->> >> +
->> >> +                  phy_data |= tmp << ((i & 3) << 3);
->> >
->> > Clearly buggy and the compiler warns.  The value of phy_data is unknown
->> > here.
->> >
->> > How did this get all the way into mainline?
->>
->> Strangely it compiles without any warning for me with the latest linux-wireless:
->
-> That is strange -- no warning here (F-11) either...
->
-> Christian, care to propose a patch?  Or maybe just something like this?
->
-> diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
-> index b3e5cf3..49c10cb 100644
-> --- a/drivers/net/wireless/ath/ar9170/phy.c
-> +++ b/drivers/net/wireless/ath/ar9170/phy.c
-> @@ -1220,7 +1220,7 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
->                                                             &vpds[1][0]);
->                        }
->
-> -                       phy_data |= tmp << ((i & 3) << 3);
-> +                       phy_data = tmp << ((i & 3) << 3);
->                        if ((i & 3) == 3) {
->                                ar9170_regwrite(0x1c6280 + chain * 0x1000 +
->                                                (i & ~3), phy_data);
->
-> John
-no? Andrew Morton's mail included a tiny patch which initializes the
-phy_data to 0. I assumed you would pick it up right away...
-Or is there something which would prevent it from including?
+> IEEE 802.11
+>     Type/Subtype: Data (32)
+>     Frame Control: 0x0108 (Normal)
+>         Version: 0
+>         Type: Data frame (2)
+>         Subtype: 0
+>         Flags: 0x1
+>             DS status: Frame from STA to DS via an AP (To DS: 1 From DS: 0) (0x01)
+>             .... .0.. = More Fragments: This is the last fragment
+>             .... 0... = Retry: Frame is not being retransmitted
+>             ...0 .... = PWR MGT: STA will stay up
+>             ..0. .... = More Data: No data buffered
+>             .0.. .... = Protected flag: Data is not protected
+>             0... .... = Order flag: Not strictly ordered
+>     Duration: 213
+>     BSS Id: 00:1b:53:11:dc:40 (00:1b:53:11:dc:40)
+>     Source address: Proxim_a0:6d:40 (00:20:a6:a0:6d:40)
+>     Destination address: Broadcast (ff:ff:ff:ff:ff:ff)
+>     Fragment number: 0
+>     Sequence number: 120
 
-Regards,
-         Chr
+When I run wpa_supplicant with -D wext, I see this additional
+field while monitoring:
+
+    WEP parameters
+        Initialization Vector: 0x222e52
+        Key Index: 0
+        WEP ICV: 0x9dc1791b (not verified)
+
+-- 
+http://www.holgerschurig.de
