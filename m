@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:47348 "EHLO lo.gmane.org"
+Received: from mail.vyatta.com ([76.74.103.46]:51670 "EHLO mail.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750934AbZIHTHr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 15:07:47 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1Ml62f-0003hB-7s
-	for linux-wireless@vger.kernel.org; Tue, 08 Sep 2009 21:07:49 +0200
-Received: from cac94-1-81-57-151-96.fbx.proxad.net ([81.57.151.96])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 21:07:49 +0200
-Received: from castet.matthieu by cac94-1-81-57-151-96.fbx.proxad.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 21:07:49 +0200
-To: linux-wireless@vger.kernel.org
-From: matthieu castet <castet.matthieu@free.fr>
+	id S1750991AbZIHQLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 12:11:47 -0400
+Date: Tue, 8 Sep 2009 09:11:43 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: rostedt@goodmis.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
 Subject: Re: Stop using tasklets for bottom halves
-Date: Tue, 8 Sep 2009 19:07:32 +0000 (UTC)
-Message-ID: <loom.20090908T210153-638@post.gmane.org>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com> <20090907171406.6a4b6116@nehalam> <1252376254.21261.2052.camel@gandalf.stny.rr.com> <200909080650.43181.mb@bu3sch.de>
+Message-ID: <20090908091143.1e613963@nehalam>
+In-Reply-To: <1252376254.21261.2052.camel@gandalf.stny.rr.com>
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+	<20090907171406.6a4b6116@nehalam>
+	<1252376254.21261.2052.camel@gandalf.stny.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@...> writes:
+On Mon, 07 Sep 2009 22:17:34 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> On Mon, 2009-09-07 at 17:14 -0700, Stephen Hemminger wrote:
+> > On Mon, 7 Sep 2009 15:58:50 -0700
+> > "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+> > 
+> > > A while ago I had read about an effort to consider removing tasklets
+> > > [1] or at least trying to not use them. I'm unaware of the progress in
+> > > this respect but since reading that article have always tried to
+> > > evaluate whether or not we need tasklets on wireless drivers. I have
+> > > also wondered whether work in irq context in other parts of the kernel
+> > > can be moved to process context, a curious example being timers. I'll
+> > > personally be trying to using only process context on bottom halves on
+> > > future drivers but I figured it may be a good time to ask how serious
+> > > was avoiding tasklets or using wrappers in the future to avoid irq
+> > > context is or is it advised. Do we have a general agreement this is a
+> > > good step forward to take? Has anyone made tests or changes on a
+> > > specific driver from irq context to process context and proven there
+> > > are no significant advantages of using irq context where you would
+> > > have expected it?
+> > > 
+> > > Wireless in particular should IMHO not require taskets for anything
+> > > time sensitive that I can think about except perhaps changing channels
+> > > quickly and to do that appropriately also process pending RX frames
+> > > prior to a switch. It remains to be seen experimentally whether or not
+> > > using a workqueue for RX processing would affect the time to switch
+> > > channels negatively but I doubt it would be significant. I hope to
+> > > test that with ath9k_htc.
+> > > 
+> > > What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
+> > > challenges which would yet need to be proven would not face issues
+> > > when processing bottom halves in process context?
+> > > 
+> > > [1] http://lwn.net/Articles/239633/
+> > > 
+> > >   Luis
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe netdev" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
+> > use NAPI.
+> > 
+> > Process context is too slow.
 > 
-> I recently converted the b43 driver to threaded interrupt handlers and
-> a workqueue based TX mechanism. (My motivation was porting b43 to the SDIO bus
-that
-> needs to sleep, so requires process context).
-Well you can do busy wait : for sending small sd command, the overhead of
-sleep ( context switch) can be bigger than the sleep.
-
+> Well, I'm hoping to prove the opposite. I'm working on some stuff that I
+> plan to present at Linux Plumbers. I've been too distracted by other
+> things, but hopefully I'll have some good numbers to present by then.
 > 
-> I think there's no real reason for process context being slow in general. It's
-just that
-> we have additional context switches. But these are fast on Linux.
-> 
-It depends of architecture. For example on older arm (armv5) context switch can
-be slow (need tlb and cache flush). It is not really true for kernel thread that
-keeps the same mmu mapping and don't need all those flush, but there still a
-visible performance hit.
 
 
-Matthieu
+That's great, does it keep the good properties of NAPI (irq disabling
+and throttling?)
 
 
 
+-- 
