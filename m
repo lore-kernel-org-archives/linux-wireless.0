@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:53437 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.157]:62368 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132AbZIMOOe (ORCPT
+	with ESMTP id S1752100AbZIHSHH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2009 10:14:34 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so322415fge.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 07:14:36 -0700 (PDT)
-To: Igor Perminov <igor.perminov@inbox.ru>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
-	Jouni Malinen <j@w1.fi>, Artur Skawina <art.08.09@gmail.com>
-Subject: Re: A station can't reconnect after it wakes up
-References: <1248969930.29068.224.camel@sunlight> <4A7318E6.3000004@gmail.com>
-	<1249312925.8515.187.camel@sunlight>
-	<1252620184.26765.65.camel@sunlight>
-	<1252767513.23427.26.camel@johannes.local>
-	<1252799481.26765.145.camel@sunlight>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 13 Sep 2009 17:14:32 +0300
-In-Reply-To: <1252799481.26765.145.camel@sunlight> (Igor Perminov's message of "Sun\, 13 Sep 2009 03\:51\:21 +0400")
-Message-ID: <87my4z0w53.fsf@litku.valot.fi>
+	Tue, 8 Sep 2009 14:07:07 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1093381fge.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:07:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AA69961.9010808@gmail.com>
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de>
+	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 8 Sep 2009 20:06:49 +0200
+Message-ID: <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com>
+Subject: Re: b43 dma error
+To: John Daiker <daikerjohn@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Perminov <igor.perminov@inbox.ru> writes:
-
-> On Sat, 2009-09-12 at 08:58 -0600, Johannes Berg wrote:
+On Tue, Sep 8, 2009 at 7:50 PM, John Daiker<daikerjohn@gmail.com> wrote:
+> On 09/08/2009 07:54 AM, Larry Finger wrote:
+>>
+>> Michael Buesch wrote:
+>>>
+>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
+>>>>
+>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
+>>>> then the controller keep restarting...
+>>>>
+>>>> Please tell what I can provide or test, Thanks.
+>>>
+>>> Is this a regression? If so, please bisect.
+>>
+>> It is something specific to his system as I don't see anything like
+>> this. In addition, there are some users on the openSUSE forums that
+>> have implemented the latest compat-wireless and switched away from
+>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
+>> them.
+>>
+>> Please reboot so that we see the ssb output as well. Use the command
+>>
+>> dmesg | egrep "ssb|b43"
+>>
+>> That way we will be able to see exactly what kind of device you have
+>> and what revisions are in it. AFAIK, the testing to date has been
+>> limited to Rev 1 PHYs and Rev 2 radios.
+>>
+>> Larry
+>>
 >
->> I think this is not necessary. Just make sure that auth/assoc frames
->> aren't buffered.
+> I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom 4312.
+>  Looks to be a PHY 1, Radio 2:
 >
-> The handshake is begun by the AP, which considers the STA is in PS mode.
-> So, first EAPOL Key frame is buffered already.
-> The AP informs the STA by TIM after that of course. But I think, there
-> is no any guarantee that the STA analyzes TIM at this point, because the
-> STA considers itself not power-saving.
-
-If this happens then the STA has really broken power save
-implementation. If a STA informs AP about going to power save it should
-_immediately_ start checking the TIM bits. Or is it so that STA actually
-hasn't informed AP about power save after association?
-
-
-[...]
-
-> I've nowhere found in 802.11-2007 document that a STA should send EAPOL
-> Start at the beginning of 4-way handshake. So, there is no any guarantee
-> that every STA implementation can synchronize its PS state with the AP.
-
-My understanding is that the power save state after association should
-be disabled until STA informs otherwise. So there shouldn't be any
-synchronisation issues.
-
-> And moreover, my ASUS WL-500GP access point (it works under Linux 2.4
-> and doesn't utilize hostapd) processes reconnection without manipulating
-> TIM and causing a STA to send EAPOL Start. Probably, it just reset its
-> internal PS state of the STA at the beginning of reconnection.
+> --snip--
+> [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+> [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
+> Revision 2
+> --snip--
 >
-> Would it be better to reset WLAN_STA_PS flag to get a more reliable
-> solution may be?
+> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config, and
+> lspci -vv and lspci -nn
+>
+> Note: With the dmesg output, I had unloaded the b43 module previous
+> 'modprobe -r b43' and then loaded it again with debug output: 'modprobe b43
+> verbose=3'
+>
+> John Daiker
+>
 
-So mac80211 doesn't clear STA's power save state during association? To
-me that sounds like a bug.
+Again, please test with v478 or v5xx firmware.
 
 -- 
-Kalle Valo
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
