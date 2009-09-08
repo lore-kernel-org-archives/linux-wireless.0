@@ -1,88 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:51727 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbZIHQMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 12:12:55 -0400
-Date: Tue, 8 Sep 2009 09:12:52 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: rostedt@goodmis.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-Subject: Re: Stop using tasklets for bottom halves
-Message-ID: <20090908091252.3e931e0d@nehalam>
-In-Reply-To: <1252376254.21261.2052.camel@gandalf.stny.rr.com>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-	<20090907171406.6a4b6116@nehalam>
-	<1252376254.21261.2052.camel@gandalf.stny.rr.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:43319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753832AbZIHJSl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 05:18:41 -0400
+Subject: Re: Possible WEP encryption error with wpa_supplicant -Dnl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200909081016.37204.hs4233@mail.mn-solutions.de>
+References: <200909081016.37204.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8PEucHqCtLmUx/AAghBj"
+Date: Tue, 08 Sep 2009 11:18:40 +0200
+Message-Id: <1252401520.1175.48.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 07 Sep 2009 22:17:34 -0400
-Steven Rostedt <rostedt@goodmis.org> wrote:
 
-> On Mon, 2009-09-07 at 17:14 -0700, Stephen Hemminger wrote:
-> > On Mon, 7 Sep 2009 15:58:50 -0700
-> > "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
-> > 
-> > > A while ago I had read about an effort to consider removing tasklets
-> > > [1] or at least trying to not use them. I'm unaware of the progress in
-> > > this respect but since reading that article have always tried to
-> > > evaluate whether or not we need tasklets on wireless drivers. I have
-> > > also wondered whether work in irq context in other parts of the kernel
-> > > can be moved to process context, a curious example being timers. I'll
-> > > personally be trying to using only process context on bottom halves on
-> > > future drivers but I figured it may be a good time to ask how serious
-> > > was avoiding tasklets or using wrappers in the future to avoid irq
-> > > context is or is it advised. Do we have a general agreement this is a
-> > > good step forward to take? Has anyone made tests or changes on a
-> > > specific driver from irq context to process context and proven there
-> > > are no significant advantages of using irq context where you would
-> > > have expected it?
-> > > 
-> > > Wireless in particular should IMHO not require taskets for anything
-> > > time sensitive that I can think about except perhaps changing channels
-> > > quickly and to do that appropriately also process pending RX frames
-> > > prior to a switch. It remains to be seen experimentally whether or not
-> > > using a workqueue for RX processing would affect the time to switch
-> > > channels negatively but I doubt it would be significant. I hope to
-> > > test that with ath9k_htc.
-> > > 
-> > > What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
-> > > challenges which would yet need to be proven would not face issues
-> > > when processing bottom halves in process context?
-> > > 
-> > > [1] http://lwn.net/Articles/239633/
-> > > 
-> > >   Luis
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe netdev" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
-> > use NAPI.
-> > 
-> > Process context is too slow.
-> 
-> Well, I'm hoping to prove the opposite. I'm working on some stuff that I
-> plan to present at Linux Plumbers. I've been too distracted by other
-> things, but hopefully I'll have some good numbers to present by then.
-> 
-> -- Steve
-> 
-> 
+--=-8PEucHqCtLmUx/AAghBj
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-A good performance test is changing the behaviour of loopback
-device and running lmbench.  This checks overhead without the specter
-of real hardware.
+On Tue, 2009-09-08 at 10:16 +0200, Holger Schurig wrote:
+> Here are some details on my ping problem: I seem to be associated
+> successfully to an Cisco 1231 AP, but no pings are going through
+> if I use nl80211.
 
--- 
+Yeah, WEP with nl80211 is known broken. I have a patch, but Jouni didn't
+like it and I haven't gotten around to fixing it up.
+
+johannes
+
+--=-8PEucHqCtLmUx/AAghBj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKpiFsAAoJEODzc/N7+QmaMBAP/1MCAYSU894s1sDDxlgosTqE
+hsxnN+vOjsWCZEtpSKciId0MLBG5CQVTCVOiVA4vJALTC45Kxfeezj7phPRtRds5
+5MYujTQaVhy86WyYlrSXcjhc9eZVch/mMm9mjD3rWbIOmXtfFjnd0f36uC58OKbR
+A8gL56jLnAzY+ymJMzseN5SpqcCvHHD81x56gyevGR4HZ+bzLkVkV7G3/BYI0zWz
+3bHPVoTwhMIz1R75i3rSjfZUSEZr0unhBfANgSz5z5kR6RM3mlnF284QcW5acc+K
+aR7KyL6oTPN5pu0yQZpFG+lK65fcsl/PP3JxBxZ1pdlRAMIVwqPr05e7Eux0/oqV
+uGqBKuAynazrF8T6VoGJUNYzpgLY95an406XUl8gjbSkqLPfoK8Nxl8ZduhJjyJS
+UCXAXkCp9VW6K/udE00TLoMnxKbJvyi5JTf0wF3x+72VD4j0O66ceZi4EzeckCFU
+1QX3KwbomVENCyFCDSAS84APE1an0or2NCWLoUS2AA88op7Rj8XomliWlz/wDQO7
+ErP7TvzWPLdACN02C5m2EKRLHKtILb6It9z4/6N2sptFL/Q8qAGbPoMzDh711Rgk
+Fz20DCIyAv97LPg4UH10IYvC58x0LUE94PkSYgjPJ6Am7c5OVVW64eckUG/L2SEe
+828YRYwesBcYlGhxSuAC
+=v7fk
+-----END PGP SIGNATURE-----
+
+--=-8PEucHqCtLmUx/AAghBj--
+
