@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:39172 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754230AbZINVIq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 17:08:46 -0400
-Received: by ewy2 with SMTP id 2so1067582ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 14:08:48 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jari Jaakola <jari.jaakola@gmail.com>
-Subject: [PATCH] p54usb: add Zcomax XG-705A usbid
-Date: Mon, 14 Sep 2009 23:08:43 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-References: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com>
-In-Reply-To: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <200909142308.43652.chunkeey@googlemail.com>
+Received: from mail.vyatta.com ([76.74.103.46]:41691 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793AbZIHAOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Sep 2009 20:14:10 -0400
+Date: Mon, 7 Sep 2009 17:14:06 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@elte.hu>,
+	Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
+Subject: Re: Stop using tasklets for bottom halves
+Message-ID: <20090907171406.6a4b6116@nehalam>
+In-Reply-To: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new usbid for Zcomax XG-705A to the device table.
+On Mon, 7 Sep 2009 15:58:50 -0700
+"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
 
-Cc: stable@kernel.org
-Reported-by: Jari Jaakola <jari.jaakola@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index e44460f..17e1995 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -67,6 +67,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
- 	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
- 	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
- 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
-+	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
- 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
- 	{USB_DEVICE(0x124a, 0x4025)},	/* IOGear GWU513 (GW3887IK chip) */
- 	{USB_DEVICE(0x1260, 0xee22)},	/* SMC 2862W-G version 2 */
+> A while ago I had read about an effort to consider removing tasklets
+> [1] or at least trying to not use them. I'm unaware of the progress in
+> this respect but since reading that article have always tried to
+> evaluate whether or not we need tasklets on wireless drivers. I have
+> also wondered whether work in irq context in other parts of the kernel
+> can be moved to process context, a curious example being timers. I'll
+> personally be trying to using only process context on bottom halves on
+> future drivers but I figured it may be a good time to ask how serious
+> was avoiding tasklets or using wrappers in the future to avoid irq
+> context is or is it advised. Do we have a general agreement this is a
+> good step forward to take? Has anyone made tests or changes on a
+> specific driver from irq context to process context and proven there
+> are no significant advantages of using irq context where you would
+> have expected it?
+> 
+> Wireless in particular should IMHO not require taskets for anything
+> time sensitive that I can think about except perhaps changing channels
+> quickly and to do that appropriately also process pending RX frames
+> prior to a switch. It remains to be seen experimentally whether or not
+> using a workqueue for RX processing would affect the time to switch
+> channels negatively but I doubt it would be significant. I hope to
+> test that with ath9k_htc.
+> 
+> What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
+> challenges which would yet need to be proven would not face issues
+> when processing bottom halves in process context?
+> 
+> [1] http://lwn.net/Articles/239633/
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
+use NAPI.
+
+Process context is too slow.
+
+-- 
