@@ -1,72 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:53433 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755916AbZIQQLz (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:48301 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbZIHGut convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 12:11:55 -0400
-Date: Thu, 17 Sep 2009 18:11:54 +0200
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-To: Andrey Yurovsky <andrey@cozybit.com>
-Cc: Bing Zhao <bzhao@marvell.com>, Dan Williams <dcbw@redhat.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-Subject: Re: [PATCH] libertas: Add auto deep sleep support for
- SD8385/SD8686/SD8688
-Message-ID: <20090917161154.GA877@Chamillionaire.breakpoint.cc>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
- <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F704306DB9CFDB7@SC-VEXCH1.marvell.com>
- <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com>
+	Tue, 8 Sep 2009 02:50:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com>
+In-Reply-To: <4AA24FAB.20700@panicking.kicks-ass.org>
+References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
+	 <1252065236.14338.179.camel@skunk> <1252080405.24673.11.camel@mj>
+	 <1252081080.31087.7.camel@skunk>
+	 <43e72e890909040951y6a1e639bl771a63389665ca2a@mail.gmail.com>
+	 <1252101647.11934.0.camel@bip>
+	 <4AA24FAB.20700@panicking.kicks-ass.org>
+Date: Tue, 8 Sep 2009 10:50:46 +0400
+Message-ID: <a872555b0909072350qf105990q3efb99a8bbb2d0bc@mail.gmail.com>
+Subject: Re: Atheros Linux wireless drivers home page - and two new driver
+	projects
+From: Denis Kirjanov <kirjanov@gmail.com>
+To: michael <michael@panicking.kicks-ass.org>
+Cc: Xavier Bestel <xavier.bestel@free.fr>, devel@driverdev.osuosl.org,
+	b_yogesh_snowy@yahoo.com, Dan Williams <dcbw@redhat.com>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Len Widra <Len.Widra@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	Stephen Chen <Stephen.Chen@atheros.com>,
+	Jouni Malinen <j@w1.fi>, Nick Kossifidis <mickflemm@gmail.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Harald Welte <laforge@openmoko.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Witold Sowa <witold.sowa@gmail.com>,
+	Michael Renzmann <mrenzmann@madwifi-project.org>,
+	Werner Almesberger <werner@openmoko.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Andrey Yurovsky | 2009-09-16 13:47:48 [-0700]:
+Good time of day.
+Do I need to use wireless-testing tree ?
 
->> Some information (such as the interface name and path) in README file is out of date. We just copy-and-paste it for the new deepsleep command. We need a separate patch to clean up the REAME file and keep it up to date.
+On Sat, Sep 5, 2009 at 3:46 PM, michael<michael@panicking.kicks-ass.org> wrote:
+> Hi,
 >
->Ok.  Either way, this is another out-of-band interface (regardless of
->if it's debugfs or sysfs).  That said, I believe that debugfs should
->be used for debugging, not for configuring driver/device features like
->these.
-I agree on this. Debugfs is for debug only and should stay that way.
-What do other driver in regard to this? I hardly belive that the
-libertas driver is the only "deep sleep" user.
-
->>> Deep sleep seems to pretty much "turn off" the wifi card (as far as
->>> the user is concerned) so how about a simpler approach: enter deep
->>> sleep when the interface is brought down (ifconfig wlanN down) and
->>> exit deep sleep when it's brought up. ?Do this only when deep sleep is
->>> supported/possible. ?Alternately, maybe this belongs as an rfkill
->>> feature?
+> Xavier Bestel wrote:
 >>
->> Entering/exiting deep sleep doesn't have to depend on wlanN interface's up and down. User can still put the chip into sleep when wlanN is up. And, with auto deep sleep feature, the driver automatically wakes the chip up for sending user commands (for example, scan) and put the chip back to sleep after certain time period of inactivity. The deepsleep command through debugfs interface provides the flexibility of deep sleep options.
+>> Le vendredi 04 septembre 2009 à 09:51 -0700, Luis R. Rodriguez a écrit :
+>>>
+>>> On Fri, Sep 4, 2009 at 9:18 AM, Xavier Bestel<xavier.bestel@free.fr>
+>>> wrote:
+>>>>
+>>>> On Fri, 2009-09-04 at 12:06 -0400, Pavel Roskin wrote:
+>>>>>
+>>>>> On Fri, 2009-09-04 at 13:53 +0200, Xavier Bestel wrote:
+>>>>>>
+>>>>>> On Thu, 2009-09-03 at 15:54 -0700, Luis R. Rodriguez wrote:
+>>>>>>>
+>>>>>>> I'm pleased to announce the new home page to Atheros Linux wireless
+>>>>>>> drivers:
+>>>>>>>
+>>>>>>> http://wireless.kernel.org/en/users/Drivers/Atheros
+>>>>>>
+>>>>>> ath5k is marked as not master-mode capable. I thought this had been
+>>>>>> fixed for 2.6.31 ?
+>>>>>
+>>>>> The above page makes no such statements.  I have fixed
+>>>>> http://wireless.kernel.org/en/users/Drivers/ath5k
+>>>>
+>>>> Right, thanks.
+>>>>
+>>>>> https://madwifi-project.org/wiki/UserDocs/ath5kAccessPoint still needs
+>>>>> a
+>>>>> lot of work, or maybe it should be removed as obsolete.
+>>>>
+>>>> Yes, I miss access-point functionality in NetworkManager :)
+>>>
+>>> BTW a GSoC project this year was to add AP support to Network Manager.
+>>> As far I can tell the Witold Sowa finished this so you should be able
+>>> to test this.
 >>
->> The rfkill shuts down the RF transmitter of the device but most of other modules may be still functioning. The deep sleep shuts down most of the modules (including the RF) on the chip to save as much power as possible.
+>> Awesome.
+>>
+>>> Witold, can you update the wiki page on this project with details as
+>>> to how people can test this?
+>>>
+>>>
+>>> http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
+>>>
+>>>  Luis
+>>>
 >
->It seems that when the device is in deep sleep, it's effectively
->"turned off" as far as the user is concerned.  That seems really
->similar to "ifconfig down" or rfkill, does the user really care about
->anything beyond that?  I understand that it's possible to control this
->feature independently of either of those functions, but is it ever
->necessary?  If not, it would be great to just integrate it into one
->(or both) of these already standard network interface semantics and
->not introduce a whole new configuration parameter.
-
-iwconfig has an interface for this I think:
-|interface power {period N|timeout N|saving N|off}
-
->From what I see in the man page it covers pretty much what you wrote in
-the Readme file. So it looks like like there is your flexible interface
-you've been looking for :)
-
->  -Andrey
+> Is there any plan to support the ar6k athereos wifi card?
 >
->> Regards,
+> Michael
+>
 >>
->> Bing
+>>
+>>
+>> _______________________________________________
+>> devel mailing list
+>> devel@linuxdriverproject.org
+>> http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
+>>
+>
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
+>
 
-Sebastian
+
+
+-- 
+Regards,
+Denis
