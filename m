@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33638 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752445AbZIBQyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 12:54:15 -0400
-Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
-From: reinette chatre <reinette.chatre@intel.com>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
-References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
-	 <1251906970.13180.137.camel@rc-desk>
-	 <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 02 Sep 2009 09:54:17 -0700
-Message-Id: <1251910457.13180.160.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-iw0-f201.google.com ([209.85.223.201]:63917 "EHLO
+	mail-iw0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbZIHQKQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 12:10:16 -0400
+Received: by iwn39 with SMTP id 39so36940iwn.23
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 09:10:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4aa3f838.ef04Hi2n3Fg54rE9%Larry.Finger@lwfinger.net>
+References: <4aa3f838.ef04Hi2n3Fg54rE9%Larry.Finger@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 8 Sep 2009 09:09:53 -0700
+Message-ID: <43e72e890909080909n557e9d97o8582d60c78ed381a@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: Fix build error on i386 for net/wireless/scan.o
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+On Sun, Sep 6, 2009 at 10:58 AM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+> With i386 architecture, building the kernel v2.6.31-rc8-34797-g4910edb
+> fails with the following error:
+>
+>  CC [M]  net/wireless/scan.o
+> net/wireless/scan.c: In function ‘cfg80211_inform_bss’:
+> net/wireless/scan.c:499: error: implicit declaration of function ‘kmemleak_ignore’
+> make[2]: *** [net/wireless/scan.o] Error 1
+>
+> On x86_64, the build succeeds. Fix by including the appropriate header.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-On Wed, 2009-09-02 at 09:41 -0700, Andrew Lutomirski wrote:
+I've asked John to revert the use of kmemleak_ignore() here for
+several reasons so this patch will not be needed.
 
-> Fair enough.  Would you accept a patch to remove power_level from sysfs instead?
-
-No. This file is used when users want to manually reduce the power used
-by device. This is the file you want to change if you want to extend
-your battery life.
-
-> >> This fixes what looks to me like a regression: power_level used to
-> >> work but now fails silently.  In 2.6.32 I think this code is going
-> >> away, but this patch seems like a safe stopgap measure.
-> >
-> > 2.6.32 will have power save support disabled also.
-> 
-> Any ETA for getting this fixed for real?  I like my battery life :)
-
-We are working on it.
-
-Reinette
-
-
+  Luis
