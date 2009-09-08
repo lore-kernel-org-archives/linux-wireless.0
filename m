@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from BISCAYNE-ONE-STATION.MIT.EDU ([18.7.7.80]:48039 "EHLO
-	biscayne-one-station.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755169AbZIAV0B (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:41111 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751857AbZIHRxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 17:26:01 -0400
-Received: from outgoing.mit.edu (OUTGOING-AUTH.MIT.EDU [18.7.22.103])
-	by biscayne-one-station.mit.edu (8.13.6/8.9.2) with ESMTP id n81LQ1Gi019565
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Sep 2009 17:26:01 -0400 (EDT)
-Received: from ctpornette.lns.mit.edu (ctpornette.lns.mit.edu [198.125.162.195])
+	Tue, 8 Sep 2009 13:53:18 -0400
+Received: from [192.168.1.3] (mail.redfish-solutions.com [192.168.1.3])
 	(authenticated bits=0)
-        (User authenticated as luto@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.13.6/8.12.4) with ESMTP id n81LQ08j008396
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Sep 2009 17:26:01 -0400 (EDT)
-Message-ID: <4A9D9168.2070608@mit.edu>
-Date: Tue, 01 Sep 2009 17:26:00 -0400
-From: Andy Lutomirski <luto@MIT.EDU>
+	by mail.redfish-solutions.com (8.14.3/8.14.3) with ESMTP id n88HrHbV015719
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 8 Sep 2009 11:53:21 -0600
+Message-ID: <4AA69A0D.3040608@redfish-solutions.com>
+Date: Tue, 08 Sep 2009 11:53:17 -0600
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 2.6.31 regression: iwlagn power_level no longer works
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: AP: ath5k + hostapd occasionally sulks
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2.6.30.5, I can echo 1 >/sys/class/net/wlan0/device/power_level, and 
-the value changes to 1, my wakeup rate goes way down, and my power 
-consumption (as measured by powertop) drops noticeably.
+I pulled compat-wireless from GIT last night (or about 1:30am mountain,
+really) and rebuilt a 2.6.27.29 kernel.
 
-On 2.6.31-rc7, I can still echo 1 to that file, but nothing happens, and 
-the value I get if I 'cat power_level' remains at 0.
+I'm seeing a lot of:
 
-My kernel configs are as identical as 'make oldconfig' knows how to make 
-them.
+Sep  8 11:44:09 pbx user.err kernel: ath5k phy0: no further txbuf available, dropping packet
 
-Any ideas?
+
+one every 10 seconds, in fact.  This is with an Engenius EMP-8062+ card:
+
+00:11.0 Ethernet controller: Atheros Communications Inc. AR5413 802.11abg NIC (rev 01)
+	Subsystem: Atheros Communications Inc. EnGenius EMP-8602 (400mw) or Compex WLM54AG
+	Flags: bus master, medium devsel, latency 168, IRQ 15
+	Memory at a0010000 (32-bit, non-prefetchable) [size=64K]
+	Capabilities: [44] Power Management version 2
+	Kernel driver in use: ath5k
+	Kernel modules: ath5k
+
+
+
+Is this a known issue? Jon posted the same question, but I didn't see an
+answer to his question...
+
+And like him, I'm also using hostapd (but I pulled a GIT at the same
+time last night).
+
+I'll probably have to reboot regularly, since this is on an embedded box
+with limited CF filesystem, and I can't overflow my /var partition...
+
+Thanks,
+
+-Philip
+
+
+
