@@ -1,170 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.211.175]:34388 "EHLO
-	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758496AbZIRSOm (ORCPT
+Received: from mail-iw0-f175.google.com ([209.85.223.175]:44499 "EHLO
+	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbZIHEQ6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 14:14:42 -0400
-Received: by ywh5 with SMTP id 5so1510780ywh.4
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 11:14:46 -0700 (PDT)
-Message-ID: <4AB3CE12.6030002@gmail.com>
-Date: Fri, 18 Sep 2009 14:14:42 -0400
-From: Paul Sedor <psedor@gmail.com>
+	Tue, 8 Sep 2009 00:16:58 -0400
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: bug build error
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1252376254.21261.2052.camel@gandalf.stny.rr.com>
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+	<20090907171406.6a4b6116@nehalam> <1252376254.21261.2052.camel@gandalf.stny.rr.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 7 Sep 2009 21:16:38 -0700
+Message-ID: <43e72e890909072116v33ecafc4ma7f5a68825f14e9@mail.gmail.com>
+Subject: Re: Stop using tasklets for bottom halves
+To: rostedt@goodmis.org
+Cc: Stephen Hemminger <shemminger@vyatta.com>,
+	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I can't build the daily (Sep 18) compat-wireless on ubuntu 9.04 with the 
-following error.
+On Mon, Sep 7, 2009 at 7:17 PM, Steven Rostedt<rostedt@goodmis.org> wrote:
+> On Mon, 2009-09-07 at 17:14 -0700, Stephen Hemminger wrote:
+>> On Mon, 7 Sep 2009 15:58:50 -0700
+>> "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+>>
+>> > A while ago I had read about an effort to consider removing tasklets
+>> > [1] or at least trying to not use them. I'm unaware of the progress in
+>> > this respect but since reading that article have always tried to
+>> > evaluate whether or not we need tasklets on wireless drivers. I have
+>> > also wondered whether work in irq context in other parts of the kernel
+>> > can be moved to process context, a curious example being timers. I'll
+>> > personally be trying to using only process context on bottom halves on
+>> > future drivers but I figured it may be a good time to ask how serious
+>> > was avoiding tasklets or using wrappers in the future to avoid irq
+>> > context is or is it advised. Do we have a general agreement this is a
+>> > good step forward to take? Has anyone made tests or changes on a
+>> > specific driver from irq context to process context and proven there
+>> > are no significant advantages of using irq context where you would
+>> > have expected it?
+>> >
+>> > Wireless in particular should IMHO not require taskets for anything
+>> > time sensitive that I can think about except perhaps changing channels
+>> > quickly and to do that appropriately also process pending RX frames
+>> > prior to a switch. It remains to be seen experimentally whether or not
+>> > using a workqueue for RX processing would affect the time to switch
+>> > channels negatively but I doubt it would be significant. I hope to
+>> > test that with ath9k_htc.
+>> >
+>> > What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
+>> > challenges which would yet need to be proven would not face issues
+>> > when processing bottom halves in process context?
+>> >
+>> > [1] http://lwn.net/Articles/239633/
+>> >
+>> > Â  Luis
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe netdev" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at Â http://vger.kernel.org/majordomo-info.html
+>>
+>> Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
+>> use NAPI.
+>>
+>> Process context is too slow.
+>
+> Well, I'm hoping to prove the opposite. I'm working on some stuff that I
+> plan to present at Linux Plumbers. I've been too distracted by other
+> things, but hopefully I'll have some good numbers to present by then.
 
-paul :~/Desktop/compat-wireless-2009-09-18$ make
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.28-15-generic/build 
-M=/home/paul/Desktop/compat-wireless-2009-09-18 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.28-15-generic'
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/misc/eeprom/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/misc/eeprom/eeprom_93cx6.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/usb/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/usb/cdc_ether.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/usb/rndis_host.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/usb/usbnet.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/main.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/regd.o
-   LD [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/usb.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/main.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/cmd.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/mac.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/phy.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/led.o
-   LD [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ar9170/ar9170usb.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/caps.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/initvals.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/eeprom.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/gpio.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/desc.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/dma.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/qcu.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/pcu.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/phy.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/reset.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/attach.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/base.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/led.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/rfkill.o
-   LD [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath5k/ath5k.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/hw.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/eeprom.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/eeprom_def.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/eeprom_4k.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/eeprom_9287.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/mac.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/calib.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/ani.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/phy.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/beacon.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/main.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/recv.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/xmit.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/virtual.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/rc.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/btcoex.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/pci.o
-   LD [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/ath/ath9k/ath9k.o
-   LD 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/built-in.o
-   CC [M] 
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.o
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c: 
-In function ‘b43_do_interrupt’:
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c:1888: 
-error: ‘IRQ_WAKE_THREAD’ undeclared (first use in this function)
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c:1888: 
-error: (Each undeclared identifier is reported only once
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c:1888: 
-error: for each function it appears in.)
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c: 
-In function ‘b43_request_firmware’:
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c:2218: 
-warning: format not a string literal and no format arguments
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c: 
-In function ‘b43_wireless_core_start’:
-/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.c:3867: 
-error: implicit declaration of function ‘request_threaded_irq’
-make[4]: *** 
-[/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43/main.o] 
-Error 1
-make[3]: *** 
-[/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless/b43] 
-Error 2
-make[2]: *** 
-[/home/paul/Desktop/compat-wireless-2009-09-18/drivers/net/wireless] Error 2
-make[1]: *** [_module_/home/paul/Desktop/compat-wireless-2009-09-18] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.28-15-generic'
-make: *** [modules] Error 2
+What day in specific was this planned for at Plumbers?
 
-Someone suggested I try the older version from Sep 6 and it will build 
-successfully.
-
-However, I'd like to keep the latest version.
-
-TIA
+  Luis
