@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:1088 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687AbZIAPhO (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:65113 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898AbZIHSQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:37:14 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so809577fge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:37:16 -0700 (PDT)
-Message-ID: <4A9D3FA8.9020800@lwfinger.net>
-Date: Tue, 01 Sep 2009 10:37:12 -0500
+	Tue, 8 Sep 2009 14:16:01 -0400
+Received: by bwz19 with SMTP id 19so2421413bwz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:16:03 -0700 (PDT)
+Message-ID: <4AA69F61.2040300@lwfinger.net>
+Date: Tue, 08 Sep 2009 13:16:01 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 3/7] wireless: update cfg80211 kconfig entry
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com> <1251818566-9264-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1251818566-9264-4-git-send-email-lrodriguez@atheros.com>
+To: John Daiker <daikerjohn@gmail.com>
+CC: Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 dma error
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> <4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com>
+In-Reply-To: <4AA69961.9010808@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> cfg80211 is now *the* wireless configuration API. Lets also
-> give a little explanation as to what it is and refer people to
-> the wireless wiki for more information.
+John Daiker wrote:
+> On 09/08/2009 07:54 AM, Larry Finger wrote:
+>> Michael Buesch wrote:
+>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
+>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
+>>>> then the controller keep restarting...
+>>>>
+>>>> Please tell what I can provide or test, Thanks.
+>>>
+>>> Is this a regression? If so, please bisect.
+>>
+>> It is something specific to his system as I don't see anything like
+>> this. In addition, there are some users on the openSUSE forums that
+>> have implemented the latest compat-wireless and switched away from
+>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
+>> them.
+>>
+>> Please reboot so that we see the ssb output as well. Use the command
+>>
+>> dmesg | egrep "ssb|b43"
+>>
+>> That way we will be able to see exactly what kind of device you have
+>> and what revisions are in it. AFAIK, the testing to date has been
+>> limited to Rev 1 PHYs and Rev 2 radios.
+>>
+>> Larry
+>>
 > 
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/wireless/Kconfig |   11 ++++++++++-
->  1 files changed, 10 insertions(+), 1 deletions(-)
+> I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom
+> 4312.  Looks to be a PHY 1, Radio 2:
 > 
-> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-> index aea7e68..9fd570b 100644
-> --- a/net/wireless/Kconfig
-> +++ b/net/wireless/Kconfig
-> @@ -1,6 +1,15 @@
->  config CFG80211
-> -	tristate "Improved wireless configuration API"
-> +	tristate "cfg80211 - wireless configuration API"
->  	depends on RFKILL || !RFKILL
-> +	---help---
-> +	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
-> +	  Enable this if you have a wireless device.
-> +
-> +	  For more information refer to documentation on the wireless wiki:
-> +
-> +	  http://wireless.kernel.org/en/developers/Documentation/cfg80211
-> +
-> +	  When built as a module cfg80211 will be built as cfg80211
+> --snip--
+> [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+> [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
+> Revision 2
+> --snip--
+> 
+> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config,
+> and lspci -vv and lspci -nn
+> 
+> Note: With the dmesg output, I had unloaded the b43 module previous
+> 'modprobe -r b43' and then loaded it again with debug output: 'modprobe
+ b43 verbose=3'
 
-First of all, I think this modest change is much better than the
-previous set of patches, and that the additional info you provide for
-mac80211 and friends will be useful for those who don't live with
-802.11 wifi all day long.
+Your PHY and your radio are the same as mine. In fact, the one thing I
+noticed is that you are using i386 architecture, whereas mine is
+x86_64. I have not tested with i386.
 
-That said, I find the above statement to be a little clumsy. Perhaps
-it should be "When built as a module, it will be called cfg80211". The
-same comment also applies to patch 6 for mac80211.
+Has anyone run the LP PHY modifications with 32-bit architecture?
 
 Larry
-
