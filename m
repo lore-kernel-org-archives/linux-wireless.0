@@ -1,44 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44860 "EHLO mail.atheros.com"
+Received: from bu3sch.de ([62.75.166.246]:51306 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756111AbZIRJga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:36:30 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:36:35 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	id S1752036AbZIHSPR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 14:15:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: b43 dma error
+Date: Tue, 8 Sep 2009 20:15:16 +0200
+Cc: John Daiker <daikerjohn@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+References: <20090908134732.GA1936@darkstar> <4AA69961.9010808@gmail.com> <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com>
+In-Reply-To: <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21669.322032.143952@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:06:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/9] ath9k: Handle ATH9K_BEACON_RESET_TSF properly
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909082015.17943.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+On Tuesday 08 September 2009 20:06:49 Gábor Stefanik wrote:
+> On Tue, Sep 8, 2009 at 7:50 PM, John Daiker<daikerjohn@gmail.com> wrote:
+> > On 09/08/2009 07:54 AM, Larry Finger wrote:
+> >>
+> >> Michael Buesch wrote:
+> >>>
+> >>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
+> >>>>
+> >>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
+> >>>> then the controller keep restarting...
+> >>>>
+> >>>> Please tell what I can provide or test, Thanks.
+> >>>
+> >>> Is this a regression? If so, please bisect.
+> >>
+> >> It is something specific to his system as I don't see anything like
+> >> this. In addition, there are some users on the openSUSE forums that
+> >> have implemented the latest compat-wireless and switched away from
+> >> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
+> >> them.
+> >>
+> >> Please reboot so that we see the ssb output as well. Use the command
+> >>
+> >> dmesg | egrep "ssb|b43"
+> >>
+> >> That way we will be able to see exactly what kind of device you have
+> >> and what revisions are in it. AFAIK, the testing to date has been
+> >> limited to Rev 1 PHYs and Rev 2 radios.
+> >>
+> >> Larry
+> >>
+> >
+> > I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom 4312.
+> >  Looks to be a PHY 1, Radio 2:
+> >
+> > --snip--
+> > [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+> > [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
+> > Revision 2
+> > --snip--
+> >
+> > I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config, and
+> > lspci -vv and lspci -nn
+> >
+> > Note: With the dmesg output, I had unloaded the b43 module previous
+> > 'modprobe -r b43' and then loaded it again with debug output: 'modprobe b43
+> > verbose=3'
+> >
+> > John Daiker
+> >
+> 
+> Again, please test with v478 or v5xx firmware.
+> 
 
-Clearing a local variable is unnecessary.
-Get rid of it.
+This won't help. The DMA engine reports a descriptor error. That means the device
+was unable to fetch the control data via DMA. Most of the time this indicates
+a bug/failure/quirk in the platform DMA implementation.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 96ea5cc..a347b40 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3422,7 +3422,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- 
- 	beacon_period &= ~ATH9K_BEACON_ENA;
- 	if (beacon_period & ATH9K_BEACON_RESET_TSF) {
--		beacon_period &= ~ATH9K_BEACON_RESET_TSF;
- 		ath9k_hw_reset_tsf(ah);
- 	}
- 
 -- 
-1.6.4.4
-
+Greetings, Michael.
