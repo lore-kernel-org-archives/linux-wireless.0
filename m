@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:12967 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753237AbZI2LBM (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:34906 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750AbZIHO7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 07:01:12 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Tomas Winkler <tomasw@gmail.com>
-Subject: Re: Firmware versioning best practices
-Date: Tue, 29 Sep 2009 13:01:04 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com> <200909290859.25075.hs4233@mail.mn-solutions.de> <1ba2fa240909290345k776826a6jc692d9d8dfe7577@mail.gmail.com>
-In-Reply-To: <1ba2fa240909290345k776826a6jc692d9d8dfe7577@mail.gmail.com>
+	Tue, 8 Sep 2009 10:59:07 -0400
+Message-ID: <4AA67139.80301@lwfinger.net>
+Date: Tue, 08 Sep 2009 09:59:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909291301.04156.hs4233@mail.mn-solutions.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Pekka Enberg <penberg@cs.helsinki.fi>, Mel Gorman <mel@csn.ul.ie>,
+	Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org
+Subject: Re: iwlagn: order 2 page allocation failures
+References: <200909060941.01810.elendil@planet.nl> <84144f020909060114s74de2d2y850745dd82ece753@mail.gmail.com> <200909061028.48442.elendil@planet.nl> <1252226116.11274.10.camel@penberg-laptop> <20090908105415.GD28127@csn.ul.ie> <84144f020909080411n4e010308qa153039bee1b8336@mail.gmail.com> <20090908141701.GB2617@tuxdriver.com>
+In-Reply-To: <20090908141701.GB2617@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Don't put the version into the filename. This is not a common
-> > practice for Linux / BSD / whatever systems. Usually you have
-> > a "kmail" file, not a kmail3.5, kmail4.0 and kmail4.2 file.
+John W. Linville wrote:
+> On Tue, Sep 08, 2009 at 02:11:35PM +0300, Pekka Enberg wrote:
+>> On Tue, Sep 8, 2009 at 1:54 PM, Mel Gorman<mel@csn.ul.ie> wrote:
+>>> My feeling is also that a number of these page allocation failures have
+>>> been related to wireless drivers. Is that accurate? If so, have there
+>>> been changes made to the wireless stack in this cycle that would have
+>>> increased the order of pages allocated?
+>> That's my general feeling as well. We have linux-wireless CC'd so
+>> maybe this rings a bell for them.
 > 
-> I think in this context libyyy.so.x.y.z is better analogy.
-> firmware is not an executable What is the reasoning behind this
-> common practice? 
+> AFAIK, this is only the second separate report.  The other related
+> to ipw2200, which actually shares no code with the iwlagn driver and
+> is not based on the mac80211 stack.
 
-There's no version of the library in the file-name, but the 
-version of the API. So if the API changes, and might break users 
-of the API, you increase the filename.
+A previous issue concerned the interaction between wireless and SLUB
+debugging that caused O(0) allocations to get bumped to O(1), but that
+was not relevant to this case either. I'm not aware of any other page
+allocation problems with wireless.
 
-But you won't have a libc-2.3.6.so file. Instead you have a 
-package "libc6_2.3.6.ds1-13etch9_i386.deb" which contains the 
-file libc.so.6.
-
--- 
-http://www.holgerschurig.de
+Larry
