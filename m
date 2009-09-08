@@ -1,45 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38475 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402AbZIJTaY (ORCPT
+Received: from mail-pz0-f201.google.com ([209.85.222.201]:53377 "EHLO
+	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbZIHS0G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 15:30:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 03/10] ath9k: use ath9k_hw_write_associd() on reset
-Date: Thu, 10 Sep 2009 15:30:20 -0400
-Message-Id: <1252611027-5285-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
-References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 8 Sep 2009 14:26:06 -0400
+Received: by pzk39 with SMTP id 39so3376300pzk.15
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:26:09 -0700 (PDT)
+Message-ID: <4AA6A1BF.6020509@gmail.com>
+Date: Tue, 08 Sep 2009 11:26:07 -0700
+From: John Daiker <daikerjohn@gmail.com>
+MIME-Version: 1.0
+To: Michael Buesch <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 dma error
+References: <20090908134732.GA1936@darkstar> <4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> <200909082013.41929.mb@bu3sch.de>
+In-Reply-To: <200909082013.41929.mb@bu3sch.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the already provided helper instead of rewriting the code
-required in place.
+On 09/08/2009 11:13 AM, Michael Buesch wrote:
+> On Tuesday 08 September 2009 19:50:25 John Daiker wrote:
+>> On 09/08/2009 07:54 AM, Larry Finger wrote:
+>>> Michael Buesch wrote:
+>>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
+>>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
+>>>>> then the controller keep restarting...
+>>>>>
+>>>>> Please tell what I can provide or test, Thanks.
+>>>>
+>>>> Is this a regression? If so, please bisect.
+>>>
+>>> It is something specific to his system as I don't see anything like
+>>> this. In addition, there are some users on the openSUSE forums that
+>>> have implemented the latest compat-wireless and switched away from
+>>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
+>>> them.
+>>>
+>>> Please reboot so that we see the ssb output as well. Use the command
+>>>
+>>> dmesg | egrep "ssb|b43"
+>>>
+>>> That way we will be able to see exactly what kind of device you have
+>>> and what revisions are in it. AFAIK, the testing to date has been
+>>> limited to Rev 1 PHYs and Rev 2 radios.
+>>>
+>>> Larry
+>>>
+>>
+>> I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom 4312.  Looks to be a PHY 1, Radio 2:
+>>
+>> --snip--
+>> [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+>> [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
+>> --snip--
+>>
+>> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config, and lspci -vv and lspci -nn
+>>
+>> Note: With the dmesg output, I had unloaded the b43 module previous 'modprobe -r b43' and then loaded it again with debug output: 'modprobe b43 verbose=3'
+>>
+>> John Daiker
+>>
+>
+> To ask the question once again: Is this a regression?
+> This is a critical question to track down the bug.
+>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+I would argue that this is not a regression.  Before the LP PHY work was 
+done, the card wouldn't work at all with the b43 driver.  "Didn't work 
+then, doesn't work now" is kinda my reasoning, I guess.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 957ecb8..e370c8f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2458,9 +2458,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	REG_WRITE(ah, AR_DEF_ANTENNA, saveDefAntenna);
- 
--	REG_WRITE(ah, AR_BSS_ID0, get_unaligned_le32(sc->curbssid));
--	REG_WRITE(ah, AR_BSS_ID1, get_unaligned_le16(sc->curbssid + 4) |
--		  ((sc->curaid & 0x3fff) << AR_BSS_ID1_AID_S));
-+	ath9k_hw_write_associd(ah);
- 
- 	REG_WRITE(ah, AR_ISR, ~0);
- 
--- 
-1.6.3.3
+Thanks for the work on the LP PHY support, though.  Always great that 
+new hardware continues to gain support! :)
+
+JD
+
 
