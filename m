@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64475 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750905AbZIOI5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 04:57:31 -0400
-Subject: Re: alloc skb based on a given data buffer
-From: Zhu Yi <yi.zhu@intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: "mel@csn.ul.ie" <mel@csn.ul.ie>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"elendil@planet.nl" <elendil@planet.nl>,
-	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"penberg@cs.helsinki.fi" <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-In-Reply-To: <20090915.013321.07006714.davem@davemloft.net>
-References: <1252897270.5650.169.camel@debian>
-	 <20090914130612.GA11778@csn.ul.ie>	<1253003420.7549.51.camel@debian>
-	 <20090915.013321.07006714.davem@davemloft.net>
-Content-Type: text/plain
-Date: Tue, 15 Sep 2009 16:57:29 +0800
-Message-Id: <1253005050.7549.58.camel@debian>
-Mime-Version: 1.0
+Received: from qw-out-2122.google.com ([74.125.92.24]:11399 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbZIHTpd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 15:45:33 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so133550qwb.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 12:45:36 -0700 (PDT)
+Date: Tue, 8 Sep 2009 14:06:09 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: rt2x00 Users List <users@host1.serialmonkey.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] rt2x00: Hardcode TX ack timeout and consume time
+Message-ID: <20090908120608.GA4296@linux-m68k.org>
+References: <200909061514.23611.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200909061514.23611.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-15 at 16:33 +0800, David Miller wrote:
-> From: Zhu Yi <yi.zhu@intel.com>
-> Date: Tue, 15 Sep 2009 16:30:20 +0800
-> 
-> > This way, device drivers can allocate the Rx buffers with their own size
-> > and alignment requirement. i.e. do an order-1 page allocation directly
-> > with free_pages() in the iwlagn driver for a 256 bytes aligned 8K Rx
-> > buffer. After DMA is finished, drivers can use the above function to
-> > assemble an skb based on the Rx buffer. It should resolve the problem
-> > for requiring an order-2 allocation by alloc_skb() in the first place.
-> 
-> You can create paged RX skbs just like drivers such as niu.c
-> and others already do, there is no need for special APIs for
-> this.
+On Sun, Sep 06, 2009 at 03:14:23PM +0200, Ivo van Doorn wrote:
+> rt2x00: Hardcode TX ack timeout and consume time
 
-Thanks. So we can put the 8K buffer into 2 skb_shinfo()->frags[] slots
-and set nr_frags to 2, right? Is this supported allover the network code
-already? At a first glance, I didn't find any frags handling in mac80211
-stack.
+Hi,
 
-Thanks,
--yi
+it does significantly improve rt73usb performance and stability of ping times.
 
+I can still get almost the double performance and much better ping times when 
+setting the rate manually.
+
+> John, this patch has not yet been confirmed by any of the above bugzilla reports,
+> but I do think this should be merged as soon as possible to 2.6.31 since this issue
+> has been marked as regression for quite some time now. :)
+
+imho it should be merged even if it does not fully fix every imaginable problem.
+
+Actually I would wish critical fixes would be merged much more aggressively,
+eg rt73usb was critically broken before Pavel Roskin' recent off-by-1 register
+access fix - causing all kinds of weird problems probably including filesystem
+damage.
+
+Seems some other fixes are also critical - it would be nice to have all important
+fixes in eg in 2.6.30.6 (if it ever comes) as it is not quite trivial to cherrypick
+them from the list when the code diverges too much from mainline.
+
+Richard
