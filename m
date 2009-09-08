@@ -1,115 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48962 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061AbZINRor (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:57598 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752308AbZIHSaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 13:44:47 -0400
-Subject: Re: [PATCH] cfg80211: don't report SME connection errs at
- SIOCSIW{FREQ/AP/ESSID}
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-In-Reply-To: <200909141323.44245.hs4233@mail.mn-solutions.de>
-References: <200909141254.14988.hs4233@mail.mn-solutions.de>
-	 <200909141323.44245.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xPTt5VINoC/UjxTYboIB"
-Date: Mon, 14 Sep 2009 10:43:54 -0700
-Message-Id: <1252950234.23427.51.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 8 Sep 2009 14:30:11 -0400
+Received: by fxm17 with SMTP id 17so2858138fxm.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:30:13 -0700 (PDT)
+Message-ID: <4AA6A2B3.2010300@lwfinger.net>
+Date: Tue, 08 Sep 2009 13:30:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: John Daiker <daikerjohn@gmail.com>, Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 dma error
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> 	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> 	<4AA69F61.2040300@lwfinger.net> <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com>
+In-Reply-To: <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gábor Stefanik wrote:
+> On Tue, Sep 8, 2009 at 8:16 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+>> Your PHY and your radio are the same as mine. In fact, the one thing I
+>> noticed is that you are using i386 architecture, whereas mine is
+>> x86_64. I have not tested with i386.
+>>
+>> Has anyone run the LP PHY modifications with 32-bit architecture?
+> 
+> Yes, me. (With the exact same card as John.)
 
---=-xPTt5VINoC/UjxTYboIB
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Is it a maximum memory issue? How much for you?
 
-On Mon, 2009-09-14 at 13:23 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
->=20
-> ---
->=20
-> This fixes
->=20
-> 1252921276.182218: Trying to associate with 00:1b:53:11:dc:40 (SSID=3D'TE=
-ST' freq=3D2412 MHz)
-> ioctl[SIOCSIWFREQ]: No such file or directory
-> ioctl[SIOCSIWESSID]: No such file or directory
-> 1252921276.268451: Association request to the driver failed
-> 1252921276.355482: Associated with 00:1b:53:11:dc:40
->=20
-> and makes it
->=20
-> 1252921276.182218: Trying to associate with 00:1b:53:11:dc:40 (SSID=3D'TE=
-ST' freq=3D2412 MHz)
-> 1252921276.355482: Associated with 00:1b:53:11:dc:40
->=20
-> However, otherwise this hasn't been greatly tested and I
-> don't have a great understanding of cfg80211, SME, etc ...
+John and Dave: Same question.
 
-And doesn't look correct to me at all. probably something missing wrt.
-disconnect() while connecting.
-
-johannes
-
-> Index: linux-wl/net/wireless/wext-sme.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-wl.orig/net/wireless/wext-sme.c	2009-09-14 12:05:54.000000000 +=
-0200
-> +++ linux-wl/net/wireless/wext-sme.c	2009-09-14 12:06:09.000000000 +0200
-> @@ -110,7 +110,7 @@ int cfg80211_mgd_wext_siwfreq(struct net
->  		goto out;
->  	}
-> =20
-> -	err =3D cfg80211_mgd_wext_connect(rdev, wdev);
-> +	cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->  	wdev_unlock(wdev);
->  	mutex_unlock(&rdev->devlist_mtx);
-> @@ -196,7 +196,7 @@ int cfg80211_mgd_wext_siwessid(struct ne
-> =20
->  	wdev->wext.connect.crypto.control_port =3D false;
-> =20
-> -	err =3D cfg80211_mgd_wext_connect(rdev, wdev);
-> +	cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->  	wdev_unlock(wdev);
->  	mutex_unlock(&rdev->devlist_mtx);
-> @@ -283,7 +283,7 @@ int cfg80211_mgd_wext_siwap(struct net_d
->  	} else
->  		wdev->wext.connect.bssid =3D NULL;
-> =20
-> -	err =3D cfg80211_mgd_wext_connect(rdev, wdev);
-> +	cfg80211_mgd_wext_connect(rdev, wdev);
->   out:
->  	wdev_unlock(wdev);
->  	mutex_unlock(&rdev->devlist_mtx);
->=20
-
-
---=-xPTt5VINoC/UjxTYboIB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKroDXAAoJEODzc/N7+QmaHCwP/09QGyM9v8qxwTKhWnrB47bG
-BiOcm5jzGd8aOdYbwN1wB408a9/ar+L5wcbh4B2W+dOH3vQ+IDWELATa7tSpp4n2
-EZt5nzL7I6Z8sZR9GGZNu2GPnlC881QxdbR1mgDuvxwh8C5+VkY7s/behvClvafq
-ejR+k/OJltIX3wDIQTPwDkcLkY2MMO8y+CvXCweyGbHSHL3sXmbBgviD0nUJGJ+k
-9yx3MOw39c5YVBPie/HyZYfDbRdje/8AXd2kLlJVutaN/spqQjDHOaW5AYz0Jalf
-5BopXr1mqhps8PQzy3zHuMfdKmdMqylgjHCDKzQ4/TY5dMpkh01ksYlksd2nc2yj
-4T5W0T/rbyYEvbTIWQViA2/6k5AzxRevj2vEdeQsraH42mZWEMqgD7pFuUs+exgL
-Z3kYT/uBSmaQ1MR/0zkDsvx45VmCvRY7PoNt2j3JbmTH7bHtfWCPBqa0evtmOjbc
-Yscn0PYFXjvHcuNiPZ53AGaHjQA5x2BCq3Xe2BJqQrF9WGSfcTFXRguLT7KUuS7d
-1OHMc822/Vyp+0EEoEuMfdSTEyWRvQRvSWCr2U4BmEZF9NlH7CpPWBovHeVY344z
-3bBD/5iNXSj3Hj4s/aPJRi70AMcF2IEyESDgUlppDwfOe4Wpj/piIERhS3AFEb6w
-gAzOOLZhcL0HP/bNsYla
-=jv7F
------END PGP SIGNATURE-----
-
---=-xPTt5VINoC/UjxTYboIB--
-
+Larry
