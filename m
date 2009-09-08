@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.211.175]:59338 "EHLO
-	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758004AbZIFQAW convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:13304 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162AbZIHScg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2009 12:00:22 -0400
-Received: by ywh5 with SMTP id 5so2888906ywh.4
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Sep 2009 09:00:24 -0700 (PDT)
+	Tue, 8 Sep 2009 14:32:36 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so2039085fge.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:32:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <606e87f00909060835q51cb8b57h9544162ee1ade4ff@mail.gmail.com>
-References: <606e87f00812101427n351265a9u28dda004f7af37a4@mail.gmail.com>
-	 <9de1a5ef0812131645l2cb021ebtf90fec38fea028ee@mail.gmail.com>
-	 <20081214112923.2df83900@kgoetz.id.au>
-	 <606e87f00909060614q545d758ch9f9d98bce7d276ad@mail.gmail.com>
-	 <2EC2F428-19E1-4A4D-AF3A-C2F22BA3AFD7@gmail.com>
-	 <606e87f00909060835q51cb8b57h9544162ee1ade4ff@mail.gmail.com>
-Date: Sun, 6 Sep 2009 11:00:24 -0500
-Message-ID: <606e87f00909060900n20469a68k4e2540b7d99334b4@mail.gmail.com>
-Subject: Fwd: [gNewSense-users] firmware development Fwd: convocatoria
-	(pagada) a desarrollo
-From: =?ISO-8859-1?Q?Quiliro_Ord=F3=F1ez?= <quiliro@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <4AA6A2B3.2010300@lwfinger.net>
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de>
+	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com>
+	<4AA69F61.2040300@lwfinger.net> <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com>
+	<4AA6A2B3.2010300@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 8 Sep 2009 20:32:13 +0200
+Message-ID: <69e28c910909081132l464c2effq31665b22365de1c2@mail.gmail.com>
+Subject: Re: b43 dma error
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Daiker <daikerjohn@gmail.com>, Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear folks.
-
-I have like to have libre (free as in freedom) firmware for rt2561
-wireless chipset. And forward this email for your consideration and
-quote.
-
----------- Forwarded message ----------
-From: Jason Self <jason.self@gmail.com>
-Date: 2009/9/6
-Subject: Re: [gNewSense-users] firmware development Fwd: convocatoria
-(pagada) a desarrollo
-To: gnewsense-users@nongnu.org
-
-
-> Dear coleagues.
+2009/9/8 Larry Finger <Larry.Finger@lwfinger.net>:
+> Gábor Stefanik wrote:
+>> On Tue, Sep 8, 2009 at 8:16 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
+>>> Your PHY and your radio are the same as mine. In fact, the one thing I
+>>> noticed is that you are using i386 architecture, whereas mine is
+>>> x86_64. I have not tested with i386.
+>>>
+>>> Has anyone run the LP PHY modifications with 32-bit architecture?
+>>
+>> Yes, me. (With the exact same card as John.)
 >
-> As you might know, I use only libre software. If I would use semi-libre software I wouldn't have noticed the following. The wireless network card of most widespread use in Quito, Ecuador, South America is
+> Is it a maximum memory issue? How much for you?
 >
-> DLink DWL g 520 - RT61 Wireless LAN PCI Card
+> John and Dave: Same question.
 >
-> It can be installed with kernel linux but its firmware is non-libre. I need that firmware to be developed as soon as possible and would like those whom feel capable of doing it (reverse engineering) post their quote for development. We consider paying different people (if that is possible) for different parts of the work.
+> Larry
 >
-> I would also ask to those whom would like to chip in for the payment of the development put some money in, express so and with how much money you would like to contribute for the payment of such development. If nobody destinates a budget, I will asume on my own the cost entirely but I asume that a small contribution starting from $1 will be possible for many people.
 
-Have you contacted the folks at linuxwireless.org? Based on [1] it
-appears that they would be willing to work with DLink (assuming that
-DLink would be willing to work with them.) Even if not, perhaps you
-might find an interested developer (or two or three) willing to take
-it on?
-
-[1] http://linuxwireless.org/en/vendors/DriverDevelopment
-
-
-_______________________________________________
-gNewSense-users mailing list
-gNewSense-users@nongnu.org
-http://lists.nongnu.org/mailman/listinfo/gnewsense-users
-
-
-
+2GB here.
 
 -- 
-Saludos/Greetings
-Quiliro Ordóñez
-593(02)340 1517 / 593(09)821 8696
-http://quiliro.wordpress.com
-"Sólo cuando el último árbol esté muerto, el último río envenenado, y
-el último pez atrapado, nos daremos cuenta que no se puede comer
-dinero"
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
