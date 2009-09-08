@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:49749 "EHLO vs166246.vserver.de"
+Received: from mail.vyatta.com ([76.74.103.46]:54390 "EHLO mail.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754000AbZIAM4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 08:56:51 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Subject: Re: zd1211rw on ppc (iBook G4)
-Date: Tue, 1 Sep 2009 14:56:50 +0200
-Cc: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <4A9BFCCB.6040808@ufra.edu.br> <200908312127.57610.mb@bu3sch.de> <3ace41890908311235i62ab0510neb8b2021c3f2945e@mail.gmail.com>
-In-Reply-To: <3ace41890908311235i62ab0510neb8b2021c3f2945e@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909011456.51711.mb@bu3sch.de>
+	id S1751600AbZIHRBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 13:01:48 -0400
+Date: Tue, 8 Sep 2009 10:01:44 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: rostedt@goodmis.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
+Subject: Re: Stop using tasklets for bottom halves
+Message-ID: <20090908100144.6e06872b@nehalam>
+In-Reply-To: <1252428023.15626.30.camel@gandalf.stny.rr.com>
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
+	<20090907171406.6a4b6116@nehalam>
+	<1252376254.21261.2052.camel@gandalf.stny.rr.com>
+	<20090908091143.1e613963@nehalam>
+	<1252428023.15626.30.camel@gandalf.stny.rr.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 31 August 2009 21:35:31 Hin-Tak Leung wrote:
-> On Mon, Aug 31, 2009 at 8:27 PM, Michael Buesch<mb@bu3sch.de> wrote:
-> > On Monday 31 August 2009 20:26:22 Hin-Tak Leung wrote:
-> >> It would appear that the rw driver's ieee80211->mac80211 conversion
-> >> has broken big- endian platforms, at a first guess.
-> >
-> > Last time I tested the device worked fine on my powerbook with zd1211rw/mac80211.
-> > But that's maybe two or three release cycles in the past.
-> >
-> > --
-> > Greetings, Michael.
-> >
+On Tue, 08 Sep 2009 12:40:23 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> On Tue, 2009-09-08 at 09:11 -0700, Stephen Hemminger wrote:
 > 
-> The rw ieee80211->mac80211 conversion happens in 2.6.27->26.28 ...
-> Iguess the question is whether it was 2.6.28 or 2.6.27 you had success
-> with? That's unfortunately two *and* three cycles in the past,
-> respectively :-).
+> > > > Process context is too slow.
+> > > 
+> > > Well, I'm hoping to prove the opposite. I'm working on some stuff that I
+> > > plan to present at Linux Plumbers. I've been too distracted by other
+> > > things, but hopefully I'll have some good numbers to present by then.
+> > > 
+> > 
+> > 
+> > That's great, does it keep the good properties of NAPI (irq disabling
+> > and throttling?)
+> 
+> Not exactly sure what you mean by throttling, but I'm assuming it will.
+> 
+> As for irqs disabling, I'm trying to avoid doing that. Note, the device
+> will have its interrupts disabled, but not all other devices will.
+> 
+> -- Steve
 > 
 > 
 
-I certainly used zd1211rw/mac80211 and it worked.
+The way NAPI works is that in irq routine, the device disables interrupts
+then schedules processing packets, when processing is done irq's are re-enabled.
+This means that if machine is being flooded, irq's stay off, and the packets
+get discarded (because device hardware ring is full), rather than in software
+(because software receive queue is full).
+
 
 -- 
-Greetings, Michael.
