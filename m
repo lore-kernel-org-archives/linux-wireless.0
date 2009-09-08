@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:5429 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbZINLYU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 07:24:20 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-Subject: [PATCH] cfg80211: don't report SME connection errs at SIOCSIW{FREQ/AP/ESSID}
-Date: Mon, 14 Sep 2009 13:23:44 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-References: <200909141254.14988.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200909141254.14988.hs4233@mail.mn-solutions.de>
+Received: from bu3sch.de ([62.75.166.246]:60140 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751651AbZIHTMO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 15:12:14 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: matthieu castet <castet.matthieu@free.fr>
+Subject: Re: Stop using tasklets for bottom halves
+Date: Tue, 8 Sep 2009 21:12:05 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com> <200909080650.43181.mb@bu3sch.de> <loom.20090908T210153-638@post.gmane.org>
+In-Reply-To: <loom.20090908T210153-638@post.gmane.org>
 MIME-Version: 1.0
+Message-Id: <200909082112.06572.mb@bu3sch.de>
 Content-Type: text/plain;
   charset="iso-8859-1"
-Message-Id: <200909141323.44245.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+On Tuesday 08 September 2009 21:07:32 matthieu castet wrote:
+> Michael Buesch <mb@...> writes:
+> > 
+> > I recently converted the b43 driver to threaded interrupt handlers and
+> > a workqueue based TX mechanism. (My motivation was porting b43 to the SDIO bus
+> that
+> > needs to sleep, so requires process context).
+> Well you can do busy wait : for sending small sd command, the overhead of
+> sleep ( context switch) can be bigger than the sleep.
 
----
+The bus is _really_ slow and we push the whole network load through it.
+So we really don't want to busywait. It would effectively lockup the machine
+on network traffic.
 
-This fixes
+And besides that, the SDIO subsystem requires process context. I was not going
+to rewrite that.
 
-1252921276.182218: Trying to associate with 00:1b:53:11:dc:40 (SSID='TEST' freq=2412 MHz)
-ioctl[SIOCSIWFREQ]: No such file or directory
-ioctl[SIOCSIWESSID]: No such file or directory
-1252921276.268451: Association request to the driver failed
-1252921276.355482: Associated with 00:1b:53:11:dc:40
+> It depends of architecture. For example on older arm (armv5) context switch can
+> be slow (need tlb and cache flush). It is not really true for kernel thread that
+> keeps the same mmu mapping and don't need all those flush,
 
-and makes it
+Yeah, but that's what it is. A kernel thread.
 
-1252921276.182218: Trying to associate with 00:1b:53:11:dc:40 (SSID='TEST' freq=2412 MHz)
-1252921276.355482: Associated with 00:1b:53:11:dc:40
+> but there still a 
+> visible performance hit.
 
-However, otherwise this hasn't been greatly tested and I
-don't have a great understanding of cfg80211, SME, etc ...
-
-Index: linux-wl/net/wireless/wext-sme.c
-===================================================================
---- linux-wl.orig/net/wireless/wext-sme.c	2009-09-14 12:05:54.000000000 +0200
-+++ linux-wl/net/wireless/wext-sme.c	2009-09-14 12:06:09.000000000 +0200
-@@ -110,7 +110,7 @@ int cfg80211_mgd_wext_siwfreq(struct net
- 		goto out;
- 	}
- 
--	err = cfg80211_mgd_wext_connect(rdev, wdev);
-+	cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
- 	mutex_unlock(&rdev->devlist_mtx);
-@@ -196,7 +196,7 @@ int cfg80211_mgd_wext_siwessid(struct ne
- 
- 	wdev->wext.connect.crypto.control_port = false;
- 
--	err = cfg80211_mgd_wext_connect(rdev, wdev);
-+	cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
- 	mutex_unlock(&rdev->devlist_mtx);
-@@ -283,7 +283,7 @@ int cfg80211_mgd_wext_siwap(struct net_d
- 	} else
- 		wdev->wext.connect.bssid = NULL;
- 
--	err = cfg80211_mgd_wext_connect(rdev, wdev);
-+	cfg80211_mgd_wext_connect(rdev, wdev);
-  out:
- 	wdev_unlock(wdev);
- 	mutex_unlock(&rdev->devlist_mtx);
+That's the initial question. How big is it?
 
 -- 
-http://www.holgerschurig.de
+Greetings, Michael.
