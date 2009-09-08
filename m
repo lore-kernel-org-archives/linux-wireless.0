@@ -1,85 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:51874 "EHLO gir.skynet.ie"
+Received: from gir.skynet.ie ([193.1.99.77]:41830 "EHLO gir.skynet.ie"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752385AbZIIQzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 12:55:41 -0400
-Date: Wed, 9 Sep 2009 17:55:46 +0100
+	id S1754029AbZIHLAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Sep 2009 07:00:38 -0400
+Date: Tue, 8 Sep 2009 12:00:41 +0100
 From: Mel Gorman <mel@csn.ul.ie>
-To: Frans Pop <elendil@planet.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
+To: Theodore Tso <tytso@mit.edu>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Zhu Yi <yi.zhu@intel.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090909165545.GK24614@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl>
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Mel Gorman <mel@skynet.ie>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+Subject: Re: ipw2200: firmware DMA loading rework
+Message-ID: <20090908110041.GE28127@csn.ul.ie>
+References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <1251430951.3704.181.camel@debian> <200908301437.42133.bzolnier@gmail.com> <200909021948.13262.bzolnier@gmail.com> <43e72e890909021102g7f844c79xefccf305f5f5c5b6@mail.gmail.com> <20090903124913.GA26110@csn.ul.ie> <20090905142837.GI16217@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <200909091759.33655.elendil@planet.nl>
+In-Reply-To: <20090905142837.GI16217@mit.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 09, 2009 at 05:59:30PM +0200, Frans Pop wrote:
-> On Wednesday 09 September 2009, Mel Gorman wrote:
-> > Franz, in the full dmesg was there any mention of "SLUB: Unable to
-> > allocate memory on node"?
+On Sat, Sep 05, 2009 at 10:28:37AM -0400, Theodore Tso wrote:
+> On Thu, Sep 03, 2009 at 01:49:14PM +0100, Mel Gorman wrote:
+> > > 
+> > > This looks very similar to the kmemleak ext4 reports upon a mount. If
+> > > it is the same issue, which from the trace it seems it is, then this
+> > > is due to an extra kmalloc() allocation and this apparently will not
+> > > get fixed on 2.6.31 due to the closeness of the merge window and the
+> > > non-criticalness this issue has been deemed.
 > 
-> No, nothing at all. I double checked the kernel log, but it was completely 
-> quiet in the hours before and after the messages I already posted.
+> No, it's a different problem.
+> 
+> > I suspect the more pressing concern is why is this kmalloc() resulting in
+> > an order-5 allocation request? What size is the buffer being requested?
+> > Was that expected?  What is the contents of /proc/slabinfo in case a buffer
+> > that should have required order-1 or order-2 is using a higher order for
+> > some reason.
+> 
+> It's allocating 68,000 bytes for the mb_history structure, which is
+> used for debugging purposes.  That's why it's optional and we continue
+> if it's not allocated.  We should fix it to use vmalloc()
+
+You could call with kmalloc(FLAGS|GFP_NOWARN) with a fallback to
+vmalloc() and a disable if vmalloc() fails as well.  Maybe check out what
+kernel/profile.c#profile_init() to allocate a large buffer and do something
+similar?
+
+> and I'm
+> inclined to turn it off by default since it's not worth the overhead,
+> and most ext4 users won't find it useful or interesting.
 > 
 
-Ok, that in itself is unexpected.
-
-Pekka, it looks from the stack trace that the failure is from
-__alloc_skb and I am guessing the failure path is around here
-
-        size = SKB_DATA_ALIGN(size);
-        data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
-                        gfp_mask, node);
-        if (!data)
-                goto nodata;
-
-Why would the SLUB out-of-memory message not appear? It's hardly
-tripping up on printk_ratelimit() is it?
-
-> > Also, did you have any slub debug options enabled on the command line?
-> 
-> Nope.
-> 
-
-Ok, just best to rule it out.
-
-Apologies for the scattershot approach to figuring out where the order-2
-failures are coming from and am not familiar at all with the driver.
-
-According to the logs, the card is a 4965 AG so I can only assume the relevant
-driver code is iwl4965. Since commit 1ea8739648cfff4027c3db0f4cee5de87bfd3886,
-this has enabled by default a module option called amsdu_size_8K. At a glance,
-it looks like this will guarantee that at least order-1 allocations will be
-required. Assaf and other wireless folks, is that intentional? What are the
-consequences of defaulting that to being off?
-
-What might have made this worse is commit
-4018517a1a69a85c3d61b20fa02f187b80773137 which intends to fix an RX skb
-alignment problem but looks like it would have the side-effect of 8192
-byte allocations becoming 8448 byte allocations and kmalloc() having to do
-an order-2 allocation instead of order-1. The problem with this theory is
-that the patches have been in since Nov 2008 but reports are only showing
-up now.  Frans, how sure are you that this is a recent problem? Is it readily
-reproducible?
-
-Conceivably a better candidate for this problem is commit
-4752c93c30441f98f7ed723001b1a5e3e5619829 introduced in May 2009. If there
-are less than RX_QUEUE_SIZE/2 left, it starts replenishing buffers. Mohamed,
-is it absolutly necessary it use GFP_ATOMIC there? If an allocation fails,
-does it always mean frames are dropped or could it just replenish what it
-can and try again later printing a warning only if allocation failures are
-resulting in packet loss?
+I can't comment as I don't know what sort of debugging it's useful for.
 
 -- 
 Mel Gorman
