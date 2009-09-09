@@ -1,126 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54049 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754706AbZIIXo7 (ORCPT
+Received: from liberdade.minaslivre.org ([72.232.18.203]:33170 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752488AbZIIRuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 19:44:59 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/15] ath9k: split bluetooth hardware coex init into two helpers
-Date: Wed,  9 Sep 2009 19:44:50 -0400
-Message-Id: <1252539901-20679-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
-References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 9 Sep 2009 13:50:07 -0400
+Date: Wed, 9 Sep 2009 14:50:06 -0300
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lrodriguez@atheros.com, mickflemm@gmail.com, jirislaby@gmail.com,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: Re: [PATCH] ath5k: do not free irq after resume when card has been
+	removed
+Message-ID: <20090909175006.GA7945@vespa.holoscopio.com>
+References: <1252457551-4909-1-git-send-email-cascardo@holoscopio.com> <20090909033237.GC13550@hash.localnet>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="FL5UXtIhxfXey3p5"
+In-Reply-To: <20090909033237.GC13550@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a helper for 2-wire and another for 3-wire.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   75 ++++++++++++++++++-------------
- 1 files changed, 44 insertions(+), 31 deletions(-)
+--FL5UXtIhxfXey3p5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index dfbcbd0..be69924 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -225,48 +225,61 @@ static int ath_init_btcoex_info(struct ath_hw *ah,
- 	return 0;
- }
- 
--int ath9k_hw_btcoex_init(struct ath_hw *ah)
-+static void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
- {
- 	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
--	int ret = 0;
- 
--	if (btcoex_info->btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) {
--		/* connect bt_active to baseband */
--		REG_CLR_BIT(ah, AR_GPIO_INPUT_EN_VAL,
--				(AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_DEF |
--				 AR_GPIO_INPUT_EN_VAL_BT_FREQUENCY_DEF));
-+	/* connect bt_active to baseband */
-+	REG_CLR_BIT(ah, AR_GPIO_INPUT_EN_VAL,
-+		    (AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_DEF |
-+		     AR_GPIO_INPUT_EN_VAL_BT_FREQUENCY_DEF));
- 
--		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
--				AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB);
-+	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
-+		    AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB);
- 
--		/* Set input mux for bt_active to gpio pin */
--		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--				AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--				btcoex_info->btactive_gpio);
-+	/* Set input mux for bt_active to gpio pin */
-+	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+		      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+		      btcoex_info->btactive_gpio);
- 
--		/* Configure the desired gpio port for input */
--		ath9k_hw_cfg_gpio_input(ah, btcoex_info->btactive_gpio);
--	} else {
--		/* btcoex 3-wire */
--		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
--				(AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB |
--				 AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB));
-+	/* Configure the desired gpio port for input */
-+	ath9k_hw_cfg_gpio_input(ah, btcoex_info->btactive_gpio);
-+}
-+
-+static void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
- 
--		/* Set input mux for bt_prority_async and
--		 *                  bt_active_async to GPIO pins */
--		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--				AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--				btcoex_info->btactive_gpio);
-+	/* btcoex 3-wire */
-+	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
-+			(AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB |
-+			 AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB));
- 
--		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--				AR_GPIO_INPUT_MUX1_BT_PRIORITY,
--				btcoex_info->btpriority_gpio);
-+	/* Set input mux for bt_prority_async and
-+	 *                  bt_active_async to GPIO pins */
-+	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+			btcoex_info->btactive_gpio);
- 
--		/* Configure the desired GPIO ports for input */
-+	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			AR_GPIO_INPUT_MUX1_BT_PRIORITY,
-+			btcoex_info->btpriority_gpio);
- 
--		ath9k_hw_cfg_gpio_input(ah, btcoex_info->btactive_gpio);
--		ath9k_hw_cfg_gpio_input(ah, btcoex_info->btpriority_gpio);
-+	/* Configure the desired GPIO ports for input */
-+
-+	ath9k_hw_cfg_gpio_input(ah, btcoex_info->btactive_gpio);
-+	ath9k_hw_cfg_gpio_input(ah, btcoex_info->btpriority_gpio);
-+}
-+
-+int ath9k_hw_btcoex_init(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
-+	int ret = 0;
- 
-+	if (btcoex_info->btcoex_scheme == ATH_BTCOEX_CFG_2WIRE)
-+		ath9k_hw_btcoex_init_2wire(ah);
-+	else {
-+		ath9k_hw_btcoex_init_3wire(ah);
- 		ret = ath_init_btcoex_info(ah, btcoex_info);
- 	}
- 
--- 
-1.6.3.3
+On Tue, Sep 08, 2009 at 11:32:37PM -0400, Bob Copeland wrote:
+> On Tue, Sep 08, 2009 at 09:52:31PM -0300, Thadeu Lima de Souza Cascardo w=
+rote:
+> > ath5k will try to request irq when resuming and fails if the device
+> > (like a PCMCIA card) has been removed.
+>=20
+> That's not true, ath5k no longer requests an irq when resuming.
+>=20
 
+I've just saw there's a commit by you in the next tree that just removes
+the irq requesting and releasing in resume/suspend functions.
+
+> > This solves this issue defining a new flag for the status bitmap to
+> > indicate when irq has been successfully requested and does not try to
+> > release it if not.
+>=20
+> I'd rather not fix it with a status bit.  What kernel is this against?
+>=20
+
+This is against v2.6.31-rc9, so I get a warning with a version that's
+about to get stable. Sorry I am late in the release cycle.
+
+I've used a status bit because the drivers I took a look at did
+release/request irq in suspend/resume. I couldn't find a message about
+not doing it was the right thing which I thought I saw in the latest
+updates to v2.6.31-rcX. I guess it was something just like your commit
+which I did see some weeks ago.
+
+Since this is warning, is this worth backporting to rc?
+
+> --=20
+> Bob Copeland %% www.bobcopeland.com
+>=20
+
+Regards,
+Cascardo.
+
+--FL5UXtIhxfXey3p5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkqn6s4ACgkQyTpryRcqtS3r7ACggq2iFrVoYpQdP2BEPEYEyML/
+gxoAnj5GftdMAESCK2EoNVe5a4FmYxYE
+=wJs1
+-----END PGP SIGNATURE-----
+
+--FL5UXtIhxfXey3p5--
