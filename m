@@ -1,121 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.211.173]:59540 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572AbZIHUyW (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54028 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754596AbZIIXo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 16:54:22 -0400
-Received: by ywh3 with SMTP id 3so5387557ywh.22
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 13:54:25 -0700 (PDT)
-Subject: Re: driver_nl80211 broken again
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <1252423769.3806.4.camel@johannes.local>
-References: <1251117161.22951.4.camel@maxim-laptop>
-	 <1251122885.12007.12.camel@johannes.local>
-	 <1251144381.9374.4.camel@maxim-laptop>
-	 <1251147515.20161.3.camel@johannes.local>
-	 <1252116503.2398.26.camel@maxim-laptop>
-	 <1252423769.3806.4.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Sep 2009 23:54:20 +0300
-Message-Id: <1252443260.16422.5.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 9 Sep 2009 19:44:59 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 08/15] ath9k: move bt_stomp_type to driver core
+Date: Wed,  9 Sep 2009 19:44:54 -0400
+Message-Id: <1252539901-20679-9-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-08 at 17:29 +0200, Johannes Berg wrote: 
-> On Sat, 2009-09-05 at 05:08 +0300, Maxim Levitsky wrote:
-> 
-> > 1 - when connecting again to the access point (same or another), 
-> > wpa_supplicant does the following:
-> > 
-> > deassoc
-> > auth
-> > assoc
-> > 
-> > So it assumes that deassoc command disconnects completely, but it not
-> > longer true.
-> > Yet, I have tried to make its dissassoc function do both, but it failed.
-> > I used following patch:
-> > 
-> > 
-> > diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
-> > index c68dd82..50afeeb 100644
-> > --- a/wpa_supplicant/wpa_supplicant.c
-> > +++ b/wpa_supplicant/wpa_supplicant.c
-> > @@ -1278,8 +1278,10 @@ void wpa_supplicant_disassociate(struct wpa_supplicant *wpa_s,
-> >         if (!is_zero_ether_addr(wpa_s->bssid)) {
-> >                 if (wpa_s->drv_flags & WPA_DRIVER_FLAGS_USER_SPACE_MLME)
-> >                         ieee80211_sta_disassociate(wpa_s, reason_code);
-> > -               else
-> > +               else {
-> >                         wpa_drv_disassociate(wpa_s, wpa_s->bssid, reason_code);
-> > +                       wpa_drv_deauthenticate(wpa_s, wpa_s->bssid, reason_code);
-> > +               }
-> >                 addr = wpa_s->bssid;
-> >         }
-> >         wpa_clear_keys(wpa_s, addr);
-> 
-> Right, this is a known problem. I still think it should be handled in
-> wpa_s, but I'm not sure whether that patch should have worked or not.
-> 
-> > EAPOL: startWhen --> 0
-> > EAPOL: disable timer tick
-> > wpa_driver_nl80211_disassociate
-> > wpa_driver_nl80211_deauthenticate
-> > nl80211: MLME command failed: ret=-67 (Link has been severed)
-> 
-> Ok so it was called, but got -ENOLINK? That's rather odd. But I suspect
-> that it had already internally cleared the BSSID, so that it was asking
-> to deauth from 00:...:00 -- could you check that?
+The bt_stomp_type defines the bt coex weight, it has a one-to-one
+mapping. In the future we may want to just use the weight directly.
 
-I figure that out, but the wpa_drv_disassociate and
-wpa_drv_deauthenticate are direct wrappers over nl80211 calls.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.c |    2 --
+ drivers/net/wireless/ath/ath9k/btcoex.h |    8 --------
+ drivers/net/wireless/ath/ath9k/main.c   |    7 ++++---
+ 4 files changed, 13 insertions(+), 13 deletions(-)
 
-
-> 
-> > 2 - independent of the above, the ieee80211_set_disassoc
-> > doesn't work right if deauth==false.
-> > 
-> > 
-> > If it is, then a work item is added to station work thread, and it is
-> > never removed:
-> > 
-> > 	} else {
-> > 		struct ieee80211_mgd_work *wk = ifmgd->old_associate_work;
-> > 
-> > 		wk->state = IEEE80211_MGD_STATE_IDLE;
-> > 		list_add(&wk->list, &ifmgd->work_list);
-> > 	}
-> > 
-> > 
-> > iee80211_sta_work just ignores the IEEE80211_MGD_STATE_IDLE, thus it
-> > work item remains forever.
-> > 
-> > This breaks scanning, since __ieee80211_start_scan will refuses to run
-> > until, ifmgd->work_list is empty.
-> 
-> That's intentional, that work item represents the authentication state
-> we still have -- the required cleanup should be done by cfg80211 or
-> wpa_supplicant.
-
-But isn't it too much?
-This means, the wpa_supplicant can lock the device.
-
-
-
-> 
-> Can you try to figure out what the parameters are that
-> wpa_drv_deauthenticate() is sending to the kernel, and why it's getting
-> -ENOLINK?
-
-Sure!
-Very soon will do
-
-
-Best regards,
-Maxim Levitsky
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 891e71b..d99c92d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -450,12 +450,21 @@ struct ath_ani {
+ 	struct timer_list timer;
+ };
+ 
++/* Defines the BT AR_BT_COEX_WGHT used */
++enum ath_stomp_type {
++	ATH_BTCOEX_NO_STOMP,
++	ATH_BTCOEX_STOMP_ALL,
++	ATH_BTCOEX_STOMP_LOW,
++	ATH_BTCOEX_STOMP_NONE
++};
++
+ struct ath_btcoex {
+ 	bool hw_timer_enabled;
+ 	spinlock_t btcoex_lock;
+ 	struct timer_list period_timer; /* Timer for BT period */
+ 	u32 bt_priority_cnt;
+ 	unsigned long bt_priority_time;
++	int bt_stomp_type; /* Types of BT stomping */
+ 	u32 btcoex_no_stomp; /* in usec */
+ 	u32 btcoex_period; /* in usec */
+ 	struct ath_gen_timer *no_stomp_timer; /* Timer for no BT stomping */
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 91befc7..ab19072 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -65,8 +65,6 @@ void ath9k_hw_init_btcoex_hw_info(struct ath_hw *ah, int qnum)
+ 		SM(ATH_BTCOEX_BMISS_THRESH, AR_BT_BCN_MISS_THRESH) |
+ 		AR_BT_DISABLE_BT_ANT;
+ 
+-	btcoex_info->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+-
+ 	for (i = 0; i < 32; i++)
+ 		ah->hw_gen_timers.gen_timer_index[(debruijn32 << i) >> 27] = i;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index b2c3f76..d932f01 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -36,13 +36,6 @@ enum ath_btcoex_scheme {
+ 	ATH_BTCOEX_CFG_3WIRE,
+ };
+ 
+-enum ath_stomp_type {
+-	ATH_BTCOEX_NO_STOMP,
+-	ATH_BTCOEX_STOMP_ALL,
+-	ATH_BTCOEX_STOMP_LOW,
+-	ATH_BTCOEX_STOMP_NONE
+-};
+-
+ enum ath_bt_mode {
+ 	ATH_BT_COEX_MODE_LEGACY,	/* legacy rx_clear mode */
+ 	ATH_BT_COEX_MODE_UNSLOTTED,	/* untimed/unslotted mode */
+@@ -69,7 +62,6 @@ struct ath_btcoex_info {
+ 	u8 btactive_gpio;
+ 	u8 btpriority_gpio;
+ 	u8 bt_duty_cycle; 	/* BT duty cycle in percentage */
+-	int bt_stomp_type; 	/* Types of BT stomping */
+ 	u32 bt_coex_mode; 	/* Register setting for AR_BT_COEX_MODE */
+ 	u32 bt_coex_weights; 	/* Register setting for AR_BT_COEX_WEIGHT */
+ 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 90be4ed..bc3b9b0 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1395,7 +1395,7 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 
+ 	spin_lock_bh(&btcoex->btcoex_lock);
+ 
+-	ath_btcoex_bt_stomp(sc, btinfo, btinfo->bt_stomp_type);
++	ath_btcoex_bt_stomp(sc, btinfo, btcoex->bt_stomp_type);
+ 
+ 	spin_unlock_bh(&btcoex->btcoex_lock);
+ 
+@@ -1430,9 +1430,9 @@ static void ath_btcoex_no_stomp_timer(void *arg)
+ 
+ 	spin_lock_bh(&btcoex->btcoex_lock);
+ 
+-	if (btinfo->bt_stomp_type == ATH_BTCOEX_STOMP_LOW)
++	if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_LOW)
+ 		ath_btcoex_bt_stomp(sc, btinfo, ATH_BTCOEX_STOMP_NONE);
+-	 else if (btinfo->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
++	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
+ 		ath_btcoex_bt_stomp(sc, btinfo, ATH_BTCOEX_STOMP_LOW);
+ 
+ 	spin_unlock_bh(&btcoex->btcoex_lock);
+@@ -1691,6 +1691,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
+ 			goto bad2;
+ 		qnum = ath_tx_get_qnum(sc, ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_BE);
+ 		ath9k_hw_init_btcoex_hw_info(ah, qnum);
++		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+-- 
+1.6.3.3
 
