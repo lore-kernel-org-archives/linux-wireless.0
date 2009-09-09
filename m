@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:46576 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753237AbZI2Jpf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 05:45:35 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: "Hin-Tak Leung" <hintak.leung@gmail.com>,
-	ndiswrapper-general@lists.sourceforge.net
-Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need help to create driver for Netgear WN111v2
-Date: Tue, 29 Sep 2009 11:45:35 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <999306.93095.qm@web23102.mail.ird.yahoo.com> <200909291058.43765.malte.gell@gmx.de> <3ace41890909290206g3019a9cbv29048837804f830@mail.gmail.com>
-In-Reply-To: <3ace41890909290206g3019a9cbv29048837804f830@mail.gmail.com>
+Received: from gir.skynet.ie ([193.1.99.77]:41457 "EHLO gir.skynet.ie"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752646AbZIIPEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2009 11:04:14 -0400
+Date: Wed, 9 Sep 2009 16:04:19 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org
+Subject: Re: iwlagn: order 2 page allocation failures
+Message-ID: <20090909150418.GI24614@csn.ul.ie>
+References: <200909060941.01810.elendil@planet.nl> <84144f020909060114s74de2d2y850745dd82ece753@mail.gmail.com> <200909061028.48442.elendil@planet.nl> <1252226116.11274.10.camel@penberg-laptop> <20090908105415.GD28127@csn.ul.ie> <84144f020909080411n4e010308qa153039bee1b8336@mail.gmail.com> <20090908141701.GB2617@tuxdriver.com> <4AA67139.80301@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909291145.35972.malte.gell@gmx.de>
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <4AA67139.80301@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-"Hin-Tak Leung" <hintak.leung@gmail.com> wrote
-
-> > So, no need to modify compat-2.6.28.c? Does it automatically happen?
+On Tue, Sep 08, 2009 at 09:59:05AM -0500, Larry Finger wrote:
+> John W. Linville wrote:
+> > On Tue, Sep 08, 2009 at 02:11:35PM +0300, Pekka Enberg wrote:
+> >> On Tue, Sep 8, 2009 at 1:54 PM, Mel Gorman<mel@csn.ul.ie> wrote:
+> >>> My feeling is also that a number of these page allocation failures have
+> >>> been related to wireless drivers. Is that accurate? If so, have there
+> >>> been changes made to the wireless stack in this cycle that would have
+> >>> increased the order of pages allocated?
+> >> That's my general feeling as well. We have linux-wireless CC'd so
+> >> maybe this rings a bell for them.
+> > 
+> > AFAIK, this is only the second separate report.  The other related
+> > to ipw2200, which actually shares no code with the iwlagn driver and
+> > is not based on the mac80211 stack.
 > 
-> You may or may not  see any errors at the linker stage (the LD part in
-> stage 2). If you get to that point without further error, then, well,
-> count yourself lucky and just give "make install ; make unload;
-> modprobe -v ar9170" a go.
+> A previous issue concerned the interaction between wireless and SLUB
+> debugging that caused O(0) allocations to get bumped to O(1), but that
 
-Ho ho ;-) I got a lot of warnings like this:
+Ok, but now they are getting bumped to order-2 because that is the allocation
+failure that's happening here. That's pretty risky for a __GFP_HIGH|__GFP_COMP
+allocation - i.e. high-priority and atomic allocation.
 
- include/linux/tracepoint.h:86:1: warning: this is the location of the 
-previous definition
+> was not relevant to this case either. I'm not aware of any other page
+> allocation problems with wireless.
+> 
 
-But, it DID compile! Thanx a lot.
+Are atomic order-2 allocations really expected in wireless or has something
+else changed recently? Other than slub-debug, what options have been
+recently added that can push kmalloc() requests up slightly and possible
+make an order-1 allocation an order-2? If it's not in wireless, has there
+been additional padding added to skbuffs in the networking layer that might
+have pushed an allocation over an order-1 boundary increasing the size of
+the allocation to order-2?
 
-To be sure I did a find . -name "*.ko" and got these modules:
+The reporter says that the machine grinds for a bit and recovers which
+is consistent with kswapd kicking in to reclaim the contiguous pages but
+it's hardly desirable.
 
-./drivers/net/wireless/ath/ath.ko
-./net/rfkill/rfkill_backport.ko
-./net/wireless/cfg80211.ko
-./net/mac80211/mac80211.ko
+Franz, in the full dmesg was there any mention of "SLUB: Unable to allocate
+memory on node"? If so, could you post the contents of that as well because
+it should tell us more about the slab allocation that failed which vaguely
+looks like the path that went splat. Also, did you have any slub debug
+options enabled on the command line?
 
-I just wonder, where is ar9170usb !? I did ./scripts/driver-select ar9170
+Thanks
 
-Malte
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
