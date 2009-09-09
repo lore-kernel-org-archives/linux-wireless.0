@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:47480 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbZIKQHU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:54027 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754574AbZIIXo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 12:07:20 -0400
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211: NOHZ: local_softirq_pending 08
-References: <200909111648.50902.mb@bu3sch.de> <877hw534wd.fsf@litku.valot.fi>
-	<200909111707.23971.mb@bu3sch.de>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 11 Sep 2009 19:07:20 +0300
-In-Reply-To: <200909111707.23971.mb@bu3sch.de> (Michael Buesch's message of "Fri\, 11 Sep 2009 17\:07\:23 +0200")
-Message-ID: <873a6t31on.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 9 Sep 2009 19:44:59 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 09/15] ath9k: remove unused bt_duty_cycle
+Date: Wed,  9 Sep 2009 19:44:55 -0400
+Message-Id: <1252539901-20679-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch <mb@bu3sch.de> writes:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
->> > mac80211 (or some other part of the networking stack) triggers this
->> > warning in the NOHZ code: NOHZ: local_softirq_pending 08
->> >
->> > 08 seems to be NET_RX_SOFTIRQ.
->> >
->> > It happens, because my test driver b43 handles all RX and TX-status
->> > callbacks in process context. I guess some part of the networking
->> > stack expects RX to be in tasklet and/or softirq context.
->> >
->> > We also have a report of this warning in wl1251, so it's probably not
->> > a b43 problem.
->> 
->> Yes, I see this with wl1251. It uses workqueues everywhere.
->> 
->
-> This patch seems to fix it.
-
-Yes, it does. Thanks.
-
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-
-Tested-by: Kalle Valo <kalle.valo@nokia.com>
-
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index d932f01..72c613d 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -61,7 +61,6 @@ struct ath_btcoex_info {
+ 	u8 wlanactive_gpio;
+ 	u8 btactive_gpio;
+ 	u8 btpriority_gpio;
+-	u8 bt_duty_cycle; 	/* BT duty cycle in percentage */
+ 	u32 bt_coex_mode; 	/* Register setting for AR_BT_COEX_MODE */
+ 	u32 bt_coex_weights; 	/* Register setting for AR_BT_COEX_WEIGHT */
+ 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
 -- 
-Kalle Valo
+1.6.3.3
+
