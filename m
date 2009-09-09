@@ -1,75 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11589 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753557AbZIAPyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:54:24 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:54:27 -0700
+Received: from bombadil.infradead.org ([18.85.46.34]:54044 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754707AbZIIXo7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2009 19:44:59 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
-Date: Tue, 1 Sep 2009 08:54:25 -0700
-Message-ID: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 06/15] ath9k: split ath9k_hw_btcoex_enable() into two helpers
+Date: Wed,  9 Sep 2009 19:44:52 -0400
+Message-Id: <1252539901-20679-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This updates the mac80211 kconfig entry to clarify
-what it is and refer people to our wireless wiki for
-more documentation.
+One for 2-wire and another for 3-wire.
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>
 Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/btcoex.c |   57 ++++++++++++++++++++-----------
+ 1 files changed, 37 insertions(+), 20 deletions(-)
 
-Changed description of when built as a module as pointed out
-by Larry.
-
- net/mac80211/Kconfig |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 9db4ff8..72006f9 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -1,5 +1,5 @@
- config MAC80211
--	tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
-+	tristate "mac80211 - SoftMAC device support"
- 	depends on CFG80211
- 	select CRYPTO
- 	select CRYPTO_ECB
-@@ -7,8 +7,21 @@ config MAC80211
- 	select CRYPTO_AES
- 	select CRC32
- 	---help---
--	  This option enables the hardware independent IEEE 802.11
--	  networking stack.
-+	  This option enables support for a framework used by IEEE-802.11
-+	  SoftMAC devices. SoftMAC devices allow for a finer control of the
-+	  hardware, allowing for 802.11 frame management to be done in software
-+	  for them, for both parsing and generation of 802.11 wireless frames.
-+	  Most 802.11 devices today tend to be of this type.
-+
-+	  If you have new userspace utitlities which support nl80211 you do not
-+	  need wireless-extensions to support a mac80211 device.
-+
-+	  For more information refer the the wireless wiki entry on mac80211:
-+
-+	  http://wireless.kernel.org/en/developers/Documentation/mac80211
-+
-+	  When built as a module it will be called as mac80211, if not sure
-+	  you should build this as a module.
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 6209a56..61a8e1d 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -117,30 +117,47 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ 	ath9k_hw_cfg_gpio_input(ah, btcoex_info->btpriority_gpio);
+ }
  
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
++static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
++{
++	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
++
++	/* Configure the desired GPIO port for TX_FRAME output */
++	ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
++			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
++}
++
++static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
++{
++	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
++
++	/*
++	 * Program coex mode and weight registers to
++	 * enable coex 3-wire
++	 */
++	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_info->bt_coex_mode);
++	REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_info->bt_coex_weights);
++	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_info->bt_coex_mode2);
++
++	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
++	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
++
++	ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
++			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
++}
++
+ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
+ 
+-	if (btcoex_info->btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) {
+-		/* Configure the desired GPIO port for TX_FRAME output */
+-		ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
+-				AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
+-	} else {
+-		/*
+-		 * Program coex mode and weight registers to
+-		 * enable coex 3-wire
+-		 */
+-		REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_info->bt_coex_mode);
+-		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_info->bt_coex_weights);
+-		REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_info->bt_coex_mode2);
+-
+-		REG_RMW_FIELD(ah, AR_QUIET1,
+-				AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
+-		REG_RMW_FIELD(ah, AR_PCU_MISC,
+-				AR_PCU_BT_ANT_PREVENT_RX, 0);
+-
+-		ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
+-				AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
++	switch (btcoex_info->btcoex_scheme) {
++	case ATH_BTCOEX_CFG_NONE:
++		break;
++	case ATH_BTCOEX_CFG_2WIRE:
++		ath9k_hw_btcoex_enable_2wire(ah);
++		break;
++	case ATH_BTCOEX_CFG_3WIRE:
++		ath9k_hw_btcoex_enable_3wire(ah);
++		break;
+ 	}
+ 
+ 	REG_RMW(ah, AR_GPIO_PDPU,
 -- 
 1.6.3.3
 
