@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:63728 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754310AbZIAVjS (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.27]:27636 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731AbZIICHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 17:39:18 -0400
-Received: by iwn42 with SMTP id 42so145159iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 14:39:20 -0700 (PDT)
+	Tue, 8 Sep 2009 22:07:16 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so237703qwb.37
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 19:07:19 -0700 (PDT)
+Message-ID: <4AA70DD6.8040905@lwfinger.net>
+Date: Tue, 08 Sep 2009 21:07:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
-References: <40f31dec0908282151t245912f0ye79684d4a519f3c9@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 1 Sep 2009 14:39:00 -0700
-Message-ID: <43e72e890909011439g17a2926ifca147600ba9a10b@mail.gmail.com>
-Subject: Re: Ath5k and proprietary extensions
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bob Copeland <me@bobcopeland.com>, proski@gnu.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	ic.felix@gmail.com, Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: John Daiker <daikerjohn@gmail.com>, Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 dma error
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> 	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> 	<4AA69F61.2040300@lwfinger.net> <69e28c910909081124v71e6fa1cy815a2366385051e6@mail.gmail.com> 	<4AA6A2B3.2010300@lwfinger.net> <69e28c910909081132l464c2effq31665b22365de1c2@mail.gmail.com>
+In-Reply-To: <69e28c910909081132l464c2effq31665b22365de1c2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 28, 2009 at 9:51 PM, Nick Kossifidis<mickflemm@gmail.com> wrote:
+After some tests with the 32-bit architecture, I'm now thoroughly
+confused. I tried different memory models including PAE - everything
+worked. I even generated a 2.6.31-rc9-wl kernel with John's config and
+it worked. Whatever is happening is not related to his configuration.
+I'm not sure what the problem is.
 
-FWIW I plan on ignoring all bug reports for all of these vendor
-extensions. The only thing I may consider looking at is 10 / 5 MHz
-channel bandwidth usage and when its allowed by the standard.
+I'm going to be offline for a few days - I hope the solution will be
+in my mailbox by the weekend.
 
-  Luis
+Larry
+
