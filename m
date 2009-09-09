@@ -1,119 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54733 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278AbZINJG6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 05:06:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 3/4] ath5k: define ath_common ops
-Date: Mon, 14 Sep 2009 05:07:01 -0400
-Message-Id: <1252919221-13628-1-git-send-email-lrodriguez@atheros.com>
+Received: from gir.skynet.ie ([193.1.99.77]:51874 "EHLO gir.skynet.ie"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752385AbZIIQzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2009 12:55:41 -0400
+Date: Wed, 9 Sep 2009 17:55:46 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+To: Frans Pop <elendil@planet.nl>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+Subject: Re: iwlagn: order 2 page allocation failures
+Message-ID: <20090909165545.GK24614@csn.ul.ie>
+References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <200909091759.33655.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only common ath read/write ops go through the common ops.
+On Wed, Sep 09, 2009 at 05:59:30PM +0200, Frans Pop wrote:
+> On Wednesday 09 September 2009, Mel Gorman wrote:
+> > Franz, in the full dmesg was there any mention of "SLUB: Unable to
+> > allocate memory on node"?
+> 
+> No, nothing at all. I double checked the kernel log, but it was completely 
+> quiet in the hours before and after the messages I already posted.
+> 
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Ok, that in itself is unexpected.
 
-Here's a respin of 3/4 based on Jiri's comments.
+Pekka, it looks from the stack trace that the failure is from
+__alloc_skb and I am guessing the failure path is around here
 
- drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++------
- drivers/net/wireless/ath/ath5k/base.c  |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath5k/base.h  |   11 -----------
- 3 files changed, 27 insertions(+), 17 deletions(-)
+        size = SKB_DATA_ALIGN(size);
+        data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
+                        gfp_mask, node);
+        if (!data)
+                goto nodata;
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 29ce868..1416562 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1315,17 +1315,21 @@ static inline unsigned int ath5k_hw_clocktoh(unsigned int clock, bool turbo)
- 	return turbo ? (clock / 80) : (clock / 40);
- }
- 
--/*
-- * Read from a register
-- */
-+static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
-+{
-+        return &ah->common;
-+}
-+
-+static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
-+{
-+        return &(ath5k_hw_common(ah)->regulatory);
-+}
-+
- static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
- {
- 	return ioread32(ah->ah_iobase + reg);
- }
- 
--/*
-- * Write to a register
-- */
- static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- {
- 	iowrite32(val, ah->ah_iobase + reg);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3cb0752..13bbf3d 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -437,6 +437,22 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
- 
- 	return name;
- }
-+static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
-+{
-+	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
-+	return ath5k_hw_reg_read(ah, reg_offset);
-+}
-+
-+static void ath5k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
-+{
-+	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
-+	ath5k_hw_reg_write(ah, val, reg_offset);
-+}
-+
-+static const struct ath_ops ath5k_common_ops = {
-+	.read = ath5k_ioread32,
-+	.write = ath5k_iowrite32,
-+};
- 
- static int __devinit
- ath5k_pci_probe(struct pci_dev *pdev,
-@@ -576,6 +592,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	sc->ah->ah_sc = sc;
- 	sc->ah->ah_iobase = sc->iobase;
- 	common = ath5k_hw_common(sc->ah);
-+	common->ops = &ath5k_common_ops;
- 	common->cachelsz = csz << 2; /* convert to bytes */
- 
- 	/* Initialize device */
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 005d25f..b14ba07 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -201,15 +201,4 @@ struct ath5k_softc {
- #define ath5k_hw_hasveol(_ah) \
- 	(ath5k_hw_get_capability(_ah, AR5K_CAP_VEOL, 0, NULL) == 0)
- 
--static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
--{
--	return &ah->common;
--}
--
--static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
--{
--	return &(ath5k_hw_common(ah)->regulatory);
--
--}
--
- #endif
+Why would the SLUB out-of-memory message not appear? It's hardly
+tripping up on printk_ratelimit() is it?
+
+> > Also, did you have any slub debug options enabled on the command line?
+> 
+> Nope.
+> 
+
+Ok, just best to rule it out.
+
+Apologies for the scattershot approach to figuring out where the order-2
+failures are coming from and am not familiar at all with the driver.
+
+According to the logs, the card is a 4965 AG so I can only assume the relevant
+driver code is iwl4965. Since commit 1ea8739648cfff4027c3db0f4cee5de87bfd3886,
+this has enabled by default a module option called amsdu_size_8K. At a glance,
+it looks like this will guarantee that at least order-1 allocations will be
+required. Assaf and other wireless folks, is that intentional? What are the
+consequences of defaulting that to being off?
+
+What might have made this worse is commit
+4018517a1a69a85c3d61b20fa02f187b80773137 which intends to fix an RX skb
+alignment problem but looks like it would have the side-effect of 8192
+byte allocations becoming 8448 byte allocations and kmalloc() having to do
+an order-2 allocation instead of order-1. The problem with this theory is
+that the patches have been in since Nov 2008 but reports are only showing
+up now.  Frans, how sure are you that this is a recent problem? Is it readily
+reproducible?
+
+Conceivably a better candidate for this problem is commit
+4752c93c30441f98f7ed723001b1a5e3e5619829 introduced in May 2009. If there
+are less than RX_QUEUE_SIZE/2 left, it starts replenishing buffers. Mohamed,
+is it absolutly necessary it use GFP_ATOMIC there? If an allocation fails,
+does it always mean frames are dropped or could it just replenish what it
+can and try again later printing a warning only if allocation failures are
+resulting in packet loss?
+
 -- 
-1.6.3.3
-
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
