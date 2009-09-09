@@ -1,73 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp149.mail.ukl.yahoo.com ([77.238.184.80]:29784 "HELO
-	smtp149.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750933AbZIUQLn (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:17303 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbZIILKZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 12:11:43 -0400
-Message-ID: <4AB7A5BB.1050300@yahoo.es>
-Date: Mon, 21 Sep 2009 18:11:39 +0200
-From: Albert Herranz <albert_herranz@yahoo.es>
+	Wed, 9 Sep 2009 07:10:25 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] cfg80211: allow scanning on specified frequencies when using wext-compatibility
+Date: Wed, 9 Sep 2009 13:09:54 +0200
 MIME-Version: 1.0
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems with "cfg80211: fix SME connect" commit
-References: <505407.87957.qm@web28315.mail.ukl.yahoo.com> <200909210845.51247.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200909210845.51247.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909091309.55068.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Holger Schurig wrote:
-> Can you try "[PATCH] cfg80211: don't overwrite privacy setting" 
-> from [1]?
-> 
-> [1] http://marc.info/?l=linux-wireless&m=125323296617306&w=2
-> 
-> 
-> And can you use the mailing list archives?  This is now the third 
-> time this poppep up, I just copied Sedat's mail for you.
-> 
+Handles the case when SIOCSIWSCAN specified iw_scan_req.num_channels and
+iw_scan_req.channels[].
 
-Hi,
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Thanks for the information.
-
-Adding back "cfg80211: fix SME connect" and applying "cfg80211: don't overwrite privacy setting" fixes the connection issue, but with a introduces a small difference vs the previous working version.
-There is now an extra "deauthenticating by local choice (reason=3)" message in the logs.
-
-* master-20090914
-
-[   13.222940] b43-phy0 debug: Chip initialized
-[   13.291359] b43-phy0 debug: PIO initialized
-[   13.330116] b43-phy0 debug: QoS disabled
-[   13.861636] b43-phy0 debug: Wireless interface started
-[   13.969153] b43-phy0 debug: Adding Interface type 2
-[   16.679249] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
-[   16.700998] wlan1 direct probe responded
-[   16.707013] wlan1: authenticate with AP 00:12:17:15:e7:79 (try 1)
-[   16.720205] wlan1: authenticated
-[   16.726261] wlan1: associate with AP 00:12:17:15:e7:79 (try 1)
-[   16.740697] wlan1: RX AssocResp from 00:12:17:15:e7:79 (capab=0x431 status=0 aid=1)
-[   16.758042] wlan1: associated
-
-* master-20090916 + "cfg80211: don't overwrite privacy setting"
-
-[   12.849778] b43-phy0 debug: Chip initialized
-[   12.865561] b43-phy0 debug: PIO initialized
-[   12.872482] b43-phy0 debug: QoS disabled
-[   13.053373] b43-phy0 debug: Wireless interface started
-[   13.218613] b43-phy0 debug: Adding Interface type 2
-[   15.832582] wlan1: deauthenticating by local choice (reason=3)
-[   16.131599] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
-[   16.145589] wlan1 direct probe responded
-[   16.154501] wlan1: authenticate with AP 00:12:17:15:e7:79 (try 1)
-[   16.175640] wlan1: authenticated
-[   16.181829] wlan1: associate with AP 00:12:17:15:e7:79 (try 1)
-[   16.198990] wlan1: RX AssocResp from 00:12:17:15:e7:79 (capab=0x431 status=0 aid=1)
-[   16.210791] wlan1: associated
-
-Any comments on this?
-
-Thanks,
-Albert
+Index: linux-wl/net/wireless/scan.c
+===================================================================
+--- linux-wl.orig/net/wireless/scan.c	2009-09-09 10:38:58.000000000 +0200
++++ linux-wl/net/wireless/scan.c	2009-09-09 11:59:39.000000000 +0200
+@@ -607,6 +607,9 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	if (!netif_running(dev))
+ 		return -ENETDOWN;
+ 
++	if (wrqu->data.length == sizeof(struct iw_scan_req))
++		wreq = (struct iw_scan_req *)extra;
++
+ 	rdev = cfg80211_get_dev_from_ifindex(dev_net(dev), dev->ifindex);
+ 
+ 	if (IS_ERR(rdev))
+@@ -619,9 +622,14 @@ int cfg80211_wext_siwscan(struct net_dev
+ 
+ 	wiphy = &rdev->wiphy;
+ 
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
+-		if (wiphy->bands[band])
+-			n_channels += wiphy->bands[band]->n_channels;
++	/* Determine number of channels, needed to allocate creq */
++	if (wreq && wreq->num_channels)
++		n_channels = wreq->num_channels;
++	else {
++		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
++			if (wiphy->bands[band])
++				n_channels += wiphy->bands[band]->n_channels;
++	}
+ 
+ 	creq = kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
+ 		       n_channels * sizeof(void *),
+@@ -638,22 +646,41 @@ int cfg80211_wext_siwscan(struct net_dev
+ 	creq->n_channels = n_channels;
+ 	creq->n_ssids = 1;
+ 
+-	/* all channels */
++	/* translate "Scan on frequencies" request */
+ 	i = 0;
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		int j;
+ 		if (!wiphy->bands[band])
+ 			continue;
+ 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
++
++			/* If we have a wireless request structure and the
++			 * wireless request specifies frequencies, then search
++			 * for the matching hardware channel.
++			 */
++			if (wreq && wreq->num_channels) {
++				int k;
++				int wiphy_freq = wiphy->bands[band]->channels[j].center_freq;
++				for (k = 0; k < wreq->num_channels; k++) {
++					int wext_freq = wreq->channel_list[k].m / 100000;
++					if (wext_freq == wiphy_freq)
++						goto wext_freq_found;
++				}
++				goto wext_freq_not_found;
++			}
++
++		wext_freq_found:
+ 			creq->channels[i] = &wiphy->bands[band]->channels[j];
+ 			i++;
++		wext_freq_not_found: ;
+ 		}
+ 	}
+ 
+-	/* translate scan request */
+-	if (wrqu->data.length == sizeof(struct iw_scan_req)) {
+-		wreq = (struct iw_scan_req *)extra;
++	/* Set real number of channels specified in creq->channels[] */
++	creq->n_channels = i;
+ 
++	/* translate "Scan for SSID" request */
++	if (wreq) {
+ 		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
+ 			if (wreq->essid_len > IEEE80211_MAX_SSID_LEN)
+ 				return -EINVAL;
