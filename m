@@ -1,57 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.211.175]:58948 "EHLO
-	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbZIQXMB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 19:12:01 -0400
-Received: by mail-yw0-f175.google.com with SMTP id 5so650736ywh.4
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2009 16:12:05 -0700 (PDT)
-Subject: Re: regression?  No connection with master-2009-09-16 was fine
- until master-2009-09-14
-From: ASIC Felix <ic.felix@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <20090917195141.GB2562@tuxdriver.com>
-References: <1253208348.6601.17.camel@darkslate>
-	 <20090917195141.GB2562@tuxdriver.com>
+Received: from mail.atheros.com ([12.36.123.2]:12896 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751542AbZIIKEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2009 06:04:20 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 03:04:23 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
+	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/4] ath9k: Enable btcoex based on the subsystem id of the device
+Date: Wed, 9 Sep 2009 15:25:50 +0530
+Message-ID: <1252490152-19284-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1252490152-19284-1-git-send-email-vasanth@atheros.com>
+References: <1252490152-19284-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Thu, 17 Sep 2009 16:06:31 -0700
-Message-Id: <1253228791.6914.2.camel@darkslate>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-09-17 at 15:51 -0400, John W. Linville wrote:
-> On Thu, Sep 17, 2009 at 10:25:48AM -0700, ASIC Felix wrote:
-> > Hi,
-> > 
-> > with master-2009-09-16 my laptop can no longer connect to the network.
-> > I can see all the APs, but can't connect.
-> > The issue is new, w-t kernel master-2009-09-14 was fine.
-> > 
-> > Sorry for pasting the whole /var/log/messages from boot to boot,
-> > but I see anything obvious by myself.
-> 
-> Perhaps you could bisect between master-2009-09-14 and
-> master-2009-09-16?  There are only a handful of patches.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c     |    3 ++-
+ drivers/net/wireless/ath/ath9k/hw.h     |    4 ++++
+ 4 files changed, 30 insertions(+), 1 deletions(-)
 
-]$ git bisect good
-389ce02fdca74c15984edced7a2f1879fe08a8b1 is first bad commit
-commit 389ce02fdca74c15984edced7a2f1879fe08a8b1
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Wed Sep 16 09:04:26 2009 -0700
-
-    cfg80211: fix SME connect
-    
-    There's a check saying
-    	/* we're good if we have both BSSID and channel */
-    	if (wdev->conn->params.bssid && wdev->conn->params.channel) {
-
-
-This commit prevents connection for me.
-
-Best regards,
-Felix
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index e8bfb01..55f607b 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -19,6 +19,29 @@
+ static const struct ath_btcoex_config ath_bt_config = { 0, true, true,
+ 			ATH_BT_COEX_MODE_SLOTTED, true, true, 2, 5, true };
+ 
++static const u16 ath_subsysid_tbl[] = {
++	AR9280_COEX2WIRE_SUBSYSID,
++	AT9285_COEX3WIRE_SA_SUBSYSID,
++	AT9285_COEX3WIRE_DA_SUBSYSID
++};
++
++/*
++ * Checks the subsystem id of the device to see if it
++ * supports btcoex
++ */
++bool ath_btcoex_supported(u16 subsysid)
++{
++	int i;
++
++	if (!subsysid)
++		return false;
++
++	for (i = 0; i < ARRAY_SIZE(ath_subsysid_tbl); i++)
++		if (subsysid == ath_subsysid_tbl[i])
++			return true;
++
++	return false;
++}
+ 
+ /*
+  * Detects if there is any priority bt traffic
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 4556819..f1baf66 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -79,6 +79,7 @@ struct ath_btcoex_info {
+ 	struct ath_gen_timer *no_stomp_timer; /*Timer for no BT stomping*/
+ };
+ 
++bool ath_btcoex_supported(u16 subsysid);
+ int ath9k_hw_btcoex_init(struct ath_hw *ah);
+ void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 97a09db..8d77817 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3690,7 +3690,8 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	pCap->num_antcfg_2ghz =
+ 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_2GHZ);
+ 
+-	if (AR_SREV_9280_10_OR_LATER(ah) && btcoex_enable) {
++	if (AR_SREV_9280_10_OR_LATER(ah) &&
++	    ath_btcoex_supported(ah->hw_version.subsysid)) {
+ 		btcoex_info->btactive_gpio = ATH_BTACTIVE_GPIO;
+ 		btcoex_info->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 64ea547..9106a0b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -45,6 +45,10 @@
+ #define AR5416_DEVID_AR9287_PCI  0x002D
+ #define AR5416_DEVID_AR9287_PCIE 0x002E
+ 
++#define AR9280_COEX2WIRE_SUBSYSID	0x309b
++#define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
++#define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
++
+ /* Register read/write primitives */
+ #define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
+ #define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
+-- 
+1.5.5.1
 
