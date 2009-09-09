@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3715 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593AbZIITcv (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:63038 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752012AbZIIRTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 15:32:51 -0400
-Date: Wed, 9 Sep 2009 15:31:40 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lrodriguez@atheros.com, mickflemm@gmail.com, jirislaby@gmail.com,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: Re: [PATCH] ath5k: do not free irq after resume when card has been
-	removed
-Message-ID: <20090909193140.GA17717@hash.localnet>
-References: <1252457551-4909-1-git-send-email-cascardo@holoscopio.com> <20090909033237.GC13550@hash.localnet> <20090909175006.GA7945@vespa.holoscopio.com>
+	Wed, 9 Sep 2009 13:19:14 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: iwlagn: order 2 page allocation failures
+Date: Wed, 9 Sep 2009 19:19:12 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+References: <200909060941.01810.elendil@planet.nl> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie>
+In-Reply-To: <20090909165545.GK24614@csn.ul.ie>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090909175006.GA7945@vespa.holoscopio.com>
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909091919.16461.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 09, 2009 at 02:50:06PM -0300, Thadeu Lima de Souza Cascardo wrote:
-> This is against v2.6.31-rc9, so I get a warning with a version that's
-> about to get stable. Sorry I am late in the release cycle.
+On Wednesday 09 September 2009, you wrote:
+> The problem with this theory is that the patches have been in since Nov
+> 2008 but reports are only showing up now.  Frans, how sure are you that
+> this is a recent problem? Is it readily reproducible?
 
-Ok yes, that makes sense then.
+The only thing I can say here is that I've never seen the issue before 
+(and thanks to logcheck I certainly would have).
+The laptop is in constant use, but I rarely stress the memory like that. 
+Swap is almost always at 0.
 
-> Since this is warning, is this worth backporting to rc?
+I would have to make an effort to try and reproduce it, probably by again 
+creating some very large images and loading those in konqueror, maybe 
+while streaming a movie over wireless or something.
 
-It's too late probably, but we can send it to stable for 2.6.31.1.
-
-Thank you for the patch by the way, just keep in mind that wireless
-patches should be against the wireless-testing kernel in the future.
-
--- 
-Bob Copeland %% www.bobcopeland.com
-
+Thanks for your efforts,
+FJP
