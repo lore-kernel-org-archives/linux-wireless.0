@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21614 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760139AbZIQDxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 23:53:44 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:53:47 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-Message-ID: <19121.45772.489140.407518@gargle.gargle.HOWL>
-Date: Thu, 17 Sep 2009 09:23:48 +0530
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:54340 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753056AbZIIP7b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Sep 2009 11:59:31 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: iwlagn: order 2 page allocation failures
+Date: Wed, 9 Sep 2009 17:59:30 +0200
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org
+References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie>
+In-Reply-To: <20090909150418.GI24614@csn.ul.ie>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 00/12] ath9k bug fixes
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909091759.33655.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Wednesday 09 September 2009, Mel Gorman wrote:
+> Franz, in the full dmesg was there any mention of "SLUB: Unable to
+> allocate memory on node"?
 
-A bunch of patches fixing various bugs in the driver.
-These apply on top of wireless-testing.
+No, nothing at all. I double checked the kernel log, but it was completely 
+quiet in the hours before and after the messages I already posted.
 
-Luis would rebase his pending patches on top of these
-and resend them.
+> Also, did you have any slub debug options enabled on the command line?
 
-Thanks.
-Sujith
+Nope.
 
-Senthil Balasubramanian (2):
-  ath9k: Adjust the chainmasks properly
-  ath9k: Fix bug in chain handling
-
-Sujith (3):
-  ath9k: Restore TSF after RESET
-  ath9k: Fix chip wakeup issue
-  ath9k: Fix regression in PA calibration
-
-Vasanthakumar Thiagarajan (3):
-  ath9k: Fix rx data corruption
-  ath9k: Don't read NF when chip has gone through full sleep mode
-  ath9k: Do a full reset for AR9280
-
-Vivek Natarajan (4):
-  ath9k: Set default noise floor value for AR9287
-  ath9k: Revamp PCIE workarounds
-  ath9k: Fix AHB reset for AR9280
-  ath9k: Disable autosleep feature by default.
-
- drivers/net/wireless/ath/ath9k/calib.c      |   23 +++-
- drivers/net/wireless/ath/ath9k/calib.h      |    1 +
- drivers/net/wireless/ath/ath9k/eeprom_def.c |    4 +-
- drivers/net/wireless/ath/ath9k/hw.c         |  198 ++++++++++++++++-----------
- drivers/net/wireless/ath/ath9k/hw.h         |    4 +-
- drivers/net/wireless/ath/ath9k/main.c       |    8 +-
- drivers/net/wireless/ath/ath9k/reg.h        |    3 +-
- 7 files changed, 149 insertions(+), 92 deletions(-)
-
+Cheers,
+FJP
