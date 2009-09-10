@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:57796 "EHLO gir.skynet.ie"
+Received: from gir.skynet.ie ([193.1.99.77]:57477 "EHLO gir.skynet.ie"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753476AbZIKIrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 04:47:12 -0400
-Date: Fri, 11 Sep 2009 09:47:17 +0100
+	id S1754654AbZIJMek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 08:34:40 -0400
+Date: Thu, 10 Sep 2009 13:34:46 +0100
 From: Mel Gorman <mel@csn.ul.ie>
-To: reinette chatre <reinette.chatre@intel.com>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
 Cc: Frans Pop <elendil@planet.nl>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
 	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
+	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+	Mohamed Abbas <mohamed.abbas@intel.com>
 Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090911084717.GB32497@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252526738.30150.91.camel@rc-desk> <20090910090206.GA22276@csn.ul.ie> <1252617290.30150.321.camel@rc-desk>
+Message-ID: <20090910123445.GC31153@csn.ul.ie>
+References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252570722.4876.23.camel@penberg-laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1252617290.30150.321.camel@rc-desk>
+In-Reply-To: <1252570722.4876.23.camel@penberg-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 10, 2009 at 02:14:50PM -0700, reinette chatre wrote:
-> On Thu, 2009-09-10 at 02:02 -0700, Mel Gorman wrote:
-> 
+On Thu, Sep 10, 2009 at 11:18:42AM +0300, Pekka Enberg wrote:
+> On Wed, 2009-09-09 at 17:55 +0100, Mel Gorman wrote:
+> > On Wed, Sep 09, 2009 at 05:59:30PM +0200, Frans Pop wrote:
+> > > On Wednesday 09 September 2009, Mel Gorman wrote:
+> > > > Franz, in the full dmesg was there any mention of "SLUB: Unable to
+> > > > allocate memory on node"?
+> > > 
+> > > No, nothing at all. I double checked the kernel log, but it was completely 
+> > > quiet in the hours before and after the messages I already posted.
+> > > 
 > > 
-> > As a total aside, there is still the problem that the driver is depending on
-> > order-2 allocations. On systems without swap, the allocation problem could be
-> > more severe as there are fewer pages the system can use to regain contiguity.
+> > Ok, that in itself is unexpected.
+> > 
+> > Pekka, it looks from the stack trace that the failure is from
+> > __alloc_skb and I am guessing the failure path is around here
+> > 
+> >         size = SKB_DATA_ALIGN(size);
+> >         data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
+> >                         gfp_mask, node);
+> >         if (!data)
+> >                 goto nodata;
+> > 
+> > Why would the SLUB out-of-memory message not appear? It's hardly
+> > tripping up on printk_ratelimit() is it?
 > 
-> I looked more at the implementation and hardware interface but I do not
-> see a way around this. We have to provide 8k buffer to device, and we
-> have to make sure it is aligned. 
+> That's because it's a large allocation that's passed directly to the
+> page allocator. See kmalloc_large_node(), for example.
 > 
 
-That would imply an order-1 allocation instead of an order-2 though so
-it would appear than we are being worse than we have to. It would appear
-to be because of this +256 bytes that goes onto every buffer.
-
-> Do you have any suggestions?
-> 
-
-Nothing concrete. Finding an alternative to having the socket buffer
-8192+256 to make it an order-1 allocation would be an improvement but I
-don't know how that should be tackled. Lacking the hardware, I can't
-experiment myself :(
+Pants. Is there any chance that could be fixed so that allocation
+failures within SLUB get consistently reported?
 
 -- 
 Mel Gorman
