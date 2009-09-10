@@ -1,184 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx71.mail.ru ([94.100.176.85]:55714 "EHLO mx71.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752451AbZIQPI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 11:08:57 -0400
-Subject: [PATCH] mac80211: Fix [re]association power saving issue on AP side
-From: Igor Perminov <igor.perminov@inbox.ru>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 17 Sep 2009 19:08:57 +0400
-Message-Id: <1253200137.26765.338.camel@sunlight>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:38513 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbZIJTa3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 15:30:29 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Stephen Chen <stephen.chen@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>
+Subject: [PATCH 10/10] ath9k: Define bus agnostic bluetooth coex prep helper
+Date: Thu, 10 Sep 2009 15:30:27 -0400
+Message-Id: <1252611027-5285-11-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consider the following step-by step:
-1. A STA authenticates and associates with the AP and exchanges
-traffic.
-2. The STA reports to the AP that it is going to PS state.
-3. Some time later the STA device goes to the stand-by mode (not only
-its wi-fi card, but the device itself) and drops the association state
-without sending a disassociation frame.
-4. The STA device wakes up and begins authentication with an
-Auth frame as it hasn't been authenticated/associated previously.
- 
-At the step 4 the AP "remembers" the STA and considers it is still in
-the PS state, so the AP buffers frames, which it has to send to the STA.
-But the STA isn't actually in the PS state and so it neither checks
-TIM bits nor reports to the AP that it isn't power saving.
-Because of that reauthentication/association fails.
+We disable ASPM when enabling bluetooth coexistance. Disabling
+ASPM is a bus specific operation. In the future other buses may
+support bluetooth coexistance, an example is USB. To this end
+move the current routine which disables ASPM into pci.c, and declare
+it the PCI bt_coex_prep() helper. Additionally, since ASPM is
+a PCI-Express primitive ensure we don't ever try to muck with ASPM
+registers on non PCI-express devices.
 
-To fix this issue:
-1. Auth, Assoc Resp and Reassoc Resp frames are transmitted disregarding
-of STA's power saving state.
-2. When an application (hostapd) tries to add a STA to an AP (that
-occurs when the STA has [re]associated successfully) and mac80211
-already "knows" that STA, the AP resets the power saving state of the
-STA and purges of frames that was previously buffered if any.
+This also cleans up hw.c to not include bus specific headers or
+utilities.
 
-Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
+Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Stephen Chen <stephen.chen@atheros.com>
+Cc: Zhifeng Cai <zhifeng.cai@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/cfg.c      |   15 +++++++++------
- net/mac80211/sta_info.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h |    1 +
- net/mac80211/tx.c       |    5 ++++-
- 4 files changed, 61 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c    |   14 --------------
+ drivers/net/wireless/ath/ath9k/hw.h    |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |    3 ++-
+ drivers/net/wireless/ath/ath9k/pci.c   |   17 +++++++++++++++++
+ 5 files changed, 20 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5608f6c..20d4c12 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -704,7 +704,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
-        struct sta_info *sta;
-        struct ieee80211_sub_if_data *sdata;
-        int err;
--       int layer2_update;
-+       int iftype_ap;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0c64c80..0962505 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -545,6 +545,7 @@ struct ath_bus_ops {
+ 	void		(*read_cachesize)(struct ath_softc *sc, int *csz);
+ 	void		(*cleanup)(struct ath_softc *sc);
+ 	bool		(*eeprom_read)(struct ath_hw *ah, u32 off, u16 *data);
++	void		(*bt_coex_prep)(struct ath_softc *sc);
+ };
  
-        if (params->vlan) {
-                sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-@@ -731,7 +731,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ struct ath_wiphy;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 234decc..5436244 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -16,7 +16,6 @@
  
-        rate_control_rate_init(sta);
+ #include <linux/io.h>
+ #include <asm/unaligned.h>
+-#include <linux/pci.h>
  
--       layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-+       iftype_ap = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-                sdata->vif.type == NL80211_IFTYPE_AP;
+ #include "hw.h"
+ #include "ath9k.h"
+@@ -4254,16 +4253,3 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ 		timer->trigger(timer->arg);
+ 	}
+ }
+-
+-/*
+- * Primitive to disable ASPM
+- */
+-void ath_pcie_aspm_disable(struct ath_softc *sc)
+-{
+-	struct pci_dev *pdev = to_pci_dev(sc->dev);
+-	u8 aspm;
+-
+-	pci_read_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, &aspm);
+-	aspm &= ~(ATH_PCIE_CAP_LINK_L0S | ATH_PCIE_CAP_LINK_L1);
+-	pci_write_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, aspm);
+-}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 4f58908..84deae4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -679,5 +679,4 @@ u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
  
-        rcu_read_lock();
-@@ -739,17 +739,20 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
-        err = sta_info_insert(sta);
-        if (err) {
-                /* STA has been freed */
--               if (err == -EEXIST && layer2_update) {
--                       /* Need to update layer 2 devices on reassociation */
-+               if (err == -EEXIST && iftype_ap) {
-+                       /* Need to reset PS state
-+                        * and update layer 2 devices on reassociation */
-                        sta = sta_info_get(local, mac);
--                       if (sta)
-+                       if (sta) {
-+                               sta_info_reset_ps(sta);
-                                ieee80211_send_layer2_update(sta);
-+                       }
-                }
-                rcu_read_unlock();
-                return err;
-        }
+-void ath_pcie_aspm_disable(struct ath_softc *sc);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 2423cdc..b530e47 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2245,7 +2245,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 					   AR_STOMP_LOW_WLAN_WGHT);
+ 		ath9k_hw_btcoex_enable(ah);
  
--       if (layer2_update)
-+       if (iftype_ap)
-                ieee80211_send_layer2_update(sta);
- 
-        rcu_read_unlock();
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index eec0014..09dc8de 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -459,6 +459,53 @@ void sta_info_clear_tim_bit(struct sta_info *sta)
-        spin_unlock_irqrestore(&sta->local->sta_lock, flags);
+-		ath_pcie_aspm_disable(sc);
++		if (sc->bus_ops->bt_coex_prep)
++			sc->bus_ops->bt_coex_prep(sc);
+ 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
+ 			ath9k_btcoex_timer_resume(sc);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 903dd8a..f59d224 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -75,10 +75,27 @@ static bool ath_pci_eeprom_read(struct ath_hw *ah, u32 off, u16 *data)
+ 	return true;
  }
  
-+void sta_info_reset_ps(struct sta_info *sta)
++/*
++ * Bluetooth coexistance requires disabling ASPM.
++ */
++static void ath_pci_bt_coex_prep(struct ath_softc *sc)
 +{
-+       struct ieee80211_sub_if_data *sdata = sta->sdata;
-+       struct ieee80211_local *local = sdata->local;
-+       struct ieee80211_if_ap *bss = sdata->bss;
-+       unsigned long flags;
-+       int filtered, buffered;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	u8 aspm;
 +
-+       BUG_ON(!bss);
++	if (!pdev->is_pcie)
++		return;
 +
-+       spin_lock_irqsave(&sta->local->sta_lock, flags);
-+
-+       if (!test_sta_flags(sta, WLAN_STA_PS)) {
-+               spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+               return;
-+       }
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+       printk(KERN_DEBUG "%s: STA %pM aid %d resets power save mode\n",
-+              sdata->dev->name, sta->sta.addr, sta->sta.aid);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+
-+       atomic_dec(&bss->num_sta_ps);
-+
-+       clear_sta_flags(sta, WLAN_STA_PS);
-+       drv_sta_notify(local, &sdata->vif, STA_NOTIFY_AWAKE, &sta->sta);
-+
-+       filtered = skb_queue_len(&sta->tx_filtered);
-+       skb_queue_purge(&sta->tx_filtered);
-+
-+       buffered = skb_queue_len(&sta->ps_tx_buf);
-+       skb_queue_purge(&sta->ps_tx_buf);
-+
-+       if (buffered) {
-+               __sta_info_clear_tim_bit(bss, sta);
-+               local->total_ps_buffered -= buffered;
-+       }
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+       printk(KERN_DEBUG "%s: STA %pM aid %d purged of "
-+                       "%d filtered/%d PS frames\n", sdata->dev->name,
-+                       sta->sta.addr, sta->sta.aid, filtered, buffered);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+
-+       spin_unlock_irqrestore(&sta->local->sta_lock, flags);
++	pci_read_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, &aspm);
++	aspm &= ~(ATH_PCIE_CAP_LINK_L0S | ATH_PCIE_CAP_LINK_L1);
++	pci_write_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, aspm);
 +}
 +
- static void __sta_info_unlink(struct sta_info **sta)
- {
-        struct ieee80211_local *local = (*sta)->local;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ccc3adf..bd65d9c 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -445,6 +445,7 @@ void sta_info_unlink(struct sta_info **sta);
- void sta_info_destroy(struct sta_info *sta);
- void sta_info_set_tim_bit(struct sta_info *sta);
- void sta_info_clear_tim_bit(struct sta_info *sta);
-+void sta_info_reset_ps(struct sta_info *sta);
+ static struct ath_bus_ops ath_pci_bus_ops = {
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.cleanup = ath_pci_cleanup,
+ 	.eeprom_read = ath_pci_eeprom_read,
++	.bt_coex_prep = ath_pci_bt_coex_prep,
+ };
  
- void sta_info_init(struct ieee80211_local *local);
- int sta_info_start(struct ieee80211_local *local);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 10a1099..4d981e7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
-        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-        u32 staflags;
- 
--       if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)))
-+       if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
-+                       || ieee80211_is_auth(hdr->frame_control)
-+                       || ieee80211_is_assoc_resp(hdr->frame_control)
-+                       || ieee80211_is_reassoc_resp(hdr->frame_control)))
-                return TX_CONTINUE;
- 
-        staflags = get_sta_flags(sta);
-
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-- 
+1.6.3.3
 
