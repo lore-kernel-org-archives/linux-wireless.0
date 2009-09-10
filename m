@@ -1,82 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:18179 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951AbZIARR7 convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:38478 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469AbZIJTaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 13:17:59 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so847984fge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 10:17:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090901163300.GA29047@jm.kir.nu>
-References: <1251820465-11104-1-git-send-email-lrodriguez@atheros.com>
-	<20090901163300.GA29047@jm.kir.nu>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 1 Sep 2009 19:17:39 +0200
-Message-ID: <69e28c910909011017o49cc8dcehe84f08baba4a7a35@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] wireless: update mac80211 kconfig entry
-To: Jouni Malinen <j@w1.fi>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 Sep 2009 15:30:24 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 05/10] ar9170: make use of common macaddr and curbssid
+Date: Thu, 10 Sep 2009 15:30:22 -0400
+Message-Id: <1252611027-5285-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 1, 2009 at 6:33 PM, Jouni Malinen<j@w1.fi> wrote:
-> On Tue, Sep 01, 2009 at 08:54:25AM -0700, Luis R. Rodriguez wrote:
->> This updates the mac80211 kconfig entry to clarify
->> what it is and refer people to our wireless wiki for
->> more documentation.
->
->> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
->
->> -     tristate "Generic IEEE 802.11 Networking Stack (mac80211)"
->> +     tristate "mac80211 - SoftMAC device support"
->
-> Uh.. Do we really need to call this SoftMAC or well have that in the
-> title? I prefer the current text or if you want to, just move the
-> mac80211 into the beginning..
->
->
->> +       This option enables support for a framework used by IEEE-802.11
->
-> s/IEEE-802.11/IEEE 802.11/
->
->> +       SoftMAC devices. SoftMAC devices allow for a finer control of the
->
-> Again, I don't really like the term "SoftMAC" here..
->
->> +       hardware, allowing for 802.11 frame management to be done in software
->> +       for them, for both parsing and generation of 802.11 wireless frames.
->> +       Most 802.11 devices today tend to be of this type.
->
-> s/802.11/IEEE 802.11/g
->
->> +       If you have new userspace utitlities which support nl80211 you do not
->
-> s/utitlities/utilities/
->
->> +       need wireless-extensions to support a mac80211 device.
->
-> s/wireless-extensions/wireless extensions/
->
->> +       When built as a module it will be called as mac80211, if not sure
->> +       you should build this as a module.
->
-> s/, if/. If/
+These are provided by ath_common.
 
-Also, s/called as/called/
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ar9170/ar9170.h |    2 --
+ drivers/net/wireless/ath/ar9170/mac.c    |    5 +++--
+ drivers/net/wireless/ath/ar9170/main.c   |    6 ++++--
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ar9170/ar9170.h b/drivers/net/wireless/ath/ar9170/ar9170.h
+index 914e471..c5576ee 100644
+--- a/drivers/net/wireless/ath/ar9170/ar9170.h
++++ b/drivers/net/wireless/ath/ar9170/ar9170.h
+@@ -172,8 +172,6 @@ struct ar9170 {
+ 
+ 	/* interface mode settings */
+ 	struct ieee80211_vif *vif;
+-	u8 mac_addr[ETH_ALEN];
+-	u8 bssid[ETH_ALEN];
+ 
+ 	/* beaconing */
+ 	struct sk_buff *beacon;
+diff --git a/drivers/net/wireless/ath/ar9170/mac.c b/drivers/net/wireless/ath/ar9170/mac.c
+index 0c6273a..ddc8c09 100644
+--- a/drivers/net/wireless/ath/ar9170/mac.c
++++ b/drivers/net/wireless/ath/ar9170/mac.c
+@@ -311,13 +311,14 @@ static int ar9170_set_promiscouous(struct ar9170 *ar)
+ 
+ int ar9170_set_operating_mode(struct ar9170 *ar)
+ {
++	struct ath_common *common = &ar->common;
+ 	u32 pm_mode = AR9170_MAC_REG_POWERMGT_DEFAULTS;
+ 	u8 *mac_addr, *bssid;
+ 	int err;
+ 
+ 	if (ar->vif) {
+-		mac_addr = ar->mac_addr;
+-		bssid = ar->bssid;
++		mac_addr = common->macaddr;
++		bssid = common->curbssid;
+ 
+ 		switch (ar->vif->type) {
+ 		case NL80211_IFTYPE_MESH_POINT:
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index c1f8c69..81c6cf1 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1952,6 +1952,7 @@ static int ar9170_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_if_init_conf *conf)
+ {
+ 	struct ar9170 *ar = hw->priv;
++	struct ath_common *common = &ar->common;
+ 	int err = 0;
+ 
+ 	mutex_lock(&ar->mutex);
+@@ -1962,7 +1963,7 @@ static int ar9170_op_add_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ar->vif = conf->vif;
+-	memcpy(ar->mac_addr, conf->mac_addr, ETH_ALEN);
++	memcpy(common->macaddr, conf->mac_addr, ETH_ALEN);
+ 
+ 	if (modparam_nohwcrypt || (ar->vif->type != NL80211_IFTYPE_STATION)) {
+ 		ar->rx_software_decryption = true;
+@@ -2131,12 +2132,13 @@ static void ar9170_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				       u32 changed)
+ {
+ 	struct ar9170 *ar = hw->priv;
++	struct ath_common *common = &ar->common;
+ 	int err = 0;
+ 
+ 	mutex_lock(&ar->mutex);
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
+-		memcpy(ar->bssid, bss_conf->bssid, ETH_ALEN);
++		memcpy(common->curbssid, bss_conf->bssid, ETH_ALEN);
+ 		err = ar9170_set_operating_mode(ar);
+ 		if (err)
+ 			goto out;
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
