@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.216.194]:61801 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbZI0Tuf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 15:50:35 -0400
-Received: by pxi32 with SMTP id 32so3033669pxi.4
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2009 12:50:39 -0700 (PDT)
+Received: from gir.skynet.ie ([193.1.99.77]:55886 "EHLO gir.skynet.ie"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752787AbZIJM6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 08:58:36 -0400
+Date: Thu, 10 Sep 2009 13:58:41 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Cc: Frans Pop <elendil@planet.nl>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Andrew Morton <akpm@linux-foundation.org>,
+	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Mohamed Abbas <mohamed.abbas@intel.com>
+Subject: Re: iwlagn: order 2 page allocation failures
+Message-ID: <20090910125841.GD31153@csn.ul.ie>
+References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252570722.4876.23.camel@penberg-laptop> <20090910123445.GC31153@csn.ul.ie> <1252586376.4876.29.camel@penberg-laptop>
 MIME-Version: 1.0
-In-Reply-To: <4ABF8184.9060904@verizon.net>
-References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
-	<4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
-	<4ABF8184.9060904@verizon.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 27 Sep 2009 12:50:19 -0700
-Message-ID: <43e72e890909271250g2936947fj314aad65e10d9788@mail.gmail.com>
-Subject: Re: A problem loading ssb module
-To: Clyde McPherson <ccmcphe@verizon.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1252586376.4876.29.camel@penberg-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 27, 2009 at 8:15 AM, Clyde McPherson <ccmcphe@verizon.net> wrote:
->
->
->> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>
->>>
->>> Bryan Wu wrote:
->>>
->>>>
->>>> Mauro Di Domenico wrote:
->>>>
->>>>>
->>>>> Hi,
->>>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
->>>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
->>>>> machine with kernel version 2.6.30-6.
->>>>>
->>>>> During the boot I experience this problem:
->>>>>
->>>>> $ dmesg|egrep "b43|ssb"
->>>>>
->>>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
->>>>> low) -> IRQ 17
->>>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
->>>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
->>>>> 0000:06:00.0
->>>>> [    6.968981] b43: disagrees about version of symbol
->>>>> ssb_device_is_enabled
->>>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
->>>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
->>>>> [    6.969407] b43: disagrees about version of symbol
->>>>> ssb_pcicore_dev_irqvecs_enable
->>>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
->>>>> .....
->>>>> ....
->>>>> ...
->>>>>
->>>>>
->>>>
->>>> I faced the exactly same issue as Mauro did. +1 from me, but currently
->>>> have
->>>> no time to take a deeper look.
->>>>
->>>> Thanks
->>>>
->>>
->>> Hi,
->>>
->>> I had the same problem with the ssb module and compat-wireless in ubuntu
->>> 9.04. The problem is that the ssb module is integrated into the
->>> initramfs image. The version out of the initramfs image is loaded on
->>> startup and not the version of compat-wireless. Running "sudo
->>> update-initramfs -u" after installing compat-wireless and restaing the
->>> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
->>> form default initramfs image or compat-wireless should update the image
->>> with the install command. At least the compat-wireless documentation
->>> needs an update.
->>>
->>> Hauke
->>>
->>> (adding Luis and linux-wireless list)
->>>
->>
->> Tim, do you guys update the initramfs upon installation of lbm? If a
->> user does not use lbm and uses compat-wireless I suppose we need to do
->> something similar.
->>
->>  Luis
->> _______________________________________________
->> Bcm43xx-dev mailing list
->> Bcm43xx-dev@lists.berlios.de
->> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
->>
->
-> All:
-> I have a large group that uses the ssb module along with the Broadcom 4318,
-> in a CF form factor. If the CF card is inserted before boot, and the ssb
-> module is not in the initrd process, the laptops lock up and do not become
-> operational. The solution to this problem is/was adding the ssb.ko to the
-> initrd process. So I agree with Luis on this, the ssb module will have to be
-> added/updated to the initrd process. As for PCI operations, I don't know,
-> but for PCMCIA operations ssb.ko has to be added and/or updated. Anytime I
-> am testing new releases of b43, I run "update-initramfs -u" to update the
-> ssb module. (Sometimes you can do a rmmod ssb and rmmod b43, and then
-> modprobe them back in. - This saves a reboot)
+On Thu, Sep 10, 2009 at 03:39:36PM +0300, Pekka Enberg wrote:
+> Hi Mel,
+> 
+> On Thu, 2009-09-10 at 13:34 +0100, Mel Gorman wrote:
+> > > That's because it's a large allocation that's passed directly to the
+> > > page allocator. See kmalloc_large_node(), for example. 
+> > 
+> > Pants. Is there any chance that could be fixed so that allocation
+> > failures within SLUB get consistently reported?
+> 
+> Did you have something specific in mind? I am not sure it's worth it,
+> really.
+> 
+> The kmalloc_large() function is a static inline in
+> include/linux/slub_def.h that gets inlined nicely to a get_order() +
+> __get_free_pages() pair in the caller for production configs. I'm not
+> sure what we should print either. There's no known "object size" or
+> "buffer size" nor do we any of the variable order things or backing
+> struct kmem_cache_nodes.
+> 
 
-But why is ssb, b43, b44 needed upon early boot?
+All I had in mind really was to grab the size of the buffer that was
+passed into kmalloc such as here;
 
-  Luis
+void *__kmalloc(size_t size, gfp_t flags)
+{
+        struct kmem_cache *s;
+        void *ret;
+
+        if (unlikely(size > SLUB_MAX_SIZE))
+                return kmalloc_large(size, flags);
+
+and to have consistent reporting of slub-allocation failures but if you
+reckon it's not worth it, I wouldn't push strongly on it.
+
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
