@@ -1,108 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:56702 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbZIXSCt (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40338 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181AbZIJHKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 14:02:49 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI1YAF014003
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 13:02:03 -0500
-Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
-	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI2eM5011497
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:02:41 +0300
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH 1/2] cfg80211: add firmware and hardware version to wiphy
-To: linux-wireless@vger.kernel.org
-Date: Thu, 24 Sep 2009 11:02:42 -0700
-Message-ID: <20090924180242.14503.11148.stgit@tikku>
-In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
-References: <20090924180048.14503.9579.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 10 Sep 2009 03:10:16 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/7] ath9k/atheros: ps/bssid mask cleanups
+Date: Thu, 10 Sep 2009 03:10:12 -0400
+Message-Id: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Here's my second series on cleanups to fixate driver core
+changes in the right place. In this series I stuff power save
+helpers which use the driver for locking.
 
-It's useful to provide firmware and hardware version to user space and have a
-generic interface to retrieve them. Users can provide the version information
-in bug reports etc.
+Next thing I'm looking at is the usage of sc->bssidmask and
+sc->curbssid even on hw.c on ath9k -- we should not access the
+sc on hw code, anyway, while reviewing that I noticed
+ath5k/ar9170 could benefit from a few changes already in place
+on ath9k.
 
-Add fields for firmware and hardware version to struct wiphy and return
-them to user space in NL80211_CMD_GET_WIPHY reply.
+It seems the last thing we'll need to address is read/write ops.
+I've considered defining read/write ops on the ath common
+structure, or at the very least on ath_hw, upon initialization
+then the driver core would set this. ath9k would use ath9k_iowrite32()
+and ath9k_ioread32() would ath9k_htc would define its own. REG_READ
+and REG_WRITE could then also point to the common->ops->read / write
+or if we don't want to take that approach the ath_hw->rw->read / write.
 
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
+Other suggestions are welcomed.
 
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |    5 +++++
- net/wireless/nl80211.c  |   11 +++++++++++
- 3 files changed, 19 insertions(+), 0 deletions(-)
+A minor thing I did notice is we use ieee80211_hw on ath9k hw.c
+for configuration -- this is fine but I realized virtual wiphys
+are not using their own hw conf, but the primary wiphy's.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index a8d71ed..6d6651f 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -714,6 +714,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PID,
- 
-+	NL80211_ATTR_FW_VERSION,
-+	NL80211_ATTR_HW_VERSION,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3d874c6..de3da19 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1070,6 +1070,8 @@ struct cfg80211_ops {
-  * and registration/helper functions
-  */
- 
-+#define CFG80211_VERSION_LEN 32
-+
- /**
-  * struct wiphy - wireless hardware description
-  * @idx: the wiphy index assigned to this item
-@@ -1142,6 +1144,9 @@ struct wiphy {
- 	u32 frag_threshold;
- 	u32 rts_threshold;
- 
-+	char fw_version[CFG80211_VERSION_LEN];
-+	char hw_version[CFG80211_VERSION_LEN];
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index eddab09..9e2214e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -138,6 +138,14 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
- 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
-+	[NL80211_ATTR_FW_VERSION] = {
-+		.type = NLA_NUL_STRING,
-+		.len = CFG80211_VERSION_LEN,
-+	},
-+	[NL80211_ATTR_HW_VERSION] = {
-+		.type = NLA_NUL_STRING,
-+		.len = CFG80211_VERSION_LEN,
-+	},
- };
- 
- /* policy for the attributes */
-@@ -420,6 +428,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_RTS_THRESHOLD,
- 		    dev->wiphy.rts_threshold);
- 
-+	NLA_PUT_STRING(msg, NL80211_ATTR_FW_VERSION, dev->wiphy.fw_version);
-+	NLA_PUT_STRING(msg, NL80211_ATTR_HW_VERSION, dev->wiphy.hw_version);
-+
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
- 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
+Luis R. Rodriguez (7):
+  ath9k: move ps helpers onto core driver when reseting tsf
+  ath9k: move ath9k_ps_wakeup() and ath9k_ps_restore() to main.c
+  ath9k: avoid usage of ath9k_hw_setpower() on hw.c
+  ath9k: move ath9k_hw_setpower() to main.c
+  ath9k: rename driver core and hw power save helpers
+  ath: move ath_bcast_mac to common header
+  atheros: use get_unaligned_le*() for bssid mask setting
+
+ drivers/net/wireless/ath/ar9170/mac.c   |   10 +++---
+ drivers/net/wireless/ath/ath.h          |    3 ++
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    7 ----
+ drivers/net/wireless/ath/ath5k/attach.c |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c   |    2 +-
+ drivers/net/wireless/ath/ath5k/pcu.c    |   38 +++++++++++--------
+ drivers/net/wireless/ath/ath5k/reset.c  |    6 ++-
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 -
+ drivers/net/wireless/ath/ath9k/beacon.c |   17 ++++++++-
+ drivers/net/wireless/ath/ath9k/hw.c     |   50 +-------------------------
+ drivers/net/wireless/ath/ath9k/hw.h     |    5 ++-
+ drivers/net/wireless/ath/ath9k/main.c   |   59 ++++++++++++++++++++++++++++---
+ 12 files changed, 109 insertions(+), 92 deletions(-)
 
