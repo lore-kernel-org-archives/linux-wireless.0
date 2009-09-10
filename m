@@ -1,69 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f227.google.com ([209.85.219.227]:63495 "EHLO
-	mail-ew0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754022AbZIPRg4 convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40340 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755203AbZIJHKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 13:36:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <1253122055.26521.431.camel@rc-desk>
-References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
-	 <1253122055.26521.431.camel@rc-desk>
-Date: Wed, 16 Sep 2009 19:36:57 +0200
-Message-ID: <8db1092f0909161036t5bae781eqa6f0a0df308ec4cd@mail.gmail.com>
-Subject: Re: WARNING: at net/mac80211/scan.c:267 ieee80211_scan_completed+0x299/0x2b0
-	[mac80211]()
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 10 Sep 2009 03:10:16 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/7] ath9k: move ps helpers onto core driver when reseting tsf
+Date: Thu, 10 Sep 2009 03:10:13 -0400
+Message-Id: <1252566619-30390-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
+References: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/16 reinette chatre <reinette.chatre@intel.com>:
->
-> The important information is not what you posted here, but still in the
-> dmesg file you provided. In that log we see the following right before
-> the warnings:
->
-> [  163.126590] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
-> [  163.130027] wlan0 direct probe responded
-> [  163.130032] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
-> [  163.131924] wlan0: authenticated
-> [  163.131952] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
-> [  163.134325] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28 (capab=0x431 status=0 aid=1)
-> [  163.134331] wlan0: associated
-> [  163.155938] wlan0: deauthenticating by local choice (reason=3)
->
-> It shows that association was successful, but something in userspace requested a disconnect.
+When the TSF is reset power save state is disabled and
+then restored. The helpers to disable power save and restore
+it use a lock provided by the driver core. Move the callers
+of the helpers outside of the hw code.
 
-Hmm. Yes, connect takes more time than in 2.6.31.
->
->>
->> [  163.208063] ------------[ cut here ]------------
->> [  163.208114] WARNING: at net/mac80211/scan.c:267
->> ieee80211_scan_completed+0x299/0x2b0 [mac80211]()
->
-> I cannot get an exact line match based on the kernel information you
-> provided. I assume it is the first warning in
-> ieee80211_scan_completed(). This is not serious as it indicates that
-> mac80211 received a "scan completed" indication when it was not
-> scanning.
->
->
->> [  163.232845] ------------[ cut here ]------------
->> [  163.232908] WARNING: at net/wireless/core.c:613
->> wdev_cleanup_work+0xbb/0xe0 [cfg80211]()
->
-> This warning has just been reported in linux-wireless also. Perhaps you
-> can follow its discussion there. See
-> http://thread.gmane.org/gmane.linux.kernel.wireless.general/39607
+We reset the TSF when mac80211 tells us and on the beacon.c
+helper ath9k_hw_beaconinit() when it is made explicitly required.
+Add a helper on beacon.c which will deal with ps awake/restore
+if we need to reset the TSF upon ath9k_hw_beaconinit().
 
-Thanks for information
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |   17 +++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.c     |    2 --
+ drivers/net/wireless/ath/ath9k/main.c   |    4 ++++
+ 3 files changed, 19 insertions(+), 4 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 6e7a519..fb4ff55 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -502,6 +502,19 @@ void ath_beacon_tasklet(unsigned long data)
+ 	}
+ }
+ 
++static void ath9k_beacon_init(struct ath_softc *sc,
++			      u32 next_beacon,
++			      u32 beacon_period)
++{
++	if (beacon_period & ATH9K_BEACON_RESET_TSF)
++		ath9k_ps_wakeup(sc);
++
++	ath9k_hw_beaconinit(sc->sc_ah, next_beacon, beacon_period);
++
++	if (beacon_period & ATH9K_BEACON_RESET_TSF)
++		ath9k_ps_restore(sc);
++}
++
+ /*
+  * For multi-bss ap support beacons are either staggered evenly over N slots or
+  * burst together.  For the former arrange for the SWBA to be delivered for each
+@@ -534,7 +547,7 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
+ 	/* Set the computed AP beacon timers */
+ 
+ 	ath9k_hw_set_interrupts(sc->sc_ah, 0);
+-	ath9k_hw_beaconinit(sc->sc_ah, nexttbtt, intval);
++	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
+ 
+@@ -707,7 +720,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
+ 	/* Set the computed ADHOC beacon timers */
+ 
+ 	ath9k_hw_set_interrupts(sc->sc_ah, 0);
+-	ath9k_hw_beaconinit(sc->sc_ah, nexttbtt, intval);
++	ath9k_beacon_init(sc, nexttbtt, intval);
+ 	sc->beacon.bmisscnt = 0;
+ 	ath9k_hw_set_interrupts(sc->sc_ah, sc->imask);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 24157d2..d9a6026 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -4061,14 +4061,12 @@ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64)
+ 
+ void ath9k_hw_reset_tsf(struct ath_hw *ah)
+ {
+-	ath9k_ps_wakeup(ah->ah_sc);
+ 	if (!ath9k_hw_wait(ah, AR_SLP32_MODE, AR_SLP32_TSF_WRITE_STATUS, 0,
+ 			   AH_TSF_WRITE_TIMEOUT))
+ 		DPRINTF(ah, ATH_DBG_RESET,
+ 			"AR_SLP32_TSF_WRITE_STATUS limit exceeded\n");
+ 
+ 	REG_WRITE(ah, AR_RESET_TSF, AR_RESET_TSF_ONCE);
+-	ath9k_ps_restore(ah->ah_sc);
+ }
+ 
+ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5a33d01..df09176 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2899,7 +2899,11 @@ static void ath9k_reset_tsf(struct ieee80211_hw *hw)
+ 	struct ath_softc *sc = aphy->sc;
+ 
+ 	mutex_lock(&sc->mutex);
++
++	ath9k_ps_wakeup(sc);
+ 	ath9k_hw_reset_tsf(sc->sc_ah);
++	ath9k_ps_restore(sc);
++
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
 -- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+1.6.3.3
+
