@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:57477 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754654AbZIJMek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 08:34:40 -0400
-Date: Thu, 10 Sep 2009 13:34:46 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090910123445.GC31153@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252570722.4876.23.camel@penberg-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1252570722.4876.23.camel@penberg-laptop>
+Received: from cavan.codon.org.uk ([93.93.128.6]:39051 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbZIJRWD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 13:22:03 -0400
+From: Matthew Garrett <mjg@redhat.com>
+To: linux-input@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, marcel@holtmann.org,
+	Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 1/2] input: Add KEY_RFKILL
+Date: Thu, 10 Sep 2009 18:21:31 +0100
+Message-Id: <1252603292-20830-1-git-send-email-mjg@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 10, 2009 at 11:18:42AM +0300, Pekka Enberg wrote:
-> On Wed, 2009-09-09 at 17:55 +0100, Mel Gorman wrote:
-> > On Wed, Sep 09, 2009 at 05:59:30PM +0200, Frans Pop wrote:
-> > > On Wednesday 09 September 2009, Mel Gorman wrote:
-> > > > Franz, in the full dmesg was there any mention of "SLUB: Unable to
-> > > > allocate memory on node"?
-> > > 
-> > > No, nothing at all. I double checked the kernel log, but it was completely 
-> > > quiet in the hours before and after the messages I already posted.
-> > > 
-> > 
-> > Ok, that in itself is unexpected.
-> > 
-> > Pekka, it looks from the stack trace that the failure is from
-> > __alloc_skb and I am guessing the failure path is around here
-> > 
-> >         size = SKB_DATA_ALIGN(size);
-> >         data = kmalloc_node_track_caller(size + sizeof(struct skb_shared_info),
-> >                         gfp_mask, node);
-> >         if (!data)
-> >                 goto nodata;
-> > 
-> > Why would the SLUB out-of-memory message not appear? It's hardly
-> > tripping up on printk_ratelimit() is it?
-> 
-> That's because it's a large allocation that's passed directly to the
-> page allocator. See kmalloc_large_node(), for example.
-> 
+Most laptops have keys that are intended to toggle all device state, not
+just wifi. These are currently generally mapped to KEY_WLAN. As a result,
+rfkill will only kill or enable wifi in response to the key press. This
+confuses users and can make it difficult for them to enable bluetooth
+and wwan devices.
 
-Pants. Is there any chance that could be fixed so that allocation
-failures within SLUB get consistently reported?
+This patch adds a new keycode, KEY_RFKILL_ALL. It indicates that the
+system should toggle the state of all rfkillable devices.
 
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ include/linux/input.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/input.h b/include/linux/input.h
+index 8b3bc3e..20a622e 100644
+--- a/include/linux/input.h
++++ b/include/linux/input.h
+@@ -595,6 +595,8 @@ struct input_absinfo {
+ #define KEY_NUMERIC_STAR	0x20a
+ #define KEY_NUMERIC_POUND	0x20b
+ 
++#define KEY_RFKILL		0x20c /* Key that controls all radios */
++
+ /* We avoid low common keys in module aliases so they don't get huge. */
+ #define KEY_MIN_INTERESTING	KEY_MUTE
+ #define KEY_MAX			0x2ff
 -- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+1.6.2.5
+
