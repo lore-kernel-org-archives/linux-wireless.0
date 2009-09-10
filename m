@@ -1,82 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:63754 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656AbZIXJU4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 05:20:56 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] iw: show age of last scan
-Date: Thu, 24 Sep 2009 11:20:47 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Received: from bu3sch.de ([62.75.166.246]:54174 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750940AbZIJSWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 14:22:30 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: Do not use _irqsafe callbacks
+Date: Thu, 10 Sep 2009 20:22:02 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Albert Herranz <albert_herranz@yahoo.es>
 MIME-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
-Message-Id: <200909241120.47534.hs4233@mail.mn-solutions.de>
+Message-Id: <200909102022.02987.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This shows how old a scan result entry is.
+We don't need to call the irqsafe callbacks.
+
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
 ---
 
-Example:
+Apply on top the other patches.
 
-# ./iw eth1 scan trigger freq 2412
-# sleep 1
-# ./iw eth1 scan dump | grep seen
-        last seen: 832 ms ago
-        last seen: 852 ms ago
-        last seen: 852 ms ago
-# sleep 1
-# ./iw eth1 scan dump | grep seen
-        last seen: 1836 ms ago
-        last seen: 1856 ms ago
-        last seen: 1856 ms ago
-
-Index: iw/scan.c
+Index: wireless-testing/drivers/net/wireless/b43/dma.c
 ===================================================================
---- iw.orig/scan.c	2009-09-21 14:06:47.000000000 +0200
-+++ iw/scan.c	2009-09-24 09:57:02.000000000 +0200
-@@ -754,6 +754,7 @@ static int print_bss_handler(struct nl_m
- 		[NL80211_BSS_SIGNAL_MBM] = { .type = NLA_U32 },
- 		[NL80211_BSS_SIGNAL_UNSPEC] = { .type = NLA_U8 },
- 		[NL80211_BSS_STATUS] = { .type = NLA_U32 },
-+		[NL80211_BSS_AGE_MS] = { .type = NLA_U32 },
- 	};
- 	struct scan_params *params = arg;
+--- wireless-testing.orig/drivers/net/wireless/b43/dma.c	2009-09-05 12:31:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/dma.c	2009-09-10 20:14:25.000000000 +0200
+@@ -1428,9 +1428,9 @@ void b43_dma_handle_txstatus(struct b43_
+ 				ring->nr_failed_tx_packets++;
+ 			ring->nr_total_packet_tries += status->frame_count;
+ #endif /* DEBUG */
+-			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb);
++			ieee80211_tx_status(dev->wl->hw, meta->skb);
  
-@@ -845,6 +846,10 @@ static int print_bss_handler(struct nl_m
- 		unsigned char s = nla_get_u8(bss[NL80211_BSS_SIGNAL_UNSPEC]);
- 		printf("\tsignal: %d/100\n", s);
+-			/* skb is freed by ieee80211_tx_status_irqsafe() */
++			/* skb is freed by ieee80211_tx_status() */
+ 			meta->skb = NULL;
+ 		} else {
+ 			/* No need to call free_descriptor_buffer here, as
+Index: wireless-testing/drivers/net/wireless/b43/pio.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/pio.c	2009-09-05 12:31:02.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/pio.c	2009-09-10 20:14:37.000000000 +0200
+@@ -574,7 +574,7 @@ void b43_pio_handle_txstatus(struct b43_
+ 	q->buffer_used -= total_len;
+ 	q->free_packet_slots += 1;
+ 
+-	ieee80211_tx_status_irqsafe(dev->wl->hw, pack->skb);
++	ieee80211_tx_status(dev->wl->hw, pack->skb);
+ 	pack->skb = NULL;
+ 	list_add(&pack->list, &q->packets_list);
+ 
+Index: wireless-testing/drivers/net/wireless/b43/xmit.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/xmit.c	2009-09-06 16:17:08.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/xmit.c	2009-09-10 20:13:29.000000000 +0200
+@@ -690,7 +690,7 @@ void b43_rx(struct b43_wldev *dev, struc
  	}
-+	if (bss[NL80211_BSS_AGE_MS]) {
-+		int age = nla_get_u32(bss[NL80211_BSS_AGE_MS]);
-+		printf("\tlast seen: %d ms ago\n", age);
-+	}
- 	if (bss[NL80211_BSS_INFORMATION_ELEMENTS])
- 		print_ies(nla_data(bss[NL80211_BSS_INFORMATION_ELEMENTS]),
- 			  nla_len(bss[NL80211_BSS_INFORMATION_ELEMENTS]),
-Index: iw/nl80211.h
-===================================================================
---- iw.orig/nl80211.h	2009-09-24 09:55:57.000000000 +0200
-+++ iw/nl80211.h	2009-09-24 09:56:29.000000000 +0200
-@@ -1261,6 +1261,7 @@ enum nl80211_channel_type {
-  * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe response/beacon
-  *	in unspecified units, scaled to 0..100 (u8)
-  * @NL80211_BSS_STATUS: status, if this BSS is "used"
-+ * @NL80211_BSS_AGE_MS: age of this BSS entry in ms
-  * @__NL80211_BSS_AFTER_LAST: internal
-  * @NL80211_BSS_MAX: highest BSS attribute
-  */
-@@ -1275,6 +1276,7 @@ enum nl80211_bss {
- 	NL80211_BSS_SIGNAL_MBM,
- 	NL80211_BSS_SIGNAL_UNSPEC,
- 	NL80211_BSS_STATUS,
-+	NL80211_BSS_AGE_MS,
  
- 	/* keep last */
- 	__NL80211_BSS_AFTER_LAST,
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+-	ieee80211_rx_irqsafe(dev->wl->hw, skb);
++	ieee80211_rx(dev->wl->hw, skb);
+ 
+ 	return;
+ drop:
 
 -- 
-http://www.holgerschurig.de
+Greetings, Michael.
