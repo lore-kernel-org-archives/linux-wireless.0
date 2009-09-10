@@ -1,60 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34154 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037AbZIWG75 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:59467 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753056AbZIJS4Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 02:59:57 -0400
-Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP
- and WPA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-In-Reply-To: <200909221118.04569.hs4233@mail.mn-solutions.de>
-References: <200909221118.04569.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hc9KoL1bkC3nXwExaaXt"
-Date: Wed, 23 Sep 2009 08:59:58 +0200
-Message-Id: <1253689198.4458.24.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 10 Sep 2009 14:56:16 -0400
+Message-ID: <4AA94BAA.1070605@redfish-solutions.com>
+Date: Thu, 10 Sep 2009 11:55:38 -0700
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: jon.fairbairn@cl.cam.ac.uk,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: AP: ath5k + hostapd occasionally sulks
+References: <4AA69A0D.3040608@redfish-solutions.com> <b6c5339f0909090600o267ae376o432cb36b912b7c2a@mail.gmail.com> <4AA7DB6C.9060207@redfish-solutions.com>
+In-Reply-To: <4AA7DB6C.9060207@redfish-solutions.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Philip Prindeville wrote:
+> Bob Copeland wrote:
+>   
+>> On Tue, Sep 8, 2009 at 1:53 PM, Philip Prindeville
+>> <philipp_subx@redfish-solutions.com> wrote:
+>>   
+>>     
+>>> I pulled compat-wireless from GIT last night (or about 1:30am mountain,
+>>> really) and rebuilt a 2.6.27.29 kernel.
+>>>
+>>> I'm seeing a lot of:
+>>>
+>>> Sep  8 11:44:09 pbx user.err kernel: ath5k phy0: no further txbuf available, dropping packet
+>>>
+>>>
+>>> one every 10 seconds, in fact.  This is with an Engenius EMP-8062+ card:
+>>>     
+>>>       
+>> Ok, the timing information is useful.  This is probably something (beacon
+>> sending?) racing with the periodic calibration, which temporarily stops
+>> all of the tx traffic and frees the tx buffers, then starts it all up
+>> again.  In short, apart from the logging this shouldn't cause any
+>> problems, but we should probably disable the beacon tasklet during this
+>> time.
+>>   
+>>     
+>
+> Alas it is causing problems.  I have a Windows 7 client with an Atheros
+> card (I forget which... it's the mini-PCIe card that comes with Zotac
+> ION mini-itx motherboards).
+>
+> I either can't associate, or associate but don't get a DHCP address or
+> don't pass traffic... I forget which.
+>
+> I can do more testing tomorrow...
+>   
+>> If this only appeared all of a sudden in recent compat snapshots, it
+>> would be useful to know the last one that worked normally.
+>>   
+>>     
+>
+> I could walk it backwards, I suppose...  2009-08-23 was definitely
+> working with an 9K board.
+>
+> I've not tried it with a 5K board (I'm not at this location very often).
+>   
 
---=-hc9KoL1bkC3nXwExaaXt
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+FYI:  The Windows 7 box associates and runs just fine with 9K driver
+with 2009-09-07.  So it seems to be an issue with the 5K driver.
 
-On Tue, 2009-09-22 at 11:18 +0200, Holger Schurig wrote:
+I'll set up a second WAP with a 5K card...
 
-> wep_nl80211
-> -----------
->  0.00000  0.00000: Initializing interface ...
->  0.03985  0.03985: ##ERROR: nl80211: set_key failed; err=3D-67 Link has b=
-een severed)
+-Philip
 
-Those are expected, and ok.
-
-johannes
-
---=-hc9KoL1bkC3nXwExaaXt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKucdqAAoJEODzc/N7+QmaYy8P/RAI+5mWfhmhvFBkngWTh10y
-/LlmWpw8uynrDFG/BmVAxHZb0rflm+nw4gh7dwWAn98DNo3/b0MRTFCi8z30SirV
-v/Owk6BRp3GlpueCkM2oOnizsDEPUbn9L823ords4UzflYtW2lnUBC5m3aZcP2wm
-AaSEz5xeF4ITPOepeULlcHwGvHiKSt5VtaIuP/rbHLa5XNdq1yZftbWnOQDPDLKz
-wL9f/qttDYSvhMMICDy4/BrbzZ5JijVC5h/5tEV22KabpIHRBFVQKpqG0vZuWsIT
-/jEsqINL9O60PU5DxY+SF00nm59Nd3VwMZma0KRrbdYUGPe1MCusqLRZO42msf7v
-s/pQUV2k6O6ryADPvQ/ropXGesZ2b/sdv2v0L+IULjHnV+d3j6PPiYdHjsGXrJ3M
-dtORPCuOBo5RiSaHFL6yVT2HeXQ8nCtlf62ekKloY5BvU8s9j6hGjRJ+aki43554
-821WwVOac3aMCoKSc3Kyq3lJDMrfVaMl6HT206J17kdHqmuHQ4TP8tlJpmeD6fBV
-HUKZq4nTM9KxdWWpqKSn/unmLXl4aCK2bSusNqM4IhVqE/wj7JenokGiWrfiQbGO
-dAEYLOW372F3YdbA+pl55wWj1/4HmeZ5oPc0twl6T06liF7a41+etsjxuqJ7ZAnj
-igcNDTeWcjrV6ztUP9dD
-=caNb
------END PGP SIGNATURE-----
-
---=-hc9KoL1bkC3nXwExaaXt--
+>
+>   
+>>> I'll probably have to reboot regularly, since this is on an embedded box
+>>> with limited CF filesystem, and I can't overflow my /var partition...
+>>>     
+>>>       
+>> Ouch.  For now, just take it out or demote it to debug.
+>>
+>> As for the original problem, I don't know offhand why a large download
+>> would trigger a cascade of these errors.  The best way to track it down
+>> is to try to come up with a case that reproduces it and sprinkle printks
+>> throughout the driver, especially when we free and allocate the tx
+>> buffers.
+>>
+>>   
+>>     
 
