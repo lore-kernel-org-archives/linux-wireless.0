@@ -1,64 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:51426 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757217AbZINVCc (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:40333 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851AbZIJHKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 17:02:32 -0400
-Received: by fxm17 with SMTP id 17so1146608fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 14:02:34 -0700 (PDT)
-Subject: [PATCH] b43: Add LP PHY Analog Switch Support
-From: Thomas Ilnseher <illth@gmx.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 14 Sep 2009 23:01:33 +0200
-Message-Id: <1252962093.4696.45.camel@luzifer.localnet>
-Mime-Version: 1.0
+	Thu, 10 Sep 2009 03:10:16 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 6/7] ath: move ath_bcast_mac to common header
+Date: Thu, 10 Sep 2009 03:10:18 -0400
+Message-Id: <1252566619-30390-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
+References: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current verison of b43 uses "b43_phyop_switch_analog_generic" for A,
-G and LP phys.
+This is used by both ath5k and ath9k to set the first bssid mask.
 
-According to the spec, this is the wrong behaviour for the LP PHY
-(see: http://bcm-v4.sipsolutions.net/802.11/PHY/Anacore )
-
-While no problems on the x86 plattform where seen, this leads to a crash
-on the BCM5354 SoC (MIPS 32 LE plattform).
-This patch implements the analog switch for LP PHYs according to the
-specs. It fixes the crash
-
-signed-off-by: Thomas Ilnseher <illth@gmx.de>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff -uNr b/drivers/net/wireless/b43/phy_lp.c
-a/drivers/net/wireless/b43/phy_lp.c
---- b/drivers/net/wireless/b43/phy_lp.c 2009-09-14 06:14:18.000000000 +0200
-+++ a/drivers/net/wireless/b43/phy_lp.c 2009-09-14 21:03:15.158507573 +0200
-@@ -2228,6 +2228,16 @@
-        return B43_TXPWR_RES_DONE;
- }
+ drivers/net/wireless/ath/ath.h          |    2 ++
+ drivers/net/wireless/ath/ath5k/attach.c |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c   |    2 +-
+ drivers/net/wireless/ath/ath5k/pcu.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 --
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index a63e90c..59072e3 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -19,6 +19,8 @@
  
-+void b43_lpphy_op_switch_analog(struct b43_wldev *dev, bool on)
-+{
-+       if (on) {
-+               b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xfff8);
-+       } else {
-+               b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0x0007);
-+               b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 0x0007);
-+       }
-+}
+ #include <linux/skbuff.h>
+ 
++static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 +
- const struct b43_phy_operations b43_phyops_lp = {
-        .allocate               = b43_lpphy_op_allocate,
-        .free                   = b43_lpphy_op_free,
-@@ -2239,7 +2249,7 @@
-        .radio_read             = b43_lpphy_op_radio_read,
-        .radio_write            = b43_lpphy_op_radio_write,
-        .software_rfkill        = b43_lpphy_op_software_rfkill,
--       .switch_analog          = b43_phyop_switch_analog_generic,
-+       .switch_analog          = b43_lpphy_op_switch_analog,
-        .switch_channel         = b43_lpphy_op_switch_channel,
-        .get_default_chan       = b43_lpphy_op_get_default_chan,
-        .set_rx_antenna         = b43_lpphy_op_set_rx_antenna,
+ struct reg_dmn_pair_mapping {
+ 	u16 regDmnEnum;
+ 	u16 reg_5ghz_ctl;
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index 71a1bd2..9a009a7 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -336,7 +336,7 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc)
+ 	ath5k_hw_set_lladdr(ah, (u8[ETH_ALEN]){});
+ 
+ 	/* Set BSSID to bcast address: ff:ff:ff:ff:ff:ff for now */
+-	memset(ah->ah_bssid, 0xff, ETH_ALEN);
++	memcpy(ah->ah_bssid, ath_bcast_mac, ETH_ALEN);
+ 	ath5k_hw_set_associd(ah, ah->ah_bssid, 0);
+ 	ath5k_hw_set_opmode(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9c6ab53..a28d795 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -815,7 +815,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 
+ 	SET_IEEE80211_PERM_ADDR(hw, mac);
+ 	/* All MAC address bits matter for ACKs */
+-	memset(sc->bssidmask, 0xff, ETH_ALEN);
++	memcpy(sc->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
+ 
+ 	regulatory->current_rd = ah->ah_capabilities.cap_eeprom.ee_regdomain;
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 2942f13..43aa358 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -365,7 +365,7 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah, const u8 *bssid, u16 assoc_id)
+  * assuming only 4 bits for a mac address and for BSSIDs you can then have:
+  *
+  *                  \
+- * MAC:                0001 |
++ * MAC:        0001 |
+  * BSSID-01:   0100 | --> Belongs to us
+  * BSSID-02:   1001 |
+  *                  /
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d99c92d..e54fac3 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -60,8 +60,6 @@ struct ath_node;
+ 
+ #define	ATH_TXQ_SETUP(sc, i)        ((sc)->tx.txqsetup & (1<<i))
+ 
+-static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+-
+ struct ath_config {
+ 	u32 ath_aggr_prot;
+ 	u16 txpowlimit;
+-- 
+1.6.3.3
 
