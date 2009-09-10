@@ -1,100 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:38654 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757AbZIQMfg convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f194.google.com ([209.85.216.194]:51086 "EHLO
+	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585AbZIJGbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 08:35:36 -0400
-Received: by fxm17 with SMTP id 17so2939256fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2009 05:35:38 -0700 (PDT)
+	Thu, 10 Sep 2009 02:31:32 -0400
+Received: by pxi32 with SMTP id 32so1583645pxi.4
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 23:31:35 -0700 (PDT)
+Message-ID: <4AA89BB2.1080205@gmail.com>
+Date: Wed, 09 Sep 2009 23:24:50 -0700
+From: John Daiker <daikerjohn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4AB1FAAB.1050103@canonical.com>
-References: <4AA9B46E.8020100@canonical.com> <69e28c910909102318u465f6c75w46a2404a8e8d9f08@mail.gmail.com>
-	<4AB0EDEB.9010803@canonical.com> <69e28c910909160813h2a91ff32hb5fa836f1f7a4963@mail.gmail.com>
-	<4AB1AE43.6000602@canonical.com> <4AB1FAAB.1050103@canonical.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 17 Sep 2009 14:35:17 +0200
-Message-ID: <69e28c910909170535r26aabb14mfbd3e31223f56618@mail.gmail.com>
-Subject: Re: [b43] About supporting of BCM4312 [14e4:4315] with Low Power PHY
-To: Bryan Wu <bryan.wu@canonical.com>
-Cc: mb@bu3sch.de, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Buesch <mb@bu3sch.de>,
+	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
+Subject: Re: b43 dma error
+References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> 	<4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com> <4AA890F9.90604@gmail.com>
+In-Reply-To: <4AA890F9.90604@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2009 at 11:00 AM, Bryan Wu <bryan.wu@canonical.com> wrote:
-> Bryan Wu wrote:
->> Gábor Stefanik wrote:
->>> 2009/9/16 Bryan Wu <bryan.wu@canonical.com>:
->>>> Hi Gabor,
+On 09/09/2009 10:39 PM, John Daiker wrote:
+> On 09/08/2009 11:06 AM, Gábor Stefanik wrote:
+>> On Tue, Sep 8, 2009 at 7:50 PM, John Daiker<daikerjohn@gmail.com> wrote:
+>>> On 09/08/2009 07:54 AM, Larry Finger wrote:
 >>>>
->>>> I tried the latest cmpat-wireless 09-16 snapshot on my machine which runs on 2.6.31
->>>> Ubuntu Karmic latest kernel. The hardware probing passes and wlan1 interface shows up.
->>>> But the iwlist scanning got no data from wlan1 interface,
+>>>> Michael Buesch wrote:
+>>>>>
+>>>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
+>>>>>>
+>>>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
+>>>>>> then the controller keep restarting...
+>>>>>>
+>>>>>> Please tell what I can provide or test, Thanks.
+>>>>>
+>>>>> Is this a regression? If so, please bisect.
 >>>>
->>>> dmesg:
->>>> ---
->>>> [  364.371703] b43-pci-bridge 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
->>>> [  364.371761] b43-pci-bridge 0000:07:00.0: setting latency timer to 64
->>>> [  364.437779] ssb: Sonics Silicon Backplane found on PCI device 0000:07:00.0
->>>> [  364.491488] b43-phy0: Broadcom 4312 WLAN found (core revision 15)
->>>> [  364.533562] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
->>>> [  364.533604] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
->>>> [  364.693040] phy0: Selected rate control algorithm 'minstrel'
->>>> [  364.701666] Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
->>>> [  364.748486] udev: renamed network interface wlan0 to wlan1
->>>> [  364.824296] b43 ssb0:0: firmware: requesting b43/ucode15.fw
->>>> [  364.901848] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
->>>> [  364.931482] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
->>>> [  365.140212] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
->>> Please test with v478 or newer.
+>>>> It is something specific to his system as I don't see anything like
+>>>> this. In addition, there are some users on the openSUSE forums that
+>>>> have implemented the latest compat-wireless and switched away from
+>>>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
+>>>> them.
+>>>>
+>>>> Please reboot so that we see the ssb output as well. Use the command
+>>>>
+>>>> dmesg | egrep "ssb|b43"
+>>>>
+>>>> That way we will be able to see exactly what kind of device you have
+>>>> and what revisions are in it. AFAIK, the testing to date has been
+>>>> limited to Rev 1 PHYs and Rev 2 radios.
+>>>>
+>>>> Larry
+>>>>
+>>>
+>>> I can confirm the same issue. I have a HP Mini 1116NR with a Broadcom
+>>> 4312.
+>>> Looks to be a PHY 1, Radio 2:
+>>>
+>>> --snip--
+>>> [ 456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+>>> [ 456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
+>>> Revision 2
+>>> --snip--
+>>>
+>>> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel
+>>> config, and
+>>> lspci -vv and lspci -nn
+>>>
+>>> Note: With the dmesg output, I had unloaded the b43 module previous
+>>> 'modprobe -r b43' and then loaded it again with debug output:
+>>> 'modprobe b43
+>>> verbose=3'
+>>>
+>>> John Daiker
+>>>
 >>
->> OK, do you know where can I find this firmware? I just followed the wiki page to get the firmware, but it seems the same version as I am using.
->> http://linuxwireless.org/en/users/Drivers/b43#device_firmware
+>> Again, please test with v478 or v5xx firmware.
 >>
 >
-> I tried the one from here: http://downloads.openwrt.org/sources/broadcom-wl-4.178.10.4.tar.bz2
-> Still got the same result,
-> [   95.360263] b43-pci-bridge 0000:07:00.0: PCI INT A disabled
-> [  122.214822] b43-pci-bridge 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [  122.214880] b43-pci-bridge 0000:07:00.0: setting latency timer to 64
-> [  122.285420] ssb: Sonics Silicon Backplane found on PCI device 0000:07:00.0
-> [  122.354411] b43-phy0: Broadcom 4312 WLAN found (core revision 15)
-> [  122.397222] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-> [  122.397260] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
-> [  122.544617] phy0: Selected rate control algorithm 'minstrel'
-> [  122.549401] Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
-> [  122.675356] udev: renamed network interface wlan0 to wlan1
-> [  122.769147] b43 ssb0:0: firmware: requesting b43/ucode15.fw
-> [  122.847433] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
-> [  122.883806] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
-> [  123.113178] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-> [  123.117334] b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
-> [  123.385222] b43-phy0 debug: Chip initialized
-> [  123.385794] b43-phy0 debug: 64-bit DMA initialized
-> [  123.385850] b43-phy0 debug: QoS disabled
-> [  123.406615] Registered led device: b43-phy0::tx
-> [  123.406745] Registered led device: b43-phy0::rx
-> [  123.406874] Registered led device: b43-phy0::radio
-> [  123.407281] b43-phy0 debug: Wireless interface started
-> [  123.407374] b43-phy0 debug: Adding Interface type 2
-> [  123.421273] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+> I've tried with the v478 firmware (was using 410.2160 earlier). I do not
+> see the 'Fatal DMA error' messages anymore.
 >
-> Thanks,
-> -Bryan
+> On another note, however, I can't connect to a network. The device seems
+> to alternate between being idle, and scanning for APs.
 >
+> --snip--
+> [ 73.273722] phy0: device no longer idle - scanning
+> [ 74.561178] phy0: device now idle
+> [ 79.545776] phy0: device no longer idle - scanning
+> [ 80.828232] phy0: device now idle
+> [ 85.817930] phy0: device no longer idle - scanning
+> [ 87.100240] phy0: device now idle
+> [ 92.090713] phy0: device no longer idle - scanning
+> [ 93.372367] phy0: device now idle
+> [ 98.362829] phy0: device no longer idle - scanning
+> [ 99.644362] phy0: device now idle
+> --snip--
 >
+> I've attached the relevant portion of my dmesg output for your review.
+>
+> Where would I got about finding the v5xx firmware?
+>
+> JD
 
-Try to enable mac80211/cfg80211 debug messages. Also enable SSB
-debugging. (If mac80211 debugging is on, then you are hitting a
-{mac|cfg|nl|lib}80211 bug, as your dmesg should contain entries like
-"device is no longer idle".)
+Found the v5xx firmware along with a patch by Daniel Lenski for 
+b43-fwcutter on the bcm43xx mailing list.  I've tried both versions 
+(508.102 and 508.1107) without any luck.  I see the same 'idle -> 
+scanning -> idle' loop as before.
 
-To Larry: Software RFKILL is not yet implemented for LP-PHY - it is
-part of my calibration patch, which had other errors (software RFKILL
-is a prereq for calibration). Feel free to split it out into a
-separate patch if anyone needs it - I can't do it right now; no
-working Linux system (due to the vmware problem).
+Any other ideas?
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+JD
