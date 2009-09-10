@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52953 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbZIHSp7 (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60109
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751822AbZIJDen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 14:45:59 -0400
-Date: Tue, 8 Sep 2009 14:33:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"aquilaver@yahoo.com" <aquilaver@yahoo.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wireless: mark prism54 as deprecated and mark for
-	removal
-Message-ID: <20090908183337.GD2617@tuxdriver.com>
-References: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com> <4A9D469B.9060005@lwfinger.net> <20090901161513.GD8261@mosca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090901161513.GD8261@mosca>
+	Wed, 9 Sep 2009 23:34:43 -0400
+Date: Wed, 09 Sep 2009 20:35:00 -0700 (PDT)
+Message-Id: <20090909.203500.53952434.davem@davemloft.net>
+To: martin@decky.cz
+Cc: j@w1.fi, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] hostap: Revert a toxic part of the conversion to
+ net_device_ops
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.LFD.2.00.0909100333230.4334@hefaistos.decky.cz>
+References: <alpine.LFD.2.00.0909100333230.4334@hefaistos.decky.cz>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 09:15:13AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Sep 01, 2009 at 09:06:51AM -0700, Larry Finger wrote:
+From: Martin Decky <martin@decky.cz>
+Date: Thu, 10 Sep 2009 03:44:47 +0200 (CEST)
 
-> > Otherwise, ACK.
+Thanks, linux-wireless CC:'d, please CC: them on all wireless
+patches in the future.
+
+> From: Martin Decky <martin@decky.cz>
 > 
-> Thanks for the review, will resend with the changes.
+> As the hostap driver was converted to use net_device_ops, a mistake was 
+> made in hostap_main.c (commit 5ae4efbcd2611562a8b93596be034e63495706a5). 
+> Originally, the tx_queue_len was set to 0 for every other interface than 
+> HOSTAP_INTERFACE_MASTER, but the new fragment of code sets tx_queue_len to 
+> 0 only for HOSTAP_INTERFACE_MASTER. The opposite of the previous 
+> behavior makes the driver to drop all packets in AP mode.
 > 
->   Luis
+> Change the way 0 is assigned to tx_queue_len according to the original 
+> logic.
+> 
+> Signed-off-by: Martin Decky <martin@decky.cz>
 
-Ahem? :-)
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> ----
+> diff -Naurp linux-2.6.30.orig/drivers/net/wireless/hostap/hostap_main.c linux-2.6.30/drivers/net/wireless/hostap/hostap_main.c
+> --- linux-2.6.30.orig/drivers/net/wireless/hostap/hostap_main.c	2009-06-10 05:05:27.000000000 +0200
+> +++ linux-2.6.30/drivers/net/wireless/hostap/hostap_main.c	2009-09-08 11:11:23.892816045 +0200
+> @@ -875,15 +875,16 @@ void hostap_setup_dev(struct net_device 
+>  
+>  	switch(type) {
+>  	case HOSTAP_INTERFACE_AP:
+> +		dev->tx_queue_len = 0;	/* use main radio device queue */
+>  		dev->netdev_ops = &hostap_mgmt_netdev_ops;
+>  		dev->type = ARPHRD_IEEE80211;
+>  		dev->header_ops = &hostap_80211_ops;
+>  		break;
+>  	case HOSTAP_INTERFACE_MASTER:
+> -		dev->tx_queue_len = 0;	/* use main radio device queue */
+>  		dev->netdev_ops = &hostap_master_ops;
+>  		break;
+>  	default:
+> +		dev->tx_queue_len = 0;	/* use main radio device queue */
+>  		dev->netdev_ops = &hostap_netdev_ops;
+>  	}
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
