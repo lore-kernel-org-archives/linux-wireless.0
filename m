@@ -1,181 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:25151 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791AbZIIQDm convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:38483 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505AbZIJTaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 12:03:42 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so2283669fge.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 09:03:44 -0700 (PDT)
-Subject: wireless/sme.c:617 __cfg80211_disconnected I still get these daily
-From: ASIC Felix <ic.felix@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-Date: Wed, 09 Sep 2009 09:03:10 -0700
-Message-Id: <1252512190.25355.15.camel@darkslate>
-Mime-Version: 1.0
+	Thu, 10 Sep 2009 15:30:24 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	devel@linuxdriverproject.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 09/10] ath5k: move ath_common to ath5k_hw
+Date: Thu, 10 Sep 2009 15:30:26 -0400
+Message-Id: <1252611027-5285-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 ++
+ drivers/net/wireless/ath/ath5k/base.c  |   21 +++++++++++++--------
+ drivers/net/wireless/ath/ath5k/base.h  |    3 +--
+ 3 files changed, 16 insertions(+), 10 deletions(-)
 
-I still get these daily.
-
-Thinkpad T43,
-phy0: Atheros AR9280 MAC/BB Rev:2 AR5133 RF Rev:d0: mem=0xfa360000, irq=21
-
-kernel: linville master-2009-09-08 2.6.31-rc9-wl-36500-g918dc92 
-
-auth: WPA-EAP   PEAP
-
-Best regards,
-Felix
-
-Sep  9 08:46:01 darkslate CROND[14154]: (root) CMD (   /usr/share/msec/promisc_check.sh)
-Sep  9 08:46:22 darkslate klogd: ------------[ cut here ]------------
-Sep  9 08:46:22 darkslate klogd: WARNING: at net/wireless/sme.c:617 __cfg80211_disconnected+0x1ff/0x210 [cfg80211]()
-Sep  9 08:46:22 darkslate klogd: Hardware name: 1875DLU
-Sep  9 08:46:22 darkslate klogd: deauth failed: -67
-Sep  9 08:46:22 darkslate klogd: Modules linked in: xt_time xt_connlimit xt_realm iptable_raw xt_comment ipt_ULOG ipt_REJECT ipt_REDIRECT ipt_NETMAP ipt_MASQUERADE ipt_LOG ipt_ECN ipt_ecn ipt_ah ipt_addrtype nf_nat_tftp nf_nat_snmp_basic nf_nat_sip nf_nat_pptp nf_nat_proto_gre nf_nat_irc nf_nat_h323 nf_nat_ftp nf_nat_amanda ts_kmp nf_conntrack_amanda nf_conntrack_tftp nf_conntrack_sip nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_netlink nf_conntrack_netbios_ns nf_conntrack_irc nf_conntrack_h323 nf_conntrack_ftp xt_tcpmss xt_recent xt_pkttype xt_physdev xt_owner xt_NFQUEUE xt_NFLOG nfnetlink_log xt_multiport xt_MARK xt_mark xt_mac xt_limit xt_length xt_iprange xt_helper xt_hashlimit xt_DSCP xt_dscp xt_dccp xt_conntrack xt_CONNMARK xt_connmark xt_CLASSIFY xt_tcpudp xt_state iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack iptable_mangle nfnetlink iptable_filter ip_tables x_tables i915 drm i2c_algo_bit aes_i586 aes_generic af_packet bridge stp llc bnep sco rfcomm l2cap bluetooth binfmt_misc 
-Sep  9 08:46:22 darkslate klogd: oop fuse cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table arc4 ecb ath9k mac80211 ath cfg80211 thinkpad_acpi rfkill video tg3 joydev led_class evdev output nsc_ircc irda ehci_hcd crc_ccitt i2c_i801 i2c_core uhci_hcd intel_agp rtc_cmos sr_mod libphy sg iTCO_wdt iTCO_vendor_support pcspkr yenta_socket rsrc_nonstatic button agpgart thermal ac processor battery pcmcia_core nvram usbcore ata_generic ide_pci_generic ide_gd_mod ide_core pata_acpi ata_piix ahci libata sd_mod scsi_mod crc_t10dif ext3 jbd
-Sep  9 08:46:22 darkslate klogd: Pid: 1142, comm: phy0 Tainted: G        W  2.6.31-rc9-wl-mnbStrip-36500-g918dc92 #77
-Sep  9 08:46:22 darkslate klogd: Call Trace:
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0138d9c>] warn_slowpath_common+0x6c/0xc0
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0138e36>] warn_slowpath_fmt+0x26/0x30
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f8910262>] ? nl80211_send_deauth+0x22/0x30 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f8911463>] __cfg80211_send_deauth+0x213/0x260 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89ea7a3>] ? __sta_info_free+0x33/0x40 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89ea9d3>] ? sta_info_destroy+0xf3/0x100 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89f1384>] ? ieee80211_set_disassoc+0x174/0x1d0 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f891150e>] cfg80211_send_deauth+0x5e/0x70 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89f2f31>] ieee80211_sta_work+0x901/0x1820 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0134ca1>] ? update_curr+0x1b1/0x1c0
-Sep  9 08:46:22 darkslate klogd:  [<c013502d>] ? dequeue_task_fair+0x29d/0x2b0
-Sep  9 08:46:22 darkslate klogd:  [<c010254d>] ? __switch_to+0xad/0x1a0
-Sep  9 08:46:22 darkslate klogd:  [<c012a10f>] ? set_next_entity+0x11f/0x1b0
-Sep  9 08:46:22 darkslate klogd:  [<c03a3c65>] ? schedule+0x495/0xa40
-Sep  9 08:46:22 darkslate klogd:  [<c014fbea>] ? prepare_to_wait+0x3a/0x70
-Sep  9 08:46:22 darkslate klogd:  [<c014b178>] worker_thread+0x148/0x210
-Sep  9 08:46:22 darkslate klogd:  [<f89f2630>] ? ieee80211_sta_work+0x0/0x1820 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<c014f9a0>] ? autoremove_wake_function+0x0/0x50
-Sep  9 08:46:22 darkslate klogd:  [<c014b030>] ? worker_thread+0x0/0x210
-Sep  9 08:46:22 darkslate klogd:  [<c014f644>] kthread+0x84/0x90
-Sep  9 08:46:22 darkslate klogd:  [<c014f5c0>] ? kthread+0x0/0x90
-Sep  9 08:46:22 darkslate klogd:  [<c0104667>] kernel_thread_helper+0x7/0x10
-Sep  9 08:46:22 darkslate klogd: ---[ end trace 46565fb73d858208 ]---
-Sep  9 08:46:22 darkslate ifplugd(wlan0)[30335]: Link beat lost.
-Sep  9 08:46:22 darkslate klogd: ------------[ cut here ]------------
-Sep  9 08:46:22 darkslate klogd: WARNING: at net/wireless/sme.c:617 __cfg80211_disconnected+0x1ff/0x210 [cfg80211]()
-Sep  9 08:46:22 darkslate klogd: Hardware name: 1875DLU
-Sep  9 08:46:22 darkslate klogd: deauth failed: -67
-Sep  9 08:46:22 darkslate klogd: Modules linked in: xt_time xt_connlimit xt_realm iptable_raw xt_comment ipt_ULOG ipt_REJECT ipt_REDIRECT ipt_NETMAP ipt_MASQUERADE ipt_LOG ipt_ECN ipt_ecn ipt_ah ipt_addrtype nf_nat_tftp nf_nat_snmp_basic nf_nat_sip nf_nat_pptp nf_nat_proto_gre nf_nat_irc nf_nat_h323 nf_nat_ftp nf_nat_amanda ts_kmp nf_conntrack_amanda nf_conntrack_tftp nf_conntrack_sip nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_netlink nf_conntrack_netbios_ns nf_conntrack_irc nf_conntrack_h323 nf_conntrack_ftp xt_tcpmss xt_recent xt_pkttype xt_physdev xt_owner xt_NFQUEUE xt_NFLOG nfnetlink_log xt_multiport xt_MARK xt_mark xt_mac xt_limit xt_length xt_iprange xt_helper xt_hashlimit xt_DSCP xt_dscp xt_dccp xt_conntrack xt_CONNMARK xt_connmark xt_CLASSIFY xt_tcpudp xt_state iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack iptable_mangle nfnetlink iptable_filter ip_tables x_tables i915 drm i2c_algo_bit aes_i586 aes_generic af_packet bridge stp llc bnep sco rfcomm l2cap bluetooth binfmt_misc 
-Sep  9 08:46:22 darkslate klogd: oop fuse cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table arc4 ecb ath9k mac80211 ath cfg80211 thinkpad_acpi rfkill video tg3 joydev led_class evdev output nsc_ircc irda ehci_hcd crc_ccitt i2c_i801 i2c_core uhci_hcd intel_agp rtc_cmos sr_mod libphy sg iTCO_wdt iTCO_vendor_support pcspkr yenta_socket rsrc_nonstatic button agpgart thermal ac processor battery pcmcia_core nvram usbcore ata_generic ide_pci_generic ide_gd_mod ide_core pata_acpi ata_piix ahci libata sd_mod scsi_mod crc_t10dif ext3 jbd
-Sep  9 08:46:22 darkslate klogd: Pid: 1142, comm: phy0 Tainted: G        W  2.6.31-rc9-wl-mnbStrip-36500-g918dc92 #77
-Sep  9 08:46:22 darkslate klogd: Call Trace:
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0138d9c>] warn_slowpath_common+0x6c/0xc0
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0138e36>] warn_slowpath_fmt+0x26/0x30
-Sep  9 08:46:22 darkslate klogd:  [<f89134af>] __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f8910262>] ? nl80211_send_deauth+0x22/0x30 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f8911463>] __cfg80211_send_deauth+0x213/0x260 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89ea7a3>] ? __sta_info_free+0x33/0x40 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89ea9d3>] ? sta_info_destroy+0xf3/0x100 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89f1384>] ? ieee80211_set_disassoc+0x174/0x1d0 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<f891150e>] cfg80211_send_deauth+0x5e/0x70 [cfg80211]
-Sep  9 08:46:22 darkslate klogd:  [<f89f2f31>] ieee80211_sta_work+0x901/0x1820 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<c0134ca1>] ? update_curr+0x1b1/0x1c0
-Sep  9 08:46:22 darkslate klogd:  [<c013502d>] ? dequeue_task_fair+0x29d/0x2b0
-Sep  9 08:46:22 darkslate klogd:  [<c010254d>] ? __switch_to+0xad/0x1a0
-Sep  9 08:46:22 darkslate klogd:  [<c012a10f>] ? set_next_entity+0x11f/0x1b0
-Sep  9 08:46:22 darkslate klogd:  [<c03a3c65>] ? schedule+0x495/0xa40
-Sep  9 08:46:22 darkslate klogd:  [<c014fbea>] ? prepare_to_wait+0x3a/0x70
-Sep  9 08:46:22 darkslate klogd:  [<c014b178>] worker_thread+0x148/0x210
-Sep  9 08:46:22 darkslate klogd:  [<f89f2630>] ? ieee80211_sta_work+0x0/0x1820 [mac80211]
-Sep  9 08:46:22 darkslate klogd:  [<c014f9a0>] ? autoremove_wake_function+0x0/0x50
-Sep  9 08:46:22 darkslate klogd:  [<c014b030>] ? worker_thread+0x0/0x210
-Sep  9 08:46:22 darkslate klogd:  [<c014f644>] kthread+0x84/0x90
-Sep  9 08:46:22 darkslate klogd:  [<c014f5c0>] ? kthread+0x0/0x90
-Sep  9 08:46:22 darkslate klogd:  [<c0104667>] kernel_thread_helper+0x7/0x10
-Sep  9 08:46:22 darkslate klogd: ---[ end trace 46565fb73d858208 ]---
-Sep  9 08:46:22 darkslate ifplugd(wlan0)[30335]: Link beat lost.
-Sep  9 08:46:23 darkslate ifplugd(wlan0)[30335]: Link beat detected.
-Sep  9 08:46:23 darkslate ifplugd(wlan0)[30335]: Link beat detected.
-
-dmesg -c
-wlan0: deauthenticated from 00:0b:85:6f:12:ac (Reason: 1)
-wlan0: direct probe to AP 00:0b:85:6f:20:8c (try 1)
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:0b:85:6f:20:8c (try 1)
-wlan0: authenticated
-wlan0: associate with AP 00:0b:85:6f:20:8c (try 1)
-wlan0: RX AssocResp from 00:0b:85:6f:20:8c (capab=0x421 status=17 aid=0)
-wlan0: AP denied association (code=17)
-wlan0: deauthenticating by local choice (reason=3)
-wlan0: direct probe to AP 00:0b:85:6f:20:8c (try 1)
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:0b:85:6f:20:8c (try 1)
-wlan0: authenticated
-wlan0: associate with AP 00:0b:85:6f:20:8c (try 1)
-wlan0: RX AssocResp from 00:0b:85:6f:20:8c (capab=0x431 status=1 aid=16)
-wlan0: AP denied association (code=1)
-wlan0: direct probe to AP 00:0b:85:6f:12:ac (try 1)
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:0b:85:6f:12:ac (try 1)
-wlan0: authenticated
-wlan0: associate with AP 00:0b:85:6f:12:ac (try 1)
-wlan0: RX AssocResp from 00:0b:85:6f:12:ac (capab=0x431 status=0 aid=26)
-wlan0: associated
-wlan0: deauthenticated from 00:0b:85:6f:12:ac (Reason: 1)
-wlan0: deauthenticating by local choice (reason=3)
-------------[ cut here ]------------
-WARNING: at net/wireless/sme.c:617 __cfg80211_disconnected+0x1ff/0x210 [cfg80211]()
-Hardware name: 1875DLU
-deauth failed: -67
-Modules linked in: xt_time xt_connlimit xt_realm iptable_raw xt_comment ipt_ULOG ipt_REJECT ipt_REDIRECT ipt_NETMAP ipt_MASQUERADE ipt_LOG ipt_ECN ipt_ecn ipt_ah ipt_addrtype nf_nat_tftp nf_nat_snmp_basic nf_nat_sip nf_nat_pptp nf_nat_proto_gre nf_nat_irc nf_nat_h323 nf_nat_ftp nf_nat_amanda ts_kmp nf_conntrack_amanda nf_conntrack_tftp nf_conntrack_sip nf_conntrack_pptp nf_conntrack_proto_gre nf_conntrack_netlink nf_conntrack_netbios_ns nf_conntrack_irc nf_conntrack_h323 nf_conntrack_ftp xt_tcpmss xt_recent xt_pkttype xt_physdev xt_owner xt_NFQUEUE xt_NFLOG nfnetlink_log xt_multiport xt_MARK xt_mark xt_mac xt_limit xt_length xt_iprange xt_helper xt_hashlimit xt_DSCP xt_dscp xt_dccp xt_conntrack xt_CONNMARK xt_connmark xt_CLASSIFY xt_tcpudp xt_state iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack iptable_mangle nfnetlink iptable_filter ip_tables x_tables i915 drm i2c_algo_bit aes_i586 aes_generic af_packet bridge stp llc bnep sco rfcomm l2cap bluetooth binfmt_misc loop fuse cpufreq_ondemand cpufreq_conservative cpufreq_powersave acpi_cpufreq freq_table arc4 ecb ath9k mac80211 ath cfg80211 thinkpad_acpi rfkill video tg3 joydev led_class evdev output nsc_ircc irda ehci_hcd crc_ccitt i2c_i801 i2c_core uhci_hcd intel_agp rtc_cmos sr_mod libphy sg iTCO_wdt iTCO_vendor_support pcspkr yenta_socket rsrc_nonstatic button agpgart thermal ac processor battery pcmcia_core nvram usbcore ata_generic ide_pci_generic ide_gd_mod ide_core pata_acpi ata_piix ahci libata sd_mod scsi_mod crc_t10dif ext3 jbd
-Pid: 1142, comm: phy0 Tainted: G        W  2.6.31-rc9-wl-mnbStrip-36500-g918dc92 #77
-Call Trace:
- [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
- [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
- [<c0138d9c>] warn_slowpath_common+0x6c/0xc0
- [<f89134af>] ? __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
- [<c0138e36>] warn_slowpath_fmt+0x26/0x30
- [<f89134af>] __cfg80211_disconnected+0x1ff/0x210 [cfg80211]
- [<f8910262>] ? nl80211_send_deauth+0x22/0x30 [cfg80211]
- [<f8911463>] __cfg80211_send_deauth+0x213/0x260 [cfg80211]
- [<f89ea7a3>] ? __sta_info_free+0x33/0x40 [mac80211]
- [<f89ea9d3>] ? sta_info_destroy+0xf3/0x100 [mac80211]
- [<f89f1384>] ? ieee80211_set_disassoc+0x174/0x1d0 [mac80211]
- [<f891150e>] cfg80211_send_deauth+0x5e/0x70 [cfg80211]
- [<f89f2f31>] ieee80211_sta_work+0x901/0x1820 [mac80211]
- [<c0134ca1>] ? update_curr+0x1b1/0x1c0
- [<c013502d>] ? dequeue_task_fair+0x29d/0x2b0
- [<c010254d>] ? __switch_to+0xad/0x1a0
- [<c012a10f>] ? set_next_entity+0x11f/0x1b0
- [<c03a3c65>] ? schedule+0x495/0xa40
- [<c014fbea>] ? prepare_to_wait+0x3a/0x70
- [<c014b178>] worker_thread+0x148/0x210
- [<f89f2630>] ? ieee80211_sta_work+0x0/0x1820 [mac80211]
- [<c014f9a0>] ? autoremove_wake_function+0x0/0x50
- [<c014b030>] ? worker_thread+0x0/0x210
- [<c014f644>] kthread+0x84/0x90
- [<c014f5c0>] ? kthread+0x0/0x90
- [<c0104667>] kernel_thread_helper+0x7/0x10
----[ end trace 46565fb73d858208 ]---
-wlan0: direct probe to AP 00:0b:85:6f:12:ac (try 1)
-wlan0 direct probe responded
-wlan0: authenticate with AP 00:0b:85:6f:12:ac (try 1)
-wlan0: authenticated
-wlan0: associate with AP 00:0b:85:6f:12:ac (try 1)
-wlan0: RX ReassocResp from 00:0b:85:6f:12:ac (capab=0x431 status=0 aid=25)
-wlan0: associated
-
- sometimes no re-connect, until manual /etc/init.d/network restart
-
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index f46a92e..fee16fd 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -35,6 +35,7 @@
+  * TODO: Make a more generic struct (eg. add more stuff to ath5k_capabilities)
+  * and clean up common bits, then introduce set/get functions in eeprom.c */
+ #include "eeprom.h"
++#include "../ath.h"
+ 
+ /* PCI IDs */
+ #define PCI_DEVICE_ID_ATHEROS_AR5210 		0x0007 /* AR5210 */
+@@ -1020,6 +1021,7 @@ struct ath5k_capabilities {
+ /* TODO: Clean up and merge with ath5k_softc */
+ struct ath5k_hw {
+ 	u32			ah_magic;
++	struct ath_common       common;
+ 
+ 	struct ath5k_softc	*ah_sc;
+ 	void __iomem		*ah_iobase;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index efee68c..06fc893 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -444,6 +444,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ {
+ 	void __iomem *mem;
+ 	struct ath5k_softc *sc;
++	struct ath_common *common;
+ 	struct ieee80211_hw *hw;
+ 	int ret;
+ 	u8 csz;
+@@ -547,7 +548,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	__set_bit(ATH_STAT_INVALID, sc->status);
+ 
+ 	sc->iobase = mem; /* So we can unmap it on detach */
+-	sc->common.cachelsz = csz << 2; /* convert to bytes */
+ 	sc->opmode = NL80211_IFTYPE_STATION;
+ 	sc->bintval = 1000;
+ 	mutex_init(&sc->lock);
+@@ -572,6 +572,9 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 		goto err_irq;
+ 	}
+ 
++	common = ath5k_hw_common(sc->ah);
++	common->cachelsz = csz << 2; /* convert to bytes */
++
+ 	/* set up multi-rate retry capabilities */
+ 	if (sc->ah->ah_version == AR5K_AR5212) {
+ 		hw->max_rates = 4;
+@@ -718,7 +721,7 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
+ {
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct ath5k_softc *sc = hw->priv;
+-	struct ath_regulatory *regulatory = &sc->common.regulatory;
++	struct ath_regulatory *regulatory = ath5k_hw_regulatory(sc->ah);
+ 
+ 	return ath_reg_notifier_apply(wiphy, request, regulatory);
+ }
+@@ -728,7 +731,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ {
+ 	struct ath5k_softc *sc = hw->priv;
+ 	struct ath5k_hw *ah = sc->ah;
+-	struct ath_regulatory *regulatory = &sc->common.regulatory;
++	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
+ 	u8 mac[ETH_ALEN] = {};
+ 	int ret;
+ 
+@@ -1153,19 +1156,20 @@ ath5k_hw_to_driver_rix(struct ath5k_softc *sc, int hw_rix)
+ static
+ struct sk_buff *ath5k_rx_skb_alloc(struct ath5k_softc *sc, dma_addr_t *skb_addr)
+ {
++	struct ath_common *common = ath5k_hw_common(sc->ah);
+ 	struct sk_buff *skb;
+ 
+ 	/*
+ 	 * Allocate buffer with headroom_needed space for the
+ 	 * fake physical layer header at the start.
+ 	 */
+-	skb = ath_rxbuf_alloc(&sc->common,
+-			      sc->rxbufsize + sc->common.cachelsz - 1,
++	skb = ath_rxbuf_alloc(common,
++			      sc->rxbufsize + common->cachelsz - 1,
+ 			      GFP_ATOMIC);
+ 
+ 	if (!skb) {
+ 		ATH5K_ERR(sc, "can't alloc skbuff of size %u\n",
+-				sc->rxbufsize + sc->common.cachelsz - 1);
++				sc->rxbufsize + common->cachelsz - 1);
+ 		return NULL;
+ 	}
+ 
+@@ -1606,13 +1610,14 @@ static int
+ ath5k_rx_start(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
++	struct ath_common *common = ath5k_hw_common(ah);
+ 	struct ath5k_buf *bf;
+ 	int ret;
+ 
+-	sc->rxbufsize = roundup(IEEE80211_MAX_LEN, sc->common.cachelsz);
++	sc->rxbufsize = roundup(IEEE80211_MAX_LEN, common->cachelsz);
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "cachelsz %u rxbufsize %u\n",
+-		sc->common.cachelsz, sc->rxbufsize);
++		common->cachelsz, sc->rxbufsize);
+ 
+ 	spin_lock_bh(&sc->rxbuflock);
+ 	sc->rxlink = NULL;
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index a28c42f..005d25f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -115,7 +115,6 @@ struct ath5k_rfkill {
+  * associated with an instance of a device */
+ struct ath5k_softc {
+ 	struct pci_dev		*pdev;		/* for dma mapping */
+-	struct ath_common	common;
+ 	void __iomem		*iobase;	/* address of the device */
+ 	struct mutex		lock;		/* dev-level lock */
+ 	struct ieee80211_tx_queue_stats tx_stats[AR5K_NUM_TX_QUEUES];
+@@ -204,7 +203,7 @@ struct ath5k_softc {
+ 
+ static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
+ {
+-	return &ah->ah_sc->common;
++	return &ah->common;
+ }
+ 
+ static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+-- 
+1.6.3.3
 
