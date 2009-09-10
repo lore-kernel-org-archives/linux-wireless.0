@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48322 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753828AbZICAGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 20:06:19 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 17:06:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: claim irq for ath9k, not ath for pci
-Date: Wed, 2 Sep 2009 17:06:21 -0700
-Message-ID: <1251936381-16886-1-git-send-email-lrodriguez@atheros.com>
+Received: from ey-out-2122.google.com ([74.125.78.25]:14519 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605AbZIJWTg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 18:19:36 -0400
+Received: by ey-out-2122.google.com with SMTP id 25so124809eya.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 15:19:38 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: rt2x00: Hardcode TX ack timeout and consume time
+Date: Fri, 11 Sep 2009 00:19:35 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+References: <200909061514.23611.IvDoorn@gmail.com> <20090908183648.GE2617@tuxdriver.com>
+In-Reply-To: <20090908183648.GE2617@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909110019.35994.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k ahb requests an IRQ and indicates 'ath9k' claimed it,
-ath9k pci requests an IRQ and indicates 'ath'   claims it;
-since 'ath' is another module sync both ahb and pci to claim
-the irq using 'ath9k'.
+On Tuesday 08 September 2009, John W. Linville wrote:
+> On Sun, Sep 06, 2009 at 03:14:23PM +0200, Ivo van Doorn wrote:
+> > rt2x00: Hardcode TX ack timeout and consume time
+> 
+> > John, this patch has not yet been confirmed by any of the above bugzilla reports,
+> > but I do think this should be merged as soon as possible to 2.6.31 since this issue
+> > has been marked as regression for quite some time now. :)
+> 
+> Well, given how late it is in the 2.6.31 cycle and the fact that this
+> problem has persisted for a while I think I'll just let this slip to
+> 2.6.32 -- good enough?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Well preferably not, but I can sit it out and try to push it into -stable
+for 2.6.31.1. That might be the easiest solution which worked the last time
+when I had an urgent fix late in the release cycle as well. :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index bc4bc2c..8bb286d 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -187,7 +187,7 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	/* setup interrupt service routine */
- 
--	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath", sc);
-+	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
- 	if (ret) {
- 		dev_err(&pdev->dev, "request_irq failed\n");
- 		goto bad4;
--- 
-1.6.3.3
-
+Ivo
