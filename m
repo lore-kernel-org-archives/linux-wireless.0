@@ -1,89 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:48027 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:59155 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753809AbZICACR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 20:02:17 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 17:02:20 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: propagate errors on ath_init_device() and request_irq()
-Date: Wed, 2 Sep 2009 17:02:18 -0700
-Message-ID: <1251936138-16631-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
+	id S1751165AbZIJSuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 14:50:21 -0400
+Subject: Re: iwlagn: order 2 page allocation failures
+From: reinette chatre <reinette.chatre@intel.com>
+To: Frans Pop <elendil@planet.nl>
+Cc: Mel Gorman <mel@csn.ul.ie>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"cl@linux-foundation.org" <cl@linux-foundation.org>,
+	"Krauss, Assaf" <assaf.krauss@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>
+In-Reply-To: <200909102043.17883.elendil@planet.nl>
+References: <200909060941.01810.elendil@planet.nl>
+	 <20090910090206.GA22276@csn.ul.ie> <1252606547.30150.304.camel@rc-desk>
+	 <200909102043.17883.elendil@planet.nl>
 Content-Type: text/plain
+Date: Thu, 10 Sep 2009 11:50:24 -0700
+Message-Id: <1252608624.30150.312.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've cleaned up ath_init_device() and its children enough
-to pass meaninful errors back from probe. When this fails
-it means our device could not be initialized and a meaninful
-error will have been passed.
+On Thu, 2009-09-10 at 11:43 -0700, Frans Pop wrote:
 
-Do the same for request_irq() and also synchronize the error
-messages while at it.
+> Looks good to me (from a user's perspective).
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ahb.c |    8 +++-----
- drivers/net/wireless/ath/ath9k/pci.c |   12 ++++++------
- 2 files changed, 9 insertions(+), 11 deletions(-)
+Thank you very much for looking at it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index 5618fc2..7dc6301 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -120,16 +120,14 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	sc->irq = irq;
- 
- 	ret = ath_init_device(AR5416_AR9100_DEVID, sc);
--	if (ret != 0) {
--		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
--		ret = -ENODEV;
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize device\n");
- 		goto err_free_hw;
- 	}
- 
- 	ret = request_irq(irq, ath_isr, IRQF_SHARED, "ath9k", sc);
- 	if (ret) {
--		dev_err(&pdev->dev, "request_irq failed, err=%d\n", ret);
--		ret = -EIO;
-+		dev_err(&pdev->dev, "request_irq failed\n");
- 		goto err_detach;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 17862cc..bc4bc2c 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -179,17 +179,17 @@ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sc->mem = mem;
- 	sc->bus_ops = &ath_pci_bus_ops;
- 
--	if (ath_init_device(id->device, sc) != 0) {
--		ret = -ENODEV;
-+	ret = ath_init_device(id->device, sc);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize device\n");
- 		goto bad3;
- 	}
- 
- 	/* setup interrupt service routine */
- 
--	if (request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath", sc)) {
--		printk(KERN_ERR "%s: request_irq failed\n",
--			wiphy_name(hw->wiphy));
--		ret = -EIO;
-+	ret = request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath", sc);
-+	if (ret) {
-+		dev_err(&pdev->dev, "request_irq failed\n");
- 		goto bad4;
- 	}
- 
--- 
-1.6.3.3
+> IIUC the first message is now only displayed if IWL debugging is 
+> explicitly enabled, 
+
+Correct. User will have to enable debug flag of 0x1.
+
+> It seems to me that, with debugging enabled, the "Failed to allocate SKB 
+> buffer." message may get repeated, but I guess that's minor.
+
+Yes, it will be repeated. I did add a "net_ratelimit()" to it so it
+should not be too overwhelming. I did not care to limit it even more
+since we are now talking about a debug message as opposed to an error
+message on the console.
+
+
+> One nitpick. As you've made the message into sentences, "Only %u free 
+> buffers remaining" should IMO also end with a period.
+
+Sorry - will fix. I will not post a new version to this thread for this
+issue, but it will be fixed in the next version I send out.
+
+Reinette
+
 
