@@ -1,73 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822AbZI0LPR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46599 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752762AbZIJALJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 07:15:17 -0400
-Subject: Re: 2.6.31-git wireless broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
-	 <1253813740.3868.324.camel@johannes.local>
-	 <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
-	 <1253816614.3868.406.camel@johannes.local>
-	 <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
-	 <1253856038.3868.500.camel@johannes.local>
-	 <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
-	 <1253868214.3868.713.camel@johannes.local>
-	 <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
-	 <1253970049.5122.31.camel@johannes.local>
-	 <1253973831.5122.33.camel@johannes.local>
-	 <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JnPdICGDojVXK3hNsT3m"
-Date: Sun, 27 Sep 2009 13:15:18 +0200
-Message-Id: <1254050118.3958.2.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 9 Sep 2009 20:11:09 -0400
+Date: Wed, 9 Sep 2009 20:10:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2009-09-09
+Message-ID: <20090910001025.GA19645@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-JnPdICGDojVXK3hNsT3m
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+One last batch of wireless bits for the 2.6.32 merge window... :-)
 
-On Sat, 2009-09-26 at 16:33 +0100, Hugh Dickins wrote:
+This includes a number of ath9k updates related especially to bluetooth
+coexistance, as well as a number of b43 changes related to support of SDIO
+and the associated SSB over SDIO bus support.
 
-> I do have CONFIG_WIRELESS_EXT_SYSFS=3Dy,
-> and I do have /sys/class/net/wlan0/ containing various things,
-> but I don't have any /sys/class/net/wlan0/wireless with recent kernels.
+Please let me know if there are problems!
 
-Curious. I found the problem, but maybe nobody else complaining before
-you means we can get rid of CONFIG_WIRELESS_EXT_SYSFS quicker than I
-thought ;)
+Thanks,
 
-Will post a fix later today.
+John
 
-johannes
+---
 
---=-JnPdICGDojVXK3hNsT3m
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Individual patches are available here:
 
------BEGIN PGP SIGNATURE-----
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
 
-iQIcBAABAgAGBQJKv0lCAAoJEODzc/N7+QmaWHMP/A48kM2eSlJ1U7vEn993UE0o
-XWNpiOOF2LQx90Z52SeSzackXWcoy/zX/jcZUEsh82aAfVezo2LAw3hR8DELC+yt
-Xn2hkh8/PiNtV7dUfAIwhGB3ceNAFLaYvjHSeozxAOGtagWWveKmxo2YEhGSaLXh
-oItAkcff14EGSVUgy8Qlapr8zrGga0GAIUOZJ853kQCZAuu9eJmGy93HDTIYwqt0
-Z4YIHfTGmLyDFBg/j+HxHJs6Z/A3Kx5K+YvHnd/U4IoHYuwsGH1G2pqRilOLFr1W
-GhG53UGUkxMQEtUAMhGe+Gmog6WaJ6nmcMMaxYKxVOoZtqCocqbYXXxPU27XOlVO
-RbUcwjAOUIvkew44iM3OurXTbMF9DmAvxlugdrOAbJeaYOJ0cITkNreFS9TfObzx
-y1+iw+lODJWjBOJs5uoU4FiYIHMXssVvGbZdHJEFEXI5KX2tNKuqKQK6qeMq48KQ
-jKE5Mw1RsNO24gsfisK+5GG6T3dpKDHK+KnTVV5/J61kVGk4hPbWkQtWFin8urj7
-j52s8Lkh7/8BKNstMttumbNLQd8pWn7SWVyuiJf0A+5RsVVcuYkeXjCJJ4VWPBDF
-sQspW4A935+eiGlV4kjMNdIX1Pd+uCdcyLnwhY88u8CdNVXt+PxSHwxvZeVgCKbd
-o1tx46QcBTgy+5CtsQcs
-=yvDK
------END PGP SIGNATURE-----
+---
 
---=-JnPdICGDojVXK3hNsT3m--
+The following changes since commit 6ec1c69a8f6492fd25722f4762721921da074c12:
+  David S. Miller (1):
+        net_sched: add classful multiqueue dummy scheduler
 
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
+
+Albert Herranz (1):
+      ssb: Implement SDIO host bus support
+
+Christian Lamparter (1):
+      ar9170: implement frequency calibration for one-stage/openfw
+
+Holger Schurig (1):
+      cfg80211: allow scanning on specified frequencies when using wext-compatibility
+
+Ivo van Doorn (1):
+      rt2x00: Hardcode TX ack timeout and consume time
+
+Joe Perches (1):
+      MAINTAINERS: Add Atheros Linux wireless drivers home page
+
+Joerg Albert (3):
+      ar9170: added phy register initialisation from eeprom values
+      ath,ar9170: move CTL_ defines into regd.h
+      ath,ar9170: implemented conformance test limit calc. for tx power
+
+Luis R. Rodriguez (5):
+      ath9k: propagate ieee80211_alloc_hw() failure
+      ath9k: propagate errors on ath_init_device() and request_irq()
+      ath9k: claim irq for ath9k, not ath for pci
+      wireless: update cfg80211 kconfig entry
+      wireless: mark prism54 as deprecated and mark for removal
+
+Michael Buesch (10):
+      b43: Use a threaded IRQ handler
+      b43: Remove TX spinlock
+      b43: Remove DMA/PIO queue locks
+      b43: Remove PIO RX workqueue
+      b43: remove SHM spinlock
+      ssb: Fail ssb modinit, if attach of the buses failed.
+      b43: PCMCIA is not experimental anymore
+      b43: Really disable QoS, if requested
+      b43: Fix sparse warning in hw-tkip code
+      b44/b43/b43legacy: Fix switch warnings introduced by SSB-SDIO
+
+Sujith (2):
+      ath9k: Fix RX Filter handling for BAR
+      ath9k: Fix channelFlags for 2GHZ
+
+Vasanthakumar Thiagarajan (6):
+      ath9k: Disable ASPM when btcoex is active
+      ath9k: Remove unnecessary casting to u8 in pci_read_config_byte() call
+      ath9k: Store subsystem id in struct hw_version
+      ath9k: Enable btcoex based on the subsystem id of the device
+      ath9k: Get rid of the modparam btcoex_enable
+      ath9k: Initialize the priority gpio for BT coex 3-wire
+
+ Documentation/feature-removal-schedule.txt |   29 ++
+ MAINTAINERS                                |    2 +
+ drivers/net/b44.c                          |   10 +-
+ drivers/net/wireless/Kconfig               |   57 +--
+ drivers/net/wireless/ath/ar9170/phy.c      |  420 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ahb.c       |   10 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h     |    2 +-
+ drivers/net/wireless/ath/ath9k/btcoex.c    |   23 +
+ drivers/net/wireless/ath/ath9k/btcoex.h    |    2 +
+ drivers/net/wireless/ath/ath9k/hw.c        |   30 +-
+ drivers/net/wireless/ath/ath9k/hw.h        |   10 +
+ drivers/net/wireless/ath/ath9k/mac.h       |    1 +
+ drivers/net/wireless/ath/ath9k/main.c      |   12 +-
+ drivers/net/wireless/ath/ath9k/pci.c       |   22 +-
+ drivers/net/wireless/ath/ath9k/recv.c      |    3 +
+ drivers/net/wireless/ath/ath9k/reg.h       |    1 -
+ drivers/net/wireless/ath/regd.h            |    6 +
+ drivers/net/wireless/ath/regd_common.h     |    6 -
+ drivers/net/wireless/b43/Kconfig           |    4 +-
+ drivers/net/wireless/b43/b43.h             |   30 +-
+ drivers/net/wireless/b43/debugfs.c         |   67 +---
+ drivers/net/wireless/b43/debugfs.h         |    3 +-
+ drivers/net/wireless/b43/dma.c             |   31 +--
+ drivers/net/wireless/b43/dma.h             |    3 -
+ drivers/net/wireless/b43/main.c            |  460 +++++++++++-----------
+ drivers/net/wireless/b43/main.h            |    4 -
+ drivers/net/wireless/b43/phy_common.c      |    1 -
+ drivers/net/wireless/b43/phy_common.h      |    3 +-
+ drivers/net/wireless/b43/phy_g.c           |    7 -
+ drivers/net/wireless/b43/phy_g.h           |    3 +-
+ drivers/net/wireless/b43/pio.c             |   71 +---
+ drivers/net/wireless/b43/pio.h             |    6 -
+ drivers/net/wireless/b43/sysfs.c           |    3 -
+ drivers/net/wireless/b43/xmit.c            |   10 +-
+ drivers/net/wireless/b43legacy/main.c      |    8 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c    |    5 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c    |    5 +-
+ drivers/net/wireless/rt2x00/rt2500usb.c    |    4 -
+ drivers/net/wireless/rt2x00/rt2800usb.c    |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00.h       |    3 -
+ drivers/net/wireless/rt2x00/rt2x00config.c |   11 -
+ drivers/net/wireless/rt2x00/rt61pci.c      |    2 +-
+ drivers/net/wireless/rt2x00/rt73usb.c      |    2 +-
+ drivers/ssb/Kconfig                        |   14 +
+ drivers/ssb/Makefile                       |    1 +
+ drivers/ssb/main.c                         |   64 +++-
+ drivers/ssb/scan.c                         |   11 +
+ drivers/ssb/sdio.c                         |  610 ++++++++++++++++++++++++++++
+ drivers/ssb/ssb_private.h                  |   40 ++
+ include/linux/ssb/ssb.h                    |   25 +-
+ net/wireless/Kconfig                       |   11 +-
+ net/wireless/scan.c                        |   41 ++-
+ 52 files changed, 1673 insertions(+), 539 deletions(-)
+ create mode 100644 drivers/ssb/sdio.c
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-09-09.patch.bz2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
