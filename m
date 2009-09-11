@@ -1,138 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2753 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbZIAMRi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 08:17:38 -0400
-Received: from hash ([72.83.200.195])
-	(authenticated user bob@bobcopeland.com)
-	by mail.deathmatch.net
-	(using TLSv1/SSLv3 with cipher AES256-SHA (256 bits))
-	for linux-wireless@vger.kernel.org;
-	Tue, 1 Sep 2009 08:17:39 -0400
-Received: from bob by hash with local (Exim 4.69)
-	(envelope-from <me@bobcopeland.com>)
-	id 1MiSIi-0005cp-U2
-	for linux-wireless@vger.kernel.org; Tue, 01 Sep 2009 08:17:28 -0400
-Date: Tue, 1 Sep 2009 08:17:28 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Subject: soft lockup in cfg80211 find_ie()
-Message-ID: <20090901121728.GA15790@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754498AbZIKRiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 04/13] iwlwifi: separate nic_config for different NIC
+Date: Fri, 11 Sep 2009 10:38:10 -0700
+Message-Id: <1252690699-25796-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-My laptop was on all night and at some point got stuck in a loop.
-Unfortunately I don't know exactly what happened since dmesg buffer
-filled up and there was nothing incriminating in /var/log, but
-here's my interpretation:
+Different NIC has different requirements for configuration. Currently all
+5000 series hardware and later share the same configuration function even
+though they do not need the same configurations. Fix this by separating the
+needed configuration actions for each hardware model.
 
-EIP points to line 146:
+.5000 series: L1-ASPM H/W bug work-around
+              configure radio
+              write CSR_HW_IF_CONFIG_REG for uCode use
+              work-around for NIC get stuck after early PCIe power off
 
-   while (len > 2 && ies[0] != num) ...
+.1000 series: write CSR_HW_IF_CONFIG_REG for uCode use
+              setting digital SVR for 1000 card to 1.32V
 
-ECX holds len, which is negative (unfortunately size_t is unsigned)
-EDX holds ies, looks like a valid pointer
-EBX holds num, which is 0.
+.6000 series: configure radio
+              write CSR_HW_IF_CONFIG_REG for uCode use
+              write CSR_GP_DRIVER_REG to indicate radio sku
 
-This looks like this is a DoS-able bug if there are any malformed
-packets, no?  I think we should change 'len' to int here.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c   |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |   16 +++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    7 ++++++-
+ 4 files changed, 27 insertions(+), 5 deletions(-)
 
-[38442.105007] BUG: soft lockup - CPU#0 stuck for 61s! [phy0:2230]
-[38442.105007] Modules linked in: aes_i586 aes_generic fuse af_packet ipt_REJECT xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_state iptable_filter ip_tables x_tables acpi_cpufreq binfmt_misc dm_mirror dm_region_hash dm_log dm_multipath dm_mod kvm_intel kvm uinput i915 arc4 ecb drm snd_hda_codec_idt ath5k snd_hda_intel hid_apple mac80211 usbhid appletouch snd_hda_codec snd_pcm ath cfg80211 snd_timer i2c_algo_bit ohci1394 video snd processor ieee1394 rfkill ehci_hcd sg sky2 backlight snd_page_alloc uhci_hcd joydev output ac thermal button battery sr_mod applesmc cdrom input_polldev evdev unix [last unloaded: scsi_wait_scan]
-[38442.105007] irq event stamp: 2044208759
-[38442.105007] hardirqs last  enabled at (2044208758): [<c1002ffc>] restore_all_notrace+0x0/0x18
-[38442.105007] hardirqs last disabled at (2044208759): [<c10038f4>] apic_timer_interrupt+0x28/0x34
-[38442.105007] softirqs last  enabled at (92950144): [<c103ab48>] __do_softirq+0x108/0x210
-[38442.105007] softirqs last disabled at (92950274): [<c1348e74>] _spin_lock_bh+0x14/0x80
-[38442.105007] 
-[38442.105007] Pid: 2230, comm: phy0 Tainted: G        W  (2.6.31-rc7-wl #8) MacBook1,1
-[38442.105007] EIP: 0060:[<f8ea2d50>] EFLAGS: 00010292 CPU: 0
-[38442.105007] EIP is at cmp_ies+0x30/0x180 [cfg80211]
-[38442.105007] EAX: 00000082 EBX: 00000000 ECX: ffffffc1 EDX: d8efd014
-[38442.105007] ESI: ffffff7c EDI: 0000004d EBP: eee2dc50 ESP: eee2dc3c
-[38442.105007]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[38442.105007] CR0: 8005003b CR2: d8efd014 CR3: 01694000 CR4: 000026d0
-[38442.105007] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[38442.105007] DR6: ffff0ff0 DR7: 00000400
-[38442.105007] Call Trace:
-[38442.105007]  [<f8ea2f8d>] cmp_bss+0xed/0x100 [cfg80211]
-[38442.105007]  [<f8ea33e4>] cfg80211_bss_update+0x84/0x410 [cfg80211]
-[38442.105007]  [<f8ea3884>] cfg80211_inform_bss_frame+0x114/0x180 [cfg80211]
-[38442.105007]  [<f97255ff>] ieee80211_bss_info_update+0x4f/0x180 [mac80211]
-[38442.105007]  [<f972b118>] ieee80211_rx_bss_info+0x88/0xf0 [mac80211]
-[38442.105007]  [<f9739297>] ? ieee802_11_parse_elems+0x27/0x30 [mac80211]
-[38442.105007]  [<f972b224>] ieee80211_rx_mgmt_probe_resp+0xa4/0x1c0 [mac80211]
-[38442.105007]  [<f972bc59>] ieee80211_sta_rx_queued_mgmt+0x919/0xc50 [mac80211]
-[38442.105007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38442.105007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38442.105007]  [<c105ffd0>] ? mark_held_locks+0x60/0x80
-[38442.105007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
-[38442.105007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
-[38442.105007]  [<c1348bce>] ? _spin_unlock_irqrestore+0x3e/0x70
-[38442.105007]  [<c12c1c0f>] ? skb_dequeue+0x4f/0x70
-[38442.105007]  [<f972c021>] ieee80211_sta_work+0x91/0xb80 [mac80211]
-[38442.105007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38442.105007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
-[38442.105007]  [<c10479af>] worker_thread+0x18f/0x320
-[38442.105007]  [<c104794e>] ? worker_thread+0x12e/0x320
-[38442.105007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
-[38442.105007]  [<f972bf90>] ? ieee80211_sta_work+0x0/0xb80 [mac80211]
-[38442.105007]  [<c104cbb0>] ? autoremove_wake_function+0x0/0x50
-[38442.105007]  [<c1047820>] ? worker_thread+0x0/0x320
-[38442.105007]  [<c104c854>] kthread+0x84/0x90
-[38442.105007]  [<c104c7d0>] ? kthread+0x0/0x90
-[38442.105007]  [<c1003ab7>] kernel_thread_helper+0x7/0x10
-[38507.604007] BUG: soft lockup - CPU#0 stuck for 61s! [phy0:2230]
-[38507.604007] Modules linked in: aes_i586 aes_generic fuse af_packet ipt_REJECT xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_state iptable_filter ip_tables x_tables acpi_cpufreq binfmt_misc dm_mirror dm_region_hash dm_log dm_multipath dm_mod kvm_intel kvm uinput i915 arc4 ecb drm snd_hda_codec_idt ath5k snd_hda_intel hid_apple mac80211 usbhid appletouch snd_hda_codec snd_pcm ath cfg80211 snd_timer i2c_algo_bit ohci1394 video snd processor ieee1394 rfkill ehci_hcd sg sky2 backlight snd_page_alloc uhci_hcd joydev output ac thermal button battery sr_mod applesmc cdrom input_polldev evdev unix [last unloaded: scsi_wait_scan]
-[38507.604007] irq event stamp: 2295973181
-[38507.604007] hardirqs last  enabled at (2295973180): [<c1002ffc>] restore_all_notrace+0x0/0x18
-[38507.604007] hardirqs last disabled at (2295973181): [<c10038f4>] apic_timer_interrupt+0x28/0x34
-[38507.604007] softirqs last  enabled at (92950144): [<c103ab48>] __do_softirq+0x108/0x210
-[38507.604007] softirqs last disabled at (92950274): [<c1348e74>] _spin_lock_bh+0x14/0x80
-[38507.604007] 
-[38507.604007] Pid: 2230, comm: phy0 Tainted: G        W  (2.6.31-rc7-wl #8) MacBook1,1
-[38507.604007] EIP: 0060:[<f8ea2d50>] EFLAGS: 00010292 CPU: 0
-[38507.604007] EIP is at cmp_ies+0x30/0x180 [cfg80211]
-[38507.604007] EAX: 00000082 EBX: 00000000 ECX: ffffffc1 EDX: d8efd014
-[38507.604007] ESI: ffffff7c EDI: 0000004d EBP: eee2dc50 ESP: eee2dc3c
-[38507.604007]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[38507.604007] CR0: 8005003b CR2: d8efd014 CR3: 01694000 CR4: 000026d0
-[38507.604007] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-[38507.604007] DR6: ffff0ff0 DR7: 00000400
-[38507.604007] Call Trace:
-[38507.604007]  [<f8ea2f8d>] cmp_bss+0xed/0x100 [cfg80211]
-[38507.604007]  [<f8ea33e4>] cfg80211_bss_update+0x84/0x410 [cfg80211]
-[38507.604007]  [<f8ea3884>] cfg80211_inform_bss_frame+0x114/0x180 [cfg80211]
-[38507.604007]  [<f97255ff>] ieee80211_bss_info_update+0x4f/0x180 [mac80211]
-[38507.604007]  [<f972b118>] ieee80211_rx_bss_info+0x88/0xf0 [mac80211]
-[38507.604007]  [<f9739297>] ? ieee802_11_parse_elems+0x27/0x30 [mac80211]
-[38507.604007]  [<f972b224>] ieee80211_rx_mgmt_probe_resp+0xa4/0x1c0 [mac80211]
-[38507.604007]  [<f972bc59>] ieee80211_sta_rx_queued_mgmt+0x919/0xc50 [mac80211]
-[38507.604007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38507.604007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38507.604007]  [<c105ffd0>] ? mark_held_locks+0x60/0x80
-[38507.604007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
-[38507.604007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
-[38507.604007]  [<c1348bce>] ? _spin_unlock_irqrestore+0x3e/0x70
-[38507.604007]  [<c12c1c0f>] ? skb_dequeue+0x4f/0x70
-[38507.604007]  [<f972c021>] ieee80211_sta_work+0x91/0xb80 [mac80211]
-[38507.604007]  [<c1009707>] ? sched_clock+0x27/0xa0
-[38507.604007]  [<c134baa5>] ? sub_preempt_count+0x85/0xc0
-[38507.604007]  [<c10479af>] worker_thread+0x18f/0x320
-[38507.604007]  [<c104794e>] ? worker_thread+0x12e/0x320
-[38507.604007]  [<c1348be5>] ? _spin_unlock_irqrestore+0x55/0x70
-[38507.604007]  [<f972bf90>] ? ieee80211_sta_work+0x0/0xb80 [mac80211]
-[38507.604007]  [<c104cbb0>] ? autoremove_wake_function+0x0/0x50
-[38507.604007]  [<c1047820>] ? worker_thread+0x0/0x320
-[38507.604007]  [<c104c854>] kthread+0x84/0x90
-[38507.604007]  [<c104c7d0>] ? kthread+0x0/0x90
-[38507.604007]  [<c1003ab7>] kernel_thread_helper+0x7/0x10
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index a95caa0..b6d2abe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -76,7 +76,10 @@ static void iwl1000_set_ct_threshold(struct iwl_priv *priv)
+ /* NIC configuration for 1000 series */
+ static void iwl1000_nic_config(struct iwl_priv *priv)
+ {
+-	iwl5000_nic_config(priv);
++	/* set CSR_HW_CONFIG_REG for uCode use */
++	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
++		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
+ 
+ 	/* Setting digital SVR for 1000 card to 1.32V */
+ 	/* locking is acquired in iwl_set_bits_mask_prph() function */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 1d539e3..ea215bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -198,7 +198,7 @@ out:
+ }
+ 
+ 
+-/* NIC configuration for 5000 series and up */
++/* NIC configuration for 5000 series */
+ void iwl5000_nic_config(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+@@ -221,7 +221,7 @@ void iwl5000_nic_config(struct iwl_priv *priv)
+ 	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
+ 
+ 	/* write radio config values to register */
+-	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) < EEPROM_5000_RF_CFG_TYPE_MAX)
++	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) < EEPROM_RF_CONFIG_TYPE_MAX)
+ 		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
+ 			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
+ 			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 82b9c93..36655c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -71,7 +71,21 @@ static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
+ /* NIC configuration for 6000 series */
+ static void iwl6000_nic_config(struct iwl_priv *priv)
+ {
+-	iwl5000_nic_config(priv);
++	u16 radio_cfg;
++
++	radio_cfg = iwl_eeprom_query16(priv, EEPROM_RADIO_CONFIG);
++
++	/* write radio config values to register */
++	if (EEPROM_RF_CFG_TYPE_MSK(radio_cfg) <= EEPROM_RF_CONFIG_TYPE_MAX)
++		iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++			    EEPROM_RF_CFG_TYPE_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_STEP_MSK(radio_cfg) |
++			    EEPROM_RF_CFG_DASH_MSK(radio_cfg));
++
++	/* set CSR_HW_CONFIG_REG for uCode use */
++	iwl_set_bit(priv, CSR_HW_IF_CONFIG_REG,
++		    CSR_HW_IF_CONFIG_REG_BIT_RADIO_SI |
++		    CSR_HW_IF_CONFIG_REG_BIT_MAC_SI);
+ 
+ 	/* no locking required for register write */
+ 	if (priv->cfg->pa_type == IWL_PA_HYBRID) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 90e2b4e..61794eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -385,7 +385,12 @@ struct iwl_eeprom_calib_info {
+ 
+ #define EEPROM_3945_RF_CFG_TYPE_MAX  0x0
+ #define EEPROM_4965_RF_CFG_TYPE_MAX  0x1
+-#define EEPROM_5000_RF_CFG_TYPE_MAX  0x3
++
++/* Radio Config for 5000 and up */
++#define EEPROM_RF_CONFIG_TYPE_R3x3	0x0
++#define EEPROM_RF_CONFIG_TYPE_R2x2	0x1
++#define EEPROM_RF_CONFIG_TYPE_R1x2	0x2
++#define EEPROM_RF_CONFIG_TYPE_MAX	0x3
+ 
+ /*
+  * Per-channel regulatory data.
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.5.6.3
 
