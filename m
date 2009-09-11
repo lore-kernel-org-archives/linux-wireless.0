@@ -1,36 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f173.google.com ([209.85.210.173]:33197 "EHLO
-	mail-yx0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508AbZIYFVM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 01:21:12 -0400
-Received: by yxe3 with SMTP id 3so268435yxe.4
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 22:21:16 -0700 (PDT)
-From: Balaji Ravindran <b@w1an.in>
-Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
-Subject: Question on general wireless testing tree compilation.
-Date: Thu, 24 Sep 2009 22:21:12 -0700
-Message-Id: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Mime-Version: 1.0 (Apple Message framework v1076)
+Received: from web28302.mail.ukl.yahoo.com ([87.248.110.121]:42619 "HELO
+	web28302.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753424AbZIKHwJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 03:52:09 -0400
+Message-ID: <354996.83066.qm@web28302.mail.ukl.yahoo.com>
+Date: Fri, 11 Sep 2009 07:52:11 +0000 (GMT)
+From: Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mmc@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090910203951.041d5c17.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Everyone,
+--- El vie, 11/9/09, Andrew Morton <akpm@linux-foundation.org> escribió:
+> > Some manufacturers provide vendor information in
+> non-vendor specific CIS
+> > tuples. For example, Broadcom uses an Extended
+> Function tuple to provide
+> > the MAC address on some of their network cards, as in
+> the case of the
+> > Nintendo Wii WLAN daughter card.
+> > 
+> > This patch allows passing correct tuples unknown to
+> the SDIO core to
+> > a matching SDIO driver instead of rejecting them and
+> failing.
+> > 
+> 
+> This looks leaky to me.
+> 
 
-Sorry for a very amateur question. Could anyone just help me get  
-started with compiling the linux kernel from the wireless-testing  
-tree? I just pulled the local wireless-testing repo, trying to  
-navigate through the code, and wanted to compile the kernel, and to  
-boot up to it. Could anyone just help me get started?
+Hi Andrew, thanks for the review.
+I hope I can clarify a bit what the patch does in the next comments.
 
-I followed the instructions from http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
-and ended up with a compile error in 'make', while trying to create  
-the bzimage. (error is on make: initramfs_data.cpi.o failed)
+> 
+> :         if (i < ARRAY_SIZE(cis_tpl_list)) {
+> :             const struct cis_tpl *tpl = cis_tpl_list + i;
+> :             if (tpl_link < tpl->min_size) {
+> :                 printk(KERN_ERR
+> :                        "%s: bad CIS tuple 0x%02x"
+> :                        " (length = %u, expected >= %u)\n",
+> :                        mmc_hostname(card->host),
+> :                        tpl_code, tpl_link, tpl->min_size);
+> :                 ret = -EINVAL;
+> 
+> ret == -EINVAL
+> 
 
-Is there any other easy way to compile the kernel/debug.
+At this point ret is not -EINVAL. If it was -EINVAL the code would have had exit at this snipped before:
+
+                if (ret) {
+                        kfree(this);
+                        break;
+                }
 
 
-Thanks
+> :             } else if (tpl->parse) {
+> :                 ret = tpl->parse(card, func,
+> :                                  this->data, tpl_link);
+> :             }
+> :             /* already successfully parsed, not needed anymore */
+> :             if (!ret)
+> :                 kfree(this);
+> 
+> `this' doesn't get freed
+> 
 
-Balaji R
+Yes, that's the whole point of the patch. It must be freed _only_ if the SDIO core parsed it. If the SDIO core cannot parse it then it gets passed to the SDIO driver via the SDIO func struct tuple list (later).
+
+> :         } else {
+> :            /* unknown tuple */
+> :            ret = -EILSEQ;
+> :         }
+> :
+> :         if (ret == -EILSEQ) {
+> 
+> `this' doesn't get remembered.
+> 
+
+When ret is -EILSEQ `this' is linked to the SDIO func tuple list (later).
+
+> :            /* this tuple is unknown to the core */
+> :            this->next = NULL;
+> :            this->code = tpl_code;
+> :            this->size = tpl_link;
+> :            *prev = this;
+> :            prev = &this->next;
+> :            pr_debug("%s: queuing CIS tuple 0x%02x length %u\n",
+> :                     mmc_hostname(card->host), tpl_code, tpl_link);
+> :            /* keep on analyzing tuples */
+> :            ret = 0;
+> :         }
+> : 
+> :         ptr += tpl_link;
+> 
+> `this' leaks.
+> 
+
+`this' doesn't leak. `this' has been linked to the SDIO func tuple list in:
+
+*prev = this;
+
+
+> :     } while (!ret);
+> 
+> Please check?
+> 
+
+Thanks a lot for you comments,
+Albert
+
+
+
+      
