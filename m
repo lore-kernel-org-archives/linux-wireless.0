@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f190.google.com ([209.85.222.190]:45661 "EHLO
-	mail-pz0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574AbZIOXrY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 19:47:24 -0400
-Received: by pzk28 with SMTP id 28so3783197pzk.20
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 16:47:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
-Date: Tue, 15 Sep 2009 16:41:29 -0700
-Message-ID: <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
-Subject: Re: [PATCH] libertas: Add auto deep sleep support for
-	SD8385/SD8686/SD8688
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754496AbZIKRiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:17 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/13] iwlwifi driver updates 09/11/2009
+Date: Fri, 11 Sep 2009 10:38:06 -0700
+Message-Id: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing.  This is not specific to the actual implementation of the
-deep sleep commands in your patch but,
+In this series we include a few fixes for 2.6.32. It also contains some
+cleanup and preparation work for new hardware.
 
-On Tue, Sep 15, 2009 at 4:45 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> +       Path: /sys/kernel/debug/libertas_wireless/ethX/
+The fixes for 2.6.32 are:
+- patch 2/13 fixes the problem where stations are not able to use HT rates
+and keep using legacy rates
+- patch 6/13 fixes buffer loss that occur when system is not able to
+allocate an skb. This can happen more often than expected since the driver
+attempts skb allocation while in tasklet and thus with GFP_ATOMIC that is
+more likely to fail.
+- patch 12/13 fixes the problem where we transmit on incorrect antenna
+- patch 13/13 even though powersave is default disabled for iwlwifi users
+are still able to enable it using iwconfig. We need to prevent this for
+4965 since it cannot handle the powersave requests well.
 
-Is the sysfs interface really necessary?  It seems like yet another
-non-standard configuration option to keep track of.
+[PATCH 01/13] iwlwifi: modify LED blink index table
+[PATCH 02/13 v2.6.32 and w-t] iwlwifi: fix HT operation in 2.4 GHz band
+[PATCH 03/13] iwlwifi: remove un-supported eeprom parameters
+[PATCH 04/13] iwlwifi: separate nic_config for different NIC
+[PATCH 05/13] iwlwifi: separate set_hw_params function for 6000 series
+[PATCH 06/13 v2.6.32 and w-t] iwlwifi: fix potential rx buffer loss
+[PATCH 07/13] iwlwifi: clean up ht config a little
+[PATCH 08/13] iwlwifi: Adjust blink rate to compensate Clock difference
+[PATCH 09/13] iwlwifi: clean up ht config naming
+[PATCH 10/13] iwlwifi: show NVM version in debugfs
+[PATCH 11/13] iwlwifi: clarify and clean up chain settings
+[PATCH 12/13 v2.6.32 and w-t] iwlwifi: find the correct first antenna
+[PATCH 13/13 v2.6.32 and w-t] iwlwifi: disable powersave for 4965
 
-Deep sleep seems to pretty much "turn off" the wifi card (as far as
-the user is concerned) so how about a simpler approach: enter deep
-sleep when the interface is brought down (ifconfig wlanN down) and
-exit deep sleep when it's brought up.  Do this only when deep sleep is
-supported/possible.  Alternately, maybe this belongs as an rfkill
-feature?
 
-  -Andrey
+Thank you
+
+Reinette
+
