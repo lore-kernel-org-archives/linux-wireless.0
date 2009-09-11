@@ -1,116 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43109 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523AbZIXDHB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 23:07:01 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:11274 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755714AbZIKRiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:20 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/4] ath9k: use common read/write ops on pci and debug code
-Date: Wed, 23 Sep 2009 23:06:59 -0400
-Message-Id: <1253761622-9530-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1253761622-9530-1-git-send-email-lrodriguez@atheros.com>
-References: <1253761622-9530-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/13] iwlwifi: Adjust blink rate to compensate Clock difference
+Date: Fri, 11 Sep 2009 10:38:14 -0700
+Message-Id: <1252690699-25796-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PCI and debug code will not be shared between ath9k and
-ath9k_htc, so make that code use the common read/write ops.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Adjust led blink rate to compensate on a MAC Clock difference on every
+HW. Led blink rate analysis showed an average deviation of 0% on 3945,
+5% on 4965 HW and 20% on 5000 series and up.
+Need to compensate on the led on/off time per HW according to the
+deviation to achieve the desired led frequency
+The calculation is: (100-averageDeviation)/100 * blinkTime
+For code efficiency the calculation will be:
+    compensation = (100 - averageDeviation) * 64 / 100
+    NewBlinkTime = (compensation * BlinkTime) / 64
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   21 +++++++++++++--------
- drivers/net/wireless/ath/ath9k/pci.c   |    4 ++--
- 2 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    2 +
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    6 +++++
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    5 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    4 +++
+ drivers/net/wireless/iwlwifi/iwl-led.c  |   33 +++++++++++++++++++++++++++++-
+ 7 files changed, 50 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 5dfc0e9..352914c 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -18,6 +18,11 @@
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index b6d2abe..486b144 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -162,5 +162,6 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
+ 	.shadow_ram_support = false,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
  
- #include "ath9k.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index e9a685d..63dfa57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2892,6 +2892,7 @@ static struct iwl_cfg iwl3945_bg_cfg = {
+ 	.mod_params = &iwl3945_mod_params,
+ 	.use_isr_legacy = true,
+ 	.ht_greenfield_support = false,
++	.led_compensation = 64,
+ };
  
-+#define REG_WRITE_D(_ah, _reg, _val) \
-+	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
-+#define REG_READ_D(_ah, _reg) \
-+	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
+ static struct iwl_cfg iwl3945_abg_cfg = {
+@@ -2906,6 +2907,7 @@ static struct iwl_cfg iwl3945_abg_cfg = {
+ 	.mod_params = &iwl3945_mod_params,
+ 	.use_isr_legacy = true,
+ 	.ht_greenfield_support = false,
++	.led_compensation = 64,
+ };
+ 
+ struct pci_device_id iwl3945_hw_card_ids[] = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 6a13bfb..63df1e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2346,6 +2346,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.mod_params = &iwl4965_mod_params,
+ 	.use_isr_legacy = true,
+ 	.ht_greenfield_support = false,
++	.led_compensation = 61,
+ };
+ 
+ /* Module firmware */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index e4acfc3..c31bde3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -1646,6 +1646,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.valid_rx_ant = ANT_ABC,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl5100_bg_cfg = {
+@@ -1663,6 +1664,7 @@ struct iwl_cfg iwl5100_bg_cfg = {
+ 	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl5100_abg_cfg = {
+@@ -1680,6 +1682,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl5100_agn_cfg = {
+@@ -1697,6 +1700,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl5350_agn_cfg = {
+@@ -1714,6 +1718,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.valid_rx_ant = ANT_ABC,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl5150_agn_cfg = {
+@@ -1731,6 +1736,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.valid_rx_ant = ANT_AB,
+ 	.need_pll_cfg = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 957205c..89b111a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -256,6 +256,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ /*
+@@ -279,6 +280,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -299,6 +301,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -319,6 +322,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -339,6 +343,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
++	.led_compensation = 51,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index c04d2a2..dfeca62 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -211,6 +211,9 @@ struct iwl_mod_params {
+  * @pa_type: used by 6000 series only to identify the type of Power Amplifier
+  * @max_ll_items: max number of OTP blocks
+  * @shadow_ram_support: shadow support for OTP memory
++ * @led_compensation: compensate on the led on/off time per HW according
++ *	to the deviation to achieve the desired led frequency.
++ *	The detail algorithm is described in iwl-led.c
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -252,6 +255,7 @@ struct iwl_cfg {
+ 	const u16 max_ll_items;
+ 	const bool shadow_ram_support;
+ 	const bool ht_greenfield_support;
++	u16 led_compensation;
+ };
+ 
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index 41addd1..f547233 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -78,6 +78,29 @@ static const struct {
+ #define IWL_MAX_BLINK_TBL (ARRAY_SIZE(blink_tbl) - 1) /* exclude SOLID_ON */
+ #define IWL_SOLID_BLINK_IDX (ARRAY_SIZE(blink_tbl) - 1)
+ 
++/*
++ * Adjust led blink rate to compensate on a MAC Clock difference on every HW
++ * Led blink rate analysis showed an average deviation of 0% on 3945,
++ * 5% on 4965 HW and 20% on 5000 series and up.
++ * Need to compensate on the led on/off time per HW according to the deviation
++ * to achieve the desired led frequency
++ * The calculation is: (100-averageDeviation)/100 * blinkTime
++ * For code efficiency the calculation will be:
++ *     compensation = (100 - averageDeviation) * 64 / 100
++ *     NewBlinkTime = (compensation * BlinkTime) / 64
++ */
++static inline u8 iwl_blink_compensation(struct iwl_priv *priv,
++				    u8 time, u16 compensation)
++{
++	if (!compensation) {
++		IWL_ERR(priv, "undefined blink compensation: "
++			"use pre-defined blinking time\n");
++		return time;
++	}
 +
- static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
- module_param_named(debug, ath9k_debug, uint, 0);
- 
-@@ -82,7 +87,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 
- 	ath9k_ps_wakeup(sc);
- 
--	REG_WRITE(ah, AR_MACMISC,
-+	REG_WRITE_D(ah, AR_MACMISC,
- 		  ((AR_MACMISC_DMA_OBS_LINE_8 << AR_MACMISC_DMA_OBS_S) |
- 		   (AR_MACMISC_MISC_OBS_BUS_1 <<
- 		    AR_MACMISC_MISC_OBS_BUS_MSB_S)));
-@@ -94,7 +99,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 		if (i % 4 == 0)
- 			len += snprintf(buf + len, sizeof(buf) - len, "\n");
- 
--		val[i] = REG_READ(ah, AR_DMADBG_0 + (i * sizeof(u32)));
-+		val[i] = REG_READ_D(ah, AR_DMADBG_0 + (i * sizeof(u32)));
- 		len += snprintf(buf + len, sizeof(buf) - len, "%d: %08x ",
- 				i, val[i]);
- 	}
-@@ -144,9 +149,9 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 		(val[6] & 0x0001e000) >> 13, (val[6] & 0x001e0000) >> 17);
- 
- 	len += snprintf(buf + len, sizeof(buf) - len, "pcu observe: 0x%x \n",
--			REG_READ(ah, AR_OBS_BUS_1));
-+			REG_READ_D(ah, AR_OBS_BUS_1));
- 	len += snprintf(buf + len, sizeof(buf) - len,
--			"AR_CR: 0x%x \n", REG_READ(ah, AR_CR));
-+			"AR_CR: 0x%x \n", REG_READ_D(ah, AR_CR));
- 
- 	ath9k_ps_restore(sc);
- 
-@@ -363,12 +368,12 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 				aphy->chan_idx, aphy->chan_is_ht);
- 	}
- 
--	put_unaligned_le32(REG_READ(sc->sc_ah, AR_STA_ID0), addr);
--	put_unaligned_le16(REG_READ(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
-+	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
-+	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"addr: %pM\n", addr);
--	put_unaligned_le32(REG_READ(sc->sc_ah, AR_BSSMSKL), addr);
--	put_unaligned_le16(REG_READ(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
-+	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
-+	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"addrmask: %pM\n", addr);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a1001ff..b2a45ce 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -65,7 +65,7 @@ static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
++	return (u8)((time * compensation) >> 6);
++}
++
+ /*  [0-256] -> [0..8] FIXME: we need [0..10] */
+ static inline int iwl_brightness_to_idx(enum led_brightness brightness)
  {
- 	struct ath_hw *ah = (struct ath_hw *) common->ah;
+@@ -114,8 +137,14 @@ static int iwl_led_pattern(struct iwl_priv *priv, int led_id,
  
--	(void)REG_READ(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
-+	common->ops->read(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
+ 	BUG_ON(idx > IWL_MAX_BLINK_TBL);
  
- 	if (!ath9k_hw_wait(ah,
- 			   AR_EEPROM_STATUS_DATA,
-@@ -75,7 +75,7 @@ static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- 		return false;
- 	}
+-	led_cmd.on = blink_tbl[idx].on_time;
+-	led_cmd.off = blink_tbl[idx].off_time;
++	IWL_DEBUG_LED(priv, "Led blink time compensation= %u\n",
++			priv->cfg->led_compensation);
++	led_cmd.on =
++		iwl_blink_compensation(priv, blink_tbl[idx].on_time,
++					priv->cfg->led_compensation);
++	led_cmd.off =
++		iwl_blink_compensation(priv, blink_tbl[idx].off_time,
++					priv->cfg->led_compensation);
  
--	*data = MS(REG_READ(ah, AR_EEPROM_STATUS_DATA),
-+	*data = MS(common->ops->read(ah, AR_EEPROM_STATUS_DATA),
- 		   AR_EEPROM_STATUS_DATA_VAL);
- 
- 	return true;
+ 	return iwl_send_led_cmd(priv, &led_cmd);
+ }
 -- 
-1.6.3.3
+1.5.6.3
 
