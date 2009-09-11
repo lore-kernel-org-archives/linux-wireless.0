@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21311 "EHLO mga02.intel.com"
+Received: from gir.skynet.ie ([193.1.99.77]:57796 "EHLO gir.skynet.ie"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752979AbZIJVOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 17:14:47 -0400
-Subject: Re: iwlagn: order 2 page allocation failures
-From: reinette chatre <reinette.chatre@intel.com>
-To: Mel Gorman <mel@csn.ul.ie>
+	id S1753476AbZIKIrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 04:47:12 -0400
+Date: Fri, 11 Sep 2009 09:47:17 +0100
+From: Mel Gorman <mel@csn.ul.ie>
+To: reinette chatre <reinette.chatre@intel.com>
 Cc: Frans Pop <elendil@planet.nl>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
 	"John W. Linville" <linville@tuxdriver.com>,
@@ -19,30 +19,41 @@ Cc: Frans Pop <elendil@planet.nl>,
 	"Krauss, Assaf" <assaf.krauss@intel.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
 	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <20090910090206.GA22276@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl>
-	 <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie>
-	 <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie>
-	 <1252526738.30150.91.camel@rc-desk>  <20090910090206.GA22276@csn.ul.ie>
-Content-Type: text/plain
-Date: Thu, 10 Sep 2009 14:14:50 -0700
-Message-Id: <1252617290.30150.321.camel@rc-desk>
-Mime-Version: 1.0
+Subject: Re: iwlagn: order 2 page allocation failures
+Message-ID: <20090911084717.GB32497@csn.ul.ie>
+References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252526738.30150.91.camel@rc-desk> <20090910090206.GA22276@csn.ul.ie> <1252617290.30150.321.camel@rc-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1252617290.30150.321.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-09-10 at 02:02 -0700, Mel Gorman wrote:
-
+On Thu, Sep 10, 2009 at 02:14:50PM -0700, reinette chatre wrote:
+> On Thu, 2009-09-10 at 02:02 -0700, Mel Gorman wrote:
 > 
-> As a total aside, there is still the problem that the driver is depending on
-> order-2 allocations. On systems without swap, the allocation problem could be
-> more severe as there are fewer pages the system can use to regain contiguity.
+> > 
+> > As a total aside, there is still the problem that the driver is depending on
+> > order-2 allocations. On systems without swap, the allocation problem could be
+> > more severe as there are fewer pages the system can use to regain contiguity.
+> 
+> I looked more at the implementation and hardware interface but I do not
+> see a way around this. We have to provide 8k buffer to device, and we
+> have to make sure it is aligned. 
+> 
 
-I looked more at the implementation and hardware interface but I do not
-see a way around this. We have to provide 8k buffer to device, and we
-have to make sure it is aligned. 
+That would imply an order-1 allocation instead of an order-2 though so
+it would appear than we are being worse than we have to. It would appear
+to be because of this +256 bytes that goes onto every buffer.
 
-Do you have any suggestions?
+> Do you have any suggestions?
+> 
 
-Reinette
+Nothing concrete. Finding an alternative to having the socket buffer
+8192+256 to make it an order-1 allocation would be an improvement but I
+don't know how that should be tackled. Lacking the hardware, I can't
+experiment myself :(
 
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
