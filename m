@@ -1,70 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:41691 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752793AbZIHAOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 20:14:10 -0400
-Date: Mon, 7 Sep 2009 17:14:06 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@elte.hu>,
-	Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-Subject: Re: Stop using tasklets for bottom halves
-Message-ID: <20090907171406.6a4b6116@nehalam>
-In-Reply-To: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:41704 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755786AbZIKT03 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 15:26:29 -0400
+Received: by fxm17 with SMTP id 17so1020651fxm.37
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2009 12:26:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <43e72e890909111136r67a305b9qc3e78a7dcb205d@mail.gmail.com>
+References: <200909111427.39974.hs4233@mail.mn-solutions.de>
+	<43e72e890909111136r67a305b9qc3e78a7dcb205d@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 11 Sep 2009 21:26:11 +0200
+Message-ID: <69e28c910909111226s48ac1db9ya8fe2cce54861c1e@mail.gmail.com>
+Subject: Re: Questions about regulatory domain & passive scanning
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless@vger.kernel.org, Kel Modderman <kel@otaku42.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 7 Sep 2009 15:58:50 -0700
-"Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+On Fri, Sep 11, 2009 at 8:36 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Fri, Sep 11, 2009 at 5:27 AM, Holger Schurig
+> <hs4233@mail.mn-solutions.de> wrote:
+>> Hi !
+>>
+>> I'm playing with regulatory domain using wireless-testing, iw,
+>> crda and ath5 on Debian. Here are some observations:
+>>
+>> 1) Debian sucks here
+>
+> We've tried a few times to poke them and after some thread exchanges
+> and some changes to wirless-regdb and crda due to concerns over the
+> signing stuff due to the DFSG in account for these discussions it
+> seems some stuff was packaged but not sure where it went. Kel, are you
+> aware of the status in this regard on Debian?
 
-> A while ago I had read about an effort to consider removing tasklets
-> [1] or at least trying to not use them. I'm unaware of the progress in
-> this respect but since reading that article have always tried to
-> evaluate whether or not we need tasklets on wireless drivers. I have
-> also wondered whether work in irq context in other parts of the kernel
-> can be moved to process context, a curious example being timers. I'll
-> personally be trying to using only process context on bottom halves on
-> future drivers but I figured it may be a good time to ask how serious
-> was avoiding tasklets or using wrappers in the future to avoid irq
-> context is or is it advised. Do we have a general agreement this is a
-> good step forward to take? Has anyone made tests or changes on a
-> specific driver from irq context to process context and proven there
-> are no significant advantages of using irq context where you would
-> have expected it?
-> 
-> Wireless in particular should IMHO not require taskets for anything
-> time sensitive that I can think about except perhaps changing channels
-> quickly and to do that appropriately also process pending RX frames
-> prior to a switch. It remains to be seen experimentally whether or not
-> using a workqueue for RX processing would affect the time to switch
-> channels negatively but I doubt it would be significant. I hope to
-> test that with ath9k_htc.
-> 
-> What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
-> challenges which would yet need to be proven would not face issues
-> when processing bottom halves in process context?
-> 
-> [1] http://lwn.net/Articles/239633/
-> 
->   Luis
+Well, if the problem is signing, then they are always free to package
+a patched crda that accepts unsigned or self-signed databases; AFAIK
+GPL doesn't prohibit that (though it kinda defeats the purpose of
+crda).
+
+>
+> [1] http://lists.alioth.debian.org/pipermail/pkg-wpa-devel/2009-May/002267.html
+>
+>> 2) I remove CONFIG_WIRELESS_OLD_REGULATORY. Then, after inserting
+>>   the card, I see in "iw list":
+>>
+>>         * 2412 MHz [1] (20.0 dBm)
+>>         * 2417 MHz [2] (20.0 dBm)
+>>         * 2422 MHz [3] (20.0 dBm)
+>>         * 2427 MHz [4] (20.0 dBm)
+>>         * 2432 MHz [5] (20.0 dBm)
+>>         * 2437 MHz [6] (20.0 dBm)
+>>         * 2442 MHz [7] (20.0 dBm)
+>>         * 2447 MHz [8] (20.0 dBm)
+>>         * 2452 MHz [9] (20.0 dBm)
+>>         * 2457 MHz [10] (20.0 dBm)
+>>         * 2462 MHz [11] (20.0 dBm)
+>>         * 2467 MHz [12] (20.0 dBm) (passive scanning)
+>>         * 2472 MHz [13] (20.0 dBm) (passive scanning)
+>>         * 2484 MHz [14] (20.0 dBm) (passive scanning)
+>>
+>>   I'd like to highlight the "passive scanning". Is this info
+>>   from the card EEPROM?
+>
+> If you lack crda, by default you will world roam, even if your EEPROM
+> has been programmed to a specific regulatory domain and calibrated as
+> such -- reason being is we moved regulatory content to userspace; so
+> OLD_REG had only 3 statically built regulatory domains in the kernel,
+> with CRDA you get all of them on userspace, and no more need to update
+> the kernel to update regulatory settings. World roaming has some
+> enhancements though like enabling active scanning on passive-scanning
+> channels if youo pick up a beacon from an AP on that channel.
+>
+>> 3) After "iw reg set DE" (for germany), it's now
+>>
+>>          2412 MHz [1] (20.0 dBm)
+>>          2417 MHz [2] (20.0 dBm)
+>>          2422 MHz [3] (20.0 dBm)
+>>          2427 MHz [4] (20.0 dBm)
+>>          2432 MHz [5] (20.0 dBm)
+>>          2437 MHz [6] (20.0 dBm)
+>>          2442 MHz [7] (20.0 dBm)
+>>          2447 MHz [8] (20.0 dBm)
+>>          2452 MHz [9] (20.0 dBm)
+>>          2457 MHz [10] (20.0 dBm)
+>>          2462 MHz [11] (20.0 dBm)
+>>          2467 MHz [12] (20.0 dBm) (passive scanning)
+>>          2472 MHz [13] (20.0 dBm) (passive scanning)
+>>          2484 MHz [14] (disabled)
+>>
+>>   Great, CRDA worked obviously: channel 14 has been disabled.
+>
+> Sure, but keep in mind your regulatory domain must've been read too
+> first, that's probably what lifted your passive scan flag on channel
+> 12 unless you did a scan prior to trying to set the regulatory domain.
+>
+>>   And, as I understand it, CRDA can just limit settings
+>>   further, not widening it. Therefore channels 12 and 13
+>>   are still marked as "passive scanning".
+>
+> Right. Now if your card is world roaming (defined in
+> net/wireless/reg.c as reg_is_world_roaming() ) you could lift passive
+> scan off of 12 and 13 if you had an AP there.
+>
+>>   If I want to get them to "active scanning", would I need to
+>>   modify the EEPROM of the card?
+>
+> Well yes, but you must note that is something not supported, not
+> recommended, unless you are a manufacturer selling cards and have the
+> capability to calibrate, etc, and certify. That is -- EEPROM
+> programming is not something designed to be changed by the end user.
+>
+>> ath_info says "Reg. Domain:
+>>   0x60".
+>
+> Ok, as I have documented on the ath wiki page [1] any Atheros
+> regulatory domain which has 0x60 is world roaming. As I also
+> documented as well these 12 world regulatory domains are statically
+> built into the kernel on ath as they are custom world regulatory
+> domains, so even without the presence of CRDA you'll get the
+> regulatory domain your card is designed for. With OLD_REG though you
+> end up trying to stick to static kenrel US rules so you would only be
+> allowed to use what the US allows on your 0x60 regulatory domain, this
+> is ath_world_regdom_60_61_62 on drivers/net/wireless/ath/regd.c.
+>
+> [1] http://wireless.kernel.org/en/users/Drivers/ath
+>
+>  Luis
 > --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Why not use NAPI, which is soft irq? Almost all 1G and 10G drivers
-use NAPI.
 
-Process context is too slow.
 
 -- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
