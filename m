@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f176.google.com ([209.85.223.176]:42440 "EHLO
-	mail-iw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbZIBVZ3 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:38260 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753423AbZIKIna (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 17:25:29 -0400
-Received: by iwn6 with SMTP id 6so517100iwn.5
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 14:25:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <95408c820909021353i5b2d0e5dpeddefcdb5065d724@mail.gmail.com>
-References: <95408c820909021353i5b2d0e5dpeddefcdb5065d724@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 2 Sep 2009 14:25:10 -0700
-Message-ID: <43e72e890909021425s13784658r342e52eefb7b582d@mail.gmail.com>
-Subject: Re: building compat-wireless for other than running kernels
-To: Natanael Copa <natanael.copa@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Sep 2009 04:43:30 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] wireless: default CONFIG_WLAN to y
+Date: Fri, 11 Sep 2009 04:43:29 -0400
+Message-Id: <1252658609-3423-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 2, 2009 at 1:53 PM, Natanael Copa<natanael.copa@gmail.com> wrote:
-> Hi,
-> I'm trying to create a compat-wireless package for Alpine Linux. I get
-> errors like this:
-> FATAL: Could not load
-> /lib/modules/2.6.29.4-vs2.3.0.36.14-ARCH/modules.dep: No such file or
-> directory
-> This comes from the fact that the package is not for the current running kernel.
->
-> It would be nice if modprobe and depmod could respect the KLIB
-> variable in makefile. (I have not figured out how to do that for
-> modprobe -l)
->
-> Alternatively you could define a DEPMOD=/sbin/depmod in the Makefile
-> so its possible to override it with: make DEPMOD=: ...
+When this was added no defaults were set and it seems
+this implies n. Default this to y.
 
-Patches are welcomed. I considered just now added the depmod stuff you
-mentioned but remembered that there are also scripts which may use
-this on compat-wireless. We could just export it though and then all
-the scripts would have access to it -- but note that it means then
-that you'd need the Makefile to run certain scripts -- and if you
-don't you have to define your own depmod. Because of this I welcome
-your patches on this if you test it.
+Reported-by: Jouni Malinen <jouni.malinen@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index ad89d23..49ea9c9 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -5,6 +5,7 @@
+ menuconfig WLAN
+ 	bool "Wireless LAN"
+ 	depends on !S390
++	default y
+ 	---help---
+ 	  This section contains all the pre 802.11 and 802.11 wireless
+ 	  device drivers. For a complete list of drivers and documentation
+-- 
+1.6.3.3
+
