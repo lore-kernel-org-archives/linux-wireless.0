@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60728 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758108AbZIFSnc convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:35336 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859AbZIKGqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2009 14:43:32 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] b43: PCMCIA is not experimental anymore
-Date: Sun, 6 Sep 2009 20:43:32 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-References: <200909061449.45455.mb@bu3sch.de> <69e28c910909061142g546b4b0aqd123e8d800264505@mail.gmail.com>
-In-Reply-To: <69e28c910909061142g546b4b0aqd123e8d800264505@mail.gmail.com>
+	Fri, 11 Sep 2009 02:46:05 -0400
+Received: by fxm17 with SMTP id 17so592969fxm.37
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 23:46:07 -0700 (PDT)
+Message-ID: <4AA9F22C.3090007@gmail.com>
+Date: Fri, 11 Sep 2009 08:46:04 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909062043.33801.mb@bu3sch.de>
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	devel@linuxdriverproject.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com> <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
+In-Reply-To: <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 September 2009 20:42:00 Gábor Stefanik wrote:
-> On Sun, Sep 6, 2009 at 2:49 PM, Michael Buesch<mb@bu3sch.de> wrote:
-> > PCMCIA support works well and is not experimental anymore.
-> >
-> > Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> >
-> > ---
-> >  drivers/net/wireless/b43/Kconfig |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > --- wireless-testing.orig/drivers/net/wireless/b43/Kconfig
-> > +++ wireless-testing/drivers/net/wireless/b43/Kconfig
-> > @@ -42,8 +42,8 @@ config B43_PCICORE_AUTOSELECT
-> >        default y
-> >
-> >  config B43_PCMCIA
-> > -       bool "Broadcom 43xx PCMCIA device support (EXPERIMENTAL)"
-> > -       depends on B43 && SSB_PCMCIAHOST_POSSIBLE && EXPERIMENTAL
-> > +       bool "Broadcom 43xx PCMCIA device support"
-> > +       depends on B43 && SSB_PCMCIAHOST_POSSIBLE
-> >        select SSB_PCMCIAHOST
-> >        ---help---
-> >          Broadcom 43xx PCMCIA device support.
-> >
-> > --
-> > Greetings, Michael.
-> > _______________________________________________
-> > Bcm43xx-dev mailing list
-> > Bcm43xx-dev@lists.berlios.de
-> > https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
-> >
-> 
-> This should be auto-selected depending on SSB_PCMCIAHOST_POSSIBLE (at
-> least if !EMBEDDED). There is no need for a separate config prompt if
-> it's not EXPERIMENTAL anymore.
-> 
+On 09/11/2009 08:16 AM, Nick Kossifidis wrote:
+>>  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+>>  {
+>> -       return ioread32(ah->ah_iobase + reg);
+>> +       return ath5k_hw_common(ah)->ops->read(ah, reg);
+>>  }
+>>
+>> -/*
+>> - * Write to a register
+>> - */
+>>  static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+>>  {
+>> -       iowrite32(val, ah->ah_iobase + reg);
+>> +       ath5k_hw_common(ah)->ops->write(ah, reg, val);
+...
+> Since each driver will use it's own reg read/write functions (ath5k hw
+> code still uses ath5k_hw_reg_read/write), why do we need to have
+> common reg read/write functions like that used in the driver code ?
+> This makes the code more complex that it needs to be and i don't see a
+> reason why we need it. I understand why we need a way to handle
+> read/write functions from common ath code but i don't see a reason to
+> use these functions on ath5k, we can just fill ath_ops struct so that
+> common code can use them and leave ath5k_hw_read/write untouched.
 
-Patch please
-
--- 
-Greetings, Michael.
+I definitely agree with Nick here. Althought whole ath_ops will be hot
+cache after the first operation, there is no need to prolong hot paths
+by computing the op address and a call. Ok, read/write on PCI is pretty
+slow, but still...
