@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:63122 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbZI3OZM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 10:25:12 -0400
-Message-ID: <4AC36A46.7010209@googlemail.com>
-Date: Wed, 30 Sep 2009 16:25:10 +0200
-From: Gonsolo <gonsolo@gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:41462 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753403AbZIKDAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 23:00:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 20:00:42 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Gonsolo <gonsolo@gmail.com>,
-	Daniel J Blueman <daniel.blueman@gmail.com>,
-	kernel-team@lists.ubuntu.com,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath5k suspend
-References: <4AC22B64.8050909@googlemail.com> <6278d2220909300536u7934d7dan286d219b5cf7e5a@mail.gmail.com> <4AC35CA0.5070401@googlemail.com> <20090930140905.GA3193@tuxdriver.com>
-In-Reply-To: <20090930140905.GA3193@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19113.48435.208806.221217@gargle.gargle.HOWL>
+Date: Fri, 11 Sep 2009 08:30:03 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix bug in ANI channel handling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 30.09.2009 16:09, schrieb John W. Linville:
-> On Wed, Sep 30, 2009 at 03:26:56PM +0200, Gonsolo wrote:
->>>> Is it possible to add
->>>> http://patchwork.kernel.org/patch/38550/
->>>> to karmic? Otherwise karmic would be broken for me/my notebook/my
->>>> wireless pccard.
->>>
->>> Since Karmic tracks the 2.6.31 -stable kernels, it's worth reporting
->>> this upstream (CC'd) instead, particularly if it's a regression from a
->>> previous kernel version, using the same ath5k driver...?
->>
->> I did that, too. ;) Hopefully it will be in 2.6.31.2.
->
-> Maybe I missed it, but did you actually request the -stable team to
-> take the patch?  -stable helps more than just Ubuntu... :-)
+When processing MIB interrupts, OFDM and CCK error
+handling routines for low RSSI values have to be invoked
+only when the channel mode is 11G/11B. Since HT channels
+will also fall under the bands 2Ghz/5Ghz, check appropriately.
 
-I requested it in Ubuntu and stable in two separate emails, just to be 
-sure it will be there when I am going to upgrade. ;)
-I apologize if I caused confusion or doubled your amount of work.
-Maybe I should have done this in one email to both parties.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
 
-g
+This patch would apply over Luis' pending patches.
+
+ drivers/net/wireless/ath/ath9k/ani.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index f5cd7da..e4f9559 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -327,7 +327,8 @@ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+ 					     aniState->firstepLevel + 1);
+ 		return;
+ 	} else {
+-		if (conf->channel->band == IEEE80211_BAND_2GHZ) {
++		if ((conf->channel->band == IEEE80211_BAND_2GHZ) &&
++		    !conf_is_ht(conf)) {
+ 			if (!aniState->ofdmWeakSigDetectOff)
+ 				ath9k_hw_ani_control(ah,
+ 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
+@@ -369,7 +370,8 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ 			ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
+ 					     aniState->firstepLevel + 1);
+ 	} else {
+-		if (conf->channel->band == IEEE80211_BAND_2GHZ) {
++		if ((conf->channel->band == IEEE80211_BAND_2GHZ) &&
++		    !conf_is_ht(conf)) {
+ 			if (aniState->firstepLevel > 0)
+ 				ath9k_hw_ani_control(ah,
+ 					     ATH9K_ANI_FIRSTEP_LEVEL, 0);
+-- 
+1.6.4.2
+
