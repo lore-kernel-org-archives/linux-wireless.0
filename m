@@ -1,100 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:51710 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567AbZIKQHy (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:47065 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754231AbZIKRx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 12:07:54 -0400
-Message-ID: <4AAA75CB.6040803@hartkopp.net>
-Date: Fri, 11 Sep 2009 18:07:39 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
+	Fri, 11 Sep 2009 13:53:26 -0400
+Received: by iwn8 with SMTP id 8so553056iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Sep 2009 10:53:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: mac80211: NOHZ: local_softirq_pending 08
-References: <200909111648.50902.mb@bu3sch.de> <877hw534wd.fsf@litku.valot.fi> <200909111707.23971.mb@bu3sch.de>
-In-Reply-To: <200909111707.23971.mb@bu3sch.de>
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <b6c5339f0909110435l2e420685y7715f3512873008e@mail.gmail.com>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
+	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com>
+	<40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
+	<4AA9F22C.3090007@gmail.com> <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+	<b6c5339f0909110435l2e420685y7715f3512873008e@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 11 Sep 2009 10:53:08 -0700
+Message-ID: <43e72e890909111053y64026e98r7d5220e74005f16f@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	devel@linuxdriverproject.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jeff Garzik <jeff@garzik.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Friday 11 September 2009 16:57:54 Kalle Valo wrote:
->> Michael Buesch <mb@bu3sch.de> writes:
+On Fri, Sep 11, 2009 at 4:35 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Sep 11, 2009 at 3:23 AM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> ath9k/ath9k/ath9k_htc. But -- is there really is a measurable cost
+>> penalty?
 >>
->>> Hi,
->> Hallo,
->>
->>> mac80211 (or some other part of the networking stack) triggers this
->>> warning in the NOHZ code: NOHZ: local_softirq_pending 08
->>>
->>> 08 seems to be NET_RX_SOFTIRQ.
->>>
->>> It happens, because my test driver b43 handles all RX and TX-status
->>> callbacks in process context. I guess some part of the networking
->>> stack expects RX to be in tasklet and/or softirq context.
->>>
->>> We also have a report of this warning in wl1251, so it's probably not
->>> a b43 problem.
->> Yes, I see this with wl1251. It uses workqueues everywhere.
->>
-> 
-> This patch seems to fix it.
-> 
-> Signed-off-by: Michael Buesch <mb@bu3sch.de>
-> 
-> Index: wireless-testing/net/mac80211/cfg.c
-> ===================================================================
-> --- wireless-testing.orig/net/mac80211/cfg.c	2009-08-09 18:47:11.000000000 +0200
-> +++ wireless-testing/net/mac80211/cfg.c	2009-09-11 16:59:12.000000000 +0200
-> @@ -606,7 +606,7 @@ static void ieee80211_send_layer2_update
->  	skb->dev = sta->sdata->dev;
->  	skb->protocol = eth_type_trans(skb, sta->sdata->dev);
->  	memset(skb->cb, 0, sizeof(skb->cb));
-> -	netif_rx(skb);
-> +	ieee80211_netif_rx(skb);
->  }
->  
->  static void sta_apply_parameters(struct ieee80211_local *local,
-> Index: wireless-testing/net/mac80211/ieee80211_i.h
-> ===================================================================
-> --- wireless-testing.orig/net/mac80211/ieee80211_i.h	2009-08-23 00:06:41.000000000 +0200
-> +++ wireless-testing/net/mac80211/ieee80211_i.h	2009-09-11 17:02:05.000000000 +0200
-> @@ -1053,6 +1053,14 @@ void ieee80211_tx_pending(unsigned long 
->  int ieee80211_monitor_start_xmit(struct sk_buff *skb, struct net_device *dev);
->  int ieee80211_subif_start_xmit(struct sk_buff *skb, struct net_device *dev);
->  
-> +/* rx handling */
-> +static inline int ieee80211_netif_rx(struct sk_buff *skb)
-> +{
-> +	if (in_interrupt())
-> +		return netif_rx(skb);
-> +	return netif_rx_ni(skb);
-> +}
-> +
+>> This is why I asked if someone can test and give measurable
+>> differences over this. If there really isn't then that's not strong
+>> point against it.
+>
+> Honestly, it probably won't matter in the grand scheme of things, but I
+> think if you are proposing a patch that touches every hotpath in two
+> drivers, then you need to do the work to say "by the way, this has benefit
+> X which outweighs the very small (or absent) performance regression Y,
+> and here are the numbers.
 
-Hello Michael,
+You're completely right, sorry about that. I thought the advantages
+would have been obvious but let me clarify them them:
 
-i know this NOHZ warning from the CAN stack also - but now, i know what caused
-this warning. I fixed it in my local tree and it works. Thanks!
+So far I've tested this with:
 
-As there are several users in the kernel do exact this test and call the
-appropriate netif_rx() function, i would suggest to create a static inline
-function:
+time iw list dev wlan0 scan > /dev/null
 
-static inline int netif_rx_ti(struct sk_buff *skb)
-{
-	if (in_interrupt())
-		return netif_rx(skb);
-	return netif_rx_ni(skb);
-}
+Both with and without the patches and the time it takes to scan, when
+not associated, remains the same. Granted I do have an Intel Core Duo
+1.8 GHz, so if some others could test this on some embedded platforms
+that would be appreciated.
 
-('ti' for test in_interrupt())
+The main added advantage to these changes is the possibility to now
+share hw access code between ath5k/ath9k. With the patches as-is you
+get one hot path on the driver, whether or not you use common hw code
+through ath.ko or through the driver's own hw code. It is unclear to
+me whether this has any measurable benefits so an alternative is to
+only use the common read/write ops on the common ath.ko.
 
-in include/linux/netdevice.h
+Although I don't see any measurable differences at the moment I
+suspect most people are inclined to leave hw access directly on the
+driver and only use common hw read/write ops for the common code. I'll
+respin these patches to do just that.
 
-What do you think about that?
-
-Regards,
-Oliver
+  Luis
