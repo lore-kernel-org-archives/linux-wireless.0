@@ -1,149 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:11274 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755697AbZIKRiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/13 v2.6.32 and w-t] iwlwifi: fix potential rx buffer loss
-Date: Fri, 11 Sep 2009 10:38:12 -0700
-Message-Id: <1252690699-25796-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:39503 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750704AbZIKF6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 01:58:21 -0400
+Date: Fri, 11 Sep 2009 07:58:19 +0200
+From: Pierre Ossman <pierre@ossman.eu>
+To: Albert Herranz <albert_herranz@yahoo.es>
+Cc: akpm@linux-foundation.org, linux-mmc@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH] sdio: recognize io card without powercycle
+Message-ID: <20090911075819.1989d75b@mjolnir.ossman.eu>
+In-Reply-To: <1252587402-7382-1-git-send-email-albert_herranz@yahoo.es>
+References: <1252587402-7382-1-git-send-email-albert_herranz@yahoo.es>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-14418-1252648703-0001-2"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
-RX handling maintains a few lists that keep track of the RX buffers.
-Buffers move from one list to the other as they are used, replenished, and
-again made available for usage. In one such instance, when a buffer is used
-it enters the "rx_used" list. When buffers are replenished an skb is
-attached to the buffer and it is moved to the "rx_free" list. The problem
-here is that the buffer is first removed from the "rx_used" list _before_ the
-skb is allocated. Thus, if the skb allocation fails this buffer remains
-removed from the "rx_used" list and is thus lost for future usage.
+--=_freyr.ossman.eu-14418-1252648703-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Fix this by first allocating the skb before trying to attach it to a list.
-We add an additional check to not do this unnecessarily.
+On Thu, 10 Sep 2009 14:56:41 +0200
+Albert Herranz <albert_herranz@yahoo.es> wrote:
 
-Reported-by: Rick Farrington <rickdic@hotmail.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 +++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   24 ++++++++++++++++--------
- 2 files changed, 33 insertions(+), 15 deletions(-)
+> SDIO Simplified Specification V2.00 states that it is strongly recommended
+> that the host executes either a power reset or issues a CMD52 (I/O Reset)=
+ to
+> re-initialize an I/O only card or the I/O portion of a combo card.
+> Additionally, the CMD52 must be issued first because it cannot be issued
+> after a CMD0.
+>=20
+> With this patch the Nintendo Wii SDIO-based WLAN card is detected after a
+> system reset, without requiring a complete system powercycle.
+>=20
+> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
+> ---
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index 8150c5c..b90adcb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -239,26 +239,22 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 	struct iwl_rx_queue *rxq = &priv->rxq;
- 	struct list_head *element;
- 	struct iwl_rx_mem_buffer *rxb;
-+	struct sk_buff *skb;
- 	unsigned long flags;
- 
- 	while (1) {
- 		spin_lock_irqsave(&rxq->lock, flags);
--
- 		if (list_empty(&rxq->rx_used)) {
- 			spin_unlock_irqrestore(&rxq->lock, flags);
- 			return;
- 		}
--		element = rxq->rx_used.next;
--		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
--		list_del(element);
--
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
- 		/* Alloc a new receive buffer */
--		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
-+		skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
- 						priority);
- 
--		if (!rxb->skb) {
-+		if (!skb) {
- 			IWL_CRIT(priv, "Can not allocate SKB buffers\n");
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
-@@ -266,6 +262,20 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 			break;
- 		}
- 
-+		spin_lock_irqsave(&rxq->lock, flags);
-+
-+		if (list_empty(&rxq->rx_used)) {
-+			spin_unlock_irqrestore(&rxq->lock, flags);
-+			dev_kfree_skb_any(skb);
-+			return;
-+		}
-+		element = rxq->rx_used.next;
-+		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
-+		list_del(element);
-+
-+		spin_unlock_irqrestore(&rxq->lock, flags);
-+
-+		rxb->skb = skb;
- 		/* Get physical address of RB/SKB */
- 		rxb->real_dma_addr = pci_map_single(
- 					priv->pci_dev,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 2238c9f..0909668 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1134,6 +1134,7 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 	struct iwl_rx_queue *rxq = &priv->rxq;
- 	struct list_head *element;
- 	struct iwl_rx_mem_buffer *rxb;
-+	struct sk_buff *skb;
- 	unsigned long flags;
- 
- 	while (1) {
-@@ -1143,17 +1144,11 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 			spin_unlock_irqrestore(&rxq->lock, flags);
- 			return;
- 		}
--
--		element = rxq->rx_used.next;
--		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
--		list_del(element);
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
- 		/* Alloc a new receive buffer */
--		rxb->skb =
--		    alloc_skb(priv->hw_params.rx_buf_size,
--				priority);
--		if (!rxb->skb) {
-+		skb = alloc_skb(priv->hw_params.rx_buf_size, priority);
-+		if (!skb) {
- 			if (net_ratelimit())
- 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
- 			/* We don't reschedule replenish work here -- we will
-@@ -1162,6 +1157,19 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 			break;
- 		}
- 
-+		spin_lock_irqsave(&rxq->lock, flags);
-+		if (list_empty(&rxq->rx_used)) {
-+			spin_unlock_irqrestore(&rxq->lock, flags);
-+			dev_kfree_skb_any(skb);
-+			return;
-+		}
-+		element = rxq->rx_used.next;
-+		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
-+		list_del(element);
-+		spin_unlock_irqrestore(&rxq->lock, flags);
-+
-+		rxb->skb = skb;
-+
- 		/* If radiotap head is required, reserve some headroom here.
- 		 * The physical head count is a variable rx_stats->phy_count.
- 		 * We reserve 4 bytes here. Plus these extra bytes, the
--- 
-1.5.6.3
+I had problems with cards already in the idle state crashing when I
+sent them a reset. I suggest a big round of testing before merging this.
 
+> @@ -182,3 +189,20 @@ int mmc_io_rw_extended(struct mmc_card *card, int wr=
+ite, unsigned fn,
+>  	return 0;
+>  }
+> =20
+> +int sdio_go_idle(struct mmc_host *host)
+> +{
+
+It might be clearer if you use the terminology from the spec, so either
+sdio_abort() or sdio_reset().
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by the
+  Swedish government. Make sure your server uses encryption
+  for SMTP traffic and consider using PGP for end-to-end
+  encryption.
+
+--=_freyr.ossman.eu-14418-1252648703-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
+
+iEYEARECAAYFAkqp5v4ACgkQ7b8eESbyJLjFQwCfSwwLYHjebMD8t/U2TEacJRIM
+lV4An3v+gqIfRxLMtded3piLxrqXOQ5y
+=pmXm
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-14418-1252648703-0001-2--
