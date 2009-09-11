@@ -1,92 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:35670 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbZIWRvx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 13:51:53 -0400
-Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP
- and WPA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-In-Reply-To: <200909230907.24750.hs4233@mail.mn-solutions.de>
-References: <200909221118.04569.hs4233@mail.mn-solutions.de>
-	 <1253689198.4458.24.camel@johannes.local>
-	 <200909230907.24750.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Y9wjWwm1niW3pTMUGjoE"
-Date: Wed, 23 Sep 2009 19:51:55 +0200
-Message-Id: <1253728315.4458.66.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755731AbZIKRiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:21 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/13 v2.6.32 and w-t] iwlwifi: disable powersave for 4965
+Date: Fri, 11 Sep 2009 10:38:19 -0700
+Message-Id: <1252690699-25796-14-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
 
---=-Y9wjWwm1niW3pTMUGjoE
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+There's a bug in 4965 powersave that appears to
+be related to the way it keeps track of its data
+during sleep, but we haven't found it yet. Due to
+that, using powersave may spontaneously cause the
+device to SYSASSERT when transitioning from sleep
+to wake. Therefore, disable powersave for 4965,
+until (if ever, unfortunately) we can identify
+and fix the problem.
 
-On Wed, 2009-09-23 at 09:07 +0200, Holger Schurig wrote:
-> > Those are expected, and ok.
->=20
-> Okay, then here is a patch to silence this in wpa_supplicant.
+Cf. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1982
+which was closed, but now has re-appeared with
+IDLE mode, which probably means we never really
+fixed it.
 
-No, they should only be ignored under certain circumstances.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c  |    9 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c |    5 +++--
+ 4 files changed, 11 insertions(+), 5 deletions(-)
 
-johannes
-
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
->=20
-> Index: wpasupplicant/src/drivers/driver_nl80211.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- wpasupplicant.orig/src/drivers/driver_nl80211.c	2009-09-22 12:28:58.0=
-00000000 +0200
-> +++ wpasupplicant/src/drivers/driver_nl80211.c	2009-09-22 12:30:29.000000=
-000 +0200
-> @@ -1819,6 +1819,8 @@ static int nl_set_encr(int ifindex, stru
->  	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, ifindex);
-> =20
->  	ret =3D send_and_recv_msgs(drv, msg, NULL, NULL);
-> +	if (ret =3D=3D -ENOLINK)
-> +		ret =3D 0;
->  	if (ret =3D=3D -ENOENT && alg =3D=3D WPA_ALG_NONE)
->  		ret =3D 0;
->  	if (ret)
-> @@ -1850,7 +1852,7 @@ static int nl_set_encr(int ifindex, stru
->  		NLA_PUT_FLAG(msg, NL80211_ATTR_KEY_DEFAULT);
-> =20
->  	ret =3D send_and_recv_msgs(drv, msg, NULL, NULL);
-> -	if (ret =3D=3D -ENOENT)
-> +	if (ret =3D=3D -ENOENT || ret =3D=3D -ENOLINK)
->  		ret =3D 0;
->  	if (ret)
->  		wpa_printf(MSG_DEBUG, "nl80211: set_key default failed; "
->=20
->=20
->=20
-
-
---=-Y9wjWwm1niW3pTMUGjoE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKumA2AAoJEODzc/N7+Qmadr0P/1civ6D1KoIkqlwV80xahC16
-GwHYgKghO13sr1pwPzwNwK6yDr3ucZTvfGGLhk3qvFA/shPLUhl2JjS8bZGALA9I
-mpreokUjVs5xn0iOMPocLjX4D/7sJ2zFtGirz1p7T0/kXuxODoXzoJxdpHePFZXI
-8iodiqZsmGQDZ3ktG7wqj9aUSslRkb1GL8560iixx7/EcNvqv2f08c8A+2++jI0s
-m8vR4CLRXzZN5lN6NS0xYFkZ9bR2mw+EGdNRS9NnZEiR6dLfjZBPagpXCWXJSdDQ
-qAYgjxHUNsbXJP84xk/xe6PS6Kue9QdMjbxAmQHzzD34jcOAg+e09wNlLsRQIa+e
-LnYe5n7zREh6HqNj9CKCKA7GlyJlJZ/KGZ88WCZ/R5VIPRw87gEudWTZkG5ZVr3T
-oarqk40/VoRbEajL0BzXSjN8iVvKL9+gzraZxtQUX/BgOFE8jO0HkMPSaxdC7ZAt
-1+NSEwDR8VUu+N6OCC0bvfeP1x49NMzGlN79gMCVZ2bG2b9/N//xkOUgcMcXgQZq
-mLiO7+Y/4F6+rPWz8l079Xx3kPN1OC7OBr08I8SuC8ftDI5IhIRJbpQRAa3zXZKQ
-XUC6D/MQvW++yTETMt8f9XksG/28K4k0AK7UqyI4w0mz+4gc8ESMaqVOZrWwyyNH
-wHVUOojagshGb+eVVpJu
-=VU80
------END PGP SIGNATURE-----
-
---=-Y9wjWwm1niW3pTMUGjoE--
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 63df1e4..d61d5a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2346,6 +2346,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.mod_params = &iwl4965_mod_params,
+ 	.use_isr_legacy = true,
+ 	.ht_greenfield_support = false,
++	.broken_powersave = true,
+ 	.led_compensation = 61,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5c6cee2..e447c1a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1565,9 +1565,12 @@ int iwl_setup_mac(struct iwl_priv *priv)
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		    IEEE80211_HW_NOISE_DBM |
+ 		    IEEE80211_HW_AMPDU_AGGREGATION |
+-		    IEEE80211_HW_SPECTRUM_MGMT |
+-		    IEEE80211_HW_SUPPORTS_PS |
+-		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
++		    IEEE80211_HW_SPECTRUM_MGMT;
++
++	if (!priv->cfg->broken_powersave)
++		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
++			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
++
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index cab148d..5e1f700 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -256,6 +256,7 @@ struct iwl_cfg {
+ 	const bool shadow_ram_support;
+ 	const bool ht_greenfield_support;
+ 	u16 led_compensation;
++	const bool broken_powersave;
+ };
+ 
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 4ec6a83..60be976 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -292,8 +292,9 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+ 	else
+ 		dtimper = 1;
+ 
+-	/* TT power setting overwrites everything */
+-	if (tt->state >= IWL_TI_1)
++	if (priv->cfg->broken_powersave)
++		iwl_power_sleep_cam_cmd(priv, &cmd);
++	else if (tt->state >= IWL_TI_1)
+ 		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
+ 	else if (!enabled)
+ 		iwl_power_sleep_cam_cmd(priv, &cmd);
+-- 
+1.5.6.3
 
