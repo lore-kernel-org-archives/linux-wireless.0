@@ -1,239 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:42436 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbZINR4J (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:43633 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751068AbZIKGQx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 13:56:09 -0400
-Received: by bwz19 with SMTP id 19so2261950bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 10:56:11 -0700 (PDT)
+	Fri, 11 Sep 2009 02:16:53 -0400
+Received: by ewy2 with SMTP id 2so803224ewy.17
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 23:16:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4AAE7446.3080407@lwfinger.net>
-References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>
-	 <4AAE3DF7.7060504@lwfinger.net>
-	 <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
-	 <4AAE53C8.1060100@lwfinger.net>
-	 <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
-	 <4AAE7446.3080407@lwfinger.net>
-Date: Mon, 14 Sep 2009 12:56:11 -0500
-Message-ID: <3b0e19890909141056l4a01b8f9w9887af5d6219c3ff@mail.gmail.com>
-Subject: Re: RTL8187B wireless driver issue
-From: Vignette consultant <vignette75@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=0016e6551d7896541404738d616a
+In-Reply-To: <1252632895-11914-4-git-send-email-lrodriguez@atheros.com>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
+	 <1252632895-11914-4-git-send-email-lrodriguez@atheros.com>
+Date: Fri, 11 Sep 2009 09:16:55 +0300
+Message-ID: <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=ISO-8859-1
-
- Larry,
-
- I got the same error even after adding wlan0 in
-/etc/network/interfaces file. I set the essid using "sudo iwconfig
-wlan0 essid linksys" command and restarted network. I tried other
-essids, but it gives same error.
-
- Attached files contain log files. Please advise about solution.
-
- How do I disable usb monitoring log, so I can see wlan0 interface log
-from dmesg?
-
- Thanks
- Sam
-
-On 9/14/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Vignette consultant wrote:
->>  Hi
->>
->>  Attached files contain several logs of various commands. The log-1
->> file is before running command and log-2 file is after running
->> specific command.
->>
->>  Here are commands that I give as soon as I log in. It's server edition.
->>
->>  $ sudo ifconfig wlan0 up
->>  $ sudo iwconfig wlan0 ESSID linksys
->>  $ sudo dhclient wlan0 - results in no IP addr leased
+2009/9/11 Luis R. Rodriguez <lrodriguez@atheros.com>:
+> All read/write ops now go through the common ops.
 >
-> Your wireless has not associated and has no communication, which is
-> why it cannot get an IP using DHCP.
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/ath5k.h |   20 ++++++++++++--------
+>  drivers/net/wireless/ath/ath5k/base.c  |   17 +++++++++++++++++
+>  drivers/net/wireless/ath/ath5k/base.h  |   11 -----------
+>  3 files changed, 29 insertions(+), 19 deletions(-)
 >
-> A quick check with Google indicates that Ubuntu uses
-> /etc/network/interfaces to control the devices. Once that is correct,
-> you should be able to 'sudo /etc/init.d/networking restart' to start
-> the network. If the server is properly configured, the network should
-> start on boot.
+> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+> index 29ce868..997101b 100644
+> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+> @@ -1315,20 +1315,24 @@ static inline unsigned int ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+>        return turbo ? (clock / 80) : (clock / 40);
+>  }
 >
-> BTW, the dmesg buffer is circular. All that usb monitoring output has
-> completely filled the buffer, and it contains no useful information.
+> -/*
+> - * Read from a register
+> - */
+> +static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
+> +{
+> +        return &ah->common;
+> +}
+> +
+> +static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+> +{
+> +        return &(ath5k_hw_common(ah)->regulatory);
+> +}
+> +
+>  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+>  {
+> -       return ioread32(ah->ah_iobase + reg);
+> +       return ath5k_hw_common(ah)->ops->read(ah, reg);
+>  }
 >
+> -/*
+> - * Write to a register
+> - */
+>  static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+>  {
+> -       iowrite32(val, ah->ah_iobase + reg);
+> +       ath5k_hw_common(ah)->ops->write(ah, reg, val);
+>  }
+>
+>  #if defined(_ATH5K_RESET) || defined(_ATH5K_PHY)
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 3cb0752..535ea72 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -437,6 +437,22 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+>
+>        return name;
+>  }
+> +static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
+> +{
+> +       struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
+> +       return ioread32(ah->ah_iobase + reg_offset);
+> +}
+> +
+> +static void ath5k_iowrite32(void *hw_priv, u32 reg_offset, u32 val)
+> +{
+> +       struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
+> +       iowrite32(val, ah->ah_iobase + reg_offset);
+> +}
+> +
+> +static struct ath_ops ath5k_common_ops = {
+> +       .read = ath5k_ioread32,
+> +       .write = ath5k_iowrite32,
+> +};
+>
+>  static int __devinit
+>  ath5k_pci_probe(struct pci_dev *pdev,
+> @@ -576,6 +592,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>        sc->ah->ah_sc = sc;
+>        sc->ah->ah_iobase = sc->iobase;
+>        common = ath5k_hw_common(sc->ah);
+> +       common->ops = &ath5k_common_ops;
+>        common->cachelsz = csz << 2; /* convert to bytes */
+>
+>        /* Initialize device */
+> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+> index 005d25f..b14ba07 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.h
+> +++ b/drivers/net/wireless/ath/ath5k/base.h
+> @@ -201,15 +201,4 @@ struct ath5k_softc {
+>  #define ath5k_hw_hasveol(_ah) \
+>        (ath5k_hw_get_capability(_ah, AR5K_CAP_VEOL, 0, NULL) == 0)
+>
+> -static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
+> -{
+> -       return &ah->common;
+> -}
+> -
+> -static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+> -{
+> -       return &(ath5k_hw_common(ah)->regulatory);
+> -
+> -}
+> -
+>  #endif
 
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=US-ASCII; name="interfaces.log"
-Content-Disposition: attachment; filename="interfaces.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file1
+Since each driver will use it's own reg read/write functions (ath5k hw
+code still uses ath5k_hw_reg_read/write), why do we need to have
+common reg read/write functions like that used in the driver code ?
+This makes the code more complex that it needs to be and i don't see a
+reason why we need it. I understand why we need a way to handle
+read/write functions from common ath code but i don't see a reason to
+use these functions on ath5k, we can just fill ath_ops struct so that
+common code can use them and leave ath5k_hw_read/write untouched.
 
-IyBUaGlzIGZpbGUgZGVzY3JpYmVzIHRoZSBuZXR3b3JrIGludGVyZmFjZXMgYXZhaWxhYmxlIG9u
-IHlvdXIgc3lzdGVtCiMgYW5kIGhvdyB0byBhY3RpdmF0ZSB0aGVtLiBGb3IgbW9yZSBpbmZvcm1h
-dGlvbiwgc2VlIGludGVyZmFjZXMoNSkuCgojIFRoZSBsb29wYmFjayBuZXR3b3JrIGludGVyZmFj
-ZQphdXRvIGxvCmlmYWNlIGxvIGluZXQgbG9vcGJhY2sKCmF1dG8gd2xhbjAKaWZhY2Ugd2xhbjAg
-aW5ldCBkaGNwCg==
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=US-ASCII; name="ifconfig.log"
-Content-Disposition: attachment; filename="ifconfig.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file2
-
-bG8gICAgICAgIExpbmsgZW5jYXA6TG9jYWwgTG9vcGJhY2sgIAogICAgICAgICAgaW5ldCBhZGRy
-OjEyNy4wLjAuMSAgTWFzazoyNTUuMC4wLjAKICAgICAgICAgIFVQIExPT1BCQUNLIFJVTk5JTkcg
-IE1UVToxNjQzNiAgTWV0cmljOjEKICAgICAgICAgIFJYIHBhY2tldHM6MCBlcnJvcnM6MCBkcm9w
-cGVkOjAgb3ZlcnJ1bnM6MCBmcmFtZTowCiAgICAgICAgICBUWCBwYWNrZXRzOjAgZXJyb3JzOjAg
-ZHJvcHBlZDowIG92ZXJydW5zOjAgY2FycmllcjowCiAgICAgICAgICBjb2xsaXNpb25zOjAgdHhx
-dWV1ZWxlbjowIAogICAgICAgICAgUlggYnl0ZXM6MCAoMC4wIEIpICBUWCBieXRlczowICgwLjAg
-QikKCndsYW4wICAgICBMaW5rIGVuY2FwOkV0aGVybmV0ICBIV2FkZHIgMDA6MTY6NDQ6OGY6OGY6
-OTAgIAogICAgICAgICAgVVAgQlJPQURDQVNUIE1VTFRJQ0FTVCAgTVRVOjE1MDAgIE1ldHJpYzox
-CiAgICAgICAgICBSWCBwYWNrZXRzOjAgZXJyb3JzOjAgZHJvcHBlZDowIG92ZXJydW5zOjAgZnJh
-bWU6MAogICAgICAgICAgVFggcGFja2V0czowIGVycm9yczowIGRyb3BwZWQ6MCBvdmVycnVuczow
-IGNhcnJpZXI6MAogICAgICAgICAgY29sbGlzaW9uczowIHR4cXVldWVsZW46MTAwMCAKICAgICAg
-ICAgIFJYIGJ5dGVzOjAgKDAuMCBCKSAgVFggYnl0ZXM6MCAoMC4wIEIpCgp3bWFzdGVyMCAgTGlu
-ayBlbmNhcDpVTlNQRUMgIEhXYWRkciAwMC0xNi00NC04Ri04Ri05MC0wMC0wMC0wMC0wMC0wMC0w
-MC0wMC0wMC0wMC0wMCAgCiAgICAgICAgICBVUCBSVU5OSU5HICBNVFU6MCAgTWV0cmljOjEKICAg
-ICAgICAgIFJYIHBhY2tldHM6MCBlcnJvcnM6MCBkcm9wcGVkOjAgb3ZlcnJ1bnM6MCBmcmFtZTow
-CiAgICAgICAgICBUWCBwYWNrZXRzOjAgZXJyb3JzOjAgZHJvcHBlZDowIG92ZXJydW5zOjAgY2Fy
-cmllcjowCiAgICAgICAgICBjb2xsaXNpb25zOjAgdHhxdWV1ZWxlbjoxMDAwIAogICAgICAgICAg
-UlggYnl0ZXM6MCAoMC4wIEIpICBUWCBieXRlczowICgwLjAgQikKCg==
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=US-ASCII; name="iwconfig.log"
-Content-Disposition: attachment; filename="iwconfig.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file3
-
-d2xhbjAgICAgIElFRUUgODAyLjExYmcgIEVTU0lEOiJsaW5rc3lzIiAgCiAgICAgICAgICBNb2Rl
-Ok1hbmFnZWQgIEZyZXF1ZW5jeToyLjQzNyBHSHogIEFjY2VzcyBQb2ludDogTm90LUFzc29jaWF0
-ZWQgICAKICAgICAgICAgIFR4LVBvd2VyPTI3IGRCbSAgIAogICAgICAgICAgUmV0cnkgIGxvbmcg
-bGltaXQ6NyAgIFJUUyB0aHI6b2ZmICAgRnJhZ21lbnQgdGhyOm9mZgogICAgICAgICAgRW5jcnlw
-dGlvbiBrZXk6b2ZmCiAgICAgICAgICBQb3dlciBNYW5hZ2VtZW50Om9mZgogICAgICAgICAgTGlu
-ayBRdWFsaXR5OjAgIFNpZ25hbCBsZXZlbDowICBOb2lzZSBsZXZlbDowCiAgICAgICAgICBSeCBp
-bnZhbGlkIG53aWQ6MCAgUnggaW52YWxpZCBjcnlwdDowICBSeCBpbnZhbGlkIGZyYWc6MAogICAg
-ICAgICAgVHggZXhjZXNzaXZlIHJldHJpZXM6MCAgSW52YWxpZCBtaXNjOjAgICBNaXNzZWQgYmVh
-Y29uOjAKCg==
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=US-ASCII; name="scan.log"
-Content-Disposition: attachment; filename="scan.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file4
-
-d2xhbjAgICAgIFNjYW4gY29tcGxldGVkIDoKICAgICAgICAgIENlbGwgMDEgLSBBZGRyZXNzOiAw
-MDoxRjozMzozQzo2MzpDNAogICAgICAgICAgICAgICAgICAgIENoYW5uZWw6MQogICAgICAgICAg
-ICAgICAgICAgIEZyZXF1ZW5jeToyLjQxMiBHSHogKENoYW5uZWwgMSkKICAgICAgICAgICAgICAg
-ICAgICBRdWFsaXR5PTYxLzcwICBTaWduYWwgbGV2ZWw9LTQ5IGRCbSAgCiAgICAgICAgICAgICAg
-ICAgICAgRW5jcnlwdGlvbiBrZXk6b24KICAgICAgICAgICAgICAgICAgICBFU1NJRDoibmV0MjAw
-MCIKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6MSBNYi9zOyAyIE1iL3M7IDUuNSBNYi9z
-OyAxMSBNYi9zOyAxOCBNYi9zCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDI0IE1iL3M7
-IDM2IE1iL3M7IDU0IE1iL3MKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6NiBNYi9zOyA5
-IE1iL3M7IDEyIE1iL3M7IDQ4IE1iL3MKICAgICAgICAgICAgICAgICAgICBNb2RlOk1hc3Rlcgog
-ICAgICAgICAgICAgICAgICAgIEV4dHJhOnRzZj0wMDAwMDAzZDRhZjkxMTgzCiAgICAgICAgICAg
-ICAgICAgICAgRXh0cmE6IExhc3QgYmVhY29uOiAxNTgwbXMgYWdvCiAgICAgICAgICAgICAgICAg
-ICAgSUU6IFVua25vd246IDAwMDc2RTY1NzQzMjMwMzAzMAogICAgICAgICAgICAgICAgICAgIElF
-OiBVbmtub3duOiAwMTA4ODI4NDhCOTYyNDMwNDg2QwogICAgICAgICAgICAgICAgICAgIElFOiBV
-bmtub3duOiAwMzAxMDEKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMkEwMTAwCiAg
-ICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJGMDEwMAogICAgICAgICAgICAgICAgICAg
-IElFOiBJRUVFIDgwMi4xMWkvV1BBMiBWZXJzaW9uIDEKICAgICAgICAgICAgICAgICAgICAgICAg
-R3JvdXAgQ2lwaGVyIDogVEtJUAogICAgICAgICAgICAgICAgICAgICAgICBQYWlyd2lzZSBDaXBo
-ZXJzICgyKSA6IENDTVAgVEtJUAogICAgICAgICAgICAgICAgICAgICAgICBBdXRoZW50aWNhdGlv
-biBTdWl0ZXMgKDEpIDogUFNLCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDMyMDQw
-QzEyMTg2MAogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiBERDdDMDA1MEYyMDQxMDRB
-MDAwMTEwMTA0NDAwMDEwMjEwNDEwMDAxMDAxMDNCMDAwMTAzMTA0NzAwMTBBQTlEMEU2RDI2MDJB
-RTcwMzlBNTc3NkVCRjhDNzBCRTEwMjEwMDBENEU0NTU0NDc0NTQxNTIyQzIwNDk2RTYzMkUxMDIz
-MDAwOTU3NEU1MjM4MzMzNDQyNzYzMjEwMjQwMDA5NTc0RTUyMzgzMzM0NDI3NjMyMTA0MjAwMDIz
-MDMxMTA1NDAwMDgwMDA2MDA1MEYyMDQwMDAxMTAxMTAwMDk1NzRFNTIzODMzMzQ0Mjc2MzIxMDA4
-MDAwMjAwODQKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogREQwOTAwMTAxODAyMDBG
-MDAxMDAwMAogICAgICAgICAgICAgICAgICAgIElFOiBXUEEgVmVyc2lvbiAxCiAgICAgICAgICAg
-ICAgICAgICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAg
-UGFpcndpc2UgQ2lwaGVycyAoMikgOiBDQ01QIFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAg
-QXV0aGVudGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAgICAgICAgIElFOiBV
-bmtub3duOiBERDE4MDA1MEYyMDIwMTAxODAwMDAzQTQwMDAwMjdBNDAwMDA0MjQzNUUwMDYyMzIy
-RjAwCiAgICAgICAgICBDZWxsIDAyIC0gQWRkcmVzczogMDA6MUM6MTA6MzI6OTQ6NjEKICAgICAg
-ICAgICAgICAgICAgICBDaGFubmVsOjYKICAgICAgICAgICAgICAgICAgICBGcmVxdWVuY3k6Mi40
-MzcgR0h6IChDaGFubmVsIDYpCiAgICAgICAgICAgICAgICAgICAgUXVhbGl0eT01Ny83MCAgU2ln
-bmFsIGxldmVsPS01MyBkQm0gIAogICAgICAgICAgICAgICAgICAgIEVuY3J5cHRpb24ga2V5Om9m
-ZgogICAgICAgICAgICAgICAgICAgIEVTU0lEOiJsaW5rc3lzIgogICAgICAgICAgICAgICAgICAg
-IEJpdCBSYXRlczoxIE1iL3M7IDIgTWIvczsgNS41IE1iL3M7IDExIE1iL3M7IDE4IE1iL3MKICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgMjQgTWIvczsgMzYgTWIvczsgNTQgTWIvcwogICAg
-ICAgICAgICAgICAgICAgIEJpdCBSYXRlczo2IE1iL3M7IDkgTWIvczsgMTIgTWIvczsgNDggTWIv
-cwogICAgICAgICAgICAgICAgICAgIE1vZGU6TWFzdGVyCiAgICAgICAgICAgICAgICAgICAgRXh0
-cmE6dHNmPTAwMDAwMDlkM2VmYjAxODQKICAgICAgICAgICAgICAgICAgICBFeHRyYTogTGFzdCBi
-ZWFjb246IDU0MG1zIGFnbwogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiAwMDA3NkM2
-OTZFNkI3Mzc5NzMKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDEwODgyODQ4Qjk2
-MjQzMDQ4NkMKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDMwMTA2CiAgICAgICAg
-ICAgICAgICAgICAgSUU6IFVua25vd246IDA1MDQwMDAxMDAwMAogICAgICAgICAgICAgICAgICAg
-IElFOiBVbmtub3duOiAyQTAxMDQKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMkYw
-MTA0CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDMyMDQwQzEyMTg2MAogICAgICAg
-ICAgICAgICAgICAgIElFOiBVbmtub3duOiBERDA5MDAxMDE4MDIwMEY0MDAwMDAwCiAgICAgICAg
-ICBDZWxsIDAzIC0gQWRkcmVzczogMDA6MUI6MkY6RjY6NEY6MUUKICAgICAgICAgICAgICAgICAg
-ICBDaGFubmVsOjYKICAgICAgICAgICAgICAgICAgICBGcmVxdWVuY3k6Mi40MzcgR0h6IChDaGFu
-bmVsIDYpCiAgICAgICAgICAgICAgICAgICAgUXVhbGl0eT00NS83MCAgU2lnbmFsIGxldmVsPS02
-NSBkQm0gIAogICAgICAgICAgICAgICAgICAgIEVuY3J5cHRpb24ga2V5Om9uCiAgICAgICAgICAg
-ICAgICAgICAgRVNTSUQ6IkhvbWUiCiAgICAgICAgICAgICAgICAgICAgQml0IFJhdGVzOjEgTWIv
-czsgMiBNYi9zOyA1LjUgTWIvczsgMTEgTWIvczsgNiBNYi9zCiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIDEyIE1iL3M7IDI0IE1iL3M7IDM2IE1iL3MKICAgICAgICAgICAgICAgICAgICBC
-aXQgUmF0ZXM6OSBNYi9zOyAxOCBNYi9zOyA0OCBNYi9zOyA1NCBNYi9zCiAgICAgICAgICAgICAg
-ICAgICAgTW9kZTpNYXN0ZXIKICAgICAgICAgICAgICAgICAgICBFeHRyYTp0c2Y9MDAwMDAwOWQz
-ZTY1MDE4MQogICAgICAgICAgICAgICAgICAgIEV4dHJhOiBMYXN0IGJlYWNvbjogNTIwbXMgYWdv
-CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDAwMDQ0ODZGNkQ2NQogICAgICAgICAg
-ICAgICAgICAgIElFOiBVbmtub3duOiAwMTA4ODI4NDhCOTYwQzE4MzA0OAogICAgICAgICAgICAg
-ICAgICAgIElFOiBVbmtub3duOiAwMzAxMDYKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93
-bjogMDUwNDAwMDEwMDA4CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJBMDEwMAog
-ICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiAzMjA0MTIyNDYwNkMKICAgICAgICAgICAg
-ICAgICAgICBJRTogSUVFRSA4MDIuMTFpL1dQQTIgVmVyc2lvbiAxCiAgICAgICAgICAgICAgICAg
-ICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAgUGFpcndp
-c2UgQ2lwaGVycyAoMikgOiBUS0lQIENDTVAKICAgICAgICAgICAgICAgICAgICAgICAgQXV0aGVu
-dGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAgICAgICAgICAgIFByZWF1dGhl
-bnRpY2F0aW9uIFN1cHBvcnRlZAogICAgICAgICAgICAgICAgICAgIElFOiBXUEEgVmVyc2lvbiAx
-CiAgICAgICAgICAgICAgICAgICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAg
-ICAgICAgICAgICAgUGFpcndpc2UgQ2lwaGVycyAoMikgOiBUS0lQIENDTVAKICAgICAgICAgICAg
-ICAgICAgICAgICAgQXV0aGVudGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAg
-ICAgICAgIElFOiBVbmtub3duOiBERDA5MDAwMzdGMDEwMTAwMURGRjdGCiAgICAgICAgICAgICAg
-ICAgICAgSUU6IFVua25vd246IEREMEMwMDAzN0YwMjAxMDEwNjAwMDJBMzQwMDAKICAgICAgICAg
-ICAgICAgICAgICBJRTogVW5rbm93bjogREQxQTAwMDM3RjAzMDEwMDAwMDAwMDFCMkZGNjRGMUUw
-MjFCMkZGNjRGMUU2NDAwMkMwMTFEMDgKICAgICAgICAgIENlbGwgMDQgLSBBZGRyZXNzOiAwMDox
-NDpCRjo3RDoyNzpGOAogICAgICAgICAgICAgICAgICAgIENoYW5uZWw6NgogICAgICAgICAgICAg
-ICAgICAgIEZyZXF1ZW5jeToyLjQzNyBHSHogKENoYW5uZWwgNikKICAgICAgICAgICAgICAgICAg
-ICBRdWFsaXR5PTQwLzcwICBTaWduYWwgbGV2ZWw9LTcwIGRCbSAgCiAgICAgICAgICAgICAgICAg
-ICAgRW5jcnlwdGlvbiBrZXk6b2ZmCiAgICAgICAgICAgICAgICAgICAgRVNTSUQ6Im51bWJlcm9u
-ZSIKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6MSBNYi9zOyAyIE1iL3M7IDUuNSBNYi9z
-OyAxMSBNYi9zOyAxOCBNYi9zCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDI0IE1iL3M7
-IDM2IE1iL3M7IDU0IE1iL3MKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6NiBNYi9zOyA5
-IE1iL3M7IDEyIE1iL3M7IDQ4IE1iL3MKICAgICAgICAgICAgICAgICAgICBNb2RlOk1hc3Rlcgog
-ICAgICAgICAgICAgICAgICAgIEV4dHJhOnRzZj0wMDAwMDA5ZDNlNGMwMTgzCiAgICAgICAgICAg
-ICAgICAgICAgRXh0cmE6IExhc3QgYmVhY29uOiA4NTBtcyBhZ28KICAgICAgICAgICAgICAgICAg
-ICBJRTogVW5rbm93bjogMDAwOTZFNzU2RDYyNjU3MjZGNkU2NQogICAgICAgICAgICAgICAgICAg
-IElFOiBVbmtub3duOiAwMTA4ODI4NDhCOTYyNDMwNDg2QwogICAgICAgICAgICAgICAgICAgIElF
-OiBVbmtub3duOiAwMzAxMDYKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDUwNDAw
-MDEwMDAwCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJBMDEwNAogICAgICAgICAg
-ICAgICAgICAgIElFOiBVbmtub3duOiAyRjAxMDQKICAgICAgICAgICAgICAgICAgICBJRTogVW5r
-bm93bjogMzIwNDBDMTIxODYwCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IEREMDkw
-MDEwMTgwMjAwRjQwMDAwMDAKCg==
---0016e6551d7896541404738d616a
-Content-Type: text/plain; charset=US-ASCII; name="dhclient.log"
-Content-Disposition: attachment; filename="dhclient.log"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: file5
-
-SW50ZXJuZXQgU3lzdGVtcyBDb25zb3J0aXVtIERIQ1AgQ2xpZW50IFYzLjEuMQpDb3B5cmlnaHQg
-MjAwNC0yMDA4IEludGVybmV0IFN5c3RlbXMgQ29uc29ydGl1bS4KQWxsIHJpZ2h0cyByZXNlcnZl
-ZC4KRm9yIGluZm8sIHBsZWFzZSB2aXNpdCBodHRwOi8vd3d3LmlzYy5vcmcvc3cvZGhjcC8KCkxp
-c3RlbmluZyBvbiBMUEYvd2xhbjAvMDA6MTY6NDQ6OGY6OGY6OTAKU2VuZGluZyBvbiAgIExQRi93
-bGFuMC8wMDoxNjo0NDo4Zjo4Zjo5MApTZW5kaW5nIG9uICAgU29ja2V0L2ZhbGxiYWNrCkRIQ1BE
-SVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9ydCA2NyBpbnRlcnZhbCA1CkRI
-Q1BESVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9ydCA2NyBpbnRlcnZhbCAx
-MApESENQRElTQ09WRVIgb24gd2xhbjAgdG8gMjU1LjI1NS4yNTUuMjU1IHBvcnQgNjcgaW50ZXJ2
-YWwgMTAKREhDUERJU0NPVkVSIG9uIHdsYW4wIHRvIDI1NS4yNTUuMjU1LjI1NSBwb3J0IDY3IGlu
-dGVydmFsIDcKREhDUERJU0NPVkVSIG9uIHdsYW4wIHRvIDI1NS4yNTUuMjU1LjI1NSBwb3J0IDY3
-IGludGVydmFsIDEyCkRIQ1BESVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9y
-dCA2NyBpbnRlcnZhbCAxMwpESENQRElTQ09WRVIgb24gd2xhbjAgdG8gMjU1LjI1NS4yNTUuMjU1
-IHBvcnQgNjcgaW50ZXJ2YWwgNApObyBESENQT0ZGRVJTIHJlY2VpdmVkLgpObyB3b3JraW5nIGxl
-YXNlcyBpbiBwZXJzaXN0ZW50IGRhdGFiYXNlIC0gc2xlZXBpbmcuCg==
---0016e6551d7896541404738d616a--
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
