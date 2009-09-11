@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10863 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754212AbZIAPWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:22:49 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:22:52 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 3/7] wireless: update cfg80211 kconfig entry
-Date: Tue, 1 Sep 2009 08:22:42 -0700
-Message-ID: <1251818566-9264-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:49910 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753167AbZIKBqe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 21:46:34 -0400
+Received: by iwn8 with SMTP id 8so297400iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 18:46:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <b6c5339f0909101842t74479b34heaf0628d1a3b7edb@mail.gmail.com>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
+	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com>
+	<b6c5339f0909101842t74479b34heaf0628d1a3b7edb@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 10 Sep 2009 18:46:17 -0700
+Message-ID: <43e72e890909101846p3c696b69y41675d0dd3ae221d@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+To: Bob Copeland <bcopeland@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, devel@linuxdriverproject.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 is now *the* wireless configuration API. Lets also
-give a little explanation as to what it is and refer people to
-the wireless wiki for more information.
+On Thu, Sep 10, 2009 at 6:42 PM, Bob Copeland <bcopeland@gmail.com> wrote:
+> On Thu, Sep 10, 2009 at 9:34 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>>  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+>>  {
+>> -       return ioread32(ah->ah_iobase + reg);
+>> +       return ath5k_hw_common(ah)->ops->read(ah, reg);
+>>  }
+>
+> Is there any way we can do this without two pointer dereferences for every
+> read and write?  I have a feeling this is going to make certain operations
+> (e.g. loading initvals during reset) really suck.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/Kconfig |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+It seems to work fine on my box, perhaps a single CPU (real single
+CPU) user can test to see if there are any differences noted. I don't
+think there should be really.
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index aea7e68..9fd570b 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -1,6 +1,15 @@
- config CFG80211
--	tristate "Improved wireless configuration API"
-+	tristate "cfg80211 - wireless configuration API"
- 	depends on RFKILL || !RFKILL
-+	---help---
-+	  cfg80211 is the Linux wireless LAN (802.11) configuration API.
-+	  Enable this if you have a wireless device.
-+
-+	  For more information refer to documentation on the wireless wiki:
-+
-+	  http://wireless.kernel.org/en/developers/Documentation/cfg80211
-+
-+	  When built as a module cfg80211 will be built as cfg80211
- 
- config NL80211_TESTMODE
- 	bool "nl80211 testmode command"
--- 
-1.6.3.3
+In any case if its deemed too nested for ath5k purposes you can just
+leave an ioread/iowrite on the  ath5k_hw_reg_read() and later just
+move all read/write ops to use the common ops calls. If someone can
+think of better alternatives I'm all ears.
 
+  Luis
