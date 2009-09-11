@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:47037 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890AbZIZN70 (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59956 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751103AbZIKOZK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 09:59:26 -0400
-Received: by fxm18 with SMTP id 18so2786433fxm.17
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2009 06:59:29 -0700 (PDT)
+	Fri, 11 Sep 2009 10:25:10 -0400
+Date: Fri, 11 Sep 2009 07:24:40 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	devel@driverdev.osuosl.org, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+In-Reply-To: <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+Message-ID: <alpine.LFD.2.01.0909110720210.3654@localhost.localdomain>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>  <1252632895-11914-4-git-send-email-lrodriguez@atheros.com>  <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>  <4AA9F22C.3090007@gmail.com>
+ <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1253966835.5122.8.camel@johannes.local>
-References: <20090924180048.14503.9579.stgit@tikku>
-	 <20090924180251.14503.64152.stgit@tikku>
-	 <43e72e890909241135j21f687a7oc4f929d2134b6310@mail.gmail.com>
-	 <da94abde0909241210m69bd619sce62645c3aca9aae@mail.gmail.com>
-	 <43e72e890909241311j552ee33ata80ba24c386a316b@mail.gmail.com>
-	 <da94abde0909251211x347bbd30xdfe2bd05bc1e07e5@mail.gmail.com>
-	 <1253966835.5122.8.camel@johannes.local>
-Date: Sat, 26 Sep 2009 06:59:29 -0700
-Message-ID: <da94abde0909260659g53350ab2gaf58d900489d3b45@mail.gmail.com>
-Subject: Re: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in
-	wiphy
-From: Kalle Valo <kalle.valo@iki.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 26, 2009 at 5:07 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-09-25 at 12:11 -0700, Kalle Valo wrote:
->
->> I agree. I'm not going to work on adding the driver name right now,
->> but maybe in the future.
->
-> $ readlink /sys/class/net/wlan0/phy80211/device/driver/module
 
-Excellent, that shows the driver name easily enough. Thanks.
 
-Kalle
+On Fri, 11 Sep 2009, Luis R. Rodriguez wrote:
+> 
+> That is the way I had it originally before submission, and I
+> completely agree its reasonable to not incur additional cost at the
+> expense of having two separate read/write paths, and perhaps we should
+> only incur the extra cost on routines shared between
+> ath9k/ath9k/ath9k_htc. But -- is there really is a measurable cost
+> penalty?
+
+There's a measurable size penalty, at least.
+
+In fact, if you know what kind of IO op it is (ie "it's always MMIO"), 
+you'd be even better using "writel()" directly, in which case it turns 
+into just a single store on most architectures, and doesn't cause all the 
+register save/restore of a function call.
+
+			Linus
