@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:38540 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934385AbZIDWtK (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53913 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754380AbZIKUMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 18:49:10 -0400
+	Fri, 11 Sep 2009 16:12:33 -0400
+Date: Fri, 11 Sep 2009 13:11:45 -0700 (PDT)
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: devel@driverdev.osuosl.org, ath9k-devel@venema.h4ckr.net,
+	Jeff Garzik <jeff@garzik.org>, linux-wireless@vger.kernel.org,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+In-Reply-To: <43e72e890909111043m78411058i86e61909a35412f@mail.gmail.com>
+Message-ID: <alpine.LFD.2.01.0909111308120.3654@localhost.localdomain>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>  <1252632895-11914-4-git-send-email-lrodriguez@atheros.com>  <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>  <4AA9F22C.3090007@gmail.com> <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+  <alpine.LFD.2.01.0909110720210.3654@localhost.localdomain> <43e72e890909111043m78411058i86e61909a35412f@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1252103067.21380.1.camel@pc1117.cambridge.arm.com>
-References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
-	<1251962791.3336.3.camel@johannes.local> <43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
-	<1252001837.9336.2.camel@johannes.local> <20090903204319.GC3701@mosca>
-	<1252040671.9336.10.camel@johannes.local> <1252052757.26413.9.camel@pc1117.cambridge.arm.com>
-	<43e72e890909041421m243bbea6i95c26ab21dc8732d@mail.gmail.com>
-	<43e72e890909041458u505ce89tf38743dd6305bf7b@mail.gmail.com>
-	<1252103067.21380.1.camel@pc1117.cambridge.arm.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 4 Sep 2009 15:48:50 -0700
-Message-ID: <43e72e890909041548i553d63b6k1602eeb52920c4ec@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
-	reports
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 4, 2009 at 3:24 PM, Catalin Marinas<catalin.marinas@arm.com> wrote:
-> On Fri, 2009-09-04 at 14:58 -0700, Luis R. Rodriguez wrote:
->> On Fri, Sep 4, 2009 at 2:21 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
->>
->> > BTW I should not I got this kmemleak report after using the clear
->> > command by painting objects black. I'll test it now with your
->> > suggested changes.
->>
->> So I pulled your git://linux-arm.org/linux-2.6 master into my tree and
->> didn't even need a 'clear' command now, the output of
->> /sys/kernel/debug/kmemleak is empty :), so I suspect you have quite a
->> few changes which should help avoid getting false positives.
->>
->> Will these changes make it for 2.6.32?
->
-> The kmemleak branch is planned for the upcoming merging window.
 
-Ah great.
 
-> I don't
-> think you need to merge the master branch as it has a lot of
-> arm-specific code.
+On Fri, 11 Sep 2009, Luis R. Rodriguez wrote:
+> 
+> > In fact, if you know what kind of IO op it is (ie "it's always MMIO"),
+> > you'd be even better using "writel()" directly,
+> 
+> Heh.. you realize I tried to document such a thing a while ago and it
+> seems you opposed it [1]?
 
-That was a goof, thanks, I'll rebase onto your kmemleak branch.
+If it's mapped with "pci_iomap()" you should use ioread*/iowrite*. 
 
-  Luis
+But if you know it's always MMIO, and you use just ioremap() to map it, 
+and then readl/writel.
+
+It's the _mixing_ of the two that I object to:
+ - pci_iomap() - can do either MMIO of PIO
+ - readl/writel - always just MMIO
+should preferably not be mixed.
+
+(Sure it will _work_, but I wouldn't encourage it)
+
+			Linus
