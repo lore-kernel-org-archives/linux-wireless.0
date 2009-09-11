@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61811 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753135AbZIVXix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 19:38:53 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: davem@davemloft.net, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH 2/3] iwmc3200wifi: select IWMC3200TOP in Kconfig
-Date: Wed, 23 Sep 2009 02:38:43 +0300
-Message-Id: <1253662724-16497-3-git-send-email-tomas.winkler@intel.com>
-In-Reply-To: <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
-References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
- <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1754554AbZIKRiS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:18 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 03/13] iwlwifi: remove un-supported eeprom parameters
+Date: Fri, 11 Sep 2009 10:38:09 -0700
+Message-Id: <1252690699-25796-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwmc3200wifi requires iwmc3200top  for its operation
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Remove few of the parameters not used and no longer valid in EEPROM.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwmc3200wifi/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
-index c62da43..69faaf1 100644
---- a/drivers/net/wireless/iwmc3200wifi/Kconfig
-+++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
-@@ -3,6 +3,7 @@ config IWM
- 	depends on MMC && WLAN_80211 && EXPERIMENTAL
- 	depends on CFG80211
- 	select FW_LOADER
-+	select IWMC3200TOP
- 	help
- 	  The Intel Wireless Multicomm 3200 hardware is a combo
- 	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 6b68db7..90e2b4e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -370,12 +370,10 @@ struct iwl_eeprom_calib_info {
+ #define EEPROM_BOARD_PBA_NUMBER             (2*0x3B+1)	/* 9  bytes */
+ #define EEPROM_VERSION                      (2*0x44)	/* 2  bytes */
+ #define EEPROM_SKU_CAP                      (2*0x45)	/* 1  bytes */
+-#define EEPROM_LEDS_MODE                    (2*0x45+1)	/* 1  bytes */
+ #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
+ #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
+ #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
+ #define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
+-#define EEPROM_ANTENNA_SWITCH_TYPE          (2*0x4A+1)	/* 1  bytes */
+ 
+ /* The following masks are to be applied on EEPROM_RADIO_CONFIG */
+ #define EEPROM_RF_CFG_TYPE_MSK(x)   (x & 0x3)         /* bits 0-1   */
 -- 
-1.6.0.6
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+1.5.6.3
 
