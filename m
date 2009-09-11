@@ -1,81 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f201.google.com ([209.85.222.201]:53377 "EHLO
-	mail-pz0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbZIHS0G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 14:26:06 -0400
-Received: by pzk39 with SMTP id 39so3376300pzk.15
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:26:09 -0700 (PDT)
-Message-ID: <4AA6A1BF.6020509@gmail.com>
-Date: Tue, 08 Sep 2009 11:26:07 -0700
-From: John Daiker <daikerjohn@gmail.com>
+Received: from web28308.mail.ukl.yahoo.com ([87.248.110.127]:22781 "HELO
+	web28308.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752655AbZIKIVr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 04:21:47 -0400
+Message-ID: <839237.19551.qm@web28308.mail.ukl.yahoo.com>
+Date: Fri, 11 Sep 2009 08:21:49 +0000 (GMT)
+From: Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
+To: Pierre Ossman <pierre@ossman.eu>
+Cc: akpm@linux-foundation.org, linux-mmc@vger.kernel.org,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+In-Reply-To: <20090911080659.2ac822fc@mjolnir.ossman.eu>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 dma error
-References: <20090908134732.GA1936@darkstar> <4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com> <200909082013.41929.mb@bu3sch.de>
-In-Reply-To: <200909082013.41929.mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/2009 11:13 AM, Michael Buesch wrote:
-> On Tuesday 08 September 2009 19:50:25 John Daiker wrote:
->> On 09/08/2009 07:54 AM, Larry Finger wrote:
->>> Michael Buesch wrote:
->>>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->>>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->>>>> then the controller keep restarting...
->>>>>
->>>>> Please tell what I can provide or test, Thanks.
->>>>
->>>> Is this a regression? If so, please bisect.
->>>
->>> It is something specific to his system as I don't see anything like
->>> this. In addition, there are some users on the openSUSE forums that
->>> have implemented the latest compat-wireless and switched away from
->>> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
->>> them.
->>>
->>> Please reboot so that we see the ssb output as well. Use the command
->>>
->>> dmesg | egrep "ssb|b43"
->>>
->>> That way we will be able to see exactly what kind of device you have
->>> and what revisions are in it. AFAIK, the testing to date has been
->>> limited to Rev 1 PHYs and Rev 2 radios.
->>>
->>> Larry
->>>
->>
->> I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom 4312.  Looks to be a PHY 1, Radio 2:
->>
->> --snip--
->> [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
->> [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
->> --snip--
->>
->> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config, and lspci -vv and lspci -nn
->>
->> Note: With the dmesg output, I had unloaded the b43 module previous 'modprobe -r b43' and then loaded it again with debug output: 'modprobe b43 verbose=3'
->>
->> John Daiker
->>
->
-> To ask the question once again: Is this a regression?
-> This is a critical question to track down the bug.
->
+--- El vie, 11/9/09, Pierre Ossman <pierre@ossman.eu> escribió:
+> The description for this patch should be made clearer. The title
+> suggests it adds functionality that's already in place. It should be
+> something along the lines of "Also pass malformed tuples to
+> card drivers".
 
-I would argue that this is not a regression.  Before the LP PHY work was 
-done, the card wouldn't work at all with the b43 driver.  "Didn't work 
-then, doesn't work now" is kinda my reasoning, I guess.
+Hi Pierre,
 
-Thanks for the work on the LP PHY support, though.  Always great that 
-new hardware continues to gain support! :)
+Thanks for your patch review.
 
-JD
+I didn't want to use "malformed" in the first place. I used "unknown" as "unknown to the SDIO core". The SDIO core in Linux only knows about FUNCE tuples of type 1 (with a sane length) as described in the SDIO Simplified Spec V2.00.
+
+I think we just have a language issue here, but if you prefer the "malformed" wording I'm ok with that.
+
+> In the sake of sanity, you might want to add this behaviour to all
+> parsers, not just the FUNCE one.
+
+I didn't find an application for the other parsers yet, so I tried to stick to the strictly necessary and just did the FUNCE one which has a direct application for Broadcom cards.
+
+> 
+> I'm also unclear on how this is supposed to work. What does the
+> broadcom tuple look like? This patch looks like it will silence a lot
+> of legitimate warnings, and possibly pollute the card structures with
+> bogus data.
+
+The contents of the Broadcom FUNCE (type 0x22) tuple that contains the MAC address of a card looks like the following (tuple size 8):
+
+04 06 00 1d bc 62 79 fd
+^^ ^^ ^^^^^^^^^^^^^^^^^
+ |  |                 |
+ |  |                 +--- MAC address
+ |  +--------------------- length (6 bytes for a ethernet MAC address)
+ +------------------------ type 4 (CISTPL_FUNCE_LAN_NODE_ID)
+
+If you prefer it, instead of passing al "unknown" (or "malformed") FUNCE tuples to SDIO drivers, I can let through only a subset of whitelisted FUNCE types (starting with type 4).
+
+> 
+> > diff --git a/drivers/mmc/core/sdio_cis.c b/drivers/mmc/core/sdio_cis.c
+> > index 963f293..87934ac 100644
+> > --- a/drivers/mmc/core/sdio_cis.c
+> > +++ b/drivers/mmc/core/sdio_cis.c
+> > @@ -123,8 +123,9 @@ static int cistpl_funce_func(struct sdio_func *func,
+> >      vsn = func->card->cccr.sdio_vsn;
+> >      min_size = (vsn == SDIO_SDIO_REV_1_00) ? 28 : 42;
+> >  
+> > +    /* let the SDIO driver take care of unknown tuples */
+> >      if (size < min_size || buf[0] != 1)
+> 
+> Misleading comment, the tuple is not unknown.
+> 
+
+Same language issue described before.
+
+> > -        return -EINVAL;
+> > +        return -EILSEQ;
+> >  
+> 
+> What does this change improve?
+
+-EILSEQ is used to indicate that the tuple was not parsed by the SDIO core and should be passed to the SDIO driver via the SDIO func tuple list.
+
+> 
+> >      /* TPLFE_MAX_BLK_SIZE */
+> >      func->max_blksize =
+> buf[12] | (buf[13] << 8);
+> > @@ -154,13 +155,7 @@ static int cistpl_funce(struct mmc_card *card, struct sdio_func *func,
+> >      else
+> >          ret = cistpl_funce_common(card, buf, size);
+> >  
+> > -    if (ret) {
+> > -        printk(KERN_ERR "%s: bad CISTPL_FUNCE size %u "
+> > -               "type %u\n", mmc_hostname(card->host), size, buf[0]);
+> > -        return ret;
+> > -    }
+> > -
+> > -    return 0;
+> > +    return ret;
+> >  }
+> >  
+> >  typedef int (tpl_parse_t)(struct mmc_card *, struct sdio_func *,
+> 
+> Silencing a legitimate error.
+> 
+
+Yes, I see your point.
+
+I think we can keep this code but prevent displaying the error if ret == -EILSEQ (i.e. the tuple is "unknown"/"malformed" BUT should be passed to the SDIO driver for parsing).
+
+> > +        if (ret == -EILSEQ) {
+> > +       
+>     /* this tuple is unknown to the core */
+> 
+> Misleading comment, the tuple might be known but malformed.
+
+Same languange issue again.
+
+> 
+> Rgds
+> -- 
+>      -- Pierre Ossman
+
+Thanks a lot for your comments,
+Albert
 
 
+
+      
