@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:33940 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbZIJB2t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 21:28:49 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so1346319eya.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 18:28:51 -0700 (PDT)
+Received: from bu3sch.de ([62.75.166.246]:46618 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751726AbZIKOBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 10:01:17 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: Fix SDIO interrupt handler deadlock
+Date: Fri, 11 Sep 2009 16:00:19 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Albert Herranz <albert_herranz@yahoo.es>
 MIME-Version: 1.0
-In-Reply-To: <a8e1da0909090056q722057d8m4b5da8afbcb7d975@mail.gmail.com>
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de>
-	 <a8e1da0909090056q722057d8m4b5da8afbcb7d975@mail.gmail.com>
-Date: Thu, 10 Sep 2009 09:28:51 +0800
-Message-ID: <a8e1da0909091828u20b0eadasc471093036a312ad@mail.gmail.com>
-Subject: Re: b43 dma error
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: linville@tuxdriver.com, netrolller.3d@gmail.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	Larry.Finger@lwfinger.net, daikerjohn@gmail.com, akamoto@ml1.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909111600.20786.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 9, 2009 at 3:56 PM, Dave Young<hidave.darkstar@gmail.com> wrote:
-> On Tue, Sep 8, 2009 at 10:38 PM, Michael Buesch<mb@bu3sch.de> wrote:
->> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->>> then the controller keep restarting...
->>>
->>> Please tell what I can provide or test, Thanks.
->>
->> Is this a regression? If so, please bisect.
->
-> Not sure, It's the first time for me to use b43 with the lp-phy
-> because I happend to know it is supported now.
->
-> If it's a regression I can do bisection.
+We need to release the SDIO host before locking the driver mutex.
 
-Add larry/john/Markus to cc-list
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-News:
-
-With following config option set to y, b43 works happily now.
-CONFIG_B43_FORCE_PIO=y
-
->
->>
->> --
->> Greetings, Michael.
->>
->
->
->
-> --
-> Regards
-> dave
->
+---
 
 
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-10 20:26:43.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-11 15:55:19.000000000 +0200
+@@ -1914,20 +1914,14 @@ static irqreturn_t b43_interrupt_handler
+ static void b43_sdio_interrupt_handler(struct b43_wldev *dev)
+ {
+ 	struct b43_wl *wl = dev->wl;
+-	struct sdio_func *func = dev->dev->bus->host_sdio;
+ 	irqreturn_t ret;
+ 
+-	if (unlikely(b43_status(dev) < B43_STAT_STARTED))
+-		return;
+-
+ 	mutex_lock(&wl->mutex);
+-	sdio_release_host(func);
+ 
+ 	ret = b43_do_interrupt(dev);
+ 	if (ret == IRQ_WAKE_THREAD)
+ 		b43_do_interrupt_thread(dev);
+ 
+-	sdio_claim_host(func);
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+Index: wireless-testing/drivers/net/wireless/b43/sdio.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/sdio.c	2009-09-10 19:23:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/sdio.c	2009-09-11 15:54:05.000000000 +0200
+@@ -54,7 +54,12 @@ static void b43_sdio_interrupt_dispatche
+ 	struct b43_sdio *sdio = sdio_get_drvdata(func);
+ 	struct b43_wldev *dev = sdio->irq_handler_opaque;
+ 
++	if (unlikely(b43_status(dev) < B43_STAT_STARTED))
++		return;
++
++	sdio_release_host(func);
+ 	sdio->irq_handler(dev);
++	sdio_claim_host(func);
+ }
+ 
+ int b43_sdio_request_irq(struct b43_wldev *dev,
 
 -- 
-Regards
-dave
+Greetings, Michael.
