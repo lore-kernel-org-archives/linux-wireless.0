@@ -1,38 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.216.194]:43386 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753569AbZI2ACF (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:53889 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752262AbZIKM2N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 20:02:05 -0400
-Received: by pxi32 with SMTP id 32so3859103pxi.4
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 17:02:08 -0700 (PDT)
+	Fri, 11 Sep 2009 08:28:13 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Questions about regulatory domain & passive scanning
+Date: Fri, 11 Sep 2009 14:27:39 +0200
 MIME-Version: 1.0
-In-Reply-To: <43e72e890909201028i119b75c0ic94d07e79e4b7a43@mail.gmail.com>
-References: <20090919205545.GA18080@bombadil.infradead.org>
-	 <4AB5A5A7.3020107@canonical.com>
-	 <43e72e890909200743h74934657nc056c9e6dcb14e90@mail.gmail.com>
-	 <4AB65CFE.7090101@canonical.com>
-	 <43e72e890909201028i119b75c0ic94d07e79e4b7a43@mail.gmail.com>
-Date: Mon, 28 Sep 2009 17:02:08 -0700
-Message-ID: <45e8e6c40909281702i2e5497e7l3a6492151f506ce5@mail.gmail.com>
-Subject: Re: [RFC] compat-2.6: mangle symbols for driver-select
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: tim.gardner@canonical.com, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909111427.39974.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On a side note, the compat-wireless name mangling will help with
-another problem:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/249186
+Hi !
 
-...this happens because compat-wireless builds a version of the usbnet
-module but then there are Ethernet dongles (ex: asix) that rely on the
-stock version of usbnet (they aren't updated by compat-wireless) and
-the user gets a symbols mismatch as a result.  This won't be an issue
-if compat-wireless' usbnet has mangled names for its symbols.
+I'm playing with regulatory domain using wireless-testing, iw, 
+crda and ath5 on Debian. Here are some observations:
 
-  -Andrey
+1) Debian sucks here (while it's otherwise great!). No
+   wireless-regdb, wireless-crda packages, not even in
+   experimental. Maybe I need to add some Ubuntu repository
+   as "deb-src" to my apt sources.list, apt-get source that
+   stuff and recompile it manually.
+
+2) I remove CONFIG_WIRELESS_OLD_REGULATORY. Then, after inserting
+   the card, I see in "iw list":
+
+         * 2412 MHz [1] (20.0 dBm)
+         * 2417 MHz [2] (20.0 dBm)
+         * 2422 MHz [3] (20.0 dBm)
+         * 2427 MHz [4] (20.0 dBm)
+         * 2432 MHz [5] (20.0 dBm)
+         * 2437 MHz [6] (20.0 dBm)
+         * 2442 MHz [7] (20.0 dBm)
+         * 2447 MHz [8] (20.0 dBm)
+         * 2452 MHz [9] (20.0 dBm)
+         * 2457 MHz [10] (20.0 dBm)
+         * 2462 MHz [11] (20.0 dBm)
+         * 2467 MHz [12] (20.0 dBm) (passive scanning)
+         * 2472 MHz [13] (20.0 dBm) (passive scanning)
+         * 2484 MHz [14] (20.0 dBm) (passive scanning)
+
+   I'd like to highlight the "passive scanning". Is this info
+   from the card EEPROM?
+
+3) After "iw reg set DE" (for germany), it's now
+
+          2412 MHz [1] (20.0 dBm)
+          2417 MHz [2] (20.0 dBm)
+          2422 MHz [3] (20.0 dBm)
+          2427 MHz [4] (20.0 dBm)
+          2432 MHz [5] (20.0 dBm)
+          2437 MHz [6] (20.0 dBm)
+          2442 MHz [7] (20.0 dBm)
+          2447 MHz [8] (20.0 dBm)
+          2452 MHz [9] (20.0 dBm)
+          2457 MHz [10] (20.0 dBm)
+          2462 MHz [11] (20.0 dBm)
+          2467 MHz [12] (20.0 dBm) (passive scanning)
+          2472 MHz [13] (20.0 dBm) (passive scanning)
+          2484 MHz [14] (disabled)
+
+   Great, CRDA worked obviously: channel 14 has been disabled.
+
+   And, as I understand it, CRDA can just limit settings
+   further, not widening it. Therefore channels 12 and 13
+   are still marked as "passive scanning".
+
+   If I want to get them to "active scanning", would I need to
+   modify the EEPROM of the card?  ath_info says "Reg. Domain:
+   0x60".
+
+
+-- 
+http://www.holgerschurig.de
