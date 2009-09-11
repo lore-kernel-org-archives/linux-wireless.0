@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:45929 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756257AbZIVMvn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 08:51:43 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] b43: Implement RFKILL status for LP PHY
-Date: Tue, 22 Sep 2009 14:51:40 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	=?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
-References: <4AB8054F.7080600@lwfinger.net>
-In-Reply-To: <4AB8054F.7080600@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909221451.42134.mb@bu3sch.de>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34649 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752608AbZIKDjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Sep 2009 23:39:54 -0400
+Date: Thu, 10 Sep 2009 20:39:51 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Albert Herranz <albert_herranz@yahoo.es>
+Cc: linux-mmc@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
+Message-Id: <20090910203951.041d5c17.akpm@linux-foundation.org>
+In-Reply-To: <1252587402-7382-2-git-send-email-albert_herranz@yahoo.es>
+References: <1252587402-7382-1-git-send-email-albert_herranz@yahoo.es>
+	<1252587402-7382-2-git-send-email-albert_herranz@yahoo.es>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 22 September 2009 00:59:27 Larry Finger wrote:
-> The LP (and probably N) PHY has the same radio disabled bit as
-> the higher-revision A and G PHYs.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Thu, 10 Sep 2009 14:56:42 +0200 Albert Herranz <albert_herranz@yahoo.es> wrote:
 
-ack
-
-> ---
+> Some manufacturers provide vendor information in non-vendor specific CIS
+> tuples. For example, Broadcom uses an Extended Function tuple to provide
+> the MAC address on some of their network cards, as in the case of the
+> Nintendo Wii WLAN daughter card.
 > 
-> John,
-> 
-> Submission of this change for 2.6.32 would be nice, but not necessary.
-> 
-> Larry
-> ---
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
-> +++ wireless-testing/drivers/net/wireless/b43/rfkill.c
-> @@ -28,7 +28,7 @@
->  /* Returns TRUE, if the radio is enabled in hardware. */
->  bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
->  {
-> -	if (dev->phy.rev >= 3) {
-> +	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
->  		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
->  		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
->  			return 1;
-> 
-> 
-> 
+> This patch allows passing correct tuples unknown to the SDIO core to
+> a matching SDIO driver instead of rejecting them and failing.
 > 
 
+This looks leaky to me.
 
 
--- 
-Greetings, Michael.
+: 		if (i < ARRAY_SIZE(cis_tpl_list)) {
+: 			const struct cis_tpl *tpl = cis_tpl_list + i;
+: 			if (tpl_link < tpl->min_size) {
+: 				printk(KERN_ERR
+: 				       "%s: bad CIS tuple 0x%02x"
+: 				       " (length = %u, expected >= %u)\n",
+: 				       mmc_hostname(card->host),
+: 				       tpl_code, tpl_link, tpl->min_size);
+: 				ret = -EINVAL;
+
+ret == -EINVAL
+
+: 			} else if (tpl->parse) {
+: 				ret = tpl->parse(card, func,
+: 						 this->data, tpl_link);
+: 			}
+: 			/* already successfully parsed, not needed anymore */
+: 			if (!ret)
+: 				kfree(this);
+
+`this' doesn't get freed
+
+: 		} else {
+: 			/* unknown tuple */
+: 			ret = -EILSEQ;
+: 		}
+: 
+: 		if (ret == -EILSEQ) {
+
+`this' doesn't get remembered.
+
+: 			/* this tuple is unknown to the core */
+: 			this->next = NULL;
+: 			this->code = tpl_code;
+: 			this->size = tpl_link;
+: 			*prev = this;
+: 			prev = &this->next;
+: 			pr_debug("%s: queuing CIS tuple 0x%02x length %u\n",
+: 				 mmc_hostname(card->host), tpl_code, tpl_link);
+: 			/* keep on analyzing tuples */
+: 			ret = 0;
+: 		}
+: 
+: 		ptr += tpl_link;
+
+`this' leaks.
+
+: 	} while (!ret);
+
+Please check?
