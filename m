@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58110 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751520AbZIZSex (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 14:34:53 -0400
-Date: Sat, 26 Sep 2009 21:34:46 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Igor Perminov <igor.perminov@inbox.ru>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: Fix [re]association power saving issue on
-	AP side
-Message-ID: <20090926183446.GA10898@jm.kir.nu>
-References: <1253564744.4477.18.camel@sunlight>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1253564744.4477.18.camel@sunlight>
+Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755718AbZIKRiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:20 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 10/13] iwlwifi: show NVM version in debugfs
+Date: Fri, 11 Sep 2009 10:38:16 -0700
+Message-Id: <1252690699-25796-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 22, 2009 at 12:25:44AM +0400, Igor Perminov wrote:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> At the step 4 the AP "remembers" the STA and considers it is still in
-> the PS state, so the AP buffers frames, which it has to send to the STA.
-> But the STA isn't actually in the PS state and so it neither checks
-> TIM bits nor reports to the AP that it isn't power saving.
-> Because of that authentication/[re]association fails.
-> 
-> To fix authentication/[re]association stage of this issue, Auth, Assoc
-> Resp and Reassoc Resp frames are transmitted disregarding of STA's power
-> saving state.
+Show version number along with dumping NVM data, the version information
+being removed from sysfs, add it back to debugfs to help debugging.
 
-That looks fine to me and should be applied.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-> N.B. This patch doesn't fix further data frame exchange after
-> authentication/[re]association. A patch in hostapd is required to fix
-> that.
-
-Git snapshot of hostapd is now removing the STA entry (if one exists)
-when processing reassociation. The combination of these two changes
-allows the reassociation back to the same AP to be completed even if the
-STA was in PS mode.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index fb84485..1a0337f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -383,6 +383,7 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+ 	int pos = 0, ofs = 0, buf_size = 0;
+ 	const u8 *ptr;
+ 	char *buf;
++	u16 eeprom_ver;
+ 	size_t eeprom_len = priv->cfg->eeprom_size;
+ 	buf_size = 4 * eeprom_len + 256;
+ 
+@@ -403,9 +404,11 @@ static ssize_t iwl_dbgfs_nvm_read(struct file *file,
+ 		IWL_ERR(priv, "Can not allocate Buffer\n");
+ 		return -ENOMEM;
+ 	}
+-	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s\n",
++	eeprom_ver = iwl_eeprom_query16(priv, EEPROM_VERSION);
++	pos += scnprintf(buf + pos, buf_size - pos, "NVM Type: %s, "
++			"version: 0x%x\n",
+ 			(priv->nvm_device_type == NVM_DEVICE_TYPE_OTP)
+-			? "OTP" : "EEPROM");
++			 ? "OTP" : "EEPROM", eeprom_ver);
+ 	for (ofs = 0 ; ofs < eeprom_len ; ofs += 16) {
+ 		pos += scnprintf(buf + pos, buf_size - pos, "0x%.4x ", ofs);
+ 		hex_dump_to_buffer(ptr + ofs, 16 , 16, 2, buf + pos,
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.5.6.3
+
