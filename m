@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml105.kpnxchange.com ([195.121.3.9]:60057 "EHLO
-	CPSMTPM-EML105.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751165AbZIJSnQ (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:35404 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627AbZIKO5z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 14:43:16 -0400
-From: Frans Pop <elendil@planet.nl>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-Date: Thu, 10 Sep 2009 20:43:13 +0200
-Cc: Mel Gorman <mel@csn.ul.ie>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-References: <200909060941.01810.elendil@planet.nl> <20090910090206.GA22276@csn.ul.ie> <1252606547.30150.304.camel@rc-desk>
-In-Reply-To: <1252606547.30150.304.camel@rc-desk>
+	Fri, 11 Sep 2009 10:57:55 -0400
+To: Michael Buesch <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211: NOHZ: local_softirq_pending 08
+References: <200909111648.50902.mb@bu3sch.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Fri, 11 Sep 2009 17:57:54 +0300
+In-Reply-To: <200909111648.50902.mb@bu3sch.de> (Michael Buesch's message of "Fri\, 11 Sep 2009 16\:48\:49 +0200")
+Message-ID: <877hw534wd.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909102043.17883.elendil@planet.nl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 10 September 2009, reinette chatre wrote:
-> From: Reinette Chatre <reinette.chatre@intel.com>
-> Date: Wed, 9 Sep 2009 15:41:00 -0700
-> Subject: [PATCH] iwlwifi: reduce noise when skb allocation fails
+Michael Buesch <mb@bu3sch.de> writes:
 
-Looks good to me (from a user's perspective).
-IIUC the first message is now only displayed if IWL debugging is 
-explicitly enabled, and the second only if there really is danger of it 
-affecting data transfer and has been made more informative too.
+> Hi,
 
-It seems to me that, with debugging enabled, the "Failed to allocate SKB 
-buffer." message may get repeated, but I guess that's minor.
+Hallo,
 
-One nitpick. As you've made the message into sentences, "Only %u free 
-buffers remaining" should IMO also end with a period.
+> mac80211 (or some other part of the networking stack) triggers this
+> warning in the NOHZ code: NOHZ: local_softirq_pending 08
+>
+> 08 seems to be NET_RX_SOFTIRQ.
+>
+> It happens, because my test driver b43 handles all RX and TX-status
+> callbacks in process context. I guess some part of the networking
+> stack expects RX to be in tasklet and/or softirq context.
+>
+> We also have a report of this warning in wl1251, so it's probably not
+> a b43 problem.
 
-Thanks,
-FJP
+Yes, I see this with wl1251. It uses workqueues everywhere.
+
+-- 
+Kalle Valo
