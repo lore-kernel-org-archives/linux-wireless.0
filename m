@@ -1,51 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:34552 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750891AbZIPP3h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 11:29:37 -0400
-Received: by bwz19 with SMTP id 19so3576949bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 08:29:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1382256815.20090916121443@mail.ru>
-References: <174470396.20090916030952@mail.ru>
-	 <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
-	 <792649359.20090916034611@mail.ru>
-	 <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
-	 <90263558.20090916050213@mail.ru>
-	 <43e72e890909151817u375cd847r7cdf78b53f26fe2f@mail.gmail.com>
-	 <1382256815.20090916121443@mail.ru>
-Date: Wed, 16 Sep 2009 16:24:11 +0100
-Message-ID: <3ace41890909160824w146d63e6haddabe645d3e27d2@mail.gmail.com>
-Subject: Re: Re[6]: cfg80211 and rfkill_backport question.
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Nikolai ZHUBR <zhubr@mail.ru>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:11274 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755697AbZIKRiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:19 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/13 v2.6.32 and w-t] iwlwifi: fix potential rx buffer loss
+Date: Fri, 11 Sep 2009 10:38:12 -0700
+Message-Id: <1252690699-25796-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 16, 2009 at 10:14 AM, Nikolai ZHUBR <zhubr@mail.ru> wrote:
-> Hello Luis!
->
-> Wednesday, September 16, 2009, 4:17:40 AM, Luis R. Rodriguez wrote:
->> They don't have to be exported and inlined, its one or the other. So
-> Yes, that's what I supposed.
->> just ensure you your symbols you have conflicts with as
->> EXPORT_SYMBOL() or defined in a header file as inline. You will
->> obviously also need the header declaration if defined as an
->> EXPORT_SYMBOL.
-> From what I checked it all looks fine to me, except that there is
-> a circular dependency between cfg80211 and rfkill_backport (which
-> is confirmed by nm output I suppose). Is this circular dependency
-> intentional? Or, could it be avoided? (My understanding was that
-> as module loader loads one file at a time, it just have no way
-> to resolve such symbols, maybe I'm wrong on this)
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Hmm, yes and no... insmod loads modules one at a time; but as long as
-you run depmod, modprobe loads dependent modules automatically. I
-don't know if modprobe works for circular dependency, but it probably
-works correctly (since AFAIK, it reference-counts)?
+RX handling maintains a few lists that keep track of the RX buffers.
+Buffers move from one list to the other as they are used, replenished, and
+again made available for usage. In one such instance, when a buffer is used
+it enters the "rx_used" list. When buffers are replenished an skb is
+attached to the buffer and it is moved to the "rx_free" list. The problem
+here is that the buffer is first removed from the "rx_used" list _before_ the
+skb is allocated. Thus, if the skb allocation fails this buffer remains
+removed from the "rx_used" list and is thus lost for future usage.
+
+Fix this by first allocating the skb before trying to attach it to a list.
+We add an additional check to not do this unnecessarily.
+
+Reported-by: Rick Farrington <rickdic@hotmail.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 +++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   24 ++++++++++++++++--------
+ 2 files changed, 33 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
+index 8150c5c..b90adcb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
+@@ -239,26 +239,22 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
++	struct sk_buff *skb;
+ 	unsigned long flags;
+ 
+ 	while (1) {
+ 		spin_lock_irqsave(&rxq->lock, flags);
+-
+ 		if (list_empty(&rxq->rx_used)) {
+ 			spin_unlock_irqrestore(&rxq->lock, flags);
+ 			return;
+ 		}
+-		element = rxq->rx_used.next;
+-		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+-		list_del(element);
+-
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+ 		/* Alloc a new receive buffer */
+-		rxb->skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
++		skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
+ 						priority);
+ 
+-		if (!rxb->skb) {
++		if (!skb) {
+ 			IWL_CRIT(priv, "Can not allocate SKB buffers\n");
+ 			/* We don't reschedule replenish work here -- we will
+ 			 * call the restock method and if it still needs
+@@ -266,6 +262,20 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 			break;
+ 		}
+ 
++		spin_lock_irqsave(&rxq->lock, flags);
++
++		if (list_empty(&rxq->rx_used)) {
++			spin_unlock_irqrestore(&rxq->lock, flags);
++			dev_kfree_skb_any(skb);
++			return;
++		}
++		element = rxq->rx_used.next;
++		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
++		list_del(element);
++
++		spin_unlock_irqrestore(&rxq->lock, flags);
++
++		rxb->skb = skb;
+ 		/* Get physical address of RB/SKB */
+ 		rxb->real_dma_addr = pci_map_single(
+ 					priv->pci_dev,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 2238c9f..0909668 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1134,6 +1134,7 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 	struct iwl_rx_queue *rxq = &priv->rxq;
+ 	struct list_head *element;
+ 	struct iwl_rx_mem_buffer *rxb;
++	struct sk_buff *skb;
+ 	unsigned long flags;
+ 
+ 	while (1) {
+@@ -1143,17 +1144,11 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 			spin_unlock_irqrestore(&rxq->lock, flags);
+ 			return;
+ 		}
+-
+-		element = rxq->rx_used.next;
+-		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
+-		list_del(element);
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+ 		/* Alloc a new receive buffer */
+-		rxb->skb =
+-		    alloc_skb(priv->hw_params.rx_buf_size,
+-				priority);
+-		if (!rxb->skb) {
++		skb = alloc_skb(priv->hw_params.rx_buf_size, priority);
++		if (!skb) {
+ 			if (net_ratelimit())
+ 				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
+ 			/* We don't reschedule replenish work here -- we will
+@@ -1162,6 +1157,19 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 			break;
+ 		}
+ 
++		spin_lock_irqsave(&rxq->lock, flags);
++		if (list_empty(&rxq->rx_used)) {
++			spin_unlock_irqrestore(&rxq->lock, flags);
++			dev_kfree_skb_any(skb);
++			return;
++		}
++		element = rxq->rx_used.next;
++		rxb = list_entry(element, struct iwl_rx_mem_buffer, list);
++		list_del(element);
++		spin_unlock_irqrestore(&rxq->lock, flags);
++
++		rxb->skb = skb;
++
+ 		/* If radiotap head is required, reserve some headroom here.
+ 		 * The physical head count is a variable rx_stats->phy_count.
+ 		 * We reserve 4 bytes here. Plus these extra bytes, the
+-- 
+1.5.6.3
+
