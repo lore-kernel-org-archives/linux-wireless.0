@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:18084 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751014AbZHaXL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:11:27 -0400
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187:
- Implement 	rfkill support)
-From: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	 <1251357267.20531.4.camel@johannes.local>
-	 <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-	 <3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
-	 <43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
-	 <3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
-	 <43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
-	 <1251749600.5165.1.camel@localhost.localdomain>
-	 <1251751251.1266.16.camel@localhost.localdomain>
-	 <43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
-	 <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 31 Aug 2009 16:10:32 -0700
-Message-Id: <1251760232.5165.28.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:54654 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882AbZILO6g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2009 10:58:36 -0400
+Subject: Re: A station can't reconnect after it wakes up
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Igor Perminov <igor.perminov@inbox.ru>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
+	Jouni Malinen <j@w1.fi>, Artur Skawina <art.08.09@gmail.com>
+In-Reply-To: <1252620184.26765.65.camel@sunlight>
+References: <1248969930.29068.224.camel@sunlight>
+	 <4A7318E6.3000004@gmail.com>  <1249312925.8515.187.camel@sunlight>
+	 <1252620184.26765.65.camel@sunlight>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7d+dUDhZldZyjX21waxm"
+Date: Sat, 12 Sep 2009 08:58:33 -0600
+Message-Id: <1252767513.23427.26.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-08-31 at 17:05 -0600, Luis R. Rodriguez wrote:
-> On Mon, Aug 31, 2009 at 2:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> > On Mon, Aug 31, 2009 at 1:40 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
-> >> Hi Luis,
-> >>
-> >>> > OK not so bad except for:
-> >>> >
-> >>> > > kernel/net/wimax/wimax.ko
-> >>> >
-> >>> > That's touching another subsystem but we could technically merge wimax
-> >>> > into compat-wireless if Inaky thinks that's a good idea. the point
-> >>> > here is to unify anything that uses rfkill for backport usage.
-> >>>
-> >>> Oh boy, can of worms
-> >>>
-> >>> I have my own compat-wimax already, which already handles things for
-> >>> backwards compat (many #ifdef hacks to simplify life) and which is
-> >>> heavily used internally.
-> >>>
-> >>> I don't really know how much worth it might be and I know I don't have
-> >>> resources to support both.
-> >>
-> >> for the wireless-compat tree, I would just remove the RFKILL support for
-> >> WiMAX. It is really not worth to support it.
-> >
-> > Works for me, we then still need to address (if we really care) the
-> > platform stuff. If someone is interested feel free to send patches to
-> > add those, I figure as long we get down to the latest supported stable
-> > kernel it should be good. The latest supported stable kernel is always
-> > on display on kernel,org, today being 2.6.27.
-> 
-> BTW inaky -- this is actually up to you, are you wiling to live with
-> no rfkill for compat?
 
-I don't really mind -- but it could be a problem for anyone trying to
-use it. Not that I recommend not being able to switch the radio off :)
-however, the WiMAX stack has APIs for it too, so at least there is a
-workaround.
+--=-7d+dUDhZldZyjX21waxm
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-But remember, I won't be able to support it at all.
+On Fri, 2009-09-11 at 02:03 +0400, Igor Perminov wrote:
 
--- 
--- Inaky
+> Jouni suggests to not buffer Auth/Assoc frames at all, independently of
+> station's PS state.=20
 
+Ok, works for me.
+
+> I think, it isn't enough, because an AP should send
+> a number of EAPOL Key frames after that, which are data frames and
+> therefore will be buffered anyway.
+
+That's not a problem though since the handshake will be in data frames
+and synchronise the PS state on both ends via the sleep bit.
+
+> I think mac80211 in AP mode should reset WLAN_STA_PS flag of the station
+> (and purge frames having been buffered previously if any) on an event
+> indicating beginning of authentication.
+> The event may be one of the following:
+> A) An Auth frame being received from the station.
+> B) An Auth frame being sent to the station.
+> C) A special API call from an application (hostapd), when it is
+> receiving an Auth frame from the station and is beginning
+> authentication/association.
+>=20
+> Johannes, what do you think of these approaches?
+
+I think this is not necessary. Just make sure that auth/assoc frames
+aren't buffered.
+
+johannes
+
+--=-7d+dUDhZldZyjX21waxm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKq7cWAAoJEODzc/N7+QmaHBkP/j8pBUmDbYCXVXNoYbmqTdFz
+XkQCukmOU+fBzb3TNBT3e/pgCrvt+KQHGgYnaI41QWE4872m9gZNjfyShZxGIxUp
+0g1N9S8FMfEQOfCn2DkItUFAo9IAtxuBRoNsf5bL/ahp0KlZc+kiKWX4u8Mzg0aI
+qFZkf4rQkLXfy92GV3MJHF1jsN2QiIFpAz8cKf9ghx42xg9X37adPuAfugDWbdHF
+68B0IM8ZHZPQMgUeLhT18ZLq2YzPEOFqbDtvUdEHlAXBA+kdq3Gt4FDz/c7dXA6z
+KkA9PqYmuWhv7L0CVGp9UIju7ILYvjBWPq5W2S2+qH9pNuGtJk6FMQ9X0Gosf/Cv
+Ldy4n91dL9D0WgvmtUwiMG543fGOlelNnj4K3OEKOtUYyKY0b7G7EtXN3a3Thd7T
+c33/isiIxYNOsZZZEnNcCgTTVwluh2Q2/g3itHn2U8JhL7wI5zmnji34R8zAPRor
+oG/qTjNSWW6WkkmBr+oaU2gHTTTd+TAOyHNEzWkfMiLFuNdqsJDHU4opzdhVc8Fa
+Ekx0XjfvBkhhEjr5tQojBRfdoB+R7x5kz1z8KKFqg1wNTRGjS7fV1mmhpwIsFZYY
+HxAyEEQ6jx/0D+CYcd3kh+zTIsck/OFqFDGXUslAsgW0dTjLZT5hnZSzEgixmH1r
+ujMLvudgyCsmTg6lAIba
+=UwfL
+-----END PGP SIGNATURE-----
+
+--=-7d+dUDhZldZyjX21waxm--
 
