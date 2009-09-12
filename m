@@ -1,75 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:19929 "EHLO
+Received: from fg-out-1718.google.com ([72.14.220.156]:7690 "EHLO
 	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756850AbZINTZi (ORCPT
+	with ESMTP id S1753512AbZILLwy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 15:25:38 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so1060817fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 12:25:41 -0700 (PDT)
-Subject: Re: [PATCH] b43: LP-PHY: Fix analog core switching
-From: Thomas Ilnseher <illth@gmx.de>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-In-Reply-To: <4AAE950C.2050704@gmail.com>
-References: <4AAE950C.2050704@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Sep 2009 21:24:40 +0200
-Message-Id: <1252956280.4696.19.camel@luzifer.localnet>
-Mime-Version: 1.0
+	Sat, 12 Sep 2009 07:52:54 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so159885fge.1
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 04:52:57 -0700 (PDT)
+Message-ID: <4AAB8B9E.1030508@gmail.com>
+Date: Sat, 12 Sep 2009 13:53:02 +0200
+From: Jiri Slaby <jirislaby@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>,
+	devel@linuxdriverproject.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com> 	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com> 	<40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com> 	<4AA9F22C.3090007@gmail.com> <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+In-Reply-To: <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mo, 2009-09-14 at 21:10 +0200, Gábor Stefanik wrote:
-> The generic analog switch routine is not correct for LP-PHY according
-> to the latest specs. Implement the proper analog core switch routine.
+On 09/11/2009 09:23 AM, Luis R. Rodriguez wrote:
+> On Thu, Sep 10, 2009 at 11:46 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>> I definitely agree with Nick here. Althought whole ath_ops will be hot
+>> cache after the first operation, there is no need to prolong hot paths
+>> by computing the op address and a call. Ok, read/write on PCI is pretty
+>> slow, but still...
 > 
-> Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-> index 80da9c7..b0e127a 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -2160,6 +2160,16 @@ static int lpphy_b2063_tune(struct b43_w
->  	return 0;
->  }
->  
-> +static void b43_lpphy_op_switch_analog(struct b43_wldev *dev, bool on)
-> +{
-The spec says:
-Else if this in an LP PHY 
-     a. If argument "on" is zero 
-             1. OR PHY Register 0x43C with 7 
-                
-             2. OR PHY Register 0x43B with 7 
-                
-> +	if (on) {
-This stuff is executed when on is true (ie. anything else than zero)
-> +		b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0x7);
-> +		b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 0x7);
-> +	} else {
-> +		b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFF8);
-> +	}
-> +}
-> +
->  static int b43_lpphy_op_switch_channel(struct b43_wldev *dev,
->  				       unsigned int new_channel)
->  {
-> @@ -2239,7 +2249,7 @@ const struct b43_phy_operations b43_phyo
->  	.radio_read		= b43_lpphy_op_radio_read,
->  	.radio_write		= b43_lpphy_op_radio_write,
->  	.software_rfkill	= b43_lpphy_op_software_rfkill,
-> -	.switch_analog		= b43_phyop_switch_analog_generic,
-> +	.switch_analog		= b43_lpphy_op_switch_analog,
->  	.switch_channel		= b43_lpphy_op_switch_channel,
->  	.get_default_chan	= b43_lpphy_op_get_default_chan,
->  	.set_rx_antenna		= b43_lpphy_op_set_rx_antenna,
-> 
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+> That is the way I had it originally before submission, and I
+> completely agree its reasonable to not incur additional cost at the
+> expense of having two separate read/write paths, and perhaps we should
+> only incur the extra cost on routines shared between
+> ath9k/ath9k/ath9k_htc. But -- is there really is a measurable cost
+> penalty?
 
+Hardly there is a measurable one. As I wrote earlier one will wait ages
+for PCI in comparison to few load+call cycles.
+
+> This is why I asked if someone can test and give measurable
+> differences over this. If there really isn't then that's not strong
+> point against it.
+
+Well, honestly I see no strong point for it. It rather looks like an
+obfuscation, not improvement.
+
+> For example, long ago I had argued over the cost incurred over the
+> unnecessary branching on ioread()/iowrite() when you know you have
+> MMIO devices [1] -- the defense then, and IMHO reasonable now, was
+> that the benefits of allowing cleaner drivers through the new
+> interfaces outweigh the theoretical penalties imposed by them.
+
+Ok, that one has benefits. You just needn't care about what is behind
+that mapping. It will choose a PIO or MMIO op on its own.
+
+When it's always MMIO I personally prefer simple ioremap though. (I
+didn't at the time of merging the driver.)
+
+> Granted you can argue these new interfaces between
+> ath5k/ath9k/ath9k_htc would make things a little more complex, but I
+> would expect sharing the code will help in the end. And if these
+> interfaces are not acceptable I'm completely open to better suggested
+> alternatives.
+
+Ok, I think nothing more than this is needed:
++static u32 ath5k_ioread32(void *hw_priv, u32 reg_offset)
++{
++	return ath5k_hw_reg_read(hw_priv, reg_offset)
++}
++
++static void ath5k_iowrite32(void *hw_priv, u32 reg_offset, u32 val)
++{
++	ath5k_hw_reg_write(hw_priv, val, reg_offset);
++}
++
++static struct ath_ops ath5k_common_ops = {
++	.read = ath5k_ioread32,
++	.write = ath5k_iowrite32,
++};
+
+What I wonder is why ath_ops has reg+val parameters in the opposite
+manner than the rest of kernel? It is error-prone.
