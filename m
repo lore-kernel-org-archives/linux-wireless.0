@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:56999 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607AbZIGVcB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 17:32:01 -0400
+Received: from bu3sch.de ([62.75.166.246]:43542 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753682AbZILQvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2009 12:51:46 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Subject: Re: mac80211: NOHZ: local_softirq_pending 08
+Date: Sat, 12 Sep 2009 18:51:44 +0200
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <200909111648.50902.mb@bu3sch.de> <200909111813.35810.mb@bu3sch.de> <4AABCF28.6090505@hartkopp.net>
+In-Reply-To: <4AABCF28.6090505@hartkopp.net>
 MIME-Version: 1.0
-In-Reply-To: <1252348470.3394.30.camel@Joe-Laptop.home>
-References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
-	<1252259950.9660.179.camel@Joe-Laptop.home> <43e72e890909061226w743e84e6p17fe0d097316678e@mail.gmail.com>
-	<1252348470.3394.30.camel@Joe-Laptop.home>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 7 Sep 2009 14:31:43 -0700
-Message-ID: <43e72e890909071431t2a9ece28u1d5b69dd73b1fe15@mail.gmail.com>
-Subject: Re: [PATCH V2] MAINTAINERS: Add Atheros Linux wireless drivers home
-	page
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	Len Widra <Len.Widra@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>, Greg KH <greg@kroah.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909121851.46002.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 7, 2009 at 11:34 AM, Joe Perches<joe@perches.com> wrote:
-> On Sun, 2009-09-06 at 12:26 -0700, Luis R. Rodriguez wrote:
->> On Sun, Sep 6, 2009 at 10:59 AM, Joe Perches<joe@perches.com> wrote:
->> > On Thu, 2009-09-03 at 15:54 -0700, Luis R. Rodriguez wrote:
->> >> I'm pleased to announce the new home page to Atheros Linux wireless drivers:
->> >> http://wireless.kernel.org/en/users/Drivers/Atheros
->> > Perhaps add this to MAINTAINERS?
->> Fine by me, except ath5k and ath9k also have their own respective page
->> so those can also be added.
->
-> (cc's trimmed and maintainers added)
->
-> Perhaps this instead:
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+On Saturday 12 September 2009 18:41:12 Oliver Hartkopp wrote:
+> Michael Buesch wrote:
+> 
+> >> As there are several users in the kernel do exact this test and call the
+> >> appropriate netif_rx() function, i would suggest to create a static inline
+> >> function:
+> >>
+> >> static inline int netif_rx_ti(struct sk_buff *skb)
+> >> {
+> >> 	if (in_interrupt())
+> >> 		return netif_rx(skb);
+> >> 	return netif_rx_ni(skb);
+> >> }
+> >>
+> >> ('ti' for test in_interrupt())
+> >>
+> >> in include/linux/netdevice.h
+> >>
+> >> What do you think about that?
+> > 
+> > Yeah, I'm fine with that.
+> > 
+> 
+> Hi Michael,
+> 
+> i cooked a patch that introduces netif_rx_ti() and fixes up the problems in
+> mac80211 and the CAN subsystem.
+> 
+> Currently i'm pondering whether netif_rx_ti() is needed in all cases or if
+> there are code sections that'll never be executed from irq-context.
+> 
+> In theses cases netif_rx_ni() should be prefered to netif_rx_ti() to prevent
+> the obsolete check ...
+> 
+> Is there any of your changes that should better use netif_rx_ni() ?
+> 
+> Regards,
+> Oliver
+> 
 
-Acked-by: Luis R. Rodriguez
+Well, I'd say this check does not cost much at all.
+If I were the net maintainer, I'd get rid of netif_rx_ni() _and_ netif_rx_ti() and
+do the check internally in netif_rx().
+But as I don't have to decide that, I just want the mac80211 issue fixed.
 
-think you have to send this to John.
-
-  Luis
+-- 
+Greetings, Michael.
