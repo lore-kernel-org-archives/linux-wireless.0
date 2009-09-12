@@ -1,85 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2919 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753100AbZIYAE1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 20:04:27 -0400
-Message-ID: <4ABC08FA.8030104@canonical.com>
-Date: Thu, 24 Sep 2009 17:04:10 -0700
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:59591 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbZILXy0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2009 19:54:26 -0400
+Received: by bwz19 with SMTP id 19so1443140bwz.37
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 16:54:28 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	Bryan Wu <bryan.wu@canonical.com>,
-	Mauro Di Domenico <didomauro@tiscali.it>,
-	bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: A problem loading ssb module
-References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com> 	<4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
-In-Reply-To: <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20090831175932.GC5631@tuxdriver.com>
+References: <1250640253-18434-1-git-send-email-kilroyd@googlemail.com>
+	 <20090831175932.GC5631@tuxdriver.com>
+Date: Sun, 13 Sep 2009 11:54:28 +1200
+Message-ID: <b88bb1ad0909121654w43215f60lf9d7b90d4b54bf35@mail.gmail.com>
+Subject: Re: [RFC v2 0/5] orinoco: use cfg80211 for key manipulation
+From: Dave Kilroy <kilroyd@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, orinoco-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> Bryan Wu wrote:
->>> Mauro Di Domenico wrote:
->>>> Hi,
->>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
->>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
->>>> machine with kernel version 2.6.30-6.
->>>>
->>>> During the boot I experience this problem:
->>>>
->>>> $ dmesg|egrep "b43|ssb"
->>>>
->>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
->>>> low) -> IRQ 17
->>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
->>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
->>>> 0000:06:00.0
->>>> [    6.968981] b43: disagrees about version of symbol
->>>> ssb_device_is_enabled
->>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
->>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
->>>> [    6.969407] b43: disagrees about version of symbol
->>>> ssb_pcicore_dev_irqvecs_enable
->>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
->>>> .....
->>>> ....
->>>> ...
->>>>
->>> I faced the exactly same issue as Mauro did. +1 from me, but currently have
->>> no time to take a deeper look.
->>>
->>> Thanks
->> Hi,
->>
->> I had the same problem with the ssb module and compat-wireless in ubuntu
->> 9.04. The problem is that the ssb module is integrated into the
->> initramfs image. The version out of the initramfs image is loaded on
->> startup and not the version of compat-wireless. Running "sudo
->> update-initramfs -u" after installing compat-wireless and restaing the
->> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
->> form default initramfs image or compat-wireless should update the image
->> with the install command. At least the compat-wireless documentation
->> needs an update.
->>
->> Hauke
->>
->> (adding Luis and linux-wireless list)
-> 
-> Tim, do you guys update the initramfs upon installation of lbm? If a
-> user does not use lbm and uses compat-wireless I suppose we need to do
-> something similar.
-> 
->   Luis
+On Tue, Sep 1, 2009 at 5:59 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Aug 19, 2009 at 01:04:08AM +0100, David Kilroy wrote:
+>> This series basically works (at least after the last patch is applied)
+>
+> Any word on this series?  Time is short for 2.6.32...
 
-No, initramfs is not updated when LBM is installed. I think maybe its a 
-bug that ssb is in the initramfs modules list since AFAIK its not a boot 
-essential device. Even in the netboot case, ssb/b44 should be in a udeb.
+I'm on holiday right now, but will be back in a week.
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+I don't recall off the top of my head where I was at, but I suspect
+there's still some restructuring I need to do. I guess this'll miss
+2.6.32 :(
+
+
+
+Dave.
