@@ -1,34 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:59837 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbZIETdw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.153]:19928 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752404AbZILKa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2009 15:33:52 -0400
-Received: by iwn5 with SMTP id 5so531776iwn.4
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 12:33:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4AA270AF.2010902@gmx.de>
-References: <4AA270AF.2010902@gmx.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 5 Sep 2009 12:33:34 -0700
-Message-ID: <43e72e890909051233s3df12787oa1c59a8b9728c271@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ath,ar9170: move CTL_ defines into regd.h
-To: Joerg Albert <jal2@gmx.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 12 Sep 2009 06:30:59 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so563613fge.1
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 03:31:01 -0700 (PDT)
+From: Natanael Copa <natanael.copa@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@winlab.rutgers.edu>
+Cc: linux-wireless@vger.kernel.org,
+	Natanael Copa <natanael.copa@gmail.com>
+Subject: [PATCH] compat-2.6: Make it possible to build without running depmod
+Date: Sat, 12 Sep 2009 10:31:48 +0000
+Message-Id: <1252751508-4390-1-git-send-email-natanael.copa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 5, 2009 at 7:07 AM, Joerg Albert<jal2@gmx.de> wrote:
-> The ar9170 driver needs the defines for conformance test limit groups
-> and cannot include regd_common.h
->
-> Signed-off-by: Joerg Albert <jal2@gmx.de>
+When building binary packages you normally don't want to run depmod
+for the running kernel. This patch allows packagers override depmod.
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+ make DEPMOD=: ...
 
-Just please test compilation of ath5k and ath9k as well.
+The patch also address the issue in the scripts called from Makefile
+and it should be compatible with current behaviour.
+---
+ Makefile             |    3 ++-
+ scripts/check_depmod |    2 +-
+ scripts/modlib.sh    |    5 +++--
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/Makefile b/Makefile
+index ab97de0..7c796ec 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,6 +8,7 @@ endif
+ export KLIB_BUILD ?=	$(KLIB)/build
+ # Sometimes not available in the path
+ MODPROBE := /sbin/modprobe
++DEPMOD := /sbin/depmod
+ MADWIFI=$(shell $(MODPROBE) -l ath_pci)
+ OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+ 
+@@ -182,7 +183,7 @@ uninstall:
+ 	@rm -f $(KLIB)/$(KMODDIR)/drivers/misc/eeprom/eeprom_93cx6.ko*
+ 	@rm -f $(KLIB)/$(KMODDIR)/drivers/misc/eeprom_93cx6.ko*
+ 	@rm -f $(KLIB)/$(KMODDIR)/drivers/net/b44.ko*
+-	@/sbin/depmod -ae
++	@$(DEPMOD) -ae
+ 	@echo
+ 	@echo "Your old wireless subsystem modules were left intact:"
+ 	@echo 
+diff --git a/scripts/check_depmod b/scripts/check_depmod
+index f127a6a..0b81573 100755
+--- a/scripts/check_depmod
++++ b/scripts/check_depmod
+@@ -12,7 +12,7 @@ DEPMOD_DIR="/etc/depmod.d/"
+ COMPAT_DEPMOD_FILE=compat-wireless.conf
+ GREP_REGEX_UPDATES="^[[:space:]]*search.*[[:space:]]updates\([[:space:]]\|$\)"
+ GREP_REGEX_SEARCH="^[[:space:]]*search[[:space:]].\+$"
+-DEPMOD_CMD="depmod"
++DEPMOD_CMD="${DEPMOD:-depmod}"
+ 
+ function add_compat_depmod_conf {
+ 	echo "NOTE: Your distribution lacks an $DEPMOD_DIR directory with "
+diff --git a/scripts/modlib.sh b/scripts/modlib.sh
+index 91e53f1..76d5b01 100755
+--- a/scripts/modlib.sh
++++ b/scripts/modlib.sh
+@@ -10,6 +10,7 @@ PATH=$PATH:/usr/sbin:/sbin
+ # Appended to module file at the end when we want to ignore one
+ IGNORE_SUFFIX=".ignore"
+ VER=`uname -r`
++DEPMOD_CMD=${DEPMOD:-depmod}
+ 
+ # If 'module' is found, its renamed to 'module.ignore'
+ function module_disable {
+@@ -39,7 +40,7 @@ function module_disable {
+ 			echo -en "Disabling $MODULE ..."
+ 		fi
+ 		mv -f $i ${i}${IGNORE_SUFFIX}
+-		depmod -ae
++		${DEPMOD_CMD} -ae
+ 		CHECK_AGAIN=`modprobe -l $MODULE`
+ 		if [ "$CHECK" != "$CHECK_AGAIN" ]; then
+ 			echo -e "\t[OK]\tModule disabled:"
+@@ -65,7 +66,7 @@ function module_enable {
+ 		echo -en "Enabling $MODULE ..."
+ 		DIR=`dirname $i`
+ 		mv $i $DIR/$MODULE_KO
+-		depmod -ae
++		${DEPMOD_CMD} -ae
+ 		CHECK=`modprobe -l $MODULE`
+ 		if [ "$DIR/$MODULE_KO" != $CHECK ]; then
+ 			if [ -z $CHECK ]; then
+-- 
+1.6.4.2
+
