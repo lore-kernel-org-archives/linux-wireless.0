@@ -1,65 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:55886 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752787AbZIJM6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 08:58:36 -0400
-Date: Thu, 10 Sep 2009 13:58:41 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Cc: Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090910125841.GD31153@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252570722.4876.23.camel@penberg-laptop> <20090910123445.GC31153@csn.ul.ie> <1252586376.4876.29.camel@penberg-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1252586376.4876.29.camel@penberg-laptop>
+Received: from xc.sipsolutions.net ([83.246.72.84]:34854 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695AbZILNDS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2009 09:03:18 -0400
+Subject: [PATCH v2] genetlink: fix netns vs. netlink table locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1252425578.3806.22.camel@johannes.local>
+References: <1252425578.3806.22.camel@johannes.local>
+Content-Type: text/plain
+Date: Sat, 12 Sep 2009 07:03:15 -0600
+Message-Id: <1252760595.23427.20.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 10, 2009 at 03:39:36PM +0300, Pekka Enberg wrote:
-> Hi Mel,
-> 
-> On Thu, 2009-09-10 at 13:34 +0100, Mel Gorman wrote:
-> > > That's because it's a large allocation that's passed directly to the
-> > > page allocator. See kmalloc_large_node(), for example. 
-> > 
-> > Pants. Is there any chance that could be fixed so that allocation
-> > failures within SLUB get consistently reported?
-> 
-> Did you have something specific in mind? I am not sure it's worth it,
-> really.
-> 
-> The kmalloc_large() function is a static inline in
-> include/linux/slub_def.h that gets inlined nicely to a get_order() +
-> __get_free_pages() pair in the caller for production configs. I'm not
-> sure what we should print either. There's no known "object size" or
-> "buffer size" nor do we any of the variable order things or backing
-> struct kmem_cache_nodes.
-> 
+Since my commits introducing netns awareness into
+genetlink we can get this problem:
 
-All I had in mind really was to grab the size of the buffer that was
-passed into kmalloc such as here;
+BUG: scheduling while atomic: modprobe/1178/0x00000002
+2 locks held by modprobe/1178:
+ #0:  (genl_mutex){+.+.+.}, at: [<ffffffff8135ee1a>] genl_register_mc_grou
+ #1:  (rcu_read_lock){.+.+..}, at: [<ffffffff8135eeb5>] genl_register_mc_g
+Pid: 1178, comm: modprobe Not tainted 2.6.31-rc8-wl-34789-g95cb731-dirty #
+Call Trace:
+ [<ffffffff8103e285>] __schedule_bug+0x85/0x90
+ [<ffffffff81403138>] schedule+0x108/0x588
+ [<ffffffff8135b131>] netlink_table_grab+0xa1/0xf0
+ [<ffffffff8135c3a7>] netlink_change_ngroups+0x47/0x100
+ [<ffffffff8135ef0f>] genl_register_mc_group+0x12f/0x290
 
-void *__kmalloc(size_t size, gfp_t flags)
-{
-        struct kmem_cache *s;
-        void *ret;
+because I overlooked that netlink_table_grab() will
+schedule, thinking it was just the rwlock. However,
+in the contention case, that isn't actually true.
 
-        if (unlikely(size > SLUB_MAX_SIZE))
-                return kmalloc_large(size, flags);
+Fix this by letting the code grab the netlink table
+lock first and then the RCU for netns protection.
 
-and to have consistent reporting of slub-allocation failures but if you
-reckon it's not worth it, I wouldn't push strongly on it.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: rebase over removal of netlink_change_ngroups EXPORT_SYMBOL
 
--- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+ include/linux/netlink.h  |    4 +++
+ net/netlink/af_netlink.c |   51 ++++++++++++++++++++++++++---------------------
+ net/netlink/genetlink.c  |    5 +++-
+ 3 files changed, 37 insertions(+), 23 deletions(-)
+
+--- wireless-testing.orig/include/linux/netlink.h	2009-09-12 06:58:44.000000000 -0600
++++ wireless-testing/include/linux/netlink.h	2009-09-12 06:58:53.000000000 -0600
+@@ -176,12 +176,16 @@ struct netlink_skb_parms
+ #define NETLINK_CREDS(skb)	(&NETLINK_CB((skb)).creds)
+ 
+ 
++extern void netlink_table_grab(void);
++extern void netlink_table_ungrab(void);
++
+ extern struct sock *netlink_kernel_create(struct net *net,
+ 					  int unit,unsigned int groups,
+ 					  void (*input)(struct sk_buff *skb),
+ 					  struct mutex *cb_mutex,
+ 					  struct module *module);
+ extern void netlink_kernel_release(struct sock *sk);
++extern int __netlink_change_ngroups(struct sock *sk, unsigned int groups);
+ extern int netlink_change_ngroups(struct sock *sk, unsigned int groups);
+ extern void netlink_clear_multicast_users(struct sock *sk, unsigned int group);
+ extern void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err);
+--- wireless-testing.orig/net/netlink/af_netlink.c	2009-09-12 06:58:46.000000000 -0600
++++ wireless-testing/net/netlink/af_netlink.c	2009-09-12 06:58:53.000000000 -0600
+@@ -177,9 +177,11 @@ static void netlink_sock_destruct(struct
+  * this, _but_ remember, it adds useless work on UP machines.
+  */
+ 
+-static void netlink_table_grab(void)
++void netlink_table_grab(void)
+ 	__acquires(nl_table_lock)
+ {
++	might_sleep();
++
+ 	write_lock_irq(&nl_table_lock);
+ 
+ 	if (atomic_read(&nl_table_users)) {
+@@ -200,7 +202,7 @@ static void netlink_table_grab(void)
+ 	}
+ }
+ 
+-static void netlink_table_ungrab(void)
++void netlink_table_ungrab(void)
+ 	__releases(nl_table_lock)
+ {
+ 	write_unlock_irq(&nl_table_lock);
+@@ -1549,37 +1551,21 @@ static void netlink_free_old_listeners(s
+ 	kfree(lrh->ptr);
+ }
+ 
+-/**
+- * netlink_change_ngroups - change number of multicast groups
+- *
+- * This changes the number of multicast groups that are available
+- * on a certain netlink family. Note that it is not possible to
+- * change the number of groups to below 32. Also note that it does
+- * not implicitly call netlink_clear_multicast_users() when the
+- * number of groups is reduced.
+- *
+- * @sk: The kernel netlink socket, as returned by netlink_kernel_create().
+- * @groups: The new number of groups.
+- */
+-int netlink_change_ngroups(struct sock *sk, unsigned int groups)
++int __netlink_change_ngroups(struct sock *sk, unsigned int groups)
+ {
+ 	unsigned long *listeners, *old = NULL;
+ 	struct listeners_rcu_head *old_rcu_head;
+ 	struct netlink_table *tbl = &nl_table[sk->sk_protocol];
+-	int err = 0;
+ 
+ 	if (groups < 32)
+ 		groups = 32;
+ 
+-	netlink_table_grab();
+ 	if (NLGRPSZ(tbl->groups) < NLGRPSZ(groups)) {
+ 		listeners = kzalloc(NLGRPSZ(groups) +
+ 				    sizeof(struct listeners_rcu_head),
+ 				    GFP_ATOMIC);
+-		if (!listeners) {
+-			err = -ENOMEM;
+-			goto out_ungrab;
+-		}
++		if (!listeners)
++			return -ENOMEM;
+ 		old = tbl->listeners;
+ 		memcpy(listeners, old, NLGRPSZ(tbl->groups));
+ 		rcu_assign_pointer(tbl->listeners, listeners);
+@@ -1597,8 +1583,29 @@ int netlink_change_ngroups(struct sock *
+ 	}
+ 	tbl->groups = groups;
+ 
+- out_ungrab:
++	return 0;
++}
++
++/**
++ * netlink_change_ngroups - change number of multicast groups
++ *
++ * This changes the number of multicast groups that are available
++ * on a certain netlink family. Note that it is not possible to
++ * change the number of groups to below 32. Also note that it does
++ * not implicitly call netlink_clear_multicast_users() when the
++ * number of groups is reduced.
++ *
++ * @sk: The kernel netlink socket, as returned by netlink_kernel_create().
++ * @groups: The new number of groups.
++ */
++int netlink_change_ngroups(struct sock *sk, unsigned int groups)
++{
++	int err;
++
++	netlink_table_grab();
++	err = __netlink_change_ngroups(sk, groups);
+ 	netlink_table_ungrab();
++
+ 	return err;
+ }
+ 
+--- wireless-testing.orig/net/netlink/genetlink.c	2009-09-12 06:58:46.000000000 -0600
++++ wireless-testing/net/netlink/genetlink.c	2009-09-12 06:58:53.000000000 -0600
+@@ -176,9 +176,10 @@ int genl_register_mc_group(struct genl_f
+ 	if (family->netnsok) {
+ 		struct net *net;
+ 
++		netlink_table_grab();
+ 		rcu_read_lock();
+ 		for_each_net_rcu(net) {
+-			err = netlink_change_ngroups(net->genl_sock,
++			err = __netlink_change_ngroups(net->genl_sock,
+ 					mc_groups_longs * BITS_PER_LONG);
+ 			if (err) {
+ 				/*
+@@ -188,10 +189,12 @@ int genl_register_mc_group(struct genl_f
+ 				 * increased on some sockets which is ok.
+ 				 */
+ 				rcu_read_unlock();
++				netlink_table_ungrab();
+ 				goto out;
+ 			}
+ 		}
+ 		rcu_read_unlock();
++		netlink_table_ungrab();
+ 	} else {
+ 		err = netlink_change_ngroups(init_net.genl_sock,
+ 					     mc_groups_longs * BITS_PER_LONG);
+
+
