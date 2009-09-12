@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:34316 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851AbZIXSgF convert rfc822-to-8bit (ORCPT
+Received: from correio.ufra.edu.br ([200.129.150.6]:45312 "EHLO
+	correio.ufra.edu.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbZILWnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 14:36:05 -0400
-Received: by iwn8 with SMTP id 8so1144858iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 11:36:08 -0700 (PDT)
+	Sat, 12 Sep 2009 18:43:47 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by correio.ufra.edu.br (Postfix) with ESMTP id 83EF57A4D2
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 19:46:25 -0300 (BRT)
+Received: from correio.ufra.edu.br ([127.0.0.1])
+	by localhost (correio.ufra.edu.br [127.0.0.1]) (amavisd-new, port 10025)
+	with LMTP id vfCM0iuqUfft for <linux-wireless@vger.kernel.org>;
+	Sat, 12 Sep 2009 19:46:16 -0300 (BRT)
+Received: from [192.168.254.5] (unknown [189.82.217.205])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by correio.ufra.edu.br (Postfix) with ESMTP id D54A97A4B4
+	for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 19:46:15 -0300 (BRT)
+Message-ID: <4AAC240E.20104@ufra.edu.br>
+Date: Sat, 12 Sep 2009 19:43:26 -0300
+From: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>
 MIME-Version: 1.0
-In-Reply-To: <20090924180251.14503.64152.stgit@tikku>
-References: <20090924180048.14503.9579.stgit@tikku> <20090924180251.14503.64152.stgit@tikku>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 24 Sep 2009 11:35:48 -0700
-Message-ID: <43e72e890909241135j21f687a7oc4f929d2134b6310@mail.gmail.com>
-Subject: Re: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in
-	wiphy
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org, Felix Bitterli <ic.felix@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: Re: zd1211rw on ppc (iBook G4) -- Solved, somewhat)
+References: <4A9BFCCB.6040808@ufra.edu.br>	 <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>	 <4A9C0ADC.6050607@ufra.edu.br> <3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com> <4A9D7DC0.6050701@ufra.edu.br>
+In-Reply-To: <4A9D7DC0.6050701@ufra.edu.br>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 11:02 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Set firmware and hardware version in wiphy so that user space can access
-> it.
->
-> Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
-> ---
->
->  drivers/net/wireless/at76c50x-usb.c |   15 +++++++++++++++
->  1 files changed, 15 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-> index 8e1a55d..b6de657 100644
-> --- a/drivers/net/wireless/at76c50x-usb.c
-> +++ b/drivers/net/wireless/at76c50x-usb.c
-> @@ -2217,6 +2217,8 @@ static struct ieee80211_supported_band at76_supported_band = {
->  static int at76_init_new_device(struct at76_priv *priv,
->                                struct usb_interface *interface)
->  {
-> +       struct wiphy *wiphy;
-> +       size_t len;
->        int ret;
->
->        /* set up the endpoint information */
-> @@ -2254,6 +2256,7 @@ static int at76_init_new_device(struct at76_priv *priv,
->        priv->device_unplugged = 0;
->
->        /* mac80211 initialisation */
-> +       wiphy = priv->hw->wiphy;
->        priv->hw->wiphy->max_scan_ssids = 1;
->        priv->hw->wiphy->max_scan_ie_len = 0;
->        priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> @@ -2265,6 +2268,18 @@ static int at76_init_new_device(struct at76_priv *priv,
->        SET_IEEE80211_DEV(priv->hw, &interface->dev);
->        SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
->
-> +       len = sizeof(wiphy->fw_version);
-> +       snprintf(wiphy->fw_version, len, "%d.%d.%d-%d",
-> +                priv->fw_version.major, priv->fw_version.minor,
-> +                priv->fw_version.patch, priv->fw_version.build);
-> +
-> +       len = sizeof(wiphy->hw_version);
-> +       snprintf(wiphy->hw_version, len, "%d", priv->board_type);
+Hi all,
 
-So ath9k and ath5k keep their own strings for such things, to name the
-MAC/Baseband, and then the radio revision and subrevisions... What I'd
-like to see documented on the kdoc for hw_version is what exactly is
-expected to be put there.
+At this moment, after tweaking the zd1211rw code in kernel
+2.6.31-gentoo, finally I am able to use the WLI-U2-KG54L wireless usb
+dongle on this old ibook.
 
-The hw_version and fw_version seem to be helpful in providing more
-information to userspace which you would not typically see -- things
-you would only tend to see on a dmesg output so at least for that
-purpose I think its nice. For example lspci won't really tell you the
-exact hardware type on atheros chipsets, so this seems nice.
+Browsing the source with a cross referencing tool
+(http://lxr.free-electrons.com) and making additional checking points, I
+could trace the issue as follow.
 
-Anyway, getting some more clarification on the docs would be nice.
+The problem is that this device returns a regulatory region of 0x49,
+which is not defined in the zd1211rw tables. So the call
 
-  Luis
+r <http://lxr.free-electrons.com/ident?i=r> = zd_reg2alpha2 <http://lxr.free-electrons.com/ident?i=zd_reg2alpha2>(mac <http://lxr.free-electrons.com/ident?i=mac>->regdomain, alpha2);
+
+will fail the initialization process.
+
+
+Workaround:
+
+----snip----
+int zd_mac_init_hw(struct ieee80211_hw *hw)
+{
+...
+        r = zd_read_regdomain(chip, &default_regdomain);
+        /* A unknown regulatory of 0x49 will be set default to
+ZD_REGDOMAIN_FCC. */
+        if (0x49 == default_regdomain)
+                default_regdomain = ZD_REGDOMAIN_FCC;
+...
+----snip----
+
+The above code will force the default regulatry to be FCC code for this
+case. I think that this was the case in previous zd1211rw driver. What
+is the country code for 0x49 region? There is a better way?
+
+
+Thanks all,
+
+Phew!! Leonardo
+
+
+
+
