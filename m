@@ -1,53 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57895 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751422AbZIZIOt (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43037 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbZILO4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 04:14:49 -0400
-Date: Sat, 26 Sep 2009 11:14:38 +0300
-From: Jouni Malinen <j@w1.fi>
+	Sat, 12 Sep 2009 10:56:51 -0400
+Subject: Re: [PATCH] cfg80211: allow scanning on specified frequencies when
+ using wext-compatibility
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH]: nl80211: report age of scan results
-Message-ID: <20090926081438.GA20788@jm.kir.nu>
-References: <200909241055.51604.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200909241055.51604.hs4233@mail.mn-solutions.de>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200909110952.14644.hs4233@mail.mn-solutions.de>
+References: <200909091309.55068.hs4233@mail.mn-solutions.de>
+	 <1252629664.23427.4.camel@johannes.local>
+	 <200909110952.14644.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6YSdcb7zVarSZR1KkFwC"
+Date: Sat, 12 Sep 2009 08:56:46 -0600
+Message-Id: <1252767406.23427.25.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 10:55:51AM +0200, Holger Schurig wrote:
-> One question was if I should specify the age in ms, or if I should specify
-> an absolute time. In the end I thought age in ms is better suited.
-> 
-> If an absolute time would sent with every BSS item, then user-space would
-> need an additional call to time() to find out which BSS items are too old.
-> Now it can use the milliseconds directly.
 
-This would depend on your use case.. I would have preferred absolute
-time since it allows the application to filter out entries that were not
-updated after the last scan request, i.e., to figure out which entries
-were found based on the last scan request (or well, based on frames
-received during this time).
+--=-6YSdcb7zVarSZR1KkFwC
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> The case there user-space wants an absolute time ("At what hour did I get
-> the last probe response from this AP?") seems to be a more theoretical
-> problem. But if info is wanted, *THEN* you can call time() and substract the
-> reported bss-item-age from it.
+On Fri, 2009-09-11 at 09:52 +0200, Holger Schurig wrote:
 
-No you cannot or well, you cannot get the exact time using this
-mechanism since you do not know the exact time used in the kernel for
-calculating the age. Anyway, the exact time may not matter that much if
-there were a better way at figuring out whether the results are based on
-a specific scan request.
+> Now, if I want to report an -EINVAL for every possibly invalid=20
+> scan-request channel, I'd have to do this:
+>=20
+>=20
+> If scan-request has freqs:
+>    Loop over all scan-request freqs
+>       Loop over all bands
+>          Loop over all channels
+>             search for freq
+>    if found:
+>        Stick channel to scan request
+>    else:
+>        err =3D -EINVAL
+> else:
+>    Loop over all bands
+>       Loop over all channels
+>          Stick channel to scan request
+>=20
+> This is considerable code-bloat for such a seldom-used function.
 
-One option would be to add a sequence number into scan requests and
-report this to the user space in the scan completed event. The scan
-results would also need to include the sequence number of the scan
-request after which they were updated.
+Doesn't seem that bad considering that the inner loop is already in an
+existing function.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> I'd rather do it like this:
+>=20
+>=20
+> Loop over all bands
+>    Loop over all channels
+>       If scan-request hasn't this channel freq: continue
+>       Stick channel to scan request
+> if no channels:
+>    err =3D -EINVAL
+>=20
+> That's a compromise :-)
+
+I guess. I'd still prefer the other way, but it's wext, so I don't
+really care :)
+
+johannes
+
+
+--=-6YSdcb7zVarSZR1KkFwC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKq7arAAoJEODzc/N7+QmaWlYQAJy/uCSh9yga9Of6OvuGnOKc
+hNsg4IchqFLxqQQGf+RB3ZDq2KztfTwE1ppSb22u8v4M32e8UtNSy7ggVSCgNvOM
+o1h+ryVJ+b39NuacPI6RUCTLwMqNbrJ5AuTSM90hVlxf+6Pst68yZvSCIfoOxq3X
+xErRoRqxLqyx9oHiBtj+6P0v4dCK4gxxRXpTBKq4mT71uwxjMhdTuLRKlAEGKnQM
+i2YLWKMlqEfoknTsZKxo2wo46wZk68Ur3r5oaDBb2karvkW6M0GX6QEih6THSN6K
+1hp8g0J2DelOD05G7uv4+IDusd0zAY7twraxQIVTRxttVtLVvHJ8Kma1VgRTJogc
+XR/1GAaszs5qOecJahjVA1HlVuOixNfUCloADIpVOF/YLo2U3WQXxFng/I3L4UBm
+eOe41Gtx09wpoIMLVH2cKMSFJMsp+vyUCN5HMr1yB9bKOkcetyQto5GXFdl+NclL
+lpvArKop1v3WGedwIr1qxhUk3axcvDowZ1bR+G8K5Ei7aF9JhOylePD64hJPbdZd
+OB9S49F5k0LpsX9p9m0efJN7oYv+x1oGGj3SkzSKxMWWb+/dMNNO0FBAc/YZ2b7f
+4fm95LwoDytQGoOiPfFJyLGkhjP27EWlNHjXzOXTauzlyqu4eqHPAgBnnhocWvw6
+f7nkJh1XQbOiR0qmpfpn
+=3Stp
+-----END PGP SIGNATURE-----
+
+--=-6YSdcb7zVarSZR1KkFwC--
+
