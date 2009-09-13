@@ -1,150 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52151 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbZIBUA0 (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.155]:53437 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132AbZIMOOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 16:00:26 -0400
-Date: Wed, 2 Sep 2009 15:56:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2009-09-02
-Message-ID: <20090902195651.GF2662@tuxdriver.com>
+	Sun, 13 Sep 2009 10:14:34 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so322415fge.1
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 07:14:36 -0700 (PDT)
+To: Igor Perminov <igor.perminov@inbox.ru>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
+	Jouni Malinen <j@w1.fi>, Artur Skawina <art.08.09@gmail.com>
+Subject: Re: A station can't reconnect after it wakes up
+References: <1248969930.29068.224.camel@sunlight> <4A7318E6.3000004@gmail.com>
+	<1249312925.8515.187.camel@sunlight>
+	<1252620184.26765.65.camel@sunlight>
+	<1252767513.23427.26.camel@johannes.local>
+	<1252799481.26765.145.camel@sunlight>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 13 Sep 2009 17:14:32 +0300
+In-Reply-To: <1252799481.26765.145.camel@sunlight> (Igor Perminov's message of "Sun\, 13 Sep 2009 03\:51\:21 +0400")
+Message-ID: <87my4z0w53.fsf@litku.valot.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Igor Perminov <igor.perminov@inbox.ru> writes:
 
-Once again, the usual batch of wireless updates for -next...  This time
-its mostly a random collection of driver updates...
+> On Sat, 2009-09-12 at 08:58 -0600, Johannes Berg wrote:
+>
+>> I think this is not necessary. Just make sure that auth/assoc frames
+>> aren't buffered.
+>
+> The handshake is begun by the AP, which considers the STA is in PS mode.
+> So, first EAPOL Key frame is buffered already.
+> The AP informs the STA by TIM after that of course. But I think, there
+> is no any guarantee that the STA analyzes TIM at this point, because the
+> STA considers itself not power-saving.
 
-Please let me know if there are problems!
+If this happens then the STA has really broken power save
+implementation. If a STA informs AP about going to power save it should
+_immediately_ start checking the TIM bits. Or is it so that STA actually
+hasn't informed AP about power save after association?
 
-Thanks,
 
-John
+[...]
 
----
+> I've nowhere found in 802.11-2007 document that a STA should send EAPOL
+> Start at the beginning of 4-way handshake. So, there is no any guarantee
+> that every STA implementation can synchronize its PS state with the AP.
 
-Individual patches are available here:
+My understanding is that the power save state after association should
+be disabled until STA informs otherwise. So there shouldn't be any
+synchronisation issues.
 
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6/
+> And moreover, my ASUS WL-500GP access point (it works under Linux 2.4
+> and doesn't utilize hostapd) processes reconnection without manipulating
+> TIM and causing a STA to send EAPOL Start. Probably, it just reset its
+> internal PS state of the STA at the beginning of reconnection.
+>
+> Would it be better to reset WLAN_STA_PS flag to get a more reliable
+> solution may be?
 
----
-
-The following changes since commit 9e39f7c5b311a306977c5471f9e2ce4c456aa038:
-  Joe Perches (1):
-        s2io: Generate complete messages using single line DBG_PRINTs
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git master
-
-Bob Copeland (1):
-      cfg80211: fix looping soft lockup in find_ie()
-
-Daniel C Halperin (3):
-      iwlwifi: remove 60 Mbps from sband bitrates table
-      iwlwifi: remove incorrect uses of ieee80211_get_tx_rate to prevent TX stall
-      iwlwifi: use iwl_hwrate_get_mac80211_idx where appropriate
-
-Gábor Stefanik (4):
-      b43: Refactor and update antenna diversity for A/G-PHY
-      b43: Add myself to module authors & to LP-PHY file copyright notices
-      b43: Fix typo in modparam_btcoex description
-      b43: LP-PHY: Fix TX gain tables
-
-Ivo van Doorn (2):
-      rt2x00: Fix TX status reporting
-      rt2x00: Reorganize padding & L2 padding
-
-Johannes Berg (2):
-      iwlwifi: use sleep interval succession
-      rfkill: relicense header file
-
-Jussi Kivilinna (4):
-      rndis_wlan: use bool for on/off switches
-      rndis_wlan: cleanup
-      rndis_wlan: fix sparse endianess warnings
-      rndis_wlan: remove 'select WIRELESS_EXT' in Kconfig
-
-Luis R. Rodriguez (3):
-      wireless: update top level wireless driver entry
-      wireless: update reg debug kconfig entry
-      wireless: remove mac80211 rate selection extra menu
-
-Randy Dunlap (1):
-      ipw2200: fix kconfig dependencies
-
-Reinette Chatre (2):
-      iwlwifi: fix situation in which debug message is printed
-      iwl3945: reduce debug noise when default debug flags used
-
-Samuel Ortiz (5):
-      iwmc3200wifi: Set WEP key from connect
-      iwmc3200wifi: Fix sparse warning
-      iwmc3200wifi: New initial LMAC calibration
-      iwmc3200wifi: Handle UMAC stalls and UMAC assert properly
-      iwmc3200wifi: Add a last_fw_err debugfs entry
-
-Vasanthakumar Thiagarajan (3):
-      ath9k: Do an AHB reset before doing RTC reset
-      ath9k: Move generic hw timer intr handler to bottom-half
-      ath9k: Call spin_lock_bh() on btcoex_lock
-
-Vivek Natarajan (1):
-      ath9k: Reconfigure beacon timers after the scan is completed.
-
-Zhu Yi (4):
-      iwmc3200wifi: invalidate profile when necessary before connect
-      iwmc3200wifi: use cfg80211_roamed to send roam event
-      iwmc3200wifi: add disconnect work
-      iwmc3200wifi: fix misuse of le16_to_cpu
-
- drivers/net/wireless/Kconfig                 |   14 +-
- drivers/net/wireless/ath/ath9k/btcoex.c      |   10 +-
- drivers/net/wireless/ath/ath9k/hw.c          |    7 +
- drivers/net/wireless/ath/ath9k/main.c        |   12 +-
- drivers/net/wireless/b43/main.c              |    3 +-
- drivers/net/wireless/b43/phy_a.c             |   48 ++---
- drivers/net/wireless/b43/phy_g.c             |   53 ++---
- drivers/net/wireless/b43/phy_lp.c            |    3 +-
- drivers/net/wireless/b43/tables_lpphy.c      |  309 +++++++++++++-------------
- drivers/net/wireless/ipw2x00/Kconfig         |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |   56 +++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h    |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c      |   39 +++-
- drivers/net/wireless/iwlwifi/iwl-core.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-power.c     |   24 ++-
- drivers/net/wireless/iwlwifi/iwl-rx.c        |    9 +-
- drivers/net/wireless/iwlwifi/iwl-tx.c        |  111 +++++----
- drivers/net/wireless/iwlwifi/iwl3945-base.c  |    8 +-
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   66 +++++-
- drivers/net/wireless/iwmc3200wifi/commands.c |    1 +
- drivers/net/wireless/iwmc3200wifi/debug.h    |    2 +
- drivers/net/wireless/iwmc3200wifi/debugfs.c  |  105 +++++++++-
- drivers/net/wireless/iwmc3200wifi/fw.c       |   56 ++++--
- drivers/net/wireless/iwmc3200wifi/iwm.h      |    8 +-
- drivers/net/wireless/iwmc3200wifi/lmac.h     |   15 ++
- drivers/net/wireless/iwmc3200wifi/main.c     |   60 +++++-
- drivers/net/wireless/iwmc3200wifi/rx.c       |   87 ++++++--
- drivers/net/wireless/rndis_wlan.c            |   98 ++------
- drivers/net/wireless/rt2x00/rt2x00crypto.c   |    6 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c      |   38 ++--
- drivers/net/wireless/rt2x00/rt2x00lib.h      |   45 +++-
- drivers/net/wireless/rt2x00/rt2x00queue.c    |   99 +++++++--
- include/linux/rfkill.h                       |   23 +-
- net/mac80211/Kconfig                         |    5 +-
- net/wireless/Kconfig                         |    4 +
- net/wireless/scan.c                          |    2 +-
- 36 files changed, 894 insertions(+), 540 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2009-09-02.patch.bz2
+So mac80211 doesn't clear STA's power save state during association? To
+me that sounds like a bug.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
