@@ -1,90 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51728 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbZIZNBB (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:54575 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbZIMXp3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 09:01:01 -0400
-Subject: Re: 2.6.31-git wireless broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
-	 <1253813740.3868.324.camel@johannes.local>
-	 <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
-	 <1253816614.3868.406.camel@johannes.local>
-	 <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
-	 <1253856038.3868.500.camel@johannes.local>
-	 <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
-	 <1253868214.3868.713.camel@johannes.local>
-	 <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CxhKh95bEL4qZfx2lkbh"
-Date: Sat, 26 Sep 2009 15:00:49 +0200
-Message-Id: <1253970049.5122.31.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 13 Sep 2009 19:45:29 -0400
+Received: by fxm17 with SMTP id 17so520615fxm.37
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 16:45:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1252690699-25796-10-git-send-email-reinette.chatre@intel.com>
+References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+	 <1252690699-25796-10-git-send-email-reinette.chatre@intel.com>
+Date: Mon, 14 Sep 2009 02:45:29 +0300
+Message-ID: <1ba2fa240909131645o3254764y84b4eb807c251936@mail.gmail.com>
+Subject: Re: [ipw3945-devel] [PATCH 09/13] iwlwifi: clean up ht config naming
+From: Tomas Winkler <tomasw@gmail.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 11, 2009 at 8:38 PM, Reinette Chatre
+<reinette.chatre@intel.com> wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+>
+> Daniel Halperin pointed out that the naming
+> here is rather inconsistent with at least 3
+> different names being used for one thing in
+> different contexts. Rename the struct to
+> iwl_ht_config (rather than iwl_ht_info) and
+> use ht_conf as a variable for it.
 
---=-CxhKh95bEL4qZfx2lkbh
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Hmm. ht_info was used to describe protocol handshake info (as
+described by spec) while ht_configis actual HW configuration
+constrained by HW capabilities or current state I didn't follow
+closely current changes but at least they used to be not the same
+things.
 
-On Fri, 2009-09-25 at 15:15 +0100, Hugh Dickins wrote:
+Thanks
+Tomas
 
-> That bisection, focussing on wpa_supplicant running versus ESSID:off/any
-> (indeed they match up), now completed on the Aspire One (I'll assume for
-> the moment that the laptop would show the same).
->=20
-> Yes, it does appear that the patch I originally pointed to introduced a
-> problem which later got fixed, but was enough to throw the bisection off
-> when I just looked for "wireless not working".
->=20
-> But you can't escape, you've been too busy, the guilty patch is...=20
->=20
-> a9a11622c5c742c115fad371c0397ae86dd3bb67 is first bad commit
-> commit a9a11622c5c742c115fad371c0397ae86dd3bb67
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Mon Jul 27 12:01:53 2009 +0200
->=20
->     cfg80211: self-contained wext handling where possible
 
-Heh, fun.
+>
 
-Well the problem appears to be that wpa_supplicant isn't getting started
-by your distro any more. Unfortunately I'm not familiar with opensuse.
-It seems it thinks the device isn't wireless but wired, since it starts
-ifplugd. OTOH maybe it wants ifplugd for wireless too? It's possible in
-theory.
-
-I'm downloading a livecd to figure out what might be going wrong.
-
-Can you try running wpa_supplicant manually to make sure it's a problem
-in the distro/kernel interaction and not in wpa_supplicant/kernel?
-
-johannes
-
---=-CxhKh95bEL4qZfx2lkbh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKvhB+AAoJEODzc/N7+Qman8gQAJDmR5o4OtwYLnyiXWmBKrrp
-xaCcHtNOKzhwfhKkJSTcT7TvhDBdfCjUYGP/0eYtcAEml5MYnDwWbX+KzZEwaTrL
-e0ndR+Kg9Gjg9/JullAIdPAQfojfHrArwt6I4tA7AXIVYjryow5HSYye7F+eCq0i
-ECXebdA3PRLUW9ugdWLS+Nl1KvHE8OkKAt1HTVEQW0Wu3egtNxTW8yXyrD6D8jgF
-4W4DRtKZ24644I7Q0uvTzmqrT3GtSZhZSFmXviy9nN+2/nmU9TKRJ6s8GV7JV+fB
-6MZryzUFhy5L2PG/NTX/V1IYxS9M+46olgZm9wv6NuSgL/9xcV5UZE1Dd8S5d2WV
-uNfACpJtqC8grhq+q+aEdbhOv0YgT+pYMm63/gRNGUlNfdr4L+DRYnvcOiy6FCss
-oBFZbFCJpMioGIZxaRvAsjFVPdvTq+2DD0kVeZ1gM+HMg9HFVNHTBxTm7tA/a+DT
-7SXQmQKzqwJ/k2zXc31cDZO/WNMapHqMFJZROqxAx4uH35+UOPyokix8CHdoMEFt
-xjb49pTb2S8zOrhXWWyxYyCkY2BO/wNOL7NgpxeV+93zS9uYNjEY2ZisjKKvrvPo
-SrkZ5Gcp94VQKpXqd4F39DTtbkT4AattdiKldRDvMkr7rz7pIH/zv6RrFhmxjjg/
-SzYYkE2nDY5wtA35il7x
-=GMUL
------END PGP SIGNATURE-----
-
---=-CxhKh95bEL4qZfx2lkbh--
-
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Acked-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-core.c   |   48 ++++++++++++++--------------
+>  drivers/net/wireless/iwlwifi/iwl-core.h   |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-dev.h    |    4 +-
+>  4 files changed, 28 insertions(+), 28 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> index fd73153..9d0758a 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+> @@ -662,7 +662,7 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *rate_n_flags,
+>  * there are no non-GF stations present in the BSS.
+>  */
+>  static inline u8 rs_use_green(struct ieee80211_sta *sta,
+> -                             struct iwl_ht_info *ht_conf)
+> +                             struct iwl_ht_config *ht_conf)
+>  {
+>        return (sta->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
+>                !(ht_conf->non_GF_STA_present);
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+> index 7c50065..d9a757a 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -634,9 +634,9 @@ static u8 iwl_is_channel_extension(struct iwl_priv *priv,
+>  u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+>                         struct ieee80211_sta_ht_cap *sta_ht_inf)
+>  {
+> -       struct iwl_ht_info *iwl_ht_conf = &priv->current_ht_config;
+> +       struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+>
+> -       if (!iwl_ht_conf->is_ht || !iwl_ht_conf->is_40mhz)
+> +       if (!ht_conf->is_ht || !ht_conf->is_40mhz)
+>                return 0;
+>
+>        /* We do not check for IEEE80211_HT_CAP_SUP_WIDTH_20_40
+> @@ -652,7 +652,7 @@ u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+>  #endif
+>        return iwl_is_channel_extension(priv, priv->band,
+>                        le16_to_cpu(priv->staging_rxon.channel),
+> -                       iwl_ht_conf->extension_chan_offset);
+> +                       ht_conf->extension_chan_offset);
+>  }
+>  EXPORT_SYMBOL(iwl_is_ht40_tx_allowed);
+>
+> @@ -876,11 +876,11 @@ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv)
+>  }
+>  EXPORT_SYMBOL(iwl_rate_get_lowest_plcp);
+>
+> -void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+> +void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
+>  {
+>        struct iwl_rxon_cmd *rxon = &priv->staging_rxon;
+>
+> -       if (!ht_info->is_ht) {
+> +       if (!ht_conf->is_ht) {
+>                rxon->flags &= ~(RXON_FLG_CHANNEL_MODE_MSK |
+>                        RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK |
+>                        RXON_FLG_HT40_PROT_MSK |
+> @@ -891,7 +891,7 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+>        /* FIXME: if the definition of ht_protection changed, the "translation"
+>         * will be needed for rxon->flags
+>         */
+> -       rxon->flags |= cpu_to_le32(ht_info->ht_protection << RXON_FLG_HT_OPERATING_MODE_POS);
+> +       rxon->flags |= cpu_to_le32(ht_conf->ht_protection << RXON_FLG_HT_OPERATING_MODE_POS);
+>
+>        /* Set up channel bandwidth:
+>         * 20 MHz only, 20/40 mixed or pure 40 if ht40 ok */
+> @@ -900,10 +900,10 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+>                         RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK);
+>        if (iwl_is_ht40_tx_allowed(priv, NULL)) {
+>                /* pure ht40 */
+> -               if (ht_info->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ) {
+> +               if (ht_conf->ht_protection == IEEE80211_HT_OP_MODE_PROTECTION_20MHZ) {
+>                        rxon->flags |= RXON_FLG_CHANNEL_MODE_PURE_40;
+>                        /* Note: control channel is opposite of extension channel */
+> -                       switch (ht_info->extension_chan_offset) {
+> +                       switch (ht_conf->extension_chan_offset) {
+>                        case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+>                                rxon->flags &= ~RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK;
+>                                break;
+> @@ -913,7 +913,7 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+>                        }
+>                } else {
+>                        /* Note: control channel is opposite of extension channel */
+> -                       switch (ht_info->extension_chan_offset) {
+> +                       switch (ht_conf->extension_chan_offset) {
+>                        case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+>                                rxon->flags &= ~(RXON_FLG_CTRL_CHANNEL_LOC_HI_MSK);
+>                                rxon->flags |= RXON_FLG_CHANNEL_MODE_MIXED;
+> @@ -939,11 +939,11 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info)
+>        IWL_DEBUG_ASSOC(priv, "supported HT rate 0x%X 0x%X 0x%X "
+>                        "rxon flags 0x%X operation mode :0x%X "
+>                        "extension channel offset 0x%x\n",
+> -                       ht_info->mcs.rx_mask[0],
+> -                       ht_info->mcs.rx_mask[1],
+> -                       ht_info->mcs.rx_mask[2],
+> -                       le32_to_cpu(rxon->flags), ht_info->ht_protection,
+> -                       ht_info->extension_chan_offset);
+> +                       ht_conf->mcs.rx_mask[0],
+> +                       ht_conf->mcs.rx_mask[1],
+> +                       ht_conf->mcs.rx_mask[2],
+> +                       le32_to_cpu(rxon->flags), ht_conf->ht_protection,
+> +                       ht_conf->extension_chan_offset);
+>        return;
+>  }
+>  EXPORT_SYMBOL(iwl_set_rxon_ht);
+> @@ -2408,13 +2408,13 @@ EXPORT_SYMBOL(iwl_mac_conf_tx);
+>  static void iwl_ht_conf(struct iwl_priv *priv,
+>                            struct ieee80211_bss_conf *bss_conf)
+>  {
+> -       struct ieee80211_sta_ht_cap *ht_conf;
+> -       struct iwl_ht_info *iwl_conf = &priv->current_ht_config;
+> +       struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+> +       struct ieee80211_sta_ht_cap *ht_cap;
+>        struct ieee80211_sta *sta;
+>
+>        IWL_DEBUG_MAC80211(priv, "enter: \n");
+>
+> -       if (!iwl_conf->is_ht)
+> +       if (!ht_conf->is_ht)
+>                return;
+>
+>
+> @@ -2430,15 +2430,15 @@ static void iwl_ht_conf(struct iwl_priv *priv,
+>                rcu_read_unlock();
+>                return;
+>        }
+> -       ht_conf = &sta->ht_cap;
+> +       ht_cap = &sta->ht_cap;
+>
+> -       iwl_conf->sm_ps = (u8)((ht_conf->cap & IEEE80211_HT_CAP_SM_PS) >> 2);
+> +       ht_conf->sm_ps = (u8)((ht_cap->cap & IEEE80211_HT_CAP_SM_PS) >> 2);
+>
+> -       memcpy(&iwl_conf->mcs, &ht_conf->mcs, 16);
+> +       memcpy(&ht_conf->mcs, &ht_cap->mcs, 16);
+>
+> -       iwl_conf->ht_protection =
+> +       ht_conf->ht_protection =
+>                bss_conf->ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION;
+> -       iwl_conf->non_GF_STA_present =
+> +       ht_conf->non_GF_STA_present =
+>                !!(bss_conf->ht_operation_mode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
+>
+>        rcu_read_unlock();
+> @@ -2748,7 +2748,7 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+>        struct iwl_priv *priv = hw->priv;
+>        const struct iwl_channel_info *ch_info;
+>        struct ieee80211_conf *conf = &hw->conf;
+> -       struct iwl_ht_info *ht_conf = &priv->current_ht_config;
+> +       struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+>        unsigned long flags = 0;
+>        int ret = 0;
+>        u16 ch;
+> @@ -2915,7 +2915,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+>        IWL_DEBUG_MAC80211(priv, "enter\n");
+>
+>        spin_lock_irqsave(&priv->lock, flags);
+> -       memset(&priv->current_ht_config, 0, sizeof(struct iwl_ht_info));
+> +       memset(&priv->current_ht_config, 0, sizeof(struct iwl_ht_config));
+>        spin_unlock_irqrestore(&priv->lock, flags);
+>
+>        iwl_reset_qos(priv);
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+> index dfeca62..cab148d 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+> @@ -274,7 +274,7 @@ int iwl_check_rxon_cmd(struct iwl_priv *priv);
+>  int iwl_full_rxon_required(struct iwl_priv *priv);
+>  void iwl_set_rxon_chain(struct iwl_priv *priv);
+>  int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
+> -void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_info *ht_info);
+> +void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
+>  u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+>                         struct ieee80211_sta_ht_cap *sta_ht_inf);
+>  void iwl_set_flags_for_band(struct iwl_priv *priv, enum ieee80211_band band);
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+> index 961d534..e161f8d 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+> @@ -502,7 +502,7 @@ union iwl_ht_rate_supp {
+>  #define CFG_HT_MPDU_DENSITY_4USEC   (0x5)
+>  #define CFG_HT_MPDU_DENSITY_DEF CFG_HT_MPDU_DENSITY_4USEC
+>
+> -struct iwl_ht_info {
+> +struct iwl_ht_config {
+>        /* self configuration data */
+>        bool is_ht;
+>        bool is_40mhz;
+> @@ -1077,7 +1077,7 @@ struct iwl_priv {
+>        struct iwl_chain_noise_data chain_noise_data;
+>        __le16 sensitivity_tbl[HD_TABLE_SIZE];
+>
+> -       struct iwl_ht_info current_ht_config;
+> +       struct iwl_ht_config current_ht_config;
+>        u8 last_phy_res[100];
+>
+>        /* Rate scaling data */
+> --
+> 1.5.6.3
+>
+>
+> ------------------------------------------------------------------------------
+> Let Crystal Reports handle the reporting - Free Crystal Reports 2008 30-Day
+> trial. Simplify your report design, integration and deployment - and focus on
+> what you do best, core application coding. Discover what's new with
+> Crystal Reports now.  http://p.sf.net/sfu/bobj-july
+> _______________________________________________
+> Ipw3945-devel mailing list
+> Ipw3945-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/ipw3945-devel
+>
