@@ -1,84 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17892 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752495AbZI2CzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 22:55:07 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 19:55:12 -0700
-Date: Mon, 28 Sep 2009 19:55:09 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: compat-wireless master-2009-09-28 breakage and suggested fixes
-Message-ID: <20090929025509.GB6529@mosca>
-References: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:56950 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbZIMKNF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Sep 2009 06:13:05 -0400
+Received: by ewy2 with SMTP id 2so2197250ewy.17
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 03:13:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
+In-Reply-To: <4AAC240E.20104@ufra.edu.br>
+References: <4A9BFCCB.6040808@ufra.edu.br>
+	 <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>
+	 <4A9C0ADC.6050607@ufra.edu.br>
+	 <3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
+	 <4A9D7DC0.6050701@ufra.edu.br> <4AAC240E.20104@ufra.edu.br>
+Date: Sun, 13 Sep 2009 11:13:06 +0100
+Message-ID: <3ace41890909130313y474074ecnc5e720f780a4bd8f@mail.gmail.com>
+Subject: Re: zd1211rw on ppc (iBook G4) -- Solved, somewhat)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 28, 2009 at 07:35:22PM -0700, Hin-Tak Leung wrote:
-> commit d0cf9c0dadcdc89a755bcb301cfc9c796eb28ccf
-> Author: Stephen Hemminger <shemminger@vyatta.com>
-> Date:   Mon Aug 31 19:50:57 2009 +0000
-> 
->     wireless: convert drivers to netdev_tx_t
-> 
-> and the 2nd change due to this:
-> 
-> commit 384912ed194e43c03ad1cdaa09b0b1e488c34d46
-> Author: Marcel Holtmann <marcel@holtmann.org>
-> Date:   Mon Aug 31 21:08:19 2009 +0000
-> 
->     net: Add DEVTYPE support for Ethernet based devices
-> 
-> Both of these changes are traced back to changes in
-> <linux/netdevice.h> , which compat-wireless does not ship. What's your
-> policy on these kind of changes to compat-wireless?
-> (the 2nd SET_NETDEV_DEVTYPE change probably can be spanned by an
-> ifndef SET_NETDEV_DEVTYPE, and roll into
-> "compat/patches/01-netdev.patch"? Should the first kind of change also
-> go into compat/patches/01-netdev.patch?)
+On Sat, Sep 12, 2009 at 11:43 PM, Leonardo H. Souza Hamada
+<leonardo.hamada@ufra.edu.br> wrote:
+> Hi all,
+>
+> At this moment, after tweaking the zd1211rw code in kernel
+> 2.6.31-gentoo, finally I am able to use the WLI-U2-KG54L wireless usb
+> dongle on this old ibook.
+>
+> Browsing the source with a cross referencing tool
+> (http://lxr.free-electrons.com) and making additional checking points, I
+> could trace the issue as follow.
+>
+> The problem is that this device returns a regulatory region of 0x49,
+> which is not defined in the zd1211rw tables. So the call
+>
+> r <http://lxr.free-electrons.com/ident?i=r> = zd_reg2alpha2 <http://lxr.free-electrons.com/ident?i=zd_reg2alpha2>(mac <http://lxr.free-electrons.com/ident?i=mac>->regdomain, alpha2);
+>
+> will fail the initialization process.
+>
+>
+> Workaround:
+>
+> ----snip----
+> int zd_mac_init_hw(struct ieee80211_hw *hw)
+> {
+> ...
+>        r = zd_read_regdomain(chip, &default_regdomain);
+>        /* A unknown regulatory of 0x49 will be set default to
+> ZD_REGDOMAIN_FCC. */
+>        if (0x49 == default_regdomain)
+>                default_regdomain = ZD_REGDOMAIN_FCC;
+> ...
+> ----snip----
+>
+> The above code will force the default regulatry to be FCC code for this
+> case. I think that this was the case in previous zd1211rw driver. What
+> is the country code for 0x49 region? There is a better way?
+>
+>
+> Thanks all,
+>
+> Phew!! Leonardo
 
-I don't see this yet on wireless-testing but it is on 2.6.32.
-I backported this as follows. I'll push this out shortly.
+The vendor driver has quite a lot more regdomain code defined, and
+0x49 is apparently
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH] Fix compilation against for 2.6.32 changes
+ZD_Region_Japan_3           = 0x49,//G channel->ch1-13; A channel->8~16,34~46;
 
-2.6.32 added SET_NETDEV_DEVTYPE() and netdev_tx
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- compat/compat-2.6.32.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
-
-diff --git a/compat/compat-2.6.32.h b/compat/compat-2.6.32.h
-index f7081f2..418b521 100644
---- a/compat/compat-2.6.32.h
-+++ b/compat/compat-2.6.32.h
-@@ -31,6 +31,18 @@
- 
- #define dev_change_net_namespace(a, b, c) (-EOPNOTSUPP)
- 
-+#define SET_NETDEV_DEVTYPE(netdev, type)
-+
-+#ifdef __KERNEL__
-+/* Driver transmit return codes */
-+enum netdev_tx {
-+	BACKPORT_NETDEV_TX_OK = NETDEV_TX_OK,       /* driver took care of packet */
-+	BACKPORT_NETDEV_TX_BUSY = NETDEV_TX_BUSY,         /* driver tx path was busy*/
-+	BACKPORT_NETDEV_TX_LOCKED = NETDEV_TX_LOCKED,  /* driver tx lock was already taken */
-+};
-+typedef enum netdev_tx netdev_tx_t;
-+#endif /* __KERNEL__ */
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
- 
- #endif /* LINUX_26_32_COMPAT_H */
--- 
-1.6.3.3
-
+the rw driver code probably should set it to most restrictive than let
+it fail...
