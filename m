@@ -1,94 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:47167 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbZI3LSk convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:38004 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396AbZIMA42 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 07:18:40 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so1348599fge.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 04:18:44 -0700 (PDT)
+	Sat, 12 Sep 2009 20:56:28 -0400
+Received: by iwn8 with SMTP id 8so918889iwn.4
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 17:56:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200909301304.33903.schmidtreiner@gmx.net>
-References: <200909301304.33903.schmidtreiner@gmx.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 30 Sep 2009 13:18:24 +0200
-Message-ID: <69e28c910909300418qa239fa9k5cb3f223df210ee7@mail.gmail.com>
-Subject: Re: B43 Module on Compaq HP615 Laptop
-To: Reiner Schmidt <schmidtreiner@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4AAB8B9E.1030508@gmail.com>
+References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
+	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com>
+	<40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
+	<4AA9F22C.3090007@gmail.com> <43e72e890909110023k62a512bejd712a3449cc8328d@mail.gmail.com>
+	<4AAB8B9E.1030508@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 12 Sep 2009 17:56:11 -0700
+Message-ID: <43e72e890909121756m550c41d0pe399f0994a050b50@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	devel@linuxdriverproject.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jeff Garzik <jeff@garzik.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You need to unload the old ssb prior to loading b43 (which loads an
-updated ssb).
+On Sat, Sep 12, 2009 at 4:53 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 09/11/2009 09:23 AM, Luis R. Rodriguez wrote:
+>> On Thu, Sep 10, 2009 at 11:46 PM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>>> I definitely agree with Nick here. Althought whole ath_ops will be hot
+>>> cache after the first operation, there is no need to prolong hot paths
+>>> by computing the op address and a call. Ok, read/write on PCI is pretty
+>>> slow, but still...
+>>
+>> That is the way I had it originally before submission, and I
+>> completely agree its reasonable to not incur additional cost at the
+>> expense of having two separate read/write paths, and perhaps we should
+>> only incur the extra cost on routines shared between
+>> ath9k/ath9k/ath9k_htc. But -- is there really is a measurable cost
+>> penalty?
+>
+> Hardly there is a measurable one. As I wrote earlier one will wait ages
+> for PCI in comparison to few load+call cycles.
 
-On Wed, Sep 30, 2009 at 1:04 PM, Reiner Schmidt <schmidtreiner@gmx.net> wrote:
-> Hello,
-> I am trying to install the newest compat-wireless package (from 30.09.2009)
-> onto this notebook. It has a Broadcom 4312 compatible �WLAN device on it .
-> Its id is:14e4:4315.
-> I use s debian sidux distribution with an 2.6.29-4 liquorix-kernel.
-> Unfortunately I can currently use newer kernels on this notebook because it
-> wouldn't boot up. Tried several 2.6.30 and -31 kernels up too 2.6.31-1.
+Alright, this helps.
 
-Please report any error messages it prints.
+>> This is why I asked if someone can test and give measurable
+>> differences over this. If there really isn't then that's not strong
+>> point against it.
+>
+> Well, honestly I see no strong point for it. It rather looks like an
+> obfuscation, not improvement.
 
->
-> Compiling the package works so far but when loading the module b43 manually or
-> via /etc/modules it complains heavily about ssb-related issues.
->
->
->> b43: disagrees about version of symbol ssb_device_is_enabled
->> b43: Unknown symbol ssb_device_is_enabled
->> b43: Unknown symbol ssb_pmu_set_ldo_paref
->> b43: disagrees about version of symbol ssb_pcicore_dev_irqvecs_enable
->> b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
->> b43: disagrees about version of symbol ssb_bus_may_powerdown
->> b43: Unknown symbol ssb_bus_may_powerdown
->> b43: disagrees about version of symbol ssb_dma_free_consistent
->> b43: Unknown symbol ssb_dma_free_consistent
->> b43: disagrees about version of symbol ssb_bus_suspend
->> b43: Unknown symbol ssb_bus_suspend
->> b43: disagrees about version of symbol ssb_bus_unregister
->> b43: Unknown symbol ssb_bus_unregister
->> b43: disagrees about version of symbol ssb_bus_resume
->> b43: Unknown symbol ssb_bus_resume
->> b43: disagrees about version of symbol ssb_set_devtypedata
->> b43: Unknown symbol ssb_set_devtypedata
->> b43: disagrees about version of symbol ssb_device_disable
->> b43: Unknown symbol ssb_device_disable
->> b43: Unknown symbol ssb_pmu_set_ldo_voltage
->> b43: disagrees about version of symbol ssb_dma_alloc_consistent
->> b43: Unknown symbol ssb_dma_alloc_consistent
->> b43: disagrees about version of symbol ssb_dma_set_mask
->> b43: Unknown symbol ssb_dma_set_mask
->> b43: disagrees about version of symbol ssb_device_enable
->> b43: Unknown symbol ssb_device_enable
->> b43: disagrees about version of symbol ssb_driver_unregister
->> b43: Unknown symbol ssb_driver_unregister
->> b43: disagrees about version of symbol __ssb_driver_register
->> b43: Unknown symbol __ssb_driver_register
->> b43: disagrees about version of symbol ssb_bus_pcmciabus_register
->> b43: Unknown symbol ssb_bus_pcmciabus_register
->> b43: disagrees about version of symbol ssb_bus_powerup
->> b43: Unknown symbol ssb_bus_powerup
->> b43: disagrees about version of symbol ssb_dma_translation
->> b43: Unknown symbol ssb_dma_translation
->
-> Is this a real bug or do Ihave to submit additional prameter for the module
-> when I load it?
-> If so, where can I find those otions ?
->
-> Kind regards
->
-> Reiner Schmidt
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at �http://vger.kernel.org/majordomo-info.html
->
+It may be and for ath5k this is not a requirement, for ath9k however
+we do need a way to share hw code and therefore we cannot keep
+read/write ops as part of hw.c but more importantly we need something
+to map READ_READ/REG_WRITE macros on hw.h which will work for both
+ath9k and ath9k_htc.
 
+>> Granted you can argue these new interfaces between
+>> ath5k/ath9k/ath9k_htc would make things a little more complex, but I
+>> would expect sharing the code will help in the end. And if these
+>> interfaces are not acceptable I'm completely open to better suggested
+>> alternatives.
+>
+> Ok, I think nothing more than this is needed:
+> +static u32 ath5k_ioread32(void *hw_priv, u32 reg_offset)
+> +{
+> +       return ath5k_hw_reg_read(hw_priv, reg_offset)
+> +}
+> +
+> +static void ath5k_iowrite32(void *hw_priv, u32 reg_offset, u32 val)
+> +{
+> +       ath5k_hw_reg_write(hw_priv, val, reg_offset);
+> +}
+> +
+> +static struct ath_ops ath5k_common_ops = {
+> +       .read = ath5k_ioread32,
+> +       .write = ath5k_iowrite32,
+> +};
 
+That's fine for ath5k.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> What I wonder is why ath_ops has reg+val parameters in the opposite
+> manner than the rest of kernel? It is error-prone.
+
+Heh, yeah, that's just how the Atheros hw code was written, so I'll
+change the common ops to match standard practice but don't want to
+change the all the REG_READ/REG_WRITE macros, so ath9k stuff will just
+do the flip.
+
+  Luis
