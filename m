@@ -1,87 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:46410 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757587AbZIFNoY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Sep 2009 09:44:24 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] b43: Really disable QoS, if requested
-Date: Sun, 6 Sep 2009 15:42:45 +0200
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:63284 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbZIMAYr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Sep 2009 20:24:47 -0400
+Received: by ewy2 with SMTP id 2so2048042ewy.17
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Sep 2009 17:24:49 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: hostap@lists.shmoo.com
+Subject: Re: A station can't reconnect after it wakes up
+Date: Sun, 13 Sep 2009 02:24:43 +0200
+Cc: Igor Perminov <igor.perminov@inbox.ru>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Artur Skawina <art.08.09@gmail.com>
+References: <1248969930.29068.224.camel@sunlight> <1252767513.23427.26.camel@johannes.local> <1252799481.26765.145.camel@sunlight>
+In-Reply-To: <1252799481.26765.145.camel@sunlight>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909061542.46256.mb@bu3sch.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909130224.43258.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, when QoS-disable is requested, we would leave QoS enabled
-in firmware, but only queue frames on one queue.
-Change that and also tell firmware about disabled QoS, so it
-completely ignores all the QoS parameters. Also don't upload the parameters,
-if QoS is disabled.
+On Sunday 13 September 2009 01:51:21 Igor Perminov wrote:
+> On Sat, 2009-09-12 at 08:58 -0600, Johannes Berg wrote:
+> > On Fri, 2009-09-11 at 02:03 +0400, Igor Perminov wrote:
+> > 
+> > > Jouni suggests to not buffer Auth/Assoc frames at all, independently of
+> > > station's PS state. 
+> > 
+> > Ok, works for me.
+> > 
+> > > I think, it isn't enough, because an AP should send
+> > > a number of EAPOL Key frames after that, which are data frames and
+> > > therefore will be buffered anyway.
+> > 
+> > That's not a problem though since the handshake will be in data frames
+> > and synchronise the PS state on both ends via the sleep bit.
+> > 
+> > > I think mac80211 in AP mode should reset WLAN_STA_PS flag of the station
+> > > (and purge frames having been buffered previously if any) on an event
+> > > indicating beginning of authentication.
+> > > The event may be one of the following:
+> > > A) An Auth frame being received from the station.
+> > > B) An Auth frame being sent to the station.
+> > > C) A special API call from an application (hostapd), when it is
+> > > receiving an Auth frame from the station and is beginning
+> > > authentication/association.
+> > > 
+> > > Johannes, what do you think of these approaches?
+> > 
+> > I think this is not necessary. Just make sure that auth/assoc frames
+> > aren't buffered.
+> 
+> The handshake is begun by the AP, which considers the STA is in PS mode.
+>
+> So, first EAPOL Key frame is buffered already.
+> The AP informs the STA by TIM after that of course. But I think, there
+> is no any guarantee that the STA analyzes TIM at this point, because the
+> STA considers itself not power-saving.
+> 
+> I've implemented transmitting Auth and Assoc Response frames without
+> buffering on current wireless-testing and got the following result with
+> my Windows Mobile 6 PDA as a STA.
+> The AP buffers first EAPOL Key frame, gets a timeout, tries to resend
+> the frame and buffers it again. Some time later the STA sends EAPOL
+> Start frame, which reports to the AP that the STA isn't sleeping. After
+> that reconnection succeeds.
+> Normally the PDA doesn't send EAPOL Start, and I have no idea, why it
+> does so when it doesn't receive a EAPOL Key frame in time.
+> And I can at least assume that the PDA ignores TIM at the handshake
+> stage.
+> 
+> Unfortunately, I can't test another STA implementation, because my
+> laptop under Ubuntu Linux sends a Disassoc frame before going down,
+> which prevents PS state misunderstanding.
+> 
+> I've nowhere found in 802.11-2007 document that a STA should send EAPOL
+> Start at the beginning of 4-way handshake. So, there is no any guarantee
+> that every STA implementation can synchronize its PS state with the AP.
+> 
+> And moreover, my ASUS WL-500GP access point (it works under Linux 2.4
+> and doesn't utilize hostapd) processes reconnection without manipulating
+> TIM and causing a STA to send EAPOL Start. Probably, it just reset its
+> internal PS state of the STA at the beginning of reconnection.
+> 
+> Would it be better to reset WLAN_STA_PS flag to get a more reliable
+> solution may be?
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+well, you can take a look right here: (comment)
 
+net/mac80211/rx.c - ieee80211_rx_h_sta_process
 
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-06 15:37:47.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-06 15:38:03.000000000 +0200
-@@ -3093,7 +3093,6 @@ static int b43_op_tx(struct ieee80211_hw
- 	return NETDEV_TX_OK;
- }
- 
--/* Locking: wl->irq_lock */
- static void b43_qos_params_upload(struct b43_wldev *dev,
- 				  const struct ieee80211_tx_queue_params *p,
- 				  u16 shm_offset)
-@@ -3102,6 +3101,9 @@ static void b43_qos_params_upload(struct
- 	int bslots, tmp;
- 	unsigned int i;
- 
-+	if (!dev->qos_enabled)
-+		return;
-+
- 	bslots = b43_read16(dev, B43_MMIO_RNG) & p->cw_min;
- 
- 	memset(&params, 0, sizeof(params));
-@@ -3147,6 +3149,9 @@ static void b43_qos_upload_all(struct b4
- 	struct b43_qos_params *params;
- 	unsigned int i;
- 
-+	if (!dev->qos_enabled)
-+		return;
-+
- 	BUILD_BUG_ON(ARRAY_SIZE(b43_qos_shm_offsets) !=
- 		     ARRAY_SIZE(wl->qos_params));
- 
-@@ -3206,6 +3211,16 @@ static void b43_qos_clear(struct b43_wl 
- /* Initialize the core's QOS capabilities */
- static void b43_qos_init(struct b43_wldev *dev)
- {
-+	if (!dev->qos_enabled) {
-+		/* Disable QOS support. */
-+		b43_hf_write(dev, b43_hf_read(dev) & ~B43_HF_EDCF);
-+		b43_write16(dev, B43_MMIO_IFSCTL,
-+			    b43_read16(dev, B43_MMIO_IFSCTL)
-+			    & ~B43_MMIO_IFSCTL_USE_EDCF);
-+		b43dbg(dev->wl, "QoS disabled\n");
-+		return;
-+	}
-+
- 	/* Upload the current QOS parameters. */
- 	b43_qos_upload_all(dev);
- 
-@@ -3214,6 +3229,7 @@ static void b43_qos_init(struct b43_wlde
- 	b43_write16(dev, B43_MMIO_IFSCTL,
- 		    b43_read16(dev, B43_MMIO_IFSCTL)
- 		    | B43_MMIO_IFSCTL_USE_EDCF);
-+	b43dbg(dev->wl, "QoS enabled\n");
- }
- 
- static int b43_op_conf_tx(struct ieee80211_hw *hw, u16 _queue,
+        /*
+         * Change STA power saving mode only at the end of a frame
+         * exchange sequence.
+         */
+        if (!ieee80211_has_morefrags(hdr->frame_control) &&
+            (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
+             rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
+                if (test_sta_flags(sta, WLAN_STA_PS)) {
+                        /*
+                         * Ignore doze->wake transitions that are
+                         * indicated by non-data frames, the standard
+                         * is unclear here, but for example going to
+                         * PS mode and then scanning would cause a
+                         * doze->wake transition for the probe request,
+                         * and that is clearly undesirable.
+                         */
+--- from here --- 
+                        if (ieee80211_is_data(hdr->frame_control) &&
+                            !ieee80211_has_pm(hdr->frame_control))
+                                rx->sent_ps_buffered += ap_sta_ps_end(sta);
+--- to here ---
 
--- 
-Greetings, Michael.
+                } else {
+                        if (ieee80211_has_pm(hdr->frame_control))
+                                ap_sta_ps_start(sta);
+                }
+	}
+
+to trigger for (de-)auth/(de/re)assoc too in order to reset the PS state.
+
+Regards,
+   Chr 
