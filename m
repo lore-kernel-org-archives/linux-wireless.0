@@ -1,61 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59155 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165AbZIJSuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 14:50:21 -0400
-Subject: Re: iwlagn: order 2 page allocation failures
-From: reinette chatre <reinette.chatre@intel.com>
-To: Frans Pop <elendil@planet.nl>
-Cc: Mel Gorman <mel@csn.ul.ie>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <200909102043.17883.elendil@planet.nl>
-References: <200909060941.01810.elendil@planet.nl>
-	 <20090910090206.GA22276@csn.ul.ie> <1252606547.30150.304.camel@rc-desk>
-	 <200909102043.17883.elendil@planet.nl>
-Content-Type: text/plain
-Date: Thu, 10 Sep 2009 11:50:24 -0700
-Message-Id: <1252608624.30150.312.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:43852 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757129AbZINUS2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 16:18:28 -0400
+Received: by fxm17 with SMTP id 17so1118654fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 13:18:30 -0700 (PDT)
+Message-ID: <4AAEA510.5060606@lwfinger.net>
+Date: Mon, 14 Sep 2009 15:18:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Thomas Ilnseher <illth@gmx.de>
+CC: John Linville <linville@tuxdriver.com>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH3]Add analog switch support
+References: <1252956934.4696.23.camel@luzifer.localnet>	 <69e28c910909141243i5551c87bsfd0c9e767cfa254@mail.gmail.com> <1252958183.4696.25.camel@luzifer.localnet>
+In-Reply-To: <1252958183.4696.25.camel@luzifer.localnet>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-09-10 at 11:43 -0700, Frans Pop wrote:
+Thomas Ilnseher wrote:
+> On Mo, 2009-09-14 at 21:43 +0200, Gábor Stefanik wrote:
+>> Always send patches to John Linville, and CC linux-wireless.
+> Ok, the last try ...
+> 
+> As I've seen Gàbor's patch, I noticed that my previous patch was
+> bullshit. This patch should work:
+> 
+> (see: http://bcm-v4.sipsolutions.net/802.11/PHY/Anacore)
+> 
+> Signed-off-by: Thomas Ilnseher <illth@gmx.de>
+> 
 
-> Looks good to me (from a user's perspective).
+A few points about patch formatting.
 
-Thank you very much for looking at it.
+The subject of the submittal message should be of the form "[PATCH]
+component: Description". For this one, something like "[PATCH] b43:
+Add LP PHY analog switch support" would be appropriate. If multiple
+versions are needed, indicate that a previous one is superceded by
+[PATCH V2] ..., etc.
 
-> IIUC the first message is now only displayed if IWL debugging is 
-> explicitly enabled, 
+There should be a line containing --- after the last signed-off-by line.
 
-Correct. User will have to enable debug flag of 0x1.
+Anything between the beginning of the e-mail and the --- line becomes
+part of the permanent record if the patch is accepted. Usually quoted
+material and words like bullshit are avoided. Not always, but usually.
 
-> It seems to me that, with debugging enabled, the "Failed to allocate SKB 
-> buffer." message may get repeated, but I guess that's minor.
+Between the --- line and the start of the patch, you can place
+instructions to Linville regarding the circumstances of the patch and
+its priority. Such directions are useful to distinguish an improvement
+that should wait for the next merge period from a bug fix that should
+be sent upstream ASAP. In this case, the patch fixes a system crash on
+some platforms and should be applied now.
 
-Yes, it will be repeated. I did add a "net_ratelimit()" to it so it
-should not be too overwhelming. I did not care to limit it even more
-since we are now talking about a debug message as opposed to an error
-message on the console.
-
-
-> One nitpick. As you've made the message into sentences, "Only %u free 
-> buffers remaining" should IMO also end with a period.
-
-Sorry - will fix. I will not post a new version to this thread for this
-issue, but it will be fixed in the next version I send out.
-
-Reinette
-
-
+Larry
