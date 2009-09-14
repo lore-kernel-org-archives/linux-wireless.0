@@ -1,63 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:15685 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbZIHTCN convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52504 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755182AbZINIhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 15:02:13 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so2046521fge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 12:02:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890909080906g264fd5d5oc74a90aa4c1cd33d@mail.gmail.com>
-References: <606e87f00812101427n351265a9u28dda004f7af37a4@mail.gmail.com>
-	<9de1a5ef0812131645l2cb021ebtf90fec38fea028ee@mail.gmail.com>
-	<20081214112923.2df83900@kgoetz.id.au> <606e87f00909060614q545d758ch9f9d98bce7d276ad@mail.gmail.com>
-	<2EC2F428-19E1-4A4D-AF3A-C2F22BA3AFD7@gmail.com> <606e87f00909060835q51cb8b57h9544162ee1ade4ff@mail.gmail.com>
-	<606e87f00909060900n20469a68k4e2540b7d99334b4@mail.gmail.com>
-	<43e72e890909080906g264fd5d5oc74a90aa4c1cd33d@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 8 Sep 2009 21:01:55 +0200
-Message-ID: <69e28c910909081201m7c77e7cdt3050dab7d73a0452@mail.gmail.com>
-Subject: Re: [gNewSense-users] firmware development Fwd: convocatoria (pagada)
-	a desarrollo
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: =?ISO-8859-1?Q?Quiliro_Ord=F3=F1ez?= <quiliro@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Sep 2009 04:37:25 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 05/11] ath9k: remove ath9k 25 MHz HT40 spacing stuff
+Date: Mon, 14 Sep 2009 04:37:22 -0400
+Message-Id: <1252917448-10744-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 8, 2009 at 6:06 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Sun, Sep 6, 2009 at 9:00 AM, Quiliro Ordóñez<quiliro@gmail.com> wrote:
->> Dear folks.
->>
->> I have like to have libre (free as in freedom) firmware for rt2561
->> wireless chipset. And forward this email for your consideration and
->> quote.
->
-> I think we can poke ralink, but anyway in the meantime be aware that
-> if you want a wireless device for which there are open upstream
-> drivers and either open firmware or no firmware requirement you can
-> refer to:
->
-> These devices require no firmware:
->
-> http://wireless.kernel.org/en/users/Drivers/ath5k
-> http://wireless.kernel.org/en/users/Drivers/ath9k
->
-> This driver has open firmware available:
->
-> http://wireless.kernel.org/en/users/Drivers/ar9170
-> http://wireless.kernel.org/en/users/Drivers/ar9170.fw
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+This was for supporting 25 MHz spacing for HT40, this is not used
+as we use 20 MHz spacing instead for HT40 as per 802.11n. The hardware
+is capable of it though so we leave the phymode definition and EEPROM
+parsing for it. If some experimenter wants to work on this stuff stuff
+you can add an extension enabling bool on ath_common and perhaps some
+debugfs knob to enable it. Keep in mind you'll also need to update the
+phymode with the AR_PHY_FC_DYN2040_EXT_CH which has been left on the
+driver.
 
-OpenFWWF for b43 is also worth looking at. (It only supports rev.5
-cards, though.)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c    |    8 ++------
+ drivers/net/wireless/ath/ath9k/hw.h    |    1 -
+ drivers/net/wireless/ath/ath9k/mac.h   |    5 -----
+ drivers/net/wireless/ath/ath9k/phy.h   |    1 +
+ 5 files changed, 3 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 46d19e8..e93ab63 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -592,7 +592,6 @@ struct ath_softc {
+ 	bool ps_enabled;
+ 	unsigned long ps_usecount;
+ 	enum ath9k_int imask;
+-	enum ath9k_ht_extprotspacing ht_extprotspacing;
+ 	enum ath9k_ht_macmode tx_chan_width;
+ 
+ 	struct ath_config config;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4a5d398..e430be0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -213,10 +213,9 @@ void ath9k_hw_get_channel_centers(struct ath_hw *ah,
+ 
+ 	centers->ctl_center =
+ 		centers->synth_center - (extoff * HT40_CHANNEL_CENTER_SHIFT);
++	/* 25 MHz spacing is supported by hw but not on upper layers */
+ 	centers->ext_center =
+-		centers->synth_center + (extoff *
+-			 ((ah->extprotspacing == ATH9K_HT_EXTPROTSPACING_20) ?
+-			  HT40_CHANNEL_CENTER_SHIFT : 15));
++		centers->synth_center + (extoff * HT40_CHANNEL_CENTER_SHIFT);
+ }
+ 
+ /******************/
+@@ -1750,8 +1749,6 @@ static void ath9k_hw_set_regs(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		    (chan->chanmode == CHANNEL_G_HT40PLUS))
+ 			phymode |= AR_PHY_FC_DYN2040_PRI_CH;
+ 
+-		if (ah->extprotspacing == ATH9K_HT_EXTPROTSPACING_25)
+-			phymode |= AR_PHY_FC_DYN2040_EXT_CH;
+ 	}
+ 	REG_WRITE(ah, AR_PHY_TURBO, phymode);
+ 
+@@ -2323,7 +2320,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u32 macStaId1;
+ 	int i, rx_chainmask, r;
+ 
+-	ah->extprotspacing = sc->ht_extprotspacing;
+ 	ah->txchainmask = common->tx_chainmask;
+ 	ah->rxchainmask = common->rx_chainmask;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0fe814f..3b1cfda 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -563,7 +563,6 @@ struct ath_hw {
+ 	struct ath_btcoex_hw btcoex_hw;
+ 
+ 	u32 intr_txqs;
+-	enum ath9k_ht_extprotspacing extprotspacing;
+ 	u8 txchainmask;
+ 	u8 rxchainmask;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index f56e77d..767256d 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -619,11 +619,6 @@ enum ath9k_ht_macmode {
+ 	ATH9K_HT_MACMODE_2040 = 1,
+ };
+ 
+-enum ath9k_ht_extprotspacing {
+-	ATH9K_HT_EXTPROTSPACING_20 = 0,
+-	ATH9K_HT_EXTPROTSPACING_25 = 1,
+-};
+-
+ struct ath_hw;
+ struct ath9k_channel;
+ struct ath_rate_table;
+diff --git a/drivers/net/wireless/ath/ath9k/phy.h b/drivers/net/wireless/ath/ath9k/phy.h
+index dfda6f4..140fef7 100644
+--- a/drivers/net/wireless/ath/ath9k/phy.h
++++ b/drivers/net/wireless/ath/ath9k/phy.h
+@@ -45,6 +45,7 @@ bool ath9k_hw_init_rf(struct ath_hw *ah,
+ #define AR_PHY_FC_DYN2040_EN        0x00000004
+ #define AR_PHY_FC_DYN2040_PRI_ONLY  0x00000008
+ #define AR_PHY_FC_DYN2040_PRI_CH    0x00000010
++/* For 25 MHz channel spacing -- not used but supported by hw */
+ #define AR_PHY_FC_DYN2040_EXT_CH    0x00000020
+ #define AR_PHY_FC_HT_EN             0x00000040
+ #define AR_PHY_FC_SHORT_GI_40       0x00000080
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.3.3
+
