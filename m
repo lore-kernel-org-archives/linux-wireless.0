@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:51222 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575AbZI2Nhx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52508 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755190AbZINIhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 09:37:53 -0400
-Received: by ewy7 with SMTP id 7so5411880ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 06:37:56 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	szalat <szalat@gmail.com>, users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB and rt73usb
-Date: Tue, 29 Sep 2009 15:37:53 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909291537.54334.IvDoorn@gmail.com>
+	Mon, 14 Sep 2009 04:37:25 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 07/11] ath9k: move ATH_AMPDU_LIMIT_MAX to hw.h
+Date: Mon, 14 Sep 2009 04:37:24 -0400
+Message-Id: <1252917448-10744-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Szalata <szalat@gmail.com>
+This is used by hw code.
 
-Thrustmaster FunAccess WIFI USB works with rt73usb with little
-modification of rt73usb.c.
-Tested with version 2.3.0 of driver.
-
-Signed-off-by: Michal Szalata <szalat@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 1cbd9b4..b8f5ee3 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2381,6 +2381,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* Huawei-3Com */
- 	{ USB_DEVICE(0x1472, 0x0009), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Hercules */
-+	{ USB_DEVICE(0x06f8, 0xe002), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x06f8, 0xe010), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x06f8, 0xe020), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Linksys */
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/hw.h    |    2 ++
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 73c2ac5..f3b5a60 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -189,7 +189,6 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
+ /* minimum h/w qdepth to be sustained to maximize aggregation */
+ #define ATH_AGGR_MIN_QDEPTH        2
+ #define ATH_AMPDU_SUBFRAME_DEFAULT 32
+-#define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
+ 
+ #define IEEE80211_SEQ_SEQ_SHIFT    4
+ #define IEEE80211_SEQ_MAX          4096
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e2b6bce..047b5b8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -51,6 +51,8 @@
+ #define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
+ #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
+ 
++#define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
++
+ /* Register read/write primitives */
+ #define REG_WRITE(_ah, _reg, _val) \
+ 	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
+-- 
+1.6.3.3
+
