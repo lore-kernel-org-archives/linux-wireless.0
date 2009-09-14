@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:54390 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751600AbZIHRBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 13:01:48 -0400
-Date: Tue, 8 Sep 2009 10:01:44 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: rostedt@goodmis.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-Subject: Re: Stop using tasklets for bottom halves
-Message-ID: <20090908100144.6e06872b@nehalam>
-In-Reply-To: <1252428023.15626.30.camel@gandalf.stny.rr.com>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-	<20090907171406.6a4b6116@nehalam>
-	<1252376254.21261.2052.camel@gandalf.stny.rr.com>
-	<20090908091143.1e613963@nehalam>
-	<1252428023.15626.30.camel@gandalf.stny.rr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:39172 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754230AbZINVIq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 17:08:46 -0400
+Received: by ewy2 with SMTP id 2so1067582ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 14:08:48 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Jari Jaakola <jari.jaakola@gmail.com>
+Subject: [PATCH] p54usb: add Zcomax XG-705A usbid
+Date: Mon, 14 Sep 2009 23:08:43 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+References: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com>
+In-Reply-To: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200909142308.43652.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 08 Sep 2009 12:40:23 -0400
-Steven Rostedt <rostedt@goodmis.org> wrote:
+This patch adds a new usbid for Zcomax XG-705A to the device table.
 
-> On Tue, 2009-09-08 at 09:11 -0700, Stephen Hemminger wrote:
-> 
-> > > > Process context is too slow.
-> > > 
-> > > Well, I'm hoping to prove the opposite. I'm working on some stuff that I
-> > > plan to present at Linux Plumbers. I've been too distracted by other
-> > > things, but hopefully I'll have some good numbers to present by then.
-> > > 
-> > 
-> > 
-> > That's great, does it keep the good properties of NAPI (irq disabling
-> > and throttling?)
-> 
-> Not exactly sure what you mean by throttling, but I'm assuming it will.
-> 
-> As for irqs disabling, I'm trying to avoid doing that. Note, the device
-> will have its interrupts disabled, but not all other devices will.
-> 
-> -- Steve
-> 
-> 
-
-The way NAPI works is that in irq routine, the device disables interrupts
-then schedules processing packets, when processing is done irq's are re-enabled.
-This means that if machine is being flooded, irq's stay off, and the packets
-get discarded (because device hardware ring is full), rather than in software
-(because software receive queue is full).
-
-
--- 
+Cc: stable@kernel.org
+Reported-by: Jari Jaakola <jari.jaakola@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index e44460f..17e1995 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -67,6 +67,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+ 	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
+ 	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
+ 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
++	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
+ 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
+ 	{USB_DEVICE(0x124a, 0x4025)},	/* IOGear GWU513 (GW3887IK chip) */
+ 	{USB_DEVICE(0x1260, 0xee22)},	/* SMC 2862W-G version 2 */
