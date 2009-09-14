@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:56948 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095AbZIAQG4 (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:58480 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbZINOTo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 12:06:56 -0400
-Message-ID: <4A9D469B.9060005@lwfinger.net>
-Date: Tue, 01 Sep 2009 11:06:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 14 Sep 2009 10:19:44 -0400
+Received: by bwz19 with SMTP id 19so2108200bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 07:19:47 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	aquilaver@yahoo.com, linux-kernel@vger.kernel.org,
-	Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?UTF-8?B?QmrDtnJuIFN0ZWluYnJpbms=?= <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wireless: mark prism54 as deprecated and mark for removal
-References: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4AAE3DF7.7060504@lwfinger.net>
+References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>
+	 <4AAE3DF7.7060504@lwfinger.net>
+Date: Mon, 14 Sep 2009 09:19:46 -0500
+Message-ID: <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
+Subject: Re: RTL8187B wireless driver issue
+From: Vignette consultant <vignette75@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> The preferred modules is p54 which also supports FullMAC
+ Hi
 
-This needs to be "modules are" or "module is". I know p54 is really a
-family, but I think you specifically mean p54pci here.
+ I just built linux kernel 2.6.31 on ubuntu 9.0.4 2.6.28-11 server.
+The dhcpclient wlan0 still is unable to get ip address.
 
-> PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
-> to remove this is no one really is testing prism54 anymore,
-> and while it works p54 provides support for the same hardware.
-                     ===
-p54pci?
+ I don't see any message in dmesg log for wlan0. The laptop uses
+RTL8187 built-in usb card.
 
-> It should be noted I have been told some FullMAC devices may not
-> have worked with the SoftMAC driver but to date we have yet to
-> recieve a single bug report regarding this. If there are users
-  =======
-receive
+ The Vista is able to connect through wireless dhcp without any
+problem. The linux is not.
 
-> out there please let us know!
-  =========
+ How can I trace the root cause of this issue.
 
-Those words can be removed.
+ Thanks
+ Sam
 
-Otherwise, ACK.
-
-Larry
-
+On 9/14/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Vignette consultant wrote:
+>>  Larry,
+>>
+>>  I am using Ubuntu 9.0.4 server edition with kernel image 2.6.30.05
+>> using rtl8187.ko driver module for RTL8187 wireless adapter.
+>>
+>>  It always reports "wlan0 link not ready" error causing not able to
+>> use wireless connection at all while trying to get dhcp ip lease. I
+>> also get the same "eth0 link not ready" error.
+>>
+>>  Can you advise of any solution?
+>>
+>>  PS - I get the same error with Ubuntu 2.6.28-11 server kernel image
+>> also. I even reinstall it, but no luck so far. It gives me same error
+>> even if I turn off wireless radio!
+>
+> Please post any messages to the wireless list. That way the general
+> community can learn and participate, particularly when I get it wrong.
+>
+> The usual reason for the "link not ready" message is that the network
+> is down. How are you controlling the network? For wireless, that
+> message can come from the rfkill switch being off; however, that
+> functionality is not implemented in 2.6.30 for rtl8187.
+>
+> Larry
+>
+>
+>
