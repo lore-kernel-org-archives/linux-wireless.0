@@ -1,90 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f210.google.com ([209.85.218.210]:49954 "EHLO
-	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319AbZIYJNq (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbZINRno (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 05:13:46 -0400
-Received: by bwz6 with SMTP id 6so1886210bwz.37
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 02:13:49 -0700 (PDT)
-Message-ID: <4ABC89C5.70609@tuffmail.co.uk>
-Date: Fri, 25 Sep 2009 10:13:41 +0100
-From: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mattia Dongili <malattia@linux.it>,
-	Norbert Preining <preining@logic.at>,
-	"Almer S. Tigelaar" <almer@gnome.org>,
-	Matthias Welwarsky <matze@welwarsky.de>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] sony-laptop: check for rfkill hard block at load time
-References: <20090924130231.GU21590@gamma.logic.tuwien.ac.at> <1253801252.3868.108.camel@johannes.local> <4ABB89B2.8070302@tuffmail.co.uk> <1253804713.3868.168.camel@johannes.local> <4ABB8C5E.6070402@tuffmail.co.uk> <1253813371.3868.313.camel@johannes.local> <4ABBC54C.5010103@tuffmail.co.uk> <20090924223805.GA29169@kamineko.org>
-In-Reply-To: <20090924223805.GA29169@kamineko.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Sep 2009 13:43:44 -0400
+Subject: Re: A station can't reconnect after it wakes up
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Igor Perminov <igor.perminov@inbox.ru>,
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	hostap@lists.shmoo.com, Artur Skawina <art.08.09@gmail.com>
+In-Reply-To: <20090914125008.GA15494@jm.kir.nu>
+References: <1248969930.29068.224.camel@sunlight>
+	 <4A7318E6.3000004@gmail.com> <1249312925.8515.187.camel@sunlight>
+	 <1252620184.26765.65.camel@sunlight>
+	 <1252767513.23427.26.camel@johannes.local>
+	 <1252799481.26765.145.camel@sunlight> <87my4z0w53.fsf@litku.valot.fi>
+	 <1252927472.26765.202.camel@sunlight>  <20090914125008.GA15494@jm.kir.nu>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oblMKWb0X1AIyqWpxOOF"
+Date: Mon, 14 Sep 2009 10:42:44 -0700
+Message-Id: <1252950164.23427.50.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mattia Dongili wrote:
-> On Thu, Sep 24, 2009 at 08:15:24PM +0100, Alan Jenkins wrote:
->   
->> "I recently (on a flight) I found out that when I boot with the hard-switch
->> activated, so turning off all wireless activity on my laptop, the state
->> is not correctly announced in /dev/rfkill (reading it with rfkill command,
->> or my own gnome applet)...
->>
->> After turning off and on again the hard-switch the events were right."
->>
->> We can fix this by querying the firmware at load time and calling
->> rfkill_set_hw_state().
->>     
->
-> Is it worth trying to get this into a stable release?
->   
 
-Sure.  It seems to fit, and all we have to do is add a CC to the patch
+--=-oblMKWb0X1AIyqWpxOOF
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
->> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
->> Tested-by: Norbert Preining <preining@logic.at>
->>     
->
-> Acked-by: Mattia Dongili <malattia@linux.it>
->   
+On Mon, 2009-09-14 at 15:50 +0300, Jouni Malinen wrote:
 
-CC: stable@kernel.org
+> Taken into account that the AP can even change the Association ID for
+> the STA during reassociation, I would be fine with dropping the buffered
+> frames and clearing the PS state when association is completed
+> successfully (the STA ACKs the (Re)Association Response frame that had
+> status code 0). I would hope that the authentication frame sequence or
+> failed (re)association would not touch the PS buffer or state.
+>=20
+> The real time when the association state changes in the AP is when the
+> ACK frame is received for (Re)Association Response frame. Of the options
+> you listed, this would be bit after (B), i.e., (C) might be needed to
+> get the exact timing right. However, I could probably live with (B),
+> too, in practice.
 
->   
->> ---
->>  drivers/platform/x86/sony-laptop.c |    6 ++++++
->>  1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
->> index dafaa4a..a234a9d 100644
->> --- a/drivers/platform/x86/sony-laptop.c
->> +++ b/drivers/platform/x86/sony-laptop.c
->> @@ -1081,6 +1081,8 @@ static int sony_nc_setup_rfkill(struct acpi_device *device,
->>  	struct rfkill *rfk;
->>  	enum rfkill_type type;
->>  	const char *name;
->> +	int result;
->> +	bool hwblock;
->>  
->>  	switch (nc_type) {
->>  	case SONY_WIFI:
->> @@ -1108,6 +1110,10 @@ static int sony_nc_setup_rfkill(struct acpi_device *device,
->>  	if (!rfk)
->>  		return -ENOMEM;
->>  
->> +	sony_call_snc_handle(0x124, 0x200, &result);
->> +	hwblock = !(result & 0x1);
->> +	rfkill_set_hw_state(rfk, hwblock);
->> +
->>  	err = rfkill_register(rfk);
->>  	if (err) {
->>  		rfkill_destroy(rfk);
->> -- 
->> 1.6.3.2
->>
->>
->>
->>     
+
+
+> > But I think, we shouldn't call ap_sta_ps_end as is done for normal PS
+> > state switching, because that leads to sending buffered frames if any,
+> > which is undesirable in our case. Instead, we should simply purge of
+> > buffered frames and clear WLAN_STA_PS.
+>=20
+> This is a very good point and we much indeed make sure we do not end up
+> sending the buffered frames out based on a new authentication or
+> association frame. This is especially important for the case when the
+> frames were buffered in RSNA,
+
+Given all this, I still think it would be a lot simpler to just have
+hostapd remove the station once.
+
+johannes
+
+--=-oblMKWb0X1AIyqWpxOOF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKroCRAAoJEODzc/N7+Qma5nAQAKOdN0gZXqAcIgsd+MgLSPlQ
+Cud2pmnAlDRwhuZJeHX3MRdHPfaeU6hOWZn6fgmBA8T48ltbWnxfafSipHCK2Wq/
+IGPUoD4R8QXoE9EXVxkmdkn46iNdFBnx10zEtDUy29Qt/H/W6k8fJ3FwwHEfGznH
+a/WncasNoX6R7po+mVi+2iKz+GnEloXaT2jwTt840W7Qtl9qaV8Rc+rxtpQFoGaV
+o5fxqZpd/tnF0Apgwx7fvpSjugz7wMhL30jvFWZioYqPrH8i5YH2DPgtCrZ5WyPD
+9BXZMeIsuzYzWWEEiAwHhSnEhic3mFy7dI5PsLYS05XHMOwctgjanMx3Z+WFsCG9
+l+qznnwO/iBHqMMMyZdXOFBROo+ifklviR+K/bBP0CftjwOJxdC/+GE0fvRZHZN2
+D7zeEL1K59jPs7qMrNUyUgX5XHyvkHryKzzxDKfgtnpNa9B3HE30GfoAGGhvlnFR
+EySkqz05uiEDKslTpxi6o6x1uIGYTKv/uN8rVcG6xQLQEVV6cpIAvqv39o37cZx5
+Lr70dfpoytoHrhtXP2Uk/7Ef74ShumYJbzkulsuF0Nfg08492o6o80oMGwfeKg7G
+hYLlGEE0AKjpol+A8EEqLimMPvBu17p3dsUky2iiTibt3gcR2Ti1w6aMzjL1zTZZ
+dKI+voTP/IXF7C+ktR6A
+=HezV
+-----END PGP SIGNATURE-----
+
+--=-oblMKWb0X1AIyqWpxOOF--
 
