@@ -1,25 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:42781 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754961AbZINIuF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:50:05 -0400
-Received: by iwn8 with SMTP id 8so1230168iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:50:08 -0700 (PDT)
+Received: from bu3sch.de ([62.75.166.246]:56328 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756796AbZINUzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 16:55:45 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Kernel oops with 2.6.31-wl
+Date: Mon, 14 Sep 2009 22:55:40 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4AAE4DAA.1010505@lwfinger.net> <200909142245.52042.mb@bu3sch.de> <4AAEAC90.7070205@lwfinger.net>
+In-Reply-To: <4AAEAC90.7070205@lwfinger.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 14 Sep 2009 01:49:48 -0700
-Message-ID: <43e72e890909140149t7459b36fgbcca27adb7937d9b@mail.gmail.com>
-Subject: pending patches for atheros - all-in-one file - 2009-09-14
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, devel@linuxdriverproject.org
-Cc: Sujith <Sujith.Manoharan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909142255.42958.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file has all pending patches from my series + sujiths ANI fix patch:
+On Monday 14 September 2009 22:50:24 Larry Finger wrote:
+> Michael Buesch wrote:
+> > On Monday 14 September 2009 20:20:21 Larry Finger wrote:
+> >> Johannes Berg wrote:
+> >>> On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
+> >>>> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
+> >>>> oops when unloading b43:
+> >>>> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
+> >>>> b43_op_config+0x10c/0x36f [b43]
+> >>> Seems like a b43 problem to me.
+> >> I had pretty much reached that conclusion. I will need to swap cards
+> >> to debug as the 4315 won't run on older kernels without a lot of patches.
+> > 
+> > I can't reproduce here. What sequence of events is needed to trigger this?
+> 
+> All I have to do is make a connection, then "sudo modprobe -rv b43"
+> while the connection is live. I have not tried shutting the interface
+> down before the modprobe. It gets through the "rmmod b43" and the
+> "rmmod ssb" and then crashes.
 
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-pending-2009-09-14.patch
+Ok, works. Thanks.
+I'll send a patch soon.
 
-  Luis
+-- 
+Greetings, Michael.
