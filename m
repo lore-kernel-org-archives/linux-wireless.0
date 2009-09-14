@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx30.mail.ru ([94.100.176.44]:49430 "EHLO mx30.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755067AbZIQMPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 08:15:43 -0400
-Received: from [94.242.37.174] (port=43577 helo=zhubr.mshome.net)
-	by mx30.mail.ru with asmtp
-	id 1MoFtp-0004su-00
-	for linux-wireless@vger.kernel.org; Thu, 17 Sep 2009 16:15:45 +0400
-Date: Thu, 17 Sep 2009 16:22:42 +0300
-From: Nikolai ZHUBR <zhubr@mail.ru>
-Message-ID: <1214494232.20090917162242@mail.ru>
-To: linux-wireless@vger.kernel.org
-Subject: 2.6.25 kernel & compat-wireless-2009-09-14
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:56590 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbZINIut convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 04:50:49 -0400
+Received: by iwn8 with SMTP id 8so1230317iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:50:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4AAE0297.20401@gmail.com>
+References: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com>
+	<1252917123-11559-3-git-send-email-lrodriguez@atheros.com>
+	<4AAE0297.20401@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 14 Sep 2009 01:50:32 -0700
+Message-ID: <43e72e890909140150i1e060503nae9987aba9275764@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] ath5k: allocate ath5k_hw prior to initializing hw
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello people,
+On Mon, Sep 14, 2009 at 1:45 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+> On 09/14/2009 10:32 AM, Luis R. Rodriguez wrote:
+>> --- a/drivers/net/wireless/ath/ath.h
+>> +++ b/drivers/net/wireless/ath/ath.h
+>> @@ -51,7 +51,7 @@ struct ath_common {
+>>       u8 curbssid[ETH_ALEN];
+>>       u8 bssidmask[ETH_ALEN];
+>>       struct ath_regulatory regulatory;
+>> -     struct ath_ops *ops;
+>> +     const struct ath_ops *ops;
+>
+> If I'm looking correctly, this will emit a warning for ath9k.
 
-So finally I got it mostly working and usable as AP:
+Hm, I'm using C=1 when compiling and see no warnings even from sparse.
 
-Hardware:
-* ASUS WL-500gP (mips) with stock wireless card removed (broadcom).
-* New shining Ralink RT2600 Mini-PCI card
-Software:
-* kernel 2.6.25.20 (openwrt 8.09.1)
-* compat-wireless-2009-09-14 (without rfkill_backport and with ugly bus_id fix)
-libnl-1.1
-hostapd 0.6.9
-
-The led is now even blinking nicely.
-Strange though that selecting static IP in the client didn't work,
-but using DHCP works fine (it's ok for me now).
-
- Nikolai
-
-
+  Luis
