@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754496AbZIKRiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Daniel C Halperin <daniel.c.halperin@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/13 v2.6.32 and w-t] iwlwifi: fix HT operation in 2.4 GHz band
-Date: Fri, 11 Sep 2009 10:38:08 -0700
-Message-Id: <1252690699-25796-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.155]:2466 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749AbZINQuR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 12:50:17 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1015682fge.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 09:50:18 -0700 (PDT)
+Message-ID: <4AAE7446.3080407@lwfinger.net>
+Date: Mon, 14 Sep 2009 11:50:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Vignette consultant <vignette75@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RTL8187B wireless driver issue
+References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>	 <4AAE3DF7.7060504@lwfinger.net>	 <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>	 <4AAE53C8.1060100@lwfinger.net> <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
+In-Reply-To: <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel C Halperin <daniel.c.halperin@intel.com>
+Vignette consultant wrote:
+>  Hi
+> 
+>  Attached files contain several logs of various commands. The log-1
+> file is before running command and log-2 file is after running
+> specific command.
+> 
+>  Here are commands that I give as soon as I log in. It's server edition.
+> 
+>  $ sudo ifconfig wlan0 up
+>  $ sudo iwconfig wlan0 ESSID linksys
+>  $ sudo dhclient wlan0 - results in no IP addr leased
 
-When we cleaned up the driver to properly tell mac80211 about HT rates
-("iwlwifi: use iwl_hwrate_get_mac80211_idx where appropriate"), we broke
-internal rate indexing in 2.4 GHz band.
+Your wireless has not associated and has no communication, which is
+why it cannot get an IP using DHCP.
 
-Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
-Tested-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+A quick check with Google indicates that Ubuntu uses
+/etc/network/interfaces to control the devices. Once that is correct,
+you should be able to 'sudo /etc/init.d/networking restart' to start
+the network. If the server is properly configured, the network should
+start on boot.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 40b207a..fd73153 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -883,6 +883,12 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
- 		mac_index &= RATE_MCS_CODE_MSK;	/* Remove # of streams */
- 		if (mac_index >= (IWL_RATE_9M_INDEX - IWL_FIRST_OFDM_RATE))
- 			mac_index++;
-+		/*
-+		 * mac80211 HT index is always zero-indexed; we need to move
-+		 * HT OFDM rates after CCK rates in 2.4 GHz band
-+		 */
-+		if (priv->band == IEEE80211_BAND_2GHZ)
-+			mac_index += IWL_FIRST_OFDM_RATE;
- 	}
- 
- 	if ((mac_index < 0) ||
--- 
-1.5.6.3
-
+BTW, the dmesg buffer is circular. All that usb monitoring output has
+completely filled the buffer, and it contains no useful information.
