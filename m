@@ -1,105 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42965 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbZI1N0o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 09:26:44 -0400
-Subject: [PATCH v2] wext: add back wireless/ dir in sysfs for cfg80211
- interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hugh Dickins <hugh.dickins@tiscali.co.uk>
-In-Reply-To: <1254130453.6583.22.camel@johannes.local>
-References: <1254130453.6583.22.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Sep 2009 15:26:43 +0200
-Message-Id: <1254144403.3151.0.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:41305 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757007AbZINVWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 17:22:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: Don't abuse wl->current_dev in the led work
+Date: Mon, 14 Sep 2009 23:22:08 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909142322.09152.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The move away from having drivers assign wireless handlers,
-in favour of making cfg80211 assign them, broke the sysfs
-registration (the wireless/ dir went missing) because the
-handlers are now assigned only after registration, which is
-too late.
+Don't abuse wl->current_dev in the LED work for checking whether we're
+going down. Add an explicit variable.
+This fixes a crash on rmmod dereferencing the wl->current_dev NULL pointer
+in various other places of the driver.
 
-Fix this by special-casing cfg80211-based devices, all
-of which are required to have an ieee80211_ptr, in the
-sysfs code, and also using get_wireless_stats() to have
-the same values reported as in procfs.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Tested-by: Hugh Dickins <hugh.dickins@tiscali.co.uk>
 ---
-v2: reworded commit log
 
- include/net/wext.h   |    1 +
- net/core/net-sysfs.c |   12 +++++-------
- net/wireless/wext.c  |    2 +-
- 3 files changed, 7 insertions(+), 8 deletions(-)
+Note to self: Don't try to safe a byte of memory :)
 
---- wireless-testing.orig/net/core/net-sysfs.c	2009-09-28 10:41:50.000000000 +0200
-+++ wireless-testing/net/core/net-sysfs.c	2009-09-28 11:24:12.000000000 +0200
-@@ -16,7 +16,7 @@
- #include <net/sock.h>
- #include <linux/rtnetlink.h>
- #include <linux/wireless.h>
--#include <net/iw_handler.h>
-+#include <net/wext.h>
+
+Index: wireless-testing/drivers/net/wireless/b43/leds.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/leds.c	2009-09-14 22:42:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/leds.c	2009-09-14 23:15:39.000000000 +0200
+@@ -112,10 +112,7 @@ static void b43_led_brightness_set(struc
+ 	struct b43_led *led = container_of(led_dev, struct b43_led, led_dev);
+ 	struct b43_wl *wl = led->wl;
  
- #include "net-sysfs.h"
- 
-@@ -363,15 +363,13 @@ static ssize_t wireless_show(struct devi
- 					       char *))
- {
- 	struct net_device *dev = to_net_dev(d);
--	const struct iw_statistics *iw = NULL;
-+	const struct iw_statistics *iw;
- 	ssize_t ret = -EINVAL;
- 
- 	read_lock(&dev_base_lock);
- 	if (dev_isalive(dev)) {
--		if (dev->wireless_handlers &&
--		    dev->wireless_handlers->get_wireless_stats)
--			iw = dev->wireless_handlers->get_wireless_stats(dev);
--		if (iw != NULL)
-+		iw = get_wireless_stats(dev);
-+		if (iw)
- 			ret = (*format)(iw, buf);
+-	/* The check for current_dev is only needed while unregistering,
+-	 * so it is sequencial and does not race. But we must not dereference
+-	 * current_dev here. */
+-	if (likely(wl->current_dev)) {
++	if (likely(!wl->leds.stop)) {
+ 		atomic_set(&led->state, brightness);
+ 		ieee80211_queue_work(wl->hw, &wl->leds.work);
  	}
- 	read_unlock(&dev_base_lock);
-@@ -505,7 +503,7 @@ int netdev_register_kobject(struct net_d
- 	*groups++ = &netstat_group;
+@@ -314,6 +311,8 @@ void b43_leds_init(struct b43_wldev *dev
+ 			break;
+ 		}
+ 	}
++
++	dev->wl->leds.stop = 0;
+ }
  
- #ifdef CONFIG_WIRELESS_EXT_SYSFS
--	if (net->wireless_handlers && net->wireless_handlers->get_wireless_stats)
-+	if (net->wireless_handlers || net->ieee80211_ptr)
- 		*groups++ = &wireless_group;
- #endif
- #endif /* CONFIG_SYSFS */
---- wireless-testing.orig/include/net/wext.h	2009-09-28 10:41:50.000000000 +0200
-+++ wireless-testing/include/net/wext.h	2009-09-28 11:09:06.000000000 +0200
-@@ -14,6 +14,7 @@ extern int wext_handle_ioctl(struct net 
- 			     void __user *arg);
- extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
- 				    unsigned long arg);
-+extern struct iw_statistics *get_wireless_stats(struct net_device *dev);
- #else
- static inline int wext_proc_init(struct net *net)
- {
---- wireless-testing.orig/net/wireless/wext.c	2009-09-28 10:41:50.000000000 +0200
-+++ wireless-testing/net/wireless/wext.c	2009-09-28 11:09:07.000000000 +0200
-@@ -470,7 +470,7 @@ static iw_handler get_handler(struct net
- /*
-  * Get statistics out of the driver
-  */
--static struct iw_statistics *get_wireless_stats(struct net_device *dev)
-+struct iw_statistics *get_wireless_stats(struct net_device *dev)
- {
- 	/* New location */
- 	if ((dev->wireless_handlers != NULL) &&
+ void b43_leds_exit(struct b43_wldev *dev)
+Index: wireless-testing/drivers/net/wireless/b43/leds.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/leds.h	2009-09-14 22:42:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/leds.h	2009-09-14 23:13:38.000000000 +0200
+@@ -35,6 +35,7 @@ struct b43_leds {
+ 	struct b43_led led_radio;
+ 	struct b43_led led_assoc;
+ 
++	bool stop;
+ 	struct work_struct work;
+ };
+ 
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-14 23:11:17.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-14 23:14:39.000000000 +0200
+@@ -4987,7 +4987,7 @@ static void b43_remove(struct ssb_device
+ 		 * might have modified it. Restoring is important, so the networking
+ 		 * stack can properly free resources. */
+ 		wl->hw->queues = wl->mac80211_initially_registered_queues;
+-		wl->current_dev = NULL;
++		wl->leds.stop = 1;
+ 		cancel_work_sync(&wl->leds.work);
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
 
-
+-- 
+Greetings, Michael.
