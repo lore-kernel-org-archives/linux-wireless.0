@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-filter-1-a-1.mail.uk.tiscali.com ([212.74.100.52]:1751 "EHLO
-	mk-filter-1-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752276AbZI0U6p (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:45185 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932847AbZINSUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 16:58:45 -0400
-Date: Sun, 27 Sep 2009 21:58:38 +0100 (BST)
-From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] cfg80211: fix wireless handlers assignment
-In-Reply-To: <1254076075.6583.6.camel@johannes.local>
-Message-ID: <Pine.LNX.4.64.0909272139280.4061@sister.anvils>
-References: <1254076075.6583.6.camel@johannes.local>
+	Mon, 14 Sep 2009 14:20:24 -0400
+Received: by bwz19 with SMTP id 19so2277889bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 11:20:26 -0700 (PDT)
+Message-ID: <4AAE8965.4040108@lwfinger.net>
+Date: Mon, 14 Sep 2009 13:20:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel oops with 2.6.31-wl
+References: <4AAE4DAA.1010505@lwfinger.net> <1252950017.23427.49.camel@johannes.local>
+In-Reply-To: <1252950017.23427.49.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 27 Sep 2009, Johannes Berg wrote:
-
-> The point we assign dev->wireless_handlers at is too
-> late, we need to do that before netdev_register_kobject()
-> gets called, so use the new NETDEV_PRE_INIT notifier.
-> The result of adding wireless_handlers too late is the
-> disappearance of /sys/class/net/wlan0/wireless which a
-> bunch of distro scripts still require.
+Johannes Berg wrote:
+> On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
+>> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
+>> oops when unloading b43:
 > 
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
+>> b43_op_config+0x10c/0x36f [b43]
+> 
+> Seems like a b43 problem to me.
 
-This 2/2 patch does indeed work: many thanks.  But...
+I had pretty much reached that conclusion. I will need to swap cards
+to debug as the 4315 won't run on older kernels without a lot of patches.
 
-> ---
-> This should fix the regression Hugh reported (of course requires the
-> other patch which unfortunately I forgot to CC you, Hugh, I'll send you
-> a copy in private).
-
-... the 1/2 patch has a couple of problems.
-
-The trivial problem is that include/linux/notifier.h in Linus's git has
-#define NETDEV_PRE_UP		0x000D
-#define NETDEV_BONDING_OLDTYPE  0x000E
-#define NETDEV_BONDING_NEWTYPE  0x000F
-
-So it rejects the patch you posted: I changed it to add
-#define NETDEV_PRE_INIT		0x0010
-just after the NETDEV_BONDING_NEWTYPE line.
-
-The more serious problem is that it stops both my machines from booting,
-too early for framebuffer to show any messages, but vga=normal shows a
-long stacktrace scrolling offscreen, with some notifier stuff in there.
-
-I've experimented by moving your NETDEV_PRE_INIT hunk later in the
-sequence, just before the netdev_initialize_kobject(dev) (so I also
-changed the "goto out" to "goto err_uninit"): both* machines then boot
-correctly, and this mail leaves me wirelessly.
-
-I'll now experiment to see how early I can move that hunk.
-
-Hugh
-
-* I wrote that hoping the Aspire One build would complete soon,
-but it's still going: assume it's fine unless I say otherwise.
+Larry
