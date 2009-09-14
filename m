@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12312 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753719AbZIAQPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 12:15:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 09:15:14 -0700
-Date: Tue, 1 Sep 2009 09:15:13 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"aquilaver@yahoo.com" <aquilaver@yahoo.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Kai Engert <kengert@redhat.com>,
-	Jean Tourrilhes <jt@hpl.hp.com>,
-	Tim de Waal <tim.dewaal@yahoo.com>,
-	Roy Marples <uberlord@gentoo.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Christian Lamparter <chunkeey@web.de>,
-	=?iso-8859-1?Q?Bj=F6rn?= Steinbrink <B.Steinbrink@gmx.de>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] wireless: mark prism54 as deprecated and mark for
- removal
-Message-ID: <20090901161513.GD8261@mosca>
-References: <1251819116-10004-1-git-send-email-lrodriguez@atheros.com>
- <4A9D469B.9060005@lwfinger.net>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:35188 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753551AbZINIxw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 04:53:52 -0400
+Received: by iwn8 with SMTP id 8so1230833iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:53:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4A9D469B.9060005@lwfinger.net>
+In-Reply-To: <43e72e890909140150i1e060503nae9987aba9275764@mail.gmail.com>
+References: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com>
+	<1252917123-11559-3-git-send-email-lrodriguez@atheros.com>
+	<4AAE0297.20401@gmail.com> <43e72e890909140150i1e060503nae9987aba9275764@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 14 Sep 2009 01:53:36 -0700
+Message-ID: <43e72e890909140153rd61009ai3eb421e5981a6a43@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] ath5k: allocate ath5k_hw prior to initializing hw
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: linville@tuxdriver.com, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 09:06:51AM -0700, Larry Finger wrote:
-> Luis R. Rodriguez wrote:
-> > The preferred modules is p54 which also supports FullMAC
-> 
-> This needs to be "modules are" or "module is". I know p54 is really a
-> family, but I think you specifically mean p54pci here.
+On Mon, Sep 14, 2009 at 1:50 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Sep 14, 2009 at 1:45 AM, Jiri Slaby <jirislaby@gmail.com> wrote:
+>> On 09/14/2009 10:32 AM, Luis R. Rodriguez wrote:
+>>> --- a/drivers/net/wireless/ath/ath.h
+>>> +++ b/drivers/net/wireless/ath/ath.h
+>>> @@ -51,7 +51,7 @@ struct ath_common {
+>>>       u8 curbssid[ETH_ALEN];
+>>>       u8 bssidmask[ETH_ALEN];
+>>>       struct ath_regulatory regulatory;
+>>> -     struct ath_ops *ops;
+>>> +     const struct ath_ops *ops;
+>>
+>> If I'm looking correctly, this will emit a warning for ath9k.
+>
+> Hm, I'm using C=1 when compiling and see no warnings even from sparse.
 
-Will fix.
-
-> > PCI / Cardbus devices. We schedule removal for 2.6.34. Reason
-> > to remove this is no one really is testing prism54 anymore,
-> > and while it works p54 provides support for the same hardware.
->                      ===
-> p54pci?
-
-That would make it clearer, yes thanks.
-
-> > It should be noted I have been told some FullMAC devices may not
-> > have worked with the SoftMAC driver but to date we have yet to
-> > recieve a single bug report regarding this. If there are users
->   =======
-> receive
-
-ack
-
-> > out there please let us know!
->   =========
-> 
-> Those words can be removed.
-> 
-> Otherwise, ACK.
-
-Thanks for the review, will resend with the changes.
+Well, as my tree is now, let me rebase and see how it was back then, I
+thought I tested compiled that patch.
 
   Luis
