@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:11338 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771AbZIXIPn (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:17923 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757486AbZINW6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 04:15:43 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: getting "ath5k phy0: noise floor calibration timeout"
-Date: Thu, 24 Sep 2009 10:15:06 +0200
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <200909210902.23723.hs4233@mail.mn-solutions.de> <1253662161.2510.59.camel@localhost.localdomain>
-In-Reply-To: <1253662161.2510.59.camel@localhost.localdomain>
+	Mon, 14 Sep 2009 18:58:17 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so1134649qwb.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 15:58:20 -0700 (PDT)
+Message-ID: <4AAECA8A.1060200@lwfinger.net>
+Date: Mon, 14 Sep 2009 17:58:18 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909241015.06706.hs4233@mail.mn-solutions.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: Don't abuse wl->current_dev in the led work
+References: <200909142322.09152.mb@bu3sch.de>
+In-Reply-To: <200909142322.09152.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I get that all the time, and have since 2.6.27 or earlier.  If
-> it's a real bug, we should fix it, but if it's just an
-> informational message, maybe we should silence it?
+Michael Buesch wrote:
+> Don't abuse wl->current_dev in the LED work for checking whether we're
+> going down. Add an explicit variable.
+> This fixes a crash on rmmod dereferencing the wl->current_dev NULL pointer
+> in various other places of the driver.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-On ath5k-devel, there was a mail "[ath5k-devel] [RFC/RFT] ath5k: 
-use noise calibration from madwifi hal" from Bob Copeland.
+This patch does not apply. What other patches should I have beyond the
+current state of wireless-testing?
 
-Part of the patch is "- we do not complain if NF calibration 
-isn't complete, instead we keep the last read value.".
-
-
-
-I now applied this patch, the message is gone and the device 
-seems to work quite nicely. Maybe it should still emit a warning 
-if there are n consecutive calibration errors, but for now I'm 
-happy.
-
--- 
-http://www.holgerschurig.de
+Larry
