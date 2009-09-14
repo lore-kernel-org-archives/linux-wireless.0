@@ -1,114 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:33816 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725AbZINEJm convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43434 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438AbZINIcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 00:09:42 -0400
-Received: by iwn8 with SMTP id 8so1179863iwn.4
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 21:09:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3ace41890909132041w2d3f10b7r72e0eb855f1ab2a5@mail.gmail.com>
-References: <4A9BFCCB.6040808@ufra.edu.br> <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>
-	<4A9C0ADC.6050607@ufra.edu.br> <3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
-	<4A9D7DC0.6050701@ufra.edu.br> <4AAC240E.20104@ufra.edu.br>
-	<3ace41890909130313y474074ecnc5e720f780a4bd8f@mail.gmail.com>
-	<3ace41890909132041w2d3f10b7r72e0eb855f1ab2a5@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 13 Sep 2009 21:09:25 -0700
-Message-ID: <43e72e890909132109l4b47431cw85cfba21ec1fb42c@mail.gmail.com>
-Subject: Re: zd1211rw on ppc (iBook G4) -- Solved, somewhat)
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Sep 2009 04:32:01 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 3/4] ath5k: define ath_common ops
+Date: Mon, 14 Sep 2009 04:32:02 -0400
+Message-Id: <1252917123-11559-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com>
+References: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 13, 2009 at 8:41 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Sun, Sep 13, 2009 at 11:13 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
->> On Sat, Sep 12, 2009 at 11:43 PM, Leonardo H. Souza Hamada
->> <leonardo.hamada@ufra.edu.br> wrote:
->>> Hi all,
->>>
->>> At this moment, after tweaking the zd1211rw code in kernel
->>> 2.6.31-gentoo, finally I am able to use the WLI-U2-KG54L wireless usb
->>> dongle on this old ibook.
->>>
->>> Browsing the source with a cross referencing tool
->>> (http://lxr.free-electrons.com) and making additional checking points, I
->>> could trace the issue as follow.
->>>
->>> The problem is that this device returns a regulatory region of 0x49,
->>> which is not defined in the zd1211rw tables. So the call
->>>
->>> r <http://lxr.free-electrons.com/ident?i=r> = zd_reg2alpha2 <http://lxr.free-electrons.com/ident?i=zd_reg2alpha2>(mac <http://lxr.free-electrons.com/ident?i=mac>->regdomain, alpha2);
->>>
->>> will fail the initialization process.
->>>
->>>
->>> Workaround:
->>>
->>> ----snip----
->>> int zd_mac_init_hw(struct ieee80211_hw *hw)
->>> {
->>> ...
->>>        r = zd_read_regdomain(chip, &default_regdomain);
->>>        /* A unknown regulatory of 0x49 will be set default to
->>> ZD_REGDOMAIN_FCC. */
->>>        if (0x49 == default_regdomain)
->>>                default_regdomain = ZD_REGDOMAIN_FCC;
->>> ...
->>> ----snip----
->>>
->>> The above code will force the default regulatry to be FCC code for this
->>> case. I think that this was the case in previous zd1211rw driver. What
->>> is the country code for 0x49 region? There is a better way?
->>>
->>>
->>> Thanks all,
->>>
->>> Phew!! Leonardo
->>
->> The vendor driver has quite a lot more regdomain code defined, and
->> 0x49 is apparently
->>
->> ZD_Region_Japan_3           = 0x49,//G channel->ch1-13; A channel->8~16,34~46;
->>
->> the rw driver code probably should set it to most restrictive than let
->> it fail...
->>
->
-> Can you give this patch a try against a recent
-> wireless-testing/compat-wireless? I think this is the correct way to
-> do things.
->
-> Here is the content of the patch for others who doesn't like
-> attachments - it just sets 0x49 as Japan.
-> ==============================
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
-> b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index 6d66635..b0d32c4 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -42,6 +42,7 @@ static struct zd_reg_alpha2_map reg_alpha2_map[] = {
->        { ZD_REGDOMAIN_ETSI, "DE" }, /* Generic ETSI, use most restrictive */
->        { ZD_REGDOMAIN_JAPAN, "JP" },
->        { ZD_REGDOMAIN_JAPAN_ADD, "JP" },
-> +       { ZD_REGDOMAIN_JAPAN_3, "JP" },
->        { ZD_REGDOMAIN_SPAIN, "ES" },
->        { ZD_REGDOMAIN_FRANCE, "FR" },
->  };
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h
-> b/drivers/net/wireless/zd1211rw/zd_mac.h
-> index 7c27591..9701935 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.h
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-> @@ -193,6 +193,7 @@ struct zd_mac {
->  #define ZD_REGDOMAIN_FRANCE    0x32
->  #define ZD_REGDOMAIN_JAPAN_ADD 0x40
->  #define ZD_REGDOMAIN_JAPAN     0x41
-> +#define ZD_REGDOMAIN_JAPAN_3   0x49
+Only common ath read/write ops go through the common ops.
 
-FWIW, this does seem right.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++------
+ drivers/net/wireless/ath/ath5k/base.c  |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath5k/base.h  |   11 -----------
+ 3 files changed, 27 insertions(+), 17 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 29ce868..1416562 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1315,17 +1315,21 @@ static inline unsigned int ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+ 	return turbo ? (clock / 80) : (clock / 40);
+ }
+ 
+-/*
+- * Read from a register
+- */
++static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
++{
++        return &ah->common;
++}
++
++static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
++{
++        return &(ath5k_hw_common(ah)->regulatory);
++}
++
+ static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+ {
+ 	return ioread32(ah->ah_iobase + reg);
+ }
+ 
+-/*
+- * Write to a register
+- */
+ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+ {
+ 	iowrite32(val, ah->ah_iobase + reg);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3cb0752..c78ad55 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -437,6 +437,22 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ 
+ 	return name;
+ }
++static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
++{
++	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	return ioread32(ah->ah_iobase + reg_offset);
++}
++
++static void ath5k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
++{
++	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	iowrite32(val, ah->ah_iobase + reg_offset);
++}
++
++const static struct ath_ops ath5k_common_ops = {
++	.read = ath5k_ioread32,
++	.write = ath5k_iowrite32,
++};
+ 
+ static int __devinit
+ ath5k_pci_probe(struct pci_dev *pdev,
+@@ -576,6 +592,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	sc->ah->ah_sc = sc;
+ 	sc->ah->ah_iobase = sc->iobase;
+ 	common = ath5k_hw_common(sc->ah);
++	common->ops = &ath5k_common_ops;
+ 	common->cachelsz = csz << 2; /* convert to bytes */
+ 
+ 	/* Initialize device */
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 005d25f..b14ba07 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -201,15 +201,4 @@ struct ath5k_softc {
+ #define ath5k_hw_hasveol(_ah) \
+ 	(ath5k_hw_get_capability(_ah, AR5K_CAP_VEOL, 0, NULL) == 0)
+ 
+-static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
+-{
+-	return &ah->common;
+-}
+-
+-static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+-{
+-	return &(ath5k_hw_common(ah)->regulatory);
+-
+-}
+-
+ #endif
+-- 
+1.6.3.3
+
