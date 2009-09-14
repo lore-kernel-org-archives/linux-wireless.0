@@ -1,68 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:63422 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934097AbZIEAED (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:33816 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725AbZINEJm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 20:04:03 -0400
+	Mon, 14 Sep 2009 00:09:42 -0400
+Received: by iwn8 with SMTP id 8so1179863iwn.4
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Sep 2009 21:09:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <43e72e890909041548i553d63b6k1602eeb52920c4ec@mail.gmail.com>
-References: <1251958266-10692-1-git-send-email-lrodriguez@atheros.com>
-	<43e72e890909031113r6010519br3b81d15cc331ba85@mail.gmail.com>
-	<1252001837.9336.2.camel@johannes.local> <20090903204319.GC3701@mosca>
-	<1252040671.9336.10.camel@johannes.local> <1252052757.26413.9.camel@pc1117.cambridge.arm.com>
-	<43e72e890909041421m243bbea6i95c26ab21dc8732d@mail.gmail.com>
-	<43e72e890909041458u505ce89tf38743dd6305bf7b@mail.gmail.com>
-	<1252103067.21380.1.camel@pc1117.cambridge.arm.com> <43e72e890909041548i553d63b6k1602eeb52920c4ec@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 4 Sep 2009 17:03:45 -0700
-Message-ID: <43e72e890909041703k79326384ided33edfccaaeb0a@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: clear cfg80211_inform_bss() from kmemleak
-	reports
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <3ace41890909132041w2d3f10b7r72e0eb855f1ab2a5@mail.gmail.com>
+References: <4A9BFCCB.6040808@ufra.edu.br> <3ace41890908311025r3ce83c12gd6aeace4833609b1@mail.gmail.com>
+	<4A9C0ADC.6050607@ufra.edu.br> <3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
+	<4A9D7DC0.6050701@ufra.edu.br> <4AAC240E.20104@ufra.edu.br>
+	<3ace41890909130313y474074ecnc5e720f780a4bd8f@mail.gmail.com>
+	<3ace41890909132041w2d3f10b7r72e0eb855f1ab2a5@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 13 Sep 2009 21:09:25 -0700
+Message-ID: <43e72e890909132109l4b47431cw85cfba21ec1fb42c@mail.gmail.com>
+Subject: Re: zd1211rw on ppc (iBook G4) -- Solved, somewhat)
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: "Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 4, 2009 at 3:48 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
-> On Fri, Sep 4, 2009 at 3:24 PM, Catalin Marinas<catalin.marinas@arm.com> wrote:
->> On Fri, 2009-09-04 at 14:58 -0700, Luis R. Rodriguez wrote:
->>> On Fri, Sep 4, 2009 at 2:21 PM, Luis R. Rodriguez<lrodriguez@atheros.com> wrote:
+On Sun, Sep 13, 2009 at 8:41 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Sun, Sep 13, 2009 at 11:13 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+>> On Sat, Sep 12, 2009 at 11:43 PM, Leonardo H. Souza Hamada
+>> <leonardo.hamada@ufra.edu.br> wrote:
+>>> Hi all,
 >>>
->>> > BTW I should not I got this kmemleak report after using the clear
->>> > command by painting objects black. I'll test it now with your
->>> > suggested changes.
+>>> At this moment, after tweaking the zd1211rw code in kernel
+>>> 2.6.31-gentoo, finally I am able to use the WLI-U2-KG54L wireless usb
+>>> dongle on this old ibook.
 >>>
->>> So I pulled your git://linux-arm.org/linux-2.6 master into my tree and
->>> didn't even need a 'clear' command now, the output of
->>> /sys/kernel/debug/kmemleak is empty :), so I suspect you have quite a
->>> few changes which should help avoid getting false positives.
+>>> Browsing the source with a cross referencing tool
+>>> (http://lxr.free-electrons.com) and making additional checking points, I
+>>> could trace the issue as follow.
 >>>
->>> Will these changes make it for 2.6.32?
+>>> The problem is that this device returns a regulatory region of 0x49,
+>>> which is not defined in the zd1211rw tables. So the call
+>>>
+>>> r <http://lxr.free-electrons.com/ident?i=r> = zd_reg2alpha2 <http://lxr.free-electrons.com/ident?i=zd_reg2alpha2>(mac <http://lxr.free-electrons.com/ident?i=mac>->regdomain, alpha2);
+>>>
+>>> will fail the initialization process.
+>>>
+>>>
+>>> Workaround:
+>>>
+>>> ----snip----
+>>> int zd_mac_init_hw(struct ieee80211_hw *hw)
+>>> {
+>>> ...
+>>>        r = zd_read_regdomain(chip, &default_regdomain);
+>>>        /* A unknown regulatory of 0x49 will be set default to
+>>> ZD_REGDOMAIN_FCC. */
+>>>        if (0x49 == default_regdomain)
+>>>                default_regdomain = ZD_REGDOMAIN_FCC;
+>>> ...
+>>> ----snip----
+>>>
+>>> The above code will force the default regulatry to be FCC code for this
+>>> case. I think that this was the case in previous zd1211rw driver. What
+>>> is the country code for 0x49 region? There is a better way?
+>>>
+>>>
+>>> Thanks all,
+>>>
+>>> Phew!! Leonardo
 >>
->> The kmemleak branch is planned for the upcoming merging window.
+>> The vendor driver has quite a lot more regdomain code defined, and
+>> 0x49 is apparently
+>>
+>> ZD_Region_Japan_3           = 0x49,//G channel->ch1-13; A channel->8~16,34~46;
+>>
+>> the rw driver code probably should set it to most restrictive than let
+>> it fail...
+>>
 >
-> Ah great.
+> Can you give this patch a try against a recent
+> wireless-testing/compat-wireless? I think this is the correct way to
+> do things.
 >
->> I don't
->> think you need to merge the master branch as it has a lot of
->> arm-specific code.
->
-> That was a goof, thanks, I'll rebase onto your kmemleak branch.
+> Here is the content of the patch for others who doesn't like
+> attachments - it just sets 0x49 as Japan.
+> ==============================
+> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
+> b/drivers/net/wireless/zd1211rw/zd_mac.c
+> index 6d66635..b0d32c4 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+> @@ -42,6 +42,7 @@ static struct zd_reg_alpha2_map reg_alpha2_map[] = {
+>        { ZD_REGDOMAIN_ETSI, "DE" }, /* Generic ETSI, use most restrictive */
+>        { ZD_REGDOMAIN_JAPAN, "JP" },
+>        { ZD_REGDOMAIN_JAPAN_ADD, "JP" },
+> +       { ZD_REGDOMAIN_JAPAN_3, "JP" },
+>        { ZD_REGDOMAIN_SPAIN, "ES" },
+>        { ZD_REGDOMAIN_FRANCE, "FR" },
+>  };
+> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h
+> b/drivers/net/wireless/zd1211rw/zd_mac.h
+> index 7c27591..9701935 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_mac.h
+> +++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+> @@ -193,6 +193,7 @@ struct zd_mac {
+>  #define ZD_REGDOMAIN_FRANCE    0x32
+>  #define ZD_REGDOMAIN_JAPAN_ADD 0x40
+>  #define ZD_REGDOMAIN_JAPAN     0x41
+> +#define ZD_REGDOMAIN_JAPAN_3   0x49
 
-I rebased and I still get these, even if I scan every now and then,
-they stay up there.
-
-On wireless_send_event() I can follow the allocated skb put onto the
-skb queue wext_nlevents, and then schedule work is supposed to process
-it on wireless_nlevent_process(). From there I am able to follow the
-skb onto netlink_unicast() (for unicast data) but I do not see where
-this ends up being freed. The compskb is set onto the
-skb_shinfo(skb)->frag_list and not sure if netlink_unicast() ever
-frees that.
+FWIW, this does seem right.
 
   Luis
