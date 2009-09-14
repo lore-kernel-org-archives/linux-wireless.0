@@ -1,120 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60538 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751862AbZIZKGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 06:06:49 -0400
-Message-ID: <4ABDE7AC.1090409@hauke-m.de>
-Date: Sat, 26 Sep 2009 12:06:36 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Malte Gell <malte.gell@gmx.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: cannot compile compate-wirless snapshots
-References: <200909260457.21103.malte.gell@gmx.de>
-In-Reply-To: <200909260457.21103.malte.gell@gmx.de>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig0A8F8C241722E40EFB85B109"
+Received: from bombadil.infradead.org ([18.85.46.34]:54733 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755278AbZINJG6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 05:06:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 3/4] ath5k: define ath_common ops
+Date: Mon, 14 Sep 2009 05:07:01 -0400
+Message-Id: <1252919221-13628-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig0A8F8C241722E40EFB85B109
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Only common ath read/write ops go through the common ops.
 
-Malte Gell wrote:
-> Hello,
->=20
-> actually I can build the stable compat-wirless-2.6.30.ta.bz2 just fine.=
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
 
->=20
-> But I get make errors, when I try to build the daily snapshot, see belo=
-w. I=20
-> use openSUSE on a 2.6.27 kernel.
->=20
-> Thanx, Malte
->=20
->=20
-> 2[malte_gell@linux-61r3]12535 04:50~/download/src/wifi/compat-
-> wireless-2009-09-25> make
-> make -C /lib/modules/2.6.27.29-0.1-k7/build=20
-> M=3D/home/malte_gell/download/src/wifi/compat-wireless-2009-09-25 modul=
-es
-> make[1]: Entering directory `/usr/src/linux-2.6.27.29-0.1'
->   CC [M]  /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/drivers/net/wireless/ath/main.o
-> In file included from /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat.h:19,
->                  from <command-line>:0:
-> /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat-2.6.28.h:152: error: redefinitio=
-n of=20
-> 'struct tracepoint'
-> In file included from /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat.h:19,
->                  from <command-line>:0:
-> /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat-2.6.28.h:182:1: warning: "DEFINE=
-_TRACE"=20
-> redefined
-> In file included from include/linux/module.h:19,
->                  from include/linux/textsearch.h:7,
->                  from include/linux/skbuff.h:26,
->                  from /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat-2.6.28.h:10,
->                  from /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat.h:19,
->                  from <command-line>:0:
-> include/linux/tracepoint.h:86:1: warning: this is the location of the p=
-revious=20
-> definition
-> /home/malte_gell/download/src/wifi/compat-
-> wireless-2009-09-25/include/net/compat-2.6.28.h:186: error: redefinitio=
-n of=20
-> 'tracepoint_update_probe_range'
-> include/linux/tracepoint.h:100: error: previous definition of=20
-> 'tracepoint_update_probe_range' was here
-Hi,
+Here's a respin of 3/4 based on Jiri's comments.
 
-what kernel are you using? It looks to me you are using 2.6.27, but the
-2.6.27 mainline kernel does *not* contain the tracepoint infrastructure
-and include/linux/tracepoint.h, like your kernel. Did you made some big
- modifications to your kernel or is it the default openSUSE kernel?
+ drivers/net/wireless/ath/ath5k/ath5k.h |   16 ++++++++++------
+ drivers/net/wireless/ath/ath5k/base.c  |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath5k/base.h  |   11 -----------
+ 3 files changed, 27 insertions(+), 17 deletions(-)
 
-Does this file exists in your installation?
-/lib/modules/`uname -r`/build/include/linux/tracepoint.h ?
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 29ce868..1416562 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1315,17 +1315,21 @@ static inline unsigned int ath5k_hw_clocktoh(unsigned int clock, bool turbo)
+ 	return turbo ? (clock / 80) : (clock / 40);
+ }
+ 
+-/*
+- * Read from a register
+- */
++static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
++{
++        return &ah->common;
++}
++
++static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
++{
++        return &(ath5k_hw_common(ah)->regulatory);
++}
++
+ static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
+ {
+ 	return ioread32(ah->ah_iobase + reg);
+ }
+ 
+-/*
+- * Write to a register
+- */
+ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
+ {
+ 	iowrite32(val, ah->ah_iobase + reg);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3cb0752..13bbf3d 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -437,6 +437,22 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ 
+ 	return name;
+ }
++static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
++{
++	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	return ath5k_hw_reg_read(ah, reg_offset);
++}
++
++static void ath5k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
++{
++	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
++	ath5k_hw_reg_write(ah, val, reg_offset);
++}
++
++static const struct ath_ops ath5k_common_ops = {
++	.read = ath5k_ioread32,
++	.write = ath5k_iowrite32,
++};
+ 
+ static int __devinit
+ ath5k_pci_probe(struct pci_dev *pdev,
+@@ -576,6 +592,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	sc->ah->ah_sc = sc;
+ 	sc->ah->ah_iobase = sc->iobase;
+ 	common = ath5k_hw_common(sc->ah);
++	common->ops = &ath5k_common_ops;
+ 	common->cachelsz = csz << 2; /* convert to bytes */
+ 
+ 	/* Initialize device */
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 005d25f..b14ba07 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -201,15 +201,4 @@ struct ath5k_softc {
+ #define ath5k_hw_hasveol(_ah) \
+ 	(ath5k_hw_get_capability(_ah, AR5K_CAP_VEOL, 0, NULL) == 0)
+ 
+-static inline struct ath_common *ath5k_hw_common(struct ath5k_hw *ah)
+-{
+-	return &ah->common;
+-}
+-
+-static inline struct ath_regulatory *ath5k_hw_regulatory(struct ath5k_hw *ah)
+-{
+-	return &(ath5k_hw_common(ah)->regulatory);
+-
+-}
+-
+ #endif
+-- 
+1.6.3.3
 
-Compat-wireless checks the kernel version and adds some compat code
-based on the things the mainline kernel misses in this version, but this
-is not working correctly with kernel, because it looks like it contains
-some "bad" modifications.
-
-Hauke
-
-
---------------enig0A8F8C241722E40EFB85B109
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iQIcBAEBAgAGBQJKveewAAoJEIZ0px9YPRMy+eAP/iudBKatB/7p9wcAa1fZDIie
-P6D4UBHCXvFtf1mal2Oek6p05bDWXphmsajj53Wq0zfzU6OicP4v7ztOIzDzoxz7
-aL2e+KJpvDO8feSXIm4g10SzVbFP0P3unvSpoLytYuuMVEY5wHX7d9xwJix21fXI
-Nbv96EVbgXYeYnq8fzDAUA2Jfh9sC/zuGeF+246LVe3cQVpokuDcYyi+1trXgHeJ
-ldM+7G0nlgvBhz4u7/JwHOexr940vSayi2cnYPe3wuRETfg8kiUNxPIIoKtpDg+/
-Rdr9DNWqQocu2MRDDez84G6II6WrAVemNMBO/QwRYg3YSK2FkdTkz4LO6BL9SIWl
-hqChu+N5HKRBIEqR4DcE22prhftf+daldiOPTq2UhRAXQooLtSjsW3R/LN2xFHTA
-C6AI+oVCHmKon4IEmMyKvYk3YdLSFUTxUQBj4pGDK1cLux2pL9Z4PayPiRc2vDAq
-O1gbWSl/tycPXNpc4PyPiXy5rmkb/JLZewsyXh336KNP5PC5j6sLIoMh+EMPoEsX
-xhovV4FB0qSdRdZ2Z78NeZPY9Jr7tAJDQeoLbEhzfcxg2g0Yh4H5xduyb7zNBRlc
-fUDCrm5neH4dyA1JtRWmepAXdKfxDkXXTF3QQsmOSbuOkryY9oKj4wUsvmpG/Qvq
-9t70+IxSGq+v8fOaGtBl
-=O/W7
------END PGP SIGNATURE-----
-
---------------enig0A8F8C241722E40EFB85B109--
