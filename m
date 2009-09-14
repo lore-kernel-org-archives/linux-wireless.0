@@ -1,154 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:45110 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754576AbZIVAEa convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:52500 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754620AbZINIhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 20:04:30 -0400
-Received: by fxm18 with SMTP id 18so444116fxm.17
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2009 17:04:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910909211325o271c471eydb9f37e20b9bd4c3@mail.gmail.com>
-References: <76516bfc0909211119i4362ca35k13fc1f87857fb393@mail.gmail.com>
-	 <200909212104.28665.chunkeey@googlemail.com>
-	 <69e28c910909211325o271c471eydb9f37e20b9bd4c3@mail.gmail.com>
-Date: Mon, 21 Sep 2009 20:04:32 -0400
-Message-ID: <76516bfc0909211704iddf2ebcm9a8e12548c50fecd@mail.gmail.com>
-Subject: Re: p54spi: dbm_antsignal value, is it RSSI or dbm?
-From: Andre K <andrekdeen@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Sep 2009 04:37:25 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 04/11] atheros: move tx/rx chainmask to ath_common
+Date: Mon, 14 Sep 2009 04:37:21 -0400
+Message-Id: <1252917448-10744-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the replies and the clarification.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath.h          |    3 ++
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 -
+ drivers/net/wireless/ath/ath9k/beacon.c |    3 +-
+ drivers/net/wireless/ath/ath9k/hw.c     |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c   |   34 +++++++++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/xmit.c   |    3 +-
+ 6 files changed, 30 insertions(+), 19 deletions(-)
 
-I actually wouldn't mind investing some time to help sort this out,
-but I have no idea where to start. For now I think I'll have to revert
-to stlc45xx v1.3 and the calibration tool.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 2ca9701..38ca68e 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -56,6 +56,9 @@ struct ath_common {
+ 	u8 curbssid[ETH_ALEN];
+ 	u8 bssidmask[ETH_ALEN];
+ 
++	u8 tx_chainmask;
++	u8 rx_chainmask;
++
+ 	struct ath_regulatory regulatory;
+ 	const struct ath_ops *ops;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9864461..46d19e8 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -586,8 +586,6 @@ struct ath_softc {
+ 	u16 curtxpow;
+ 	u8 nbcnvifs;
+ 	u16 nvifs;
+-	u8 tx_chainmask;
+-	u8 rx_chainmask;
+ 	u32 keymax;
+ 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
+ 	u8 splitmic;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 2f00313..54be876 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -62,6 +62,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_desc *ds;
+ 	struct ath9k_11n_rate_series series[4];
+ 	const struct ath_rate_table *rt;
+@@ -109,7 +110,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	memset(series, 0, sizeof(struct ath9k_11n_rate_series) * 4);
+ 	series[0].Tries = 1;
+ 	series[0].Rate = rate;
+-	series[0].ChSel = sc->tx_chainmask;
++	series[0].ChSel = common->tx_chainmask;
+ 	series[0].RateFlags = (ctsrate) ? ATH9K_RATESERIES_RTS_CTS : 0;
+ 	ath9k_hw_set11n_ratescenario(ah, ds, ds, 0, ctsrate, ctsduration,
+ 				     series, 4, 0);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index cd98719..4a5d398 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2324,8 +2324,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	int i, rx_chainmask, r;
+ 
+ 	ah->extprotspacing = sc->ht_extprotspacing;
+-	ah->txchainmask = sc->tx_chainmask;
+-	ah->rxchainmask = sc->rx_chainmask;
++	ah->txchainmask = common->tx_chainmask;
++	ah->rxchainmask = common->rx_chainmask;
+ 
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 214ce65..6404157 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -438,8 +438,11 @@ static void ath_ani_calibrate(unsigned long data)
+ 
+ 		/* Perform calibration if necessary */
+ 		if (longcal || shortcal) {
+-			sc->ani.caldone = ath9k_hw_calibrate(ah, ah->curchan,
+-						     sc->rx_chainmask, longcal);
++			sc->ani.caldone =
++				ath9k_hw_calibrate(ah,
++						   ah->curchan,
++						   common->rx_chainmask,
++						   longcal);
+ 
+ 			if (longcal)
+ 				sc->ani.noise_floor = ath9k_hw_getchan_noise(ah,
+@@ -492,19 +495,21 @@ static void ath_start_ani(struct ath_softc *sc)
+ void ath_update_chainmask(struct ath_softc *sc, int is_ht)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if ((sc->sc_flags & SC_OP_SCANNING) || is_ht ||
+ 	    (ah->btcoex_hw.scheme != ATH_BTCOEX_CFG_NONE)) {
+-		sc->tx_chainmask = sc->sc_ah->caps.tx_chainmask;
+-		sc->rx_chainmask = sc->sc_ah->caps.rx_chainmask;
++		common->tx_chainmask = ah->caps.tx_chainmask;
++		common->rx_chainmask = ah->caps.rx_chainmask;
+ 	} else {
+-		sc->tx_chainmask = 1;
+-		sc->rx_chainmask = 1;
++		common->tx_chainmask = 1;
++		common->rx_chainmask = 1;
+ 	}
+ 
+-	ath_print(ath9k_hw_common(ah), ATH_DBG_CONFIG,
++	ath_print(common, ATH_DBG_CONFIG,
+ 		  "tx chmask: %d, rx chmask: %d\n",
+-		  sc->tx_chainmask, sc->rx_chainmask);
++		  common->tx_chainmask,
++		  common->rx_chainmask);
+ }
+ 
+ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta)
+@@ -949,6 +954,7 @@ static void ath_key_delete(struct ath_softc *sc, struct ieee80211_key_conf *key)
+ static void setup_ht_cap(struct ath_softc *sc,
+ 			 struct ieee80211_sta_ht_cap *ht_info)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	u8 tx_streams, rx_streams;
+ 
+ 	ht_info->ht_supported = true;
+@@ -962,11 +968,13 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 
+ 	/* set up supported mcs set */
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	tx_streams = !(sc->tx_chainmask & (sc->tx_chainmask - 1)) ? 1 : 2;
+-	rx_streams = !(sc->rx_chainmask & (sc->rx_chainmask - 1)) ? 1 : 2;
++	tx_streams = !(common->tx_chainmask & (common->tx_chainmask - 1)) ?
++		     1 : 2;
++	rx_streams = !(common->rx_chainmask & (common->rx_chainmask - 1)) ?
++		     1 : 2;
+ 
+ 	if (tx_streams != rx_streams) {
+-		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_CONFIG,
++		ath_print(common, ATH_DBG_CONFIG,
+ 			  "TX streams %d, RX streams: %d\n",
+ 			  tx_streams, rx_streams);
+ 		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+@@ -1763,8 +1771,8 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
+ 		sc->sc_flags |= SC_OP_RXAGGR;
+ 	}
+ 
+-	sc->tx_chainmask = ah->caps.tx_chainmask;
+-	sc->rx_chainmask = ah->caps.rx_chainmask;
++	common->tx_chainmask = ah->caps.tx_chainmask;
++	common->rx_chainmask = ah->caps.rx_chainmask;
+ 
+ 	ath9k_hw_setcapability(ah, ATH9K_CAP_DIVERSITY, 1, true, NULL);
+ 	sc->rx.defant = ath9k_hw_getdefantenna(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3665050..f302652 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1456,6 +1456,7 @@ static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
+ 
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	const struct ath_rate_table *rt = sc->cur_rate_table;
+ 	struct ath9k_11n_rate_series series[4];
+ 	struct sk_buff *skb;
+@@ -1511,7 +1512,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
+ 
+ 		rix = rates[i].idx;
+ 		series[i].Tries = rates[i].count;
+-		series[i].ChSel = sc->tx_chainmask;
++		series[i].ChSel = common->tx_chainmask;
+ 
+ 		if (rates[i].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 			series[i].Rate = rt->info[rix].ratecode |
+-- 
+1.6.3.3
 
--Andre.
-
-On 9/21/09, Gábor Stefanik <netrolller.3d@gmail.com> wrote:
-> On Mon, Sep 21, 2009 at 9:04 PM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
->> On Monday 21 September 2009 20:19:35 Andre K wrote:
->>> Hi all,
->>>
->>> I've been using the new p54spi driver on a couple of n800s. Some
->>> specifics:
->>> Kernel : 2.6.29-omap1
->>> Wireless-compat: compat-wireless-2009-08-22
->>> OS: Maemo
->>> Options:  disabled CONFIG_RFKILL_BACKPORT_LEDS because it didn't compile
->>>
->>> The driver loads and functions normally. However, the values for the
->>> dbm_antsignal (from RadioTap header), are they RSSI or dbm? Initially
->>> I thought they were dbm since tcpdump showed negative values, which
->>> makes sense:
->>>
->>> Tcpdump:
->>> 14:08:25.312988 4469382526us tsft 2.0 Mb/s 2437 MHz (0x00a0) -49dB
->>> signal -41dB noise antenna 0 [0x0000000e] Acknowledgment
->>> RA:00:1d:e0:3d:5a:53 (oui Unknown)
->> heh, noise is higher than the signal.
->>
->>> 14:08:25.313903 4469383345us tsft 1.0 Mb/s 2437 MHz (0x00a0) 4dB
->>> signal -41dB noise antenna 0 [0x0000000e] 04:c2:08:00:07:07 (oui
->>> Unknown) Unknown SSAP 0x0a >
->>>
->>> Which shows up the first positive dbm value. Next I set up another
->>> n800 to broadcast ping packets (using hping3, since busybox's ping
->>> doesn't allow broadcast).
->>>
->>> 14:12:22.066192 13296010370us tsft 1.0 Mb/s 2437 MHz (0x00a0) 87dB
->>> signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
->>> 192.168.10.255: ICMP echo request, id 6662, seq 40704, length 8
->>> 14:12:22.092376 13296036864us tsft 18.0 Mb/s 2437 MHz (0x00c0) 82dB
->>> signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
->>> 192.168.10.255: ICMP echo request, id 6662, seq 40960, length 8
->>> 14:12:22.094787 13296037678us tsft 1.0 Mb/s 2437 MHz (0x00a0) 112dB
->>> signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
->>> 192.168.10.255: ICMP echo request, id 6662, seq 40960, length 8
->>>
->>> I get strange dbm values, in the range of 50 - 100dbm, which doesn't
->>> make much sense.
->>>
->>> Does anyone have an idea what value is being returned and if there is
->>> an error in the dbm calculation?
->>>
->>
->> no, this has been on the TODO list for some time now.
->>
->> (drivers/net/wireless/p54/txrx.c)
->> static int p54_rssi_to_dbm(struct p54_common *priv, int rssi)
->> {
->>        int band = priv->hw->conf.channel->band;
->>
->>        if (priv->rxhw != 5)
->>                return ((rssi * priv->rssical_db[band].mul) / 64 +
->>                         priv->rssical_db[band].add) / 4;
->>        else
->>                /*
->>                 * TODO: find the correct formula
->>                 */
->>                return ((rssi * priv->rssical_db[band].mul) / 64 +
->>                         priv->rssical_db[band].add) / 4;
->> }
->>
->> the .mul & .add values can be retrieved from the p54spi_eeprom.h blob.
->>
->> 0x09, 0x00, 0xad, 0xde,         /* PDR_RSSI_LINEAR_APPROXIMATION_CUSTOM
->> */
->>        0x0a, 0x01, 0x72, 0xfe, 0x1a, 0x00, 0x00, 0x00,
->>        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
->>
->> => translates into: (best viewed with a fixed-width font)
->> .mul           = 0x010a = 416 (base 10)
->> .add           = 0xfe72 = -398
->> .longbow_unkn1 = 0x001a = 26
->> .longbow_unkn2 = 0x0000 = 0
->>
->> ---
->>
->> stlc45xx has a completely different phy/rf (longbow - rxhw = 5) and
->> the specs are not a part of the freely available fw iface documentation.
->>
->> here's the relevant quote from a Nokia official: "
->>> If this is so, what's so secret about the values that it needs a
->>> binary-only tool and hidden storage area? Is there legal issues with
->>> it (related to the radio device regulations)?
->>
->> Yes, this is because regulatory requirements. So thank FCC and ETSI
->> for all this. This causes much grief for all wireless vendors, for
->> example Intel had to do major changes in iwl3945 firmware for their
->> mac80211 driver. "
->> (ref:
->> http://www.mail-archive.com/stlc45xx-devel@garage.maemo.org/msg00021.html
->> )
->
-> I've actually read somewhere (AFAIK on this list, but I am not sure)
-> that this is actually a misinterpretation of the FCC requirements...
->
->>
->> ---
->>
->> if you need real dBm reading for signal and noise, you have
->> to some "reverse engineering" on your own or find someone else
->> with the hardware and some spare time to burn.
->>
->> Regards,
->>        Chr
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
->
-> --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->
