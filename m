@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49977 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751508AbZIWW7X (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43426 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891AbZINIcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 18:59:23 -0400
-Date: Wed, 23 Sep 2009 15:58:53 -0700
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Flush TX - wireless summit topic
-Message-ID: <20090923225853.GA14625@jm.kir.nu>
-References: <43e72e890909221541u67fa291fq353327d1d55841f2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890909221541u67fa291fq353327d1d55841f2@mail.gmail.com>
+	Mon, 14 Sep 2009 04:32:01 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 0/4] atheros: implement common read/write ops
+Date: Mon, 14 Sep 2009 04:31:59 -0400
+Message-Id: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 22, 2009 at 03:41:50PM -0700, Luis R. Rodriguez wrote:
-> Another thing we spoke about at the wireless summit was flushing TX
-> prior to changing channel / scan. Bob, remember the issue with ath5k
-> on the band not coinciding on received skbs since we don't do a DMA RX
-> flush prior to channel change? Well one theory discussed was that we
-> would see that issue disappear if we actually did a proper TX flush
-> prior to channel change since we expect we would not see further
-> incoming frames from our AP if we told it we were going to PS (sending
-> a null func frame). If we implement a proper TX flush then the theory
-> goes that we wouldn't need to do any sort of DMA flush as we would not
-> have any frames pending.
+This is a respin on my fourth series. We leave ath5k as is and only
+use the common read/write ops for it for shared hw code. ath9k however
+does need to use the common ops as we need to make read/write code
+driver core independent to share with ath9k_htc, even before its
+moved into ath hw common code.
 
-I don't know where this theory is coming from, but I do not subscribe to
-it ;-). The AP may very well send broadcast frames even after we
-indicate the change to PS mode. In addition, other frames could
-potentially be received based on RX filter settings. If we want to make
-sure we do not get new pending RX frames, we need to stop the receiver
-first or be prepared to handle the received frames somehow.
+Other changes worth noting are the order of the write op arguments
+to coincide more with more kernel code.
 
-The number of pending RX frames would hopefully be relatively small,
-though, in this kind of case. In order to process these frames
-correctly, they would need to be taken care of prior to the channel
-change or alternatively, with the channel parameters cached in the
-driver so that they could be sent up with all the correct information
-even after the channel change.
+Luis R. Rodriguez (4):
+  atheros/ath9k: add common read/write ops and port ath9k to use it
+  ath5k: allocate ath5k_hw prior to initializing hw
+  ath5k: define ath_common ops
+  atheros: define shared bssidmask setting
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+ drivers/net/wireless/ath/Makefile         |    5 +-
+ drivers/net/wireless/ath/ath.h            |    9 ++
+ drivers/net/wireless/ath/ath5k/ath5k.h    |   20 +++--
+ drivers/net/wireless/ath/ath5k/attach.c   |   25 +-----
+ drivers/net/wireless/ath/ath5k/base.c     |   38 ++++++++-
+ drivers/net/wireless/ath/ath5k/base.h     |   11 ---
+ drivers/net/wireless/ath/ath5k/initvals.c |    4 +-
+ drivers/net/wireless/ath/ath5k/pcu.c      |  121 ++--------------------------
+ drivers/net/wireless/ath/ath5k/reg.h      |    8 +--
+ drivers/net/wireless/ath/ath9k/ath9k.h    |   13 ---
+ drivers/net/wireless/ath/ath9k/hw.c       |   42 +---------
+ drivers/net/wireless/ath/ath9k/hw.h       |   17 ++++-
+ drivers/net/wireless/ath/ath9k/main.c     |   43 ++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c     |    2 +-
+ drivers/net/wireless/ath/ath9k/reg.h      |    5 +-
+ drivers/net/wireless/ath/ath9k/virtual.c  |    2 +-
+ drivers/net/wireless/ath/hw.c             |  126 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/reg.h            |   27 ++++++
+ 18 files changed, 290 insertions(+), 228 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/hw.c
+ create mode 100644 drivers/net/wireless/ath/reg.h
+
