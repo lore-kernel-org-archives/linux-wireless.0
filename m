@@ -1,54 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sdinet.de ([78.47.32.153]:45696 "EHLO mail.sdinet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752765AbZIZPRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 11:17:23 -0400
-Date: Sat, 26 Sep 2009 17:06:18 +0200 (CEST)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Hugh Dickins <hugh.dickins@tiscali.co.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.31-git wireless broken
-In-Reply-To: <1253973831.5122.33.camel@johannes.local>
-Message-ID: <alpine.DEB.2.00.0909261657510.19532@aurora.sdinet.de>
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>  <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>  <1253816614.3868.406.camel@johannes.local>  <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
- <1253856038.3868.500.camel@johannes.local>  <Pine.LNX.4.64.0909250838420.3783@sister.anvils>  <1253868214.3868.713.camel@johannes.local>  <Pine.LNX.4.64.0909251506260.11390@sister.anvils>  <1253970049.5122.31.camel@johannes.local>
- <1253973831.5122.33.camel@johannes.local>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:42436 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbZINR4J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 13:56:09 -0400
+Received: by bwz19 with SMTP id 19so2261950bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 10:56:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <4AAE7446.3080407@lwfinger.net>
+References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>
+	 <4AAE3DF7.7060504@lwfinger.net>
+	 <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
+	 <4AAE53C8.1060100@lwfinger.net>
+	 <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
+	 <4AAE7446.3080407@lwfinger.net>
+Date: Mon, 14 Sep 2009 12:56:11 -0500
+Message-ID: <3b0e19890909141056l4a01b8f9w9887af5d6219c3ff@mail.gmail.com>
+Subject: Re: RTL8187B wireless driver issue
+From: Vignette consultant <vignette75@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=0016e6551d7896541404738d616a
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 26 Sep 2009, Johannes Berg wrote:
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=ISO-8859-1
 
-> On Sat, 2009-09-26 at 15:00 +0200, Johannes Berg wrote:
-> 
-> > Well the problem appears to be that wpa_supplicant isn't getting started
-> > by your distro any more. Unfortunately I'm not familiar with opensuse.
-> > It seems it thinks the device isn't wireless but wired, since it starts
-> > ifplugd. OTOH maybe it wants ifplugd for wireless too? It's possible in
-> > theory.
-> > 
-> > I'm downloading a livecd to figure out what might be going wrong.
-> 
-> It appears that just uses
-> 	test -d /sys/class/net/wlan0/wireless
-> 
-> but that should be ok, unless that's actually a link now for some reason
-> -- can you verify what happens there? And double-check you have
-> CONFIG_WIRELESS_EXT_SYSFS please, the config you sent me did have it
-> tho.
+ Larry,
 
-just as a differnt datapoint:
+ I got the same error even after adding wlan0 in
+/etc/network/interfaces file. I set the essid using "sudo iwconfig
+wlan0 essid linksys" command and restarted network. I tried other
+essids, but it gives same error.
 
-My current 2.6.27 based on the ubuntu kernel with a compat-wireless-2.6 
-from yesterday (which works without problems for me with intel 3945) 
-does not have this subdir either, it just does not exist at all.
-(there is a phy80211 symlink, but no "wireless")
+ Attached files contain log files. Please advise about solution.
 
-c'ya
-sven
+ How do I disable usb monitoring log, so I can see wlan0 interface log
+from dmesg?
 
--- 
-The lights are fading out, once more...
+ Thanks
+ Sam
+
+On 9/14/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Vignette consultant wrote:
+>>  Hi
+>>
+>>  Attached files contain several logs of various commands. The log-1
+>> file is before running command and log-2 file is after running
+>> specific command.
+>>
+>>  Here are commands that I give as soon as I log in. It's server edition.
+>>
+>>  $ sudo ifconfig wlan0 up
+>>  $ sudo iwconfig wlan0 ESSID linksys
+>>  $ sudo dhclient wlan0 - results in no IP addr leased
+>
+> Your wireless has not associated and has no communication, which is
+> why it cannot get an IP using DHCP.
+>
+> A quick check with Google indicates that Ubuntu uses
+> /etc/network/interfaces to control the devices. Once that is correct,
+> you should be able to 'sudo /etc/init.d/networking restart' to start
+> the network. If the server is properly configured, the network should
+> start on boot.
+>
+> BTW, the dmesg buffer is circular. All that usb monitoring output has
+> completely filled the buffer, and it contains no useful information.
+>
+
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=US-ASCII; name="interfaces.log"
+Content-Disposition: attachment; filename="interfaces.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file1
+
+IyBUaGlzIGZpbGUgZGVzY3JpYmVzIHRoZSBuZXR3b3JrIGludGVyZmFjZXMgYXZhaWxhYmxlIG9u
+IHlvdXIgc3lzdGVtCiMgYW5kIGhvdyB0byBhY3RpdmF0ZSB0aGVtLiBGb3IgbW9yZSBpbmZvcm1h
+dGlvbiwgc2VlIGludGVyZmFjZXMoNSkuCgojIFRoZSBsb29wYmFjayBuZXR3b3JrIGludGVyZmFj
+ZQphdXRvIGxvCmlmYWNlIGxvIGluZXQgbG9vcGJhY2sKCmF1dG8gd2xhbjAKaWZhY2Ugd2xhbjAg
+aW5ldCBkaGNwCg==
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=US-ASCII; name="ifconfig.log"
+Content-Disposition: attachment; filename="ifconfig.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file2
+
+bG8gICAgICAgIExpbmsgZW5jYXA6TG9jYWwgTG9vcGJhY2sgIAogICAgICAgICAgaW5ldCBhZGRy
+OjEyNy4wLjAuMSAgTWFzazoyNTUuMC4wLjAKICAgICAgICAgIFVQIExPT1BCQUNLIFJVTk5JTkcg
+IE1UVToxNjQzNiAgTWV0cmljOjEKICAgICAgICAgIFJYIHBhY2tldHM6MCBlcnJvcnM6MCBkcm9w
+cGVkOjAgb3ZlcnJ1bnM6MCBmcmFtZTowCiAgICAgICAgICBUWCBwYWNrZXRzOjAgZXJyb3JzOjAg
+ZHJvcHBlZDowIG92ZXJydW5zOjAgY2FycmllcjowCiAgICAgICAgICBjb2xsaXNpb25zOjAgdHhx
+dWV1ZWxlbjowIAogICAgICAgICAgUlggYnl0ZXM6MCAoMC4wIEIpICBUWCBieXRlczowICgwLjAg
+QikKCndsYW4wICAgICBMaW5rIGVuY2FwOkV0aGVybmV0ICBIV2FkZHIgMDA6MTY6NDQ6OGY6OGY6
+OTAgIAogICAgICAgICAgVVAgQlJPQURDQVNUIE1VTFRJQ0FTVCAgTVRVOjE1MDAgIE1ldHJpYzox
+CiAgICAgICAgICBSWCBwYWNrZXRzOjAgZXJyb3JzOjAgZHJvcHBlZDowIG92ZXJydW5zOjAgZnJh
+bWU6MAogICAgICAgICAgVFggcGFja2V0czowIGVycm9yczowIGRyb3BwZWQ6MCBvdmVycnVuczow
+IGNhcnJpZXI6MAogICAgICAgICAgY29sbGlzaW9uczowIHR4cXVldWVsZW46MTAwMCAKICAgICAg
+ICAgIFJYIGJ5dGVzOjAgKDAuMCBCKSAgVFggYnl0ZXM6MCAoMC4wIEIpCgp3bWFzdGVyMCAgTGlu
+ayBlbmNhcDpVTlNQRUMgIEhXYWRkciAwMC0xNi00NC04Ri04Ri05MC0wMC0wMC0wMC0wMC0wMC0w
+MC0wMC0wMC0wMC0wMCAgCiAgICAgICAgICBVUCBSVU5OSU5HICBNVFU6MCAgTWV0cmljOjEKICAg
+ICAgICAgIFJYIHBhY2tldHM6MCBlcnJvcnM6MCBkcm9wcGVkOjAgb3ZlcnJ1bnM6MCBmcmFtZTow
+CiAgICAgICAgICBUWCBwYWNrZXRzOjAgZXJyb3JzOjAgZHJvcHBlZDowIG92ZXJydW5zOjAgY2Fy
+cmllcjowCiAgICAgICAgICBjb2xsaXNpb25zOjAgdHhxdWV1ZWxlbjoxMDAwIAogICAgICAgICAg
+UlggYnl0ZXM6MCAoMC4wIEIpICBUWCBieXRlczowICgwLjAgQikKCg==
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=US-ASCII; name="iwconfig.log"
+Content-Disposition: attachment; filename="iwconfig.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file3
+
+d2xhbjAgICAgIElFRUUgODAyLjExYmcgIEVTU0lEOiJsaW5rc3lzIiAgCiAgICAgICAgICBNb2Rl
+Ok1hbmFnZWQgIEZyZXF1ZW5jeToyLjQzNyBHSHogIEFjY2VzcyBQb2ludDogTm90LUFzc29jaWF0
+ZWQgICAKICAgICAgICAgIFR4LVBvd2VyPTI3IGRCbSAgIAogICAgICAgICAgUmV0cnkgIGxvbmcg
+bGltaXQ6NyAgIFJUUyB0aHI6b2ZmICAgRnJhZ21lbnQgdGhyOm9mZgogICAgICAgICAgRW5jcnlw
+dGlvbiBrZXk6b2ZmCiAgICAgICAgICBQb3dlciBNYW5hZ2VtZW50Om9mZgogICAgICAgICAgTGlu
+ayBRdWFsaXR5OjAgIFNpZ25hbCBsZXZlbDowICBOb2lzZSBsZXZlbDowCiAgICAgICAgICBSeCBp
+bnZhbGlkIG53aWQ6MCAgUnggaW52YWxpZCBjcnlwdDowICBSeCBpbnZhbGlkIGZyYWc6MAogICAg
+ICAgICAgVHggZXhjZXNzaXZlIHJldHJpZXM6MCAgSW52YWxpZCBtaXNjOjAgICBNaXNzZWQgYmVh
+Y29uOjAKCg==
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=US-ASCII; name="scan.log"
+Content-Disposition: attachment; filename="scan.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file4
+
+d2xhbjAgICAgIFNjYW4gY29tcGxldGVkIDoKICAgICAgICAgIENlbGwgMDEgLSBBZGRyZXNzOiAw
+MDoxRjozMzozQzo2MzpDNAogICAgICAgICAgICAgICAgICAgIENoYW5uZWw6MQogICAgICAgICAg
+ICAgICAgICAgIEZyZXF1ZW5jeToyLjQxMiBHSHogKENoYW5uZWwgMSkKICAgICAgICAgICAgICAg
+ICAgICBRdWFsaXR5PTYxLzcwICBTaWduYWwgbGV2ZWw9LTQ5IGRCbSAgCiAgICAgICAgICAgICAg
+ICAgICAgRW5jcnlwdGlvbiBrZXk6b24KICAgICAgICAgICAgICAgICAgICBFU1NJRDoibmV0MjAw
+MCIKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6MSBNYi9zOyAyIE1iL3M7IDUuNSBNYi9z
+OyAxMSBNYi9zOyAxOCBNYi9zCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDI0IE1iL3M7
+IDM2IE1iL3M7IDU0IE1iL3MKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6NiBNYi9zOyA5
+IE1iL3M7IDEyIE1iL3M7IDQ4IE1iL3MKICAgICAgICAgICAgICAgICAgICBNb2RlOk1hc3Rlcgog
+ICAgICAgICAgICAgICAgICAgIEV4dHJhOnRzZj0wMDAwMDAzZDRhZjkxMTgzCiAgICAgICAgICAg
+ICAgICAgICAgRXh0cmE6IExhc3QgYmVhY29uOiAxNTgwbXMgYWdvCiAgICAgICAgICAgICAgICAg
+ICAgSUU6IFVua25vd246IDAwMDc2RTY1NzQzMjMwMzAzMAogICAgICAgICAgICAgICAgICAgIElF
+OiBVbmtub3duOiAwMTA4ODI4NDhCOTYyNDMwNDg2QwogICAgICAgICAgICAgICAgICAgIElFOiBV
+bmtub3duOiAwMzAxMDEKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMkEwMTAwCiAg
+ICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJGMDEwMAogICAgICAgICAgICAgICAgICAg
+IElFOiBJRUVFIDgwMi4xMWkvV1BBMiBWZXJzaW9uIDEKICAgICAgICAgICAgICAgICAgICAgICAg
+R3JvdXAgQ2lwaGVyIDogVEtJUAogICAgICAgICAgICAgICAgICAgICAgICBQYWlyd2lzZSBDaXBo
+ZXJzICgyKSA6IENDTVAgVEtJUAogICAgICAgICAgICAgICAgICAgICAgICBBdXRoZW50aWNhdGlv
+biBTdWl0ZXMgKDEpIDogUFNLCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDMyMDQw
+QzEyMTg2MAogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiBERDdDMDA1MEYyMDQxMDRB
+MDAwMTEwMTA0NDAwMDEwMjEwNDEwMDAxMDAxMDNCMDAwMTAzMTA0NzAwMTBBQTlEMEU2RDI2MDJB
+RTcwMzlBNTc3NkVCRjhDNzBCRTEwMjEwMDBENEU0NTU0NDc0NTQxNTIyQzIwNDk2RTYzMkUxMDIz
+MDAwOTU3NEU1MjM4MzMzNDQyNzYzMjEwMjQwMDA5NTc0RTUyMzgzMzM0NDI3NjMyMTA0MjAwMDIz
+MDMxMTA1NDAwMDgwMDA2MDA1MEYyMDQwMDAxMTAxMTAwMDk1NzRFNTIzODMzMzQ0Mjc2MzIxMDA4
+MDAwMjAwODQKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogREQwOTAwMTAxODAyMDBG
+MDAxMDAwMAogICAgICAgICAgICAgICAgICAgIElFOiBXUEEgVmVyc2lvbiAxCiAgICAgICAgICAg
+ICAgICAgICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAg
+UGFpcndpc2UgQ2lwaGVycyAoMikgOiBDQ01QIFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAg
+QXV0aGVudGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAgICAgICAgIElFOiBV
+bmtub3duOiBERDE4MDA1MEYyMDIwMTAxODAwMDAzQTQwMDAwMjdBNDAwMDA0MjQzNUUwMDYyMzIy
+RjAwCiAgICAgICAgICBDZWxsIDAyIC0gQWRkcmVzczogMDA6MUM6MTA6MzI6OTQ6NjEKICAgICAg
+ICAgICAgICAgICAgICBDaGFubmVsOjYKICAgICAgICAgICAgICAgICAgICBGcmVxdWVuY3k6Mi40
+MzcgR0h6IChDaGFubmVsIDYpCiAgICAgICAgICAgICAgICAgICAgUXVhbGl0eT01Ny83MCAgU2ln
+bmFsIGxldmVsPS01MyBkQm0gIAogICAgICAgICAgICAgICAgICAgIEVuY3J5cHRpb24ga2V5Om9m
+ZgogICAgICAgICAgICAgICAgICAgIEVTU0lEOiJsaW5rc3lzIgogICAgICAgICAgICAgICAgICAg
+IEJpdCBSYXRlczoxIE1iL3M7IDIgTWIvczsgNS41IE1iL3M7IDExIE1iL3M7IDE4IE1iL3MKICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgMjQgTWIvczsgMzYgTWIvczsgNTQgTWIvcwogICAg
+ICAgICAgICAgICAgICAgIEJpdCBSYXRlczo2IE1iL3M7IDkgTWIvczsgMTIgTWIvczsgNDggTWIv
+cwogICAgICAgICAgICAgICAgICAgIE1vZGU6TWFzdGVyCiAgICAgICAgICAgICAgICAgICAgRXh0
+cmE6dHNmPTAwMDAwMDlkM2VmYjAxODQKICAgICAgICAgICAgICAgICAgICBFeHRyYTogTGFzdCBi
+ZWFjb246IDU0MG1zIGFnbwogICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiAwMDA3NkM2
+OTZFNkI3Mzc5NzMKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDEwODgyODQ4Qjk2
+MjQzMDQ4NkMKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDMwMTA2CiAgICAgICAg
+ICAgICAgICAgICAgSUU6IFVua25vd246IDA1MDQwMDAxMDAwMAogICAgICAgICAgICAgICAgICAg
+IElFOiBVbmtub3duOiAyQTAxMDQKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMkYw
+MTA0CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDMyMDQwQzEyMTg2MAogICAgICAg
+ICAgICAgICAgICAgIElFOiBVbmtub3duOiBERDA5MDAxMDE4MDIwMEY0MDAwMDAwCiAgICAgICAg
+ICBDZWxsIDAzIC0gQWRkcmVzczogMDA6MUI6MkY6RjY6NEY6MUUKICAgICAgICAgICAgICAgICAg
+ICBDaGFubmVsOjYKICAgICAgICAgICAgICAgICAgICBGcmVxdWVuY3k6Mi40MzcgR0h6IChDaGFu
+bmVsIDYpCiAgICAgICAgICAgICAgICAgICAgUXVhbGl0eT00NS83MCAgU2lnbmFsIGxldmVsPS02
+NSBkQm0gIAogICAgICAgICAgICAgICAgICAgIEVuY3J5cHRpb24ga2V5Om9uCiAgICAgICAgICAg
+ICAgICAgICAgRVNTSUQ6IkhvbWUiCiAgICAgICAgICAgICAgICAgICAgQml0IFJhdGVzOjEgTWIv
+czsgMiBNYi9zOyA1LjUgTWIvczsgMTEgTWIvczsgNiBNYi9zCiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIDEyIE1iL3M7IDI0IE1iL3M7IDM2IE1iL3MKICAgICAgICAgICAgICAgICAgICBC
+aXQgUmF0ZXM6OSBNYi9zOyAxOCBNYi9zOyA0OCBNYi9zOyA1NCBNYi9zCiAgICAgICAgICAgICAg
+ICAgICAgTW9kZTpNYXN0ZXIKICAgICAgICAgICAgICAgICAgICBFeHRyYTp0c2Y9MDAwMDAwOWQz
+ZTY1MDE4MQogICAgICAgICAgICAgICAgICAgIEV4dHJhOiBMYXN0IGJlYWNvbjogNTIwbXMgYWdv
+CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDAwMDQ0ODZGNkQ2NQogICAgICAgICAg
+ICAgICAgICAgIElFOiBVbmtub3duOiAwMTA4ODI4NDhCOTYwQzE4MzA0OAogICAgICAgICAgICAg
+ICAgICAgIElFOiBVbmtub3duOiAwMzAxMDYKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93
+bjogMDUwNDAwMDEwMDA4CiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJBMDEwMAog
+ICAgICAgICAgICAgICAgICAgIElFOiBVbmtub3duOiAzMjA0MTIyNDYwNkMKICAgICAgICAgICAg
+ICAgICAgICBJRTogSUVFRSA4MDIuMTFpL1dQQTIgVmVyc2lvbiAxCiAgICAgICAgICAgICAgICAg
+ICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAgICAgICAgICAgICAgUGFpcndp
+c2UgQ2lwaGVycyAoMikgOiBUS0lQIENDTVAKICAgICAgICAgICAgICAgICAgICAgICAgQXV0aGVu
+dGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAgICAgICAgICAgIFByZWF1dGhl
+bnRpY2F0aW9uIFN1cHBvcnRlZAogICAgICAgICAgICAgICAgICAgIElFOiBXUEEgVmVyc2lvbiAx
+CiAgICAgICAgICAgICAgICAgICAgICAgIEdyb3VwIENpcGhlciA6IFRLSVAKICAgICAgICAgICAg
+ICAgICAgICAgICAgUGFpcndpc2UgQ2lwaGVycyAoMikgOiBUS0lQIENDTVAKICAgICAgICAgICAg
+ICAgICAgICAgICAgQXV0aGVudGljYXRpb24gU3VpdGVzICgxKSA6IFBTSwogICAgICAgICAgICAg
+ICAgICAgIElFOiBVbmtub3duOiBERDA5MDAwMzdGMDEwMTAwMURGRjdGCiAgICAgICAgICAgICAg
+ICAgICAgSUU6IFVua25vd246IEREMEMwMDAzN0YwMjAxMDEwNjAwMDJBMzQwMDAKICAgICAgICAg
+ICAgICAgICAgICBJRTogVW5rbm93bjogREQxQTAwMDM3RjAzMDEwMDAwMDAwMDFCMkZGNjRGMUUw
+MjFCMkZGNjRGMUU2NDAwMkMwMTFEMDgKICAgICAgICAgIENlbGwgMDQgLSBBZGRyZXNzOiAwMDox
+NDpCRjo3RDoyNzpGOAogICAgICAgICAgICAgICAgICAgIENoYW5uZWw6NgogICAgICAgICAgICAg
+ICAgICAgIEZyZXF1ZW5jeToyLjQzNyBHSHogKENoYW5uZWwgNikKICAgICAgICAgICAgICAgICAg
+ICBRdWFsaXR5PTQwLzcwICBTaWduYWwgbGV2ZWw9LTcwIGRCbSAgCiAgICAgICAgICAgICAgICAg
+ICAgRW5jcnlwdGlvbiBrZXk6b2ZmCiAgICAgICAgICAgICAgICAgICAgRVNTSUQ6Im51bWJlcm9u
+ZSIKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6MSBNYi9zOyAyIE1iL3M7IDUuNSBNYi9z
+OyAxMSBNYi9zOyAxOCBNYi9zCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDI0IE1iL3M7
+IDM2IE1iL3M7IDU0IE1iL3MKICAgICAgICAgICAgICAgICAgICBCaXQgUmF0ZXM6NiBNYi9zOyA5
+IE1iL3M7IDEyIE1iL3M7IDQ4IE1iL3MKICAgICAgICAgICAgICAgICAgICBNb2RlOk1hc3Rlcgog
+ICAgICAgICAgICAgICAgICAgIEV4dHJhOnRzZj0wMDAwMDA5ZDNlNGMwMTgzCiAgICAgICAgICAg
+ICAgICAgICAgRXh0cmE6IExhc3QgYmVhY29uOiA4NTBtcyBhZ28KICAgICAgICAgICAgICAgICAg
+ICBJRTogVW5rbm93bjogMDAwOTZFNzU2RDYyNjU3MjZGNkU2NQogICAgICAgICAgICAgICAgICAg
+IElFOiBVbmtub3duOiAwMTA4ODI4NDhCOTYyNDMwNDg2QwogICAgICAgICAgICAgICAgICAgIElF
+OiBVbmtub3duOiAwMzAxMDYKICAgICAgICAgICAgICAgICAgICBJRTogVW5rbm93bjogMDUwNDAw
+MDEwMDAwCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IDJBMDEwNAogICAgICAgICAg
+ICAgICAgICAgIElFOiBVbmtub3duOiAyRjAxMDQKICAgICAgICAgICAgICAgICAgICBJRTogVW5r
+bm93bjogMzIwNDBDMTIxODYwCiAgICAgICAgICAgICAgICAgICAgSUU6IFVua25vd246IEREMDkw
+MDEwMTgwMjAwRjQwMDAwMDAKCg==
+--0016e6551d7896541404738d616a
+Content-Type: text/plain; charset=US-ASCII; name="dhclient.log"
+Content-Disposition: attachment; filename="dhclient.log"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file5
+
+SW50ZXJuZXQgU3lzdGVtcyBDb25zb3J0aXVtIERIQ1AgQ2xpZW50IFYzLjEuMQpDb3B5cmlnaHQg
+MjAwNC0yMDA4IEludGVybmV0IFN5c3RlbXMgQ29uc29ydGl1bS4KQWxsIHJpZ2h0cyByZXNlcnZl
+ZC4KRm9yIGluZm8sIHBsZWFzZSB2aXNpdCBodHRwOi8vd3d3LmlzYy5vcmcvc3cvZGhjcC8KCkxp
+c3RlbmluZyBvbiBMUEYvd2xhbjAvMDA6MTY6NDQ6OGY6OGY6OTAKU2VuZGluZyBvbiAgIExQRi93
+bGFuMC8wMDoxNjo0NDo4Zjo4Zjo5MApTZW5kaW5nIG9uICAgU29ja2V0L2ZhbGxiYWNrCkRIQ1BE
+SVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9ydCA2NyBpbnRlcnZhbCA1CkRI
+Q1BESVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9ydCA2NyBpbnRlcnZhbCAx
+MApESENQRElTQ09WRVIgb24gd2xhbjAgdG8gMjU1LjI1NS4yNTUuMjU1IHBvcnQgNjcgaW50ZXJ2
+YWwgMTAKREhDUERJU0NPVkVSIG9uIHdsYW4wIHRvIDI1NS4yNTUuMjU1LjI1NSBwb3J0IDY3IGlu
+dGVydmFsIDcKREhDUERJU0NPVkVSIG9uIHdsYW4wIHRvIDI1NS4yNTUuMjU1LjI1NSBwb3J0IDY3
+IGludGVydmFsIDEyCkRIQ1BESVNDT1ZFUiBvbiB3bGFuMCB0byAyNTUuMjU1LjI1NS4yNTUgcG9y
+dCA2NyBpbnRlcnZhbCAxMwpESENQRElTQ09WRVIgb24gd2xhbjAgdG8gMjU1LjI1NS4yNTUuMjU1
+IHBvcnQgNjcgaW50ZXJ2YWwgNApObyBESENQT0ZGRVJTIHJlY2VpdmVkLgpObyB3b3JraW5nIGxl
+YXNlcyBpbiBwZXJzaXN0ZW50IGRhdGFiYXNlIC0gc2xlZXBpbmcuCg==
+--0016e6551d7896541404738d616a--
