@@ -1,57 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:33976 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751775AbZIKWxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 18:53:04 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43: Disable PMQ mechanism
-Date: Sat, 12 Sep 2009 00:52:48 +0200
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:42781 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754961AbZINIuF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Sep 2009 04:50:05 -0400
+Received: by iwn8 with SMTP id 8so1230168iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:50:08 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200909120052.48395.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="us-ascii"
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 14 Sep 2009 01:49:48 -0700
+Message-ID: <43e72e890909140149t7459b36fgbcca27adb7937d9b@mail.gmail.com>
+Subject: pending patches for atheros - all-in-one file - 2009-09-14
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, devel@linuxdriverproject.org
+Cc: Sujith <Sujith.Manoharan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reduces IRQ pressure by about one third on a saturated link
-by disabling the PMQ mechanism. We currently don't use that mechanism.
+This file has all pending patches from my series + sujiths ANI fix patch:
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-pending-2009-09-14.patch
 
----
-
-If we implement PMQ in the future, we need to re-enable it, but only
-for AP mode. See the comment in the sourcecode.
-
-
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c	2009-09-12 00:31:44.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/b43/main.c	2009-09-12 00:41:27.000000000 +0200
-@@ -2675,6 +2675,20 @@ static void b43_adjust_opmode(struct b43
- 			cfp_pretbtt = 50;
- 	}
- 	b43_write16(dev, 0x612, cfp_pretbtt);
-+
-+	/* FIXME: We don't currently implement the PMQ mechanism,
-+	 *        so always disable it. If we want to implement PMQ,
-+	 *        we need to enable it here (clear DISCPMQ) in AP mode.
-+	 */
-+	if (0  /* ctl & B43_MACCTL_AP */) {
-+		b43_write32(dev, B43_MMIO_MACCTL,
-+			    b43_read32(dev, B43_MMIO_MACCTL)
-+			    & ~B43_MACCTL_DISCPMQ);
-+	} else {
-+		b43_write32(dev, B43_MMIO_MACCTL,
-+			    b43_read32(dev, B43_MMIO_MACCTL)
-+			    | B43_MACCTL_DISCPMQ);
-+	}
- }
- 
- static void b43_rate_memory_write(struct b43_wldev *dev, u16 rate, int is_ofdm)
-
--- 
-Greetings, Michael.
+  Luis
