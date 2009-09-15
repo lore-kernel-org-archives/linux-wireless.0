@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:15992 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbZINIqd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:46:33 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so473134fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 01:46:35 -0700 (PDT)
-Message-ID: <4AAE02E9.2050905@gmail.com>
-Date: Mon, 14 Sep 2009 10:46:33 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] ath5k: define ath_common ops
-References: <1252917123-11559-1-git-send-email-lrodriguez@atheros.com> <1252917123-11559-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252917123-11559-4-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:64475 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750905AbZIOI5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 04:57:31 -0400
+Subject: Re: alloc skb based on a given data buffer
+From: Zhu Yi <yi.zhu@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: "mel@csn.ul.ie" <mel@csn.ul.ie>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"elendil@planet.nl" <elendil@planet.nl>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"penberg@cs.helsinki.fi" <penberg@cs.helsinki.fi>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"cl@linux-foundation.org" <cl@linux-foundation.org>,
+	"Krauss, Assaf" <assaf.krauss@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <20090915.013321.07006714.davem@davemloft.net>
+References: <1252897270.5650.169.camel@debian>
+	 <20090914130612.GA11778@csn.ul.ie>	<1253003420.7549.51.camel@debian>
+	 <20090915.013321.07006714.davem@davemloft.net>
+Content-Type: text/plain
+Date: Tue, 15 Sep 2009 16:57:29 +0800
+Message-Id: <1253005050.7549.58.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2009 10:32 AM, Luis R. Rodriguez wrote:
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -437,6 +437,22 @@ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
->  
->  	return name;
->  }
-> +static unsigned int ath5k_ioread32(void *hw_priv, u32 reg_offset)
-> +{
-> +	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
-> +	return ioread32(ah->ah_iobase + reg_offset);
+On Tue, 2009-09-15 at 16:33 +0800, David Miller wrote:
+> From: Zhu Yi <yi.zhu@intel.com>
+> Date: Tue, 15 Sep 2009 16:30:20 +0800
+> 
+> > This way, device drivers can allocate the Rx buffers with their own size
+> > and alignment requirement. i.e. do an order-1 page allocation directly
+> > with free_pages() in the iwlagn driver for a 256 bytes aligned 8K Rx
+> > buffer. After DMA is finished, drivers can use the above function to
+> > assemble an skb based on the Rx buffer. It should resolve the problem
+> > for requiring an order-2 allocation by alloc_skb() in the first place.
+> 
+> You can create paged RX skbs just like drivers such as niu.c
+> and others already do, there is no need for special APIs for
+> this.
 
-Why not just
-return ath5k_hw_reg_read(hw_priv, reg_offset)
-as I suggested?
+Thanks. So we can put the 8K buffer into 2 skb_shinfo()->frags[] slots
+and set nr_frags to 2, right? Is this supported allover the network code
+already? At a first glance, I didn't find any frags handling in mac80211
+stack.
 
-> +static void ath5k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
-> +{
-> +	struct ath5k_hw *ah = (struct ath5k_hw *) hw_priv;
-> +	iowrite32(val, ah->ah_iobase + reg_offset);
+Thanks,
+-yi
 
-and ath5k_hw_reg_write(hw_priv, val, reg_offset)
-
-If we ever decide to not use ioread32/iowrite32, it will need a change
-on a single place.
-
-> +}
-> +
-> +const static struct ath_ops ath5k_common_ops = {
-
-C99, 6.11.5 Storage-class specifiers:
-1 The placement of a storage-class specifier other than at the
-beginning of the declaration specifiers in a declaration is
-an obsolescent feature.
-
-I.e. use static const, please.
