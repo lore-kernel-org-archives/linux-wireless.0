@@ -1,61 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 62.81.188.219.static.user.ono.com ([62.81.188.219]:22653 "EHLO
-	BCNSRV02.futurlink.local" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750704AbZI2P1g convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 11:27:36 -0400
-From: Genar Codina <Genar.Codina@futurlink.com>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	John Linville <linville@tuxdriver.com>,
+Received: from mga02.intel.com ([134.134.136.20]:20263 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750785AbZIOJPM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 05:15:12 -0400
+Subject: Re: alloc skb based on a given data buffer
+From: Zhu Yi <yi.zhu@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: "mel@csn.ul.ie" <mel@csn.ul.ie>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"elendil@planet.nl" <elendil@planet.nl>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"penberg@cs.helsinki.fi" <penberg@cs.helsinki.fi>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	szalat <szalat@gmail.com>
-Date: Tue, 29 Sep 2009 17:21:28 +0200
-Subject: RE: [rt2x00-users] [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB
- and rt73usb
-Message-ID: <38F8A7B624E06848B97136504F05BB180F4DA926FC@BCNSRV02.futurlink.local>
-References: <200909291537.54334.IvDoorn@gmail.com>
-In-Reply-To: <200909291537.54334.IvDoorn@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"cl@linux-foundation.org" <cl@linux-foundation.org>,
+	"Krauss, Assaf" <assaf.krauss@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"Abbas, Mohamed" <mohamed.abbas@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <20090915.020903.93643290.davem@davemloft.net>
+References: <1253003420.7549.51.camel@debian>
+	 <20090915.013321.07006714.davem@davemloft.net>
+	 <1253005050.7549.58.camel@debian>
+	 <20090915.020903.93643290.davem@davemloft.net>
+Content-Type: text/plain
+Date: Tue, 15 Sep 2009 17:15:11 +0800
+Message-Id: <1253006111.7549.61.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2009-09-15 at 17:09 +0800, David Miller wrote:
+> From: Zhu Yi <yi.zhu@intel.com>
+> Date: Tue, 15 Sep 2009 16:57:29 +0800
+> 
+> > Thanks. So we can put the 8K buffer into 2 skb_shinfo()->frags[] slots
+> > and set nr_frags to 2, right? Is this supported allover the network code
+> > already? At a first glance, I didn't find any frags handling in mac80211
+> > stack.
+> 
+> You have to pre-pull the link level protocol headers into the
+> linear area, but that's it.
+> 
+> Again, see niu.c for details, it does:
+> 
+> static void niu_rx_skb_append(struct sk_buff *skb, struct page *page,
+> 			      u32 offset, u32 size)
+> {
+> 	int i = skb_shinfo(skb)->nr_frags;
+> 	skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+> 
+> 	frag->page = page;
+> 	frag->page_offset = offset;
+> 	frag->size = size;
+> 
+> 	skb->len += size;
+> 	skb->data_len += size;
+> 	skb->truesize += size;
+> 
+> 	skb_shinfo(skb)->nr_frags = i + 1;
+> }
+> 
+> to add pages to SKBs and then at the end it goes:
+> 
+> 	skb_reserve(skb, NET_IP_ALIGN);
+> 	__pskb_pull_tail(skb, min(len, NIU_RXPULL_MAX));
+> 
+> Right before giving the SKB to the networking stack.  NIU_RXPULL_MAX
+> should be a value that will be large enough to cover the largest
+> possible link level header.
 
-I have also tested the rt73usb which is included in the new 2.6.31 kernel (modinfo rt73usb gives the version "2.3.0"), in mode Master, using hostapd (version 0.6.9) and it works OK.
+I see. Thanks for this info. I'll try implementing the same for iwlagn.
 
-Regards,
- 
+Thanks,
+-yi
 
------Mensaje original-----
-De: users-bounces@rt2x00.serialmonkey.com [mailto:users-bounces@rt2x00.serialmonkey.com] En nombre de Ivo van Doorn
-Enviado el: martes, 29 de septiembre de 2009 15:38
-Para: John Linville; linux-wireless@vger.kernel.org; szalat; users@rt2x00.serialmonkey.com
-Asunto: [rt2x00-users] [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB and rt73usb
-
-From: Michal Szalata <szalat@gmail.com>
-
-Thrustmaster FunAccess WIFI USB works with rt73usb with little
-modification of rt73usb.c.
-Tested with version 2.3.0 of driver.
-
-Signed-off-by: Michal Szalata <szalat@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 1cbd9b4..b8f5ee3 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2381,6 +2381,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	/* Huawei-3Com */
- 	{ USB_DEVICE(0x1472, 0x0009), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Hercules */
-+	{ USB_DEVICE(0x06f8, 0xe002), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x06f8, 0xe010), USB_DEVICE_DATA(&rt73usb_ops) },
- 	{ USB_DEVICE(0x06f8, 0xe020), USB_DEVICE_DATA(&rt73usb_ops) },
- 	/* Linksys */
-
-_______________________________________________
-users mailing list
-users@rt2x00.serialmonkey.com
-http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
