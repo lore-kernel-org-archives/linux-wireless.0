@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:12562 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbZI1PII convert rfc822-to-8bit (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40220
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751205AbZIOJIq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 11:08:08 -0400
-From: Holger Schurig <h.schurig@mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] libertas: first stab at cfg80211 support
-Date: Mon, 28 Sep 2009 17:07:59 +0200
-Cc: libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-References: <200909281321.21600.h.schurig@mn-solutions.de> <200909281654.08859.h.schurig@mn-solutions.de> <1254149857.3151.5.camel@johannes.local>
-In-Reply-To: <1254149857.3151.5.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909281707.59846.h.schurig@mn-solutions.de>
+	Tue, 15 Sep 2009 05:08:46 -0400
+Date: Tue, 15 Sep 2009 02:09:03 -0700 (PDT)
+Message-Id: <20090915.020903.93643290.davem@davemloft.net>
+To: yi.zhu@intel.com
+Cc: mel@csn.ul.ie, reinette.chatre@intel.com, elendil@planet.nl,
+	Larry.Finger@lwfinger.net, linville@tuxdriver.com,
+	penberg@cs.helsinki.fi, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, akpm@linux-foundation.org,
+	cl@linux-foundation.org, assaf.krauss@intel.com,
+	johannes@sipsolutions.net, mohamed.abbas@intel.com,
+	netdev@vger.kernel.org
+Subject: Re: alloc skb based on a given data buffer
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1253005050.7549.58.camel@debian>
+References: <1253003420.7549.51.camel@debian>
+	<20090915.013321.07006714.davem@davemloft.net>
+	<1253005050.7549.58.camel@debian>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It might make sense to support adding interfaces with nl80211,
-> since apparently it has mesh and monitor interfaces.
+From: Zhu Yi <yi.zhu@intel.com>
+Date: Tue, 15 Sep 2009 16:57:29 +0800
 
-Yes, this will eventually be added.
+> Thanks. So we can put the 8K buffer into 2 skb_shinfo()->frags[] slots
+> and set nr_frags to 2, right? Is this supported allover the network code
+> already? At a first glance, I didn't find any frags handling in mac80211
+> stack.
 
+You have to pre-pull the link level protocol headers into the
+linear area, but that's it.
 
-In the end I'd like to have all WEXT code in it's own file or 
-#ifdef'd and I'd like to have a working libertas_cs and 
-libertas_usb that don't need WEXT at all. But that will take 
-considerable time :-)   One step towards this goal will be 
-monitor mode via NL80211.
+Again, see niu.c for details, it does:
 
-Mesh-support via NL80211 must be done by someone else, I don't 
-have neither the knowledge, mesh nodes nor a mesh-capable 
-firmware. And I don't really care about mesh. So if no one else 
-does it, the CFG80211-only libertas-driver won't have mesh at 
-all.
+static void niu_rx_skb_append(struct sk_buff *skb, struct page *page,
+			      u32 offset, u32 size)
+{
+	int i = skb_shinfo(skb)->nr_frags;
+	skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
 
--- 
-M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
-Holger Schurig
-Raiffeisenstr. 10
-61191 Rosbach
-Tel: 06003/9141-15          Fax 06003/9141-49
-http://www.mn-solutions.de/
+	frag->page = page;
+	frag->page_offset = offset;
+	frag->size = size;
 
-Handelsregister Friedberg, HRB 5903
-Geschäftsführer: P.Schrittenlocher
+	skb->len += size;
+	skb->data_len += size;
+	skb->truesize += size;
+
+	skb_shinfo(skb)->nr_frags = i + 1;
+}
+
+to add pages to SKBs and then at the end it goes:
+
+	skb_reserve(skb, NET_IP_ALIGN);
+	__pskb_pull_tail(skb, min(len, NIU_RXPULL_MAX));
+
+Right before giving the SKB to the networking stack.  NIU_RXPULL_MAX
+should be a value that will be large enough to cover the largest
+possible link level header.
