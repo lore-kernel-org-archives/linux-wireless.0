@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33065 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175AbZIWAoR (ORCPT
+Received: from mail-iw0-f179.google.com ([209.85.223.179]:63535 "EHLO
+	mail-iw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbZIOWov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 20:44:17 -0400
-Subject: Re: [PATCH 3/3] i2400m-sdio: select IWMC3200TOP in Kconfig
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: davem@davemloft.net, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, yi.zhu@intel.com,
-	inaky.perez-gonzalez@intel.com, cindy.h.kao@intel.com,
-	guy.cohen@intel.com, ron.rindjunsky@intel.com
-In-Reply-To: <1253662724-16497-4-git-send-email-tomas.winkler@intel.com>
-References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
-	 <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
-	 <1253662724-16497-3-git-send-email-tomas.winkler@intel.com>
-	 <1253662724-16497-4-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain
-Date: Tue, 22 Sep 2009 17:44:04 -0700
-Message-Id: <1253666644.2931.7.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Tue, 15 Sep 2009 18:44:51 -0400
+Received: by iwn9 with SMTP id 9so2080963iwn.22
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 15:44:54 -0700 (PDT)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 15 Sep 2009 15:44:34 -0700
+Message-ID: <43e72e890909151544y23ac3c70sc679ba7399ecae78@mail.gmail.com>
+Subject: Pending patches for ar9271
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@linuxdriverproject.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
+Holger Schurig pointed out my all-in-one patch file was not applying
+cleanly on wireless-testing, I've corrected the mistake, here is the
+new v3 all-in-one file:
 
-> i2400m-sdio requires iwmc3200top for its operation
-> 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
->  drivers/net/wimax/i2400m/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wimax/i2400m/Kconfig b/drivers/net/wimax/i2400m/Kconfig
-> index d623b3d..7368ad5 100644
-> --- a/drivers/net/wimax/i2400m/Kconfig
-> +++ b/drivers/net/wimax/i2400m/Kconfig
-> @@ -25,6 +25,7 @@ config WIMAX_I2400M_SDIO
->  	tristate "Intel Wireless WiMAX Connection 2400 over SDIO"
->  	depends on WIMAX && MMC
->  	select WIMAX_I2400M
-> +	select IWMC3200TOP
->  	help
->  	  Select if you have a device based on the Intel WiMAX
->  	  Connection 2400 over SDIO.
+http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-14v3.patch
 
-this is not true actually. Since the WiMAX hardware in my laptop doesn't
-require the top driver.
+I've updated the ar9271 wiki page which explains how to set up your
+environment to work on ar9271:
 
-Regards
+http://wireless.kernel.org/en/users/Drivers/ar9271#Setting_up_your_environment
 
-Marcel
-
-
+ Luis
