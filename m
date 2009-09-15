@@ -1,85 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34997 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbZIURTj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 13:19:39 -0400
-Subject: Re: [PATCH] mac80211: Fix [re]association power saving issue on AP
- side
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Igor Perminov <igor.perminov@inbox.ru>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-In-Reply-To: <1253200137.26765.338.camel@sunlight>
-References: <1253200137.26765.338.camel@sunlight>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-8Bqk3kKXIaz2hYTcZyln"
-Date: Mon, 21 Sep 2009 10:19:33 -0700
-Message-Id: <1253553573.4458.9.camel@johannes.local>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:45978 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751213AbZIOW0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 18:26:32 -0400
+From: Michael Buesch <mb@bu3sch.de>
+Date: Wed, 16 Sep 2009 00:26:19 +0200
+MIME-Version: 1.0
+Subject: [PATCH] b43: fix build error if !CONFIG_B43_LEDS
+To: linville@tuxdriver.com
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Message-Id: <200909160026.21404.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Albert Herranz <albert_herranz@yahoo.es>
 
---=-8Bqk3kKXIaz2hYTcZyln
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Fix the following build error when CONFIG_B43_LEDS is not selected:
 
-Hi,
+drivers/net/wireless/b43/main.c: In function 'b43_remove':
+drivers/net/wireless/b43/main.c:4990: error: 'struct b43_leds' has no member named 'stop'
+drivers/net/wireless/b43/main.c:4991: error: 'struct b43_leds' has no member named 'work'
+make[4]: *** [drivers/net/wireless/b43/main.o] Error 1
 
-Jouni and I just discussed this and noticed that there are even more
-things broken that your patch doesn't fix either, so we will need just
-the last hunk of your patch (quoted below), and a one-line fix in
-hostapd.
+Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-And then we can also remove the workaround from net/mac80211/cfg.c (the
-entire EEXIST branch).
+---
+ drivers/net/wireless/b43/leds.c |    8 ++++++++
+ drivers/net/wireless/b43/leds.h |    4 ++++
+ drivers/net/wireless/b43/main.c |    3 +--
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
-Thanks,
-johannes
+diff --git a/drivers/net/wireless/b43/leds.c b/drivers/net/wireless/b43/leds.c
+index fbe31e0..fbe3d4f 100644
+--- a/drivers/net/wireless/b43/leds.c
++++ b/drivers/net/wireless/b43/leds.c
+@@ -325,6 +325,14 @@ void b43_leds_exit(struct b43_wldev *dev)
+ 	b43_led_turn_off(dev, leds->led_radio.index, leds->led_radio.activelow);
+ }
+ 
++void b43_leds_stop(struct b43_wldev *dev)
++{
++	struct b43_leds *leds = &dev->wl->leds;
++
++	leds->stop = 1;
++	cancel_work_sync(&leds->work);
++}
++
+ void b43_leds_register(struct b43_wldev *dev)
+ {
+ 	unsigned int i;
+diff --git a/drivers/net/wireless/b43/leds.h b/drivers/net/wireless/b43/leds.h
+index 49d3da5..9592e4c 100644
+--- a/drivers/net/wireless/b43/leds.h
++++ b/drivers/net/wireless/b43/leds.h
+@@ -63,6 +63,7 @@ void b43_leds_register(struct b43_wldev *dev);
+ void b43_leds_unregister(struct b43_wldev *dev);
+ void b43_leds_init(struct b43_wldev *dev);
+ void b43_leds_exit(struct b43_wldev *dev);
++void b43_leds_stop(struct b43_wldev *dev);
+ 
+ 
+ #else /* CONFIG_B43_LEDS */
+@@ -84,6 +85,9 @@ static inline void b43_leds_init(struct b43_wldev *dev)
+ static inline void b43_leds_exit(struct b43_wldev *dev)
+ {
+ }
++static inline void b43_leds_stop(struct b43_wldev *dev)
++{
++}
+ #endif /* CONFIG_B43_LEDS */
+ 
+ #endif /* B43_LEDS_H_ */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index a8840ef..6c0ea21 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4987,8 +4987,7 @@ static void b43_remove(struct ssb_device *dev)
+ 		 * might have modified it. Restoring is important, so the networking
+ 		 * stack can properly free resources. */
+ 		wl->hw->queues = wl->mac80211_initially_registered_queues;
+-		wl->leds.stop = 1;
+-		cancel_work_sync(&wl->leds.work);
++		b43_leds_stop(wldev);
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+ 
 
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_da=
-ta *tx)
->         struct ieee80211_hdr *hdr =3D (struct ieee80211_hdr *)tx->skb->da=
-ta;
->         u32 staflags;
-> =20
-> -       if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control))=
-)
-> +       if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
-> +                       || ieee80211_is_auth(hdr->frame_control)
-> +                       || ieee80211_is_assoc_resp(hdr->frame_control)
-> +                       || ieee80211_is_reassoc_resp(hdr->frame_control))=
-)
->                 return TX_CONTINUE;
-> =20
->         staflags =3D get_sta_flags(sta);
->=20
->=20
->=20
-
-
---=-8Bqk3kKXIaz2hYTcZyln
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKt7WiAAoJEODzc/N7+QmaB9cP/Rksz50HWKEcEcrv/L3YTWid
-7MdTgcXCsiSzEjSUOEpzr/E11nJ4h9swYoF2IBCZz70UpsWYORa+j+UeUVUExbQC
-d7tv+9rHPdhSWg/+ePRuk9kzzzIE74zXU7E2Er294nWzYUMOMHubG3WcYqpG0P1F
-ct5shVVZ6L6zoLXwRi7/by/QykYxLtl1qUks5miA5ULxbsW1UQ/NAGCZoOdnMBWZ
-bIHpoyxS+OWnTTfoKzA+CVHmpOo1Otj3414xKNYv87ACH5tPZc/DccRDZXjwECNI
-8gxiOhWY1UjryntC6Ss5j4EJW/ue2APJrCmqTYE+v/BaAs7sqH27Ys4DXK+hOQcu
-ewwFs/ySxZjP3qFtfILljNlBjlxtieKSksF+vwgTled8knCPs93SHNaP/9IIOqS3
-Q0mEsf88n3khnMyd/CIA0FMaCpftnpQTBrJfr25X6JnyexqCwsI21UqOQbJFQRN/
-g61firn/DpwL/mlOoHN3QM9sAa5rlGlT3hSsJ9JlmWfwjxCLl4iE5JQ5WRsdQoC9
-IOX/zKhHNlmcpQW16vUfdNtfNjZB+WBIJMvXrlr/s55A0n6hTSqeoYF0xKSrWff2
-nmuA/IM95+LxrdNbTWrWg2Q9mFEoqutii3SZ/cOslzoPc3opB5h+uzwRBQvIrg/v
-9mJ/xKg1XgKBz31r5kk6
-=fsbT
------END PGP SIGNATURE-----
-
---=-8Bqk3kKXIaz2hYTcZyln--
-
+-- 
+Greetings, Michael.
