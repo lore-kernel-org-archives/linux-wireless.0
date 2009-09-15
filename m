@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43117 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751618AbZIXDHB (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:62387 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768AbZIOEEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 23:07:01 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/4] atheros: move ath9k hw code to a module
-Date: Wed, 23 Sep 2009 23:06:58 -0400
-Message-Id: <1253761622-9530-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 15 Sep 2009 00:04:46 -0400
+Received: by fxm17 with SMTP id 17so1294598fxm.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 21:04:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3b0e19890909141951uf8b80c0ta3619045b54efff3@mail.gmail.com>
+References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>
+	 <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
+	 <4AAE53C8.1060100@lwfinger.net>
+	 <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
+	 <4AAE7446.3080407@lwfinger.net>
+	 <3b0e19890909141056l4a01b8f9w9887af5d6219c3ff@mail.gmail.com>
+	 <3ace41890909141351o261f7013u7d050a2f8a41dcb3@mail.gmail.com>
+	 <3b0e19890909141434t758a9b3dk2799623dfb19c6a6@mail.gmail.com>
+	 <3ace41890909141824i2f274a91rc19e50eac254e950@mail.gmail.com>
+	 <3b0e19890909141951uf8b80c0ta3619045b54efff3@mail.gmail.com>
+Date: Tue, 15 Sep 2009 05:04:48 +0100
+Message-ID: <3ace41890909142104u25ec85b9s4b1999799494fc1d@mail.gmail.com>
+Subject: Re: RTL8187B wireless driver issue
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Vignette consultant <vignette75@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Based on review through IRC of my RFC patches about moving ath9k hw
-code onto ath/ we determined its best to separate hw code from the
-ath module and instead use a separate new module. Since its shared
-between ath9k and ath9k_htc and since I'm working on reducing the
-number of files ath9k_htc has we'll just keep this new module,
-ath9k_hw, under ath9k/ as well as the future ath9k_htc module.
+On Tue, Sep 15, 2009 at 3:51 AM, Vignette consultant
+<vignette75@gmail.com> wrote:
+>  1 how can i check if wpa_supplicant is running or not?
 
-This patch series was rebased as of today's wireless-testing and
-applies on top of the other pending ath9k patches, specifically
-on top of Senthil's patch, "ath9k: Fix bugs in handling TX power".
+(sigh...) well, have a look at 'ps -lax' , e.g.
+ps -lax | grep wpa
+ps -lax | grep -i net
+ps -lax | grep dh
 
-If you have today's wireless-testing and want to apply all
-pending ath9k patches you can get all 61 patches from here:
+and see if there is anything you don't know the nature of... (and look
+it up on the web!).
 
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-23.patch
+>  3 are you saying "to use different driver"?
 
-Its sha1sum is: 90b59e0c85029a89bff7c6ec064220586cc6543e
+yes, different version/release of the driver
 
-If you're working on new patches please rebase on top of these.
+>
+>  2 where do i need put essid, so udev can use it?
 
-Luis R. Rodriguez (4):
-  ath9k: use common read/write ops on pci and debug code
-  ath9k: move hw code to its own module
-  ath9k_hw: print device ID if not supported
-  ath9k_hw: add AR9271 srev and device ID to allow hw to support ar9271
+YMMV, on my system (fedora) these are the system locations for wlan2.
 
- drivers/net/wireless/ath/Makefile       |    2 +-
- drivers/net/wireless/ath/ath9k/Kconfig  |    4 ++
- drivers/net/wireless/ath/ath9k/Makefile |   27 ++++++------
- drivers/net/wireless/ath/ath9k/ani.c    |    2 +
- drivers/net/wireless/ath/ath9k/btcoex.c |    6 +++
- drivers/net/wireless/ath/ath9k/calib.c  |    3 +
- drivers/net/wireless/ath/ath9k/debug.c  |   21 ++++++----
- drivers/net/wireless/ath/ath9k/hw.c     |   71 +++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.h     |    5 ++
- drivers/net/wireless/ath/ath9k/mac.c    |   30 +++++++++++++
- drivers/net/wireless/ath/ath9k/pci.c    |    4 +-
- 11 files changed, 148 insertions(+), 27 deletions(-)
+/etc/wpa_supplicant/wpa_supplicant.conf
 
+/etc/sysconfig/networking/devices/ifcfg-wlan2
+/etc/sysconfig/networking/devices/keys-wlan2
+/etc/sysconfig/networking/profiles/default/ifcfg-wlan2
+/etc/sysconfig/networking/profiles/default/keys-wlan2
+
+essid is in /etc/wpa_supplicant/wpa_supplicant.conf and ifcfg-*, and
+the key is in keys-* and also in
+/etc/wpa_supplicant/wpa_supplicant.conf . Also if you use
+NetworkManager, it can take credentials from the gnome-keyring-manager
+as well.
+
+In the normal course of event, when one if up a network interface,
+udev tells either the network service to configure the interface or
+talk to NetworkManger via dbus to do it. both network service and
+NetworkManager tells wpa_supplicant to start scanning for known APs or
+open APs and try to authenticate.
+
+If you are not aware of what wpa_supplicant might be doing, it could
+unset whatever credentials you try to set as it scans and look for
+known or open APs. You should try to use the NetworkManager applet or
+Wireless assistant to set essid and credentials, rather than by hand
+on the command line.
+
+Hmm, your Vista screenshot says the AP is unsecure (and the signal
+strength is poor), is that the case?
