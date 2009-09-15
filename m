@@ -1,50 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f174.google.com ([209.85.211.174]:51194 "EHLO
-	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbZIWK5i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 06:57:38 -0400
-Received: by ywh4 with SMTP id 4so690722ywh.33
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 03:57:42 -0700 (PDT)
-Date: Wed, 23 Sep 2009 16:27:27 +0530
-From: Vivek Natarajan <vivek.natraj@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Initialize txgain and rxgain for newer AR9287
-	chipsets.
-Message-ID: <20090923105727.GA13880@vivek-laptop>
+Received: from mail.gmx.net ([213.165.64.20]:40968 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750879AbZIOUUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 16:20:21 -0400
+Message-ID: <4AAFF706.9010806@gmx.de>
+Date: Tue, 15 Sep 2009 22:20:22 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ar9170: fixed coding style, moved define
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+This patch fixes some coding style issues and moves MAX_RATE_POWER into hw.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f74604d..7a4de3d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -814,7 +814,7 @@ static void ath9k_hw_init_mode_regs(struct ath_hw *ah)
+Signed-off-by: Joerg Albert <jal2@gmx.de>
+---
+ drivers/net/wireless/ath/ar9170/hw.h  |    2 ++
+ drivers/net/wireless/ath/ar9170/phy.c |   28 +++++++++++++++-------------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
+index 6cbfb2f..8811314 100644
+--- a/drivers/net/wireless/ath/ar9170/hw.h
++++ b/drivers/net/wireless/ath/ar9170/hw.h
+@@ -311,6 +311,8 @@ struct ar9170_tx_control {
  
- static void ath9k_hw_init_mode_gain_regs(struct ath_hw *ah)
+ #define AR9170_TX_PHY_SHORT_GI			0x80000000
+ 
++#define AR5416_MAX_RATE_POWER                   63
++
+ struct ar9170_rx_head {
+ 	u8 plcp[12];
+ } __packed;
+diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+index b3e5cf3..941c699 100644
+--- a/drivers/net/wireless/ath/ar9170/phy.c
++++ b/drivers/net/wireless/ath/ar9170/phy.c
+@@ -1241,9 +1241,6 @@ static u8 ar9170_get_max_edge_power(struct ar9170 *ar,
+ 				    struct ar9170_calctl_edges edges[],
+ 				    u32 freq)
  {
--	if (AR_SREV_9287_11(ah))
-+	if (AR_SREV_9287_11_OR_LATER(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 		ar9287Modes_rx_gain_9287_1_1,
- 		ARRAY_SIZE(ar9287Modes_rx_gain_9287_1_1), 6);
-@@ -825,7 +825,7 @@ static void ath9k_hw_init_mode_gain_regs(struct ath_hw *ah)
- 	else if (AR_SREV_9280_20(ah))
- 		ath9k_hw_init_rxgain_ini(ah);
+-/* TODO: move somewhere else */
+-#define AR5416_MAX_RATE_POWER        63
+-
+ 	int i;
+ 	u8 rc = AR5416_MAX_RATE_POWER;
+ 	u8 f;
+@@ -1261,10 +1258,11 @@ static u8 ar9170_get_max_edge_power(struct ar9170 *ar,
+ 			break;
+ 		}
+ 		if (i > 0 && f < edges[i].channel) {
+-			if (f > edges[i-1].channel &&
+-			    edges[i-1].power_flags & AR9170_CALCTL_EDGE_FLAGS) {
++			if (f > edges[i - 1].channel &&
++			    edges[i - 1].power_flags &
++			    AR9170_CALCTL_EDGE_FLAGS) {
+ 				/* lower channel has the inband flag set */
+-				rc = edges[i-1].power_flags &
++				rc = edges[i - 1].power_flags &
+ 					~AR9170_CALCTL_EDGE_FLAGS;
+ 			}
+ 			break;
+@@ -1272,10 +1270,10 @@ static u8 ar9170_get_max_edge_power(struct ar9170 *ar,
+ 	}
  
--	if (AR_SREV_9287_11(ah)) {
-+	if (AR_SREV_9287_11_OR_LATER(ah)) {
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 		ar9287Modes_tx_gain_9287_1_1,
- 		ARRAY_SIZE(ar9287Modes_tx_gain_9287_1_1), 6);
+ 	if (i == AR5416_NUM_BAND_EDGES) {
+-		if (f > edges[i-1].channel &&
+-		    edges[i-1].power_flags & AR9170_CALCTL_EDGE_FLAGS) {
++		if (f > edges[i - 1].channel &&
++		    edges[i - 1].power_flags & AR9170_CALCTL_EDGE_FLAGS) {
+ 			/* lower channel has the inband flag set */
+-			rc = edges[i-1].power_flags &
++			rc = edges[i - 1].power_flags &
+ 				~AR9170_CALCTL_EDGE_FLAGS;
+ 		}
+ 	}
+@@ -1297,7 +1295,8 @@ static void ar9170_calc_ctl(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+ 		int pwr_cal_len;
+ 	} *modes;
+ 
+-	/* order is relevant in the mode_list_*: we fall back to the
++	/*
++	 * order is relevant in the mode_list_*: we fall back to the
+ 	 * lower indices if any mode is missed in the EEPROM.
+ 	 */
+ 	struct ctl_modes mode_list_2ghz[] = {
+@@ -1315,7 +1314,8 @@ static void ar9170_calc_ctl(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+ 
+ #define EDGES(c, n) (ar->eeprom.ctl_data[c].control_edges[n])
+ 
+-	/* TODO: investigate the differences between OTUS'
++	/*
++	 * TODO: investigate the differences between OTUS'
+ 	 * hpreg.c::zfHpGetRegulatoryDomain() and
+ 	 * ath/regd.c::ath_regd_get_band_ctl() -
+ 	 * e.g. for FCC3_WORLD the OTUS procedure
+@@ -1362,13 +1362,15 @@ static void ar9170_calc_ctl(struct ar9170 *ar, u32 freq, enum ar9170_bw bw)
+ 				ar9170_get_max_edge_power(ar, EDGES(ctl_idx, 1),
+ 							  freq+f_off);
+ 
+-			/* TODO: check if the regulatory max. power is
++			/*
++			 * TODO: check if the regulatory max. power is
+ 			 *  controlled by cfg80211 for DFS
+ 			 * (hpmain applies it to max_power itself for DFS freq)
+ 			 */
+ 
+ 		} else {
+-			/* Workaround in otus driver, hpmain.c, line 3906:
++			/*
++			 * Workaround in otus driver, hpmain.c, line 3906:
+ 			 * if no data for 5GHT20 are found, take the
+ 			 * legacy 5G value.
+ 			 * We extend this here to fallback from any other *HT or
 -- 
-1.6.4.4
+1.6.0.4
 
