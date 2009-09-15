@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:64968 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479AbZIPTlK convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:40258 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753972AbZIOVAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 15:41:10 -0400
-Received: by fxm17 with SMTP id 17so2531847fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:41:12 -0700 (PDT)
+	Tue, 15 Sep 2009 17:00:12 -0400
+Received: by ewy2 with SMTP id 2so865643ewy.17
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 14:00:13 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Joerg Albert <jal2@gmx.de>
+Subject: Re: [PATCH] ar9170: handle overflow in tsf_low register during get_tsf
+Date: Tue, 15 Sep 2009 23:00:05 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4AAFF89D.1000804@gmx.de>
+In-Reply-To: <4AAFF89D.1000804@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <1253129879.2989.48.camel@note>
-References: <1253129879.2989.48.camel@note>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 16 Sep 2009 21:40:52 +0200
-Message-ID: <69e28c910909161240p7739edebi653b5d402a792856@mail.gmail.com>
-Subject: Re: [PATCH 2/2] b43: Add lpphy_clear_tx_power_offsets to improve TX
-	Power handling
-To: Thomas Ilnseher <illth@gmx.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909152300.06026.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You are essentially implementing dead code at this point - this will
-only ever be called if hardware-accelerated TX power control is
-enabled - and HW TX power control is unsupported, even for G-PHYs.
+On Tuesday 15 September 2009 22:27:09 Joerg Albert wrote:
+> ar9170_op_get_tsf: handle a carry from register TSF_L into TSF_H
+> by reading TSF_H twice.  We also get rid of the mutex here
+> and use read_mreg.
+> 
+> Signed-off-by: Joerg Albert <jal2@gmx.de>
+NACK.
 
-On Wed, Sep 16, 2009 at 9:37 PM, Thomas Ilnseher <illth@gmx.de> wrote:
-> This patch adds the lpphy_clear_tx_power_offsets to b43.
->
-> Signed-off-by: Thomas Ilnseher <illth@gmx.de>
->
+don't remove the mutex!
+
+it ensures an exclusive access the driver's data structures
+(cmdbuf, [readlen and readbuf]) and synchronous control message transfer.
+
+Regards,
+	Chr
 > ---
-> diff -uNr a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-> --- a/drivers/net/wireless/b43/phy_lp.c 2009-09-16 20:52:17.501318374 +0200
-> +++ b/drivers/net/wireless/b43/phy_lp.c 2009-09-16 20:53:36.593319452 +0200
-> @@ -1125,6 +1125,18 @@
->        dev->phy.lp->tssi_idx = (b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT) & 0x7F00) >> 8;
->  }
->
-> +static void lpphy_clear_tx_power_offsets(struct b43_wldev *dev)
-> +{
-> +       int i;
-> +       int id = 7;
-> +       if (dev->phy.rev < 2)
-> +               id = 10;
-> +       for (i = 0; i < 12; i++)
-> +               b43_lptab_write(dev, B43_LPTAB32(id, 0x40 + i), 0);
-> +       for (i = 0; i < 64; i++)
-> +               b43_lptab_write(dev, B43_LPTAB32(id, 0x80 + i), 0);
-> +}
+>  drivers/net/wireless/ath/ar9170/cmd.c  |    3 +--
+>  drivers/net/wireless/ath/ar9170/cmd.h  |    1 +
+>  drivers/net/wireless/ath/ar9170/main.c |   30 +++++++++++++++++-------------
+>  3 files changed, 19 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ar9170/cmd.c b/drivers/net/wireless/ath/ar9170/cmd.c
+> index f57a620..cf6f5c4 100644
+> --- a/drivers/net/wireless/ath/ar9170/cmd.c
+> +++ b/drivers/net/wireless/ath/ar9170/cmd.c
+> @@ -72,8 +72,7 @@ int ar9170_write_reg(struct ar9170 *ar, const u32 reg, const u32 val)
+>  	return err;
+>  }
+>  
+> -static int ar9170_read_mreg(struct ar9170 *ar, int nregs,
+> -			    const u32 *regs, u32 *out)
+> +int ar9170_read_mreg(struct ar9170 *ar, int nregs, const u32 *regs, u32 *out)
+>  {
+>  	int i, err;
+>  	__le32 *offs, *res;
+> diff --git a/drivers/net/wireless/ath/ar9170/cmd.h b/drivers/net/wireless/ath/ar9170/cmd.h
+> index a4f0e50..826c45e 100644
+> --- a/drivers/net/wireless/ath/ar9170/cmd.h
+> +++ b/drivers/net/wireless/ath/ar9170/cmd.h
+> @@ -44,6 +44,7 @@
+>  int ar9170_write_mem(struct ar9170 *ar, const __le32 *data, size_t len);
+>  int ar9170_write_reg(struct ar9170 *ar, const u32 reg, const u32 val);
+>  int ar9170_read_reg(struct ar9170 *ar, u32 reg, u32 *val);
+> +int ar9170_read_mreg(struct ar9170 *ar, int nregs, const u32 *regs, u32 *out);
+>  int ar9170_echo_test(struct ar9170 *ar, u32 v);
+>  
+>  /*
+> diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+> index c1f8c69..3457cd2 100644
+> --- a/drivers/net/wireless/ath/ar9170/main.c
+> +++ b/drivers/net/wireless/ath/ar9170/main.c
+> @@ -2190,22 +2190,26 @@ static u64 ar9170_op_get_tsf(struct ieee80211_hw *hw)
+>  {
+>  	struct ar9170 *ar = hw->priv;
+>  	int err;
+> -	u32 tsf_low;
+> -	u32 tsf_high;
+>  	u64 tsf;
+> +#define NR 3
+
+> +	static const u32 addr[NR] = { AR9170_MAC_REG_TSF_H,
+> +				    AR9170_MAC_REG_TSF_L,
+> +				    AR9170_MAC_REG_TSF_H };
+> +	u32 val[NR];
+> +	int loops = 0;
 > +
->  static void lpphy_set_tx_power_control(struct b43_wldev *dev,
->                                       enum b43_lpphy_txpctl_mode mode)
->  {
-> @@ -1139,7 +1151,7 @@
->
->        if (oldmode == B43_LPPHY_TXPCTL_HW) {
->                lpphy_update_tx_power_npt(dev);
-> -               //TODO Clear all TX Power offsets
-> +               lpphy_clear_tx_power_offsets(dev);
->        } else {
->                if (mode == B43_LPPHY_TXPCTL_HW) {
->                        //TODO Recalculate target TX power
->
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> +	while (loops++ < 100) {
+> +		err = ar9170_read_mreg(ar, NR, addr, val);
+> +		if (WARN_ON(err))
+> +			return 0;
+> +		if (val[0] == val[2])
+> +			break;
+> +	}
+>  
+> -	mutex_lock(&ar->mutex);
+> -	err = ar9170_read_reg(ar, AR9170_MAC_REG_TSF_L, &tsf_low);
+> -	if (!err)
+> -		err = ar9170_read_reg(ar, AR9170_MAC_REG_TSF_H, &tsf_high);
+> -	mutex_unlock(&ar->mutex);
+> -
+> -	if (WARN_ON(err))
+> -		return 0;
+> -
+> -	tsf = tsf_high;
+> -	tsf = (tsf << 32) | tsf_low;
+> +	tsf = val[0];
+> +	tsf = (tsf << 32) | val[1];
+>  	return tsf;
+> +#undef NR
+>  }
+>  
+>  static int ar9170_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> 
