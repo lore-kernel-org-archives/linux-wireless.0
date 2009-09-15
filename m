@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:51301 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbZI3BTh convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:62144 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754379AbZIOCQz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 21:19:37 -0400
-Received: by ewy7 with SMTP id 7so5998752ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 18:19:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
-References: <200909260457.21103.malte.gell@gmx.de>
-	 <4ABDE7AC.1090409@hauke-m.de> <200909291050.54388.malte.gell@gmx.de>
-	 <3ace41890909290200h4dbefddah131851675dc06097@mail.gmail.com>
-	 <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
-Date: Wed, 30 Sep 2009 02:19:41 +0100
-Message-ID: <3ace41890909291819x4f01c6c9p475ea3a4bb075342@mail.gmail.com>
-Subject: Re: cannot compile compate-wirless snapshots
+	Mon, 14 Sep 2009 22:16:55 -0400
+Received: by ewy2 with SMTP id 2so68663ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 19:16:58 -0700 (PDT)
 From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: Malte Gell <malte.gell@gmx.de>, Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org, mcgrof@winlab.rutgers.edu
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: [PATCH] compat-2.6: adding driver-select script support for rtl818x
+Date: Tue, 15 Sep 2009 03:16:53 +0100
+Message-Id: <1252981013-11685-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/29 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Tue, Sep 29, 2009 at 11:00 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+adding driver-select script support for rtl818x
 
->> The relevant config is probably /boot/config-`uname -r`, but, please
->> do *not* modify it.
->>
->
-> It should be in /proc/config.gz. (/boot/config-* is an Ubuntuism.)
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
+ scripts/driver-select |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-John pointed out Fedora & RHEL does /boot/config-*  . (and don't
-provide /proc/config.gz). I don't know which distro does
-/proc/config.gz Obviously neither Ubuntu nor Fedora/RHEL; maybe one of
-Mandriva/Debian/Suse?
+diff --git a/scripts/driver-select b/scripts/driver-select
+index e0d7305..dcb777c 100755
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -44,6 +44,7 @@ function usage {
+ 	echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k ar9170 ${NORMAL}>"
+ 	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwl3945 iwlagn ipw2100 ipw2200 ${NORMAL}>"
+ 	echo -e "\t${CYAN}iwlwifi${NORMAL} < ${PURPLE} iwl3945 iwlagn ${NORMAL}>"
++	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+ 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 (SPI and SDIO) wl1271 ${NORMAL}>"
+ 
+ 	echo -e "Restoring compat-wireless:"
+@@ -127,6 +128,13 @@ function disable_var_01 {
+ 	disable_var
+ }
+ 
++function disable_var_02 {
++	#var_01 with eeprom not disabled
++	disable_lib80211
++	disable_ssb
++	disable_usbnet
++}
++
+ function select_ath_driver 
+ {
+ 	backup_file $ATH_MAKEFILE
+@@ -227,6 +235,10 @@ case $1 in
+ 		select_driver		CONFIG_ATH_COMMON
+ 		select_ath_driver	CONFIG_AR9170_USB
+ 		;;
++	rtl818x)
++		select_drivers		CONFIG_RTL8180 CONFIG_RTL8187
++		disable_var_02
++		;;
+ 	zd1211rw)
+ 		select_driver		CONFIG_ZD1211RW
+ 		disable_var_01
+-- 
+1.6.2.5
 
-As a point of interest, /boot also contains the init ramdisk, the
-kernel symbol map besides the kernel image (beside some
-grub/boot-loader files), so it isn't too much to have another kernel
-related file. For the purist, building the kernel to have
-self-knowledge of its own config under /proc is a neat thing, but
-OTOH, it uses kernel memory to provide what is very static unchanging
-info under /proc, which is unwise.
