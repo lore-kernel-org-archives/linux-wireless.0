@@ -1,70 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40916 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753749AbZISF4s (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:43892 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716AbZIOBYW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2009 01:56:48 -0400
-Subject: Re: alloc skb based on a given data buffer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: yi.zhu@intel.com, mel@csn.ul.ie, reinette.chatre@intel.com,
-	elendil@planet.nl, Larry.Finger@lwfinger.net,
-	linville@tuxdriver.com, penberg@cs.helsinki.fi,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net, akpm@linux-foundation.org,
-	cl@linux-foundation.org, assaf.krauss@intel.com,
-	mohamed.abbas@intel.com, netdev@vger.kernel.org
-In-Reply-To: <20090915.141606.134994761.davem@davemloft.net>
-References: <20090915.020903.93643290.davem@davemloft.net>
-	 <1253006111.7549.61.camel@debian>
-	 <1253028631.23427.55.camel@johannes.local>
-	 <20090915.141606.134994761.davem@davemloft.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-q77ki/2eoXOCiZi7ADji"
-Date: Fri, 18 Sep 2009 22:56:06 -0700
-Message-Id: <1253339766.16125.1.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 14 Sep 2009 21:24:22 -0400
+Received: by bwz19 with SMTP id 19so2483910bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 18:24:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3b0e19890909141434t758a9b3dk2799623dfb19c6a6@mail.gmail.com>
+References: <3b0e19890909122130l6c447e40r977f050e1a099794@mail.gmail.com>
+	 <4AAE3DF7.7060504@lwfinger.net>
+	 <3b0e19890909140719y7971c9f4m5fe086a9008fd423@mail.gmail.com>
+	 <4AAE53C8.1060100@lwfinger.net>
+	 <3b0e19890909140905g4c6bfef3t38cd94a205d26f8@mail.gmail.com>
+	 <4AAE7446.3080407@lwfinger.net>
+	 <3b0e19890909141056l4a01b8f9w9887af5d6219c3ff@mail.gmail.com>
+	 <3ace41890909141351o261f7013u7d050a2f8a41dcb3@mail.gmail.com>
+	 <3b0e19890909141434t758a9b3dk2799623dfb19c6a6@mail.gmail.com>
+Date: Tue, 15 Sep 2009 02:24:25 +0100
+Message-ID: <3ace41890909141824i2f274a91rc19e50eac254e950@mail.gmail.com>
+Subject: Re: RTL8187B wireless driver issue
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Vignette consultant <vignette75@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Sep 14, 2009 at 10:34 PM, Vignette consultant
+<vignette75@gmail.com> wrote:
+>  Hi
+>
+>  I get timed out errors consistently as per attached log file.
+>  I tried several Live Cds from fedora, sidux - but i get the same dhcp
+> error. I used to be able to connect before.
+>
+>  Please check attached log and see if you can point me towards the solution.
 
---=-q77ki/2eoXOCiZi7ADji
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Your log do not add anything new - I already asked you to do 3 things,
+and there is no indication you have done any of them; there is no
+point writing me the same things you had wrote to Larry or
+linux-wireless, and try to get a private answer - Your won't. (please
+do not remove the CC:'s and please do not write privately on general
+help matters).
 
-On Tue, 2009-09-15 at 14:16 -0700, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 15 Sep 2009 08:30:31 -0700
->=20
-> > Hold, mac80211 can't cope with that at this point for sw crypto and
-> > possibly other things.
->=20
-> Then it should skb_linearize() at input, or similar.
+1) make sure that wpa_supplicant is *not* running - newer liveCDs can
+have wpa_supplicant working (compare to older which does not use it).
 
-Not all that much won then since that again means an order-2 allocation.
-Fewer, certainly, as most packets are actually much smaller than that.
+2) make sure your authentication credentials - essid, passphases - are
+in the network config files and agree with what you are trying to set
+on the command line, just in case udev wants to unset your credentials
+you are setting manually on the comamnd line.
 
-johannes
+3) switch from kernel-modules-backport to a different version of
+compat-wireless and/or vice versa. There were some transient bugs a
+while ago.
 
---=-q77ki/2eoXOCiZi7ADji
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKtHJyAAoJEODzc/N7+QmaK64QAJxYVAiY0mWYsHhi3iGib2Ma
-1VqZdVHNCZ4AbUp90sOkrTfUaS/nL0w5EPQ8hhM1zMQoqcyX7O05dPig2ahnRLJ1
-MZXZkPhV3Nb1TAHwYj4PDaRur7X5d9xCBhPDZEt9feLZs3Gw8NqhmJxDoNi3OyA8
-VmGVBhifpZMZetST5votEXXJWOx3aN8UAf6xv+jbOAFcfNke3xUWSKFVtK82B6UV
-8klkTFAOo/Tq9RlV2Eb83QaFnHYjZLMfj0puh8Tc8E/i6BARrI+qgjT1DJNBFTsL
-Bbe3yGq+OWMQ//tWbRvZTN954vKdtvA6PfU6lF3gVdSlJAZKSZUIt6EBHf/ZSz0J
-O7eTPweVKNKEHFROglN+w+IWV8ZNZIcms+1sCK3zH3bLxKpR89LyWtiRaIX8tuci
-BwvXfLgVTnDJjf89X3uaNmH8XCv3zyX6TBhuMrfB1fjWwc8xPp5Rupo83jC9KPAp
-Vzc5NY/VXdD/U27VBNRvS2KQUiKXNU/NyLoZ2o+WW51mkHStwmv/6/HXyBDT9v1U
-sc0yBjg3/yJo50RTzaQRvUVmEqWZcLtEujgOlgad3YuCpZMUjdaOHybQWkvGJMxb
-jhDfsfCvlLfLSE+8E4/2+9BIlBVSa8qovt2WCkiXMrY+j3YFGNI/E+GPXcTmCxCU
-r+CgNqI9zDZusMru3zcU
-=AziV
------END PGP SIGNATURE-----
-
---=-q77ki/2eoXOCiZi7ADji--
-
+>
+>  thanks
+>  sam
+>
+> On 9/14/09, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+>> On Mon, Sep 14, 2009 at 6:56 PM, Vignette consultant
+>> <vignette75@gmail.com> wrote:
+>>>  Larry,
+>>>
+>>>  I got the same error even after adding wlan0 in
+>>> /etc/network/interfaces file. I set the essid using "sudo iwconfig
+>>> wlan0 essid linksys" command and restarted network. I tried other
+>>> essids, but it gives same error.
+>>>
+>>>  Attached files contain log files. Please advise about solution.
+>>>
+>>>  How do I disable usb monitoring log, so I can see wlan0 interface log
+>>> from dmesg?
+>>>
+>>>  Thanks
+>>>  Sam
+>>>
+>>> On 9/14/09, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>>> Vignette consultant wrote:
+>>>>>  Hi
+>>>>>
+>>>>>  Attached files contain several logs of various commands. The log-1
+>>>>> file is before running command and log-2 file is after running
+>>>>> specific command.
+>>>>>
+>>>>>  Here are commands that I give as soon as I log in. It's server
+>>>>> edition.
+>>>>>
+>>>>>  $ sudo ifconfig wlan0 up
+>>>>>  $ sudo iwconfig wlan0 ESSID linksys
+>>>>>  $ sudo dhclient wlan0 - results in no IP addr leased
+>>>>
+>>>> Your wireless has not associated and has no communication, which is
+>>>> why it cannot get an IP using DHCP.
+>>>>
+>>>> A quick check with Google indicates that Ubuntu uses
+>>>> /etc/network/interfaces to control the devices. Once that is correct,
+>>>> you should be able to 'sudo /etc/init.d/networking restart' to start
+>>>> the network. If the server is properly configured, the network should
+>>>> start on boot.
+>>>>
+>>>> BTW, the dmesg buffer is circular. All that usb monitoring output has
+>>>> completely filled the buffer, and it contains no useful information.
+>>>>
+>>>
+>>
+>> scanning works, so there doesn't seem to be anything wrong with the
+>> device or the driver itself. However, even for static configuration,
+>> sometimes wpa_supplicant can still be involved and interfere, so you
+>> probably want to make sure you put all the relevant config in
+>> wpa_supplicant.conf , as well as manually; or make sure no other
+>> network tools are running. (udev can launch wpa_supplicant/dhcp on
+>> ifconfig up automatically - the 'not ready' messages are from udev
+>> hooks). Lastly, I think the Ubuntu/Debian family packages
+>> compat-wireless as 'kernel-modules-backport' or something; try that or
+>> even compat-wireless. ( a while back there was a bug with
+>> associattion).
+>>
+>
