@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40781 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbZI0S1R (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:46691 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676AbZIOXtU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 14:27:17 -0400
-Subject: [PATCH 1/2] net: introduce NETDEV_PRE_INIT notifier
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Sep 2009 20:26:39 +0200
-Message-Id: <1254075999.6583.4.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 15 Sep 2009 19:49:20 -0400
+Received: by iwn8 with SMTP id 8so2008569iwn.4
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 16:49:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <792649359.20090916034611@mail.ru>
+References: <174470396.20090916030952@mail.ru> <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
+	<792649359.20090916034611@mail.ru>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 15 Sep 2009 16:49:04 -0700
+Message-ID: <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
+Subject: Re: Re[2]: cfg80211 and rfkill_backport question.
+To: Nikolai ZHUBR <zhubr@mail.ru>
+Cc: linux-wireless@vger.kernel.org,
+	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For various purposes including a wireless extensions
-bugfix, we need to hook into the netdev creation at
-a point before netdev_register_kobject(). It seems
-more generic, however, to have it even earlier. This
-will also ease doing the dev type assignment that
-Marcel was working on generically.
+On Tue, Sep 15, 2009 at 5:46 PM, Nikolai ZHUBR <zhubr@mail.ru> wrote:
+> Hello Luis,
+>
+> Wednesday, September 16, 2009, 2:14:21 AM, Luis R. Rodriguez wrote:
+>> Ah nice, finally some tester on 2.6.25 :D
+>
+>> So we never tested 2.6.25 on compat-wireless, I just got it to
+>> compile, that's all. So what I think you need is to make sure the
+>> symbols you are having issues with are either exported or included
+>> inline on a header. Can you check that?
+> Ok, could you be more specific? What should I do exactly? I'm not a
+> great kernel expert actually. :/
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- include/linux/notifier.h |    1 +
- net/core/dev.c           |    5 +++++
- 2 files changed, 6 insertions(+)
+Check if the symbols you had issues with were indeed exported via
+EXPORT_SYMBOL() on the compat code (compat/*.c) or if whether they
+were defined via a header as an inline (compat/*.h).
 
---- wireless-testing.orig/include/linux/notifier.h	2009-09-27 15:09:10.000000000 +0200
-+++ wireless-testing/include/linux/notifier.h	2009-09-27 15:10:19.000000000 +0200
-@@ -199,6 +199,7 @@ static inline int notifier_to_errno(int 
- #define NETDEV_FEAT_CHANGE	0x000B
- #define NETDEV_BONDING_FAILOVER 0x000C
- #define NETDEV_PRE_UP		0x000D
-+#define NETDEV_PRE_INIT		0x000E
- 
- #define SYS_DOWN	0x0001	/* Notify of system down */
- #define SYS_RESTART	SYS_DOWN
---- wireless-testing.orig/net/core/dev.c	2009-09-27 15:09:56.000000000 +0200
-+++ wireless-testing/net/core/dev.c	2009-09-27 15:11:40.000000000 +0200
-@@ -4734,6 +4734,11 @@ int register_netdevice(struct net_device
- 
- 	dev->iflink = -1;
- 
-+	ret = call_netdevice_notifiers(NETDEV_PRE_INIT, dev);
-+	ret = notifier_to_errno(ret);
-+	if (ret)
-+		goto out;
-+
- 	/* Init, if this function is available */
- 	if (dev->netdev_ops->ndo_init) {
- 		ret = dev->netdev_ops->ndo_init(dev);
-
-
+  Luis
