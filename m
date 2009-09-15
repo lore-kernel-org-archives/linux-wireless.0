@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:56328 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756796AbZINUzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 16:55:45 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Kernel oops with 2.6.31-wl
-Date: Mon, 14 Sep 2009 22:55:40 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <4AAE4DAA.1010505@lwfinger.net> <200909142245.52042.mb@bu3sch.de> <4AAEAC90.7070205@lwfinger.net>
-In-Reply-To: <4AAEAC90.7070205@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909142255.42958.mb@bu3sch.de>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56381
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751331AbZIOVPt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 17:15:49 -0400
+Date: Tue, 15 Sep 2009 14:16:06 -0700 (PDT)
+Message-Id: <20090915.141606.134994761.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: yi.zhu@intel.com, mel@csn.ul.ie, reinette.chatre@intel.com,
+	elendil@planet.nl, Larry.Finger@lwfinger.net,
+	linville@tuxdriver.com, penberg@cs.helsinki.fi,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, akpm@linux-foundation.org,
+	cl@linux-foundation.org, assaf.krauss@intel.com,
+	mohamed.abbas@intel.com, netdev@vger.kernel.org
+Subject: Re: alloc skb based on a given data buffer
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1253028631.23427.55.camel@johannes.local>
+References: <20090915.020903.93643290.davem@davemloft.net>
+	<1253006111.7549.61.camel@debian>
+	<1253028631.23427.55.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 September 2009 22:50:24 Larry Finger wrote:
-> Michael Buesch wrote:
-> > On Monday 14 September 2009 20:20:21 Larry Finger wrote:
-> >> Johannes Berg wrote:
-> >>> On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
-> >>>> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
-> >>>> oops when unloading b43:
-> >>>> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
-> >>>> b43_op_config+0x10c/0x36f [b43]
-> >>> Seems like a b43 problem to me.
-> >> I had pretty much reached that conclusion. I will need to swap cards
-> >> to debug as the 4315 won't run on older kernels without a lot of patches.
-> > 
-> > I can't reproduce here. What sequence of events is needed to trigger this?
-> 
-> All I have to do is make a connection, then "sudo modprobe -rv b43"
-> while the connection is live. I have not tried shutting the interface
-> down before the modprobe. It gets through the "rmmod b43" and the
-> "rmmod ssb" and then crashes.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 15 Sep 2009 08:30:31 -0700
 
-Ok, works. Thanks.
-I'll send a patch soon.
+> Hold, mac80211 can't cope with that at this point for sw crypto and
+> possibly other things.
 
--- 
-Greetings, Michael.
+Then it should skb_linearize() at input, or similar.
