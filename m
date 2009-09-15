@@ -1,42 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58020 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751890AbZIZTJV (ORCPT
+Received: from smtp138.mail.ukl.yahoo.com ([77.238.184.69]:46730 "HELO
+	smtp138.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752413AbZIOUdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 15:09:21 -0400
-Date: Sat, 26 Sep 2009 22:09:21 +0300
-From: Jouni Malinen <j@w1.fi>
-To: ASIC Felix <ic.felix@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Is this normal: ath9k: Two wiphys trying to scan at the same
-	time
-Message-ID: <20090926190921.GA22838@jm.kir.nu>
-References: <1253825462.19221.14.camel@darkslate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1253825462.19221.14.camel@darkslate>
+	Tue, 15 Sep 2009 16:33:00 -0400
+From: Albert Herranz <albert_herranz@yahoo.es>
+To: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Cc: Albert Herranz <albert_herranz@yahoo.es>
+Subject: [PATCH] b43: fix build error if !CONFIG_B43_LEDS
+Date: Tue, 15 Sep 2009 22:32:54 +0200
+Message-Id: <1253046774-14416-1-git-send-email-albert_herranz@yahoo.es>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 01:51:02PM -0700, ASIC Felix wrote:
+Fix the following build error when CONFIG_B43_LEDS is not selected:
 
-> is this normal:
-> 
->   ath9k: Two wiphys trying to scan at the same time
-> 
-> afaik, I did not enable virtual phy stuff. Connection appears to be
-> working okay. I've been seeing this for quite some time.
+drivers/net/wireless/b43/main.c: In function 'b43_remove':
+drivers/net/wireless/b43/main.c:4990: error: 'struct b43_leds' has no member named 'stop'
+drivers/net/wireless/b43/main.c:4991: error: 'struct b43_leds' has no member named 'work'
+make[4]: *** [drivers/net/wireless/b43/main.o] Error 1
 
-That should only be showing up if virtual wiphys are used. In this case,
-it should not really be showing up and is likely indicating a bug
-somewhere (ath9k or mac80211). I don't know how to reproduce this
-easily, so I have not looked into more details yet. It would be
-interesting to add printk calls into ath9k_sw_scan_start() and
-ath9k_sw_scan_complete() just after the mutex_lock() call to figure out
-whether mac80211 ends up calling sw_scan_start() driver handler twice in
-a row which would be one possible way to get this triggered. The other
-way to hit this would be if ath9k were to somehow not update aphy->state
-correctly when the scan has been completed.
+Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
+---
+ drivers/net/wireless/b43/leds.c |    8 ++++++++
+ drivers/net/wireless/b43/leds.h |    4 ++++
+ drivers/net/wireless/b43/main.c |    3 +--
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/leds.c b/drivers/net/wireless/b43/leds.c
+index fbe31e0..fbe3d4f 100644
+--- a/drivers/net/wireless/b43/leds.c
++++ b/drivers/net/wireless/b43/leds.c
+@@ -325,6 +325,14 @@ void b43_leds_exit(struct b43_wldev *dev)
+ 	b43_led_turn_off(dev, leds->led_radio.index, leds->led_radio.activelow);
+ }
+ 
++void b43_leds_stop(struct b43_wldev *dev)
++{
++	struct b43_leds *leds = &dev->wl->leds;
++
++	leds->stop = 1;
++	cancel_work_sync(&leds->work);
++}
++
+ void b43_leds_register(struct b43_wldev *dev)
+ {
+ 	unsigned int i;
+diff --git a/drivers/net/wireless/b43/leds.h b/drivers/net/wireless/b43/leds.h
+index 49d3da5..9592e4c 100644
+--- a/drivers/net/wireless/b43/leds.h
++++ b/drivers/net/wireless/b43/leds.h
+@@ -63,6 +63,7 @@ void b43_leds_register(struct b43_wldev *dev);
+ void b43_leds_unregister(struct b43_wldev *dev);
+ void b43_leds_init(struct b43_wldev *dev);
+ void b43_leds_exit(struct b43_wldev *dev);
++void b43_leds_stop(struct b43_wldev *dev);
+ 
+ 
+ #else /* CONFIG_B43_LEDS */
+@@ -84,6 +85,9 @@ static inline void b43_leds_init(struct b43_wldev *dev)
+ static inline void b43_leds_exit(struct b43_wldev *dev)
+ {
+ }
++static inline void b43_leds_stop(struct b43_wldev *dev)
++{
++}
+ #endif /* CONFIG_B43_LEDS */
+ 
+ #endif /* B43_LEDS_H_ */
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index a8840ef..6c0ea21 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4987,8 +4987,7 @@ static void b43_remove(struct ssb_device *dev)
+ 		 * might have modified it. Restoring is important, so the networking
+ 		 * stack can properly free resources. */
+ 		wl->hw->queues = wl->mac80211_initially_registered_queues;
+-		wl->leds.stop = 1;
+-		cancel_work_sync(&wl->leds.work);
++		b43_leds_stop(wldev);
+ 		ieee80211_unregister_hw(wl->hw);
+ 	}
+ 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.6.0.4
+
