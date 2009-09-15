@@ -1,103 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galiil.marvell.com ([199.203.130.254]:64021 "EHLO
-	galiil.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbZIRBsB convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:63614 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757314AbZIOCU4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 21:48:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
-	Andrey Yurovsky <andrey@cozybit.com>
-CC: Dan Williams <dcbw@redhat.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-Date: Thu, 17 Sep 2009 18:47:58 -0700
-Subject: RE: [PATCH] libertas: Add auto deep sleep support for
- SD8385/SD8686/SD8688
-Message-ID: <477F20668A386D41ADCC57781B1F704306DB9D021C@SC-VEXCH1.marvell.com>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
- <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
- <477F20668A386D41ADCC57781B1F704306DB9CFDB7@SC-VEXCH1.marvell.com>
- <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com>
- <20090917161154.GA877@Chamillionaire.breakpoint.cc>
-In-Reply-To: <20090917161154.GA877@Chamillionaire.breakpoint.cc>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+	Mon, 14 Sep 2009 22:20:56 -0400
+Received: by ewy2 with SMTP id 2so70368ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 19:20:59 -0700 (PDT)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, mcgrof@winlab.rutgers.edu
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: [PATCH] compat-2.6: adding notes on installing to non-running kernel
+Date: Tue, 15 Sep 2009 03:20:56 +0100
+Message-Id: <1252981256-12371-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+adding notes on installing to non-running kernel
 
-> -----Original Message-----
-> From: Sebastian Andrzej Siewior [mailto:sebastian@breakpoint.cc]
-> Sent: Thursday, September 17, 2009 9:12 AM
-> To: Andrey Yurovsky
-> Cc: Bing Zhao; Dan Williams; Amitkumar Karwar; linux-wireless@vger.kernel.org; libertas-
-> dev@lists.infradead.org
-> Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
-> 
-> * Andrey Yurovsky | 2009-09-16 13:47:48 [-0700]:
-> 
-> >> Some information (such as the interface name and path) in README file is out of date. We just
-> copy-and-paste it for the new deepsleep command. We need a separate patch to clean up the REAME file
-> and keep it up to date.
-> >
-> >Ok.  Either way, this is another out-of-band interface (regardless of
-> >if it's debugfs or sysfs).  That said, I believe that debugfs should
-> >be used for debugging, not for configuring driver/device features like
-> >these.
-> I agree on this. Debugfs is for debug only and should stay that way.
-> What do other driver in regard to this? I hardly belive that the
-> libertas driver is the only "deep sleep" user.
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
+ README |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-The debugfs interface has already been used for configuring some other parameters in libertas driver.
-Choosing a different way for deep sleep configuration doesn't make sense to me.
+diff --git a/README b/README
+index 7c6c2cd..380fc5a 100644
+--- a/README
++++ b/README
+@@ -142,6 +142,15 @@ compat-wireless-2.6 drivers for it you can use this syntax:
+ 
+ make KLIB=/home/mcgrof/kernels/linux-2.6.23.9 KLIB_BUILD=/home/mcgrof/kernels/linux-2.6.23.9
+ 
++If you have a kernel installed, which is not your currently running kernel (e.g. via
++distro updates; plus its corresponding kernel-dev package), you can use this syntax:
++
++make  KLIB=/lib/modules/2.6.30.6-53.fc11.x86_64
++
++  and to install to your system's root path for the non-running kernel:
++
++make  KLIB=/lib/modules/2.6.30.6-53.fc11.x86_64 KMODPATH_ARG='INSTALL_MOD_PATH=' install
++
+ Bugs
+ -----
+ 
+-- 
+1.6.2.5
 
-> 
-> >>> Deep sleep seems to pretty much "turn off" the wifi card (as far as
-> >>> the user is concerned) so how about a simpler approach: enter deep
-> >>> sleep when the interface is brought down (ifconfig wlanN down) and
-> >>> exit deep sleep when it's brought up. ?Do this only when deep sleep is
-> >>> supported/possible. ?Alternately, maybe this belongs as an rfkill
-> >>> feature?
-> >>
-> >> Entering/exiting deep sleep doesn't have to depend on wlanN interface's up and down. User can
-> still put the chip into sleep when wlanN is up. And, with auto deep sleep feature, the driver
-> automatically wakes the chip up for sending user commands (for example, scan) and put the chip back
-> to sleep after certain time period of inactivity. The deepsleep command through debugfs interface
-> provides the flexibility of deep sleep options.
-> >>
-> >> The rfkill shuts down the RF transmitter of the device but most of other modules may be still
-> functioning. The deep sleep shuts down most of the modules (including the RF) on the chip to save as
-> much power as possible.
-> >
-> >It seems that when the device is in deep sleep, it's effectively
-> >"turned off" as far as the user is concerned.  That seems really
-> >similar to "ifconfig down" or rfkill, does the user really care about
-> >anything beyond that?  I understand that it's possible to control this
-> >feature independently of either of those functions, but is it ever
-> >necessary?  If not, it would be great to just integrate it into one
-> >(or both) of these already standard network interface semantics and
-> >not introduce a whole new configuration parameter.
-> 
-> iwconfig has an interface for this I think:
-> |interface power {period N|timeout N|saving N|off}
-> 
-> From what I see in the man page it covers pretty much what you wrote in
-> the Readme file. So it looks like like there is your flexible interface
-> you've been looking for :)
-
-Unfortunately, the "iwconfig wlanN power" command is used for ieee power saving mode in the driver.
-
-Regards,
-
-Bing
-
-> 
-> >  -Andrey
-> >
-> >> Regards,
-> >>
-> >> Bing
-> 
-> Sebastian
