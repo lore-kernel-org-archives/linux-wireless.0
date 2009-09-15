@@ -1,80 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:32866 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754494AbZIQMjJ (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58873
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757578AbZIOAGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 08:39:09 -0400
-Received: by bwz19 with SMTP id 19so262980bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2009 05:39:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200909171116.19281.fabio.coatti@gmail.com>
-References: <200909161521.15710.fabio.coatti@gmail.com>
-	 <200909170005.56145.fabio.coatti@gmail.com>
-	 <3ace41890909161615u64d2878i8ddb52c2ba03ea52@mail.gmail.com>
-	 <200909171116.19281.fabio.coatti@gmail.com>
-Date: Thu, 17 Sep 2009 13:39:11 +0100
-Message-ID: <3ace41890909170539p29e0f369pf02457e6dca410f5@mail.gmail.com>
-Subject: Re: iwlagn rfkill and 2.6.31 on Intel Corporation PRO/Wireless 5100
-	AGN
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Fabio Coatti <fabio.coatti@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mjg@redhat.com" <mjg@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 Sep 2009 20:06:48 -0400
+Date: Mon, 14 Sep 2009 17:07:04 -0700 (PDT)
+Message-Id: <20090914.170704.38918868.davem@davemloft.net>
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] genetlink: fix netns vs. netlink table locking
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1252760595.23427.20.camel@johannes.local>
+References: <1252425578.3806.22.camel@johannes.local>
+	<1252760595.23427.20.camel@johannes.local>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 17, 2009 at 10:16 AM, Fabio Coatti <fabio.coatti@gmail.com> wrote:
-> I
->> Hmm, I recently looked to the interaction between rfkill and hal, and
->> may be able to answer that. The kernel rfkill module also exports its
->> state via either /dev/rfkill or sysfs's /sys/class/rfkill (depending
->> on kernel version; I think /dev/rfkill is new to
->> 2.6.31/wireless-testing/compat-wireless, and not in 2.6.30). hald or
->> devicekit (again, depend on distro/kernel version) monitors those, and
->> informs NetworkManager via d-bus messaging when the rkfill state
->> changes. NetworkManager then if up/down the device and tell
->> wpa_supplicant accordingly. So the ifconfig-interface-up is supposed
->> to happen automatically, if hald/devicekit works and talk to
->> NetworkManager.
->>
->> i.e. the waking-up should happen automatically if you have the
->> combination of hald/devicekit and networkmanager.
->>
->> Does this answer your question?
->>
->
-> Indeed; it's a good explanation of what's going on. Now I'll follow each step
-> of your descripiton and I'll try to find out where the chain breaks :)
->
->
-> Many thanks for your help.
->
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sat, 12 Sep 2009 07:03:15 -0600
 
-On my system - hal knows about the killswitch:
+> Since my commits introducing netns awareness into
+> genetlink we can get this problem:
+> 
+> BUG: scheduling while atomic: modprobe/1178/0x00000002
+> 2 locks held by modprobe/1178:
+>  #0:  (genl_mutex){+.+.+.}, at: [<ffffffff8135ee1a>] genl_register_mc_grou
+>  #1:  (rcu_read_lock){.+.+..}, at: [<ffffffff8135eeb5>] genl_register_mc_g
+> Pid: 1178, comm: modprobe Not tainted 2.6.31-rc8-wl-34789-g95cb731-dirty #
+> Call Trace:
+>  [<ffffffff8103e285>] __schedule_bug+0x85/0x90
+>  [<ffffffff81403138>] schedule+0x108/0x588
+>  [<ffffffff8135b131>] netlink_table_grab+0xa1/0xf0
+>  [<ffffffff8135c3a7>] netlink_change_ngroups+0x47/0x100
+>  [<ffffffff8135ef0f>] genl_register_mc_group+0x12f/0x290
+> 
+> because I overlooked that netlink_table_grab() will
+> schedule, thinking it was just the rwlock. However,
+> in the contention case, that isn't actually true.
+> 
+> Fix this by letting the code grab the netlink table
+> lock first and then the RCU for netns protection.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-$lshal |grep -i killswitch
-  info.addons.singleton = {'hald-addon-rfkill-killswitch'} (string list)
-  info.capabilities = {'killswitch'} (string list)
-  info.category = 'killswitch'  (string)
-  info.interfaces = {'org.freedesktop.Hal.Device.KillSwitch'} (string list)
-  info.product = 'phy0 wlan Killswitch'  (string)
-  killswitch.access_method = 'rfkill'  (string)
-  killswitch.name = 'phy0'  (string)
-  killswitch.state = 1  (0x1)  (int)
-  killswitch.type = 'wlan'  (string)
-
-and NM also wrote to syslog saying it found the switch, and other
-stuff when the switch is turned on and off:
-
-#grep kill /var/log/message
-...
-Sep 16 00:08:48 localhost NetworkManager: <info>  Wireless now
-disabled by radio killswitch
-Sep 16 00:10:09 localhost NetworkManager: <info>  Wireless now enabled
-by radio killswitch
-Sep 16 01:40:18 localhost NetworkManager: <info>  Found radio
-killswitch /org/freedesktop/Hal/devices/usb_device_XXXXXXX_if0_rfkill_phy0_wlan
-...
+Applied, thanks.
