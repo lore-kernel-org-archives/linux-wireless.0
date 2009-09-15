@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:45001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753107AbZIQXf6 (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:46351 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbZIOIGz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 19:35:58 -0400
-Subject: Re: regression?  No connection with master-2009-09-16 was fine
- until master-2009-09-14
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ASIC Felix <ic.felix@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1253208348.6601.17.camel@darkslate>
-References: <1253208348.6601.17.camel@darkslate>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-F3ZJ1urRKtb/DcoWu3jU"
-Date: Thu, 17 Sep 2009 16:35:30 -0700
-Message-Id: <1253230530.23567.1.camel@johannes.local>
-Mime-Version: 1.0
+	Tue, 15 Sep 2009 04:06:55 -0400
+Received: by ewy2 with SMTP id 2so217590ewy.17
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 01:06:58 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Fabian Lenz <lenz_fabian@yahoo.de>
+Subject: Re: [RFC] ar9170usb: add ar9170 usbid
+Date: Tue, 15 Sep 2009 10:06:26 +0200
+Cc: linux-wireless@vger.kernel.org, Stephen.Chen@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+References: <200909142046.07525.lenz_fabian@yahoo.de> <200909142308.19569.chunkeey@googlemail.com> <200909150752.19146.lenz_fabian@yahoo.de>
+In-Reply-To: <200909150752.19146.lenz_fabian@yahoo.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909151006.26631.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 15 September 2009 07:52:19 Fabian Lenz wrote:
+> Here the output of lsusb: 
+> 
+> Bus 002 Device 003: ID 0cf3:1002 Atheros Communications, Inc.
 
---=-F3ZJ1urRKtb/DcoWu3jU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+they made two revisions (v1 and v2).
+Do you know which one you've got?
 
-On Thu, 2009-09-17 at 10:25 -0700, ASIC Felix wrote:
+> and the product page of the WLAN stick:
+> 
+> http://www.tp-link.com/products/product_des.asp?id=140
+> 
+> I added { USB_DEVICE(0x0cf3, 0x1002) } to the usb.c file manually some time 
+> ago and got my stick to work but the connection is somewhat unstable... but 
+> that's another story.
+what firmware image do you use?
+the two-stage (ar9170-1.fw & ar9170-2.fw) firmware should work.
+for one-stage you should use a bleeding edge wireless-testing tree.
 
-> ath9k: Two wiphys trying to scan at the same time
-
-how about you stop playing with multi-wiphy things _first_?
-
-and then describe your setup ... the patch works fine here and Holger
-said it fixed his problem. hidden ssid by any chance?
-
-johannes
-
---=-F3ZJ1urRKtb/DcoWu3jU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKsse/AAoJEODzc/N7+QmasR8P/i/SXLW67Yp9Bvi9iFPUP6uh
-sCp1NU4FC773EwppMK9hlZB5eyNGgkjLdTFj38HwocLCjfHE+h4dpbNSENQic4NE
-xT2vXsEptmFBLnt/E/3IiDk/fXglJHsFOjhkDK9fYmCyZucxjbpNwNJMta0aGpdK
-Q8vtiizFigQ/viXKf2asjEKTXKWUHnQnhZNwh8Zkrx2QrICdN95XhljBv+QbwS/U
-Irmvvz5BMux5YO8M4e1ksxpmnNlUH/AhGORX3b2qn9duTiS7ne7s/vWQ7bj3VZce
-GPCCPMR61w7Zjn45hYU+Fb5P1q9T5GccW8ZifJBSZPut3oawlXwpNpcV4hxx1Ac7
-l3HkAtM+C3FDOflagw122eyRb1/B513pD5J2VZ/k08sy1HfyRNT/n+jEdFHoemMF
-kfIj4Phu2e2GoYRIH2Zx2+x7FWz6ZOVj4jcCfx2maSCXxYfn1poPvQY5Pw3H5PgP
-Jq2FGX9E+Q7s9a13tqAbu+VwwR5i3RhYLGewkke7XdcHUqhRg8j9L2ln7r+8ZtJW
-U5k6w/UItJGPQJv4p8inNUx9Q7ZvzJdrk6Tlm2sWd9yuAK6fw59yf7VYStkS4Ng0
-nHPRreg2jLylliJ188x4COMks+1xp+ls9gTSAdTeSHgZTDmZZHaT8gBDAZPauFk+
-fDSrauKT+yJ1lEZ0/4eB
-=bWCT
------END PGP SIGNATURE-----
-
---=-F3ZJ1urRKtb/DcoWu3jU--
-
+Regards,
+   Chr
