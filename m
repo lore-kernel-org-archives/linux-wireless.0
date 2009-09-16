@@ -1,90 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f192.google.com ([209.85.211.192]:42073 "EHLO
-	mail-yw0-f192.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752682AbZIDAjs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 20:39:48 -0400
-MIME-Version: 1.0
-In-Reply-To: <69e28c910909031634l55d44e93sa052b3d78413dd44@mail.gmail.com>
-References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
-	<69e28c910909031634l55d44e93sa052b3d78413dd44@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Sep 2009 17:39:30 -0700
-Message-ID: <43e72e890909031739p279848fev1f70947a998cc937@mail.gmail.com>
-Subject: Re: Atheros Linux wireless drivers home page - and two new driver
-	projects
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	Len Widra <Len.Widra@atheros.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Werner Almesberger <werner@openmoko.org>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>, Greg KH <greg@kroah.com>,
-	rshlinux@gmail.com, b_yogesh_snowy@yahoo.com,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Paul Fertser <fercerpav@gmail.com>,
-	Harald Welte <laforge@openmoko.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx33.mail.ru ([94.100.176.47]:63182 "EHLO mx33.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748AbZIPAzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 20:55:17 -0400
+Date: Wed, 16 Sep 2009 05:02:13 +0300
+From: Nikolai ZHUBR <zhubr@mail.ru>
+Message-ID: <90263558.20090916050213@mail.ru>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: Re[4]: cfg80211 and rfkill_backport question.
+In-reply-To: <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
+References: <174470396.20090916030952@mail.ru>
+ <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
+ <792649359.20090916034611@mail.ru>
+ <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/3 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Fri, Sep 4, 2009 at 12:54 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> I'm pleased to announce the new home page to Atheros Linux wireless drivers:
->>
->> http://wireless.kernel.org/en/users/Drivers/Atheros
->>
->> To get updates just subscribe to the wiki. There you will find
->> information regarding any old legacy Atheros driver and any proper
->> upstream driver.
->>
->> I'd like to also take the time to announce two devices for which
->> support is currently being developed for: ar5523 and ar9271. Both
->> ar5523 and ar9271 device support is currently being worked on either
->> by the community or by Atheros itself. Both of these driver projects
->> will be using th Linux driver project [1] to gain traction. Patches
->> and development discussions regarding these two drivers prior to
->> getting upstream into drivers/net/wireless/ will take place on the
->> Linux driver project mailing list [2]. For direct one-on-one
->> communication for support and development we will rely on the
->> #linux-wireless IRC channel on irc.freenode.net. Both devices are USB
->> but differ greatly, please visit the ar5523 page [2] and the ar9271
->> page [3] for further device specifics and more information.
->>
->> The model of development for ar9271 device support is rather new -- we
->> are not targeting staging, instead we target using the strength of
->> community development at an extremely early stage, as early as is
->> possible, even before the device is functional. If we get a device
->> driver functional prior to meeting upstream requirements then so be it
->> -- and the driver does gets stuffed into drivers/staging. End goal is
->> to get it into proper drivers/net/wireless/ but obviously it will not
->> hurt to get users some device functionality prior to that.
->>
->> The time of turnaround to getting users supported either through
->> drivers/staging or drivers/net/wireless/ will ultimately depend on the
->> resources dedicated to it. Right now I know only Stefan
->> Lippers-Hollmann is working on ar5523 support and I'm the only one
->> working on ar9271 support. With your help I am in hopes this will
->> change soon.
->>
->> [1] http://www.linuxdriverproject.org/twiki/bin/view
->> [2] http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
->> [3] http://wireless.kernel.org/en/users/Drivers/ar5523
->> [4] http://wireless.kernel.org/en/users/Drivers/ar9271
->>
->>  Luis
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> About ar9271: is this device already in the market, or the chip itself
-> is also still in development?
+Wednesday, September 16, 2009, 2:49:04 AM, Luis R. Rodriguez wrote:
+> Check if the symbols you had issues with were indeed exported via
+> EXPORT_SYMBOL() on the compat code (compat/*.c) or if whether they
+> were defined via a header as an inline (compat/*.h).
+As far as I can see, the symbols in question are not defined as inline:
 
-Some vendors are selling it, I however do not know the name or have
-any URL for it.
+compat/compat-2.6.26.c:
+  EXPORT_SYMBOL_GPL(dev_set_name);
+  
+compat/compat-2.6.26.h:
+  extern int dev_set_name(struct device *dev, const char *name, ...)
+                        __attribute__((format(printf, 2, 3)));
+net/rfkill/core.c:
+  EXPORT_SYMBOL(rfkill_blocked);
 
-  Luis
+include/linux/rfkill-backport.h:
+  #if defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_MODULE_BACKPORT)
+  .......
+  bool rfkill_blocked(struct rfkill *rfkill);
+  #else /* !RFKILL */
+  .......
+  static inline bool rfkill_blocked(struct rfkill *rfkill)
+  {
+        return false;
+  }
+  #endif /* RFKILL || RFKILL_MODULE */
+  
+config.mk:  
+  ifdef CONFIG_COMPAT_WIRELESS_31
+  CONFIG_RFKILL_BACKPORT=m
+  ......
+
+Maybe module loader is supposed to do some magic with symbols, which openwrt 
+is missing? However, other modules work just as usual, there are no problems
+with lib80211* for instance.
+
+ Nikolai
+
+
