@@ -1,37 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:46240 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726AbZIYTi0 (ORCPT
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:60383 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbZIPNgT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 15:38:26 -0400
-Received: by fxm18 with SMTP id 18so2463471fxm.17
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 12:38:30 -0700 (PDT)
-Message-ID: <4ABD1C37.3030102@lwfinger.net>
-Date: Fri, 25 Sep 2009 14:38:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 16 Sep 2009 09:36:19 -0400
+Received: by ewy2 with SMTP id 2so1417983ewy.17
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 06:36:21 -0700 (PDT)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problems with WPA in mainline 2.6.31-gitX
-References: <4ABD0B0D.5020002@lwfinger.net> <200909252042.37881.chunkeey@googlemail.com>
-In-Reply-To: <200909252042.37881.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200909161220.11538.hs4233@mail.mn-solutions.de>
+References: <200909161220.11538.hs4233@mail.mn-solutions.de>
+Date: Wed, 16 Sep 2009 16:36:20 +0300
+Message-ID: <40f31dec0909160636j6a2022eaxdfef4889e6aafec@mail.gmail.com>
+Subject: Re: question: ATH5K, antenna-mode and fall-throught in
+	ath5k_hw_set_fast_div()
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> 
-> it made it into 2.6.31-git16:
-> "cfg80211: don't overwrite privacy setting"
-> 94f85853324e02c3a32bc3101f090dc9a3f512b4
-> 
-> but, "[PATCH] cfg80211: don't set privacy w/o key"
-> is still missing.
+2009/9/16 Holger Schurig <hs4233@mail.mn-solutions.de>:
+> Hi !
+>
+> I have a device (fork-lift-terminal) where there is a PCCARD with
+> an Atheros chip inside it. The PCCARD has an built-in antenna and
+> a socket, where a cable goes to the external antenna.
+>
+> Using madwifi, I always did:
+>
+>        echo 2 >/proc/sys/dev/wifi0/rxantenna
+>        echo 2 >/proc/sys/dev/wifi0/txantenna
+>        echo 0 >/proc/sys/dev/wifi0/diversity
+>
+> Now, with ath5k I'm planning to do this:
+>
+> --- linux-wl.orig/drivers/net/wireless/ath/ath5k/base.c 2009-09-16 10:43:45.000000000 +0200
+> +++ linux-wl/drivers/net/wireless/ath/ath5k/base.c      2009-09-16 10:44:10.000000000 +0200
+> @@ -2850,5 +2850,5 @@ ath5k_config(struct ieee80211_hw *hw, u3
+>         * then we must allow the user to set how many tx antennas we
+>         * have available
+>         */
+> -       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
+> +       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_B);
+>
+>
+> ... as long as there is no offical interface for setting antenna
+> mode. A bit crude, but ... :-)
+>
 
-Thanks, Christian. It turns out I do not need "don't set privacy".
+An official interface is on the way, until then that's indeed the way
+to switch to a fixed antenna ;-)
 
-With the latest pull, my system works fine.
+>
+> However, when looking for the antenna-related code-paths, I found
+> this:
+>
+> ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
+> {
+>        switch (ee_mode) {
+>        case AR5K_EEPROM_MODE_11G:
+>                /* XXX: This is set to
+>                 * disabled on initvals !!! */
+>        case AR5K_EEPROM_MODE_11A:
+>        ...
+>
+>
+> In my case, ee_mode happens to be AR5K_EEPROM_MODE_11G, but I don't
+> understand the implication of this comment. Is the XXX something
+> to worry?  My card is a B/G only card, so I wonder if the
+> fall-through into the MODE_11A case is ok ?!?
+>
 
-Larry
+As you see there is no break there so we treat G and A modes (OFDM)
+the same, comment is there to let developers know that
+AR5K_PHY_AGCCTL_OFDM_DIV_DIS is already disabled on initvals for G
+mode (however AR5K_PHY_FAST_ANT_DIV_EN is enabled so diversity is
+enabled) but it doesn't seem to make a difference anyway.
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
