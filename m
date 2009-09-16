@@ -1,77 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:31257 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556AbZHaXrB convert rfc822-to-8bit (ORCPT
+Received: from bugs.comnets.uni-bremen.de ([134.102.186.10]:54619 "EHLO
+	bugs.comnets.uni-bremen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932998AbZIPQVx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:47:01 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so611470fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:47:03 -0700 (PDT)
+	Wed, 16 Sep 2009 12:21:53 -0400
+Received: from shelbyville.localnet (unknown [134.102.155.219])
+	by bugs.comnets.uni-bremen.de (Postfix) with ESMTP id 95EB524EDF0
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 18:04:04 +0200 (CEST)
+From: Markus Becker <mab@comnets.uni-bremen.de>
+To: linux-wireless@vger.kernel.org
+Subject: linuxwireless Driver information: zd1211rw
+Date: Wed, 16 Sep 2009 18:04:04 +0200
 MIME-Version: 1.0
-In-Reply-To: <43e72e890908311637r7b079e9fj2ac6b77f2b59eb79@mail.gmail.com>
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-	<43e72e890908311637r7b079e9fj2ac6b77f2b59eb79@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 1 Sep 2009 01:46:39 +0200
-Message-ID: <69e28c910908311646w315bef9eo43d3342c13e38fca@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200909161804.04296.mab@comnets.uni-bremen.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 1, 2009 at 1:37 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> 2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
->> On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
->>> Hin-Tak Leung wrote:
->>>>
->>>> I just took a look at the history - there aren't obvious bug fixes, a
->>>> bunch of work queue-related changes from you & Johannes; feature-wise,
->>>> Larry added LED blinking after 2.6.30, and Herton added rfkill support
->>>> quite recently after 2.6.31-rc7 . But no, there isn't any change that
->>>> would affect tx level beyond 2.6.31-rc7, I think.
->>>
->>> Your analysis matches my recollection.
->>>
->>> Apparently RealTek is supplying a closed-source driver for RTL8187B
->>> these days. There are no sources for the B on their web site. In
->>> addition, the one that Tobias loaded tainted his kernel.
->>>
->>> Larry
->>
->> The driver is not actually closed-source; they just don't provide any
->> drivers on their site anymore, instead they send their reference
->> drivers to OEMs, expecting the OEMs to release their own versions
->> (with sources - most vendors who do release Linux drivers in fact only
->> release sources, without binaries). The reason for this appears to be
->> that Realtek now encourages vendors to sell RTL81xx wireless chips
->> with modified USB IDs. (Or are you seeing a binary-only driver on
->> realtek.com.tw? That would definitely be a GPL violation, given that
->> they use a modified version of the GPLed libipw stack.)
->
-> Gabor, do you speak to RealkTek folks? It seems what may be best for
-> OEMs and RealTek themselves is to post drivers for inclusion into
-> staging first and then for interested parties to port them properly.
->
->  Luis
+Hello,
 
-Not yet, I haven't tried contacting them. I simply based my comments
-on the fact that OEMs are releasing sources. However, contacting them
-about work to include their drivers in the kernel is a good idea -
-apparently there is nothing keeping Realtek from taking community
-contributions (unlike e.g. Zydas - the vendor driver is based on
-Andrea Merello's old r8180-sa2400 driver, and was not developed
-in-house by Realtek).
+is the information on the page 
+http://www.linuxwireless.org/en/users/Drivers/zd1211rw about the Debian 
+firmware package still true?
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+"Firmware is pulled from userspace, get the files here.
+Debian users beware: don't use the the zd1211-firmware package, as this is for 
+Debian's fork of the vendor-based driver"
+
+The current debian package contains the same files as in the link 
+http://sourceforge.net/project/showfiles.php?group_id=129083
+
+BR,
+Markus
