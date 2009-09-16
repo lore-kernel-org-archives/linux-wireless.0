@@ -1,39 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:55028 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158AbZI0Nbm (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:60137 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbZIPLjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 09:31:42 -0400
-Date: Sun, 27 Sep 2009 15:32:05 +0200
-From: Arjan van de Ven <arjan@infradead.org>
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [bisected] Wireless regression in 2.6.32-git
-Message-ID: <20090927153205.4e3a1ee9@infradead.org>
-In-Reply-To: <8db1092f0909270624l4fc46734u6a91f7cc7ffb0c72@mail.gmail.com>
-References: <20090927151855.29efcc53@infradead.org>
-	<8db1092f0909270624l4fc46734u6a91f7cc7ffb0c72@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 16 Sep 2009 07:39:17 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: don't report SME connection errs at SIOCSIW{FREQ/AP/ESSID}
+Date: Wed, 16 Sep 2009 13:38:34 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+References: <200909141254.14988.hs4233@mail.mn-solutions.de> <200909150821.57216.hs4233@mail.mn-solutions.de> <1253075947.9450.0.camel@johannes.local>
+In-Reply-To: <1253075947.9450.0.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909161338.34743.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 27 Sep 2009 15:24:10 +0200
-Maciej Rutecki <maciej.rutecki@gmail.com> wrote:
+> Try this please.
 
-> Did You have similar messages in dmesg like this:
-> 
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2089
-> (use WPA)
-
-nope I don't get a Reason 6 disconnect...
-
-(I get a reason 3 local choice, but that's true for working and
-non-working both)
+Tested-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Works fine :-)
