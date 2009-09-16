@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f203.google.com ([209.85.212.203]:36735 "EHLO
-	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752434AbZIYOjF (ORCPT
+Received: from mail-ew0-f227.google.com ([209.85.219.227]:63495 "EHLO
+	mail-ew0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022AbZIPRg4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 10:39:05 -0400
-Received: by vws41 with SMTP id 41so1696340vws.4
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 07:39:08 -0700 (PDT)
+	Wed, 16 Sep 2009 13:36:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <200909241015.06706.hs4233@mail.mn-solutions.de>
-References: <200909210902.23723.hs4233@mail.mn-solutions.de>
-	 <1253662161.2510.59.camel@localhost.localdomain>
-	 <200909241015.06706.hs4233@mail.mn-solutions.de>
-Date: Fri, 25 Sep 2009 10:39:08 -0400
-Message-ID: <b6c5339f0909250739r2bcb8528tbc4d98b574e0e198@mail.gmail.com>
-Subject: Re: getting "ath5k phy0: noise floor calibration timeout"
-From: Bob Copeland <me@bobcopeland.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1253122055.26521.431.camel@rc-desk>
+References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
+	 <1253122055.26521.431.camel@rc-desk>
+Date: Wed, 16 Sep 2009 19:36:57 +0200
+Message-ID: <8db1092f0909161036t5bae781eqa6f0a0df308ec4cd@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/scan.c:267 ieee80211_scan_completed+0x299/0x2b0
+	[mac80211]()
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 4:15 AM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
-> On ath5k-devel, there was a mail "[ath5k-devel] [RFC/RFT] ath5k:
-> use noise calibration from madwifi hal" from Bob Copeland.
+2009/9/16 reinette chatre <reinette.chatre@intel.com>:
 >
-> Part of the patch is "- we do not complain if NF calibration
-> isn't complete, instead we keep the last read value.".
+> The important information is not what you posted here, but still in the
+> dmesg file you provided. In that log we see the following right before
+> the warnings:
+>
+> [  163.126590] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+> [  163.130027] wlan0 direct probe responded
+> [  163.130032] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+> [  163.131924] wlan0: authenticated
+> [  163.131952] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+> [  163.134325] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28 (capab=0x431 status=0 aid=1)
+> [  163.134331] wlan0: associated
+> [  163.155938] wlan0: deauthenticating by local choice (reason=3)
+>
+> It shows that association was successful, but something in userspace requested a disconnect.
 
-Yeah, NF calibration timeout happens all the time (also in
-madwifi/ath9k) so we should just silence it.  At best, it indicates
-a problem that the user can't do anything about; at worst, it
-leads to bug reports accusing the NF calibration of wholly unrelated
-things.
+Hmm. Yes, connect takes more time than in 2.6.31.
+>
+>>
+>> [  163.208063] ------------[ cut here ]------------
+>> [  163.208114] WARNING: at net/mac80211/scan.c:267
+>> ieee80211_scan_completed+0x299/0x2b0 [mac80211]()
+>
+> I cannot get an exact line match based on the kernel information you
+> provided. I assume it is the first warning in
+> ieee80211_scan_completed(). This is not serious as it indicates that
+> mac80211 received a "scan completed" indication when it was not
+> scanning.
+>
+>
+>> [  163.232845] ------------[ cut here ]------------
+>> [  163.232908] WARNING: at net/wireless/core.c:613
+>> wdev_cleanup_work+0xbb/0xe0 [cfg80211]()
+>
+> This warning has just been reported in linux-wireless also. Perhaps you
+> can follow its discussion there. See
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/39607
 
-I really should finish testing and push that patch, real life has
-just been in the way lately.
+Thanks for information
+
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Maciej Rutecki
+http://www.maciek.unixy.pl
