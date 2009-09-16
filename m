@@ -1,109 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:19939 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbZIRNIm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 09:08:42 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 5C21A50005
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 15:08:45 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id bP1VQ-vWMvSB for <linux-wireless@vger.kernel.org>;
-	Fri, 18 Sep 2009 15:08:45 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F87DB.dip0.t-ipconnect.de [217.95.135.219])
-	by mx51.mymxserver.com (Postfix) with ESMTP id B663D50004
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 15:08:44 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id CBBE21E0036
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 15:08:34 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Life-time of scan-results?
-Date: Fri, 18 Sep 2009 15:07:59 +0200
-References: <200909181418.30958.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200909181418.30958.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909181507.59420.hs4233@mail.mn-solutions.de>
+Received: from mga14.intel.com ([143.182.124.37]:2368 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752628AbZIPR1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 13:27:32 -0400
+Subject: Re: WARNING: at net/mac80211/scan.c:267
+ ieee80211_scan_completed+0x299/0x2b0 	[mac80211]()
+From: reinette chatre <reinette.chatre@intel.com>
+To: Maciej Rutecki <maciej.rutecki@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
+References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 16 Sep 2009 10:27:35 -0700
+Message-Id: <1253122055.26521.431.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a log of the events with some kernel msgs.
+Hi Maciej,
 
-First, a successfull association:
+> Steps to reproduce:
+> 1. Connect to the wireless network (WPA2), it takes long time (longer
+> than in 2.6.31)
+> 2. Connect to another wireless network:
+> 3. Connect fails with error:
 
-##HS nl80211_trigger_scan:2922
-##HS ieee80211_scan_rx:150 mac 00:1b:53:11:dc:40, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:53:11:dc:40, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:13:19:80:da:30, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:d4:44:35:90, probe resp 0
-eth1: direct probe to AP 00:13:19:80:da:30 (try 1)
-eth1 direct probe responded
-eth1: authenticate with AP 00:13:19:80:da:30 (try 1)
-eth1: authenticated
-eth1: associate with AP 00:13:19:80:da:30 (try 1)
-eth1: RX AssocResp from 00:13:19:80:da:30 (capab=0x11 status=0 aid=53)
-eth1: associated
+The important information is not what you posted here, but still in the
+dmesg file you provided. In that log we see the following right before
+the warnings:
 
-And here the user-space view:
+[  163.126590] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  163.130027] wlan0 direct probe responded
+[  163.130032] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  163.131924] wlan0: authenticated
+[  163.131952] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  163.134325] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28 (capab=0x431 status=0 aid=1)
+[  163.134331] wlan0: associated
+[  163.155938] wlan0: deauthenticating by local choice (reason=3)
 
-1253275071.933750: wpa_driver_nl80211_scan:1570
-1253275071.934167: NL80211_CMD_TRIGGER_SCAN
-1253275072.454547: NL80211_CMD_NEW_SCAN_RESULTS
-1253275072.454652: Received scan results (3 BSSes)
-1253275072.454670: ##HS 0: 00:1b:53:11:dc:40 ssid='MNFUNK' freq=2412
-1253275072.454689: ##HS 1: 00:1b:d4:44:35:90 ssid='MNWPA' freq=2412
-1253275072.454706: ##HS 2: 00:13:19:80:da:30 ssid='MNHS' freq=2412
-1253275072.454728: CTRL-EVENT-SCAN-RESULTS
-1253275072.454791: Trying to authenticate with 00:13:19:80:da:30 (SSID='MNHS' freq=2412 MHz)
-1253275072.704223: NL80211_CMD_AUTHENTICATE
-1253275072.704244: MLME event NL80211_CMD_AUTHENTICATE
-1253275072.704267: Trying to associate with 00:13:19:80:da:30 (SSID='MNHS' freq=2412 MHz)
-1253275072.762116: NL80211_CMD_ASSOCIATE
-1253275072.762136: MLME event NL80211_CMD_ASSOCIATE
-1253275072.762175: Associated with 00:13:19:80:da:30
-1253275072.767178: NL80211_CMD_CONNECT
-1253275072.880891: WPA: Key negotiation completed with 00:13:19:80:da:30 [PTK=TKIP GTK=TKIP]
-1253275072.880931: CTRL-EVENT-CONNECTED - Connection to 00:13:19:80:da:30 completed (auth) [id=0 id_str=]
+It shows that association was successful, but something in userspace requested a disconnect. 
+
+> 
+> [  163.208063] ------------[ cut here ]------------
+> [  163.208114] WARNING: at net/mac80211/scan.c:267
+> ieee80211_scan_completed+0x299/0x2b0 [mac80211]()
+
+I cannot get an exact line match based on the kernel information you
+provided. I assume it is the first warning in
+ieee80211_scan_completed(). This is not serious as it indicates that
+mac80211 received a "scan completed" indication when it was not
+scanning. 
 
 
+> [  163.232845] ------------[ cut here ]------------
+> [  163.232908] WARNING: at net/wireless/core.c:613
+> wdev_cleanup_work+0xbb/0xe0 [cfg80211]()
+
+This warning has just been reported in linux-wireless also. Perhaps you
+can follow its discussion there. See
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/39607
+
+Reinette
 
 
-Now I take away the AP:
-
-eth1: deauthenticated from 00:13:19:80:da:30 (Reason: 1)
-##HS nl80211_trigger_scan:2922
-##HS ieee80211_scan_rx:150 mac 00:1b:53:11:dc:40, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:d4:44:35:90, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:d4:44:35:90, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:53:11:dc:40, probe resp 0
-##HS ieee80211_scan_rx:150 mac 00:1b:d4:44:35:90, probe resp 0
-
-Note: there was no beacon nor probe-response from
-00:13:19:80:da:30.
-
-253275108.483431: NL80211_CMD_DEAUTHENTICATE
-1253275108.483451: MLME event NL80211_CMD_DEAUTHENTICATE
-1253275108.483464: ##HS wpa_supplicant_event_disassoc:1040
-1253275108.483490: CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
-1253275108.483857: wpa_driver_nl80211_scan:1570
-1253275108.484063: NL80211_CMD_DISCONNECT
-1253275108.484106: NL80211_CMD_TRIGGER_SCAN
-1253275108.958527: NL80211_CMD_NEW_SCAN_RESULTS
-1253275108.958624: Received scan results (3 BSSes)
-1253275108.958642: ##HS 0: 00:1b:53:11:dc:40 ssid='MNFUNK' freq=2412
-1253275108.958661: ##HS 1: 00:1b:d4:44:35:90 ssid='MNWPA' freq=2412
-1253275108.958677: ##HS 2: 00:13:19:80:da:30 ssid='MNHS' freq=2412
-
-
-But here it was in the results. And because of that,
-wpa_supplicant tries to use this AP in vain:
-
-1253275108.958746: Trying to authenticate with 00:13:19:80:da:30 (SSID='MNHS' freq=2412 MHz)
-1253275109.722468: NL80211_CMD_AUTHENTICATE
-...
-
--- 
-http://www.holgerschurig.de
