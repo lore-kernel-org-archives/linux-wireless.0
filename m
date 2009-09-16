@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:33710 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760014AbZIQDil (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:58477 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750891AbZIPNVR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 23:38:41 -0400
-Message-ID: <4AB1AF38.3040601@canonical.com>
-Date: Thu, 17 Sep 2009 11:38:32 +0800
-From: Bryan Wu <bryan.wu@canonical.com>
+	Wed, 16 Sep 2009 09:21:17 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1174717fge.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 06:21:19 -0700 (PDT)
+From: Fabio Coatti <fabio.coatti@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: iwlagn rfkill and 2.6.31 on Intel Corporation PRO/Wireless 5100 AGN
+Date: Wed, 16 Sep 2009 15:21:15 +0200
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	mb@bu3sch.de, linux-wireless@vger.kernel.org
-Subject: Re: [b43] About supporting of BCM4312 [14e4:4315] with Low Power
- PHY
-References: <4AA9B46E.8020100@canonical.com> <69e28c910909102318u465f6c75w46a2404a8e8d9f08@mail.gmail.com> <4AB0EDEB.9010803@canonical.com> <4AB109D7.2060300@lwfinger.net>
-In-Reply-To: <4AB109D7.2060300@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200909161521.15710.fabio.coatti@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Bryan Wu wrote:
-> 
->> Do you guys think it is related to 64bit DMA issue? I really want to help to develop this b43 opensource driver,
->> anything need me to do, please feel free ping me.
-> 
-> Not an issue with 64-bit DMA. Those people with 64-bit DMA problems
-> get error messages.
-> 
+Hi all,
+I'm experiencing a bad behaviour of rfkill / iwlang driver. Here the 
+description:
 
-OK, got you. Thanks. I'm just wandering how to debug this driver. It seems that probing passes but the wlan1
-interface does not work at all.
+Kernels: 2.6.30.[5,6] 2.6.31  
+Hardware: HP EliteBook 6930p
 
--Bryan
+Behaviour: once a working wireless is killed activating the rfkill button, 
+there is no way to turn off the rfkill and riactivate wifi network. Even a 
+reboot is not able to reset the situation; to get again the control of rfkill 
+button is to reboot under windows xp and activate wifi. After that I can boot 
+inder linux with wifi active and kill it with rfkill button and the loop 
+starts again :)
+I'm pretty sure that this issue is present since some kernel before the one 
+I've reported, but I'm not sure about the versions.
+
+I don't know if this is iwlagn or acpi related bug (or my fault), I'm 
+available for any test.
+
+HW:
+Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network 
+Connection
+        Subsystem: Intel Corporation Device 1211                                               
+        Flags: bus master, fast devsel, latency 0, IRQ 33                                      
+        Memory at d0100000 (64-bit, non-prefetchable) [size=8K]                                
+        Capabilities: [c8] Power Management version 3                                          
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+                             
+        Capabilities: [e0] Express Endpoint, MSI 00                                            
+        Capabilities: [100] Advanced Error Reporting                                           
+        Capabilities: [140] Device Serial Number 00-21-6b-ff-ff-74-2b-28                       
+        Kernel driver in use: iwlagn                                                           
+        Kernel modules: iwlagn 
+
+Let me know if more information are needed.
+
+Thanks for any answer (I'm not subscribed to this list, so please CC me on 
+answers, thanks)
