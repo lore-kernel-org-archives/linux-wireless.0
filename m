@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f194.google.com ([209.85.216.194]:46906 "EHLO
-	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbZIWTZY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 15:25:24 -0400
-Received: by pxi32 with SMTP id 32so833710pxi.4
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 12:25:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1253731843-1045-1-git-send-email-hauke@hauke-m.de>
-References: <1253731843-1045-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 23 Sep 2009 12:25:08 -0700
-Message-ID: <43e72e890909231225t3520e3aci2f53524187f19158@mail.gmail.com>
-Subject: Re: [PATCH] [compat-2.6] fix build problems
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx73.mail.ru ([94.100.176.87]:58724 "EHLO mx73.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752964AbZIOXEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 19:04:09 -0400
+Received: from mx40.mail.ru (mx40.mail.ru [94.100.176.54])
+	by mx73.mail.ru (mPOP.Fallback_MX) with ESMTP id 1328D688A1F
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 03:04:08 +0400 (MSD)
+Received: from [94.242.37.174] (port=7907 helo=zhubr.mshome.net)
+	by mx40.mail.ru with asmtp
+	id 1Mnh3g-000Gbz-00
+	for linux-wireless@vger.kernel.org; Wed, 16 Sep 2009 03:03:36 +0400
+Date: Wed, 16 Sep 2009 03:09:52 +0300
+From: Nikolai ZHUBR <zhubr@mail.ru>
+Message-ID: <174470396.20090916030952@mail.ru>
+To: linux-wireless@vger.kernel.org
+Subject: cfg80211 and rfkill_backport question.
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 23, 2009 at 11:50 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> IRQ_WAKE_THREAD is not defined in kernel < 2.6.30
-> in include/linux/irqreturn.h .
->
-> In 09-threaded-irq.patch the condition was wrong.
+Hello people,
 
-Applied, thanks.
+I'm trying to use compat-wireless-2009-09-14 for kernel 2.6.25.20.
+It all compiles fine but inserting cfg80211 fails complaining about
+symbols exported from rfkill_backport not being found, and inserting 
+rfkill_backport first also fails complaining about symbols exported
+from cfg80211, kind of circular dependancy:
 
-  Luis
+cfg80211.ko:
+0001b570 T dev_set_name
+.....
+.....
+         U backport_rfkill_blocked
+
+rfkill_backport.ko:
+         U dev_set_name
+.........
+......
+000010a8 T backport_rfkill_blocked
+
+How is this supposed to work? 
+
+I'm compiling for openwrt 8.09.1, mips platform, if it matters, and the
+box for building openwrt is opensuse 10.3.
+
+Thank you!
+
+Nikolai ZHUBR
+
+(Please CC me, I'm not subscribed)
+
+
