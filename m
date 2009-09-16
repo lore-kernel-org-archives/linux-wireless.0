@@ -1,101 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54044 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754707AbZIIXo7 (ORCPT
+Received: from galiil.marvell.com ([199.203.130.254]:28503 "EHLO
+	galiil.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755820AbZIPU0M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 19:44:59 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 06/15] ath9k: split ath9k_hw_btcoex_enable() into two helpers
-Date: Wed,  9 Sep 2009 19:44:52 -0400
-Message-Id: <1252539901-20679-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
-References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 16 Sep 2009 16:26:12 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Andrey Yurovsky <andrey@cozybit.com>
+CC: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Dan Williams <dcbw@redhat.com>
+Date: Wed, 16 Sep 2009 13:20:40 -0700
+Subject: RE: [PATCH] libertas: Add auto deep sleep support for
+ 	SD8385/SD8686/SD8688
+Message-ID: <477F20668A386D41ADCC57781B1F704306DB9CFDB7@SC-VEXCH1.marvell.com>
+References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
+ <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
+In-Reply-To: <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One for 2-wire and another for 3-wire.
+Hi Andrey,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   57 ++++++++++++++++++++-----------
- 1 files changed, 37 insertions(+), 20 deletions(-)
+> -----Original Message-----
+> From: Andrey Yurovsky [mailto:andrey@cozybit.com]
+> Sent: Tuesday, September 15, 2009 4:41 PM
+> To: Bing Zhao
+> Cc: libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org; Amitkumar Karwar; Dan Williams
+> Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+> 
+> Hi Bing.  This is not specific to the actual implementation of the
+> deep sleep commands in your patch but,
+> 
+> On Tue, Sep 15, 2009 at 4:45 PM, Bing Zhao <bzhao@marvell.com> wrote:
+> > +       Path: /sys/kernel/debug/libertas_wireless/ethX/
+> 
+> Is the sysfs interface really necessary?  It seems like yet another
+> non-standard configuration option to keep track of.
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 6209a56..61a8e1d 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -117,30 +117,47 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- 	ath9k_hw_cfg_gpio_input(ah, btcoex_info->btpriority_gpio);
- }
- 
-+static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
-+
-+	/* Configure the desired GPIO port for TX_FRAME output */
-+	ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
-+			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
-+}
-+
-+static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
-+
-+	/*
-+	 * Program coex mode and weight registers to
-+	 * enable coex 3-wire
-+	 */
-+	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_info->bt_coex_mode);
-+	REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_info->bt_coex_weights);
-+	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_info->bt_coex_mode2);
-+
-+	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
-+	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
-+
-+	ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
-+			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
-+}
-+
- void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- {
- 	struct ath_btcoex_info *btcoex_info = &ah->btcoex_info;
- 
--	if (btcoex_info->btcoex_scheme == ATH_BTCOEX_CFG_2WIRE) {
--		/* Configure the desired GPIO port for TX_FRAME output */
--		ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
--				AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
--	} else {
--		/*
--		 * Program coex mode and weight registers to
--		 * enable coex 3-wire
--		 */
--		REG_WRITE(ah, AR_BT_COEX_MODE, btcoex_info->bt_coex_mode);
--		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex_info->bt_coex_weights);
--		REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex_info->bt_coex_mode2);
--
--		REG_RMW_FIELD(ah, AR_QUIET1,
--				AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
--		REG_RMW_FIELD(ah, AR_PCU_MISC,
--				AR_PCU_BT_ANT_PREVENT_RX, 0);
--
--		ath9k_hw_cfg_output(ah, btcoex_info->wlanactive_gpio,
--				AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
-+	switch (btcoex_info->btcoex_scheme) {
-+	case ATH_BTCOEX_CFG_NONE:
-+		break;
-+	case ATH_BTCOEX_CFG_2WIRE:
-+		ath9k_hw_btcoex_enable_2wire(ah);
-+		break;
-+	case ATH_BTCOEX_CFG_3WIRE:
-+		ath9k_hw_btcoex_enable_3wire(ah);
-+		break;
- 	}
- 
- 	REG_RMW(ah, AR_GPIO_PDPU,
--- 
-1.6.3.3
+Actually the debugfs interface is used in the patch.
 
+Some information (such as the interface name and path) in README file is out of date. We just copy-and-paste it for the new deepsleep command. We need a separate patch to clean up the REAME file and keep it up to date. 
+
+> 
+> Deep sleep seems to pretty much "turn off" the wifi card (as far as
+> the user is concerned) so how about a simpler approach: enter deep
+> sleep when the interface is brought down (ifconfig wlanN down) and
+> exit deep sleep when it's brought up.  Do this only when deep sleep is
+> supported/possible.  Alternately, maybe this belongs as an rfkill
+> feature?
+
+Entering/exiting deep sleep doesn't have to depend on wlanN interface's up and down. User can still put the chip into sleep when wlanN is up. And, with auto deep sleep feature, the driver automatically wakes the chip up for sending user commands (for example, scan) and put the chip back to sleep after certain time period of inactivity. The deepsleep command through debugfs interface provides the flexibility of deep sleep options.
+
+The rfkill shuts down the RF transmitter of the device but most of other modules may be still functioning. The deep sleep shuts down most of the modules (including the RF) on the chip to save as much power as possible.
+
+
+Regards,
+
+Bing
+
+> 
+>   -Andrey
