@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41462 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753403AbZIKDAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 23:00:39 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 20:00:42 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail.schicktech.com ([74.201.138.167]:61375 "EHLO
+	mail.schicktech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861AbZIPRY0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 13:24:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19113.48435.208806.221217@gargle.gargle.HOWL>
-Date: Fri, 11 Sep 2009 08:30:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix bug in ANI channel handling
+Content-Type: text/plain; charset=US-ASCII
+Subject: Continuous monitoring of wifi stats
+Date: Wed, 16 Sep 2009 13:24:14 -0400
+Message-ID: <C6BB22C4F02E0E4AB5B55BD3B1FEDBCD056C4ABD@schickmail.schicknt.com>
+From: "John Goyette" <jgoyette@schicktech.com>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When processing MIB interrupts, OFDM and CCK error
-handling routines for low RSSI values have to be invoked
-only when the channel mode is 11G/11B. Since HT channels
-will also fall under the bands 2Ghz/5Ghz, check appropriately.
+Hello all,
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
+ 
 
-This patch would apply over Luis' pending patches.
+I am looking for some advice on a Libertas related issue.  I am having a problem with a recent feature we added to our embedded system that continuously monitors wifi statistics, i.e., signal strength.  We are using a Blackfin platform with a Marvell 8686 device in the G-SPI configuration.  Our kernel is based on a 2.6.28.6 release.  
 
- drivers/net/wireless/ath/ath9k/ani.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ 
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index f5cd7da..e4f9559 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -327,7 +327,8 @@ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
- 					     aniState->firstepLevel + 1);
- 		return;
- 	} else {
--		if (conf->channel->band == IEEE80211_BAND_2GHZ) {
-+		if ((conf->channel->band == IEEE80211_BAND_2GHZ) &&
-+		    !conf_is_ht(conf)) {
- 			if (!aniState->ofdmWeakSigDetectOff)
- 				ath9k_hw_ani_control(ah,
- 				     ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
-@@ -369,7 +370,8 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- 			ath9k_hw_ani_control(ah, ATH9K_ANI_FIRSTEP_LEVEL,
- 					     aniState->firstepLevel + 1);
- 	} else {
--		if (conf->channel->band == IEEE80211_BAND_2GHZ) {
-+		if ((conf->channel->band == IEEE80211_BAND_2GHZ) &&
-+		    !conf_is_ht(conf)) {
- 			if (aniState->firstepLevel > 0)
- 				ath9k_hw_ani_control(ah,
- 					     ATH9K_ANI_FIRSTEP_LEVEL, 0);
--- 
-1.6.4.2
+The problem occurs after pressing Ctrl-C to terminate a user space program that is polling the wireless stats in a loop.  A number of libertas error messages appear indicating a failure to download command 0x0000.  I am pretty sure there is no command 0x0000, so I do not know how it got queued.  Here is a sample of the error messages from dmesg:
+
+ 
+
+libertas: command 0x0000 timed out
+libertas: requeueing command 0x0000 due to timeout (#1)
+libertas: if_spi_host_to_card: invalid size requested: 0
+libertas: DNLD_CMD: hw_host_to_card failed: -22
+libertas: command 0x0000 timed out
+libertas: requeueing command 0x0000 due to timeout (0000002 <http://schicksw/mantis/view.php?id=2> )
+libertas: if_spi_host_to_card: invalid size requested: 0
+libertas: DNLD_CMD: hw_host_to_card failed: -22
+libertas: command 0x0000 timed out
+libertas: requeueing command 0x0000 due to timeout (0000003 <http://schicksw/mantis/view.php?id=3> )
+libertas: if_spi_host_to_card: invalid size requested: 0
+libertas: DNLD_CMD: hw_host_to_card failed: -22
+libertas: command 0x0000 timed out
+libertas: Excessive timeouts submitting command 0x0000
+
+ 
+
+ 
+
+This can be reproduced by enabling IEEE Power Savings mode and flooding the card with wireless stats requests by running something like the following from a terminal:
+
+while true; do iwconfig eth1;done
+
+ 
+
+Let this run for 30-60 secs, and then press Ctrl-C.  With IEEE power savings off, it may take several minutes, but does eventually give the same problem.  I have downloaded the compat-wireless-2.6.30 release and was able to cross-compile it for our kernel.  It helped a little in that it seemed to take longer before the error messaged occurred after pressing ctrl-c, but it did not completely resolve the problem.
+
+ 
+
+Has anyone seen something similar?  Are there any more recent patches that may address this issue?
+
+ 
+
+Thanks.
+
+ 
+
+-John Goyette
+
+Schick Technologies, Inc.
+
+ 
 
