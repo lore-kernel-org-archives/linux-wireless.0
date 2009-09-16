@@ -1,115 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:48301 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbZIHGut convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:53277 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754720AbZIPO5o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 02:50:49 -0400
+	Wed, 16 Sep 2009 10:57:44 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1205482fge.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 07:57:47 -0700 (PDT)
+From: Fabio Coatti <fabio.coatti@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: iwlagn rfkill and 2.6.31 on Intel Corporation PRO/Wireless 5100 AGN
+Date: Wed, 16 Sep 2009 16:57:44 +0200
+Cc: linux-wireless@vger.kernel.org, mjg@redhat.com
+References: <200909161521.15710.fabio.coatti@gmail.com> <20090916132549.GA10634@tuxdriver.com>
+In-Reply-To: <20090916132549.GA10634@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <4AA24FAB.20700@panicking.kicks-ass.org>
-References: <43e72e890909031554v1343bcfdu8ed6e23d0b1df832@mail.gmail.com>
-	 <1252065236.14338.179.camel@skunk> <1252080405.24673.11.camel@mj>
-	 <1252081080.31087.7.camel@skunk>
-	 <43e72e890909040951y6a1e639bl771a63389665ca2a@mail.gmail.com>
-	 <1252101647.11934.0.camel@bip>
-	 <4AA24FAB.20700@panicking.kicks-ass.org>
-Date: Tue, 8 Sep 2009 10:50:46 +0400
-Message-ID: <a872555b0909072350qf105990q3efb99a8bbb2d0bc@mail.gmail.com>
-Subject: Re: Atheros Linux wireless drivers home page - and two new driver
-	projects
-From: Denis Kirjanov <kirjanov@gmail.com>
-To: michael <michael@panicking.kicks-ass.org>
-Cc: Xavier Bestel <xavier.bestel@free.fr>, devel@driverdev.osuosl.org,
-	b_yogesh_snowy@yahoo.com, Dan Williams <dcbw@redhat.com>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Len Widra <Len.Widra@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Stephen Chen <Stephen.Chen@atheros.com>,
-	Jouni Malinen <j@w1.fi>, Nick Kossifidis <mickflemm@gmail.com>,
-	Paul Fertser <fercerpav@gmail.com>,
-	Harald Welte <laforge@openmoko.org>,
-	Bob Copeland <me@bobcopeland.com>,
-	Witold Sowa <witold.sowa@gmail.com>,
-	Michael Renzmann <mrenzmann@madwifi-project.org>,
-	Werner Almesberger <werner@openmoko.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909161657.44453.fabio.coatti@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good time of day.
-Do I need to use wireless-testing tree ?
+Thanks for the answer;
 
-On Sat, Sep 5, 2009 at 3:46 PM, michael<michael@panicking.kicks-ass.org> wrote:
-> Hi,
->
-> Xavier Bestel wrote:
->>
->> Le vendredi 04 septembre 2009 à 09:51 -0700, Luis R. Rodriguez a écrit :
->>>
->>> On Fri, Sep 4, 2009 at 9:18 AM, Xavier Bestel<xavier.bestel@free.fr>
->>> wrote:
->>>>
->>>> On Fri, 2009-09-04 at 12:06 -0400, Pavel Roskin wrote:
->>>>>
->>>>> On Fri, 2009-09-04 at 13:53 +0200, Xavier Bestel wrote:
->>>>>>
->>>>>> On Thu, 2009-09-03 at 15:54 -0700, Luis R. Rodriguez wrote:
->>>>>>>
->>>>>>> I'm pleased to announce the new home page to Atheros Linux wireless
->>>>>>> drivers:
->>>>>>>
->>>>>>> http://wireless.kernel.org/en/users/Drivers/Atheros
->>>>>>
->>>>>> ath5k is marked as not master-mode capable. I thought this had been
->>>>>> fixed for 2.6.31 ?
->>>>>
->>>>> The above page makes no such statements.  I have fixed
->>>>> http://wireless.kernel.org/en/users/Drivers/ath5k
->>>>
->>>> Right, thanks.
->>>>
->>>>> https://madwifi-project.org/wiki/UserDocs/ath5kAccessPoint still needs
->>>>> a
->>>>> lot of work, or maybe it should be removed as obsolete.
->>>>
->>>> Yes, I miss access-point functionality in NetworkManager :)
->>>
->>> BTW a GSoC project this year was to add AP support to Network Manager.
->>> As far I can tell the Witold Sowa finished this so you should be able
->>> to test this.
->>
->> Awesome.
->>
->>> Witold, can you update the wiki page on this project with details as
->>> to how people can test this?
->>>
->>>
->>> http://wireless.kernel.org/en/developers/GSoC/2009/Add_AP_Support_to_Network_Manager
->>>
->>>  Luis
->>>
->
-> Is there any plan to support the ar6k athereos wifi card?
->
-> Michael
->
->>
->>
->>
->> _______________________________________________
->> devel mailing list
->> devel@linuxdriverproject.org
->> http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
->>
->
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/devel
->
+In fact, it wasn't loaded.
 
+I've inserted that module and the behaviour changed: now the rfkill switch 
+reacts in the correct way and I'm able to turn on and off bluetooth system.
 
+But the behaviour of wifi sybsystem is still weird, (maybe for some faults on 
+my side). Basically if the laptop starts with wifi enabled (rfkill off) 
+wpa_supplicant can establish a connection, that can be killed by rfkill switch 
+(both wifi and bluetooth seems to be killed). But when I turn off rfkill 
+switch wpa_supplicant is unable to connect again; looking at syslog/dmesg I 
+can see activity in bt stack, but no messages regarding wlan0.
 
--- 
-Regards,
-Denis
+Any suggestion?
+
+dmeIn data mercoledì 16 settembre 2009 15:25:49, John W. Linville ha scritto:
+> Is the hp-wmi module loaded?
+> 
+> On Wed, Sep 16, 2009 at 03:21:15PM +0200, Fabio Coatti wrote:
+> > Hi all,
+> > I'm experiencing a bad behaviour of rfkill / iwlang driver. Here the
+> > description:
+> >
+> > Kernels: 2.6.30.[5,6] 2.6.31
+> > Hardware: HP EliteBook 6930p
+> >
+> > Behaviour: once a working wireless is killed activating the rfkill
+> > button, there is no way to turn off the rfkill and riactivate wifi
+> > network. Even a reboot is not able to reset the situation; to get again
+> > the control of rfkill button is to reboot under windows xp and activate
+> > wifi. After that I can boot inder linux with wifi active and kill it with
+> > rfkill button and the loop starts again :)
+> > I'm pretty sure that this issue is present since some kernel before the
+> > one I've reported, but I'm not sure about the versions.
+> >
+> > I don't know if this is iwlagn or acpi related bug (or my fault), I'm
+> > available for any test.
+> >
+> > HW:
+> > Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh]
+> > Network Connection
+> >         Subsystem: Intel Corporation Device 1211
+> >         Flags: bus master, fast devsel, latency 0, IRQ 33
+> >         Memory at d0100000 (64-bit, non-prefetchable) [size=8K]
+> >         Capabilities: [c8] Power Management version 3
+> >         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> >         Capabilities: [e0] Express Endpoint, MSI 00
+> >         Capabilities: [100] Advanced Error Reporting
+> >         Capabilities: [140] Device Serial Number 00-21-6b-ff-ff-74-2b-28
+> >         Kernel driver in use: iwlagn
+> >         Kernel modules: iwlagn
+> >
+> > Let me know if more information are needed.
+> >
+> > Thanks for any answer (I'm not subscribed to this list, so please CC me
+> > on answers, thanks)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> > in the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
