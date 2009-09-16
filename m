@@ -1,71 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43557 "EHLO mga02.intel.com"
+Received: from mx27.mail.ru ([94.100.176.41]:55484 "EHLO mx27.mail.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751253AbZIAGdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 02:33:49 -0400
-Subject: Re: memleaks, acpi + ext4 + tty
-From: Zhu Yi <yi.zhu@intel.com>
+	id S1751680AbZIOXj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Sep 2009 19:39:27 -0400
+Date: Wed, 16 Sep 2009 03:46:11 +0300
+From: Nikolai ZHUBR <zhubr@mail.ru>
+Message-ID: <792649359.20090916034611@mail.ru>
 To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Eric Paris <eparis@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Eric Paris <eparis@parisplace.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"H. Peter Anvin" <hpa@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890908311731h626a5b9bu486653c755cda2fa@mail.gmail.com>
-References: <tnxtyzr7vcl.fsf@pc1117.cambridge.arm.com>
-	 <43e72e890908311050s320d0ceen312a0d3d9e4fbc76@mail.gmail.com>
-	 <43e72e890908311137k78ac439bs4edf376d07343a32@mail.gmail.com>
-	 <43e72e890908311230u28b0642ep7a6bfd9dab82318a@mail.gmail.com>
-	 <20090831193345.GG5631@tuxdriver.com>
-	 <43e72e890908311243u50b9323fveda9feaaa4d8efdb@mail.gmail.com>
-	 <20090831194753.GH5631@tuxdriver.com>
-	 <43e72e890908311302s58743978wd8950f167a871cfb@mail.gmail.com>
-	 <43e72e890908311654t5d9489d3w9a817cffab5cb8f8@mail.gmail.com>
-	 <1251764791.2158.7.camel@dhcp231-106.rdu.redhat.com>
-	 <43e72e890908311731h626a5b9bu486653c755cda2fa@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 01 Sep 2009 14:33:49 +0800
-Message-Id: <1251786829.8830.277.camel@debian>
+CC: linux-wireless@vger.kernel.org,
+	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: Re[2]: cfg80211 and rfkill_backport question.
+In-reply-To: <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
+References: <174470396.20090916030952@mail.ru>
+ <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-01 at 08:31 +0800, Luis R. Rodriguez wrote:
-> >>
-> http://git.infradead.org/users/eparis/notify.git/commit/b962e7312ae87006aed6f68ceee94bdf8db08338
-> >>
-> >> FWIW for that patch:
-> >>
-> >> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> >>
-> >> So -- you if you're like me and had issues with bootup lag on
-> >> wireless-testing, you can probably fix your wireless-testing by
-> >> pulling his patches:
-> >>
-> >> git pull git://git.infradead.org/users/eparis/notify.git for-linus
-> >>
-> >> I saw Linus had some other fixes but I'll wait for rc9 for that as
-> my
-> >> box seems reasonably stable right now.
-> >
-> > Yes, -rc8 broke pretty badly for a number of people.  Linus did pull
-> all
-> > of the fixes that I know of.  I wouldn't suggest pulling just that
-> one
-> > commit.  All 3 of the post -rc8 patches in my tree fix -rc8
-> > regressions   :(
-> 
-> Thanks, the note -- so I guess best is to just pull from Linus ontop
-> of wireless-testing.
+Hello Luis,
 
-I confirm I'm also suffered with the problem on today's wireless-testing
-tip (udevadm --settle hangs on boot) and the above patch does fix the
-issue for me. Thanks both for identify and fix the problem.
+Wednesday, September 16, 2009, 2:14:21 AM, Luis R. Rodriguez wrote:
+> Ah nice, finally some tester on 2.6.25 :D
 
-Thanks,
--yi
+> So we never tested 2.6.25 on compat-wireless, I just got it to
+> compile, that's all. So what I think you need is to make sure the
+> symbols you are having issues with are either exported or included
+> inline on a header. Can you check that?
+Ok, could you be more specific? What should I do exactly? I'm not a
+great kernel expert actually. :/
+
+>   Luis
+
 
