@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f199.google.com ([209.85.210.199]:43505 "EHLO
-	mail-yx0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322AbZIRHOU convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:64309 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754449AbZIPTh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 03:14:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <a32f33a40909180000m72d3f8cep3b97205e5ef1e26d@mail.gmail.com>
-References: <20090915174233.7db381cd@varda> <200909151813.32223.IvDoorn@gmail.com>
-	<646765f40909172337g74b419fegd2935cb28aedb220@mail.gmail.com>
-	<a32f33a40909180000m72d3f8cep3b97205e5ef1e26d@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 18 Sep 2009 17:14:03 +1000
-Message-ID: <646765f40909180014l1aafe786kd5bb2ed2ec3c1bce@mail.gmail.com>
-Subject: Re: [rt2x00] rt2500pci is spamming syslogd since upgrade to 2.6.31
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: =?ISO-8859-1?Q?Alejandro_Riveira_Fern=E1ndez?= <ariveira@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Sep 2009 15:37:57 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1702379fge.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:38:00 -0700 (PDT)
+Subject: [PATCH 2/2] b43: Add lpphy_clear_tx_power_offsets to improve TX
+ Power handling
+From: Thomas Ilnseher <illth@gmx.de>
+To: John Linville <linville@tuxdriver.com>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Content-Type: text/plain
+Date: Wed, 16 Sep 2009 21:37:59 +0200
+Message-Id: <1253129879.2989.48.camel@note>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 18, 2009 at 17:00, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> On Fri, Sep 18, 2009 at 8:37 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> 2009/9/16 Ivo van Doorn <ivdoorn@gmail.com>:
->>> Hi,
->>>
->>>>  Hi; my syslog has many entries like this since the upgrade to 2.6.31
->>>>
->>>>  phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
->>>>
->>>>  Sometimes the driver just start spamming like crazy sometimes is at less rate
->>>>  sometimes it does not appear.
->>>>
->>>>  I'm running 2.6.31 with a revert [1] config follows. If more info is needed
->>>>  just ask
->>>>
->>>>  [1] http://bugzilla.kernel.org/show_bug.cgi?id=13362
->>>
->>> Try disabling powersaving,
->>>
->>>        iwconfig wlan0 power off
->>
->> I have an identical problem, which is fixed by this command.
->>
->> It is possible to detect that the chip doesn't, for whatever reason,
->> support powersaving and disable it in the driver?
->
-> Well I simply have to:
-> a) fix the driver to handle powersaving better
-> b) disable powersaving support for the driver
->
-> It will probably be (b) first followed by (a) much later if I ever
-> get the time to look into the issue.
+This patch adds the lpphy_clear_tx_power_offsets to b43.
 
-Fair enough.
+Signed-off-by: Thomas Ilnseher <illth@gmx.de>
 
-I'll take a look if I get an opportunity.
+---
+diff -uNr a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+--- a/drivers/net/wireless/b43/phy_lp.c	2009-09-16 20:52:17.501318374 +0200
++++ b/drivers/net/wireless/b43/phy_lp.c	2009-09-16 20:53:36.593319452 +0200
+@@ -1125,6 +1125,18 @@
+ 	dev->phy.lp->tssi_idx = (b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT) & 0x7F00) >> 8;
+ }
+ 
++static void lpphy_clear_tx_power_offsets(struct b43_wldev *dev)
++{
++	int i;
++	int id = 7;
++	if (dev->phy.rev < 2)
++		id = 10;
++	for (i = 0; i < 12; i++)
++		b43_lptab_write(dev, B43_LPTAB32(id, 0x40 + i), 0);
++	for (i = 0; i < 64; i++)
++		b43_lptab_write(dev, B43_LPTAB32(id, 0x80 + i), 0);
++}
++
+ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
+ 				       enum b43_lpphy_txpctl_mode mode)
+ {
+@@ -1139,7 +1151,7 @@
+ 
+ 	if (oldmode == B43_LPPHY_TXPCTL_HW) {
+ 		lpphy_update_tx_power_npt(dev);
+-		//TODO Clear all TX Power offsets
++		lpphy_clear_tx_power_offsets(dev);
+ 	} else {
+ 		if (mode == B43_LPPHY_TXPCTL_HW) {
+ 			//TODO Recalculate target TX power
 
-Thanks,
-
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
