@@ -1,133 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:42197 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934621AbZIEAVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 20:21:00 -0400
-Message-Id: <20090905001452.788421893@mini.kroah.org>
-Date: Fri, 04 Sep 2009 17:14:10 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [patch 35/71] iwl3945: fix rfkill switch
-References: <20090905001335.106974681@mini.kroah.org>
-In-Reply-To: <20090905001824.GA18171@kroah.com>
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:59235 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754169AbZIQGca (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 02:32:30 -0400
+MIME-Version: 1.0
+In-Reply-To: <1253139186.26521.449.camel@rc-desk>
+References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
+	 <1253122055.26521.431.camel@rc-desk>
+	 <8db1092f0909161036t5bae781eqa6f0a0df308ec4cd@mail.gmail.com>
+	 <1253124149.26521.438.camel@rc-desk>
+	 <8db1092f0909161259i5e007282i42f426bc2d0fc0c4@mail.gmail.com>
+	 <1253139186.26521.449.camel@rc-desk>
+Date: Thu, 17 Sep 2009 08:32:33 +0200
+Message-ID: <8db1092f0909162332r4ffeef09jdb87f7fc69ff8e9e@mail.gmail.com>
+Subject: Re: WARNING: at net/mac80211/scan.c:267 ieee80211_scan_completed+0x299/0x2b0
+	[mac80211]()
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.30-stable review patch.  If anyone has any objections, please let us know.
+2009/9/17 reinette chatre <reinette.chatre@intel.com>:
+[...]
+>
+> I think there is a potential race here. You start wpa_supplicant in
+> background and then immediately request an IP. It is not guaranteed at
+> this point that you are associated.
+>
+> Could you perform the last three steps of your script manually?
+>
+> Reinette
+>
+>
+>
 
-------------------
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+root@gumis:/home/maciek# INTERFACE=wlan0
+root@gumis:/home/maciek# WPA_FILE=/etc/wpa_supplicant/wpa_supplicant.conf
+root@gumis:/home/maciek# DRIVER=wext
+root@gumis:/home/maciek# ifconfig eth0 down
+root@gumis:/home/maciek# killall dhclient3
 
-(Not needed upstream, due to the major rewrite in 2.6.31)
+Dmesg:
+[  130.925689] b44: eth0: powering down PHY
 
-Due to rfkill and iwlwifi mishmash of SW / HW killswitch representation,
-we have race conditions which make unable turn wifi radio on, after enable
-and disable again killswitch. I can observe this problem on my laptop
-with iwl3945 device.
+root@gumis:/home/maciek# ifconfig $INTERFACE up
 
-In rfkill core HW switch and SW switch are separate 'states'. Device can
-be only in one of 3 states: RFKILL_STATE_SOFT_BLOCKED, RFKILL_STATE_UNBLOCKED,
-RFKILL_STATE_HARD_BLOCKED. Whereas in iwlwifi driver we have separate bits
-STATUS_RF_KILL_HW and STATUS_RF_KILL_SW for HW and SW switches - radio can be
-turned on, only if both bits are cleared.
+Demsg:
+[  171.563937] iwl3945 0000:08:00.0: firmware: requesting iwlwifi-3945-2.ucode
+[  171.611178] iwl3945 0000:08:00.0: loaded firmware version 15.32.2.9
+[  171.688664] Registered led device: iwl-phy0::radio
+[  171.688759] Registered led device: iwl-phy0::assoc
+[  171.688802] Registered led device: iwl-phy0::RX
+[  171.688844] Registered led device: iwl-phy0::TX
 
-In this particular race conditions, radio can not be turned on if in driver
-STATUS_RF_KILL_SW bit is set, and rfkill core is in state
-RFKILL_STATE_HARD_BLOCKED, because rfkill core is unable to call
-rfkill->toggle_radio(). This situation can be entered in case:
+root@gumis:/home/maciek# killall wpa_supplicant &> /dev/null
+(wait 5 seconds)
+root@gumis:/home/maciek# wpa_supplicant -c $WPA_FILE -D $DRIVER -i $INTERFACE -B
+(and wait)
 
-- killswitch is turned on
-- rfkill core 'see' button change first and move to RFKILL_STATE_SOFT_BLOCKED
-  also call ->toggle_radio() and STATE_RF_KILL_SW in driver is set
-- iwl3945 get info about button from hardware to set STATUS_RF_KILL_HW bit and
-  force rfkill to move to RFKILL_STATE_HARD_BLOCKED
-- killsiwtch is turend off
-- driver clear STATUS_RF_KILL_HW
-- rfkill core is unable to clear STATUS_RF_KILL_SW in driver
+Dmesg:
+[  249.340094] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  249.345339] wlan0 direct probe responded
+[  249.345347] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  249.347122] wlan0: authenticated
+[  249.347152] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  249.349703] wlan0: RX AssocResp from 00:1b:11:f6:0f:28 (capab=0x431
+status=0 aid=1)
+[  249.349711] wlan0: associated
+[  253.411858] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason:
+6)
+[  256.116488] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  256.118910] wlan0 direct probe responded
+[  256.118918] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  256.120663] wlan0: authenticated
+[  256.120694] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  256.122944] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28
+(capab=0x431 status=0 aid=1)
+[  256.122951] wlan0: associated
 
-Additionally call to rfkill_epo() when STATUS_RF_KILL_HW in driver is set
-cause move to the same situation.
+[...]
 
-In 2.6.31 this problem is fixed due to _total_ rewrite of rfkill subsystem.
-This is a quite small fix for 2.6.30.x in iwlwifi driver. We are changing
-internal rfkill state to always have below relations true:
-
-STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
-STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=1 <-> RFKILL_STATUS_SOFT_BLOCKED
-STATUS_RF_KILL_HW=1 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_HARD_BLOCKED
-STATUS_RF_KILL_HW=0 STATUS_RF_KILL_SW=0 <-> RFKILL_STATUS_UNBLOCKED
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: John W. Linville <linville@tuxdriver.com>
-
-
----
- drivers/net/wireless/iwlwifi/iwl-rfkill.c |   26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
-
---- a/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rfkill.c
-@@ -53,22 +53,31 @@ static int iwl_rfkill_soft_rf_kill(void 
- 	switch (state) {
- 	case RFKILL_STATE_UNBLOCKED:
- 		if (iwl_is_rfkill_hw(priv)) {
-+			/* pass error to rfkill core, make it state HARD
-+			 * BLOCKED (rfkill->mutex taken) and disable
-+			 * software kill switch */
- 			err = -EBUSY;
--			goto out_unlock;
-+			priv->rfkill->state = RFKILL_STATE_HARD_BLOCKED;
- 		}
- 		iwl_radio_kill_sw_enable_radio(priv);
- 		break;
- 	case RFKILL_STATE_SOFT_BLOCKED:
- 		iwl_radio_kill_sw_disable_radio(priv);
-+		/* rfkill->mutex is taken */
-+		if (priv->rfkill->state == RFKILL_STATE_HARD_BLOCKED) {
-+			/* force rfkill core state to be SOFT BLOCKED,
-+			 * otherwise core will be unable to disable software
-+			 * kill switch */
-+			priv->rfkill->state = RFKILL_STATE_SOFT_BLOCKED;
-+		}
- 		break;
- 	default:
- 		IWL_WARN(priv, "we received unexpected RFKILL state %d\n",
- 			state);
- 		break;
- 	}
--out_unlock:
--	mutex_unlock(&priv->mutex);
- 
-+	mutex_unlock(&priv->mutex);
- 	return err;
- }
- 
-@@ -132,14 +141,11 @@ void iwl_rfkill_set_hw_state(struct iwl_
- 	if (!priv->rfkill)
- 		return;
- 
--	if (iwl_is_rfkill_hw(priv)) {
-+	if (iwl_is_rfkill_sw(priv))
-+		rfkill_force_state(priv->rfkill, RFKILL_STATE_SOFT_BLOCKED);
-+	else if (iwl_is_rfkill_hw(priv))
- 		rfkill_force_state(priv->rfkill, RFKILL_STATE_HARD_BLOCKED);
--		return;
--	}
--
--	if (!iwl_is_rfkill_sw(priv))
--		rfkill_force_state(priv->rfkill, RFKILL_STATE_UNBLOCKED);
- 	else
--		rfkill_force_state(priv->rfkill, RFKILL_STATE_SOFT_BLOCKED);
-+		rfkill_force_state(priv->rfkill, RFKILL_STATE_UNBLOCKED);
- }
- EXPORT_SYMBOL(iwl_rfkill_set_hw_state);
+[  353.353780] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason: 6)
+[  356.070680] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  356.073112] wlan0 direct probe responded
+[  356.073121] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  356.074849] wlan0: authenticated
+[  356.074879] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  356.077160] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28
+(capab=0x431 status=0 aid=1)
+[  356.077168] wlan0: associated
 
 
+(Stop wainting)
+root@gumis:/home/maciek# dhclient $INTERFACE
+Internet Systems Consortium DHCP Client V3.1.2p1
+Copyright 2004-2009 Internet Systems Consortium.
+All rights reserved.
+For info, please visit http://www.isc.org/sw/dhcp/
+
+Listening on LPF/wlan0/00:13:02:c3:96:a8
+Sending on   LPF/wlan0/00:13:02:c3:96:a8
+Sending on   Socket/fallback
+DHCPREQUEST on wlan0 to 255.255.255.255 port 67
+DHCPREQUEST on wlan0 to 255.255.255.255 port 67
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 4
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 11
+DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 11
+DHCPOFFER from 192.168.0.1
+DHCPREQUEST on wlan0 to 255.255.255.255 port 67
+DHCPACK from 192.168.0.1
+Reloading /etc/samba/smb.conf: smbd only.
+bound to 192.168.0.102 -- renewal in 474672 seconds.
+
+Dmesg:
+[  390.228036] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason:
+6)
+[  392.969750] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  392.972333] wlan0 direct probe responded
+[  392.972342] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  392.974072] wlan0: authenticated
+
+[...]
+
+[  425.722523] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  425.724773] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28
+(capab=0x431 status=0 aid=1)
+[  425.724782] wlan0: associated
+[  429.231829] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason: 6)
+[  431.936205] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
+[  431.938624] wlan0 direct probe responded
+[  431.938631] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
+[  431.940470] wlan0: authenticated
+[  431.940502] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
+[  431.942754] wlan0: RX ReassocResp from 00:1b:11:f6:0f:28
+(capab=0x431 status=0 aid=1)
+[  431.942761] wlan0: associated
+
+root@gumis:/home/maciek# iwconfig $INTERFACE
+wlan0     IEEE 802.11abg  ESSID:"x"
+          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:1B:11:F6:0F:28
+          Bit Rate=54 Mb/s   Tx-Power=15 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+          Link Quality=53/70  Signal level=-57 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+root@gumis:/home/maciek# ping onet.pl
+PING onet.pl (213.180.146.27) 56(84) bytes of data.
+64 bytes from s4.m1r2.onet.pl (213.180.146.27): icmp_seq=1 ttl=53 time=18.3 ms
+64 bytes from s4.m1r2.onet.pl (213.180.146.27): icmp_seq=2 ttl=53 time=21.0 ms
+^C
+--- onet.pl ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 18.395/19.702/21.009/1.307 ms
+
+===============================
+
+Compare to 2.6.31:
+root@gumis:/home/maciek# /home/maciek/bin/wifi/wifi_wpa.sh
+Internet Systems Consortium DHCP Client V3.1.2p1
+Copyright 2004-2009 Internet Systems Consortium.
+All rights reserved.
+For info, please visit http://www.isc.org/sw/dhcp/
+
+Listening on LPF/wlan0/00:13:02:c3:96:a8
+Sending on   LPF/wlan0/00:13:02:c3:96:a8
+Sending on   Socket/fallback
+DHCPREQUEST on wlan0 to 255.255.255.255 port 67
+DHCPACK from 192.168.0.1
+Reloading /etc/samba/smb.conf: smbd only.
+bound to 192.168.0.102 -- renewal in 596714 seconds.
+wlan0     IEEE 802.11abg  ESSID:"x"
+          Mode:Managed  Frequency:2.457 GHz  Access Point: 00:1B:11:F6:0F:28
+          Bit Rate=1 Mb/s   Tx-Power=15 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption
+key:D99A-9047-D4B3-05CD-5AD4-041C-A1A1-577D-CF2C-7BC4-1F49-08F8-9802-2A2D-F5B3-0861
+[2]
+          Power Management:off
+          Link Quality=50/70  Signal level=-60 dBm  Noise level=-127 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+Demsg:	
+[   92.188241] b44: eth0: powering down PHY
+[   92.191643] iwl3945 0000:08:00.0: firmware: requesting iwlwifi-3945-2.ucode
+[   92.305225] iwl3945 0000:08:00.0: loaded firmware version 15.32.2.9
+[   92.380738] Registered led device: iwl-phy0::radio
+[   92.381651] Registered led device: iwl-phy0::assoc
+[   92.381685] Registered led device: iwl-phy0::RX
+[   92.381708] Registered led device: iwl-phy0::TX
+[   98.353640] wlan0: authenticate with AP 00:1b:11:f6:0f:28
+[   98.355401] wlan0: authenticated
+[   98.355407] wlan0: associate with AP 00:1b:11:f6:0f:28
+[   98.357622] wlan0: RX AssocResp from 00:1b:11:f6:0f:28 (capab=0x431
+status=0 aid=1)
+[   98.357630] wlan0: associated
+
+
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
