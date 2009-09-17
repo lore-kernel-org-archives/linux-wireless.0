@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f185.google.com ([209.85.210.185]:55747 "EHLO
-	mail-yx0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbZIZP60 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 11:58:26 -0400
-Received: by yxe15 with SMTP id 15so4139168yxe.22
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Sep 2009 08:58:30 -0700 (PDT)
-Message-ID: <4ABE3A29.5070006@lwfinger.net>
-Date: Sat, 26 Sep 2009 10:58:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.31-git wireless broken
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>  <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>  <1253816614.3868.406.camel@johannes.local>  <Pine.LNX.4.64.0909242036270.7469@sister.anvils>  <1253856038.3868.500.camel@johannes.local>  <Pine.LNX.4.64.0909250838420.3783@sister.anvils>  <1253868214.3868.713.camel@johannes.local>  <Pine.LNX.4.64.0909251506260.11390@sister.anvils> <1253970049.5122.31.camel@johannes.local> <Pine.LNX.4.64.0909261625050.4336@sister.anvils>
-In-Reply-To: <Pine.LNX.4.64.0909261625050.4336@sister.anvils>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbZIQRnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:43:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/13] iwlwifi driver updates 09/17/2009
+Date: Thu, 17 Sep 2009 10:43:43 -0700
+Message-Id: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hugh Dickins wrote:
-> On Sat, 26 Sep 2009, Johannes Berg wrote:
->> On Fri, 2009-09-25 at 15:15 +0100, Hugh Dickins wrote:
->>> a9a11622c5c742c115fad371c0397ae86dd3bb67 is first bad commit
->>> commit a9a11622c5c742c115fad371c0397ae86dd3bb67
->>> Author: Johannes Berg <johannes@sipsolutions.net>
->>> Date:   Mon Jul 27 12:01:53 2009 +0200
->>>
->>>     cfg80211: self-contained wext handling where possible
->> Heh, fun.
->>
->> Well the problem appears to be that wpa_supplicant isn't getting started
->> by your distro any more. Unfortunately I'm not familiar with opensuse.
->> It seems it thinks the device isn't wireless but wired, since it starts
->> ifplugd. OTOH maybe it wants ifplugd for wireless too? It's possible in
->> theory.
-> 
-> No, ifplugd was my choice: IIRC, at some stage of installation you're
-> given a choice between traditional ifplugd and super new NetworkManager:
-> my choice has been ifplugd (after being somehow burnt by NetworkManager
-> once in the past).
+We include more patches to support enabling of 6000 and 1000 series
+hardware. We add aggregation tables to rate scaling algorithm for improved
+performance. There is also now an additional LED mode if users do not want
+a blinking LED but just an LED reflecting RF state.
 
-FWIW, the current version of NetworkManager used by the KDE 3.5
-desktop in openSUSE 11.1 works, as does the Gnome version. There have
-been problems with KDE4.2 and earlier, but 4.3 works.
+We include two fixes targeting 2.6.32: 12/13 removes sleeping code from a
+spinlock section to prevent potential deadlock, 13/13 reduce significant
+unnecessary noise when skb allocation fails in atomic context, this was
+discussed in email thread linked to in commit message.
 
-I have been testing openSUSE 11.2. As of Milestone 7, wireless
-networking works with KDE and Gnome in both i386 and x86_64
-architectures. I have also tested networks with no encryption, WEP,
-WPA TKIP, and WPA2 TKIP.
+[PATCH 01/13] iwlwifi: Use RTS/CTS as the preferred protection mechanism for 6000 series
+[PATCH 02/13] iwlwifi: allow user change protection mechanism for HT
+[PATCH 03/13] iwlwifi: EEPROM version for 1000 and 6000 series
+[PATCH 04/13] iwlwifi: use S_IRUGO and S_IWUSR in module parameters
+[PATCH 05/13] iwlwifi: clean up rs_tx_status
+[PATCH 06/13] iwlwifi: do not clear TX info flags when receiving BlockAckResponse
+[PATCH 07/13] iwlwifi: add aggregation tables to the rate scaling algorithm
+[PATCH 08/13] iwlwifi: send cmd to uCode to configure valid tx antenna
+[PATCH 09/13] iwlwifi: update PCI Subsystem ID for 1000 series
+[PATCH 10/13] iwlwifi: update PCI Subsystem ID for 6000 series
+[PATCH 11/13] iwlwifi: add LED mode to support different LED behavior
+[PATCH 12/13 v2.6.32 and w-t] iwlwifi: do not send sync command while holding spinlock
+[PATCH 13/13 v2.6.32 and w-t] iwlwifi: reduce noise when skb allocation fails
 
-My inclination is to set wired connections with ifplugd, but wireless
-to "on boot".
 
-Larry
+Thank you
+
+Reinette
+
