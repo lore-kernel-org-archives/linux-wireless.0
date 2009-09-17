@@ -1,69 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:55527 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752083AbZI3VtD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 17:49:03 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
-Date: Wed, 30 Sep 2009 23:49:04 +0200
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <200909300952.29106.elendil@planet.nl> <20090930122451.GA17280@hash.localnet>
-In-Reply-To: <20090930122451.GA17280@hash.localnet>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909302349.05614.elendil@planet.nl>
+Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753995AbZIQRnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:43:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 01/13] iwlwifi: Use RTS/CTS as the preferred protection mechanism for 6000 series
+Date: Thu, 17 Sep 2009 10:43:44 -0700
+Message-Id: <1253209436-2309-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 September 2009, Bob Copeland wrote:
-> On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
-> > This is on a laptop I don't use much, but with .31 wireless has always
-> > been (and still is) reliable (.31-rc5 is the last kernel I built for
-> > it). On my other laptop wireless (iwlagn) works fine with .32-rc1.
->
-> Although iwlagn works, I would think this kind of thing:
-> > ath0: authenticated
-> > ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
-> > ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
-> > ath0: associated 
-> > ath0: deauthenticating by local choice (reason=3)
->
-> ...is some kind of issue with userspace or wext rather than the driver.
-> Ath5k only had a dozen or so patches this time around, so it should be
-> easy to bisect if it's a problem in the driver.  One possibility is
-> hardware CCMP support but I've been using it here for some time.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I doubt it's a userspace issue, but it does look like the regression was
-not triggered by the ath5k driver itself. In the mean time I did a bisect
-on the drivers/net/wireless/ath directory without any results.
+When 802.11g was introduced, we had RTS/CTS and CTS-to-Self protection
+mechanisms. In an HT Beacon, HT stations use the "Operating Mode" field
+in the HT Information Element to determine whether or not to use
+protection.
 
-> By the way, name it what you will, but the standard is wlan0 these days
-> :)
+The Operating Mode field has 4 possible settings: 0-3:
+Mode 0: If all stations in the BSS are 20/40 MHz HT capable, or if the
+BSS is 20/40 MHz capable, or if all stations in the BSS are 20 MHz HT
+stations in a 20 MHz BSS
+Mode 1: used if there are non-HT stations or APs using the primary or
+secondary channels
+Mode 2: if only HT stations are associated in the BSS and at least one
+20 MHz HT station is associated.
+Mode 3: used if one or more non-HT stations are associated in the BSS.
 
-Yep. A leftover from the days I used madwifi :-) I kind of like it though
-given its similarity to eth0.
+When in operating modes 1 or 3, and the Use_Protection field is 1 in the
+Beacon's ERP IE, all HT transmissions must be protected using RTS/CTS or
+CTS-to-Self.
 
-> > So the difference looks to be how I boot: if I do a *cold* boot
-> > directly into .32, wireless fails; if I *reboot* from .31 into .32,
-> > wireless comes up correctly. Reboot from .32 to .32 fails too.
->
-> Is that repeatable?
+By default, CTS-to-self is the preferred protection mechanism for less
+overhead and higher throughput; but using the full RTS/CTS will better
+protect the inner exchange from interference, especially in
+highly-congested environment.
 
-Yes, 100%. Weird heh? That's what made me think it must be an ath5k
-driver issue as it looks like a hardware initialization problem. Could
-be PCI or PCMCIA though, although I don't see anything suspicious in
-dmesg.
+For 6000 series WIFI NIC, RTS/CTS protection mechanism is the
+recommended choice for HT traffic based on the HW design.
 
-> Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
-> linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    5 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   10 +++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    2 ++
+ 4 files changed, 23 insertions(+), 3 deletions(-)
 
-Ack.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 89b111a..c4ae99f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -257,6 +257,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ /*
+@@ -281,6 +282,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -302,6 +304,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -323,6 +326,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -344,6 +348,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.shadow_ram_support = true,
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
++	.use_rts_for_ht = true, /* use rts/cts protection */
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 18af37c..469d563 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -418,6 +418,15 @@ static void rs_tl_turn_on_agg(struct iwl_priv *priv, u8 tid,
+ 	else if (tid == IWL_AGG_ALL_TID)
+ 		for (tid = 0; tid < TID_MAX_LOAD_COUNT; tid++)
+ 			rs_tl_turn_on_agg_for_tid(priv, lq_data, tid, sta);
++	if (priv->cfg->use_rts_for_ht) {
++		/*
++		 * switch to RTS/CTS if it is the prefer protection method
++		 * for HT traffic
++		 */
++		IWL_DEBUG_HT(priv, "use RTS/CTS protection for HT\n");
++		priv->staging_rxon.flags &= ~RXON_FLG_SELF_CTS_EN;
++		iwlcore_commit_rxon(priv);
++	}
+ }
+ 
+ static inline int get_num_of_ant_from_rate(u32 rate_n_flags)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 00457bf..c0939dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -115,9 +115,6 @@ int iwl_commit_rxon(struct iwl_priv *priv)
+ 
+ 	/* always get timestamp with Rx frame */
+ 	priv->staging_rxon.flags |= RXON_FLG_TSF2HOST_MSK;
+-	/* allow CTS-to-self if possible. this is relevant only for
+-	 * 5000, but will not damage 4965 */
+-	priv->staging_rxon.flags |= RXON_FLG_SELF_CTS_EN;
+ 
+ 	ret = iwl_check_rxon_cmd(priv);
+ 	if (ret) {
+@@ -217,6 +214,13 @@ int iwl_commit_rxon(struct iwl_priv *priv)
+ 					"Could not send WEP static key.\n");
+ 		}
+ 
++		/*
++		 * allow CTS-to-self if possible for new association.
++		 * this is relevant only for 5000 series and up,
++		 * but will not damage 4965
++		 */
++		priv->staging_rxon.flags |= RXON_FLG_SELF_CTS_EN;
++
+ 		/* Apply the new configuration
+ 		 * RXON assoc doesn't clear the station table in uCode,
+ 		 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 5e1f700..4f7c133 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -214,6 +214,7 @@ struct iwl_mod_params {
+  * @led_compensation: compensate on the led on/off time per HW according
+  *	to the deviation to achieve the desired led frequency.
+  *	The detail algorithm is described in iwl-led.c
++ * @use_rts_for_ht: use rts/cts protection for HT traffic
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -257,6 +258,7 @@ struct iwl_cfg {
+ 	const bool ht_greenfield_support;
+ 	u16 led_compensation;
+ 	const bool broken_powersave;
++	bool use_rts_for_ht;
+ };
+ 
+ /***************************
+-- 
+1.5.6.3
 
-I'll probably wait and see how -rc2 (or 2a or 3 or whatever) behaves
-before doing a full bisect, but I will come back to this.
-
-Thanks,
-FJP
