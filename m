@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:35484 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbZIIICi (ORCPT
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:32866 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754494AbZIQMjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 04:02:38 -0400
-Received: by ewy2 with SMTP id 2so3469652ewy.17
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 01:02:40 -0700 (PDT)
+	Thu, 17 Sep 2009 08:39:09 -0400
+Received: by bwz19 with SMTP id 19so262980bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Sep 2009 05:39:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4AA67009.4020400@lwfinger.net>
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de>
-	 <4AA67009.4020400@lwfinger.net>
-Date: Wed, 9 Sep 2009 16:02:39 +0800
-Message-ID: <a8e1da0909090102t1d6f3380y94683a188c09db06@mail.gmail.com>
-Subject: Re: b43 dma error
-From: Dave Young <hidave.darkstar@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>, linville@tuxdriver.com,
-	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <200909171116.19281.fabio.coatti@gmail.com>
+References: <200909161521.15710.fabio.coatti@gmail.com>
+	 <200909170005.56145.fabio.coatti@gmail.com>
+	 <3ace41890909161615u64d2878i8ddb52c2ba03ea52@mail.gmail.com>
+	 <200909171116.19281.fabio.coatti@gmail.com>
+Date: Thu, 17 Sep 2009 13:39:11 +0100
+Message-ID: <3ace41890909170539p29e0f369pf02457e6dca410f5@mail.gmail.com>
+Subject: Re: iwlagn rfkill and 2.6.31 on Intel Corporation PRO/Wireless 5100
+	AGN
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Fabio Coatti <fabio.coatti@gmail.com>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mjg@redhat.com" <mjg@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 8, 2009 at 10:54 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
-> Michael Buesch wrote:
->> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->>> then the controller keep restarting...
->>>
->>> Please tell what I can provide or test, Thanks.
+On Thu, Sep 17, 2009 at 10:16 AM, Fabio Coatti <fabio.coatti@gmail.com> wrote:
+> I
+>> Hmm, I recently looked to the interaction between rfkill and hal, and
+>> may be able to answer that. The kernel rfkill module also exports its
+>> state via either /dev/rfkill or sysfs's /sys/class/rfkill (depending
+>> on kernel version; I think /dev/rfkill is new to
+>> 2.6.31/wireless-testing/compat-wireless, and not in 2.6.30). hald or
+>> devicekit (again, depend on distro/kernel version) monitors those, and
+>> informs NetworkManager via d-bus messaging when the rkfill state
+>> changes. NetworkManager then if up/down the device and tell
+>> wpa_supplicant accordingly. So the ifconfig-interface-up is supposed
+>> to happen automatically, if hald/devicekit works and talk to
+>> NetworkManager.
 >>
->> Is this a regression? If so, please bisect.
+>> i.e. the waking-up should happen automatically if you have the
+>> combination of hald/devicekit and networkmanager.
+>>
+>> Does this answer your question?
+>>
 >
-> It is something specific to his system as I don't see anything like
-> this. In addition, there are some users on the openSUSE forums that
-> have implemented the latest compat-wireless and switched away from
-> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
-> them.
->
-> Please reboot so that we see the ssb output as well. Use the command
->
-> dmesg | egrep "ssb|b43"
->
-> That way we will be able to see exactly what kind of device you have
-> and what revisions are in it. AFAIK, the testing to date has been
-> limited to Rev 1 PHYs and Rev 2 radios.
-
-I use a public pc and I have no lan access for my laptop, so just hand
-copy something:
-
-b43-pci-bridge 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-b43-pci-bridge 0000:0c:00.0: setting latency timer to 64
-ssb SInics Silicon Backplane found on PCI device 0000:0c:00.0
-b43-phy0: Broadcom 4312 WLAN found (core revision 15)
-b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
-
->
-> Larry
+> Indeed; it's a good explanation of what's going on. Now I'll follow each step
+> of your descripiton and I'll try to find out where the chain breaks :)
 >
 >
+> Many thanks for your help.
 >
 
+On my system - hal knows about the killswitch:
 
+$lshal |grep -i killswitch
+  info.addons.singleton = {'hald-addon-rfkill-killswitch'} (string list)
+  info.capabilities = {'killswitch'} (string list)
+  info.category = 'killswitch'  (string)
+  info.interfaces = {'org.freedesktop.Hal.Device.KillSwitch'} (string list)
+  info.product = 'phy0 wlan Killswitch'  (string)
+  killswitch.access_method = 'rfkill'  (string)
+  killswitch.name = 'phy0'  (string)
+  killswitch.state = 1  (0x1)  (int)
+  killswitch.type = 'wlan'  (string)
 
--- 
-Regards
-dave
+and NM also wrote to syslog saying it found the switch, and other
+stuff when the switch is turned on and off:
+
+#grep kill /var/log/message
+...
+Sep 16 00:08:48 localhost NetworkManager: <info>  Wireless now
+disabled by radio killswitch
+Sep 16 00:10:09 localhost NetworkManager: <info>  Wireless now enabled
+by radio killswitch
+Sep 16 01:40:18 localhost NetworkManager: <info>  Found radio
+killswitch /org/freedesktop/Hal/devices/usb_device_XXXXXXX_if0_rfkill_phy0_wlan
+...
