@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:39507 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbZI2JO0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 05:14:26 -0400
-Received: by ewy7 with SMTP id 7so5210149ewy.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 02:14:29 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:21651 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760657AbZIQD5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 23:57:54 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:57:58 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <200909291014.57777.malte.gell@gmx.de>
-References: <200909291014.57777.malte.gell@gmx.de>
-Date: Tue, 29 Sep 2009 10:14:29 +0100
-Message-ID: <3ace41890909290214w161388fdje1aa501f6e05fbd4@mail.gmail.com>
-Subject: Re: bleeding edge ar9170usb: Fritz N USB support?
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Malte Gell <malte.gell@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19121.46023.94384.92577@gargle.gargle.HOWL>
+Date: Thu, 17 Sep 2009 09:27:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/12] ath9k: Fix AHB reset for AR9280
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2009 at 9:14 AM, Malte Gell <malte.gell@gmx.de> wrote:
-> Hello!
->
-> At
->
-> http://linuxwireless.org/en/users/Drivers/ar9170
->
-> I read support for the 802.11n Fritz N USB will be until kernel 2.6.32.
->
-> So, I wonder is this USB stick already supported in the bleeding edge compat-
-> wireless-2.6?
+From: Vivek Natarajan <vnatarajan@atheros.com>
 
-sigh. bleeding edge compat-wireless is ahead of Linus' tree (I already
-told you, and probably more than once).
+The commit "ath9k: Do an AHB reset before doing RTC reset"
+fixed RTC reset issue for AR9280 2.0 chipsets and above.
+The fix is valid for all AR9280 chipsets.
+
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 323df96..8146826 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1793,7 +1793,7 @@ static void ath9k_hw_set_regs(struct ath_hw *ah, struct ath9k_channel *chan,
+ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
+ 				struct ath9k_channel *chan)
+ {
+-	if (OLC_FOR_AR9280_20_LATER) {
++	if (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)) {
+ 		if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON))
+ 			return false;
+ 	} else if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
+-- 
+1.6.4.3
+
