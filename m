@@ -1,28 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:2304 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756632AbZIOGWg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 02:22:36 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: don't report SME connection errs at SIOCSIW{FREQ/AP/ESSID}
-Date: Tue, 15 Sep 2009 08:21:57 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-References: <200909141254.14988.hs4233@mail.mn-solutions.de> <200909141323.44245.hs4233@mail.mn-solutions.de> <1252950234.23427.51.camel@johannes.local>
-In-Reply-To: <1252950234.23427.51.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909150821.57216.hs4233@mail.mn-solutions.de>
+Received: from mga11.intel.com ([192.55.52.93]:62030 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758307AbZIQRnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:43:55 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel C Halperin <daniel.c.halperin@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/13] iwlwifi: do not clear TX info flags when receiving BlockAckResponse
+Date: Thu, 17 Sep 2009 10:43:49 -0700
+Message-Id: <1253209436-2309-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> And doesn't look correct to me at all. probably something
-> missing wrt. disconnect() while connecting.
+From: Daniel C Halperin <daniel.c.halperin@intel.com>
 
-Can you then outline the right solution ?
+OR-in AMPDU flags rather than assigning them.  This lets the TX status for
+aggregated packets be processed by rs_tx_status.
 
+Signed-off-by: Daniel C Halperin <daniel.c.halperin@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index a7422e5..ee0e26d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -1394,7 +1394,7 @@ static int iwl_tx_status_reply_compressed_ba(struct iwl_priv *priv,
+ 
+ 	info = IEEE80211_SKB_CB(priv->txq[scd_flow].txb[agg->start_idx].skb[0]);
+ 	memset(&info->status, 0, sizeof(info->status));
+-	info->flags = IEEE80211_TX_STAT_ACK;
++	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 	info->status.ampdu_ack_map = successes;
+ 	info->status.ampdu_ack_len = agg->frame_count;
 -- 
-http://www.holgerschurig.de
+1.5.6.3
+
