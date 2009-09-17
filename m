@@ -1,102 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:36427 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750880AbZIZLjQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 07:39:16 -0400
-Subject: Re: Problems with "cfg80211: fix SME connect" commit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Albert Herranz <albert_herranz@yahoo.es>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
-References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
-	 <200909210845.51247.hs4233@mail.mn-solutions.de>
-	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
-	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
-	 <1253859759.3868.569.camel@johannes.local>
-	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-v1dFu/rguU3pkeAkMP+1"
-Date: Sat, 26 Sep 2009 13:39:14 +0200
-Message-Id: <1253965154.5122.7.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:21666 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760146AbZIQD7D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 23:59:03 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:59:07 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19121.46091.712058.725272@gargle.gargle.HOWL>
+Date: Thu, 17 Sep 2009 09:29:07 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/12] ath9k: Disable autosleep feature by default.
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Vivek Natarajan <vnatarajan@atheros.com>
 
---=-v1dFu/rguU3pkeAkMP+1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Autosleep needs to be disabled for AR9287 chipsets also.
+Since autosleep is not used for any of the currently supported
+chipsets, disable it by default and can be enabled if needed
+for any of the future chipsets.
 
-On Fri, 2009-09-25 at 16:54 +0100, Hin-Tak Leung wrote:
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   10 +---------
+ 1 files changed, 1 insertions(+), 9 deletions(-)
 
-> > Can you try this? The last hunk is most important, but the other stuff
-> > helps debugging.
->=20
-> Great. The extra timeout in wap_spplicant.log is gone, so it is back
-> to NM does it all by itself.
-
-Interesting, thanks for the test. I'll go submit the patch.
-
-> Here is the dmesg from this patch on top of everything else so far:
->=20
-> wlan2: starting authentication with _id_
-> wlan2: deauthenticating from _id_ by local choice (reason=3D3)
-> wlan2: starting authentication with _id_
-> wlan2: direct probe to AP _id_ (try 1)
-> wlan2: direct probe responded
-> wlan2: authenticate with AP _id_ (try 1)
-> wlan2: authenticated
-> wlan2: starting association with _id_
-> wlan2: associate with AP _id_ (try 1)
-> wlan2: RX AssocResp from _id_ (capab=3D0x431 status=3D0 aid=3D1)
-> wlan2: associated
->=20
-> There is still the extra deauth at the beginning, but I guess I can
-> live with it, it doesn't require user action to deal with (unlike
-> without this latest patch) I suppose there might be more tuning before
-> commit?=20
-
-I think I'll just remove some of the printks again, but leave the ones
-moving. Actually probably better to split it up into a mac80211 and a
-cfg80211 patch.
-
-The extra deauth is because cfg80211 already starts the auth with the
-BSS before wpa_supplicant set the BSSID, and then when setting the BSSID
-it asks for deauth, but before we ever actually did anything... I think
-we'll just have to live with that, since it's hard to fix in the layered
-design we have now.
-
->  Otherwise Tested-by:
->=20
-> Hmm, slightly side-tracked - was the original poster using NM on top
-> on wpa_supplicant, just curious?
-
-You mean Albert? I don't know.
-
-johannes
-
---=-v1dFu/rguU3pkeAkMP+1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKvf1eAAoJEODzc/N7+QmaHkUP/15JyLd9whq7RyzO8VGhy6RL
-N/dsUleCftH0e1NT0pBjfSzftgJjepiyEpEQqanG04TAPoqKYGOreiwnX01eyHM8
-3KA7pJG/ndDXFoZ5qDR9DNv8UhnSQ74tp/FyVdZjGQ1lj581TK2wIs/rFTVaSsMr
-pjqP82FoyTQYLJlVHYAZTxLAj4VNcCgpukud5gL+3Fe7/2f9LYI7BFGcYaFELKT7
-U0bQmrlV0QfE7FJVO9fO+vpJc4+ml7+CMrgtI0BAl5yJITV3aA+RbZfwSyeHeQJ7
-GznsQJJiTUTP8vUlVSvviuDm13n+deBrG3Pn/B9UxvviGY23uARgRmljeCCCWpQc
-UxWu22pNDcpHJBhSr5iGoV4k2pSzDzIs6+tUHFAvrk0p1/N9nWnotIthItImxdxG
-0+KPnQOBDCG4xrNFb/8ZGdeYIx+/HlZdrac+ApRKpbvnK6HV0wHrNZ1kP4mGwgXz
-9zp9IKnFzrLa/1tTiP5FObprGvcFPL11Qw4vHPVcCFguCu5n6B73pGI/3Ayp6gfl
-1H24QfX7OmsdH71xZ6VI2LhWK349ON+n8q7hYAzaKqN6RoY0mZY154wQltULhCu+
-qJyBnJvEcO4iYDLtAKPzJlZLjvI/XRUMES9y+7PEmiITVRAgY0tm3eAHZza5dQh2
-xULW9zyIInf5UAJfHhhF
-=+7er
------END PGP SIGNATURE-----
-
---=-v1dFu/rguU3pkeAkMP+1--
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8146826..84abf30 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3700,15 +3700,7 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ #endif
+ 
+-	if ((ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) ||
+-	    (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE) ||
+-	    (ah->hw_version.macVersion == AR_SREV_VERSION_9160) ||
+-	    (ah->hw_version.macVersion == AR_SREV_VERSION_9100) ||
+-	    (ah->hw_version.macVersion == AR_SREV_VERSION_9280) ||
+-	    (ah->hw_version.macVersion == AR_SREV_VERSION_9285))
+-		pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
+-	else
+-		pCap->hw_caps |= ATH9K_HW_CAP_AUTOSLEEP;
++	pCap->hw_caps &= ~ATH9K_HW_CAP_AUTOSLEEP;
+ 
+ 	if (AR_SREV_9280(ah) || AR_SREV_9285(ah))
+ 		pCap->hw_caps &= ~ATH9K_HW_CAP_4KB_SPLITTRANS;
+-- 
+1.6.4.3
 
