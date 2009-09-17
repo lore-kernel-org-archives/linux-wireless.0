@@ -1,107 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49357 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755731AbZIKRiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 13:38:21 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/13 v2.6.32 and w-t] iwlwifi: disable powersave for 4965
-Date: Fri, 11 Sep 2009 10:38:19 -0700
-Message-Id: <1252690699-25796-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
-References: <1252690699-25796-1-git-send-email-reinette.chatre@intel.com>
+Received: from adelie.canonical.com ([91.189.90.139]:55723 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753891AbZIQJAj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 05:00:39 -0400
+Message-ID: <4AB1FAAB.1050103@canonical.com>
+Date: Thu, 17 Sep 2009 17:00:27 +0800
+From: Bryan Wu <bryan.wu@canonical.com>
+MIME-Version: 1.0
+To: Bryan Wu <bryan.wu@canonical.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	mb@bu3sch.de, stefano.brivio@polimi.it,
+	linux-wireless@vger.kernel.org
+Subject: Re: [b43] About supporting of BCM4312 [14e4:4315] with Low Power
+ PHY
+References: <4AA9B46E.8020100@canonical.com> <69e28c910909102318u465f6c75w46a2404a8e8d9f08@mail.gmail.com> 	<4AB0EDEB.9010803@canonical.com> <69e28c910909160813h2a91ff32hb5fa836f1f7a4963@mail.gmail.com> <4AB1AE43.6000602@canonical.com>
+In-Reply-To: <4AB1AE43.6000602@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+Bryan Wu wrote:
+> Gábor Stefanik wrote:
+>> 2009/9/16 Bryan Wu <bryan.wu@canonical.com>:
+>>> Hi Gabor,
+>>>
+>>> I tried the latest cmpat-wireless 09-16 snapshot on my machine which runs on 2.6.31
+>>> Ubuntu Karmic latest kernel. The hardware probing passes and wlan1 interface shows up.
+>>> But the iwlist scanning got no data from wlan1 interface,
+>>>
+>>> dmesg:
+>>> ---
+>>> [  364.371703] b43-pci-bridge 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+>>> [  364.371761] b43-pci-bridge 0000:07:00.0: setting latency timer to 64
+>>> [  364.437779] ssb: Sonics Silicon Backplane found on PCI device 0000:07:00.0
+>>> [  364.491488] b43-phy0: Broadcom 4312 WLAN found (core revision 15)
+>>> [  364.533562] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+>>> [  364.533604] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
+>>> [  364.693040] phy0: Selected rate control algorithm 'minstrel'
+>>> [  364.701666] Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
+>>> [  364.748486] udev: renamed network interface wlan0 to wlan1
+>>> [  364.824296] b43 ssb0:0: firmware: requesting b43/ucode15.fw
+>>> [  364.901848] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
+>>> [  364.931482] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
+>>> [  365.140212] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
+>> Please test with v478 or newer.
+> 
+> OK, do you know where can I find this firmware? I just followed the wiki page to get the firmware, but it seems the same version as I am using.
+> http://linuxwireless.org/en/users/Drivers/b43#device_firmware
+> 
 
-There's a bug in 4965 powersave that appears to
-be related to the way it keeps track of its data
-during sleep, but we haven't found it yet. Due to
-that, using powersave may spontaneously cause the
-device to SYSASSERT when transitioning from sleep
-to wake. Therefore, disable powersave for 4965,
-until (if ever, unfortunately) we can identify
-and fix the problem.
+I tried the one from here: http://downloads.openwrt.org/sources/broadcom-wl-4.178.10.4.tar.bz2
+Still got the same result,
+[   95.360263] b43-pci-bridge 0000:07:00.0: PCI INT A disabled
+[  122.214822] b43-pci-bridge 0000:07:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[  122.214880] b43-pci-bridge 0000:07:00.0: setting latency timer to 64
+[  122.285420] ssb: Sonics Silicon Backplane found on PCI device 0000:07:00.0
+[  122.354411] b43-phy0: Broadcom 4312 WLAN found (core revision 15)
+[  122.397222] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+[  122.397260] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
+[  122.544617] phy0: Selected rate control algorithm 'minstrel'
+[  122.549401] Broadcom 43xx driver loaded [ Features: PML, Firmware-ID: FW13 ]
+[  122.675356] udev: renamed network interface wlan0 to wlan1
+[  122.769147] b43 ssb0:0: firmware: requesting b43/ucode15.fw
+[  122.847433] b43 ssb0:0: firmware: requesting b43/lp0initvals15.fw
+[  122.883806] b43 ssb0:0: firmware: requesting b43/lp0bsinitvals15.fw
+[  123.113178] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+[  123.117334] b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
+[  123.385222] b43-phy0 debug: Chip initialized
+[  123.385794] b43-phy0 debug: 64-bit DMA initialized
+[  123.385850] b43-phy0 debug: QoS disabled
+[  123.406615] Registered led device: b43-phy0::tx
+[  123.406745] Registered led device: b43-phy0::rx
+[  123.406874] Registered led device: b43-phy0::radio
+[  123.407281] b43-phy0 debug: Wireless interface started
+[  123.407374] b43-phy0 debug: Adding Interface type 2
+[  123.421273] ADDRCONF(NETDEV_UP): wlan1: link is not ready
 
-Cf. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1982
-which was closed, but now has re-appeared with
-IDLE mode, which probably means we never really
-fixed it.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c  |    9 ++++++---
- drivers/net/wireless/iwlwifi/iwl-core.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-power.c |    5 +++--
- 4 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 63df1e4..d61d5a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2346,6 +2346,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
- 	.mod_params = &iwl4965_mod_params,
- 	.use_isr_legacy = true,
- 	.ht_greenfield_support = false,
-+	.broken_powersave = true,
- 	.led_compensation = 61,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5c6cee2..e447c1a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1565,9 +1565,12 @@ int iwl_setup_mac(struct iwl_priv *priv)
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_NOISE_DBM |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
--		    IEEE80211_HW_SPECTRUM_MGMT |
--		    IEEE80211_HW_SUPPORTS_PS |
--		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+		    IEEE80211_HW_SPECTRUM_MGMT;
-+
-+	if (!priv->cfg->broken_powersave)
-+		hw->flags |= IEEE80211_HW_SUPPORTS_PS |
-+			     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index cab148d..5e1f700 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -256,6 +256,7 @@ struct iwl_cfg {
- 	const bool shadow_ram_support;
- 	const bool ht_greenfield_support;
- 	u16 led_compensation;
-+	const bool broken_powersave;
- };
- 
- /***************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 4ec6a83..60be976 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -292,8 +292,9 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
- 	else
- 		dtimper = 1;
- 
--	/* TT power setting overwrites everything */
--	if (tt->state >= IWL_TI_1)
-+	if (priv->cfg->broken_powersave)
-+		iwl_power_sleep_cam_cmd(priv, &cmd);
-+	else if (tt->state >= IWL_TI_1)
- 		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
- 	else if (!enabled)
- 		iwl_power_sleep_cam_cmd(priv, &cmd);
--- 
-1.5.6.3
+Thanks,
+-Bryan
 
