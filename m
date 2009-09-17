@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:57507 "EHLO gir.skynet.ie"
+Received: from mail.atheros.com ([12.36.123.2]:21637 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632AbZINNGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 09:06:07 -0400
-Date: Mon, 14 Sep 2009 14:06:12 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-Subject: Re: iwlagn: order 2 page allocation failures
-Message-ID: <20090914130612.GA11778@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl> <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie> <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie> <1252526738.30150.91.camel@rc-desk> <20090910090206.GA22276@csn.ul.ie> <1252617290.30150.321.camel@rc-desk> <20090911084717.GB32497@csn.ul.ie> <1252897270.5650.169.camel@debian>
+	id S1760203AbZIQD4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 23:56:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:56:43 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <1252897270.5650.169.camel@debian>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19121.45948.450756.30029@gargle.gargle.HOWL>
+Date: Thu, 17 Sep 2009 09:26:44 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/12] ath9k: Don't read NF when chip has gone through full sleep mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 14, 2009 at 11:01:10AM +0800, Zhu Yi wrote:
-> On Fri, 2009-09-11 at 16:47 +0800, Mel Gorman wrote:
-> > On Thu, Sep 10, 2009 at 02:14:50PM -0700, reinette chatre wrote:
-> > > On Thu, 2009-09-10 at 02:02 -0700, Mel Gorman wrote:
-> > > 
-> > > > 
-> > > > As a total aside, there is still the problem that the driver is depending on
-> > > > order-2 allocations. On systems without swap, the allocation problem could be
-> > > > more severe as there are fewer pages the system can use to regain contiguity.
-> > > 
-> > > I looked more at the implementation and hardware interface but I do not
-> > > see a way around this. We have to provide 8k buffer to device, and we
-> > > have to make sure it is aligned. 
-> > > 
-> > 
-> > That would imply an order-1 allocation instead of an order-2 though so
-> > it would appear than we are being worse than we have to. It would appear
-> > to be because of this +256 bytes that goes onto every buffer.
-> > 
-> > > Do you have any suggestions?
-> > > 
-> > 
-> > Nothing concrete. Finding an alternative to having the socket buffer
-> > 8192+256 to make it an order-1 allocation would be an improvement but I
-> > don't know how that should be tackled. Lacking the hardware, I can't
-> > experiment myself :(
-> 
-> Essentially, the hardware only requires an order-1 allocation aligned on
-> 256 bytes boundary. But as it is used as an SKB, a trailing struct
-> skb_shared_info is added. This forces us to both increase the order and
-> do alignment ourselves. I believe some improvement could be done here.
-> But it should not be an easy one.
-> 
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Probably not. I can only assume that moving the location of
-skb_shared_info such that it is sometimes located after the buffer and
-sometimes allocated via a separate kmalloc() would be a significant
-undertaking.
+NF value may be incorrect when we read it just after the chip
+has gone through a full sleep mode. Reading incorrect NF values
+affects RX throughput.
 
-> BTW, does SLAB/SLUB guarantee size of multiple PAGE_SIZE __kmalloc()
-> allocation align on PAGE_SIZE (or 256 bytes) boundary?
-> 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Page-aligned.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4731ad2..2c904c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2357,7 +2357,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+-	if (curchan)
++	if (curchan && !ah->chip_fullsleep)
+ 		ath9k_hw_getnf(ah, curchan);
+ 
+ 	if (bChannelChange &&
 -- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+1.6.4.3
+
