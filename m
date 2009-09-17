@@ -1,41 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:21066 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410AbZI2G7i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 02:59:38 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Firmware versioning best practices
-Date: Tue, 29 Sep 2009 08:59:24 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@web.de>,
-	Bob Copeland <me@bobcopeland.com>
-References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
-In-Reply-To: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909290859.25075.hs4233@mail.mn-solutions.de>
+Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755181AbZIQRnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:43:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/13] iwlwifi: allow user change protection mechanism for HT
+Date: Thu, 17 Sep 2009 10:43:45 -0700
+Message-Id: <1253209436-2309-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Or shall we have the same firmware filename and simply query
-> the firmware for a map of capabilities? Any other ideas?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Don't put the version into the filename. This is not a common 
-practice for Linux / BSD / whatever systems. Usually you have 
-a "kmail" file, not a kmail3.5, kmail4.0 and kmail4.2 file.
+Allow user to change protection mechanism for HT between RTS/CTS and
+CTS-to-self through sysfs:
 
-Versions or capability maps can be stored inside the firmware and 
-queried at load time. E.g. the libertas driver does it that way.
+Show current protection mechanism for HT
+   cat /sys/class/net/wlan0/device/rts_ht_protection
 
-If you make your firmware redistributable (which I recommend), 
-the version will also be stored in the package metadata, e.g. 
-the rpm or deb file and the infrastructure for rpm/yum deb/apt.
+Change protection mechanism for HT (only allowed while not-associated)
+CTS-to-self:
+   echo 0 > /sys/class/net/wlan0/device/rts_ht_protection
+RTS/CTS:
+   echo 1 > /sys/class/net/wlan0/device/rts_ht_protection
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c0939dc..0b2a1d4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2613,6 +2613,40 @@ static ssize_t show_statistics(struct device *d,
+ 
+ static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
+ 
++static ssize_t show_rts_ht_protection(struct device *d,
++			     struct device_attribute *attr, char *buf)
++{
++	struct iwl_priv *priv = dev_get_drvdata(d);
++
++	return sprintf(buf, "%s\n",
++		priv->cfg->use_rts_for_ht ? "RTS/CTS" : "CTS-to-self");
++}
++
++static ssize_t store_rts_ht_protection(struct device *d,
++			      struct device_attribute *attr,
++			      const char *buf, size_t count)
++{
++	struct iwl_priv *priv = dev_get_drvdata(d);
++	unsigned long val;
++	int ret;
++
++	ret = strict_strtoul(buf, 10, &val);
++	if (ret)
++		IWL_INFO(priv, "Input is not in decimal form.\n");
++	else {
++		if (!iwl_is_associated(priv))
++			priv->cfg->use_rts_for_ht = val ? true : false;
++		else
++			IWL_ERR(priv, "Sta associated with AP - "
++				"Change protection mechanism is not allowed\n");
++		ret = count;
++	}
++	return ret;
++}
++
++static DEVICE_ATTR(rts_ht_protection, S_IWUSR | S_IRUGO,
++			show_rts_ht_protection, store_rts_ht_protection);
++
+ 
+ /*****************************************************************************
+  *
+@@ -2669,6 +2703,7 @@ static struct attribute *iwl_sysfs_entries[] = {
+ 	&dev_attr_statistics.attr,
+ 	&dev_attr_temperature.attr,
+ 	&dev_attr_tx_power.attr,
++	&dev_attr_rts_ht_protection.attr,
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	&dev_attr_debug_level.attr,
+ #endif
 -- 
-http://www.holgerschurig.de
+1.5.6.3
+
