@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:53630 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932110AbZIDDPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 23:15:52 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2009 20:15:56 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19104.35102.897450.112606@gargle.gargle.HOWL>
-Date: Fri, 4 Sep 2009 08:57:26 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Fix channelFlags for 2GHZ
-In-Reply-To: <43e72e890909031128k4ce1f7b5i5c42ebaa73498c70@mail.gmail.com>
-References: <19103.25725.707217.596352@gargle.gargle.HOWL>
-	<1251991187.6521.22.camel@mj>
-	<43e72e890909031128k4ce1f7b5i5c42ebaa73498c70@mail.gmail.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:37608 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496AbZIQRT5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:19:57 -0400
+Subject: [PATCH] mac80211: fix DTIM setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 17 Sep 2009 10:19:23 -0700
+Message-Id: <1253207963.9450.20.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> I should mention ath9k_update_ichannel() was the last thing I intended
-> on porting for the new regulatory changes we did on ath9k, when we
-> ditched the old regulatory code, but I left it as it did involve quite
-> a lot more changes in the code. When I reviewed this it seemed we
-> could just rely on the hw->conf.channel->band for many things but in
-> some cases we needed some defines for hw.
-> 
-> So -- I'd personally welcome this change as a better alternative needs
-> better planning, and more testing.
+When the DTIM setting is read from beacons, mac80211 will
+assume it is 1 if the TIM IE is not present or the value
+is 0. This sounds fine, but the same function processes
+probe responses as well, which don't have a TIM IE. This
+leads to overwriting any values previously parsed out of
+beacon frames.
 
-Agreed.
+Thus, instead of checking for the presence of the TIM IE
+when setting the default, simply check whether the DTIM
+period value is valid already. If the TIM IE is not there
+then the value cannot be valid (it is initialised to 0)
+and probe responses received after beacons will not lead
+to overwriting an already valid value.
 
-Sujith
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+It's a bug, but probably not severe enough to warrant looking into
+putting it into -stable.
+
+ net/mac80211/scan.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/scan.c	2009-09-17 10:14:59.000000000 -0700
++++ wireless-testing/net/mac80211/scan.c	2009-09-17 10:15:18.000000000 -0700
+@@ -90,8 +90,8 @@ ieee80211_bss_info_update(struct ieee802
+ 		bss->dtim_period = tim_ie->dtim_period;
+ 	}
+ 
+-	/* set default value for buggy APs */
+-	if (!elems->tim || bss->dtim_period == 0)
++	/* set default value for buggy AP/no TIM element */
++	if (bss->dtim_period == 0)
+ 		bss->dtim_period = 1;
+ 
+ 	bss->supp_rates_len = 0;
+
+
