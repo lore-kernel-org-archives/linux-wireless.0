@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:44474 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754992AbZICUVo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 16:21:44 -0400
-Received: by bwz19 with SMTP id 19so229599bwz.37
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Sep 2009 13:21:45 -0700 (PDT)
-To: <gregkh@suse.de>
-Cc: greg@kroah.com, linux-wireless@vger.kernel.org
-Subject: Re: patch staging-remove-at76_usb-wireless-driver.patch added to gregkh-2.6 tree
-References: <12520044192286@kroah.org>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Thu, 03 Sep 2009 23:21:43 +0300
-In-Reply-To: <12520044192286@kroah.org> (gregkh@suse.de's message of "Thu\, 03 Sep 2009 12\:00\:19 -0700")
-Message-ID: <87tyzj93u0.fsf@litku.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:62030 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757955AbZIQRn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Sep 2009 13:43:57 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/13 v2.6.32 and w-t] iwlwifi: do not send sync command while holding spinlock
+Date: Thu, 17 Sep 2009 10:43:55 -0700
+Message-Id: <1253209436-2309-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<gregkh@suse.de> writes:
+commit 10c994ca70e8e94bbc85a5bf13de5911ee8de4d2 "iwlwifi: fix remove key
+error" fixed an error reported by mac80211 during interface down. The fix
+involved changing an async command to synchronous. Unfortunately this was
+inside a spinlock section in which we cannot sleep.
 
-> From: Greg Kroah-Hartman <gregkh@suse.de>
-> Subject: Staging: remove at76_usb wireless driver.
->
-> There is already an in-kernel driver for this hardware (since 2.6.30),
-> at76c50x-usb, and it supports all of the same devices.  So this driver
-> can now be deleted.
->
-> Cc: Kalle Valo <kalle.valo@iki.fi> 
-> Cc: linux-wireless <linux-wireless@vger.kernel.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Modify the sending of the command back to async. This causes the mac80211
+error "mac80211-phy0: failed to remove key (0, ff:ff:ff:ff:ff:ff) from
+hardware (-16)." to return. This error is not serious since this occurs
+during interface down and the keys will be cleared anyway when ucode is
+unloaded. Having this error message is thus less serious than a potential
+deadlock introduced when sleeping while holding a spinlock. We will have to
+find another fix for that error.
 
-Thanks.
+This is a revert of the abovementioned commit.
 
-Acked-by: Kalle Valo <kalle.valo@iki.fi>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index a2b9ec8..c6633fe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -520,7 +520,7 @@ int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
+ 	struct iwl_host_cmd cmd = {
+ 		.id = REPLY_WEPKEY,
+ 		.data = wep_cmd,
+-		.flags = CMD_SYNC,
++		.flags = CMD_ASYNC,
+ 	};
+ 
+ 	memset(wep_cmd, 0, cmd_size +
 -- 
-Kalle Valo
+1.5.6.3
+
