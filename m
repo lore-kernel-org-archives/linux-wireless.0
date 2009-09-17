@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38479 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbZIJTaY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 15:30:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 07/10] ath5k: initialize eeprom struct early on attach
-Date: Thu, 10 Sep 2009 15:30:24 -0400
-Message-Id: <1252611027-5285-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
-References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.atheros.com ([12.36.123.2]:21614 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760139AbZIQDxo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Sep 2009 23:53:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:53:47 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+Message-ID: <19121.45772.489140.407518@gargle.gargle.HOWL>
+Date: Thu, 17 Sep 2009 09:23:48 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/12] ath9k bug fixes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes this sparse warning:
+John,
 
-  CHECK   drivers/net/wireless/ath/ath5k/attach.c
-drivers/net/wireless/ath/ath5k/attach.c:288:42: warning: symbol 'ee' shadows an earlier one
-drivers/net/wireless/ath/ath5k/attach.c:109:34: originally declared here
+A bunch of patches fixing various bugs in the driver.
+These apply on top of wireless-testing.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath5k/attach.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Luis would rebase his pending patches on top of these
+and resend them.
 
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index 2d262c7..123612a 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -281,12 +281,12 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc)
- 		goto err_free;
- 	}
- 
-+	ee = &ah->ah_capabilities.cap_eeprom;
-+
- 	/*
- 	 * Write PCI-E power save settings
- 	 */
- 	if ((ah->ah_version == AR5K_AR5212) && (pdev->is_pcie)) {
--		struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
--
- 		ath5k_hw_reg_write(ah, 0x9248fc00, AR5K_PCIE_SERDES);
- 		ath5k_hw_reg_write(ah, 0x24924924, AR5K_PCIE_SERDES);
- 
-@@ -324,7 +324,6 @@ struct ath5k_hw *ath5k_hw_attach(struct ath5k_softc *sc)
- 	}
- 
- 	/* Crypto settings */
--	ee = &ah->ah_capabilities.cap_eeprom;
- 	ah->ah_aes_support = srev >= AR5K_SREV_AR5212_V4 &&
- 		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
- 		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5));
--- 
-1.6.3.3
+Thanks.
+Sujith
+
+Senthil Balasubramanian (2):
+  ath9k: Adjust the chainmasks properly
+  ath9k: Fix bug in chain handling
+
+Sujith (3):
+  ath9k: Restore TSF after RESET
+  ath9k: Fix chip wakeup issue
+  ath9k: Fix regression in PA calibration
+
+Vasanthakumar Thiagarajan (3):
+  ath9k: Fix rx data corruption
+  ath9k: Don't read NF when chip has gone through full sleep mode
+  ath9k: Do a full reset for AR9280
+
+Vivek Natarajan (4):
+  ath9k: Set default noise floor value for AR9287
+  ath9k: Revamp PCIE workarounds
+  ath9k: Fix AHB reset for AR9280
+  ath9k: Disable autosleep feature by default.
+
+ drivers/net/wireless/ath/ath9k/calib.c      |   23 +++-
+ drivers/net/wireless/ath/ath9k/calib.h      |    1 +
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    4 +-
+ drivers/net/wireless/ath/ath9k/hw.c         |  198 ++++++++++++++++-----------
+ drivers/net/wireless/ath/ath9k/hw.h         |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c       |    8 +-
+ drivers/net/wireless/ath/ath9k/reg.h        |    3 +-
+ 7 files changed, 149 insertions(+), 92 deletions(-)
 
