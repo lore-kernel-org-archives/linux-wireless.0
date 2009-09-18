@@ -1,85 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from viefep19-int.chello.at ([62.179.121.39]:22535 "EHLO
-	viefep19-int.chello.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbZIHU6F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 16:58:05 -0400
-Subject: Re: ipw2200: firmware DMA loading rework
-From: Simon Kitching <simon.kitching@chello.at>
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Theodore Tso <tytso@mit.edu>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Mel Gorman <mel@skynet.ie>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-In-Reply-To: <20090908110041.GE28127@csn.ul.ie>
-References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera>
-	 <1251430951.3704.181.camel@debian> <200908301437.42133.bzolnier@gmail.com>
-	 <200909021948.13262.bzolnier@gmail.com>
-	 <43e72e890909021102g7f844c79xefccf305f5f5c5b6@mail.gmail.com>
-	 <20090903124913.GA26110@csn.ul.ie> <20090905142837.GI16217@mit.edu>
-	 <20090908110041.GE28127@csn.ul.ie>
-Content-Type: text/plain
-Date: Tue, 08 Sep 2009 22:39:26 +0200
-Message-Id: <1252442366.9812.3.camel@simon-laptop>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:44863 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756031AbZIRJh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2009 05:37:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:37:30 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19123.21725.565202.139974@gargle.gargle.HOWL>
+Date: Fri, 18 Sep 2009 15:07:33 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 8/9] ath9k: Advertise midband for AR5416 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-08 at 12:00 +0100, Mel Gorman wrote:
-> On Sat, Sep 05, 2009 at 10:28:37AM -0400, Theodore Tso wrote:
-> > On Thu, Sep 03, 2009 at 01:49:14PM +0100, Mel Gorman wrote:
-> > > > 
-> > > > This looks very similar to the kmemleak ext4 reports upon a mount. If
-> > > > it is the same issue, which from the trace it seems it is, then this
-> > > > is due to an extra kmalloc() allocation and this apparently will not
-> > > > get fixed on 2.6.31 due to the closeness of the merge window and the
-> > > > non-criticalness this issue has been deemed.
-> > 
-> > No, it's a different problem.
-> > 
-> > > I suspect the more pressing concern is why is this kmalloc() resulting in
-> > > an order-5 allocation request? What size is the buffer being requested?
-> > > Was that expected?  What is the contents of /proc/slabinfo in case a buffer
-> > > that should have required order-1 or order-2 is using a higher order for
-> > > some reason.
-> > 
-> > It's allocating 68,000 bytes for the mb_history structure, which is
-> > used for debugging purposes.  That's why it's optional and we continue
-> > if it's not allocated.  We should fix it to use vmalloc()
-> 
-> You could call with kmalloc(FLAGS|GFP_NOWARN) with a fallback to
-> vmalloc() and a disable if vmalloc() fails as well.  Maybe check out what
-> kernel/profile.c#profile_init() to allocate a large buffer and do something
-> similar?
-> 
-> > and I'm
-> > inclined to turn it off by default since it's not worth the overhead,
-> > and most ext4 users won't find it useful or interesting.
-> > 
-> 
-> I can't comment as I don't know what sort of debugging it's useful for.
-> 
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-Perhaps this is a suitable use for the new proposed flex_array? From an
-initial glance, I can't see why the allocated memory has to be
-contiguous..
+This has to be done if the EEPROM supports FCC Midband
+capability.
 
-http://lwn.net/Articles/345273/
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c     |    5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-Cheers, Simon
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 8463ba0..3349274 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -639,6 +639,7 @@ struct ar9287_eeprom {
+ } __packed;
+ 
+ enum reg_ext_bitmap {
++	REG_EXT_FCC_MIDBAND = 0,
+ 	REG_EXT_JAPAN_MIDBAND = 1,
+ 	REG_EXT_FCC_DFS_HT40 = 2,
+ 	REG_EXT_JAPAN_NONDFS_HT40 = 3,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 99c0dac..f74604d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -3660,7 +3660,10 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			AR_EEPROM_EEREGCAP_EN_KK_U1_EVEN;
+ 	}
+ 
+-	pCap->reg_cap |= AR_EEPROM_EEREGCAP_EN_FCC_MIDBAND;
++	/* Advertise midband for AR5416 with FCC midband set in eeprom */
++	if (regulatory->current_rd_ext & (1 << REG_EXT_FCC_MIDBAND) &&
++	    AR_SREV_5416(ah))
++		pCap->reg_cap |= AR_EEPROM_EEREGCAP_EN_FCC_MIDBAND;
+ 
+ 	pCap->num_antcfg_5ghz =
+ 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_5GHZ);
+-- 
+1.6.4.4
 
