@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:63359 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409AbZIXJTh (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:55466 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755479AbZIRIBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 05:19:37 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH]: nl80211: report age of scan results
-Date: Thu, 24 Sep 2009 11:19:28 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <200909241055.51604.hs4233@mail.mn-solutions.de> <43e72e890909240159x6d733e1bj9c529f6fe77b32f5@mail.gmail.com>
-In-Reply-To: <43e72e890909240159x6d733e1bj9c529f6fe77b32f5@mail.gmail.com>
+	Fri, 18 Sep 2009 04:01:20 -0400
+Received: by iwn8 with SMTP id 8so577936iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 01:01:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909241119.28207.hs4233@mail.mn-solutions.de>
+In-Reply-To: <43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
+References: <19121.45772.489140.407518@gargle.gargle.HOWL>
+	<43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 18 Sep 2009 01:01:03 -0700
+Message-ID: <43e72e890909180101se65a608k1c11c53434cb74e@mail.gmail.com>
+Subject: Re: [PATCH 00/12] ath9k bug fixes
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 24 September 2009 10:59:57 Luis R. Rodriguez wrote:
-> Wil want to #define NL80211_BSS_AGE_MS NL80211_BSS_AGE_MS as
-> well so userspace apps can ifdef around that feature to know if
-> its supported. 
+On Fri, Sep 18, 2009 at 12:59 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Sep 16, 2009 at 8:53 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+>> John,
+>>
+>> A bunch of patches fixing various bugs in the driver.
+>> These apply on top of wireless-testing.
+>>
+>> Luis would rebase his pending patches on top of these
+>> and resend them.
+>
+> John, here is my rebase of my 48 patches on top of this series. I
+> won't post them and instead give you this handy git am'able file.
+>
+> http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18-mcgrof-rebased.patch
+>
+> If you really need me to post them again please let me know.
+>
+> If you want to get both sujith's collection series + mine in one file
+> here they are:
+>
+> http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18.patch
 
-Nice idea.
+But I expect my series to only be applied after 2.6.32-rc1 is released.
 
-That could be a different patch. I haven't seen it for anything 
-else, e.g. there's no "#define NL80211_BSS_STATUS" anywhere.
-
-"iw" for example has it's own nl80211.h file.
-
--- 
-http://www.holgerschurig.de
+  Luis
