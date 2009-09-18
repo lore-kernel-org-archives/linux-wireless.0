@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10867 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754339AbZIAPWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:22:55 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:22:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 7/7] wireless: remove mac80211 rate selection extra menu
-Date: Tue, 1 Sep 2009 08:22:46 -0700
-Message-ID: <1251818566-9264-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-ew0-f206.google.com ([209.85.219.206]:48109 "EHLO
+	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758297AbZIRSFE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2009 14:05:04 -0400
+Received: by ewy2 with SMTP id 2so1545332ewy.17
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 11:05:06 -0700 (PDT)
+From: Florian Fainelli <florian@openwrt.org>
+Reply-To: Florian Fainelli <florian@openwrt.org>
+To: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: Re: Makefile ref to non-existent CONFIG_ATHEROS_AR71XX
+Date: Fri, 18 Sep 2009 20:04:51 +0200
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+References: <alpine.LFD.2.00.0909180959550.9988@localhost>
+In-Reply-To: <alpine.LFD.2.00.0909180959550.9988@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909182004.54398.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can just display this upon enabling mac80211 with an
-'if MAC80211 != n' check.
+Hi Robert,
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/Kconfig |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Le vendredi 18 septembre 2009 16:01:25, Robert P. J. Day a écrit :
+>   searching for Makefile references to Kconfig variables that don't
+> exist, and i find:
+>
+> ===== ATHEROS_AR71XX =====
+> ./drivers/net/wireless/ath/ath9k/Makefile:ath9k-$(CONFIG_ATHEROS_AR71XX) +=
+> ahb.o
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 72006f9..8300d19 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -26,8 +26,7 @@ config MAC80211
- comment "CFG80211 needs to be enabled for MAC80211"
- 	depends on CFG80211=n
- 
--menu "Rate control algorithm selection"
--	depends on MAC80211 != n
-+if MAC80211 != n
- 
- config MAC80211_RC_PID
- 	bool "PID controller based rate control algorithm" if EMBEDDED
-@@ -74,7 +73,7 @@ config MAC80211_RC_DEFAULT
- 	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default ""
- 
--endmenu
-+endif
- 
- config MAC80211_MESH
- 	bool "Enable mac80211 mesh networking (pre-802.11s) support"
+We need it in OpenWrt and plan to send Atheros AR71xx SoC support soon, do not 
+consider this for removal. Thanks
 -- 
-1.6.3.3
-
+Best regards, Florian Fainelli
+Email: florian@openwrt.org
+Web: http://openwrt.org
+IRC: [florian] on irc.freenode.net
+-------------------------------
