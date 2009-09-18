@@ -1,65 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-220-247-10-204.b-man.svips.gol.ne.jp ([220.247.10.204]:51991
-	"EHLO smtp.kamineko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825AbZIXXEQ convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:29167 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932324AbZIRSLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 19:04:16 -0400
-Date: Fri, 25 Sep 2009 08:04:15 +0900
-From: Mattia Dongili <malattia@linux.it>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Norbert Preining <preining@logic.at>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Almer S. Tigelaar" <almer@gnome.org>,
-	Matthias Welwarsky <matze@welwarsky.de>
-Subject: Re: [PATCH] sony-laptop: check for rfkill hard block at load time
-Message-ID: <20090924230415.GB29169@kamineko.org>
-References: <20090924130231.GU21590@gamma.logic.tuwien.ac.at>
- <1253801252.3868.108.camel@johannes.local>
- <4ABB89B2.8070302@tuffmail.co.uk>
- <1253804713.3868.168.camel@johannes.local>
- <4ABB8C5E.6070402@tuffmail.co.uk>
- <1253813371.3868.313.camel@johannes.local>
- <4ABBC54C.5010103@tuffmail.co.uk>
- <69e28c910909241224q10202a47o37ba0f3975ee3294@mail.gmail.com>
- <4ABBD278.3050207@tuffmail.co.uk>
+	Fri, 18 Sep 2009 14:11:05 -0400
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: David Miller <davem@davemloft.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>,
+	"Oikarinen Juuso \(Nokia-D\/Tampere\)" <juuso.oikarinen@nokia.com>,
+	"torvalds\@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [origin tree build failure] [PATCH] Fix: (.text+0x22ec88): undefined reference to `ieee80211_unregister_hw'
+References: <20090911.202543.52533792.davem@davemloft.net>
+	<20090915114958.GA26902@elte.hu>
+Date: Fri, 18 Sep 2009 11:09:39 -0700
+In-Reply-To: <20090915114958.GA26902@elte.hu> (ext Ingo Molnar's message of
+	"Tue, 15 Sep 2009 13:49:58 +0200")
+Message-ID: <87tyz0gm58.fsf@nokia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4ABBD278.3050207@tuffmail.co.uk>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 09:11:36PM +0100, Alan Jenkins wrote:
-> Gábor Stefanik wrote:
-> > On Thu, Sep 24, 2009 at 9:15 PM, Alan Jenkins
-> > <alan-jenkins@tuffmail.co.uk> wrote:
-> >   
-...
-> >> @@ -1108,6 +1110,10 @@ static int sony_nc_setup_rfkill(struct acpi_device *device,
-> >>        if (!rfk)
-> >>                return -ENOMEM;
-> >>
-> >> +       sony_call_snc_handle(0x124, 0x200, &result);
-> >>     
-> >
-> > Please define these somewhere, don't use magic numbers.
-> >   
-> 
-> The rfkill functions are all together in the file, it's not that bad. 
-> But ok.
-> 
-> There's another bug / missing feature - it doesn't re-read the hard
-> states on resume from suspend.
-> 
-> I'll submit two more patches then.  I won't convert all of the magic
-> numbers though.  This isn't hardware I know anything about, and "magic
-> numbers" is a good description of some of them -
+Ingo Molnar <mingo@elte.hu> writes:
 
-right and the whole purpose of them is to hit specific code paths
-in the DSDT tables. Not sure we would benefit that much from having
-names for them.
+> FYI, -tip testing found that something in this lot broke the build with 
+> certain configs (attached):
+>
+> drivers/built-in.o: In function `wl1251_free_hw':
+> (.text+0x22ec88): undefined reference to `ieee80211_unregister_hw'
+> drivers/built-in.o: In function `wl1251_free_hw':
+> (.text+0x22ecf5): undefined reference to `ieee80211_free_hw'
+> drivers/built-in.o: In function `wl1251_op_bss_info_changed':
+> wl1251_main.c:(.text+0x22f161): undefined reference to `ieee80211_beacon_get'
+> drivers/built-in.o: In function `wl1251_op_config':
+> wl1251_main.c:(.text+0x22f2f8): undefined reference to `ieee80211_frequency_to_channel'
+> drivers/built-in.o: In function `wl1251_op_stop':
+> wl1251_main.c:(.text+0x22f554): undefined reference to `ieee80211_scan_completed'
+> drivers/built-in.o: In function `wl1251_op_tx':
+> wl1251_main.c:(.text+0x22f6a5): undefined reference to `ieee80211_queue_work'
+> wl1251_main.c:(.text+0x22f6b6): undefined reference to `ieee80211_stop_queues'
+> drivers/built-in.o: In function `wl1251_alloc_hw':
+> (.text+0x22f710): undefined reference to `ieee80211_alloc_hw'
+> drivers/built-in.o: In function `wl1251_alloc_hw':
+> (.text+0x22f9e4): undefined reference to `ieee80211_free_hw'
+> drivers/built-in.o: In function `wl1251_init_ieee80211':
+> (.text+0x2305df): undefined reference to `ieee80211_register_hw'
+> drivers/built-in.o: In function `wl1251_event_handle':
+> (.text+0x2306c4): undefined reference to `ieee80211_scan_completed'
+> drivers/built-in.o: In function `wl1251_tx_flush':
+> (.text+0x230810): undefined reference to `ieee80211_tx_status'
+> drivers/built-in.o: In function `wl1251_tx_flush':
+> (.text+0x230846): undefined reference to `ieee80211_tx_status'
+> drivers/built-in.o: In function `wl1251_tx_frame':
+> wl1251_tx.c:(.text+0x230a97): undefined reference to `ieee80211_hdrlen'
+> drivers/built-in.o: In function `wl1251_tx_complete':
+> (.text+0x230d30): undefined reference to `ieee80211_get_hdrlen_from_skb'
+> drivers/built-in.o: In function `wl1251_tx_complete':
+> (.text+0x230d58): undefined reference to `ieee80211_tx_status'
+> drivers/built-in.o: In function `wl1251_tx_complete':
+> (.text+0x230dc0): undefined reference to `ieee80211_wake_queues'
+> drivers/built-in.o: In function `wl1251_tx_work':
+> (.text+0x230f57): undefined reference to `ieee80211_stop_queues'
+> drivers/built-in.o: In function `wl1251_rx':
+> (.text+0x231187): undefined reference to `ieee80211_channel_to_frequency'
+> drivers/built-in.o: In function `wl1251_rx':
+> (.text+0x2311e4): undefined reference to `ieee80211_rx'
+>
+> Turning CONFIG_WL1251 off makes it build.
+>
+> A (very) quick first look suggests that not all prior dependencies were 
+> carried over to the new drivers in drivers/net/wireless/wl12xx/Kconfig:
+>
+> -config WL12XX
+> -       tristate "TI wl1251/wl1271 support"
+> -       depends on MAC80211 && WLAN_80211 && SPI_MASTER && 
+> GENERIC_HARDIRQS && EXPERIMENTAL
+> +menuconfig WL12XX
+> +       boolean "TI wl12xx driver support"
+> +       depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
+> +       ---help---
+> +         This will enable TI wl12xx driver support. The drivers make
+> +         use of the mac80211 stack.
+> +
+> +config WL1251
+> +       tristate "TI wl1251 support"
+> +       depends on WL12XX && GENERIC_HARDIRQS
+>
+> the friction is between modular/build-in mode:
+>
+>  CONFIG_WL1251=y
+>  CONFIG_MAC80211=m
+>
+> Kconfig does not carry over the modular dependency from WL12XX to 
+> WL1251. An explicit rule via the patch below turns CONFIG_WL1251 into a 
+> modular entry as well:
+>
+>  CONFIG_WL12XX=y
+>  CONFIG_WL1251=m
+>
+> ( Note: i have tested this patch with this particular config and it 
+>   solves the problem there but have not investigated any deeper. )
+>
+> 	Ingo
+>
+> Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+I missed this state entirely, thanks for fixing this.
+
+Acked-by: Kalle Valo <kalle.valo@nokia.com>
+
+"wl1251:" prefix is just missing from the commit summary.
+
+Who is going to take the patch? Should I send this to John?
 
 -- 
-mattia
-:wq!
+Kalle Valo
