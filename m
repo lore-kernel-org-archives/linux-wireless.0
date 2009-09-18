@@ -1,52 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f175.google.com ([209.85.223.175]:40755 "EHLO
-	mail-iw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934385AbZIDWlA convert rfc822-to-8bit (ORCPT
+Received: from galiil.marvell.com ([199.203.130.254]:64021 "EHLO
+	galiil.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220AbZIRBsB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 18:41:00 -0400
-Received: by iwn5 with SMTP id 5so376660iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2009 15:41:03 -0700 (PDT)
+	Thu, 17 Sep 2009 21:48:01 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>,
+	Andrey Yurovsky <andrey@cozybit.com>
+CC: Dan Williams <dcbw@redhat.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+Date: Thu, 17 Sep 2009 18:47:58 -0700
+Subject: RE: [PATCH] libertas: Add auto deep sleep support for
+ SD8385/SD8686/SD8688
+Message-ID: <477F20668A386D41ADCC57781B1F704306DB9D021C@SC-VEXCH1.marvell.com>
+References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
+ <45e8e6c40909151641o423cbc70y22033061505661b6@mail.gmail.com>
+ <477F20668A386D41ADCC57781B1F704306DB9CFDB7@SC-VEXCH1.marvell.com>
+ <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com>
+ <20090917161154.GA877@Chamillionaire.breakpoint.cc>
+In-Reply-To: <20090917161154.GA877@Chamillionaire.breakpoint.cc>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <1252103579.21380.10.camel@pc1117.cambridge.arm.com>
-References: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
-	<1252103579.21380.10.camel@pc1117.cambridge.arm.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 4 Sep 2009 15:40:43 -0700
-Message-ID: <43e72e890909041540l5aa6aa2dn403efe4451ecc6e6@mail.gmail.com>
-Subject: Re: kmemleak reports on wireless-testing master-2009-09-04 + kmemleak
-	tree
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 4, 2009 at 3:32 PM, Catalin Marinas<catalin.marinas@arm.com> wrote:
-> On Fri, 2009-09-04 at 15:15 -0700, Luis R. Rodriguez wrote:
->> I get these with today's wireless-testing + pulling Catalin's kmemleak
->> tree. I nothing upon bootup, and then after a while I force a scan and
->> get (besides some other acpi stuff):
->>
->> unreferenced object 0xffff880039c7d700 (size 256):
->>   comm "events/1", pid 10, jiffies 4295050369
->>   hex dump (first 32 bytes):
->>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>   backtrace:
->>     [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
->>     [<ffffffff81118a83>] kmem_cache_alloc_node+0x193/0x200
->>     [<ffffffff8141dc6a>] __alloc_skb+0x4a/0x180
->>     [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
->>     [<ffffffffa01b7084>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
->>     [<ffffffffa01b70d6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
->>     [<ffffffff8106de80>] worker_thread+0x1d0/0x380
->>     [<ffffffff81073266>] kthread+0xa6/0xb0
->>     [<ffffffff810130ca>] child_rip+0xa/0x20
->>     [<ffffffffffffffff>] 0xffffffffffffffff
->
-> If you force a few scans, do we still get the same objects reported as
-> leaks?
+Hi Sebastian,
 
-Just tried it, and yes.
+> -----Original Message-----
+> From: Sebastian Andrzej Siewior [mailto:sebastian@breakpoint.cc]
+> Sent: Thursday, September 17, 2009 9:12 AM
+> To: Andrey Yurovsky
+> Cc: Bing Zhao; Dan Williams; Amitkumar Karwar; linux-wireless@vger.kernel.org; libertas-
+> dev@lists.infradead.org
+> Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+> 
+> * Andrey Yurovsky | 2009-09-16 13:47:48 [-0700]:
+> 
+> >> Some information (such as the interface name and path) in README file is out of date. We just
+> copy-and-paste it for the new deepsleep command. We need a separate patch to clean up the REAME file
+> and keep it up to date.
+> >
+> >Ok.  Either way, this is another out-of-band interface (regardless of
+> >if it's debugfs or sysfs).  That said, I believe that debugfs should
+> >be used for debugging, not for configuring driver/device features like
+> >these.
+> I agree on this. Debugfs is for debug only and should stay that way.
+> What do other driver in regard to this? I hardly belive that the
+> libertas driver is the only "deep sleep" user.
 
-  Luis
+The debugfs interface has already been used for configuring some other parameters in libertas driver.
+Choosing a different way for deep sleep configuration doesn't make sense to me.
+
+> 
+> >>> Deep sleep seems to pretty much "turn off" the wifi card (as far as
+> >>> the user is concerned) so how about a simpler approach: enter deep
+> >>> sleep when the interface is brought down (ifconfig wlanN down) and
+> >>> exit deep sleep when it's brought up. ?Do this only when deep sleep is
+> >>> supported/possible. ?Alternately, maybe this belongs as an rfkill
+> >>> feature?
+> >>
+> >> Entering/exiting deep sleep doesn't have to depend on wlanN interface's up and down. User can
+> still put the chip into sleep when wlanN is up. And, with auto deep sleep feature, the driver
+> automatically wakes the chip up for sending user commands (for example, scan) and put the chip back
+> to sleep after certain time period of inactivity. The deepsleep command through debugfs interface
+> provides the flexibility of deep sleep options.
+> >>
+> >> The rfkill shuts down the RF transmitter of the device but most of other modules may be still
+> functioning. The deep sleep shuts down most of the modules (including the RF) on the chip to save as
+> much power as possible.
+> >
+> >It seems that when the device is in deep sleep, it's effectively
+> >"turned off" as far as the user is concerned.  That seems really
+> >similar to "ifconfig down" or rfkill, does the user really care about
+> >anything beyond that?  I understand that it's possible to control this
+> >feature independently of either of those functions, but is it ever
+> >necessary?  If not, it would be great to just integrate it into one
+> >(or both) of these already standard network interface semantics and
+> >not introduce a whole new configuration parameter.
+> 
+> iwconfig has an interface for this I think:
+> |interface power {period N|timeout N|saving N|off}
+> 
+> From what I see in the man page it covers pretty much what you wrote in
+> the Readme file. So it looks like like there is your flexible interface
+> you've been looking for :)
+
+Unfortunately, the "iwconfig wlanN power" command is used for ieee power saving mode in the driver.
+
+Regards,
+
+Bing
+
+> 
+> >  -Andrey
+> >
+> >> Regards,
+> >>
+> >> Bing
+> 
+> Sebastian
