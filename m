@@ -1,115 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:43088 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbZIYAxv convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:19743 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbZIRHi0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 20:53:51 -0400
-Received: by iwn8 with SMTP id 8so1317928iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 17:53:55 -0700 (PDT)
+	Fri, 18 Sep 2009 03:38:26 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+Date: Fri, 18 Sep 2009 09:37:42 +0200
+Cc: Andrey Yurovsky <andrey@cozybit.com>,
+	Bing Zhao <bzhao@marvell.com>, Dan Williams <dcbw@redhat.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
+References: <1253058359-1934-1-git-send-email-bzhao@marvell.com> <45e8e6c40909161347l23caaf4ct14d4ef7b416b3387@mail.gmail.com> <20090917161154.GA877@Chamillionaire.breakpoint.cc>
+In-Reply-To: <20090917161154.GA877@Chamillionaire.breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <4ABC0B60.5070909@canonical.com>
-References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
-	<4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
-	<4ABC08FA.8030104@canonical.com> <43e72e890909241708v55af30baia5f6fca8eb5d9d59@mail.gmail.com>
-	<4ABC0B60.5070909@canonical.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 24 Sep 2009 17:53:35 -0700
-Message-ID: <43e72e890909241753y4803d508u3641708a7a9a2d74@mail.gmail.com>
-Subject: Re: A problem loading ssb module
-To: tim.gardner@canonical.com
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Bryan Wu <bryan.wu@canonical.com>,
-	Mauro Di Domenico <didomauro@tiscali.it>,
-	bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909180937.42727.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 5:14 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
-> Luis R. Rodriguez wrote:
->>
->> On Thu, Sep 24, 2009 at 5:04 PM, Tim Gardner <tim.gardner@canonical.com>
->> wrote:
->>>
->>> Luis R. Rodriguez wrote:
->>>>
->>>> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de>
->>>> wrote:
->>>>>
->>>>> Bryan Wu wrote:
->>>>>>
->>>>>> Mauro Di Domenico wrote:
->>>>>>>
->>>>>>> Hi,
->>>>>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
->>>>>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
->>>>>>> machine with kernel version 2.6.30-6.
->>>>>>>
->>>>>>> During the boot I experience this problem:
->>>>>>>
->>>>>>> $ dmesg|egrep "b43|ssb"
->>>>>>>
->>>>>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17
->>>>>>> (level,
->>>>>>> low) -> IRQ 17
->>>>>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to
->>>>>>> 64
->>>>>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
->>>>>>> 0000:06:00.0
->>>>>>> [    6.968981] b43: disagrees about version of symbol
->>>>>>> ssb_device_is_enabled
->>>>>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
->>>>>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
->>>>>>> [    6.969407] b43: disagrees about version of symbol
->>>>>>> ssb_pcicore_dev_irqvecs_enable
->>>>>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
->>>>>>> .....
->>>>>>> ....
->>>>>>> ...
->>>>>>>
->>>>>> I faced the exactly same issue as Mauro did. +1 from me, but currently
->>>>>> have
->>>>>> no time to take a deeper look.
->>>>>>
->>>>>> Thanks
->>>>>
->>>>> Hi,
->>>>>
->>>>> I had the same problem with the ssb module and compat-wireless in
->>>>> ubuntu
->>>>> 9.04. The problem is that the ssb module is integrated into the
->>>>> initramfs image. The version out of the initramfs image is loaded on
->>>>> startup and not the version of compat-wireless. Running "sudo
->>>>> update-initramfs -u" after installing compat-wireless and restaing the
->>>>> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
->>>>> form default initramfs image or compat-wireless should update the image
->>>>> with the install command. At least the compat-wireless documentation
->>>>> needs an update.
->>>>>
->>>>> Hauke
->>>>>
->>>>> (adding Luis and linux-wireless list)
->>>>
->>>> Tim, do you guys update the initramfs upon installation of lbm? If a
->>>> user does not use lbm and uses compat-wireless I suppose we need to do
->>>> something similar.
->>>>
->>>>  Luis
->>>
->>> No, initramfs is not updated when LBM is installed. I think maybe its a
->>> bug
->>> that ssb is in the initramfs modules list since AFAIK its not a boot
->>> essential device. Even in the netboot case, ssb/b44 should be in a udeb.
->>
->> That would make life much easier.
->>
->>  Luis
->>
->
-> I'm looking at the Karmic initramfs-tools package and am not seeing _any_
-> reference to ssb or b44.
+> I agree on this. Debugfs is for debug only and should stay
+> that way. What do other driver in regard to this?
 
-Seems like a Debian 2.6.30-6 bug then.
+I see this now as an example where a Manufacturer (Marvell) 
+starts to work with the community, has a nice feature (probably 
+bacause of customer-request) and cannot get this into the kernel 
+because of this issue :-)
 
-  Luis
+
+Debugfs isn't suitable for anything except debugging. It is, per 
+definition, an interface for developers that want to debug it. 
+The idea is that a kernel for end-user devices won't even have 
+debugfs compiled in.
+
+If libertas currently does use debugfs for something != 
+debugging?  I don't know, but than that has been a lapse, an 
+oversight. Let's not do that oversight again.
+
+
+So you can use
+
+* iwpriv
+* sysfs
+* kernel module parameters
+* nl80211/cfg80211
+* Maybe the new "stable debugfs" proposed by Rostedt (see the
+  Article "A stable debugfs" on http://lwn.net/Articles/350463/,
+  but here it's not even clear that this will come).
+
+For me, iwpriv seems the best candidate as long as libertas 
+doesn't have a cfg80211/nl80211 interface.
+
+
+
+> I hardly belive that the libertas driver is the only "deep
+> sleep" user. 
+
+I think that ATH6K WLAN devices might be candidates for this, 
+too. If the interface is "iwpriv XXX deepsleep 0" / "iwpriv XXX 
+deepsleep 1" I don't see a reason they could do it similar.
+
+
+> iwconfig has an interface for this I think:
+> |interface power {period N|timeout N|saving N|off}
+
+That's something very differently.
+
+
+-- 
+http://www.holgerschurig.de
