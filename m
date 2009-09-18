@@ -1,56 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:49016 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755860AbZIVLpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 07:45:14 -0400
-Date: Tue, 22 Sep 2009 13:45:16 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] drivers/net/wireless: Use usb_endpoint_dir_out
-Message-ID: <Pine.LNX.4.64.0909221344370.20456@pc-004.diku.dk>
+Received: from mx51.mymxserver.com ([85.199.173.110]:17008 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811AbZIRONc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2009 10:13:32 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 5783C4B004
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 16:13:35 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id J7WxOAwEHEKz for <linux-wireless@vger.kernel.org>;
+	Fri, 18 Sep 2009 16:13:35 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F87DB.dip0.t-ipconnect.de [217.95.135.219])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 00C994B00C
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 16:13:34 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id E3A091E0036
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 16:13:24 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Life-time of scan-results?
+Date: Fri, 18 Sep 2009 16:12:49 +0200
+References: <200909181418.30958.hs4233@mail.mn-solutions.de> <200909181507.59420.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200909181507.59420.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909181612.49412.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Currently, before returning scan results, cfg80211_bss_expire() 
+get's called. It deletes BSSs that are older than 
+IEEE80211_SCAN_RESULT_EXPIRE.
 
-Use the usb_endpoint_dir_out API function.  Note that the use of
-USB_TYPE_MASK in the original code is incorrect; it results in a test that
-is always false.
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
 
-// <smpl>
-@@
-struct usb_endpoint_descriptor *endpoint;
-expression E;
-@@
+I propose to change cfg80211_bss_expire() so that it doesn't 
+hard-code NL80211_CMD_TRIGGER_SCAN anymore, but has a new 
+parameter, say "int expire".
 
-- (endpoint->bEndpointAddress & E) == USB_DIR_OUT
-+ usb_endpoint_dir_out(endpoint)
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
 
----
- drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Then NL80211_CMD_TRIGGER_SCAN get's a new optional attribute, say 
+NL80211_ATTR_SCAN_EXPIRE.
 
-diff -u -p a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -1070,7 +1070,7 @@ static int eject_installer(struct usb_in
- 
- 	/* Find bulk out endpoint */
- 	endpoint = &iface_desc->endpoint[1].desc;
--	if ((endpoint->bEndpointAddress & USB_TYPE_MASK) == USB_DIR_OUT &&
-+	if (usb_endpoint_dir_out(endpoint) &&
- 	    usb_endpoint_xfer_bulk(endpoint)) {
- 		bulk_out_ep = endpoint->bEndpointAddress;
- 	} else {
+If that attribut exists when calling NL80211_CMD_TRIGGER_SCAN, 
+it's value will be used to call cfg80211_bss_expire(). If the 
+value is zero, cfg80211_bss_expire() triggers the whole 
+rdev->bss_list. That means we do a completely fresh scan.
+
+If it doesn't exists, cfg80211_bss_expire() won't be called at 
+scan-trigger time.
+
+
+
+
+NL80211_CMD_GET_SCAN could get this attribute as well. If 
+not specified, then the default of NL80211_CMD_TRIGGER_SCAN will 
+be used. That is, just right now, the rdev->bss_list will expire 
+like now.
+
+However, if a value will be specified, then the bss_list will be 
+expired with the specified expiry time.
+
+Specifying zero doesn't make sense here, because that would zap 
+the freshly made bss list. So a zero could mean "Don't expire 
+anything".
+
+
+That way user-space could ask for what has scanned the last time, 
+even when this has been one hour ago --- with no scans in the 
+meantime.
+
+
+Does this make sense?
+
+-- 
+http://www.holgerschurig.de
