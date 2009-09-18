@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:60660 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbZIHQkY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 12:40:24 -0400
-Subject: Re: Stop using tasklets for bottom halves
-From: Steven Rostedt <rostedt@goodmis.org>
-Reply-To: rostedt@goodmis.org
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>, Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-In-Reply-To: <20090908091143.1e613963@nehalam>
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-	 <20090907171406.6a4b6116@nehalam>
-	 <1252376254.21261.2052.camel@gandalf.stny.rr.com>
-	 <20090908091143.1e613963@nehalam>
-Content-Type: text/plain
-Date: Tue, 08 Sep 2009 12:40:23 -0400
-Message-Id: <1252428023.15626.30.camel@gandalf.stny.rr.com>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:44851 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755839AbZIRJeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Sep 2009 05:34:21 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:34:25 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19123.21539.327196.550393@gargle.gargle.HOWL>
+Date: Fri, 18 Sep 2009 15:04:27 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH/REVIEW 3/9] ath9k: Fix RTC reset for AR5416
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-08 at 09:11 -0700, Stephen Hemminger wrote:
+For AR5416 chipsets, clearing RTC_RESET_EN when setting
+the chip to SLEEP mode results in high power consumption.
+This patch fixes this issue by not clearing it for AR5416.
 
-> > > Process context is too slow.
-> > 
-> > Well, I'm hoping to prove the opposite. I'm working on some stuff that I
-> > plan to present at Linux Plumbers. I've been too distracted by other
-> > things, but hopefully I'll have some good numbers to present by then.
-> > 
-> 
-> 
-> That's great, does it keep the good properties of NAPI (irq disabling
-> and throttling?)
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Not exactly sure what you mean by throttling, but I'm assuming it will.
-
-As for irqs disabling, I'm trying to avoid doing that. Note, the device
-will have its interrupts disabled, but not all other devices will.
-
--- Steve
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 6ed0289..96ea5cc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2851,8 +2851,9 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ 		if (!AR_SREV_9100(ah))
+ 			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
+ 
+-		REG_CLR_BIT(ah, (AR_RTC_RESET),
+-			    AR_RTC_RESET_EN);
++		if(!AR_SREV_5416(ah))
++			REG_CLR_BIT(ah, (AR_RTC_RESET),
++				    AR_RTC_RESET_EN);
+ 	}
+ }
+ 
+-- 
+1.6.4.4
 
