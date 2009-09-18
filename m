@@ -1,91 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:37405 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754475AbZICQOX (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:48534 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163AbZIRH72 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Sep 2009 12:14:23 -0400
-Message-ID: <4A9FEB5B.8020904@redfish-solutions.com>
-Date: Thu, 03 Sep 2009 10:14:19 -0600
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+	Fri, 18 Sep 2009 03:59:28 -0400
+Received: by iwn8 with SMTP id 8so577526iwn.4
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 00:59:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Ed W <lists@wildgooses.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Cross compiling currently broken?
-References: <4A94319B.9030903@wildgooses.com>
-In-Reply-To: <4A94319B.9030903@wildgooses.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <19121.45772.489140.407518@gargle.gargle.HOWL>
+References: <19121.45772.489140.407518@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 18 Sep 2009 00:59:11 -0700
+Message-ID: <43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
+Subject: Re: [PATCH 00/12] ath9k bug fixes
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ed W wrote:
-> It would appear that there is something broken with the current Makefile 
-> when crosscompiling - I need a bit of help figuring out a proper solution.
+On Wed, Sep 16, 2009 at 8:53 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> John,
 >
-> In this case it's barely cross compiling, I just want to use a kernel I 
-> compiled somewhere, but isn't installed (I'm also in a chroot).  
-> According to the docs (http://linuxwireless.org/en/users/Download) I 
-> should do something like:
+> A bunch of patches fixing various bugs in the driver.
+> These apply on top of wireless-testing.
 >
->   make KLIB=/home/mcgrof/kernels/linux-2.6.27.22 \
->    KLIB_BUILD=/home/mcgrof/kernels/linux-2.6.27.22
->
-> However, the makefile then installs the files in completely the wrong 
-> location, eg the following puts the files in 
-> /usr/src/linux/lib/modules/2.6.30.5-grsec-wrap/ !!
->
->   make KLIB=/usr/src/linux \
->    KLIB_BUILD=/usr/src/linux install-modules
->
-> So KLIB should apparently be something like /lib/modules/xyz.  However, 
-> this is still wrong because the line below puts the files in: 
-> /lib/modules/2.6.30.5-grsec-wrap/lib/modules/2.6.30.5-grsec-wrap/
->
->   make KLIB=/lib/modules/2.6.30.5-grsec-wrap/ \
->     KLIB_BUILD=/usr/src/linux  install-modules
->
->
-> Adding unsetting KMODPATH_ARG seems to do the trick (but seems unintended?):
->
->   make KLIB=/lib/modules/2.6.30.5-grsec-wrap/ \
->     KLIB_BUILD=/usr/src/linux KMODPATH_ARG= install-modules
->
->
-> But I still get repeated errors while building (where this is the 
-> currently running kernel, but the modules dir is unavailable in this 
-> chroot):
->
->   FATAL: Could not load 
-> /lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-> file or directory
->   FATAL: Could not load 
-> /lib/modules/2.6.29.6-grsec2.1.14-vs2.3.0.36.14/modules.dep: No such 
-> file or directory
->
->
-> This appears to be caused by these lines at the top of the makefile:
->   MADWIFI=$(shell $(MODPROBE) -l ath_pci)
->   OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
->
-> Clearly these need some parametrisation to include the running kernel 
-> name.  Something like this might pluck out the correct
-> uname:
-> KERNELRELEASE = $(cat $(KLIB_BUILD)/include/config/kernel.release 2> 
-> /dev/null)
->
->
-> I'm not quite clear what all the KLIB/KLIB_BUILD vars are supposed to be 
-> achieving, but at present they aren't working correctly when overridden 
-> to build a non installed kernel.  I'm surprised more people aren't 
-> hitting this?
->
-> Grateful if someone with a bit more experience could suggest a proper fix?
->
-> Thanks
->
-> Ed W
->   
+> Luis would rebase his pending patches on top of these
+> and resend them.
 
-Try the patch I posted a few weeks ago.  It solved this issue for us.
+John, here is my rebase of my 48 patches on top of this series. I
+won't post them and instead give you this handy git am'able file.
 
--Philip
+http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18-mcgrof-rebased.patch
 
+If you really need me to post them again please let me know.
+
+If you want to get both sujith's collection series + mine in one file
+here they are:
+
+http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18.patch
+
+  Luis
