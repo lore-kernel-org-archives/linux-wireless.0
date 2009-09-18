@@ -1,82 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-filter-3-a-1.mail.uk.tiscali.com ([212.74.100.54]:12802 "EHLO
-	mk-filter-3-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753267AbZI0QOF (ORCPT
+Received: from mail-fx0-f217.google.com ([209.85.220.217]:49630 "EHLO
+	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbZIRHAZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 12:14:05 -0400
-Date: Sun, 27 Sep 2009 17:14:04 +0100 (BST)
-From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-To: Arjan van de Ven <arjan@infradead.org>
-cc: Johannes Berg <johannes@sipsolutions.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [bisected] Wireless regression in 2.6.32-git
-In-Reply-To: <20090927151855.29efcc53@infradead.org>
-Message-ID: <Pine.LNX.4.64.0909271708210.8927@sister.anvils>
-References: <20090927151855.29efcc53@infradead.org>
+	Fri, 18 Sep 2009 03:00:25 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <646765f40909172337g74b419fegd2935cb28aedb220@mail.gmail.com>
+References: <20090915174233.7db381cd@varda>
+	 <200909151813.32223.IvDoorn@gmail.com>
+	 <646765f40909172337g74b419fegd2935cb28aedb220@mail.gmail.com>
+Date: Fri, 18 Sep 2009 09:00:28 +0200
+Message-ID: <a32f33a40909180000m72d3f8cep3b97205e5ef1e26d@mail.gmail.com>
+Subject: Re: [rt2x00] rt2500pci is spamming syslogd since upgrade to 2.6.31
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: =?ISO-8859-1?Q?Alejandro_Riveira_Fern=E1ndez?= <ariveira@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 27 Sep 2009, Arjan van de Ven wrote:
-> 
-> With todays git my laptop fails to associate with my access point.
-> Bisection points to the commit below, and reverting this one commit on
-> the HEAD of tree also fixes the issue, so I'm pretty confident that this
-> commit is to blame.
-> 
-> I have a 4965 wifi card in my laptop, and the network I'm trying to
-> connect to has no encryption. I'm running Fedora 11 as OS.
-> 
-> I would like to kindly request for this commit to be reverted until a
-> more permanent solution is found (I'm happy to test any patches)..
-> 
-> 94f85853324e02c3a32bc3101f090dc9a3f512b4 is first bad commit
-> commit 94f85853324e02c3a32bc3101f090dc9a3f512b4
-> Author: Johannes Berg <johannes@sipsolutions.net>
-> Date:   Thu Sep 17 17:15:31 2009 -0700
-> 
->     cfg80211: don't overwrite privacy setting
->     
->     When cfg80211 is instructed to connect, it always
->     uses the default WEP key for the privacy setting,
->     which clearly is wrong when using wpa_supplicant.
->     Don't overwrite the setting, and rely on it being
->     false when wpa_supplicant is not running, instead
->     set it to true when we have keys.
->     
->     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> :040000 040000 27fb46273e88eefee373699eb7e3f2923ac0886b
-> 9518ee3e52c8320613cc5eee5ac54aabf082432f M	net
+On Fri, Sep 18, 2009 at 8:37 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> 2009/9/16 Ivo van Doorn <ivdoorn@gmail.com>:
+>> Hi,
+>>
+>>>  Hi; my syslog has many entries like this since the upgrade to 2.6.31
+>>>
+>>>  phy0 -> rt2500pci_set_device_state: Error - Device failed to enter state 1 (-16).
+>>>
+>>>  Sometimes the driver just start spamming like crazy sometimes is at less rate
+>>>  sometimes it does not appear.
+>>>
+>>>  I'm running 2.6.31 with a revert [1] config follows. If more info is needed
+>>>  just ask
+>>>
+>>>  [1] http://bugzilla.kernel.org/show_bug.cgi?id=13362
+>>
+>> Try disabling powersaving,
+>>
+>>        iwconfig wlan0 power off
+>
+> I have an identical problem, which is fixed by this command.
+>
+> It is possible to detect that the chip doesn't, for whatever reason,
+> support powersaving and disable it in the driver?
 
-I've a different problem with wireless that Johannes is investigating
-for me on linux-wireless; but here's a patch that he pointed me to
-along the way, didn't help my issue but I expect it will help yours...
+Well I simply have to:
+a) fix the driver to handle powersaving better
+b) disable powersaving support for the driver
 
+It will probably be (b) first followed by (a) much later if I ever
+get the time to look into the issue.
 
-Subject: cfg80211: don't set privacy w/o key
-
-When wpa_supplicant is used to connect to open networks,
-it causes the wdev->wext.keys to point to key memory, but
-that key memory is all empty. Only use privacy when there
-is a default key to be used.
-
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/wireless/wext-sme.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
---- wireless-testing.orig/net/wireless/wext-sme.c	2009-09-24 08:51:14.000000000 +0200
-+++ wireless-testing/net/wireless/wext-sme.c	2009-09-24 08:57:01.000000000 +0200
-@@ -30,7 +30,8 @@ int cfg80211_mgd_wext_connect(struct cfg
- 	if (wdev->wext.keys) {
- 		wdev->wext.keys->def = wdev->wext.default_key;
- 		wdev->wext.keys->defmgmt = wdev->wext.default_mgmt_key;
--		wdev->wext.connect.privacy = true;
-+		if (wdev->wext.default_key != -1)
-+			wdev->wext.connect.privacy = true;
- 	}
- 
- 	if (!wdev->wext.connect.ssid_len)
+Ivo
