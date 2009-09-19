@@ -1,73 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64003 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753551AbZINDBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Sep 2009 23:01:10 -0400
-Subject: Re: iwlagn: order 2 page allocation failures
-From: Zhu Yi <yi.zhu@intel.com>
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"cl@linux-foundation.org" <cl@linux-foundation.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Abbas, Mohamed" <mohamed.abbas@intel.com>
-In-Reply-To: <20090911084717.GB32497@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl>
-	 <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie>
-	 <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie>
-	 <1252526738.30150.91.camel@rc-desk> <20090910090206.GA22276@csn.ul.ie>
-	 <1252617290.30150.321.camel@rc-desk>  <20090911084717.GB32497@csn.ul.ie>
-Content-Type: text/plain
-Date: Mon, 14 Sep 2009 11:01:10 +0800
-Message-Id: <1252897270.5650.169.camel@debian>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40916 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749AbZISF4s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2009 01:56:48 -0400
+Subject: Re: alloc skb based on a given data buffer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: yi.zhu@intel.com, mel@csn.ul.ie, reinette.chatre@intel.com,
+	elendil@planet.nl, Larry.Finger@lwfinger.net,
+	linville@tuxdriver.com, penberg@cs.helsinki.fi,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, akpm@linux-foundation.org,
+	cl@linux-foundation.org, assaf.krauss@intel.com,
+	mohamed.abbas@intel.com, netdev@vger.kernel.org
+In-Reply-To: <20090915.141606.134994761.davem@davemloft.net>
+References: <20090915.020903.93643290.davem@davemloft.net>
+	 <1253006111.7549.61.camel@debian>
+	 <1253028631.23427.55.camel@johannes.local>
+	 <20090915.141606.134994761.davem@davemloft.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-q77ki/2eoXOCiZi7ADji"
+Date: Fri, 18 Sep 2009 22:56:06 -0700
+Message-Id: <1253339766.16125.1.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-09-11 at 16:47 +0800, Mel Gorman wrote:
-> On Thu, Sep 10, 2009 at 02:14:50PM -0700, reinette chatre wrote:
-> > On Thu, 2009-09-10 at 02:02 -0700, Mel Gorman wrote:
-> > 
-> > > 
-> > > As a total aside, there is still the problem that the driver is depending on
-> > > order-2 allocations. On systems without swap, the allocation problem could be
-> > > more severe as there are fewer pages the system can use to regain contiguity.
-> > 
-> > I looked more at the implementation and hardware interface but I do not
-> > see a way around this. We have to provide 8k buffer to device, and we
-> > have to make sure it is aligned. 
-> > 
-> 
-> That would imply an order-1 allocation instead of an order-2 though so
-> it would appear than we are being worse than we have to. It would appear
-> to be because of this +256 bytes that goes onto every buffer.
-> 
-> > Do you have any suggestions?
-> > 
-> 
-> Nothing concrete. Finding an alternative to having the socket buffer
-> 8192+256 to make it an order-1 allocation would be an improvement but I
-> don't know how that should be tackled. Lacking the hardware, I can't
-> experiment myself :(
 
-Essentially, the hardware only requires an order-1 allocation aligned on
-256 bytes boundary. But as it is used as an SKB, a trailing struct
-skb_shared_info is added. This forces us to both increase the order and
-do alignment ourselves. I believe some improvement could be done here.
-But it should not be an easy one.
+--=-q77ki/2eoXOCiZi7ADji
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-BTW, does SLAB/SLUB guarantee size of multiple PAGE_SIZE __kmalloc()
-allocation align on PAGE_SIZE (or 256 bytes) boundary?
+On Tue, 2009-09-15 at 14:16 -0700, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 15 Sep 2009 08:30:31 -0700
+>=20
+> > Hold, mac80211 can't cope with that at this point for sw crypto and
+> > possibly other things.
+>=20
+> Then it should skb_linearize() at input, or similar.
 
-Thanks,
--yi
+Not all that much won then since that again means an order-2 allocation.
+Fewer, certainly, as most packets are actually much smaller than that.
+
+johannes
+
+--=-q77ki/2eoXOCiZi7ADji
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKtHJyAAoJEODzc/N7+QmaK64QAJxYVAiY0mWYsHhi3iGib2Ma
+1VqZdVHNCZ4AbUp90sOkrTfUaS/nL0w5EPQ8hhM1zMQoqcyX7O05dPig2ahnRLJ1
+MZXZkPhV3Nb1TAHwYj4PDaRur7X5d9xCBhPDZEt9feLZs3Gw8NqhmJxDoNi3OyA8
+VmGVBhifpZMZetST5votEXXJWOx3aN8UAf6xv+jbOAFcfNke3xUWSKFVtK82B6UV
+8klkTFAOo/Tq9RlV2Eb83QaFnHYjZLMfj0puh8Tc8E/i6BARrI+qgjT1DJNBFTsL
+Bbe3yGq+OWMQ//tWbRvZTN954vKdtvA6PfU6lF3gVdSlJAZKSZUIt6EBHf/ZSz0J
+O7eTPweVKNKEHFROglN+w+IWV8ZNZIcms+1sCK3zH3bLxKpR89LyWtiRaIX8tuci
+BwvXfLgVTnDJjf89X3uaNmH8XCv3zyX6TBhuMrfB1fjWwc8xPp5Rupo83jC9KPAp
+Vzc5NY/VXdD/U27VBNRvS2KQUiKXNU/NyLoZ2o+WW51mkHStwmv/6/HXyBDT9v1U
+sc0yBjg3/yJo50RTzaQRvUVmEqWZcLtEujgOlgad3YuCpZMUjdaOHybQWkvGJMxb
+jhDfsfCvlLfLSE+8E4/2+9BIlBVSa8qovt2WCkiXMrY+j3YFGNI/E+GPXcTmCxCU
+r+CgNqI9zDZusMru3zcU
+=AziV
+-----END PGP SIGNATURE-----
+
+--=-q77ki/2eoXOCiZi7ADji--
 
