@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:58397 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753018AbZIJSiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 14:38:19 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] b43: Force-wake queues on init
-Date: Thu, 10 Sep 2009 20:38:15 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Albert Herranz <albert_herranz@yahoo.es>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>
-References: <200909102031.47103.mb@bu3sch.de> <43e72e890909101134j64bf22eai1c282cc1738cd968@mail.gmail.com>
-In-Reply-To: <43e72e890909101134j64bf22eai1c282cc1738cd968@mail.gmail.com>
+Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:41263 "EHLO
+	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbZISWIO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2009 18:08:14 -0400
+Received: from cpc2-whit1-0-0-cust96.cdif.cable.ntl.com ([82.13.80.97] helo=plato.andrewprice.me.uk)
+	by silver.sucs.swan.ac.uk with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.69)
+	(envelope-from <andy@andrewprice.me.uk>)
+	id 1Mp86L-0003ko-3F
+	for linux-wireless@vger.kernel.org; Sat, 19 Sep 2009 23:08:17 +0100
+Date: Sat, 19 Sep 2009 23:08:05 +0100
+From: Andrew Price <andy@andrewprice.me.uk>
+To: linux-wireless@vger.kernel.org
+Subject: Problem with "cfg80211: fix SME connect" (bisected)
+Message-ID: <20090919220805.GA2728@plato.andrewprice.me.uk>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200909102038.17930.mb@bu3sch.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 10 September 2009 20:34:36 Luis R. Rodriguez wrote:
-> On Thu, Sep 10, 2009 at 11:31 AM, Michael Buesch <mb@bu3sch.de> wrote:
-> > Force wake the mac80211 queues on init.
-> > Under rare circumstances they may be stopped, if a DMA error or
-> > something else causes a device reset while a queue was stopped.
-> 
-> So this is a work around for some unknown issue on the driver?
+Hi,
 
-No, it's a fix for a bug that should not trigger in practice very often.
+After building today's mainline kernel (as of 78f28b7c) my wireless
+networking stopped working - the interface seems to come up but nothing
+can connect.  The output of dmesg was clean, no backtraces or anything
+unusual.
 
--- 
-Greetings, Michael.
+I've bisected the problem down to commit bbac31f4 "cfg80211: fix SME
+connect".  Reverting that commit fixes the problem. I'm using
+wpa_supplicant v0.6.9. The bug occurs for my b43 card and my rt2500pci
+card, and reverting the commit fixes the problem for both cards.
+
+Please let me know if there's any more info I can provide or patches I
+can test.
+
+Andrew
