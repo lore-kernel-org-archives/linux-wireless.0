@@ -1,83 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:39630 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754120AbZIWHNv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 03:13:51 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [RFC] nl80211: introduce NL80211_ATTR_SCAN_EXPIRE
-Date: Wed, 23 Sep 2009 09:12:57 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John W Linville <linville@tuxdriver.com>
-References: <200909181849.22302.hs4233@mail.mn-solutions.de> <200909210946.19675.hs4233@mail.mn-solutions.de> <1253662172.2510.60.camel@localhost.localdomain>
-In-Reply-To: <1253662172.2510.60.camel@localhost.localdomain>
+Received: from mail.tpi.com ([70.99.223.143]:4717 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752000AbZITDrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Sep 2009 23:47:00 -0400
+Message-ID: <4AB5A5A7.3020107@canonical.com>
+Date: Sat, 19 Sep 2009 21:46:47 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909230912.57417.hs4233@mail.mn-solutions.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] compat-2.6: mangle symbols for driver-select
+References: <20090919205545.GA18080@bombadil.infradead.org>
+In-Reply-To: <20090919205545.GA18080@bombadil.infradead.org>
+Content-Type: multipart/mixed;
+ boundary="------------060608070506000607090506"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 September 2009 01:29:32 Dan Williams wrote:
+This is a multi-part message in MIME format.
+--------------060608070506000607090506
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> So on the supplicant side, this weekend I was discussing with
-> Jouni about making the supplicant *not* trigger a completely
-> new scan when trying to associate if the scan list was current
-> in the past 5 or 10 seconds.  The issue here is that NM
-> requests a scan, ... 
+Luis R. Rodriguez wrote:
+> Today at the summit we spoke about mangling symbols for driver-slect.
+> Here's a quick nasty take on this but without doing this for driver-select
+> specifically just for testing. It seems to compile, but someone more motivated
+> may want to test and make this apply somehow only for driver-select or perhaps
+> when a -D define is used.
+> 
+> Reason for this is to help distributions / OEMs / ODMs who want to replace
+> just *one* driver with compat-wireless.
+> 
 
-I currently center around a setup without NM. Okay, for the
-forklift terminals (they are x86-based), NM would be feasible.
-But for the handheld terminals (Intel PXA based) I'm not keen
-on NM. So I basically develop a simple program that monitors
-signal and triggers a scan when signal level is below some
-thresshold. This program happens to be linked into
-wpa_supplicant, but it can also be a standalone program.
+I think it would be better to generate the list of mangled symbols 
+dynamically. In older Ubuntu releases (before depmod behavior was 
+corrected), we have to run a 'munge' script to preface all of the 
+exported symbols so that a compat-wireless driver references the 
+compat-wireless protocol stack symbols. See the attached munge script 
+for compat-wireless on 2.6.24. We can either do something like this for 
+compat-wireless, or we could use a subset of this logic to generate the 
+list of symbols contained within the '#ifdef 
+CONFIG_COMPAT_WIRELESS_MANGLE' clause.
 
-I'm relying on wpa_supplicant's feature to monitor scan-done
-events and looking if there's something a better matching BSS
-in the result.
-
-
-
-But when you take wpa_supplicant, NM and whatever, then maybe the
-timestamp idea from Johannes should be used. Any application
-that wants to look if it should roam can quickly get the
-scan results. By the timestamp of the entries it can then
-see how old the entries are. Only if entries are outdated,
-it can fire up a scan.
-
-There's just one case: if there is no BSS in the scan list.
-Then any app doing a "get scan results" call wouldn't know
-if the last scan is ages ago or if there is really no AP
-in the vincinity, doing an immediate re-scan. This can be
-harmful for battery-driven devices. So maybe a timestamp
-"last scan was at timestamp XXX" besides the individual
-BSS timestamps would be helpful here.
-
-This way apps can synchronize themselfes and, even if
-different apps do scanning, they can say "We don't scan
-more often than every N seconds".
-
-
-> BTW, 10 years ago I did a forklift deployment too with pre-802.11
-> Aironet equipment and Netware.  Wasn't that fun to get up and running.
-> This was at a paper company too, and guess what huge rolls of paper do?
-> They absorb radio waves quite well.  Suck.  And forklifts can go *fast*.
-
-Oh, and a wholesale company for drinks is even more demanding.
-Water-based liquid has the nice property of absorbing microwaves
-in the 2.4 MHz range extremely nicely, just see your next
-microwave oven for a proof ...
-
-
-The nice thing about this: when you have a working roaming 
-(and fast-enought handoff) in a warehouse/fork-lift scenary,
-then your can forget about the WLAN problem in other scenarios,
-because they are way less demanding. What happens to work in
-the forklift case works everywhere else.
-
+rtg
 -- 
-http://www.holgerschurig.de
+Tim Gardner tim.gardner@canonical.com
+
+--------------060608070506000607090506
+Content-Type: text/plain;
+ name="munge"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="munge"
+
+#!/bin/bash
+#
+# Isolate the compat-wireless exported symbols and munge every occurence such that
+# there is no possibility of conflict with the main kernel.
+#
+TL=token_list
+FL=file_list
+SL=sed_list
+TL_EXCEPTIONS=token_list_exceptions
+
+find compat-wireless-2.6 -name "*.[ch]" > ${FL}
+
+rm -f ${TL_EXCEPTIONS}
+for i in wireless_send_event iw_handler_set_spy wireless_spy_update iw_handler_get_thrspy iw_handler_get_spy iw_handler_set_thrspy
+do
+	echo ${i} >> ${TL_EXCEPTIONS}
+done
+
+cat ${FL} | \
+egrep -v "compat\.[ch]" |\
+xargs grep -h EXPORT_SYMBOL | \
+grep -v -f ${TL_EXCEPTIONS} |\
+sed -e 's/^.*EXPORT_SYMBOL_GPL(//' -e 's/);//' -e 's/^.*EXPORT_SYMBOL(//' -e 's/);//' |\
+sort -r | uniq > ${TL}
+
+rm -f ${SL}
+cat ${TL} | while read token
+do
+	echo s/${token}/cw_${token}/g >> ${SL}
+done
+
+cat ${FL} | while read f
+do
+	sed -i -f ${SL} "${f}"
+done
+
+rm -f ${TL} ${FL} ${SL} ${TL_EXCEPTIONS}
+
+
+--------------060608070506000607090506--
