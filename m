@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:46198 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbZIXJuN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 05:50:13 -0400
-Received: by iwn8 with SMTP id 8so804046iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 02:50:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <200909241119.28207.hs4233@mail.mn-solutions.de>
-References: <200909241055.51604.hs4233@mail.mn-solutions.de>
-	<43e72e890909240159x6d733e1bj9c529f6fe77b32f5@mail.gmail.com>
-	<200909241119.28207.hs4233@mail.mn-solutions.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 24 Sep 2009 02:44:46 -0700
-Message-ID: <43e72e890909240244i2d5e4c2sdf6326b50566e0f7@mail.gmail.com>
-Subject: Re: [PATCH]: nl80211: report age of scan results
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from hera.kernel.org ([140.211.167.34]:45853 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752621AbZITIJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Sep 2009 04:09:32 -0400
+Subject: [RFC][PATCH] b43: Comment unused functions
+ lpphy_restore_dig_flt_state and lpphy_disable_rx_gain_override
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 20 Sep 2009 13:39:24 +0530
+Message-Id: <1253434164.19515.5.camel@ht.satnam>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 2:19 AM, Holger Schurig
-<hs4233@mail.mn-solutions.de> wrote:
-> On Thursday 24 September 2009 10:59:57 Luis R. Rodriguez wrote:
->> Wil want to #define NL80211_BSS_AGE_MS NL80211_BSS_AGE_MS as
->> well so userspace apps can ifdef around that feature to know if
->> its supported.
->
-> Nice idea.
->
-> That could be a different patch. I haven't seen it for anything
-> else, e.g. there's no "#define NL80211_BSS_STATUS" anywhere.
 
-Typically a command went in with a set of attributes, I tend to only
-add a define for a new command, and then for any new attributes after
-that in later patches for the same command.
+Commenting unused functions lpphy_restore_dig_flt_state and
+lpphy_disable_rx_gain_override, may be we need these functions in future.
 
-> "iw" for example has it's own nl80211.h file.
+This also fixed following compilation warnings :
+  CC [M]  drivers/net/wireless/b43/phy_lp.o
+drivers/net/wireless/b43/phy_lp.c:383: warning: ‘lpphy_restore_dig_flt_state’ defined but not used
+drivers/net/wireless/b43/phy_lp.c:891: warning: ‘lpphy_disable_rx_gain_override’ defined but not used
 
-Yes, but not all apps may ship their own ni80211.h, we probably will
-be implementing then, but yeah -- we cannot enforce this, only
-recommend it.
+Signed-off-by: Jaswinder Singh Rajput <jaswinderrajput@gmail.com>
+---
+ drivers/net/wireless/b43/phy_lp.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+index 3e02d96..9c31462 100644
+--- a/drivers/net/wireless/b43/phy_lp.c
++++ b/drivers/net/wireless/b43/phy_lp.c
+@@ -379,6 +379,8 @@ static void lpphy_save_dig_flt_state(struct b43_wldev *dev)
+ 	}
+ }
+ 
++/* lpphy_restore_dig_flt_state is unused but kept as a reference */
++#if 0
+ static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
+ {
+ 	static const u16 addr[] = {
+@@ -399,6 +401,7 @@ static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
+ 	for (i = 0; i < ARRAY_SIZE(addr); i++)
+ 		b43_phy_write(dev, addr[i], lpphy->dig_flt_state[i]);
+ }
++#endif
+ 
+ static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
+ {
+@@ -887,6 +890,8 @@ static void lpphy_rev2plus_set_rx_gain(struct b43_wldev *dev, u32 gain)
+ 	}
+ }
+ 
++/* lpphy_disable_rx_gain_override is unused but kept as a reference */
++#if 0
+ static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+ {
+ 	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
+@@ -902,6 +907,7 @@ static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+ 		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
+ 	}
+ }
++#endif
+ 
+ static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
+ {
+-- 
+1.6.4.4
+
+
