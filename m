@@ -1,127 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:57849 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754980AbZINTie (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 15:38:34 -0400
-Received: by ewy2 with SMTP id 2so993714ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 12:38:36 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 14 Sep 2009 22:38:36 +0300
-Message-ID: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com>
-Subject: Missing device ID in p54usb driver
-From: Jari Jaakola <jari.jaakola@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx38.mail.ru ([94.100.176.52]:65262 "EHLO mx38.mail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751208AbZIUUZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2009 16:25:47 -0400
+Subject: [PATCH v2] mac80211: Fix [re]association power saving issue on AP
+ side
+From: Igor Perminov <igor.perminov@inbox.ru>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Tue, 22 Sep 2009 00:25:44 +0400
+Message-Id: <1253564744.4477.18.camel@sunlight>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Consider the following step-by step:
+1. A STA authenticates and associates with the AP and exchanges
+traffic.
+2. The STA reports to the AP that it is going to PS state.
+3. Some time later the STA device goes to the stand-by mode (not only
+its wi-fi card, but the device itself) and drops the association state
+without sending a disassociation frame.
+4. The STA device wakes up and begins authentication with an
+Auth frame as it hasn't been authenticated/associated previously.
+ 
+At the step 4 the AP "remembers" the STA and considers it is still in
+the PS state, so the AP buffers frames, which it has to send to the STA.
+But the STA isn't actually in the PS state and so it neither checks
+TIM bits nor reports to the AP that it isn't power saving.
+Because of that authentication/[re]association fails.
 
-Device ID "0cde:0015" is missing from driver "p54usb". This usb wlan
-stick is Z-Com XG-705A, it seems to work ok after I added device id in
-driver, builded and installed it. I used compat-wireless-2.6.30.
+To fix authentication/[re]association stage of this issue, Auth, Assoc
+Resp and Reassoc Resp frames are transmitted disregarding of STA's power
+saving state.
 
-Regards,
-Jari
+N.B. This patch doesn't fix further data frame exchange after
+authentication/[re]association. A patch in hostapd is required to fix
+that.
+
+Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
+---
+ net/mac80211/tx.c       |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 10a1099..4d981e7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 	u32 staflags;
+ 
+-	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)))
++	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
++			|| ieee80211_is_auth(hdr->frame_control)
++			|| ieee80211_is_assoc_resp(hdr->frame_control)
++			|| ieee80211_is_reassoc_resp(hdr->frame_control)))
+ 		return TX_CONTINUE;
+ 
+ 	staflags = get_sta_flags(sta);
 
 
-PS. Below is lsusb -v
-
-Bus 002 Device 006: ID 0cde:0015 Z-Com Zoom Wireless-G
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  idVendor           0x0cde Z-Com
-  idProduct          0x0015 Zoom Wireless-G
-  bcdDevice            1.00
-  iManufacturer           1 Conexant
-  iProduct                2 Cohiba 3887a rev1
-  iSerial                 3 3887-0100
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           53
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          0
-    bmAttributes         0x80
-      (Bus Powered)
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           5
-      bInterfaceClass       255 Vendor Specific Class
-      bInterfaceSubClass    255 Vendor Specific Subclass
-      bInterfaceProtocol    255 Vendor Specific Protocol
-      iInterface              0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x81  EP 1 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x01  EP 1 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x82  EP 2 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x02  EP 2 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x83  EP 3 IN
-        bmAttributes            3
-          Transfer Type            Interrupt
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0040  1x 64 bytes
-        bInterval               1
-Device Qualifier (for other device speed):
-  bLength                10
-  bDescriptorType         6
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  bNumConfigurations      1
-Device Status:     0x0000
-  (Bus Powered)
