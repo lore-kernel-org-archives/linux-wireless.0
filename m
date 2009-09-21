@@ -1,39 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:44267 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003AbZIPBR5 (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:48405 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756120AbZIUNTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 21:17:57 -0400
-Received: by iwn8 with SMTP id 8so2035726iwn.4
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Sep 2009 18:18:00 -0700 (PDT)
+	Mon, 21 Sep 2009 09:19:39 -0400
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Pekka Enberg <penberg@cs.helsinki.fi>
+Subject: Re: ipw2200: firmware DMA loading rework
+Date: Mon, 21 Sep 2009 15:12:14 +0200
+Cc: Mel Gorman <mel@csn.ul.ie>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tso Ted <tytso@mit.edu>,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Mel Gorman <mel@skynet.ie>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw2100-devel@lists.sourceforge.net"
+	<ipw2100-devel@lists.sourceforge.net>
+References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <200909211246.34774.bzolnier@gmail.com> <1253530608.5216.17.camel@penberg-laptop>
+In-Reply-To: <1253530608.5216.17.camel@penberg-laptop>
 MIME-Version: 1.0
-In-Reply-To: <90263558.20090916050213@mail.ru>
-References: <174470396.20090916030952@mail.ru> <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
-	<792649359.20090916034611@mail.ru> <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
-	<90263558.20090916050213@mail.ru>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 15 Sep 2009 18:17:40 -0700
-Message-ID: <43e72e890909151817u375cd847r7cdf78b53f26fe2f@mail.gmail.com>
-Subject: Re: Re[4]: cfg80211 and rfkill_backport question.
-To: Nikolai ZHUBR <zhubr@mail.ru>
-Cc: linux-wireless@vger.kernel.org,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200909211512.14785.bzolnier@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 15, 2009 at 7:02 PM, Nikolai ZHUBR <zhubr@mail.ru> wrote:
-> Wednesday, September 16, 2009, 2:49:04 AM, Luis R. Rodriguez wrote:
->> Check if the symbols you had issues with were indeed exported via
->> EXPORT_SYMBOL() on the compat code (compat/*.c) or if whether they
->> were defined via a header as an inline (compat/*.h).
-> As far as I can see, the symbols in question are not defined as inline:
+On Monday 21 September 2009 12:56:48 Pekka Enberg wrote:
+> On Mon, 2009-09-21 at 12:46 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > > I don't know why people don't see it but for me it has a memory management
+> > > > regression and reliability issue written all over it.
+> > > 
+> > > Possibly but drivers that reload their firmware as a response to an
+> > > error condition is relatively new and loading network drivers while the
+> > > system is already up and running a long time does not strike me as
+> > > typical system behaviour.
+> > 
+> > Loading drivers after boot is a typical desktop/laptop behavior, please
+> > think about hotplug (the hardware in question is an USB dongle).
+> 
+> Yeah, I wonder what broke things. Did the wireless stack change in
+> 2.6.31-rc1 too? IIRC Mel ruled out page allocator changes as a suspect.
 
-They don't have to be exported and inlined, its one or the other. So
-just ensure you your symbols you have conflicts with as
-EXPORT_SYMBOL() or defined in a header file as inline. You will
-obviously also need the header declaration if defined as an
-EXPORT_SYMBOL.
+The thing is that the mm behavior change has been narrowed down already
+over a month ago to -mm merge in 2.6.31-rc1 (as has been noted in my initial
+reports), I first though that that it was -next breakage but it turned out
+that it came the other way around (because -mm is not even pulled into -next
+currently -- great way to set an example for other kernel maintainers BTW).
 
-  Luis
+I understand that behavior change may be justified and technically correct
+in itself.  I also completely agree that high order allocations in certain
+drivers need fixing anyway.
+
+However there is something wrong with the big picture and the way changes
+are happening.  I'm not saying that I'm surprised though, especially given
+the recent decline in the quality assurance and the paradigm shift that
+I'm seeing (some influential top level people talking that -rc1 is fine for
+testing new code now or the "new kernel new hardware" thing).
+
+Sorry but I have no more time currently to narrow down the issue some more
+(guess what, there are other kernel bugs standing in the way to bisect it
+and I would have to provide some reliable way to reproduce it first) so I
+see no more point in wasting people's time on this.  I can certainly get by
+with allocation failure here and there.  Not a big deal for me personally..
