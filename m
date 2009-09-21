@@ -1,79 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:20463 "EHLO
+Received: from mx51.mymxserver.com ([85.199.173.110]:2075 "EHLO
 	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757486AbZIPKUv (ORCPT
+	with ESMTP id S1756556AbZIUPXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 06:20:51 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 7D2A750009
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:20:53 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id B-mCwPc5rOKP for <linux-wireless@vger.kernel.org>;
-	Wed, 16 Sep 2009 12:20:53 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F9B84.dip0.t-ipconnect.de [217.95.155.132])
-	by mx51.mymxserver.com (Postfix) with ESMTP id 207BA50008
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:20:52 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id DE70A1E0036
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:20:42 +0200 (CEST)
+	Mon, 21 Sep 2009 11:23:25 -0400
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: question: ATH5K, antenna-mode and fall-throught in ath5k_hw_set_fast_div()
-Date: Wed, 16 Sep 2009 12:20:11 +0200
+To: hostap@lists.shmoo.com
+Subject: Re: BUG: can bring wpa_supplicant/mac80211 into a stuck state at will
+Date: Mon, 21 Sep 2009 17:22:33 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200909211259.45431.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200909211259.45431.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909161220.11538.hs4233@mail.mn-solutions.de>
+  charset="iso-8859-1"
+Message-Id: <200909211722.33577.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi !
-
-I have a device (fork-lift-terminal) where there is a PCCARD with
-an Atheros chip inside it. The PCCARD has an built-in antenna and
-a socket, where a cable goes to the external antenna.
-
-Using madwifi, I always did:
-
-        echo 2 >/proc/sys/dev/wifi0/rxantenna
-        echo 2 >/proc/sys/dev/wifi0/txantenna
-        echo 0 >/proc/sys/dev/wifi0/diversity
-
-Now, with ath5k I'm planning to do this:
-
---- linux-wl.orig/drivers/net/wireless/ath/ath5k/base.c 2009-09-16 10:43:45.000000000 +0200
-+++ linux-wl/drivers/net/wireless/ath/ath5k/base.c      2009-09-16 10:44:10.000000000 +0200
-@@ -2850,5 +2850,5 @@ ath5k_config(struct ieee80211_hw *hw, u3
-         * then we must allow the user to set how many tx antennas we
-         * have available
-         */
--       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_DEFAULT);
-+       ath5k_hw_set_antenna_mode(ah, AR5K_ANTMODE_FIXED_B);
+Johannes asked me off-list for dmesg output:
 
 
-... as long as there is no offical interface for setting antenna
-mode. A bit crude, but ... :-)
+> First, it associates to the MNHS-AP:
+
+eth1: direct probe to AP 00:13:19:80:da:30 (try 1)
+eth1 direct probe responded
+eth1: authenticate with AP 00:13:19:80:da:30 (try 1)
+eth1: authenticated
+eth1: associate with AP 00:13:19:80:da:30 (try 1)
+eth1: RX AssocResp from 00:13:19:80:da:30 (capab=0x11 status=0 
+aid=112)
+eth1: associate
 
 
 
-However, when looking for the antenna-related code-paths, I found
-this:
+> Next I turn of the AP where I'm associated to. wpa_supplicant
+> successfully associates to the WEP-based AP:
 
-ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
-{
-        switch (ee_mode) {
-        case AR5K_EEPROM_MODE_11G:
-                /* XXX: This is set to
-                 * disabled on initvals !!! */
-        case AR5K_EEPROM_MODE_11A:
-        ...
+eth1: deauthenticated from 00:13:19:80:da:30 (Reason: 1)
+eth1: direct probe to AP 00:1b:53:11:dc:40 (try 1)
+eth1 direct probe responded
+eth1: authenticate with AP 00:1b:53:11:dc:40 (try 1)
+eth1: authenticated
+eth1: associate with AP 00:1b:53:11:dc:40 (try 1)
+eth1: RX AssocResp from 00:1b:53:11:dc:40 (capab=0x11 status=0 
+aid=91)
+eth1: associated
 
 
-In my case, ee_mode happens to be AR5K_EEPROM_MODE_11G, but I don't
-understand the implication of this comment. Is the XXX something
-to worry?  My card is a B/G only card, so I wonder if the
-fall-through into the MODE_11A case is ok ?!?
+> Now I turn on again the MNHS AP. And then I issue a scan
+> from the cmdline: "iw eth1 scan trigger freq 2412"
+
+eth1: direct probe to AP 00:13:19:80:da:30 (try 1)
+eth1 direct probe responded
+eth1: authenticate with AP 00:13:19:80:da:30 (try 1)
+eth1: authenticated
+
+
+Also the output of "iw eth1 info":
+
+iw eth1 link
+Connected to 00:1b:53:11:dc:40 (on eth1)
+        SSID: MNFUNK
+        freq: 2412
+Authenticated with 00:13:19:80:da:30 (on eth1)
+        RX: 78173 bytes (722 packets)
+        TX: 144 bytes (4 packets)
+        signal: -67 dBm
+        tx bitrate: 11.0 MBit/s
+
+
+
+If I understand this right, then mac80211 thinks it's connected, 
+even before the 4-way key exchange?
+
+
 
 -- 
 http://www.holgerschurig.de
