@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:64699 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754226AbZIWHQe (ORCPT
+Received: from mail-yx0-f199.google.com ([209.85.210.199]:59981 "EHLO
+	mail-yx0-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbZIUW7W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 03:16:34 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP and WPA
-Date: Wed, 23 Sep 2009 09:15:35 +0200
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
-References: <200909221118.04569.hs4233@mail.mn-solutions.de> <200909221258.44921.hs4233@mail.mn-solutions.de> <1253689291.4458.25.camel@johannes.local>
-In-Reply-To: <1253689291.4458.25.camel@johannes.local>
+	Mon, 21 Sep 2009 18:59:22 -0400
+Received: by yxe37 with SMTP id 37so3642187yxe.33
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2009 15:59:25 -0700 (PDT)
+Message-ID: <4AB8054F.7080600@lwfinger.net>
+Date: Mon, 21 Sep 2009 17:59:27 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200909230915.35312.hs4233@mail.mn-solutions.de>
+To: John Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>,
+	=?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	Broadcom Linux <bcm43xx-dev@lists.berlios.de>
+Subject: [PATCH] b43: Implement RFKILL status for LP PHY
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 September 2009 09:01:31 Johannes Berg wrote:
-> Because the scan request contains info on how to do the scan.
+The LP (and probably N) PHY has the same radio disabled bit as
+the higher-revision A and G PHYs.
 
-I know. I sent another mail where I said the traceback
-was correct, but not my conclusion: I confused
-cfg80211_wext_siwscan() and cfg80211_wext_giwscan().
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I thougth the return -EBUSY is in cfg80211_wext_giwscan().
+John,
 
-That it is in cfg80211_wext_siwscan() makes perfect sense.
+Submission of this change for 2.6.32 would be nice, but not necessary.
 
--- 
-http://www.holgerschurig.de
+Larry
+---
+
+Index: wireless-testing/drivers/net/wireless/b43/rfkill.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/rfkill.c
++++ wireless-testing/drivers/net/wireless/b43/rfkill.c
+@@ -28,7 +28,7 @@
+ /* Returns TRUE, if the radio is enabled in hardware. */
+ bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
+ {
+-	if (dev->phy.rev >= 3) {
++	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
+ 		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+ 		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+ 			return 1;
+
+
