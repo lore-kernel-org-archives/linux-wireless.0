@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59555 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615AbZIWSus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 14:50:48 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] [compat-2.6] fix build problems
-Date: Wed, 23 Sep 2009 20:50:43 +0200
-Message-Id: <1253731843-1045-1-git-send-email-hauke@hauke-m.de>
+Received: from mx51.mymxserver.com ([85.199.173.110]:58905 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669AbZIUGoh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Sep 2009 02:44:37 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] nl80211: introduce NL80211_ATTR_SCAN_EXPIRE
+Date: Mon, 21 Sep 2009 08:42:59 +0200
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+References: <200909181849.22302.hs4233@mail.mn-solutions.de> <1253293842.4787.1.camel@johannes.local>
+In-Reply-To: <1253293842.4787.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909210842.59852.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IRQ_WAKE_THREAD is not defined in kernel < 2.6.30
-in include/linux/irqreturn.h .
+> > It also allows to set an expiration for
+> > NL80211_CMD_TRIGGER_SCAN. Setting the expiration to 0 will
+> > clean the whole BSS list.
+>
+> tbh, I don't really understand the need for it. changing your
+> AP settings doesn't seem like a use case anyone would really
+> care about that much.
 
-In 09-threaded-irq.patch the condition was wrong.
+Turning of an AP is one way making the AP vanish.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.30.h               |    2 ++
- compat/patches/09-threaded-irq.patch |    8 ++++----
- 2 files changed, 6 insertions(+), 4 deletions(-)
+Sitting into a fork-lift and driving throught a ware-house hall 
+is another way to accomplish the same.
 
-diff --git a/compat/compat-2.6.30.h b/compat/compat-2.6.30.h
-index 6a7c8fb..ed31198 100644
---- a/compat/compat-2.6.30.h
-+++ b/compat/compat-2.6.30.h
-@@ -14,6 +14,8 @@
- #define TP_ARGS(args...)	TPARGS(args)
- #endif
- 
-+#define IRQ_WAKE_THREAD	(2)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)) */
- 
- #endif /* LINUX_26_30_COMPAT_H */
-diff --git a/compat/patches/09-threaded-irq.patch b/compat/patches/09-threaded-irq.patch
-index e6daa15..4b9a361 100644
---- a/compat/patches/09-threaded-irq.patch
-+++ b/compat/patches/09-threaded-irq.patch
-@@ -25,15 +25,15 @@ thread in process context as well.
-  		}
-  	} else {
- +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-- 		err = request_threaded_irq(dev->dev->irq, b43_interrupt_handler,
-- 					   b43_interrupt_thread_handler,
-- 					   IRQF_SHARED, KBUILD_MODNAME, dev);
--+#else
- +		err = compat_request_threaded_irq(&dev->irq_compat,
- +						  dev->dev->irq,
- +						  b43_interrupt_handler,
- +						  b43_interrupt_thread_handler,
- +						  IRQF_SHARED, KBUILD_MODNAME, dev);
-++#else
-+ 		err = request_threaded_irq(dev->dev->irq, b43_interrupt_handler,
-+ 					   b43_interrupt_thread_handler,
-+ 					   IRQF_SHARED, KBUILD_MODNAME, dev);
- +#endif
-  		if (err) {
-  			b43err(dev->wl, "Cannot request IRQ-%d\n", dev->dev->irq);
+However, it's way easier for me to change the AP's setting than 
+to actually leave me office :-)
+
+
+/me wishes kernel developers would have more sense for real 
+life :-)
+
 -- 
-1.6.2.1
-
+http://www.holgerschurig.de
