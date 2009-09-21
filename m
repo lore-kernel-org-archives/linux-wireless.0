@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:40547 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715AbZIARY3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:50283 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754317AbZIUXhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 13:24:29 -0400
-Received: by iwn42 with SMTP id 42so72755iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 10:24:31 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 1 Sep 2009 10:24:11 -0700
-Message-ID: <43e72e890909011024p7b7176a6vfad3902ac714df79@mail.gmail.com>
-Subject: wireless_send_event kmemleaks
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 21 Sep 2009 19:37:03 -0400
+Subject: Re: [PATCH v2] mac80211: Fix [re]association power saving issue on
+ AP side
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Igor Perminov <igor.perminov@inbox.ru>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+In-Reply-To: <1253564744.4477.18.camel@sunlight>
+References: <1253564744.4477.18.camel@sunlight>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-XtRgK8gDE3bnBqtLp1T6"
+Date: Mon, 21 Sep 2009 16:36:52 -0700
+Message-Id: <1253576212.4458.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Can't tell you how to reproduce yet.
 
-unreferenced object 0xffff88003ba5fd00 (size 256):
-  comm "events/0", pid 9, jiffies 4297130623
-  backtrace:
-    [<ffffffff8112200d>] create_object+0x13d/0x2d0
-    [<ffffffff811222c5>] kmemleak_alloc+0x25/0x60
-    [<ffffffff81118a63>] kmem_cache_alloc_node+0x193/0x200
-    [<ffffffff81446cca>] __alloc_skb+0x4a/0x180
-    [<ffffffff81506be2>] wireless_send_event+0x1f2/0x410
-    [<ffffffffa0175074>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
-    [<ffffffffa01750c6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
-    [<ffffffff8106de60>] worker_thread+0x1d0/0x380
-    [<ffffffff81073246>] kthread+0xa6/0xb0
-    [<ffffffff810130ca>] child_rip+0xa/0x20
-    [<ffffffffffffffff>] 0xffffffffffffffff
-unreferenced object 0xffff88001f662000 (size 4096):
-  comm "events/0", pid 9, jiffies 4297130623
-  backtrace:
-    [<ffffffff8112200d>] create_object+0x13d/0x2d0
-    [<ffffffff811222c5>] kmemleak_alloc+0x25/0x60
-    [<ffffffff811198db>] __kmalloc_node_track_caller+0x1ab/0x220
-    [<ffffffff81446cfb>] __alloc_skb+0x7b/0x180
-    [<ffffffff81506be2>] wireless_send_event+0x1f2/0x410
-    [<ffffffffa0175074>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
-    [<ffffffffa01750c6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
-    [<ffffffff8106de60>] worker_thread+0x1d0/0x380
-    [<ffffffff81073246>] kthread+0xa6/0xb0
-    [<ffffffff810130ca>] child_rip+0xa/0x20
-    [<ffffffffffffffff>] 0xffffffffffffffff
+--=-XtRgK8gDE3bnBqtLp1T6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2009-09-22 at 00:25 +0400, Igor Perminov wrote:
+> Consider the following step-by step:
+
+NACK this, we'll take care of it properly with the required cleanup as
+mentioned.
+
+johannes
+
+--=-XtRgK8gDE3bnBqtLp1T6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKuA4QAAoJEODzc/N7+QmahgsQAKfdE1xFeBLAXRLEB41XL6Ar
+V9Zuu6fDzQoSf8IzgEg+AxSMsQiggRIkt/PHIaHXiOfuKYTh3pG3UyzErurGyo23
++r4ne+ovYSEkZJSy3YZUy+4JnS1TiwOrtN80NGsGlAYYEyHDB3JN6IPFVAzHtNdQ
+6eSzFN2ObVj7JjVNLO2B+TdDBOWoEc0TocUKgXXTZJDfy+kyE3wQgo7T6mUnjphQ
+lDbahwAh1/3uPMBZFhpxgekZwI4hD4jf3C68+C8U/0vahDw8S+KQfScF6Hdb8iTb
+qRiG5gkIwU35S4u9Iqwiu3otU63l+F8x+Kg/1ryCrHug0iBJlRPRY5RsyU60nGrY
+9G8XBRfD5pDHG01x9l1gQmvAgA8W+pWlNJcjKciTFjSF8z9vLLortmSiF/a4secY
+H6N2rHwfSWNJwh4YkynbtzS6g8PvsxnaIRk5CvjJh2fZC4e2lv4J8mBSoKI4XlSm
+06jwWQ88c9sOTmbwM7WICWTNlrdfTxW65P4g3kqYf4FrRSz6fQXn1Xj3AiUP6moS
+uEiKmS9qxNLVcJAefuLnfaBlhdV7+6hyAhEljd3HJZRDHuLNvxEe7Z1aq+c4FMBf
+94LNBLxYLcivnRuv0LQvS5DlyIbRPgBZn896UwuUsmX9nxgroVoz7BpqKFbxyqzG
+fhISSEDPjbPAjtyeGNAp
+=iAQi
+-----END PGP SIGNATURE-----
+
+--=-XtRgK8gDE3bnBqtLp1T6--
+
