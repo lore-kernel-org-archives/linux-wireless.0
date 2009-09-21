@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:59813 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752354AbZIXSJf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42105 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbZIUHPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 14:09:35 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI9PRD010729
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:09:30 +0300
-Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI9Jh9003457
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:09:20 +0300
-From: Kalle Valo <kalle.valo@nokia.com>
-Subject: [PATCH 2/2] iw: print firmware and hardware version
-To: linux-wireless@vger.kernel.org
-Date: Thu, 24 Sep 2009 11:09:25 -0700
-Message-ID: <20090924180925.14692.47279.stgit@tikku>
-In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
-References: <20090924180048.14503.9579.stgit@tikku>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 21 Sep 2009 03:15:37 -0400
+Subject: Re: [RFC] nl80211: introduce NL80211_ATTR_SCAN_EXPIRE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <200909210842.59852.hs4233@mail.mn-solutions.de>
+References: <200909181849.22302.hs4233@mail.mn-solutions.de>
+	 <1253293842.4787.1.camel@johannes.local>
+	 <200909210842.59852.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mzPDqYgvbMFskAeBoJqy"
+Date: Mon, 21 Sep 2009 00:15:33 -0700
+Message-Id: <1253517333.4458.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct wiphy now contains firmware and hardware version, print that
-information to the user.
----
 
- info.c    |   15 +++++++++++++++
- nl80211.h |    3 +++
- 2 files changed, 18 insertions(+), 0 deletions(-)
+--=-mzPDqYgvbMFskAeBoJqy
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/info.c b/info.c
-index 7bca69d..ae3ed54 100644
---- a/info.c
-+++ b/info.c
-@@ -66,6 +66,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 	struct nlattr *nl_freq;
- 	struct nlattr *nl_rate;
- 	struct nlattr *nl_mode;
-+	const char *str;
- 	int bandidx = 1;
- 	int rem_band, rem_freq, rem_rate, rem_mode;
- 	int open;
-@@ -263,6 +264,20 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 			printf("\tRTS threshold: %d\n", rts);
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_FW_VERSION]) {
-+		str = nla_get_string(tb_msg[NL80211_ATTR_FW_VERSION]);
-+		if (strlen(str) == 0)
-+			str = "<unknown>";
-+		printf("\tFirmware version: %s\n", str);
-+	}
-+
-+	if (tb_msg[NL80211_ATTR_HW_VERSION]) {
-+		str = nla_get_string(tb_msg[NL80211_ATTR_HW_VERSION]);
-+		if (strlen(str) == 0)
-+			str = "<unknown>";
-+		printf("\tHardware version: %s\n", str);
-+	}
-+
- 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
- 		return NL_SKIP;
- 
-diff --git a/nl80211.h b/nl80211.h
-index a8d71ed..6d6651f 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -714,6 +714,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PID,
- 
-+	NL80211_ATTR_FW_VERSION,
-+	NL80211_ATTR_HW_VERSION,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
+On Mon, 2009-09-21 at 08:42 +0200, Holger Schurig wrote:
+> > > It also allows to set an expiration for
+> > > NL80211_CMD_TRIGGER_SCAN. Setting the expiration to 0 will
+> > > clean the whole BSS list.
+> >
+> > tbh, I don't really understand the need for it. changing your
+> > AP settings doesn't seem like a use case anyone would really
+> > care about that much.
+>=20
+> Turning of an AP is one way making the AP vanish.
+>=20
+> Sitting into a fork-lift and driving throught a ware-house hall=20
+> is another way to accomplish the same.
+
+It's not actually the same, and you didn't explain that well. You care
+about the disappear case, but you made it sound like you cared about the
+_reappear_ case.
+
+However, I still don't believe that you need to change anything in the
+kernel, just get wpa_supplicant to handle it properly.
+
+johannes
+
+
+--=-mzPDqYgvbMFskAeBoJqy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKtygQAAoJEODzc/N7+QmaOucQAIh5imM1/t5O8kxeU02bg9Br
+s4rIQbzflP9w708vH1okjGZ4GWCoP/Ud7TQbsbzMUJUjMO1JUVD43gVp2X7Fcgbq
+zgAYZQJtwRVlGG3MtRRC1QvVN9qW19Yb5vQfnrA5j1+T4kExKvwfPFTFjrtZ0j3O
+6b3BVd/di1bomgteK/1526j28b/DEpmqcgwXmkstWkhRlk666j6DVuHXTNr2w1+T
+o7WPhVh0VUWzZUpLaXady1nK24wSKzS1fiajxa4oUwdWv1HlLDoGZMxhjwzHTDjk
+ZrSdB8yn/9MOjBYqoFUjy5JeLquoOND2jouuwdoJHhPYzYh0dMs007Vfsnod8wOT
+8j1+y7KzFV+JyzC9gA0k4fEhwk07Vc1dLx+dH6GVsstBlw0M1qUmLyxyIIxslxLG
+hZfexQEk133K1mljQBHOmszcLPTxX16dVyPpLg/cqItOiYXimDmjUbI9JjLzv6tP
+4Bs+Uc2c9nvPet1moEvJ7GFpeWHbLgJzlMiAOvt1e4YeQddZ4BXKI7zorx4yDVgr
+xo+ugjT/697wmGQFrgBR/jpbXXMAisUow85/dtU4XbMHY1pUMT9x/RKrss5Q6X/F
+cY1mqU46enEn9OxSpI/2Vs7B162JmqccNJwONWohxS9ospK0bhybWc+HTBiYN1dM
+bxLgbELLI58RCz8UYr8J
+=SF1Z
+-----END PGP SIGNATURE-----
+
+--=-mzPDqYgvbMFskAeBoJqy--
 
