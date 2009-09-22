@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:60829 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095AbZIJRbd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 13:31:33 -0400
-Date: Thu, 10 Sep 2009 18:31:27 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-input@vger.kernel.org, linux-wireless@vger.kernel.org,
-	marcel@holtmann.org
-Subject: Re: [PATCH 1/2] input: Add KEY_RFKILL
-Message-ID: <20090910173127.GA8465@srcf.ucam.org>
-References: <1252603292-20830-1-git-send-email-mjg@redhat.com> <43e72e890909101027saf1ed35u23936729eccf3f92@mail.gmail.com>
+Received: from mgw1.diku.dk ([130.225.96.91]:49016 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755860AbZIVLpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2009 07:45:14 -0400
+Date: Tue, 22 Sep 2009 13:45:16 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless: Use usb_endpoint_dir_out
+Message-ID: <Pine.LNX.4.64.0909221344370.20456@pc-004.diku.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <43e72e890909101027saf1ed35u23936729eccf3f92@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 10, 2009 at 10:27:01AM -0700, Luis R. Rodriguez wrote:
-> On Thu, Sep 10, 2009 at 10:21 AM, Matthew Garrett <mjg@redhat.com> wrote:
-> 
-> > This patch adds a new keycode, KEY_RFKILL_ALL.
-> 
-> >  include/linux/input.h |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> > +#define KEY_RFKILL             0x20c /* Key that controls all radios */
-> 
-> But this above is KEY_RFKILL, not KEY_RKILL_ALL. Typo?
+From: Julia Lawall <julia@diku.dk>
 
-Sorry, yes - forgot to update the commit message to match the change in 
-the patch and subject.
+Use the usb_endpoint_dir_out API function.  Note that the use of
+USB_TYPE_MASK in the original code is incorrect; it results in a test that
+is always false.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+struct usb_endpoint_descriptor *endpoint;
+expression E;
+@@
+
+- (endpoint->bEndpointAddress & E) == USB_DIR_OUT
++ usb_endpoint_dir_out(endpoint)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1070,7 +1070,7 @@ static int eject_installer(struct usb_in
+ 
+ 	/* Find bulk out endpoint */
+ 	endpoint = &iface_desc->endpoint[1].desc;
+-	if ((endpoint->bEndpointAddress & USB_TYPE_MASK) == USB_DIR_OUT &&
++	if (usb_endpoint_dir_out(endpoint) &&
+ 	    usb_endpoint_xfer_bulk(endpoint)) {
+ 		bulk_out_ep = endpoint->bEndpointAddress;
+ 	} else {
