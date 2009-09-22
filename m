@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36123 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752272AbZIKIBF (ORCPT
+Received: from mail-iw0-f190.google.com ([209.85.223.190]:54044 "EHLO
+	mail-iw0-f190.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756471AbZIVRB4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 04:01:05 -0400
-Date: Fri, 11 Sep 2009 01:01:02 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Albert Herranz <albert_herranz@yahoo.es>
-Cc: linux-mmc@vger.kernel.org, bcm43xx-dev@lists.berlios.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] sdio: pass unknown cis tuples to sdio drivers
-Message-Id: <20090911010102.4c7840b0.akpm@linux-foundation.org>
-In-Reply-To: <354996.83066.qm@web28302.mail.ukl.yahoo.com>
-References: <20090910203951.041d5c17.akpm@linux-foundation.org>
-	<354996.83066.qm@web28302.mail.ukl.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 22 Sep 2009 13:01:56 -0400
+Received: by iwn28 with SMTP id 28so568472iwn.22
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2009 10:01:59 -0700 (PDT)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 22 Sep 2009 10:01:39 -0700
+Message-ID: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
+Subject: Synching trees for BT 3.0 and a possible compat-bluetooth
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Jothikumar Mothilal <jothikumar.mothilal@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kevin Hayes <kevin@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 11 Sep 2009 07:52:11 +0000 (GMT) Albert Herranz <albert_herranz@yahoo.es> wrote:
+I forgot to poke about BT 3.0 synching at the summit. To work on
+bluetooth 3.0 we'll need some synching of trees between
+wireless-testing and Marcel's bluetooth tree. Also a compat-bluetooth
+might be in order to accomplish the same as we do with
+compat-wireless, only it would seem logical to consider tying to just
+merge this with compat-wireless to get the features required for
+bluetooth 3.0; to do this having one tree with both would be nice with
+the added benefit of all the same compat-2.6.3x.[ch] files being
+reused. Synching of the trees would be required only when a feature on
+one tree is not yet available on the latest rc kernel (provided marcel
+rebases on Linus' latest rc as well, not sure), this will probably be
+important during initial implementation, not sure how much divergence
+we should expect after this goes through a release through Linus.
 
-> --- El vie, 11/9/09, Andrew Morton <akpm@linux-foundation.org> escribi__:
-> > > Some manufacturers provide vendor information in
-> > non-vendor specific CIS
-> > > tuples. For example, Broadcom uses an Extended
-> > Function tuple to provide
-> > > the MAC address on some of their network cards, as in
-> > the case of the
-> > > Nintendo Wii WLAN daughter card.
-> > > 
-> > > This patch allows passing correct tuples unknown to
-> > the SDIO core to
-> > > a matching SDIO driver instead of rejecting them and
-> > failing.
-> > > 
-> > 
-> > This looks leaky to me.
-> > 
-> 
-> Hi Andrew, thanks for the review.
-> I hope I can clarify a bit what the patch does in the next comments.
-> 
-> > 
-> > : ______ ______ if (i < ARRAY_SIZE(cis_tpl_list)) {
+So any thoughts on synching bluetooth and wireless-testing other than
+doing so on a private tree for development purposes?
 
-argh, now yahoo mail is converting tabs to 0xa0's as well.  Despair.
-
-> > : ______ ______ ______ const struct cis_tpl *tpl = cis_tpl_list + i;
-> > : ______ ______ ______ if (tpl_link < tpl->min_size) {
-> > : ______ ______ ______ ______ printk(KERN_ERR
-> > : ______ ______ ______ ______ __ __ ______"%s: bad CIS tuple 0x%02x"
-> > : ______ ______ ______ ______ __ __ ______" (length = %u, expected >= %u)\n",
-> > : ______ ______ ______         ______mmc_hostname(card->host),
-> > : ______ ______ ______ ______ __ __ ______tpl_code, tpl_link, tpl->min_size);
-> > : ______ ______ ______ ______ ret = -EINVAL;
-> > 
-> > ret == -EINVAL
-> > 
-> 
-> At this point ret is not -EINVAL.
-
-Yes it is.  We just did
-
-	ret = -EINVAL;
-
-
-If that assignment happens, we leak `this'.
+  Luis
