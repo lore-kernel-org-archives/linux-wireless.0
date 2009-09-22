@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:35045 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220AbZIGW7I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 18:59:08 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 7 Sep 2009 15:58:50 -0700
-Message-ID: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com>
-Subject: Stop using tasklets for bottom halves
-To: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@elte.hu>,
-	Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
-	Ivan Seskar <Seskar@winlab.rutgers.edu>, ic.felix@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:61811 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753135AbZIVXix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Sep 2009 19:38:53 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: davem@davemloft.net, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 2/3] iwmc3200wifi: select IWMC3200TOP in Kconfig
+Date: Wed, 23 Sep 2009 02:38:43 +0300
+Message-Id: <1253662724-16497-3-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
+References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
+ <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A while ago I had read about an effort to consider removing tasklets
-[1] or at least trying to not use them. I'm unaware of the progress in
-this respect but since reading that article have always tried to
-evaluate whether or not we need tasklets on wireless drivers. I have
-also wondered whether work in irq context in other parts of the kernel
-can be moved to process context, a curious example being timers. I'll
-personally be trying to using only process context on bottom halves on
-future drivers but I figured it may be a good time to ask how serious
-was avoiding tasklets or using wrappers in the future to avoid irq
-context is or is it advised. Do we have a general agreement this is a
-good step forward to take? Has anyone made tests or changes on a
-specific driver from irq context to process context and proven there
-are no significant advantages of using irq context where you would
-have expected it?
+iwmc3200wifi requires iwmc3200top  for its operation
 
-Wireless in particular should IMHO not require taskets for anything
-time sensitive that I can think about except perhaps changing channels
-quickly and to do that appropriately also process pending RX frames
-prior to a switch. It remains to be seen experimentally whether or not
-using a workqueue for RX processing would affect the time to switch
-channels negatively but I doubt it would be significant. I hope to
-test that with ath9k_htc.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/net/wireless/iwmc3200wifi/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-What about gigabit or 10 Gigabit Ethernet drivers ? Do they face any
-challenges which would yet need to be proven would not face issues
-when processing bottom halves in process context?
+diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
+index c62da43..69faaf1 100644
+--- a/drivers/net/wireless/iwmc3200wifi/Kconfig
++++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
+@@ -3,6 +3,7 @@ config IWM
+ 	depends on MMC && WLAN_80211 && EXPERIMENTAL
+ 	depends on CFG80211
+ 	select FW_LOADER
++	select IWMC3200TOP
+ 	help
+ 	  The Intel Wireless Multicomm 3200 hardware is a combo
+ 	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
+-- 
+1.6.0.6
 
-[1] http://lwn.net/Articles/239633/
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
-  Luis
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
