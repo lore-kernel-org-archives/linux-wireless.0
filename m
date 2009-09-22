@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46047 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbZI2TAw (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:23912 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084AbZIVHe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 15:00:52 -0400
-Date: Tue, 29 Sep 2009 14:52:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	Malte Gell <malte.gell@gmx.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: cannot compile compate-wirless snapshots
-Message-ID: <20090929185202.GD2678@tuxdriver.com>
-References: <200909260457.21103.malte.gell@gmx.de> <4ABDE7AC.1090409@hauke-m.de> <200909291050.54388.malte.gell@gmx.de> <3ace41890909290200h4dbefddah131851675dc06097@mail.gmail.com> <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
+	Tue, 22 Sep 2009 03:34:56 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id CA02B3A009
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2009 09:34:59 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ESqcxEYWIwR4 for <linux-wireless@vger.kernel.org>;
+	Tue, 22 Sep 2009 09:34:59 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F88BE.dip0.t-ipconnect.de [217.95.136.190])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 7AA4C3A004
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2009 09:34:58 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 39B7A1E0036
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Sep 2009 09:34:07 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: BUGLET? cfg80211: .dumpit methods called twice
+Date: Tue, 22 Sep 2009 09:33:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909220933.24443.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2009 at 08:27:20PM +0200, Gábor Stefanik wrote:
-> On Tue, Sep 29, 2009 at 11:00 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+I just noticed that all functions mentioned on .dumpit in 
+net/wireless/nl80211.c are actually called twice.
 
-> > The relevant config is probably /boot/config-`uname -r`, but, please
-> > do *not* modify it.
-> >
-> 
-> It should be in /proc/config.gz. (/boot/config-* is an Ubuntuism.)
+For example, I've added
 
-No -- it is at least that way in Fedora and RHEL as well.
+--- linux-wl.orig/net/wireless/nl80211.c        2009-09-18 
+14:44:28.000000000 +0200
++++ linux-wl/net/wireless/nl80211.c     2009-09-18 
+14:45:41.000000000 +0200
+@@ -2919,6 +2919,8 @@ static int nl80211_trigger_scan(struct s
+        enum ieee80211_band band;
+        size_t ie_len;
 
-John
++       printk("##HS %s:%d\n", __func__, __LINE__);
++
+        if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
+                return -EINVAL;
+
+and when I now issue one "iw eth1 scan dump" I get two logs of 
+this printk in my dmesg.
+
+AFAIK it doesn't cause any harm, but it's not that efficient and 
+it might cause harm in the future if any of the .dumpit methods 
+has the "right" side-effects.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
