@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512AbZIXR33 (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:53343 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752116AbZIWXab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 13:29:29 -0400
-Subject: Re: rfkill hard state after booting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: Norbert Preining <preining@logic.at>,
-	linux-wireless@vger.kernel.org, Mattia Dongili <malattia@linux.it>,
-	"Almer S. Tigelaar" <almer@gnome.org>,
-	Matthias Welwarsky <matze@welwarsky.de>
-In-Reply-To: <4ABB8C5E.6070402@tuffmail.co.uk>
-References: <20090924130231.GU21590@gamma.logic.tuwien.ac.at>
-	 <1253801252.3868.108.camel@johannes.local>
-	 <4ABB89B2.8070302@tuffmail.co.uk>
-	 <1253804713.3868.168.camel@johannes.local>
-	 <4ABB8C5E.6070402@tuffmail.co.uk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oa5wU4Z90Pa1uHoJSqce"
-Date: Thu, 24 Sep 2009 19:29:31 +0200
-Message-Id: <1253813371.3868.313.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 23 Sep 2009 19:30:31 -0400
+Received: by iwn8 with SMTP id 8so626070iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 16:30:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1253748426.2931.9.camel@localhost.localdomain>
+References: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
+	<1253748426.2931.9.camel@localhost.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 23 Sep 2009 16:30:15 -0700
+Message-ID: <43e72e890909231630r7492fe78m23bceb24a629538b@mail.gmail.com>
+Subject: Re: Synching trees for BT 3.0 and a possible compat-bluetooth
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Jothikumar Mothilal <jothikumar.mothilal@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kevin Hayes <kevin@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 23, 2009 at 4:27 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Luis,
+>
+>> I forgot to poke about BT 3.0 synching at the summit. To work on
+>> bluetooth 3.0 we'll need some synching of trees between
+>> wireless-testing and Marcel's bluetooth tree. Also a compat-bluetooth
+>> might be in order to accomplish the same as we do with
+>> compat-wireless, only it would seem logical to consider tying to just
+>> merge this with compat-wireless to get the features required for
+>> bluetooth 3.0; to do this having one tree with both would be nice with
+>> the added benefit of all the same compat-2.6.3x.[ch] files being
+>> reused. Synching of the trees would be required only when a feature on
+>> one tree is not yet available on the latest rc kernel (provided marcel
+>> rebases on Linus' latest rc as well, not sure), this will probably be
+>> important during initial implementation, not sure how much divergence
+>> we should expect after this goes through a release through Linus.
+>>
+>> So any thoughts on synching bluetooth and wireless-testing other than
+>> doing so on a private tree for development purposes?
+>
+> we don't need this right now. For the initial development of the WiFi
+> AMP, we will use the fact that you can create HCI RAW devices from a
+> driver. These are skipped by BlueZ and only show up in hciconfig. That
+> should be enough for testing.
 
---=-oa5wU4Z90Pa1uHoJSqce
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks Marcel, when do you expect we would need this?
 
-On Thu, 2009-09-24 at 16:12 +0100, Alan Jenkins wrote:
-
-> > Although maybe it should just call sony_nc_rfkill_update() after
-> > registering all of them?
-
-> That means the initial "add" uevents etc. will contain wrong values (and
-> then be updated immediately after).  Do we care about that?  It's
-> unlikely to matter in practice for platform devices which only get
-> loaded at boot-time, but perhaps it would set a bad example.
-
-Ah, good point. I was just a little concerned about the logic
-difference, but I don't really understand the _update() logic.
-
-johannes
-
---=-oa5wU4Z90Pa1uHoJSqce
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKu6x4AAoJEODzc/N7+Qma6ycP/3XS6PNdebJIkEoL2/TWrA6i
-cQjVDv/+33fzY5OGkt1hF8gBeG2Lyd1GFzQqkoRV9/so8pWullF1T2GndngBWZPj
-dH+fVoeA6Xwpzocryw9nNeSmplCp9fmjYLpOSpoF63v/xSgASNTmWpfaCblaOyID
-r1IqwETgj29qJLUK3R5QwMDIhjv0CB+AA0jY3c1TTjUO90pXS0E+qJonNvCoLToQ
-cG72ix8Aw+TKreKTK76plxI8Si2Q8M1q7TQGTLvEjMZob4qpLyW+5zIN8/0B/rJQ
-mn37ws4Gs58K0fezpsWnHqh2Sw6rWGGSwmBUeLPiTDKCWZF7b6SMhO6Iq3n60um0
-aUGAJVPp6DCbknCRriMC2Kfqk6rO1c4aPb/IcDon+vA4R21IGprh2VSi50Zob9tu
-LkCrwG1IPD2/A63RvwjX+q1siTqIS2vpT8OFYzkDnglFRei4TOVXSFAkp8J2+Woj
-fnO4O81PsczRdRQfauhg5UHQOH+flC7DR+qBLPwxOqQgshYZ717HIZ69irnKr0VL
-QPBAsR3NaE4dZMUgm9mCJAJ7IXBX6kXqS4lAxlCDQ582wySKBbsynatA2vCAF3up
-Z4gAkrTVWOGhj4H2g4uhbCKxoHiNZtjn2nKXg38tzfPiPctpPskvPyXw1P3jF2hO
-Eh3Ewhj9Sy8aKl5knL9/
-=gMUc
------END PGP SIGNATURE-----
-
---=-oa5wU4Z90Pa1uHoJSqce--
-
+  Luis
