@@ -1,80 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:8900 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751377AbZIWRtR (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:64699 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226AbZIWHQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 13:49:17 -0400
-Subject: Re: [PATCH 1/3] iwmc3200top: Add Intel Wireless MultiCom 3200 top
- driver.
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>,
-	"Kao, Cindy H" <cindy.h.kao@intel.com>,
-	"Cohen, Guy" <guy.cohen@intel.com>,
-	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
-In-Reply-To: <1ba2fa240909230023v17fe2b49v4981d464dba469ed@mail.gmail.com>
-References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
-	 <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
-	 <1253689036.4458.22.camel@johannes.local>
-	 <1ba2fa240909230023v17fe2b49v4981d464dba469ed@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 23 Sep 2009 10:48:14 -0700
-Message-Id: <1253728094.3033.240.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Wed, 23 Sep 2009 03:16:34 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP and WPA
+Date: Wed, 23 Sep 2009 09:15:35 +0200
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
+References: <200909221118.04569.hs4233@mail.mn-solutions.de> <200909221258.44921.hs4233@mail.mn-solutions.de> <1253689291.4458.25.camel@johannes.local>
+In-Reply-To: <1253689291.4458.25.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909230915.35312.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-09-23 at 01:23 -0600, Tomas Winkler wrote:
-> On Wed, Sep 23, 2009 at 9:57 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2009-09-23 at 02:38 +0300, Tomas Winkler wrote:
-> >
-> >> +config IWMC3200TOP
-> >> +        tristate "Intel Wireless MultiCom Top Driver"
-> >> +        depends on MMC && EXPERIMENTAL
-> >> +        select FW_LOADER
-> >> +     ---help---
-> >> +       Intel Wireless MultiCom 3200 Top driver is responsible for
-> >> +       for firmware load and enabled coms enumeration
-> >
-> > This seems like the wrong approach to me.
-> >
-> > To me, it seems like you have a device that contains an internal bus and
-> > allows bus enumeration. Typically, we would surface that bus in the
-> > driver/device model and allow sub-drivers to bind to that by way of
-> > exposing the internal bus, like e.g. drivers/ssb/.
-> 
-> From HW perspective your assumption is not exactly correct. All the
-> devices are visible on the SDIO bus but they are not operational
-> (probe won't succeed) until TOP download the firmware and kicks the
-> devices. From SW perspective to create another bus layer is an option.
-> I'm not sure if it's not more complicated one.
+On Wednesday 23 September 2009 09:01:31 Johannes Berg wrote:
+> Because the scan request contains info on how to do the scan.
 
-It is definitely more complicated; we thought about it and it wasn't
-worth. The current solution works and it is simple enough.
+I know. I sent another mail where I said the traceback
+was correct, but not my conclusion: I confused
+cfg80211_wext_siwscan() and cfg80211_wext_giwscan().
 
-To extend Tomas' explanation:
+I thougth the return -EBUSY is in cfg80211_wext_giwscan().
 
-1 device powers up
-2 enabling any sdio function that is not the top one fails; drivers
-  return -ENODEV
-3 top function is enabled, firmware loaded, it initializes
-  the rest of the functions. Top driver kicks a SDIO bus rescan
-  on a workqueue
-4 other sdio functions can be enabled and probe succesfully (uploading
-  firmware, yadah yadah).
+That it is in cfg80211_wext_siwscan() makes perfect sense.
 
-A subbus would add a lot of complexity to all this, having to replicate
-most of the device probing, suspend/resume, pre/post reset (that's is 
-being added to SDIO).
-
-Thanks,
-
-
-
+-- 
+http://www.holgerschurig.de
