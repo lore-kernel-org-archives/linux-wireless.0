@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:49723 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802AbZI3TOL (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60481 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbZIWX1U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 15:14:11 -0400
-Received: by iwn8 with SMTP id 8so3832614iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 12:14:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1254334586.26521.1617.camel@rc-desk>
-References: <4AC39D6F.5070308@canonical.com> <1254334586.26521.1617.camel@rc-desk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 30 Sep 2009 12:13:55 -0700
-Message-ID: <43e72e890909301213m6c6b890fp59940f732c181686@mail.gmail.com>
-Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "tim.gardner@canonical.com" <tim.gardner@canonical.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Sep 2009 19:27:20 -0400
+Subject: Re: Synching trees for BT 3.0 and a possible compat-bluetooth
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Jothikumar Mothilal <jothikumar.mothilal@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Kevin Hayes <kevin@atheros.com>
+In-Reply-To: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
+References: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 23 Sep 2009 16:27:06 -0700
+Message-Id: <1253748426.2931.9.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 11:16 AM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> Hi Tim,
->
-> On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
->> I've got a user complaining that the iwl-1000 firmware version required
->> by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
->> only firmware available from http://intellinuxwireless.org/?n=Downloads
->> is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
->>
->> BugLink: http://bugs.launchpad.net/bugs/439285
->>
->
-> 2.6.31 needs a few more patches to fully support 1000 series
+Hi Luis,
 
-So just a heads up the stable compat-wireless stuff is here:
+> I forgot to poke about BT 3.0 synching at the summit. To work on
+> bluetooth 3.0 we'll need some synching of trees between
+> wireless-testing and Marcel's bluetooth tree. Also a compat-bluetooth
+> might be in order to accomplish the same as we do with
+> compat-wireless, only it would seem logical to consider tying to just
+> merge this with compat-wireless to get the features required for
+> bluetooth 3.0; to do this having one tree with both would be nice with
+> the added benefit of all the same compat-2.6.3x.[ch] files being
+> reused. Synching of the trees would be required only when a feature on
+> one tree is not yet available on the latest rc kernel (provided marcel
+> rebases on Linus' latest rc as well, not sure), this will probably be
+> important during initial implementation, not sure how much divergence
+> we should expect after this goes through a release through Linus.
+> 
+> So any thoughts on synching bluetooth and wireless-testing other than
+> doing so on a private tree for development purposes?
 
-http://wireless.kernel.org/en/users/Download/stable/
+we don't need this right now. For the initial development of the WiFi
+AMP, we will use the fact that you can create HCI RAW devices from a
+driver. These are skipped by BlueZ and only show up in hciconfig. That
+should be enough for testing.
 
-I'll soon make a release based on 2.6.32-rc1, but I thought 2.6.32-rc1
-was going to be busted, not sure yet, it may be. We probably should
-wait for rc2.
+Regards
 
-  Luis
+Marcel
+
+
