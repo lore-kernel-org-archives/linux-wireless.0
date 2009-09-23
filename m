@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:1107 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbZIYVY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 17:24:28 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:47590 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbZIWX23 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2009 19:28:29 -0400
+Received: by iwn8 with SMTP id 8so625388iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 16:28:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090923225853.GA14625@jm.kir.nu>
+References: <43e72e890909221541u67fa291fq353327d1d55841f2@mail.gmail.com>
+	<20090923225853.GA14625@jm.kir.nu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 23 Sep 2009 16:28:12 -0700
+Message-ID: <43e72e890909231628g340f1467ka5c02515b051285b@mail.gmail.com>
+Subject: Re: Flush TX - wireless summit topic
+To: Jouni Malinen <j@w1.fi>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/8] iwlwifi: default to using all chains
-Date: Fri, 25 Sep 2009 14:24:25 -0700
-Message-Id: <1253913868-8400-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
-References: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
+On Wed, Sep 23, 2009 at 3:58 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Tue, Sep 22, 2009 at 03:41:50PM -0700, Luis R. Rodriguez wrote:
+>> Another thing we spoke about at the wireless summit was flushing TX
+>> prior to changing channel / scan. Bob, remember the issue with ath5k
+>> on the band not coinciding on received skbs since we don't do a DMA RX
+>> flush prior to channel change? Well one theory discussed was that we
+>> would see that issue disappear if we actually did a proper TX flush
+>> prior to channel change since we expect we would not see further
+>> incoming frames from our AP if we told it we were going to PS (sending
+>> a null func frame). If we implement a proper TX flush then the theory
+>> goes that we wouldn't need to do any sort of DMA flush as we would not
+>> have any frames pending.
+>
+> I don't know where this theory is coming from, but I do not subscribe to
+> it ;-).
 
-When instructing the microcode to use just a single
-chain when we have power saving enabled, we should
-also tell the AP that we are doing SM powersave.
-However, using a single chain doesn't actually have
-any power saving advantage while idle -- measurements
-show that the power consumption is no different when
-using one vs. two or three chains.
+I misunderstood you then, sorry about that.
 
-Therefore, always instruct the microcode to use all
-chains.
+> The AP may very well send broadcast frames even after we
+> indicate the change to PS mode. In addition, other frames could
+> potentially be received based on RX filter settings. If we want to make
+> sure we do not get new pending RX frames, we need to stop the receiver
+> first or be prepared to handle the received frames somehow.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   30 +++++++++++++++++-------------
- 1 files changed, 17 insertions(+), 13 deletions(-)
+Thanks for the clarification.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5ff0f66..e97b104 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -948,8 +948,13 @@ EXPORT_SYMBOL(iwl_set_rxon_ht);
- #define IWL_NUM_IDLE_CHAINS_DUAL	2
- #define IWL_NUM_IDLE_CHAINS_SINGLE	1
- 
--/* Determine how many receiver/antenna chains to use.
-- * More provides better reception via diversity.  Fewer saves power.
-+/*
-+ * Determine how many receiver/antenna chains to use.
-+ *
-+ * More provides better reception via diversity.  Fewer saves power
-+ * at the expense of throughput, but only when not in powersave to
-+ * start with.
-+ *
-  * MIMO (dual stream) requires at least 2, but works better with 3.
-  * This does not determine *which* chains to use, just how many.
-  */
-@@ -962,19 +967,18 @@ static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
- 		return IWL_NUM_RX_CHAINS_MULTIPLE;
- }
- 
-+/*
-+ * When we are in power saving, there's no difference between
-+ * using multiple chains or just a single chain, but due to the
-+ * lack of SM PS we lose a lot of throughput if we use just a
-+ * single chain.
-+ *
-+ * Therefore, use the active count here (which will use multiple
-+ * chains unless connected to a legacy AP).
-+ */
- static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
- {
--	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
--
--	/* # Rx chains when idling and maybe trying to save power */
--
--	/*
--	 * XXX: this is incorrect!!
--	 *	we always indicate to the AP that
--	 *	our SM PS mode is "disabled"
--	 */
--
--	return is_cam ? active_cnt : IWL_NUM_IDLE_CHAINS_SINGLE;
-+	return active_cnt;
- }
- 
- /* up to 4 chains */
--- 
-1.5.6.3
+> The number of pending RX frames would hopefully be relatively small,
+> though, in this kind of case.
 
+Indeed.
+
+> In order to process these frames
+> correctly, they would need to be taken care of prior to the channel
+> change or alternatively, with the channel parameters cached in the
+> driver so that they could be sent up with all the correct information
+> even after the channel change.
+
+I'm inclined for mac80211 to force an rxflush here so that we force
+all drivers to do the right thing and we'd document this as such,
+instead of having to rely on each driver doing the right thing
+(caching the channel for the RX'f frame). The downside to this is
+obviously this can create a delay on channel change, however long it
+takes to process the pending frames already sitting for us on the
+DMA'd memory.
+
+  Luis
