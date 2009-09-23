@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:48937 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbZINRno (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:39630 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbZIWHNv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 13:43:44 -0400
-Subject: Re: A station can't reconnect after it wakes up
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Igor Perminov <igor.perminov@inbox.ru>,
-	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	hostap@lists.shmoo.com, Artur Skawina <art.08.09@gmail.com>
-In-Reply-To: <20090914125008.GA15494@jm.kir.nu>
-References: <1248969930.29068.224.camel@sunlight>
-	 <4A7318E6.3000004@gmail.com> <1249312925.8515.187.camel@sunlight>
-	 <1252620184.26765.65.camel@sunlight>
-	 <1252767513.23427.26.camel@johannes.local>
-	 <1252799481.26765.145.camel@sunlight> <87my4z0w53.fsf@litku.valot.fi>
-	 <1252927472.26765.202.camel@sunlight>  <20090914125008.GA15494@jm.kir.nu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oblMKWb0X1AIyqWpxOOF"
-Date: Mon, 14 Sep 2009 10:42:44 -0700
-Message-Id: <1252950164.23427.50.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 23 Sep 2009 03:13:51 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC] nl80211: introduce NL80211_ATTR_SCAN_EXPIRE
+Date: Wed, 23 Sep 2009 09:12:57 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John W Linville <linville@tuxdriver.com>
+References: <200909181849.22302.hs4233@mail.mn-solutions.de> <200909210946.19675.hs4233@mail.mn-solutions.de> <1253662172.2510.60.camel@localhost.localdomain>
+In-Reply-To: <1253662172.2510.60.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909230912.57417.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 23 September 2009 01:29:32 Dan Williams wrote:
 
---=-oblMKWb0X1AIyqWpxOOF
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+> So on the supplicant side, this weekend I was discussing with
+> Jouni about making the supplicant *not* trigger a completely
+> new scan when trying to associate if the scan list was current
+> in the past 5 or 10 seconds.  The issue here is that NM
+> requests a scan, ... 
 
-On Mon, 2009-09-14 at 15:50 +0300, Jouni Malinen wrote:
+I currently center around a setup without NM. Okay, for the
+forklift terminals (they are x86-based), NM would be feasible.
+But for the handheld terminals (Intel PXA based) I'm not keen
+on NM. So I basically develop a simple program that monitors
+signal and triggers a scan when signal level is below some
+thresshold. This program happens to be linked into
+wpa_supplicant, but it can also be a standalone program.
 
-> Taken into account that the AP can even change the Association ID for
-> the STA during reassociation, I would be fine with dropping the buffered
-> frames and clearing the PS state when association is completed
-> successfully (the STA ACKs the (Re)Association Response frame that had
-> status code 0). I would hope that the authentication frame sequence or
-> failed (re)association would not touch the PS buffer or state.
->=20
-> The real time when the association state changes in the AP is when the
-> ACK frame is received for (Re)Association Response frame. Of the options
-> you listed, this would be bit after (B), i.e., (C) might be needed to
-> get the exact timing right. However, I could probably live with (B),
-> too, in practice.
-
+I'm relying on wpa_supplicant's feature to monitor scan-done
+events and looking if there's something a better matching BSS
+in the result.
 
 
-> > But I think, we shouldn't call ap_sta_ps_end as is done for normal PS
-> > state switching, because that leads to sending buffered frames if any,
-> > which is undesirable in our case. Instead, we should simply purge of
-> > buffered frames and clear WLAN_STA_PS.
->=20
-> This is a very good point and we much indeed make sure we do not end up
-> sending the buffered frames out based on a new authentication or
-> association frame. This is especially important for the case when the
-> frames were buffered in RSNA,
 
-Given all this, I still think it would be a lot simpler to just have
-hostapd remove the station once.
+But when you take wpa_supplicant, NM and whatever, then maybe the
+timestamp idea from Johannes should be used. Any application
+that wants to look if it should roam can quickly get the
+scan results. By the timestamp of the entries it can then
+see how old the entries are. Only if entries are outdated,
+it can fire up a scan.
 
-johannes
+There's just one case: if there is no BSS in the scan list.
+Then any app doing a "get scan results" call wouldn't know
+if the last scan is ages ago or if there is really no AP
+in the vincinity, doing an immediate re-scan. This can be
+harmful for battery-driven devices. So maybe a timestamp
+"last scan was at timestamp XXX" besides the individual
+BSS timestamps would be helpful here.
 
---=-oblMKWb0X1AIyqWpxOOF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+This way apps can synchronize themselfes and, even if
+different apps do scanning, they can say "We don't scan
+more often than every N seconds".
 
------BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJKroCRAAoJEODzc/N7+Qma5nAQAKOdN0gZXqAcIgsd+MgLSPlQ
-Cud2pmnAlDRwhuZJeHX3MRdHPfaeU6hOWZn6fgmBA8T48ltbWnxfafSipHCK2Wq/
-IGPUoD4R8QXoE9EXVxkmdkn46iNdFBnx10zEtDUy29Qt/H/W6k8fJ3FwwHEfGznH
-a/WncasNoX6R7po+mVi+2iKz+GnEloXaT2jwTt840W7Qtl9qaV8Rc+rxtpQFoGaV
-o5fxqZpd/tnF0Apgwx7fvpSjugz7wMhL30jvFWZioYqPrH8i5YH2DPgtCrZ5WyPD
-9BXZMeIsuzYzWWEEiAwHhSnEhic3mFy7dI5PsLYS05XHMOwctgjanMx3Z+WFsCG9
-l+qznnwO/iBHqMMMyZdXOFBROo+ifklviR+K/bBP0CftjwOJxdC/+GE0fvRZHZN2
-D7zeEL1K59jPs7qMrNUyUgX5XHyvkHryKzzxDKfgtnpNa9B3HE30GfoAGGhvlnFR
-EySkqz05uiEDKslTpxi6o6x1uIGYTKv/uN8rVcG6xQLQEVV6cpIAvqv39o37cZx5
-Lr70dfpoytoHrhtXP2Uk/7Ef74ShumYJbzkulsuF0Nfg08492o6o80oMGwfeKg7G
-hYLlGEE0AKjpol+A8EEqLimMPvBu17p3dsUky2iiTibt3gcR2Ti1w6aMzjL1zTZZ
-dKI+voTP/IXF7C+ktR6A
-=HezV
------END PGP SIGNATURE-----
+> BTW, 10 years ago I did a forklift deployment too with pre-802.11
+> Aironet equipment and Netware.  Wasn't that fun to get up and running.
+> This was at a paper company too, and guess what huge rolls of paper do?
+> They absorb radio waves quite well.  Suck.  And forklifts can go *fast*.
 
---=-oblMKWb0X1AIyqWpxOOF--
+Oh, and a wholesale company for drinks is even more demanding.
+Water-based liquid has the nice property of absorbing microwaves
+in the 2.4 MHz range extremely nicely, just see your next
+microwave oven for a proof ...
 
+
+The nice thing about this: when you have a working roaming 
+(and fast-enought handoff) in a warehouse/fork-lift scenary,
+then your can forget about the WLAN problem in other scenarios,
+because they are way less demanding. What happens to work in
+the forklift case works everywhere else.
+
+-- 
+http://www.holgerschurig.de
