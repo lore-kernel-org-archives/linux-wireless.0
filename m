@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1572 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754202AbZI3Syt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 14:54:49 -0400
-Message-ID: <4AC3A978.2070309@canonical.com>
-Date: Wed, 30 Sep 2009 12:54:48 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:36275 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754191AbZIWHX4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Sep 2009 03:23:56 -0400
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
-References: <4AC39D6F.5070308@canonical.com> <1254334586.26521.1617.camel@rc-desk>
-In-Reply-To: <1254334586.26521.1617.camel@rc-desk>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1253689036.4458.22.camel@johannes.local>
+References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
+	 <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
+	 <1253689036.4458.22.camel@johannes.local>
+Date: Wed, 23 Sep 2009 10:23:59 +0300
+Message-ID: <1ba2fa240909230023v17fe2b49v4981d464dba469ed@mail.gmail.com>
+Subject: Re: [PATCH 1/3] iwmc3200top: Add Intel Wireless MultiCom 3200 top
+	driver.
+From: Tomas Winkler <tomasw@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: davem@davemloft.net, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, yi.zhu@intel.com,
+	inaky.perez-gonzalez@intel.com, cindy.h.kao@intel.com,
+	guy.cohen@intel.com, ron.rindjunsky@intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre wrote:
-> Hi Tim,
-> 
-> On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
->> I've got a user complaining that the iwl-1000 firmware version required
->> by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
->> only firmware available from http://intellinuxwireless.org/?n=Downloads
->> is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
->>
->> BugLink: http://bugs.launchpad.net/bugs/439285
->>
-> 
-> 2.6.31 needs a few more patches to fully support 1000 series, among
-> these is the patch that can parse a new ucode header format and another
-> patch to update the ucode API. 
-> 
-> Depending on the requirements it may be easier to backport those patches
-> or to just use compat-wireless. That will be the user's decision.
-> 
-> Here is the list of patches:
-> 
-> commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
-> Author: Jay Sternberg <jay.e.sternberg@intel.com>
-> Date:   Fri Jul 17 09:30:16 2009 -0700
-> 
->     iwlwifi: Handle new firmware file with ucode build number in header
-> 
-> commit cce53aa347c1e023d967b1cb1aa393c725aedba5
-> Author: Jay Sternberg <jay.e.sternberg@intel.com>
-> Date:   Fri Jul 17 09:30:22 2009 -0700
-> 
->     iwlwifi: update 1000 series API version to match firmware
-> 
-> commit 02c06e4abc0680afd31bf481a803541556757fb6
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Fri Jul 17 09:30:14 2009 -0700
-> 
->     iwlagn: modify digital SVR for 1000
-> 
-> commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Thu Aug 13 13:30:54 2009 -0700
-> 
->     iwlwifi: traverse linklist to find the valid OTP block
-> 
-> commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
-> Author: Reinette Chatre <reinette.chatre@intel.com>
-> Date:   Fri Jul 24 11:13:12 2009 -0700
-> 
->     iwlagn: fix null pointer access during ucode load on 1000
-> 
-> Reinette
-> 
+On Wed, Sep 23, 2009 at 9:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2009-09-23 at 02:38 +0300, Tomas Winkler wrote:
+>
+>> +config IWMC3200TOP
+>> +        tristate "Intel Wireless MultiCom Top Driver"
+>> +        depends on MMC && EXPERIMENTAL
+>> +        select FW_LOADER
+>> +     ---help---
+>> +       Intel Wireless MultiCom 3200 Top driver is responsible for
+>> +       for firmware load and enabled coms enumeration
+>
+> This seems like the wrong approach to me.
+>
+> To me, it seems like you have a device that contains an internal bus and
+> allows bus enumeration. Typically, we would surface that bus in the
+> driver/device model and allow sub-drivers to bind to that by way of
+> exposing the internal bus, like e.g. drivers/ssb/.
 
-Hmm, I think I'll just disable the 2 PCI IDs for these cards since they
-never really worked in 2.6.31 anyways. Does that make sense to you? The
-above patch sets are too invasive at this point in the Karmic release
-cycle. compat-wireless to the rescue.
+>From HW perspective your assumption is not exactly correct. All the
+devices are visible on the SDIO bus but they are not operational
+(probe won't succeed) until TOP download the firmware and kicks the
+devices. From SW perspective to create another bus layer is an option.
+I'm not sure if it's not more complicated one.
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+Thanks
+Tomas
