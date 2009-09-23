@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:53343 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116AbZIWXab (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037AbZIWG75 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 19:30:31 -0400
-Received: by iwn8 with SMTP id 8so626070iwn.33
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 16:30:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1253748426.2931.9.camel@localhost.localdomain>
-References: <43e72e890909221001m19f076d8n64fb012b486f666a@mail.gmail.com>
-	<1253748426.2931.9.camel@localhost.localdomain>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 23 Sep 2009 16:30:15 -0700
-Message-ID: <43e72e890909231630r7492fe78m23bceb24a629538b@mail.gmail.com>
-Subject: Re: Synching trees for BT 3.0 and a possible compat-bluetooth
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Jothikumar Mothilal <jothikumar.mothilal@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kevin Hayes <kevin@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Sep 2009 02:59:57 -0400
+Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP
+ and WPA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+In-Reply-To: <200909221118.04569.hs4233@mail.mn-solutions.de>
+References: <200909221118.04569.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hc9KoL1bkC3nXwExaaXt"
+Date: Wed, 23 Sep 2009 08:59:58 +0200
+Message-Id: <1253689198.4458.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 23, 2009 at 4:27 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Luis,
->
->> I forgot to poke about BT 3.0 synching at the summit. To work on
->> bluetooth 3.0 we'll need some synching of trees between
->> wireless-testing and Marcel's bluetooth tree. Also a compat-bluetooth
->> might be in order to accomplish the same as we do with
->> compat-wireless, only it would seem logical to consider tying to just
->> merge this with compat-wireless to get the features required for
->> bluetooth 3.0; to do this having one tree with both would be nice with
->> the added benefit of all the same compat-2.6.3x.[ch] files being
->> reused. Synching of the trees would be required only when a feature on
->> one tree is not yet available on the latest rc kernel (provided marcel
->> rebases on Linus' latest rc as well, not sure), this will probably be
->> important during initial implementation, not sure how much divergence
->> we should expect after this goes through a release through Linus.
->>
->> So any thoughts on synching bluetooth and wireless-testing other than
->> doing so on a private tree for development purposes?
->
-> we don't need this right now. For the initial development of the WiFi
-> AMP, we will use the fact that you can create HCI RAW devices from a
-> driver. These are skipped by BlueZ and only show up in hciconfig. That
-> should be enough for testing.
 
-Thanks Marcel, when do you expect we would need this?
+--=-hc9KoL1bkC3nXwExaaXt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2009-09-22 at 11:18 +0200, Holger Schurig wrote:
+
+> wep_nl80211
+> -----------
+>  0.00000  0.00000: Initializing interface ...
+>  0.03985  0.03985: ##ERROR: nl80211: set_key failed; err=3D-67 Link has b=
+een severed)
+
+Those are expected, and ok.
+
+johannes
+
+--=-hc9KoL1bkC3nXwExaaXt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKucdqAAoJEODzc/N7+QmaYy8P/RAI+5mWfhmhvFBkngWTh10y
+/LlmWpw8uynrDFG/BmVAxHZb0rflm+nw4gh7dwWAn98DNo3/b0MRTFCi8z30SirV
+v/Owk6BRp3GlpueCkM2oOnizsDEPUbn9L823ords4UzflYtW2lnUBC5m3aZcP2wm
+AaSEz5xeF4ITPOepeULlcHwGvHiKSt5VtaIuP/rbHLa5XNdq1yZftbWnOQDPDLKz
+wL9f/qttDYSvhMMICDy4/BrbzZ5JijVC5h/5tEV22KabpIHRBFVQKpqG0vZuWsIT
+/jEsqINL9O60PU5DxY+SF00nm59Nd3VwMZma0KRrbdYUGPe1MCusqLRZO42msf7v
+s/pQUV2k6O6ryADPvQ/ropXGesZ2b/sdv2v0L+IULjHnV+d3j6PPiYdHjsGXrJ3M
+dtORPCuOBo5RiSaHFL6yVT2HeXQ8nCtlf62ekKloY5BvU8s9j6hGjRJ+aki43554
+821WwVOac3aMCoKSc3Kyq3lJDMrfVaMl6HT206J17kdHqmuHQ4TP8tlJpmeD6fBV
+HUKZq4nTM9KxdWWpqKSn/unmLXl4aCK2bSusNqM4IhVqE/wj7JenokGiWrfiQbGO
+dAEYLOW372F3YdbA+pl55wWj1/4HmeZ5oPc0twl6T06liF7a41+etsjxuqJ7ZAnj
+igcNDTeWcjrV6ztUP9dD
+=caNb
+-----END PGP SIGNATURE-----
+
+--=-hc9KoL1bkC3nXwExaaXt--
+
