@@ -1,78 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:34304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594AbZIWHCF (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:40525 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751629AbZIXUIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Sep 2009 03:02:05 -0400
-Subject: Re: BUGLET? cfg80211: .dumpit methods called twice
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Thu, 24 Sep 2009 16:08:35 -0400
+Received: by iwn8 with SMTP id 8so1203468iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 13:08:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <da94abde0909241214y8179cfeoa86aa59346daa9ef@mail.gmail.com>
+References: <20090924180048.14503.9579.stgit@tikku> <20090924180242.14503.11148.stgit@tikku>
+	<43e72e890909241132r2c684de2i9e80537bc3d13c63@mail.gmail.com>
+	<da94abde0909241214y8179cfeoa86aa59346daa9ef@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 24 Sep 2009 13:08:19 -0700
+Message-ID: <43e72e890909241308h47c36f40pe0149412ed5bb080@mail.gmail.com>
+Subject: Re: [PATCH 1/2] cfg80211: add firmware and hardware version to wiphy
+To: Kalle Valo <kalle.valo@iki.fi>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200909220933.24443.hs4233@mail.mn-solutions.de>
-References: <200909220933.24443.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iY9R2yTd8zUnXHx3Bjmo"
-Date: Wed, 23 Sep 2009 09:02:06 +0200
-Message-Id: <1253689326.4458.26.camel@johannes.local>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Sep 24, 2009 at 12:14 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
 
---=-iY9R2yTd8zUnXHx3Bjmo
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> The length is used four time so I would not want to remove it. Maybe
+> rename to CFG80211_FWHW_VERSION_LEN?
 
-On Tue, 2009-09-22 at 09:33 +0200, Holger Schurig wrote:
-> I just noticed that all functions mentioned on .dumpit in=20
-> net/wireless/nl80211.c are actually called twice.
->=20
-> For example, I've added
->=20
-> --- linux-wl.orig/net/wireless/nl80211.c        2009-09-18=20
-> 14:44:28.000000000 +0200
-> +++ linux-wl/net/wireless/nl80211.c     2009-09-18=20
-> 14:45:41.000000000 +0200
-> @@ -2919,6 +2919,8 @@ static int nl80211_trigger_scan(struct s
->         enum ieee80211_band band;
->         size_t ie_len;
->=20
-> +       printk("##HS %s:%d\n", __func__, __LINE__);
-> +
->         if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
->                 return -EINVAL;
->=20
-> and when I now issue one "iw eth1 scan dump" I get two logs of=20
-> this printk in my dmesg.
->=20
-> AFAIK it doesn't cause any harm, but it's not that efficient and=20
-> it might cause harm in the future if any of the .dumpit methods=20
-> has the "right" side-effects.
+Sure.
 
-Umm, that's expected since dumpit() effectively runs until it returns no
-more data.
-
-johannes
-
---=-iY9R2yTd8zUnXHx3Bjmo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKucfrAAoJEODzc/N7+QmajOEP/3kU+mWuL9VHfsG3yf8FJvvB
-0mKA57bdtwpLU06mpXVc7Y6FG5naLjkBBzmrYwLrzmOM4BM/BDlH2I2yy4cCVqKM
-8tYYKAT/rd2ehv6+Qmm1xhKkxKRbHSKJa1W3KzTyyCOe3mNBypigszqWQ++S9VqD
-pJJcGlyui4DvFDn7Hra2nSN2bJWj1vltFi7QsGfx4HfLBweSCwIHtpLSzL7e208O
-RoVY5GN9UX6AWtCkw0Inr7mCPUESa+z7wgq4jbAy9elbkEXK2eOSWmygKj2QmesF
-dhI9PoDWRRteAApYF/nCUyWDkEvWAmzZ8DRI88xmpA8CLJ9ODO0eNBuGajGrIqmw
-8gperSL/mYsvlYpiytacVxBQuVYKlI6BxcDDgOYAvdY+pBIU/Nn6MlFqBCfSKZx+
-ETazl43QGZIOC5jrLWL+/RQm6Mnr6YaOeq4dM95igzGRar532vVbv4m78dsDW/au
-XC48MM+c2AKnhsoyToWINYd9kcBImgNSaU7jtDgio0HHMFK9NmtSenpaddZIH7nZ
-j3ryaZzS5154m2jaZBHO+f4HbMh2pZx239TdxVa6ESmAXy4/CcSsj31RdBNao7DX
-iKDHiruov+DjbvyxdCK5C6imH/Ub4fb6aFHVaSVf8rUTTL18nj0JtFZlmio/wZdM
-gQpKVzHzWDdLyWZxlsHo
-=X0QY
------END PGP SIGNATURE-----
-
---=-iY9R2yTd8zUnXHx3Bjmo--
-
+  Luis
