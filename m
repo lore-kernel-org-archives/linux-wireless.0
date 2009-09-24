@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52508 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190AbZINIhZ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:59813 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbZIXSJf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:37:25 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 07/11] ath9k: move ATH_AMPDU_LIMIT_MAX to hw.h
-Date: Mon, 14 Sep 2009 04:37:24 -0400
-Message-Id: <1252917448-10744-8-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
-References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 24 Sep 2009 14:09:35 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI9PRD010729
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:09:30 +0300
+Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI9Jh9003457
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:09:20 +0300
+From: Kalle Valo <kalle.valo@nokia.com>
+Subject: [PATCH 2/2] iw: print firmware and hardware version
+To: linux-wireless@vger.kernel.org
+Date: Thu, 24 Sep 2009 11:09:25 -0700
+Message-ID: <20090924180925.14692.47279.stgit@tikku>
+In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
+References: <20090924180048.14503.9579.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is used by hw code.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+struct wiphy now contains firmware and hardware version, print that
+information to the user.
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/hw.h    |    2 ++
- 2 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 73c2ac5..f3b5a60 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -189,7 +189,6 @@ void ath_descdma_cleanup(struct ath_softc *sc, struct ath_descdma *dd,
- /* minimum h/w qdepth to be sustained to maximize aggregation */
- #define ATH_AGGR_MIN_QDEPTH        2
- #define ATH_AMPDU_SUBFRAME_DEFAULT 32
--#define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
+ info.c    |   15 +++++++++++++++
+ nl80211.h |    3 +++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/info.c b/info.c
+index 7bca69d..ae3ed54 100644
+--- a/info.c
++++ b/info.c
+@@ -66,6 +66,7 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 	struct nlattr *nl_freq;
+ 	struct nlattr *nl_rate;
+ 	struct nlattr *nl_mode;
++	const char *str;
+ 	int bandidx = 1;
+ 	int rem_band, rem_freq, rem_rate, rem_mode;
+ 	int open;
+@@ -263,6 +264,20 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 			printf("\tRTS threshold: %d\n", rts);
+ 	}
  
- #define IEEE80211_SEQ_SEQ_SHIFT    4
- #define IEEE80211_SEQ_MAX          4096
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e2b6bce..047b5b8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -51,6 +51,8 @@
- #define AT9285_COEX3WIRE_SA_SUBSYSID	0x30aa
- #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
- 
-+#define ATH_AMPDU_LIMIT_MAX        (64 * 1024 - 1)
++	if (tb_msg[NL80211_ATTR_FW_VERSION]) {
++		str = nla_get_string(tb_msg[NL80211_ATTR_FW_VERSION]);
++		if (strlen(str) == 0)
++			str = "<unknown>";
++		printf("\tFirmware version: %s\n", str);
++	}
 +
- /* Register read/write primitives */
- #define REG_WRITE(_ah, _reg, _val) \
- 	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
--- 
-1.6.3.3
++	if (tb_msg[NL80211_ATTR_HW_VERSION]) {
++		str = nla_get_string(tb_msg[NL80211_ATTR_HW_VERSION]);
++		if (strlen(str) == 0)
++			str = "<unknown>";
++		printf("\tHardware version: %s\n", str);
++	}
++
+ 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
+ 		return NL_SKIP;
+ 
+diff --git a/nl80211.h b/nl80211.h
+index a8d71ed..6d6651f 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -714,6 +714,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PID,
+ 
++	NL80211_ATTR_FW_VERSION,
++	NL80211_ATTR_HW_VERSION,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
 
