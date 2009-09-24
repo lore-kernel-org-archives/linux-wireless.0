@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:54857 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757031AbZINUu0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 16:50:26 -0400
-Received: by bwz19 with SMTP id 19so2375200bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 13:50:28 -0700 (PDT)
-Message-ID: <4AAEAC90.7070205@lwfinger.net>
-Date: Mon, 14 Sep 2009 15:50:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:48559 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753100AbZIXVNI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 17:13:08 -0400
+Message-ID: <4ABBE0E6.4090408@gmx.de>
+Date: Thu, 24 Sep 2009 23:13:10 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel oops with 2.6.31-wl
-References: <4AAE4DAA.1010505@lwfinger.net> <1252950017.23427.49.camel@johannes.local> <4AAE8965.4040108@lwfinger.net> <200909142245.52042.mb@bu3sch.de>
-In-Reply-To: <200909142245.52042.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Kalle Valo <kalle.valo@iki.fi>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in
+ wiphy
+References: <20090924180048.14503.9579.stgit@tikku> <20090924180251.14503.64152.stgit@tikku>
+In-Reply-To: <20090924180251.14503.64152.stgit@tikku>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Monday 14 September 2009 20:20:21 Larry Finger wrote:
->> Johannes Berg wrote:
->>> On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
->>>> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
->>>> oops when unloading b43:
->>>> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
->>>> b43_op_config+0x10c/0x36f [b43]
->>> Seems like a b43 problem to me.
->> I had pretty much reached that conclusion. I will need to swap cards
->> to debug as the 4315 won't run on older kernels without a lot of patches.
-> 
-> I can't reproduce here. What sequence of events is needed to trigger this?
+On 09/24/2009 08:02 PM, Kalle Valo wrote:
 
-All I have to do is make a connection, then "sudo modprobe -rv b43"
-while the connection is live. I have not tried shutting the interface
-down before the modprobe. It gets through the "rmmod b43" and the
-"rmmod ssb" and then crashes.
+> +	len = sizeof(wiphy->fw_version);
+> +	snprintf(wiphy->fw_version, len, "%d.%d.%d-%d",
+> +		 priv->fw_version.major, priv->fw_version.minor,
+> +		 priv->fw_version.patch, priv->fw_version.build);
+> +
+> +	len = sizeof(wiphy->hw_version);
+> +	snprintf(wiphy->hw_version, len, "%d", priv->board_type);
+> +
+> +	/* null terminate the strings in case they were truncated */
+> +	wiphy->fw_version[len - 1] = '\0';
+> +	wiphy->hw_version[len - 1] = '\0';
 
-Larry
+This only works as long as sizeof(wiphy->fw_version) == sizeof(wiphy->hw_version) - which is currently the case.
+For sizeof(wiphy->fw_version) < sizeof(wiphy_hw_version) it overwrites memory behind wiphy->fw_version.
+
+IMHO this is more robust against changes in the lengths of the char arrays:
+
++	wiphy->fw_version[sizeof(wiphy->fw_version) - 1] = '\0';
++	wiphy->hw_version[sizeof(wiphy->hw_version) - 1] = '\0';
+
+
+Regards,
+Jörg.
