@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:63767 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705AbZIRV1q convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:40707 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbZIXKVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 17:27:46 -0400
-Received: by ewy2 with SMTP id 2so1682729ewy.17
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 14:27:49 -0700 (PDT)
+	Thu, 24 Sep 2009 06:21:11 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH, v2]: nl80211: report age of scan results
+Date: Thu, 24 Sep 2009 12:21:01 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1253232931.23567.6.camel@johannes.local>
-References: <1253232931.23567.6.camel@johannes.local>
-Date: Fri, 18 Sep 2009 23:27:49 +0200
-Message-ID: <2d0a357f0909181427g6f54fc24ga07aa6d2238e2b5b@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: don't overwrite privacy setting
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ASIC Felix <ic.felix@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909241221.01456.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quick Feedback:
+Linux keeps scan results up to 15 seconds. This can be a problem for fast
+moving clients: they get back stale data. But if the kernel reports the age
+of the BSS items, then user-space can simply weed out old entries by itself.
 
-Fixes also compat-wireless (2009-09-18) built against 2.6.31 with iwl3945.
-ath5k driver on another machine is also OK.
-With yesterday's c-w I had no connection to my AP (WPA2-PSK/CCMP).
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-$ sudo wpa_cli -iwlan0 status
-bssid=$myBSSID
-ssid=$mySSID
-id=0
-pairwise_cipher=CCMP
-group_cipher=CCMP
-key_mgmt=WPA2-PSK
-wpa_state=COMPLETED
-ip_address=$myIPADDR
+---
 
+v2: renamed NL80211_BSS_AGE_MS to NL80211_BSS_SEEN_MS_AGO to underline that
+    it's a relativene time
 
--Sedat
+--- linux-wl.orig/include/linux/nl80211.h
++++ linux-wl/include/linux/nl80211.h
+@@ -1277,6 +1277,7 @@
+  * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe response/beacon
+  *	in unspecified units, scaled to 0..100 (u8)
+  * @NL80211_BSS_STATUS: status, if this BSS is "used"
++ * @NL80211_BSS_SEEN_MS_AGO: age of this BSS entry in ms
+  * @__NL80211_BSS_AFTER_LAST: internal
+  * @NL80211_BSS_MAX: highest BSS attribute
+  */
+@@ -1291,6 +1292,7 @@
+ 	NL80211_BSS_SIGNAL_MBM,
+ 	NL80211_BSS_SIGNAL_UNSPEC,
+ 	NL80211_BSS_STATUS,
++	NL80211_BSS_SEEN_MS_AGO,
+ 
+ 	/* keep last */
+ 	__NL80211_BSS_AFTER_LAST,
+--- linux-wl.orig/net/wireless/nl80211.c
++++ linux-wl/net/wireless/nl80211.c
+@@ -3105,6 +3105,8 @@
+ 		NLA_PUT_U16(msg, NL80211_BSS_BEACON_INTERVAL, res->beacon_interval);
+ 	NLA_PUT_U16(msg, NL80211_BSS_CAPABILITY, res->capability);
+ 	NLA_PUT_U32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq);
++	NLA_PUT_U32(msg, NL80211_BSS_SEEN_MS_AGO,
++		jiffies_to_msecs(jiffies - intbss->ts));
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
 
-On Fri, Sep 18, 2009 at 2:15 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> When cfg80211 is instructed to connect, it always
-> uses the default WEP key for the privacy setting,
-> which clearly is wrong when using wpa_supplicant.
-> Don't overwrite the setting, and rely on it being
-> false when wpa_supplicant is not running, instead
-> set it to true when we have keys.
->
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->
-> --- wireless-testing.orig/net/wireless/wext-sme.c       2009-09-17 17:12:03.000000000 -0700
-> +++ wireless-testing/net/wireless/wext-sme.c    2009-09-17 17:12:53.000000000 -0700
-> @@ -26,11 +26,11 @@ int cfg80211_mgd_wext_connect(struct cfg
->
->        wdev->wext.connect.ie = wdev->wext.ie;
->        wdev->wext.connect.ie_len = wdev->wext.ie_len;
-> -       wdev->wext.connect.privacy = wdev->wext.default_key != -1;
->
->        if (wdev->wext.keys) {
->                wdev->wext.keys->def = wdev->wext.default_key;
->                wdev->wext.keys->defmgmt = wdev->wext.default_mgmt_key;
-> +               wdev->wext.connect.privacy = true;
->        }
->
->        if (!wdev->wext.connect.ssid_len)
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+http://www.holgerschurig.de
