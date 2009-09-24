@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:20197 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757425AbZINWbP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 18:31:15 -0400
-Received: by ey-out-2122.google.com with SMTP id 25so683102eya.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 15:31:18 -0700 (PDT)
-Message-ID: <4AAEC2A5.9030009@lwfinger.net>
-Date: Mon, 14 Sep 2009 17:24:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:35341 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751594AbZIXVeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 17:34:18 -0400
+Message-ID: <4ABBE5DB.5070201@gmx.de>
+Date: Thu, 24 Sep 2009 23:34:19 +0200
+From: Joerg Albert <jal2@gmx.de>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Jari Jaakola <jari.jaakola@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: Re: [PATCH] p54usb: add Zcomax XG-705A usbid
-References: <6c9000d40909141238w2331a975tdaf0952487a3c76@mail.gmail.com> <200909142308.43652.chunkeey@googlemail.com>
-In-Reply-To: <200909142308.43652.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Malte Gell <malte.gell@gmx.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ar9170 makes machine hang when shut down
+References: <200909242155.19485.malte.gell@gmx.de>
+In-Reply-To: <200909242155.19485.malte.gell@gmx.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> This patch adds a new usbid for Zcomax XG-705A to the device table.
-> 
-> Cc: stable@kernel.org
-> Reported-by: Jari Jaakola <jari.jaakola@gmail.com>
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-> index e44460f..17e1995 100644
-> --- a/drivers/net/wireless/p54/p54usb.c
-> +++ b/drivers/net/wireless/p54/p54usb.c
-> @@ -67,6 +67,7 @@ static struct usb_device_id p54u_table[] __devinitdata = {
->  	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
->  	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
->  	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
-> +	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
->  	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
->  	{USB_DEVICE(0x124a, 0x4025)},	/* IOGear GWU513 (GW3887IK chip) */
->  	{USB_DEVICE(0x1260, 0xee22)},	/* SMC 2862W-G version 2 */
-> --
+On 09/24/2009 09:55 PM, Malte Gell wrote:
 
-ack
+> I use the compat 2.6.30 and the ar9170 driver for my Netgear WN111 USB stick. 
+> I use the packages from
+> http://download.opensuse.org/repositories/driver:/wireless/11.1-update/i586/
+> for openSUSE 11.1.
+> 
+> When I shutdown my machine, it hangs after the last messages "system now 
+> rebooting" or similar.
+> 
+> Does it make sense to use "rmmod --force ar9170" to force removing that module 
+> before shutting down?
+
+Why are you sure that the hang is caused by the ar9170 driver? 
+
+The vendor driver is called arusb_lnx, the new one ar9170usb
+
+If you only use the packages from the above URL and haven't compile compat-wireless yourself,
+chances are that you use the vendor driver. You may check the loaded module list:
+	lsmod
+and try to remove the module:
+	rmmod arusb_lnx
+before shutting down.
+If this fails, try to close the corresponding netdev first:
+	 ifconfig X down
+with X = ath0 or wlan0 (see the output of "iwconfig").
+
+Needing "--force" for rmmod is IMHO a bug in the driver.
+
+Regards,
+Jörg.
+
