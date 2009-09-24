@@ -1,140 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44848 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506AbZIRJdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:33:35 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:33:40 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from static-220-247-10-204.b-man.svips.gol.ne.jp ([220.247.10.204]:51168
+	"EHLO smtp.kamineko.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbZIXWt3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 18:49:29 -0400
+Date: Fri, 25 Sep 2009 07:38:06 +0900
+From: Mattia Dongili <malattia@linux.it>
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Norbert Preining <preining@logic.at>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Almer S. Tigelaar" <almer@gnome.org>,
+	Matthias Welwarsky <matze@welwarsky.de>
+Subject: Re: [PATCH] sony-laptop: check for rfkill hard block at load time
+Message-ID: <20090924223805.GA29169@kamineko.org>
+References: <20090924130231.GU21590@gamma.logic.tuwien.ac.at>
+ <1253801252.3868.108.camel@johannes.local>
+ <4ABB89B2.8070302@tuffmail.co.uk>
+ <1253804713.3868.168.camel@johannes.local>
+ <4ABB8C5E.6070402@tuffmail.co.uk>
+ <1253813371.3868.313.camel@johannes.local>
+ <4ABBC54C.5010103@tuffmail.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21494.461882.467644@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:03:42 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH/REVIEW 1/9] ath9k: Add Calibration checks
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4ABBC54C.5010103@tuffmail.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vivek Natarajan <vnatarajan@atheros.com>
+On Thu, Sep 24, 2009 at 08:15:24PM +0100, Alan Jenkins wrote:
+> "I recently (on a flight) I found out that when I boot with the hard-switch
+> activated, so turning off all wireless activity on my laptop, the state
+> is not correctly announced in /dev/rfkill (reading it with rfkill command,
+> or my own gnome applet)...
+> 
+> After turning off and on again the hard-switch the events were right."
+> 
+> We can fix this by querying the firmware at load time and calling
+> rfkill_set_hw_state().
 
-* Prevent divide-by-zero errors in IQ Calibration.
-* Do not run temperature compensation if initPDADC or currPDADC is zero.
-* Also, introduce a separate function for handling OLC for AR9287.
+Is it worth trying to get this into a stable release?
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |   78 ++++++++++++++++++++-----------
- 1 files changed, 50 insertions(+), 28 deletions(-)
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> Tested-by: Norbert Preining <preining@logic.at>
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 36c5f89..9c46b54 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -403,7 +403,8 @@ static void ath9k_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 		iCoffDenom = (powerMeasI / 2 + powerMeasQ / 2) / 128;
- 		qCoffDenom = powerMeasQ / 64;
- 
--		if (powerMeasQ != 0) {
-+		if ((powerMeasQ != 0) && (iCoffDenom != 0) &&
-+		    (qCoffDenom != 0)) {
- 			iCoff = iqCorrMeas / iCoffDenom;
- 			qCoff = powerMeasI / qCoffDenom - 64;
- 			ath_print(common, ATH_DBG_CALIBRATE,
-@@ -746,44 +747,65 @@ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
- 	return nf;
- }
- 
--static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+static void ath9k_olc_temp_compensation_9287(struct ath_hw *ah)
- {
--	u32 rddata, i;
--	int delta, currPDADC, regval, slope;
-+	u32 rddata;
-+	int32_t delta, currPDADC, slope;
- 
- 	rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
- 	currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
- 
-+	if (ah->initPDADC == 0 || currPDADC == 0) {
-+		/*
-+		 * Zero value indicates that no frames have been transmitted yet,
-+		 * can't do temperature compensation until frames are transmitted.
-+		 */
-+		return;
-+	} else {
-+		slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
-+
-+		if (slope == 0) { /* to avoid divide by zero case */
-+			delta = 0;
-+		} else {
-+			delta = ((currPDADC - ah->initPDADC)*4) / slope;
-+		}
-+		REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
-+			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
-+		REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
-+			      AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
-+	}
-+}
-+
-+static void ath9k_olc_temp_compensation(struct ath_hw *ah)
-+{
-+	u32 rddata, i;
-+	int delta, currPDADC, regval;
- 
- 	if (OLC_FOR_AR9287_10_LATER) {
-+		ath9k_olc_temp_compensation_9287(ah);
-+	} else {
-+		rddata = REG_READ(ah, AR_PHY_TX_PWRCTRL4);
-+		currPDADC = MS(rddata, AR_PHY_TX_PWRCTRL_PD_AVG_OUT);
-+
- 		if (ah->initPDADC == 0 || currPDADC == 0) {
- 			return;
- 		} else {
--			slope = ah->eep_ops->get_eeprom(ah, EEP_TEMPSENSE_SLOPE);
--			if (slope == 0)
--				delta = 0;
-+			if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
-+				delta = (currPDADC - ah->initPDADC + 4) / 8;
- 			else
--				delta = ((currPDADC - ah->initPDADC)*4) / slope;
--			REG_RMW_FIELD(ah, AR_PHY_CH0_TX_PWRCTRL11,
--					AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
--			REG_RMW_FIELD(ah, AR_PHY_CH1_TX_PWRCTRL11,
--					AR_PHY_TX_PWRCTRL_OLPC_TEMP_COMP, delta);
--		}
--	} else {
--		if (ah->eep_ops->get_eeprom(ah, EEP_DAC_HPWR_5G))
--			delta = (currPDADC - ah->initPDADC + 4) / 8;
--		else
--			delta = (currPDADC - ah->initPDADC + 5) / 10;
--
--		if (delta != ah->PDADCdelta) {
--			ah->PDADCdelta = delta;
--			for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
--				regval = ah->originalGain[i] - delta;
--				if (regval < 0)
--					regval = 0;
--
--				REG_RMW_FIELD(ah, AR_PHY_TX_GAIN_TBL1 + i * 4,
--						AR_PHY_TX_GAIN, regval);
-+				delta = (currPDADC - ah->initPDADC + 5) / 10;
-+
-+			if (delta != ah->PDADCdelta) {
-+				ah->PDADCdelta = delta;
-+				for (i = 1; i < AR9280_TX_GAIN_TABLE_SIZE; i++) {
-+					regval = ah->originalGain[i] - delta;
-+					if (regval < 0)
-+						regval = 0;
-+
-+					REG_RMW_FIELD(ah,
-+						      AR_PHY_TX_GAIN_TBL1 + i * 4,
-+						      AR_PHY_TX_GAIN, regval);
-+				}
- 			}
- 		}
- 	}
+Acked-by: Mattia Dongili <malattia@linux.it>
+
+> ---
+>  drivers/platform/x86/sony-laptop.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
+> index dafaa4a..a234a9d 100644
+> --- a/drivers/platform/x86/sony-laptop.c
+> +++ b/drivers/platform/x86/sony-laptop.c
+> @@ -1081,6 +1081,8 @@ static int sony_nc_setup_rfkill(struct acpi_device *device,
+>  	struct rfkill *rfk;
+>  	enum rfkill_type type;
+>  	const char *name;
+> +	int result;
+> +	bool hwblock;
+>  
+>  	switch (nc_type) {
+>  	case SONY_WIFI:
+> @@ -1108,6 +1110,10 @@ static int sony_nc_setup_rfkill(struct acpi_device *device,
+>  	if (!rfk)
+>  		return -ENOMEM;
+>  
+> +	sony_call_snc_handle(0x124, 0x200, &result);
+> +	hwblock = !(result & 0x1);
+> +	rfkill_set_hw_state(rfk, hwblock);
+> +
+>  	err = rfkill_register(rfk);
+>  	if (err) {
+>  		rfkill_destroy(rfk);
+> -- 
+> 1.6.3.2
+> 
+> 
+> 
 -- 
-1.6.4.4
-
+mattia
+:wq!
