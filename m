@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50992 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754203AbZI3OdU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 10:33:20 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Oliver Hartkopp <socketcan@hartkopp.net>
-Subject: Re: mac80211: NOHZ: local_softirq_pending 08
-Date: Wed, 30 Sep 2009 16:33:02 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
-References: <200909111648.50902.mb@bu3sch.de> <20090929192928.GF2678@tuxdriver.com> <4AC3475C.7000403@hartkopp.net>
-In-Reply-To: <4AC3475C.7000403@hartkopp.net>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:32902 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591AbZIXShd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 14:37:33 -0400
+Received: by iwn8 with SMTP id 8so1146202iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 11:37:37 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200909301633.04376.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+In-Reply-To: <4ABBBB8C.8080401@hauke-m.de>
+References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
+	<4ABBBB8C.8080401@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 24 Sep 2009 11:37:17 -0700
+Message-ID: <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
+Subject: Re: A problem loading ssb module
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Tim Gardner <tim.gardner@canonical.com>
+Cc: Bryan Wu <bryan.wu@canonical.com>,
+	Mauro Di Domenico <didomauro@tiscali.it>,
+	bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 30 September 2009 13:56:12 Oliver Hartkopp wrote:
-> John W. Linville wrote:
-> > On Sat, Sep 12, 2009 at 06:41:12PM +0200, Oliver Hartkopp wrote:
-> > 
-> >> i cooked a patch that introduces netif_rx_ti() and fixes up the problems in
-> >> mac80211 and the CAN subsystem.
-> > 
-> > Oliver,
-> > 
-> > Are you going to send this patch to Dave?  If you want me to carry
-> > it instead, please resend it with a proper changelog including a
-> > Signed-off-by line.  For that matter, Dave will most certainly want
-> > that as well...
-> 
-> Hello John,
-> 
-> as i wrote here
-> 
-> http://marc.info/?l=linux-netdev&m=125277885910179&w=2
-> 
-> there are currently only three occurrences of checks that use netif_rx() and
-> netif_rx_ni() depending on in_interrupt().
-> 
-> And regarding the suggested fix from Michael, that checked every(!) netif_rx()
-> whether it is in interrupt or not, i was unsure if a netif_tx_ti() would make
-> sense for only three cases?!?
-> 
-> If you think it makes sense, i can post a patch for that ... but:
-> 
-> Indeed it costs some additional investigation to prove whether netif_rx() or
-> netif_rx_ni() should be used in each case. But IMHO this has to be done before
-> providing a pump-gun function that solves the problem without thinking if we
-> are in irq-context or not. I want to avoid that people are using netif_rx_ti()
-> as some kind of default ...
-> 
-> I don't know how expensive in_interrupt() is, but it IMO should be avoided
-> when the context for a code section can be determined in another way.
+On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Bryan Wu wrote:
+>> Mauro Di Domenico wrote:
+>>> Hi,
+>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
+>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
+>>> machine with kernel version 2.6.30-6.
+>>>
+>>> During the boot I experience this problem:
+>>>
+>>> $ dmesg|egrep "b43|ssb"
+>>>
+>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
+>>> low) -> IRQ 17
+>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
+>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
+>>> 0000:06:00.0
+>>> [    6.968981] b43: disagrees about version of symbol
+>>> ssb_device_is_enabled
+>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
+>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
+>>> [    6.969407] b43: disagrees about version of symbol
+>>> ssb_pcicore_dev_irqvecs_enable
+>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
+>>> .....
+>>> ....
+>>> ...
+>>>
+>>
+>> I faced the exactly same issue as Mauro did. +1 from me, but currently have
+>> no time to take a deeper look.
+>>
+>> Thanks
+> Hi,
+>
+> I had the same problem with the ssb module and compat-wireless in ubuntu
+> 9.04. The problem is that the ssb module is integrated into the
+> initramfs image. The version out of the initramfs image is loaded on
+> startup and not the version of compat-wireless. Running "sudo
+> update-initramfs -u" after installing compat-wireless and restaing the
+> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
+> form default initramfs image or compat-wireless should update the image
+> with the install command. At least the compat-wireless documentation
+> needs an update.
+>
+> Hauke
+>
+> (adding Luis and linux-wireless list)
 
-What if we just get the fix merged and discuss later whether it's worth to optimize a picosecond or not??
-My patch fixes the _bug_. You can merge a more "efficient" fix later that saves one or two CPU cycles.
+Tim, do you guys update the initramfs upon installation of lbm? If a
+user does not use lbm and uses compat-wireless I suppose we need to do
+something similar.
 
--- 
-Greetings, Michael.
+  Luis
