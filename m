@@ -1,146 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp111.mail.ukl.yahoo.com ([77.238.184.49]:38139 "HELO
-	smtp111.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752382AbZIKJyL (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:49092 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbZIXI4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 05:54:11 -0400
-From: Albert Herranz <albert_herranz@yahoo.es>
-To: akpm@linux-foundation.org, pierre@ossman.eu,
-	linux-mmc@vger.kernel.org
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	Albert Herranz <albert_herranz@yahoo.es>
-Subject: [PATCH v2] sdio: recognize io card without powercycle
-Date: Fri, 11 Sep 2009 11:54:11 +0200
-Message-Id: <1252662852-20548-1-git-send-email-albert_herranz@yahoo.es>
+	Thu, 24 Sep 2009 04:56:04 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: John Linville <linville@tuxdriver.com>
+Subject: [PATCH]: nl80211: report age of scan results
+Date: Thu, 24 Sep 2009 10:55:51 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909241055.51604.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SDIO Simplified Specification V2.00 states that it is strongly recommended
-that the host executes either a power reset or issues a CMD52 (I/O Reset) to
-re-initialize an I/O only card or the I/O portion of a combo card.
-Additionally, the CMD52 must be issued first because it cannot be issued
-after a CMD0.
+Linux keeps scan results up to 15 seconds. This can be a problem for fast
+moving client: they get back stale data. But if the kernel reports the
+age of some BSS, then user-space can simply weed out old entries.
 
-With this patch the Nintendo Wii SDIO-based WLAN card is detected after a
-system reset, without requiring a complete system powercycle.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
 ---
-v1
-- reworded commit message
-- CC'd akpm as suggested by mb
 
-v2
-- renamed sdio_go_idle to sdio_reset as suggested by Pierre Ossman
+One question was if I should specify the age in ms, or if I should specify
+an absolute time. In the end I thought age in ms is better suited.
 
- drivers/mmc/core/core.c     |    1 +
- drivers/mmc/core/sdio_ops.c |   36 ++++++++++++++++++++++++++++++------
- drivers/mmc/core/sdio_ops.h |    1 +
- 3 files changed, 32 insertions(+), 6 deletions(-)
+If an absolute time would sent with every BSS item, then user-space would
+need an additional call to time() to find out which BSS items are too old.
+Now it can use the milliseconds directly.
 
-diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-index 2649117..dd746d9 100644
---- a/drivers/mmc/core/core.c
-+++ b/drivers/mmc/core/core.c
-@@ -868,6 +868,7 @@ void mmc_rescan(struct work_struct *work)
- 		mmc_claim_host(host);
+The case there user-space wants an absolute time ("At what hour did I get
+the last probe response from this AP?") seems to be a more theoretical
+problem. But if info is wanted, *THEN* you can call time() and substract the
+reported bss-item-age from it.
+
+
+Index: linux-wl/include/linux/nl80211.h
+===================================================================
+--- linux-wl.orig/include/linux/nl80211.h	2009-09-24 09:19:03.000000000 +0200
++++ linux-wl/include/linux/nl80211.h	2009-09-24 09:19:42.000000000 +0200
+@@ -1277,6 +1277,7 @@ enum nl80211_channel_type {
+  * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe response/beacon
+  *	in unspecified units, scaled to 0..100 (u8)
+  * @NL80211_BSS_STATUS: status, if this BSS is "used"
++ * @NL80211_BSS_AGE_MS: age of this BSS entry in ms
+  * @__NL80211_BSS_AFTER_LAST: internal
+  * @NL80211_BSS_MAX: highest BSS attribute
+  */
+@@ -1291,6 +1292,7 @@ enum nl80211_bss {
+ 	NL80211_BSS_SIGNAL_MBM,
+ 	NL80211_BSS_SIGNAL_UNSPEC,
+ 	NL80211_BSS_STATUS,
++	NL80211_BSS_AGE_MS,
  
- 		mmc_power_up(host);
-+		sdio_reset(host);
- 		mmc_go_idle(host);
+ 	/* keep last */
+ 	__NL80211_BSS_AFTER_LAST,
+Index: linux-wl/net/wireless/nl80211.c
+===================================================================
+--- linux-wl.orig/net/wireless/nl80211.c	2009-09-24 09:19:03.000000000 +0200
++++ linux-wl/net/wireless/nl80211.c	2009-09-24 09:37:40.000000000 +0200
+@@ -3105,6 +3105,7 @@ static int nl80211_send_bss(struct sk_bu
+ 		NLA_PUT_U16(msg, NL80211_BSS_BEACON_INTERVAL, res->beacon_interval);
+ 	NLA_PUT_U16(msg, NL80211_BSS_CAPABILITY, res->capability);
+ 	NLA_PUT_U32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq);
++	NLA_PUT_U32(msg, NL80211_BSS_AGE_MS, jiffies_to_msecs(jiffies - intbss->ts));
  
- 		mmc_send_if_cond(host, host->ocr_avail);
-diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
-index 4eb7825..dea36d9 100644
---- a/drivers/mmc/core/sdio_ops.c
-+++ b/drivers/mmc/core/sdio_ops.c
-@@ -67,13 +67,13 @@ int mmc_send_io_op_cond(struct mmc_host *host, u32 ocr, u32 *rocr)
- 	return err;
- }
- 
--int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
--	unsigned addr, u8 in, u8* out)
-+static int mmc_io_rw_direct_host(struct mmc_host *host, int write, unsigned fn,
-+	unsigned addr, u8 in, u8 *out)
- {
- 	struct mmc_command cmd;
- 	int err;
- 
--	BUG_ON(!card);
-+	BUG_ON(!host);
- 	BUG_ON(fn > 7);
- 
- 	/* sanity check */
-@@ -90,11 +90,11 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
- 	cmd.arg |= in;
- 	cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_AC;
- 
--	err = mmc_wait_for_cmd(card->host, &cmd, 0);
-+	err = mmc_wait_for_cmd(host, &cmd, 0);
- 	if (err)
- 		return err;
- 
--	if (mmc_host_is_spi(card->host)) {
-+	if (mmc_host_is_spi(host)) {
- 		/* host driver already reported errors */
- 	} else {
- 		if (cmd.resp[0] & R5_ERROR)
-@@ -106,7 +106,7 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
- 	}
- 
- 	if (out) {
--		if (mmc_host_is_spi(card->host))
-+		if (mmc_host_is_spi(host))
- 			*out = (cmd.resp[0] >> 8) & 0xFF;
- 		else
- 			*out = cmd.resp[0] & 0xFF;
-@@ -115,6 +115,13 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
- 	return 0;
- }
- 
-+int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
-+	unsigned addr, u8 in, u8 *out)
-+{
-+	BUG_ON(!card);
-+	return mmc_io_rw_direct_host(card->host, write, fn, addr, in, out);
-+}
-+
- int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, unsigned blksz)
- {
-@@ -182,3 +189,20 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	return 0;
- }
- 
-+int sdio_reset(struct mmc_host *host)
-+{
-+	int ret;
-+	u8 abort;
-+
-+	/* SDIO Simplified Specification V2.0, 4.4 Reset for SDIO */
-+
-+	ret = mmc_io_rw_direct_host(host, 0, 0, SDIO_CCCR_ABORT, 0, &abort);
-+	if (ret)
-+		abort = 0x08;
-+	else
-+		abort |= 0x08;
-+
-+	ret = mmc_io_rw_direct_host(host, 1, 0, SDIO_CCCR_ABORT, abort, NULL);
-+	return ret;
-+}
-+
-diff --git a/drivers/mmc/core/sdio_ops.h b/drivers/mmc/core/sdio_ops.h
-index e2e74b0..12a4d3a 100644
---- a/drivers/mmc/core/sdio_ops.h
-+++ b/drivers/mmc/core/sdio_ops.h
-@@ -17,6 +17,7 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
- 	unsigned addr, u8 in, u8* out);
- int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, unsigned blksz);
-+int sdio_reset(struct mmc_host *host);
- 
- #endif
- 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+
 -- 
-1.6.0.4
-
+http://www.holgerschurig.de
