@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:40338 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755181AbZIJHKQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 03:10:16 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/7] ath9k/atheros: ps/bssid mask cleanups
-Date: Thu, 10 Sep 2009 03:10:12 -0400
-Message-Id: <1252566619-30390-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga02.intel.com ([134.134.136.20]:24828 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752037AbZIXIA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 04:00:58 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: davem@davemloft.net, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH 3/3 V2] i2400m-sdio: select IWMC3200TOP in Kconfig
+Date: Thu, 24 Sep 2009 11:00:56 +0300
+Message-Id: <1253779256-17058-1-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's my second series on cleanups to fixate driver core
-changes in the right place. In this series I stuff power save
-helpers which use the driver for locking.
+i2400m-sdio requires iwmc3200top for its operation
 
-Next thing I'm looking at is the usage of sc->bssidmask and
-sc->curbssid even on hw.c on ath9k -- we should not access the
-sc on hw code, anyway, while reviewing that I noticed
-ath5k/ar9170 could benefit from a few changes already in place
-on ath9k.
+create separate config option to separate 3200 specifics
+from eventual further wimax sdio HW.
 
-It seems the last thing we'll need to address is read/write ops.
-I've considered defining read/write ops on the ath common
-structure, or at the very least on ath_hw, upon initialization
-then the driver core would set this. ath9k would use ath9k_iowrite32()
-and ath9k_ioread32() would ath9k_htc would define its own. REG_READ
-and REG_WRITE could then also point to the common->ops->read / write
-or if we don't want to take that approach the ath_hw->rw->read / write.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+V2: create separate config option as discussed with Inaky
 
-Other suggestions are welcomed.
+ drivers/net/wimax/i2400m/Kconfig |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-A minor thing I did notice is we use ieee80211_hw on ath9k hw.c
-for configuration -- this is fine but I realized virtual wiphys
-are not using their own hw conf, but the primary wiphy's.
+diff --git a/drivers/net/wimax/i2400m/Kconfig b/drivers/net/wimax/i2400m/Kconfig
+index d623b3d..9723c5c 100644
+--- a/drivers/net/wimax/i2400m/Kconfig
++++ b/drivers/net/wimax/i2400m/Kconfig
+@@ -31,6 +31,15 @@ config WIMAX_I2400M_SDIO
+ 
+ 	  If unsure, it is safe to select M (module).
+ 
++config WIMAX_IWMC3200_SDIO
++	bool "Intel Wireless Multicom WiMAX Connection 3200 over SDIO"
++	depends on WIMAX_I2400M_SDIO
++	select IWMC3200TOP
++	help
++	  Select if you have a device based on the Intel Multicom WiMAX
++          Connection 3200 over SDIO.
++ 
++
+ config WIMAX_I2400M_DEBUG_LEVEL
+ 	int "WiMAX i2400m debug level"
+ 	depends on WIMAX_I2400M
+-- 
+1.6.0.6
 
-Luis R. Rodriguez (7):
-  ath9k: move ps helpers onto core driver when reseting tsf
-  ath9k: move ath9k_ps_wakeup() and ath9k_ps_restore() to main.c
-  ath9k: avoid usage of ath9k_hw_setpower() on hw.c
-  ath9k: move ath9k_hw_setpower() to main.c
-  ath9k: rename driver core and hw power save helpers
-  ath: move ath_bcast_mac to common header
-  atheros: use get_unaligned_le*() for bssid mask setting
+---------------------------------------------------------------------
+Intel Israel (74) Limited
 
- drivers/net/wireless/ath/ar9170/mac.c   |   10 +++---
- drivers/net/wireless/ath/ath.h          |    3 ++
- drivers/net/wireless/ath/ath5k/ath5k.h  |    7 ----
- drivers/net/wireless/ath/ath5k/attach.c |    2 +-
- drivers/net/wireless/ath/ath5k/base.c   |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c    |   38 +++++++++++--------
- drivers/net/wireless/ath/ath5k/reset.c  |    6 ++-
- drivers/net/wireless/ath/ath9k/ath9k.h  |    2 -
- drivers/net/wireless/ath/ath9k/beacon.c |   17 ++++++++-
- drivers/net/wireless/ath/ath9k/hw.c     |   50 +-------------------------
- drivers/net/wireless/ath/ath9k/hw.h     |    5 ++-
- drivers/net/wireless/ath/ath9k/main.c   |   59 ++++++++++++++++++++++++++++---
- 12 files changed, 109 insertions(+), 92 deletions(-)
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
