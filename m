@@ -1,59 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21617 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760149AbZIQDyT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 23:54:19 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:54:23 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from smtp.nokia.com ([192.100.105.134]:56702 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbZIXSCt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 14:02:49 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI1YAF014003
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 13:02:03 -0500
+Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
+	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI2eM5011497
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:02:41 +0300
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 1/2] cfg80211: add firmware and hardware version to wiphy
+To: linux-wireless@vger.kernel.org
+Date: Thu, 24 Sep 2009 11:02:42 -0700
+Message-ID: <20090924180242.14503.11148.stgit@tikku>
+In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
+References: <20090924180048.14503.9579.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19121.45808.620985.302306@gargle.gargle.HOWL>
-Date: Thu, 17 Sep 2009 09:24:24 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/12] ath9k: Set default noise floor value for AR9287
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vivek Natarajan <vnatarajan@atheros.com>
+From: Kalle Valo <kalle.valo@nokia.com>
 
-The default noise floor was never initialized for
-AR9287.This patch helps in reporting the correct
-RSSI for this version of chipset.
+It's useful to provide firmware and hardware version to user space and have a
+generic interface to retrieve them. Users can provide the version information
+in bug reports etc.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Add fields for firmware and hardware version to struct wiphy and return
+them to user space in NL80211_CMD_GET_WIPHY reply.
+
+Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c |    2 ++
- drivers/net/wireless/ath/ath9k/calib.h |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 3234995..439f2c7 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -697,6 +697,8 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah)
- 		noise_floor = AR_PHY_CCA_MAX_AR9280_GOOD_VALUE;
- 	else if (AR_SREV_9285(ah))
- 		noise_floor = AR_PHY_CCA_MAX_AR9285_GOOD_VALUE;
-+	else if (AR_SREV_9287(ah))
-+		noise_floor = AR_PHY_CCA_MAX_AR9287_GOOD_VALUE;
- 	else
- 		noise_floor = AR_PHY_CCA_MAX_AR5416_GOOD_VALUE;
+ include/linux/nl80211.h |    3 +++
+ include/net/cfg80211.h  |    5 +++++
+ net/wireless/nl80211.c  |   11 +++++++++++
+ 3 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index a8d71ed..6d6651f 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -714,6 +714,9 @@ enum nl80211_attrs {
  
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 019bcbb..9028ab1 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -28,6 +28,7 @@ extern const struct ath9k_percal_data adc_init_dc_cal;
- #define AR_PHY_CCA_MAX_AR5416_GOOD_VALUE	-85
- #define AR_PHY_CCA_MAX_AR9280_GOOD_VALUE	-112
- #define AR_PHY_CCA_MAX_AR9285_GOOD_VALUE	-118
-+#define AR_PHY_CCA_MAX_AR9287_GOOD_VALUE	-118
- #define AR_PHY_CCA_MAX_HIGH_VALUE      		-62
- #define AR_PHY_CCA_MIN_BAD_VALUE       		-140
- #define AR_PHY_CCA_FILTERWINDOW_LENGTH_INIT     3
--- 
-1.6.4.3
+ 	NL80211_ATTR_PID,
+ 
++	NL80211_ATTR_FW_VERSION,
++	NL80211_ATTR_HW_VERSION,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3d874c6..de3da19 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1070,6 +1070,8 @@ struct cfg80211_ops {
+  * and registration/helper functions
+  */
+ 
++#define CFG80211_VERSION_LEN 32
++
+ /**
+  * struct wiphy - wireless hardware description
+  * @idx: the wiphy index assigned to this item
+@@ -1142,6 +1144,9 @@ struct wiphy {
+ 	u32 frag_threshold;
+ 	u32 rts_threshold;
+ 
++	char fw_version[CFG80211_VERSION_LEN];
++	char hw_version[CFG80211_VERSION_LEN];
++
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+ 	 * know whether it points to a wiphy your driver has registered
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index eddab09..9e2214e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -138,6 +138,14 @@ static struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] __read_mostly = {
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
++	[NL80211_ATTR_FW_VERSION] = {
++		.type = NLA_NUL_STRING,
++		.len = CFG80211_VERSION_LEN,
++	},
++	[NL80211_ATTR_HW_VERSION] = {
++		.type = NLA_NUL_STRING,
++		.len = CFG80211_VERSION_LEN,
++	},
+ };
+ 
+ /* policy for the attributes */
+@@ -420,6 +428,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_RTS_THRESHOLD,
+ 		    dev->wiphy.rts_threshold);
+ 
++	NLA_PUT_STRING(msg, NL80211_ATTR_FW_VERSION, dev->wiphy.fw_version);
++	NLA_PUT_STRING(msg, NL80211_ATTR_HW_VERSION, dev->wiphy.hw_version);
++
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
+ 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
 
