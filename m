@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43354 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302AbZI1J3Y (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:62355 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050AbZIXJAO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 05:29:24 -0400
-Subject: Re: [PATCH 1/2] net: introduce NETDEV_POST_INIT notifier
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev <netdev@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hugh Dickins <hugh.dickins@tiscali.co.uk>,
-	Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1254126089.6583.18.camel@johannes.local>
-References: <1254126089.6583.18.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0uyeY+YOv0XPyBMT/sTl"
-Date: Mon, 28 Sep 2009 11:29:23 +0200
-Message-Id: <1254130163.6583.20.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 24 Sep 2009 05:00:14 -0400
+Received: by iwn8 with SMTP id 8so791958iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 02:00:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200909241055.51604.hs4233@mail.mn-solutions.de>
+References: <200909241055.51604.hs4233@mail.mn-solutions.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 24 Sep 2009 01:59:57 -0700
+Message-ID: <43e72e890909240159x6d733e1bj9c529f6fe77b32f5@mail.gmail.com>
+Subject: Re: [PATCH]: nl80211: report age of scan results
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-0uyeY+YOv0XPyBMT/sTl
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, 2009-09-28 at 10:21 +0200, Johannes Berg wrote:
-> For various purposes including a wireless extensions
-> bugfix, we need to hook into the netdev creation before
-> before netdev_register_kobject(). This will also ease
-> doing the dev type assignment that Marcel was working
-> on for cfg80211 drivers w/o touching them all.
->=20
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+On Thu, Sep 24, 2009 at 1:55 AM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+> Linux keeps scan results up to 15 seconds. This can be a problem for fast
+> moving client: they get back stale data. But if the kernel reports the
+> age of some BSS, then user-space can simply weed out old entries.
+>
+> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
+>
 > ---
-> I decided that it doesn't make a lot of sense to be after ndo_init but
-> before the other name/... checks.
+>
+> One question was if I should specify the age in ms, or if I should specify
+> an absolute time. In the end I thought age in ms is better suited.
+>
+> If an absolute time would sent with every BSS item, then user-space would
+> need an additional call to time() to find out which BSS items are too old.
+> Now it can use the milliseconds directly.
+>
+> The case there user-space wants an absolute time ("At what hour did I get
+> the last probe response from this AP?") seems to be a more theoretical
+> problem. But if info is wanted, *THEN* you can call time() and substract the
+> reported bss-item-age from it.
+>
+>
+> Index: linux-wl/include/linux/nl80211.h
+> ===================================================================
+> --- linux-wl.orig/include/linux/nl80211.h       2009-09-24 09:19:03.000000000 +0200
+> +++ linux-wl/include/linux/nl80211.h    2009-09-24 09:19:42.000000000 +0200
+> @@ -1277,6 +1277,7 @@ enum nl80211_channel_type {
+>  * @NL80211_BSS_SIGNAL_UNSPEC: signal strength of the probe response/beacon
+>  *     in unspecified units, scaled to 0..100 (u8)
+>  * @NL80211_BSS_STATUS: status, if this BSS is "used"
+> + * @NL80211_BSS_AGE_MS: age of this BSS entry in ms
+>  * @__NL80211_BSS_AFTER_LAST: internal
+>  * @NL80211_BSS_MAX: highest BSS attribute
+>  */
+> @@ -1291,6 +1292,7 @@ enum nl80211_bss {
+>        NL80211_BSS_SIGNAL_MBM,
+>        NL80211_BSS_SIGNAL_UNSPEC,
+>        NL80211_BSS_STATUS,
+> +       NL80211_BSS_AGE_MS,
 
-Ignore this patch please, I have something better. Marcel, feel free to
-pick this up once you continue working on your devtype thing.
+Wil want to #define NL80211_BSS_AGE_MS NL80211_BSS_AGE_MS as well so
+userspace apps can ifdef around that feature to know if its supported.
 
-johannes
-
---=-0uyeY+YOv0XPyBMT/sTl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKwIHwAAoJEODzc/N7+QmamzoP/R531Auz0xfIDvWzc/fnpZO7
-b4NbXTCFNpHnJAKWz96s0n/WEsvODnUKZsDq3T0Z63vOQgax3yeJFAkjzJIPDVOS
-RRLKZQxC3InC/VczSV2ethb0dbkcZcfcW64t9fu+zV1EQW0y8VvTfqvJMDnTCcRn
-nfqIc08DcQ3bJ/LPm7DErGtbF2CJ86a31gnCLrwFhhuKIqhP0+il0o1G2n7WzbCt
-HkX67a1owek/ZS+gq2lHc9xxvXwEPZz527lkfMrBLOzifYSgKupn3rL6ACr8e8er
-y++CPzFC7q3vnNYHFvTCwDaJRxtINP5mWBHYFAMBcG1EeecyUFwUPrdxeXGAISUN
-qxaITEykozakP0lo70FZFTORClfnw0yCY+jCUt9rKenDfCe60joDHbK/fHVfyzeQ
-CslRT4CsSW+Q3/B6zRXoYVekYgKwGKrtfPwhC1LKVr6ALz0ksUo6plgf/6HPk2aD
-Gk369WU+delYdkoVSjyLIdIsUmQ19aCUhoVkvU2czcz0qgFlpA5nQIzHRsw0l8oM
-aZjDGopRwOCPHNLgWqudI5rO7Wio21Bqc2EiZUDevrnvDoSvZEiTLhTqJQAxJyYI
-1NnqMVpln2iTZKqrjAmgKuOP7/uPiA6lfMTNkO3LACp/FJD93LjrbAwJ7lLV6ieb
-0/61UB2mP5vY7rEkekyb
-=escH
------END PGP SIGNATURE-----
-
---=-0uyeY+YOv0XPyBMT/sTl--
-
+  Luis
