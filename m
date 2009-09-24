@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:41263 "EHLO
-	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbZISWIO (ORCPT
+Received: from mk-filter-1-a-1.mail.uk.tiscali.com ([212.74.100.52]:1313 "EHLO
+	mk-filter-1-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752931AbZIXTps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2009 18:08:14 -0400
-Received: from cpc2-whit1-0-0-cust96.cdif.cable.ntl.com ([82.13.80.97] helo=plato.andrewprice.me.uk)
-	by silver.sucs.swan.ac.uk with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.69)
-	(envelope-from <andy@andrewprice.me.uk>)
-	id 1Mp86L-0003ko-3F
-	for linux-wireless@vger.kernel.org; Sat, 19 Sep 2009 23:08:17 +0100
-Date: Sat, 19 Sep 2009 23:08:05 +0100
-From: Andrew Price <andy@andrewprice.me.uk>
-To: linux-wireless@vger.kernel.org
-Subject: Problem with "cfg80211: fix SME connect" (bisected)
-Message-ID: <20090919220805.GA2728@plato.andrewprice.me.uk>
+	Thu, 24 Sep 2009 15:45:48 -0400
+Date: Thu, 24 Sep 2009 20:45:45 +0100 (BST)
+From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31-git wireless broken
+In-Reply-To: <1253816614.3868.406.camel@johannes.local>
+Message-ID: <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
+References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
+ <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+ <1253816614.3868.406.camel@johannes.local>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 24 Sep 2009, Johannes Berg wrote:
+> 
+> Ah. That patch isn't in yet I guess. I wonder if that could still be an
+> issue though. Maybe you can try that patch along with this one:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff_plain;h=55a00b83339f25d2979b85ab6e2151390327db80;hp=cfa53f1e753ed709f0a483fa8bd16bc7d08d402d
 
-After building today's mainline kernel (as of 78f28b7c) my wireless
-networking stopped working - the interface seems to come up but nothing
-can connect.  The output of dmesg was clean, no backtraces or anything
-unusual.
+I've now tried recent Linus -git plus both those patches on both machines,
+but no joy on either.
 
-I've bisected the problem down to commit bbac31f4 "cfg80211: fix SME
-connect".  Reverting that commit fixes the problem. I'm using
-wpa_supplicant v0.6.9. The bug occurs for my b43 card and my rt2500pci
-card, and reverting the commit fixes the problem for both cards.
+> 
+> Anyhow, I'm grasping at straws -- can you tell me more about the failure
+> mode, and possibly enable CONFIG_MAC80211_DEBUG_MENU and
+> CONFIG_MAC80211_VERBOSE_DEBUG?
 
-Please let me know if there's any more info I can provide or patches I
-can test.
+I enabled those on both machines for that trial, will keep them on for now.
 
-Andrew
+The failure mode is that iwconfig says ESSID:off/any instead of showing
+my essid, and I've no connectivity; but you probably need something more
+specific than that.
+
+I'll send you privately the .config of each machine, and the dmesg of
+each machine, from that trial.  I've just compared the .configs against
+what works for 2.6.31, and everything relevant still seems to be there.
+
+I do wonder if this is an openSUSE interaction, whether another distro
+with the same kernel would be fine.
+
+Hugh
