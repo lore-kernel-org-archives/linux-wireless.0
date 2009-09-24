@@ -1,44 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:34906 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbZIHO7H (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:38646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530AbZIXSXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 10:59:07 -0400
-Message-ID: <4AA67139.80301@lwfinger.net>
-Date: Tue, 08 Sep 2009 09:59:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Pekka Enberg <penberg@cs.helsinki.fi>, Mel Gorman <mel@csn.ul.ie>,
-	Frans Pop <elendil@planet.nl>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org
-Subject: Re: iwlagn: order 2 page allocation failures
-References: <200909060941.01810.elendil@planet.nl> <84144f020909060114s74de2d2y850745dd82ece753@mail.gmail.com> <200909061028.48442.elendil@planet.nl> <1252226116.11274.10.camel@penberg-laptop> <20090908105415.GD28127@csn.ul.ie> <84144f020909080411n4e010308qa153039bee1b8336@mail.gmail.com> <20090908141701.GB2617@tuxdriver.com>
-In-Reply-To: <20090908141701.GB2617@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 24 Sep 2009 14:23:33 -0400
+Subject: Re: 2.6.31-git wireless broken
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
+	 <1253813740.3868.324.camel@johannes.local>
+	 <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-aIlvxhFiQiAmFetrWaVF"
+Date: Thu, 24 Sep 2009 20:23:34 +0200
+Message-Id: <1253816614.3868.406.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Tue, Sep 08, 2009 at 02:11:35PM +0300, Pekka Enberg wrote:
->> On Tue, Sep 8, 2009 at 1:54 PM, Mel Gorman<mel@csn.ul.ie> wrote:
->>> My feeling is also that a number of these page allocation failures have
->>> been related to wireless drivers. Is that accurate? If so, have there
->>> been changes made to the wireless stack in this cycle that would have
->>> increased the order of pages allocated?
->> That's my general feeling as well. We have linux-wireless CC'd so
->> maybe this rings a bell for them.
-> 
-> AFAIK, this is only the second separate report.  The other related
-> to ipw2200, which actually shares no code with the iwlagn driver and
-> is not based on the mac80211 stack.
 
-A previous issue concerned the interaction between wireless and SLUB
-debugging that caused O(0) allocations to get bumped to O(1), but that
-was not relevant to this case either. I'm not aware of any other page
-allocation problems with wireless.
+--=-aIlvxhFiQiAmFetrWaVF
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Thu, 2009-09-24 at 19:14 +0100, Hugh Dickins wrote:
+
+> I've been working under the belief that it's WPA encrypted.
+>=20
+> > If it's open, can you try this patch?
+>=20
+> But I could try the patch, in case I've been fooled.
+>=20
+> > http://johannes.sipsolutions.net/patches/kernel/all/2009-09-24-17%3a32/=
+010-cfg80211-fix-wpas-open.patch
+>=20
+> However, all the trees I'm working with (Linus latest, or the bisect
+> result, or a week old mmotm) have cfg80211_mgd_wext_connect saying:
+>=20
+> 	if (!netif_running(wdev->netdev))
+> 		return 0;
+>=20
+> 	wdev->wext.connect.ie =3D wdev->wext.ie;
+> 	wdev->wext.connect.ie_len =3D wdev->wext.ie_len;
+> 	wdev->wext.connect.privacy =3D wdev->wext.default_key !=3D -1;
+>=20
+> 	if (wdev->wext.keys) {
+> 		wdev->wext.keys->def =3D wdev->wext.default_key;
+> 		wdev->wext.keys->defmgmt =3D wdev->wext.default_mgmt_key;
+> 	}
+>=20
+> 	if (!wdev->wext.connect.ssid_len)
+> 		return 0;
+>=20
+> which is not consistent with the fix your patch is making.
+
+Ah. That patch isn't in yet I guess. I wonder if that could still be an
+issue though. Maybe you can try that patch along with this one:
+
+http://git.kernel.org/?p=3Dlinux/kernel/git/linville/wireless-testing.git;a=
+=3Dcommitdiff_plain;h=3D55a00b83339f25d2979b85ab6e2151390327db80;hp=3Dcfa53=
+f1e753ed709f0a483fa8bd16bc7d08d402d
+
+Anyhow, I'm grasping at straws -- can you tell me more about the failure
+mode, and possibly enable CONFIG_MAC80211_DEBUG_MENU and
+CONFIG_MAC80211_VERBOSE_DEBUG?
+
+johannes
+
+--=-aIlvxhFiQiAmFetrWaVF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKu7kiAAoJEODzc/N7+QmaZUkP/3JCoVNb0ddyyWi/r21d6i9K
+UpK8MLnTDC2Qj743rKGzsUnTg0mdZoq1b9j76EMF6rHHff1QQHHyz8cJ5sln13kG
+gSyOih19nAlRfQ55Wnvo/msBoQ7fNzyaJ1sOJ0+4zLuqhQtwQvHRkwomxpa8vhob
+R9k37983ZME34ycWw6xnd3VvWKfZxdLcvQ3xfSJgj+6OeKZ4Au8rlbdnloWCDCOd
+eiyxlYJb9ONr47eIj/77FHQpgfDC6uNHVeclhizzEymxQEl25x0Dc5D2VP4xGyDy
+iZcmGMWIF9b+/BcIJwkAmft5/GOGLsWqgTJ9lXynLXR3E4p0gYXpzhoQUCzbWLB0
+wiy2cbPalpKBQPnIedMXX8+HhzFKSrYP6aRrgL3Zw7CiyM/72ZUV1spaXt7y8rxC
++ZnVqSOt/3RyfivZOowdJhtWRABvpVIXjX2Cn2UcB6khHfaGrAfsYIdW/FvZIU4x
+NPhCioDx/vpwdTv5qmnrnq/WEpkeZNLJHVql2Y/HGCzd6G3AgMK4mixNqubjdfXO
+Zm2Cy7a0xM6+VoL+OxQVorxRsPy8YKp3uukJt6y6dibhvtpJ1a84Uc2VoIz5CtyS
+cJDJgOUS3L8mHp5Ck9GsTl8JtEoQeuo3LaWKxRXZlbUO/EJXcaGXuYtSrb9qeBGh
+ial2L3CKkThE5lXHYh0o
+=FDN1
+-----END PGP SIGNATURE-----
+
+--=-aIlvxhFiQiAmFetrWaVF--
+
