@@ -1,80 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54040 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754700AbZIIXo7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:35518 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbZIXOHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 19:44:59 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 15/15] ath9k: rename ath_btcoex_supported() to ath9k_hw_btcoex_supported()
-Date: Wed,  9 Sep 2009 19:45:01 -0400
-Message-Id: <1252539901-20679-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
-References: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 24 Sep 2009 10:07:33 -0400
+Subject: Re: rfkill hard state after booting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-wireless@vger.kernel.org,
+	Alan Jenkins <alan-jenkins@tuffmail.co.uk>,
+	Mattia Dongili <malattia@linux.it>,
+	"Almer S. Tigelaar" <almer@gnome.org>,
+	Matthias Welwarsky <matze@welwarsky.de>
+In-Reply-To: <20090924130231.GU21590@gamma.logic.tuwien.ac.at>
+References: <20090924130231.GU21590@gamma.logic.tuwien.ac.at>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-xwyiAyq7OjcPlKJCrv/R"
+Date: Thu, 24 Sep 2009 16:07:32 +0200
+Message-Id: <1253801252.3868.108.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also just pass the ath_hw as the parameter.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |    6 +++---
- drivers/net/wireless/ath/ath9k/btcoex.h |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c     |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+--=-xwyiAyq7OjcPlKJCrv/R
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index ee2a834..5d1095f 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -45,15 +45,15 @@ static const u16 ath_subsysid_tbl[] = {
-  * Checks the subsystem id of the device to see if it
-  * supports btcoex
-  */
--bool ath_btcoex_supported(u16 subsysid)
-+bool ath9k_hw_btcoex_supported(struct ath_hw *ah)
- {
- 	int i;
- 
--	if (!subsysid)
-+	if (!ah->hw_version.subsysid)
- 		return false;
- 
- 	for (i = 0; i < ARRAY_SIZE(ath_subsysid_tbl); i++)
--		if (subsysid == ath_subsysid_tbl[i])
-+		if (ah->hw_version.subsysid == ath_subsysid_tbl[i])
- 			return true;
- 
- 	return false;
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 0dc5120..1ba31a7 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -47,7 +47,7 @@ struct ath_btcoex_hw {
- 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
- };
- 
--bool ath_btcoex_supported(u16 subsysid);
-+bool ath9k_hw_btcoex_supported(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0fc4c6e..24157d2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3688,7 +3688,7 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_2GHZ);
- 
- 	if (AR_SREV_9280_10_OR_LATER(ah) &&
--	    ath_btcoex_supported(ah->hw_version.subsysid)) {
-+	    ath9k_hw_btcoex_supported(ah)) {
- 		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO;
- 		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
- 
--- 
-1.6.3.3
+On Thu, 2009-09-24 at 15:02 +0200, Norbert Preining wrote:
+
+> I recently (on a flight) I found out that when I boot with the hard-switc=
+h
+> activated, so turning off all wireless activity on my laptop, the state
+> is not correctly announced in /dev/rfkill (reading it with rfkill command=
+,
+> or my own gnome applet). All the devices seem to be in normal state but
+> one.
+
+Very strange.
+
+> Here some outputs:
+> $ cd /sys/class/rfkill
+> $ ls
+> rfkill0@  rfkill1@  rfkill2@  rfkill3@	rfkill4@  rfkill5@
+> $ cat rfkill?/name
+> sony-wifi
+> sony-bluetooth
+> sony-wwan
+> hso-0
+> hci0
+> phy0
+> $
+>=20
+> and the three sony-* are the ones for actually turning on/off the devices=
+,
+> but they showed all soft 0 hard 0 at initial startup. Only phy0 (AFAIR)
+> had hard 1.
+
+Makes sense. I mean, that phy0 was hard blocked.
+
+> After turning off and on again the hard-switch the events were right.
+
+I can't decide where this bug is. I suspect it's in the sony code.
+Anyone feel responsible for that code?
+
+johannes
+
+--=-xwyiAyq7OjcPlKJCrv/R
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKu30hAAoJEODzc/N7+QmanZwP/0xqt8qpbSh/S/1a+dmsCQ51
+ZDem/HlmB6E5DJnk9zImVzbV2GHhqnP1uON6I+Lk5T/ivabEltwe0Rp5KclMNHkx
++k1zWpMXccjEaLcm5m7Ge6Evsyoov4+kyAmUe9M5eVe95TQ0OcT60Jxo1WeotwpI
+rqYXkav9Kr5mXQyaxPNCaqmml8HRfX1ne4geW7c08KIZ3VXNGPYAIF6HHDGeFBCz
+q1g+eDMwVBbh/vgQuejyoOtHsNF3qzQJaM5ehRtBFHMzekKnbDyPHmpn1SMgyyO3
+xsiZIihxUY3F1SbolEbSoM9nVuVBh5UI/OD1d2usfrbPk4QRmnn0f/GKa1CSSK/U
+WsWl/m6vD0kwlq/jqELqDmbrtXMjebgubIPqTstpszyWWqZ80fgauWItHDwos7Ei
+0aYBlo3YX4hOds98kQrgt9rTGzqZuZ9e68IMwcOQN2Z0NDZQdgfIW4APXzSJ5nb3
+xBlar2uul+i1+Z8SOkCY5a7f7+FuRY8ldRdUrUsGxtw/bDsTpws46nflwRR1hQOM
+L71VOI4skZa4HxI/o2VEpHVS0s8Lzdq7kWKC0SPMdYOjhaD4upSes4jgXrZkQuRj
+PAbgZ6RmnCqmEx6tL81JJXnagTd/NduBMkk840IJSg3gOPlLeB/9kAyR8au7etwH
+9aMbsI7s9v+P65LeQ8aS
+=CpKQ
+-----END PGP SIGNATURE-----
+
+--=-xwyiAyq7OjcPlKJCrv/R--
 
