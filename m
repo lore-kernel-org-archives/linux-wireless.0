@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51961 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbZI3Oy1 (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:42985 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbZIXBAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 10:54:27 -0400
-Subject: Re: mac80211: NOHZ: local_softirq_pending 08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Oliver Hartkopp <socketcan@hartkopp.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <87ocosqykb.fsf@purkki.valot.fi>
-References: <200909111648.50902.mb@bu3sch.de>
-	 <20090929192928.GF2678@tuxdriver.com> <4AC3475C.7000403@hartkopp.net>
-	 <200909301633.04376.mb@bu3sch.de>  <87ocosqykb.fsf@purkki.valot.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZMVAfkYVX3YpIa63so4V"
-Date: Wed, 30 Sep 2009 16:54:26 +0200
-Message-Id: <1254322466.3959.5.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 23 Sep 2009 21:00:39 -0400
+Received: by bwz6 with SMTP id 6so974467bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 18:00:42 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 23 Sep 2009 18:00:41 -0700
+Message-ID: <da94abde0909231800v75b05677ka6b8570a73b6055c@mail.gmail.com>
+Subject: wireless-testing broken
+From: Kalle Valo <kalle.valo@iki.fi>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-ZMVAfkYVX3YpIa63so4V
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I upgraded to latest wireless-testing and noticed that I can't connect
+anymore with my iwl3945. master-2009-09-16 still works. My syslog has
+this:
 
-On Wed, 2009-09-30 at 17:47 +0300, Kalle Valo wrote:
+Sep 24 03:53:28 tikku kernel: [  719.479190] phy0: device no longer
+idle - scanning
+Sep 24 03:53:31 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:31 tikku wpa_supplicant[12381]: Trying to associate with
+00:03:52:d9:27:10 (SSID='ibahn' freq=2452 MHz)
+Sep 24 03:53:31 tikku wpa_supplicant[12381]: Association request to
+the driver failed
+Sep 24 03:53:31 tikku kernel: [  722.096782] phy0: device now idle
+Sep 24 03:53:31 tikku kernel: [  722.099163] phy0: device no longer
+idle - scanning
+Sep 24 03:53:31 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:31 tikku kernel: [  722.101652] phy0: device now idle
+Sep 24 03:53:32 tikku kernel: [  723.101920] phy0: device no longer
+idle - scanning
+Sep 24 03:53:34 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:34 tikku kernel: [  725.804837] phy0: device now idle
+Sep 24 03:53:36 tikku wpa_supplicant[12381]: Authentication with
+00:03:52:d9:27:10 timed out.
+Sep 24 03:53:36 tikku kernel: [  727.101285] phy0: device no longer
+idle - scanning
+Sep 24 03:53:38 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:38 tikku wpa_supplicant[12381]: Trying to associate with
+00:03:52:d9:77:70 (SSID='ibahn' freq=2427 MHz)
+Sep 24 03:53:38 tikku wpa_supplicant[12381]: Association request to
+the driver failed
+Sep 24 03:53:38 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:38 tikku kernel: [  729.816160] phy0: device now idle
+Sep 24 03:53:39 tikku kernel: [  730.777467] phy0: device no longer
+idle - scanning
+Sep 24 03:53:42 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:42 tikku kernel: [  733.389081] phy0: device now idle
+Sep 24 03:53:43 tikku wpa_supplicant[12381]: Authentication with
+00:03:52:d9:77:70 timed out.
+Sep 24 03:53:43 tikku kernel: [  734.737634] phy0: device no longer
+idle - scanning
+Sep 24 03:53:46 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:46 tikku wpa_supplicant[12381]: Trying to associate with
+00:03:52:a4:7d:b0 (SSID='ibahn' freq=2432 MHz)
+Sep 24 03:53:46 tikku wpa_supplicant[12381]: Association request to
+the driver failed
+Sep 24 03:53:46 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
+Sep 24 03:53:46 tikku kernel: [  737.428317] phy0: device now idle
+Sep 24 03:53:47 tikku kernel: [  738.414783] phy0: device no longer
+idle - scanning
+Sep 24 03:53:50 tikku wpa_supplicant[12381]: CTRL-EVENT-SCAN-RESULTS
 
-> I agree with Michael. The bug is real and I have verified that
-> Michael's patch fixes the issue. Better to apply the patch now, it's
-> trivial to change the implementation if/when the network stack has
-> support for this.
+But gotta run now, more info later.
 
-FWIW, I think in mac80211 the in_interrupt() check can never return true
-since we postpone all RX to the tasklet. But the tasklet seems to be ok
--- so should it really be in_interrupt()?
-
-johannes
-
---=-ZMVAfkYVX3YpIa63so4V
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKw3EeAAoJEODzc/N7+QmaOMQP/3hf8jDqWyigHUANoR8sQ0oq
-jgy31FwyaKBpYfSKYM1yscK01lOq90dcbc93HG3CS8zW27w+b2mVeJeR7bvKM0xo
-cn7hhiEvli3ILGjRRRHPDSrV78+bzltYwwd0DiYsDlmfhTkj06myg6P5DeZhrJnQ
-CiufPFNdS6z+qyzBvT9ck0STpFe0RV2PHD5X4DQbkpSNKBHs6nqnmOyQKw8dOXpV
-v7MZm6c7nFnSYyVgDaDFFuogQROquC6JtAOebaMzoX2vXbT1uKTd8wj3HbErOuAl
-A/3Hfj7Kt8bmCF06CRvECLqXLonzgdaDJJu7hxIH2/2ei4ktQv+M6s92xEkGKLNT
-RxLffZfjKR+0rcOJfe87qxujR6kLZpWoaCgyU2zaS3dJyUlz77y36g7iXwSNPXQp
-f5qLpeZhH7RFjqOt4wbWOiPVCzfK2SIWduGRfX7aS99B+QpfcoKBGoeD6e0uO65q
-4+ijLRIpdga/QrW/SmyNI/GN+H1IIUUxxOSHYsX8GjTR6dmkG0o8ZMfsRyql+2iD
-WNSLs3YX53tNh/JaC1/eUMQ0/V22wqdhnC6tUw8oYIpNFFmmKVOHSTVvx65BfaxE
-ZBNHBrFEhMECQmHzVpmkZMAFKqrWmF2mJn/tcQJJIQCm6dvm7fCwnvqSpnbQGemv
-xycWAhAke+IYQGmVmFqi
-=gA4z
------END PGP SIGNATURE-----
-
---=-ZMVAfkYVX3YpIa63so4V--
-
+Kalle
