@@ -1,95 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5408 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758640AbZIQRn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:57 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/13 2.6.32 and w-t] iwlwifi: reduce noise when skb allocation fails
-Date: Thu, 17 Sep 2009 10:43:56 -0700
-Message-Id: <1253209436-2309-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
-References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39660 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037AbZIXIFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 04:05:41 -0400
+Subject: Re: Problems with "cfg80211: fix SME connect" commit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Albert Herranz <albert_herranz@yahoo.es>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <4AB7A5BB.1050300@yahoo.es>
+References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
+	 <200909210845.51247.hs4233@mail.mn-solutions.de>
+	 <4AB7A5BB.1050300@yahoo.es>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-G+ubo3cPwClBX8CfhgPX"
+Date: Thu, 24 Sep 2009 10:05:38 +0200
+Message-Id: <1253779538.3868.14.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replenishment of receive buffers is done in the tasklet handling
-received frames as well as in a workqueue. When we are in the tasklet
-we cannot sleep and thus attempt atomic skb allocations. It is generally
-not a big problem if this fails since iwl_rx_allocate is always followed
-by a call to iwl_rx_queue_restock which will queue the work to replenish
-the buffers at a time when sleeping is allowed.
 
-We thus add the __GFP_NOWARN to the skb allocation in iwl_rx_allocate to
-reduce the noise if such an allocation fails while we still have enough
-buffers. We do maintain the warning and the error message when we are low
-on buffers to communicate to the user that there is a potential problem with
-memory availability on system
+--=-G+ubo3cPwClBX8CfhgPX
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This addresses issue reported upstream in thread "iwlagn: order 2 page
-allocation failures" in
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/39187
+On Mon, 2009-09-21 at 18:11 +0200, Albert Herranz wrote:
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-Acked-by: Mel Gorman <mel@csn.ul.ie>
----
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   10 +++++++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ++++++++-
- 2 files changed, 17 insertions(+), 2 deletions(-)
+> Adding back "cfg80211: fix SME connect" and applying "cfg80211: don't
+> overwrite privacy setting" fixes the connection issue, but with a
+> introduces a small difference vs the previous working version.
+> There is now an extra "deauthenticating by local choice (reason=3D3)"
+> message in the logs.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index b90adcb..8e1bb53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -250,12 +250,20 @@ void iwl_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 		}
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
-+		if (rxq->free_count > RX_LOW_WATERMARK)
-+			priority |= __GFP_NOWARN;
- 		/* Alloc a new receive buffer */
- 		skb = alloc_skb(priv->hw_params.rx_buf_size + 256,
- 						priority);
- 
- 		if (!skb) {
--			IWL_CRIT(priv, "Can not allocate SKB buffers\n");
-+			if (net_ratelimit())
-+				IWL_DEBUG_INFO(priv, "Failed to allocate SKB buffer.\n");
-+			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
-+			    net_ratelimit())
-+				IWL_CRIT(priv, "Failed to allocate SKB buffer with %s. Only %u free buffers remaining.\n",
-+					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-+					 rxq->free_count);
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
- 			 * more buffers it will schedule replenish */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3b31bd5..c92db01 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1146,11 +1146,18 @@ static void iwl3945_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 		}
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
-+		if (rxq->free_count > RX_LOW_WATERMARK)
-+			priority |= __GFP_NOWARN;
- 		/* Alloc a new receive buffer */
- 		skb = alloc_skb(priv->hw_params.rx_buf_size, priority);
- 		if (!skb) {
- 			if (net_ratelimit())
--				IWL_CRIT(priv, ": Can not allocate SKB buffers\n");
-+				IWL_DEBUG_INFO(priv, "Failed to allocate SKB buffer.\n");
-+			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
-+			    net_ratelimit())
-+				IWL_CRIT(priv, "Failed to allocate SKB buffer with %s. Only %u free buffers remaining.\n",
-+					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-+					 rxq->free_count);
- 			/* We don't reschedule replenish work here -- we will
- 			 * call the restock method and if it still needs
- 			 * more buffers it will schedule replenish */
--- 
-1.5.6.3
+> [   13.969153] b43-phy0 debug: Adding Interface type 2
+> [   16.679249] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
+
+> * master-20090916 + "cfg80211: don't overwrite privacy setting"
+
+> [   13.218613] b43-phy0 debug: Adding Interface type 2
+> [   15.832582] wlan1: deauthenticating by local choice (reason=3D3)
+> [   16.131599] wlan1: direct probe to AP 00:12:17:15:e7:79 (try 1)
+
+Very odd. Can you edit the deauthenticating message to show the
+BSSID/MAC address?
+
+johannes
+
+--=-G+ubo3cPwClBX8CfhgPX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKuyhMAAoJEODzc/N7+QmaNyEP/1N6h5vRpzVl3NsN9rAjFgE/
+BPQ4/mbVy0T6riA+AJj4hV473hR5DEnpeiweth8NQHthaUAfyQXoWdJNtg6FmI4P
+0RJSnz4kzaUuVcEDrBTJUvl0pT6KLVXN+ADY5FHxWBUBB/vkBAYFIrwKsSAdlPIY
+ubPDdyY3HbcMl8c1D95/njfEoXanLUlSaciHxeTxY8MBpYC2/A+zWk4b91p0p+WK
+0HDPAkmcWZq6XqUkP8F8TAxMkzG+fEHO1RxYjhff6rfU1ruNUtC7u/yZ+KdhOpOA
+coRmLSJzEt9WVHlFmcAQWGNCraN19ZmMCB9O+iHruSBClbu86Yl2VNcZldo94w1E
+FvRXnraBlT4qbfF56mDLFeDd89d8psfvlfdt1CjzXZ+/TbbaK4IzE/bxD4Nx8hPL
+aFOfoPbNj/kJTMBW2LkWnLKyCd/rRpVKK7vomR3Hti3e1C0Ud8ZEaZY5EQF3fJFo
+USNjK/6cmVIM15CcfUuTo5qxDIWqyzaLbUMP+RuxNjh6QeJY26LUEfUFqfZfaWng
+u/41+IzUARsu6Pst7ooWxvPe3mddzvDNI/OojRaoyNb/YYzL2aYSIv0yLSrEu8K9
++D+LqADSW/BzyfAJYaUm+iLffPTR7zxW/us5SGP6NykW4QehdAI3Cx03S04duj1T
+ABqfljYmN3+EfXDEtBLG
+=gGju
+-----END PGP SIGNATURE-----
+
+--=-G+ubo3cPwClBX8CfhgPX--
 
