@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:56533 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359AbZIRQUG (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:40274 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbZIXEjM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 12:20:06 -0400
-Received: by fxm17 with SMTP id 17so824946fxm.37
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 09:20:09 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iwlwifi: drop lib80211 dependency
-Date: Fri, 18 Sep 2009 18:20:03 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linville@tuxdriver.com
+	Thu, 24 Sep 2009 00:39:12 -0400
+Received: by bwz6 with SMTP id 6so1039740bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Sep 2009 21:39:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909181820.04078.chunkeey@googlemail.com>
+In-Reply-To: <da94abde0909232116n4ddc8bedxf7033a140a0c6fa0@mail.gmail.com>
+References: <da94abde0909231800v75b05677ka6b8570a73b6055c@mail.gmail.com>
+	 <20090924035356.GC2726@tuxdriver.com>
+	 <da94abde0909232116n4ddc8bedxf7033a140a0c6fa0@mail.gmail.com>
+Date: Wed, 23 Sep 2009 21:39:14 -0700
+Message-ID: <da94abde0909232139t396b37b3x7cfdeaaafbbbcda1@mail.gmail.com>
+Subject: Re: wireless-testing broken
+From: Kalle Valo <kalle.valo@iki.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ever since Johannes' "iwlwifi: improve scan support" iwlwifi
-no longer needs any of lib80211's functions or definitions.
+On Wed, Sep 23, 2009 at 9:16 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> On Wed, Sep 23, 2009 at 8:54 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> I know you aren't in a great situation for this, but could you try
+>> a bisect?  Or, you might just try reverting "iwlwifi: reduce noise
+>> when skb allocation" as a start...
+>
+> Sure, I'll start bisecting right now.
 
-This patch updates iwlwifi's Kconfig _selections_ and
-removes all left lib80211.h inclusions from the source files.
+The result is:
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 99310c0..eb62c20 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -1,7 +1,6 @@
- config IWLWIFI
- 	tristate "Intel Wireless Wifi"
- 	depends on PCI && MAC80211 && WLAN_80211 && EXPERIMENTAL
--	select LIB80211
- 	select FW_LOADER
- 	select MAC80211_LEDS if IWLWIFI_LEDS
- 	select LEDS_CLASS if IWLWIFI_LEDS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 4f3a108..41f9a06 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -27,7 +27,6 @@
-  *****************************************************************************/
- #include <linux/types.h>
- #include <linux/etherdevice.h>
--#include <net/lib80211.h>
- #include <net/mac80211.h>
- 
- #include "iwl-eeprom.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 0909668..34e6af6 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -41,7 +41,6 @@
- #include <linux/if_arp.h>
- 
- #include <net/ieee80211_radiotap.h>
--#include <net/lib80211.h>
- #include <net/mac80211.h>
- 
- #include <asm/div64.h>
+55a00b83339f25d2979b85ab6e2151390327db80 is first bad commit
+commit 55a00b83339f25d2979b85ab6e2151390327db80
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Thu Sep 17 17:15:31 2009 -0700
+
+    cfg80211: don't overwrite privacy setting
+
+    When cfg80211 is instructed to connect, it always
+    uses the default WEP key for the privacy setting,
+    which clearly is wrong when using wpa_supplicant.
+    Don't overwrite the setting, and rely on it being
+    false when wpa_supplicant is not running, instead
+    set it to true when we have keys.
+
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+I verified the result by manually reverting the commit and this is
+really causing my problem. My current setup is debian unstable,
+default debian wpa_supplicant (using wext I think, haven't checked)
+and open network at Portland Marriott hotel. I can reproduce the
+problem every time.
+
+Kalle
