@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60979 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753995AbZIRAOX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:46608 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbZIXSCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 20:14:23 -0400
-Subject: Re: regression?  No connection with master-2009-09-16 was fine
- until master-2009-09-14
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ASIC Felix <ic.felix@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <1253232542.23567.3.camel@johannes.local>
-References: <1253208348.6601.17.camel@darkslate>
-	 <1253230530.23567.1.camel@johannes.local>
-	 <1253232319.6914.15.camel@darkslate>
-	 <1253232542.23567.3.camel@johannes.local>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-iDOeHmEVBm/d6h4Uj1Or"
-Date: Thu, 17 Sep 2009 17:13:56 -0700
-Message-Id: <1253232836.23567.4.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 24 Sep 2009 14:02:50 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI2DaH005652
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:02:37 +0300
+Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
+	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI2PZF028049
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:02:29 +0300
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 0/2] cfg80211: firmware and hardware version
+To: linux-wireless@vger.kernel.org
+Date: Thu, 24 Sep 2009 11:02:29 -0700
+Message-ID: <20090924180048.14503.9579.stgit@tikku>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Here's my suggestion how to provide firmware and hardware version to
+user space. First I was thinking adding a new nl80211 command and
+it looked so ugly that I decided include the versions in struct wiphy
+instead.
 
---=-iDOeHmEVBm/d6h4Uj1Or
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Please comment.
 
-On Thu, 2009-09-17 at 17:09 -0700, Johannes Berg wrote:
-> On Thu, 2009-09-17 at 17:05 -0700, ASIC Felix wrote:
->=20
-> > > and then describe your setup ... the patch works fine here and Holger
-> > > said it fixed his problem. hidden ssid by any chance?
-> >=20
-> > Office network, can see about 50 APs, more 2G than 5G.
-> >=20
-> > Main office ssid is available on most 2G channels 11g (no 11n), also on
-> > several 5G channels 11a (no 11n). Lots of other ssids are visible.
-> > WPA2/PSK.
->=20
-> I think wpa is the problem, seeing something like that here too, very
-> odd that it could connect otherwise tho.
+---
 
-yeah I've got it.
+Kalle Valo (2):
+      at76c50x-usb: set firmware and hardware version in wiphy
+      cfg80211: add firmware and hardware version to wiphy
 
-johannes
 
---=-iDOeHmEVBm/d6h4Uj1Or
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKstDAAAoJEODzc/N7+QmazIMQAJlqVUKG4GUfK4z/evzGZFA9
-XYfcGNkb86pq3y7mQ/c24wZ5/fa/SQnQvFtFdzqZq3ZaHS2/5Zd198s6gC874WQK
-yG+MMceTt8bzYm2ZGbcGHVBjoFsGq/tnwyKs2USE3+FRf1w2cNGRKRCHjYRb64IA
-5+BMzqH/JXJD6pBEYmiDpdpAK/W22Yqee21dm1RMHR4V647XQNIuBNoh0KCD/6TM
-NZb9/Ja2wDTcclL9Z88/E3mbmI/REPZ2Xo3SpxYRAvyDsm7sN6wAhU/DAowD7xLB
-/w4GA+O09heWosDYWaxOh4WmegLeMYJCRLC1Z1vuuYjcDm+f677bd4SPgggzHGw+
-gJQYwG1Hrrs2lxWc14VwoBko3/W69O2c2n1wQayLbUg0v3fkWR6+yJVMMat5uF56
-ParxEl+T/6BU4wv6v6pWzP6Z+atDS7mN5e/3xuvgpHEgN4uok67C0S8Rriux3rba
-aUQRahTkwPPjsaMT8ueT30Xs34K08KY1/gFYtBEWtzF70XNUrrZtacUwqL+jXmGd
-M33jQFiQ3eKsu0pC0BLYfX2YDO2ER6Gga0x95cEsdCX4Vg2J4Bjc8Qlx6YnXgVCO
-PuOOy8CoWCDQP4YWvBM/fzvJX0HkXPI058bnimkp72IJh8cctYE+DsB2vnuBWRUb
-4rUXVmRg4/2W+ivs12mM
-=V5W5
------END PGP SIGNATURE-----
-
---=-iDOeHmEVBm/d6h4Uj1Or--
+ drivers/net/wireless/at76c50x-usb.c |   15 +++++++++++++++
+ include/linux/nl80211.h             |    3 +++
+ include/net/cfg80211.h              |    5 +++++
+ net/wireless/nl80211.c              |   11 +++++++++++
+ 4 files changed, 34 insertions(+), 0 deletions(-)
 
