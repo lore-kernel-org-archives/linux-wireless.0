@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40989 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756228AbZIKTpc (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:46198 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbZIXJuN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 15:45:32 -0400
-Date: Fri, 11 Sep 2009 15:35:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linux-wireless@vger.kernel.org, Kel Modderman <kel@otaku42.de>
-Subject: Re: Questions about regulatory domain & passive scanning
-Message-ID: <20090911193542.GK2622@tuxdriver.com>
-References: <200909111427.39974.hs4233@mail.mn-solutions.de> <43e72e890909111136r67a305b9qc3e78a7dcb205d@mail.gmail.com> <69e28c910909111226s48ac1db9ya8fe2cce54861c1e@mail.gmail.com>
+	Thu, 24 Sep 2009 05:50:13 -0400
+Received: by iwn8 with SMTP id 8so804046iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 02:50:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <69e28c910909111226s48ac1db9ya8fe2cce54861c1e@mail.gmail.com>
+In-Reply-To: <200909241119.28207.hs4233@mail.mn-solutions.de>
+References: <200909241055.51604.hs4233@mail.mn-solutions.de>
+	<43e72e890909240159x6d733e1bj9c529f6fe77b32f5@mail.gmail.com>
+	<200909241119.28207.hs4233@mail.mn-solutions.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 24 Sep 2009 02:44:46 -0700
+Message-ID: <43e72e890909240244i2d5e4c2sdf6326b50566e0f7@mail.gmail.com>
+Subject: Re: [PATCH]: nl80211: report age of scan results
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 11, 2009 at 09:26:11PM +0200, Gábor Stefanik wrote:
-> On Fri, Sep 11, 2009 at 8:36 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Fri, Sep 11, 2009 at 5:27 AM, Holger Schurig
-> > <hs4233@mail.mn-solutions.de> wrote:
-> >> Hi !
-> >>
-> >> I'm playing with regulatory domain using wireless-testing, iw,
-> >> crda and ath5 on Debian. Here are some observations:
-> >>
-> >> 1) Debian sucks here
-> >
-> > We've tried a few times to poke them and after some thread exchanges
-> > and some changes to wirless-regdb and crda due to concerns over the
-> > signing stuff due to the DFSG in account for these discussions it
-> > seems some stuff was packaged but not sure where it went. Kel, are you
-> > aware of the status in this regard on Debian?
-> 
-> Well, if the problem is signing, then they are always free to package
-> a patched crda that accepts unsigned or self-signed databases; AFAIK
-> GPL doesn't prohibit that (though it kinda defeats the purpose of
-> crda).
+On Thu, Sep 24, 2009 at 2:19 AM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+> On Thursday 24 September 2009 10:59:57 Luis R. Rodriguez wrote:
+>> Wil want to #define NL80211_BSS_AGE_MS NL80211_BSS_AGE_MS as
+>> well so userspace apps can ifdef around that feature to know if
+>> its supported.
+>
+> Nice idea.
+>
+> That could be a different patch. I haven't seen it for anything
+> else, e.g. there's no "#define NL80211_BSS_STATUS" anywhere.
 
-I disagree about that defeating the purpose -- the purpose is to put
-the decision making into userland.  The signing is a configuration
-issue, allowing distributions to have "trusted" configuration sources
-by default.
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Typically a command went in with a set of attributes, I tend to only
+add a define for a new command, and then for any new attributes after
+that in later patches for the same command.
+
+> "iw" for example has it's own nl80211.h file.
+
+Yes, but not all apps may ship their own ni80211.h, we probably will
+be implementing then, but yeah -- we cannot enforce this, only
+recommend it.
+
+  Luis
