@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from liberdade.minaslivre.org ([72.232.18.203]:33170 "EHLO
-	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbZIIRuH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33705 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbZIXHUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 13:50:07 -0400
-Date: Wed, 9 Sep 2009 14:50:06 -0300
-From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lrodriguez@atheros.com, mickflemm@gmail.com, jirislaby@gmail.com,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: Re: [PATCH] ath5k: do not free irq after resume when card has been
-	removed
-Message-ID: <20090909175006.GA7945@vespa.holoscopio.com>
-References: <1252457551-4909-1-git-send-email-cascardo@holoscopio.com> <20090909033237.GC13550@hash.localnet>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FL5UXtIhxfXey3p5"
-In-Reply-To: <20090909033237.GC13550@hash.localnet>
+	Thu, 24 Sep 2009 03:20:18 -0400
+Subject: Re: BUG: can bring wpa_supplicant/mac80211 into a stuck state at
+ will
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200909211722.33577.hs4233@mail.mn-solutions.de>
+References: <200909211259.45431.hs4233@mail.mn-solutions.de>
+	 <200909211722.33577.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VWoaOu+HdiIHdamHpThN"
+Date: Thu, 24 Sep 2009 09:20:15 +0200
+Message-Id: <1253776815.3868.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-VWoaOu+HdiIHdamHpThN
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 08, 2009 at 11:32:37PM -0400, Bob Copeland wrote:
-> On Tue, Sep 08, 2009 at 09:52:31PM -0300, Thadeu Lima de Souza Cascardo w=
-rote:
-> > ath5k will try to request irq when resuming and fails if the device
-> > (like a PCMCIA card) has been removed.
->=20
-> That's not true, ath5k no longer requests an irq when resuming.
->=20
+On Mon, 2009-09-21 at 17:22 +0200, Holger Schurig wrote:
 
-I've just saw there's a commit by you in the next tree that just removes
-the irq requesting and releasing in resume/suspend functions.
+> iw eth1 link
+> Connected to 00:1b:53:11:dc:40 (on eth1)
+>         SSID: MNFUNK
+>         freq: 2412
+> Authenticated with 00:13:19:80:da:30 (on eth1)
+>         RX: 78173 bytes (722 packets)
+>         TX: 144 bytes (4 packets)
+>         signal: -67 dBm
+>         tx bitrate: 11.0 MBit/s
 
-> > This solves this issue defining a new flag for the status bitmap to
-> > indicate when irq has been successfully requested and does not try to
-> > release it if not.
->=20
-> I'd rather not fix it with a status bit.  What kernel is this against?
->=20
+This is very odd, I'll look into it.
 
-This is against v2.6.31-rc9, so I get a warning with a version that's
-about to get stable. Sorry I am late in the release cycle.
+> If I understand this right, then mac80211 thinks it's connected,=20
+> even before the 4-way key exchange?
 
-I've used a status bit because the drivers I took a look at did
-release/request irq in suspend/resume. I couldn't find a message about
-not doing it was the right thing which I thought I saw in the latest
-updates to v2.6.31-rcX. I guess it was something just like your commit
-which I did see some weeks ago.
+Umm, it is supposed to think so.
 
-Since this is warning, is this worth backporting to rc?
+johannes
 
-> --=20
-> Bob Copeland %% www.bobcopeland.com
->=20
-
-Regards,
-Cascardo.
-
---FL5UXtIhxfXey3p5
+--=-VWoaOu+HdiIHdamHpThN
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
 
-iEYEARECAAYFAkqn6s4ACgkQyTpryRcqtS3r7ACggq2iFrVoYpQdP2BEPEYEyML/
-gxoAnj5GftdMAESCK2EoNVe5a4FmYxYE
-=wJs1
+iQIcBAABAgAGBQJKux2sAAoJEODzc/N7+QmaVEAQAIowZi/O0USZKS+kEWsV4NXZ
+tvoXQuGwSQa4op5nQE46jwK5Xn/JnvjY1yeUaU0bRz/vUFhtF/1EF+BHcxaqT3yH
+kCJjt4UmzfR68OB8ZYKWts5cMLZGXzeERoWXoPQ8dzHCvE4i7MtQKJPFSqY3bmYe
+rmIUwljPe5WgDkyEYrRiRN0NpDATGERgFMRcajltX07PiPCrfYPbPM+X4ny1b/7u
+XYXjK7FaNKO8WSIXggVOFW82ywGkiQfx8VDWM61H6XQbarBPNL7j5+Suji3EWGmQ
+8gwlTtKw6AVnibQsyEHkL2zdYdXa+gObD5v+aXyIjem4W1XsNGSZ76fpBfikg+B2
+9rYuBHhif5AEvZ5MtT/Bn9oYMOY5HuVV6yJtorV2RPkXQHBJ+E9w9/wDhRUvi3/X
+FcBIrNTGdVqkJlM2Pb1d8TgggT9QF3eqs3Eg1jWaosrY5PWMsE/qpVxjZcNI5aAx
+fk2/aR1Nabic91IRIuWhzz3spipgGvDnVngb/9vFZvfK4yOY0CiqZu9G5WdkJ6ch
+FZliuwmoo6I0uusvzCEb9QIT++bjVNvo2EEXpa2CZ6ibbe4Pq858ZVeRkpZ40xZv
+Odqq2bNAdM4HoRrjduMBc3cRd/mpPOlGYcjGdY/LtXOvwb5eTMXkVmsnLdUqPkLH
+sgTmtDpP9NE2hedrUgDH
+=L3E/
 -----END PGP SIGNATURE-----
 
---FL5UXtIhxfXey3p5--
+--=-VWoaOu+HdiIHdamHpThN--
+
