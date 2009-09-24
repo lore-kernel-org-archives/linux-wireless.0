@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35227 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750863AbZGaXVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Jul 2009 19:21:34 -0400
-Message-ID: <4A737C7D.3070709@gmx.de>
-Date: Sat, 01 Aug 2009 01:21:33 +0200
-From: Joerg Albert <jal2@gmx.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] compat-2.6:  Makefile: fixed test expressions for target
- install
-References: <4A720FE4.4020301@gmx.de> <1248990136.10154.10.camel@mj>	 <4A733CDE.4060801@gmx.de> <1249066564.20276.3.camel@mj>
-In-Reply-To: <1249066564.20276.3.camel@mj>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from xc.sipsolutions.net ([83.246.72.84]:55921 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751206AbZIXHxW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 03:53:22 -0400
+Subject: Re: BUG: can bring wpa_supplicant/mac80211 into a stuck state at
+ will
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
+In-Reply-To: <200909221123.36953.hs4233@mail.mn-solutions.de>
+References: <200909211259.45431.hs4233@mail.mn-solutions.de>
+	 <200909221123.36953.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wNpJbrDCj+DnS+iArtM7"
+Date: Thu, 24 Sep 2009 09:53:23 +0200
+Message-Id: <1253778803.3868.12.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes the two errors of [ with target "install"
 
-[: 9: missing ]
-[: 9: missing ]
+--=-wNpJbrDCj+DnS+iArtM7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-and works with sh as well.
+On Tue, 2009-09-22 at 11:23 +0200, Holger Schurig wrote:
 
-Signed-off-by: Joerg Albert <jal2@gmx.de>
----
-  Makefile |    4 ++--
-  1 files changed, 2 insertions(+), 2 deletions(-)
+> Maybe some state isn't clear at the implicit "ifdown XXX down"
+> that wpa_supplicant does when terminating?
 
-diff --git a/Makefile b/Makefile
-index 62eb5db..e1ad666 100644
---- a/Makefile
-+++ b/Makefile
-@@ -80,7 +80,7 @@ install-scripts:
-         @install scripts/athload        $(DESTDIR)/usr/sbin/
-         @install scripts/b43load        $(DESTDIR)/usr/sbin/
-         @install scripts/iwl-load       $(DESTDIR)/usr/sbin/
--       @if [ ! -z $(MADWIFI) && -z "$(DESTDIR)" ]; then \
-+       @if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
-                 echo ;\
-                 echo -n "Note: madwifi detected, we're going to disable it. "  ;\
-                 echo "If you would like to enable it later you can run:"  ;\
-@@ -89,7 +89,7 @@ install-scripts:
-                 echo Running athenable ath5k...;\
-                 /usr/sbin/athenable ath5k ;\
-         fi
--       @if [ ! -z $(OLD_IWL) && -z "$(DESTDIR)" ]; then \
-+       @if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
-                 echo ;\
-                 echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
-                 echo "If you would like to enable it later you can run:"  ;\
--- 
-1.6.0.4
+The SSID is kept and then re-applied during ifup, so that would cause a
+scan, but shouldn't cause any timeouts.
+
+johannes
+
+
+--=-wNpJbrDCj+DnS+iArtM7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKuyVqAAoJEODzc/N7+QmanLAP/2fKTUimbnL7FO3RivE0cUQs
+ucA+PF6LgijR4+7BKzNHr9qC7TAjPc55flynr0fBrDUT5XPZrFRoxQYLzw+8f2p5
+ZiNYIhxrxq5BGXBXZasWRGEaHSsD152zuYzCe1lOzTa2maMfVeO4wVfBnp9oy8ne
+ygr8AfwmwSCGYcoPDwMQPi7Ac8XJbGuIRxgyi6DHtVMAH+M0U/MVzdpGD5VbBrUg
+FQe8HTuSuaiah/TwdByr08TCmdWZ8kP54qqsKjxc16wET4T4jm5JfzSbiRDt6oo+
+Nff+Z8kBSlcdsUInF7ky5Cnl3rA43GKlOSSIm9wlEQMHDGX4krpUXfK3UHrf6CAZ
+2oFdlBWpGhoGY4OdfRU7X+puqZSwGrHPCWv7qdPC1FKYF/aCA5Emy2AsEvIbLzMf
+LBCmbZLyWl48MHOxDlfzPyNco1NKNRns+uYUUh7TPc2DMbf6bNMY5V0iYSwKDGiP
+T7DvR1qPkGRtH7kWFTrG6zEOEm0T6720WyTBk3/gBSk2S+K1CJjaCPz0wgqQns+D
+CV7GRRX5/pGFlJq5EQdI2X6qhX/Futeub0SJ0qJMZLukQIYA+hdiPva0J2LKf7Oj
+ScDFZQWo7e4aRFnN+KurA4Cj4clh7L3FFh1qGp6EVh8KumCKFRONE3N8zfB6xdB5
+VmDOW/DmjgUZQJtRT+Vi
+=Pm5g
+-----END PGP SIGNATURE-----
+
+--=-wNpJbrDCj+DnS+iArtM7--
+
