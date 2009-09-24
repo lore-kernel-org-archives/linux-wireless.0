@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:38517 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184AbZIKCWx (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:40784 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbZIXNgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 22:22:53 -0400
-Message-ID: <4AA9B46E.8020100@canonical.com>
-Date: Fri, 11 Sep 2009 10:22:38 +0800
-From: Bryan Wu <bryan.wu@canonical.com>
+	Thu, 24 Sep 2009 09:36:08 -0400
+Received: by bwz6 with SMTP id 6so1292608bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 06:36:10 -0700 (PDT)
 MIME-Version: 1.0
-To: mb@bu3sch.de, stefano.brivio@polimi.it
-CC: linux-wireless@vger.kernel.org
-Subject: [b43] About supporting of BCM4312 [14e4:4315] with Low Power PHY
+In-Reply-To: <1253775657.3868.8.camel@johannes.local>
+References: <1253775657.3868.8.camel@johannes.local>
+Date: Thu, 24 Sep 2009 06:36:10 -0700
+Message-ID: <da94abde0909240636s45694cc6nda7118108d72c5da@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: don't set privacy w/o key
+From: Kalle Valo <kalle.valo@iki.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Michael and Stefano,
+On Thu, Sep 24, 2009 at 12:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> When wpa_supplicant is used to connect to open networks,
+> it causes the wdev->wext.keys to point to key memory, but
+> that key memory is all empty. Only use privacy when there
+> is a default key to be used.
+>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-I have a project which integrate Broadcom Wifi chip. But the mainline b43 still does not support this chip, because it has Low Power PHY.
+Thanks, this fixes the issue I reported yesterday evening.
 
-Here is my lspci -vvnn output for this device:
-------
-07:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g [14e4:4315] (rev 01)
-	Subsystem: Dell Device [1028:000c]
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 17
-	Region 0: Memory at f0100000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 PME-Enable- DSel=0 DScale=2 PME-
-	Capabilities: [58] Vendor Specific Information <?>
-	Capabilities: [e8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [d0] Express (v1) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
-			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd- ExtTag+ PhantFunc- AuxPwr- NoSnoop-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <64us
-			ClockPM+ Suprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-	Kernel driver in use: b43-pci-bridge
-	Kernel modules: ssb
-------
+Tested-by: Kalle Valo <kalle.valo@iki.fi>
 
-Do you guys know how to support this device in 2.6.31 kernel? Need I backport some code from wireless-testing? I enabled the PHY_LP config manually in 2.6.31 kernel and b43 driver recognized the hardware wifi device, but it still
-does not work at all.
+> Never happened of course with iw ...
 
-Or there is no choice but Broadcom's STA driver? I do not like such non-GPL stuff. 
+This is just the reason why I still use stock wpa_supplicant from debian :)
 
-Thanks a lot
--- 
-Bryan Wu <bryan.wu@canonical.com>
-Kernel Developer    +86.138-1617-6545 Mobile
-Ubuntu Kernel Team | Hardware Enablement Team
-Canonical Ltd.      www.canonical.com
-Ubuntu - Linux for human beings | www.ubuntu.com 
+Kalle
