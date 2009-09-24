@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11375 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754492AbZIAPqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:46:31 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:46:34 -0700
-Date: Tue, 1 Sep 2009 08:46:33 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/7] wireless: update wireless kconfig description
-Message-ID: <20090901154633.GB8261@mosca>
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
- <1251818566-9264-3-git-send-email-lrodriguez@atheros.com>
- <1251819096.22442.17.camel@johannes.local>
+Received: from smtp.nokia.com ([192.100.122.230]:58785 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbZIXSDT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Sep 2009 14:03:19 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI3DDI008403
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:03:14 +0300
+Received: from [127.0.1.1] (essapo-nirac25264.europe.nokia.com [10.162.252.64])
+	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id n8OI2lwf028438
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 21:02:49 +0300
+From: Kalle Valo <kalle.valo@iki.fi>
+Subject: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in wiphy
+To: linux-wireless@vger.kernel.org
+Date: Thu, 24 Sep 2009 11:02:51 -0700
+Message-ID: <20090924180251.14503.64152.stgit@tikku>
+In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
+References: <20090924180048.14503.9579.stgit@tikku>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1251819096.22442.17.camel@johannes.local>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 08:31:36AM -0700, Johannes Berg wrote:
-> On Tue, 2009-09-01 at 08:22 -0700, Luis R. Rodriguez wrote:
-> > "Wireless" is a misnomer 802.11 as there are plently
-> > of other wireless technologies. Be more specific and refer
-> > people to our good hearty wireless wiki for documentation.
-> > 
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  net/Kconfig |    8 +++++++-
-> >  1 files changed, 7 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/net/Kconfig b/net/Kconfig
-> > index 041c35e..31c208d 100644
-> > --- a/net/Kconfig
-> > +++ b/net/Kconfig
-> > @@ -260,9 +260,15 @@ config FIB_RULES
-> >  	bool
-> >  
-> >  menuconfig WIRELESS
-> > -	bool "Wireless"
-> > +	bool "IEEE 802.11 - Wireless LAN"
-> 
-> But this also has WEXT under it which supports pre-802.11 technologies,
-> no? 
+Set firmware and hardware version in wiphy so that user space can access
+it.
 
-Heh yeah, good point.
+Signed-off-by: Kalle Valo <kalle.valo@iki.fi>
+---
 
-> Might not matter at this point though.
+ drivers/net/wireless/at76c50x-usb.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-Probably not, its more 802.11 than pre now.
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 8e1a55d..b6de657 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -2217,6 +2217,8 @@ static struct ieee80211_supported_band at76_supported_band = {
+ static int at76_init_new_device(struct at76_priv *priv,
+ 				struct usb_interface *interface)
+ {
++	struct wiphy *wiphy;
++	size_t len;
+ 	int ret;
+ 
+ 	/* set up the endpoint information */
+@@ -2254,6 +2256,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	priv->device_unplugged = 0;
+ 
+ 	/* mac80211 initialisation */
++	wiphy = priv->hw->wiphy;
+ 	priv->hw->wiphy->max_scan_ssids = 1;
+ 	priv->hw->wiphy->max_scan_ie_len = 0;
+ 	priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+@@ -2265,6 +2268,18 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	SET_IEEE80211_DEV(priv->hw, &interface->dev);
+ 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
+ 
++	len = sizeof(wiphy->fw_version);
++	snprintf(wiphy->fw_version, len, "%d.%d.%d-%d",
++		 priv->fw_version.major, priv->fw_version.minor,
++		 priv->fw_version.patch, priv->fw_version.build);
++
++	len = sizeof(wiphy->hw_version);
++	snprintf(wiphy->hw_version, len, "%d", priv->board_type);
++
++	/* null terminate the strings in case they were truncated */
++	wiphy->fw_version[len - 1] = '\0';
++	wiphy->hw_version[len - 1] = '\0';
++
+ 	ret = ieee80211_register_hw(priv->hw);
+ 	if (ret) {
+ 		printk(KERN_ERR "cannot register mac80211 hw (status %d)!\n",
 
-  Luis
