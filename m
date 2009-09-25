@@ -1,69 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:50648 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753497AbZI1XFY convert rfc822-to-8bit (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:36796 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbZIYKvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 19:05:24 -0400
-Received: by iwn10 with SMTP id 10so2764741iwn.4
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 16:05:28 -0700 (PDT)
+	Fri, 25 Sep 2009 06:51:46 -0400
+Date: Fri, 25 Sep 2009 12:51:45 +0200
+To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mattia Dongili <malattia@linux.it>
+Subject: Re: [PATCH] [RFT] sony-laptop: re-read the rfkill state when
+	resuming from suspend
+Message-ID: <20090925105145.GA23268@gamma.logic.tuwien.ac.at>
+References: <4ABC8ADD.3090803@tuffmail.co.uk>
 MIME-Version: 1.0
-In-Reply-To: <1254177211.21847.15.camel@mj>
-References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
-	<1254177211.21847.15.camel@mj>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 28 Sep 2009 16:05:08 -0700
-Message-ID: <43e72e890909281605t679cb207x98819949e27b1f6d@mail.gmail.com>
-Subject: Re: Firmware versioning best practices
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@web.de>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4ABC8ADD.3090803@tuffmail.co.uk>
+From: Norbert Preining <preining@logic.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 28, 2009 at 3:33 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Mon, 2009-09-28 at 15:17 -0700, Luis R. Rodriguez wrote:
->> The ath_hif_usb driver will require the ar9271 firmware file but in
->> the future an open firmware might become available. The ar9170 driver
->> already is under the same situation already: a closed firmware is
->> available but an open firmware can be used, only thing is ar9170 uses
->> the same firmware name for both. We *could* change ar9170 to use the
->> Intel practice of tagging a version at the end of each firmware
->> release, like ar9170-1.fw but ar9170 originally was implemented with a
->> 2-stage firmware requirement and so ar9170-1.fw is already taken.
->
-> Versions don't have to start with 1.  We could start e.g. with 10.
+On Fr, 25 Sep 2009, Alan Jenkins wrote:
+> Without this, the hard-blocked state will be reported incorrectly if
+> the hardware switch is changed while the laptop is suspended.
 
-Point taken.
+I confirm that with the old module (without that patch) after:
+- having rfkill de-activated (so devices working)
+- suspend to ram
+- while suspended turn on rfkill (disable all devices)
+- resume
+the rfkill event shows:
+RFKILL event: idx 0 type 1 op 0 soft 0 hard 0
+RFKILL event: idx 1 type 2 op 0 soft 0 hard 0
+RFKILL event: idx 2 type 5 op 0 soft 0 hard 0
+RFKILL event: idx 4 type 1 op 0 soft 0 hard 1
 
->> ar9170 still needs a solution for the different firmwares, once we
->> start supporting the open firmware through some sort of release but
->> I'd like to address ath_hif_usb now early so that we don't run into
->> these snags and use some decent convention that is easy to follow.
->
-> We could use ar9170-apiversion-codeverestion.fw and link it to
-> ar9170-apiversion.fw.  That is, if the open firmware version is 0.9.0
-> and it was compiled for API version 12, the filename would be
-> ar9170-12-0.9.0.fw and it could be linked to ar9170-12.fw.
+so it didn't work.
 
-Nice, I like this convention.
+Adding the patch after resume I have
+RFKILL event: idx 0 type 1 op 0 soft 0 hard 1
+RFKILL event: idx 1 type 2 op 0 soft 0 hard 1
+RFKILL event: idx 2 type 5 op 0 soft 0 hard 1
+RFKILL event: idx 5 type 1 op 0 soft 0 hard 1
 
->> As I noted above, Intel seems to use the device-1.fw, device-2.fw
->> naming convention. Is this the best approach? Or shall we have the
->> same firmware filename and simply query the firmware for a map of
->> capabilities? Any other ideas?
->
-> Distinctive names are good for simplicity of administration and the
-> capabilities are good for the sanity of the driver.  But I don't see why
-> we cannot have both.
+so that is fixed.
 
-OK sure, thanks for the feedback, at least now I know what naming
-scheme to use. The bitmap stuff will have to come later through some
-sort of open firmware as I am not sure if we have this with the closed
-one.
+Tested-by: Norbert Preining <preining@logic.at>
+> 
+> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
+> --
+> 
+> Again, this is from code inspection only.  Since suspend/resume can
+> be tricky, please test that this change works (and is necessary).
+> 
+> 
+> diff a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
+> --- a/drivers/platform/x86/sony-laptop.c
+> +++ b/drivers/platform/x86/sony-laptop.c
+> @@ -1044,6 +1044,9 @@ static int sony_nc_resume(struct acpi_device *device)
+>  			sony_backlight_update_status(sony_backlight_device) < 0)
+>  		printk(KERN_WARNING DRV_PFX "unable to restore brightness level\n");
+>  
+> +	/* re-read rfkill state */
+> +	sony_nc_rfkill_update();
+> +
+>  	return 0;
+>  }
+>  
+> 
 
-  Luis
+Best wishes
+
+Norbert
+
+-------------------------------------------------------------------------------
+Dr. Norbert Preining <preining@logic.at>        Vienna University of Technology
+Debian Developer <preining@debian.org>                         Debian TeX Group
+gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+-------------------------------------------------------------------------------
+HUTTOFT (n.)
+The fibrous algae which grows in the dark, moist environment of
+trouser turn-ups.
+			--- Douglas Adams, The Meaning of Liff
