@@ -1,71 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39053 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbZIJRWD (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:54589 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752969AbZIYAJI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 13:22:03 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-input@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, marcel@holtmann.org,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH 2/2] rfkill: Add support for KEY_RFKILL
-Date: Thu, 10 Sep 2009 18:21:32 +0100
-Message-Id: <1252603292-20830-2-git-send-email-mjg@redhat.com>
-In-Reply-To: <1252603292-20830-1-git-send-email-mjg@redhat.com>
-References: <1252603292-20830-1-git-send-email-mjg@redhat.com>
+	Thu, 24 Sep 2009 20:09:08 -0400
+Received: by iwn8 with SMTP id 8so1302205iwn.33
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 17:09:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4ABC08FA.8030104@canonical.com>
+References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
+	<4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
+	<4ABC08FA.8030104@canonical.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 24 Sep 2009 17:08:50 -0700
+Message-ID: <43e72e890909241708v55af30baia5f6fca8eb5d9d59@mail.gmail.com>
+Subject: Re: A problem loading ssb module
+To: tim.gardner@canonical.com
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Bryan Wu <bryan.wu@canonical.com>,
+	Mauro Di Domenico <didomauro@tiscali.it>,
+	bcm43xx-dev@lists.berlios.de,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for handling KEY_RFKILL in the rfkill input module. This
-simply toggles the state of all rfkill devices. The comment in rfkill.h
-is also updated to reflect that RFKILL_TYPE_ALL may be used inside the
-kernel.
+On Thu, Sep 24, 2009 at 5:04 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
+> Luis R. Rodriguez wrote:
+>>
+>> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>
+>>> Bryan Wu wrote:
+>>>>
+>>>> Mauro Di Domenico wrote:
+>>>>>
+>>>>> Hi,
+>>>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
+>>>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
+>>>>> machine with kernel version 2.6.30-6.
+>>>>>
+>>>>> During the boot I experience this problem:
+>>>>>
+>>>>> $ dmesg|egrep "b43|ssb"
+>>>>>
+>>>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
+>>>>> low) -> IRQ 17
+>>>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
+>>>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
+>>>>> 0000:06:00.0
+>>>>> [    6.968981] b43: disagrees about version of symbol
+>>>>> ssb_device_is_enabled
+>>>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
+>>>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
+>>>>> [    6.969407] b43: disagrees about version of symbol
+>>>>> ssb_pcicore_dev_irqvecs_enable
+>>>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
+>>>>> .....
+>>>>> ....
+>>>>> ...
+>>>>>
+>>>> I faced the exactly same issue as Mauro did. +1 from me, but currently
+>>>> have
+>>>> no time to take a deeper look.
+>>>>
+>>>> Thanks
+>>>
+>>> Hi,
+>>>
+>>> I had the same problem with the ssb module and compat-wireless in ubuntu
+>>> 9.04. The problem is that the ssb module is integrated into the
+>>> initramfs image. The version out of the initramfs image is loaded on
+>>> startup and not the version of compat-wireless. Running "sudo
+>>> update-initramfs -u" after installing compat-wireless and restaing the
+>>> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
+>>> form default initramfs image or compat-wireless should update the image
+>>> with the install command. At least the compat-wireless documentation
+>>> needs an update.
+>>>
+>>> Hauke
+>>>
+>>> (adding Luis and linux-wireless list)
+>>
+>> Tim, do you guys update the initramfs upon installation of lbm? If a
+>> user does not use lbm and uses compat-wireless I suppose we need to do
+>> something similar.
+>>
+>>  Luis
+>
+> No, initramfs is not updated when LBM is installed. I think maybe its a bug
+> that ssb is in the initramfs modules list since AFAIK its not a boot
+> essential device. Even in the netboot case, ssb/b44 should be in a udeb.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- include/linux/rfkill.h |    2 +-
- net/rfkill/input.c     |    8 ++++++++
- 2 files changed, 9 insertions(+), 1 deletions(-)
+That would make life much easier.
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index 278777f..4c39f7e 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -32,7 +32,7 @@
- /**
-  * enum rfkill_type - type of rfkill switch.
-  *
-- * @RFKILL_TYPE_ALL: toggles all switches (userspace only)
-+ * @RFKILL_TYPE_ALL: toggles all switches (requests only - not a switch type)
-  * @RFKILL_TYPE_WLAN: switch is on a 802.11 wireless network device.
-  * @RFKILL_TYPE_BLUETOOTH: switch is on a bluetooth device.
-  * @RFKILL_TYPE_UWB: switch is on a ultra wideband device.
-diff --git a/net/rfkill/input.c b/net/rfkill/input.c
-index a7295ad..3713d7e 100644
---- a/net/rfkill/input.c
-+++ b/net/rfkill/input.c
-@@ -212,6 +212,9 @@ static void rfkill_event(struct input_handle *handle, unsigned int type,
- 		case KEY_WIMAX:
- 			rfkill_schedule_toggle(RFKILL_TYPE_WIMAX);
- 			break;
-+		case KEY_RFKILL:
-+			rfkill_schedule_toggle(RFKILL_TYPE_ALL);
-+			break;
- 		}
- 	} else if (type == EV_SW && code == SW_RFKILL_ALL)
- 		rfkill_schedule_evsw_rfkillall(data);
-@@ -295,6 +298,11 @@ static const struct input_device_id rfkill_ids[] = {
- 		.keybit = { [BIT_WORD(KEY_WIMAX)] = BIT_MASK(KEY_WIMAX) },
- 	},
- 	{
-+		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
-+		.evbit = { BIT_MASK(EV_KEY) },
-+		.keybit = { [BIT_WORD(KEY_RFKILL)] = BIT_MASK(KEY_RFKILL) },
-+	},
-+	{
- 		.flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_SWBIT,
- 		.evbit = { BIT(EV_SW) },
- 		.swbit = { [BIT_WORD(SW_RFKILL_ALL)] = BIT_MASK(SW_RFKILL_ALL) },
--- 
-1.6.2.5
-
+  Luis
