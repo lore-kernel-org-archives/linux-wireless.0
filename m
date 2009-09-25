@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51655 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbZINUpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 16:45:53 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Kernel oops with 2.6.31-wl
-Date: Mon, 14 Sep 2009 22:45:49 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <4AAE4DAA.1010505@lwfinger.net> <1252950017.23427.49.camel@johannes.local> <4AAE8965.4040108@lwfinger.net>
-In-Reply-To: <4AAE8965.4040108@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909142245.52042.mb@bu3sch.de>
+Received: from mail-yx0-f173.google.com ([209.85.210.173]:33197 "EHLO
+	mail-yx0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbZIYFVM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 01:21:12 -0400
+Received: by yxe3 with SMTP id 3so268435yxe.4
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 22:21:16 -0700 (PDT)
+From: Balaji Ravindran <b@w1an.in>
+Content-Type: text/plain; charset=us-ascii; format=flowed; delsp=yes
+Subject: Question on general wireless testing tree compilation.
+Date: Thu, 24 Sep 2009 22:21:12 -0700
+Message-Id: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Mime-Version: 1.0 (Apple Message framework v1076)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 14 September 2009 20:20:21 Larry Finger wrote:
-> Johannes Berg wrote:
-> > On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
-> >> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
-> >> oops when unloading b43:
-> > 
-> >> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
-> >> b43_op_config+0x10c/0x36f [b43]
-> > 
-> > Seems like a b43 problem to me.
-> 
-> I had pretty much reached that conclusion. I will need to swap cards
-> to debug as the 4315 won't run on older kernels without a lot of patches.
+Hi Everyone,
 
-I can't reproduce here. What sequence of events is needed to trigger this?
+Sorry for a very amateur question. Could anyone just help me get  
+started with compiling the linux kernel from the wireless-testing  
+tree? I just pulled the local wireless-testing repo, trying to  
+navigate through the code, and wanted to compile the kernel, and to  
+boot up to it. Could anyone just help me get started?
+
+I followed the instructions from http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
+and ended up with a compile error in 'make', while trying to create  
+the bzimage. (error is on make: initramfs_data.cpi.o failed)
+
+Is there any other easy way to compile the kernel/debug.
 
 
--- 
-Greetings, Michael.
+Thanks
+
+Balaji R
