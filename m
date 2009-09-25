@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19335 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750741AbZIRJnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:43:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:43:54 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:46240 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726AbZIYTi0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 15:38:26 -0400
+Received: by fxm18 with SMTP id 18so2463471fxm.17
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 12:38:30 -0700 (PDT)
+Message-ID: <4ABD1C37.3030102@lwfinger.net>
+Date: Fri, 25 Sep 2009 14:38:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.22109.182852.463412@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:13:57 +0530
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH/REVIEW 0/9] ath9k update
-In-Reply-To: <19123.21462.191695.91617@gargle.gargle.HOWL>
-References: <19123.21462.191695.91617@gargle.gargle.HOWL>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problems with WPA in mainline 2.6.31-gitX
+References: <4ABD0B0D.5020002@lwfinger.net> <200909252042.37881.chunkeey@googlemail.com>
+In-Reply-To: <200909252042.37881.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> Hi John,
+Christian Lamparter wrote:
 > 
-> A bunch of fixes/cleanups.
+> it made it into 2.6.31-git16:
+> "cfg80211: don't overwrite privacy setting"
+> 94f85853324e02c3a32bc3101f090dc9a3f512b4
 > 
-> These patches apply over the pending ath9k patches:
->   - The inital series of bug fixes.
->   - Luis' series.
-> 
-> Please apply.
+> but, "[PATCH] cfg80211: don't set privacy w/o key"
+> is still missing.
 
-Hm. The first 5 patches got sent out with "PATCH/REVIEW" as
-subject-prefix. My elisp-foo tripped me I guess.
+Thanks, Christian. It turns out I do not need "don't set privacy".
 
-Just yell or roar if you want the patches to be resent.
+With the latest pull, my system works fine.
 
-Sujith
+Larry
