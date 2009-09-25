@@ -1,113 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:60155 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbZI1Nbz (ORCPT
+Received: from mk-filter-4-a-1.mail.uk.tiscali.com ([212.74.100.55]:39852 "EHLO
+	mk-filter-4-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752669AbZIYOQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 09:31:55 -0400
-Subject: Re: [RFC] libertas: first stab at cfg80211 support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <h.schurig@mn-solutions.de>
-Cc: libertas-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <200909281321.21600.h.schurig@mn-solutions.de>
-References: <200909281321.21600.h.schurig@mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-YsNwzqjQWCOa2Un7I1vY"
-Date: Mon, 28 Sep 2009 15:31:54 +0200
-Message-Id: <1254144714.3151.1.camel@johannes.local>
-Mime-Version: 1.0
+	Fri, 25 Sep 2009 10:16:01 -0400
+Date: Fri, 25 Sep 2009 15:15:54 +0100 (BST)
+From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31-git wireless broken
+In-Reply-To: <1253868214.3868.713.camel@johannes.local>
+Message-ID: <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
+References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
+ <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+  <1253816614.3868.406.camel@johannes.local>  <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
+  <1253856038.3868.500.camel@johannes.local>  <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
+ <1253868214.3868.713.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 25 Sep 2009, Johannes Berg wrote:
+> On Fri, 2009-09-25 at 09:06 +0100, Hugh Dickins wrote:
+> 
+> > Should be, but you're right, for whatever reason it is not running
+> > with these recent kernels.
+> > 
+> > I expect that correlates with iwconfig showing me ESSID:off/any.
+> 
+> Well it showing you that means that nothing is even trying to connect :)
+> 
+> > I'm thinking that (unless you've a better idea) I should do another
+> > bisect for when that behaviour starts - hoping that whatever problem
+> > led me to your patch, got fixed up later on, but superseded by this
+> > different problem.
+> 
+> Not sure, might be very time consuming.
 
---=-YsNwzqjQWCOa2Un7I1vY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+That bisection, focussing on wpa_supplicant running versus ESSID:off/any
+(indeed they match up), now completed on the Aspire One (I'll assume for
+the moment that the laptop would show the same).
 
-On Mon, 2009-09-28 at 13:21 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
->=20
-> ---
->=20
-> This patch currently just create a wdev, so you can do "iw list".
->=20
-> I'd like to get comments if the position where I create/destroy
-> the wdev makes sense.
->=20
-> Index: linux-wl/drivers/net/wireless/Kconfig
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-wl.orig/drivers/net/wireless/Kconfig	2009-09-28 12:06:02.000000=
-000 +0200
-> +++ linux-wl/drivers/net/wireless/Kconfig	2009-09-28 12:06:30.000000000 +=
-0200
-> @@ -138,6 +138,7 @@ config LIBERTAS
->  	depends on WLAN_80211
->  	select WIRELESS_EXT
->  	select LIB80211
-> +	select CFG80211
->  	select FW_LOADER
->  	---help---
->  	  A library for Marvell Libertas 8xxx devices.
-> Index: linux-wl/drivers/net/wireless/libertas/Makefile
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-wl.orig/drivers/net/wireless/libertas/Makefile	2009-09-28 12:06=
-:02.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/libertas/Makefile	2009-09-28 12:06:30.0=
-00000000 +0200
-> @@ -1,5 +1,5 @@
->  libertas-objs :=3D main.o wext.o rx.o tx.o cmd.o cmdresp.o scan.o 11d.o	=
-\
-> -		 debugfs.o persistcfg.o ethtool.o assoc.o
-> +		 debugfs.o persistcfg.o ethtool.o assoc.o cfg.o
-> =20
->  usb8xxx-objs +=3D if_usb.o
->  libertas_cs-objs +=3D if_cs.o
-> Index: linux-wl/drivers/net/wireless/libertas/dev.h
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-wl.orig/drivers/net/wireless/libertas/dev.h	2009-09-28 12:06:02=
-.000000000 +0200
-> +++ linux-wl/drivers/net/wireless/libertas/dev.h	2009-09-28 12:06:30.0000=
-00000 +0200
-> @@ -100,6 +100,7 @@ struct lbs_mesh_stats {
-> =20
->  /** Private structure for the MV device */
->  struct lbs_private {
-> +	struct wireless_dev *wdev;
->  	int mesh_open;
->  	int mesh_fw_ver;
->  	int infra_open;
+Yes, it does appear that the patch I originally pointed to introduced a
+problem which later got fixed, but was enough to throw the bisection off
+when I just looked for "wireless not working".
 
-This seems wrong -- doesn't libertas have multiple netdevs? You're
-treating wdev =3D=3D wiphy it seems here, rather than wdev =3D=3D netdev.
+But you can't escape, you've been too busy, the guilty patch is... 
 
-johannes
+a9a11622c5c742c115fad371c0397ae86dd3bb67 is first bad commit
+commit a9a11622c5c742c115fad371c0397ae86dd3bb67
+Author: Johannes Berg <johannes@sipsolutions.net>
+Date:   Mon Jul 27 12:01:53 2009 +0200
 
---=-YsNwzqjQWCOa2Un7I1vY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+    cfg80211: self-contained wext handling where possible
+    
+    Finally! This is what you've all been waiting for!
+    
+    This patch makes cfg80211 take care of wext emulation
+    _completely_ by itself, drivers that don't need things
+    cfg80211 doesn't do yet don't even need to be aware of
+    wireless extensions.
+    This means we can also clean up mac80211's and iwm's
+    Kconfig and make it possible to build them w/o wext
+    now!
+    
+    		RIP wext.
+    
+    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
------BEGIN PGP SIGNATURE-----
+:040000 040000 ce98d49476cd6547eabab0db90bdff31cc40104e 8ea4d1374da1fb39e1ea431cd07da96ecdccd565 M	drivers
+:040000 040000 23a9348f55a10a0c8278049f71be02728514fc61 de6267de96e307e41bb5aded9666c5bc1e4fe938 M	net
 
-iQIcBAABAgAGBQJKwLrGAAoJEODzc/N7+QmanPgQAJX7SrXNFsNY9YaY2TE9HwUj
-YzNz0xmZp3BVgXCJWjGtl3ea7WQncHbTmW2eKrwZ1fqHFGq2ubyJCsP+iJdOSJtR
-SzKCUTkkfpcA+dLv11jqQZc3CtPf665wI7fvm1o7P2Xj2z+uW+M/bbWc39YoesQQ
-L7Kg+yEJzAew+mVfwPdbi77P5RSxd+Oxx1OGUARbCFFVcwZoIDmI+szQk5TTbK5a
-VTi07VqvypTGLxAWnRvivbeqFOOcw2U+XzLSgcNAeUJjEndbqDD70FcvbNpq/G03
-ZhPGW4YalB8/QFWZH2sJjduyaPd1pXKL1S65C2R85C4yH4bWM01t0agsNheKoviR
-+dmvPksbycXVSiteYkSmHrH0I599w7R1PKBdDEKo16Dc+FWXLeyjEshCHxeSRRhn
-fngpEnFlm4jVlxqx1W+olVMLQs3leVoP0Ofla22EmoR2Gzy5xHiD9Vj3QvR4TABa
-gdiLOG3nbS2Yr5EljHAeimR6hAt0MPAx/0g2vbDxkDdBS2YbD9xrBEhoUpeP7MEm
-RiABikr7kJ7e6bLuK/jpqVJR63Pn/KVbp7ekWzr8BnGxidfTp0+QwGx2ZB8wz3ys
-vq8N8a0/eu80vgQFYhrEDa9f4E5ry49WE7DPfo+BBUuH7Y+OMC4uHnMOw4kb4Rvv
-VfxldjF+UGo3sdGxSw1K
-=dusu
------END PGP SIGNATURE-----
+RIP wireless - not quite what I'd been waiting for ;)
 
---=-YsNwzqjQWCOa2Un7I1vY--
-
+Hugh
