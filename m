@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:45433 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530AbZIXUUv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 16:20:51 -0400
-Received: by iwn8 with SMTP id 8so1210147iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 13:20:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20090924180048.14503.9579.stgit@tikku>
-References: <20090924180048.14503.9579.stgit@tikku>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 24 Sep 2009 13:20:35 -0700
-Message-ID: <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
-Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:1107 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752495AbZIYVY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 17:24:29 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 4/8] iwlwifi: fix a typo
+Date: Fri, 25 Sep 2009 14:24:24 -0700
+Message-Id: <1253913868-8400-5-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
+References: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 11:02 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> Here's my suggestion how to provide firmware and hardware version to
-> user space. First I was thinking adding a new nl80211 command and
-> it looked so ugly that I decided include the versions in struct wiphy
-> instead.
->
-> Please comment.
+From: Johannes Berg <johannes@sipsolutions.net>
 
-What was the conclusion on ethtool stuff again? I forgot.
+We never have four chains, but let's fix the typo
+while we noticed it. You count 0, 1, 2, 3, not
+0, 1, 2, 4 :)
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2908bff..5ff0f66 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -984,7 +984,7 @@ static u8 iwl_count_chain_bitmap(u32 chain_bitmap)
+ 	res = (chain_bitmap & BIT(0)) >> 0;
+ 	res += (chain_bitmap & BIT(1)) >> 1;
+ 	res += (chain_bitmap & BIT(2)) >> 2;
+-	res += (chain_bitmap & BIT(4)) >> 4;
++	res += (chain_bitmap & BIT(3)) >> 3;
+ 	return res;
+ }
+ 
+-- 
+1.5.6.3
+
