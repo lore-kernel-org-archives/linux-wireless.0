@@ -1,114 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755189AbZIQRny (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:54 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 03/13] iwlwifi: EEPROM version for 1000 and 6000 series
-Date: Thu, 17 Sep 2009 10:43:46 -0700
-Message-Id: <1253209436-2309-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
-References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:10034 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084AbZIYG7K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 02:59:10 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Balaji Ravindran <b@w1an.in>
+Subject: Re: Question on general wireless testing tree compilation.
+Date: Fri, 25 Sep 2009 08:58:58 +0200
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+References: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
+In-Reply-To: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909250858.58989.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> I followed the instructions from
+> http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html 
+> and ended up with a compile error in 'make', while trying to
+> create the bzimage. (error is on make: initramfs_data.cpi.o
+> failed) 
 
-Update EEPROM version requirement for 1000 and 6000 series of NIC
-for EEPROM version verification.
+Hmm, I simply compile almost-self-contained kernels, without any 
+initramfs. Slows down the boot and isn't needed for the usual 
+IDE/SATA desktop PCs anyway.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c   |   10 +++++-----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    6 ++++++
- 3 files changed, 12 insertions(+), 6 deletions(-)
+If you don't want to go that way, you'd better post the whole 
+error. Maybe when doing "make V=1", and include some (10 or so) 
+lines from above the error message above.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 486b144..4da99d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -153,7 +153,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
- 	.sku = IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl1000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_1000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_A,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index c4ae99f..92faac0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -246,7 +246,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_AB,
-@@ -271,7 +271,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_BC,
-@@ -293,7 +293,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_AB,
-@@ -315,7 +315,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
-@@ -337,7 +337,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.ops = &iwl6000_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
--	.eeprom_ver = EEPROM_5000_EEPROM_VERSION,
-+	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_5000_TX_POWER_VERSION,
- 	.mod_params = &iwl50_mod_params,
- 	.valid_tx_ant = ANT_ABC,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 61794eb..75fe022 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -256,6 +256,12 @@ struct iwl_eeprom_enhanced_txpwr {
- #define EEPROM_5050_TX_POWER_VERSION    (4)
- #define EEPROM_5050_EEPROM_VERSION	(0x21E)
- 
-+/* 1000 Specific */
-+#define EEPROM_1000_EEPROM_VERSION	(0x15D)
-+
-+/* 60x0 Specific */
-+#define EEPROM_6000_EEPROM_VERSION	(0x434)
-+
- /* OTP */
- /* lower blocks contain EEPROM image and calibration data */
- #define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
 -- 
-1.5.6.3
-
+http://www.holgerschurig.de
