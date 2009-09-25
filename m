@@ -1,124 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:29167 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932324AbZIRSLF (ORCPT
+Received: from jupiter.gibraltar.at ([80.120.3.98]:54444 "EHLO
+	mail1.gibraltar.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427AbZIYV3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 14:11:05 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: David Miller <davem@davemloft.net>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Coelho Luciano \(Nokia-D\/Helsinki\)" <Luciano.Coelho@nokia.com>,
-	"Oikarinen Juuso \(Nokia-D\/Tampere\)" <juuso.oikarinen@nokia.com>,
-	"torvalds\@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [origin tree build failure] [PATCH] Fix: (.text+0x22ec88): undefined reference to `ieee80211_unregister_hw'
-References: <20090911.202543.52533792.davem@davemloft.net>
-	<20090915114958.GA26902@elte.hu>
-Date: Fri, 18 Sep 2009 11:09:39 -0700
-In-Reply-To: <20090915114958.GA26902@elte.hu> (ext Ingo Molnar's message of
-	"Tue, 15 Sep 2009 13:49:58 +0200")
-Message-ID: <87tyz0gm58.fsf@nokia.com>
+	Fri, 25 Sep 2009 17:29:10 -0400
+From: Rene Mayrhofer <rene.mayrhofer@gibraltar.at>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: Massive packet loss with ath9k, AR9280, hostapd in 802.11n mode
+Date: Fri, 25 Sep 2009 23:29:00 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <200909252054.19762.rene.mayrhofer@gibraltar.at> <b6c5339f0909251352s4c30323awa588dd2f9f0d1af5@mail.gmail.com>
+In-Reply-To: <b6c5339f0909251352s4c30323awa588dd2f9f0d1af5@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909252329.01897.rene.mayrhofer@gibraltar.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ingo Molnar <mingo@elte.hu> writes:
+Am Freitag, 25. September 2009 22:52:58 schrieb Bob Copeland:
+> > 4. How do I tell CRDA to load frequency definitions for my location (AT)
+> > instead of the default (US)? I might be blind, stupid, or both, but using
+> > the slightly conflicting documentation available on various Wikis, I was
+> > unable to change this. I have read that some chipsets are hard-wired for
+> > one location and can't be changed, but couldn't find out if mine is (it
+> > was bought in Europe, so shouldn't be locked to US in any case). An RTFM
+> > (with an up-to-date pointer, preferrably for Debian/Ubuntu) in this
+> > matter would be highly appreciated.
+> 
+> "iw reg set XX", but read this first:
+> 
+> http://wireless.kernel.org/en/users/Drivers/ath
+> http://wireless.kernel.org/en/developers/Regulatory
+> 
+> In short, it depends on what's in your EEPROM.
 
-> FYI, -tip testing found that something in this lot broke the build with 
-> certain configs (attached):
->
-> drivers/built-in.o: In function `wl1251_free_hw':
-> (.text+0x22ec88): undefined reference to `ieee80211_unregister_hw'
-> drivers/built-in.o: In function `wl1251_free_hw':
-> (.text+0x22ecf5): undefined reference to `ieee80211_free_hw'
-> drivers/built-in.o: In function `wl1251_op_bss_info_changed':
-> wl1251_main.c:(.text+0x22f161): undefined reference to `ieee80211_beacon_get'
-> drivers/built-in.o: In function `wl1251_op_config':
-> wl1251_main.c:(.text+0x22f2f8): undefined reference to `ieee80211_frequency_to_channel'
-> drivers/built-in.o: In function `wl1251_op_stop':
-> wl1251_main.c:(.text+0x22f554): undefined reference to `ieee80211_scan_completed'
-> drivers/built-in.o: In function `wl1251_op_tx':
-> wl1251_main.c:(.text+0x22f6a5): undefined reference to `ieee80211_queue_work'
-> wl1251_main.c:(.text+0x22f6b6): undefined reference to `ieee80211_stop_queues'
-> drivers/built-in.o: In function `wl1251_alloc_hw':
-> (.text+0x22f710): undefined reference to `ieee80211_alloc_hw'
-> drivers/built-in.o: In function `wl1251_alloc_hw':
-> (.text+0x22f9e4): undefined reference to `ieee80211_free_hw'
-> drivers/built-in.o: In function `wl1251_init_ieee80211':
-> (.text+0x2305df): undefined reference to `ieee80211_register_hw'
-> drivers/built-in.o: In function `wl1251_event_handle':
-> (.text+0x2306c4): undefined reference to `ieee80211_scan_completed'
-> drivers/built-in.o: In function `wl1251_tx_flush':
-> (.text+0x230810): undefined reference to `ieee80211_tx_status'
-> drivers/built-in.o: In function `wl1251_tx_flush':
-> (.text+0x230846): undefined reference to `ieee80211_tx_status'
-> drivers/built-in.o: In function `wl1251_tx_frame':
-> wl1251_tx.c:(.text+0x230a97): undefined reference to `ieee80211_hdrlen'
-> drivers/built-in.o: In function `wl1251_tx_complete':
-> (.text+0x230d30): undefined reference to `ieee80211_get_hdrlen_from_skb'
-> drivers/built-in.o: In function `wl1251_tx_complete':
-> (.text+0x230d58): undefined reference to `ieee80211_tx_status'
-> drivers/built-in.o: In function `wl1251_tx_complete':
-> (.text+0x230dc0): undefined reference to `ieee80211_wake_queues'
-> drivers/built-in.o: In function `wl1251_tx_work':
-> (.text+0x230f57): undefined reference to `ieee80211_stop_queues'
-> drivers/built-in.o: In function `wl1251_rx':
-> (.text+0x231187): undefined reference to `ieee80211_channel_to_frequency'
-> drivers/built-in.o: In function `wl1251_rx':
-> (.text+0x2311e4): undefined reference to `ieee80211_rx'
->
-> Turning CONFIG_WL1251 off makes it build.
->
-> A (very) quick first look suggests that not all prior dependencies were 
-> carried over to the new drivers in drivers/net/wireless/wl12xx/Kconfig:
->
-> -config WL12XX
-> -       tristate "TI wl1251/wl1271 support"
-> -       depends on MAC80211 && WLAN_80211 && SPI_MASTER && 
-> GENERIC_HARDIRQS && EXPERIMENTAL
-> +menuconfig WL12XX
-> +       boolean "TI wl12xx driver support"
-> +       depends on MAC80211 && WLAN_80211 && EXPERIMENTAL
-> +       ---help---
-> +         This will enable TI wl12xx driver support. The drivers make
-> +         use of the mac80211 stack.
-> +
-> +config WL1251
-> +       tristate "TI wl1251 support"
-> +       depends on WL12XX && GENERIC_HARDIRQS
->
-> the friction is between modular/build-in mode:
->
->  CONFIG_WL1251=y
->  CONFIG_MAC80211=m
->
-> Kconfig does not carry over the modular dependency from WL12XX to 
-> WL1251. An explicit rule via the patch below turns CONFIG_WL1251 into a 
-> modular entry as well:
->
->  CONFIG_WL12XX=y
->  CONFIG_WL1251=m
->
-> ( Note: i have tested this patch with this particular config and it 
->   solves the problem there but have not investigated any deeper. )
->
-> 	Ingo
->
-> Signed-off-by: Ingo Molnar <mingo@elte.hu>
+Thanks for the pointers. Using compat-wireless-2.6 as of today, I get
 
-I missed this state entirely, thanks for fixing this.
+ [ 1686.542910] cfg80211: Using static regulatory domain info                                                                          
+[ 1686.542931] cfg80211: Regulatory domain: US                                                                                        
+[ 1686.542947]  (start_freq - end_freq @ bandwidth), (max_antenna_gain, 
+max_eirp)                                                     
+[ 1686.542976]  (2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)                                                          
+[ 1686.543004]  (5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)                                                          
+[ 1686.543031]  (5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)                                                          
+[ 1686.543058]  (5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)                                                          
+[ 1686.543085]  (5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)                                                          
+[ 1686.543113]  (5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)                                                          
+[ 1686.543158] cfg80211: Calling CRDA for country: US 
+[ 1698.498801] ath: EEPROM regdomain: 0x0                                                                                             
+[ 1698.498820] ath: EEPROM indicates default country code should be used                                                              
+[ 1698.498838] ath: doing EEPROM country->regdmn map search                                                                           
+[ 1698.498862] ath: country maps to regdmn code: 0x3a                                                                                 
+[ 1698.498880] ath: Country alpha2 being used: US                                                                                     
+[ 1698.498896] ath: Regpair used: 0x3a                                                                                                
+[ 1698.513630] phy0: Selected rate control algorithm 'ath9k_rate_control'                                                             
+[ 1698.533093] cfg80211: Calling CRDA for country: US                                                                                 
+[ 1698.555221] Registered led device: ath9k-phy0::radio                                                                               
+[ 1698.555359] Registered led device: ath9k-phy0::assoc                                                                               
+[ 1698.555490] Registered led device: ath9k-phy0::tx                                                                                  
+[ 1698.555624] Registered led device: ath9k-phy0::rx                                                                                  
+[ 1698.555680] phy0: Atheros AR9280 MAC/BB Rev:2 AR5133 RF Rev:d0: 
+mem=0xd2780000, irq=9
 
-Acked-by: Kalle Valo <kalle.valo@nokia.com>
+Does this indicate that the EEPROM is locked to country code 0x0 (whatever 
+that is, probably US)? "iw reg" doesn't seem to change anything:
 
-"wl1251:" prefix is just missing from the commit summary.
+[root@gibraltar-500 tmp]# iw reg get                                                     
+country US:                                                                              
+        (2402 - 2472 @ 40), (6, 27)                                                      
+        (5170 - 5190 @ 40), (6, 23)                                                      
+        (5190 - 5210 @ 40), (6, 23)                                                      
+        (5210 - 5230 @ 40), (6, 23)                                                      
+        (5230 - 5330 @ 40), (6, 23)                                                      
+        (5735 - 5835 @ 40), (6, 30)                                                      
+[root@gibraltar-500 tmp]# iw reg set 0x68
+not a valid ISO/IEC 3166-1 alpha2
+Special non-alpha2 usable entries:
+        00      World Regulatory domain
+[root@gibraltar-500 tmp]# iw reg set 00
+command failed: Invalid argument (-22)
+[root@gibraltar-500 tmp]# iw reg set AT
+[root@gibraltar-500 tmp]# iw reg get
+country US:
+        (2402 - 2472 @ 40), (6, 27)
+        (5170 - 5190 @ 40), (6, 23)
+        (5190 - 5210 @ 40), (6, 23)
+        (5210 - 5230 @ 40), (6, 23)
+        (5230 - 5330 @ 40), (6, 23)
+        (5735 - 5835 @ 40), (6, 30)
+[root@gibraltar-500 tmp]# iw reg set EU
+[root@gibraltar-500 tmp]# iw reg get
+country US:
+        (2402 - 2472 @ 40), (6, 27)
+        (5170 - 5190 @ 40), (6, 23)
+        (5190 - 5210 @ 40), (6, 23)
+        (5210 - 5230 @ 40), (6, 23)
+        (5230 - 5330 @ 40), (6, 23)
+        (5735 - 5835 @ 40), (6, 30)
 
-Who is going to take the patch? Should I send this to John?
+What I am still unsure about (having read the regulatory Wiki page before): 
+are CRDA+regdb required to be able to change the regulatory domain or are they 
+only responsible for updating the regulatory database for which a default 
+already exists in the kernel?
 
--- 
-Kalle Valo
+If the EEPROM states that the device belongs to a specific domain, can this be 
+overridden without patching the source?
+
+best regards,
+Rene
+
