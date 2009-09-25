@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21661 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760659AbZIQD6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 23:58:36 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 20:58:40 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from fg-out-1718.google.com ([72.14.220.156]:40817 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbZIYSml (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 14:42:41 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so250135fge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 11:42:44 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Problems with WPA in mainline 2.6.31-gitX
+Date: Fri, 25 Sep 2009 20:42:37 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+References: <4ABD0B0D.5020002@lwfinger.net>
+In-Reply-To: <4ABD0B0D.5020002@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19121.46065.776829.67691@gargle.gargle.HOWL>
-Date: Thu, 17 Sep 2009 09:28:41 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/12] ath9k: Fix regression in PA calibration
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200909252042.37881.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k: Fix bugs in programming registers during PA CAL"
-removed a REG_READ of 0x7834. This resulted in incorrect
-computation of the subsequent value to be written in RF2G6.
+On Friday 25 September 2009 20:25:17 Larry Finger wrote:
+> Johannes and John,
+> 
+> I found that commit bbac31f4 "cfg80211: fix SME connect" breaks WPA2
+> connections. I found the problem using bisection. I verified the
+> bisection by reverting the patch above. I also found that commit
+> 55a00b833 "cfg80211: don't overwrite privacy setting" from
+> wireless-testing fixed the issue.
+> 
+> Is the latter patch on its way upstream? If so, I will not bother with
+> posting a regression on LKML or a bugzilla report. If not, I will
+> initiate the formalities to ensure that the second patch is included
+> in mainline.
+> 
 
-This patch fixes the regression by re-adding the REG_READ.
+it made it into 2.6.31-git16:
+"cfg80211: don't overwrite privacy setting"
+94f85853324e02c3a32bc3101f090dc9a3f512b4
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/calib.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+but, "[PATCH] cfg80211: don't set privacy w/o key"
+is still missing.
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 22a3a69..0ad6d0b 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -936,6 +936,7 @@ static inline void ath9k_hw_9285_pa_cal(struct ath_hw *ah, bool is_reset)
- 		regVal |= (1 << (19 + i));
- 		REG_WRITE(ah, 0x7834, regVal);
- 		udelay(1);
-+		regVal = REG_READ(ah, 0x7834);
- 		regVal &= (~(0x1 << (19 + i)));
- 		reg_field = MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9);
- 		regVal |= (reg_field << (19 + i));
--- 
-1.6.4.3
-
+Regards,
+	Chr
