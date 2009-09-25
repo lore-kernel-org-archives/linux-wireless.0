@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:34936 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbZIJMje (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 08:39:34 -0400
-Subject: Re: iwlagn: order 2 page allocation failures
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Frans Pop <elendil@planet.nl>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cl@linux-foundation.org, Assaf Krauss <assaf.krauss@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohamed Abbas <mohamed.abbas@intel.com>
-In-Reply-To: <20090910123445.GC31153@csn.ul.ie>
-References: <200909060941.01810.elendil@planet.nl>
-	 <4AA67139.80301@lwfinger.net> <20090909150418.GI24614@csn.ul.ie>
-	 <200909091759.33655.elendil@planet.nl> <20090909165545.GK24614@csn.ul.ie>
-	 <1252570722.4876.23.camel@penberg-laptop>
-	 <20090910123445.GC31153@csn.ul.ie>
-Date: Thu, 10 Sep 2009 15:39:36 +0300
-Message-Id: <1252586376.4876.29.camel@penberg-laptop>
+Received: from lo.gmane.org ([80.91.229.12]:39033 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751828AbZIYRpC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 13:45:02 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1MrEqt-0005SI-AE
+	for linux-wireless@vger.kernel.org; Fri, 25 Sep 2009 19:45:03 +0200
+Received: from passportsystems.com ([68.178.128.95])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 19:45:03 +0200
+Received: from rudicus by passportsystems.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 19:45:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Matthew Ryan <rudicus@gmail.com>
+Subject: Porting AR6K to use cfg80211
+Date: Fri, 25 Sep 2009 17:40:52 +0000 (UTC)
+Message-ID: <loom.20090925T193922-290@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mel,
+Hi All,
 
-On Thu, 2009-09-10 at 13:34 +0100, Mel Gorman wrote:
-> > That's because it's a large allocation that's passed directly to the
-> > page allocator. See kmalloc_large_node(), for example. 
-> 
-> Pants. Is there any chance that could be fixed so that allocation
-> failures within SLUB get consistently reported?
+I am using the Neo Freerunner(http://wiki.openmoko.org/wiki/Neo_FreeRunner)
+on a project which I am trying to setup to use a wireless mesh network using
+open80211s
 
-Did you have something specific in mind? I am not sure it's worth it,
-really.
+I was able to build a custom kernel to enable the 80211_MESH capability, but
+finally realised the driver that ships with the Freerunner isn't compatible
+with the new stack.
 
-The kmalloc_large() function is a static inline in
-include/linux/slub_def.h that gets inlined nicely to a get_order() +
-__get_free_pages() pair in the caller for production configs. I'm not
-sure what we should print either. There's no known "object size" or
-"buffer size" nor do we any of the variable order things or backing
-struct kmem_cache_nodes.
+The chipset is:
 
-			Pekka
+Accton (WLAN 802.11b/g SiP-M WM3236AQ(Flash Ver:2.0 Atheros AR6001GZ) which
+uses the AR6K driver, which from what I have read doesn't use mac80211.
+
+Unfortunately I know very little about wireless drivers.
+
+I was curious if I could get a few expert opinions on if its possible to port
+this driver to use mac80211, and how difficult/ what pitfalls there may be.
+
+While I don't know much about wireless drivers, I do have extensive
+experience porting other drivers and don't usually shy away from a challenge ;)
+So, if there's any positive feedback I would give it a shot.
+
+Thanks for your time and comments.
+
+Matt Ryan
 
