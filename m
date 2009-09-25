@@ -1,80 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:32902 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591AbZIXShd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 14:37:33 -0400
-Received: by iwn8 with SMTP id 8so1146202iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Sep 2009 11:37:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4ABBBB8C.8080401@hauke-m.de>
-References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
-	<4ABBBB8C.8080401@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 24 Sep 2009 11:37:17 -0700
-Message-ID: <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
-Subject: Re: A problem loading ssb module
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Tim Gardner <tim.gardner@canonical.com>
-Cc: Bryan Wu <bryan.wu@canonical.com>,
-	Mauro Di Domenico <didomauro@tiscali.it>,
-	bcm43xx-dev@lists.berlios.de,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:1107 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664AbZIYVYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 17:24:34 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 7/8] iwlwifi: support idle for 6000 series hw
+Date: Fri, 25 Sep 2009 14:24:27 -0700
+Message-Id: <1253913868-8400-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
+References: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Bryan Wu wrote:
->> Mauro Di Domenico wrote:
->>> Hi,
->>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
->>> I've compiled and installed compat-wireless-2009-09-16 in a debian
->>> machine with kernel version 2.6.30-6.
->>>
->>> During the boot I experience this problem:
->>>
->>> $ dmesg|egrep "b43|ssb"
->>>
->>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
->>> low) -> IRQ 17
->>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
->>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
->>> 0000:06:00.0
->>> [    6.968981] b43: disagrees about version of symbol
->>> ssb_device_is_enabled
->>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
->>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
->>> [    6.969407] b43: disagrees about version of symbol
->>> ssb_pcicore_dev_irqvecs_enable
->>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
->>> .....
->>> ....
->>> ...
->>>
->>
->> I faced the exactly same issue as Mauro did. +1 from me, but currently have
->> no time to take a deeper look.
->>
->> Thanks
-> Hi,
->
-> I had the same problem with the ssb module and compat-wireless in ubuntu
-> 9.04. The problem is that the ssb module is integrated into the
-> initramfs image. The version out of the initramfs image is loaded on
-> startup and not the version of compat-wireless. Running "sudo
-> update-initramfs -u" after installing compat-wireless and restaing the
-> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
-> form default initramfs image or compat-wireless should update the image
-> with the install command. At least the compat-wireless documentation
-> needs an update.
->
-> Hauke
->
-> (adding Luis and linux-wireless list)
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Tim, do you guys update the initramfs upon installation of lbm? If a
-user does not use lbm and uses compat-wireless I suppose we need to do
-something similar.
+Using powersave while idle saves a lot of power, but
+we've had problems with this on some cards (5150 has
+been reported to be problematic). However, on the new
+6000 series we're seeing no problems, so for now let
+that hardware benefit from idle mode, we can look at
+the problems with other hardware one by one and then
+enable those once we figure out the problems.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c  |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c  |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-power.c |    3 +++
+ 4 files changed, 16 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index ad5d77c..6f4ee27 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -254,6 +254,7 @@ struct iwl_cfg iwl6000h_2agn_cfg = {
+ 	.led_compensation = 51,
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2abg_cfg = {
+@@ -276,6 +277,7 @@ struct iwl_cfg iwl6000h_2abg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6000h_2bg_cfg = {
+@@ -298,6 +300,7 @@ struct iwl_cfg iwl6000h_2bg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ /*
+@@ -324,6 +327,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.led_compensation = 51,
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2abg_cfg = {
+@@ -346,6 +350,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6000i_2bg_cfg = {
+@@ -368,6 +373,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -391,6 +397,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.led_compensation = 51,
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_2abg_cfg = {
+@@ -413,6 +420,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.ht_greenfield_support = true,
+ 	.led_compensation = 51,
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -436,6 +444,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.led_compensation = 51,
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ struct iwl_cfg iwl6050_3agn_cfg = {
+@@ -459,6 +468,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
+ 	.led_compensation = 51,
+ 	.use_rts_for_ht = true, /* use rts/cts protection */
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
+ };
+ 
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index e97b104..1cf2e04 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2650,7 +2650,8 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		iwl_set_rate(priv);
+ 	}
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_PS) {
++	if (changed & (IEEE80211_CONF_CHANGE_PS |
++			IEEE80211_CONF_CHANGE_IDLE)) {
+ 		ret = iwl_power_update_mode(priv, false);
+ 		if (ret)
+ 			IWL_DEBUG_MAC80211(priv, "Error setting sleep level\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b66bf7b..744f0ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -265,6 +265,7 @@ struct iwl_cfg {
+ 	const bool broken_powersave;
+ 	bool use_rts_for_ht;
+ 	int chain_noise_num_beacons;
++	const bool supports_idle;
+ };
+ 
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 60be976..e50d77b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -294,6 +294,9 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+ 
+ 	if (priv->cfg->broken_powersave)
+ 		iwl_power_sleep_cam_cmd(priv, &cmd);
++	else if (priv->cfg->supports_idle &&
++		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
++		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
+ 	else if (tt->state >= IWL_TI_1)
+ 		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
+ 	else if (!enabled)
+-- 
+1.5.6.3
+
