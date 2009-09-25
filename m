@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:48971 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751316AbZI2Iux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 04:50:53 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: cannot compile compate-wirless snapshots
-Date: Tue, 29 Sep 2009 10:50:54 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200909260457.21103.malte.gell@gmx.de> <4ABDE7AC.1090409@hauke-m.de>
-In-Reply-To: <4ABDE7AC.1090409@hauke-m.de>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:38668 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbZIYT1h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 15:27:37 -0400
+Received: by iwn8 with SMTP id 8so1786004iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 12:27:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909291050.54388.malte.gell@gmx.de>
+In-Reply-To: <da94abde0909251211x347bbd30xdfe2bd05bc1e07e5@mail.gmail.com>
+References: <20090924180048.14503.9579.stgit@tikku> <20090924180251.14503.64152.stgit@tikku>
+	<43e72e890909241135j21f687a7oc4f929d2134b6310@mail.gmail.com>
+	<da94abde0909241210m69bd619sce62645c3aca9aae@mail.gmail.com>
+	<43e72e890909241311j552ee33ata80ba24c386a316b@mail.gmail.com>
+	<da94abde0909251211x347bbd30xdfe2bd05bc1e07e5@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 25 Sep 2009 12:27:21 -0700
+Message-ID: <43e72e890909251227y1b4286f7gb92e75074af2bc3b@mail.gmail.com>
+Subject: Re: [PATCH 2/2] at76c50x-usb: set firmware and hardware version in
+	wiphy
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 25, 2009 at 12:11 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> On Thu, Sep 24, 2009 at 1:11 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Thu, Sep 24, 2009 at 12:10 PM, Kalle Valo <kalle.valo@iki.fi> wrote:
+>>
+>>> BTW, is there an easy way to get the module name for the interface?
+>>> That's also helpful information for the user.
+>>
+>> If you can map the interface to PCI ID then I think its possible,
+>> lspci -k seems to do it.
+>
+> Not all drivers use PCI, we have USB, SDIO, SPI and so on.
 
-Hauke Mehrtens <hauke@hauke-m.de> wrote
+Sure, it was just an example of a transport where this does exist, I
+am hoping this doesn't use PCI specific stuff and based on a simple
+strace of "strace -o foo lspci -k -s 03:00.0"  I see it actually ends
+up reading a  /lib/modules/ file and am hoping this is what it uses to
+do the mapping. But you still first need the bus ID for the netdevice,
+not sure how to best to do that. I do see the sysfs ieee80211 class
+maps the phy%d to the bus:
 
+mcgrof@tux ~ $ ls -ld /sys/class/ieee80211/phy0/device
+lrwxrwxrwx 1 root root 0 2009-09-25 12:25
+/sys/class/ieee80211/phy0/device -> ../../../0000:03:00.0
 
-> Does this file exists in your installation?
-> /lib/modules/`uname -r`/build/include/linux/tracepoint.h ?
+If you can extract the bus from here and then the device:vendor id I
+think you can read the /lib/modules/ map file for the driver.
 
-Yes, but, look:
+Check these files out:
 
-cd /usr/src/linux
+ls /lib/modules/2.6.31-wl/modules.*map
 
-grep -i tracepoint .config
-
-# CONFIG_TRACEPOINTS is not set
-
-Do I need to set it to yes?
-
-Malte
+  Luis
