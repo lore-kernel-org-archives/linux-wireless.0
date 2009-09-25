@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:60140 "EHLO vs166246.vserver.de"
+Received: from mga09.intel.com ([134.134.136.24]:1107 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751651AbZIHTMO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 15:12:14 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: matthieu castet <castet.matthieu@free.fr>
-Subject: Re: Stop using tasklets for bottom halves
-Date: Tue, 8 Sep 2009 21:12:05 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <43e72e890909071558s637b45c7i10807587dc40e8c4@mail.gmail.com> <200909080650.43181.mb@bu3sch.de> <loom.20090908T210153-638@post.gmane.org>
-In-Reply-To: <loom.20090908T210153-638@post.gmane.org>
-MIME-Version: 1.0
-Message-Id: <200909082112.06572.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+	id S1752427AbZIYVY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 17:24:28 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/8] iwlwifi driver updates 09/25/2009
+Date: Fri, 25 Sep 2009 14:24:20 -0700
+Message-Id: <1253913868-8400-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 08 September 2009 21:07:32 matthieu castet wrote:
-> Michael Buesch <mb@...> writes:
-> > 
-> > I recently converted the b43 driver to threaded interrupt handlers and
-> > a workqueue based TX mechanism. (My motivation was porting b43 to the SDIO bus
-> that
-> > needs to sleep, so requires process context).
-> Well you can do busy wait : for sending small sd command, the overhead of
-> sleep ( context switch) can be bigger than the sleep.
+We include a few fixes targeting 2.6.32 and wireless-testing:
+1/8 prevents a WARN printed due to invalid address
+2/8 fixes a memory leak
+3/8 fixes debug information when a ucode problem occurs in 3945. without
+this patch the logs printed when such a problem occurs will be formatted
+incorrectly.
 
-The bus is _really_ slow and we push the whole network load through it.
-So we really don't want to busywait. It would effectively lockup the machine
-on network traffic.
+The rest of the patches continue adding support for 6000 support as well as
+better powersaving support.
 
-And besides that, the SDIO subsystem requires process context. I was not going
-to rewrite that.
+[PATCH 1/8 v2.6.32 and w-t] iwlwifi: fix debugfs buffer handling
+[PATCH 2/8 v2.6.32 and w-t] iwlwifi: fix memory leak in command queue handling
+[PATCH 3/8 v2.6.32 and w-t] iwlwifi: fix 3945 ucode info retrieval after failure
+[PATCH 4/8] iwlwifi: fix a typo
+[PATCH 5/8] iwlwifi: default to using all chains
+[PATCH 6/8] iwlwifi: Chain Noise Calibration for 6000 series
+[PATCH 7/8] iwlwifi: support idle for 6000 series hw
+[PATCH 8/8] iwlwifi: add module firmware info for 1000 series
 
-> It depends of architecture. For example on older arm (armv5) context switch can
-> be slow (need tlb and cache flush). It is not really true for kernel thread that
-> keeps the same mmu mapping and don't need all those flush,
-
-Yeah, but that's what it is. A kernel thread.
-
-> but there still a 
-> visible performance hit.
-
-That's the initial question. How big is it?
-
--- 
-Greetings, Michael.
+Reinette
