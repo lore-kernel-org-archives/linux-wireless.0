@@ -1,81 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:36815 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962AbZHaX43 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:33493 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbZIYPH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:56:29 -0400
-Received: by iwn42 with SMTP id 42so2014802iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:56:31 -0700 (PDT)
+	Fri, 25 Sep 2009 11:07:28 -0400
+Received: by fxm18 with SMTP id 18so2270116fxm.17
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 08:07:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <69e28c910908311646w315bef9eo43d3342c13e38fca@mail.gmail.com>
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-	<43e72e890908311637r7b079e9fj2ac6b77f2b59eb79@mail.gmail.com>
-	<69e28c910908311646w315bef9eo43d3342c13e38fca@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 31 Aug 2009 16:56:11 -0700
-Message-ID: <43e72e890908311656o6f4a4157k6f967dc4934e6dd0@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <200909251047.46826.m.alessandrini@deit.univpm.it>
+References: <200909251047.46826.m.alessandrini@deit.univpm.it>
+Date: Fri, 25 Sep 2009 16:07:30 +0100
+Message-ID: <3ace41890909250807y6d178f34m6a47016173b87f97@mail.gmail.com>
+Subject: Re: zd1211rw on Debian not working with new kernels
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Michele Alessandrini <m.alessandrini@deit.univpm.it>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Tue, Sep 1, 2009 at 1:37 AM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
->> 2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
->>> On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
->>>> Hin-Tak Leung wrote:
->>>>>
->>>>> I just took a look at the history - there aren't obvious bug fixes, a
->>>>> bunch of work queue-related changes from you & Johannes; feature-wise,
->>>>> Larry added LED blinking after 2.6.30, and Herton added rfkill support
->>>>> quite recently after 2.6.31-rc7 . But no, there isn't any change that
->>>>> would affect tx level beyond 2.6.31-rc7, I think.
->>>>
->>>> Your analysis matches my recollection.
->>>>
->>>> Apparently RealTek is supplying a closed-source driver for RTL8187B
->>>> these days. There are no sources for the B on their web site. In
->>>> addition, the one that Tobias loaded tainted his kernel.
->>>>
->>>> Larry
->>>
->>> The driver is not actually closed-source; they just don't provide any
->>> drivers on their site anymore, instead they send their reference
->>> drivers to OEMs, expecting the OEMs to release their own versions
->>> (with sources - most vendors who do release Linux drivers in fact only
->>> release sources, without binaries). The reason for this appears to be
->>> that Realtek now encourages vendors to sell RTL81xx wireless chips
->>> with modified USB IDs. (Or are you seeing a binary-only driver on
->>> realtek.com.tw? That would definitely be a GPL violation, given that
->>> they use a modified version of the GPLed libipw stack.)
->>
->> Gabor, do you speak to RealkTek folks? It seems what may be best for
->> OEMs and RealTek themselves is to post drivers for inclusion into
->> staging first and then for interested parties to port them properly.
->>
->>  Luis
+2009/9/25 Michele Alessandrini <m.alessandrini@deit.univpm.it>:
+> Hi everybody,
+> I have a Sitecom WL-113 USB wireless adapter, and I use Debian testing with
+> zd1211rw. My wireless network uses WPA.
+> The adapter is working with kernel up to 2.6.24. It is not working anymore
+> with kernels 2.6.26 and 2.6.30 (these are the kernels I could test).
+> From what I can see, wpa_supplicant gets a series of errors from the driver
+> when it tries to associate to the network.
+> Provided that the OS is exactly the same, and the only variable is which
+> kernel is booted, I think it's something related to the driver (kernel 2.6.26
+> is where the MAC layer has been changed) or to the interface between it and
+> wpa_supplicant.
+> I'm just writing to ask if this is a know issue or if someone else is getting
+> similar problems.
+> Thank you very much for your work
+> Bye
+> Michele Alessandrini, Italy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> Not yet, I haven't tried contacting them. I simply based my comments
-> on the fact that OEMs are releasing sources. However, contacting them
-> about work to include their drivers in the kernel is a good idea -
-> apparently there is nothing keeping Realtek from taking community
-> contributions (unlike e.g. Zydas - the vendor driver is based on
-> Andrea Merello's old r8180-sa2400 driver, and was not developed
-> in-house by Realtek).
 
-If anyone has contacts that does indeed seem reasonable to do, seems
-like it could help them and their customers.
-
-  Luis
+I am quite sure you are mistaken. Debian ships a version of the
+vendor/vendor-derived driver up to 2.6.24(?) and I don't know when
+they switch over. You should approach the debian people on your
+problem.
