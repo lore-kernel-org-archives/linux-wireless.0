@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:35336 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859AbZIKGqF (ORCPT
+Received: from mail-vw0-f203.google.com ([209.85.212.203]:36735 "EHLO
+	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbZIYOjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Sep 2009 02:46:05 -0400
-Received: by fxm17 with SMTP id 17so592969fxm.37
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Sep 2009 23:46:07 -0700 (PDT)
-Message-ID: <4AA9F22C.3090007@gmail.com>
-Date: Fri, 11 Sep 2009 08:46:04 +0200
-From: Jiri Slaby <jirislaby@gmail.com>
+	Fri, 25 Sep 2009 10:39:05 -0400
+Received: by vws41 with SMTP id 41so1696340vws.4
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 07:39:08 -0700 (PDT)
 MIME-Version: 1.0
-To: Nick Kossifidis <mickflemm@gmail.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	devel@linuxdriverproject.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/4] ath5k: define ath_common ops
-References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>	<1252632895-11914-4-git-send-email-lrodriguez@atheros.com> <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
-In-Reply-To: <40f31dec0909102316q7902098jbee7fd8d17c3f622@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <200909241015.06706.hs4233@mail.mn-solutions.de>
+References: <200909210902.23723.hs4233@mail.mn-solutions.de>
+	 <1253662161.2510.59.camel@localhost.localdomain>
+	 <200909241015.06706.hs4233@mail.mn-solutions.de>
+Date: Fri, 25 Sep 2009 10:39:08 -0400
+Message-ID: <b6c5339f0909250739r2bcb8528tbc4d98b574e0e198@mail.gmail.com>
+Subject: Re: getting "ath5k phy0: noise floor calibration timeout"
+From: Bob Copeland <me@bobcopeland.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2009 08:16 AM, Nick Kossifidis wrote:
->>  static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
->>  {
->> -       return ioread32(ah->ah_iobase + reg);
->> +       return ath5k_hw_common(ah)->ops->read(ah, reg);
->>  }
->>
->> -/*
->> - * Write to a register
->> - */
->>  static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
->>  {
->> -       iowrite32(val, ah->ah_iobase + reg);
->> +       ath5k_hw_common(ah)->ops->write(ah, reg, val);
-...
-> Since each driver will use it's own reg read/write functions (ath5k hw
-> code still uses ath5k_hw_reg_read/write), why do we need to have
-> common reg read/write functions like that used in the driver code ?
-> This makes the code more complex that it needs to be and i don't see a
-> reason why we need it. I understand why we need a way to handle
-> read/write functions from common ath code but i don't see a reason to
-> use these functions on ath5k, we can just fill ath_ops struct so that
-> common code can use them and leave ath5k_hw_read/write untouched.
+On Thu, Sep 24, 2009 at 4:15 AM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+> On ath5k-devel, there was a mail "[ath5k-devel] [RFC/RFT] ath5k:
+> use noise calibration from madwifi hal" from Bob Copeland.
+>
+> Part of the patch is "- we do not complain if NF calibration
+> isn't complete, instead we keep the last read value.".
 
-I definitely agree with Nick here. Althought whole ath_ops will be hot
-cache after the first operation, there is no need to prolong hot paths
-by computing the op address and a call. Ok, read/write on PCI is pretty
-slow, but still...
+Yeah, NF calibration timeout happens all the time (also in
+madwifi/ath9k) so we should just silence it.  At best, it indicates
+a problem that the user can't do anything about; at worst, it
+leads to bug reports accusing the NF calibration of wholly unrelated
+things.
+
+I really should finish testing and push that patch, real life has
+just been in the way lately.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
