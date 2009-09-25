@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx38.mail.ru ([94.100.176.52]:65262 "EHLO mx38.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751208AbZIUUZr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 16:25:47 -0400
-Subject: [PATCH v2] mac80211: Fix [re]association power saving issue on AP
- side
-From: Igor Perminov <igor.perminov@inbox.ru>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 22 Sep 2009 00:25:44 +0400
-Message-Id: <1253564744.4477.18.camel@sunlight>
-Mime-Version: 1.0
+Received: from mail-vw0-f203.google.com ([209.85.212.203]:38082 "EHLO
+	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbZIYUwz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 16:52:55 -0400
+Received: by vws41 with SMTP id 41so1868372vws.4
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Sep 2009 13:52:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200909252054.19762.rene.mayrhofer@gibraltar.at>
+References: <200909252054.19762.rene.mayrhofer@gibraltar.at>
+Date: Fri, 25 Sep 2009 16:52:58 -0400
+Message-ID: <b6c5339f0909251352s4c30323awa588dd2f9f0d1af5@mail.gmail.com>
+Subject: Re: Massive packet loss with ath9k, AR9280, hostapd in 802.11n mode
+From: Bob Copeland <me@bobcopeland.com>
+To: Rene Mayrhofer <rene.mayrhofer@gibraltar.at>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consider the following step-by step:
-1. A STA authenticates and associates with the AP and exchanges
-traffic.
-2. The STA reports to the AP that it is going to PS state.
-3. Some time later the STA device goes to the stand-by mode (not only
-its wi-fi card, but the device itself) and drops the association state
-without sending a disassociation frame.
-4. The STA device wakes up and begins authentication with an
-Auth frame as it hasn't been authenticated/associated previously.
- 
-At the step 4 the AP "remembers" the STA and considers it is still in
-the PS state, so the AP buffers frames, which it has to send to the STA.
-But the STA isn't actually in the PS state and so it neither checks
-TIM bits nor reports to the AP that it isn't power saving.
-Because of that authentication/[re]association fails.
+On Fri, Sep 25, 2009 at 2:54 PM, Rene Mayrhofer
+<rene.mayrhofer@gibraltar.at> wrote:
 
-To fix authentication/[re]association stage of this issue, Auth, Assoc
-Resp and Reassoc Resp frames are transmitted disregarding of STA's power
-saving state.
+I'll take a stab at this one, someone else can try the other ath9k-related
+questions.
 
-N.B. This patch doesn't fix further data frame exchange after
-authentication/[re]association. A patch in hostapd is required to fix
-that.
+> 4. How do I tell CRDA to load frequency definitions for my location (AT)
+> instead of the default (US)? I might be blind, stupid, or both, but using the
+> slightly conflicting documentation available on various Wikis, I was unable to
+> change this. I have read that some chipsets are hard-wired for one location
+> and can't be changed, but couldn't find out if mine is (it was bought in
+> Europe, so shouldn't be locked to US in any case). An RTFM (with an up-to-date
+> pointer, preferrably for Debian/Ubuntu) in this matter would be highly
+> appreciated.
 
-Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
----
- net/mac80211/tx.c       |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+"iw reg set XX", but read this first:
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 10a1099..4d981e7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 	u32 staflags;
- 
--	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)))
-+	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
-+			|| ieee80211_is_auth(hdr->frame_control)
-+			|| ieee80211_is_assoc_resp(hdr->frame_control)
-+			|| ieee80211_is_reassoc_resp(hdr->frame_control)))
- 		return TX_CONTINUE;
- 
- 	staflags = get_sta_flags(sta);
+http://wireless.kernel.org/en/users/Drivers/ath
+http://wireless.kernel.org/en/developers/Regulatory
 
+In short, it depends on what's in your EEPROM.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
