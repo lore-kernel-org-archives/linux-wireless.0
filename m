@@ -1,38 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34098 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750699AbZI2WRU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 18:17:20 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: "Hin-Tak Leung" <hintak.leung@gmail.com>
-Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need help to create driver for Netgear WN111v2
-Date: Wed, 30 Sep 2009 00:17:20 +0200
+Received: from bu3sch.de ([62.75.166.246]:48654 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185AbZIYSFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 14:05:23 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Matthew Ryan <rudicus@gmail.com>
+Subject: Re: Porting AR6K to use cfg80211
+Date: Fri, 25 Sep 2009 20:05:22 +0200
 Cc: linux-wireless@vger.kernel.org
-References: <999306.93095.qm@web23102.mail.ird.yahoo.com> <200909291145.35972.malte.gell@gmx.de> <3ace41890909290328l14620ed6o4939488e268d76a3@mail.gmail.com>
-In-Reply-To: <3ace41890909290328l14620ed6o4939488e268d76a3@mail.gmail.com>
+References: <loom.20090925T193922-290@post.gmane.org>
+In-Reply-To: <loom.20090925T193922-290@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909300017.20949.malte.gell@gmx.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909252005.23746.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Friday 25 September 2009 19:40:52 Matthew Ryan wrote:
+> I was curious if I could get a few expert opinions on if its possible to port
+> this driver to use mac80211, and how difficult/ what pitfalls there may be.
 
-"Hin-Tak Leung" <hintak.leung@gmail.com> wrote
+The device is fullmac, so it does not require mac80211.
+I guess however, ar6k can be ported to use cfg80211.
 
-> 
-> Argh... try changing this line  in config.mk
-> 
-> ifndef CONFIG_COMPAT_WIRELESS_28
-> 
-> to ...27.
-
-Hello,
-
-it was a pain with my Kernel 2.6.27.29 I now updated to kernel 2.6.31-44 (from 
-openSUSE) and voila, it now works like a charm! I compiled the bleeding edge 
-compat-wireless and it just works fine now! As I initially suspected, 2.6.27 
-only made trouble.
-
-Regards
-Malte
+-- 
+Greetings, Michael.
