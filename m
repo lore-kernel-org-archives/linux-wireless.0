@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 113.245.131.213.static.inetbone.net ([213.131.245.113]:59053
-	"EHLO smtp.tmcs.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040AbZIJJpx (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2742 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409AbZIZMrW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 05:45:53 -0400
-Subject: [RFC] rtl8180: change PCI DMA mask to DMA_BIT_MASK(32) to solve
- "No suitable DMA available" problems on sparc64.
-From: Tiziano =?ISO-8859-1?Q?M=FCller?= <tm@dev-zero.ch>
-Reply-To: tm@dev-zero.ch
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Thu, 10 Sep 2009 11:37:43 +0200
-Message-Id: <1252575463.30576.59.camel@localhost>
-Mime-Version: 1.0
+	Sat, 26 Sep 2009 08:47:22 -0400
+Date: Sat, 26 Sep 2009 08:46:20 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: hans.ullrich@loop.de
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Fw: Cannot register at bugzilla (bugreport added) [ ath5k
+	bugreport ]
+Message-ID: <20090926124620.GA5188@hash.localnet>
+References: <20090925191524.7b2b228c@schatten>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090925191524.7b2b228c@schatten>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there
+On Fri, Sep 25, 2009 at 07:15:24PM +0200, Florian Mickler wrote:
+> cc's added
+> 
+> could you also:
+>  - tell the version of the broken kernel, 
+>  - the last working kernel version, 
+>  - test if it works with current kernel-snapshot from
+>    http://www.kernel.org/ 
 
-I had problems to get my rtl8185 PCI card running on Sparc64: I always
-got an error about "No suitable DMA available" followed by an error
-that no device could be detected. When comparing the rtl8180 driver to
-others I noticed that others are mostly using DMA_BIT_MASK so I changed
-the custom mask to DMA_BIT_MASK(32) which fixed my issue.
+Yes, please.
 
-Cheers,
-Tiziano
+> kernel-module "ath5k" gets no IP when using dhcp
+> 
+> Description: It is not possible, to get an IP-address by using dhcp
+> with the kernel-module ath5k. It is possible, to give a fixed IP to
+> that module.
 
----
- drivers/net/wireless/rtl818x/rtl8180_dev.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+It works here - I would guess the packets are getting dropped.
+Do you have anything in 'dmesg' while trying to associate?
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 16429c4..515f562 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -850,8 +850,8 @@ static int __devinit rtl8180_probe(struct pci_dev *pdev,
- 		goto err_free_reg;
- 	}
- 
--	if ((err = pci_set_dma_mask(pdev, 0xFFFFFF00ULL)) ||
--	    (err = pci_set_consistent_dma_mask(pdev, 0xFFFFFF00ULL))) {
-+	if ((err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) ||
-+	    (err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))) {
- 		printk(KERN_ERR "%s (rtl8180): No suitable DMA available\n",
- 		       pci_name(pdev));
- 		goto err_free_reg;
+> There are already other reports of this problem in discussion forums.
+> It seems, the old madwifi-driver works better with dhcp - so people say.
+
+Can you point to such a discussion?  It's best to discuss on ath5k-devel
+or linux-wireless ML so we will know about it.
+
 -- 
-1.6.4
+Bob Copeland %% www.bobcopeland.com
 
