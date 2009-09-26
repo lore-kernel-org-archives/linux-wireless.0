@@ -1,184 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx39.mail.ru ([94.100.176.53]:60427 "EHLO mx39.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757469AbZINXCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 19:02:35 -0400
-Subject: [RFC PATCH] mac80211: Fix [re]association power saving issue on AP
- side
-From: Igor Perminov <igor.perminov@inbox.ru>
-To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain
-Date: Tue, 15 Sep 2009 03:02:36 +0400
-Message-Id: <1252969356.26765.299.camel@sunlight>
-Mime-Version: 1.0
+Received: from mk-filter-1-a-1.mail.uk.tiscali.com ([212.74.100.52]:7760 "EHLO
+	mk-filter-1-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751952AbZIZPdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Sep 2009 11:33:13 -0400
+Date: Sat, 26 Sep 2009 16:33:14 +0100 (BST)
+From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31-git wireless broken
+In-Reply-To: <1253973831.5122.33.camel@johannes.local>
+Message-ID: <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
+References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
+ <1253813740.3868.324.camel@johannes.local>  <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+  <1253816614.3868.406.camel@johannes.local>  <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
+  <1253856038.3868.500.camel@johannes.local>  <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
+  <1253868214.3868.713.camel@johannes.local>  <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
+  <1253970049.5122.31.camel@johannes.local> <1253973831.5122.33.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Consider the following step-by step:
-1. A STA authenticates and associates with the AP and exchanges
-traffic.
-2. The STA reports to the AP that it is going to PS state.
-3. Some time later the STA device goes to the stand-by mode (not only
-its wi-fi card, but the device itself) and drops the association state
-without sending a disassociation frame.
-4. The STA device wakes up and begins authentication with an
-Auth frame as it hasn't been authenticated/associated previously.
- 
-At the step 4 the AP "remembers" the STA and considers it is still in
-the PS state, so the AP buffers frames, which it has to send to the STA.
-But the STA isn't actually in the PS state and so it neither checks
-TIM bits nor reports to the AP that it isn't power saving.
-Because of that reauthentication/association fails.
+On Sat, 26 Sep 2009, Johannes Berg wrote:
+> On Sat, 2009-09-26 at 15:00 +0200, Johannes Berg wrote:
+> > 
+> > I'm downloading a livecd to figure out what might be going wrong.
+> 
+> It appears that just uses
+> 	test -d /sys/class/net/wlan0/wireless
+> 
+> but that should be ok, unless that's actually a link now for some reason
+> -- can you verify what happens there? And double-check you have
+> CONFIG_WIRELESS_EXT_SYSFS please, the config you sent me did have it
+> tho.
 
-To fix this issue:
-1. Auth, Assoc Resp and Reassoc Resp frames are transmitted disregarding
-of STA's power saving state.
-2. When an application (hostapd) tries to add a STA to an AP (that
-occurs when the STA has [re]associated successfully) and mac80211
-already "knows" that STA, the AP resets the power saving state of the
-STA and purges of frames that was previously buffered if any.
+I do have CONFIG_WIRELESS_EXT_SYSFS=y,
+and I do have /sys/class/net/wlan0/ containing various things,
+but I don't have any /sys/class/net/wlan0/wireless with recent kernels.
 
-Signed-off-by: Igor Perminov <igor.perminov@inbox.ru>
----
- net/mac80211/cfg.c      |   15 +++++++++------
- net/mac80211/sta_info.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h |    1 +
- net/mac80211/tx.c       |    5 ++++-
- 4 files changed, 61 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5608f6c..20d4c12 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -704,7 +704,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
--	int layer2_update;
-+	int iftype_ap;
- 
- 	if (params->vlan) {
- 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-@@ -731,7 +731,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 
- 	rate_control_rate_init(sta);
- 
--	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-+	iftype_ap = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		sdata->vif.type == NL80211_IFTYPE_AP;
- 
- 	rcu_read_lock();
-@@ -739,17 +739,20 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	err = sta_info_insert(sta);
- 	if (err) {
- 		/* STA has been freed */
--		if (err == -EEXIST && layer2_update) {
--			/* Need to update layer 2 devices on reassociation */
-+		if (err == -EEXIST && iftype_ap) {
-+			/* Need to reset PS state
-+			 * and update layer 2 devices on reassociation */
- 			sta = sta_info_get(local, mac);
--			if (sta)
-+			if (sta) {
-+				sta_info_reset_ps(sta);
- 				ieee80211_send_layer2_update(sta);
-+			}
- 		}
- 		rcu_read_unlock();
- 		return err;
- 	}
- 
--	if (layer2_update)
-+	if (iftype_ap)
- 		ieee80211_send_layer2_update(sta);
- 
- 	rcu_read_unlock();
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index eec0014..09dc8de 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -459,6 +459,53 @@ void sta_info_clear_tim_bit(struct sta_info *sta)
- 	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
- }
- 
-+void sta_info_reset_ps(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_ap *bss = sdata->bss;
-+	unsigned long flags;
-+	int filtered, buffered;
-+
-+	BUG_ON(!bss);
-+
-+	spin_lock_irqsave(&sta->local->sta_lock, flags);
-+
-+	if (!test_sta_flags(sta, WLAN_STA_PS)) {
-+		spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+		return;
-+	}
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+	printk(KERN_DEBUG "%s: STA %pM aid %d resets power save mode\n",
-+	       sdata->dev->name, sta->sta.addr, sta->sta.aid);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+
-+	atomic_dec(&bss->num_sta_ps);
-+
-+	clear_sta_flags(sta, WLAN_STA_PS);
-+	drv_sta_notify(local, &sdata->vif, STA_NOTIFY_AWAKE, &sta->sta);
-+
-+	filtered = skb_queue_len(&sta->tx_filtered);
-+	skb_queue_purge(&sta->tx_filtered);
-+
-+	buffered = skb_queue_len(&sta->ps_tx_buf);
-+	skb_queue_purge(&sta->ps_tx_buf);
-+
-+	if (buffered) {
-+		__sta_info_clear_tim_bit(bss, sta);
-+		local->total_ps_buffered -= buffered;
-+	}
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
-+	printk(KERN_DEBUG "%s: STA %pM aid %d purged of "
-+			"%d filtered/%d PS frames\n", sdata->dev->name,
-+			sta->sta.addr, sta->sta.aid, filtered, buffered);
-+#endif /* CONFIG_MAC80211_VERBOSE_PS_DEBUG */
-+
-+	spin_unlock_irqrestore(&sta->local->sta_lock, flags);
-+}
-+
- static void __sta_info_unlink(struct sta_info **sta)
- {
- 	struct ieee80211_local *local = (*sta)->local;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ccc3adf..bd65d9c 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -445,6 +445,7 @@ void sta_info_unlink(struct sta_info **sta);
- void sta_info_destroy(struct sta_info *sta);
- void sta_info_set_tim_bit(struct sta_info *sta);
- void sta_info_clear_tim_bit(struct sta_info *sta);
-+void sta_info_reset_ps(struct sta_info *sta);
- 
- void sta_info_init(struct ieee80211_local *local);
- int sta_info_start(struct ieee80211_local *local);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 10a1099..4d981e7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 	u32 staflags;
- 
--	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)))
-+	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
-+			|| ieee80211_is_auth(hdr->frame_control)
-+			|| ieee80211_is_assoc_resp(hdr->frame_control)
-+			|| ieee80211_is_reassoc_resp(hdr->frame_control)))
- 		return TX_CONTINUE;
- 
- 	staflags = get_sta_flags(sta);
-
-
+Hugh
