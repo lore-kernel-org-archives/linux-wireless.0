@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:60990 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755376AbZIDIFe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 04:05:34 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1MjTnc-0004AU-9Y
-	for linux-wireless@vger.kernel.org; Fri, 04 Sep 2009 10:05:36 +0200
-Received: from cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com ([82.16.96.10])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2009 10:05:36 +0200
-Received: from jon.fairbairn by cpc1-cmbg9-0-0-cust9.cmbg.cable.ntl.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Sep 2009 10:05:36 +0200
-To: linux-wireless@vger.kernel.org
-From: Jon Fairbairn <jon.fairbairn@cl.cam.ac.uk>
-Subject: AP: ath5k + hostapd occasionally sulks
-Date: Fri, 04 Sep 2009 09:05:02 +0100
-Message-ID: <wf8wgvqgnl.fsf@calligramme.charmers>
+Received: from casper.infradead.org ([85.118.1.10]:36410 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbZIZSyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Sep 2009 14:54:22 -0400
+Date: Sat, 26 Sep 2009 20:51:14 +0200
+From: Arjan van de Ven <arjan@infradead.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org,
+	mingo@elte.hu, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/9] Add bound checks in wext for copy_from_user
+Message-ID: <20090926205114.4ec62382@infradead.org>
+In-Reply-To: <20090926204951.424e567e@infradead.org>
+References: <20090926204951.424e567e@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Arjan van de Ven <arjan@linux.intel.com>
+Subject: [PATCH 3/9] Add bound checks in wext for copy_from_user
+CC: linux-wireless@vger.kernel.org
 
-I'm running hostapd 0.6.9 and currently compat-wireless-2009-08-22.
+The wireless extensions have a copy_from_user to a local stack
+array "essid", but both me and gcc have failed to find where
+the bounds for this copy are located in the code.
 
-This seems to work most of the time, but occasionally (usually days
-between occurrences) stops accepting connexions. Usually there's no
-indication of this in the logs, but when clients try to associate they
-eventually time out.
+This patch adds some basic sanity checks for the copy length
+to make sure that we don't overflow the stack buffer.
 
-However, the most recent time this happened was when I was downloading a
-large amount of data to one of the clients. I got a lot of
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 
-ath5k phy0: no further txbuf available, dropping packet
 
-in the log and then the connexion died and wouldn't come back until I
-restarted hostapd (I reloaded ath5k for good measure; I should probably
-have tried without doing that...)
-
-I have two questions: 
-
-(1) is that buffer message something that might have been addressed
-since 2009-08-22, and
-
-(2) What can I do to track down something that happens this
-infrequently? I'm running hostapd with -d, but that doesn't log anything
-different when it happens.
+diff --git a/net/wireless/wext.c b/net/wireless/wext.c
+index 5b4a0ce..34beae6 100644
+--- a/net/wireless/wext.c
++++ b/net/wireless/wext.c
+@@ -773,10 +773,13 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
+ 			essid_compat = 1;
+ 		else if (IW_IS_SET(cmd) && (iwp->length != 0)) {
+ 			char essid[IW_ESSID_MAX_SIZE + 1];
++			unsigned int len;
++			len = iwp->length * descr->token_size;
+ 
+-			err = copy_from_user(essid, iwp->pointer,
+-					     iwp->length *
+-					     descr->token_size);
++			if (len > IW_ESSID_MAX_SIZE)
++				return -EFAULT;
++
++			err = copy_from_user(essid, iwp->pointer, len);
+ 			if (err)
+ 				return -EFAULT;
+ 
 
 
 
 -- 
-Jón Fairbairn                                 Jon.Fairbairn@cl.cam.ac.uk
-
-
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
