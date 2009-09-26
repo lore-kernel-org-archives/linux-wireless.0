@@ -1,64 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:51265 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903AbZHaXiB convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36427 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbZIZLjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:38:01 -0400
-Received: by iwn42 with SMTP id 42so2010270iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:38:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-References: <h7eo7q$7ks$1@ger.gmane.org> <3ace41890908311055s5c49a25fjf69ca48024579d44@mail.gmail.com>
-	<43e72e890908311102q2ed9e8b3q8f1f15d45a29b2f1@mail.gmail.com>
-	<3ace41890908311132g16783b68y2d1771ce1d2780d@mail.gmail.com>
-	<43e72e890908311141k6bcf5edbl6bce2b88670fb5f8@mail.gmail.com>
-	<3ace41890908311157v4fbc9829j6db9c91ef6fff3c7@mail.gmail.com>
-	<4A9C3C59.5010305@lwfinger.net> <69e28c910908311418l7f033b5bp7a9b443cd253304@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 31 Aug 2009 16:37:43 -0700
-Message-ID: <43e72e890908311637r7b079e9fj2ac6b77f2b59eb79@mail.gmail.com>
-Subject: Re: rtl8187b Problem with tx level
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Tobias Schlemmer <keinstein_junior@gmx.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 26 Sep 2009 07:39:16 -0400
+Subject: Re: Problems with "cfg80211: fix SME connect" commit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Albert Herranz <albert_herranz@yahoo.es>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
+References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
+	 <200909210845.51247.hs4233@mail.mn-solutions.de>
+	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
+	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
+	 <1253859759.3868.569.camel@johannes.local>
+	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-v1dFu/rguU3pkeAkMP+1"
+Date: Sat, 26 Sep 2009 13:39:14 +0200
+Message-Id: <1253965154.5122.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Mon, Aug 31, 2009 at 11:10 PM, Larry Finger<Larry.Finger@lwfinger.net> wrote:
->> Hin-Tak Leung wrote:
->>>
->>> I just took a look at the history - there aren't obvious bug fixes, a
->>> bunch of work queue-related changes from you & Johannes; feature-wise,
->>> Larry added LED blinking after 2.6.30, and Herton added rfkill support
->>> quite recently after 2.6.31-rc7 . But no, there isn't any change that
->>> would affect tx level beyond 2.6.31-rc7, I think.
->>
->> Your analysis matches my recollection.
->>
->> Apparently RealTek is supplying a closed-source driver for RTL8187B
->> these days. There are no sources for the B on their web site. In
->> addition, the one that Tobias loaded tainted his kernel.
->>
->> Larry
->
-> The driver is not actually closed-source; they just don't provide any
-> drivers on their site anymore, instead they send their reference
-> drivers to OEMs, expecting the OEMs to release their own versions
-> (with sources - most vendors who do release Linux drivers in fact only
-> release sources, without binaries). The reason for this appears to be
-> that Realtek now encourages vendors to sell RTL81xx wireless chips
-> with modified USB IDs. (Or are you seeing a binary-only driver on
-> realtek.com.tw? That would definitely be a GPL violation, given that
-> they use a modified version of the GPLed libipw stack.)
 
-Gabor, do you speak to RealkTek folks? It seems what may be best for
-OEMs and RealTek themselves is to post drivers for inclusion into
-staging first and then for interested parties to port them properly.
+--=-v1dFu/rguU3pkeAkMP+1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Fri, 2009-09-25 at 16:54 +0100, Hin-Tak Leung wrote:
+
+> > Can you try this? The last hunk is most important, but the other stuff
+> > helps debugging.
+>=20
+> Great. The extra timeout in wap_spplicant.log is gone, so it is back
+> to NM does it all by itself.
+
+Interesting, thanks for the test. I'll go submit the patch.
+
+> Here is the dmesg from this patch on top of everything else so far:
+>=20
+> wlan2: starting authentication with _id_
+> wlan2: deauthenticating from _id_ by local choice (reason=3D3)
+> wlan2: starting authentication with _id_
+> wlan2: direct probe to AP _id_ (try 1)
+> wlan2: direct probe responded
+> wlan2: authenticate with AP _id_ (try 1)
+> wlan2: authenticated
+> wlan2: starting association with _id_
+> wlan2: associate with AP _id_ (try 1)
+> wlan2: RX AssocResp from _id_ (capab=3D0x431 status=3D0 aid=3D1)
+> wlan2: associated
+>=20
+> There is still the extra deauth at the beginning, but I guess I can
+> live with it, it doesn't require user action to deal with (unlike
+> without this latest patch) I suppose there might be more tuning before
+> commit?=20
+
+I think I'll just remove some of the printks again, but leave the ones
+moving. Actually probably better to split it up into a mac80211 and a
+cfg80211 patch.
+
+The extra deauth is because cfg80211 already starts the auth with the
+BSS before wpa_supplicant set the BSSID, and then when setting the BSSID
+it asks for deauth, but before we ever actually did anything... I think
+we'll just have to live with that, since it's hard to fix in the layered
+design we have now.
+
+>  Otherwise Tested-by:
+>=20
+> Hmm, slightly side-tracked - was the original poster using NM on top
+> on wpa_supplicant, just curious?
+
+You mean Albert? I don't know.
+
+johannes
+
+--=-v1dFu/rguU3pkeAkMP+1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKvf1eAAoJEODzc/N7+QmaHkUP/15JyLd9whq7RyzO8VGhy6RL
+N/dsUleCftH0e1NT0pBjfSzftgJjepiyEpEQqanG04TAPoqKYGOreiwnX01eyHM8
+3KA7pJG/ndDXFoZ5qDR9DNv8UhnSQ74tp/FyVdZjGQ1lj581TK2wIs/rFTVaSsMr
+pjqP82FoyTQYLJlVHYAZTxLAj4VNcCgpukud5gL+3Fe7/2f9LYI7BFGcYaFELKT7
+U0bQmrlV0QfE7FJVO9fO+vpJc4+ml7+CMrgtI0BAl5yJITV3aA+RbZfwSyeHeQJ7
+GznsQJJiTUTP8vUlVSvviuDm13n+deBrG3Pn/B9UxvviGY23uARgRmljeCCCWpQc
+UxWu22pNDcpHJBhSr5iGoV4k2pSzDzIs6+tUHFAvrk0p1/N9nWnotIthItImxdxG
+0+KPnQOBDCG4xrNFb/8ZGdeYIx+/HlZdrac+ApRKpbvnK6HV0wHrNZ1kP4mGwgXz
+9zp9IKnFzrLa/1tTiP5FObprGvcFPL11Qw4vHPVcCFguCu5n6B73pGI/3Ayp6gfl
+1H24QfX7OmsdH71xZ6VI2LhWK349ON+n8q7hYAzaKqN6RoY0mZY154wQltULhCu+
+qJyBnJvEcO4iYDLtAKPzJlZLjvI/XRUMES9y+7PEmiITVRAgY0tm3eAHZza5dQh2
+xULW9zyIInf5UAJfHhhF
+=+7er
+-----END PGP SIGNATURE-----
+
+--=-v1dFu/rguU3pkeAkMP+1--
+
