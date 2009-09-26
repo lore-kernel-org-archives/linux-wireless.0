@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40222 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbZIYFUq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 01:20:46 -0400
-Subject: Re: 2.6.31-git wireless broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
-In-Reply-To: <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
-References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
-	 <1253813740.3868.324.camel@johannes.local>
-	 <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
-	 <1253816614.3868.406.camel@johannes.local>
-	 <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SMr3CbQWtheGrG4QDc6f"
-Date: Fri, 25 Sep 2009 07:20:38 +0200
-Message-Id: <1253856038.3868.500.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:38315 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752840AbZIZC5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Sep 2009 22:57:20 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: cannot compile compate-wirless snapshots
+Date: Sat, 26 Sep 2009 04:57:20 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909260457.21103.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---=-SMr3CbQWtheGrG4QDc6f
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+actually I can build the stable compat-wirless-2.6.30.ta.bz2 just fine.
 
-On Thu, 2009-09-24 at 20:45 +0100, Hugh Dickins wrote:
+But I get make errors, when I try to build the daily snapshot, see below. I 
+use openSUSE on a 2.6.27 kernel.
 
-> I've now tried recent Linus -git plus both those patches on both machines=
-,
-> but no joy on either.
+Thanx, Malte
 
-Thanks.
 
-> >=20
-> > Anyhow, I'm grasping at straws -- can you tell me more about the failur=
-e
-> > mode, and possibly enable CONFIG_MAC80211_DEBUG_MENU and
-> > CONFIG_MAC80211_VERBOSE_DEBUG?
->=20
-> I enabled those on both machines for that trial, will keep them on for no=
-w.
->=20
-> The failure mode is that iwconfig says ESSID:off/any instead of showing
-> my essid, and I've no connectivity; but you probably need something more
-> specific than that.
->=20
-> I'll send you privately the .config of each machine, and the dmesg of
-> each machine, from that trial.  I've just compared the .configs against
-> what works for 2.6.31, and everything relevant still seems to be there.
-
-Very odd. Haven't really looked at the config, but I see the phy0: idle
-message that indicates you have debug on. However, it's like nothing
-ever tells the kernel to connect to a network.
-
-Are you running wpa_supplicant?
-
-> I do wonder if this is an openSUSE interaction, whether another distro
-> with the same kernel would be fine.
-
-I'm not sure why that would be? But then again this is the first I've
-heard of such a problem.
-
-johannes
-
---=-SMr3CbQWtheGrG4QDc6f
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKvFMiAAoJEODzc/N7+QmaNAMP/jECxQLfahKkt2TStazpOb+l
-wMUoYAUldqD5x6V7qqneucFjIk+fwHC3XJA4weckbxOa6WBEgM/R5hHjRL0sHBNu
-XKpUHMX5i/ucTcInBw6xmtBEOLEO4k7lHRlULb0p4ABLKZp7lSB7Gk3sRYHod2zp
-BxEfZ2NhxRimGFI5U5RuWezmZJzfvRUeShpbTgA5HJ0UXDZBw5BP1QNg63P4KT+g
-dIW/LZK69NC62uqdtEjTltcYPa1CtzYCrqHC2MryDavSv6ECtO4DqM00ZGIZrETu
-B0e+HJhee4LQ2XULTHTSAGhUSnaqsVQdyWN3qqRUBS81bNEcvbcVGLvvcy7iEKnl
-fVr/WTYx38Cc13zicpaYodosfMIEh4Ru2hFhKIxOipFlfs+AfvK/WPO15vRDp9yK
-zx8tGZplJ/6lHecjo4J8ET1XjPUjK260U784rIQgQci/16gG2o7SCYLPXQ6kkmuy
-LeUWah/lG6l5TDgF4JAIS2rARf28tejiwSATvdPt/TF/UmXTciOynexNM8U6Z6oF
-n9FCCNxWJYMJQ1TtNDrNaLoE1Xw3wTCRunpkGVTdEgkrw18npcxwx9qp3hhaxrcl
-z0Y9IIeawGC8XeHnk68wmYAX5Ze4B0g7CSTKb+b+XhCo33k64UYn22waMq8uX6kE
-TEM0yShHB+5m5s7ptS1z
-=cYXk
------END PGP SIGNATURE-----
-
---=-SMr3CbQWtheGrG4QDc6f--
-
+2[malte_gell@linux-61r3]12535 04:50~/download/src/wifi/compat-
+wireless-2009-09-25> make
+make -C /lib/modules/2.6.27.29-0.1-k7/build 
+M=/home/malte_gell/download/src/wifi/compat-wireless-2009-09-25 modules
+make[1]: Entering directory `/usr/src/linux-2.6.27.29-0.1'
+  CC [M]  /home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/drivers/net/wireless/ath/main.o
+In file included from /home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat.h:19,
+                 from <command-line>:0:
+/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat-2.6.28.h:152: error: redefinition of 
+'struct tracepoint'
+In file included from /home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat.h:19,
+                 from <command-line>:0:
+/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat-2.6.28.h:182:1: warning: "DEFINE_TRACE" 
+redefined
+In file included from include/linux/module.h:19,
+                 from include/linux/textsearch.h:7,
+                 from include/linux/skbuff.h:26,
+                 from /home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat-2.6.28.h:10,
+                 from /home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat.h:19,
+                 from <command-line>:0:
+include/linux/tracepoint.h:86:1: warning: this is the location of the previous 
+definition
+/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/include/net/compat-2.6.28.h:186: error: redefinition of 
+'tracepoint_update_probe_range'
+include/linux/tracepoint.h:100: error: previous definition of 
+'tracepoint_update_probe_range' was here
+make[4]: *** [/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/drivers/net/wireless/ath/main.o] Error 1
+make[3]: *** [/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/drivers/net/wireless/ath] Error 2
+make[2]: *** [/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25/drivers/net/wireless] Error 2
+make[1]: *** [_module_/home/malte_gell/download/src/wifi/compat-
+wireless-2009-09-25] Error 2
+make[1]: Leaving directory `/usr/src/linux-2.6.27.29-0.1'
+make: *** [modules] Error 2
