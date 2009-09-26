@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:48109 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758297AbZIRSFE convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34003 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752370AbZIZTaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 14:05:04 -0400
-Received: by ewy2 with SMTP id 2so1545332ewy.17
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 11:05:06 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-Reply-To: Florian Fainelli <florian@openwrt.org>
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: Re: Makefile ref to non-existent CONFIG_ATHEROS_AR71XX
-Date: Fri, 18 Sep 2009 20:04:51 +0200
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-References: <alpine.LFD.2.00.0909180959550.9988@localhost>
-In-Reply-To: <alpine.LFD.2.00.0909180959550.9988@localhost>
+	Sat, 26 Sep 2009 15:30:17 -0400
+Date: Sat, 26 Sep 2009 22:30:15 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Fix initial beacon timer configuration
+Message-ID: <20090926193015.GA27296@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200909182004.54398.florian@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+mac80211_hwsim does not start transmitting Beacon frames when hostapd
+is started for the first time and restarting hostapd fixes this. The
+issue is caused by the config() handler not being able to start
+beacon_timer when beacon interval is not yet known and
+bss_info_changed() handler not starting the timer. This can be fixed by
+making the bss_info_changed() update the timer.
 
-Le vendredi 18 septembre 2009 16:01:25, Robert P. J. Day a écrit :
->   searching for Makefile references to Kconfig variables that don't
-> exist, and i find:
->
-> ===== ATHEROS_AR71XX =====
-> ./drivers/net/wireless/ath/ath9k/Makefile:ath9k-$(CONFIG_ATHEROS_AR71XX) +=
-> ahb.o
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-We need it in OpenWrt and plan to send Atheros AR71xx SoC support soon, do not 
-consider this for removal. Thanks
+---
+ drivers/net/wireless/mac80211_hwsim.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- uml.orig/drivers/net/wireless/mac80211_hwsim.c	2009-09-26 21:36:08.000000000 +0300
++++ uml/drivers/net/wireless/mac80211_hwsim.c	2009-09-26 22:21:58.000000000 +0300
+@@ -639,6 +639,9 @@ static void mac80211_hwsim_bss_info_chan
+ 		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
+ 		if (WARN_ON(!data->beacon_int))
+ 			data->beacon_int = 1;
++		if (data->started)
++			mod_timer(&data->beacon_timer,
++				  jiffies + data->beacon_int);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+
 -- 
-Best regards, Florian Fainelli
-Email: florian@openwrt.org
-Web: http://openwrt.org
-IRC: [florian] on irc.freenode.net
--------------------------------
+Jouni Malinen                                            PGP id EFC895FA
