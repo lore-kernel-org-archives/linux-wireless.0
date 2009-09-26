@@ -1,28 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:38314 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:41512 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbZIZMT6 (ORCPT
+	with ESMTP id S1752321AbZIZMKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Sep 2009 08:19:58 -0400
+	Sat, 26 Sep 2009 08:10:20 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
 	(Exim 4.69)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1MrWFi-0002ly-OZ
-	for linux-wireless@vger.kernel.org; Sat, 26 Sep 2009 14:20:00 +0200
-Subject: [RFC/RFT v3] wext: refactor
+	id 1MrW6P-0002fJ-FB
+	for linux-wireless@vger.kernel.org; Sat, 26 Sep 2009 14:10:23 +0200
+Subject: [RFC/RFT v2] wext: refactor
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1253967011.5122.9.camel@johannes.local>
+In-Reply-To: <1253873092.3868.797.camel@johannes.local>
 References: <1253873092.3868.797.camel@johannes.local>
-	 <1253967011.5122.9.camel@johannes.local>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 26 Sep 2009 14:19:49 +0200
-Message-Id: <1253967589.5122.11.camel@johannes.local>
+Date: Sat, 26 Sep 2009 14:10:11 +0200
+Message-Id: <1253967011.5122.9.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
-
-Subject: wext: refactor
 
 Refactor wext to
  * split out iwpriv handling
@@ -45,7 +42,10 @@ based on PROC_FS and anything that requires the wext core
 
 Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
-Another buglet...
+Sorry, first version had slightly bad patch to wext.h
+
+Should we proceed with this? Seems to work ok here, and if anything it
+could be causing build failures that are easy to catch.
 
  drivers/net/wireless/Kconfig         |   29 
  drivers/net/wireless/hostap/Kconfig  |    2 
@@ -54,7 +54,7 @@ Another buglet...
  include/net/cfg80211.h               |    6 
  include/net/iw_handler.h             |   14 
  include/net/net_namespace.h          |    2 
- include/net/wext.h                   |   50 
+ include/net/wext.h                   |   46 
  net/socket.c                         |    4 
  net/wireless/Kconfig                 |   50 
  net/wireless/Makefile                |    8 
@@ -69,7 +69,7 @@ Another buglet...
  net/wireless/wext-proc.c             |  155 +++
  net/wireless/wext-spy.c              |  231 ++++
  net/wireless/wext.c                  | 1772 -----------------------------------
- 22 files changed, 1843 insertions(+), 1843 deletions(-)
+ 22 files changed, 1842 insertions(+), 1840 deletions(-)
 
 --- wireless-testing.orig/net/wireless/Kconfig	2009-09-26 13:29:37.000000000 +0200
 +++ wireless-testing/net/wireless/Kconfig	2009-09-26 13:59:56.000000000 +0200
@@ -3286,15 +3286,8 @@ Another buglet...
 +}
 +#endif
 --- wireless-testing.orig/include/net/wext.h	2009-09-26 13:59:07.000000000 +0200
-+++ wireless-testing/include/net/wext.h	2009-09-26 14:18:02.000000000 +0200
-@@ -1,28 +1,19 @@
- #ifndef __NET_WEXT_H
- #define __NET_WEXT_H
- 
--/*
-- * wireless extensions interface to the core code
-- */
-+#include <net/iw_handler.h>
++++ wireless-testing/include/net/wext.h	2009-09-26 13:59:56.000000000 +0200
+@@ -7,22 +7,15 @@
  
  struct net;
  
@@ -3321,7 +3314,7 @@ Another buglet...
  static inline int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
  				    void __user *arg)
  {
-@@ -35,4 +26,35 @@ static inline int compat_wext_handle_ioc
+@@ -35,4 +28,35 @@ static inline int compat_wext_handle_ioc
  }
  #endif
  
