@@ -1,68 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([193.131.176.58]:33828 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934364AbZIDWc7 (ORCPT
+Received: from mail-px0-f194.google.com ([209.85.216.194]:61801 "EHLO
+	mail-px0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbZI0Tuf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Sep 2009 18:32:59 -0400
-Subject: Re: kmemleak reports on wireless-testing master-2009-09-04 +
-	kmemleak  tree
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
-References: <43e72e890909041515s38e7c502kf552a5cf90e99d94@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 04 Sep 2009 23:32:59 +0100
-Message-Id: <1252103579.21380.10.camel@pc1117.cambridge.arm.com>
-Mime-Version: 1.0
+	Sun, 27 Sep 2009 15:50:35 -0400
+Received: by pxi32 with SMTP id 32so3033669pxi.4
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2009 12:50:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4ABF8184.9060904@verizon.net>
+References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com>
+	<4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com>
+	<4ABF8184.9060904@verizon.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 27 Sep 2009 12:50:19 -0700
+Message-ID: <43e72e890909271250g2936947fj314aad65e10d9788@mail.gmail.com>
+Subject: Re: A problem loading ssb module
+To: Clyde McPherson <ccmcphe@verizon.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bcm43xx-dev@lists.berlios.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-09-04 at 15:15 -0700, Luis R. Rodriguez wrote:
-> I get these with today's wireless-testing + pulling Catalin's kmemleak
-> tree. I nothing upon bootup, and then after a while I force a scan and
-> get (besides some other acpi stuff):
-> 
-> unreferenced object 0xffff880039c7d700 (size 256):
->   comm "events/1", pid 10, jiffies 4295050369
->   hex dump (first 32 bytes):
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->   backtrace:
->     [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
->     [<ffffffff81118a83>] kmem_cache_alloc_node+0x193/0x200
->     [<ffffffff8141dc6a>] __alloc_skb+0x4a/0x180
->     [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
->     [<ffffffffa01b7084>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
->     [<ffffffffa01b70d6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
->     [<ffffffff8106de80>] worker_thread+0x1d0/0x380
->     [<ffffffff81073266>] kthread+0xa6/0xb0
->     [<ffffffff810130ca>] child_rip+0xa/0x20
->     [<ffffffffffffffff>] 0xffffffffffffffff
+On Sun, Sep 27, 2009 at 8:15 AM, Clyde McPherson <ccmcphe@verizon.net> wrote:
+>
+>
+>> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>
+>>>
+>>> Bryan Wu wrote:
+>>>
+>>>>
+>>>> Mauro Di Domenico wrote:
+>>>>
+>>>>>
+>>>>> Hi,
+>>>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
+>>>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
+>>>>> machine with kernel version 2.6.30-6.
+>>>>>
+>>>>> During the boot I experience this problem:
+>>>>>
+>>>>> $ dmesg|egrep "b43|ssb"
+>>>>>
+>>>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
+>>>>> low) -> IRQ 17
+>>>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
+>>>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
+>>>>> 0000:06:00.0
+>>>>> [    6.968981] b43: disagrees about version of symbol
+>>>>> ssb_device_is_enabled
+>>>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
+>>>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
+>>>>> [    6.969407] b43: disagrees about version of symbol
+>>>>> ssb_pcicore_dev_irqvecs_enable
+>>>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
+>>>>> .....
+>>>>> ....
+>>>>> ...
+>>>>>
+>>>>>
+>>>>
+>>>> I faced the exactly same issue as Mauro did. +1 from me, but currently
+>>>> have
+>>>> no time to take a deeper look.
+>>>>
+>>>> Thanks
+>>>>
+>>>
+>>> Hi,
+>>>
+>>> I had the same problem with the ssb module and compat-wireless in ubuntu
+>>> 9.04. The problem is that the ssb module is integrated into the
+>>> initramfs image. The version out of the initramfs image is loaded on
+>>> startup and not the version of compat-wireless. Running "sudo
+>>> update-initramfs -u" after installing compat-wireless and restaing the
+>>> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
+>>> form default initramfs image or compat-wireless should update the image
+>>> with the install command. At least the compat-wireless documentation
+>>> needs an update.
+>>>
+>>> Hauke
+>>>
+>>> (adding Luis and linux-wireless list)
+>>>
+>>
+>> Tim, do you guys update the initramfs upon installation of lbm? If a
+>> user does not use lbm and uses compat-wireless I suppose we need to do
+>> something similar.
+>>
+>>  Luis
+>> _______________________________________________
+>> Bcm43xx-dev mailing list
+>> Bcm43xx-dev@lists.berlios.de
+>> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>>
+>
+> All:
+> I have a large group that uses the ssb module along with the Broadcom 4318,
+> in a CF form factor. If the CF card is inserted before boot, and the ssb
+> module is not in the initrd process, the laptops lock up and do not become
+> operational. The solution to this problem is/was adding the ssb.ko to the
+> initrd process. So I agree with Luis on this, the ssb module will have to be
+> added/updated to the initrd process. As for PCI operations, I don't know,
+> but for PCMCIA operations ssb.ko has to be added and/or updated. Anytime I
+> am testing new releases of b43, I run "update-initramfs -u" to update the
+> ssb module. (Sometimes you can do a rmmod ssb and rmmod b43, and then
+> modprobe them back in. - This saves a reboot)
 
-If you force a few scans, do we still get the same objects reported as
-leaks?
+But why is ssb, b43, b44 needed upon early boot?
 
-> unreferenced object 0xffff8800322bd000 (size 4096):
->   comm "events/1", pid 10, jiffies 4295050369
->   hex dump (first 32 bytes):
->     38 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00  8...............
->     00 00 01 00 03 00 00 00 43 10 01 00 00 00 00 00  ........C.......
->   backtrace:
->     [<ffffffff814e9d55>] kmemleak_alloc+0x25/0x60
->     [<ffffffff811198fb>] __kmalloc_node_track_caller+0x1ab/0x220
->     [<ffffffff8141dc9b>] __alloc_skb+0x7b/0x180
->     [<ffffffff814ddb82>] wireless_send_event+0x1f2/0x410
->     [<ffffffffa01b7084>] ___cfg80211_scan_done+0xe4/0x110 [cfg80211]
->     [<ffffffffa01b70d6>] __cfg80211_scan_done+0x26/0x50 [cfg80211]
->     [<ffffffff8106de80>] worker_thread+0x1d0/0x380
->     [<ffffffff81073266>] kthread+0xa6/0xb0
->     [<ffffffff810130ca>] child_rip+0xa/0x20
->     [<ffffffffffffffff>] 0xffffffffffffffff
-
-This is probably referenced from the first one, so we usually need to
-look into the first reported leak.
-
--- 
-Catalin
-
+  Luis
