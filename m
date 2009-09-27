@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44243 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbZI2WJw (ORCPT
+Received: from mk-filter-1-a-1.mail.uk.tiscali.com ([212.74.100.52]:1751 "EHLO
+	mk-filter-1-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752276AbZI0U6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 18:09:52 -0400
-Subject: [PATCH] mac80211: fix BSS leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Sep 2009 00:09:25 +0200
-Message-Id: <1254262165.30589.25.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 27 Sep 2009 16:58:45 -0400
+Date: Sun, 27 Sep 2009 21:58:38 +0100 (BST)
+From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] cfg80211: fix wireless handlers assignment
+In-Reply-To: <1254076075.6583.6.camel@johannes.local>
+Message-ID: <Pine.LNX.4.64.0909272139280.4061@sister.anvils>
+References: <1254076075.6583.6.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IBSS code leaks a BSS struct after telling
-cfg80211 about a given BSS by passing a frame.
+On Sun, 27 Sep 2009, Johannes Berg wrote:
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/ibss.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> The point we assign dev->wireless_handlers at is too
+> late, we need to do that before netdev_register_kobject()
+> gets called, so use the new NETDEV_PRE_INIT notifier.
+> The result of adding wireless_handlers too late is the
+> disappearance of /sys/class/net/wlan0/wireless which a
+> bunch of distro scripts still require.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
---- wireless-testing.orig/net/mac80211/ibss.c	2009-09-30 00:05:12.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-09-30 00:08:18.000000000 +0200
-@@ -73,6 +73,7 @@ static void __ieee80211_sta_join_ibss(st
- 	struct ieee80211_mgmt *mgmt;
- 	u8 *pos;
- 	struct ieee80211_supported_band *sband;
-+	struct cfg80211_bss *bss;
- 	u32 bss_change;
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
- 
-@@ -177,8 +178,9 @@ static void __ieee80211_sta_join_ibss(st
- 	mod_timer(&ifibss->timer,
- 		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
- 
--	cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
--				  mgmt, skb->len, 0, GFP_KERNEL);
-+	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
-+					mgmt, skb->len, 0, GFP_KERNEL);
-+	cfg80211_put_bss(bss);
- 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
- }
- 
+This 2/2 patch does indeed work: many thanks.  But...
 
+> ---
+> This should fix the regression Hugh reported (of course requires the
+> other patch which unfortunately I forgot to CC you, Hugh, I'll send you
+> a copy in private).
 
+... the 1/2 patch has a couple of problems.
+
+The trivial problem is that include/linux/notifier.h in Linus's git has
+#define NETDEV_PRE_UP		0x000D
+#define NETDEV_BONDING_OLDTYPE  0x000E
+#define NETDEV_BONDING_NEWTYPE  0x000F
+
+So it rejects the patch you posted: I changed it to add
+#define NETDEV_PRE_INIT		0x0010
+just after the NETDEV_BONDING_NEWTYPE line.
+
+The more serious problem is that it stops both my machines from booting,
+too early for framebuffer to show any messages, but vga=normal shows a
+long stacktrace scrolling offscreen, with some notifier stuff in there.
+
+I've experimented by moving your NETDEV_PRE_INIT hunk later in the
+sequence, just before the netdev_initialize_kobject(dev) (so I also
+changed the "goto out" to "goto err_uninit"): both* machines then boot
+correctly, and this mail leaves me wirelessly.
+
+I'll now experiment to see how early I can move that hunk.
+
+Hugh
+
+* I wrote that hoping the Aspire One build would complete soon,
+but it's still going: assume it's fine unless I say otherwise.
