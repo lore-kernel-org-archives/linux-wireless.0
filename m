@@ -1,22 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n3.bullet.mail.re3.yahoo.com ([68.142.237.110]:27897 "HELO
-	n3.bullet.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756187AbZINSwg (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:59967 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbZI0NYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 14:52:36 -0400
-From: Fabian Lenz <lenz_fabian@yahoo.de>
-To: linux-wireless@vger.kernel.org
-Subject: missing device id in ar9170 driver
-Date: Mon, 14 Sep 2009 20:46:07 +0200
+	Sun, 27 Sep 2009 09:24:08 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909142046.07525.lenz_fabian@yahoo.de>
+In-Reply-To: <20090927151855.29efcc53@infradead.org>
+References: <20090927151855.29efcc53@infradead.org>
+Date: Sun, 27 Sep 2009 15:24:10 +0200
+Message-ID: <8db1092f0909270624l4fc46734u6a91f7cc7ffb0c72@mail.gmail.com>
+Subject: Re: [bisected] Wireless regression in 2.6.32-git
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello! A quick note: device id 1002 for my TP-LINK TL-WN821N stick is missing, 
-please include it in the driver.
+Did You have similar messages in dmesg like this:
 
-Regards!
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2089
+(use WPA)
+?
 
+I try make sure, that that result of my bisection is correct.
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
