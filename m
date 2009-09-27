@@ -1,175 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:52496 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754581AbZINIhZ (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:48936 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794AbZI0LIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 04:37:25 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/11] ath9k: separate core driver and hw timer code
-Date: Mon, 14 Sep 2009 04:37:19 -0400
-Message-Id: <1252917448-10744-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
-References: <1252917448-10744-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 27 Sep 2009 07:08:44 -0400
+Subject: Re: 2.6.31-git wireless broken
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
+References: <Pine.LNX.4.64.0909241737390.20846@sister.anvils>
+	 <1253813740.3868.324.camel@johannes.local>
+	 <Pine.LNX.4.64.0909241859020.25022@sister.anvils>
+	 <1253816614.3868.406.camel@johannes.local>
+	 <Pine.LNX.4.64.0909242036270.7469@sister.anvils>
+	 <1253856038.3868.500.camel@johannes.local>
+	 <Pine.LNX.4.64.0909250838420.3783@sister.anvils>
+	 <1253868214.3868.713.camel@johannes.local>
+	 <Pine.LNX.4.64.0909251506260.11390@sister.anvils>
+	 <1253970049.5122.31.camel@johannes.local>
+	 <1253973831.5122.33.camel@johannes.local>
+	 <Pine.LNX.4.64.0909261631110.4336@sister.anvils>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-eKFvZla9b/xy+rDtjTeu"
+Date: Sun, 27 Sep 2009 13:08:31 +0200
+Message-Id: <1254049711.3958.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c   |   22 +++------------
- drivers/net/wireless/ath/ath9k/hw.h   |    9 ++++--
- drivers/net/wireless/ath/ath9k/main.c |   44 +++++++++++++++++++++++++++------
- 3 files changed, 47 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1f4e747..0fe8644 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -4096,9 +4096,10 @@ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
- 	return timer;
- }
- 
--void ath_gen_timer_start(struct ath_hw *ah,
--			 struct ath_gen_timer *timer,
--			 u32 timer_next, u32 timer_period)
-+void ath9k_hw_gen_timer_start(struct ath_hw *ah,
-+			      struct ath_gen_timer *timer,
-+			      u32 timer_next,
-+			      u32 timer_period)
- {
- 	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
- 	u32 tsf;
-@@ -4133,15 +4134,9 @@ void ath_gen_timer_start(struct ath_hw *ah,
- 	REG_SET_BIT(ah, AR_IMR_S5,
- 		(SM(AR_GENTMR_BIT(timer->index), AR_IMR_S5_GENTIMER_THRESH) |
- 		SM(AR_GENTMR_BIT(timer->index), AR_IMR_S5_GENTIMER_TRIG)));
--
--	if ((ah->ah_sc->imask & ATH9K_INT_GENTIMER) == 0) {
--		ath9k_hw_set_interrupts(ah, 0);
--		ah->ah_sc->imask |= ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->ah_sc->imask);
--	}
- }
- 
--void ath_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
-+void ath9k_hw_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- {
- 	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
- 
-@@ -4160,13 +4155,6 @@ void ath_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- 		SM(AR_GENTMR_BIT(timer->index), AR_IMR_S5_GENTIMER_TRIG)));
- 
- 	clear_bit(timer->index, &timer_table->timer_mask.timer_bits);
--
--	/* if no timer is enabled, turn off interrupt mask */
--	if (timer_table->timer_mask.val == 0) {
--		ath9k_hw_set_interrupts(ah, 0);
--		ah->ah_sc->imask &= ~ATH9K_INT_GENTIMER;
--		ath9k_hw_set_interrupts(ah, ah->ah_sc->imask);
--	}
- }
- 
- void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index eeb55e9..3120c21 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -682,9 +682,12 @@ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
- 					  void (*overflow)(void *),
- 					  void *arg,
- 					  u8 timer_index);
--void ath_gen_timer_start(struct ath_hw *ah, struct ath_gen_timer *timer,
--			 u32 timer_next, u32 timer_period);
--void ath_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer);
-+void ath9k_hw_gen_timer_start(struct ath_hw *ah,
-+			      struct ath_gen_timer *timer,
-+			      u32 timer_next,
-+			      u32 timer_period);
-+void ath9k_hw_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer);
-+
- void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
- void ath_gen_timer_isr(struct ath_hw *hw);
- u32 ath9k_hw_gettsf32(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0884c3e..5cd4b78 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1412,6 +1412,34 @@ static void ath9k_btcoex_bt_stomp(struct ath_softc *sc,
- 	ath9k_hw_btcoex_enable(ah);
- }
- 
-+static void ath9k_gen_timer_start(struct ath_hw *ah,
-+				  struct ath_gen_timer *timer,
-+				  u32 timer_next,
-+				  u32 timer_period)
-+{
-+	ath9k_hw_gen_timer_start(ah, timer, timer_next, timer_period);
-+
-+	if ((ah->ah_sc->imask & ATH9K_INT_GENTIMER) == 0) {
-+		ath9k_hw_set_interrupts(ah, 0);
-+		ah->ah_sc->imask |= ATH9K_INT_GENTIMER;
-+		ath9k_hw_set_interrupts(ah, ah->ah_sc->imask);
-+	}
-+}
-+
-+static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
-+{
-+	struct ath_gen_timer_table *timer_table = &ah->hw_gen_timers;
-+
-+	ath9k_hw_gen_timer_stop(ah, timer);
-+
-+	/* if no timer is enabled, turn off interrupt mask */
-+	if (timer_table->timer_mask.val == 0) {
-+		ath9k_hw_set_interrupts(ah, 0);
-+		ah->ah_sc->imask &= ~ATH9K_INT_GENTIMER;
-+		ath9k_hw_set_interrupts(ah, ah->ah_sc->imask);
-+	}
-+}
-+
- /*
-  * This is the master bt coex timer which runs for every
-  * 45ms, bt traffic will be given priority during 55% of this
-@@ -1433,13 +1461,13 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 	if (btcoex->btcoex_period != btcoex->btcoex_no_stomp) {
- 		if (btcoex->hw_timer_enabled)
--			ath_gen_timer_stop(ah, btcoex->no_stomp_timer);
-+			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
- 
--		ath_gen_timer_start(ah,
--			btcoex->no_stomp_timer,
--			(ath9k_hw_gettsf32(ah) +
--				btcoex->btcoex_no_stomp),
--				btcoex->btcoex_no_stomp * 10);
-+		ath9k_gen_timer_start(ah,
-+				      btcoex->no_stomp_timer,
-+				      (ath9k_hw_gettsf32(ah) +
-+				       btcoex->btcoex_no_stomp),
-+				       btcoex->btcoex_no_stomp * 10);
- 		btcoex->hw_timer_enabled = true;
- 	}
- 
-@@ -2169,7 +2197,7 @@ static void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- 
- 	/* make sure duty cycle timer is also stopped when resuming */
- 	if (btcoex->hw_timer_enabled)
--		ath_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
-+		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
- 
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
-@@ -2411,7 +2439,7 @@ static void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	del_timer_sync(&btcoex->period_timer);
- 
- 	if (btcoex->hw_timer_enabled)
--		ath_gen_timer_stop(ah, btcoex->no_stomp_timer);
-+		ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
- 
- 	btcoex->hw_timer_enabled = false;
- }
--- 
-1.6.3.3
+--=-eKFvZla9b/xy+rDtjTeu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Sat, 2009-09-26 at 16:33 +0100, Hugh Dickins wrote:
+
+> I do have CONFIG_WIRELESS_EXT_SYSFS=3Dy,
+> and I do have /sys/class/net/wlan0/ containing various things,
+> but I don't have any /sys/class/net/wlan0/wireless with recent kernels.
+
+That appears to be the problem, though I wonder why that is. I'll look
+into it.
+
+johannes
+
+--=-eKFvZla9b/xy+rDtjTeu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKv0eqAAoJEODzc/N7+Qma9PQP/1JI1iXikmHMQkF88QlsVJdY
+TB74TbWJCEO2c3TKJzFAxPSfas1rZztE3E3BgB6p7dByBdwSjNwT5u6b20kD0xfV
+2lU75cC9vet0KSulbvJjt+tXMoDdHeXH8FWgnhtPv7Im1Y+RUZdU9aqf2UhWgxwN
+oeffyIqhDwghpbC2oNdp+6OyTLlaqWcUWAWL3QU6zaAKVRAJ9MOhLuw1z7mF99FR
+8nSGjOHxsdAE0dGqA1SANvpWGLmpdV3eF5urESnXMJoCONVs0FDdfARY4HeUE7l/
+uYlq1yCCS6QGEmTG+rnqIxbAqSwtzVD9YPgKTdow2MBP0ayyleLD9yiYcFT2me3F
+P0Pjfgd7fTvotcfbkRJFR1IKaVJE191oqksHxDg5qcfKtCLU4g5FYsO4vVfYDsEe
+fxU0ffeI0lCTr08KaVn9aUfbZPQ0tyP91E21WYB5KhWDH+T2Tu2h6VfwNLLE9GfN
+1sMLCuRV/MKagjiWNIe9os6MJiD7CMJqLgDdf2OxqtyNfXEV1W69VVR4Y7kFncgI
+7kFZLfyNSqnLJuJiw7ciwY6gWyEsI797iUCk5t+whpK2K1y+MBZwV59Eh3/xJYhu
+HC4meawQ/DSRdEu31WoVzKLs1dW0SEfAiNYsK6mHj86MymRKJFVWOjyLFtssg4uO
+M+POEnX11mJ1ih3YXvSA
+=uUsH
+-----END PGP SIGNATURE-----
+
+--=-eKFvZla9b/xy+rDtjTeu--
 
