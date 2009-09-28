@@ -1,84 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54842 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802AbZI3VUm (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:47413 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbZI1TWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 17:20:42 -0400
-Subject: Re: Problems with "cfg80211: fix SME connect" commit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Albert Herranz <albert_herranz@yahoo.es>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <3ace41890909301417j5966336dn197a45cf66c2cd1e@mail.gmail.com>
+	Mon, 28 Sep 2009 15:22:39 -0400
+Received: by ewy7 with SMTP id 7so4749572ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 12:22:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1254164123.3151.10.camel@johannes.local>
 References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
 	 <200909210845.51247.hs4233@mail.mn-solutions.de>
 	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
-	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
-	 <1253859759.3868.569.camel@johannes.local>
-	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
-	 <1253965154.5122.7.camel@johannes.local>
-	 <3ace41890909301417j5966336dn197a45cf66c2cd1e@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Q17rfdsX7LeC2isi5Y+Q"
-Date: Wed, 30 Sep 2009 23:20:39 +0200
-Message-Id: <1254345639.3959.16.camel@johannes.local>
-Mime-Version: 1.0
+	 <29413.68229.qm@web28307.mail.ukl.yahoo.com>
+	 <1254164123.3151.10.camel@johannes.local>
+Date: Mon, 28 Sep 2009 20:22:41 +0100
+Message-ID: <3ace41890909281222o5c345333y858e097166146577@mail.gmail.com>
+Subject: Re: Problems with "cfg80211: fix SME connect" commit
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Albert Herranz <albert_herranz@yahoo.es>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Sep 28, 2009 at 7:55 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2009-09-28 at 11:04 -0700, Albert Herranz wrote:
+>
+>> [   15.624121] wlan1: starting authentication with 00:12:17:15:e7:79
+>> [   15.630717] wlan1: deauthenticating from 00:12:17:15:e7:79 by local choice (reason=3)
+>> [   15.645151] wlan1: starting authentication with 00:12:17:15:e7:79
+>
+>> I'm using wpa_supplicant _without_ NM.
+>
+> Yeah, I since figured out why that's happening, and it's not so strange
+> after all. Shouldn't be a big deal. At least I see you're getting
+> connected too now.
+>
+> johannes
+>
 
---=-Q17rfdsX7LeC2isi5Y+Q
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Yes, it looks like it is similar/same as my situation - the difference
+being that I had wpa_supplicant talking to NM via D-bus and get the
+extra user-prompt (not anymore with the latest patches) when the first
+try from wpa_supplicant fails. When wpa_supplicant is run without -u
+(the d-bus/NM option) it probably tries a bit harder on its own?
 
-On Wed, 2009-09-30 at 22:17 +0100, Hin-Tak Leung wrote:
-> On Sat, Sep 26, 2009 at 12:39 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->=20
-> > The extra deauth is because cfg80211 already starts the auth with the
-> > BSS before wpa_supplicant set the BSSID, and then when setting the BSSI=
-D
-> > it asks for deauth, but before we ever actually did anything... I think
-> > we'll just have to live with that, since it's hard to fix in the layere=
-d
-> > design we have now.
->=20
-> Hmm, I looked at the AP log, and the deauth is there...
-
-Yeah. I've thought of doing a fix in mac80211, but haven't gotten around
-to it yet -- should be fairly easy tho.
-
->  also I think
-> due to recent changes, association takes longer now. Is there
-> something that can be done in userland, for example?
-
-You can use -Dnl80211 with wpa_supplicant, but other than that we may or
-may not scan a few times more or less, which is somewhat unfortunate.
-Though it shouldn't be taking longer due to these specific recent
-changes, in fact this should make it faster, if anything, I think.
-
-johannes
-
---=-Q17rfdsX7LeC2isi5Y+Q
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKw8ukAAoJEODzc/N7+Qmav2MQALQZXrM2NGPn1DAhDjSO7H05
-Ywr8MXO5dMg8WVKJme0xTZcPCCJpBk54ptY0OXbe8Oc5EhgtfRWnR+PyilDTOW7a
-oy85naZSmTF1BJMSmN7G0RUlBpIKiz8g6Oaix5OFlErS1DktaJxqXNDEZC0+KIN0
-RIg0G+bF6BVImlpVPhCHtb7497419Z6IL1+pdSZq/KNUu4pmSbaGSSUlM3lwzNFS
-4B5i2J4WV2RnblHJwasnQK6piyJB2F6p14/eI8JH9Hr4OTGo5AyKmqChHqgdo824
-WKI8HZhrSVZhBFpe8oDp4pBABlaQo3mEvTr2RDsIIQK3oiwteXGF+nstpT6C47EA
-YkSNPQ+YdP7lJ8+RIzIf6P7NeElcjb/qF5sNagxdNQZKUo0YdjWPh/xDYGMrxWV5
-BYgvkZI2A5n9SmHGtdFEsntRHjaXyDhojGX04TbpMC8OW0urEs5JyC03audYoLlu
-V4eta0o0ZV6Wfjp9Fcba+utgM6GkKKf+i+iD1EtHUqZSojuE0PnI4bQNNk1m7OSO
-qj1O6XlRF1K6oCOgr1Lh/raV/Js5kRxJxbrE94CbOk1xw+i/9LNML5/pxbXuxKnb
-ddBynK+afFbstrPdvNz7c28zMmg9WqhuRRknnMrvjH3gNOyyp/1Pu66iXvVpY8H0
-+qEio8GbhU9IsWsmXE9v
-=IZ80
------END PGP SIGNATURE-----
-
---=-Q17rfdsX7LeC2isi5Y+Q--
-
+Hin-Tak
