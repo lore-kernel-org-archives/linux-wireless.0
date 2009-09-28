@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx71.mail.ru ([94.100.176.85]:58092 "EHLO mx71.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754699AbZIQCcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 22:32:10 -0400
-Date: Thu, 17 Sep 2009 06:38:55 +0300
-From: Nikolai ZHUBR <zhubr@mail.ru>
-Message-ID: <1502527774.20090917063855@mail.ru>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re[4]: 2.6.25 kernel & compat-wireless-2009-09-14
-In-reply-To: <1253153088.9450.10.camel@johannes.local>
-References: <191513177.20090917035628@mail.ru>
- <43e72e890909161654x141f48e4q54f0526bf6c04ea3@mail.gmail.com>
- <142272111.20090917060119@mail.ru> <1253153088.9450.10.camel@johannes.local>
+Received: from xc.sipsolutions.net ([83.246.72.84]:40160 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbZI1IV3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 04:21:29 -0400
+Subject: [PATCH 1/2] net: introduce NETDEV_POST_INIT notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Sep 2009 10:21:29 +0200
+Message-Id: <1254126089.6583.18.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thursday, September 17, 2009, 5:04:48 AM, Johannes Berg wrote:
->>
->> --- everything.orig/net/wireless/core.c 2009-09-16 23:45:40.000000000 +0400
->> +++ everything/net/wireless/core.c      2009-09-16 23:48:22.000000000 +0400
->> @@ -350,6 +350,7 @@
->>  
->>         /* give it a proper name */
->>         dev_set_name(&rdev->wiphy.dev, PHY_NAME "%d", rdev->wiphy_idx);
->> +       snprintf(rdev->wiphy.dev.bus_id, BUS_ID_SIZE, PHY_NAME "%d", rdev->wiphy_idx);
+For various purposes including a wireless extensions
+bugfix, we need to hook into the netdev creation before
+before netdev_register_kobject(). This will also ease
+doing the dev type assignment that Marcel was working
+on for cfg80211 drivers w/o touching them all.
 
-> Isn't that exactly what dev_set_name() is/was supposed to do?
-Well, probably yes, but still it doesn't set bus_id, I've checked.
-Probably it needs some correction.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+I decided that it doesn't make a lot of sense to be after ndo_init but
+before the other name/... checks.
 
-> johannes
+ include/linux/notifier.h |    1 +
+ net/core/dev.c           |    5 +++++
+ 2 files changed, 6 insertions(+)
+
+--- wireless-testing.orig/include/linux/notifier.h	2009-09-28 10:14:54.000000000 +0200
++++ wireless-testing/include/linux/notifier.h	2009-09-28 10:16:07.000000000 +0200
+@@ -201,6 +201,7 @@ static inline int notifier_to_errno(int 
+ #define NETDEV_PRE_UP		0x000D
+ #define NETDEV_BONDING_OLDTYPE  0x000E
+ #define NETDEV_BONDING_NEWTYPE  0x000F
++#define NETDEV_POST_INIT	0x0010
+ 
+ #define SYS_DOWN	0x0001	/* Notify of system down */
+ #define SYS_RESTART	SYS_DOWN
+--- wireless-testing.orig/net/core/dev.c	2009-09-28 10:14:54.000000000 +0200
++++ wireless-testing/net/core/dev.c	2009-09-28 10:20:46.000000000 +0200
+@@ -4785,6 +4785,11 @@ int register_netdevice(struct net_device
+ 	if (dev->features & NETIF_F_SG)
+ 		dev->features |= NETIF_F_GSO;
+ 
++	ret = call_netdevice_notifiers(NETDEV_POST_INIT, dev);
++	ret = notifier_to_errno(ret);
++	if (ret)
++		goto err_uninit;
++
+ 	netdev_initialize_kobject(dev);
+ 	ret = netdev_register_kobject(dev);
+ 	if (ret)
 
 
