@@ -1,83 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51306 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752036AbZIHSPR convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615AbZI1Sav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 14:15:17 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: b43 dma error
-Date: Tue, 8 Sep 2009 20:15:16 +0200
-Cc: John Daiker <daikerjohn@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, bcm43xx-dev@lists.berlios.de
-References: <20090908134732.GA1936@darkstar> <4AA69961.9010808@gmail.com> <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com>
-In-Reply-To: <69e28c910909081106p413b70d8u83a48a63943f123e@mail.gmail.com>
+	Mon, 28 Sep 2009 14:30:51 -0400
+Date: Mon, 28 Sep 2009 14:29:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: "Robert P. J. Day" <rpjday@crashcourse.ca>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: Makefile ref to non-existent CONFIG_ATHEROS_AR71XX
+Message-ID: <20090928182944.GA4737@tuxdriver.com>
+References: <alpine.LFD.2.00.0909180959550.9988@localhost> <200909182004.54398.florian@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909082015.17943.mb@bu3sch.de>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <200909182004.54398.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 08 September 2009 20:06:49 Gábor Stefanik wrote:
-> On Tue, Sep 8, 2009 at 7:50 PM, John Daiker<daikerjohn@gmail.com> wrote:
-> > On 09/08/2009 07:54 AM, Larry Finger wrote:
-> >>
-> >> Michael Buesch wrote:
-> >>>
-> >>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
-> >>>>
-> >>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
-> >>>> then the controller keep restarting...
-> >>>>
-> >>>> Please tell what I can provide or test, Thanks.
-> >>>
-> >>> Is this a regression? If so, please bisect.
-> >>
-> >> It is something specific to his system as I don't see anything like
-> >> this. In addition, there are some users on the openSUSE forums that
-> >> have implemented the latest compat-wireless and switched away from
-> >> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
-> >> them.
-> >>
-> >> Please reboot so that we see the ssb output as well. Use the command
-> >>
-> >> dmesg | egrep "ssb|b43"
-> >>
-> >> That way we will be able to see exactly what kind of device you have
-> >> and what revisions are in it. AFAIK, the testing to date has been
-> >> limited to Rev 1 PHYs and Rev 2 radios.
-> >>
-> >> Larry
-> >>
-> >
-> > I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom 4312.
-> >  Looks to be a PHY 1, Radio 2:
-> >
-> > --snip--
-> > [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-> > [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
-> > Revision 2
-> > --snip--
-> >
-> > I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config, and
-> > lspci -vv and lspci -nn
-> >
-> > Note: With the dmesg output, I had unloaded the b43 module previous
-> > 'modprobe -r b43' and then loaded it again with debug output: 'modprobe b43
-> > verbose=3'
-> >
-> > John Daiker
-> >
+On Fri, Sep 18, 2009 at 08:04:51PM +0200, Florian Fainelli wrote:
+> Hi Robert,
 > 
-> Again, please test with v478 or v5xx firmware.
+> Le vendredi 18 septembre 2009 16:01:25, Robert P. J. Day a écrit :
+> >   searching for Makefile references to Kconfig variables that don't
+> > exist, and i find:
+> >
+> > ===== ATHEROS_AR71XX =====
+> > ./drivers/net/wireless/ath/ath9k/Makefile:ath9k-$(CONFIG_ATHEROS_AR71XX) +=
+> > ahb.o
 > 
+> We need it in OpenWrt and plan to send Atheros AR71xx SoC support soon, do not 
+> consider this for removal. Thanks
 
-This won't help. The DMA engine reports a descriptor error. That means the device
-was unable to fetch the control data via DMA. Most of the time this indicates
-a bug/failure/quirk in the platform DMA implementation.
+Sure, fine...estimate when it will arrive?
 
+John
 -- 
-Greetings, Michael.
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
