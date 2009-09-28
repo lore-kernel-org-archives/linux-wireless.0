@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:45151 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbZI0NSb (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:46631 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752747AbZI1WSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 09:18:31 -0400
-Date: Sun, 27 Sep 2009 15:18:55 +0200
-From: Arjan van de Ven <arjan@infradead.org>
-To: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [bisected] Wireless regression in 2.6.32-git
-Message-ID: <20090927151855.29efcc53@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 28 Sep 2009 18:18:05 -0400
+Received: by iwn8 with SMTP id 8so2802377iwn.33
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 15:18:09 -0700 (PDT)
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 28 Sep 2009 15:17:49 -0700
+Message-ID: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
+Subject: Firmware versioning best practices
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The ath_hif_usb driver will require the ar9271 firmware file but in
+the future an open firmware might become available. The ar9170 driver
+already is under the same situation already: a closed firmware is
+available but an open firmware can be used, only thing is ar9170 uses
+the same firmware name for both. We *could* change ar9170 to use the
+Intel practice of tagging a version at the end of each firmware
+release, like ar9170-1.fw but ar9170 originally was implemented with a
+2-stage firmware requirement and so ar9170-1.fw is already taken.
 
-With todays git my laptop fails to associate with my access point.
-Bisection points to the commit below, and reverting this one commit on
-the HEAD of tree also fixes the issue, so I'm pretty confident that this
-commit is to blame.
+ar9170 still needs a solution for the different firmwares, once we
+start supporting the open firmware through some sort of release but
+I'd like to address ath_hif_usb now early so that we don't run into
+these snags and use some decent convention that is easy to follow.
 
-I have a 4965 wifi card in my laptop, and the network I'm trying to
-connect to has no encryption. I'm running Fedora 11 as OS.
+As I noted above, Intel seems to use the device-1.fw, device-2.fw
+naming convention. Is this the best approach? Or shall we have the
+same firmware filename and simply query the firmware for a map of
+capabilities? Any other ideas?
 
-I would like to kindly request for this commit to be reverted until a
-more permanent solution is found (I'm happy to test any patches)..
-
-
-
-
-94f85853324e02c3a32bc3101f090dc9a3f512b4 is first bad commit
-commit 94f85853324e02c3a32bc3101f090dc9a3f512b4
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Thu Sep 17 17:15:31 2009 -0700
-
-    cfg80211: don't overwrite privacy setting
-    
-    When cfg80211 is instructed to connect, it always
-    uses the default WEP key for the privacy setting,
-    which clearly is wrong when using wpa_supplicant.
-    Don't overwrite the setting, and rely on it being
-    false when wpa_supplicant is not running, instead
-    set it to true when we have keys.
-    
-    Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-:040000 040000 27fb46273e88eefee373699eb7e3f2923ac0886b
-9518ee3e52c8320613cc5eee5ac54aabf082432f M	net
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+  Luis
