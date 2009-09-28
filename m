@@ -1,134 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56320 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932669AbZIEMXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2009 08:23:34 -0400
-Message-ID: <4AA25846.70007@gmx.de>
-Date: Sat, 05 Sep 2009 14:23:34 +0200
-From: Joerg Albert <jal2@gmx.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45989 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbZI1UAy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 16:00:54 -0400
+Date: Mon, 28 Sep 2009 15:50:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Joerg Albert <jal2@gmx.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH] ar9170: implement frequency calibration for
+	one-stage/openfw
+Message-ID: <20090928195040.GD4737@tuxdriver.com>
+References: <200909032025.31260.chunkeey@googlemail.com> <20090918170211.8acce2cc.akpm@linux-foundation.org> <4AB4CCD0.5080003@gmx.de> <20090928184111.GB4737@tuxdriver.com> <22ee4e770909281245g3346a800n940c28199e429abf@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"otus-devel@lists.madwifi-project.org"
-	<otus-devel@lists.madwifi-project.org>
-Subject: otus: conformance test limits implementation for MKK and ETSI
-Content-Type: multipart/mixed;
- boundary="------------020303080209070305010009"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <22ee4e770909281245g3346a800n940c28199e429abf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020303080209070305010009
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Mon, Sep 28, 2009 at 09:45:28PM +0200, Christian Lamparter wrote:
+> 2009/9/28 John W. Linville <linville@tuxdriver.com>:
+> > On Sat, Sep 19, 2009 at 02:21:36PM +0200, Joerg Albert wrote:
+> >> On 09/19/2009 02:02 AM, Andrew Morton wrote:
 
-Hi,
+> >> > How did this get all the way into mainline?
+> >>
+> >> Strangely it compiles without any warning for me with the latest linux-wireless:
+> >
+> > That is strange -- no warning here (F-11) either...
+> >
+> > Christian, care to propose a patch?  Or maybe just something like this?
+> >
+> > diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+> > index b3e5cf3..49c10cb 100644
+> > --- a/drivers/net/wireless/ath/ar9170/phy.c
+> > +++ b/drivers/net/wireless/ath/ar9170/phy.c
+> > @@ -1220,7 +1220,7 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
+> >                                                             &vpds[1][0]);
+> >                        }
+> >
+> > -                       phy_data |= tmp << ((i & 3) << 3);
+> > +                       phy_data = tmp << ((i & 3) << 3);
+> >                        if ((i & 3) == 3) {
+> >                                ar9170_regwrite(0x1c6280 + chain * 0x1000 +
+> >                                                (i & ~3), phy_data);
+> >
+> > John
+> no? Andrew Morton's mail included a tiny patch which initializes the
+> phy_data to 0. I assumed you would pick it up right away...
+> Or is there something which would prevent it from including?
 
-I've read [1] about the ctl groups, looked into otus' hal/hpmain.c (lines 3700 ff.) 
-and dumped the ctl index and data in the eeprom of my WNDA3100
+Don't know what email you got, but there was no patch in my inbox...
 
-It seems like the otus driver skips ctl (and heavy clip) application for the groups CTL_MKK and
-CTL_ETSI. On the other hand I've found ctl data for these groups in the eeprom (see attachment).
-Is this intended behaviour or a bug in the otus driver?
+So, I presume you have no objection to the patch above?  Initializing
+phy_data just to unconditionally assign to it doesn't seem any better.
 
-
-[1] http://linuxwireless.org/en/users/Drivers/ath
-
---------------020303080209070305010009
-Content-Type: text/plain;
- name="ar9170_ctl_dump_eeprom.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ar9170_ctl_dump_eeprom.txt"
-
-WNDA3100
-========
-
- ar9170_calc_ctl: ctl_grp 0x10 freq 2412
- ar9170_calc_ctl: eeprom ctl_index: 0x10
-   chain 0: 76(0x1a) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
-   chain 1: 76(0x1a) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
- ar9170_calc_ctl: eeprom ctl_index: 0x16
-   chain 0: 76(0x19) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
-   chain 1: 76(0x19) 80(0x5a) 104(0x1e) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
- ar9170_calc_ctl: eeprom ctl_index: 0x18
-   chain 0: 78(0x18) 86(0x59) 102(0x1e) 142(0x62) 158(0x62) 178(0x22) 191(0x62) 199(0x62)
-   chain 1: 78(0x18) 86(0x59) 102(0x1e) 142(0x62) 158(0x62) 178(0x22) 191(0x62) 199(0x62)
- ar9170_calc_ctl: eeprom ctl_index: 0x11
-   chain 0: 112(0x26) 117(0x66) 162(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x26) 117(0x66) 162(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x12
-   chain 0: 112(0x24) 117(0x64) 162(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x24) 117(0x64) 162(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x15
-   chain 0: 112(0x23) 117(0x64) 162(0x21) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x23) 117(0x64) 162(0x21) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x17
-   chain 0: 122(0x1d) 127(0x64) 147(0x64) 152(0x1b) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 122(0x1d) 127(0x64) 147(0x64) 152(0x1b) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x40
-   chain 0: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x46
-   chain 0: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 74(0x62) 80(0x62) 92(0x62) 104(0x62) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x41
-   chain 0: 112(0x24) 117(0x64) 172(0x24) 184(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x24) 117(0x64) 172(0x24) 184(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x42
-   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x45
-   chain 0: 112(0x22) 117(0x62) 152(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x22) 117(0x62) 152(0x22) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x30
-   chain 0: 76(0x22) 92(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
-   chain 1: 76(0x22) 92(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
- ar9170_calc_ctl: eeprom ctl_index: 0x36
-   chain 0: 76(0x22) 80(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
-   chain 1: 76(0x22) 80(0x62) 104(0x22) 140(0x62) 160(0x62) 180(0x62) 189(0x62) 205(0x22)
- ar9170_calc_ctl: eeprom ctl_index: 0x38
-   chain 0: 78(0x22) 86(0x62) 102(0x22) 142(0x62) 158(0x62) 174(0x22) 0(0x00) 0(0x00)
-   chain 1: 78(0x22) 86(0x62) 102(0x22) 142(0x62) 158(0x62) 174(0x22) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x31
-   chain 0: 112(0x26) 117(0x66) 172(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x26) 117(0x66) 172(0x26) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x32
-   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x35
-   chain 0: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 112(0x24) 117(0x64) 172(0x24) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x37
-   chain 0: 122(0x23) 127(0x63) 147(0x63) 152(0x23) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 122(0x23) 127(0x63) 147(0x63) 152(0x23) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x00
-   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x00
-   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x00
-   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x00
-   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_calc_ctl: eeprom ctl_index: 0x00
-   chain 0: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
-   chain 1: 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00) 0(0x00)
- ar9170_get_max_edge_power: freq 2412 max_edge_power 38
- ar9170_get_max_edge_power: freq 2412 max_edge_power 36
- ar9170_get_max_edge_power: freq 2412 max_edge_power 35
- ar9170_calc_ctl: ctl_mode 5 pwr_cal[0] 24 -> 23
- ar9170_get_max_edge_power: freq 2422 max_edge_power 29
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[0] 23 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[1] 22 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[2] 22 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[3] 22 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[4] 22 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[5] 22 -> 1d
- ar9170_calc_ctl: ctl_mode 7 pwr_cal[6] 20 -> 1d
-
---------------020303080209070305010009--
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
