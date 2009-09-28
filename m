@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:40422 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754043AbZIGQaa (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:48883 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbZI1TIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 12:30:30 -0400
-Subject: Re: iw: strange output
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200909071711.18632.hs4233@mail.mn-solutions.de>
-References: <200909071711.18632.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-IZGJl9Kw0DGDUhEC8RxP"
-Date: Mon, 07 Sep 2009 18:30:30 +0200
-Message-Id: <1252341030.1175.40.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 28 Sep 2009 15:08:37 -0400
+Received: by ewy7 with SMTP id 7so4737152ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 12:08:40 -0700 (PDT)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: [PATCH] compat-2.6: adding driver-select script support for rtl818x
+Date: Mon, 28 Sep 2009 20:08:34 +0100
+Message-Id: <1254164914-1682-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+adding driver-select script support for rtl818x
 
---=-IZGJl9Kw0DGDUhEC8RxP
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
+ scripts/driver-select |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-On Mon, 2009-09-07 at 17:11 +0200, Holger Schurig wrote:
-
-> For wpa_supplicant, I'm currently using the wext driver.
-
-> eth1 (phy #0): scan finished: 2412, "g\xc6isQ\xffJ\xec)\xcd\xba\xab
-> \xf2\xfb\xe3F|\xc2T\xf8\x1b\xe8\xe7\x8dvZ.c3\x9f\xc9\x9a"
-
-the wext driver sets a random SSID to "disconnect".
-
-johannes
-
---=-IZGJl9Kw0DGDUhEC8RxP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKpTUjAAoJEODzc/N7+QmaQewQAIvCVL8JJbFDI4XI9JtGITfg
-QrakQPR5MfQEy/NR0uRZDhrW2YToZOAbYlEl8IGW8/0JyDH7ayeIykrFKpAN4/EL
-iQ7imIIb2u7iEy4RWsZibj2++xpS7jiuH/cZY6LBDpyi/Vhyf4spHzHofyjlI1Bt
-mNwNrfUhs5X1tnFFrNkqtB+V4xeBA0qWecvorfjfk5GvFj3HeHT9WbXPAcYku+47
-Lh9F91KhP34vMN/y8i58BmbK6hvrqm5ZYrmLbop5f9eD0rNnllWIp6p/xcMyBJs9
-LuDlXnnZz4I5lIzx1tTkkb3Rlsg6QY+dXyHf8dF3/tEnrL5J2mWVxLo5F/Qc7SGy
-B04ljOm+xhdTjsfzvxhve4rHA7CuhunkTclNfOVcA34v8B8IqfH2aWGqo5E859Fb
-4FIX53jIn8qZ0utSzxVF2RhC3HkCaQKxPLdIuLgEgPEvp2ourimLak7x4AEnUT5g
-edqGSQShEhIfrzec1miwrftzwsi7aoa6+1NoReE5cXFToYvXfm6Sz7HhMhrZ0EQB
-AFZl7Lc5VzfL+SwvhNYDpoMzkFynOtnZiz805djBqw/EGRxBpcOgKYzTbc01SzPF
-R+XFA+5fupWe9611OqHVRKtixF6JYpcROB//lsv8BjRJH0yQCqrVv1yGhK+6yYml
-rRxLJwrEL12PNjZ4QVjL
-=br3W
------END PGP SIGNATURE-----
-
---=-IZGJl9Kw0DGDUhEC8RxP--
+diff --git a/scripts/driver-select b/scripts/driver-select
+index e0d7305..dcb777c 100755
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -44,6 +44,7 @@ function usage {
+ 	echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k ar9170 ${NORMAL}>"
+ 	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwl3945 iwlagn ipw2100 ipw2200 ${NORMAL}>"
+ 	echo -e "\t${CYAN}iwlwifi${NORMAL} < ${PURPLE} iwl3945 iwlagn ${NORMAL}>"
++	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+ 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 (SPI and SDIO) wl1271 ${NORMAL}>"
+ 
+ 	echo -e "Restoring compat-wireless:"
+@@ -127,6 +128,13 @@ function disable_var_01 {
+ 	disable_var
+ }
+ 
++function disable_var_02 {
++	#var_01 with eeprom not disabled
++	disable_lib80211
++	disable_ssb
++	disable_usbnet
++}
++
+ function select_ath_driver 
+ {
+ 	backup_file $ATH_MAKEFILE
+@@ -227,6 +235,10 @@ case $1 in
+ 		select_driver		CONFIG_ATH_COMMON
+ 		select_ath_driver	CONFIG_AR9170_USB
+ 		;;
++	rtl818x)
++		select_drivers		CONFIG_RTL8180 CONFIG_RTL8187
++		disable_var_02
++		;;
+ 	zd1211rw)
+ 		select_driver		CONFIG_ZD1211RW
+ 		disable_var_01
+-- 
+1.6.2.5
 
