@@ -1,69 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbZIBRE0 (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:64590 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752286AbZI1VwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 13:04:26 -0400
-Subject: Re: [PATCH 2.6.31] iwlwifi: Reenable power_level
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Andrew Lutomirski <luto@mit.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1251910457.13180.160.camel@rc-desk>
-References: <cb0375e10909020753o4d314f61k74dd35025f61666a@mail.gmail.com>
-	 <1251906970.13180.137.camel@rc-desk>
-	 <cb0375e10909020941qa54215cqb6af7ac01e87ccb3@mail.gmail.com>
-	 <1251910457.13180.160.camel@rc-desk>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-3qSARCWQ7Bln3fiQqNiY"
-Date: Wed, 02 Sep 2009 19:03:49 +0200
-Message-Id: <1251911029.2999.0.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 28 Sep 2009 17:52:18 -0400
+Received: by ewy7 with SMTP id 7so4872406ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 14:52:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
+References: <16D9C5FD-4A2A-4061-9C26-FF5C0B0CDFBA@w1an.in>
+Date: Mon, 28 Sep 2009 22:52:21 +0100
+Message-ID: <3ace41890909281452x3170c8c6g5dc56cff85663099@mail.gmail.com>
+Subject: Re: Question on general wireless testing tree compilation.
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Balaji Ravindran <b@w1an.in>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Sep 25, 2009 at 6:21 AM, Balaji Ravindran <b@w1an.in> wrote:
+> Hi Everyone,
+>
+> Sorry for a very amateur question. Could anyone just help me get started
+> with compiling the linux kernel from the wireless-testing tree? I just
+> pulled the local wireless-testing repo, trying to navigate through the code,
+> and wanted to compile the kernel, and to boot up to it. Could anyone just
+> help me get started?
+>
+> I followed the instructions from
+> http://www.cyberciti.biz/tips/compiling-linux-kernel-26.html
+> and ended up with a compile error in 'make', while trying to create the
+> bzimage. (error is on make: initramfs_data.cpi.o failed)
+>
+> Is there any other easy way to compile the kernel/debug.
+>
+>
+> Thanks
+>
+> Balaji R
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
---=-3qSARCWQ7Bln3fiQqNiY
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+As the other replier has already stated, including the last few lines
+of the message before the error would be nice.
 
-On Wed, 2009-09-02 at 09:54 -0700, reinette chatre wrote:
-> Hi Andrew,
->=20
-> On Wed, 2009-09-02 at 09:41 -0700, Andrew Lutomirski wrote:
->=20
-> > Fair enough.  Would you accept a patch to remove power_level from sysfs=
- instead?
->=20
-> No. This file is used when users want to manually reduce the power used
-> by device. This is the file you want to change if you want to extend
-> your battery life.
+Also, if you haven't built your own kernel before, it is probably
+better to start from a known configuration rather than from scratch.
+While all the tutorial, etc tells you to do 'make mrproper ; make
+menuconfig/xconfig; make' , there are occasionally some missing
+dependencies which aren't explicitly hooked up, so it might be easier
+to do, instead of make menuconfig/xconfig, in the middle, copy your
+distro's config (or your current running kernel's config) from either
+/boot/config-* (packaged from your distro) or /proc/config.gz (for a
+kernel which remembers its own config - it is a kernel config opton),
+to .config in your source tree, run make oldconfig (which only ask
+your questions about *difference* between the tree and the running
+kernel), before running make menuconfig/xconfig. This way, you are
+starting from a valid and know-working configuration for your
+hardware/archecture.
 
-Actually, we have already removed that file for 2.6.32 I think? So it
-may be fair to remove it for .31 since there you can't use it anyway.
-
-johannes
-
---=-3qSARCWQ7Bln3fiQqNiY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKnqVxAAoJEODzc/N7+QmakWMQAIS9arc14lSrJCP7KyG2D1UU
-ShqT5FyvDhPJZ7MAJ8hGL4nCDMy4aAfOfm4koE0rC8Eq7nbeEZ2hRjz+565XL1TE
-ThrbYB+NH34E5Ewm8Bdxrw3WqVxiFpcvYDE9yVRpEpavH+YtLc+g2hwYoz7M3RAx
-nmtQsFdjGHDvazk1IGHxpFW96XHeRdVJPqgddwnfZIi2dLP0vnb/h9dvmO1icVLM
-Ytxn1Pp8tjp4XCJsqkFw4+oSC819/t39Ci/NPO0QtzgSSnM1XdHgVBDgVoe08mnM
-iQFnsN7SIfiNBofFQTNpi/AkK30I9oBRq9je9+OeJB//Bw3DMwVZrwvi4Ef4YtVg
-CaJQgJ1Xx3k8RRAMvcFwoTKNZhm02GL2IKTnUYXtgyxfSEbB6iiWTTK2FTHnnRS+
-YV2GIm6xZMxdSLK0cIUGD6MtLnBPrIRoml/mcpepOZPp3ZFrjHa0cnn6+Zvm/ZHV
-cANlnwGjsPbJpoaVwA26EOwvMl2MDpt3AQwk86a49JykfL1xK2MxGC1t6biVebg9
-ixQHFQC66kZhket2z/F01/rt/g6LlgM4w/xZSxC5Ev6kVikJGJGoECr2fmyshLnw
-eUhW6kjL4/kojWrXjINFmSMqhDLZv//Y6utkXsmCOBkhSoaROUR3lKxB0ewSfmLI
-Rrc56yPjV2PiS6wrFaH/
-=9I4T
------END PGP SIGNATURE-----
-
---=-3qSARCWQ7Bln3fiQqNiY--
-
+Also, compat-wireless (which just replaces the wireless-related kernel
+modules) is sometimes a quicker/easier alternative to the whole
+wireless-testing.
