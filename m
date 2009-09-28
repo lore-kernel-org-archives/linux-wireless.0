@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hogsmeade.leitwerk.net ([217.28.96.50]:44881 "EHLO
-	hogsmeade.leitwerk.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158AbZI0Nvs (ORCPT
+Received: from jupiter.gibraltar.at ([80.120.3.98]:57043 "EHLO
+	mail1.gibraltar.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136AbZI1IH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 09:51:48 -0400
-Received: from ion.localnet (ion.storm.lieberbiber.de [217.28.107.11])
-	by hogsmeade.leitwerk.net (Postfix) with ESMTPSA id 8A33EA8904
-	for <linux-wireless@vger.kernel.org>; Sun, 27 Sep 2009 15:41:59 +0200 (CEST)
-From: Simon Raffeiner <sturmflut@lieberbiber.de>
-To: linux-wireless@vger.kernel.org
-Subject: Unable to create an 802.11s mesh using compat-wireless-2009-09-27
-Date: Sun, 27 Sep 2009 15:41:58 +0200
+	Mon, 28 Sep 2009 04:07:59 -0400
+From: Rene Mayrhofer <rene.mayrhofer@gibraltar.at>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Subject: Re: Massive packet loss with ath9k, AR9280, hostapd in 802.11n mode
+Date: Mon, 28 Sep 2009 10:07:50 +0200
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+References: <200909252054.19762.rene.mayrhofer@gibraltar.at> <200909252329.01897.rene.mayrhofer@gibraltar.at> <200909280956.23887.hs4233@mail.mn-solutions.de>
+In-Reply-To: <200909280956.23887.hs4233@mail.mn-solutions.de>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <200909271541.58448.sturmflut@lieberbiber.de>
+Message-Id: <200909281007.50856.rene.mayrhofer@gibraltar.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello List,
+Am Montag, 28. September 2009 09:56:23 schrieb Holger Schurig:
+> Oh, and what I'm not yet getting: how can a wrong country setting
+> lead to so much packet-loss?
 
-I built todays compat-wireless (compat-wireless-2009-09-27) on two different 
-Ubuntu machines:
+I don't think these two are connected - the erroneous country setting is 
+probably just the reason why I can't try the 5GHz band and thus can't verify 
+if the packet loss occurs there as well.
+Thanks for your explanations - I will try to get CRDA and regdb running and 
+will try again with the 5GHz band.
 
-- kernel 2.6.28-15-generic i686 using rt73usb
-- kernel 2.6.31-11-generic x86_64 using ath5k (AR2425)
 
-and tried to create an 802.11s Mesh following the HOWTO - unsuccessfully:
+One other thing comes to mind: this 802.11n card has two antenna connectors, 
+and both are actually connected to pigtails (which are probably not mounted in 
+correct distance according to wavelenght, but that shouldn't cause packet 
+loss). However, it might be possible that one of the antennas has a poor 
+connection, is misaligned with the clients, or whatever. What I couldn't find 
+in ath9k is an option for user-controlled antenna diversity (comparable to 
+madwifi). How can I selectively disable antenna usage and/or set them for RX or 
+TX mode only?
 
-root@ion:/home/sturmflut# export MESH_IFACE=mesh
-root@ion:/home/sturmflut# export MESH_ID=test
-root@ion:/home/sturmflut# iw dev wlan0 interface add $MESH_IFACE type mp 
-mesh_id $MESH_ID
-
-root@ion:/home/sturmflut# ifconfig -a | grep mesh
-mesh      Link encap:Ethernet  HWaddr 00:22:75:50:13:c2
-
-root@ion:/home/sturmflut# ifconfig $MESH_IFACE up
-SIOCSIFFLAGS: Name not unique on network
-
-if I remove wlan0 the mesh device can be brought up through ifconfig:
-
-root@ion:/home/sturmflut# iw dev wlan0 del
-root@ion:/home/sturmflut# ifconfig $MESH_IFACE up
-
-The strange thing is that iwconfig lists the interface as Mode "Auto" 
-immediately after it is added:
-
-root@ion:/home/sturmflut# iwconfig mesh
-mesh      IEEE 802.11bg  Mode:Auto  Tx-Power=11 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:on
-
-and falls back to "Managed" after about five seconds:
-
-root@ion:/home/sturmflut# iwconfig mesh
-mesh      IEEE 802.11bg  Mode:Managed  Access Point: Not-Associated
-          Tx-Power=11 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
-
-Symptoms are identical on both machines. I remember this working some weeks 
-ago, at least using the ath5k driver, and without any "Name not unique on 
-network" errors.
-
-I could try with a full wireless-testing.git checkout but I doubt anything 
-will change, Ubuntus 2.6.31-11-generic is quite recent and all relevant 
-modules should have been overwritten by those in compat-wireless.
-
-regards,
-Simon Raffeiner
-
-University of Applied Sciences Offenburg
+best regards,
+Rene
