@@ -1,49 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:60403 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753818AbZI2Tha (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 15:37:30 -0400
-Received: by iwn8 with SMTP id 8so3284896iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 12:37:33 -0700 (PDT)
+Received: from mail.tpi.com ([70.99.223.143]:4987 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752747AbZI1Uir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 16:38:47 -0400
+Message-ID: <4AC11ED6.2010706@canonical.com>
+Date: Mon, 28 Sep 2009 14:38:46 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 29 Sep 2009 12:37:12 -0700
-Message-ID: <43e72e890909291237q23c40b91xc45245d44a4c10d6@mail.gmail.com>
-Subject: New cfg80211 warning on 2.6.32-rc<bleh>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Clyde McPherson <ccmcphe@verizon.net>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"bcm43xx-dev@lists.berlios.de" <bcm43xx-dev@lists.berlios.de>
+Subject: Re: A problem loading ssb module
+References: <1253811559.4579.44.camel@pc3.dido> <4ABBAB47.8040300@canonical.com> <4ABBBB8C.8080401@hauke-m.de> <43e72e890909241137o7e853edfxb9e159df34927d7b@mail.gmail.com> <4ABF8184.9060904@verizon.net> <43e72e890909271250g2936947fj314aad65e10d9788@mail.gmail.com> <20090927210252.GA31472@bombadil.infradead.org> <4AC115F7.8020909@canonical.com> <20090928200759.GC7788@mosca>
+In-Reply-To: <20090928200759.GC7788@mosca>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I got this while running my tests by booting with mem=300M and CPU downscaled.
+Luis R. Rodriguez wrote:
+> On Mon, Sep 28, 2009 at 01:00:55PM -0700, Tim Gardner wrote:
+>> Luis R. Rodriguez wrote:
+>>> On Sun, Sep 27, 2009 at 12:50:19PM -0700, Luis R. Rodriguez wrote:
+>>>> On Sun, Sep 27, 2009 at 8:15 AM, Clyde McPherson <ccmcphe@verizon.net> wrote:
+>>>>>> On Thu, Sep 24, 2009 at 11:33 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>>>
+>>>>>>> Bryan Wu wrote:
+>>>>>>>
+>>>>>>>> Mauro Di Domenico wrote:
+>>>>>>>>
+>>>>>>>>> Hi,
+>>>>>>>>> I'm testing new b43 modules for my 14e4:4315 broadcom card.
+>>>>>>>>> I've compiled and installed compat-wireless-2009-09-16 in a debian
+>>>>>>>>> machine with kernel version 2.6.30-6.
+>>>>>>>>>
+>>>>>>>>> During the boot I experience this problem:
+>>>>>>>>>
+>>>>>>>>> $ dmesg|egrep "b43|ssb"
+>>>>>>>>>
+>>>>>>>>> [    2.384463] b43-pci-bridge 0000:06:00.0: PCI INT A -> GSI 17 (level,
+>>>>>>>>> low) -> IRQ 17
+>>>>>>>>> [    2.384477] b43-pci-bridge 0000:06:00.0: setting latency timer to 64
+>>>>>>>>> [    2.544344] ssb: Sonics Silicon Backplane found on PCI device
+>>>>>>>>> 0000:06:00.0
+>>>>>>>>> [    6.968981] b43: disagrees about version of symbol
+>>>>>>>>> ssb_device_is_enabled
+>>>>>>>>> [    6.968986] b43: Unknown symbol ssb_device_is_enabled
+>>>>>>>>> [    6.969280] b43: Unknown symbol ssb_pmu_set_ldo_paref
+>>>>>>>>> [    6.969407] b43: disagrees about version of symbol
+>>>>>>>>> ssb_pcicore_dev_irqvecs_enable
+>>>>>>>>> [    6.969410] b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
+>>>>>>>>> .....
+>>>>>>>>> ....
+>>>>>>>>> ...
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>> I faced the exactly same issue as Mauro did. +1 from me, but currently
+>>>>>>>> have
+>>>>>>>> no time to take a deeper look.
+>>>>>>>>
+>>>>>>>> Thanks
+>>>>>>>>
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> I had the same problem with the ssb module and compat-wireless in ubuntu
+>>>>>>> 9.04. The problem is that the ssb module is integrated into the
+>>>>>>> initramfs image. The version out of the initramfs image is loaded on
+>>>>>>> startup and not the version of compat-wireless. Running "sudo
+>>>>>>> update-initramfs -u" after installing compat-wireless and restaing the
+>>>>>>> system fixes the problem for me. Either Debian/Ubuntu should remove ssb
+>>>>>>> form default initramfs image or compat-wireless should update the image
+>>>>>>> with the install command. At least the compat-wireless documentation
+>>>>>>> needs an update.
+>>>>>>>
+>>>>>>> Hauke
+>>>>>>>
+>>>>>>> (adding Luis and linux-wireless list)
+>>>>>>>
+>>>>>> Tim, do you guys update the initramfs upon installation of lbm? If a
+>>>>>> user does not use lbm and uses compat-wireless I suppose we need to do
+>>>>>> something similar.
+>>>>>>
+>>>>>>  Luis
+>>>>>> _______________________________________________
+>>>>>> Bcm43xx-dev mailing list
+>>>>>> Bcm43xx-dev@lists.berlios.de
+>>>>>> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>>>>>>
+>>>>> All:
+>>>>> I have a large group that uses the ssb module along with the Broadcom 4318,
+>>>>> in a CF form factor. If the CF card is inserted before boot, and the ssb
+>>>>> module is not in the initrd process, the laptops lock up and do not become
+>>>>> operational. The solution to this problem is/was adding the ssb.ko to the
+>>>>> initrd process. So I agree with Luis on this, the ssb module will have to be
+>>>>> added/updated to the initrd process. As for PCI operations, I don't know,
+>>>>> but for PCMCIA operations ssb.ko has to be added and/or updated. Anytime I
+>>>>> am testing new releases of b43, I run "update-initramfs -u" to update the
+>>>>> ssb module. (Sometimes you can do a rmmod ssb and rmmod b43, and then
+>>>>> modprobe them back in. - This saves a reboot)
+>>>> But why is ssb, b43, b44 needed upon early boot?
+>>> OK the reason seems to be netboot. Yeah the only fix for distros who want
+>>> this on the initramfs is to update it after a compat-wireless package is
+>>> installed. I suppose we can add a hook to compat-wireless for each distro.
+>>> I'm only familiar with Ubuntu way of doing this so if people are interested
+>>> in other distros you'll need to point/test how to do this on there.
+>>>
+>>> Please try this patch against compat-wireless: (also attached)
+>>>
+>>> From 99af88246c2de71aa799de2b63f9d9ccac41634f Mon Sep 17 00:00:00 2001
+>>> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>> Date: Sun, 27 Sep 2009 13:58:22 -0700
+>>> Subject: [PATCH] Add scripts/update-initramfs and use it
+>>>
+>>> Some distributions may ship b44 and ssb on the initramfs for
+>>> netboot. To help with this we need to update the initrafms
+>>> for those distributions.
+>>>
+>>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>> ---
+>>>  Makefile                 |    1 +
+>>>  scripts/update-initramfs |   33 +++++++++++++++++++++++++++++++++
+>>>  2 files changed, 34 insertions(+), 0 deletions(-)
+>>>  create mode 100755 scripts/update-initramfs
+>>>
+>>> diff --git a/Makefile b/Makefile
+>>> index ab97de0..c7333a2 100644
+>>> --- a/Makefile
+>>> +++ b/Makefile
+>>> @@ -65,6 +65,7 @@ install: uninstall install-modules install-scripts
+>>>  install-modules: modules
+>>>       $(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) \
+>>>               modules_install
+>>> +     @./scripts/update-initramfs
+>>>
+>>>  install-scripts:
+>>>       @# All the scripts we can use
+>>> diff --git a/scripts/update-initramfs b/scripts/update-initramfs
+>>> new file mode 100755
+>>> index 0000000..412d885
+>>> --- /dev/null
+>>> +++ b/scripts/update-initramfs
+>>> @@ -0,0 +1,33 @@
+>>> +#!/bin/bash
+>>> +# Copyright 2009        Luis R. Rodriguez <mcgrof@gmail.com>
+>>> +#
+>>> +# Since we provide ssb, the Ethernet module b44 some people may
+>>> +# rely on it to netboot, so update the initrafms for each
+>>> +# distribution.
+>>> +#
+>>> +# Note that in the future people may want to wireless-boot
+>>> +# so this will help with that as well.
+>>> +
+>>> +LSB_RED_ID=$(/usr/bin/lsb_release -i -s)
+>>> +
+>>> +KLIB=/lib/modules/2.6.31-wl/build
+>>> +ver=$(echo $KLIB | awk -F "/lib/modules/" '{print $2}' | awk -F"/" '{print $1}')
+>>> +dir=/boot/
+>>> +
+>>> +case $LSB_RED_ID in
+>>> +"Ubuntu")
+>>> +     echo "Updating Ubuntu's initramfs for $ver under $dir ..."
+>>> +     mkinitramfs -o $dir/initrd.img-$ver $ver
+>>> +     echo "Will now run update-grub to ensure grub will find the new initramfs ..."
+>>> +     update-grub
+>>> +     ;;
+>>> +*)
+>>> +     echo "Warning:"
+>>> +     echo "You may or may not need to update your initframfs, you should if"
+>>> +     echo "any of the modules installed are part of your initramfs. To add"
+>>> +     echo "support for your distribution to do this automatically send a"
+>>> +     echo "patch against $0. If your distribution does not require this"
+>>> +     echo "send a patch against the '/usr/bin/lsb_release -i -s': $LSB_RED_ID"
+>>> +     echo "tag for your distribution to avoid this warning."
+>>> +        ;;
+>>> +esac
+>>>
+>> Luis - I'll do something similar in a post install script for Karmic LBM
+> 
+> Great, thanks for the heads up.
+> 
+>> since the install-modules target in your makefile isn't used for a
+>> debian install.
+> 
+> Not sure I followed this part, what do you mean?
+> 
 
-  Luis
+It has to do with the way debian packages are installed. In the case of
+LBM, the .ko files from the binary package are simply copied to their
+target locations during 'apt-get install'. Therefore, a post
+installation script needs to be run that updates the initramfs.
 
-[ 2032.396393] phy4: Removed STA <ap-BSSID>
-[ 2032.408522] phy4: Destroyed STA <ap-BSSID>
-[ 2032.408542] wlan0: deauthenticating from <ap-BSSID> by local choice
-(reason=3)
-[ 2032.442906] phy4: device now idle
-[ 2032.451837] ------------[ cut here ]------------
-[ 2032.451876] WARNING: at net/wireless/core.c:613
-wdev_cleanup_work+0xe9/0x110 [cfg80211]()
-[ 2032.451883] Hardware name: 7660A14
-[ 2032.451888] Modules linked in: ath5k(-) <bleh>
-[ 2032.452072] Pid: 10, comm: events/1 Tainted: G        W  2.6.32-rc2-wl #45
-[ 2032.452080] Call Trace:
-[ 2032.452098]  [<ffffffff8105be78>] warn_slowpath_common+0x78/0xb0
-[ 2032.452109]  [<ffffffff8105bebf>] warn_slowpath_null+0xf/0x20
-[ 2032.452127]  [<ffffffffa00c25b9>] wdev_cleanup_work+0xe9/0x110 [cfg80211]
-[ 2032.452144]  [<ffffffffa00c24d0>] ? wdev_cleanup_work+0x0/0x110 [cfg80211]
-[ 2032.452156]  [<ffffffff81075c3e>] worker_thread+0x1fe/0x3b0
-[ 2032.452165]  [<ffffffff81075bed>] ? worker_thread+0x1ad/0x3b0
-[ 2032.452176]  [<ffffffff8107abf0>] ? autoremove_wake_function+0x0/0x40
-[ 2032.452188]  [<ffffffff81075a40>] ? worker_thread+0x0/0x3b0
-[ 2032.452198]  [<ffffffff8107a82e>] kthread+0x8e/0xa0
-[ 2032.452209]  [<ffffffff8101300a>] child_rip+0xa/0x20
-[ 2032.452221]  [<ffffffff81012990>] ? restore_args+0x0/0x30
-[ 2032.452230]  [<ffffffff8107a7a0>] ? kthread+0x0/0xa0
-[ 2032.452239]  [<ffffffff81013000>] ? child_rip+0x0/0x20
-[ 2032.452245] ---[ end trace 7d678c5342bdcaab ]---
-[ 2033.767265] ath5k 0000:03:00.0: PCI INT A disabled
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
