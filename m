@@ -1,85 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:13474 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754666AbZIANM6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:43359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752451AbZI1J3x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 09:12:58 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 6/9] iwmc3200wifi: fix misuse of le16_to_cpu
-Date: Tue,  1 Sep 2009 15:14:03 +0200
-Message-Id: <0b1215c4ea3f375a932030fe94fd97e47df4b4eb.1251809163.git.sameo@linux.intel.com>
-In-Reply-To: <cf887cbfdcddc6c3874e08978b8926f82862d345.1251809163.git.sameo@linux.intel.com>
-References: <cover.1251809163.git.sameo@linux.intel.com>
- <51aebb943245be1aef404d6274fe60feabd47c94.1251809163.git.sameo@linux.intel.com>
- <b08ebbaa73e4796a6be51889860bc1bd67867a90.1251809163.git.sameo@linux.intel.com>
- <3a950a601bd437ab1c971dc495fc0a2c3c886631.1251809163.git.sameo@linux.intel.com>
- <8736a234164502177f2073aa9d2f042eed39f67b.1251809163.git.sameo@linux.intel.com>
- <cf887cbfdcddc6c3874e08978b8926f82862d345.1251809163.git.sameo@linux.intel.com>
-In-Reply-To: <cover.1251809163.git.sameo@linux.intel.com>
-References: <cover.1251809163.git.sameo@linux.intel.com>
+	Mon, 28 Sep 2009 05:29:53 -0400
+Subject: Re: [PATCH 2/2] cfg80211: fix wireless handlers assignment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev <netdev@vger.kernel.org>
+Cc: Hugh Dickins <hugh.dickins@tiscali.co.uk>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1254126117.6583.19.camel@johannes.local>
+References: <1254126117.6583.19.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-9X0nEpfe4IJA6fRaYfpU"
+Date: Mon, 28 Sep 2009 11:29:39 +0200
+Message-Id: <1254130179.6583.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhu Yi <yi.zhu@intel.com>
 
-Also mark some functions static.
+--=-9X0nEpfe4IJA6fRaYfpU
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/net/wireless/iwmc3200wifi/main.c |    8 ++++----
- drivers/net/wireless/iwmc3200wifi/rx.c   |    2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+On Mon, 2009-09-28 at 10:21 +0200, Johannes Berg wrote:
+> The point we assign dev->wireless_handlers at is too
+> late, we need to do that before netdev_register_kobject()
+> gets called, so use the new NETDEV_PRE_INIT notifier.
+> The result of adding wireless_handlers too late is the
+> disappearance of /sys/class/net/wlan0/wireless which a
+> bunch of distro scripts still require.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/main.c b/drivers/net/wireless/iwmc3200wifi/main.c
-index c41fa8c..6cf2f0c 100644
---- a/drivers/net/wireless/iwmc3200wifi/main.c
-+++ b/drivers/net/wireless/iwmc3200wifi/main.c
-@@ -128,8 +128,8 @@ static void iwm_disconnect_work(struct work_struct *work)
- 	cfg80211_disconnected(iwm_to_ndev(iwm), 0, NULL, 0, GFP_KERNEL);
- }
- 
--int __iwm_up(struct iwm_priv *iwm);
--int __iwm_down(struct iwm_priv *iwm);
-+static int __iwm_up(struct iwm_priv *iwm);
-+static int __iwm_down(struct iwm_priv *iwm);
- 
- static void iwm_reset_worker(struct work_struct *work)
- {
-@@ -559,7 +559,7 @@ static int iwm_channels_init(struct iwm_priv *iwm)
- 	return 0;
- }
- 
--int __iwm_up(struct iwm_priv *iwm)
-+static int __iwm_up(struct iwm_priv *iwm)
- {
- 	int ret;
- 	struct iwm_notif *notif_reboot, *notif_ack = NULL;
-@@ -693,7 +693,7 @@ int iwm_up(struct iwm_priv *iwm)
- 	return ret;
- }
- 
--int __iwm_down(struct iwm_priv *iwm)
-+static int __iwm_down(struct iwm_priv *iwm)
- {
- 	int ret;
- 
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index 4d9793e..2daa586 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -850,7 +850,7 @@ static int iwm_mlme_mgt_frame(struct iwm_priv *iwm, u8 *buf,
- 				       iwm->resp_ie_len, GFP_KERNEL);
- 	} else {
- 		IWM_ERR(iwm, "Unsupported management frame: 0x%x",
--			cpu_to_le16(mgt->frame_control));
-+			le16_to_cpu(mgt->frame_control));
- 		return 0;
- 	}
- 
--- 
-1.6.3.3
+Ignore please, I have a better, self-contained fix.
+
+johannes
+
+--=-9X0nEpfe4IJA6fRaYfpU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKwIIAAAoJEODzc/N7+QmaGhcP/iA023BLXtzstg1qNJgRdiQu
+vJmJag3jMJZrZ99EvfbaNewsBs5SV95m5vhVNQiUrEKrAHwcOwFJvftKUd2TW7Fo
+QfM5haFNfmTTkMuFZRQrhYJmZ3SXwoZk4HUsQJQ0TiaPwLjsCjJq7/FCruT2h54q
+emo3rc3qURx9tWYLiOG3i67kR6EviyoWDAr9ESFvQtxRisIb4JD9xozWCcn/D2vN
+vcUQrEOoSt6DsNjbGpspGD/pQmxM92jq9ttDqGLzdqlcPcaS/L1RXkXzR8UBCBzY
+4iWZHGKyHFSngPuDXL85Ce0/rcTg0+oXi+qx+q2CPekfsTPbfrqcDGN1ab6uik7B
+X6Sq5mZe5AsyqC1gYms0fITm7EJTmCGaEkG4XHGXOzw5NMZbUT9Z3si4TtoChuVQ
+I0rfgiTEVRQmr7w1pO+nFbcHNBWjLfjO69ijzzhVLIyCifjDYP6kOXZzmYjmcULJ
+d7y9fCtQOh1ig/xNXkI5sf/7ByvfYTzhU1i5HvvRIkeSYnfI7otW76NEY8KklCJy
+MQXCp8BwsOotTgjU4mRQ5ToBOO/ZllKweVxUochr0CMZ36papIprdCjuToSd6K1f
+FAxIEgNAQvb2IFUvlW+8S5rluO5xbLTWCEtY+hpAR6bxxagDTcRdZguf9XlP/r80
+plbNre9tXoR8xLT7Sp+R
+=5ffI
+-----END PGP SIGNATURE-----
+
+--=-9X0nEpfe4IJA6fRaYfpU--
 
