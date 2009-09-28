@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mk-filter-4-a-1.mail.uk.tiscali.com ([212.74.100.55]:1123 "EHLO
-	mk-filter-4-a-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750803AbZI0VuG (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:41476 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbZI1H4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Sep 2009 17:50:06 -0400
-Date: Sun, 27 Sep 2009 22:50:03 +0100 (BST)
-From: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] cfg80211: fix wireless handlers assignment
-In-Reply-To: <Pine.LNX.4.64.0909272139280.4061@sister.anvils>
-Message-ID: <Pine.LNX.4.64.0909272237190.4098@sister.anvils>
-References: <1254076075.6583.6.camel@johannes.local>
- <Pine.LNX.4.64.0909272139280.4061@sister.anvils>
+	Mon, 28 Sep 2009 03:56:35 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Rene Mayrhofer <rene.mayrhofer@gibraltar.at>
+Subject: Re: Massive packet loss with ath9k, AR9280, hostapd in 802.11n mode
+Date: Mon, 28 Sep 2009 09:56:23 +0200
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+References: <200909252054.19762.rene.mayrhofer@gibraltar.at> <b6c5339f0909251352s4c30323awa588dd2f9f0d1af5@mail.gmail.com> <200909252329.01897.rene.mayrhofer@gibraltar.at>
+In-Reply-To: <200909252329.01897.rene.mayrhofer@gibraltar.at>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909280956.23887.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 27 Sep 2009, Hugh Dickins wrote:
+> [ 1698.498801] ath: EEPROM regdomain: 0x0                                                                                             
 > 
-> I've experimented by moving your NETDEV_PRE_INIT hunk later in the
-> sequence, just before the netdev_initialize_kobject(dev) (so I also
-> changed the "goto out" to "goto err_uninit"): both* machines then boot
-> correctly, and this mail leaves me wirelessly.
-> 
-> I'll now experiment to see how early I can move that hunk.
+> Does this indicate that the EEPROM is locked to country code
+> 0x0 (whatever that is, probably US)? "iw reg" doesn't seem to
+> change anything: 
 
-Both machines boot (and do wireless) correctly with your NETDEV_PRE_INIT
-hunk placed just after the ndo_init block, instead of just before where
-you placed it.  That's i386 kernels on both.
+Yep, that's the case.
 
-But curiouser and curiouser... the laptop can do 64-bit, so I built
-my 64-bit kernel, and went through the motions to reproduce the
-early boot crash with the patch as you had it: but the x86_64 kernel
-boots (and does wireless) correctly with the NETDEV_PRE_INIT hunk
-just where you placed it, before the ndo_init block.
+However, "iw XXX reg set XX" should *STILL* change some things, 
+so I guess that crda/regdb isn't still correctly installed. And 
+you should still see something in your "dmesg" output. Hey, 
+even "COUNTRY=AT crda" should change/produce something, e.g. 
+check "dmesg" and "iw list".
 
-Perhaps there's a difference in the 32- and 64-bit startup sequence
-with respect to notifiers; or perhaps your change tickles another bug.
-I don't know, I'm turning off now.
+However, I've now switched my kernel to no longer include
 
-Hugh
+> [ 1686.542910] cfg80211: Using static regulatory domain info
+
+You probably should either use CRDA ("the new way") or some 
+static reg info in your kernel. I personally opted for CRDA, as 
+this gives me more correct channel settings.
+
+
+Regarding the wrong info in your EEPROM: check the README file 
+from ath_info (svn co 
+http://madwifi-project.org/svn/ath_info/trunk).
+
+I currently have the feeling, that about 50% of all WLAN cards 
+bought in Germany have a "wrong" EEPROM country. Maybe importers 
+simply don't care about this.
+
+
+
+Oh, and what I'm not yet getting: how can a wrong country setting 
+lead to so much packet-loss?
