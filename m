@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45892 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645AbZI2AqH (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:64884 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbZI1PZI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 20:46:07 -0400
-Date: Mon, 28 Sep 2009 20:42:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	reinette chatre <reinette.chatre@intel.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Christian Lamparter <chunkeey@web.de>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: Firmware versioning best practices
-Message-ID: <20090929004219.GB24039@tuxdriver.com>
-References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com> <1254181937.2659.34.camel@localhost.localdomain>
+	Mon, 28 Sep 2009 11:25:08 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [RFC] libertas: first stab at cfg80211 support
+Date: Mon, 28 Sep 2009 17:24:59 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+References: <200909281321.21600.h.schurig@mn-solutions.de>
+In-Reply-To: <200909281321.21600.h.schurig@mn-solutions.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1254181937.2659.34.camel@localhost.localdomain>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909281724.59854.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 28, 2009 at 04:52:17PM -0700, Marcel Holtmann wrote:
-> Hi Luis,
-> 
-> > The ath_hif_usb driver will require the ar9271 firmware file but in
-> > the future an open firmware might become available. The ar9170 driver
-> > already is under the same situation already: a closed firmware is
-> > available but an open firmware can be used, only thing is ar9170 uses
-> > the same firmware name for both. We *could* change ar9170 to use the
-> > Intel practice of tagging a version at the end of each firmware
-> > release, like ar9170-1.fw but ar9170 originally was implemented with a
-> > 2-stage firmware requirement and so ar9170-1.fw is already taken.
-> > 
-> > ar9170 still needs a solution for the different firmwares, once we
-> > start supporting the open firmware through some sort of release but
-> > I'd like to address ath_hif_usb now early so that we don't run into
-> > these snags and use some decent convention that is easy to follow.
-> > 
-> > As I noted above, Intel seems to use the device-1.fw, device-2.fw
-> > naming convention. Is this the best approach? Or shall we have the
-> > same firmware filename and simply query the firmware for a map of
-> > capabilities? Any other ideas?
-> 
-> the general rule of thumb is that if you break the firmware API/ABI or
-> change it then the firmware name should be different. So for example if
-> you have some new driver functionality that requires new firmware then
-> you better use a new firmware name. Otherwise it is just fine to use the
-> same name if the functionality is not changing. If you can actually
-> detect the new firmware features from the firmware filename, then you
-> might not even have to bother with a different name. However keep in
-> mind that you still need to load at least the previous version of the
-> firmware and keep that working.
-> 
-> For open source firmware vs binary blobs, we don't really have a good
-> reference. In theory the driver should always try loading both and if
-> one succeeds then go with it. At no point the driver should stop working
-> only because a firmware is missing while either an open source or binary
-> one for that matter would have been available.
-> 
-> If you have a binary and an open source available, then you might wanna
-> have a Kconfig option which to try first. Like prefer the open source
-> over the binary one, but at the end of the day most system will ship
-> with only one anyway. And a module parameter would work here as well.
+Hmm, I see two problems with my code:
 
-This seems like a good piece of advise (as does Pavel's).  Perhaps
-someone should capture this on the wiki?
+> +struct wireless_dev *lbs_wdev_alloc(int sizeof_priv, struct 
+device *dev)
+> +{
+...
+> +	wdev->wiphy = wiphy_new(&lbs_cfg80211_ops,
+> +		sizeof(struct lbs_private) + sizeof_priv);
+...
 
-John
+and later:
+
+> +	wdev = lbs_wdev_alloc(sizeof(struct lbs_private), dmdev);
+
+That's rubbish, I now allocate "sizeof(lbs_private)" bytes twice.
+
+
+
+Another thing is that it might be necessary to unbundle the
+call of "wiphy_new()" and wiphy_register().
+
+I need lbs_private allocated and usable, e.g. in 
+lbs_start_card().
+
+Later, in lbs_start_card(), when I query the firmware about it's 
+capabilites I know enought to populate wiphy->bands. Only then 
+should I call wiphy_register().
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.holgerschurig.de
