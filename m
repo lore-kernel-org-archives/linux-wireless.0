@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26354 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752001AbZI3VxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 17:53:07 -0400
-Subject: Re: [stable] Making Intel WiFi Link 1000 usable in 2.6.31
-From: reinette chatre <reinette.chatre@intel.com>
-To: Greg KH <greg@kroah.com>
-Cc: "stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20090930212447.GB30093@kroah.com>
-References: <1254339259.26521.1645.camel@rc-desk>
-	 <20090930212447.GB30093@kroah.com>
-Content-Type: text/plain
-Date: Wed, 30 Sep 2009 14:53:10 -0700
-Message-Id: <1254347590.26521.1656.camel@rc-desk>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53430 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbZI1OAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 10:00:55 -0400
+Date: Mon, 28 Sep 2009 09:59:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Hugh Dickins <hugh.dickins@tiscali.co.uk>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [bisected] Wireless regression in 2.6.32-git
+Message-ID: <20090928135910.GA2698@tuxdriver.com>
+References: <20090927151855.29efcc53@infradead.org> <Pine.LNX.4.64.0909271708210.8927@sister.anvils> <20090927204548.3ee3768f@infradead.org> <1254077199.6583.8.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1254077199.6583.8.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-09-30 at 14:24 -0700, Greg KH wrote:
-> On Wed, Sep 30, 2009 at 12:34:19PM -0700, reinette chatre wrote:
-> > 
-> > commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
-> > Author: Jay Sternberg <jay.e.sternberg@intel.com>
-> > Date:   Fri Jul 17 09:30:16 2009 -0700
-> > 
-> >     iwlwifi: Handle new firmware file with ucode build number in header
-> > 
-> > commit cce53aa347c1e023d967b1cb1aa393c725aedba5
-> > Author: Jay Sternberg <jay.e.sternberg@intel.com>
-> > Date:   Fri Jul 17 09:30:22 2009 -0700
-> > 
-> >     iwlwifi: update 1000 series API version to match firmware
-> > 
-> > commit 02c06e4abc0680afd31bf481a803541556757fb6
-> > Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Date:   Fri Jul 17 09:30:14 2009 -0700
-> > 
-> >     iwlagn: modify digital SVR for 1000
-> > 
-> > commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
-> > Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > Date:   Thu Aug 13 13:30:54 2009 -0700
-> > 
-> >     iwlwifi: traverse linklist to find the valid OTP block
-> > 
-> > commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
-> > Author: Reinette Chatre <reinette.chatre@intel.com>
-> > Date:   Fri Jul 24 11:13:12 2009 -0700
-> > 
-> >     iwlagn: fix null pointer access during ucode load on 1000
-> > 
-> > Thank you very much
+On Sun, Sep 27, 2009 at 08:46:39PM +0200, Johannes Berg wrote:
+> On Sun, 2009-09-27 at 20:45 +0200, Arjan van de Ven wrote:
 > 
-> Is this the order in which they should be applied?
+> > > Subject: cfg80211: don't set privacy w/o key
+> > > 
+> > > When wpa_supplicant is used to connect to open networks,
+> > > it causes the wdev->wext.keys to point to key memory, but
+> > > that key memory is all empty. Only use privacy when there
+> > > is a default key to be used.
+> > 
+> > 
+> > indeed it does
+> > 
+> > can we get this into mainline soon ?
+> 
+> John's on his way home I suppose.
 
-This is the correct order, but the last two patches need to be ported to
-2.6.31. I will send out new versions.
+Yes, I'll get to it today -- sorry for the delays related to my travel!
 
-Reinette
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
