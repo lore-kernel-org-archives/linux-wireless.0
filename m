@@ -1,132 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755166AbZIQRn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:56 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/13] iwlwifi: send cmd to uCode to configure valid tx antenna
-Date: Thu, 17 Sep 2009 10:43:51 -0700
-Message-Id: <1253209436-2309-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
-References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:39125 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932AbZI1Ol6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 10:41:58 -0400
+Subject: Re: Problems with "cfg80211: fix SME connect" commit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Albert Herranz <albert_herranz@yahoo.es>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <3ace41890909261657s53b38a2fl7939740fc53dd594@mail.gmail.com>
+References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
+	 <200909210845.51247.hs4233@mail.mn-solutions.de>
+	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
+	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
+	 <1253859759.3868.569.camel@johannes.local>
+	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
+	 <1253965154.5122.7.camel@johannes.local>
+	 <3ace41890909261657s53b38a2fl7939740fc53dd594@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-JAz+REDu2s9FQmah+Qjn"
+Date: Mon, 28 Sep 2009 16:41:44 +0200
+Message-Id: <1254148904.3151.4.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-In order for uCode to select the valid antennas for transmit, driver
-need to configure the allowed tx antennas through host command.
+--=-JAz+REDu2s9FQmah+Qjn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The TX_ANT_CONFIGURATION_CMD should be used for 5000 series and up
+On Sun, 2009-09-27 at 00:57 +0100, Hin-Tak Leung wrote:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   19 +++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-commands.h |   12 +++++++++++-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
- 4 files changed, 35 insertions(+), 1 deletions(-)
+> I suppose (together with some of the newly added printk you mentioned
+> could be removed in the final version) the dmesg messages are somewhat
+> confusing, because as a user, I would rather have a deauth message
+> that's actually associated with a user action (e.g. if I switch AP or
+> rfkill). Is it possible to distinguish situation where a user action
+> is involved versus one that isn't? or is the distinction between any
+> consequence of 'user-action' vs wpa_supplicant doing-it-on-its-own too
+> much buried down in the layers?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 00b07f0..2bb282e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -1444,6 +1444,24 @@ int iwl5000_calc_rssi(struct iwl_priv *priv,
- 	return max_rssi - agc - IWL49_RSSI_OFFSET;
- }
- 
-+static int iwl5000_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
-+{
-+	struct iwl_tx_ant_config_cmd tx_ant_cmd = {
-+	  .valid = cpu_to_le32(valid_tx_ant),
-+	};
-+
-+	if (IWL_UCODE_API(priv->ucode_ver) > 1) {
-+		IWL_DEBUG_HC(priv, "select valid tx ant: %u\n", valid_tx_ant);
-+		return iwl_send_cmd_pdu(priv, TX_ANT_CONFIGURATION_CMD,
-+					sizeof(struct iwl_tx_ant_config_cmd),
-+					&tx_ant_cmd);
-+	} else {
-+		IWL_DEBUG_HC(priv, "TX_ANT_CONFIGURATION_CMD not supported\n");
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
-+
- #define IWL5000_UCODE_GET(item)						\
- static u32 iwl5000_ucode_get_##item(const struct iwl_ucode_header *ucode,\
- 				    u32 api_ver)			\
-@@ -1486,6 +1504,7 @@ struct iwl_hcmd_ops iwl5000_hcmd = {
- 	.rxon_assoc = iwl5000_send_rxon_assoc,
- 	.commit_rxon = iwl_commit_rxon,
- 	.set_rxon_chain = iwl_set_rxon_chain,
-+	.set_tx_ant = iwl5000_send_tx_ant_config,
- };
- 
- struct iwl_hcmd_utils_ops iwl5000_hcmd_utils = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f726b42..cc7a5a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1577,6 +1577,10 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	priv->active_rate = priv->rates_mask;
- 	priv->active_rate_basic = priv->rates_mask & IWL_BASIC_RATES_MASK;
- 
-+	/* Configure Tx antenna selection based on H/W config */
-+	if (priv->cfg->ops->hcmd->set_tx_ant)
-+		priv->cfg->ops->hcmd->set_tx_ant(priv, priv->cfg->valid_tx_ant);
-+
- 	if (iwl_is_associated(priv)) {
- 		struct iwl_rxon_cmd *active_rxon =
- 				(struct iwl_rxon_cmd *)&priv->active_rxon;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 2c5c88f..e5f40f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -148,7 +148,7 @@ enum {
- 	QUIET_NOTIFICATION = 0x96,		/* not used */
- 	REPLY_TX_PWR_TABLE_CMD = 0x97,
- 	REPLY_TX_POWER_DBM_CMD_V1 = 0x98,	/* old version of API */
--	TX_ANT_CONFIGURATION_CMD = 0x98,	/* not used */
-+	TX_ANT_CONFIGURATION_CMD = 0x98,
- 	MEASURE_ABORT_NOTIFICATION = 0x99,	/* not used */
- 
- 	/* Bluetooth device coexistence config command */
-@@ -411,6 +411,16 @@ struct iwl5000_tx_power_dbm_cmd {
- 	u8 reserved;
- } __attribute__ ((packed));
- 
-+/**
-+ * Command TX_ANT_CONFIGURATION_CMD = 0x98
-+ * This command is used to configure valid Tx antenna.
-+ * By default uCode concludes the valid antenna according to the radio flavor.
-+ * This command enables the driver to override/modify this conclusion.
-+ */
-+struct iwl_tx_ant_config_cmd {
-+	__le32 valid;
-+} __attribute__ ((packed));
-+
- /******************************************************************************
-  * (0a)
-  * Alive and Error Commands & Responses:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 4f7c133..3791c87 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -89,6 +89,7 @@ struct iwl_hcmd_ops {
- 	int (*rxon_assoc)(struct iwl_priv *priv);
- 	int (*commit_rxon)(struct iwl_priv *priv);
- 	void (*set_rxon_chain)(struct iwl_priv *priv);
-+	int (*set_tx_ant)(struct iwl_priv *priv, u8 valid_tx_ant);
- };
- 
- struct iwl_hcmd_utils_ops {
--- 
-1.5.6.3
+Yeah, it'd be nice to avoid that completely. Or even just avoid telling
+the driver, maybe with some delay akin iwcommit. Alas, I haven't looked
+at it yet and right now it seems to just be a message (and possibly a
+deauth frame)
+
+johannes
+
+--=-JAz+REDu2s9FQmah+Qjn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKwMskAAoJEODzc/N7+QmaRXoP/iddbBta/DeyJ3tINmFFkLgH
+rgKO7z+VwLOHwTK0Ttgbt0TL7DIjd/bNSs6Ixi0Grk/j9xHVFfElBJT2Sh6FE/aq
+9JDpEwUqRJmLGUcuxseZvelstcF/kG3GYhxkqZu0jvX2s7xBi4cQZn2TiR8HWgJb
+p2C72uwjDY1XBknbrdibgxHCpCPcYfWsO5g8aUurE6RoRINSc4mxKMx5lAhG7Qni
+xnrXrmXS+UZw6+HLS6OtDS9mm5pLDHp99wmJ9xvPs/vDULJqxW7p2gTtXv7cRfow
+HCxalvYb7eHb0SMVkbeon3exsTnhz9WsH4rMKQa2yzbA3IR11rxScrXEchia16uZ
++Jj9xp5TibelWwkBQAwNaeXwQbbbtvzbLIWWZRqEsrGXpUef0I1HPdxDgwuINtEM
+W8QTbOvBSXA9+QXqFw6LnkvSun8IDFxDqTzKrWvoL9JE/zv3f1pMa8PsL1qAxC9+
+QqKEDbE+6GlU6HTNjRGNE/hxqGEbydKZgClSYvGSTLXQpWmpJQtrVg1bpscayE9q
+B9tHOlZc4r0X4Ru/97ZObUh1XAmmOFCN+JDvbGKVpHnGaBUDT9uSBz2wJ/n2otAh
+IO8s+8fGhTKh6HbJYwD13jyuDo4xbZuK5gRf3LUE1FBMjgYmnw1PUkt5OecTI9tT
+rKNeIMxxw1Mca6koQdkb
+=yUTf
+-----END PGP SIGNATURE-----
+
+--=-JAz+REDu2s9FQmah+Qjn--
 
