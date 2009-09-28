@@ -1,193 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58221 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679AbZIKBex (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:63553 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbZI1TpZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 21:34:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 1/4] atheros/ath9k: add common read/write ops and port ath9k to use it
-Date: Thu, 10 Sep 2009 21:34:52 -0400
-Message-Id: <1252632895-11914-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
-References: <1252632895-11914-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 28 Sep 2009 15:45:25 -0400
+Received: by bwz6 with SMTP id 6so1526081bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 12:45:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20090928184111.GB4737@tuxdriver.com>
+References: <200909032025.31260.chunkeey@googlemail.com>
+	 <20090918170211.8acce2cc.akpm@linux-foundation.org>
+	 <4AB4CCD0.5080003@gmx.de> <20090928184111.GB4737@tuxdriver.com>
+Date: Mon, 28 Sep 2009 21:45:28 +0200
+Message-ID: <22ee4e770909281245g3346a800n940c28199e429abf@mail.gmail.com>
+Subject: Re: [PATCH] ar9170: implement frequency calibration for
+	one-stage/openfw
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Joerg Albert <jal2@gmx.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In an effort to make hw code driver core agnostic read
-and write operations are defined on the ath_common structure.
-This patch adds that and makes ath9k use it. This allows
-drivers like ath9k_htc to define its own read/write ops and
-still rely on the same hw code. This also paves the way for
-sharing code between ath9k/ath5k/ath9k_htc.
+2009/9/28 John W. Linville <linville@tuxdriver.com>:
+> On Sat, Sep 19, 2009 at 02:21:36PM +0200, Joerg Albert wrote:
+>> On 09/19/2009 02:02 AM, Andrew Morton wrote:
+>> > On Thu, 3 Sep 2009 20:25:31 +0200
+>> > Christian Lamparter <chunkeey@googlemail.com> wrote:
+>> >
+>> >> This patch ports some code from the vendor driver, which is
+>> >> supposed to upload the right calibration values for the
+>> >> chosen frequency.
+>> >>
+>> >> In theory, this should give a better range and throughput
+>> >> for all users with the open, or one-stage firmware.
+>> >>
+>> >> ...
+>> >>
+>> >> +          for (i = 0; i < 76; i++) {
+>> >> +                  u32 phy_data;
+>> >> +                  u8 tmp;
+>> >> +
+>> >> +                  if (i < 25) {
+>> >> +                          tmp = ar9170_interpolate_val(i, &pwrs[0][0],
+>> >> +                                                       &vpds[0][0]);
+>> >> +                  } else {
+>> >> +                          tmp = ar9170_interpolate_val(i - 12,
+>> >> +                                                       &pwrs[1][0],
+>> >> +                                                       &vpds[1][0]);
+>> >> +                  }
+>> >> +
+>> >> +                  phy_data |= tmp << ((i & 3) << 3);
+>> >
+>> > Clearly buggy and the compiler warns.  The value of phy_data is unknown
+>> > here.
+>> >
+>> > How did this get all the way into mainline?
+>>
+>> Strangely it compiles without any warning for me with the latest linux-wireless:
+>
+> That is strange -- no warning here (F-11) either...
+>
+> Christian, care to propose a patch?  Or maybe just something like this?
+>
+> diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+> index b3e5cf3..49c10cb 100644
+> --- a/drivers/net/wireless/ath/ar9170/phy.c
+> +++ b/drivers/net/wireless/ath/ar9170/phy.c
+> @@ -1220,7 +1220,7 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
+>                                                             &vpds[1][0]);
+>                        }
+>
+> -                       phy_data |= tmp << ((i & 3) << 3);
+> +                       phy_data = tmp << ((i & 3) << 3);
+>                        if ((i & 3) == 3) {
+>                                ar9170_regwrite(0x1c6280 + chain * 0x1000 +
+>                                                (i & ~3), phy_data);
+>
+> John
+no? Andrew Morton's mail included a tiny patch which initializes the
+phy_data to 0. I assumed you would pick it up right away...
+Or is there something which would prevent it from including?
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath.h         |    6 ++++
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 --
- drivers/net/wireless/ath/ath9k/hw.c    |   32 ------------------------
- drivers/net/wireless/ath/ath9k/hw.h    |    4 +-
- drivers/net/wireless/ath/ath9k/main.c  |   42 ++++++++++++++++++++++++++++++++
- 5 files changed, 50 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 7589b2a..91cb43c 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -39,6 +39,11 @@ struct ath_regulatory {
- 	struct reg_dmn_pair_mapping *regpair;
- };
- 
-+struct ath_ops {
-+	unsigned int (*read)(void *, u32 reg_offset);
-+        void (*write)(void *, u32 reg_offset, u32 val);
-+};
-+
- struct ath_common {
- 	u16 cachelsz;
- 	u16 curaid;
-@@ -46,6 +51,7 @@ struct ath_common {
- 	u8 curbssid[ETH_ALEN];
- 	u8 bssidmask[ETH_ALEN];
- 	struct ath_regulatory regulatory;
-+	struct ath_ops *ops;
- };
- 
- struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0962505..affc3e5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -718,8 +718,5 @@ bool ath9k_wiphy_scanning(struct ath_softc *sc);
- void ath9k_wiphy_work(struct work_struct *work);
- bool ath9k_all_wiphys_idle(struct ath_softc *sc);
- 
--void ath9k_iowrite32(struct ath_hw *ah, u32 reg_offset, u32 val);
--unsigned int ath9k_ioread32(struct ath_hw *ah, u32 reg_offset);
--
- int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
- #endif /* ATH9K_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 5436244..dabff52 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -81,38 +81,6 @@ static u32 ath9k_hw_mac_to_clks(struct ath_hw *ah, u32 usecs)
- 		return ath9k_hw_mac_clks(ah, usecs);
- }
- 
--/*
-- * Read and write, they both share the same lock. We do this to serialize
-- * reads and writes on Atheros 802.11n PCI devices only. This is required
-- * as the FIFO on these devices can only accept sanely 2 requests. After
-- * that the device goes bananas. Serializing the reads/writes prevents this
-- * from happening.
-- */
--
--void ath9k_iowrite32(struct ath_hw *ah, u32 reg_offset, u32 val)
--{
--	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
--		unsigned long flags;
--		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
--		iowrite32(val, ah->ah_sc->mem + reg_offset);
--		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
--	} else
--		iowrite32(val, ah->ah_sc->mem + reg_offset);
--}
--
--unsigned int ath9k_ioread32(struct ath_hw *ah, u32 reg_offset)
--{
--	u32 val;
--	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
--		unsigned long flags;
--		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
--		val = ioread32(ah->ah_sc->mem + reg_offset);
--		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
--	} else
--		val = ioread32(ah->ah_sc->mem + reg_offset);
--	return val;
--}
--
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
- {
- 	int i;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 84deae4..19b1da8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -51,8 +51,8 @@
- #define AT9285_COEX3WIRE_DA_SUBSYSID	0x30ab
- 
- /* Register read/write primitives */
--#define REG_WRITE(_ah, _reg, _val) ath9k_iowrite32((_ah), (_reg), (_val))
--#define REG_READ(_ah, _reg) ath9k_ioread32((_ah), (_reg))
-+#define REG_WRITE(_ah, _reg, _val) _ah->common.ops->write((_ah), (_reg), (_val))
-+#define REG_READ(_ah, _reg) _ah->common.ops->read((_ah), (_reg))
- 
- #define SM(_v, _f)  (((_v) << _f##_S) & _f)
- #define MS(_v, _f)  (((_v) & _f) >> _f##_S)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b530e47..5f8a18a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1494,6 +1494,47 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
- }
- 
- /*
-+ * Read and write, they both share the same lock. We do this to serialize
-+ * reads and writes on Atheros 802.11n PCI devices only. This is required
-+ * as the FIFO on these devices can only accept sanely 2 requests. After
-+ * that the device goes bananas. Serializing the reads/writes prevents this
-+ * from happening.
-+ */
-+
-+static void ath9k_iowrite32(void *hw_priv, u32 reg_offset, u32 val)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+
-+	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		iowrite32(val, ah->ah_sc->mem + reg_offset);
-+}
-+
-+static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
-+{
-+	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-+	u32 val;
-+
-+	if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ah->ah_sc->sc_serial_rw, flags);
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+		spin_unlock_irqrestore(&ah->ah_sc->sc_serial_rw, flags);
-+	} else
-+		val = ioread32(ah->ah_sc->mem + reg_offset);
-+	return val;
-+}
-+
-+static struct ath_ops ath9k_common_ops = {
-+	.read = ath9k_ioread32,
-+	.write = ath9k_iowrite32,
-+};
-+
-+/*
-  * Initialize and fill ath_softc, ath_sofct is the
-  * "Software Carrier" struct. Historically it has existed
-  * to allow the separation between hardware specific
-@@ -1532,6 +1573,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
- 	sc->sc_ah = ah;
- 
- 	common = ath9k_hw_common(ah);
-+	common->ops = &ath9k_common_ops;
- 
- 	/*
- 	 * Cache line size is used to size and align various
--- 
-1.6.3.3
-
+Regards,
+         Chr
