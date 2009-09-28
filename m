@@ -1,52 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47993 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752475AbZI3RvT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 13:51:19 -0400
-Date: Wed, 30 Sep 2009 20:51:19 +0300
-From: Jouni Malinen <j@w1.fi>
-To: =?utf-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: VLAN traffic appearing on the wrong iface
-Message-ID: <20090930175119.GA13376@jm.kir.nu>
-References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+Received: from web28311.mail.ukl.yahoo.com ([87.248.110.130]:21505 "HELO
+	web28311.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753034AbZI1WaV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 18:30:21 -0400
+Message-ID: <200395.81672.qm@web28311.mail.ukl.yahoo.com>
+References: <200909231851.22110.mb@bu3sch.de>
+Date: Mon, 28 Sep 2009 15:30:24 -0700 (PDT)
+From: Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH] b43: Always use block-I/O for the PIO data registers
+To: Michael Buesch <mb@bu3sch.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <200909231851.22110.mb@bu3sch.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 02:54:10AM +0200, Blaž Bačnik wrote:
-> I use RADIUS-assigned vlans with my AP. Hostapd reports vlan change
-> during authentication and the station appears on correct vlan
-> according to "iw dev ... station dump". But actual packets keep coming
-> in on the default interface (wlan0), not the vlan one (eg. wlan0.2).
+Michael Buesch wrote:
+> On SDIO the PIO data register seems to be hardwired to LE. So
+> the MACCTL bit has no effect on the endianness.
+> So also use block-I/O for the last word of the packet. block-I/O is always LE.
+> 
+> Signed-off-by: Michael Buesch <mb@bu3sch.de>
+> 
+> ---
+> 
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/pio.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/pio.c    2009-09-10 20:14:37.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/b43/pio.c    2009-09-10 21:08:11.000000000 +0200
+> @@ -340,10 +340,15 @@ static u16 tx_write_2byte_queue(struct b
+>              q->mmio_base + B43_PIO_TXDATA,
+>              sizeof(u16));
+>      if (data_len & 1) {
+> +        u8 tail[2] = { 0, };
+> +
+>          /* Write the last byte. */
+>          ctl &= ~B43_PIO_TXCTL_WRITEHI;
+>          b43_piotx_write16(q, B43_PIO_TXCTL, ctl);
+> -        b43_piotx_write16(q, B43_PIO_TXDATA, data[data_len - 1]);
+> +        tail[0] = data[data_len - 1];
+> +        ssb_block_write(dev->dev, tail, 2,
+> +                q->mmio_base + B43_PIO_TXDATA,
+> +                sizeof(u16));
+>      }
+>  
+>      return ctl;
+> @@ -386,26 +391,31 @@ static u32 tx_write_4byte_queue(struct b
+>              q->mmio_base + B43_PIO8_TXDATA,
+>              sizeof(u32));
+>      if (data_len & 3) {
+> -        u32 value = 0;
+> +        u8 tail[4] = { 0, };
+>  
+>          /* Write the last few bytes. */
+>          ctl &= ~(B43_PIO8_TXCTL_8_15 | B43_PIO8_TXCTL_16_23 |
+>               B43_PIO8_TXCTL_24_31);
+> -        data = &(data[data_len - 1]);
+>          switch (data_len & 3) {
+>          case 3:
+> -            ctl |= B43_PIO8_TXCTL_16_23;
+> -            value |= (u32)(*data) << 16;
+> -            data--;
+> +            ctl |= B43_PIO8_TXCTL_16_23 | B43_PIO8_TXCTL_8_15;
+> +            tail[0] = data[data_len - 3];
+> +            tail[1] = data[data_len - 2];
+> +            tail[2] = data[data_len - 1];
+> +            break;
+>          case 2:
+>              ctl |= B43_PIO8_TXCTL_8_15;
+> -            value |= (u32)(*data) << 8;
+> -            data--;
+> +            tail[0] = data[data_len - 2];
+> +            tail[1] = data[data_len - 1];
+> +            break;
+>          case 1:
+> -            value |= (u32)(*data);
+> +            tail[0] = data[data_len - 1];
+> +            break;
+>          }
+>          b43_piotx_write32(q, B43_PIO8_TXCTL, ctl);
+> -        b43_piotx_write32(q, B43_PIO8_TXDATA, value);
+> +        ssb_block_write(dev->dev, tail, 4,
+> +                q->mmio_base + B43_PIO8_TXDATA,
+> +                sizeof(u32));
+>      }
+>  
+>      return ctl;
+> @@ -693,21 +703,25 @@ data_ready:
+>                     q->mmio_base + B43_PIO8_RXDATA,
+>                     sizeof(u32));
+>          if (len & 3) {
+> -            u32 value;
+> -            char *data;
+> +            u8 tail[4] = { 0, };
+>  
+>              /* Read the last few bytes. */
+> -            value = b43_piorx_read32(q, B43_PIO8_RXDATA);
+> -            data = &(skb->data[len + padding - 1]);
+> +            ssb_block_read(dev->dev, tail, 4,
+> +                       q->mmio_base + B43_PIO8_RXDATA,
+> +                       sizeof(u32));
+>              switch (len & 3) {
+>              case 3:
+> -                *data = (value >> 16);
+> -                data--;
+> +                skb->data[len + padding - 3] = tail[0];
+> +                skb->data[len + padding - 2] = tail[1];
+> +                skb->data[len + padding - 1] = tail[2];
+> +                break;
+>              case 2:
+> -                *data = (value >> 8);
+> -                data--;
+> +                skb->data[len + padding - 2] = tail[0];
+> +                skb->data[len + padding - 1] = tail[1];
+> +                break;
+>              case 1:
+> -                *data = value;
+> +                skb->data[len + padding - 1] = tail[0];
+> +                break;
+>              }
+>          }
+>      } else {
+> @@ -715,11 +729,13 @@ data_ready:
+>                     q->mmio_base + B43_PIO_RXDATA,
+>                     sizeof(u16));
+>          if (len & 1) {
+> -            u16 value;
+> +            u8 tail[2] = { 0, };
+>  
+>              /* Read the last byte. */
+> -            value = b43_piorx_read16(q, B43_PIO_RXDATA);
+> -            skb->data[len + padding - 1] = value;
+> +            ssb_block_read(dev->dev, tail, 2,
+> +                       q->mmio_base + B43_PIO_RXDATA,
+> +                       sizeof(u16));
+> +            skb->data[len + padding - 1] = tail[0];
+>          }
+>      }
+>  
+> 
 
-You will need (at least) the following fix in hostapd to get this
-working:
-http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=1c766b094a82a669a1d0bb7f8d132b322e56e81d
+Without this patch, the last bytes of data sent/received to/from PIO FIFOs on SDIO-based cards get "swizzled" when its length is not multiple of 4 bytes.
 
-I have not tested whether this actually works, so no guarantees on that
-being the only remaining issue.
+Tested-by: Albert Herranz <albert_herranz@yahoo.es>
 
-> I also tried taking RADIUS out of the loop, so I used hostapd's
-> "accept_mac_file" with specified vlan and I think I might have found
-> another bug. After applying the patch below (for I believe a rather
-> obvious typo), kernel started oopsing and I gave up. If needed, I can
-> provide config files for either hostapd or freeradius server, though
-> it looks like this is a driver problem.
 
-Thanks for the hostapd patch (even better thanks would have been given
-should it have been sent to the hostap mailing list or me ;-). It is now
-in the current development (0.7.x) tree for hostapd (with the additional
-fix I mentioned above). If you can test one, it would be interesting to
-hear whether VLANs are actually working now.
-
-As far as the kernel oops is concerned, that does not sound good..
-hostapd should not have been able to trigger such a thing even with the
-not-yey-fixed driver_nl80211.c.. Some more details on this could be
-useful if I cannot easily reproduce the oops.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+      
