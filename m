@@ -1,89 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f210.google.com ([209.85.218.210]:65090 "EHLO
-	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054AbZIUSTd (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:46267 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751755AbZI1O5h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 14:19:33 -0400
-Received: by bwz6 with SMTP id 6so2124080bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Sep 2009 11:19:35 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 21 Sep 2009 14:19:35 -0400
-Message-ID: <76516bfc0909211119i4362ca35k13fc1f87857fb393@mail.gmail.com>
-Subject: p54spi: dbm_antsignal value, is it RSSI or dbm?
-From: Andre K <andrekdeen@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Sep 2009 10:57:37 -0400
+Subject: Re: [RFC] libertas: first stab at cfg80211 support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <h.schurig@mn-solutions.de>
+Cc: libertas-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <200909281654.08859.h.schurig@mn-solutions.de>
+References: <200909281321.21600.h.schurig@mn-solutions.de>
+	 <1254144714.3151.1.camel@johannes.local>
+	 <200909281654.08859.h.schurig@mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-wtlrgKGKcd3iPWnOzIuz"
+Date: Mon, 28 Sep 2009 16:57:37 +0200
+Message-Id: <1254149857.3151.5.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
 
-I've been using the new p54spi driver on a couple of n800s. Some specifics:
-Kernel : 2.6.29-omap1
-Wireless-compat: compat-wireless-2009-08-22
-OS: Maemo
-Options:  disabled CONFIG_RFKILL_BACKPORT_LEDS because it didn't compile
+--=-wtlrgKGKcd3iPWnOzIuz
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The driver loads and functions normally. However, the values for the
-dbm_antsignal (from RadioTap header), are they RSSI or dbm? Initially
-I thought they were dbm since tcpdump showed negative values, which
-makes sense:
+On Mon, 2009-09-28 at 16:54 +0200, Holger Schurig wrote:
 
-14:05:39.458831 8602124us tsft 1.0 Mb/s 2412 MHz (0x00a0) -46dB signal
--60dB noise antenna 0 [0x0000000e] Beacon (**SSID_REMOVED**) [1.0*
-2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0 Mbit] ESS CH: 1, PRIVACY
-14:05:39.461090 8603807us tsft 1.0 Mb/s 2412 MHz (0x00a0) -52dB signal
--60dB noise antenna 0 [0x0000000e] Beacon (**SSID_REMOVED**) [1.0*
-2.0* 5.5* 11.0* 6.0 12.0 24.0 36.0 Mbit] ESS CH: 1, PRIVACY
-14:05:39.506713 8652588us tsft 1.0 Mb/s 2412 MHz (0x00a0) -52dB signal
--60dB noise antenna 0 [0x0000000e] Beacon (**SSID_REMOVED**) [1.0*
-2.0* 5.5* 11.0* Mbit] ESS CH: 1, PRIVACY
-14:05:39.541900 8687877us tsft 1.0 Mb/s 2412 MHz (0x00a0) -47dB signal
--60dB noise antenna 0 [0x0000000e] Beacon (**SSID_REMOVED**)[|802.11]
+> Yes, it has three netdevs, but they aren't all setup at=20
+> card-initialization time.
+>=20
+>=20
+> Some details: "struct private" contains:
+>=20
+>         struct net_device *dev;
+>         struct net_device *mesh_dev; /* Virtual device */
+>         struct net_device *rtap_net_dev;
+>=20
+> The old code did have an
+>=20
+>         dev =3D alloc_etherdev(sizeof(struct lbs_private));"
+>=20
+> and the other two netdevs got initialized at some other location:
+>=20
+> * priv->lbs_add_mesh() in lbs_add_mesh()
+>   via "alloc_netdev(0, "msh%d", ether_setup)". And lbs_add_mesh()
+>   is called only when the hardware supports this.
+> * rtap_net_dev is created in lbs_add_rtap() and again I haven't
+>   change the creation of this thingy.
+>=20
+> Please note that when I'm using the card in station mode, both=20
+> mesh_dev and rtap_net_dev are NULL. My firmware doesn't have=20
+> mesh code, and only when I set the card into monitor mode will=20
+> the rtap_net_dev created.
+>=20
+>=20
+> I kept this behavior for now: at initialzation I call:
+>=20
+>         wdev =3D lbs_wdev_alloc(sizeof(struct lbs_private), dmdev);
+> 	wdev->xyz =3D initialization;
+>         ...
+>         dev =3D alloc_netdev()
+>=20
+>=20
+> For me it's not clear if I should create wdev's for mesh_dev and=20
+> rtap_net_dev as well. However, I'm not able to check the mesh=20
+> code anyway: my firmware doesn't support this. And for=20
+> rtap_net_dev I'm not sure if this shouldn't be handled=20
+> differently in a cfg80211 scenario, e.g. via=20
+> lbs_cfg80211_change_iface().
 
-Output of iwconfig:
-          wlan0     IEEE 802.11bg  Mode:Monitor  Tx-Power=27 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
+Interesting.
 
-However, when I select a channel (6 in this case) its starts to behave
-strangely:
-Output of iwconfig:
-          wlan0     IEEE 802.11bg  Mode:Monitor  Frequency:2.437 GHz
-Tx-Power=27 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Power Management:off
+> A hint of what I should then would be most welcome :-)
 
-Tcpdump:
-14:08:25.312988 4469382526us tsft 2.0 Mb/s 2437 MHz (0x00a0) -49dB
-signal -41dB noise antenna 0 [0x0000000e] Acknowledgment
-RA:00:1d:e0:3d:5a:53 (oui Unknown)
-14:08:25.313903 4469383345us tsft 1.0 Mb/s 2437 MHz (0x00a0) 4dB
-signal -41dB noise antenna 0 [0x0000000e] 04:c2:08:00:07:07 (oui
-Unknown) Unknown SSAP 0x0a >
+It might make sense to support adding interfaces with nl80211, since
+apparently it has mesh and monitor interfaces.
 
-Which shows up the first positive dbm value. Next I set up another
-n800 to broadcast ping packets (using hping3, since busybox's ping
-doesn't allow broadcast).
+johannes
 
-14:12:22.066192 13296010370us tsft 1.0 Mb/s 2437 MHz (0x00a0) 87dB
-signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
-192.168.10.255: ICMP echo request, id 6662, seq 40704, length 8
-14:12:22.092376 13296036864us tsft 18.0 Mb/s 2437 MHz (0x00c0) 82dB
-signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
-192.168.10.255: ICMP echo request, id 6662, seq 40960, length 8
-14:12:22.094787 13296037678us tsft 1.0 Mb/s 2437 MHz (0x00a0) 112dB
-signal -62dB noise antenna 0 [0x0000000e] IP 192.168.10.11 >
-192.168.10.255: ICMP echo request, id 6662, seq 40960, length 8
+--=-wtlrgKGKcd3iPWnOzIuz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
 
-I get strange dbm values, in the range of 50 - 100dbm, which doesn't
-make much sense.
+iQIcBAABAgAGBQJKwM7dAAoJEODzc/N7+QmaH7cQAK1pXKnV284olhYrSqiAC44v
+KudglaZ3UFz7heB8z1nFInbpMnZuYPNlqGof8eRmI4eISnp0BA2UaN8R9BqqTxkK
+pk4AvtWwFad6R8Ll7h7AHNX4BD0suyEssVeowV6h/Y7whE+7tTf5WdP1nlZfkEWK
++ym8LLRBOfGzDytSApcR1Cwc79HDK4C5CdE/0U3Izfp2j1D5HJp+EEJjdJ9yCkfS
+yUnlQjCrz9ZnpYLPmn0fhutE05PH4M/gz2xC7RiWN4SIVXmTaxfOHWh+76qrDtJ5
+ZrwcHsOUYTWB9oiq+8zzdYpjuXv7S84dH+AYE7iVQX7Auy4Q9mN0uRU+zKekDo8R
+d98XISqblcm7OOQPtfUsiJmNvvbtGMwWfDO0CNhO6HoD6UGdGhEOXa0Yq0Kp9Uui
+5cK2KjTYUJGg0Rv19wPQG3SHRnTezx1iy9JmpqCDArL9b/UxZcyr52NB9TA7G/I/
+ISdFMD0hw1/9c7eXqjxLfwoMcGJDR1u7Q5H0uiHDwmfG7li5qEoF9ftQwN9LTNEP
+3HowTRbEvvsfh6edPy/vPPR2BVJaey4yG9e+EXVHUtHWxToyeX90rjNwU+RrN5fD
+NzrfpKwsaWXJxov6NAVYTkfKWU699blGmh+IZDSJlHNrSqfuGi3Q9YUFitcs49jF
+8MzWN8bTn945xdBfRm0o
+=Xz6y
+-----END PGP SIGNATURE-----
 
-Does anyone have an idea what value is being returned and if there is
-an error in the dbm calculation?
+--=-wtlrgKGKcd3iPWnOzIuz--
 
-Thanks,
-Andre.
-
-P.S. Would be happy to provide more info. and feedback.
