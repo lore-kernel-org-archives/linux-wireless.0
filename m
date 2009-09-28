@@ -1,95 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755181AbZIQRnx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:53 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/13] iwlwifi: allow user change protection mechanism for HT
-Date: Thu, 17 Sep 2009 10:43:45 -0700
-Message-Id: <1253209436-2309-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
-References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:3303 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbZI1OyS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 10:54:18 -0400
+From: Holger Schurig <h.schurig@mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] libertas: first stab at cfg80211 support
+Date: Mon, 28 Sep 2009 16:54:08 +0200
+Cc: libertas-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+References: <200909281321.21600.h.schurig@mn-solutions.de> <1254144714.3151.1.camel@johannes.local>
+In-Reply-To: <1254144714.3151.1.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200909281654.08859.h.schurig@mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> This seems wrong -- doesn't libertas have multiple netdevs?
+> You're treating wdev == wiphy it seems here, rather than wdev
+> == netdev. 
 
-Allow user to change protection mechanism for HT between RTS/CTS and
-CTS-to-self through sysfs:
+Yes, it has three netdevs, but they aren't all setup at 
+card-initialization time.
 
-Show current protection mechanism for HT
-   cat /sys/class/net/wlan0/device/rts_ht_protection
 
-Change protection mechanism for HT (only allowed while not-associated)
-CTS-to-self:
-   echo 0 > /sys/class/net/wlan0/device/rts_ht_protection
-RTS/CTS:
-   echo 1 > /sys/class/net/wlan0/device/rts_ht_protection
+Some details: "struct private" contains:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+        struct net_device *dev;
+        struct net_device *mesh_dev; /* Virtual device */
+        struct net_device *rtap_net_dev;
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c0939dc..0b2a1d4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2613,6 +2613,40 @@ static ssize_t show_statistics(struct device *d,
- 
- static DEVICE_ATTR(statistics, S_IRUGO, show_statistics, NULL);
- 
-+static ssize_t show_rts_ht_protection(struct device *d,
-+			     struct device_attribute *attr, char *buf)
-+{
-+	struct iwl_priv *priv = dev_get_drvdata(d);
-+
-+	return sprintf(buf, "%s\n",
-+		priv->cfg->use_rts_for_ht ? "RTS/CTS" : "CTS-to-self");
-+}
-+
-+static ssize_t store_rts_ht_protection(struct device *d,
-+			      struct device_attribute *attr,
-+			      const char *buf, size_t count)
-+{
-+	struct iwl_priv *priv = dev_get_drvdata(d);
-+	unsigned long val;
-+	int ret;
-+
-+	ret = strict_strtoul(buf, 10, &val);
-+	if (ret)
-+		IWL_INFO(priv, "Input is not in decimal form.\n");
-+	else {
-+		if (!iwl_is_associated(priv))
-+			priv->cfg->use_rts_for_ht = val ? true : false;
-+		else
-+			IWL_ERR(priv, "Sta associated with AP - "
-+				"Change protection mechanism is not allowed\n");
-+		ret = count;
-+	}
-+	return ret;
-+}
-+
-+static DEVICE_ATTR(rts_ht_protection, S_IWUSR | S_IRUGO,
-+			show_rts_ht_protection, store_rts_ht_protection);
-+
- 
- /*****************************************************************************
-  *
-@@ -2669,6 +2703,7 @@ static struct attribute *iwl_sysfs_entries[] = {
- 	&dev_attr_statistics.attr,
- 	&dev_attr_temperature.attr,
- 	&dev_attr_tx_power.attr,
-+	&dev_attr_rts_ht_protection.attr,
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	&dev_attr_debug_level.attr,
- #endif
+The old code did have an
+
+        dev = alloc_etherdev(sizeof(struct lbs_private));"
+
+and the other two netdevs got initialized at some other location:
+
+* priv->lbs_add_mesh() in lbs_add_mesh()
+  via "alloc_netdev(0, "msh%d", ether_setup)". And lbs_add_mesh()
+  is called only when the hardware supports this.
+* rtap_net_dev is created in lbs_add_rtap() and again I haven't
+  change the creation of this thingy.
+
+Please note that when I'm using the card in station mode, both 
+mesh_dev and rtap_net_dev are NULL. My firmware doesn't have 
+mesh code, and only when I set the card into monitor mode will 
+the rtap_net_dev created.
+
+
+I kept this behavior for now: at initialzation I call:
+
+        wdev = lbs_wdev_alloc(sizeof(struct lbs_private), dmdev);
+	wdev->xyz = initialization;
+        ...
+        dev = alloc_netdev()
+
+
+For me it's not clear if I should create wdev's for mesh_dev and 
+rtap_net_dev as well. However, I'm not able to check the mesh 
+code anyway: my firmware doesn't support this. And for 
+rtap_net_dev I'm not sure if this shouldn't be handled 
+differently in a cfg80211 scenario, e.g. via 
+lbs_cfg80211_change_iface().
+
+A hint of what I should then would be most welcome :-)
+
+
 -- 
-1.5.6.3
+M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
+Holger Schurig
+Raiffeisenstr. 10
+61191 Rosbach
+Tel: 06003/9141-15          Fax 06003/9141-49
+http://www.mn-solutions.de/
 
+Handelsregister Friedberg, HRB 5903
+Geschäftsführer: P.Schrittenlocher
