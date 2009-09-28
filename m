@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.trivenet.it ([212.103.192.15]:3384 "EHLO tbox.trivenet.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757217AbZIEK5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Sep 2009 06:57:45 -0400
-Received: from localhost ([212.103.192.15])
-        by tbox.trivenet.it (Trivenet Mailserver) with SMTP id MTY50939
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Sep 2009 12:45:39 +0200
-Date: Sat, 05 Sep 2009 12:45:39 +0200
-From: "Riccardo Gori" <goric@trivenet.it>
-Reply-To: "Riccardo Gori" <goric@trivenet.it>
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless compilation error on 2.6.29 kernel
-Message-ID: <af320d47da5ad895b4fa0ba64fc4cec4@trivenet.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59086
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751575AbZI1Vvb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 17:51:31 -0400
+Date: Mon, 28 Sep 2009 14:51:50 -0700 (PDT)
+Message-Id: <20090928.145150.94640612.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-09-28
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20090928214047.GF4737@tuxdriver.com>
+References: <20090928214047.GF4737@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I'm trying to compile compat-wireless-2009-09-05 and it gives me the following error:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 28 Sep 2009 17:40:48 -0400
 
-$ ./scripts/driver-select ath5k
-$ make
+> There are number of small fixes to core wireless infrastructure from
+> Johannes Berg.  These have been bounced around on the list quite a bit
+> during the last several days, so I think they are solid.  Also included
+> is one that improves some debugging messages. 
+> 
+> There are a few fixes for the iwlwifi family of drivers, including a
+> buffer overrun, a memory leak, and another debugging message fix.
+> 
+> Arjan showed-up with a bounds checking fix in some ancient wext code.  I
+> included it due to the potential security implications.
+> 
+> The sony-laptop fixes may seem a bit out of place, but they are related
+> to rfkill.  Also, they are "Acked-by: Mattia Dongili <malattia@linux.it>",
+> who is the listed maintainer for that code.  I put them at the end, so
+> if you want you can pull from 8f1546cadf7ac5e9a40d54089a1c7302264ec49b
+> instead of master.
+> 
+> Please let me know if there are problems!
 
-...snip...
-
-  CC [M]  /home/riccardo/Download/compat-wireless-2009-09-05/net/wireless/scan.o
-/home/riccardo/Download/compat-wireless-2009-09-05/net/wireless/scan.c: In function ‘cfg80211_inform_bss’:
-/home/riccardo/Download/compat-wireless-2009-09-05/net/wireless/scan.c:503: error: implicit declaration of function ‘kmemleak_ignore’
-make[3]: *** [/home/riccardo/Download/compat-wireless-2009-09-05/net/wireless/scan.o] Error 1
-make[2]: *** [/home/riccardo/Download/compat-wireless-2009-09-05/net/wireless] Error 2
-make[1]: *** [_module_/home/riccardo/Download/compat-wireless-2009-09-05] Error 2
-make[1]: Leaving directory `/usr/src/kernels/2.6.29.6-217.2.16.fc11.i586'
-make: *** [modules] Error 2
-
-I'm using the 2.6.29 fedora 11 kernel.
-
-Commenting out line 503:
-kmemleak_ignore(res);
-solve the compilation problem
-
-Thanks,
-Riccardo
-
+Pulled, thanks a lot John!
