@@ -1,172 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38474 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753451AbZIJTaY (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:50648 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753497AbZI1XFY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 15:30:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 08/10] ath9k: move ath_common to ath_hw
-Date: Thu, 10 Sep 2009 15:30:25 -0400
-Message-Id: <1252611027-5285-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
-References: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 28 Sep 2009 19:05:24 -0400
+Received: by iwn10 with SMTP id 10so2764741iwn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 16:05:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1254177211.21847.15.camel@mj>
+References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
+	<1254177211.21847.15.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 28 Sep 2009 16:05:08 -0700
+Message-ID: <43e72e890909281605t679cb207x98819949e27b1f6d@mail.gmail.com>
+Subject: Re: Firmware versioning best practices
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This ensures that we can access common on hw related code
-independent of the driver core.
+On Mon, Sep 28, 2009 at 3:33 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Mon, 2009-09-28 at 15:17 -0700, Luis R. Rodriguez wrote:
+>> The ath_hif_usb driver will require the ar9271 firmware file but in
+>> the future an open firmware might become available. The ar9170 driver
+>> already is under the same situation already: a closed firmware is
+>> available but an open firmware can be used, only thing is ar9170 uses
+>> the same firmware name for both. We *could* change ar9170 to use the
+>> Intel practice of tagging a version at the end of each firmware
+>> release, like ar9170-1.fw but ar9170 originally was implemented with a
+>> 2-stage firmware requirement and so ar9170-1.fw is already taken.
+>
+> Versions don't have to start with 1.  We could start e.g. with 10.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 +---
- drivers/net/wireless/ath/ath9k/hw.h    |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |   22 +++++++++++-----------
- drivers/net/wireless/ath/ath9k/recv.c  |   10 ++++++----
- 4 files changed, 19 insertions(+), 18 deletions(-)
+Point taken.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 757f17f..0c64c80 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -553,8 +553,6 @@ struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
- 
--	struct ath_common common;
--
- 	spinlock_t wiphy_lock; /* spinlock to protect ath_wiphy data */
- 	struct ath_wiphy *pri_wiphy;
- 	struct ath_wiphy **sec_wiphy; /* secondary wiphys (virtual radios); may
-@@ -649,7 +647,7 @@ int ath_cabq_update(struct ath_softc *);
- 
- static inline struct ath_common *ath9k_hw_common(struct ath_hw *ah)
- {
--	return &ah->ah_sc->common;
-+	return &ah->common;
- }
- 
- static inline struct ath_regulatory *ath9k_hw_regulatory(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f8e7919..4f58908 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -435,6 +435,7 @@ struct ath_gen_timer_table {
- 
- struct ath_hw {
- 	struct ath_softc *ah_sc;
-+	struct ath_common common;
- 	struct ath9k_hw_version hw_version;
- 	struct ath9k_ops_config config;
- 	struct ath9k_hw_capabilities caps;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 838b704..2423cdc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1352,7 +1352,7 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
--	struct ath_regulatory *reg = &sc->common.regulatory;
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(sc->sc_ah);
- 
- 	return ath_reg_notifier_apply(wiphy, request, reg);
- }
-@@ -1520,14 +1520,6 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
- 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
- 		     (unsigned long)sc);
- 
--	/*
--	 * Cache line size is used to size and align various
--	 * structures used to communicate with the hardware.
--	 */
--	ath_read_cachesize(sc, &csz);
--	/* XXX assert csz is non-zero */
--	sc->common.cachelsz = csz << 2;	/* convert to bytes */
--
- 	ah = kzalloc(sizeof(struct ath_hw), GFP_KERNEL);
- 	if (!ah) {
- 		r = -ENOMEM;
-@@ -1539,6 +1531,16 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
- 	ah->hw_version.subsysid = subsysid;
- 	sc->sc_ah = ah;
- 
-+	common = ath9k_hw_common(ah);
-+
-+	/*
-+	 * Cache line size is used to size and align various
-+	 * structures used to communicate with the hardware.
-+	 */
-+	ath_read_cachesize(sc, &csz);
-+	/* XXX assert csz is non-zero */
-+	common->cachelsz = csz << 2;	/* convert to bytes */
-+
- 	if (ath9k_init_debug(ah) < 0)
- 		dev_err(sc->dev, "Unable to create debugfs files\n");
- 
-@@ -1681,8 +1683,6 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid)
- 	ath9k_hw_setcapability(ah, ATH9K_CAP_DIVERSITY, 1, true, NULL);
- 	sc->rx.defant = ath9k_hw_getdefantenna(ah);
- 
--	common = ath9k_hw_common(ah);
--
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
- 		memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3bdd4e6..97a5efe 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -297,6 +297,7 @@ static void ath_opmode_init(struct ath_softc *sc)
- 
- int ath_rx_init(struct ath_softc *sc, int nbufs)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct sk_buff *skb;
- 	struct ath_buf *bf;
- 	int error = 0;
-@@ -306,10 +307,10 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	spin_lock_init(&sc->rx.rxbuflock);
- 
- 	sc->rx.bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
--				 min(sc->common.cachelsz, (u16)64));
-+				 min(common->cachelsz, (u16)64));
- 
- 	DPRINTF(sc->sc_ah, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
--		sc->common.cachelsz, sc->rx.bufsize);
-+		common->cachelsz, sc->rx.bufsize);
- 
- 	/* Initialize rx descriptors */
- 
-@@ -322,7 +323,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	}
- 
- 	list_for_each_entry(bf, &sc->rx.rxbuf, list) {
--		skb = ath_rxbuf_alloc(&sc->common, sc->rx.bufsize, GFP_KERNEL);
-+		skb = ath_rxbuf_alloc(common, sc->rx.bufsize, GFP_KERNEL);
- 		if (skb == NULL) {
- 			error = -ENOMEM;
- 			goto err;
-@@ -654,6 +655,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 	struct sk_buff *skb = NULL, *requeue_skb;
- 	struct ieee80211_rx_status rx_status;
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_hdr *hdr;
- 	int hdrlen, padsize, retval;
- 	bool decrypt_error = false;
-@@ -752,7 +754,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush)
- 
- 		/* Ensure we always have an skb to requeue once we are done
- 		 * processing the current buffer's skb */
--		requeue_skb = ath_rxbuf_alloc(&sc->common, sc->rx.bufsize, GFP_ATOMIC);
-+		requeue_skb = ath_rxbuf_alloc(common, sc->rx.bufsize, GFP_ATOMIC);
- 
- 		/* If there is no memory we ignore the current RX'd frame,
- 		 * tell hardware it can give us a new frame using the old
--- 
-1.6.3.3
+>> ar9170 still needs a solution for the different firmwares, once we
+>> start supporting the open firmware through some sort of release but
+>> I'd like to address ath_hif_usb now early so that we don't run into
+>> these snags and use some decent convention that is easy to follow.
+>
+> We could use ar9170-apiversion-codeverestion.fw and link it to
+> ar9170-apiversion.fw.  That is, if the open firmware version is 0.9.0
+> and it was compiled for API version 12, the filename would be
+> ar9170-12-0.9.0.fw and it could be linked to ar9170-12.fw.
 
+Nice, I like this convention.
+
+>> As I noted above, Intel seems to use the device-1.fw, device-2.fw
+>> naming convention. Is this the best approach? Or shall we have the
+>> same firmware filename and simply query the firmware for a map of
+>> capabilities? Any other ideas?
+>
+> Distinctive names are good for simplicity of administration and the
+> capabilities are good for the sanity of the driver.  But I don't see why
+> we cannot have both.
+
+OK sure, thanks for the feedback, at least now I know what naming
+scheme to use. The bitmap stuff will have to come later through some
+sort of open firmware as I am not sure if we have this with the closed
+one.
+
+  Luis
