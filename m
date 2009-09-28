@@ -1,66 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54043 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702AbZIIXo7 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42965 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbZI1N0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 19:44:59 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/15] ath9k: cleanups to help other core drivers
-Date: Wed,  9 Sep 2009 19:44:46 -0400
-Message-Id: <1252539901-20679-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 28 Sep 2009 09:26:44 -0400
+Subject: [PATCH v2] wext: add back wireless/ dir in sysfs for cfg80211
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hugh Dickins <hugh.dickins@tiscali.co.uk>
+In-Reply-To: <1254130453.6583.22.camel@johannes.local>
+References: <1254130453.6583.22.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Sep 2009 15:26:43 +0200
+Message-Id: <1254144403.3151.0.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We want the common hardware access stuff to not rely on a specific
-driver core. We want this so that different driver cores can share
-the same hw code, both for ath9k_htc and perhaps ath5k. I've spotted
-a few places where we do use ath_softc internally on hw code, and
-have strated to move core-specific code out and kept hw-related
-code apart. This series addreses DPRINTF() usage and btcoex changes.
+The move away from having drivers assign wireless handlers,
+in favour of making cfg80211 assign them, broke the sysfs
+registration (the wireless/ dir went missing) because the
+handlers are now assigned only after registration, which is
+too late.
 
-There'll be more of these, until we can bring up ath9k_htc with
-shared code.
+Fix this by special-casing cfg80211-based devices, all
+of which are required to have an ieee80211_ptr, in the
+sysfs code, and also using get_wireless_stats() to have
+the same values reported as in procfs.
 
-Luis R. Rodriguez (15):
-  ath9k: use ath_hw for DPRINTF() and debug init/exit
-  ath9k: move btcoex core driver info to its own struct
-  ath9k: move hw specific btcoex info to ath_hw
-  ath9k: split bluetooth hardware coex init into two helpers
-  ath9k: move driver core helpers to main.c
-  ath9k: split ath9k_hw_btcoex_enable() into two helpers
-  ath9k: replaces SC_OP_BTCOEX_ENABLED with a bool
-  ath9k: move bt_stomp_type to driver core
-  ath9k: remove unused bt_duty_cycle
-  ath9k: rename btcoex_scheme to just scheme
-  ath9k: rename ath_btcoex_info to ath_btcoex_hw
-  ath9k: simplify ath_btcoex_bt_stomp()
-  ath9k: now move ath9k_hw_btcoex_set_weight() to btcoex.c
-  ath9k: move ath_btcoex_config and ath_bt_mode to btcoex.c
-  ath9k: rename ath_btcoex_supported() to ath9k_hw_btcoex_supported()
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Tested-by: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+---
+v2: reworded commit log
 
- drivers/net/wireless/ath/ath9k/ahb.c         |    2 +-
- drivers/net/wireless/ath/ath9k/ani.c         |   44 ++--
- drivers/net/wireless/ath/ath9k/ath9k.h       |   24 ++-
- drivers/net/wireless/ath/ath9k/beacon.c      |   32 +-
- drivers/net/wireless/ath/ath9k/btcoex.c      |  375 ++++++++----------------
- drivers/net/wireless/ath/ath9k/btcoex.h      |   64 +----
- drivers/net/wireless/ath/ath9k/calib.c       |  102 ++++----
- drivers/net/wireless/ath/ath9k/debug.c       |   16 +-
- drivers/net/wireless/ath/ath9k/debug.h       |   15 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c   |   24 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |   24 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c  |   24 +-
- drivers/net/wireless/ath/ath9k/hw.c          |  139 +++++-----
- drivers/net/wireless/ath/ath9k/hw.h          |    4 +
- drivers/net/wireless/ath/ath9k/mac.c         |   48 ++--
- drivers/net/wireless/ath/ath9k/main.c        |  399 +++++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/phy.c         |   10 +-
- drivers/net/wireless/ath/ath9k/rc.c          |   15 +-
- drivers/net/wireless/ath/ath9k/recv.c        |   18 +-
- drivers/net/wireless/ath/ath9k/xmit.c        |   46 ++--
- 20 files changed, 750 insertions(+), 675 deletions(-)
+ include/net/wext.h   |    1 +
+ net/core/net-sysfs.c |   12 +++++-------
+ net/wireless/wext.c  |    2 +-
+ 3 files changed, 7 insertions(+), 8 deletions(-)
+
+--- wireless-testing.orig/net/core/net-sysfs.c	2009-09-28 10:41:50.000000000 +0200
++++ wireless-testing/net/core/net-sysfs.c	2009-09-28 11:24:12.000000000 +0200
+@@ -16,7 +16,7 @@
+ #include <net/sock.h>
+ #include <linux/rtnetlink.h>
+ #include <linux/wireless.h>
+-#include <net/iw_handler.h>
++#include <net/wext.h>
+ 
+ #include "net-sysfs.h"
+ 
+@@ -363,15 +363,13 @@ static ssize_t wireless_show(struct devi
+ 					       char *))
+ {
+ 	struct net_device *dev = to_net_dev(d);
+-	const struct iw_statistics *iw = NULL;
++	const struct iw_statistics *iw;
+ 	ssize_t ret = -EINVAL;
+ 
+ 	read_lock(&dev_base_lock);
+ 	if (dev_isalive(dev)) {
+-		if (dev->wireless_handlers &&
+-		    dev->wireless_handlers->get_wireless_stats)
+-			iw = dev->wireless_handlers->get_wireless_stats(dev);
+-		if (iw != NULL)
++		iw = get_wireless_stats(dev);
++		if (iw)
+ 			ret = (*format)(iw, buf);
+ 	}
+ 	read_unlock(&dev_base_lock);
+@@ -505,7 +503,7 @@ int netdev_register_kobject(struct net_d
+ 	*groups++ = &netstat_group;
+ 
+ #ifdef CONFIG_WIRELESS_EXT_SYSFS
+-	if (net->wireless_handlers && net->wireless_handlers->get_wireless_stats)
++	if (net->wireless_handlers || net->ieee80211_ptr)
+ 		*groups++ = &wireless_group;
+ #endif
+ #endif /* CONFIG_SYSFS */
+--- wireless-testing.orig/include/net/wext.h	2009-09-28 10:41:50.000000000 +0200
++++ wireless-testing/include/net/wext.h	2009-09-28 11:09:06.000000000 +0200
+@@ -14,6 +14,7 @@ extern int wext_handle_ioctl(struct net 
+ 			     void __user *arg);
+ extern int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+ 				    unsigned long arg);
++extern struct iw_statistics *get_wireless_stats(struct net_device *dev);
+ #else
+ static inline int wext_proc_init(struct net *net)
+ {
+--- wireless-testing.orig/net/wireless/wext.c	2009-09-28 10:41:50.000000000 +0200
++++ wireless-testing/net/wireless/wext.c	2009-09-28 11:09:07.000000000 +0200
+@@ -470,7 +470,7 @@ static iw_handler get_handler(struct net
+ /*
+  * Get statistics out of the driver
+  */
+-static struct iw_statistics *get_wireless_stats(struct net_device *dev)
++struct iw_statistics *get_wireless_stats(struct net_device *dev)
+ {
+ 	/* New location */
+ 	if ((dev->wireless_handlers != NULL) &&
+
 
