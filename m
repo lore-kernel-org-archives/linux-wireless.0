@@ -1,73 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:48405 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756120AbZIUNTj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Sep 2009 09:19:39 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: ipw2200: firmware DMA loading rework
-Date: Mon, 21 Sep 2009 15:12:14 +0200
-Cc: Mel Gorman <mel@csn.ul.ie>, "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Tso Ted <tytso@mit.edu>,
-	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Mel Gorman <mel@skynet.ie>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <200909211246.34774.bzolnier@gmail.com> <1253530608.5216.17.camel@penberg-laptop>
-In-Reply-To: <1253530608.5216.17.camel@penberg-laptop>
+Received: from mail.atheros.com ([12.36.123.2]:17892 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752495AbZI2CzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 22:55:07 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 19:55:12 -0700
+Date: Mon, 28 Sep 2009 19:55:09 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: compat-wireless master-2009-09-28 breakage and suggested fixes
+Message-ID: <20090929025509.GB6529@mosca>
+References: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
 MIME-Version: 1.0
-Message-Id: <200909211512.14785.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 21 September 2009 12:56:48 Pekka Enberg wrote:
-> On Mon, 2009-09-21 at 12:46 +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > > I don't know why people don't see it but for me it has a memory management
-> > > > regression and reliability issue written all over it.
-> > > 
-> > > Possibly but drivers that reload their firmware as a response to an
-> > > error condition is relatively new and loading network drivers while the
-> > > system is already up and running a long time does not strike me as
-> > > typical system behaviour.
-> > 
-> > Loading drivers after boot is a typical desktop/laptop behavior, please
-> > think about hotplug (the hardware in question is an USB dongle).
+On Mon, Sep 28, 2009 at 07:35:22PM -0700, Hin-Tak Leung wrote:
+> commit d0cf9c0dadcdc89a755bcb301cfc9c796eb28ccf
+> Author: Stephen Hemminger <shemminger@vyatta.com>
+> Date:   Mon Aug 31 19:50:57 2009 +0000
 > 
-> Yeah, I wonder what broke things. Did the wireless stack change in
-> 2.6.31-rc1 too? IIRC Mel ruled out page allocator changes as a suspect.
+>     wireless: convert drivers to netdev_tx_t
+> 
+> and the 2nd change due to this:
+> 
+> commit 384912ed194e43c03ad1cdaa09b0b1e488c34d46
+> Author: Marcel Holtmann <marcel@holtmann.org>
+> Date:   Mon Aug 31 21:08:19 2009 +0000
+> 
+>     net: Add DEVTYPE support for Ethernet based devices
+> 
+> Both of these changes are traced back to changes in
+> <linux/netdevice.h> , which compat-wireless does not ship. What's your
+> policy on these kind of changes to compat-wireless?
+> (the 2nd SET_NETDEV_DEVTYPE change probably can be spanned by an
+> ifndef SET_NETDEV_DEVTYPE, and roll into
+> "compat/patches/01-netdev.patch"? Should the first kind of change also
+> go into compat/patches/01-netdev.patch?)
 
-The thing is that the mm behavior change has been narrowed down already
-over a month ago to -mm merge in 2.6.31-rc1 (as has been noted in my initial
-reports), I first though that that it was -next breakage but it turned out
-that it came the other way around (because -mm is not even pulled into -next
-currently -- great way to set an example for other kernel maintainers BTW).
+I don't see this yet on wireless-testing but it is on 2.6.32.
+I backported this as follows. I'll push this out shortly.
 
-I understand that behavior change may be justified and technically correct
-in itself.  I also completely agree that high order allocations in certain
-drivers need fixing anyway.
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
+Subject: [PATCH] Fix compilation against for 2.6.32 changes
 
-However there is something wrong with the big picture and the way changes
-are happening.  I'm not saying that I'm surprised though, especially given
-the recent decline in the quality assurance and the paradigm shift that
-I'm seeing (some influential top level people talking that -rc1 is fine for
-testing new code now or the "new kernel new hardware" thing).
+2.6.32 added SET_NETDEV_DEVTYPE() and netdev_tx
 
-Sorry but I have no more time currently to narrow down the issue some more
-(guess what, there are other kernel bugs standing in the way to bisect it
-and I would have to provide some reliable way to reproduce it first) so I
-see no more point in wasting people's time on this.  I can certainly get by
-with allocation failure here and there.  Not a big deal for me personally..
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ compat/compat-2.6.32.h |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/compat/compat-2.6.32.h b/compat/compat-2.6.32.h
+index f7081f2..418b521 100644
+--- a/compat/compat-2.6.32.h
++++ b/compat/compat-2.6.32.h
+@@ -31,6 +31,18 @@
+ 
+ #define dev_change_net_namespace(a, b, c) (-EOPNOTSUPP)
+ 
++#define SET_NETDEV_DEVTYPE(netdev, type)
++
++#ifdef __KERNEL__
++/* Driver transmit return codes */
++enum netdev_tx {
++	BACKPORT_NETDEV_TX_OK = NETDEV_TX_OK,       /* driver took care of packet */
++	BACKPORT_NETDEV_TX_BUSY = NETDEV_TX_BUSY,         /* driver tx path was busy*/
++	BACKPORT_NETDEV_TX_LOCKED = NETDEV_TX_LOCKED,  /* driver tx lock was already taken */
++};
++typedef enum netdev_tx netdev_tx_t;
++#endif /* __KERNEL__ */
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
+ 
+ #endif /* LINUX_26_32_COMPAT_H */
+-- 
+1.6.3.3
+
