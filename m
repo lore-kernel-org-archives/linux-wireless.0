@@ -1,98 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4717 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000AbZITDrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Sep 2009 23:47:00 -0400
-Message-ID: <4AB5A5A7.3020107@canonical.com>
-Date: Sat, 19 Sep 2009 21:46:47 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
+Received: from mail.gmx.net ([213.165.64.20]:33564 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751316AbZI2I6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 04:58:43 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: "Hin-Tak Leung" <hintak_leung@yahoo.co.uk>
+Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need help to create driver for Netgear WN111v2
+Date: Tue, 29 Sep 2009 10:58:43 +0200
+Cc: ndiswrapper-general@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+References: <999306.93095.qm@web23102.mail.ird.yahoo.com>
+In-Reply-To: <999306.93095.qm@web23102.mail.ird.yahoo.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] compat-2.6: mangle symbols for driver-select
-References: <20090919205545.GA18080@bombadil.infradead.org>
-In-Reply-To: <20090919205545.GA18080@bombadil.infradead.org>
-Content-Type: multipart/mixed;
- boundary="------------060608070506000607090506"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200909291058.43765.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060608070506000607090506
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Luis R. Rodriguez wrote:
-> Today at the summit we spoke about mangling symbols for driver-slect.
-> Here's a quick nasty take on this but without doing this for driver-select
-> specifically just for testing. It seems to compile, but someone more motivated
-> may want to test and make this apply somehow only for driver-select or perhaps
-> when a -D define is used.
+"Hin-Tak Leung" <hintak_leung@yahoo.co.uk> wrote
+ 
+> Hmm, I see you have already posted to linux-wireless and already got your
+>  answers. Hauke has already given you the answer - your kernel tree is
+>  *not* 2.6.27(.0), and as it is obvious that you have 2.6.27.29-0.1, which
+>  is 2.6.27.29 + suse-patches. Even 2.6.27.29 is not 2.6.27(.0), but
+>  somewhat closer to 2.6.28. And you really have already had your answer -
+>  your tree is somewhat between 2.6.27 and 2.6.28, and *neither*.
 > 
-> Reason for this is to help distributions / OEMs / ODMs who want to replace
-> just *one* driver with compat-wireless.
-> 
+> My suggestion would be simply to delete all the 'error: redefinition' parts
+>  from net/compat-2.6.28.h , because you already have them in the suse tree.
 
-I think it would be better to generate the list of mangled symbols 
-dynamically. In older Ubuntu releases (before depmod behavior was 
-corrected), we have to run a 'munge' script to preface all of the 
-exported symbols so that a compat-wireless driver references the 
-compat-wireless protocol stack symbols. See the attached munge script 
-for compat-wireless on 2.6.24. We can either do something like this for 
-compat-wireless, or we could use a subset of this logic to generate the 
-list of symbols contained within the '#ifdef 
-CONFIG_COMPAT_WIRELESS_MANGLE' clause.
+Thanx for your efforts. By the way, do I need to set  CONFIG_TRACEPOINTS in the 
+kernel? I just see it is _not_ set in openSUSE 11.1.
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+>  You may also need to delete something from net/compat-2.6.28.c, but that
+>  will happen during the linking stage (much later).
 
---------------060608070506000607090506
-Content-Type: text/plain;
- name="munge"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="munge"
+So, no need to modify compat-2.6.28.c? Does it automatically happen?
 
-#!/bin/bash
-#
-# Isolate the compat-wireless exported symbols and munge every occurence such that
-# there is no possibility of conflict with the main kernel.
-#
-TL=token_list
-FL=file_list
-SL=sed_list
-TL_EXCEPTIONS=token_list_exceptions
-
-find compat-wireless-2.6 -name "*.[ch]" > ${FL}
-
-rm -f ${TL_EXCEPTIONS}
-for i in wireless_send_event iw_handler_set_spy wireless_spy_update iw_handler_get_thrspy iw_handler_get_spy iw_handler_set_thrspy
-do
-	echo ${i} >> ${TL_EXCEPTIONS}
-done
-
-cat ${FL} | \
-egrep -v "compat\.[ch]" |\
-xargs grep -h EXPORT_SYMBOL | \
-grep -v -f ${TL_EXCEPTIONS} |\
-sed -e 's/^.*EXPORT_SYMBOL_GPL(//' -e 's/);//' -e 's/^.*EXPORT_SYMBOL(//' -e 's/);//' |\
-sort -r | uniq > ${TL}
-
-rm -f ${SL}
-cat ${TL} | while read token
-do
-	echo s/${token}/cw_${token}/g >> ${SL}
-done
-
-cat ${FL} | while read f
-do
-	sed -i -f ${SL} "${f}"
-done
-
-rm -f ${TL} ${FL} ${SL} ${TL_EXCEPTIONS}
-
-
---------------060608070506000607090506--
+Regards
+Malte
