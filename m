@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx76.mail.ru ([94.100.176.91]:54950 "EHLO mx76.mail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752385AbZIPKFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 06:05:50 -0400
-Date: Wed, 16 Sep 2009 14:12:45 +0300
-From: Nikolai ZHUBR <zhubr@mail.ru>
-Message-ID: <186931799.20090916141245@mail.ru>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Gaurav Jauhar <gaurav.jauhar@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: Re[6]: cfg80211 and rfkill_backport question.
-In-reply-To: <43e72e890909151817u375cd847r7cdf78b53f26fe2f@mail.gmail.com>
-References: <174470396.20090916030952@mail.ru>
- <43e72e890909151614l9820e2y7031e09de11653@mail.gmail.com>
- <792649359.20090916034611@mail.ru>
- <43e72e890909151649x66321b6emdc2977473e22872a@mail.gmail.com>
- <90263558.20090916050213@mail.ru>
- <43e72e890909151817u375cd847r7cdf78b53f26fe2f@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:59548 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222AbZI2JGz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 05:06:55 -0400
+Received: by ewy7 with SMTP id 7so5205029ewy.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 02:06:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <200909291058.43765.malte.gell@gmx.de>
+References: <999306.93095.qm@web23102.mail.ird.yahoo.com>
+	 <200909291058.43765.malte.gell@gmx.de>
+Date: Tue, 29 Sep 2009 10:06:58 +0100
+Message-ID: <3ace41890909290206g3019a9cbv29048837804f830@mail.gmail.com>
+Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need
+	help to create driver for Netgear WN111v2
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Malte Gell <malte.gell@gmx.de>
+Cc: Hin-Tak Leung <hintak_leung@yahoo.co.uk>,
+	ndiswrapper-general@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luis,
+On Tue, Sep 29, 2009 at 9:58 AM, Malte Gell <malte.gell@gmx.de> wrote:
+>
+> "Hin-Tak Leung" <hintak_leung@yahoo.co.uk> wrote
+>
+>> Hmm, I see you have already posted to linux-wireless and already got your
+>>  answers. Hauke has already given you the answer - your kernel tree is
+>>  *not* 2.6.27(.0), and as it is obvious that you have 2.6.27.29-0.1, which
+>>  is 2.6.27.29 + suse-patches. Even 2.6.27.29 is not 2.6.27(.0), but
+>>  somewhat closer to 2.6.28. And you really have already had your answer -
+>>  your tree is somewhat between 2.6.27 and 2.6.28, and *neither*.
+>>
+>> My suggestion would be simply to delete all the 'error: redefinition' parts
+>>  from net/compat-2.6.28.h , because you already have them in the suse tree.
+>
+> Thanx for your efforts. By the way, do I need to set  CONFIG_TRACEPOINTS in the
+> kernel? I just see it is _not_ set in openSUSE 11.1.
 
-I've solved (kind of) symbol issues by simply commenting out
-the CONFIG_RFKILL_BACKPORT=m (because I don't actually need
-the rfkill thing yet). Finally mac80211 loads fine.
+No, do *not* modify any kernel config files. You should not do that,
+as the compat modules should be compiled against a correct config, as
+in a config that corresponds to how your kernel was built.
 
-Now I'm getting an error when loading the RT61 driver:
+>>  You may also need to delete something from net/compat-2.6.28.c, but that
+>>  will happen during the linking stage (much later).
+>
+> So, no need to modify compat-2.6.28.c? Does it automatically happen?
 
-PCI: Unable to reserve mem region #1:8000@40000000 for device 0000:00:02.0
-rt2x00pci -> rt2x00pci_probe: Error - PCI request regions failed.
-rt61pci: probe of 0000:00:02.0 failed with error -16
-Any hints?
-
-
-Wednesday, September 16, 2009, 4:17:40 AM, Luis R. Rodriguez wrote:
-> On Tue, Sep 15, 2009 at 7:02 PM, Nikolai ZHUBR <zhubr@mail.ru> wrote:
->> Wednesday, September 16, 2009, 2:49:04 AM, Luis R. Rodriguez wrote:
->>> Check if the symbols you had issues with were indeed exported via
->>> EXPORT_SYMBOL() on the compat code (compat/*.c) or if whether they
->>> were defined via a header as an inline (compat/*.h).
->> As far as I can see, the symbols in question are not defined as inline:
-
-> They don't have to be exported and inlined, its one or the other. So
-> just ensure you your symbols you have conflicts with as
-> EXPORT_SYMBOL() or defined in a header file as inline. You will
-> obviously also need the header declaration if defined as an
-> EXPORT_SYMBOL.
-
->   Luis
-
-
+You may or may not  see any errors at the linker stage (the LD part in
+stage 2). If you get to that point without further error, then, well,
+count yourself lucky and just give "make install ; make unload;
+modprobe -v ar9170" a go.
