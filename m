@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:39800 "EHLO c60.cesmail.net"
+Received: from mga09.intel.com ([134.134.136.24]:28573 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245AbZIPCYh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 22:24:37 -0400
-Subject: [PATCH] rc80211_minstrel: fix contention window calculation
-To: Dan Halperin <dhalperi@cs.washington.edu>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Pavel Roskin <proski@gnu.org>
-Date: Tue, 15 Sep 2009 22:24:30 -0400
-Message-ID: <20090916022430.27557.93510.stgit@mj.roinet.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1753823AbZI2JWw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 05:22:52 -0400
+Subject: Re: [PATCH 2/3] iwmc3200wifi: select IWMC3200TOP in Kconfig
+From: Zhu Yi <yi.zhu@intel.com>
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: "davem@davemloft.net" <davem@davemloft.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	"Kao, Cindy H" <cindy.h.kao@intel.com>,
+	"Cohen, Guy" <guy.cohen@intel.com>,
+	"Rindjunsky, Ron" <ron.rindjunsky@intel.com>
+In-Reply-To: <1253662724-16497-3-git-send-email-tomas.winkler@intel.com>
+References: <1253662724-16497-1-git-send-email-tomas.winkler@intel.com>
+	 <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
+	 <1253662724-16497-3-git-send-email-tomas.winkler@intel.com>
+Content-Type: text/plain
+Date: Tue, 29 Sep 2009 17:22:43 +0800
+Message-Id: <1254216163.3731.36.camel@debian>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The contention window is supposed to be a power of two minus one, i.e.
-15, 31, 63, 127...  minstrel_rate_init() forgets to subtract 1, so the
-sequence becomes 15, 32, 66, 134...
+On Wed, 2009-09-23 at 07:38 +0800, Winkler, Tomas wrote:
+> iwmc3200wifi requires iwmc3200top  for its operation
+> 
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 
-Bug reported by Dan Halperin <dhalperi@cs.washington.edu>
+Acked-by: Zhu Yi <yi.zhu@intel.com>
 
-Signed-off-by: Pavel Roskin <proski@gnu.org>
----
- net/mac80211/rc80211_minstrel.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Thanks,
+-yi
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 7c51429..6e5d68b 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -418,7 +418,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 
- 			/* contention window */
- 			tx_time_single += t_slot + min(cw, mp->cw_max);
--			cw = (cw + 1) << 1;
-+			cw = (cw << 1) | 1;
- 
- 			tx_time += tx_time_single;
- 			tx_time_cts += tx_time_single + mi->sp_ack_dur;
+> ---
+>  drivers/net/wireless/iwmc3200wifi/Kconfig |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
+> index c62da43..69faaf1 100644
+> --- a/drivers/net/wireless/iwmc3200wifi/Kconfig
+> +++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
+> @@ -3,6 +3,7 @@ config IWM
+>  	depends on MMC && WLAN_80211 && EXPERIMENTAL
+>  	depends on CFG80211
+>  	select FW_LOADER
+> +	select IWMC3200TOP
+>  	help
+>  	  The Intel Wireless Multicomm 3200 hardware is a combo
+>  	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
+
