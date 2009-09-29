@@ -1,229 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44854 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755507AbZIRJeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:34:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:34:50 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from ey-out-2122.google.com ([74.125.78.26]:15787 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752184AbZI2CfU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Sep 2009 22:35:20 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so192942eyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 19:35:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21563.795047.291411@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:04:51 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH/REVIEW 4/9] ath9k: Update initvals
+Date: Tue, 29 Sep 2009 03:35:22 +0100
+Message-ID: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
+Subject: compat-wireless master-2009-09-28 breakage and suggested fixes
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Hi Luis,
 
-* Move 0xa274 and 0xa27c to the top of tx_gain table.
-* Update initvals to fix random failure of noise floor calibration.
+A couple of breakages against current wireless testing head:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/initvals.h |   49 +++++++++++++++--------------
- 1 files changed, 25 insertions(+), 24 deletions(-)
+compat-release  - master-2009-09-23-1-gd1e5747
+git-describe  v2.6.32-rc1-39226-g63dbea4
+master-tag master-2009-09-28
 
-diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
-index d8aaeee..3ee6658 100644
---- a/drivers/net/wireless/ath/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/initvals.h
-@@ -21,6 +21,8 @@ static const u32 ar5416Modes[][6] = {
-     { 0x000010f0, 0x0000a000, 0x00014000, 0x00016000, 0x0000b000, 0x00014008 },
-     { 0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00, 0x06e006e0 },
-     { 0x0000801c, 0x128d93a7, 0x128d93cf, 0x12e013d7, 0x12e013ab, 0x098813cf },
-+    { 0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810, 0x08f04810 },
-+    { 0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a, 0x0000320a },
-     { 0x00009804, 0x00000300, 0x000003c4, 0x000003c4, 0x00000300, 0x00000303 },
-     { 0x00009820, 0x02020200, 0x02020200, 0x02020200, 0x02020200, 0x02020200 },
-     { 0x00009824, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e },
-@@ -31,11 +33,11 @@ static const u32 ar5416Modes[][6] = {
-     { 0x00009848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000a848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
-     { 0x0000b848, 0x001a6a65, 0x001a6a65, 0x00197a68, 0x00197a68, 0x00197a68 },
--    { 0x00009850, 0x6c48b4e0, 0x6c48b4e0, 0x6c48b0de, 0x6c48b0de, 0x6c48b0de },
-+    { 0x00009850, 0x6c48b4e0, 0x6d48b4e0, 0x6d48b0de, 0x6c48b0de, 0x6c48b0de },
-     { 0x00009858, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e, 0x7ec82d2e },
--    { 0x0000985c, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e, 0x31395d5e },
-+    { 0x0000985c, 0x31395d5e, 0x3139605e, 0x3139605e, 0x31395d5e, 0x31395d5e },
-     { 0x00009860, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18, 0x00049d18 },
--    { 0x0000c864, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00 },
-+    { 0x00009864, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00 },
-     { 0x00009868, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190, 0x409a4190 },
-     { 0x0000986c, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081, 0x050cb081 },
-     { 0x00009914, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898, 0x000007d0 },
-@@ -46,10 +48,10 @@ static const u32 ar5416Modes[][6] = {
-     { 0x0000a960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
-     { 0x0000b960, 0x00000900, 0x00000900, 0x00012d80, 0x00012d80, 0x00012d80 },
-     { 0x00009964, 0x00000000, 0x00000000, 0x00001120, 0x00001120, 0x00001120 },
--    { 0x0000c9bc, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00 },
-+    { 0x000099bc, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00, 0x001a0a00 },
-     { 0x000099c0, 0x038919be, 0x038919be, 0x038919be, 0x038919be, 0x038919be },
-     { 0x000099c4, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77, 0x06336f77 },
--    { 0x000099c8, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c, 0x60f6532c },
-+    { 0x000099c8, 0x6af6532c, 0x6af6532c, 0x6af6532c, 0x6af6532c, 0x6af6532c },
-     { 0x000099cc, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8, 0x08f186c8 },
-     { 0x000099d0, 0x00046384, 0x00046384, 0x00046384, 0x00046384, 0x00046384 },
-     { 0x000099d4, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-@@ -199,7 +201,6 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008110, 0x00000168 },
-     { 0x00008118, 0x000100aa },
-     { 0x0000811c, 0x00003210 },
--    { 0x00008120, 0x08f04800 },
-     { 0x00008124, 0x00000000 },
-     { 0x00008128, 0x00000000 },
-     { 0x0000812c, 0x00000000 },
-@@ -215,7 +216,6 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008178, 0x00000100 },
-     { 0x0000817c, 0x00000000 },
-     { 0x000081c4, 0x00000000 },
--    { 0x000081d0, 0x00003210 },
-     { 0x000081ec, 0x00000000 },
-     { 0x000081f0, 0x00000000 },
-     { 0x000081f4, 0x00000000 },
-@@ -246,6 +246,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
-+    { 0x00008264, 0xa8000010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -406,9 +407,9 @@ static const u32 ar5416Common[][2] = {
-     { 0x0000a25c, 0x0f0f0f01 },
-     { 0x0000a260, 0xdfa91f01 },
-     { 0x0000a268, 0x00000000 },
--    { 0x0000a26c, 0x0ebae9c6 },
--    { 0x0000b26c, 0x0ebae9c6 },
--    { 0x0000c26c, 0x0ebae9c6 },
-+    { 0x0000a26c, 0x0e79e5c6 },
-+    { 0x0000b26c, 0x0e79e5c6 },
-+    { 0x0000c26c, 0x0e79e5c6 },
-     { 0x0000d270, 0x00820820 },
-     { 0x0000a278, 0x1ce739ce },
-     { 0x0000a27c, 0x051701ce },
-@@ -2551,26 +2552,27 @@ static const u32 ar9280Modes_9280_2[][6] = {
-     { 0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440, 0x00006880 },
-     { 0x00009804, 0x00000300, 0x000003c4, 0x000003c4, 0x00000300, 0x00000303 },
-     { 0x00009820, 0x02020200, 0x02020200, 0x02020200, 0x02020200, 0x02020200 },
--    { 0x00009824, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e },
-+    { 0x00009824, 0x01000e0e, 0x01000e0e, 0x01000e0e, 0x01000e0e, 0x01000e0e },
-     { 0x00009828, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001, 0x0a020001 },
-     { 0x00009834, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e },
-     { 0x00009838, 0x00000007, 0x00000007, 0x00000007, 0x00000007, 0x00000007 },
-     { 0x00009840, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e, 0x206a012e },
-     { 0x00009844, 0x0372161e, 0x0372161e, 0x037216a0, 0x037216a0, 0x037216a0 },
--    { 0x00009850, 0x6c4000e2, 0x6c4000e2, 0x6d4000e2, 0x6c4000e2, 0x6c4000e2 },
-+    { 0x00009850, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2, 0x6c4000e2 },
-     { 0x00009858, 0x7ec88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec84d2e, 0x7ec84d2e },
--    { 0x0000985c, 0x31395d5e, 0x31395d5e, 0x3139605e, 0x31395d5e, 0x31395d5e },
-+    { 0x0000985c, 0x31395d5e, 0x3139605e, 0x3139605e, 0x31395d5e, 0x31395d5e },
-     { 0x00009860, 0x00048d18, 0x00048d18, 0x00048d20, 0x00048d20, 0x00048d18 },
-     { 0x00009864, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00, 0x0001ce00 },
-     { 0x00009868, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0 },
-     { 0x0000986c, 0x06903081, 0x06903081, 0x06903881, 0x06903881, 0x06903881 },
-     { 0x00009914, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898, 0x000007d0 },
--    { 0x00009918, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b, 0x00000016 },
-+    { 0x00009918, 0x0000000a, 0x00000014, 0x00000268, 0x0000000b, 0x00000016 },
-     { 0x00009924, 0xd00a8a0b, 0xd00a8a0b, 0xd00a8a0d, 0xd00a8a0d, 0xd00a8a0d },
-     { 0x00009944, 0xffbc1010, 0xffbc1010, 0xffbc1010, 0xffbc1010, 0xffbc1010 },
-     { 0x00009960, 0x00000010, 0x00000010, 0x00000010, 0x00000010, 0x00000010 },
-     { 0x0000a960, 0x00000010, 0x00000010, 0x00000010, 0x00000010, 0x00000010 },
-     { 0x00009964, 0x00000210, 0x00000210, 0x00000210, 0x00000210, 0x00000210 },
-+    { 0x0000c968, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce, 0x000003ce },
-     { 0x000099b8, 0x0000001c, 0x0000001c, 0x0000001c, 0x0000001c, 0x0000001c },
-     { 0x000099bc, 0x00000a00, 0x00000a00, 0x00000c00, 0x00000c00, 0x00000c00 },
-     { 0x000099c0, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4 },
-@@ -2585,8 +2587,10 @@ static const u32 ar9280Modes_9280_2[][6] = {
-     { 0x0000b20c, 0x00000014, 0x00000014, 0x0001f019, 0x0001f019, 0x0001f019 },
-     { 0x0000a21c, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a, 0x1883800a },
-     { 0x0000a230, 0x00000000, 0x00000000, 0x00000210, 0x00000108, 0x00000000 },
-+    { 0x0000a23c, 0x13c88000, 0x13c88000, 0x13c88001, 0x13c88000, 0x13c88000 },
-     { 0x0000a250, 0x001ff000, 0x001ff000, 0x0004a000, 0x0004a000, 0x0004a000 },
-     { 0x0000a358, 0x7999aa02, 0x7999aa02, 0x7999aa0e, 0x7999aa0e, 0x7999aa0e },
-+    { 0x0000a388, 0x0c000000, 0x0c000000, 0x08000000, 0x0c000000, 0x0c000000 },
-     { 0x0000a3d8, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x00007894, 0x5a508000, 0x5a508000, 0x5a508000, 0x5a508000, 0x5a508000 },
- };
-@@ -2813,7 +2817,6 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x00009958, 0x2108ecff },
-     { 0x00009940, 0x14750604 },
-     { 0x0000c95c, 0x004b6a8e },
--    { 0x0000c968, 0x000003ce },
-     { 0x00009970, 0x190fb515 },
-     { 0x00009974, 0x00000000 },
-     { 0x00009978, 0x00000001 },
-@@ -2849,7 +2852,6 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x0000a22c, 0x233f7180 },
-     { 0x0000a234, 0x20202020 },
-     { 0x0000a238, 0x20202020 },
--    { 0x0000a23c, 0x13c88000 },
-     { 0x0000a240, 0x38490a20 },
-     { 0x0000a244, 0x00007bb6 },
-     { 0x0000a248, 0x0fff3ffc },
-@@ -2859,8 +2861,8 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x0000a25c, 0x0f0f0f01 },
-     { 0x0000a260, 0xdfa91f01 },
-     { 0x0000a268, 0x00000000 },
--    { 0x0000a26c, 0x0ebae9c6 },
--    { 0x0000b26c, 0x0ebae9c6 },
-+    { 0x0000a26c, 0x0e79e5c6 },
-+    { 0x0000b26c, 0x0e79e5c6 },
-     { 0x0000d270, 0x00820820 },
-     { 0x0000a278, 0x1ce739ce },
-     { 0x0000d35c, 0x07ffffef },
-@@ -2874,7 +2876,6 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x0000d37c, 0x7fffffe2 },
-     { 0x0000d380, 0x7f3c7bba },
-     { 0x0000d384, 0xf3307ff0 },
--    { 0x0000a388, 0x0c000000 },
-     { 0x0000a38c, 0x20202020 },
-     { 0x0000a390, 0x20202020 },
-     { 0x0000a394, 0x1ce739ce },
-@@ -2940,7 +2941,7 @@ static const u32 ar9280Modes_fast_clock_9280_2[][3] = {
-     { 0x0000801c, 0x148ec02b, 0x148ec057 },
-     { 0x00008318, 0x000044c0, 0x00008980 },
-     { 0x00009820, 0x02020200, 0x02020200 },
--    { 0x00009824, 0x00000f0f, 0x00000f0f },
-+    { 0x00009824, 0x01000f0f, 0x01000f0f },
-     { 0x00009828, 0x0b020001, 0x0b020001 },
-     { 0x00009834, 0x00000f0f, 0x00000f0f },
-     { 0x00009844, 0x03721821, 0x03721821 },
-@@ -3348,6 +3349,8 @@ static const u32 ar9280Modes_backoff_13db_rxgain_9280_2[][6] = {
- };
- 
- static const u32 ar9280Modes_high_power_tx_gain_9280_2[][6] = {
-+    { 0x0000a274, 0x0a19e652, 0x0a19e652, 0x0a1aa652, 0x0a1aa652, 0x0a1aa652 },
-+    { 0x0000a27c, 0x050739ce, 0x050739ce, 0x050739ce, 0x050739ce, 0x050739ce },
-     { 0x0000a300, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x0000a304, 0x00003002, 0x00003002, 0x00004002, 0x00004002, 0x00004002 },
-     { 0x0000a308, 0x00006004, 0x00006004, 0x00007008, 0x00007008, 0x00007008 },
-@@ -3376,11 +3379,11 @@ static const u32 ar9280Modes_high_power_tx_gain_9280_2[][6] = {
-     { 0x00007840, 0x00172000, 0x00172000, 0x00172000, 0x00172000, 0x00172000 },
-     { 0x00007820, 0xf258a480, 0xf258a480, 0xf258a480, 0xf258a480, 0xf258a480 },
-     { 0x00007844, 0xf258a480, 0xf258a480, 0xf258a480, 0xf258a480, 0xf258a480 },
--    { 0x0000a274, 0x0a19e652, 0x0a19e652, 0x0a1aa652, 0x0a1aa652, 0x0a1aa652 },
--    { 0x0000a27c, 0x050739ce, 0x050739ce, 0x050739ce, 0x050739ce, 0x050739ce },
- };
- 
- static const u32 ar9280Modes_original_tx_gain_9280_2[][6] = {
-+    { 0x0000a274, 0x0a19c652, 0x0a19c652, 0x0a1aa652, 0x0a1aa652, 0x0a1aa652 },
-+    { 0x0000a27c, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce },
-     { 0x0000a300, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
-     { 0x0000a304, 0x00003002, 0x00003002, 0x00003002, 0x00003002, 0x00003002 },
-     { 0x0000a308, 0x00006004, 0x00006004, 0x00008009, 0x00008009, 0x00008009 },
-@@ -3409,8 +3412,6 @@ static const u32 ar9280Modes_original_tx_gain_9280_2[][6] = {
-     { 0x00007840, 0x00392000, 0x00392000, 0x00392000, 0x00392000, 0x00392000 },
-     { 0x00007820, 0x92592480, 0x92592480, 0x92592480, 0x92592480, 0x92592480 },
-     { 0x00007844, 0x92592480, 0x92592480, 0x92592480, 0x92592480, 0x92592480 },
--    { 0x0000a274, 0x0a19c652, 0x0a19c652, 0x0a1aa652, 0x0a1aa652, 0x0a1aa652 },
--    { 0x0000a27c, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce, 0x050701ce },
- };
- 
- static const u32 ar9280PciePhy_clkreq_off_L1_9280[][2] = {
--- 
-1.6.4.4
+-----------
+make[1]: Entering directory `/usr/src/kernels/2.6.30.8-67.fc11.x86_64'
+  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.o
+In file included from
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.c:29:
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/ieee80211_i.h:1053:
+error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before
+‘ieee80211_monitor_start_xmit’
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/ieee80211_i.h:1055:
+error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before
+‘ieee80211_subif_start_xmit’
+make[3]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/main.o]
+Error 1
+make[2]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211] Error 2
+make[1]: *** [_module_/home/Hin-Tak/tmp-git/compat-wireless-2.6] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.30.8-67.fc11.x86_64'
+make: *** [modules] Error 2
+----------
 
+----------
+  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.o
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.c: In
+function ‘ieee80211_if_add’:
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.c:815:
+error: implicit declaration of function ‘SET_NETDEV_DEVTYPE’
+make[3]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211/iface.o]
+Error 1
+make[2]: *** [/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/mac80211] Error 2
+make[1]: *** [_module_/home/Hin-Tak/tmp-git/compat-wireless-2.6] Error 2
+----------
+
+The first error can be fixed by inserting the netdev_tx_t enum:
+
+----------------
+$ diff -u ../wireless-testing/net/mac80211/ieee80211_i.h
+net/mac80211/ieee80211_i.h
+--- ../wireless-testing/net/mac80211/ieee80211_i.h	2009-09-29
+01:21:11.000000000 +0100
++++ net/mac80211/ieee80211_i.h	2009-09-29 02:43:26.000000000 +0100
+@@ -28,6 +28,24 @@
+ #include "key.h"
+ #include "sta_info.h"
+
++#ifdef NETDEV_TX_OK
++#undef NETDEV_TX_OK
++#endif
++#ifdef NETDEV_TX_BUSY
++#undef NETDEV_TX_BUSY
++#endif
++#ifdef NETDEV_TX_LOCKED
++#undef NETDEV_TX_LOCKED
++#endif
++
++/* Driver transmit return codes */
++enum netdev_tx {
++       NETDEV_TX_OK = 0,       /* driver took care of packet */
++       NETDEV_TX_BUSY,         /* driver tx path was busy*/
++       NETDEV_TX_LOCKED = -1,  /* driver tx lock was already taken */
++};
++typedef enum netdev_tx netdev_tx_t;
++
+ struct ieee80211_local;
+
+ /* Maximum number of broadcast/multicast frames to buffer when some of the
+------------------
+
+The 2nd by adding SET_NETDEV_DEVTYPE():
+----------
+--- ../wireless-testing/net/mac80211/iface.c	2009-09-29 01:21:11.000000000 +0100
++++ net/mac80211/iface.c	2009-09-29 02:50:54.000000000 +0100
+@@ -22,6 +22,8 @@
+ #include "led.h"
+ #include "driver-ops.h"
+
++#define SET_NETDEV_DEVTYPE(net, devtype)       ((net)->dev.type = (devtype))
++
+ /**
+  * DOC: Interface list locking
+  *
+-------------
+
+The first change is due to this:
+
+commit d0cf9c0dadcdc89a755bcb301cfc9c796eb28ccf
+Author: Stephen Hemminger <shemminger@vyatta.com>
+Date:   Mon Aug 31 19:50:57 2009 +0000
+
+    wireless: convert drivers to netdev_tx_t
+
+and the 2nd change due to this:
+
+commit 384912ed194e43c03ad1cdaa09b0b1e488c34d46
+Author: Marcel Holtmann <marcel@holtmann.org>
+Date:   Mon Aug 31 21:08:19 2009 +0000
+
+    net: Add DEVTYPE support for Ethernet based devices
+
+Both of these changes are traced back to changes in
+<linux/netdevice.h> , which compat-wireless does not ship. What's your
+policy on these kind of changes to compat-wireless?
+(the 2nd SET_NETDEV_DEVTYPE change probably can be spanned by an
+ifndef SET_NETDEV_DEVTYPE, and roll into
+"compat/patches/01-netdev.patch"? Should the first kind of change also
+go into compat/patches/01-netdev.patch?)
