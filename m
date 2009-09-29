@@ -1,90 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:36097 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbZHaXLf convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:42989 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753013AbZI2DdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:11:35 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so606072fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:11:37 -0700 (PDT)
+	Mon, 28 Sep 2009 23:33:08 -0400
+Received: by ewy7 with SMTP id 7so5041197ewy.17
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 20:33:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <3ace41890908311602g4a976ec5k4f1f5145662cf183@mail.gmail.com>
-References: <4A9BFCCB.6040808@ufra.edu.br> <4A9C0ADC.6050607@ufra.edu.br>
-	<3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
-	<200908312127.57610.mb@bu3sch.de> <3ace41890908311235i62ab0510neb8b2021c3f2945e@mail.gmail.com>
-	<69e28c910908311414s191aafa6ib0bdae8ed4ace27d@mail.gmail.com>
-	<3ace41890908311602g4a976ec5k4f1f5145662cf183@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 1 Sep 2009 01:11:17 +0200
-Message-ID: <69e28c910908311611t1666370csa55d16a8623f0648@mail.gmail.com>
-Subject: Re: zd1211rw on ppc (iBook G4)
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	"Leonardo H. Souza Hamada" <leonardo.hamada@ufra.edu.br>,
+In-Reply-To: <20090929025509.GB6529@mosca>
+References: <3ace41890909281935k284402f3q90b54ae20a636eeb@mail.gmail.com>
+	 <20090929025509.GB6529@mosca>
+Date: Tue, 29 Sep 2009 04:33:09 +0100
+Message-ID: <3ace41890909282033h7b3825a6n22265f3c6f0a5b72@mail.gmail.com>
+Subject: Re: compat-wireless master-2009-09-28 breakage and suggested fixes
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Restoring CCs from original message.)
-
-2009/9/1 Hin-Tak Leung <hintak.leung@gmail.com>:
-> 2009/8/31 Gábor Stefanik <netrolller.3d@gmail.com>:
->> On Mon, Aug 31, 2009 at 9:35 PM, Hin-Tak Leung<hintak.leung@gmail.com> wrote:
->>> On Mon, Aug 31, 2009 at 8:27 PM, Michael Buesch<mb@bu3sch.de> wrote:
->>>> On Monday 31 August 2009 20:26:22 Hin-Tak Leung wrote:
->>>>> It would appear that the rw driver's ieee80211->mac80211 conversion
->>>>> has broken big- endian platforms, at a first guess.
->>>>
->>>> Last time I tested the device worked fine on my powerbook with zd1211rw/mac80211.
->>>> But that's maybe two or three release cycles in the past.
->>>>
->>>> --
->>>> Greetings, Michael.
->>>>
->>>
->>> The rw ieee80211->mac80211 conversion happens in 2.6.27->26.28 ...
->>> Iguess the question is whether it was 2.6.28 or 2.6.27 you had success
->>> with? That's unfortunately two *and* three cycles in the past,
->>> respectively :-).
+On Tue, Sep 29, 2009 at 3:55 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Mon, Sep 28, 2009 at 07:35:22PM -0700, Hin-Tak Leung wrote:
+>> commit d0cf9c0dadcdc89a755bcb301cfc9c796eb28ccf
+>> Author: Stephen Hemminger <shemminger@vyatta.com>
+>> Date:   Mon Aug 31 19:50:57 2009 +0000
 >>
->> I seem to remember that the conversion happened between 2.6.24 and
->> 2.6.25 - the 2.6.26 injection patch on patches.aircrack-ng.org is also
->> clearly for the mac80211 version.
+>>     wireless: convert drivers to netdev_tx_t
+>>
+>> and the 2nd change due to this:
+>>
+>> commit 384912ed194e43c03ad1cdaa09b0b1e488c34d46
+>> Author: Marcel Holtmann <marcel@holtmann.org>
+>> Date:   Mon Aug 31 21:08:19 2009 +0000
+>>
+>>     net: Add DEVTYPE support for Ethernet based devices
+>>
+>> Both of these changes are traced back to changes in
+>> <linux/netdevice.h> , which compat-wireless does not ship. What's your
+>> policy on these kind of changes to compat-wireless?
+>> (the 2nd SET_NETDEV_DEVTYPE change probably can be spanned by an
+>> ifndef SET_NETDEV_DEVTYPE, and roll into
+>> "compat/patches/01-netdev.patch"? Should the first kind of change also
+>> go into compat/patches/01-netdev.patch?)
 >
-> Some part persists till 2.6.28 - I was running git diff between
-> different tags like this:
+> I don't see this yet on wireless-testing but it is on 2.6.32.
+> I backported this as follows. I'll push this out shortly.
 >
-> git diff v2.6.27:drivers/net/wireless/zd1211rw/
-> v2.6.28:drivers/net/wireless/zd1211rw/
-> diff --git a/Makefile b/Makefile
-> index cc36126..1907eaf 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -1,6 +1,6 @@
->  obj-$(CONFIG_ZD1211RW) += zd1211rw.o
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Subject: [PATCH] Fix compilation against for 2.6.32 changes
 >
-> -zd1211rw-objs := zd_chip.o zd_ieee80211.o zd_mac.o \
-> +zd1211rw-objs := zd_chip.o zd_mac.o \
->                zd_rf_al2230.o zd_rf_rf2959.o \
->                zd_rf_al7230b.o zd_rf_uw2453.o \
->                zd_rf.o zd_usb.o
-> diff --git a/zd_chip.c b/zd_chip.c
-> index 0acb5c3..e0ac58b 100644
-> --- a/zd_chip.c
-> +++ b/zd_chip.c
-> @@ -28,7 +28,6 @@
->
->  #include "zd_def.h"
->  #include "zd_chip.h"
-> -#include "zd_ieee80211.h"
->  #include "zd_mac.h"
->  #include "zd_rf.h"
->
+> 2.6.32 added SET_NETDEV_DEVTYPE() and netdev_tx
 
-AFAIK that was a cleanup from the changeover to mac80211 - originally,
-zd_ieee80211 housed the bindings to ieee80211softmac. After the
-conversion to mac80211, some mac80211 bindings ended up in zd_mac, the
-others in zd_ieee80211. In 2.6.28, the two files were merged.
+Argh, I see what you are getting at: codes that emulates "API changes
+between 2.6.(x-1) and 2.6.(x)" go into file
+compat/compat-2.6.(x).{h,c} .
+The 'compatibility code for new kernel' wording wasn't too obvious :-).
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+Acked.
+
+> ---
+>  compat/compat-2.6.32.h |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
+>
+> diff --git a/compat/compat-2.6.32.h b/compat/compat-2.6.32.h
+> index f7081f2..418b521 100644
+> --- a/compat/compat-2.6.32.h
+> +++ b/compat/compat-2.6.32.h
+> @@ -31,6 +31,18 @@
+>
+>  #define dev_change_net_namespace(a, b, c) (-EOPNOTSUPP)
+>
+> +#define SET_NETDEV_DEVTYPE(netdev, type)
+> +
+> +#ifdef __KERNEL__
+> +/* Driver transmit return codes */
+> +enum netdev_tx {
+> +       BACKPORT_NETDEV_TX_OK = NETDEV_TX_OK,       /* driver took care of packet */
+> +       BACKPORT_NETDEV_TX_BUSY = NETDEV_TX_BUSY,         /* driver tx path was busy*/
+> +       BACKPORT_NETDEV_TX_LOCKED = NETDEV_TX_LOCKED,  /* driver tx lock was already taken */
+> +};
+> +typedef enum netdev_tx netdev_tx_t;
+> +#endif /* __KERNEL__ */
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
+>
+>  #endif /* LINUX_26_32_COMPAT_H */
+> --
+> 1.6.3.3
+>
+>
