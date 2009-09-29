@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:44863 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756031AbZIRJh0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 05:37:26 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 02:37:30 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19123.21725.565202.139974@gargle.gargle.HOWL>
-Date: Fri, 18 Sep 2009 15:07:33 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/9] ath9k: Advertise midband for AR5416 devices
+Received: from xc.sipsolutions.net ([83.246.72.84]:42277 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753231AbZI2WDm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 18:03:42 -0400
+Subject: [PATCH] mac80211: remove bogus code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 30 Sep 2009 00:03:14 +0200
+Message-Id: <1254261794.30589.24.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+It's not right to do something here when returning an
+error, and hostapd should never have relied on it as
+it only fixes up a small part of the problem anyway.
 
-This has to be done if the EEPROM supports FCC Midband
-capability.
-
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/eeprom.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c     |    5 ++++-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+ net/mac80211/cfg.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 8463ba0..3349274 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -639,6 +639,7 @@ struct ar9287_eeprom {
- } __packed;
+--- wireless-testing.orig/net/mac80211/cfg.c	2009-09-30 00:00:37.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2009-09-30 00:00:48.000000000 +0200
+@@ -738,13 +738,6 @@ static int ieee80211_add_station(struct 
  
- enum reg_ext_bitmap {
-+	REG_EXT_FCC_MIDBAND = 0,
- 	REG_EXT_JAPAN_MIDBAND = 1,
- 	REG_EXT_FCC_DFS_HT40 = 2,
- 	REG_EXT_JAPAN_NONDFS_HT40 = 3,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 99c0dac..f74604d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3660,7 +3660,10 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 			AR_EEPROM_EEREGCAP_EN_KK_U1_EVEN;
+ 	err = sta_info_insert(sta);
+ 	if (err) {
+-		/* STA has been freed */
+-		if (err == -EEXIST && layer2_update) {
+-			/* Need to update layer 2 devices on reassociation */
+-			sta = sta_info_get(local, mac);
+-			if (sta)
+-				ieee80211_send_layer2_update(sta);
+-		}
+ 		rcu_read_unlock();
+ 		return err;
  	}
- 
--	pCap->reg_cap |= AR_EEPROM_EEREGCAP_EN_FCC_MIDBAND;
-+	/* Advertise midband for AR5416 with FCC midband set in eeprom */
-+	if (regulatory->current_rd_ext & (1 << REG_EXT_FCC_MIDBAND) &&
-+	    AR_SREV_5416(ah))
-+		pCap->reg_cap |= AR_EEPROM_EEREGCAP_EN_FCC_MIDBAND;
- 
- 	pCap->num_antcfg_5ghz =
- 		ah->eep_ops->get_num_ant_config(ah, ATH9K_HAL_FREQ_BAND_5GHZ);
--- 
-1.6.4.4
+
 
