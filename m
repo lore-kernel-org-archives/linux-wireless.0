@@ -1,56 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46087 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbZI2Saw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 14:30:52 -0400
-Date: Tue, 29 Sep 2009 14:24:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ivdoorn@gmail.com
-Subject: [htd@fancy-poultry.org: 2.6.32-rc2: wlan rt73 dead]
-Message-ID: <20090929182407.GA2678@tuxdriver.com>
+Received: from web23102.mail.ird.yahoo.com ([217.146.189.42]:39328 "HELO
+	web23102.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751316AbZI2I5k convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 04:57:40 -0400
+Message-ID: <999306.93095.qm@web23102.mail.ird.yahoo.com>
+Date: Tue, 29 Sep 2009 08:51:02 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need help to create driver for Netgear WN111v2
+To: Malte Gell <malte.gell@gmx.de>
+Cc: ndiswrapper-general@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200909290956.49681.malte.gell@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Better to send these to linux-wireless@vger.kernel.org...
 
------ Forwarded message from Heinz Diehl <htd@fancy-poultry.org> -----
+--- On Tue, 29/9/09, Malte Gell <malte.gell@gmx.de> wrote:
 
-> Date: Tue, 29 Sep 2009 19:06:15 +0200
-> From: Heinz Diehl <htd@fancy-poultry.org>
-> To: linux-kernel@vger.kernel.org
-> Subject: 2.6.32-rc2: wlan rt73 dead
-> User-Agent: Mutt/1.5.20+20090822 (GNU/Linux 2.6.31.1 x86_64)
+> "Hin-Tak Leung" <hintak_leung@yahoo.co.uk>
+> wrote
 > 
-> Hi,
+> > --- On Tue, 29/9/09, Malte Gell <malte.gell@gmx.de>
+> wrote:
+> > > I prefer to wait ;-) This way I can stick with
+> kernel
+> > > 2.6.27 and just install
+> > > this package, otherwise I would have to upgrade
+> my kernel,
+> > > because ar9170
+> > > needs kernel >= 2.6.29 as far as I know. And i
+> always
+> > > fear, a kernel update
+> > > could break other things,
+>  
+> > Where did you learn this from? It says bleeding-edge
+> compat-wireless
+> > (http://linuxwireless.org/en/users/Download#Compat-wireless_release_types)
+> > requires Kernel >= 2.6.27 . and it is not a *full*
+> kernel update -
 > 
-> with 2.6.32-rc2, my wlan adapter no longer works. I'm using an RT73 based USB wlan
-> stick, which has worked flawlessly with any kernel before this one. The
-> wlan adapter is still recognized correctly by the kernel, but its 2 status
-> lights (act, link) stay dark, and the adapter does not work at all.
-> The adapter identifies as 
-> Bus 001 Device 002: ID 07d1:3c03 D-Link System DWL-G122 802.11g Adapter [ralink rt73].
+> Yes, compat-wirless-2.6 needs kernel 2.6.27, but, the
+> ar9170 driver requires 
+> kernel 2.6.29, below you can see the "make" output when
+> building compat-
+> wireless-2.6 from today on kernel 2.6.27. It is this
+> tracepoint issue that 
+> requires kernel 2.6.29
 > 
-> The logs doesn't show any error or something strange at all, and I'm
-> somewhat puzzled on what's going on here.
+> Regards
+> Malte
+
+Hmm, I see you have already posted to linux-wireless and already got your answers. Hauke has already given you the answer - your kernel tree is *not* 2.6.27(.0), and as it is obvious that you have 2.6.27.29-0.1, which is 2.6.27.29 + suse-patches. Even 2.6.27.29 is not 2.6.27(.0), but somewhat closer to 2.6.28. And you really have already had your answer - your tree is somewhat between 2.6.27 and 2.6.28, and *neither*. 
+
+My suggestion would be simply to delete all the 'error: redefinition' parts from net/compat-2.6.28.h , because you already have them in the suse tree.
+You may also need to delete something from net/compat-2.6.28.c, but that will happen during the linking stage (much later).
+
 > 
-> Configs are attached.
 > 
-> Thanks,
-> Heinz.
+> ./scripts/driver-select ar9170
 > 
+> make
+> 
+> ./scripts/gen-compat-autoconf.sh config.mk >
+> include/linux/compat_autoconf.h
+> make -C /lib/modules/2.6.27.29-0.1-k7/build 
+> M=/home/malte_gell/download/src/wifi/compat-wireless-2009-09-29
+> modules
+> make[1]: Entering directory `/usr/src/linux-2.6.27.29-0.1'
+>   LD     
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/drivers/net/wireless/ath/built-in.o
+>   CC [M] 
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/drivers/net/wireless/ath/main.o
+> In file included from
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat.h:19,
+>              
+>    from <command-line>:0:
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat-2.6.28.h:152: error:
+> redefinition of 
+> ‘struct tracepoint’
+> In file included from
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat.h:19,
+>              
+>    from <command-line>:0:
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat-2.6.28.h:182:1:
+> warning: "DEFINE_TRACE" 
+> redefined
+> In file included from include/linux/module.h:19,
+>              
+>    from include/linux/textsearch.h:7,
+>              
+>    from include/linux/skbuff.h:26,
+>              
+>    from
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat-2.6.28.h:10,
+>              
+>    from
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat.h:19,
+>              
+>    from <command-line>:0:
+> include/linux/tracepoint.h:86:1: warning: this is the
+> location of the previous 
+> definition
+> /home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/include/net/compat-2.6.28.h:186: error:
+> redefinition of 
+> ‘tracepoint_update_probe_range’
+> include/linux/tracepoint.h:100: error: previous definition
+> of 
+> ‘tracepoint_update_probe_range’ was here
+> make[4]: *** [/home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/drivers/net/wireless/ath/main.o] Fehler
+> 1
+> make[3]: *** [/home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/drivers/net/wireless/ath] Fehler 2
+> make[2]: *** [/home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29/drivers/net/wireless] Fehler 2
+> make[1]: ***
+> [_module_/home/malte_gell/download/src/wifi/compat-
+> wireless-2009-09-29] Fehler 2
+> make[1]: Leaving directory `/usr/src/linux-2.6.27.29-0.1'
+> make: *** [modules] Fehler 2
 > 
 > 
 
 
-
-
-
------ End forwarded message -----
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+      
