@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f217.google.com ([209.85.220.217]:42160 "EHLO
-	mail-fx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831AbZIHGD4 convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:51222 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbZI2Nhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 02:03:56 -0400
-Received: by fxm17 with SMTP id 17so2371182fxm.37
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Sep 2009 23:03:58 -0700 (PDT)
-From: "Marcel" <marcelcastrobr@gmail.com>
-To: "'Luis R. Rodriguez'" <mcgrof@winlab.rutgers.edu>,
-	"'AMAR SAHUKAR'" <amarsahu7@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <b55cabb00909070639s4a6f3c1cl8c3e2eccceaf81e8@mail.gmail.com> <43e72e890909071436ub99bddbx3dd531d09f322b4a@mail.gmail.com>
-Subject: RE: compat-wireless-old for ARM
-Date: Tue, 8 Sep 2009 08:10:59 +0200
-Message-ID: <70EB52E9BF7F43BBBBC899826FD0D3C4@inin.local>
+	Tue, 29 Sep 2009 09:37:53 -0400
+Received: by ewy7 with SMTP id 7so5411880ewy.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 06:37:56 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	szalat <szalat@gmail.com>, users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB and rt73usb
+Date: Tue, 29 Sep 2009 15:37:53 +0200
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="iso-8859-1"
-In-Reply-To: <43e72e890909071436ub99bddbx3dd531d09f322b4a@mail.gmail.com>
+  charset="utf-8"
+Message-Id: <200909291537.54334.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Luis,
-	Do you think it should be viable to bring it down to kernel 2.6.22
-using armeb?
-	If so, I can help to test since I am very interested in ath5k.
-Regards
-Marcel
+From: Michal Szalata <szalat@gmail.com>
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org
-[mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Luis R. Rodriguez
-Sent: den 7 september 2009 23:37
-To: AMAR SAHUKAR
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless-old for ARM
+Thrustmaster FunAccess WIFI USB works with rt73usb with little
+modification of rt73usb.c.
+Tested with version 2.3.0 of driver.
 
-On Mon, Sep 7, 2009 at 6:39 AM, AMAR SAHUKAR<amarsahu7@gmail.com> wrote:
-> Hi,
->          I wanted to know the procedure to follow for installing
-> compat-wireless-old on ARM platform. I am using a Netgear WG111V3 usb
-dongle
-> which uses a rtl8187 chipset. I will be pleased if you can help me with
-> this.
-
-compat-wireless-old has not been updated for ages. Today is possible
-to bring compat-wireless (instead of compat-wireless-old) down to
-older kernels we previously could not since we no longer are using the
-netdevice multiqueue support. I was able to bring compat-wireless down
-to 2.6.25 -- at least compile-wise, there is also code present to help
-bring it down to older kernels, we just need someone to test/help
-finish the rest.
-
-  Luis
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Signed-off-by: Michal Szalata <szalat@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1cbd9b4..b8f5ee3 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2381,6 +2381,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Huawei-3Com */
+ 	{ USB_DEVICE(0x1472, 0x0009), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Hercules */
++	{ USB_DEVICE(0x06f8, 0xe002), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe010), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe020), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Linksys */
