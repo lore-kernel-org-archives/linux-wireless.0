@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5702 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757789AbZIRSov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 14:44:51 -0400
-Subject: Re: [Ilw] Re: WARNING: at net/mac80211/scan.c:267
- ieee80211_scan_completed+0x299/0x2b0 [mac80211]()
-From: reinette chatre <reinette.chatre@intel.com>
-To: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-In-Reply-To: <8db1092f0909162332r4ffeef09jdb87f7fc69ff8e9e@mail.gmail.com>
-References: <8db1092f0909160236i5d2b1f31k3ec289fbd9ac0bfa@mail.gmail.com>
-	 <1253122055.26521.431.camel@rc-desk>
-	 <8db1092f0909161036t5bae781eqa6f0a0df308ec4cd@mail.gmail.com>
-	 <1253124149.26521.438.camel@rc-desk>
-	 <8db1092f0909161259i5e007282i42f426bc2d0fc0c4@mail.gmail.com>
-	 <1253139186.26521.449.camel@rc-desk>
-	 <8db1092f0909162332r4ffeef09jdb87f7fc69ff8e9e@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 18 Sep 2009 11:44:54 -0700
-Message-Id: <1253299494.26521.664.camel@rc-desk>
-Mime-Version: 1.0
+Received: from mx51.mymxserver.com ([85.199.173.110]:12967 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753237AbZI2LBM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 07:01:12 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Tomas Winkler <tomasw@gmail.com>
+Subject: Re: Firmware versioning best practices
+Date: Tue, 29 Sep 2009 13:01:04 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com> <200909290859.25075.hs4233@mail.mn-solutions.de> <1ba2fa240909290345k776826a6jc692d9d8dfe7577@mail.gmail.com>
+In-Reply-To: <1ba2fa240909290345k776826a6jc692d9d8dfe7577@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909291301.04156.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maciej,
+> > Don't put the version into the filename. This is not a common
+> > practice for Linux / BSD / whatever systems. Usually you have
+> > a "kmail" file, not a kmail3.5, kmail4.0 and kmail4.2 file.
+> 
+> I think in this context libyyy.so.x.y.z is better analogy.
+> firmware is not an executable What is the reasoning behind this
+> common practice? 
 
-On Wed, 2009-09-16 at 23:32 -0700, Maciej Rutecki wrote:
+There's no version of the library in the file-name, but the 
+version of the API. So if the API changes, and might break users 
+of the API, you increase the filename.
 
-> [  249.340094] wlan0: direct probe to AP 00:1b:11:f6:0f:28 (try 1)
-> [  249.345339] wlan0 direct probe responded
-> [  249.345347] wlan0: authenticate with AP 00:1b:11:f6:0f:28 (try 1)
-> [  249.347122] wlan0: authenticated
-> [  249.347152] wlan0: associate with AP 00:1b:11:f6:0f:28 (try 1)
-> [  249.349703] wlan0: RX AssocResp from 00:1b:11:f6:0f:28 (capab=0x431
-> status=0 aid=1)
-> [  249.349711] wlan0: associated
-> [  253.411858] wlan0: deauthenticated from 00:1b:11:f6:0f:28 (Reason:
-> 6)
+But you won't have a libc-2.3.6.so file. Instead you have a 
+package "libc6_2.3.6.ds1-13etch9_i386.deb" which contains the 
+file libc.so.6.
 
-This still appears to be the main issue here, that AP deauthenticates.
-Could you run wpa_supplicant with debugging (-dddt) ? When you have
-these logs, could you please open a bug report at
-http://bugzilla.intellinuxwireless.org/ to enable us to track it?
-
-Thank you
-
-Reinette
-
-
+-- 
+http://www.holgerschurig.de
