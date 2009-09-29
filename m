@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gir.skynet.ie ([193.1.99.77]:41830 "EHLO gir.skynet.ie"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754029AbZIHLAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 07:00:38 -0400
-Date: Tue, 8 Sep 2009 12:00:41 +0100
-From: Mel Gorman <mel@csn.ul.ie>
-To: Theodore Tso <tytso@mit.edu>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Mel Gorman <mel@skynet.ie>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	James Ketrenos <jketreno@linux.intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw2100-devel@lists.sourceforge.net"
-	<ipw2100-devel@lists.sourceforge.net>
-Subject: Re: ipw2200: firmware DMA loading rework
-Message-ID: <20090908110041.GE28127@csn.ul.ie>
-References: <riPp5fx5ECC.A.2IG.qsGlKB@chimera> <1251430951.3704.181.camel@debian> <200908301437.42133.bzolnier@gmail.com> <200909021948.13262.bzolnier@gmail.com> <43e72e890909021102g7f844c79xefccf305f5f5c5b6@mail.gmail.com> <20090903124913.GA26110@csn.ul.ie> <20090905142837.GI16217@mit.edu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20090905142837.GI16217@mit.edu>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039AbZI2VDG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 17:03:06 -0400
+Subject: Re: [rfkill PATCH] default install to $(PREFIX)/sbin
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20090929210001.GG2678@tuxdriver.com>
+References: <1254246097-4490-1-git-send-email-linville@tuxdriver.com>
+	 <1254256477.30589.1.camel@johannes.local>
+	 <20090929210001.GG2678@tuxdriver.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ujb7kRM532go/LU5T75k"
+Date: Tue, 29 Sep 2009 23:02:40 +0200
+Message-Id: <1254258160.30589.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 05, 2009 at 10:28:37AM -0400, Theodore Tso wrote:
-> On Thu, Sep 03, 2009 at 01:49:14PM +0100, Mel Gorman wrote:
-> > > 
-> > > This looks very similar to the kmemleak ext4 reports upon a mount. If
-> > > it is the same issue, which from the trace it seems it is, then this
-> > > is due to an extra kmalloc() allocation and this apparently will not
-> > > get fixed on 2.6.31 due to the closeness of the merge window and the
-> > > non-criticalness this issue has been deemed.
-> 
-> No, it's a different problem.
-> 
-> > I suspect the more pressing concern is why is this kmalloc() resulting in
-> > an order-5 allocation request? What size is the buffer being requested?
-> > Was that expected?  What is the contents of /proc/slabinfo in case a buffer
-> > that should have required order-1 or order-2 is using a higher order for
-> > some reason.
-> 
-> It's allocating 68,000 bytes for the mb_history structure, which is
-> used for debugging purposes.  That's why it's optional and we continue
-> if it's not allocated.  We should fix it to use vmalloc()
 
-You could call with kmalloc(FLAGS|GFP_NOWARN) with a fallback to
-vmalloc() and a disable if vmalloc() fails as well.  Maybe check out what
-kernel/profile.c#profile_init() to allocate a large buffer and do something
-similar?
+--=-ujb7kRM532go/LU5T75k
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> and I'm
-> inclined to turn it off by default since it's not worth the overhead,
-> and most ext4 users won't find it useful or interesting.
-> 
+On Tue, 2009-09-29 at 17:00 -0400, John W. Linville wrote:
+> On Tue, Sep 29, 2009 at 10:34:37PM +0200, Johannes Berg wrote:
+> > On Tue, 2009-09-29 at 13:41 -0400, John W. Linville wrote:
+> > > The rfkill utility isn't generally useful to normal users, so move it=
+ to
+> > > /sbin with other system management executables.
+> >=20
+> > Seems to me that it's kinda useful, it should be possible for most user=
+s
+> > to use the event and query interface if the /dev/rfkill permissions are
+> > set up correctly.
+>=20
+> Sure, but (just like ip, ifconfig, or iwconfig) nothing stops people
+> from using them in /sbin or /usr/sbin.  It is just a convention for
+> tools that are more for system management than for day-to-day use.
+>=20
+> Hopefully most people will stick with NM or whatever and may stay
+> completely unaware of the rfkill utility. :-)
 
-I can't comment as I don't know what sort of debugging it's useful for.
+So are you going to send an iw patch too? :-)
 
--- 
-Mel Gorman
-Part-time Phd Student                          Linux Technology Center
-University of Limerick                         IBM Dublin Software Lab
+FWIW I like tools in bin/ since the default paths on most systems for
+users don't include sbin/.
+
+johannes
+
+--=-ujb7kRM532go/LU5T75k
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKwnXsAAoJEODzc/N7+QmaX1kQAJefHg/bbQSQiHKa+mRhgeW2
+SupyPc/xCFg9y/qxrMR06tcbiBJCnQGUlNLgfcYBNcbkDs5W++v+t0rm7H9+olFH
+rIeLDXS4SwlaAbNM8o9pVNfAnZ4lWDhGDP4YwJWZ6RrEkt4pnVeVKY7O+WpUOx0l
+W8LS3uEdSgKnwXZ9UbzPdTiWe6gkzqp+R1+LQaJ/zGb01+nbgh7NFNqmqEMuQIzW
+yzX2jSxXoQjiM7l2Fuj702r+DXdkqWi7SN8Bs2UndwDowo/p0sBnrltx4uvopXLN
+Bb/6RwqBa0OFq3b39yA8W6uQUOWnJtPlkTC9sNGKHvIy0PxVr3zjOLJBzF/REqus
+D2uyu9VUXojTVX7vcqq0oAWJa5/4PRZdDEP8s6LBLT8HL8aPQbWtZU0Qf1RcTyUD
+9vXEie5v569MrmFaYeh/cbgkNd81/HLX9h3Xr4WtEv3ANNzVvq3KkchXL5W+4S1v
+sp/mGHCJTLriFPdjeE6hfdaOwARccvEVKfw1lvZe6RTM4rqTEcuhnmoL4KC2orhh
+lVId+94TVV05wQFqONCdDmllw/z1o8WQVQ4Y6rjrPK5SDEX+7wMdFkUHnGJq3D4o
+Loj3f4qJlZVzEtmM7lDu1DzdjvGavXL9ycTtyKua7khM0h+zFKhV+OKxo7QX8+f+
+vhoiW5ZeZyJ7GLK/YEov
+=/uui
+-----END PGP SIGNATURE-----
+
+--=-ujb7kRM532go/LU5T75k--
+
