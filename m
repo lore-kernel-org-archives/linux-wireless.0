@@ -1,101 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:60747 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934094AbZIOBII (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:64370 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222AbZI2KpF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 21:08:08 -0400
-Received: by bwz19 with SMTP id 19so2478954bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 18:08:11 -0700 (PDT)
+	Tue, 29 Sep 2009 06:45:05 -0400
+Received: by fxm18 with SMTP id 18so4346589fxm.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 03:45:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <8ea57b3c57061154c0d312925100c827.squirrel@webmail.ufra.edu.br>
-References: <4A9BFCCB.6040808@ufra.edu.br>
-	 <3ace41890908311126m5212926cl27172ae775fc92f2@mail.gmail.com>
-	 <4A9D7DC0.6050701@ufra.edu.br> <4AAC240E.20104@ufra.edu.br>
-	 <3ace41890909130313y474074ecnc5e720f780a4bd8f@mail.gmail.com>
-	 <3ace41890909132041w2d3f10b7r72e0eb855f1ab2a5@mail.gmail.com>
-	 <43e72e890909132109l4b47431cw85cfba21ec1fb42c@mail.gmail.com>
-	 <4AAE7395.1050502@ufra.edu.br>
-	 <3ace41890909141411r3d57c6datca12c69cf51c32d9@mail.gmail.com>
-	 <8ea57b3c57061154c0d312925100c827.squirrel@webmail.ufra.edu.br>
-Date: Tue, 15 Sep 2009 02:08:10 +0100
-Message-ID: <3ace41890909141808qcb41032gddbc64a51ac20d32@mail.gmail.com>
-Subject: Re: zd1211rw on ppc (iBook G4) -- Solved, somewhat)
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Leonardo Hamada <leonardo.hamada@ufra.edu.br>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <200909290859.25075.hs4233@mail.mn-solutions.de>
+References: <43e72e890909281517k23abaf8dvd3e84837ce307429@mail.gmail.com>
+	 <200909290859.25075.hs4233@mail.mn-solutions.de>
+Date: Tue, 29 Sep 2009 12:45:08 +0200
+Message-ID: <1ba2fa240909290345k776826a6jc692d9d8dfe7577@mail.gmail.com>
+Subject: Re: Firmware versioning best practices
+From: Tomas Winkler <tomasw@gmail.com>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Christian Lamparter <chunkeey@web.de>,
+	Bob Copeland <me@bobcopeland.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(I'd prefer *not* to have one-on-one exchanges, so where appropriate
-please CC: the list)
+On Tue, Sep 29, 2009 at 8:59 AM, Holger Schurig
+<hs4233@mail.mn-solutions.de> wrote:
+>> Or shall we have the same firmware filename and simply query
+>> the firmware for a map of capabilities? Any other ideas?
+>
+> Don't put the version into the filename. This is not a common
+> practice for Linux / BSD / whatever systems. Usually you have
+> a "kmail" file, not a kmail3.5, kmail4.0 and kmail4.2 file.
 
-On Tue, Sep 15, 2009 at 12:30 AM, Leonardo Hamada
-<leonardo.hamada@ufra.edu.br> wrote:
->
-> Em Seg, Setembro 14, 2009 18:11, Hin-Tak Leung escreveu:
->> On Mon, Sep 14, 2009 at 5:47 PM, Leonardo H. Souza Hamada
->> <leonardo.hamada@ufra.edu.br> wrote:
->>
->>> <<<Disabling original zd1211rw in kernel configuration, recompiled
->>> kernel as instructed above, installed new kernel, reboot, many times
->>> until I got it right>>>
->>
->> The patch isn't particularly version-specific - may have applied to
->> the kernel source itself...
->
->
-> No, the patch was applied to compat package. The script install what is
-> necessary.
+I think in this context libyyy.so.x.y.z is better analogy. firmware is
+not an executable
+What is the reasoning behind this common practice?
 
-I meant the patch should have applied to the vanilla kernel source as
-well, if you have gone to the trouble of recompiling the kernel to get
-mac80211 as module. (i.e. don't bother with compat-wireless).
+> Versions or capability maps can be stored inside the firmware and
+> queried at load time. E.g. the libertas driver does it that way.
 
+It's only check if it fits but cannot fall back to an older version.
+.
 >
+> If you make your firmware redistributable (which I recommend),
+> the version will also be stored in the package metadata, e.g.
+> the rpm or deb file and the infrastructure for rpm/yum deb/apt.
 >
->>
->>> Results:
->>>
->>> dmesg seems ok. no errors.
->>
->> No, I want to see dmesg - there should be something similiar to this?
->>
->> cfg80211: Calling CRDA for country: GB
->> cfg80211: Regulatory domain changed to country: GB
->>       (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->>       (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->>       (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->>       (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
->>       (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2700 mBm)
+> --
+> http://www.holgerschurig.de
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
->
-> I'm sure saw the first line as: cfg80211: Calling CRDA for country: JP
->
-> There wasn't the rest (frequency stuff), I think. So this is suspicious.
 
-That's strange. Do you have the crda package installed? You need the
-regulatory database userland stuff for crda to work.
-http://www.linuxwireless.org/en/developers/Regulatory/CRDA
-
->>> can do iwlist wlan0
->>>
->>> iwconfig wlan0 shows:
->>> IEEE 802.11bg  Mode:Managed  Access Point: Not-Associated
->>>          Tx-Power=20 dBm
->>>          Retry  long limit:7   RTS thr:off   Fragment thr:off
->>>          Encryption key:off
->>>          Power Management:off
->>>
->>>
->>> I do not seem to be able to connect to a given access point so far. LED
->>> does not blink.
->>
->> stay dark or stay lit?
->>
->
->
-> Before ifconfig wlan0 up it stays lit. After it, always dark.
-
-Hmm, I am not familiar with the LED code in zd1211rw - somebody else
-please comment.
+Thanks
+Tomas
