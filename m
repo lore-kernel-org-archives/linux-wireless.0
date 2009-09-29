@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:45185 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932847AbZINSUY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Sep 2009 14:20:24 -0400
-Received: by bwz19 with SMTP id 19so2277889bwz.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Sep 2009 11:20:26 -0700 (PDT)
-Message-ID: <4AAE8965.4040108@lwfinger.net>
-Date: Mon, 14 Sep 2009 13:20:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.gmx.net ([213.165.64.20]:46576 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753237AbZI2Jpf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 05:45:35 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: "Hin-Tak Leung" <hintak.leung@gmail.com>,
+	ndiswrapper-general@lists.sourceforge.net
+Subject: Re: compat-wireless tracepoint error Re: [Ndiswrapper-general] Need help to create driver for Netgear WN111v2
+Date: Tue, 29 Sep 2009 11:45:35 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <999306.93095.qm@web23102.mail.ird.yahoo.com> <200909291058.43765.malte.gell@gmx.de> <3ace41890909290206g3019a9cbv29048837804f830@mail.gmail.com>
+In-Reply-To: <3ace41890909290206g3019a9cbv29048837804f830@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel oops with 2.6.31-wl
-References: <4AAE4DAA.1010505@lwfinger.net> <1252950017.23427.49.camel@johannes.local>
-In-Reply-To: <1252950017.23427.49.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200909291145.35972.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Mon, 2009-09-14 at 09:05 -0500, Larry Finger wrote:
->> Using the kernel v2.6.31-38241-g2d3a51e, I get the following kernel
->> oops when unloading b43:
-> 
->> RIP: 0010:[<ffffffffa02a3a3e>]  [<ffffffffa02a3a3e>]
->> b43_op_config+0x10c/0x36f [b43]
-> 
-> Seems like a b43 problem to me.
 
-I had pretty much reached that conclusion. I will need to swap cards
-to debug as the 4315 won't run on older kernels without a lot of patches.
+"Hin-Tak Leung" <hintak.leung@gmail.com> wrote
 
-Larry
+> > So, no need to modify compat-2.6.28.c? Does it automatically happen?
+> 
+> You may or may not  see any errors at the linker stage (the LD part in
+> stage 2). If you get to that point without further error, then, well,
+> count yourself lucky and just give "make install ; make unload;
+> modprobe -v ar9170" a go.
+
+Ho ho ;-) I got a lot of warnings like this:
+
+ include/linux/tracepoint.h:86:1: warning: this is the location of the 
+previous definition
+
+But, it DID compile! Thanx a lot.
+
+To be sure I did a find . -name "*.ko" and got these modules:
+
+./drivers/net/wireless/ath/ath.ko
+./net/rfkill/rfkill_backport.ko
+./net/wireless/cfg80211.ko
+./net/mac80211/mac80211.ko
+
+I just wonder, where is ar9170usb !? I did ./scripts/driver-select ar9170
+
+Malte
