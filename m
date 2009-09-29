@@ -1,96 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:44676 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753405AbZIVK7f (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:46527 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222AbZI2JNZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Sep 2009 06:59:35 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: hostap@lists.shmoo.com
-Subject: Re: Comparison of wpa_supplicant with -Dnl80211 and -Dwext, WEP and WPA
-Date: Tue, 22 Sep 2009 12:58:44 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <200909221118.04569.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200909221118.04569.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200909221258.44921.hs4233@mail.mn-solutions.de>
+	Tue, 29 Sep 2009 05:13:25 -0400
+Date: Tue, 29 Sep 2009 11:16:03 +0200
+From: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Disassociating atheros wlan with 2.6.31
+Message-Id: <20090929111603.8b3774f0.kristoffer.ericson@gmail.com>
+In-Reply-To: <4ABBD170.6060702@gmail.com>
+References: <20090924121617.c0c7222d.kristoffer.ericson@gmail.com>
+	<4ABBB9D3.4020200@gmail.com>
+	<200909242155.49890.s.L-H@gmx.de>
+	<4ABBD170.6060702@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> wep_nl80211
-> -----------
->  0.00000  0.00000: Initializing interface ...
->  0.03985  0.03985: ##ERROR: nl80211: set_key failed; err=-67 Link has been severed)
->  0.03992  0.00007: ##ERROR: nl80211: set_key failed; err=-67 Link has been severed)
->  0.03998  0.00006: ##ERROR: nl80211: set_key failed; err=-67 Link has been severed)
->  0.04004  0.00006: ##ERROR: nl80211: set_key failed; err=-67 Link has been severed)
+On Thu, 24 Sep 2009 13:07:12 -0700
+"Justin P. Mattock" <justinmattock@gmail.com> wrote:
 
-This is because of net/wireless/nl80211.c, function nl80211_key_allowed():
+> Stefan Lippers-Hollmann wrote:
+> > Hi
+> >
+> > CCing linux-wireless@vger.kernel.org, as it's not very likely to get
+> > noticed here by wireless developers.
+> >
+> > On Thursday 24 September 2009, Justin P. Mattock wrote:
+> >    
+> >> Kristoffer Ericson wrote:
+> >>      
+> >>> Greetings,
+> >>>
+> >>> When moving from vanilla 2.6.30->2.6.31 I noticed that I get dissasociated from
+> >>> my wlan hub with regular intervalls. This did not happen on 2.6.30.
+> >>> I cant see any pattern aside from that it happens at regular intervalls
+> >>> (around 10-15mins). It works again when I re-identifies myself.
+> >>>
+> >>> Got an Asus 1000HE with Atheros chipset.
+> >>> Havent had time to bisect it, just wanted to check
+> >>> if this is an known issue. Ive ruled out faulty wlan hub
+> >>> since everything works fine when going back to 2.6.30.
+> >>>
+> >>> nothing much on dmesg:
+> >>> uhci_hcd 0000:00:1d.1: UHCI Host Controller
+> >>> uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 3
+> >>> uhci_hcd 0000:00:1d.1: irq 19, io base 0x0000d480
+> >>> usb usb3: configuration #1 chosen from 1 choice
+> >>> hub 3-0:1.0: USB hub found
+> >>> hub 3-0:1.0: 2 ports detected
+> >>> uhci_hcd 0000:00:1d.2: PCI INT C ->   GSI 18 (level, low) ->   IRQ 18
+> >>> uhci_hcd 0000:00:1d.2: setting latency timer to 64
+> >>> uhci_hcd 0000:00:1d.2: UHCI Host Controller
+> >>> uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 4
+> >>> uhci_hcd 0000:00:1d.2: irq 18, io base 0x0000d800
+> >>> usb usb4: configuration #1 chosen from 1 choice
+> >>> hub 4-0:1.0: USB hub found
+> >>> hub 4-0:1.0: 2 ports detected
+> >>> uhci_hcd 0000:00:1d.3: PCI INT D ->   GSI 16 (level, low) ->   IRQ 16
+> >>> uhci_hcd 0000:00:1d.3: setting latency timer to 64
+> >>> uhci_hcd 0000:00:1d.3: UHCI Host Controller
+> >>> uhci_hcd 0000:00:1d.3: new USB bus registered, assigned bus number 5
+> >>> uhci_hcd 0000:00:1d.3: irq 16, io base 0x0000d880
+> >>> usb usb5: configuration #1 chosen from 1 choice
+> >>> hub 5-0:1.0: USB hub found
+> >>> hub 5-0:1.0: 2 ports detected
+> >>> input: ETPS/2 Elantech Touchpad as /devices/platform/i8042/serio1/input/input7
+> >>> usb 1-4: new high speed USB device using ehci_hcd and address 3
+> >>> usb 1-4: configuration #1 chosen from 1 choice
+> >>> hub 1-4:1.0: USB hub found
+> >>> hub 1-4:1.0: 4 ports detected
+> >>> usb 1-5: new high speed USB device using ehci_hcd and address 4
+> >>> usb 1-5: configuration #1 chosen from 1 choice
+> >>> usb 1-8: new high speed USB device using ehci_hcd and address 6
+> >>> usb 1-8: configuration #1 chosen from 1 choice
+> >>> Initializing USB Mass Storage driver...
+> >>> scsi4 : SCSI emulation for USB Mass Storage devices
+> >>> usbcore: registered new interface driver usb-storage
+> >>> USB Mass Storage support registered.
+> >>> usb-storage: device found at 4
+> >>> usb-storage: waiting for device to settle before scanning
+> >>> HDA Intel 0000:00:1b.0: PCI INT A ->   GSI 16 (level, low) ->   IRQ 16
+> >>> HDA Intel 0000:00:1b.0: setting latency timer to 64
+> >>> usb 2-2: new full speed USB device using uhci_hcd and address 2
+> >>> ath9k 0000:01:00.0: PCI INT A ->   GSI 19 (level, low) ->   IRQ 19
+> >>> ath9k 0000:01:00.0: setting latency timer to 64
+> >>> usb 2-2: configuration #1 chosen from 1 choice
+> >>> input: HDA Digital PCBeep as /devices/pci0000:00/0000:00:1b.0/input/input8
+> >>> usbcore: registered new interface driver usbserial
+> >>> USB Serial support registered for generic
+> >>> usb 5-1: new full speed USB device using uhci_hcd and address 2
+> >>> usb 5-1: configuration #1 chosen from 1 choice
+> >>> usb 1-4.1: new full speed USB device using ehci_hcd and address 7
+> >>> ath: EEPROM regdomain: 0x60
+> >>> ath: EEPROM indicates we should expect a direct regpair map
+> >>> ath: Country alpha2 being used: 00
+> >>> ath: Regpair used: 0x60
+> >>> Bluetooth: Core ver 2.15
+> >>> NET: Registered protocol family 31
+> >>> Bluetooth: HCI device and connection manager initialized
+> >>> Bluetooth: HCI socket layer initialized
+> >>> Bluetooth: Generic Bluetooth USB driver ver 0.5
+> >>> usb 1-4.1: configuration #1 chosen from 1 choice
+> >>> usb 1-4.2: new low speed USB device using ehci_hcd and address 8
+> >>> usb 1-4.2: configuration #1 chosen from 1 choice
+> >>> usb 1-4.4: new low speed USB device using ehci_hcd and address 9
+> >>> usbcore: registered new interface driver hiddev
+> >>> input: HID 04d9:1203 as /devices/pci0000:00/0000:00:1d.7/usb1/1-4/1-4.2/1-4.2:1.0/input/input9
+> >>> generic-usb 0003:04D9:1203.0001: input,hidraw0: USB HID v1.11 Keyboard [HID 04d9:1203] on usb-0000:00:1d.7-4.2/input0
+> >>> input: HID 04d9:1203 as /devices/pci0000:00/0000:00:1d.7/usb1/1-4/1-4.2/1-4.2:1.1/input/input10
+> >>> generic-usb 0003:04D9:1203.0002: input,hidraw1: USB HID v1.11 Device [HID 04d9:1203] on usb-0000:00:1d.7-4.2/input1
+> >>> usbcore: registered new interface driver usbhid
+> >>> usbhid: v2.6:USB HID core driver
+> >>> usb 1-4.4: configuration #1 chosen from 1 choice
+> >>> input: B16_b_02 USB-PS/2 Optical Mouse as /devices/pci0000:00/0000:00:1d.7/usb1/1-4/1-4.4/1-4.4:1.0/input/input11
+> >>> generic-usb 0003:046D:C025.0003: input,hidraw2: USB HID v1.10 Mouse [B16_b_02 USB-PS/2 Optical Mouse] on usb-0000:00:1d.7-4.4/input0
+> >>> usbcore: registered new interface driver btusb
+> >>> usbcore: registered new interface driver usbserial_generic
+> >>> usbserial: USB Serial Driver core
+> >>> USB Serial support registered for GSM modem (1-port)
+> >>> option 2-2:1.0: GSM modem (1-port) converter detected
+> >>> usb 2-2: GSM modem (1-port) converter now attached to ttyUSB0
+> >>> option 2-2:1.1: GSM modem (1-port) converter detected
+> >>> usb 2-2: GSM modem (1-port) converter now attached to ttyUSB1
+> >>> usbcore: registered new interface driver option
+> >>> option: v0.7.2:USB Driver for GSM modems
+> >>> USB Serial support registered for pl2303
+> >>> pl2303 1-4.1:1.0: pl2303 converter detected
+> >>> usb 1-4.1: pl2303 converter now attached to ttyUSB2
+> >>> usbcore: registered new interface driver pl2303
+> >>> pl2303: Prolific PL2303 USB to serial adaptor driver
+> >>> phy0: Selected rate control algorithm 'ath9k_rate_control'
+> >>> Registered led device: ath9k-phy0::radio
+> >>> Registered led device: ath9k-phy0::assoc
+> >>> Registered led device: ath9k-phy0::tx
+> >>> Registered led device: ath9k-phy0::rx
+> >>> phy0: Atheros AR9280 MAC/BB Rev:2 AR5133 RF Rev:d0: mem=0xf8880000, irq=19
+> >>> scsi 4:0:0:0: Direct-Access     Single   Flash Reader     1.00 PQ: 0 ANSI: 0
+> >>> sd 4:0:0:0: Attached scsi generic sg1 type 0
+> >>> sd 4:0:0:0: [sdb] 15954944 512-byte logical blocks: (8.16 GB/7.60 GiB)
+> >>> usb-storage: device scan complete
+> >>> sd 4:0:0:0: [sdb] Write Protect is off
+> >>> sd 4:0:0:0: [sdb] Mode Sense: 03 00 00 00
+> >>> sd 4:0:0:0: [sdb] Assuming drive cache: write through
+> >>> sd 4:0:0:0: [sdb] Assuming drive cache: write through
+> >>>    sdb: sdb1
+> >>> sd 4:0:0:0: [sdb] Assuming drive cache: write through
+> >>> sd 4:0:0:0: [sdb] Attached SCSI removable disk
+> >>> EXT3-fs warning: maximal mount count reached, running e2fsck is recommended
+> >>> EXT3 FS on sda1, internal journal
+> >>> Bluetooth: L2CAP ver 2.13
+> >>> Bluetooth: L2CAP socket layer initialized
+> >>> Bluetooth: SCO (Voice Link) ver 0.6
+> >>> Bluetooth: SCO socket layer initialized
+> >>> Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+> >>> Bridge firewalling registered
+> >>> Bluetooth: RFCOMM TTY layer initialized
+> >>> Bluetooth: RFCOMM socket layer initialized
+> >>> Bluetooth: RFCOMM ver 1.11
+> >>> ATL1E 0000:03:00.0: irq 27 for MSI/MSI-X
+> >>> fuse init (API version 7.12)
+> >>> ip_tables: (C) 2000-2006 Netfilter Core Team
+> >>> nf_conntrack version 0.5.0 (16384 buckets, 65536 max)
+> >>> CONFIG_NF_CT_ACCT is deprecated and will be removed soon. Please use
+> >>> nf_conntrack.acct=1 kernel parameter, acct=1 nf_conntrack module option or
+> >>> sysctl net.netfilter.nf_conntrack_acct=1 to enable it.
+> >>> wlan0: authenticate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: authenticated
+> >>> wlan0: associate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: RX AssocResp from 00:14:7c:ae:d1:90 (capab=0x431 status=0 aid=5)
+> >>> wlan0: associated
+> >>> PPP generic driver version 2.4.2
+> >>> NET: Registered protocol family 10
+> >>> lo: Disabled Privacy Extensions
+> >>> ADDRCONF(NETDEV_UP): eth0: link is not ready
+> >>> PPP BSD Compression module registered
+> >>> PPP Deflate Compression module registered
+> >>> wlan0: no IPv6 routers present
+> >>> CE: hpet increasing min_delta_ns to 15000 nsec
+> >>> wlan0: no probe response from AP 00:14:7c:ae:d1:90 - disassociating
+> >>> wlan0: authenticate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: authenticated
+> >>> wlan0: associate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: RX AssocResp from 00:14:7c:ae:d1:90 (capab=0x431 status=0 aid=5)
+> >>> wlan0: associated
+> >>> wlan0: authenticate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: authenticated
+> >>> wlan0: associate with AP 00:14:7c:ae:d1:90
+> >>> wlan0: RX AssocResp from 00:14:7c:ae:d1:90 (capab=0x431 status=0 aid=5)
+> >>> wlan0: associated
+> >>> [kristoffer@boggieman wine.git]$
+> >>>
+> >>>
+> >>>
+> >>>        
+> >> yeah I'm seeing this with my macbook pro(ath9k)
+> >> while streaming music, all of a sudden things just crap out.
+> >> (not sure if this is why, or something else).
+> >>
+> >> Justin P. Mattock
+> >>      
+> >
+> > I'm getting similar reports for iwl3945 and 2.6.31.[01], but can't confirm
+> > this on my own (non-iwl{3945,agn}, non-ath9k) hardware yet.
+> >
+> > Regards
+> > 	Stefan Lippers-Hollmann
+> >
+> >    
+> I don't mind doing a bisect from 30 - present, but first I need to
+> do some other stuff.
 
-        switch (wdev->iftype) {
-	...
-        case NL80211_IFTYPE_STATION:
-                if (wdev->sme_state != CFG80211_SME_CONNECTED)
-                        return -ENOLINK;
-                break;
+Got any updates on this? Im stuck in doing other kernel stuff and has
+left 2.6.31 currently since I need it for internet sharing (through wlan0).
+Its a real pain having it drop every 15mins. 
 
+> 
+> Justin P. Mattock
 
-> wep_wext
-> --------
->  0.00000  0.00000: Initializing interface ...
->  0.08801  0.08801: Setting scan request: 0 sec 100000 usec
->  0.25167  0.16365: ioctl[SIOCGIWSCAN]: Resource temporarily unavailable
-
-This is because wpa_supplicant very early - in
-wpa_driver_wext_finish_drv_init() - calls
-wpa_driver_wext_disconnect(). This in turn sets a random 32
-character long ESSID, as a desparate means to disconnect.
-
-Now that an essid is set, the calling chain in the kernel
-
-   cfg80211_netdev_notifier_call(), case NETDEV_UP
-   cfg80211_mgd_wext_connect()
-   __cfg80211_connect()
-  cfg80211_conn_scan(
-
-get's executed. This starts a scan.
-
-Later, when wpa_supplicant tries to get a scan result, it will
-only get an -EBUSY because of net/wireless/scan.c, function
-cfg80211_wext_siwscan():
-
-        if (rdev->scan_req) {
-                err = -EBUSY;
-                goto out;
-        }
-
-
-
-However, I'm wondering: if several scan commands are
-supposed to add up into the BSS list anyway (and each BSS list
-entry by default pruned after 15 seconds), why is it an error
-to access the current state of the BSS list while a scan is
-in progress?
-
-In other words, I think the following sequence should be ok:
-
-Request Scan
-scan finishes
-get scan result (2 BSS entries)
-request scan
-get scan result (2 BSS entries)
-scan finishes   (the scan is still in process)
-get scan result (5 BSS entries)
-
-If user-space ask for intermediate results, it should be
-allowed to do so at any time. If user-space wants full
-results, it can wait for the scan-done event.
-
-
-
-This would mean that the BSS entries get individual locks
-and that rdev->scan_req isn't used as an implicit lock.
 
 -- 
-http://www.holgerschurig.de
+Kristoffer Ericson <kristoffer.ericson@gmail.com>
