@@ -1,75 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:65113 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898AbZIHSQB (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:10596 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbZI2HYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 14:16:01 -0400
-Received: by bwz19 with SMTP id 19so2421413bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 11:16:03 -0700 (PDT)
-Message-ID: <4AA69F61.2040300@lwfinger.net>
-Date: Tue, 08 Sep 2009 13:16:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 29 Sep 2009 03:24:16 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Bing Zhao <bzhao@marvell.com>
+Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+Date: Tue, 29 Sep 2009 09:24:07 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+References: <1253058359-1934-1-git-send-email-bzhao@marvell.com> <1253458691.11702.46.camel@localhost.localdomain> <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-To: John Daiker <daikerjohn@gmail.com>
-CC: Michael Buesch <mb@bu3sch.de>,
-	Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 dma error
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de> <4AA67009.4020400@lwfinger.net> <4AA69961.9010808@gmail.com>
-In-Reply-To: <4AA69961.9010808@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909290924.07758.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John Daiker wrote:
-> On 09/08/2009 07:54 AM, Larry Finger wrote:
->> Michael Buesch wrote:
->>> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->>>> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->>>> then the controller keep restarting...
->>>>
->>>> Please tell what I can provide or test, Thanks.
->>>
->>> Is this a regression? If so, please bisect.
->>
->> It is something specific to his system as I don't see anything like
->> this. In addition, there are some users on the openSUSE forums that
->> have implemented the latest compat-wireless and switched away from
->> Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
->> them.
->>
->> Please reboot so that we see the ssb output as well. Use the command
->>
->> dmesg | egrep "ssb|b43"
->>
->> That way we will be able to see exactly what kind of device you have
->> and what revisions are in it. AFAIK, the testing to date has been
->> limited to Rev 1 PHYs and Rev 2 radios.
->>
->> Larry
->>
-> 
-> I can confirm the same issue.  I have a HP Mini 1116NR with a Broadcom
-> 4312.  Looks to be a PHY 1, Radio 2:
-> 
-> --snip--
-> [  456.165296] b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-> [  456.165364] b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062,
-> Revision 2
-> --snip--
-> 
-> I've attached the output of 'dmesg | egrep "ssb|b43"', my kernel config,
-> and lspci -vv and lspci -nn
-> 
-> Note: With the dmesg output, I had unloaded the b43 module previous
-> 'modprobe -r b43' and then loaded it again with debug output: 'modprobe
- b43 verbose=3'
+> iwconfig wlan0 power period 0   -> enable deep sleep (enter
+> deep sleep immediately) 
 
-Your PHY and your radio are the same as mine. In fact, the one thing I
-noticed is that you are using i386 architecture, whereas mine is
-x86_64. I have not tested with i386.
+> iwconfig wlan0 power period 5   -> enable auto deep sleep
+> (enter deep sleep automatically after 5s idle time) 
 
-Has anyone run the LP PHY modifications with 32-bit architecture?
+> iwconfig wlan0 power period -1  -> disable deep sleep / auto
+> deep sleep 
 
-Larry
+ACK from my side (not that I'm the maintainer ...)
+
+-- 
+http://www.holgerschurig.de
