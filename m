@@ -1,49 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:36929 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982AbZIHPU2 (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.177]:57061 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963AbZI2T5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 11:20:28 -0400
-Received: by bwz19 with SMTP id 19so2283519bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 08:20:30 -0700 (PDT)
-Message-ID: <4AA67009.4020400@lwfinger.net>
-Date: Tue, 08 Sep 2009 09:54:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 29 Sep 2009 15:57:15 -0400
+Date: Tue, 29 Sep 2009 22:04:13 +0200
+From: Heinz Diehl <htd@fancy-poultry.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.32-rc2: wlan rt73 dead
+Message-ID: <20090929200413.GA5950@fancy-poultry.org>
+Reply-To: linux-kernel@vger.kernel.org
+References: <20090929170615.GA5539@fancy-poultry.org>
+ <20090929191125.GA5640@fancy-poultry.org>
+ <20090929191948.GE2678@tuxdriver.com>
 MIME-Version: 1.0
-To: Michael Buesch <mb@bu3sch.de>
-CC: Dave Young <hidave.darkstar@gmail.com>, linville@tuxdriver.com,
-	netrolller.3d@gmail.com, linux-wireless@vger.kernel.org,
-	bcm43xx-dev@lists.berlios.de
-Subject: Re: b43 dma error
-References: <20090908134732.GA1936@darkstar> <200909081638.36897.mb@bu3sch.de>
-In-Reply-To: <200909081638.36897.mb@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20090929191948.GE2678@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Buesch wrote:
-> On Tuesday 08 September 2009 15:47:32 Dave Young wrote:
->> I tested wireless-testing b43 driver, but got "Fatal DMA error"
->> then the controller keep restarting...
->>
->> Please tell what I can provide or test, Thanks.
-> 
-> Is this a regression? If so, please bisect.
+On 29.09.2009, John W. Linville wrote: 
 
-It is something specific to his system as I don't see anything like
-this. In addition, there are some users on the openSUSE forums that
-have implemented the latest compat-wireless and switched away from
-Broadcom wl to b43 on their LP PHY devices. So far, no complaints from
-them.
+> Could you do a git bisect?
 
-Please reboot so that we see the ssb output as well. Use the command
-
-dmesg | egrep "ssb|b43"
-
-That way we will be able to see exactly what kind of device you have
-and what revisions are in it. AFAIK, the testing to date has been
-limited to Rev 1 PHYs and Rev 2 radios.
-
-Larry
-
+I have never used git in my whole life, but I'll read the documentation
+and try.
 
