@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:48534 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbZIRH72 (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:64776 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbZI2HEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Sep 2009 03:59:28 -0400
-Received: by iwn8 with SMTP id 8so577526iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Sep 2009 00:59:31 -0700 (PDT)
+	Tue, 29 Sep 2009 03:04:12 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Bing Zhao <bzhao@marvell.com>
+Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+Date: Tue, 29 Sep 2009 09:04:00 +0200
+Cc: Dan Williams <dcbw@redhat.com>,
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+References: <1253058359-1934-1-git-send-email-bzhao@marvell.com> <1253458691.11702.46.camel@localhost.localdomain> <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <19121.45772.489140.407518@gargle.gargle.HOWL>
-References: <19121.45772.489140.407518@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 18 Sep 2009 00:59:11 -0700
-Message-ID: <43e72e890909180059h31f7d80bre1bab46e7e89c699@mail.gmail.com>
-Subject: Re: [PATCH 00/12] ath9k bug fixes
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200909290904.00971.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 16, 2009 at 8:53 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> John,
->
-> A bunch of patches fixing various bugs in the driver.
-> These apply on top of wireless-testing.
->
-> Luis would rebase his pending patches on top of these
-> and resend them.
+Hi Bing !
 
-John, here is my rebase of my 48 patches on top of this series. I
-won't post them and instead give you this handy git am'able file.
+Please note that I just sent an experimental patch to enable 
+cfg80211 for libertas.
 
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18-mcgrof-rebased.patch
+Once this is polished, you can immediately start using 
+nl80211/cfg80211 to configure such things, there's no need to 
+have the full thingy (e.g. wpa_supplicant via -Dnl80211 working 
+with WEP/WPA/WPA2) working, those things are not interrelated.
 
-If you really need me to post them again please let me know.
 
-If you want to get both sujith's collection series + mine in one file
-here they are:
-
-http://bombadil.infradead.org/~mcgrof/patches/ath/2009/09/all-2009-09-18.patch
-
-  Luis
+-- 
+http://www.holgerschurig.de
