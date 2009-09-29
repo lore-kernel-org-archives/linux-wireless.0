@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50618 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46047 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828AbZIARAZ (ORCPT
+	with ESMTP id S1753188AbZI2TAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 13:00:25 -0400
-Date: Tue, 1 Sep 2009 12:58:05 -0400
+	Tue, 29 Sep 2009 15:00:52 -0400
+Date: Tue, 29 Sep 2009 14:52:02 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+To: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
+	Malte Gell <malte.gell@gmx.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 5/7] wireless: update WIRELESS_EXT kconfig entry
-Message-ID: <20090901165804.GF7650@tuxdriver.com>
-References: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com> <1251818566-9264-6-git-send-email-lrodriguez@atheros.com> <4A9D436E.20509@lwfinger.net> <1251820483.24846.0.camel@johannes.local>
+Subject: Re: cannot compile compate-wirless snapshots
+Message-ID: <20090929185202.GD2678@tuxdriver.com>
+References: <200909260457.21103.malte.gell@gmx.de> <4ABDE7AC.1090409@hauke-m.de> <200909291050.54388.malte.gell@gmx.de> <3ace41890909290200h4dbefddah131851675dc06097@mail.gmail.com> <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1251820483.24846.0.camel@johannes.local>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <69e28c910909291127x3be75be0r3ceef7367d05f9c3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 01, 2009 at 05:54:43PM +0200, Johannes Berg wrote:
-> On Tue, 2009-09-01 at 10:53 -0500, Larry Finger wrote:
-> 
-> > > @@ -98,8 +98,16 @@ config WIRELESS_EXT
-> > >  	bool "Wireless extensions"
-> > >  	default y
-> > >  	---help---
-> > > -	  This option enables the legacy wireless extensions
-> > > -	  (wireless network interface configuration via ioctls.)
-> > > +	  This option enables the legacy wireless extensions.
-> > > +	  Wireless extensions was the first 802.11 wireless configuration
-> > > +	  API used by the networking subsystem. You will not need this unless
-> > > +	  you have old userspace utilities or old wireless devices which
-> > > +	  have not yet been ported to cfg80211.
-> > 
-> > I would like this to read "You will need this if you have old
-> > userspace utilities or old wireless devices that have not yet been
-> > ported to cfg80211."
-> 
-> Don't those "select WIRELESS_EXT" anyway so you don't have a choice?
+On Tue, Sep 29, 2009 at 08:27:20PM +0200, Gábor Stefanik wrote:
+> On Tue, Sep 29, 2009 at 11:00 AM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
 
-Old userland won't do that.
+> > The relevant config is probably /boot/config-`uname -r`, but, please
+> > do *not* modify it.
+> >
+> 
+> It should be in /proc/config.gz. (/boot/config-* is an Ubuntuism.)
+
+No -- it is at least that way in Fedora and RHEL as well.
 
 John
 -- 
