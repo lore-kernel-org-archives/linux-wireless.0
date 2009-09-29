@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10859 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753873AbZIAPWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 11:22:45 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 08:22:48 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/7] wireless: few kconfig updates
-Date: Tue, 1 Sep 2009 08:22:39 -0700
-Message-ID: <1251818566-9264-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:8238 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283AbZI2NS7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 09:18:59 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 078584B00C
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 15:19:03 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Bohyx9kKNOqO for <linux-wireless@vger.kernel.org>;
+	Tue, 29 Sep 2009 15:19:02 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F93E5.dip0.t-ipconnect.de [217.95.147.229])
+	by mx51.mymxserver.com (Postfix) with ESMTP id D2F8B4B024
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 15:19:01 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 424751E004F
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 15:18:48 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: scan_request->nr_ssids never 0 ?
+Date: Tue, 29 Sep 2009 15:18:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200909291518.46655.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since it seems the organizational changes on kconfig for wireless
-drivers did not go through I am sending now only the net/wireless and
-net/mac80211 wireless kconfig updates. This updates the description of
-the wireless options to reflect better with our documentation on
-wireless.kernel.org and we also provide pointers for further
-documentation.
+Even when I do an "iw xxx scan trigger", scan_request->nr_ssids 
+is always 1 in my driver.
 
-Luis R. Rodriguez (7):
-  wireless: update top level wireless driver entry
-  wireless: update wireless kconfig description
-  wireless: update cfg80211 kconfig entry
-  wireless: update reg debug kconfig entry
-  wireless: update WIRELESS_EXT kconfig entry
-  wireless: update mac80211 kconfig entry
-  wireless: remove mac80211 rate selection extra menu
+Is this a bug or a feature?
 
- drivers/net/wireless/Kconfig |   13 +++++++++++--
- net/Kconfig                  |    8 +++++++-
- net/mac80211/Kconfig         |   24 ++++++++++++++++++------
- net/wireless/Kconfig         |   27 ++++++++++++++++++++++++---
- 4 files changed, 60 insertions(+), 12 deletions(-)
 
+
+However, scan_request->ssids[0].ssid_len is 0.
+
+So to ask my firmware for an SSID scan, I need to do 
+
+ if (req->n_ssids && req->ssid[0].ssid_len)
+
+instead of simply
+
+ if (req->n_ssids)
+
+-- 
+http://www.holgerschurig.de
