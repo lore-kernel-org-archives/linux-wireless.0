@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:54296 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033AbZI1W0t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Sep 2009 18:26:49 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so898192fge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Sep 2009 15:26:52 -0700 (PDT)
-Date: Tue, 29 Sep 2009 00:23:49 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: Bob Copeland <me@bobcopeland.com>
+Received: from mail.gmx.net ([213.165.64.20]:38231 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753408AbZI2Irx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 04:47:53 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: cannot compile compate-wirless snapshots
+Date: Tue, 29 Sep 2009 10:47:53 +0200
 Cc: linux-wireless@vger.kernel.org
-Subject: ath5k, wifi enable hotkeys
-Message-ID: <20090928222349.GA2416@linux-m68k.org>
-References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet>
+References: <200909260457.21103.malte.gell@gmx.de> <4ABDE7AC.1090409@hauke-m.de>
+In-Reply-To: <4ABDE7AC.1090409@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090705123105.GE2132@hash.localnet>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200909291047.53775.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 05, 2009 at 08:31:05AM -0400, Bob Copeland wrote:
+Hello, sorry for my late reply....
 
-Hi,
+Hauke Mehrtens <hauke@hauke-m.de> wrote
 
+> Malte Gell wrote:
+> > Hello,
+> >
+> > actually I can build the stable compat-wirless-2.6.30.ta.bz2 just fine.
+> >
+> > But I get make errors, when I try to build the daily snapshot, see below.
+> > I use openSUSE on a 2.6.27 kernel.
 
-> Try latest wireless-testing or 2.6.31-rc1; there may already be a fix
-> for your hardware thanks to recently added rfkill support.
+> what kernel are you using? 
 
-got around to give 2.6.30* more testing. LED now works nicely but that is about the
-only thing that works.
+2.6.27.29-0.1 from openSUSE 11.1
 
-Tried computers linked in Ad-Hoc mode with WEP. 2.6.30 and 2.6.31.1 work nicely
-on the other end.
+> Does this file exists in your installation?
+> /lib/modules/`uname -r`/build/include/linux/tracepoint.h ?
 
-On the ath5k end it seems like 2.6.31 choked after resume from suspend or when interface 
-was reconfigured. 
+Yes ! The kernel tracepoint API is there in openSuSE11.1, but I still cannot 
+compile compat-wireless-2.6
 
-2.6.31.1 does not work at all on this netbook. LED indicates activity but network does
-not get associated. "iwlist scan" does display available networks.
+ Besides tracepoint thing, does ar9170us require 2.6.29? As said, tracepoint 
+does exist in my kernel....
 
-After having tried 2.6.31.1 I have to cold-boot 2.6.30.x to get the ath5k working again,
-simple reboot does not do it.
-
-> 
-> > Also, while the hotkey works how do query the current on/off status of it 
-> > in Linux?
-> 
-> There's the /dev/rfkill device (see http://git.sipsolutions.net/rfkill.git)
-> and I believe there are files under /sys/ as well which show the state but
-> I don't have the details handy (/sys/class/rfkill/xxx/state?).
-
-has that been merged into 2.6.31* ? 
-
-The /sys/.../rfkill files are there but could not figure out anything that changes 
-when hitting the hotkey.
-
-Besides, I would think the LED will indicate rfkill status?
-
-Richard
+thanx
+Malte
