@@ -1,85 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:3881 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751079AbZITQtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Sep 2009 12:49:13 -0400
-Message-ID: <4AB65CFE.7090101@canonical.com>
-Date: Sun, 20 Sep 2009 10:49:02 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
+Received: from 62.81.188.219.static.user.ono.com ([62.81.188.219]:22653 "EHLO
+	BCNSRV02.futurlink.local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750704AbZI2P1g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 11:27:36 -0400
+From: Genar Codina <Genar.Codina@futurlink.com>
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	szalat <szalat@gmail.com>
+Date: Tue, 29 Sep 2009 17:21:28 +0200
+Subject: RE: [rt2x00-users] [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB
+ and rt73usb
+Message-ID: <38F8A7B624E06848B97136504F05BB180F4DA926FC@BCNSRV02.futurlink.local>
+References: <200909291537.54334.IvDoorn@gmail.com>
+In-Reply-To: <200909291537.54334.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, Greg KH <greg@kroah.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [RFC] compat-2.6: mangle symbols for driver-select
-References: <20090919205545.GA18080@bombadil.infradead.org> 	<4AB5A5A7.3020107@canonical.com> <43e72e890909200743h74934657nc056c9e6dcb14e90@mail.gmail.com>
-In-Reply-To: <43e72e890909200743h74934657nc056c9e6dcb14e90@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Sat, Sep 19, 2009 at 8:46 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
->> Luis R. Rodriguez wrote:
->>> Today at the summit we spoke about mangling symbols for driver-slect.
->>> Here's a quick nasty take on this but without doing this for driver-select
->>> specifically just for testing. It seems to compile, but someone more
->>> motivated
->>> may want to test and make this apply somehow only for driver-select or
->>> perhaps
->>> when a -D define is used.
->>>
->>> Reason for this is to help distributions / OEMs / ODMs who want to replace
->>> just *one* driver with compat-wireless.
->>>
->> I think it would be better to generate the list of mangled symbols
->> dynamically.
-> 
-> Agreed, that is the part I left out, as a TODO to someone interested.
-> 
+Hello,
 
-I'm working on a patch (it works with 2.6.31), but I need to test with 
-older kernels.
+I have also tested the rt73usb which is included in the new 2.6.31 kernel (modinfo rt73usb gives the version "2.3.0"), in mode Master, using hostapd (version 0.6.9) and it works OK.
 
->> In older Ubuntu releases (before depmod behavior was
->> corrected), we have to run a 'munge' script to preface all of the exported
->> symbols so that a compat-wireless driver references the compat-wireless
->> protocol stack symbols. See the attached munge script for compat-wireless on
->> 2.6.24.
-> 
-> Please correct me if I'm wrong but I believe the script seems to do
-> what I did just that it actually edited the files with the changes, I
-> prefer the way I did this as it requires less work to maintain and
-> understand IMHO.
-> 
+Regards,
+ 
 
-I'm fine with that, in fact its a bit faster since my munge script is a 
-bit slow. It'll also make dealing with kernel version dependent symbol 
-munge exceptions a bit simpler.
+-----Mensaje original-----
+De: users-bounces@rt2x00.serialmonkey.com [mailto:users-bounces@rt2x00.serialmonkey.com] En nombre de Ivo van Doorn
+Enviado el: martes, 29 de septiembre de 2009 15:38
+Para: John Linville; linux-wireless@vger.kernel.org; szalat; users@rt2x00.serialmonkey.com
+Asunto: [rt2x00-users] [PATCH] rt2x00: Thrustmaster FunAccess WIFI USB and rt73usb
 
-One thing that is worth mentioning is that the module names need to be 
-changed for older user space environments, otherwise depmod mucks things 
-up in interesting ways.
+From: Michal Szalata <szalat@gmail.com>
 
->> We can either do something like this for compat-wireless, or we
->> could use a subset of this logic to generate the list of symbols contained
->> within the '#ifdef CONFIG_COMPAT_WIRELESS_MANGLE' clause.
-> 
-> So I was under the impression you would use this only if you are using
-> ./scripts/driver-select to select one driver out of the whole tree,
-> but it seems you actually use this for all the drivers on
-> compat-wireless for the Ubuntu linux-backports-modules package. I take
-> it you put lbm stuff then into some /lib/modules/$(uname)/compat/ and
-> use a sort of /etc/depmod.d/01-compat.conf to prefer compat over
-> updates/ or kernel/ ?
+Thrustmaster FunAccess WIFI USB works with rt73usb with little
+modification of rt73usb.c.
+Tested with version 2.3.0 of driver.
 
-For LBM I've taken a scorched earth approach, i.e., _all_ drivers in 
-compat-wireless get built. The vast bulk of users that I deal with are 
-only interested in one driver, but I don't know a priori _which_ driver. 
-The use case where they would want to use a mainline driver at the same 
-time as a different compat-wireless driver is fairly rare (which my 
-approach makes impossible).
+Signed-off-by: Michal Szalata <szalat@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1cbd9b4..b8f5ee3 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2381,6 +2381,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Huawei-3Com */
+ 	{ USB_DEVICE(0x1472, 0x0009), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Hercules */
++	{ USB_DEVICE(0x06f8, 0xe002), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe010), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe020), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Linksys */
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+_______________________________________________
+users mailing list
+users@rt2x00.serialmonkey.com
+http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
