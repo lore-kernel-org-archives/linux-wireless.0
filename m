@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f204.google.com ([209.85.223.204]:60124 "EHLO
-	mail-iw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbZHaXF3 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:42118 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbZI2Xcu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 Aug 2009 19:05:29 -0400
-Received: by iwn42 with SMTP id 42so2002026iwn.33
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2009 16:05:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
-References: <3ace41890908261511i3056c049kca82831015ff2aa0@mail.gmail.com>
-	<1251357267.20531.4.camel@johannes.local> <3ace41890908270243i7c1d8ddav322a35c566d2c010@mail.gmail.com>
-	<3ace41890908311143q697898a3mcbc681d3941b45c9@mail.gmail.com>
-	<43e72e890908311154x51fd9481iea5e10fc5515af80@mail.gmail.com>
-	<3ace41890908311215u378951e8j3283037ec6794764@mail.gmail.com>
-	<43e72e890908311225r3b0d80bcqcb3e3e11d81a255e@mail.gmail.com>
-	<1251749600.5165.1.camel@localhost.localdomain> <1251751251.1266.16.camel@localhost.localdomain>
-	<43e72e890908311445q60c703a3ha8ef8e599e3e712@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 31 Aug 2009 16:05:11 -0700
-Message-ID: <43e72e890908311605m368f3703vfd8a25694e69072e@mail.gmail.com>
-Subject: Re: hal, rfkill and compat-wireless (Re: [RFC/RFT] rtl8187: Implement
-	rfkill support)
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Sep 2009 19:32:50 -0400
+Subject: Re: 2.6.32-rc2: wlan rt73 dead
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-kernel@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20090929200413.GA5950@fancy-poultry.org>
+References: <20090929170615.GA5539@fancy-poultry.org>
+	 <20090929191125.GA5640@fancy-poultry.org>
+	 <20090929191948.GE2678@tuxdriver.com>
+	 <20090929200413.GA5950@fancy-poultry.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4bnWoFeiWKhCgey+Tp0A"
+Date: Wed, 30 Sep 2009 01:32:20 +0200
+Message-Id: <1254267140.3959.1.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 31, 2009 at 2:45 PM, Luis R. Rodriguez<mcgrof@gmail.com> wrote:
-> On Mon, Aug 31, 2009 at 1:40 PM, Marcel Holtmann<marcel@holtmann.org> wrote:
->> Hi Luis,
->>
->>> > OK not so bad except for:
->>> >
->>> > > kernel/net/wimax/wimax.ko
->>> >
->>> > That's touching another subsystem but we could technically merge wimax
->>> > into compat-wireless if Inaky thinks that's a good idea. the point
->>> > here is to unify anything that uses rfkill for backport usage.
->>>
->>> Oh boy, can of worms
->>>
->>> I have my own compat-wimax already, which already handles things for
->>> backwards compat (many #ifdef hacks to simplify life) and which is
->>> heavily used internally.
->>>
->>> I don't really know how much worth it might be and I know I don't have
->>> resources to support both.
->>
->> for the wireless-compat tree, I would just remove the RFKILL support for
->> WiMAX. It is really not worth to support it.
->
-> Works for me, we then still need to address (if we really care) the
-> platform stuff. If someone is interested feel free to send patches to
-> add those, I figure as long we get down to the latest supported stable
-> kernel it should be good. The latest supported stable kernel is always
-> on display on kernel,org, today being 2.6.27.
 
-BTW inaky -- this is actually up to you, are you wiling to live with
-no rfkill for compat?
+--=-4bnWoFeiWKhCgey+Tp0A
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  Luis
+On Tue, 2009-09-29 at 22:04 +0200, Heinz Diehl wrote:
+> On 29.09.2009, John W. Linville wrote:=20
+>=20
+> > Could you do a git bisect?
+>=20
+> I have never used git in my whole life, but I'll read the documentation
+> and try.
+
+While it's a good skill, don't waste your time. You're running opensuse,
+I suppose, and having the same problem as Hugh:
+http://bugzilla.kernel.org/show_bug.cgi?id=3D14263
+
+Rafael: I'm pretty sure this (14272) is a dupe of 14263.
+
+Heinz: please try a net-2.6 tree, or wait a couple of days until it's
+pulled in.
+
+johannes
+
+--=-4bnWoFeiWKhCgey+Tp0A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKwpkAAAoJEODzc/N7+QmaEzEP/0qxjjXBqCSj27oJ06tUg0Y+
+CDbCjcoDwpGhWmhR9EwnqnueRQHTsGKHwXbjJDonWEqdZx0D99asvQcJQvTMp9gU
+UMLf0oj3MTS1aQ81Ly++5YLftQwhFflaGWvSw/dpMRiCfZHGY12vmX0zvWgzuTIg
+4aXMpsL2XCp68opBR2dTgkoVOiYJKWi54C8wuTPK6fmPGkYU7k3nO656aP+cCFqy
+f5W3DQ09StnNYg7DWEcvuj7+IGaRTnzNbrtyta9etiIiEUWdlKvvdE9XEpPoV8c1
+cYslKNwAE3SeiOgrbNV2Ti6HcABkwFAQrOkbdvs2Ado5f25KPEf7vovr0+KBzEQn
+naGAo7TwEPadrJBk9hBBVote0/1SYD1LyWyMnu4bopi34pJOhKy9Zk+yLCVwn3XJ
+i6B9OaxfPnCNIamqhZYgvSRFsEmqSS9RfFLgHd8k3xnw0bnMyqsurnVlIiYfYjOK
+juJZgOdxRgKRQ0QW49qv/XQIfqAw3P5qy3we2KjVSgjqwtV8rN3a5t7XrhLMFr+p
+yqqqHGGba8KNHssKrfT02pts6Zxl1yOyaSUEcBK1ZHb9kndHcyx+MtHMQE1oRHge
+IUDFInJ95/ioAaErb1C5pba7usOB90EvV43CesJTLd/tQ+eHilB2CgfN0V3IGRDP
+lVSzqB+/fQ3ACSPLzbnp
+=3tTW
+-----END PGP SIGNATURE-----
+
+--=-4bnWoFeiWKhCgey+Tp0A--
+
