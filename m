@@ -1,84 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:36796 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbZIYKvq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 06:51:46 -0400
-Date: Fri, 25 Sep 2009 12:51:45 +0200
-To: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mattia Dongili <malattia@linux.it>
-Subject: Re: [PATCH] [RFT] sony-laptop: re-read the rfkill state when
-	resuming from suspend
-Message-ID: <20090925105145.GA23268@gamma.logic.tuwien.ac.at>
-References: <4ABC8ADD.3090803@tuffmail.co.uk>
+Received: from mail.tpi.com ([70.99.223.143]:2929 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752678AbZI3RVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 13:21:08 -0400
+Message-ID: <4AC39383.9010109@canonical.com>
+Date: Wed, 30 Sep 2009 11:21:07 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ABC8ADD.3090803@tuffmail.co.uk>
-From: Norbert Preining <preining@logic.at>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [iw PATCH] default install to $(PREFIX)/sbin
+References: <1254316786-4670-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1254316786-4670-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fr, 25 Sep 2009, Alan Jenkins wrote:
-> Without this, the hard-blocked state will be reported incorrectly if
-> the hardware switch is changed while the laptop is suspended.
-
-I confirm that with the old module (without that patch) after:
-- having rfkill de-activated (so devices working)
-- suspend to ram
-- while suspended turn on rfkill (disable all devices)
-- resume
-the rfkill event shows:
-RFKILL event: idx 0 type 1 op 0 soft 0 hard 0
-RFKILL event: idx 1 type 2 op 0 soft 0 hard 0
-RFKILL event: idx 2 type 5 op 0 soft 0 hard 0
-RFKILL event: idx 4 type 1 op 0 soft 0 hard 1
-
-so it didn't work.
-
-Adding the patch after resume I have
-RFKILL event: idx 0 type 1 op 0 soft 0 hard 1
-RFKILL event: idx 1 type 2 op 0 soft 0 hard 1
-RFKILL event: idx 2 type 5 op 0 soft 0 hard 1
-RFKILL event: idx 5 type 1 op 0 soft 0 hard 1
-
-so that is fixed.
-
-Tested-by: Norbert Preining <preining@logic.at>
+John W. Linville wrote:
+> The iw utility isn't generally useful to normal users, so move it to
+> $(PREFIX)/sbin with other system management executables.
 > 
-> Signed-off-by: Alan Jenkins <alan-jenkins@tuffmail.co.uk>
-> --
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> As "suggested" by Johannes... :-)
 > 
-> Again, this is from code inspection only.  Since suspend/resume can
-> be tricky, please test that this change works (and is necessary).
+>  Makefile |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> 
-> diff a/drivers/platform/x86/sony-laptop.c b/drivers/platform/x86/sony-laptop.c
-> --- a/drivers/platform/x86/sony-laptop.c
-> +++ b/drivers/platform/x86/sony-laptop.c
-> @@ -1044,6 +1044,9 @@ static int sony_nc_resume(struct acpi_device *device)
->  			sony_backlight_update_status(sony_backlight_device) < 0)
->  		printk(KERN_WARNING DRV_PFX "unable to restore brightness level\n");
+> diff --git a/Makefile b/Makefile
+> index cb5fcc1..68bef4d 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -3,7 +3,7 @@
+>  MAKEFLAGS += --no-print-directory
 >  
-> +	/* re-read rfkill state */
-> +	sony_nc_rfkill_update();
-> +
->  	return 0;
->  }
+>  PREFIX ?= /usr
+> -BINDIR ?= $(PREFIX)/bin
+> +SBINDIR ?= $(PREFIX)/sbin
+>  MANDIR ?= $(PREFIX)/share/man
+>  PKG_CONFIG ?= pkg-config
 >  
-> 
+> @@ -85,8 +85,8 @@ check:
+>  
+>  install: iw iw.8.gz
+>  	@$(NQ) ' INST iw'
+> -	$(Q)$(MKDIR) $(DESTDIR)$(BINDIR)
+> -	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)$(BINDIR) iw
+> +	$(Q)$(MKDIR) $(DESTDIR)$(SBINDIR)
+> +	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)$(SBINDIR) iw
+>  	@$(NQ) ' INST iw.8'
+>  	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
+>  	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)$(MANDIR)/man8/ iw.8.gz
 
-Best wishes
+FWIW Ubuntu wireless-tools drops rfkill in /sbin, where I think tools
+that require root for changes should live.
 
-Norbert
-
--------------------------------------------------------------------------------
-Dr. Norbert Preining <preining@logic.at>        Vienna University of Technology
-Debian Developer <preining@debian.org>                         Debian TeX Group
-gpg DSA: 0x09C5B094      fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
--------------------------------------------------------------------------------
-HUTTOFT (n.)
-The fibrous algae which grows in the dark, moist environment of
-trouser turn-ups.
-			--- Douglas Adams, The Meaning of Liff
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
