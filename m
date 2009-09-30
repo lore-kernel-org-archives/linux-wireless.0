@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56403 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbZI2Taw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 15:30:52 -0400
-Date: Tue, 29 Sep 2009 15:19:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Heinz Diehl <htd@fancy-poultry.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.32-rc2: wlan rt73 dead
-Message-ID: <20090929191948.GE2678@tuxdriver.com>
-References: <20090929170615.GA5539@fancy-poultry.org> <20090929191125.GA5640@fancy-poultry.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20090929191125.GA5640@fancy-poultry.org>
+Received: from mail.tpi.com ([70.99.223.143]:1403 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752842AbZI3RAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 13:00:07 -0400
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] compat-wireless: Fix b44 build issues.
+Cc: lrodriguez@atheros.com
+Message-Id: <20090930170000.09582F88DD@sepang.rtg.net>
+Date: Wed, 30 Sep 2009 11:00:00 -0600 (MDT)
+From: timg@tpi.com (Tim Gardner)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 29, 2009 at 09:11:25PM +0200, Heinz Diehl wrote:
+>From 553180d80860c6090b7d82f809ea7131afca01d6 Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Wed, 30 Sep 2009 10:02:35 -0600
+Subject: [PATCH] compat-wireless: Fix b44 build issues.
 
-> And that's it. Tha adapter is "off", and no connection is possible. It's
-> strongly 2.6.32-rc2 related, no problems with any other kernel before.
+Even though CONFIG_B44 is defined, there is no Makefile
+created in drivers/net. This failure to build allows the
+in-kernel version of b44 to get loaded with a compat-wireless
+version of ssb.ko, never a good thing.
 
-Could you do a git bisect?  Also, please Cc:
-linux-wireless@vger.kernel.org for your response...
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ Makefile                |    1 +
+ scripts/admin-update.sh |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-John
+diff --git a/Makefile b/Makefile
+index c7333a2..fa9aadc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -24,6 +24,7 @@ ifeq ($(ONLY_CORE),)
+ obj-m += \
+ 	drivers/ssb/ \
+ 	drivers/misc/eeprom/ \
++	drivers/net/ \
+ 	drivers/net/usb/ \
+ 	drivers/net/wireless/
+ endif
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index c65952d..cb42fe7 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -149,6 +149,7 @@ done
+ # b44 is dependent on ssb, so its has to be rebuilt as well.
+ DIR="drivers/net"
+ cp $GIT_TREE/$DIR/b44.[ch] $DIR
++echo "obj-m += b44.o" > $DIR/Makefile
+ 
+ # Misc
+ mkdir -p drivers/misc/eeprom/
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.2.4
+
