@@ -1,51 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.sea5.speakeasy.net ([69.17.117.4]:35889 "EHLO
-	mail2.sea5.speakeasy.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbZIAUL1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52827 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754285AbZI3TAy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 16:11:27 -0400
-Received: from cldmz-nat-12-108-127-191.pittsburgh.intel-research.net (HELO [10.212.129.152]) (kaminsky@[12.108.127.191])
-          (envelope-sender <kaminsky@csail.mit.edu>)
-          by mail2.sea5.speakeasy.net (qmail-ldap-1.03) with AES256-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 1 Sep 2009 20:04:49 -0000
-Message-ID: <4A9D7E79.6090000@csail.mit.edu>
-Date: Tue, 01 Sep 2009 16:05:13 -0400
-From: Michael Kaminsky <kaminsky@csail.mit.edu>
+	Wed, 30 Sep 2009 15:00:54 -0400
+Date: Wed, 30 Sep 2009 14:45:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	stable@kernel.org
+Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
+Message-ID: <20090930184550.GC6364@tuxdriver.com>
+References: <4AC39D6F.5070308@canonical.com> <1254334586.26521.1617.camel@rc-desk>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jouni Malinen <jouni.malinen@atheros.com>
-Subject: phy0: release an RX reorder frame due to timeout on earlier frames
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1254334586.26521.1617.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm running a git checkout of iwlwifi-2.6.git from around Aug. 10
-(d229b68..).  I filed a bug report at
+Perhaps these should go in the stable series?
 
-   http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2076
+John
 
-and I was asked to post my situation to this list.
+On Wed, Sep 30, 2009 at 11:16:26AM -0700, reinette chatre wrote:
+> Hi Tim,
+> 
+> On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
+> > I've got a user complaining that the iwl-1000 firmware version required
+> > by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
+> > only firmware available from http://intellinuxwireless.org/?n=Downloads
+> > is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
+> > 
+> > BugLink: http://bugs.launchpad.net/bugs/439285
+> > 
+> 
+> 2.6.31 needs a few more patches to fully support 1000 series, among
+> these is the patch that can parse a new ucode header format and another
+> patch to update the ucode API. 
+> 
+> Depending on the requirements it may be easier to backport those patches
+> or to just use compat-wireless. That will be the user's decision.
+> 
+> Here is the list of patches:
+> 
+> commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:16 2009 -0700
+> 
+>     iwlwifi: Handle new firmware file with ucode build number in header
+> 
+> commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:22 2009 -0700
+> 
+>     iwlwifi: update 1000 series API version to match firmware
+> 
+> commit 02c06e4abc0680afd31bf481a803541556757fb6
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Fri Jul 17 09:30:14 2009 -0700
+> 
+>     iwlagn: modify digital SVR for 1000
+> 
+> commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Thu Aug 13 13:30:54 2009 -0700
+> 
+>     iwlwifi: traverse linklist to find the valid OTP block
+> 
+> commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
+> Author: Reinette Chatre <reinette.chatre@intel.com>
+> Date:   Fri Jul 24 11:13:12 2009 -0700
+> 
+>     iwlagn: fix null pointer access during ucode load on 1000
+> 
+> Reinette
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I'm seeing regular "outages" when using 11n where no packets seem to go
-through (card is an Intel 5300).  When this happens, I see the following
-in my dmesg output:
-
-   phy0: release an RX reorder frame due to timeout on earlier frames
-
-(To see this message, you need to compile with CONFIG_MAC80211_HT_DEBUG.
-The message comes from net/mac80211/rx.c.)
-
-There's dmesg log attached to the above bug report which gives a
-high-level picture (no extra debugging) of what happens.  I associate
-(with HT), things work for a little while, and then this message is
-printed out (at which point the network stops working).  If I manually
-re-associate, things work again.  If I do nothing, eventually the driver
-re-associates by itself, and things also work again.  Letting the driver
-re-associate automatically, though, can take a while (e.g, sometimes
-close to a minute).  Note that in my environment, there are multiple APs
-serving the same ESSID.  This error seems to happen quite regularly.
-
-Thanks,
-
-Michael
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
