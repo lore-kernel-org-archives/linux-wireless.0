@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:34521 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbZI3L4U (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbZI3PVd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 07:56:20 -0400
-Message-ID: <4AC3475C.7000403@hartkopp.net>
-Date: Wed, 30 Sep 2009 13:56:12 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Michael Buesch <mb@bu3sch.de>, Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+	Wed, 30 Sep 2009 11:21:33 -0400
 Subject: Re: mac80211: NOHZ: local_softirq_pending 08
-References: <200909111648.50902.mb@bu3sch.de> <200909111707.23971.mb@bu3sch.de> <4AAA75CB.6040803@hartkopp.net> <200909111813.35810.mb@bu3sch.de> <4AABCF28.6090505@hartkopp.net> <20090929192928.GF2678@tuxdriver.com>
-In-Reply-To: <20090929192928.GF2678@tuxdriver.com>
-Content-Type: text/plain; charset=us-ascii
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Oliver Hartkopp <socketcan@hartkopp.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <200909301710.31082.mb@bu3sch.de>
+References: <200909111648.50902.mb@bu3sch.de>
+	 <87ocosqykb.fsf@purkki.valot.fi> <1254322466.3959.5.camel@johannes.local>
+	 <200909301710.31082.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-yurZqWm/P6lWkQy5ETrt"
+Date: Wed, 30 Sep 2009 17:21:17 +0200
+Message-Id: <1254324077.3959.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Sat, Sep 12, 2009 at 06:41:12PM +0200, Oliver Hartkopp wrote:
-> 
->> i cooked a patch that introduces netif_rx_ti() and fixes up the problems in
->> mac80211 and the CAN subsystem.
-> 
-> Oliver,
-> 
-> Are you going to send this patch to Dave?  If you want me to carry
-> it instead, please resend it with a proper changelog including a
-> Signed-off-by line.  For that matter, Dave will most certainly want
-> that as well...
 
-Hello John,
+--=-yurZqWm/P6lWkQy5ETrt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-as i wrote here
+On Wed, 2009-09-30 at 17:10 +0200, Michael Buesch wrote:
+> On Wednesday 30 September 2009 16:54:26 Johannes Berg wrote:
+> > On Wed, 2009-09-30 at 17:47 +0300, Kalle Valo wrote:
+> >=20
+> > > I agree with Michael. The bug is real and I have verified that
+> > > Michael's patch fixes the issue. Better to apply the patch now, it's
+> > > trivial to change the implementation if/when the network stack has
+> > > support for this.
+> >=20
+> > FWIW, I think in mac80211 the in_interrupt() check can never return tru=
+e
+> > since we postpone all RX to the tasklet. But the tasklet seems to be ok
+> > -- so should it really be in_interrupt()?
+>=20
+> I think a tasklet is also in_interrupt(), because it's a softirq.
 
-http://marc.info/?l=linux-netdev&m=125277885910179&w=2
+Ah, yes, indeed, in_interrupt() vs. in_irq().
 
-there are currently only three occurrences of checks that use netif_rx() and
-netif_rx_ni() depending on in_interrupt().
+johannes
 
-And regarding the suggested fix from Michael, that checked every(!) netif_rx()
-whether it is in interrupt or not, i was unsure if a netif_tx_ti() would make
-sense for only three cases?!?
+--=-yurZqWm/P6lWkQy5ETrt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-If you think it makes sense, i can post a patch for that ... but:
+-----BEGIN PGP SIGNATURE-----
 
-Indeed it costs some additional investigation to prove whether netif_rx() or
-netif_rx_ni() should be used in each case. But IMHO this has to be done before
-providing a pump-gun function that solves the problem without thinking if we
-are in irq-context or not. I want to avoid that people are using netif_rx_ti()
-as some kind of default ...
+iQIcBAABAgAGBQJKw3dqAAoJEODzc/N7+QmaD/8QAMl79xODqhLGqkDnHqDveUFc
+cBHynUlxouy4Pp2ssl5RoaDnkeV5X4+gW+zWn8EH1HHcMwux2QOJn99ozecgYPwD
+CWwVbvdhThnCdtBC353oDwcms0dY8WM2WNesbgaWkJjN2EfaduSHFV1xT1h/i/rP
+z4FTGJx8XK2rrZ5GOmGOZXjF2Cilteny1X9n018Hi6nNnNlgjjIVCrdyVrPr7rvj
+4VGuD97Jy0XQJWNudRGBUTrtvsjq0+0Juiy2re+M+hA+ZrldXE6lyD2fidpBrsv5
+aiWxHjFwD3NzNEGKPaMOdVw1eIhZ+1yJS1JKPD9Cm9xnoChbjwm/QQDOJW0XzMtD
+5Zt2Th2rqs6aqOpBXgGbJdGOvoXgDxlmS3pZBrQvvN8bXlapb1U/94N1CwQb9Fnp
+CmaqawBNRbOatv05sANokV4Sqiqa4RfLZ/7MnTCWyv1x7rfAge7hg4964tURNk9q
+1DZS9054nXetz97hibrF6OOgMh/O7HBjrkU+5diiT6lSNZsdk6LmfOkt84xFKTAn
+dIoow2mjiKOhDTePR8WLJBLDhh7CmGEcCDJm29s+WzW2Y1y99S6u8AmCeFZuBttz
+moc61Ty3XI0Affrfr7iPttmTCNTOx6ToCW/2Bly8NS2H/jZJBc+M3TjprlSW/oGX
+ntHHfPU6Mh1Qzhvq2o46
+=a2hw
+-----END PGP SIGNATURE-----
 
-I don't know how expensive in_interrupt() is, but it IMO should be avoided
-when the context for a code section can be determined in another way.
-
-Regards,
-Oliver
+--=-yurZqWm/P6lWkQy5ETrt--
 
