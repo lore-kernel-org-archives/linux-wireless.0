@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:53692 "EHLO c60.cesmail.net"
+Received: from bu3sch.de ([62.75.166.246]:50992 "EHLO vs166246.vserver.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750718AbZIASnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 14:43:12 -0400
-Subject: Re: wireless_send_event kmemleaks
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890909011024p7b7176a6vfad3902ac714df79@mail.gmail.com>
-References: <43e72e890909011024p7b7176a6vfad3902ac714df79@mail.gmail.com>
-Content-Type: text/plain
-Date: Tue, 01 Sep 2009 14:43:05 -0400
-Message-Id: <1251830585.14862.2.camel@mj>
-Mime-Version: 1.0
+	id S1754203AbZI3OdU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 10:33:20 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Oliver Hartkopp <socketcan@hartkopp.net>
+Subject: Re: mac80211: NOHZ: local_softirq_pending 08
+Date: Wed, 30 Sep 2009 16:33:02 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+References: <200909111648.50902.mb@bu3sch.de> <20090929192928.GF2678@tuxdriver.com> <4AC3475C.7000403@hartkopp.net>
+In-Reply-To: <4AC3475C.7000403@hartkopp.net>
+MIME-Version: 1.0
+Message-Id: <200909301633.04376.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-09-01 at 10:24 -0700, Luis R. Rodriguez wrote:
-> Can't tell you how to reproduce yet.
+On Wednesday 30 September 2009 13:56:12 Oliver Hartkopp wrote:
+> John W. Linville wrote:
+> > On Sat, Sep 12, 2009 at 06:41:12PM +0200, Oliver Hartkopp wrote:
+> > 
+> >> i cooked a patch that introduces netif_rx_ti() and fixes up the problems in
+> >> mac80211 and the CAN subsystem.
+> > 
+> > Oliver,
+> > 
+> > Are you going to send this patch to Dave?  If you want me to carry
+> > it instead, please resend it with a proper changelog including a
+> > Signed-off-by line.  For that matter, Dave will most certainly want
+> > that as well...
 > 
-> unreferenced object 0xffff88003ba5fd00 (size 256):
->   comm "events/0", pid 9, jiffies 4297130623
->   backtrace:
->     [<ffffffff8112200d>] create_object+0x13d/0x2d0
->     [<ffffffff811222c5>] kmemleak_alloc+0x25/0x60
->     [<ffffffff81118a63>] kmem_cache_alloc_node+0x193/0x200
->     [<ffffffff81446cca>] __alloc_skb+0x4a/0x180
->     [<ffffffff81506be2>] wireless_send_event+0x1f2/0x410
+> Hello John,
+> 
+> as i wrote here
+> 
+> http://marc.info/?l=linux-netdev&m=125277885910179&w=2
+> 
+> there are currently only three occurrences of checks that use netif_rx() and
+> netif_rx_ni() depending on in_interrupt().
+> 
+> And regarding the suggested fix from Michael, that checked every(!) netif_rx()
+> whether it is in interrupt or not, i was unsure if a netif_tx_ti() would make
+> sense for only three cases?!?
+> 
+> If you think it makes sense, i can post a patch for that ... but:
+> 
+> Indeed it costs some additional investigation to prove whether netif_rx() or
+> netif_rx_ni() should be used in each case. But IMHO this has to be done before
+> providing a pump-gun function that solves the problem without thinking if we
+> are in irq-context or not. I want to avoid that people are using netif_rx_ti()
+> as some kind of default ...
+> 
+> I don't know how expensive in_interrupt() is, but it IMO should be avoided
+> when the context for a code section can be determined in another way.
 
-I wonder if we can translate it to the line numbers.  Together with the
-git revision, it would be quite useful.  addr2line can do it for an
-individual address, but to process the whole dump, a script would be
-needed.
+What if we just get the fix merged and discuss later whether it's worth to optimize a picosecond or not??
+My patch fixes the _bug_. You can merge a more "efficient" fix later that saves one or two CPU cycles.
 
 -- 
-Regards,
-Pavel Roskin
+Greetings, Michael.
