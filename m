@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:55420 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750992AbZIYJcS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Sep 2009 05:32:18 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: ar9170 makes machine hang when shut down
-Date: Fri, 25 Sep 2009 11:32:18 +0200
-References: <200909242155.19485.malte.gell@gmx.de> <4ABBE5DB.5070201@gmx.de>
-In-Reply-To: <4ABBE5DB.5070201@gmx.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59543 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754197AbZI3Oav (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 10:30:51 -0400
+Date: Wed, 30 Sep 2009 10:29:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gonsolo <gonsolo@gmail.com>
+Cc: Daniel J Blueman <daniel.blueman@gmail.com>,
+	kernel-team@lists.ubuntu.com,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k suspend
+Message-ID: <20090930142924.GB3835@tuxdriver.com>
+References: <4AC22B64.8050909@googlemail.com> <6278d2220909300536u7934d7dan286d219b5cf7e5a@mail.gmail.com> <4AC35CA0.5070401@googlemail.com> <20090930140905.GA3193@tuxdriver.com> <4AC36A46.7010209@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909251132.18546.malte.gell@gmx.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4AC36A46.7010209@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 30, 2009 at 04:25:10PM +0200, Gonsolo wrote:
+> Am 30.09.2009 16:09, schrieb John W. Linville:
+>> On Wed, Sep 30, 2009 at 03:26:56PM +0200, Gonsolo wrote:
+>>>>> Is it possible to add
+>>>>> http://patchwork.kernel.org/patch/38550/
+>>>>> to karmic? Otherwise karmic would be broken for me/my notebook/my
+>>>>> wireless pccard.
+>>>>
+>>>> Since Karmic tracks the 2.6.31 -stable kernels, it's worth reporting
+>>>> this upstream (CC'd) instead, particularly if it's a regression from a
+>>>> previous kernel version, using the same ath5k driver...?
+>>>
+>>> I did that, too. ;) Hopefully it will be in 2.6.31.2.
+>>
+>> Maybe I missed it, but did you actually request the -stable team to
+>> take the patch?  -stable helps more than just Ubuntu... :-)
+>
+> I requested it in Ubuntu and stable in two separate emails, just to be  
+> sure it will be there when I am going to upgrade. ;)
+> I apologize if I caused confusion or doubled your amount of work.
+> Maybe I should have done this in one email to both parties.
 
-Joerg Albert <jal2@gmx.de> wrote
+Not really a big deal -- still, one email would tend to reduce confusion. :-)
 
-> > Does it make sense to use "rmmod --force ar9170" to force removing that
-> > module before shutting down?
-> 
-> Why are you sure that the hang is caused by the ar9170 driver?
-
-You are right.... I thought this way, because my machine never hung and after 
-installing the USB stick it hang... But, I noticed when i disable ISDN 
-subsystem, it did not hang, so maybe it is the ISDN subsystem, I will try 
-further.
- 
-> The vendor driver is called arusb_lnx, the new one ar9170usb
-
-Vendor driver? Does this mean, Atheros made a driver on its own? Are there 
-several drivers for the same chip now?
-
-My system loads ar9170:
-
-lsmod | grep ar91*
-
-ar9170                 32632  0
-mac80211              237208  1 ar9170
-led_class               4028  1 ar9170
-usbcore               183280  15 
-usbserial,ar9170,usbhid,uvcvideo,snd_usb_audio,snd_usb_lib,usblp,ehci_hcd,uhci_hcd,ohci_hcd,usb_storage
-
-Regards
-Malte
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
