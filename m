@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:45978 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751213AbZIOW0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Sep 2009 18:26:32 -0400
-From: Michael Buesch <mb@bu3sch.de>
-Date: Wed, 16 Sep 2009 00:26:19 +0200
+Received: from ey-out-2122.google.com ([74.125.78.24]:46620 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbZI3AyH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Sep 2009 20:54:07 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so393562eyf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 17:54:10 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] b43: fix build error if !CONFIG_B43_LEDS
-To: linville@tuxdriver.com
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Message-Id: <200909160026.21404.mb@bu3sch.de>
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Date: Wed, 30 Sep 2009 02:54:10 +0200
+Message-ID: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+Subject: VLAN traffic appearing on the wrong iface
+From: =?UTF-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Albert Herranz <albert_herranz@yahoo.es>
+I use RADIUS-assigned vlans with my AP. Hostapd reports vlan change
+during authentication and the station appears on correct vlan
+according to "iw dev ... station dump". But actual packets keep coming
+in on the default interface (wlan0), not the vlan one (eg. wlan0.2).
+Moreover, I am able to ping this interface's (wlan0) IP address from
+the station, even though "iw dev wlan0 station dump" does not list it.
 
-Fix the following build error when CONFIG_B43_LEDS is not selected:
 
-drivers/net/wireless/b43/main.c: In function 'b43_remove':
-drivers/net/wireless/b43/main.c:4990: error: 'struct b43_leds' has no member named 'stop'
-drivers/net/wireless/b43/main.c:4991: error: 'struct b43_leds' has no member named 'work'
-make[4]: *** [drivers/net/wireless/b43/main.o] Error 1
+I also tried taking RADIUS out of the loop, so I used hostapd's
+"accept_mac_file" with specified vlan and I think I might have found
+another bug. After applying the patch below (for I believe a rather
+obvious typo), kernel started oopsing and I gave up. If needed, I can
+provide config files for either hostapd or freeradius server, though
+it looks like this is a driver problem.
 
-Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
----
- drivers/net/wireless/b43/leds.c |    8 ++++++++
- drivers/net/wireless/b43/leds.h |    4 ++++
- drivers/net/wireless/b43/main.c |    3 +--
- 3 files changed, 13 insertions(+), 2 deletions(-)
+Best regards,
+Blaz
 
-diff --git a/drivers/net/wireless/b43/leds.c b/drivers/net/wireless/b43/leds.c
-index fbe31e0..fbe3d4f 100644
---- a/drivers/net/wireless/b43/leds.c
-+++ b/drivers/net/wireless/b43/leds.c
-@@ -325,6 +325,14 @@ void b43_leds_exit(struct b43_wldev *dev)
- 	b43_led_turn_off(dev, leds->led_radio.index, leds->led_radio.activelow);
- }
- 
-+void b43_leds_stop(struct b43_wldev *dev)
-+{
-+	struct b43_leds *leds = &dev->wl->leds;
-+
-+	leds->stop = 1;
-+	cancel_work_sync(&leds->work);
-+}
-+
- void b43_leds_register(struct b43_wldev *dev)
- {
- 	unsigned int i;
-diff --git a/drivers/net/wireless/b43/leds.h b/drivers/net/wireless/b43/leds.h
-index 49d3da5..9592e4c 100644
---- a/drivers/net/wireless/b43/leds.h
-+++ b/drivers/net/wireless/b43/leds.h
-@@ -63,6 +63,7 @@ void b43_leds_register(struct b43_wldev *dev);
- void b43_leds_unregister(struct b43_wldev *dev);
- void b43_leds_init(struct b43_wldev *dev);
- void b43_leds_exit(struct b43_wldev *dev);
-+void b43_leds_stop(struct b43_wldev *dev);
- 
- 
- #else /* CONFIG_B43_LEDS */
-@@ -84,6 +85,9 @@ static inline void b43_leds_init(struct b43_wldev *dev)
- static inline void b43_leds_exit(struct b43_wldev *dev)
- {
- }
-+static inline void b43_leds_stop(struct b43_wldev *dev)
-+{
-+}
- #endif /* CONFIG_B43_LEDS */
- 
- #endif /* B43_LEDS_H_ */
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index a8840ef..6c0ea21 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4987,8 +4987,7 @@ static void b43_remove(struct ssb_device *dev)
- 		 * might have modified it. Restoring is important, so the networking
- 		 * stack can properly free resources. */
- 		wl->hw->queues = wl->mac80211_initially_registered_queues;
--		wl->leds.stop = 1;
--		cancel_work_sync(&wl->leds.work);
-+		b43_leds_stop(wldev);
- 		ieee80211_unregister_hw(wl->hw);
+
+
+--- hostapd-0.6.9/hostapd/ieee802_11.c	2009-07-05 18:24:47.000000000 +0200
++++ hostapd-new/hostapd/ieee802_11.c	2009-09-30 02:16:56.000000000 +0200
+@@ -583,11 +583,11 @@
+ 		goto fail;
  	}
- 
 
--- 
-Greetings, Michael.
+ 	if (vlan_id > 0) {
+ 		if (hostapd_get_vlan_id_ifname(hapd->conf->vlan,
+-					       sta->vlan_id) == NULL) {
++					       vlan_id) == NULL) {
+ 			hostapd_logger(hapd, sta->addr, HOSTAPD_MODULE_RADIUS,
+ 				       HOSTAPD_LEVEL_INFO, "Invalid VLAN ID "
+ 				       "%d received from RADIUS server",
+ 				       vlan_id);
+ 			resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
