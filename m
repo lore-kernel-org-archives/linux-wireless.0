@@ -1,64 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:64219 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294AbZIAVtc convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.159]:47167 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbZI3LSk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Sep 2009 17:49:32 -0400
-Received: by bwz19 with SMTP id 19so319570bwz.37
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2009 14:49:32 -0700 (PDT)
+	Wed, 30 Sep 2009 07:18:40 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so1348599fge.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 04:18:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <69e28c910909011439g6eb94e33m3bbfc2e2bbcf47e9@mail.gmail.com>
-References: <4A9D9168.2070608@mit.edu>
-	 <69e28c910909011439g6eb94e33m3bbfc2e2bbcf47e9@mail.gmail.com>
-Date: Tue, 1 Sep 2009 17:49:32 -0400
-Message-ID: <cb0375e10909011449j440ddadcm6387ca377ade31a3@mail.gmail.com>
-Subject: Re: 2.6.31 regression: iwlagn power_level no longer works
-From: Andrew Lutomirski <luto@mit.edu>
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+In-Reply-To: <200909301304.33903.schmidtreiner@gmx.net>
+References: <200909301304.33903.schmidtreiner@gmx.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 30 Sep 2009 13:18:24 +0200
+Message-ID: <69e28c910909300418qa239fa9k5cb3f223df210ee7@mail.gmail.com>
+Subject: Re: B43 Module on Compaq HP615 Laptop
+To: Reiner Schmidt <schmidtreiner@gmx.net>
 Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/9/1 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Tue, Sep 1, 2009 at 11:26 PM, Andy Lutomirski<luto@mit.edu> wrote:
->> On 2.6.30.5, I can echo 1 >/sys/class/net/wlan0/device/power_level, and the
->> value changes to 1, my wakeup rate goes way down, and my power consumption
->> (as measured by powertop) drops noticeably.
->>
->> On 2.6.31-rc7, I can still echo 1 to that file, but nothing happens, and the
->> value I get if I 'cat power_level' remains at 0.
->>
->> My kernel configs are as identical as 'make oldconfig' knows how to make
->> them.
->>
->> Any ideas?
->
-> Power saving has been disabled temporarily in recent versions, as it
-> caused too many problems. AFAIK either there is either a modparam to
-> re-enable it or you can re-enable it using iwconfig (it is simply off
-> by default). There was talk on the mailing list whether to use a
-> modparam or iwconfig - I don't remember what the outcome was.
+You need to unload the old ssb prior to loading b43 (which loads an
+updated ssb).
 
-I can't find it in modinfo on iwlcore, iwlagn, cfg80211, or mac80211.
-And iwconfig power <n> fails for all the <n> I tried.
+On Wed, Sep 30, 2009 at 1:04 PM, Reiner Schmidt <schmidtreiner@gmx.net> wrote:
+> Hello,
+> I am trying to install the newest compat-wireless package (from 30.09.2009)
+> onto this notebook. It has a Broadcom 4312 compatible  WLAN device on it .
+> Its id is:14e4:4315.
+> I use s debian sidux distribution with an 2.6.29-4 liquorix-kernel.
+> Unfortunately I can currently use newer kernels on this notebook because it
+> wouldn't boot up. Tried several 2.6.30 and -31 kernels up too 2.6.31-1.
 
-If it's intentionally disabled, shouldn't writes to the file fail?  A
-printk explaining what's going on might also be nice.  (I bet I won't
-be the only one to report a regression of 2.6.31 is released like
-this.)
-
---Andy
+Please report any error messages it prints.
 
 >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+> Compiling the package works so far but when loading the module b43 manually or
+> via /etc/modules it complains heavily about ssb-related issues.
 >
 >
+>> b43: disagrees about version of symbol ssb_device_is_enabled
+>> b43: Unknown symbol ssb_device_is_enabled
+>> b43: Unknown symbol ssb_pmu_set_ldo_paref
+>> b43: disagrees about version of symbol ssb_pcicore_dev_irqvecs_enable
+>> b43: Unknown symbol ssb_pcicore_dev_irqvecs_enable
+>> b43: disagrees about version of symbol ssb_bus_may_powerdown
+>> b43: Unknown symbol ssb_bus_may_powerdown
+>> b43: disagrees about version of symbol ssb_dma_free_consistent
+>> b43: Unknown symbol ssb_dma_free_consistent
+>> b43: disagrees about version of symbol ssb_bus_suspend
+>> b43: Unknown symbol ssb_bus_suspend
+>> b43: disagrees about version of symbol ssb_bus_unregister
+>> b43: Unknown symbol ssb_bus_unregister
+>> b43: disagrees about version of symbol ssb_bus_resume
+>> b43: Unknown symbol ssb_bus_resume
+>> b43: disagrees about version of symbol ssb_set_devtypedata
+>> b43: Unknown symbol ssb_set_devtypedata
+>> b43: disagrees about version of symbol ssb_device_disable
+>> b43: Unknown symbol ssb_device_disable
+>> b43: Unknown symbol ssb_pmu_set_ldo_voltage
+>> b43: disagrees about version of symbol ssb_dma_alloc_consistent
+>> b43: Unknown symbol ssb_dma_alloc_consistent
+>> b43: disagrees about version of symbol ssb_dma_set_mask
+>> b43: Unknown symbol ssb_dma_set_mask
+>> b43: disagrees about version of symbol ssb_device_enable
+>> b43: Unknown symbol ssb_device_enable
+>> b43: disagrees about version of symbol ssb_driver_unregister
+>> b43: Unknown symbol ssb_driver_unregister
+>> b43: disagrees about version of symbol __ssb_driver_register
+>> b43: Unknown symbol __ssb_driver_register
+>> b43: disagrees about version of symbol ssb_bus_pcmciabus_register
+>> b43: Unknown symbol ssb_bus_pcmciabus_register
+>> b43: disagrees about version of symbol ssb_bus_powerup
+>> b43: Unknown symbol ssb_bus_powerup
+>> b43: disagrees about version of symbol ssb_dma_translation
+>> b43: Unknown symbol ssb_dma_translation
 >
+> Is this a real bug or do Ihave to submit additional prameter for the module
+> when I load it?
+> If so, where can I find those otions ?
+>
+> Kind regards
+>
+> Reiner Schmidt
 > --
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
