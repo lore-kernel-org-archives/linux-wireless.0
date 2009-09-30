@@ -1,67 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12898 "EHLO mail.atheros.com"
+Received: from mail.tpi.com ([70.99.223.143]:1572 "EHLO mail.tpi.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752090AbZIIKEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Sep 2009 06:04:24 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 09 Sep 2009 03:04:28 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <Luis.Rodriguez@atheros.com>,
-	<Jouni.Malinen@atheros.com>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 4/4] ath9k: Initialize the priority gpio for BT coex 3-wire
-Date: Wed, 9 Sep 2009 15:25:52 +0530
-Message-ID: <1252490152-19284-4-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1252490152-19284-3-git-send-email-vasanth@atheros.com>
-References: <1252490152-19284-1-git-send-email-vasanth@atheros.com>
- <1252490152-19284-2-git-send-email-vasanth@atheros.com>
- <1252490152-19284-3-git-send-email-vasanth@atheros.com>
+	id S1754202AbZI3Syt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 14:54:49 -0400
+Message-ID: <4AC3A978.2070309@canonical.com>
+Date: Wed, 30 Sep 2009 12:54:48 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: reinette chatre <reinette.chatre@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
+References: <4AC39D6F.5070308@canonical.com> <1254334586.26521.1617.camel@rc-desk>
+In-Reply-To: <1254334586.26521.1617.camel@rc-desk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops, a stupid mistake in the original patch which adds coex 3-wire
-support. Bluetooth priority gpio needs to be gpio 7.
+reinette chatre wrote:
+> Hi Tim,
+> 
+> On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
+>> I've got a user complaining that the iwl-1000 firmware version required
+>> by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
+>> only firmware available from http://intellinuxwireless.org/?n=Downloads
+>> is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
+>>
+>> BugLink: http://bugs.launchpad.net/bugs/439285
+>>
+> 
+> 2.6.31 needs a few more patches to fully support 1000 series, among
+> these is the patch that can parse a new ucode header format and another
+> patch to update the ucode API. 
+> 
+> Depending on the requirements it may be easier to backport those patches
+> or to just use compat-wireless. That will be the user's decision.
+> 
+> Here is the list of patches:
+> 
+> commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:16 2009 -0700
+> 
+>     iwlwifi: Handle new firmware file with ucode build number in header
+> 
+> commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:22 2009 -0700
+> 
+>     iwlwifi: update 1000 series API version to match firmware
+> 
+> commit 02c06e4abc0680afd31bf481a803541556757fb6
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Fri Jul 17 09:30:14 2009 -0700
+> 
+>     iwlagn: modify digital SVR for 1000
+> 
+> commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Thu Aug 13 13:30:54 2009 -0700
+> 
+>     iwlwifi: traverse linklist to find the valid OTP block
+> 
+> commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
+> Author: Reinette Chatre <reinette.chatre@intel.com>
+> Date:   Fri Jul 24 11:13:12 2009 -0700
+> 
+>     iwlagn: fix null pointer access during ucode load on 1000
+> 
+> Reinette
+> 
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c     |    6 ++++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
+Hmm, I think I'll just disable the 2 PCI IDs for these cards since they
+never really worked in 2.6.31 anyways. Does that make sense to you? The
+above patch sets are too invasive at this point in the Karmic release
+cycle. compat-wireless to the rescue.
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index f1baf66..297b027 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -19,6 +19,7 @@
- 
- #define ATH_WLANACTIVE_GPIO	5
- #define ATH_BTACTIVE_GPIO	6
-+#define ATH_BTPRIORITY_GPIO	7
- 
- #define ATH_BTCOEX_DEF_BT_PERIOD  45
- #define ATH_BTCOEX_DEF_DUTY_CYCLE 55
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index c39693b..b6c6cca 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -3691,10 +3691,12 @@ void ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		btcoex_info->btactive_gpio = ATH_BTACTIVE_GPIO;
- 		btcoex_info->wlanactive_gpio = ATH_WLANACTIVE_GPIO;
- 
--		if (AR_SREV_9285(ah))
-+		if (AR_SREV_9285(ah)) {
- 			btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_3WIRE;
--		else
-+			btcoex_info->btpriority_gpio = ATH_BTPRIORITY_GPIO;
-+		} else {
- 			btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_2WIRE;
-+		}
- 	} else {
- 		btcoex_info->btcoex_scheme = ATH_BTCOEX_CFG_NONE;
- 	}
+rtg
 -- 
-1.5.5.1
-
+Tim Gardner tim.gardner@canonical.com
