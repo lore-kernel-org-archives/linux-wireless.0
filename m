@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f210.google.com ([209.85.218.210]:43929 "EHLO
-	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933618AbZJGQnr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 12:43:47 -0400
-Received: by bwz6 with SMTP id 6so86727bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 09:43:09 -0700 (PDT)
-Message-ID: <4ACCC516.7050002@lwfinger.net>
-Date: Wed, 07 Oct 2009 11:43:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from ogre.sisk.pl ([217.79.144.158]:50453 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083AbZI3W0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 18:26:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Frans Pop <elendil@planet.nl>
+Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
+Date: Thu, 1 Oct 2009 00:27:37 +0200
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <200909300952.29106.elendil@planet.nl> <20090930122451.GA17280@hash.localnet> <200909302349.05614.elendil@planet.nl>
+In-Reply-To: <200909302349.05614.elendil@planet.nl>
 MIME-Version: 1.0
-To: Albert Herranz <albert_herranz@yahoo.es>
-CC: bcm43xx-dev@lists.berlios.de, mb@bu3sch.de,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] b43: do not stack-allocate pio rx/tx header and tail
- buffers
-References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es>
-In-Reply-To: <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200910010027.37892.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Albert Herranz wrote:
-> The DMA-API debugging facility complains about b43 mapping memory from
-> stack for SDIO-based cards.
+On Wednesday 30 September 2009, Frans Pop wrote:
+> On Wednesday 30 September 2009, Bob Copeland wrote:
+> > On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
+> > > This is on a laptop I don't use much, but with .31 wireless has always
+> > > been (and still is) reliable (.31-rc5 is the last kernel I built for
+> > > it). On my other laptop wireless (iwlagn) works fine with .32-rc1.
+> >
+> > Although iwlagn works, I would think this kind of thing:
+> > > ath0: authenticated
+> > > ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
+> > > ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
+> > > ath0: associated 
+> > > ath0: deauthenticating by local choice (reason=3)
+> >
+> > ...is some kind of issue with userspace or wext rather than the driver.
+> > Ath5k only had a dozen or so patches this time around, so it should be
+> > easy to bisect if it's a problem in the driver.  One possibility is
+> > hardware CCMP support but I've been using it here for some time.
 > 
-> Indeed, b43 currently allocates the PIO RX/TX header and tail buffers
-> from stack. The solution here is to use heap-allocated buffers instead.
+> I doubt it's a userspace issue, but it does look like the regression was
+> not triggered by the ath5k driver itself. In the mean time I did a bisect
+> on the drivers/net/wireless/ath directory without any results.
 > 
-> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
-> ---
-> v2
-> - embed buffers into struct b43_wl, and make them depend on CONFIG_B43_PIO
-> - take into account tail buffers for unaligned length transfers
+> > By the way, name it what you will, but the standard is wlan0 these days
+> > :)
 > 
->  drivers/net/wireless/b43/b43.h  |  168 +++++++++++++++++++++------------------
->  drivers/net/wireless/b43/pio.c  |   78 +++++++++---------
->  drivers/net/wireless/b43/xmit.c |    2 +-
->  3 files changed, 132 insertions(+), 116 deletions(-)
+> Yep. A leftover from the days I used madwifi :-) I kind of like it though
+> given its similarity to eth0.
 > 
-> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-> index fa1549a..6607162 100644
-> --- a/drivers/net/wireless/b43/b43.h
-> +++ b/drivers/net/wireless/b43/b43.h
-> @@ -607,82 +607,7 @@ struct b43_qos_params {
->  	struct ieee80211_tx_queue_params p;
->  };
->  
-> -struct b43_wldev;
-> -
-> -/* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
-> -struct b43_wl {
-> -	/* Pointer to the active wireless device on this chip */
-> -	struct b43_wldev *current_dev;
-> -	/* Pointer to the ieee80211 hardware data structure */
-> -	struct ieee80211_hw *hw;
+> > > So the difference looks to be how I boot: if I do a *cold* boot
+> > > directly into .32, wireless fails; if I *reboot* from .31 into .32,
+> > > wireless comes up correctly. Reboot from .32 to .32 fails too.
+> >
+> > Is that repeatable?
+> 
+> Yes, 100%. Weird heh? That's what made me think it must be an ath5k
+> driver issue as it looks like a hardware initialization problem. Could
+> be PCI or PCMCIA though, although I don't see anything suspicious in
+> dmesg.
+> 
+> > Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
+> > linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
 
-What is the reason for moving the definition of struct b43_wl?
+Already in the Linus' tree.
 
-Larry
-
+Thanks,
+Rafael
