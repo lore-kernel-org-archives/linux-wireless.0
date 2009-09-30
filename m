@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:64309 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754449AbZIPTh5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Sep 2009 15:37:57 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so1702379fge.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Sep 2009 12:38:00 -0700 (PDT)
-Subject: [PATCH 2/2] b43: Add lpphy_clear_tx_power_offsets to improve TX
- Power handling
-From: Thomas Ilnseher <illth@gmx.de>
-To: John Linville <linville@tuxdriver.com>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:23406 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754660AbZI3SQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 14:16:36 -0400
+Subject: Re: iwl-1000 firmware versions 1 and 2 are nowhere to be found
+From: reinette chatre <reinette.chatre@intel.com>
+To: "tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4AC39D6F.5070308@canonical.com>
+References: <4AC39D6F.5070308@canonical.com>
 Content-Type: text/plain
-Date: Wed, 16 Sep 2009 21:37:59 +0200
-Message-Id: <1253129879.2989.48.camel@note>
+Date: Wed, 30 Sep 2009 11:16:26 -0700
+Message-Id: <1254334586.26521.1617.camel@rc-desk>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the lpphy_clear_tx_power_offsets to b43.
+Hi Tim,
 
-Signed-off-by: Thomas Ilnseher <illth@gmx.de>
+On Wed, 2009-09-30 at 11:03 -0700, Tim Gardner wrote:
+> I've got a user complaining that the iwl-1000 firmware version required
+> by 2.6.31 doesn't exist. Indeed, IWL1000_UCODE_API_MAX is 2, yet the
+> only firmware available from http://intellinuxwireless.org/?n=Downloads
+> is iwlwifi-1000-3.ucode. Shall I just tell him to install compat-wireless ?
+> 
+> BugLink: http://bugs.launchpad.net/bugs/439285
+> 
 
----
-diff -uNr a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
---- a/drivers/net/wireless/b43/phy_lp.c	2009-09-16 20:52:17.501318374 +0200
-+++ b/drivers/net/wireless/b43/phy_lp.c	2009-09-16 20:53:36.593319452 +0200
-@@ -1125,6 +1125,18 @@
- 	dev->phy.lp->tssi_idx = (b43_phy_read(dev, B43_LPPHY_TX_PWR_CTL_STAT) & 0x7F00) >> 8;
- }
- 
-+static void lpphy_clear_tx_power_offsets(struct b43_wldev *dev)
-+{
-+	int i;
-+	int id = 7;
-+	if (dev->phy.rev < 2)
-+		id = 10;
-+	for (i = 0; i < 12; i++)
-+		b43_lptab_write(dev, B43_LPTAB32(id, 0x40 + i), 0);
-+	for (i = 0; i < 64; i++)
-+		b43_lptab_write(dev, B43_LPTAB32(id, 0x80 + i), 0);
-+}
-+
- static void lpphy_set_tx_power_control(struct b43_wldev *dev,
- 				       enum b43_lpphy_txpctl_mode mode)
- {
-@@ -1139,7 +1151,7 @@
- 
- 	if (oldmode == B43_LPPHY_TXPCTL_HW) {
- 		lpphy_update_tx_power_npt(dev);
--		//TODO Clear all TX Power offsets
-+		lpphy_clear_tx_power_offsets(dev);
- 	} else {
- 		if (mode == B43_LPPHY_TXPCTL_HW) {
- 			//TODO Recalculate target TX power
+2.6.31 needs a few more patches to fully support 1000 series, among
+these is the patch that can parse a new ucode header format and another
+patch to update the ucode API. 
+
+Depending on the requirements it may be easier to backport those patches
+or to just use compat-wireless. That will be the user's decision.
+
+Here is the list of patches:
+
+commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+Author: Jay Sternberg <jay.e.sternberg@intel.com>
+Date:   Fri Jul 17 09:30:16 2009 -0700
+
+    iwlwifi: Handle new firmware file with ucode build number in header
+
+commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+Author: Jay Sternberg <jay.e.sternberg@intel.com>
+Date:   Fri Jul 17 09:30:22 2009 -0700
+
+    iwlwifi: update 1000 series API version to match firmware
+
+commit 02c06e4abc0680afd31bf481a803541556757fb6
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Jul 17 09:30:14 2009 -0700
+
+    iwlagn: modify digital SVR for 1000
+
+commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Thu Aug 13 13:30:54 2009 -0700
+
+    iwlwifi: traverse linklist to find the valid OTP block
+
+commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
+Author: Reinette Chatre <reinette.chatre@intel.com>
+Date:   Fri Jul 24 11:13:12 2009 -0700
+
+    iwlagn: fix null pointer access during ucode load on 1000
+
+Reinette
+
+
+
 
