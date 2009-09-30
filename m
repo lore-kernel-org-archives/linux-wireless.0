@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56154 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751890AbZIXTzT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 15:55:19 -0400
-From: Malte Gell <malte.gell@gmx.de>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:55682 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbZI3Tz0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 15:55:26 -0400
+Received: from cpe002129687b04-cm001225dbafb6.cpe.net.cable.rogers.com ([99.235.241.187] helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1Mt5Gr-000685-6e
+	for linux-wireless@vger.kernel.org; Wed, 30 Sep 2009 15:55:29 -0400
+Date: Wed, 30 Sep 2009 15:55:26 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
 To: linux-wireless@vger.kernel.org
-Subject: ar9170 makes machine hang when shut down
-Date: Thu, 24 Sep 2009 21:55:19 +0200
+Subject: unused header file drivers/net/wireless/wl12xx/wl1251_netlink.h?
+Message-ID: <alpine.LFD.2.00.0909301554001.21753@localhost>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200909242155.19485.malte.gell@gmx.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-I use the compat 2.6.30 and the ar9170 driver for my Netgear WN111 USB stick. 
-I use the packages from
-http://download.opensuse.org/repositories/driver:/wireless/11.1-update/i586/
-for openSUSE 11.1.
+  as best i can tell, that header file is entirely unreferenced by
+anything in the tree.  just an observation.
 
-When I shutdown my machine, it hangs after the last messages "system now 
-rebooting" or similar.
+rday
+--
 
-Does it make sense to use "rmmod --force ar9170" to force removing that module 
-before shutting down?
+========================================================================
+Robert P. J. Day                               Waterloo, Ontario, CANADA
 
-Thanx
-Malte
+        Linux Consulting, Training and Annoying Kernel Pedantry.
+
+Web page:                                          http://crashcourse.ca
+Twitter:                                       http://twitter.com/rpjday
+========================================================================
