@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26672 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758177AbZJBUtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 16:49:50 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/13] iwlwifi: fix EEPROM enhance tx power offset
-Date: Fri,  2 Oct 2009 13:43:56 -0700
-Message-Id: <1254516247-4085-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
-References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50373
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754771AbZI3XdO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 19:33:14 -0400
+Date: Wed, 30 Sep 2009 16:33:33 -0700 (PDT)
+Message-Id: <20090930.163333.234658158.davem@davemloft.net>
+To: oliver@hartkopp.net
+Cc: johannes@sipsolutions.net, mb@bu3sch.de, kalle.valo@iki.fi,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] net: fix NOHZ: local_softirq_pending 08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4AC3A0F1.3060306@hartkopp.net>
+References: <1254324077.3959.7.camel@johannes.local>
+	<4AC39A90.6060602@hartkopp.net>
+	<4AC3A0F1.3060306@hartkopp.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Oliver Hartkopp <oliver@hartkopp.net>
+Date: Wed, 30 Sep 2009 20:18:25 +0200
 
-Set the correct EEPROM offset for enhance tx power for 6000 series
+> Socket buffers that are generated and received inside softirqs or from process
+> context must not use netif_rx() that's intended to be used from irq context only.
+> 
+> This patch introduces a new helper function netif_rx_ti(skb) that tests for
+> in_interrupt() before invoking netif_rx() or netif_rx_ni().
+> 
+> It fixes the ratelimited kernel warning
+> 
+>         NOHZ: local_softirq_pending 08
+> 
+> in the mac80211 and can subsystems.
+> 
+> Signed-off-by: Oliver Hartkopp <oliver@hartkopp.net>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+I bet all of these code paths can use netif_receive_skb() or
+don't need this conditional blob at all.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 75fe022..3bcd600 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -220,35 +220,35 @@ struct iwl_eeprom_enhanced_txpwr {
-  * Section 10: 2.4 GHz 40MHz channels: 132, 44 (_above_)
-  */
- /* 2.4 GHz band: CCK */
--#define EEPROM_LB_CCK_20_COMMON       ((0xAA)\
-+#define EEPROM_LB_CCK_20_COMMON       ((0xA8)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 8 bytes */
- /* 2.4 GHz band: 20MHz-Legacy, 20MHz-HT, 40MHz-HT */
--#define EEPROM_LB_OFDM_COMMON       ((0xB2)\
-+#define EEPROM_LB_OFDM_COMMON       ((0xB0)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 24 bytes */
- /* 5.2 GHz band: 20MHz-Legacy, 20MHz-HT, 40MHz-HT */
--#define EEPROM_HB_OFDM_COMMON       ((0xCA)\
-+#define EEPROM_HB_OFDM_COMMON       ((0xC8)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 24 bytes */
- /* 2.4GHz band channels:
-  *	1Legacy, 1HT, 2Legacy, 2HT, 10Legacy, 10HT, 11Legacy, 11HT */
--#define EEPROM_LB_OFDM_20_BAND       ((0xE2)\
-+#define EEPROM_LB_OFDM_20_BAND       ((0xE0)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 64 bytes */
- /* 2.4 GHz band HT40 channels: (1,+1) (2,+1) (6,+1) (7,+1) (9,+1) */
--#define EEPROM_LB_OFDM_HT40_BAND       ((0x122)\
-+#define EEPROM_LB_OFDM_HT40_BAND       ((0x120)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 40 bytes */
- /* 5.2GHz band channels: 36Legacy, 36HT, 64Legacy, 64HT, 100Legacy, 100HT */
--#define EEPROM_HB_OFDM_20_BAND       ((0x14A)\
-+#define EEPROM_HB_OFDM_20_BAND       ((0x148)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 48 bytes */
- /* 5.2 GHz band HT40 channels: (36,+1) (60,+1) (100,+1) */
--#define EEPROM_HB_OFDM_HT40_BAND       ((0x17A)\
-+#define EEPROM_HB_OFDM_HT40_BAND       ((0x178)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 24 bytes */
- /* 2.4 GHz band, channnel 13: Legacy, HT */
--#define EEPROM_LB_OFDM_20_CHANNEL_13       ((0x192)\
-+#define EEPROM_LB_OFDM_20_CHANNEL_13       ((0x190)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 16 bytes */
- /* 5.2 GHz band, channnel 140: Legacy, HT */
--#define EEPROM_HB_OFDM_20_CHANNEL_140       ((0x1A2)\
-+#define EEPROM_HB_OFDM_20_CHANNEL_140       ((0x1A0)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 16 bytes */
- /* 5.2 GHz band, HT40 channnels (132,+1) (44,+1) */
--#define EEPROM_HB_OFDM_HT40_BAND_1       ((0x1B2)\
-+#define EEPROM_HB_OFDM_HT40_BAND_1       ((0x1B0)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 16 bytes */
- 
- 
--- 
-1.5.6.3
+Looking at some specific cases in this patch:
 
+1) VCAN:  This RX routine is only invoked from the drivers
+   ->ndo_start_xmit() handler, and therefore like the loopback
+   driver we know that BH's are already disabled and therefore
+   it can always use netif_rx() safely.
+
+   Why did you convert this case?
+
+   And if this needs to be converted, why doesn't loopback need
+   to be?
+
+2) af_can.c:  In what situation will netif_rx_ni() not be appropriate
+   here?  It should always execute in softirq or user context, now
+   hardirq context.
+
+And the list goes on and on, I don't really like this new conditional
+testing of interrupt state.  As always, that's usually a red flag and
+as far as I can see these spots where you're changing things are only
+trying to receive packets in one of the two possible cases not both.
+
+I'm not applying this until all of these details are sorted out and
+you add some verbosity to the commit message explaining each and every
+case you are changing, what contexts those cases can be called
+from, and from where.
+
+Thanks.
