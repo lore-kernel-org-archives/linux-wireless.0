@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38473 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753424AbZIJTaY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Sep 2009 15:30:24 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	devel@linuxdriverproject.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/10] atheros: expand common helpers
-Date: Thu, 10 Sep 2009 15:30:17 -0400
-Message-Id: <1252611027-5285-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga09.intel.com ([134.134.136.24]:37626 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753076AbZI3TeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 15:34:18 -0400
+Subject: Making Intel WiFi Link 1000 usable in 2.6.31
+From: reinette chatre <reinette.chatre@intel.com>
+To: stable@kernel.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain
+Date: Wed, 30 Sep 2009 12:34:19 -0700
+Message-Id: <1254339259.26521.1645.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is my third series of cleanups on atheros devices to help
-with support for ath9k_htc. ath9k hw.c was relying on the driver
-core structure ath_softc to access the bssidmask, macaddr, and
-curbssid. To prevent this I moved these into the common structure
-ath_common and also ported ath5k and ar9170 to use the same shared
-data.
+Hi,
 
-The rest are a few other cleanups I did along the way, like moving
-ath_common to the hw structure for ath9k and ath5k and also one
-final bt-coex fix/cleanup.
+A few distributions would like to enable the new 1000 series Intel
+wireless hardware (Intel WiFi Link 1000BGN) in their next releases that
+are based on 2.6.31. This hardware is not usable in 2.6.31, but it can
+be enabled in this kernel with the addition of five patches.
 
-I've tested these changes on ath5k, ath9k and ar9170.
+Until now we have been providing the distributions with this list of
+patches to do their own backporting. 
 
-Luis R. Rodriguez (10):
-  ath9k: make ath9k_hw_setbssidmask() and ath9k_hw_write_associd() use
-    ath_hw
-  ath9k: Use ath9k_hw_setbssidmask() on reset
-  ath9k: use ath9k_hw_write_associd() on reset
-  atheros/ath9k: move macaddr, curaid, curbssid and bssidmask to common
-  ar9170: make use of common macaddr and curbssid
-  ath5k: use common curbssid, bssidmask and macaddr
-  ath5k: initialize eeprom struct early on attach
-  ath9k: move ath_common to ath_hw
-  ath5k: move ath_common to ath5k_hw
-  ath9k: Define bus agnostic bluetooth coex prep helper
+Since this seems to be a general problem for distributions and users
+alike, is it possible to consider these enabling patches for inclusion
+into 2.6.31?
 
- drivers/net/wireless/ath/ar9170/ar9170.h |    2 -
- drivers/net/wireless/ath/ar9170/mac.c    |    5 +-
- drivers/net/wireless/ath/ar9170/main.c   |    6 ++-
- drivers/net/wireless/ath/ath.h           |    4 ++
- drivers/net/wireless/ath/ath5k/ath5k.h   |   11 +----
- drivers/net/wireless/ath/ath5k/attach.c  |   12 +++--
- drivers/net/wireless/ath/ath5k/base.c    |   29 ++++++++-----
- drivers/net/wireless/ath/ath5k/base.h    |    3 +-
- drivers/net/wireless/ath/ath5k/pcu.c     |   38 +++++-------------
- drivers/net/wireless/ath/ath5k/reset.c   |   13 ++++--
- drivers/net/wireless/ath/ath9k/ath9k.h   |    8 +---
- drivers/net/wireless/ath/ath9k/hw.c      |   51 +++++++++--------------
- drivers/net/wireless/ath/ath9k/hw.h      |    7 +--
- drivers/net/wireless/ath/ath9k/main.c    |   65 +++++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/pci.c     |   17 ++++++++
- drivers/net/wireless/ath/ath9k/recv.c    |   19 +++++---
- drivers/net/wireless/ath/ath9k/virtual.c |   22 +++++-----
- 17 files changed, 160 insertions(+), 152 deletions(-)
+Here is the list:
+
+commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+Author: Jay Sternberg <jay.e.sternberg@intel.com>
+Date:   Fri Jul 17 09:30:16 2009 -0700
+
+    iwlwifi: Handle new firmware file with ucode build number in header
+
+commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+Author: Jay Sternberg <jay.e.sternberg@intel.com>
+Date:   Fri Jul 17 09:30:22 2009 -0700
+
+    iwlwifi: update 1000 series API version to match firmware
+
+commit 02c06e4abc0680afd31bf481a803541556757fb6
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Jul 17 09:30:14 2009 -0700
+
+    iwlagn: modify digital SVR for 1000
+
+commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Thu Aug 13 13:30:54 2009 -0700
+
+    iwlwifi: traverse linklist to find the valid OTP block
+
+commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
+Author: Reinette Chatre <reinette.chatre@intel.com>
+Date:   Fri Jul 24 11:13:12 2009 -0700
+
+    iwlagn: fix null pointer access during ucode load on 1000
+
+Thank you very much
+
+Reinette
+
 
