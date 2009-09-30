@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34882 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753100AbZIBVqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Sep 2009 17:46:00 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2009 14:46:03 -0700
-Date: Wed, 2 Sep 2009 14:46:01 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Werner Almesberger <werner@openmoko.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<Len.Widra@atheros.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: ar6k driver
-Message-ID: <20090902214601.GB5614@mosca>
-References: <20090901170030.GE8261@mosca>
- <20090902071849.GM4363@almesberger.net>
+Received: from mail.deathmatch.net ([72.66.92.28]:2474 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368AbZI3MZJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 08:25:09 -0400
+Date: Wed, 30 Sep 2009 08:24:51 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
+Message-ID: <20090930122451.GA17280@hash.localnet>
+References: <200909300952.29106.elendil@planet.nl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20090902071849.GM4363@almesberger.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200909300952.29106.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 02, 2009 at 12:18:49AM -0700, Werner Almesberger wrote:
-> Luis R. Rodriguez wrote:
-> > I know I found it last time I looked through the openmoko wiki but
-> > it took me a lot of time to actually find the git tree and then
-> > the branch name. Today I gave up looking for it so resorting to
-> > asking you for the git url.
-> 
-> Yeah, it can be a little hard to find, particularly the right branch :-)
-> 
-> The repository is here:
-> git://git.openmoko.org/git/openmoko.git
-> 
-> The branch with the latest code is origin/andy-tracking
-> 
-> Finally, my HIF is here:
-> drivers/ar6000/hif/hif2.c
+On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
+> This is on a laptop I don't use much, but with .31 wireless has always
+> been (and still is) reliable (.31-rc5 is the last kernel I built for it).
+> On my other laptop wireless (iwlagn) works fine with .32-rc1.
 
-Thanks, I've created a new page for ar6k on the wireless.kernel.org wiki so
-we don't loose track of this and so that this can be easier to find for others.
+Although iwlagn works, I would think this kind of thing:
 
-http://wireless.kernel.org/en/users/Drivers/ar6k
+> ath0: authenticated
+> ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
+> ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
+> ath0: associated
+> ath0: deauthenticating by local choice (reason=3)
+> ath0: direct probe to AP 00:14:c1:38:e5:15 (try 1)
+> ath0 direct probe responded
+> ath0: authenticate with AP 00:14:c1:38:e5:15 (try 1)
+> ath0: authenticated
+> ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
+> ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
 
-I've updated the openmoko wiki respectively:
+...is some kind of issue with userspace or wext rather than the driver.
+Ath5k only had a dozen or so patches this time around, so it should be
+easy to bisect if it's a problem in the driver.  One possibility is
+hardware CCMP support but I've been using it here for some time.
 
-http://wiki.openmoko.org/wiki/AR6K
+By the way, name it what you will, but the standard is wlan0 these days :)
 
-  Luis
+> So the difference looks to be how I boot: if I do a *cold* boot directly
+> into .32, wireless fails; if I *reboot* from .31 into .32, wireless
+> comes up correctly. Reboot from .32 to .32 fails too.
+
+Is that repeatable?
+
+Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
+linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
+
+-- 
+Bob Copeland %% www.bobcopeland.com
+
