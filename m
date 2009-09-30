@@ -1,97 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9689 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758639AbZIQRn5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Sep 2009 13:43:57 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/13] iwlwifi: add LED mode to support different LED behavior
-Date: Thu, 17 Sep 2009 10:43:54 -0700
-Message-Id: <1253209436-2309-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
-References: <1253209436-2309-1-git-send-email-reinette.chatre@intel.com>
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:55527 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752083AbZI3VtD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Sep 2009 17:49:03 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [.32-rc1/2] ath5k: has become unreliable with .32-rc1
+Date: Wed, 30 Sep 2009 23:49:04 +0200
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <200909300952.29106.elendil@planet.nl> <20090930122451.GA17280@hash.localnet>
+In-Reply-To: <20090930122451.GA17280@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200909302349.05614.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Wednesday 30 September 2009, Bob Copeland wrote:
+> On Wed, Sep 30, 2009 at 09:52:27AM +0200, Frans Pop wrote:
+> > This is on a laptop I don't use much, but with .31 wireless has always
+> > been (and still is) reliable (.31-rc5 is the last kernel I built for
+> > it). On my other laptop wireless (iwlagn) works fine with .32-rc1.
+>
+> Although iwlagn works, I would think this kind of thing:
+> > ath0: authenticated
+> > ath0: associate with AP 00:14:c1:38:e5:15 (try 1)
+> > ath0: RX ReassocResp from 00:14:c1:38:e5:15 (capab=0x411 status=0 aid=2)
+> > ath0: associated 
+> > ath0: deauthenticating by local choice (reason=3)
+>
+> ...is some kind of issue with userspace or wext rather than the driver.
+> Ath5k only had a dozen or so patches this time around, so it should be
+> easy to bisect if it's a problem in the driver.  One possibility is
+> hardware CCMP support but I've been using it here for some time.
 
-Today's implementation allow LED to blink based on the traffic
-condition. We introduce an additional LED mode that reflects the RF
-state.
+I doubt it's a userspace issue, but it does look like the regression was
+not triggered by the ath5k driver itself. In the mean time I did a bisect
+on the drivers/net/wireless/ath directory without any results.
 
-The supported LED modes after this are:
-  IWL_LED_BLINK (current/default) - blink rate based on current Tx/Rx
-                                    traffic
-  IWL_LED_RF_STATE (new) -
-    LED OFF: No power/RF disabled, the LED is emitting no light
-    LED ON:  Powered/RF enabled, the LED is emitting light
-             in a stable non-flashing state.
+> By the way, name it what you will, but the standard is wlan0 these days
+> :)
 
-In order to provide the flexibility to support different LED
-behavior per user/system preference we add "led_mode" iwlcore module
-parameter.
+Yep. A leftover from the days I used madwifi :-) I kind of like it though
+given its similarity to eth0.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-led.c |    9 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-led.h |   12 ++++++++++++
- 2 files changed, 20 insertions(+), 1 deletions(-)
+> > So the difference looks to be how I boot: if I do a *cold* boot
+> > directly into .32, wireless fails; if I *reboot* from .31 into .32,
+> > wireless comes up correctly. Reboot from .32 to .32 fails too.
+>
+> Is that repeatable?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-index f547233..685ba9d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-@@ -42,6 +42,12 @@
- #include "iwl-core.h"
- #include "iwl-io.h"
- 
-+/* default: IWL_LED_BLINK(0) using blinking index table */
-+static int led_mode;
-+module_param(led_mode, int, S_IRUGO);
-+MODULE_PARM_DESC(led_mode, "led mode: 0=blinking, 1=On(RF On)/Off(RF Off), "
-+			   "(default 0)\n");
-+
- #ifdef CONFIG_IWLWIFI_DEBUG
- static const char *led_type_str[] = {
- 	__stringify(IWL_LED_TRG_TX),
-@@ -199,7 +205,8 @@ static int iwl_led_off_reg(struct iwl_priv *priv, int led_id)
- static int iwl_led_associate(struct iwl_priv *priv, int led_id)
- {
- 	IWL_DEBUG_LED(priv, "Associated\n");
--	priv->allow_blinking = 1;
-+	if (led_mode == IWL_LED_BLINK)
-+		priv->allow_blinking = 1;
- 	return iwl_led_on_reg(priv, led_id);
- }
- static int iwl_led_disassociate(struct iwl_priv *priv, int led_id)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-led.h b/drivers/net/wireless/iwlwifi/iwl-led.h
-index ef9b174..dd76b26 100644
---- a/drivers/net/wireless/iwlwifi/iwl-led.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-led.h
-@@ -47,6 +47,18 @@ enum led_type {
- 	IWL_LED_TRG_RADIO,
- 	IWL_LED_TRG_MAX,
- };
-+
-+/*
-+ * LED mode
-+ *    IWL_LED_BLINK:    adjust led blink rate based on blink table
-+ *    IWL_LED_RF_STATE: turn LED on/off based on RF state
-+ *			LED ON  = RF ON
-+ *			LED OFF = RF OFF
-+ */
-+enum iwl_led_mode {
-+	IWL_LED_BLINK,
-+	IWL_LED_RF_STATE,
-+};
- #endif
- 
- #ifdef CONFIG_IWLWIFI_LEDS
--- 
-1.5.6.3
+Yes, 100%. Weird heh? That's what made me think it must be an ath5k
+driver issue as it looks like a hardware initialization problem. Could
+be PCI or PCMCIA though, although I don't see anything suspicious in
+dmesg.
 
+> Rafael J. Wysocki has a patch floating around to fix PCMCIA resume,
+> linked here: http://bugzilla.kernel.org/show_bug.cgi?id=13092
+
+Ack.
+
+I'll probably wait and see how -rc2 (or 2a or 3 or whatever) behaves
+before doing a full bisect, but I will come back to this.
+
+Thanks,
+FJP
