@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:64674 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463AbZIGPLk (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:54512 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755106AbZI3Tac (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Sep 2009 11:11:40 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 074AB5000E
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2009 17:11:43 +0200 (CEST)
-Received: from mx51.mymxserver.com ([127.0.0.1])
-	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id g8MheOz76d0k for <linux-wireless@vger.kernel.org>;
-	Mon,  7 Sep 2009 17:11:42 +0200 (CEST)
-Received: from lin01.mn-solutions.de (pD95F8D06.dip0.t-ipconnect.de [217.95.141.6])
-	by mx51.mymxserver.com (Postfix) with ESMTP id A48405000B
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2009 17:11:42 +0200 (CEST)
-Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
-	by lin01.mn-solutions.de (Postfix) with ESMTP id 0651C1E004F
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Sep 2009 17:11:33 +0200 (CEST)
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org
-Subject: iw: strange output
-Date: Mon, 7 Sep 2009 17:11:18 +0200
+	Wed, 30 Sep 2009 15:30:32 -0400
+Received: by iwn8 with SMTP id 8so3840266iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 12:30:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200909071711.18632.hs4233@mail.mn-solutions.de>
+In-Reply-To: <20090930170000.09582F88DD@sepang.rtg.net>
+References: <20090930170000.09582F88DD@sepang.rtg.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 30 Sep 2009 12:30:16 -0700
+Message-ID: <43e72e890909301230r55d7b165w198a7c66acdf8e46@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: Fix b44 build issues.
+To: Tim Gardner <timg@tpi.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm using
+On Wed, Sep 30, 2009 at 10:00 AM, Tim Gardner <timg@tpi.com> wrote:
+> From 553180d80860c6090b7d82f809ea7131afca01d6 Mon Sep 17 00:00:00 2001
+> From: Tim Gardner <tim.gardner@canonical.com>
+> Date: Wed, 30 Sep 2009 10:02:35 -0600
+> Subject: [PATCH] compat-wireless: Fix b44 build issues.
+>
+> Even though CONFIG_B44 is defined, there is no Makefile
+> created in drivers/net. This failure to build allows the
+> in-kernel version of b44 to get loaded with a compat-wireless
+> version of ssb.ko, never a good thing.
+>
+> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 
-* wpasupplicant: hostap_0_6_7-490-g52eb293
-* iw: v0.9.17-1-gdbaabba
-* linux-wl: v2.6.31-rc8-34797-g4910edb
-* some ath5k.ko supported card
+Applied thanks. I must've fat fingered a commit and push after testing
+driver-select, whoopsie.. sorry about that.
 
-
-For wpa_supplicant, I'm currently using the wext driver.
-
-When I associate while "iw event" is running, I see the following
-strange output:
-
-eth1 (phy #0): scan finished: 2412, "g\xc6isQ\xffJ\xec)\xcd\xba\xab\xf2\xfb\xe3F|\xc2T\xf8\x1b\xe8\xe7\x8dvZ.c3\x9f\xc9\x9a"
-
-Is that garbage at the end intentional?
-
-
-
-
-P.S.: when I'm using nl80211 driver for wpa_supplicant, I seem
-to be associated, but no ping goes throught.
-
--- 
-http://www.holgerschurig.de
+  Luis
