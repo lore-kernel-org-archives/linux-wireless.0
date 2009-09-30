@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:43049 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039AbZI3BTd (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47993 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752475AbZI3RvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 21:19:33 -0400
-Received: by fxm18 with SMTP id 18so4955522fxm.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Sep 2009 18:19:36 -0700 (PDT)
-Subject: Re: driver_nl80211 broken again
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-In-Reply-To: <1252443260.16422.5.camel@maxim-laptop>
-References: <1251117161.22951.4.camel@maxim-laptop>
-	 <1251122885.12007.12.camel@johannes.local>
-	 <1251144381.9374.4.camel@maxim-laptop>
-	 <1251147515.20161.3.camel@johannes.local>
-	 <1252116503.2398.26.camel@maxim-laptop>
-	 <1252423769.3806.4.camel@johannes.local>
-	 <1252443260.16422.5.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Sep 2009 03:19:28 +0200
-Message-Id: <1254273569.4499.8.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 30 Sep 2009 13:51:19 -0400
+Date: Wed, 30 Sep 2009 20:51:19 +0300
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: VLAN traffic appearing on the wrong iface
+Message-ID: <20090930175119.GA13376@jm.kir.nu>
+References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 30, 2009 at 02:54:10AM +0200, Blaž Bačnik wrote:
+> I use RADIUS-assigned vlans with my AP. Hostapd reports vlan change
+> during authentication and the station appears on correct vlan
+> according to "iw dev ... station dump". But actual packets keep coming
+> in on the default interface (wlan0), not the vlan one (eg. wlan0.2).
 
-> 
-> Sure!
-> Very soon will do
-> 
+You will need (at least) the following fix in hostapd to get this
+working:
+http://w1.fi/gitweb/gitweb.cgi?p=hostap.git;a=commitdiff;h=1c766b094a82a669a1d0bb7f8d132b322e56e81d
 
-So I didn't do the testing that soon...
-Got swamped by many bugs present in ubuntu 9.10.
+I have not tested whether this actually works, so no guarantees on that
+being the only remaining issue.
 
-Now I have attempted same patch on top of wpa_supplicant, and it works.
+> I also tried taking RADIUS out of the loop, so I used hostapd's
+> "accept_mac_file" with specified vlan and I think I might have found
+> another bug. After applying the patch below (for I believe a rather
+> obvious typo), kernel started oopsing and I gave up. If needed, I can
+> provide config files for either hostapd or freeradius server, though
+> it looks like this is a driver problem.
 
-diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
-index 37a1927..a0098b9 100644
---- a/wpa_supplicant/wpa_supplicant.c
-+++ b/wpa_supplicant/wpa_supplicant.c
-@@ -1302,8 +1302,10 @@ void wpa_supplicant_disassociate(struct wpa_supplicant *wpa_s,
-        if (!is_zero_ether_addr(wpa_s->bssid)) {
-                if (wpa_s->drv_flags & WPA_DRIVER_FLAGS_USER_SPACE_MLME)
-                        ieee80211_sta_disassociate(wpa_s, reason_code);
--               else
-+               else {
-                        wpa_drv_disassociate(wpa_s, wpa_s->bssid, reason_code);
-+                       wpa_drv_deauthenticate(wpa_s, wpa_s->bssid, reason_code);
-+               }
-                addr = wpa_s->bssid;
-        }
-        wpa_clear_keys(wpa_s, addr);
+Thanks for the hostapd patch (even better thanks would have been given
+should it have been sent to the hostap mailing list or me ;-). It is now
+in the current development (0.7.x) tree for hostapd (with the additional
+fix I mentioned above). If you can test one, it would be interesting to
+hear whether VLANs are actually working now.
 
+As far as the kernel oops is concerned, that does not sound good..
+hostapd should not have been able to trigger such a thing even with the
+not-yey-fixed driver_nl80211.c.. Some more details on this could be
+useful if I cannot easily reproduce the oops.
 
-
-Would that be enough, or this is too hacky, and we need to audit each callsite of wpa_supplicant_disassociate
-and see if we need to send deauth frame too?
-
-
-Best regards,
-	Maxim Levitsky
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
