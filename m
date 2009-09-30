@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:59058 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbZIXJxw (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:47443 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbZI3VRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Sep 2009 05:53:52 -0400
-Subject: Re: [PATCH]: nl80211: report age of scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200909241055.51604.hs4233@mail.mn-solutions.de>
-References: <200909241055.51604.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-sWpfF6uHaobrSBCtBlEA"
-Date: Thu, 24 Sep 2009 11:53:54 +0200
-Message-Id: <1253786034.3868.18.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 30 Sep 2009 17:17:33 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so572712eyf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Sep 2009 14:17:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1253965154.5122.7.camel@johannes.local>
+References: <505407.87957.qm@web28315.mail.ukl.yahoo.com>
+	 <200909210845.51247.hs4233@mail.mn-solutions.de>
+	 <4AB7A5BB.1050300@yahoo.es> <1253779538.3868.14.camel@johannes.local>
+	 <3ace41890909241213q5b4992a0sffd4c34a69ac9bb6@mail.gmail.com>
+	 <1253859759.3868.569.camel@johannes.local>
+	 <3ace41890909250854t3062d1betf89501e5775ccdd0@mail.gmail.com>
+	 <1253965154.5122.7.camel@johannes.local>
+Date: Wed, 30 Sep 2009 22:17:36 +0100
+Message-ID: <3ace41890909301417j5966336dn197a45cf66c2cd1e@mail.gmail.com>
+Subject: Re: Problems with "cfg80211: fix SME connect" commit
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Albert Herranz <albert_herranz@yahoo.es>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Sep 26, 2009 at 12:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 
---=-sWpfF6uHaobrSBCtBlEA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> The extra deauth is because cfg80211 already starts the auth with the
+> BSS before wpa_supplicant set the BSSID, and then when setting the BSSID
+> it asks for deauth, but before we ever actually did anything... I think
+> we'll just have to live with that, since it's hard to fix in the layered
+> design we have now.
 
-On Thu, 2009-09-24 at 10:55 +0200, Holger Schurig wrote:
+Hmm, I looked at the AP log, and the deauth is there... also I think
+due to recent changes, association takes longer now. Is there
+something that can be done in userland, for example?
 
-> + * @NL80211_BSS_AGE_MS: age of this BSS entry in ms
-
-I'm not sure "age" is appropriate -- the BSS entry might be older but
-have been touched in a new scan etc.
-
-Maybe "last seen"? Although that kinda implies an absolute time while
-"age" implies a relative time ... hmm ...
-
-johannes
-
---=-sWpfF6uHaobrSBCtBlEA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKu0GuAAoJEODzc/N7+QmaOZEQAJQ5yfDJd/He3amuDw8iVyzO
-JqSBtnrgK/psfzADXH9LQicKz+PVXj7vggcNWk/WfXklwyeoc4kfu4X6thMySSOv
-TthFwKdV0v7utattR045qWGXdohoOFbV1G28mKWB4M5hzfW1+qUSkb07C1vevm2u
-iqtm0aKJkTC5XjdRtMtd0SMDWkC3IW7QRlEBLV1U846xOkoRQjRQeuYTiYpZD7h6
-SnBN1y+eZk0Rwh51PL4T5s0TiAThcXGLqBhvFCCi3EWODoXcNkHm2+8H+JzMYyJl
-0w7EByczHFLMpIhOodYQTeRlwwf3NQ7+iqCtOa0qEBsXW9YCsbYo19ZeR6QbcKOi
-KY4WS1gQyPk3AYLojGWLSyzcU5N0wrrpMZZUl8ZYjOsE198VbQBy0yINMgnsxG18
-8eq+gcHXMin5qJsuiezLnCO6GnY+bTzhoSPjH14Yr3BaLMLDrQPZlUqTn+ktfksB
-E9RT30qpw21EjbPAdGrUE+kfipMFhB6uyF60RLEGgURQINrz29gcVrlkJLqk/vwR
-WgBWbxQMVW97ONl6FJZQpykqsUUmpgxfJmB/OUtTuXeYuPFWcdoEIs5V2L8HbiVr
-2DfNLP6GTscU7VNFBsYYdKhaALkI18nUFV2LYhnKnZw7NOiRFLJXzR1HsHpj8Q2S
-IBgRiqpwfrM6IdlimJ2K
-=SmjS
------END PGP SIGNATURE-----
-
---=-sWpfF6uHaobrSBCtBlEA--
-
+Hin-Tak
