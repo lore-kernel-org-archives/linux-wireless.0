@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from galiil.marvell.com ([199.203.130.254]:18211 "EHLO
-	galiil.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398AbZI2Si6 convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f218.google.com ([209.85.220.218]:63122 "EHLO
+	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299AbZI3OZM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Sep 2009 14:38:58 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-CC: Dan Williams <dcbw@redhat.com>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 29 Sep 2009 11:36:01 -0700
-Subject: RE: [PATCH] libertas: Add auto deep sleep support for
- SD8385/SD8686/SD8688
-Message-ID: <477F20668A386D41ADCC57781B1F704306DDC45F51@SC-VEXCH1.marvell.com>
-References: <1253058359-1934-1-git-send-email-bzhao@marvell.com>
- <1253458691.11702.46.camel@localhost.localdomain>
- <477F20668A386D41ADCC57781B1F704306DDA6C1B6@SC-VEXCH1.marvell.com>,<200909290904.00971.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200909290904.00971.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 30 Sep 2009 10:25:12 -0400
+Message-ID: <4AC36A46.7010209@googlemail.com>
+Date: Wed, 30 Sep 2009 16:25:10 +0200
+From: Gonsolo <gonsolo@gmail.com>
 MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Gonsolo <gonsolo@gmail.com>,
+	Daniel J Blueman <daniel.blueman@gmail.com>,
+	kernel-team@lists.ubuntu.com,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ath5k suspend
+References: <4AC22B64.8050909@googlemail.com> <6278d2220909300536u7934d7dan286d219b5cf7e5a@mail.gmail.com> <4AC35CA0.5070401@googlemail.com> <20090930140905.GA3193@tuxdriver.com>
+In-Reply-To: <20090930140905.GA3193@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Holger,
-
-> From: Holger Schurig [hs4233@mail.mn-solutions.de]
-> Sent: Tuesday, September 29, 2009 12:04 AM
-> To: Bing Zhao
-> Cc: Dan Williams; libertas-dev@lists.infradead.org; linux-wireless@vger.kernel.org; Amitkumar Karwar
-> Subject: Re: [PATCH] libertas: Add auto deep sleep support for SD8385/SD8686/SD8688
+Am 30.09.2009 16:09, schrieb John W. Linville:
+> On Wed, Sep 30, 2009 at 03:26:56PM +0200, Gonsolo wrote:
+>>>> Is it possible to add
+>>>> http://patchwork.kernel.org/patch/38550/
+>>>> to karmic? Otherwise karmic would be broken for me/my notebook/my
+>>>> wireless pccard.
+>>>
+>>> Since Karmic tracks the 2.6.31 -stable kernels, it's worth reporting
+>>> this upstream (CC'd) instead, particularly if it's a regression from a
+>>> previous kernel version, using the same ath5k driver...?
+>>
+>> I did that, too. ;) Hopefully it will be in 2.6.31.2.
 >
-> Hi Bing !
-> 
-> Please note that I just sent an experimental patch to enable
-> cfg80211 for libertas.
-> 
-> Once this is polished, you can immediately start using
-> nl80211/cfg80211 to configure such things, there's no need to
-> have the full thingy (e.g. wpa_supplicant via -Dnl80211 working
-> with WEP/WPA/WPA2) working, those things are not interrelated.
+> Maybe I missed it, but did you actually request the -stable team to
+> take the patch?  -stable helps more than just Ubuntu... :-)
 
-Thanks for the info.
+I requested it in Ubuntu and stable in two separate emails, just to be 
+sure it will be there when I am going to upgrade. ;)
+I apologize if I caused confusion or doubled your amount of work.
+Maybe I should have done this in one email to both parties.
 
-I will start to use nl80211/cfg80211 to configure my parameters as soon as your patch is in libertas driver.
-
-Best regards,
-
-Bing
-
->
->
-> --
-> http://www.holgerschurig.de
+g
