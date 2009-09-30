@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.24]:11399 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbZIHTpd (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:58281 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961AbZI3RvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Sep 2009 15:45:33 -0400
-Received: by qw-out-2122.google.com with SMTP id 9so133550qwb.37
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Sep 2009 12:45:36 -0700 (PDT)
-Date: Tue, 8 Sep 2009 14:06:09 +0200
-From: Richard Zidlicky <rz@linux-m68k.org>
-To: rt2x00 Users List <users@host1.serialmonkey.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] rt2x00: Hardcode TX ack timeout and consume time
-Message-ID: <20090908120608.GA4296@linux-m68k.org>
-References: <200909061514.23611.IvDoorn@gmail.com>
+	Wed, 30 Sep 2009 13:51:10 -0400
+Message-ID: <4AC39A90.6060602@hartkopp.net>
+Date: Wed, 30 Sep 2009 19:51:12 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200909061514.23611.IvDoorn@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Michael Buesch <mb@bu3sch.de>, Kalle Valo <kalle.valo@iki.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: mac80211: NOHZ: local_softirq_pending 08
+References: <200909111648.50902.mb@bu3sch.de>	 <87ocosqykb.fsf@purkki.valot.fi> <1254322466.3959.5.camel@johannes.local>	 <200909301710.31082.mb@bu3sch.de> <1254324077.3959.7.camel@johannes.local>
+In-Reply-To: <1254324077.3959.7.camel@johannes.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 06, 2009 at 03:14:23PM +0200, Ivo van Doorn wrote:
-> rt2x00: Hardcode TX ack timeout and consume time
+Johannes Berg wrote:
+> On Wed, 2009-09-30 at 17:10 +0200, Michael Buesch wrote:
+>> On Wednesday 30 September 2009 16:54:26 Johannes Berg wrote:
+>>> On Wed, 2009-09-30 at 17:47 +0300, Kalle Valo wrote:
+>>>
+>>>> I agree with Michael. The bug is real and I have verified that
+>>>> Michael's patch fixes the issue. Better to apply the patch now, it's
+>>>> trivial to change the implementation if/when the network stack has
+>>>> support for this.
+>>> FWIW, I think in mac80211 the in_interrupt() check can never return true
+>>> since we postpone all RX to the tasklet. But the tasklet seems to be ok
+>>> -- so should it really be in_interrupt()?
+>> I think a tasklet is also in_interrupt(), because it's a softirq.
+> 
+> Ah, yes, indeed, in_interrupt() vs. in_irq().
+> 
 
-Hi,
+Oops!
 
-it does significantly improve rt73usb performance and stability of ping times.
+I missed that for my previous patch i added for two occurrences in the CAN
+sources.
 
-I can still get almost the double performance and much better ping times when 
-setting the rate manually.
+I'm currently compiling the patch for netif_rx_ti() and will post it in some
+minutes (for CAN and mac80211) when it runs without probs.
 
-> John, this patch has not yet been confirmed by any of the above bugzilla reports,
-> but I do think this should be merged as soon as possible to 2.6.31 since this issue
-> has been marked as regression for quite some time now. :)
-
-imho it should be merged even if it does not fully fix every imaginable problem.
-
-Actually I would wish critical fixes would be merged much more aggressively,
-eg rt73usb was critically broken before Pavel Roskin' recent off-by-1 register
-access fix - causing all kinds of weird problems probably including filesystem
-damage.
-
-Seems some other fixes are also critical - it would be nice to have all important
-fixes in eg in 2.6.30.6 (if it ever comes) as it is not quite trivial to cherrypick
-them from the list when the code diverges too much from mainline.
-
-Richard
+Regards,
+Oliver
