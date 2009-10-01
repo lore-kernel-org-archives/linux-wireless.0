@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:56583 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757642AbZJLVUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 17:20:01 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	larry.finger@gmail.com
-Subject: [PATCH 1/9] [compat-2.6 and compat-stable] Export round_jiffies_up again.
-Date: Mon, 12 Oct 2009 23:19:09 +0200
-Message-Id: <1255382358-20760-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
-References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+Received: from bu3sch.de ([62.75.166.246]:40233 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754741AbZJATKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 15:10:38 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] net: fix NOHZ: local_softirq_pending 08
+Date: Thu, 1 Oct 2009 21:10:32 +0200
+Cc: David Miller <davem@davemloft.net>, oliver@hartkopp.net,
+	kalle.valo@iki.fi, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <1254324077.3959.7.camel@johannes.local> <200910011604.42916.mb@bu3sch.de> <1254422548.3959.24.camel@johannes.local>
+In-Reply-To: <1254422548.3959.24.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200910012110.34216.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2.6.27 mainline kernel does not export round_jiffies_up. It looks
-like the openSuse kernel 2.6.27 does export this symbol. Rename the
-compat symbol to not conflict with the openSuse kernel.
+On Thursday 01 October 2009 20:42:28 Johannes Berg wrote:
+> On Thu, 2009-10-01 at 16:04 +0200, Michael Buesch wrote:
+> > On Thursday 01 October 2009 01:33:33 David Miller wrote:
+> > 
+> > > I'm not applying this until all of these details are sorted out 
+> > 
+> > John, please apply my fix to wireless-testing to get rid of the regression.
+> > You can revert it later, if there's a better fix available.
+> 
+> I agree with davem, don't. Just fix the driver to local_bh_disable()
+> around the rx function if necessary.
 
-CC: larry.finger@gmail.com
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.28.c |    2 --
- compat/compat-2.6.28.h |    5 +++++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+For the benefit of a much bigger critical section? I don't get it why this would be any better.
 
-diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
-index 613b009..33871a2 100644
---- a/compat/compat-2.6.28.c
-+++ b/compat/compat-2.6.28.c
-@@ -260,7 +260,6 @@ static unsigned long round_jiffies_common(unsigned long j, int cpu,
- 	return j;
- }
- 
--#if 0
- /**
-  * round_jiffies_up - function to round jiffies up to a full second
-  * @j: the time in (absolute) jiffies that should be rounded
-@@ -275,6 +274,5 @@ unsigned long round_jiffies_up(unsigned long j)
- 	return round_jiffies_common(j, raw_smp_processor_id(), true);
- }
- EXPORT_SYMBOL_GPL(round_jiffies_up);
--#endif
- 
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
-diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
-index 4e5a2ef..90d080c 100644
---- a/compat/compat-2.6.28.h
-+++ b/compat/compat-2.6.28.h
-@@ -195,6 +195,11 @@ static inline void tracepoint_update_probe_range(struct tracepoint *begin,
- 
- #endif
- 
-+/* openSuse includes round_jiffies_up in it's kernel 2.6.27.
-+ * This is needed to prevent conflicts with the openSuse definition.
-+ */
-+#define round_jiffies_up backport_round_jiffies_up
-+
- unsigned long round_jiffies_up(unsigned long j);
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
+I _am_ going to do one thing now, however. That is ignoring any regression bugreport.
+(Yes, it _is_ a regression for b43)
+
 -- 
-1.6.2.1
-
+Greetings, Michael.
