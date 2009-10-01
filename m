@@ -1,82 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.157]:46058 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757092AbZJSRaQ convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f227.google.com ([209.85.219.227]:42390 "EHLO
+	mail-ew0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbZJATzH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 13:30:16 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so1585768fga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 10:30:20 -0700 (PDT)
+	Thu, 1 Oct 2009 15:55:07 -0400
+Received: by ewy27 with SMTP id 27so629251ewy.40
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 12:55:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <279b980f0910191011p50064547r6d77a5ac32e22f93@mail.gmail.com>
-References: <1255861930.5093.7.camel@chriss-imac> <69e28c910910180602qe4cdb1fy5c2ec3f6dae0c146@mail.gmail.com>
-	<279b980f0910191011p50064547r6d77a5ac32e22f93@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 19 Oct 2009 19:29:59 +0200
-Message-ID: <69e28c910910191029v244b0613g664204f0d453e6a4@mail.gmail.com>
-Subject: Re: Support for Broadcom's BCM4328 chip
-To: Russell Knighton <russell@knighton.me.uk>
-Cc: Chriss Kalogeropoulos <iz.iznogood@gmail.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1254422380.3959.23.camel@johannes.local>
+References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+	 <1254341787.3959.11.camel@johannes.local>
+	 <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
+	 <57b62e7d0910010740t67a96d88h59b10161844f2836@mail.gmail.com>
+	 <1254422380.3959.23.camel@johannes.local>
+Date: Thu, 1 Oct 2009 21:55:10 +0200
+Message-ID: <57b62e7d0910011255r2ecf2bbex37422204add9a2b0@mail.gmail.com>
+Subject: Re: VLAN traffic appearing on the wrong iface
+From: =?UTF-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2009/10/19 Russell Knighton <russell@knighton.me.uk>
+On Thu, Oct 1, 2009 at 8:39 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Thanks for looking into the crash -- I can't explain it.
 >
-> Great news that this is now truly under-way - but, at the risk of sounding cheeky, is there an estimated merge date on this (or any progress information you can share)? I have a broadcom BCM4322 and would like to get involved in any possible testing, or at the very least be able to check the progress on this.
+>> -     if (ieee80211_vif_is_mesh(&sdata->vif)) {
+>> +     if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
 >
-> Thanks for all your hard work - your skill and efforts are highly appreciated by us end users!
+> However, that doesn't make any sense, given
 >
-> Russell
+>        struct ieee80211_sub_if_data *sdata = (*sta)->sdata;
 >
+> Could the compiler be playing tricks on us?
 
-Only reverse-engineering is happening at this point - actual
-development can only start once reverse-engineering is done. (And even
-then, we will need to find someone to actually write the code for
-N-PHY, as I'm not sure that I will have enough free time to do it
-myself, and Michael seems to have practically abandoned the project.)
+There's the sdata = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap)
+in if-clause right in front of the ieee80211_vif_is_mesh and since
+this is a vlan
+interface that if-clause gets executed. This is done because we need to tell the
+real, non-vlan interface what is going on. It changes sdata which is
+understandable.
+But I've really no idea why the new sdata (of non-vlan ap subiface)
+does not have initialized vif member. Since this is the reason behind the oops:
+trying to dereference a vif->type member of AP/VLAN's AP iface.
 
-> 2009/10/18 Gábor Stefanik <netrolller.3d@gmail.com>
->>
->> On Sun, Oct 18, 2009 at 12:32 PM, Chriss Kalogeropoulos
->> <iz.iznogood@gmail.com> wrote:
->> > Hello,
->> >
->> > i have an i-mac using Broadcom's BCM4328 chip.
->> >
->> > lspci gives:
->> >
->> > 03:00.0 Network controller [0280]: Broadcom Corporation BCM4328
->> > 802.11a/b/g/n [14e4:4328] (rev 01)
->> >
->> > This must have been answered before but i thought to ask in case
->> > something has changed. Any hope on getting support on that chip with an
->> > open source driver ?
->> >
->> > Please cc me since i am not a subscriber on the list.
->> >
->> > Thanks in advance
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->>
->> This is an N-PHY card. Reverse-engineering of N-PHY cards is still in
->> progress (though it is finally really "in progress", and not stalled
->> anymore), and it needs to be finished (at least the G part) before we
->> can work on implementing it.
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Basically, that if-clause changes sdata if iface type is AP/VLAN
+(which it is), then tries
+to do some stuff on the new sdata. And I think it should be doing it
+on the old sdata --
+this is what this patch does.
 
-
-
---
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Regards, Blaz
