@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f212.google.com ([209.85.217.212]:45220 "EHLO
-	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbZJLA13 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33807 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752878AbZJAIwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 20:27:29 -0400
-Received: by gxk4 with SMTP id 4so9599987gxk.8
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 17:26:52 -0700 (PDT)
-Message-ID: <4AD277C9.7090209@gmail.com>
-Date: Sun, 11 Oct 2009 19:26:49 -0500
-From: Quintin Pitts <geek4linux@gmail.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] p54pci: skb_over_panic, soft lockup, stall under flood
-References: <4AD1EBA7.904@gmail.com> <4AD1FA5E.1010201@lwfinger.net> <200910112141.01747.chunkeey@googlemail.com>
-In-Reply-To: <200910112141.01747.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=iso-8859-1
+	Thu, 1 Oct 2009 04:52:38 -0400
+Subject: Re: [SOLVED][.32-rc1/2] ath5k: has become unreliable with .32-rc1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Frans Pop <elendil@planet.nl>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bob Copeland <me@bobcopeland.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+In-Reply-To: <200910010235.28904.elendil@planet.nl>
+References: <200909300952.29106.elendil@planet.nl>
+	 <200910010235.28904.elendil@planet.nl>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VLlQEc46vgim2kiNd8Pl"
+Date: Thu, 01 Oct 2009 10:52:38 +0200
+Message-Id: <1254387158.3959.21.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun Oct 11 2009 14:41:01 GMT-0500 (CDT), Christian Lamparter wrote:
-> On Sunday 11 October 2009 17:31:42 Larry Finger wrote:
->>> In trying to get p54pci driver to be stable on my platform and hardware
->>> - here is a generic patch that seems to accomplish that.  Since the
->>> ViewSonic V210 uses the IT8152 pci bridge - some attention was needed to
->>> get dma related allocation in the first physical 64M.  I have verified
->>> that the dma related allocation is in the first 64M and dmabounce is not
->>> being used - just for those wondering if that was part of the problems.
-> 
-> it8152 was an important bit:
-> 
-> http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/0645.html
-> 
-> the commit sparked a discussion about it8152 pci reliability.
-> It doesn't look good:
-> 
-> (commit author):
-> "I have no idea if it's possible to get a reliable PCI bus or
-> not with this chip. Right now, we only use it for it's built-in OHCI
-> USB host controller and UART. You're making me hope I never have to
-> use it for interfacing a PCI card!"
-> 
-> ( http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/1907.html )
-> 
-> [...]
-> 
-> "Well on the system on a board we were trying, using the development
-> baseboard from the same supplier, by simply doing a ping flood through
-> the onboard rtl8139 I managed to get corrupted ethernet packets fairly
-> frequently. "
-> ( http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/1917.html )
-> 
-> the sad conclusion is that: no matter what fixes you throw
-> at the driver (BTW: isl38xx isn't 100% pci v2.1 compliance either)
-> your chances of getting the device (with the softmac fw)
-> working properly with that board are next to... not,
-> unless you can magically fix the pci-bridge issues.
 
-I feared as much.
+--=-VLlQEc46vgim2kiNd8Pl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-At least that patch has given me hope.  It survives a iperf and ping
-flood now with out going belly up.  Device has been up for three days
-now with network still working.   But likely glitches will show up.
+On Thu, 2009-10-01 at 02:35 +0200, Frans Pop wrote:
+> the boot issue by one of Johannes' patches (I'd guess either=20
+> 4be3bd8c 'cfg80211: don't set privacy w/o key' or maybe 8bb89485
+> 'cfg80211: always get BSS').
 
-iperf tests at about 9.6 to 15 Mbits/sec on a 802.11g WPA network which is
-about 2 times faster than what I had under WinCE.
+Nah, it's going to be the "add back wireless/ dir" patch.
 
-web browsing and ssh and scp all work great at the moment.
+johannes
 
-Time will tell...
+--=-VLlQEc46vgim2kiNd8Pl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thanks much!
+-----BEGIN PGP SIGNATURE-----
 
-Quintin.
+iQIcBAABAgAGBQJKxG3SAAoJEODzc/N7+QmajsIQAKqJMtYw3lPYm8HoYMq+bU/j
+vti4YHC4YK+8GPZRoHOW9/RKj7gE1Mm+TC+LNjkngwvGAbfux3cGALAv2NduNbYg
+7sxX6eXd/gjHqm/AESBO6rDELlvjp0vItbRH+ir2TZF84f0xd8eTVDR0EJTDJyxy
+0EN+aXxpcDhhKXkiLgwmYkYYnbw0uzns0Ggi5OF+bXrOKDzJCWV+cZf7y8f86iq/
+ypx4//tjyxq0kFJpz4nggKM/3e8NuscNJuUFWDus5Ym8m9noKZkSAatd/QqZo/mu
+mS3xqPqyPe9EsmXnRAM1ZQrtKMnqNKU1lfxLyKJxe1Iu25J9ifOKQbZKPcRXzYJ8
+1vOS4UBeVL3Makmkiz+tkovM7X3zlnTnmOshYIJI2LdvoB6RHI5zzZYqzlsaat5K
+w9ArujN2YHNbXc2ezG1KSpemnMy1qLzzjzZqOHm5E3xeVa6JbuvhcZKXu9/ftTy+
+wQMENA6x1qBrbN5+Xd9qdlXHKYgFARYo80aVI1kcstO81qKEgozTAfXrt3fvzQAs
+TnvJjDG8UQnS5eHVW0SkIYqAUDV2aBXarr8iq3NvzpKkytla41ozWVQECkHkxgDp
+yxSNOW2LX4DZJAj5SyGkqlHlDQGIlRFaTt4jCMIdDYWKCRhrUrFjlZi67OfLFVh8
+wSBEAYSnSMP4LJh5jVZ/
+=4jBr
+-----END PGP SIGNATURE-----
+
+--=-VLlQEc46vgim2kiNd8Pl--
 
