@@ -1,82 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46338 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbZJ2He0 (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:11177 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755566AbZJAHIG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 03:34:26 -0400
-Subject: [PATCH 2.6.32] mac80211: fix addba timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Oct 2009 08:34:00 +0100
-Message-ID: <1256801640.3865.42.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 1 Oct 2009 03:08:06 -0400
+Message-ID: <4AC45556.9080303@hartkopp.net>
+Date: Thu, 01 Oct 2009 09:08:06 +0200
+From: Oliver Hartkopp <oliver@hartkopp.net>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: johannes@sipsolutions.net, mb@bu3sch.de, kalle.valo@iki.fi,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] net: fix NOHZ: local_softirq_pending 08
+References: <1254324077.3959.7.camel@johannes.local>	<4AC39A90.6060602@hartkopp.net>	<4AC3A0F1.3060306@hartkopp.net> <20090930.163333.234658158.davem@davemloft.net>
+In-Reply-To: <20090930.163333.234658158.davem@davemloft.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The addba timer function acquires the sta spinlock,
-but at the same time we try to del_timer_sync() it
-under the spinlock which can produce deadlocks.
+David Miller wrote:
+> From: Oliver Hartkopp <oliver@hartkopp.net>
+> Date: Wed, 30 Sep 2009 20:18:25 +0200
+> 
+>> Socket buffers that are generated and received inside softirqs or from process
+>> context must not use netif_rx() that's intended to be used from irq context only.
+>>
+>> This patch introduces a new helper function netif_rx_ti(skb) that tests for
+>> in_interrupt() before invoking netif_rx() or netif_rx_ni().
+>>
+>> It fixes the ratelimited kernel warning
+>>
+>>         NOHZ: local_softirq_pending 08
+>>
+>> in the mac80211 and can subsystems.
+>>
+>> Signed-off-by: Oliver Hartkopp <oliver@hartkopp.net>
+> 
+> I bet all of these code paths can use netif_receive_skb() or
+> don't need this conditional blob at all.
+> 
+> Looking at some specific cases in this patch:
+> 
+> 1) VCAN:  This RX routine is only invoked from the drivers
+>    ->ndo_start_xmit() handler, and therefore like the loopback
+>    driver we know that BH's are already disabled and therefore
+>    it can always use netif_rx() safely.
+> 
+>    Why did you convert this case?
+> 
+>    And if this needs to be converted, why doesn't loopback need
+>    to be?
+> 
+> 2) af_can.c:  In what situation will netif_rx_ni() not be appropriate
+>    here?  It should always execute in softirq or user context, now
+>    hardirq context.
+> 
+> And the list goes on and on, I don't really like this new conditional
+> testing of interrupt state.
 
-To fix this, always del_timer_sync() the timer in
-ieee80211_process_addba_resp() and add it again
-after checking the conditions, if necessary.
+Hello Dave,
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-Looks like I forgot to send this when I made it and then hid it in the
-middle of my patch pile and forgot!
+i'm confused about in_interrupt(), in_softirq() and in_irq() as pointed out by
+Johannes here:
 
- net/mac80211/agg-tx.c |   19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+http://marc.info/?l=linux-wireless&m=125432410405562&w=2
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2009-10-27 09:06:13.000000000 +0100
-+++ wireless-testing/net/mac80211/agg-tx.c	2009-10-29 08:32:15.000000000 +0100
-@@ -666,26 +666,25 @@ void ieee80211_process_addba_resp(struct
- 
- 	state = &sta->ampdu_mlme.tid_state_tx[tid];
- 
-+	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
-+
- 	spin_lock_bh(&sta->lock);
- 
--	if (!(*state & HT_ADDBA_REQUESTED_MSK)) {
--		spin_unlock_bh(&sta->lock);
--		return;
--	}
-+	if (!(*state & HT_ADDBA_REQUESTED_MSK))
-+		goto timer_still_needed;
- 
- 	if (mgmt->u.action.u.addba_resp.dialog_token !=
- 		sta->ampdu_mlme.tid_tx[tid]->dialog_token) {
--		spin_unlock_bh(&sta->lock);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "wrong addBA response token, tid %d\n", tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
--		return;
-+		goto timer_still_needed;
- 	}
- 
--	del_timer_sync(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "switched off addBA timer for tid %d \n", tid);
- #endif /* CONFIG_MAC80211_HT_DEBUG */
-+
- 	if (le16_to_cpu(mgmt->u.action.u.addba_resp.status)
- 			== WLAN_STATUS_SUCCESS) {
- 		u8 curstate = *state;
-@@ -699,5 +698,11 @@ void ieee80211_process_addba_resp(struct
- 	} else {
- 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
- 	}
-+
-+	goto out;
-+
-+ timer_still_needed:
-+	add_timer(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer);
-+ out:
- 	spin_unlock_bh(&sta->lock);
- }
+Indeed in the two cases for the CAN stuff (in vcan.c and af_can.c) the skb's
+are received in process-context and softirq-context only.
 
+Therefore i used netif_rx_ni() in my last change of this code.
+
+Now i was reading from Johannes that in_interrupt() is used for
+hardirq-context /and/ softirq-context, so i was just *unsure* and used the
+newly introduced netif_rx_ti() for that, which tests for in_interrupt().
+
+Indeed i'm not really happy with that, as it is always better to check each
+receive case in which context it can be used and used exactly the right
+function for that.
+
+So when netif_rx_ni() or netif_receive_skb() is the best i can use when in
+process-context or in softirq-context, i'll do it with pleasure.
+
+And if it is like this the problematic netif_rx() calls in mac80211 need to be
+sorted out in detail also ...
+
+Regards,
+Oliver
 
