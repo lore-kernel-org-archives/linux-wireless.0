@@ -1,84 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756231AbZJTBJC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52180 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967AbZJASaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 21:09:02 -0400
-Subject: Re: wlan oops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	nbd <nbd@openwrt.org>
-In-Reply-To: <1255916929.2139.1.camel@pasglop>
-References: <1255916929.2139.1.camel@pasglop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-jdGcS0VlxvEtYGsnZDKU"
-Date: Tue, 20 Oct 2009 10:08:24 +0900
-Message-Id: <1256000904.4475.4.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 1 Oct 2009 14:30:04 -0400
+Date: Thu, 1 Oct 2009 14:24:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2009-10-01
+Message-ID: <20091001182450.GD2895@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dave,
 
---=-jdGcS0VlxvEtYGsnZDKU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+A small collection of fixes for 2.6.32...
 
-On Mon, 2009-10-19 at 10:48 +0900, Benjamin Herrenschmidt wrote:
+One is a brown paper bag fix for an uninitialized variable, another is a
+USB ID.  There is a beaconing fix for the mac80211_hwsim "fake" driver,
+and a bug fix for AP mode related to buffering frames for stations in
+power save mode.
 
-> [ 3698.908913] wlan0: Selected IBSS BSSID 22:48:99:ac:65:40 based on conf=
-igured SSID
-> [ 3698.932660] ------------[ cut here ]------------
-> [ 3698.932701] WARNING: at net/wireless/scan.c:483 cfg80211_inform_bss_fr=
-ame+0x151/0x190 [cfg80211]()
-> [ 3698.932707] Hardware name: 7659AB8
-> [ 3698.932711] Modules linked in: tun snd_hda_codec_analog snd_hda_intel =
-snd_hda_codec binfmt_misc snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy s=
-nd_seq_oss snd_seq_midi snd_rawmidi arc4 snd_seq_midi_event ecb snd_seq snd=
-_timer snd_seq_device pcmcia bridge iwlagn stp iptable_filter sdhci_pci ppd=
-ev snd iwlcore bnep ip_tables yenta_socket psmouse thinkpad_acpi sdhci soun=
-dcore mac80211 x_tables lp ricoh_mmc btusb rsrc_nonstatic pcmcia_core serio=
-_raw led_class nvram snd_page_alloc cfg80211 parport fbcon tileblit font bi=
-tblit softcursor ohci1394 ieee1394 i915 e1000e drm i2c_algo_bit cfbcopyarea=
- video output cfbimgblt cfbfillrect intel_agp
-> [ 3698.932822] Pid: 1345, comm: iwlagn Not tainted 2.6.31.4-14-benh #1
-> [ 3698.932827] Call Trace:
+The b43 fix looks a bit long, but it is more-or-less the same simple
+fix applied in multiple places.  It addresses a bug where "the last
+bytes of data sent/received to/from PIO FIFOs on SDIO-based cards get
+'swizzled' when its length is not multiple of 4 bytes."
 
-> [ 3698.932875]  [<ffffffffa012a4b1>] cfg80211_inform_bss_frame+0x151/0x19=
-0 [cfg80211]
-> [ 3698.932916]  [<ffffffffa01a3cc4>] __ieee80211_sta_join_ibss+0x384/0x46=
-0 [mac80211]
-> [ 3698.932944]  [<ffffffffa01a427e>] ieee80211_sta_find_ibss+0x4de/0x4f0 =
-[mac80211]
-> [ 3698.932971]  [<ffffffffa01a4303>] ieee80211_ibss_notify_scan_completed=
-+0x73/0xa0 [mac80211]
-> [ 3698.932997]  [<ffffffffa01a0bc9>] ieee80211_scan_completed+0xc9/0x470 =
-[mac80211]
+Please let me know if there are problems!
 
-This actually seems to be a bug in mac80211, not just random weird
-frames being received.
+Thanks,
 
-johannes
+John
 
---=-jdGcS0VlxvEtYGsnZDKU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+---
 
------BEGIN PGP SIGNATURE-----
+Individual patches are available here:
 
-iQIcBAABAgAGBQJK3Q2EAAoJEODzc/N7+QmarT0QAMIt5z1jNEYNdhxZh7y5sCIA
-QvTszbVUZnPBSGeJzVKMQbPwxuh3HzG+aZjrCoi1txqmiyYXIBe5iIgL9dyTC8jV
-7BqXANrCtyOuBdU6xO9Su+jofvM9YNUJ02IqOODsof1SmMbl18EKW7RBZzFTvOF3
-71x15p6HQnLPWxmN5bmv6Yzr5FOKInJ14vYf8GXnkeSSWMzmuORCkxtkdVQ+GWCe
-Uu3LYfp9tvqBkslxi90eJw/2DPqrwISkq8O/xo2JjWcjf5OYSwXrNmgyqdh+JALx
-HtAl/y/7115LhK1skXj7ko7bX4GfBjuR9NOXb6gYv9HHJO+9mQRleg9jLfHkjLAi
-fiFfoc+lhR1aVQDisTpKK+CbFDHsVtW3sN/xfHGxv3nyPRGwDqzZMYCYeFy+kX4F
-QV7/8KA0SkNjLn9/SY3h1Ir52qecF6mJFjYToe/9Jo4l7o5KYJkzT+7gF66ihs+V
-uLoL44rI/NafQRg3QdyVdKy4rz5O9XZf60BAyEhzmL8TquVRqeNcKBGilCbnnCKT
-CazBNJaZmWoRzQqARIDBzNM+0v6mXBf81CPiwR7GOfFY9y6JRBGN+cPRzRAgdAtp
-muOnL6UrO1Y1NYOBxIHCfDEQl0vVn82bqXlaFp3wjOUk7J1AuOkBFLD63BtoOy6R
-lB0nxuZR56HISCseJiKx
-=OjBE
------END PGP SIGNATURE-----
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-2.6/
 
---=-jdGcS0VlxvEtYGsnZDKU--
+---
 
+The following changes since commit eb1cf0f8f7a9e5a6d573d5bd72c015686a042db0:
+  David S. Miller (1):
+        Merge branch 'master' of ssh://master.kernel.org/.../linville/wireless-2.6
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Christian Lamparter (1):
+      ar9170: fix bug in iq-auto calibration value calculation
+
+Igor Perminov (1):
+      mac80211: Fix [re]association power saving issue on AP side
+
+Jouni Malinen (1):
+      mac80211_hwsim: Fix initial beacon timer configuration
+
+Michael Buesch (1):
+      b43: Always use block-I/O for the PIO data registers
+
+Michal Szalata (1):
+      rt2x00: Thrustmaster FunAccess WIFI USB and rt73usb
+
+ drivers/net/wireless/ath/ar9170/phy.c |    6 +--
+ drivers/net/wireless/b43/pio.c        |   60 +++++++++++++++++++++------------
+ drivers/net/wireless/mac80211_hwsim.c |    3 ++
+ drivers/net/wireless/rt2x00/rt73usb.c |    1 +
+ net/mac80211/tx.c                     |    5 ++-
+ 5 files changed, 48 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ar9170/phy.c b/drivers/net/wireless/ath/ar9170/phy.c
+index b3e5cf3..dbd488d 100644
+--- a/drivers/net/wireless/ath/ar9170/phy.c
++++ b/drivers/net/wireless/ath/ar9170/phy.c
+@@ -1141,7 +1141,8 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
+ 	u8 vpds[2][AR5416_PD_GAIN_ICEPTS];
+ 	u8 pwrs[2][AR5416_PD_GAIN_ICEPTS];
+ 	int chain, idx, i;
+-	u8 f;
++	u32 phy_data = 0;
++	u8 f, tmp;
+ 
+ 	switch (channel->band) {
+ 	case IEEE80211_BAND_2GHZ:
+@@ -1208,9 +1209,6 @@ static int ar9170_set_freq_cal_data(struct ar9170 *ar,
+ 		}
+ 
+ 		for (i = 0; i < 76; i++) {
+-			u32 phy_data;
+-			u8 tmp;
+-
+ 			if (i < 25) {
+ 				tmp = ar9170_interpolate_val(i, &pwrs[0][0],
+ 							     &vpds[0][0]);
+diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+index e96091b..9c13979 100644
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -340,10 +340,15 @@ static u16 tx_write_2byte_queue(struct b43_pio_txqueue *q,
+ 			q->mmio_base + B43_PIO_TXDATA,
+ 			sizeof(u16));
+ 	if (data_len & 1) {
++		u8 tail[2] = { 0, };
++
+ 		/* Write the last byte. */
+ 		ctl &= ~B43_PIO_TXCTL_WRITEHI;
+ 		b43_piotx_write16(q, B43_PIO_TXCTL, ctl);
+-		b43_piotx_write16(q, B43_PIO_TXDATA, data[data_len - 1]);
++		tail[0] = data[data_len - 1];
++		ssb_block_write(dev->dev, tail, 2,
++				q->mmio_base + B43_PIO_TXDATA,
++				sizeof(u16));
+ 	}
+ 
+ 	return ctl;
+@@ -386,26 +391,31 @@ static u32 tx_write_4byte_queue(struct b43_pio_txqueue *q,
+ 			q->mmio_base + B43_PIO8_TXDATA,
+ 			sizeof(u32));
+ 	if (data_len & 3) {
+-		u32 value = 0;
++		u8 tail[4] = { 0, };
+ 
+ 		/* Write the last few bytes. */
+ 		ctl &= ~(B43_PIO8_TXCTL_8_15 | B43_PIO8_TXCTL_16_23 |
+ 			 B43_PIO8_TXCTL_24_31);
+-		data = &(data[data_len - 1]);
+ 		switch (data_len & 3) {
+ 		case 3:
+-			ctl |= B43_PIO8_TXCTL_16_23;
+-			value |= (u32)(*data) << 16;
+-			data--;
++			ctl |= B43_PIO8_TXCTL_16_23 | B43_PIO8_TXCTL_8_15;
++			tail[0] = data[data_len - 3];
++			tail[1] = data[data_len - 2];
++			tail[2] = data[data_len - 1];
++			break;
+ 		case 2:
+ 			ctl |= B43_PIO8_TXCTL_8_15;
+-			value |= (u32)(*data) << 8;
+-			data--;
++			tail[0] = data[data_len - 2];
++			tail[1] = data[data_len - 1];
++			break;
+ 		case 1:
+-			value |= (u32)(*data);
++			tail[0] = data[data_len - 1];
++			break;
+ 		}
+ 		b43_piotx_write32(q, B43_PIO8_TXCTL, ctl);
+-		b43_piotx_write32(q, B43_PIO8_TXDATA, value);
++		ssb_block_write(dev->dev, tail, 4,
++				q->mmio_base + B43_PIO8_TXDATA,
++				sizeof(u32));
+ 	}
+ 
+ 	return ctl;
+@@ -693,21 +703,25 @@ data_ready:
+ 			       q->mmio_base + B43_PIO8_RXDATA,
+ 			       sizeof(u32));
+ 		if (len & 3) {
+-			u32 value;
+-			char *data;
++			u8 tail[4] = { 0, };
+ 
+ 			/* Read the last few bytes. */
+-			value = b43_piorx_read32(q, B43_PIO8_RXDATA);
+-			data = &(skb->data[len + padding - 1]);
++			ssb_block_read(dev->dev, tail, 4,
++				       q->mmio_base + B43_PIO8_RXDATA,
++				       sizeof(u32));
+ 			switch (len & 3) {
+ 			case 3:
+-				*data = (value >> 16);
+-				data--;
++				skb->data[len + padding - 3] = tail[0];
++				skb->data[len + padding - 2] = tail[1];
++				skb->data[len + padding - 1] = tail[2];
++				break;
+ 			case 2:
+-				*data = (value >> 8);
+-				data--;
++				skb->data[len + padding - 2] = tail[0];
++				skb->data[len + padding - 1] = tail[1];
++				break;
+ 			case 1:
+-				*data = value;
++				skb->data[len + padding - 1] = tail[0];
++				break;
+ 			}
+ 		}
+ 	} else {
+@@ -715,11 +729,13 @@ data_ready:
+ 			       q->mmio_base + B43_PIO_RXDATA,
+ 			       sizeof(u16));
+ 		if (len & 1) {
+-			u16 value;
++			u8 tail[2] = { 0, };
+ 
+ 			/* Read the last byte. */
+-			value = b43_piorx_read16(q, B43_PIO_RXDATA);
+-			skb->data[len + padding - 1] = value;
++			ssb_block_read(dev->dev, tail, 2,
++				       q->mmio_base + B43_PIO_RXDATA,
++				       sizeof(u16));
++			skb->data[len + padding - 1] = tail[0];
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 896f532..38cfd79 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -631,6 +631,9 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
+ 		data->beacon_int = 1024 * info->beacon_int / 1000 * HZ / 1000;
+ 		if (WARN_ON(!data->beacon_int))
+ 			data->beacon_int = 1;
++		if (data->started)
++			mod_timer(&data->beacon_timer,
++				  jiffies + data->beacon_int);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1cbd9b4..b8f5ee3 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -2381,6 +2381,7 @@ static struct usb_device_id rt73usb_device_table[] = {
+ 	/* Huawei-3Com */
+ 	{ USB_DEVICE(0x1472, 0x0009), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Hercules */
++	{ USB_DEVICE(0x06f8, 0xe002), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe010), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	{ USB_DEVICE(0x06f8, 0xe020), USB_DEVICE_DATA(&rt73usb_ops) },
+ 	/* Linksys */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5143d20..fd40282 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -367,7 +367,10 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 	u32 staflags;
+ 
+-	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)))
++	if (unlikely(!sta || ieee80211_is_probe_resp(hdr->frame_control)
++			|| ieee80211_is_auth(hdr->frame_control)
++			|| ieee80211_is_assoc_resp(hdr->frame_control)
++			|| ieee80211_is_reassoc_resp(hdr->frame_control)))
+ 		return TX_CONTINUE;
+ 
+ 	staflags = get_sta_flags(sta);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
