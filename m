@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:53802 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbZJSKGe (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:21268 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755382AbZJABos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 06:06:34 -0400
-Received: by ewy3 with SMTP id 3so3397033ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 03:06:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <efe7343f0910190255o37e6f9foe5c71226fda80d26@mail.gmail.com>
-References: <4ADC368F.1050709@gmail.com>
-	 <efe7343f0910190255o37e6f9foe5c71226fda80d26@mail.gmail.com>
-Date: Mon, 19 Oct 2009 10:58:52 +0100
-Message-ID: <efe7343f0910190258r45dc531bi2437a0b0ea507001@mail.gmail.com>
-Subject: Re: [PATCH] rt73usb.c : more ids
-From: Luis Correia <luis.f.correia@gmail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 30 Sep 2009 21:44:48 -0400
+Subject: Re: [PATCH 3/3] at76c50x-usb: set firmware and hardware version in
+ wiphy
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1254359942-3483-3-git-send-email-linville@tuxdriver.com>
+References: <20091001011340.GA3123@tuxdriver.com>
+	 <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+	 <1254359942-3483-2-git-send-email-linville@tuxdriver.com>
+	 <1254359942-3483-3-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Oct 2009 02:32:27 +0100
+Message-Id: <1254360747.23350.2.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm sorry, please disregard my last email (too early and zero coffee....)
+On Wed, 2009-09-30 at 21:19 -0400, John W. Linville wrote:
+[...]
+> +	len = sizeof(wiphy->fw_version);
+> +	snprintf(wiphy->fw_version, len, "%d.%d.%d-%d",
+> +		 priv->fw_version.major, priv->fw_version.minor,
+> +		 priv->fw_version.patch, priv->fw_version.build);
+> +	/* null terminate the strings in case they were truncated */
+> +	wiphy->fw_version[len - 1] = '\0';
+[...]
 
-Luis
+This last statement is unnecessary; snprintf() always null-terminates
+(unless the length is zero).
 
-On Mon, Oct 19, 2009 at 10:55, Luis Correia <luis.f.correia@gmail.com> wrote:
-> Hi
->
-> 2009/10/19 Xose Vazquez Perez <xose.vazquez@gmail.com>:
->> hi,
->>
->> stolen from windows inf file(07/17/2009, 1.03.05.0000)
->> Ovislink 0x1b75, 0x7318
->> MSI 0x0db0, 0x4600
->> WideTell 0x7167, 0x3840
->>
->>
->> -thanks-
->>
->> regards,
->>
->> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->
-> Please provide this as a properly formatted PATCH (diffed from source)
->
-> Luis Correia,
-> rt2x00 project admin
->
+Ben.
+
+-- 
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
