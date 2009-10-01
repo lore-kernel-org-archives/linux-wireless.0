@@ -1,99 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-068.synserver.de ([212.40.180.68]:1062 "HELO
-	smtp-out-068.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760247AbZJIDvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 23:51:55 -0400
-Date: Fri, 9 Oct 2009 05:51:17 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-To: Mike Galbraith <efault@gmx.de>
-Cc: Frans Pop <elendil@planet.nl>,
-	Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-Message-ID: <20091009035117.GB1985@phenom2.trippelsdorf.de>
-References: <200910051500.55875.elendil@planet.nl>
- <1254974743.7797.21.camel@marge.simson.net>
- <20091008064041.67219b13@infradead.org>
- <200910081655.37485.elendil@planet.nl>
- <1255026217.6643.12.camel@marge.simson.net>
- <20091008203426.GA1946@phenom2.trippelsdorf.de>
- <1255059318.7236.13.camel@marge.simson.net>
+Received: from kroah.org ([198.145.64.141]:60007 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317AbZJAWtW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 18:49:22 -0400
+Date: Thu, 1 Oct 2009 15:44:30 -0700
+From: Greg KH <greg@kroah.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [stable] Making Intel WiFi Link 1000 usable in 2.6.31
+Message-ID: <20091001224430.GH28208@kroah.com>
+References: <1254339259.26521.1645.camel@rc-desk>
+ <20090930212447.GB30093@kroah.com>
+ <1254350175.26521.1662.camel@rc-desk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255059318.7236.13.camel@marge.simson.net>
+In-Reply-To: <1254350175.26521.1662.camel@rc-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 09, 2009 at 05:35:18AM +0200, Mike Galbraith wrote:
-> On Thu, 2009-10-08 at 22:34 +0200, Markus Trippelsdorf wrote:
-> > On Thu, Oct 08, 2009 at 08:23:37PM +0200, Mike Galbraith wrote:
-> > > On Thu, 2009-10-08 at 16:55 +0200, Frans Pop wrote:
-> > > > On Thursday 08 October 2009, Arjan van de Ven wrote:
-> > > > > From: Arjan van de Ven <arjan@linux.intel.com>
-> > > > > Date: Thu, 24 Sep 2009 13:24:16 +0200
-> > > > > Subject: [PATCH] x86, timers: check for pending timers after (device)
-> > > > > interrupts
-> > > > >
-> > > > > Now that range timers and deferred timers are common, I found a
-> > > > > problem with these using the "perf timechart" tool.
-> > > > >
-> > > > > It turns out that on x86, these two 'opportunistic' timers only
-> > > > > get checked when another "real" timer happens.
-> > > > > These opportunistic timers have the objective to save power by
-> > > > > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-> > > > > as much as possible.
-> > > > 
-> > > > This patch makes quite a difference for me. iwlagn and phy0 now 
-> > > > consistently show at ~10 ms or lower.
-> > > > 
-> > > > I do still get occasional high latencies, but those are for things like
-> > > > "[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
-> > > > expect them. Those high latencies are mostly only listed for "Global" and 
-> > > > don't translate to individual processes.
+On Wed, Sep 30, 2009 at 03:36:15PM -0700, reinette chatre wrote:
+> On Wed, 2009-09-30 at 14:24 -0700, Greg KH wrote:
+> > On Wed, Sep 30, 2009 at 12:34:19PM -0700, reinette chatre wrote:
+> > > commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+> > > Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> > > Date:   Fri Jul 17 09:30:16 2009 -0700
 > > > 
-> > > I still see very high latencies coming out of idle (last noted was >
-> > > 300ms, NO_HZ) with this patch, and wonder if the hunk below makes any
-> > > difference whatsoever for you.  Here, it definitely does. (shouldn't)
+> > >     iwlwifi: Handle new firmware file with ucode build number in header
+> > > 
+> > > commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+> > > Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> > > Date:   Fri Jul 17 09:30:22 2009 -0700
+> > > 
+> > >     iwlwifi: update 1000 series API version to match firmware
+> > > 
+> > > commit 02c06e4abc0680afd31bf481a803541556757fb6
+> > > Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > Date:   Fri Jul 17 09:30:14 2009 -0700
+> > > 
+> > >     iwlagn: modify digital SVR for 1000
+> > > 
+> > > commit 415e49936b4b29b34c2fb561eeab867d41fc43a6
+> > > Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > Date:   Thu Aug 13 13:30:54 2009 -0700
+> > > 
+> > >     iwlwifi: traverse linklist to find the valid OTP block
+> > > 
+> > > commit f7ea097d9b4e61a816c041c92548aad7c7ed7915
+> > > Author: Reinette Chatre <reinette.chatre@intel.com>
+> > > Date:   Fri Jul 24 11:13:12 2009 -0700
+> > > 
+> > >     iwlagn: fix null pointer access during ucode load on 1000
+> > > 
+> > > Thank you very much
 > > 
-> > I'm also seeing these strange, very high latencies here. Your patch
-> > didn't help unfortunately.
-> > 
-> > This is from an otherwise idle NO_NZ system:
-> > 
-> > # ./perf sched latency
-> > 
-> >  -----------------------------------------------------------------------------------------
-> >   Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms |
-> >  -----------------------------------------------------------------------------------------
-> >   ksoftirqd/0:4         |      2.216 ms |      170 | avg:   24.235 ms | max:  808.356 ms |
-> >   ksoftirqd/1:6         |      2.611 ms |      205 | avg:    4.334 ms | max:  165.553 ms |
-> >   migration/2:7         |      0.000 ms |        1 | avg:    3.060 ms | max:    3.060 ms |
-> > 
-> > With latencytop the ksoftirqd latency is over 1 sec frequently. (Could be
-> > ondemand CPUfreq governor related?)
+> > Is this the order in which they should be applied?
 > 
-> That's a separate issue, which Arjan was nice enough to fix for me.  He
-> even wrote the changelog, and used my mouse to do so ;-)
+> The first three patches from this list can be applied directly from
+> linux-2.6 in the order they appear here. That is:
+> 
+> commit cc0f555d511a5fe9d4519334c8f674a1dbab9e3a
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:16 2009 -0700
+> 
+>     iwlwifi: Handle new firmware file with ucode build number in header
+> 
+> commit cce53aa347c1e023d967b1cb1aa393c725aedba5
+> Author: Jay Sternberg <jay.e.sternberg@intel.com>
+> Date:   Fri Jul 17 09:30:22 2009 -0700
+> 
+>     iwlwifi: update 1000 series API version to match firmware
+> 
+> commit 02c06e4abc0680afd31bf481a803541556757fb6
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Fri Jul 17 09:30:14 2009 -0700
+> 
+>     iwlagn: modify digital SVR for 1000
 > 
 > 
-> Repeatable.  Apply patchlet, and the numbers below become repeatable.
+> The fourth patch needed backporting and is attached. 
 > 
-> perf_counter tools: make perf sched pass -F 0 to record
+> After doing the backporting I determined that the fifth patch is not
+> needed.
 > 
-> Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
-> .. however it unfortunately changed how perf events get recorded,
-> and caused sched to miss events.
-> 
-> This patch causes the sched code to use -F 0 to not use the
-> new framework when recording sched data.
+> Thank you very much for taking these patches
 
-Yes, your're right. With this patch applied perf sched latency is back
-to normal.
+Ok, I've taken all of these, but wow, those are big patches, much larger
+than we normally take for the -stable tree.
 
--- 
-Markus
+I don't want to have to do this again please.
+
+thanks,
+
+greg k-h
