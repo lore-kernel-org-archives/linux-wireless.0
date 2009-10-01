@@ -1,33 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:61234 "EHLO
+Received: from mx51.mymxserver.com ([85.199.173.110]:33510 "EHLO
 	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbZJPMFE (ORCPT
+	with ESMTP id S1756024AbZJAJjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 08:05:04 -0400
+	Thu, 1 Oct 2009 05:39:42 -0400
 From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: cfg80211 / libertas: an unusual race
-Date: Fri, 16 Oct 2009 14:03:37 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-References: <200910131055.31739.hs4233@mail.mn-solutions.de> <1255687030.4095.327.camel@johannes.local>
-In-Reply-To: <1255687030.4095.327.camel@johannes.local>
+To: linux-wireless@vger.kernel.org
+Subject: BUG: "wext: refactor" broke compilation
+Date: Thu, 1 Oct 2009 11:39:30 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910161403.37660.hs4233@mail.mn-solutions.de>
+  charset="us-ascii"
+Message-Id: <200910011139.30914.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I don't see this happening that way -- how are you even getting 
-to
-> __cfg80211_disconnected() if not through _send_deauth()?
+  LD      net/wireless/built-in.o
+  CC [M]  net/wireless/core.o
+net/wireless/core.c: In function 'cfg80211_netdev_notifier_call':
+net/wireless/core.c:673: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:674: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:675: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:676: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:677: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:680: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:681: error: 'struct wireless_dev' has no member named 'wext'
+net/wireless/core.c:683: error: 'struct wireless_dev' has no member named 'wext'
 
-See step 7a in the second table.  We got there via 
-_send_deauth().
+The reason is that currently two different Kconfig
+defines are used:
 
-But later, step 3b in the second table (I kept the original 
-numbers, so 3b happens after 7a time-wise!) we got into 
-WARN_ON().
+
+in net/wireless/core.c:
+
+#ifdef CONFIG_WIRELESS_EXT
+                wdev->wext.default_key = -1;
+  ...
+#endif
+
+
+in include/net/cfg80211.h:
+
+#ifdef CONFIG_CFG80211_WEXT
+        /* wext data */
+        struct {
+  ...
+        } wext;
+#endif
+
+
+But I configure my kernel this way:
+
+$ grep WIRELESS .config
+CONFIG_WIRELESS=y
+CONFIG_WIRELESS_EXT=y
+...
+
+$ grep WEXT .config
+CONFIG_WEXT_CORE=y
+CONFIG_WEXT_PROC=y
+CONFIG_WEXT_SPY=y
+CONFIG_WEXT_PRIV=y
+# CONFIG_CFG80211_WEXT is not set
 
 -- 
 http://www.holgerschurig.de
