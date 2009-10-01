@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:42598 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755237AbZJZIT6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52858 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755332AbZJABUT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 04:19:58 -0400
-Received: by ewy4 with SMTP id 4so3366346ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Oct 2009 01:20:01 -0700 (PDT)
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org, juuso.oikarinen@nokia.com
-Subject: Re: [RFC 1/3] mac80211: WIP - add operating BSSID to device configuration struct
-References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
-	<1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Mon, 26 Oct 2009 10:19:58 +0200
-In-Reply-To: <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com> (Luciano Coelho's message of "Fri\, 16 Oct 2009 15\:27\:20 +0300")
-Message-ID: <87tyxmh8i9.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 30 Sep 2009 21:20:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/3] at76c50x-usb: set firmware and hardware version in wiphy
+Date: Wed, 30 Sep 2009 21:19:02 -0400
+Message-Id: <1254359942-3483-3-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1254359942-3483-2-git-send-email-linville@tuxdriver.com>
+References: <20091001011340.GA3123@tuxdriver.com>
+ <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+ <1254359942-3483-2-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano Coelho <luciano.coelho@nokia.com> writes:
+From: Kalle Valo <kalle.valo@iki.fi>
 
-> Some chips need to know the BSSID that we are interested in before we start
-> the association process.  This patch adds an operating BSSID to the device
-> configuration struct ieee80211_conf so that it can be passed to the driver
-> when op_config is called.
->
-> With this solution we also solve the problem of some chips that require
-> an explicit disconnect command when disassociating.
+Set firmware and hardware version in wiphy so that user space can access
+it.
 
-You could explain here more how disconnection is possible. It's not
-obvious from the commit log.
+(Modification from original in favor of cfg80211 ethtool support. -- JWL)
 
-> + * @oper_bssid: BSSID on which we are operating; some chips need to know
-> + *    which BSSID we are "tuned" to in order to improve power management,
-> + *    coexistence with other technologies (such as Bluetooth) and other
-> + *    filtering issues.
+Cc: Kalle Valo <kalle.valo@iki.fi>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/at76c50x-usb.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-"Tuned" is confusing here. Also I think it's enough to specify the
-reasons in the commit log, and here just explain what the parameters
-is used for. Maybe something like this:
-
-* @oper_bssid: BSSID on which we are operating; some chips need to
-*    know the BSSID before association. If zero, there is no
-*    association established nor any requests of it.
-
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 8e1a55d..533954d 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -2217,6 +2217,8 @@ static struct ieee80211_supported_band at76_supported_band = {
+ static int at76_init_new_device(struct at76_priv *priv,
+ 				struct usb_interface *interface)
+ {
++	struct wiphy *wiphy;
++	size_t len;
+ 	int ret;
+ 
+ 	/* set up the endpoint information */
+@@ -2254,6 +2256,7 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	priv->device_unplugged = 0;
+ 
+ 	/* mac80211 initialisation */
++	wiphy = priv->hw->wiphy;
+ 	priv->hw->wiphy->max_scan_ssids = 1;
+ 	priv->hw->wiphy->max_scan_ie_len = 0;
+ 	priv->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+@@ -2265,6 +2268,15 @@ static int at76_init_new_device(struct at76_priv *priv,
+ 	SET_IEEE80211_DEV(priv->hw, &interface->dev);
+ 	SET_IEEE80211_PERM_ADDR(priv->hw, priv->mac_addr);
+ 
++	len = sizeof(wiphy->fw_version);
++	snprintf(wiphy->fw_version, len, "%d.%d.%d-%d",
++		 priv->fw_version.major, priv->fw_version.minor,
++		 priv->fw_version.patch, priv->fw_version.build);
++	/* null terminate the strings in case they were truncated */
++	wiphy->fw_version[len - 1] = '\0';
++
++	wiphy->hw_version = priv->board_type;
++
+ 	ret = ieee80211_register_hw(priv->hw);
+ 	if (ret) {
+ 		printk(KERN_ERR "cannot register mac80211 hw (status %d)!\n",
 -- 
-Kalle Valo
+1.6.2.5
+
