@@ -1,81 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59412 "EHLO mx2.suse.de"
+Received: from mga14.intel.com ([143.182.124.37]:60833 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751640AbZJNEqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 00:46:04 -0400
-Date: Tue, 13 Oct 2009 21:45:19 -0700
-From: Greg KH <gregkh@suse.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>,
-	James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
-	2.6.32-rc3)
-Message-ID: <20091014044519.GA19199@suse.de>
-References: <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain> <20091009091538.GA4154@elte.hu> <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
+	id S1755272AbZJAXQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 19:16:31 -0400
+Subject: Re: [stable] Making Intel WiFi Link 1000 usable in 2.6.31
+From: reinette chatre <reinette.chatre@intel.com>
+To: Greg KH <greg@kroah.com>
+Cc: "stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20091001224430.GH28208@kroah.com>
+References: <1254339259.26521.1645.camel@rc-desk>
+	 <20090930212447.GB30093@kroah.com> <1254350175.26521.1662.camel@rc-desk>
+	 <20091001224430.GH28208@kroah.com>
+Content-Type: text/plain
+Date: Thu, 01 Oct 2009 16:16:34 -0700
+Message-Id: <1254438994.26521.2092.camel@rc-desk>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 11:08:15AM -0700, Luis R. Rodriguez wrote:
-> On Mon, Oct 12, 2009 at 4:24 PM, Greg KH <gregkh@suse.de> wrote:
-> > On Mon, Oct 12, 2009 at 05:42:44PM +0200, Ingo Molnar wrote:
-> >> Hm, i think i even gave drivers/staging/ its name?
-> >
-> > Yes you did, and I appreciate it :)
-> >
-> >> > [...] It seems that I'm the only one that has the ability to drop
-> >> > drivers out of the kernel tree, which is a funny situation :)
-> >>
-> >> You are the only one who has the ability to send a warning shot towards
-> >> drivers _without hurting users_, and by moving it into the focus of a
-> >> team of cleanup oriented developers.
-> >>
-> >> I think that's an important distinction ;-)
-> >
-> > Good point.
-> >
-> >> > In thinking about this a lot more, I don't really mind it. ??If people
-> >> > want to push stuff out of "real" places in the kernel, into
-> >> > drivers/staging/ and give the original authors and maintainers notice
-> >> > about what is going on, _and_ provide a TODO file for what needs to
-> >> > happen to get the code back into the main portion of the kernel tree,
-> >> > then I'll be happy to help out with this and manage it.
-> >> >
-> >> > I think a 6-9 month window (basically 3 kernel releases) should be
-> >> > sufficient time to have a driver that has been in drivers/staging/ be
-> >> > cleaned up enough to move back into the main kernel tree. ??If not, it
-> >> > could be easily dropped.
-> >> >
-> >> > Any objections to this?
-> >>
-> >> Sounds excellent to me!
-> >
-> > Great, I'll await the patches to move stuff to drivers/staging/ now.
-> >
-> > Wireless developers, warm up your editors :)
+On Thu, 2009-10-01 at 15:44 -0700, Greg KH wrote:
+> Ok, I've taken all of these, but wow, those are big patches, much larger
+> than we normally take for the -stable tree.
 > 
-> OK -- prism54 seems like a good candidate, instead of removing it
-> completely as I originally outlined on the feature removal schedule.
-> Do we have a file to give notices to move drivers to staging because
-> they are old as with the feature removal schedule? The more visible
-> these things become the better it is for users.
+> I don't want to have to do this again please.
 
-We've found that the feature removal file is also ignored :)
+ack.
 
-How about when it was scheduled to be removed, we put it in staging and
-I'll add it to my announcements about the staging tree every release?
+Thank you very much 
 
-Unless you can think of a better way?
+Reinette
 
-thanks,
 
-greg k-h
+
+
+
+
