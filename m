@@ -1,37 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:19844 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758737AbZJHQaH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52860 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755344AbZJABUT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 12:30:07 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so34179fge.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 09:28:19 -0700 (PDT)
-Message-ID: <4ACE131E.3080908@lwfinger.net>
-Date: Thu, 08 Oct 2009 11:28:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: James Grossmann <cctsurf@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Prism54/p54pci
-References: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
-In-Reply-To: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 30 Sep 2009 21:20:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/3] cfg80211: add firmware and hardware version to wiphy
+Date: Wed, 30 Sep 2009 21:19:01 -0400
+Message-Id: <1254359942-3483-2-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+References: <20091001011340.GA3123@tuxdriver.com>
+ <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2009 04:00 PM, James Grossmann wrote:
-> I have the gigafast WF728-AEX, which doesn't seem to work with the
-> p54pci drivers, I was previously using it with my Thinkpad T23 under
-> Gentoo (gentoo kernels 2.6.29 and 2.6.30), and could only use the
-> 1.0.4.3 firmware, now, I am using it under Ubuntu 9.04
-> (2.6.28-15-generic kernel) on the same computer, and find that I have
-> to load the prism54 driver to make it work.
-> I noticed that you were considering this to be depricated, I hope that
-> you can help me to make p54pci work!
+From: Kalle Valo <kalle.valo@nokia.com>
 
-As it works with 2.6.29 and 2.6.30 kernels, but not with 2.6.28, it 
-seems likely that you need a later version of the driver. Does Ubuntu 
-have a package for compat-wireless? If so, install it. If not, you 
-will need to install from source.
+It's useful to provide firmware and hardware version to user space and have a
+generic interface to retrieve them. Users can provide the version information
+in bug reports etc.
 
-Larry
+Add fields for firmware and hardware version to struct wiphy.
+
+(Dropped nl80211 bits for now and modified remaining bits in favor of
+ethtool. -- JWL)
+
+Cc: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/net/cfg80211.h |    3 +++
+ net/wireless/ethtool.c |   23 ++++++++++++++++++++++-
+ net/wireless/ethtool.h |    3 +++
+ 3 files changed, 28 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 241ea14..6f4862b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1142,6 +1142,9 @@ struct wiphy {
+ 	u32 frag_threshold;
+ 	u32 rts_threshold;
+ 
++	char fw_version[ETHTOOL_BUSINFO_LEN];
++	u32 hw_version;
++
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+ 	 * know whether it points to a wiphy your driver has registered
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index 94ca377..3c59549 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -4,6 +4,8 @@
+ 
+ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_drvinfo = cfg80211_get_drvinfo,
++	.get_regs_len = cfg80211_get_regs_len,
++	.get_regs = cfg80211_get_regs,
+ 	.get_link = ethtool_op_get_link,
+ };
+ 
+@@ -18,10 +20,29 @@ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+ 	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
+ 	info->version[sizeof(info->version) - 1] = '\0';
+ 
+-	strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
++	if (wdev->wiphy->fw_version[0])
++		strncpy(info->fw_version, wdev->wiphy->fw_version,
++			sizeof(info->fw_version));
++	else
++		strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
+ 	info->fw_version[sizeof(info->fw_version) - 1] = '\0';
+ 
+ 	strncpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
+ 		sizeof(info->bus_info));
+ 	info->bus_info[sizeof(info->bus_info) - 1] = '\0';
+ }
++
++int cfg80211_get_regs_len(struct net_device *dev)
++{
++	/* For now, return 0... */
++	return 0;
++}
++
++void cfg80211_get_regs(struct net_device *dev, struct ethtool_regs *regs,
++			void *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	regs->version = wdev->wiphy->hw_version;
++	regs->len = 0;
++}
+diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
+index a51b470..2d4602a 100644
+--- a/net/wireless/ethtool.h
++++ b/net/wireless/ethtool.h
+@@ -4,6 +4,9 @@
+ #include <linux/ethtool.h>
+ 
+ extern void cfg80211_get_drvinfo(struct net_device *, struct ethtool_drvinfo *);
++extern int cfg80211_get_regs_len(struct net_device *);
++extern void cfg80211_get_regs(struct net_device *, struct ethtool_regs *,
++				void *);
+ 
+ extern const struct ethtool_ops cfg80211_ethtool_ops;
+ 
+-- 
+1.6.2.5
+
