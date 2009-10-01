@@ -1,160 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:47633 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756650AbZJAXSj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33387 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640AbZJAPTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 19:18:39 -0400
-Received: by fxm27 with SMTP id 27so536349fxm.17
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 16:18:41 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Hin-Tak Leung" <hintak.leung@gmail.com>
-Subject: Re: [PATCH] ar9170usb: LEDs are confused
-Date: Fri, 2 Oct 2009 01:18:26 +0200
-Cc: Malte Gell <malte.gell@gmx.de>, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com
-References: <200910011654.10963.chunkeey@googlemail.com> <200910012234.33182.chunkeey@googlemail.com> <3ace41890910011424g3711ffbap2d4057776f10b6d8@mail.gmail.com>
-In-Reply-To: <3ace41890910011424g3711ffbap2d4057776f10b6d8@mail.gmail.com>
+	Thu, 1 Oct 2009 11:19:49 -0400
+Date: Thu, 1 Oct 2009 11:18:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
+Message-ID: <20091001151820.GA2895@tuxdriver.com>
+References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com> <20090925044258.GA2722@tuxdriver.com> <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com> <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com> <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <200910020118.27545.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fxa3qjt2.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 01 October 2009 23:24:59 Hin-Tak Leung wrote:
-> On Thu, Oct 1, 2009 at 9:34 PM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > On Thursday 01 October 2009 20:06:35 Hin-Tak Leung wrote:
-> >> On Thu, Oct 1, 2009 at 3:54 PM, Christian Lamparter
-> >> <chunkeey@googlemail.com> wrote:
-> >> > On 2009-10-01 06:32 AM, Malte Gell wrote:
-> >> >>I first noticed the LEDs are confused,
-> >> > no, the LED colors are not _confused_ at all.
-> >> > This is simply different on.... well, you know: on a per-device base!
-> >> >
-> >> > For example: The Netgear uses a single bi-color LED for their WNDA3100 stick.
-> >> > It glows blue or/and orange depending on the selected band and current
-> >> > operation mode and state...
-> >> >
-> >> > No idea why they didn't stick to the usual red/green mix.
-> >> > Maybe because someone told the hw-devs about the existence of
-> >> > red/green colorblind people??!
-> >> >
-> >> > The original vendor driver (located: drivers/staging/otus/80211core/ledmgr.c)
-> >> > goes to great lengths to describe what's behind the variety of
-> >> > blinking signals. Which is nice, if you like expensive light shows...
-> >>
-> >> This is just based on my brief look at the relevant code itself - I
-> >> think the driver actually enumerates how many LEDs the device has, so
-> >> the ONLY_ONE_LED construct is a bit bogus. Also I think the
-> >> 0x0846:0x9001 is Malte's with swapped LEDs, not ONLY_ONE?
-> > ?
-> >
-> > 0x0846:0x9001 is a Netgear WN111 v2.
-> > (one LED reference: otus' ledmgr.c ~line 547)
-> >
-> > and AFAIK: Malte uses an AVM FRITZ!WLAN Stick N (2.4?).
+On Thu, Oct 01, 2009 at 05:18:33PM +0300, Kalle Valo wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
 > 
-> I just remember the ID from Malte's ndiswrapper-list posting.
-indeed, he must have bought a WN111 v2 as well?!
-but just in case he's trying to use the WN111 driver:
-This may not work, AVM FRITZ!WLAN is not 100% compatible with
-most other AR9170 variants and could refuse to work properly with
-other 3rd party drivers.
-
-> It is not unthinkable of a rebranded device, or even vendor abusing the
-> system a bit and put out a device which is subtly different with the
-> same ids.
-yes, I've heard of such cases.
-But in all of them a reseller simply _borrowed_ the usb VID of
-the hardware manufacture (e.g Ralink/Atheros) and not from
-other resellers.
-
-I hope you agree with me on this occasion that we don't have
-to be paranoid about pid/vid collisions, unless someone
-can prove that he got a genuine ar9170 with a bi-color LED/two LEDs
-which identifies itself as WN111 v2.
-> >> I had a look when Malte first wrote about the swap - the code
-> >> basically just do assoc/data-tx in enumeration order (first LED found
-> >> is assoc, 2nd is tx, which make sense if some variant only have a
-> >> LED).
-> > Depends. I think it's more important to have some sort of an "an activity LED"
-> > than a connection indicator, because most desktops-guis nowadays have lots
-> > of fancy applets which are constantly monitoring your connection status and
-> > start to bark as soon as it changes...
+> > On Fri, Sep 25, 2009 at 09:53:35AM -0700, Luis R. Rodriguez wrote:
 > >
-> > BTW: my laptop (with an IWL 5300) only has one LED assigned for wlan as well.
-> > But, someone had the genius idea to put the activity LED into _inverted_
-> > mode when the connection is established. It stays on after association
-> > and flashes under TX activity... This is nice, but it has a downside:
-> > two trigger _drive_ one LED => no real exclusive access anymore.
-> > If you want to reassign the LEDs the clueless user has to be aware about
-> > this trigger dependency, or he see some _blinking interference_.
+> >> So for Wake-on-Wireless I ran into the same, ethtool just did not
+> >> offer the same wake up events needed for wireless. I could have
+> >> technically used ethtool and expanded it to support wireless but it
+> >> just seemed dirty.
+> >> 
+> >> I agree that using ethtool seems overkill compared to the patches
+> >> you posted.
 > >
-> >> As for the color - it is probably just a matter of commercial
-> >> interests (if they can get a particular color from a source cheaper)
-> > unlikely, the bi-color LED is a super bright one.
-> >
-> >> or simply variety to catch some customers - as you say, some *do* like
-> >> expensive light shows, and there is a market for it and money to be
-> >> made that way.
-> > :-D
-> >
-> > well to be fair, I think they tried to implement some sort of
-> > complex blinking language code. You can tell apart if
-> > the device is idling/scanning/connected/sending in the 5GHz or 2GHz
-> > band just by looking at the blue and orange rhythms...
-> > (maybe this visual feedback is indeed easier to comprehend for the generic
-> > customer than any hard and honest numbers)
-> >
-> > But back to the topic:
-> > This elaborate morse code is clearly way beyond the scope and
-> > abilities of ledclass. I think we should really stick to the
-> > simple rule: one trigger corresponds to only one physical LED.
-> >
-> >> Anyway, I am just writing regarding the ONLY_ONE_LED construct and its
-> >> association with 0x0846:0x9001 ...
-> > hmm, not sure what I should do here...
-> > Do you think the driver should simply ignore the lack of a second LED (color)?
-> > Or is it just that the ONLY_ONE_LED construct sounds really lame
-> > and needs a more cunning name?
->
-> Hmm, I mean the ONLY_ONE_LED config should not be a compiled in config
-> associated with an vid/pid, but dynamically determined from the
-> enumeration.
-dynamically determined? how?
-Neither the EEPROM, nor any hw/fw register contain any information about
-the number of available LEDs on the platform. The only feasible clue
-comes from the devices' usb descriptors (=> VID and PID).
+> > I think you either overestimate the amount of trouble for implementing
+> > (minimal) ethtool support or you underestimate the amount of
+> > functionality available through that interface.
+> 
+> I'm not worried about the implementation complexity, and as your
+> patches show it was easy. My concern is the overall design for
+> wireless devices. Instead of using nl80211 for everything, with some
+> features we would use nl80211/iw and with some ethtool. That's just
+> confusing and I don't like that. I would prefer that nl80211 provides
+> everything, it makes things so much easier.
 
-> In the case of only one LED, the it sounds quite neat to represent
-> both assciation status and transmission status by blinking pattern
-> :-).
-It is... but the logic which programs the GPIOs is nowhere to be found
-inside the driver... I think the vendor implemented it somewhere
-deep inside the embedded controller (firmware).
-And the card, driver, ledclass and userspace is unaware of this and
-treats it as two independent things => this is BAD.
+Well, if the hw/fw version numbers were the only thing then I'd
+probably say it's not a big deal.  But having ethtool support is nice
+in that it makes a familiar tool work for us.  Among other things,
+this probably helps with some distro scripts that don't work quite
+right without it.  Plus, there is lots of debugging stuff that could
+be turned-on without having to write new tools.
 
-Let me explain (why this is BAD), just take this topic as a example:
-Malte (our eagle-eyed user) discovered that his LEDs don't flash the
-same way as with a customized vendor driver.
-In his attempt to fix is issue, he could inadvertently break the
-configuration of others...
+I suppose I understand the 'one API' idea, but why duplicate
+functionality?  Anyway, adding a couple of ioctl calls isn't a
+big deal.  And don't forget, we are still network drivers too...
 
-And there's no denying here, at some point, we all had to
-suffer from similar situations which are knows as the 
-fallout of -rc1 kernels. :-D
+> > That, or you just don't like using something named "eth"tool for
+> > wireless -- but hey, let's be honest about the frames we
+> > send/receive to/from the kernel... :-)
+> 
+> I don't have a problem with the name :) But ethernet is still so much
+> different from 802.11 that there isn't that much to share and we in
+> wireless will need different features.
+> 
+> One example is the hw version, ethtool only provides u32 to userspace
+> and moves the burden of translating hw id to the user. For us a string
+> is much better choise because when debuggin we need to often (or
+> always?) know the chip version.
 
-> But one of them should take priority in case of conflict, and in this
-> regard it seems that you and I disagree on which should be.
-hmm, when I think about it: the only (proper) way to accomplish this feat 
-would be to extend the LED(class), so it can have several different triggers
-at the same time... 
+Look at the way most drivers set the version (using each byte as a
+field).  If you want prettier output, adding a parser to the userland
+ethtool is fairly trivial.  It looks something like the patch below...
 
-(or as an alternative: implement trigger filters. So some LEDs can only
-be used with a specific trigger event.
-however, there is a possibility that this might to more harm than good.)
+> But this is not something I will start fighting about. If you still
+> think that ethtool is the way to go, I'm perfectly fine with it.
+> 
+> >> The ethtool interface provides functionality for viewing and modifying
+> > eeprom contents, dumping registers, trigger self-tests, basic driver
+> > info, getting and setting message reporting levels, external card
+> > identification (hey, _could_ be useful!), and some other bits like
+> > checksum offload that might(?) be useful in the future.  I understand
+> > regarding the WoW vs. WoL issue but probably the answer is just to
+> > add a new method for WoW...?
+> 
+> I took a look at ethtool help output from debian unstable and I think
+> this is the set of features we can use in wireless:
+> 
+>         ethtool -i|--driver DEVNAME     Show driver information
+>         ethtool -d|--register-dump DEVNAME      Do a register dump
+>                 [ raw on|off ]
+>                 [ file FILENAME ]
+>         ethtool -e|--eeprom-dump DEVNAME        Do a EEPROM dump
+>                 [ raw on|off ]
+>                 [ offset N ]
+>                 [ length N ]
+>         ethtool -E|--change-eeprom DEVNAME      Change bytes in device
+>         EEPROM
+>                 [ magic N ]
+>                 [ offset N ]
+>                 [ value N ]
+>         ethtool -p|--identify DEVNAME   Show visible port
+>         identification (e.g. blinking)
+>                [ TIME-IN-SECONDS ]
+>         ethtool -t|--test DEVNAME       Execute adapter self test
+>                [ online | offline ]
+ 
+I agree with the above.
 
-Regards,
-	Chr
+> But here are the features which I doubt we will ever use:
+> 
+>         ethtool -s|--change DEVNAME     Change generic options
+>                 [ speed %%d ]
+>                 [ duplex half|full ]
+>                 [ port tp|aui|bnc|mii|fibre ]
+>                 [ autoneg on|off ]
+>                 [ advertise %%x ]
+>                 [ phyad %%d ]
+>                 [ xcvr internal|external ]
+>                 [ wol p|u|m|b|a|g|s|d... ]
+>                 [ sopass %%x:%%x:%%x:%%x:%%x:%%x ]
+>                 [ msglvl %%d ] 
+>         ethtool -a|--show-pause DEVNAME Show pause options
+>         ethtool -A|--pause DEVNAME      Set pause options
+>                 [ autoneg on|off ]
+>                 [ rx on|off ]
+>                 [ tx on|off ]
+
+I agree that the above are ethernet-specific.
+
+>         ethtool -c|--show-coalesce DEVNAME      Show coalesce options
+>         ethtool -C|--coalesce DEVNAME   Set coalesce options
+>                 [adaptive-rx on|off]
+>                 [adaptive-tx on|off]
+>                 [rx-usecs N]
+>                 [rx-frames N]
+>                 [rx-usecs-irq N]
+>                 [rx-frames-irq N]
+>                 [tx-usecs N]
+>                 [tx-frames N]
+>                 [tx-usecs-irq N]
+>                 [tx-frames-irq N]
+>                 [stats-block-usecs N]
+>                 [pkt-rate-low N]
+>                 [rx-usecs-low N]
+>                 [rx-frames-low N]
+>                 [tx-usecs-low N]
+>                 [tx-frames-low N]
+>                 [pkt-rate-high N]
+>                 [rx-usecs-high N]
+>                 [rx-frames-high N]
+>                 [tx-usecs-high N]
+>                 [tx-frames-high N]
+>                 [sample-interval N]
+
+These _could_ be useful if wireless becomes more
+performance-oriented...
+
+>         ethtool -g|--show-ring DEVNAME  Query RX/TX ring parameters
+>         ethtool -G|--set-ring DEVNAME   Set RX/TX ring parameters
+>                 [ rx N ]
+>                 [ rx-mini N ]
+>                 [ rx-jumbo N ]
+>                 [ tx N ]
+
+Wireless devices have ring buffers, no?
+
+>         ethtool -k|--show-offload DEVNAME       Get protocol offload
+>                 information
+>         ethtool -K|--offload DEVNAME    Set protocol offload
+>                 [ rx on|off ]
+>                 [ tx on|off ]
+>                 [ sg on|off ]
+>                 [ tso on|off ]
+>                 [ ufo on|off ]
+>                 [ gso on|off ]
+>                 [ gro on|off ]
+>                 [ lro on|off ]
+
+Again, if wireless devices become performance-oriented...
+
+>         ethtool -r|--negotiate DEVNAME  Restart N-WAY negotation
+
+Ethernet-specific...might could be overloaded for wireless to trigger
+reassoc...?
+
+>         ethtool -n|--show-nfc DEVNAME   Show Rx network flow
+>                 classificationoptions
+>                 [ rx-flow-hash
+>                 tcp4|udp4|ah4|sctp4|tcp6|udp6|ah6|sctp6 ]
+>         ethtool -N|--config-nfc DEVNAME Configure Rx network flow
+>                 classification options
+>                 [ rx-flow-hash tcp4|udp4|ah4|sctp4|tcp6|udp6|ah6|sctp6
+>                 m|v|t|s|d|f|n|r... ]
+
+Long-shot, but no reason it couldn't be used in wireless... :-)
+
+Anyway, it doesn't really matter if we don't use the whole API -- many
+older ethernet devices don't support all these features.  The point
+is that the API exists and has some overlap with our needs.  It is a
+driver-oriented API, with nitty-gritty stuff that need not clutter a
+configuraiton API like cfg80211.  There is even the potential of us
+adding our own extensions (e.g. WoW) that are also device-oriented.
+
+Anyway, between the link detection and making distro scripts work
+plus enabling a familiar tool for basic driver info I think this is
+a win.  So much the better if some drivers move to ethtool for register
+dumping, setting message verbosity, querying/changing eeprom values,
+etc, etc...
+
+John
+
+P.S.  The aforementioned path for userland ethtool...(theorhetical,
+not even compiled...)
+
+>From aa92d32ac1cca57bdd3439013b0c7777bdf1217c Mon Sep 17 00:00:00 2001
+From: John W. Linville <linville@tuxdriver.com>
+Date: Thu, 1 Oct 2009 11:01:32 -0400
+Subject: [PATCH] add support for at76c50x-usb driver.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ Makefile.am    |    2 +-
+ at76c50x-usb.c |   32 ++++++++++++++++++++++++++++++++
+ ethtool.c      |    1 +
+ 3 files changed, 34 insertions(+), 1 deletions(-)
+ create mode 100644 at76c50x-usb.c
+
+diff --git a/Makefile.am b/Makefile.am
+index eac65fe..a384949 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -8,7 +8,7 @@ ethtool_SOURCES = ethtool.c ethtool-copy.h ethtool-util.h	\
+ 		  amd8111e.c de2104x.c e100.c e1000.c igb.c	\
+ 		  fec_8xx.c ibm_emac.c ixgb.c ixgbe.c natsemi.c	\
+ 		  pcnet32.c realtek.c tg3.c marvell.c vioc.c	\
+-		  smsc911x.c
++		  smsc911x.c at76c50x-usb.c
+ 
+ dist-hook:
+ 	cp $(top_srcdir)/ethtool.spec $(distdir)
+diff --git a/at76c50x-usb.c b/at76c50x-usb.c
+new file mode 100644
+index 0000000..295d1cb
+--- /dev/null
++++ b/at76c50x-usb.c
+@@ -0,0 +1,32 @@
++#include <stdio.h>
++#include "ethtool-util.h"
++
++static char hw_versions[] = {
++        "503_ISL3861",
++        "503_ISL3863",
++        "        503",
++        "    503_ACC",
++        "        505",
++        "   505_2958",
++        "       505A",
++        "     505AMX",
++};
++
++int
++at76c50x_usb_dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs)
++{
++	u8 version = (u8)(regs->version >> 24);
++	u8 rev_id = (u8)(regs->version);
++	char *ver_string;
++
++	if(version != 0)
++		return -1;
++
++	ver_string = hw_versions[rev_id];
++	fprintf(stdout,
++		"Hardware Version                    %s\n",
++		ver_string);
++
++	return 0;
++}
++
+diff --git a/ethtool.c b/ethtool.c
+index 0110682..7608750 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -1189,6 +1189,7 @@ static struct {
+ 	{ "sky2", sky2_dump_regs },
+         { "vioc", vioc_dump_regs },
+         { "smsc911x", smsc911x_dump_regs },
++        { "at76c50x-usb", at76c50x_usb_dump_regs },
+ };
+ 
+ static int dump_regs(struct ethtool_drvinfo *info, struct ethtool_regs *regs)
+-- 
+1.6.2.5
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
