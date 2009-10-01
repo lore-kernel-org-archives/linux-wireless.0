@@ -1,53 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f203.google.com ([209.85.212.203]:36572 "EHLO
-	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758750AbZJHS0k convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:36164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056AbZJAUG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:26:40 -0400
-Received: by vws41 with SMTP id 41so3355929vws.4
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 11:26:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-	 <1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
-Date: Thu, 8 Oct 2009 14:26:03 -0400
-Message-ID: <b6c5339f0910081126h3fe2dd25x9198dedf09a20cea@mail.gmail.com>
-Subject: Re: [PATCH 7/7] ath5k: enable Power-Save Polls by setting the
-	association ID
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 1 Oct 2009 16:06:26 -0400
+Subject: [PATCH v2 2.6.32] mac80211: fix vlan and optimise RX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?Q?Bla=C5=BE_Ba=C4=8Dnik?= <bacnik@gmail.com>
+In-Reply-To: <1254341893.3959.13.camel@johannes.local>
+References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+	 <1254341787.3959.11.camel@johannes.local>
+	 <1254341893.3959.13.camel@johannes.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Oct 2009 22:06:29 +0200
+Message-Id: <1254427589.3959.38.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 6, 2009 at 8:44 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> @@ -3226,6 +3225,14 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
->                        set_beacon_filter(hw, sc->assoc);
->                ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
->                        AR5K_LED_ASSOC : AR5K_LED_INIT);
-> +               if (bss_conf->assoc) {
-> +                       ATH5K_DBG(sc, ATH5K_DEBUG_ANY,
-> +                                 "Bss Info ASSOC %d, bssid: %pM\n",
-> +                                 bss_conf->aid, common->curbssid);
-> +                       common->curaid = bss_conf->aid;
-> +                       ath5k_hw_set_associd(ah);
-> +                       /* Once ANI is available you would start it here */
-> +               }
+When receiving data frames, we can send them only to
+the interface they belong to based on transmitting
+station (this doesn't work for probe requests). Also,
+don't try to handle other frames for AP_VLAN at all
+since those interface should only receive data.
 
-Just quick question - do we only want to call this if we are associated?
+Additionally, the transmit side must check that the
+station we're sending a frame to is actually on the
+interface we're transmitting on, and not transmit
+packets to functions that live on other interfaces,
+so validate that as well.
 
-Or maybe we should call it to reset the mask if we are unassociated...
+Another bug fix is needed in sta_info.c where in the
+VLAN case when adding/removing stations we overwrite
+the sdata variable we still need.
 
-I wrote a patch a while ago to the ath5k list that did something similar,
-but I did:
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Cc: stable@kernel.org
+---
+ net/mac80211/rx.c       |   10 ++++++++--
+ net/mac80211/sta_info.c |    2 ++
+ net/mac80211/tx.c       |    3 ++-
+ 3 files changed, 12 insertions(+), 3 deletions(-)
 
-       if (changes & (BSS_CHANGED_BSSID | BSS_CHANGED_ASSOC)) {
-               ath5k_hw_set_associd(ah, ah->ah_bssid, ah->ah_aid);
-       }
+--- wireless-testing.orig/net/mac80211/rx.c	2009-09-30 21:38:59.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-09-30 22:09:54.000000000 +0200
+@@ -2164,11 +2164,17 @@ static void __ieee80211_rx_handle_packet
+ 
+ 	skb = rx.skb;
+ 
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++	if (rx.sdata && ieee80211_is_data(hdr->frame_control)) {
++		rx.flags |= IEEE80211_RX_RA_MATCH;
++		prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++		if (prepares)
++			prev = rx.sdata;
++	} else list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		if (!netif_running(sdata->dev))
+ 			continue;
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 			continue;
+ 
+ 		rx.flags |= IEEE80211_RX_RA_MATCH;
+--- wireless-testing.orig/net/mac80211/tx.c	2009-09-30 21:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2009-09-30 22:04:25.000000000 +0200
+@@ -1704,7 +1704,8 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 	if (!is_multicast_ether_addr(hdr.addr1)) {
+ 		rcu_read_lock();
+ 		sta = sta_info_get(local, hdr.addr1);
+-		if (sta)
++		/* XXX: in the future, use sdata to look up the sta */
++		if (sta && sta->sdata == sdata)
+ 			sta_flags = get_sta_flags(sta);
+ 		rcu_read_unlock();
+ 	}
+--- wireless-testing.orig/net/mac80211/sta_info.c	2009-10-01 21:59:00.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2009-10-01 22:05:00.000000000 +0200
+@@ -361,6 +361,7 @@ int sta_info_insert(struct sta_info *sta
+ 					     u.ap);
+ 
+ 		drv_sta_notify(local, &sdata->vif, STA_NOTIFY_ADD, &sta->sta);
++		sdata = sta->sdata;
+ 	}
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+@@ -496,6 +497,7 @@ static void __sta_info_unlink(struct sta
+ 
+ 		drv_sta_notify(local, &sdata->vif, STA_NOTIFY_REMOVE,
+ 			       &(*sta)->sta);
++		sdata = (*sta)->sdata;
+ 	}
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
 
-Thus if it changed regardless of the reason why, we update the mask.
 
--- 
-Bob Copeland %% www.bobcopeland.com
