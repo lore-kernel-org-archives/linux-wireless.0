@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:56786 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755391AbZJLMXS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:23:18 -0400
-Date: Mon, 12 Oct 2009 12:22:01 +0000
-From: Frederik Deweerdt <frederik.deweerdt@xprog.eu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
-Message-ID: <20091012122201.GA31282@gambetta>
-References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
+Received: from mga14.intel.com ([143.182.124.37]:56691 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752254AbZJAUNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 16:13:54 -0400
+Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
+From: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+In-Reply-To: <43e72e890910011256v18b30e7ck420ce80b5d35fdcb@mail.gmail.com>
+References: <20090924180048.14503.9579.stgit@tikku>
+	 <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
+	 <20090925044258.GA2722@tuxdriver.com>
+	 <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com>
+	 <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com>
+	 <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi>
+	 <20091001151820.GA2895@tuxdriver.com> <873a63qe6e.fsf@purkki.valot.fi>
+	 <20091001170722.GC2895@tuxdriver.com>
+	 <43e72e890910011256v18b30e7ck420ce80b5d35fdcb@mail.gmail.com>
+Content-Type: text/plain
+Date: Thu, 01 Oct 2009 13:12:34 -0700
+Message-Id: <1254427954.3538.2.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafael,
+On Thu, 2009-10-01 at 13:56 -0600, Luis R. Rodriguez wrote:
+> On Thu, Oct 1, 2009 at 5:07 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> 
+> > I don't predict a huge problem if there are
+> > valid extensions required for use by wireless drivers in the future.
+> > But for now, I'd like to see us make use of some of the debugging
+> > facilities available in the ethtool API -- hopefully the iwlwifi guys
+> > are listening... ;-)
+> 
+> Does the same apply to wimax then? Ethtool for 802.11 and wimax? Eh.
 
-On Mon, Oct 12, 2009 at 12:41:30AM +0200, Rafael J. Wysocki wrote:
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14185
-> Subject		: Oops in driversbasefirmware_class
-> Submitter	:  <lars_ericsson@telia.com>
-> Date		: 2009-09-17 05:09 (25 days old)
-> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6e03a201bbe8137487f340d26aa662110e324b20
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14253
-> Subject		: Oops in driversbasefirmware_class
-> Submitter	: Lars Ericsson <Lars_Ericsson@telia.com>
-> Date		: 2009-09-16 20:44 (26 days old)
-> References	: http://lkml.org/lkml/2009/9/16/461
-> Handled-By	: Frederik Deweerdt <frederik.deweerdt@xprog.eu>
-> Patch		: http://patchwork.kernel.org/patch/49914/
-> 
-Those two are refering to the same bug.
+Not really -- WiMAX is not eth-frame based, but IP based.
 
-Regards,
-Frederik
+The WiMAX stack doesn't require any type of framing/network device
+typing requirement. That is left up to the device driver writer
+(although yes, emulating eth is easier).
+
+-- 
+-- Inaky
+
+
