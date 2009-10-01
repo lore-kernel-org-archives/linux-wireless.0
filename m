@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:50817 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932626AbZJFP72 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 11:59:28 -0400
-Received: by iwn8 with SMTP id 8so2316416iwn.33
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 08:58:51 -0700 (PDT)
+Received: from bu3sch.de ([62.75.166.246]:45246 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756320AbZJANyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 09:54:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: linville@tuxdriver.com
+Subject: [PATCH] b43: Don't use struct wldev after detach.
+Date: Thu, 1 Oct 2009 15:54:32 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <20091006055222.GA26591@vasanth-laptop>
-References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
-	<20091006055222.GA26591@vasanth-laptop>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 6 Oct 2009 11:58:30 -0400
-Message-ID: <43e72e890910060858l13c235bau802c89098ce0bade@mail.gmail.com>
-Subject: Re: [ath9k-devel] [RFT 0/4] ath9k: fix oops during driver unload
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Message-Id: <200910011554.34488.mb@bu3sch.de>
+Content-Type: text/plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 6, 2009 at 1:52 AM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> On Tue, Oct 06, 2009 at 09:23:17AM +0530, Luis Rodriguez wrote:
->> This should fix an oops reported by Vasanth.
->> Vasanth my rc3 poos out, can you let me know if this
->> fixes the issue you saw?
->>
->> Luis R. Rodriguez (4):
->>   ath9k: move common->debug_mask setting to ath_init_softc()
->>   ath9k: fix oops during unload -- initialize hw prior to debugfs
->>   ath9k: add helper to un-init the hw properly
->>   ath9k: rename ath_beaconq_setup() to ath9k_hw_beaconq_setup()
->>
->>  drivers/net/wireless/ath/ath.h          |    6 ++++
->>  drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
->>  drivers/net/wireless/ath/ath9k/beacon.c |   12 -------
->>  drivers/net/wireless/ath/ath9k/debug.c  |    5 ---
->>  drivers/net/wireless/ath/ath9k/hw.c     |   11 ++++++-
->>  drivers/net/wireless/ath/ath9k/mac.c    |   13 ++++++++
->>  drivers/net/wireless/ath/ath9k/mac.h    |    1 +
->>  drivers/net/wireless/ath/ath9k/main.c   |   50 ++++++++++++++++++------------
->>  8 files changed, 60 insertions(+), 39 deletions(-)
->>
->
-> The issue is not fixed completely, ah->common is used after ah is
-> freed in ath_cleanup() which makes rmmod ath9k stuck in the middle.
+Don't use struct wldev after detach. This fixes an oops on access.
 
-Thanks I'll fix that as well.
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-  Luis
+
+---
+ drivers/net/wireless/b43/leds.c |    4 ++--
+ drivers/net/wireless/b43/leds.h |    4 ++--
+ drivers/net/wireless/b43/main.c |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/b43/leds.c
++++ wireless-testing/drivers/net/wireless/b43/leds.c
+@@ -348,9 +348,9 @@ void b43_leds_register(struct b43_wldev 
+ 	}
+ }
+ 
+-void b43_leds_unregister(struct b43_wldev *dev)
++void b43_leds_unregister(struct b43_wl *wl)
+ {
+-	struct b43_leds *leds = &dev->wl->leds;
++	struct b43_leds *leds = &wl->leds;
+ 
+ 	b43_unregister_led(&leds->led_tx);
+ 	b43_unregister_led(&leds->led_rx);
+--- wireless-testing.orig/drivers/net/wireless/b43/leds.h
++++ wireless-testing/drivers/net/wireless/b43/leds.h
+@@ -60,7 +60,7 @@ enum b43_led_behaviour {
+ };
+ 
+ void b43_leds_register(struct b43_wldev *dev);
+-void b43_leds_unregister(struct b43_wldev *dev);
++void b43_leds_unregister(struct b43_wl *wl);
+ void b43_leds_init(struct b43_wldev *dev);
+ void b43_leds_exit(struct b43_wldev *dev);
+ void b43_leds_stop(struct b43_wldev *dev);
+@@ -76,7 +76,7 @@ struct b43_leds {
+ static inline void b43_leds_register(struct b43_wldev *dev)
+ {
+ }
+-static inline void b43_leds_unregister(struct b43_wldev *dev)
++static inline void b43_leds_unregister(struct b43_wl *wl)
+ {
+ }
+ static inline void b43_leds_init(struct b43_wldev *dev)
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -4997,7 +4997,7 @@ static void b43_remove(struct ssb_device
+ 
+ 	if (list_empty(&wl->devlist)) {
+ 		b43_rng_exit(wl);
+-		b43_leds_unregister(wldev);
++		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+ 		 * We can destroy common struct b43_wl.
+ 		 */
+
+-- 
+Greetings, Michael.
