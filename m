@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:56691 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752254AbZJAUNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 16:13:54 -0400
-Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
-From: Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-In-Reply-To: <43e72e890910011256v18b30e7ck420ce80b5d35fdcb@mail.gmail.com>
-References: <20090924180048.14503.9579.stgit@tikku>
-	 <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
-	 <20090925044258.GA2722@tuxdriver.com>
-	 <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com>
-	 <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com>
-	 <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi>
-	 <20091001151820.GA2895@tuxdriver.com> <873a63qe6e.fsf@purkki.valot.fi>
-	 <20091001170722.GC2895@tuxdriver.com>
-	 <43e72e890910011256v18b30e7ck420ce80b5d35fdcb@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 01 Oct 2009 13:12:34 -0700
-Message-Id: <1254427954.3538.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:50538 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932508AbZJAOYN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 10:24:13 -0400
+To: Michael Buesch <mb@bu3sch.de>
+Cc: David Miller <davem@davemloft.net>, oliver@hartkopp.net,
+	johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] net: fix NOHZ: local_softirq_pending 08
+References: <1254324077.3959.7.camel@johannes.local>
+	<4AC3A0F1.3060306@hartkopp.net>
+	<20090930.163333.234658158.davem@davemloft.net>
+	<200910011604.42916.mb@bu3sch.de>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 01 Oct 2009 17:24:13 +0300
+In-Reply-To: <200910011604.42916.mb@bu3sch.de> (Michael Buesch's message of "Thu\, 1 Oct 2009 16\:04\:40 +0200")
+Message-ID: <87bpkrqjjm.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-01 at 13:56 -0600, Luis R. Rodriguez wrote:
-> On Thu, Oct 1, 2009 at 5:07 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> 
-> > I don't predict a huge problem if there are
-> > valid extensions required for use by wireless drivers in the future.
-> > But for now, I'd like to see us make use of some of the debugging
-> > facilities available in the ethtool API -- hopefully the iwlwifi guys
-> > are listening... ;-)
-> 
-> Does the same apply to wimax then? Ethtool for 802.11 and wimax? Eh.
+Michael Buesch <mb@bu3sch.de> writes:
 
-Not really -- WiMAX is not eth-frame based, but IP based.
+> On Thursday 01 October 2009 01:33:33 David Miller wrote:
+>
+>> I'm not applying this until all of these details are sorted out 
+>
+> John, please apply my fix to wireless-testing to get rid of the
+> regression. You can revert it later, if there's a better fix
+> available.
 
-The WiMAX stack doesn't require any type of framing/network device
-typing requirement. That is left up to the device driver writer
-(although yes, emulating eth is easier).
+I agree, please take Michael's patch. It's trivial to change mac80211
+part whenever there's better support available.
+
+But I don't think this is a regression because I see the bug also with
+2.6.28, most probably it has been in mac80211 forever. But it's still
+a bug which needs to be fixed.
 
 -- 
--- Inaky
-
-
+Kalle Valo
