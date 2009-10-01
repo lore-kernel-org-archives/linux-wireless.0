@@ -1,309 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932675AbZJ3VgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 15/15] iwlwifi: add wimax/wifi coexist support for 6x50 series
-Date: Fri, 30 Oct 2009 14:36:18 -0700
-Message-Id: <1256938578-9638-16-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from ey-out-2122.google.com ([74.125.78.25]:58482 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753597AbZJAQUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 12:20:09 -0400
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
+References: <20090924180048.14503.9579.stgit@tikku>
+	<43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
+	<20090925044258.GA2722@tuxdriver.com>
+	<da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com>
+	<43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com>
+	<20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi>
+	<20091001151820.GA2895@tuxdriver.com>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Thu, 01 Oct 2009 19:20:09 +0300
+In-Reply-To: <20091001151820.GA2895@tuxdriver.com> (John W. Linville's message of "Thu\, 1 Oct 2009 11\:18\:20 -0400")
+Message-ID: <873a63qe6e.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-For 6x50 series, it is wimax/wifi combo device, so driver need to enable
-the wimax/wifi co-exist function and send the coexist event priority
-table to uCode for operation.
+> On Thu, Oct 01, 2009 at 05:18:33PM +0300, Kalle Valo wrote:
+>> 
+>> I'm not worried about the implementation complexity, and as your
+>> patches show it was easy. My concern is the overall design for
+>> wireless devices. Instead of using nl80211 for everything, with some
+>> features we would use nl80211/iw and with some ethtool. That's just
+>> confusing and I don't like that. I would prefer that nl80211 provides
+>> everything, it makes things so much easier.
+>
+> Well, if the hw/fw version numbers were the only thing then I'd
+> probably say it's not a big deal.  But having ethtool support is nice
+> in that it makes a familiar tool work for us.  Among other things,
+> this probably helps with some distro scripts that don't work quite
+> right without it.  Plus, there is lots of debugging stuff that could
+> be turned-on without having to write new tools.
 
-The priority table will be used by uCode to determine what is the proper
-action it should take when co-exist with WiMAX.
-For example, when WiFi runs a scan, it must own radio exclusively, therefore
-will disconnect WiMAX if WiMAX is connected.
+Agreed, maybe expect the distro scripts part. To me that just sounds
+as a bug in the scripts.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c     |   12 +---
- drivers/net/wireless/iwlwifi/iwl-6000.c     |    3 +
- drivers/net/wireless/iwlwifi/iwl-commands.h |   92 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   59 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +
- 5 files changed, 158 insertions(+), 11 deletions(-)
+> I suppose I understand the 'one API' idea, but why duplicate
+> functionality?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index b8ddd70..a97d93d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -592,16 +592,6 @@ static void iwl5000_tx_queue_set_status(struct iwl_priv *priv,
- 		       scd_retry ? "BA" : "AC", txq_id, tx_fifo_id);
- }
- 
--static int iwl5000_send_wimax_coex(struct iwl_priv *priv)
--{
--	struct iwl_wimax_coex_cmd coex_cmd;
--
--	memset(&coex_cmd, 0, sizeof(coex_cmd));
--
--	return iwl_send_cmd_pdu(priv, COEX_PRIORITY_TABLE_CMD,
--				sizeof(coex_cmd), &coex_cmd);
--}
--
- int iwl5000_alive_notify(struct iwl_priv *priv)
- {
- 	u32 a;
-@@ -682,7 +672,7 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
- 
--	iwl5000_send_wimax_coex(priv);
-+	iwl_send_wimax_coex(priv);
- 
- 	iwl5000_set_Xtal_calib(priv);
- 	iwl_send_calib_results(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a4a8b5e..70e117f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -491,6 +491,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
- 	.support_sm_ps = true,
-+	.support_wimax_coexist = true,
- };
- 
- struct iwl_cfg iwl6050_2abg_cfg = {
-@@ -520,6 +521,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
-+	.support_wimax_coexist = true,
- };
- 
- struct iwl_cfg iwl6000_3agn_cfg = {
-@@ -581,6 +583,7 @@ struct iwl_cfg iwl6050_3agn_cfg = {
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
- 	.support_sm_ps = true,
-+	.support_wimax_coexist = true,
- };
- 
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 43dd6af..b62c90e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3507,6 +3507,98 @@ struct iwl_led_cmd {
-  * also used as potential "events" value for both
-  * COEX_MEDIUM_NOTIFICATION and COEX_EVENT_CMD
-  */
-+
-+/*
-+ * COEX events entry flag masks
-+ * RP - Requested Priority
-+ * WP - Win Medium Priority: priority assigned when the contention has been won
-+ */
-+#define COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG        (0x1)
-+#define COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG        (0x2)
-+#define COEX_EVT_FLAG_DELAY_MEDIUM_FREE_NTFY_FLG  (0x4)
-+
-+#define COEX_CU_UNASSOC_IDLE_RP               4
-+#define COEX_CU_UNASSOC_MANUAL_SCAN_RP        4
-+#define COEX_CU_UNASSOC_AUTO_SCAN_RP          4
-+#define COEX_CU_CALIBRATION_RP                4
-+#define COEX_CU_PERIODIC_CALIBRATION_RP       4
-+#define COEX_CU_CONNECTION_ESTAB_RP           4
-+#define COEX_CU_ASSOCIATED_IDLE_RP            4
-+#define COEX_CU_ASSOC_MANUAL_SCAN_RP          4
-+#define COEX_CU_ASSOC_AUTO_SCAN_RP            4
-+#define COEX_CU_ASSOC_ACTIVE_LEVEL_RP         4
-+#define COEX_CU_RF_ON_RP                      6
-+#define COEX_CU_RF_OFF_RP                     4
-+#define COEX_CU_STAND_ALONE_DEBUG_RP          6
-+#define COEX_CU_IPAN_ASSOC_LEVEL_RP           4
-+#define COEX_CU_RSRVD1_RP                     4
-+#define COEX_CU_RSRVD2_RP                     4
-+
-+#define COEX_CU_UNASSOC_IDLE_WP               3
-+#define COEX_CU_UNASSOC_MANUAL_SCAN_WP        3
-+#define COEX_CU_UNASSOC_AUTO_SCAN_WP          3
-+#define COEX_CU_CALIBRATION_WP                3
-+#define COEX_CU_PERIODIC_CALIBRATION_WP       3
-+#define COEX_CU_CONNECTION_ESTAB_WP           3
-+#define COEX_CU_ASSOCIATED_IDLE_WP            3
-+#define COEX_CU_ASSOC_MANUAL_SCAN_WP          3
-+#define COEX_CU_ASSOC_AUTO_SCAN_WP            3
-+#define COEX_CU_ASSOC_ACTIVE_LEVEL_WP         3
-+#define COEX_CU_RF_ON_WP                      3
-+#define COEX_CU_RF_OFF_WP                     3
-+#define COEX_CU_STAND_ALONE_DEBUG_WP          6
-+#define COEX_CU_IPAN_ASSOC_LEVEL_WP           3
-+#define COEX_CU_RSRVD1_WP                     3
-+#define COEX_CU_RSRVD2_WP                     3
-+
-+#define COEX_UNASSOC_IDLE_FLAGS                     0
-+#define COEX_UNASSOC_MANUAL_SCAN_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_UNASSOC_AUTO_SCAN_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_CALIBRATION_FLAGS			\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_PERIODIC_CALIBRATION_FLAGS             0
-+/*
-+ * COEX_CONNECTION_ESTAB:
-+ * we need DELAY_MEDIUM_FREE_NTFY to let WiMAX disconnect from network.
-+ */
-+#define COEX_CONNECTION_ESTAB_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG |	\
-+	COEX_EVT_FLAG_DELAY_MEDIUM_FREE_NTFY_FLG)
-+#define COEX_ASSOCIATED_IDLE_FLAGS                  0
-+#define COEX_ASSOC_MANUAL_SCAN_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_ASSOC_AUTO_SCAN_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_ASSOC_ACTIVE_LEVEL_FLAGS               0
-+#define COEX_RF_ON_FLAGS                            0
-+#define COEX_RF_OFF_FLAGS                           0
-+#define COEX_STAND_ALONE_DEBUG_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG)
-+#define COEX_IPAN_ASSOC_LEVEL_FLAGS		\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_DELAY_MEDIUM_FREE_NTFY_FLG)
-+#define COEX_RSRVD1_FLAGS                           0
-+#define COEX_RSRVD2_FLAGS                           0
-+/*
-+ * COEX_CU_RF_ON is the event wrapping all radio ownership.
-+ * We need DELAY_MEDIUM_FREE_NTFY to let WiMAX disconnect from network.
-+ */
-+#define COEX_CU_RF_ON_FLAGS			\
-+	(COEX_EVT_FLAG_MEDIUM_FREE_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_MEDIUM_ACTV_NTFY_FLG |	\
-+	 COEX_EVT_FLAG_DELAY_MEDIUM_FREE_NTFY_FLG)
-+
-+
- enum {
- 	/* un-association part */
- 	COEX_UNASSOC_IDLE		= 0,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6a9d593..112181b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -47,6 +47,37 @@ MODULE_VERSION(IWLWIFI_VERSION);
- MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
- MODULE_LICENSE("GPL");
- 
-+static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
-+	{COEX_CU_UNASSOC_IDLE_RP, COEX_CU_UNASSOC_IDLE_WP,
-+	 0, COEX_UNASSOC_IDLE_FLAGS},
-+	{COEX_CU_UNASSOC_MANUAL_SCAN_RP, COEX_CU_UNASSOC_MANUAL_SCAN_WP,
-+	 0, COEX_UNASSOC_MANUAL_SCAN_FLAGS},
-+	{COEX_CU_UNASSOC_AUTO_SCAN_RP, COEX_CU_UNASSOC_AUTO_SCAN_WP,
-+	 0, COEX_UNASSOC_AUTO_SCAN_FLAGS},
-+	{COEX_CU_CALIBRATION_RP, COEX_CU_CALIBRATION_WP,
-+	 0, COEX_CALIBRATION_FLAGS},
-+	{COEX_CU_PERIODIC_CALIBRATION_RP, COEX_CU_PERIODIC_CALIBRATION_WP,
-+	 0, COEX_PERIODIC_CALIBRATION_FLAGS},
-+	{COEX_CU_CONNECTION_ESTAB_RP, COEX_CU_CONNECTION_ESTAB_WP,
-+	 0, COEX_CONNECTION_ESTAB_FLAGS},
-+	{COEX_CU_ASSOCIATED_IDLE_RP, COEX_CU_ASSOCIATED_IDLE_WP,
-+	 0, COEX_ASSOCIATED_IDLE_FLAGS},
-+	{COEX_CU_ASSOC_MANUAL_SCAN_RP, COEX_CU_ASSOC_MANUAL_SCAN_WP,
-+	 0, COEX_ASSOC_MANUAL_SCAN_FLAGS},
-+	{COEX_CU_ASSOC_AUTO_SCAN_RP, COEX_CU_ASSOC_AUTO_SCAN_WP,
-+	 0, COEX_ASSOC_AUTO_SCAN_FLAGS},
-+	{COEX_CU_ASSOC_ACTIVE_LEVEL_RP, COEX_CU_ASSOC_ACTIVE_LEVEL_WP,
-+	 0, COEX_ASSOC_ACTIVE_LEVEL_FLAGS},
-+	{COEX_CU_RF_ON_RP, COEX_CU_RF_ON_WP, 0, COEX_CU_RF_ON_FLAGS},
-+	{COEX_CU_RF_OFF_RP, COEX_CU_RF_OFF_WP, 0, COEX_RF_OFF_FLAGS},
-+	{COEX_CU_STAND_ALONE_DEBUG_RP, COEX_CU_STAND_ALONE_DEBUG_WP,
-+	 0, COEX_STAND_ALONE_DEBUG_FLAGS},
-+	{COEX_CU_IPAN_ASSOC_LEVEL_RP, COEX_CU_IPAN_ASSOC_LEVEL_WP,
-+	 0, COEX_IPAN_ASSOC_LEVEL_FLAGS},
-+	{COEX_CU_RSRVD1_RP, COEX_CU_RSRVD1_WP, 0, COEX_RSRVD1_FLAGS},
-+	{COEX_CU_RSRVD2_RP, COEX_CU_RSRVD2_WP, 0, COEX_RSRVD2_FLAGS}
-+};
-+
- #define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
- 	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,      \
- 				    IWL_RATE_SISO_##s##M_PLCP, \
-@@ -2866,6 +2897,34 @@ void iwl_free_txq_mem(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_free_txq_mem);
- 
-+int iwl_send_wimax_coex(struct iwl_priv *priv)
-+{
-+	struct iwl_wimax_coex_cmd uninitialized_var(coex_cmd);
-+
-+	if (priv->cfg->support_wimax_coexist) {
-+		/* UnMask wake up src at associated sleep */
-+		coex_cmd.flags |= COEX_FLAGS_ASSOC_WA_UNMASK_MSK;
-+
-+		/* UnMask wake up src at unassociated sleep */
-+		coex_cmd.flags |= COEX_FLAGS_UNASSOC_WA_UNMASK_MSK;
-+		memcpy(coex_cmd.sta_prio, cu_priorities,
-+			sizeof(struct iwl_wimax_coex_event_entry) *
-+			 COEX_NUM_OF_EVENTS);
-+
-+		/* enabling the coexistence feature */
-+		coex_cmd.flags |= COEX_FLAGS_COEX_ENABLE_MSK;
-+
-+		/* enabling the priorities tables */
-+		coex_cmd.flags |= COEX_FLAGS_STA_TABLE_VALID_MSK;
-+	} else {
-+		/* coexistence is disabled */
-+		memset(&coex_cmd, 0, sizeof(coex_cmd));
-+	}
-+	return iwl_send_cmd_pdu(priv, COEX_PRIORITY_TABLE_CMD,
-+				sizeof(coex_cmd), &coex_cmd);
-+}
-+EXPORT_SYMBOL(iwl_send_wimax_coex);
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 
- #define IWL_TRAFFIC_DUMP_SIZE	(IWL_TRAFFIC_ENTRY_SIZE * IWL_TRAFFIC_ENTRIES)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index d2e47da..9574d8f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -229,6 +229,7 @@ struct iwl_mod_params {
-  * @adv_thermal_throttle: support advance thermal throttle
-  * @support_ct_kill_exit: support ct kill exit condition
-  * @support_sm_ps: support spatial multiplexing power save
-+ * @support_wimax_coexist: support wimax/wifi co-exist
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-  * driver specifies which APIs it supports (with @ucode_api_max being the
-@@ -285,6 +286,7 @@ struct iwl_cfg {
- 	bool adv_thermal_throttle;
- 	bool support_ct_kill_exit;
- 	bool support_sm_ps;
-+	const bool support_wimax_coexist;
- };
- 
- /***************************
-@@ -340,6 +342,7 @@ int iwl_alloc_txq_mem(struct iwl_priv *priv);
- void iwl_free_txq_mem(struct iwl_priv *priv);
- void iwlcore_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
- 				__le32 *tx_flags);
-+int iwl_send_wimax_coex(struct iwl_priv *priv);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_free_traffic_mem(struct iwl_priv *priv);
+Just because the common functionality in this case isn't high enough.
+I'm worried that we will use 10% of the functionality in nl80211 and
+the rest 90% will be something we can't use and have to reimplement in
+nl80211.
+
+> Anyway, adding a couple of ioctl calls isn't a big deal.
+
+Sure, but we need to support this forever. If, say after two years, we
+decide that ethtool is not the way to go, it's very difficult to
+remove it. The less interfaces we have, the easier it is to maintain
+them.
+
+> And don't forget, we are still network drivers too...
+
+I hope ethtool isn't a strict requirement for a network driver, at
+least I haven't heard about that.
+
+>> One example is the hw version, ethtool only provides u32 to userspace
+>> and moves the burden of translating hw id to the user. For us a string
+>> is much better choise because when debuggin we need to often (or
+>> always?) know the chip version.
+>
+> Look at the way most drivers set the version (using each byte as a
+> field).
+
+Yes, that's how it is also with wl1251. A number like '0x7030101' is
+just not that user friendly.
+
+> If you want prettier output, adding a parser to the userland ethtool
+> is fairly trivial. It looks something like the patch below...
+
+Oh wow, that's cool and a truly useful feature. One complaint less
+from me :)
+
+>>         ethtool -c|--show-coalesce DEVNAME      Show coalesce options
+>>         ethtool -C|--coalesce DEVNAME   Set coalesce options
+>>                 [adaptive-rx on|off]
+>>                 [adaptive-tx on|off]
+>>                 [rx-usecs N]
+>>                 [rx-frames N]
+>>                 [rx-usecs-irq N]
+>>                 [rx-frames-irq N]
+>>                 [tx-usecs N]
+>>                 [tx-frames N]
+>>                 [tx-usecs-irq N]
+>>                 [tx-frames-irq N]
+>>                 [stats-block-usecs N]
+>>                 [pkt-rate-low N]
+>>                 [rx-usecs-low N]
+>>                 [rx-frames-low N]
+>>                 [tx-usecs-low N]
+>>                 [tx-frames-low N]
+>>                 [pkt-rate-high N]
+>>                 [rx-usecs-high N]
+>>                 [rx-frames-high N]
+>>                 [tx-usecs-high N]
+>>                 [tx-frames-high N]
+>>                 [sample-interval N]
+>
+> These _could_ be useful if wireless becomes more
+> performance-oriented...
+
+Maybe, or maybe not. We will only find out within the next few years.
+
+And what will we do if the parameters are actually a bit different? Is
+it ok to extend ethtool for supporting wireless or do we later on have
+to add separate support to nl80211? The latter would suck big time.
+
+>>         ethtool -g|--show-ring DEVNAME  Query RX/TX ring parameters
+>>         ethtool -G|--set-ring DEVNAME   Set RX/TX ring parameters
+>>                 [ rx N ]
+>>                 [ rx-mini N ]
+>>                 [ rx-jumbo N ]
+>>                 [ tx N ]
+>
+> Wireless devices have ring buffers, no?
+
+Yes, there is hardware which have them but again the question is this
+relevant for wireless devices. In ethernet the hardware is the
+bottleneck but in 802.11 the wireless medium is the bottleneck, so the
+parameters we need to configure are usually different.
+
+>>         ethtool -r|--negotiate DEVNAME  Restart N-WAY negotation
+>
+> Ethernet-specific...might could be overloaded for wireless to trigger
+> reassoc...?
+
+Please no, I don't want to see any reassociation or anything else
+802.11 state related in ethtool, nl80211 was created for this. This is
+something I would object loudly :)
+
+> Anyway, it doesn't really matter if we don't use the whole API -- many
+> older ethernet devices don't support all these features.  The point
+> is that the API exists and has some overlap with our needs.  It is a
+> driver-oriented API, with nitty-gritty stuff that need not clutter a
+> configuraiton API like cfg80211.  There is even the potential of us
+> adding our own extensions (e.g. WoW) that are also device-oriented.
+>
+> Anyway, between the link detection and making distro scripts work
+> plus enabling a familiar tool for basic driver info I think this is
+> a win.  So much the better if some drivers move to ethtool for register
+> dumping, setting message verbosity, querying/changing eeprom values,
+> etc, etc...
+
+Sounds good enough. As I said in my earlier email, I'm not going argue
+about this for too long. You know this better than I do. So let's go
+forward with ethtool. 
+
+Thanks for listening to my concerns.
+
 -- 
-1.5.6.3
-
+Kalle Valo
