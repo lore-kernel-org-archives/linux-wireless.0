@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43330 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901AbZJWNfI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36891 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755843AbZJARP4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:35:08 -0400
-Subject: Re: cfg80211 / libertas: an unusual race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <200910161403.37660.hs4233@mail.mn-solutions.de>
-References: <200910131055.31739.hs4233@mail.mn-solutions.de>
-	 <1255687030.4095.327.camel@johannes.local>
-	 <200910161403.37660.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-Z+AtUlmBYPLzkVspKbCO"
-Date: Thu, 22 Oct 2009 10:47:57 +0200
-Message-Id: <1256201277.12174.17.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 1 Oct 2009 13:15:56 -0400
+Date: Thu, 1 Oct 2009 13:07:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
+Message-ID: <20091001170722.GC2895@tuxdriver.com>
+References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com> <20090925044258.GA2722@tuxdriver.com> <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com> <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com> <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi> <20091001151820.GA2895@tuxdriver.com> <873a63qe6e.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <873a63qe6e.fsf@purkki.valot.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 01, 2009 at 07:20:09PM +0300, Kalle Valo wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
+> 
+> > On Thu, Oct 01, 2009 at 05:18:33PM +0300, Kalle Valo wrote:
 
---=-Z+AtUlmBYPLzkVspKbCO
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> > Anyway, adding a couple of ioctl calls isn't a big deal.
+> 
+> Sure, but we need to support this forever. If, say after two years, we
+> decide that ethtool is not the way to go, it's very difficult to
+> remove it. The less interfaces we have, the easier it is to maintain
+> them.
 
-On Fri, 2009-10-16 at 14:03 +0200, Holger Schurig wrote:
-> > I don't see this happening that way -- how are you even getting=20
-> to
-> > __cfg80211_disconnected() if not through _send_deauth()?
->=20
-> See step 7a in the second table.  We got there via=20
-> _send_deauth().
->=20
-> But later, step 3b in the second table (I kept the original=20
-> numbers, so 3b happens after 7a time-wise!) we got into=20
-> WARN_ON().
+Just to be clear, I was taling about adding ioctl calls to a
+userland application (if you didn't want to use the ethtool utility).
+The required ioctls are already defined for ethtool in the kernel.
 
-Still not making sense to me, since cfg80211_mlme_deauth() never does
-anything after calling you.
+> >>         ethtool -r|--negotiate DEVNAME  Restart N-WAY negotation
+> >
+> > Ethernet-specific...might could be overloaded for wireless to trigger
+> > reassoc...?
+> 
+> Please no, I don't want to see any reassociation or anything else
+> 802.11 state related in ethtool, nl80211 was created for this. This is
+> something I would object loudly :)
 
-johannes
+Well, it was just a thought... :-)
 
+> > Anyway, between the link detection and making distro scripts work
+> > plus enabling a familiar tool for basic driver info I think this is
+> > a win.  So much the better if some drivers move to ethtool for register
+> > dumping, setting message verbosity, querying/changing eeprom values,
+> > etc, etc...
+> 
+> Sounds good enough. As I said in my earlier email, I'm not going argue
+> about this for too long. You know this better than I do. So let's go
+> forward with ethtool. 
+> 
+> Thanks for listening to my concerns.
 
---=-Z+AtUlmBYPLzkVspKbCO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Sure, np.  And FWIW, I don't predict a huge problem if there are
+valid extensions required for use by wireless drivers in the future.
+But for now, I'd like to see us make use of some of the debugging
+facilities available in the ethtool API -- hopefully the iwlwifi guys
+are listening... ;-)
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK4Bw5AAoJEODzc/N7+Qma7QYQAK7zRV6op3qqomegqwaX+Ajp
-MVGMLvkt2nBDwrlbVlyyWFxcceVfDVLq5gkn20fqiyuWQZrGe1PI+bvuEQUyPhMG
-7F0xMz/s/Yh9MjOh9SdC/DLkpRr2mteLBW4VArQxNIc+d4cZYzvQrGN98E7Y3hMx
-jdzbe3Bwxp9/433WImEcyXhS2jN/9qd/wUXy/fk+6EmW7et2o957IR3uLqGZqFw6
-3aEn+6vpUiLwp0Dwnrh+LDIP+jl/UrFLvO5mZhqDLjgGOplv/r8SxlgnaMV1a6gz
-03uA0se0J+p49bYMKCiIHTtMgbCFQLnWrKSWaFjyxPHK/j6qofq2yZXAyZm26gtf
-R059wXfIzsmsWIeLpwdoUY2870sUj6eV+vbvjBkIH+q2re2dKzdJOcC16aywxJ2Y
-p7/vO7JcpxQo1dsMyapx7QtG95ZLoeWJYB9Tvcf4M3uJSqPfVsomEsMkRyYJG40W
-XkhNiauDzSImFZrQgma3ytFMBKFfIJ8HdtpmNmfp7QATAyNnGGSWA0hcZ6JCjUt4
-ItrUVQniA9JxntlDMtliCtXhGTxuDckT9G7C3SsvjJe+fn0DV4Ir5gsBVOFRhSWx
-8l7Br4fdmuGZL0Jbb44om+1FBq2cqBP6KhEpOqFlshHvNAv5dPwdEfZpJAePeVvz
-1T5u8lBkUgXdBanJ80xz
-=pmrJ
------END PGP SIGNATURE-----
-
---=-Z+AtUlmBYPLzkVspKbCO--
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
