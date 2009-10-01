@@ -1,71 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63494 "EHLO
-	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932437AbZJHO4P (ORCPT
+Received: from mail-ew0-f211.google.com ([209.85.219.211]:63521 "EHLO
+	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932456AbZJAOkG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 10:56:15 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
-Date: Thu, 8 Oct 2009 16:55:36 +0200
-Cc: Mike Galbraith <efault@gmx.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-References: <200910051500.55875.elendil@planet.nl> <1254974743.7797.21.camel@marge.simson.net> <20091008064041.67219b13@infradead.org>
-In-Reply-To: <20091008064041.67219b13@infradead.org>
+	Thu, 1 Oct 2009 10:40:06 -0400
+Received: by ewy7 with SMTP id 7so246219ewy.17
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 07:40:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910081655.37485.elendil@planet.nl>
+In-Reply-To: <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
+References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
+	 <1254341787.3959.11.camel@johannes.local>
+	 <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
+Date: Thu, 1 Oct 2009 16:40:09 +0200
+Message-ID: <57b62e7d0910010740t67a96d88h59b10161844f2836@mail.gmail.com>
+Subject: Re: VLAN traffic appearing on the wrong iface
+From: =?UTF-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 08 October 2009, Arjan van de Ven wrote:
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Thu, 24 Sep 2009 13:24:16 +0200
-> Subject: [PATCH] x86, timers: check for pending timers after (device)
-> interrupts
+Meh, I messed up the patch. Take two, hopefully better. Sorry.
+
+Regards, Blaz
+
+
+--- a/net/mac80211/sta_info.c	2009-10-01 16:24:34.000000000 +0200
++++ b/net/mac80211/sta_info.c	2009-10-01 16:27:31.000000000 +0200
+@@ -498,7 +498,7 @@ static void __sta_info_unlink(struct sta
+ 			       &(*sta)->sta);
+ 	}
+
+-	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++	if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
+ 		mesh_accept_plinks_update(sdata);
+ #ifdef CONFIG_MAC80211_MESH
+ 		del_timer(&(*sta)->plink_timer);
+
+
+On Thu, Oct 1, 2009 at 4:32 PM, Blaž Bačnik <bacnik@gmail.com> wrote:
+> On Wed, Sep 30, 2009 at 10:16 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> I can't reproduce that oops, but we have a fix to the issue which I'll
+>> send separately.
 >
-> Now that range timers and deferred timers are common, I found a
-> problem with these using the "perf timechart" tool.
+> Thanks for patches. However, I've investigated that oops and I don't really
+> understand it. Problem seems to be in __sta_info_unlink where code checks
+> if vif is a mesh. Since this is a vlan iface, sdata used actually belongs to ap
+> iface due to previous if but that really shouldn't be a problem since ap's
+> sdata should have vif->type as well, right?
 >
-> It turns out that on x86, these two 'opportunistic' timers only
-> get checked when another "real" timer happens.
-> These opportunistic timers have the objective to save power by
-> hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-> as much as possible.
-
-This patch makes quite a difference for me. iwlagn and phy0 now 
-consistently show at ~10 ms or lower.
-
-I do still get occasional high latencies, but those are for things like
-"[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
-expect them. Those high latencies are mostly only listed for "Global" and 
-don't translate to individual processes.
-
-On Thursday 08 October 2009, Arjan van de Ven wrote:
-> On Thu, 08 Oct 2009 13:24:22 +0200 Mike Galbraith <efault@gmx.de> wrote:
-> > Latencytop was accounting uninterruptible and interruptible sleep
-> > time up to 5ms, which is not the latency the user is looking for.
+> While testing I've found out that sdata_of_ap->vif points to funny addresses
+> like 248 and such. So I've changed the code and that seems to have fixed
+> oops. I think this is now the right behaviour, anyway.
 >
-> it is for everything but the scheduler latency!
+> --- a/net/mac80211/sta_info.c   2009-10-01 16:27:31.000000000 +0200
+> +++ b/net/mac80211/sta_info.c   2009-10-01 16:24:34.000000000 +0200
+> @@ -498,7 +498,7 @@ static void __sta_info_unlink(struct sta
+>                               &(*sta)->sta);
+>        }
 >
-> latencytop wants to show where you're waiting for disk, etc etc.
-> that's not "time on runqueue".
-
-The ~10 ms I still get for iwlagn and phy0 (and sometimes higher (~30 ms) 
-for others like Xorg and artsd) is still "Scheduler: waiting for cpu'. If 
-it is actually due to (un)interuptable sleep, isn't that a misleading 
-label? I directly associated that with scheduler latency.
-
-Or are those that are left now real scheduler latencies? The values are now 
-low enough that they don't indicate a problem.
-
-Thanks,
-FJP
-
-P.S. I may be seeing another issue in the latencytop GUI. Sometimes I see
-"fsync() on a file (type 'F' for details)". But typing 'F' only gets me a 
-search for a target starting with "F", no details.
+> -       if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
+> +       if (ieee80211_vif_is_mesh(&sdata->vif)) {
+>                mesh_accept_plinks_update(sdata);
+>  #ifdef CONFIG_MAC80211_MESH
+>                del_timer(&(*sta)->plink_timer);
+>
