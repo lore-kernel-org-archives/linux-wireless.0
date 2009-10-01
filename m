@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:51490 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753418AbZJEQV7 convert rfc822-to-8bit (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:53312 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932515AbZJAOXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 12:21:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <200910050052.09085.rjw@sisk.pl>
-References: <200910050052.09085.rjw@sisk.pl>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 5 Oct 2009 16:21:02 +0000
-Message-ID: <43e72e890910050921q7f516c67ofe17603d6d873c4@mail.gmail.com>
-Subject: Re: [PATCH] Wireless / ath5k: Simplify suspend and resume callbacks
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, netdev@vger.kernel.org
-Cc: ath5k-devel@lists.ath5k.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	pm list <linux-pm@lists.linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Oct 2009 10:23:39 -0400
+Subject: Re: BUG: "wext: refactor" broke compilation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200910011139.30914.hs4233@mail.mn-solutions.de>
+References: <200910011139.30914.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tY+Z3YQwZyzVWS+uv5SK"
+Date: Thu, 01 Oct 2009 16:23:35 +0200
+Message-Id: <1254407015.3959.22.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 4, 2009 at 10:52 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
->
-> Simplify the suspend and resume callbacks of ath5k by converting the
-> driver to struct dev_pm_ops and allowing the PCI PM core to do the
-> PCI-specific suspend/resume handling.
->
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-Do you happen to know if the new dev_pm_ops thing handle WOL / WoW [1]?
+--=-tY+Z3YQwZyzVWS+uv5SK
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[1] http://wireless.kernel.org/en/users/Documentation/WoW
+On Thu, 2009-10-01 at 11:39 +0200, Holger Schurig wrote:
+> LD      net/wireless/built-in.o
+>   CC [M]  net/wireless/core.o
+> net/wireless/core.c: In function 'cfg80211_netdev_notifier_call':
+> net/wireless/core.c:673: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:674: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:675: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:676: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:677: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:680: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:681: error: 'struct wireless_dev' has no member named=
+ 'wext'
+> net/wireless/core.c:683: error: 'struct wireless_dev' has no member named=
+ 'wext'
+>=20
+> The reason is that currently two different Kconfig
+> defines are used:
+>=20
+>=20
+> in net/wireless/core.c:
+>=20
+> #ifdef CONFIG_WIRELESS_EXT
+>                 wdev->wext.default_key =3D -1;
+>   ...
+> #endif
 
->  #ifdef CONFIG_PM
-> -static int
-> -ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-> +static int ath5k_pci_suspend(struct device *dev)
->  {
-> -       struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-> +       struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
->        struct ath5k_softc *sc = hw->priv;
->
->        ath5k_led_off(sc);
-> -
-> -       pci_save_state(pdev);
-> -       pci_disable_device(pdev);
+Oops, yes, that one needs to be fixed. I thought I just used sed but I
+guess somehow I managed to miss this one.
 
-For WoW right here we'd do
+johannes
 
-pci_prepare_to_sleep(pdev) and bail out.
+--=-tY+Z3YQwZyzVWS+uv5SK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> -       pci_set_power_state(pdev, PCI_D3hot);
+-----BEGIN PGP SIGNATURE-----
 
-And here we'd call something like this:
+iQIcBAABAgAGBQJKxLtkAAoJEODzc/N7+QmaZFcP/39f2gyNNr5bvK3WiVBd3hWz
+nd//8Kz0VrGFXFfGYqSjZgLAK5TH0rjmu4Av6b+mFIWw2WFkPnSdY5c/draIdyw9
+Xxw3oUfIzLlrQjpt1kGlP3kNM++Iber10z+puSvSOxxniyDJLrOUerKzdS3aU0Eh
+M9OZ8i/hM0hoY7GIQXdqk9j8Z1OBCT2qIUQx7i2FsU8o6HQSMWwj3WTFTggHxtaB
+uazNdrH4Ge3zRABTSNP556IqxfOes5Oke31WoQD6vC8E04PHJIz1Wj9HmnbWIxum
+8ap3o6ekNM6dLRFHnFIg8Dp+q3j3fpx0LN4j7QwuL14urX+V45jxyK4T4OVOT2rZ
+jzlC4Vx9+vQg/B2SWRChoWmM81ZEg7A4l1zeS9dg6K8yM5PTPMHTLppNofTO7Pik
+qxKRALkdq1up+KvoPwQTHIPcgX7XMQIQj/G6GRV9L+bgUqqCSHEdlZFNczIO9zJt
+vGQcv+fNpsl6EN8vJZVkIPgmGYW7Np13VrGo6GMTKlUHdnKDy7pi+2zSss1cjUno
+znOyQBpnP1jgKJDYvIIIqHv5suUkHxrvP3VXRc5BXDJJxoba4/XXK9AFvjACd+8W
+K6+ctLN7NcUlVXZ3LCt25noHPUnpTXAiHKlFsl4l0641iw3hX9rrhfO78ZXNi1Bw
+7oL7WfQO4MwWUobrek+7
+=MJrD
+-----END PGP SIGNATURE-----
 
-pci_wake_from_d3(pdev, !!sc->wow_triggers_enabled);
+--=-tY+Z3YQwZyzVWS+uv5SK--
 
-> -
->        return 0;
->  }
-
-Are all drivers being converted?
-
-It'll be a while before we get WoW enabled on ath5k but it is
-technically possible, the work was tested for ath9k back in July [2]
-but I never submitted this to be merged due to some inconsistent
-issues I was noticing with the hardware.
-
-[2] http://kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
-
-  Luis
