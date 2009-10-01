@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756128AbZJTAd7 (ORCPT
+Received: from mail-px0-f179.google.com ([209.85.216.179]:55144 "EHLO
+	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbZJAUT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 20:33:59 -0400
-Subject: Re: [RFC] libertas: monster-patch to make CFG/WEXT configurable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-In-Reply-To: <200910191449.18915.hs4233@mail.mn-solutions.de>
-References: <200910191449.18915.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AIpR4wk8oJJq12o2o4sM"
-Date: Tue, 20 Oct 2009 09:33:22 +0900
-Message-Id: <1255998802.4475.2.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 1 Oct 2009 16:19:58 -0400
+MIME-Version: 1.0
+In-Reply-To: <20091001170722.GC2895@tuxdriver.com>
+References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com>
+	<20090925044258.GA2722@tuxdriver.com> <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com>
+	<43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com>
+	<20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi>
+	<20091001151820.GA2895@tuxdriver.com> <873a63qe6e.fsf@purkki.valot.fi>
+	<20091001170722.GC2895@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 1 Oct 2009 19:56:40 +0000
+Message-ID: <43e72e890910011256v18b30e7ck420ce80b5d35fdcb@mail.gmail.com>
+Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
+To: "John W. Linville" <linville@tuxdriver.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 1, 2009 at 5:07 PM, John W. Linville <linville@tuxdriver.com> wrote:
 
---=-AIpR4wk8oJJq12o2o4sM
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> I don't predict a huge problem if there are
+> valid extensions required for use by wireless drivers in the future.
+> But for now, I'd like to see us make use of some of the debugging
+> facilities available in the ethtool API -- hopefully the iwlwifi guys
+> are listening... ;-)
 
-On Mon, 2009-10-19 at 14:49 +0200, Holger Schurig wrote:
-> This is a monster patch that makes CFG80211/WEXT operation
-> configurable. My cfg80211-RFC/WIP-Patch would come on top of it,
-> but would then be quite small, e.g. almost only changed to
-> cfg.c/cfg.h.
->=20
-> As there's no mesh/adhoc/monitor mode implemented in cfg80211-
-> mode, I added many, many #ifdef/#endif pairs. Maybe too many.
-> Is this too ugly?   Or would this patch be applyable as-is ?
->=20
-> If the patch is perceived to be too ugly, I could create an
-> monitor.h/monitor.c file and singleout everything related to
-> monitoring in it, where monitor.h would resolv to dummy static
-> functions in the cfg80211-case ... at least as long as we don't
-> have monitor suppport in libertas+cfg80211. The same for mesh
-> support, e.g. here I could create a mesh.h/mesh.c and do the
-> same.
+Does the same apply to wimax then? Ethtool for 802.11 and wimax? Eh.
 
-I really don't understand the point. Can't you just use the cfg80211
-hooks and keep both functional at the same time? Just like orinoco does
--- it uses cfg80211 only partially.
-
-johannes
-
---=-AIpR4wk8oJJq12o2o4sM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK3QVOAAoJEODzc/N7+QmaOigP/3jPG6+cMifLS/g1FqFcYggb
-QSs1+ZuXHp9wrRO/iEJonMS2KZUNKGgFTVB74YQF8/qyuBqcWT8WBHyCZKC2aTDi
-3PKGx0GqLs+9YnjR+iKUIAmqy0mkWewtZ4OjZnLGMu+X+zP97+d9q7brK8Bbk+2z
-IyHqW+uvGxO64ijMr64SrWVB6qvrg4k25+nFPC9Z3Ex/X+18c48wuvbZOvZkKTzP
-Z4kmUryj+B2xOrCwCu4oZB/895QRlyrexVs7XuIe4LbqEXyXtz+uAXlTcRaygfZG
-pjQiVe/CGp+Bfd1ylIoETppQyD75yefHDJWvKpVV+bsC//fD+yKvNzWRzQ6oC6o4
-bBM+bAu9tEIyUnkYNWwHH5hRMKuLK76iBFheP5otF7TWFfw5aXXcMw4+9mmPad/Z
-cTfpCYHVtvNHXcTQQn89pdAIM+hanomA2T8o+opGZiyceqAeUq1NxIH69BsD7ZfC
-ZWCwZnR/XCL3GA6Rv/UWnInB34SBAubZA6+TWWusj2hZYtQ4KWOT4D+Pfb6XwpOb
-SfWUjv9LkN8Mcw2ha97nwTh7w2+g3vmNMvBc3MpPYbOn6fOSbP2BHugNMAUIvvcE
-t9oEMswy5VWHiU/3LCNK234pAoaufauxOMHIWW4DCJC+MY+Dyfy8aYjcF27w7AXi
-apP/DF6jOFMN/vGeAxne
-=kDRA
------END PGP SIGNATURE-----
-
---=-AIpR4wk8oJJq12o2o4sM--
-
+  Luis
