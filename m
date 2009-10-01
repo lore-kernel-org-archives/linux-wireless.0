@@ -1,31 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:45861 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbZJNAwm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52859 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755333AbZJABUT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 20:52:42 -0400
-Received: by iwn10 with SMTP id 10so3096770iwn.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 17:52:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1255479847.6242.0.camel@shadow>
-References: <1255479847.6242.0.camel@shadow>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 13 Oct 2009 17:51:44 -0700
-Message-ID: <43e72e890910131751k11f0d05ehea98c32d6195d4be@mail.gmail.com>
-Subject: Re: compat-wireless 2.6.32-rc4 failed to compile
-To: aherrerag@uci.cu
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 30 Sep 2009 21:20:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] wireless: implement basic ethtool support for cfg80211 devices
+Date: Wed, 30 Sep 2009 21:19:00 -0400
+Message-Id: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20091001011340.GA3123@tuxdriver.com>
+References: <20091001011340.GA3123@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 5:24 PM, Anielkis Herrera Gonzalez
-<aherrerag@uci.cu> wrote:
-> # uname -r
-> 2.6.32-rc4
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/wireless/Makefile  |    2 +-
+ net/wireless/core.c    |    3 +++
+ net/wireless/ethtool.c |   27 +++++++++++++++++++++++++++
+ net/wireless/ethtool.h |   10 ++++++++++
+ 4 files changed, 41 insertions(+), 1 deletions(-)
+ create mode 100644 net/wireless/ethtool.c
+ create mode 100644 net/wireless/ethtool.h
 
-Remind me why you are trying to compile
-compat-wireless-stable-2.6.32-rc4 if you already are running
-2.6.32-rc4?
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index c814150..f07c8dc 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
+ obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
+ 
+ cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+-cfg80211-y += mlme.o ibss.o sme.o chan.o
++cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o
+ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+ cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
+ 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index c761532..faada5c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -21,6 +21,7 @@
+ #include "sysfs.h"
+ #include "debugfs.h"
+ #include "wext-compat.h"
++#include "ethtool.h"
+ 
+ /* name for sysfs, %d is appended */
+ #define PHY_NAME "phy"
+@@ -683,6 +684,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+ 				wdev->wext.ps = false;
+ 			}
+ #endif
++		if (!dev->ethtool_ops)
++			dev->ethtool_ops = &cfg80211_ethtool_ops;
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+ 		switch (wdev->iftype) {
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+new file mode 100644
+index 0000000..94ca377
+--- /dev/null
++++ b/net/wireless/ethtool.c
+@@ -0,0 +1,27 @@
++#include <linux/utsrelease.h>
++#include <net/cfg80211.h>
++#include "ethtool.h"
++
++const struct ethtool_ops cfg80211_ethtool_ops = {
++	.get_drvinfo = cfg80211_get_drvinfo,
++	.get_link = ethtool_op_get_link,
++};
++
++void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++	strncpy(info->driver, wiphy_dev(wdev->wiphy)->driver->name,
++		sizeof(info->driver));
++	info->driver[sizeof(info->driver) - 1] = '\0';
++
++	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
++	info->version[sizeof(info->version) - 1] = '\0';
++
++	strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
++	info->fw_version[sizeof(info->fw_version) - 1] = '\0';
++
++	strncpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
++		sizeof(info->bus_info));
++	info->bus_info[sizeof(info->bus_info) - 1] = '\0';
++}
+diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
+new file mode 100644
+index 0000000..a51b470
+--- /dev/null
++++ b/net/wireless/ethtool.h
+@@ -0,0 +1,10 @@
++#ifndef __CFG80211_ETHTOOL__
++#define __CFG80211_ETHTOOL__
++
++#include <linux/ethtool.h>
++
++extern void cfg80211_get_drvinfo(struct net_device *, struct ethtool_drvinfo *);
++
++extern const struct ethtool_ops cfg80211_ethtool_ops;
++
++#endif /* __CFG80211_ETHTOOL__ */
+-- 
+1.6.2.5
 
-  Luis
