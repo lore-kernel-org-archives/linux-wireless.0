@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:44672 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753544AbZJTGaE (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:21268 "EHLO
+	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755383AbZJABos (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 02:30:04 -0400
-Subject: Re: [PATCH] cfg80211: sme: deauthenticate on assoc failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <43e72e890910192324t3deab484nad855a5ecd109dd@mail.gmail.com>
-References: <1256018933.4475.6.camel@johannes.local>
-	 <43e72e890910192324t3deab484nad855a5ecd109dd@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-AoG42stK/knOlFkkqqr+"
-Date: Tue, 20 Oct 2009 15:26:27 +0900
-Message-Id: <1256019987.4475.7.camel@johannes.local>
+	Wed, 30 Sep 2009 21:44:48 -0400
+Subject: Re: [PATCH 1/3] wireless: implement basic ethtool support for
+ cfg80211 devices
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kalle.valo@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+References: <20091001011340.GA3123@tuxdriver.com>
+	 <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Oct 2009 02:30:38 +0100
+Message-Id: <1254360638.23350.0.camel@localhost>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2009-09-30 at 21:19 -0400, John W. Linville wrote:
+[...]
+> +void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+> +{
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +
+> +	strncpy(info->driver, wiphy_dev(wdev->wiphy)->driver->name,
+> +		sizeof(info->driver));
+> +	info->driver[sizeof(info->driver) - 1] = '\0';
+[...]
 
---=-AoG42stK/knOlFkkqqr+
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Use strlcpy() instead of these two statements.
 
-On Tue, 2009-10-20 at 15:24 +0900, Luis R. Rodriguez wrote:
-> On Tue, Oct 20, 2009 at 3:08 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > When the in-kernel SME gets an association failure from
-> > the AP we don't deauthenticate, and thus get into a very
-> > confused state which will lead to warnings later on. Fix
-> > this by actually deauthenticating when the AP indicates
-> > an association failure.
-> >
-> > Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->=20
-> Thanks Johannes.
->=20
-> Tested-by: Luis R. Rodriguez <lrodriguez@atheros.com>
->=20
-> John -- this patch and the previous patch titled "mac80211: keep auth
-> state when assoc fails" fix the SME warning as well. These are also
-> 2.6.32-rc fixes.
+Ben.
 
-And also done during the hacking session at KS.
-
-johannes
-
---=-AoG42stK/knOlFkkqqr+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK3VgPAAoJEODzc/N7+Qmar54QALgglYdeUVaaxjlIXhh+PwxZ
-223IsCiZ2E2cP7DRR/KzH+zbA2OzAIYRqbpGeeju+Es38FByEqwAjqVdlcw+smYu
-x2i4fzPomTUfRa4OFDTaCTOGrG8PalZBDyPqwT03EMhw8rR8BD3KGJu4PqbfQAoS
-U0xN7AladF2lEOaNkMMqsYpORIVZnmc2hYS1t9XjzjfuGaZznI6RvpK5ChpgcXsn
-Sqx+h2VKbMN8NS33kAgdNvOktg9S4KO/Kq4gxV5iGJdYBkmFGWIAcitVgNf7CI2B
-9vKhWPHYyaIpOIO/flAnktIY6Va5hR+L0qpNTlZxLmRt853JS/c19Iji/QGeQu4c
-NDfciUCK2WleHgqi2FDB0k6ab6wfO8G02THfZodycJ9iJCPeJgjUUjypp8P+yx5S
-wd2l0L/BklPgpZSFRPC7W2j3g8YXAeilYNv3k15onNVmF3P4NGKtYEbvAayDYhei
-SA4bee1i5XfdIAyCWt58SGueiZkCXUL8sV8s8D1KcQGW1x5PLLwGZar5dAD062fl
-MKI4aMw+cwMTV5KQRS4rPbK4WI3AGpMttCft+tpC6dTsowmE6GuHzEjuwBeRhzUC
-H/zquzdh+XdJjJNOBuevywMd3gAEmBSmg4d86utpcT7UGqK/ZsPdwoJ2rGZOrUvt
-LwdY57M5Z/TOXchlRx3+
-=9N9V
------END PGP SIGNATURE-----
-
---=-AoG42stK/knOlFkkqqr+--
+-- 
+Ben Hutchings, Senior Software Engineer, Solarflare Communications
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
