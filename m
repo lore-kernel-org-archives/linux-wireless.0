@@ -1,57 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:34954 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760525AbZJIKQM (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.24]:36643 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756571AbZJAUox (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 06:16:12 -0400
-Received: by fg-out-1718.google.com with SMTP id 22so250492fge.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2009 03:14:24 -0700 (PDT)
+	Thu, 1 Oct 2009 16:44:53 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so133538eyf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 13:44:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <200910091139.36089.mb@bu3sch.de>
-References: <200910091139.36089.mb@bu3sch.de>
-Date: Fri, 9 Oct 2009 12:14:24 +0200
-Message-ID: <69e28c910910090314j4e9885dfofbc58e901965b4ab@mail.gmail.com>
-Subject: Re: Broadcom cards for free
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1254426421.3959.29.camel@johannes.local>
+References: <2d0a357f0910010247jfda1199h5a9b873233b186ca@mail.gmail.com>
+	 <1254426421.3959.29.camel@johannes.local>
+Date: Thu, 1 Oct 2009 22:44:56 +0200
+Message-ID: <2d0a357f0910011344u4306ecf6ha11410b0f5ed62e3@mail.gmail.com>
+Subject: Re: Linux-2.6.32-rc1/2] wext refactor needs wpasupplicant 0.7.0+?
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001636c5a28565cd5b0474e5b890
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sounds interesting... especially now that N-PHY is actually being
-reverse-engineered (or is it?).
+--001636c5a28565cd5b0474e5b890
+Content-Type: text/plain; charset=UTF-8
 
-The modded 4320 is an attempt to replace the built-in OS and use it
-with b43 as a softmac device... am I right?
+Here the logs for wpasupplicant v06.9 and v0.7.0.
 
-On 10/9/09, Michael Buesch <mb@bu3sch.de> wrote:
-> Hi,
+$ wpa_supplicant -v
+
+$ /sbin/wpa_supplicant -ddt -B -P /var/run/wpa_supplicant.wlan0.pid -i
+wlan0 -D wext -C /var/run/wpa_supplicant
+
+- Sedat -
+
+On Thu, Oct 1, 2009 at 9:47 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2009-10-01 at 11:47 +0200, Sedat Dilek wrote:
 >
-> I've currently got two Broadcom cards to offer for free.
-> http://bu3sch.de/misc/bcmcards.JPG
+>> a few hours ago I compiled a new kernel from upstream and put
+>> wireless-testing master-2009-09-30 on top of it.
+>>
+>> Last commit a1bec0ecfc76281d5e1ebd33435c67da7dd0fe71
+>> wext: refactor
+>>
+>> linux-2.6/master:
+>> 84d88d5: Merge branch 'sched-fixes-for-linus' of
+>> git://git./linux/kernel/git/tip/linux-2.6-tip
+>>
+>> After installation of the above described kernel, I could not connect
+>> to my AP using wext driver and wpasupplicant (0.6.9-3) from Debian/sid
+>> [1].
+>> With ath5k I could not establish a network connection neither via DHCP
+>> nor via static-IP to my AP (iwl3945 on a second machine works with
+>> self-debianized wpasupplicant 0.7.0+ and static-IP, same kernel).
+>>
+>> Just for clarification:
+>> Does wext refactor need a wpasupplicant >= 0.7.0 from hostap GIT repository [2]?
 >
-> The cardbus one is a WPC300N V1 802.11n card.
-> It can be used for development of the b43 N-PHY code.
+> Should be ok. Can we see wpa_supplicant -ddt log please?
 >
-> The USB one is BCM4320 which works over RNDIS-WLAN.
-> This device is disassembled and the EEPROM, which contains
-> the on-board operating system, is unsoldered and connected through a
-> pinheader.
-> That means it can be read and/or reprogrammed outside of the device.
-> The RF-shield on the RF-side of the board was removed.
-> The device should work properly. It properly registers to the kernel, but I
-> did
-> not try if it works with the rndis-wlan driver.
->
-> --
-> Greetings, Michael.
-> _______________________________________________
-> Bcm43xx-dev mailing list
-> Bcm43xx-dev@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+> johannes
 >
 
+--001636c5a28565cd5b0474e5b890
+Content-Type: text/plain; charset=US-ASCII; name="wpasupplicant-069.txt"
+Content-Disposition: attachment; filename="wpasupplicant-069.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g09z3kzl1
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+d3BhX3N1cHBsaWNhbnQgdjAuNi45CkNvcHlyaWdodCAoYykgMjAwMy0yMDA5LCBKb3VuaSBNYWxp
+bmVuIDxqQHcxLmZpPiBhbmQgY29udHJpYnV0b3JzCjEyNTQ0Mjk0NzQuOTgyODk2OiBJbml0aWFs
+aXppbmcgaW50ZXJmYWNlICd3bGFuMCcgY29uZiAnTi9BJyBkcml2ZXIgJ3dleHQnIGN0cmxfaW50
+ZXJmYWNlICcvdmFyL3J1bi93cGFfc3VwcGxpY2FudCcgYnJpZGdlICdOL0EnCjEyNTQ0Mjk0NzUu
+MDc5NzEzOiBJbnRlcmZhY2Ugd2xhbjAgc2V0IFVQIC0gd2FpdGluZyBhIHNlY29uZCBmb3IgdGhl
+IGRyaXZlciB0byBjb21wbGV0ZSBpbml0aWFsaXphdGlvbgoxMjU0NDI5NDc2LjA4MDAwOTogU0lP
+Q0dJV1JBTkdFOiBXRShjb21waWxlZCk9MjIgV0Uoc291cmNlKT0yMSBlbmNfY2FwYT0weGYKMTI1
+NDQyOTQ3Ni4wODAwMzI6ICAgY2FwYWJpbGl0aWVzOiBrZXlfbWdtdCAweGYgZW5jIDB4ZiBmbGFn
+cyAweDAKMTI1NDQyOTQ3Ni4wODQ1MzM6IFdFWFQ6IE9wZXJzdGF0ZTogbGlua21vZGU9MSwgb3Bl
+cnN0YXRlPTUKMTI1NDQyOTQ3Ni4wODQ2MzM6IE93biBNQUMgYWRkcmVzczogMDA6MDU6NGU6NDY6
+YjQ6MWYKMTI1NDQyOTQ3Ni4wODQ2NDQ6IHdwYV9kcml2ZXJfd2V4dF9zZXRfd3BhCjEyNTQ0Mjk0
+NzYuMDg0NjU4OiB3cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90
+eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKMTI1NDQyOTQ3Ni4wODQ2Nzc6IHdwYV9kcml2ZXJfd2V4
+dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTEgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAox
+MjU0NDI5NDc2LjA4NDY4OTogd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9
+MiBzZXRfdHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCjEyNTQ0Mjk0NzYuMDg0Njk5OiB3cGFfZHJp
+dmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0zIHNldF90eD0wIHNlcV9sZW49MCBrZXlf
+bGVuPTAKMTI1NDQyOTQ3Ni4wODQ3MTA6IHdwYV9kcml2ZXJfd2V4dF9zZXRfY291bnRlcm1lYXN1
+cmVzCjEyNTQ0Mjk0NzYuMDg0NzE3OiB3cGFfZHJpdmVyX3dleHRfc2V0X2Ryb3BfdW5lbmNyeXB0
+ZWQKMTI1NDQyOTQ3Ni4wODQ3MjQ6IFJTTjogZmx1c2hpbmcgUE1LSUQgbGlzdCBpbiB0aGUgZHJp
+dmVyCjEyNTQ0Mjk0NzYuMDg0NzkyOiBTZXR0aW5nIHNjYW4gcmVxdWVzdDogMCBzZWMgMTAwMDAw
+IHVzZWMKMTI1NDQyOTQ3Ni4wODQ4NDk6IFdQUzogVVVJRCBiYXNlZCBvbiBNQUMgYWRkcmVzcyAt
+IGhleGR1bXAobGVuPTE2KTogNTUgMmEgMjMgOWIgMTQgMWYgNTMgN2EgODkgYzYgOTggZDggODMg
+YWMgYTcgMjYKMTI1NDQyOTQ3Ni4wODQ4NzY6IFdQUzogQnVpbGQgQmVhY29uIGFuZCBQcm9iZSBS
+ZXNwb25zZSBJRXMKMTI1NDQyOTQ3Ni4wODQ4ODg6IFdQUzogICogVmVyc2lvbgoxMjU0NDI5NDc2
+LjA4NDg5NjogV1BTOiAgKiBXaS1GaSBQcm90ZWN0ZWQgU2V0dXAgU3RhdGUgKDApCjEyNTQ0Mjk0
+NzYuMDg0OTA0OiBXUFM6ICAqIFZlcnNpb24KMTI1NDQyOTQ3Ni4wODQ5MDg6IFdQUzogICogV2kt
+RmkgUHJvdGVjdGVkIFNldHVwIFN0YXRlICgwKQoxMjU0NDI5NDc2LjA4NDkxMzogV1BTOiAgKiBS
+ZXNwb25zZSBUeXBlICgyKQoxMjU0NDI5NDc2LjA4NDkyMTogV1BTOiAgKiBVVUlELUUKMTI1NDQy
+OTQ3Ni4wODQ5Mjg6IFdQUzogICogTWFudWZhY3R1cmVyCjEyNTQ0Mjk0NzYuMDg0OTMzOiBXUFM6
+ICAqIE1vZGVsIE5hbWUKMTI1NDQyOTQ3Ni4wODQ5Mzg6IFdQUzogICogTW9kZWwgTnVtYmVyCjEy
+NTQ0Mjk0NzYuMDg0OTQyOiBXUFM6ICAqIFNlcmlhbCBOdW1iZXIKMTI1NDQyOTQ3Ni4wODQ5NDY6
+IFdQUzogICogUHJpbWFyeSBEZXZpY2UgVHlwZQoxMjU0NDI5NDc2LjA4NDk1MTogV1BTOiAgKiBE
+ZXZpY2UgTmFtZQoxMjU0NDI5NDc2LjA4NDk1NTogV1BTOiAgKiBDb25maWcgTWV0aG9kcyAoMCkK
+MTI1NDQyOTQ3Ni4wODQ5NjA6IFdQUzogICogUkYgQmFuZHMgKDMpCjEyNTQ0Mjk0NzYuMDg4NDMz
+OiBFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECjEyNTQ0Mjk0NzYu
+MDg4NDQxOiBFQVBPTDogS0VZX1JYIGVudGVyaW5nIHN0YXRlIE5PX0tFWV9SRUNFSVZFCjEyNTQ0
+Mjk0NzYuMDg4NDQ4OiBFQVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJTklUSUFMSVpFCjEy
+NTQ0Mjk0NzYuMDg4NDU4OiBFQVA6IEVBUCBlbnRlcmluZyBzdGF0ZSBESVNBQkxFRAoxMjU0NDI5
+NDc2LjA4ODQ4NjogVXNpbmcgZXhpc3RpbmcgY29udHJvbCBpbnRlcmZhY2UgZGlyZWN0b3J5Lgox
+MjU0NDI5NDc2LjA4ODUyNzogY3RybF9pZmFjZSBiaW5kKFBGX1VOSVgpIGZhaWxlZDogQWRkcmVz
+cyBhbHJlYWR5IGluIHVzZQoxMjU0NDI5NDc2LjA4ODU0MzogY3RybF9pZmFjZSBleGlzdHMgYW5k
+IHNlZW1zIHRvIGJlIGluIHVzZSAtIGNhbm5vdCBvdmVycmlkZSBpdAoxMjU0NDI5NDc2LjA4ODU0
+ODogRGVsZXRlICcvdmFyL3J1bi93cGFfc3VwcGxpY2FudC93bGFuMCcgbWFudWFsbHkgaWYgaXQg
+aXMgbm90IHVzZWQgYW55bW9yZQoxMjU0NDI5NDc2LjA4ODU2MzogRmFpbGVkIHRvIGluaXRpYWxp
+emUgY29udHJvbCBpbnRlcmZhY2UgJy92YXIvcnVuL3dwYV9zdXBwbGljYW50Jy4KWW91IG1heSBo
+YXZlIGFub3RoZXIgd3BhX3N1cHBsaWNhbnQgcHJvY2VzcyBhbHJlYWR5IHJ1bm5pbmcgb3IgdGhl
+IGZpbGUgd2FzCmxlZnQgYnkgYW4gdW5jbGVhbiB0ZXJtaW5hdGlvbiBvZiB3cGFfc3VwcGxpY2Fu
+dCBpbiB3aGljaCBjYXNlIHlvdSB3aWxsIG5lZWQKdG8gbWFudWFsbHkgcmVtb3ZlIHRoaXMgZmls
+ZSBiZWZvcmUgc3RhcnRpbmcgd3BhX3N1cHBsaWNhbnQgYWdhaW4uCgoxMjU0NDI5NDc2LjA4ODU3
+MzogRmFpbGVkIHRvIGFkZCBpbnRlcmZhY2Ugd2xhbjAKMTI1NDQyOTQ3Ni4wODg1ODI6IFN0YXRl
+OiBESVNDT05ORUNURUQgLT4gRElTQ09OTkVDVEVECjEyNTQ0Mjk0NzYuMDg4NTkyOiB3cGFfZHJp
+dmVyX3dleHRfc2V0X29wZXJzdGF0ZTogb3BlcnN0YXRlIDAtPjAgKERPUk1BTlQpCjEyNTQ0Mjk0
+NzYuMDg4NTk5OiBXRVhUOiBPcGVyc3RhdGU6IGxpbmttb2RlPS0xLCBvcGVyc3RhdGU9NQoxMjU0
+NDI5NDc2LjA4ODYxNTogTm8ga2V5cyBoYXZlIGJlZW4gY29uZmlndXJlZCAtIHNraXAga2V5IGNs
+ZWFyaW5nCjEyNTQ0Mjk0NzYuMDg4NjIxOiBFQVBPTDogRXh0ZXJuYWwgbm90aWZpY2F0aW9uIC0g
+cG9ydEVuYWJsZWQ9MAoxMjU0NDI5NDc2LjA4ODYyODogRUFQT0w6IEV4dGVybmFsIG5vdGlmaWNh
+dGlvbiAtIHBvcnRWYWxpZD0wCjEyNTQ0Mjk0NzYuMDg4NjMzOiB3cGFfZHJpdmVyX3dleHRfc2V0
+X3dwYQoxMjU0NDI5NDc2LjA4ODY0Mjogd3BhX2RyaXZlcl93ZXh0X3NldF9kcm9wX3VuZW5jcnlw
+dGVkCjEyNTQ0Mjk0NzYuMDg4NjQ5OiB3cGFfZHJpdmVyX3dleHRfc2V0X2NvdW50ZXJtZWFzdXJl
+cwoxMjU0NDI5NDc2LjA4ODY1NTogTm8ga2V5cyBoYXZlIGJlZW4gY29uZmlndXJlZCAtIHNraXAg
+a2V5IGNsZWFyaW5nCjEyNTQ0Mjk0NzYuMDg5MzM5OiBDYW5jZWxsaW5nIHNjYW4gcmVxdWVzdAox
+MjU0NDI5NDc2LjA4OTM0OTogQ2FuY2VsbGluZyBhdXRoZW50aWNhdGlvbiB0aW1lb3V0CjEyNTQ0
+Mjk0NzYuMDg5NDExOiBXRVhUOiBPcGVyc3RhdGU6IGxpbmttb2RlPTAsIG9wZXJzdGF0ZT02Cg==
+--001636c5a28565cd5b0474e5b890
+Content-Type: text/plain; charset=US-ASCII; name="wpasupplicant-070.txt"
+Content-Disposition: attachment; filename="wpasupplicant-070.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g09z43k82
+
+d3BhX3N1cHBsaWNhbnQgdjAuNy4wCkNvcHlyaWdodCAoYykgMjAwMy0yMDA5LCBKb3VuaSBNYWxp
+bmVuIDxqQHcxLmZpPiBhbmQgY29udHJpYnV0b3JzCjEyNTQ0Mjk1NTUuNjc3MjA4OiBJbml0aWFs
+aXppbmcgaW50ZXJmYWNlICd3bGFuMCcgY29uZiAnTi9BJyBkcml2ZXIgJ3dleHQnIGN0cmxfaW50
+ZXJmYWNlICcvdmFyL3J1bi93cGFfc3VwcGxpY2FudCcgYnJpZGdlICdOL0EnCjEyNTQ0Mjk1NTUu
+NzMzOTM3OiBJbnRlcmZhY2Ugd2xhbjAgc2V0IFVQIC0gd2FpdGluZyBhIHNlY29uZCBmb3IgdGhl
+IGRyaXZlciB0byBjb21wbGV0ZSBpbml0aWFsaXphdGlvbgoxMjU0NDI5NTU2LjczNDEzOTogU0lP
+Q0dJV1JBTkdFOiBXRShjb21waWxlZCk9MjIgV0Uoc291cmNlKT0yMSBlbmNfY2FwYT0weGYKMTI1
+NDQyOTU1Ni43MzQxNjA6ICAgY2FwYWJpbGl0aWVzOiBrZXlfbWdtdCAweGYgZW5jIDB4ZiBmbGFn
+cyAweDAKMTI1NDQyOTU1Ni43Mzc3NTk6IFdFWFQ6IE9wZXJzdGF0ZTogbGlua21vZGU9MSwgb3Bl
+cnN0YXRlPTUKMTI1NDQyOTU1Ni43Mzc4MTg6IE93biBNQUMgYWRkcmVzczogMDA6MDU6NGU6NDY6
+YjQ6MWYKMTI1NDQyOTU1Ni43Mzc4MjU6IHdwYV9kcml2ZXJfd2V4dF9zZXRfd3BhCjEyNTQ0Mjk1
+NTYuNzM3ODMxOiB3cGFfZHJpdmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0wIHNldF90
+eD0wIHNlcV9sZW49MCBrZXlfbGVuPTAKMTI1NDQyOTU1Ni43Mzc4NDE6IHdwYV9kcml2ZXJfd2V4
+dF9zZXRfa2V5OiBhbGc9MCBrZXlfaWR4PTEgc2V0X3R4PTAgc2VxX2xlbj0wIGtleV9sZW49MAox
+MjU0NDI5NTU2LjczNzg0Njogd3BhX2RyaXZlcl93ZXh0X3NldF9rZXk6IGFsZz0wIGtleV9pZHg9
+MiBzZXRfdHg9MCBzZXFfbGVuPTAga2V5X2xlbj0wCjEyNTQ0Mjk1NTYuNzM3ODUxOiB3cGFfZHJp
+dmVyX3dleHRfc2V0X2tleTogYWxnPTAga2V5X2lkeD0zIHNldF90eD0wIHNlcV9sZW49MCBrZXlf
+bGVuPTAKMTI1NDQyOTU1Ni43Mzc4NTU6IHdwYV9kcml2ZXJfd2V4dF9zZXRfY291bnRlcm1lYXN1
+cmVzCjEyNTQ0Mjk1NTYuNzM3ODU4OiB3cGFfZHJpdmVyX3dleHRfc2V0X2Ryb3BfdW5lbmNyeXB0
+ZWQKMTI1NDQyOTU1Ni43Mzc4NjE6IFJTTjogZmx1c2hpbmcgUE1LSUQgbGlzdCBpbiB0aGUgZHJp
+dmVyCjEyNTQ0Mjk1NTYuNzM3ODc5OiBTZXR0aW5nIHNjYW4gcmVxdWVzdDogMCBzZWMgMTAwMDAw
+IHVzZWMKMTI1NDQyOTU1Ni43Mzc5NDg6IFdQUzogVVVJRCBiYXNlZCBvbiBNQUMgYWRkcmVzcyAt
+IGhleGR1bXAobGVuPTE2KTogNTUgMmEgMjMgOWIgMTQgMWYgNTMgN2EgODkgYzYgOTggZDggODMg
+YWMgYTcgMjYKMTI1NDQyOTU1Ni43Mzc5NTk6IFdQUzogQnVpbGQgQmVhY29uIGFuZCBQcm9iZSBS
+ZXNwb25zZSBJRXMKMTI1NDQyOTU1Ni43Mzc5NjU6IFdQUzogICogVmVyc2lvbgoxMjU0NDI5NTU2
+LjczNzk2ODogV1BTOiAgKiBXaS1GaSBQcm90ZWN0ZWQgU2V0dXAgU3RhdGUgKDApCjEyNTQ0Mjk1
+NTYuNzM3OTcyOiBXUFM6ICAqIFZlcnNpb24KMTI1NDQyOTU1Ni43Mzc5NzQ6IFdQUzogICogV2kt
+RmkgUHJvdGVjdGVkIFNldHVwIFN0YXRlICgwKQoxMjU0NDI5NTU2LjczNzk3NzogV1BTOiAgKiBS
+ZXNwb25zZSBUeXBlICgyKQoxMjU0NDI5NTU2LjczNzk3OTogV1BTOiAgKiBVVUlELUUKMTI1NDQy
+OTU1Ni43Mzc5ODI6IFdQUzogICogTWFudWZhY3R1cmVyCjEyNTQ0Mjk1NTYuNzM3OTg0OiBXUFM6
+ICAqIE1vZGVsIE5hbWUKMTI1NDQyOTU1Ni43Mzc5ODY6IFdQUzogICogTW9kZWwgTnVtYmVyCjEy
+NTQ0Mjk1NTYuNzM3OTg4OiBXUFM6ICAqIFNlcmlhbCBOdW1iZXIKMTI1NDQyOTU1Ni43Mzc5OTE6
+IFdQUzogICogUHJpbWFyeSBEZXZpY2UgVHlwZQoxMjU0NDI5NTU2LjczNzk5MzogV1BTOiAgKiBE
+ZXZpY2UgTmFtZQoxMjU0NDI5NTU2LjczNzk5NTogV1BTOiAgKiBDb25maWcgTWV0aG9kcyAoMCkK
+MTI1NDQyOTU1Ni43Mzc5OTc6IFdQUzogICogUkYgQmFuZHMgKDMpCjEyNTQ0Mjk1NTYuNzM5MzEy
+OiBFQVBPTDogU1VQUF9QQUUgZW50ZXJpbmcgc3RhdGUgRElTQ09OTkVDVEVECjEyNTQ0Mjk1NTYu
+NzM5MzE2OiBFQVBPTDogU3VwcGxpY2FudCBwb3J0IHN0YXR1czogVW5hdXRob3JpemVkCjEyNTQ0
+Mjk1NTYuNzM5MzE5OiBFQVBPTDogS0VZX1JYIGVudGVyaW5nIHN0YXRlIE5PX0tFWV9SRUNFSVZF
+CjEyNTQ0Mjk1NTYuNzM5MzIxOiBFQVBPTDogU1VQUF9CRSBlbnRlcmluZyBzdGF0ZSBJTklUSUFM
+SVpFCjEyNTQ0Mjk1NTYuNzM5MzI1OiBFQVA6IEVBUCBlbnRlcmluZyBzdGF0ZSBESVNBQkxFRAox
+MjU0NDI5NTU2LjczOTMyODogRUFQT0w6IFN1cHBsaWNhbnQgcG9ydCBzdGF0dXM6IFVuYXV0aG9y
+aXplZAoxMjU0NDI5NTU2LjczOTMzMTogRUFQT0w6IFN1cHBsaWNhbnQgcG9ydCBzdGF0dXM6IFVu
+YXV0aG9yaXplZAoxMjU0NDI5NTU2LjczOTM0MzogVXNpbmcgZXhpc3RpbmcgY29udHJvbCBpbnRl
+cmZhY2UgZGlyZWN0b3J5LgoxMjU0NDI5NTU2LjczOTM2MTogY3RybF9pZmFjZSBiaW5kKFBGX1VO
+SVgpIGZhaWxlZDogQWRkcmVzcyBhbHJlYWR5IGluIHVzZQoxMjU0NDI5NTU2LjczOTM3MTogY3Ry
+bF9pZmFjZSBleGlzdHMgYW5kIHNlZW1zIHRvIGJlIGluIHVzZSAtIGNhbm5vdCBvdmVycmlkZSBp
+dAoxMjU0NDI5NTU2LjczOTM3MzogRGVsZXRlICcvdmFyL3J1bi93cGFfc3VwcGxpY2FudC93bGFu
+MCcgbWFudWFsbHkgaWYgaXQgaXMgbm90IHVzZWQgYW55bW9yZQoxMjU0NDI5NTU2LjczOTM4MDog
+RmFpbGVkIHRvIGluaXRpYWxpemUgY29udHJvbCBpbnRlcmZhY2UgJy92YXIvcnVuL3dwYV9zdXBw
+bGljYW50Jy4KWW91IG1heSBoYXZlIGFub3RoZXIgd3BhX3N1cHBsaWNhbnQgcHJvY2VzcyBhbHJl
+YWR5IHJ1bm5pbmcgb3IgdGhlIGZpbGUgd2FzCmxlZnQgYnkgYW4gdW5jbGVhbiB0ZXJtaW5hdGlv
+biBvZiB3cGFfc3VwcGxpY2FudCBpbiB3aGljaCBjYXNlIHlvdSB3aWxsIG5lZWQKdG8gbWFudWFs
+bHkgcmVtb3ZlIHRoaXMgZmlsZSBiZWZvcmUgc3RhcnRpbmcgd3BhX3N1cHBsaWNhbnQgYWdhaW4u
+CgoxMjU0NDI5NTU2LjczOTM4NTogRmFpbGVkIHRvIGFkZCBpbnRlcmZhY2Ugd2xhbjAKMTI1NDQy
+OTU1Ni43MzkzODg6IE5vIGtleXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgLSBza2lwIGtleSBjbGVh
+cmluZwoxMjU0NDI5NTU2LjczOTM5MTogU3RhdGU6IERJU0NPTk5FQ1RFRCAtPiBESVNDT05ORUNU
+RUQKMTI1NDQyOTU1Ni43MzkzOTY6IHdwYV9kcml2ZXJfd2V4dF9zZXRfb3BlcnN0YXRlOiBvcGVy
+c3RhdGUgMC0+MCAoRE9STUFOVCkKMTI1NDQyOTU1Ni43MzkzOTk6IFdFWFQ6IE9wZXJzdGF0ZTog
+bGlua21vZGU9LTEsIG9wZXJzdGF0ZT01CjEyNTQ0Mjk1NTYuNzM5NDA3OiBFQVBPTDogRXh0ZXJu
+YWwgbm90aWZpY2F0aW9uIC0gcG9ydEVuYWJsZWQ9MAoxMjU0NDI5NTU2LjczOTQxMDogRUFQT0w6
+IFN1cHBsaWNhbnQgcG9ydCBzdGF0dXM6IFVuYXV0aG9yaXplZAoxMjU0NDI5NTU2LjczOTQxMjog
+RUFQT0w6IEV4dGVybmFsIG5vdGlmaWNhdGlvbiAtIHBvcnRWYWxpZD0wCjEyNTQ0Mjk1NTYuNzM5
+NDE1OiBFQVBPTDogU3VwcGxpY2FudCBwb3J0IHN0YXR1czogVW5hdXRob3JpemVkCjEyNTQ0Mjk1
+NTYuNzM5NDE4OiB3cGFfZHJpdmVyX3dleHRfc2V0X3dwYQoxMjU0NDI5NTU2LjczOTQyMjogd3Bh
+X2RyaXZlcl93ZXh0X3NldF9kcm9wX3VuZW5jcnlwdGVkCjEyNTQ0Mjk1NTYuNzM5NDI1OiB3cGFf
+ZHJpdmVyX3dleHRfc2V0X2NvdW50ZXJtZWFzdXJlcwoxMjU0NDI5NTU2LjczOTQyODogTm8ga2V5
+cyBoYXZlIGJlZW4gY29uZmlndXJlZCAtIHNraXAga2V5IGNsZWFyaW5nCjEyNTQ0Mjk1NTYuNzM5
+NjgyOiBDYW5jZWxsaW5nIHNjYW4gcmVxdWVzdAoxMjU0NDI5NTU2LjczOTY4NjogQ2FuY2VsbGlu
+ZyBhdXRoZW50aWNhdGlvbiB0aW1lb3V0CjEyNTQ0Mjk1NTYuNzM5NzA0OiBXRVhUOiBPcGVyc3Rh
+dGU6IGxpbmttb2RlPTAsIG9wZXJzdGF0ZT02Cg==
+--001636c5a28565cd5b0474e5b890--
