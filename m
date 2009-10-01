@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41901 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699AbZJ0Pxn (ORCPT
+Received: from cpsmtpm-eml102.kpnxchange.com ([195.121.3.6]:61986 "EHLO
+	CPSMTPM-EML102.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755118AbZJAAf0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 11:53:43 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Michael Green <Michael.Green@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Subject: [PATCH] wireless-regdb: update US rules for 5600 MHz - 5650 MHz
-Date: Tue, 27 Oct 2009 11:53:47 -0400
-Message-Id: <1256658827-25940-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 30 Sep 2009 20:35:26 -0400
+From: Frans Pop <elendil@planet.nl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [SOLVED][.32-rc1/2] ath5k: has become unreliable with .32-rc1
+Date: Thu, 1 Oct 2009 02:35:27 +0200
+Cc: linux-kernel@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+References: <200909300952.29106.elendil@planet.nl>
+In-Reply-To: <200909300952.29106.elendil@planet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200910010235.28904.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The FCC is trying to assist airports that use Terminal Doppler
-Weather Radar (TDWR) systems in avoiding interference with
-some outdoor wireless systems operating in the 5.4 GHz
-(5470 MHz - 5725 MHz) band. One of the things they have decided
-on is to disallow operation on the 5600 MHz - 5650 MHz frequency
-range inclusive. What this means in practice is 5 GHz 802.11
-devices programmed to operate in the US will have these
-channels now disabled:
+On Wednesday 30 September 2009, Frans Pop wrote:
+> The first time I booted .32-rc1 (reboot from .31-rc5), wireless came up
+> without problems, but failed to come back after suspend to RAM. I could
+> only get wireless back by ejecting and re-inserting the PCMCIA card.
+>
+> The second and third time I booted .32-rc1 (to write this report; a cold
+> boot and a ".32 to .32" reboot), wireless did not come up at all.
+> See attached dmesg. The last part is after 'ifup ath0'. It seems to
+> associate, but then for some reason immediately deauthenticates again.
 
- * 5600 MHz [120] (disabled)
- * 5620 MHz [124] (disabled)
- * 5640 MHz [128] (disabled)
- * 5660 MHz [132] (disabled)
+Both issues are solved with current mainline. Probably the resume issue by 
+Rafael's PCMCIA patch (the "late" config restore messages for ath5k are 
+back too), the boot issue by one of Johannes' patches (I'd guess either 
+4be3bd8c 'cfg80211: don't set privacy w/o key' or maybe 8bb89485
+'cfg80211: always get BSS').
 
-This is documented on the FCC Knowledge based Publication
-Number: 443999 [1]
+Still strange that iwlagn continued to work. Although, come to think of it, 
+I have not cold booted that laptop recently.
 
-[1] https://fjallfoss.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=41732
-
-Cc: Michael Green <Michael.Green@atheros.com>
-Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: David Quan <David.Quan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- db.txt |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 84be443..c8b1ef0 100644
---- a/db.txt
-+++ b/db.txt
-@@ -562,7 +562,8 @@ country US:
- 	(2402 - 2472 @ 40), (3, 27)
- 	(5170 - 5250 @ 40), (3, 17)
- 	(5250 - 5330 @ 40), (3, 20), DFS
--	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5490 - 5600 @ 40), (3, 20), DFS
-+	(5651 - 5710 @ 40), (3, 20), DFS
- 	(5735 - 5835 @ 40), (3, 30)
- 
- country UY:
--- 
-1.6.0.4
-
+Cheers,
+FJP
