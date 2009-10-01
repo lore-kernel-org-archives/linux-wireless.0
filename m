@@ -1,123 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35591 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751109AbZJHGYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 02:24:13 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1254974743.7797.21.camel@marge.simson.net>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910061749.02805.elendil@planet.nl>
-	 <200910071910.53907.elendil@planet.nl>
-	 <200910072034.57511.elendil@planet.nl>
-	 <1254974743.7797.21.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Thu, 08 Oct 2009 08:23:23 +0200
-Message-Id: <1254983003.14810.13.camel@marge.simson.net>
+Received: from xc.sipsolutions.net ([83.246.72.84]:49686 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271AbZJASm2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Oct 2009 14:42:28 -0400
+Subject: Re: [PATCH] net: fix NOHZ: local_softirq_pending 08
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: David Miller <davem@davemloft.net>, oliver@hartkopp.net,
+	kalle.valo@iki.fi, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <200910011604.42916.mb@bu3sch.de>
+References: <1254324077.3959.7.camel@johannes.local>
+	 <4AC3A0F1.3060306@hartkopp.net>
+	 <20090930.163333.234658158.davem@davemloft.net>
+	 <200910011604.42916.mb@bu3sch.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-UWaNvcKK6UaNhO8ESa4v"
+Date: Thu, 01 Oct 2009 20:42:28 +0200
+Message-Id: <1254422548.3959.24.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 06:05 +0200, Mike Galbraith wrote:
-> On Wed, 2009-10-07 at 20:34 +0200, Frans Pop wrote:
-> > On Wednesday 07 October 2009, Frans Pop wrote:
-> > > On Tuesday 06 October 2009, Frans Pop wrote:
-> > > > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
-> > > > the system is idle, but with normal values of 60-100 ms. And phy0 has
-> > > > normal values of below 10 ms.
-> > > > I've now rebooted with today's mainline git; phy0 now frequently shows
-> > > > with values of around 100 ms too (i.e. higher than last time).
-> > >
-> > > Mike privately sent me a script to try to capture the latencies with
-> > > perf, but the perf output does not show any high latencies at all. It
-> > > looks as if we may have found a bug in latencytop here instead.
-> > 
-> > Not sure if it's relevant nor what it means, but I frequently see two lines 
-> > for iwlagn, e.g:
-> > 
-> >     Scheduler: waiting for cpu              102.4 msec         99.7 %
-> >     .                                         3.3 msec          0.3 %
-> > 
-> > I get the same results with both latencytop 0.4 and 0.5.
-> 
-> OK, I see latencytop spikes here on an idle box too, to the tune of up
-> to a _second_.  Booting with nohz=off seems to have cured it.
-> 
-> I wanted to see if that's also the perf sched record -C N trouble I
-> warned you not to try when recording with script, but unfortunately,
-> after pulling this morning...
-> 
-> marge:/root/tmp # perf sched lat --sort=max
-> Segmentation fault
-> 
-> ...perf sched got busted.  Seems likely to be same thing for both
-> though, as magnitude/frequency of bogons is very similar.
 
-Reverting problematic commit showed that nohz isn't the source of perf
-sched record -C N oddity.
+--=-UWaNvcKK6UaNhO8ESa4v
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-However, aside from latencytop seemingly having trouble with nohz, there
-appears to be a problem with perf sched record -a as well, the same one
-Arjan just fixed for perf timechart.
+On Thu, 2009-10-01 at 16:04 +0200, Michael Buesch wrote:
+> On Thursday 01 October 2009 01:33:33 David Miller wrote:
+>=20
+> > I'm not applying this until all of these details are sorted out=20
+>=20
+> John, please apply my fix to wireless-testing to get rid of the regressio=
+n.
+> You can revert it later, if there's a better fix available.
 
-In thread - [PATCH] perf timechart: Work around commit 42e59d7d19dc4b4,
-Arjan said..
-<quote>
-Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
-.. however it unfortunately changed how perf events get recorded,..
-</quote>
+I agree with davem, don't. Just fix the driver to local_bh_disable()
+around the rx function if necessary.
 
-Monkey see monkey (eep) do, and record mostly idle box, only amarok
-doing it's thing...
+johannes
 
-Before:
-marge:/root/tmp # perf sched record sleep 1
-[ perf record: Woken up 1 times to write data ]
-[ perf record: Captured and wrote 0.279 MB perf.data (~12208 samples) ]
+--=-UWaNvcKK6UaNhO8ESa4v
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-After:
-marge:/root/tmp # perf sched record sleep 1
-[ perf record: Woken up 1 times to write data ]
-[ perf record: Captured and wrote 0.649 MB perf.data (~28349 samples) ]
+-----BEGIN PGP SIGNATURE-----
 
+iQIcBAABAgAGBQJKxPgRAAoJEODzc/N7+QmayZ0QALY2U6DnK2r+UoDOY4HqxZed
+GUWVYaUaGfskmBksb4j+EcK/4y0S5aU4ZTUi19UK/fTU3Q7wXVofly2GnUrfOakU
+8BIocy+eTOpuochVHpmnej8UlXtVstpKPuonAuLPwAC2i4xAhR3hUz5MTBVKe+Av
+cb1zzF8X3IBApxD+Op2ZFjOAj0/zeEQt8bOSwOPc0DRxjpXFM7zAfgGNpfQ3g+Cz
+0OFOSwdWfWWoPb6HtsEh9fQFBdf/IGSdxBDNj/2FIIbhZTLyusv0v2wbBpLsb56g
+CbP7tbOTz9eH497bGihAsdFAfn6PskHDKflsaQGq0k6PVgd78xElr5YJE1Dy5zt1
+VYbTDzejgkKfkTSQzeHPomx2GuBGzJkDghwxADcoqiz9GVHkYe4+rjSDVIxV5K7K
+lc3ZfQU0Or0zvuxZuAQ0XaMbDbQbqA0Q8wU6TO+YsdSOphcasdTHiJamNPQb3DeB
+hWDXVfl0aN2PAF8zluB3QO6hIMODZODgpw0i59xErF1FxG6uAjPB8V2Udf60/H9U
+OrKamIE8Czc9mEzty+y9atFsQOKCqrOI4lfoF3jSHCjEBl0DUjk561qYA4y5Z1FD
+mOrKW00GP923d103/8hCrjHfj9C9fboSzEtjRyA9jQmLTqrc7uhWrAOexFfgmeeQ
+8Tl9rphg8I19dXK8EfWP
+=5Q8H
+-----END PGP SIGNATURE-----
 
-perf_counter tools: make perf sched pass -F 0 to record
-
-Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
-.. however it unfortunately changed how perf events get recorded,
-and caused sched to miss events.
-
-This patch causes the sched code to use -F 0 to not use the
-new framework when recording sched data.
-
-Signed-off-by: Mike Galbraith <efault@gmx.de>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
-LKML-Reference: <new-submission>
-
----
- tools/perf/builtin-sched.c |    1 +
- 1 file changed, 1 insertion(+)
-
-Index: linux-2.6/tools/perf/builtin-sched.c
-===================================================================
---- linux-2.6.orig/tools/perf/builtin-sched.c
-+++ linux-2.6/tools/perf/builtin-sched.c
-@@ -1902,6 +1902,7 @@ static const char *record_args[] = {
- 	"-f",
- 	"-m", "1024",
- 	"-c", "1",
-+	"-F", "0",
- 	"-e", "sched:sched_switch:r",
- 	"-e", "sched:sched_stat_wait:r",
- 	"-e", "sched:sched_stat_sleep:r",
-
-
+--=-UWaNvcKK6UaNhO8ESa4v--
 
