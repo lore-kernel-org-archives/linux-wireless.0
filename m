@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:65523 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbZJ2QSg (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:59253 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625AbZJAVQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 12:18:36 -0400
-Received: by iwn10 with SMTP id 10so1466308iwn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 09:18:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
-References: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 29 Oct 2009 09:18:21 -0700
-Message-ID: <43e72e890910290918v1ca66bbdk4270eabcae6f5798@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: make align adjustment code support paged SKB
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 1 Oct 2009 17:16:28 -0400
+Subject: Re: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
+	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20090929171249.GB14405@elf.ucw.cz>
+References: <20090929171249.GB14405@elf.ucw.cz>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-P07HAGU3xY43kYV86rag"
+Date: Thu, 01 Oct 2009 23:16:23 +0200
+Message-Id: <1254431783.3959.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 28, 2009 at 1:13 PM, Reinette Chatre
-<reinette.chatre@intel.com> wrote:
-> From: Zhu Yi <yi.zhu@intel.com>
->
-> This fixed a BUG_ON in __skb_trim() when paged rx is used in
-> iwlwifi driver. Yes, the whole mac80211 stack doesn't support
-> paged SKB yet. But let's start the work slowly from small
-> code snippets.
 
-So I just noticed ar9271 segments some frames upon RX. The current
-implementation approach is to stitch them back together through a
-newly allocated skb after all segments are received. How does iwlwifi
-ues paged skbs? How do you keep track of which page is for what frame?
+--=-P07HAGU3xY43kYV86rag
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Can you elaborate on the planned paged skb support on mac80211 you
-have. Do you have any queued up patches I can look at this point?
+On Tue, 2009-09-29 at 19:12 +0200, Pavel Machek wrote:
+>=20
+> Happened while playing with wireless.
+>=20
+> Kernel is:
+>=20
+> Linux version 2.6.31 (pavel@amd) (gcc version 4.3.3 (Debian 4.3.3-10)
+> ) #72 SMP Thu Sep 10 21:56:19 CEST 2009
+> KERNEL supported cpus:
+>=20
+> (Could we get kernels between release and -rc1 mark themselves
+> somehow?)
 
-  Luis
+CONFIG_LOCALVERSION_AUTO?
+
+> Registered led device: iwl-phy0::radio
+> Registered led device: iwl-phy0::assoc
+> Registered led device: iwl-phy0::RX
+> Registered led device: iwl-phy0::TX
+> wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SSID
+> wlan0: Trigger new scan to find an IBSS to join
+> wlan0: Trigger new scan to find an IBSS to join
+> wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
+> wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
+> skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
+
+This entire log is very odd ... can you reproduce this easily? printk
+timestamps would be useful.
+
+johannes
+
+--=-P07HAGU3xY43kYV86rag
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKxRwkAAoJEODzc/N7+QmazKkP/1pg60E2W8XKI0Djsyvh6GKK
+YV5gEu3R16L4l9EZkHD4akgGlQDPtfIIlrxPQ11gLSKMt0K8UzsavJTWOkEbL4d0
+Dc3DVYNk1+lGcJmJHgz/9AuwWc0mZLZ/e7aoWGRvZsv9E3+fQG1qBLisKrUB9tLO
+MW/kPbjjlR5momvE4XglR/5/6yjWywayDL4kblR/xOSpaOJDxGTET4j+P42QiVQB
+NOal2NJDipfkBEh3qmAAueQBbcfJoRqsi0tXxh7Pysf2Yy1hcVTXNORYGhUKlbCG
+OISu+kYYIEd6AdYS5xoWmAKcKWNPoiww6xDE58hF689EJAoxju2OvqNNgwsWt7MM
+SLRPzLKUhOx/xqktljgiHxQ2PbFGfqrsknZbqzui4zljAFOnc+me1hTFuPdXljSv
+bwahG86iA27k8h7q0f3x5aJgsz8bmznfLFUr8kxmluujaqiTKuhAibko4FSr6TW7
+EehHyxiHxp0+cz0UXq3iIAoAcPFfiSKVr7bhTCim6RGIP/vFnxW5kGz/UTP4W+aA
+QB+ysMhbreM9YRFHNhysmDFwXV5MRzqdiVeT6lwaAN5xOVXfqPJSrpZyanfFYHLy
+lYuu7EI0I+tBNZgGkLpjzWgHAUfcmUesaJ4wlnLW4kMscTw7CJTyN+kzgGrZuPyB
+LeMcSHoDplvTsZqP/cZp
+=yYaN
+-----END PGP SIGNATURE-----
+
+--=-P07HAGU3xY43kYV86rag--
+
