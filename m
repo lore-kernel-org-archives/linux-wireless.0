@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755340AbZJZJWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 05:22:35 -0400
-Subject: Re: Questions about cfg80211's cfg80211_connect_params->crypto
- settings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910260947.48365.hs4233@mail.mn-solutions.de>
-References: <200910260947.48365.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0thTEhV+pFTvU7N9LeJZ"
-Date: Mon, 26 Oct 2009 10:22:29 +0100
-Message-ID: <1256548953.28230.19.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:58617 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754471AbZJBXD1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 19:03:27 -0400
+Message-ID: <4AC686C0.1050506@gmx.de>
+Date: Sat, 03 Oct 2009 01:03:28 +0200
+From: Joerg Albert <jal2@gmx.de>
+MIME-Version: 1.0
+To: Malte Gell <malte.gell@gmx.de>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com,
+	Hin-Tak Leung <hintak.leung@gmail.com>
+Subject: Re: [PATCH] ar9170usb: LEDs are confused
+References: <200910011654.10963.chunkeey@googlemail.com> <200910020852.36427.malte.gell@gmx.de> <200910021246.34699.chunkeey@googlemail.com> <200910021345.55567.malte.gell@gmx.de> <4AC67DEB.80900@gmx.de>
+In-Reply-To: <4AC67DEB.80900@gmx.de>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-0thTEhV+pFTvU7N9LeJZ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+could anyone with a WN111v2 (or any other device with one LED only)
+apply the patch below and look into syslog for the value of "hwtype"?
 
-On Mon, 2009-10-26 at 09:47 +0100, Holger Schurig wrote:
+I get 22212221 for an AVM stick (057c:8401) and 22211111 for a Netgear WNDA3100 (0846:9010).
 
-> I'm a but confused about what fields in "struct=20
-> cfg80211_connect_params" (now abbreviated as sme->)
-> are relevant for me.
->=20
->=20
-> sme->private
-> ------------
+Thanks,
+Joerg.
 
-I think you mean "privacy". I'm not sure about it right now, would have
-to dig, but maybe the answer to the others helps you?
-
-> sme->crypto.wpa_versions
-
-> sme->crypto.n_ciphers_pairwise, sme->crypto.ciphers_pairwise
-
-> sme->crypto.n_akm_suites, sme->crypto.akm_suites
-
-All these pretty much exist for hw that doesn't want to use the IE(s)
-contained in the connect parameters. If you send an assoc request with
-those IEs, you can safely ignore the parameters here. It's just there so
-one doesn't have to parse the IEs.
-
-johannes
-
---=-0thTEhV+pFTvU7N9LeJZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK5WpRAAoJEODzc/N7+QmaVaoQANQTgAMLrcLa61ONEfdsMyx0
-Bjd5EFslLmnovPifZNvIBIqZlxUudcU+oFDvCAen5D3/EcEupv/V6GhBk96Pn9uJ
-ksIG2uIdsUbpeFbRy0b0brgOv9JtZZFBPqDvxt2zYf98doPT2IZ8p/i1pCbQHrOi
-rsiGFhKFF2IJGVHTrYrsOUjKL48xT+EL2QjaJagU3Dy/qEIJb+Eyz353obsQUE8e
-dFqsVosFZeu99+PyA10foENTFrUEu3LPbSPt5DvX93tIKe9j7yf4zRNyTsfN8ZyJ
-UlUjd+Uwug6T6Wm2hcSqTWSZUDpmYKTUYsz3/H8+mDNJZTcS4eYc/9T8XvuzDzbn
-BVidyF1zJaKGU/wyn5Nkw/rdl5FFdtt7eMc9KVkyG5oyAWDjM5OvXEKmzSUxMWrU
-Pt7Vmx6xJwSEX5FB04K7Sgdfx0zYXyWKQsyY9xXW12RfOUDNl+ibPaHhdAOp5apu
-Qz5bsF0rAEM2GRdJSsAzKBZs2mYE/qhwMlLMHJDaWHd3EmVEn8QlwAdK3reeqQbj
-A4hcUPPA1fPkDM4YOzkCrkpOxya0qJ6FM/hiEkQu3/jfpCtGU66o1KuukUjXZxqH
-x1XaQbbmzc+tyRfXrxLSRGkvHQmEJ7qNxZTmyRLckgMnCpaCAQNdtgfm96YipW87
-RXjFIGMF4ty3leOq4H26
-=nQ5u
------END PGP SIGNATURE-----
-
---=-0thTEhV+pFTvU7N9LeJZ--
-
+-- 
+diff --git a/drivers/net/wireless/ath/ar9170/hw.h b/drivers/net/wireless/ath/ar9170/hw.h
+index 6cbfb2f..74b619c 100644
+--- a/drivers/net/wireless/ath/ar9170/hw.h
++++ b/drivers/net/wireless/ath/ar9170/hw.h
+@@ -77,6 +77,7 @@ enum ar9170_cmd {
+ #define AR9170_EP_IRQ				3
+ #define AR9170_EP_CMD				4
+ 
++#define AR9170_EEPROM_HWTYPE                    0x1374
+ #define AR9170_EEPROM_START			0x1600
+ 
+ #define AR9170_GPIO_REG_BASE			0x1d0100
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index c1f8c69..bffd6c4 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -2598,6 +2598,7 @@ static int ar9170_read_eeprom(struct ar9170 *ar)
+ 	__le32 offsets[RW];
+ 	unsigned int rx_streams, tx_streams, tx_params = 0;
+ 	int i, j, err, bands = 0;
++	u32 hwtype;
+ 
+ 	BUILD_BUG_ON(sizeof(ar->eeprom) & 3);
+ 
+@@ -2665,6 +2666,14 @@ static int ar9170_read_eeprom(struct ar9170 *ar)
+ 	/* second part of wiphy init */
+ 	SET_IEEE80211_PERM_ADDR(ar->hw, addr);
+ 
++	/* read hw type (aka the led modes) */
++	err = ar9170_read_reg(ar, AR9170_EEPROM_HWTYPE, &hwtype);
++	if (err)
++		return err;
++	/* jal: for debugging only */
++	printk(KERN_INFO "%s: hwtype %08x\n",
++	       wiphy_name(ar->hw->wiphy), hwtype);
++
+ 	return bands ? 0 : -EINVAL;
+ }
+ 
