@@ -1,116 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52859 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755333AbZJABUT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 21:20:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/3] wireless: implement basic ethtool support for cfg80211 devices
-Date: Wed, 30 Sep 2009 21:19:00 -0400
-Message-Id: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20091001011340.GA3123@tuxdriver.com>
-References: <20091001011340.GA3123@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:12657 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758176AbZJBUts (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 16:49:48 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/13] iwlwifi driver updates 10/2/2009
+Date: Fri,  2 Oct 2009 13:43:54 -0700
+Message-Id: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/Makefile  |    2 +-
- net/wireless/core.c    |    3 +++
- net/wireless/ethtool.c |   27 +++++++++++++++++++++++++++
- net/wireless/ethtool.h |   10 ++++++++++
- 4 files changed, 41 insertions(+), 1 deletions(-)
- create mode 100644 net/wireless/ethtool.c
- create mode 100644 net/wireless/ethtool.h
+In this series we include two fixes targeting 2.6.32:
+1/13 is needed to parse OTP data correctly, without this devices with valid
+OTP data may be unable to work - this fix also targets 2.6.31
+2/13 fixes the EEPROM offsets used for enhanced TX power data
 
-diff --git a/net/wireless/Makefile b/net/wireless/Makefile
-index c814150..f07c8dc 100644
---- a/net/wireless/Makefile
-+++ b/net/wireless/Makefile
-@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
- obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
- 
- cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
--cfg80211-y += mlme.o ibss.o sme.o chan.o
-+cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o
- cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
- cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
- 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index c761532..faada5c 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -21,6 +21,7 @@
- #include "sysfs.h"
- #include "debugfs.h"
- #include "wext-compat.h"
-+#include "ethtool.h"
- 
- /* name for sysfs, %d is appended */
- #define PHY_NAME "phy"
-@@ -683,6 +684,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
- 				wdev->wext.ps = false;
- 			}
- #endif
-+		if (!dev->ethtool_ops)
-+			dev->ethtool_ops = &cfg80211_ethtool_ops;
- 		break;
- 	case NETDEV_GOING_DOWN:
- 		switch (wdev->iftype) {
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-new file mode 100644
-index 0000000..94ca377
---- /dev/null
-+++ b/net/wireless/ethtool.c
-@@ -0,0 +1,27 @@
-+#include <linux/utsrelease.h>
-+#include <net/cfg80211.h>
-+#include "ethtool.h"
-+
-+const struct ethtool_ops cfg80211_ethtool_ops = {
-+	.get_drvinfo = cfg80211_get_drvinfo,
-+	.get_link = ethtool_op_get_link,
-+};
-+
-+void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	strncpy(info->driver, wiphy_dev(wdev->wiphy)->driver->name,
-+		sizeof(info->driver));
-+	info->driver[sizeof(info->driver) - 1] = '\0';
-+
-+	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
-+	info->version[sizeof(info->version) - 1] = '\0';
-+
-+	strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
-+	info->fw_version[sizeof(info->fw_version) - 1] = '\0';
-+
-+	strncpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
-+		sizeof(info->bus_info));
-+	info->bus_info[sizeof(info->bus_info) - 1] = '\0';
-+}
-diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
-new file mode 100644
-index 0000000..a51b470
---- /dev/null
-+++ b/net/wireless/ethtool.h
-@@ -0,0 +1,10 @@
-+#ifndef __CFG80211_ETHTOOL__
-+#define __CFG80211_ETHTOOL__
-+
-+#include <linux/ethtool.h>
-+
-+extern void cfg80211_get_drvinfo(struct net_device *, struct ethtool_drvinfo *);
-+
-+extern const struct ethtool_ops cfg80211_ethtool_ops;
-+
-+#endif /* __CFG80211_ETHTOOL__ */
--- 
-1.6.2.5
+This series introduces, thanks to Johannes, device tracing utilizing the
+ftrace framework.
+
+[PATCH 01/13 v2.6.31, v2.6.32 and w-t] iwlwifi: incorrect method used for finding valid OTP blocks
+[PATCH 02/13 v2.6.32 and w-t] iwlwifi: fix EEPROM enhance tx power offset
+[PATCH 03/13] iwlwifi: fix compile warning
+[PATCH 04/13] iwlwifi: reliable entering of critical temperature state
+[PATCH 05/13] iwlwifi: change valid EEPROM version for 1000 series
+[PATCH 06/13] iwlwifi: clear the translate table area
+[PATCH 07/13] iwlwifi: set default aggregation frame count limit to 31
+[PATCH 08/13] iwlwifi: device tracing
+[PATCH 09/13] iwlwifi: LED cleanup
+[PATCH 10/13] iwlwifi/iwl3945 : unify apm stop operation
+[PATCH 11/13] iwlwifi: replace iwl_poll_direct_bit with iwl_poll_bit for CSR access
+[PATCH 12/13] iwlwifi: validate the signature for EEPROM and OTP
+[PATCH 13/13] iwlagn: fix compile warning in iwl5000_gain_computation
+
+Thank you
+
+Reinette
 
