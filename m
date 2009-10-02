@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:34156 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbZJPHwx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 03:52:53 -0400
-Received: by ewy4 with SMTP id 4so1329035ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 00:52:17 -0700 (PDT)
-To: "John Willis" <John.Willis@Distant-earth.com>
-Cc: <me@bobcopeland.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] WL1251: Very crude EEPROM reading support for the WL1251 driver
-References: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Fri, 16 Oct 2009 10:52:15 +0300
-In-Reply-To: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com> (John Willis's message of "Thu\, 15 Oct 2009 16\:51\:49 +0100")
-Message-ID: <87r5t3n5cg.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([143.182.124.21]:12657 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758178AbZJBUtt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 16:49:49 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 07/13] iwlwifi: set default aggregation frame count limit to 31
+Date: Fri,  2 Oct 2009 13:44:01 -0700
+Message-Id: <1254516247-4085-8-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John Willis" <John.Willis@Distant-earth.com> writes:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-> Gents,
->
-> Attached are some very hacky (even after a quick cleanup) patches that add
-> something like support for reading the EEPROM NVS calibration data into the
-> WL1251 driver. It seems just good enough to get the driver up and playing
-> nicely. 
+Multiple MPDUs can be aggregated, transmitted, and finally acknowledged
+together using a single BA frame. Block ACK (BA) contains
+bitmap size of 64*16 bits so the maximum frame count is 64.
+The default value of aggregation frame count suggested by uCode is 31 to
+achieve best performance.
 
-Thanks a lot, this is good stuff. Now we have all hardware
-configurations (known by me) supported in wl1251: SPI, SDIO, without
-EEPROM and with EEPROM.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> I quickly rebased the patches on the top of wireless-testing, with any luck
-> they still work however I can't test as there is something badly borked for
-> OMAP3 in the mainline tree feeding WT at the moment. I have left out a lot
-> of my development chaff and rubbish from the patches.
-
-In cases like this I usually merge linux-omap to wireless-testing,
-it's quite simple and fast thing to do. That way I get the omap
-hardware booting with latest wireless stuff.
-
-> They have only been tested on OMAP3 OpenPandora boards using SDIO. I still
-> think timing needs tweaking but I have not had a chance to look into that.
-
-I have few comments about the patch. I think it's better to configure
-EEPROM support runtime and not via Kconfig. Also I don't like
-hungarian notation :)
-
-Is it okay if I clean it up a bit and then send it to John Linville?
-Better to have the patch in the tree as early as possible, as long as it
-doesn't break existing functionality. We can always fix it later if
-there's something broken.
-
-Thanks again for your patches and please keep on sending them :)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index e6c35e0..a07be29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2800,7 +2800,7 @@ static void rs_fill_link_cmd(struct iwl_priv *priv,
+ 		repeat_rate--;
+ 	}
+ 
+-	lq_cmd->agg_params.agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_MAX;
++	lq_cmd->agg_params.agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
+ 	lq_cmd->agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
+ 	lq_cmd->agg_params.agg_time_limit =
+ 		cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
 -- 
-Kalle Valo
+1.5.6.3
+
