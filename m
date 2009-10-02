@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:55066 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756513AbZJ2Rna (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 13:43:30 -0400
-Received: by pwj9 with SMTP id 9so184058pwj.21
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 10:43:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <209743CECB91EB4F84169A51F300410D97BA47DBF4@MAIL02.ug.kth.se>
-References: <209743CECB91EB4F84169A51F300410D97BA47DBF4@MAIL02.ug.kth.se>
-Date: Thu, 29 Oct 2009 10:43:35 -0700
-Message-ID: <45e8e6c40910291043h68397035m4ca53eb08786051a@mail.gmail.com>
-Subject: Re: mesh support for rt73
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Dan Rosenqvist <danro@kth.se>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:26672 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758197AbZJBUtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 16:49:50 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Huaxu Wan <huaxu.wan@linux.intel.com>,
+	Guo Chaohong <chaohong.guo@linux.intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 06/13] iwlwifi: clear the translate table area
+Date: Fri,  2 Oct 2009 13:44:00 -0700
+Message-Id: <1254516247-4085-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Huaxu Wan <huaxu.wan@linux.intel.com>
 
-On Thu, Oct 29, 2009 at 6:19 AM, Dan Rosenqvist <danro@kth.se> wrote:
-> Hi,
->
-> I'm currently trying to set up a small 802.11s mesh network. As I've come to understand there's no support for mesh networking at the moment for rt 73 based cards (using DWL-G122 C1).
->
-> Is it possible to implement the changes mentioned in http://linuxwireless.org/en/developers/Documentation/mac80211/API to support mesh networks for rt 73 as well?
-> Is there someone out there currently working on this? Otherwise, how could I contribute to make this work?
->
-> Regards,
-> Dan--
+Driver should clear the translate table area after receiving "Alive"
+response from uCode. This patch corrects a mistake when doing this.
 
-rt73 devices are driven by the rt2x00 driver, in my case the interface
-driver is rt73usb and the core driver is rt2x00.  That does support
-mesh although there's an issue related to beaconing:
-http://bugzilla.kernel.org/show_bug.cgi?id=13752
+Signed-off-by: Huaxu Wan <huaxu.wan@linux.intel.com>
+Signed-off-by: Guo Chaohong <chaohong.guo@linux.intel.com>
+Acked-by: Ben M Cahill  <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-  -Andrey
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 4e492c1..0921e45 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -663,7 +663,8 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
+ 		iwl_write_targ_mem(priv, a, 0);
+ 	for (; a < priv->scd_base_addr + IWL49_SCD_TRANSLATE_TBL_OFFSET; a += 4)
+ 		iwl_write_targ_mem(priv, a, 0);
+-	for (; a < sizeof(u16) * priv->hw_params.max_txq_num; a += 4)
++	for (; a < priv->scd_base_addr +
++	       IWL49_SCD_TRANSLATE_TBL_OFFSET_QUEUE(priv->hw_params.max_txq_num); a += 4)
+ 		iwl_write_targ_mem(priv, a, 0);
+ 
+ 	/* Tel 4965 where to find Tx byte count tables */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 660fd51..01d53eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -748,7 +748,8 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
+ 	for (; a < priv->scd_base_addr + IWL50_SCD_TRANSLATE_TBL_OFFSET;
+ 		a += 4)
+ 		iwl_write_targ_mem(priv, a, 0);
+-	for (; a < sizeof(u16) * priv->hw_params.max_txq_num; a += 4)
++	for (; a < priv->scd_base_addr +
++	       IWL50_SCD_TRANSLATE_TBL_OFFSET_QUEUE(priv->hw_params.max_txq_num); a += 4)
+ 		iwl_write_targ_mem(priv, a, 0);
+ 
+ 	iwl_write_prph(priv, IWL50_SCD_DRAM_BASE_ADDR,
+-- 
+1.5.6.3
+
