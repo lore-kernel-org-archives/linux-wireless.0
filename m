@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36891 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755843AbZJARP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 13:15:56 -0400
-Date: Thu, 1 Oct 2009 13:07:22 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 0/2] cfg80211: firmware and hardware version
-Message-ID: <20091001170722.GC2895@tuxdriver.com>
-References: <20090924180048.14503.9579.stgit@tikku> <43e72e890909241320j592e347die8a14f8bdd962ffb@mail.gmail.com> <20090925044258.GA2722@tuxdriver.com> <da94abde0909250947k5084db85vccafe0d3e74e2ecf@mail.gmail.com> <43e72e890909250953r1714c79bsa679b96ca6f5797@mail.gmail.com> <20091001011340.GA3123@tuxdriver.com> <87fxa3qjt2.fsf@purkki.valot.fi> <20091001151820.GA2895@tuxdriver.com> <873a63qe6e.fsf@purkki.valot.fi>
+Received: from ogre.sisk.pl ([217.79.144.158]:35778 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757581AbZJBRbO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 13:31:14 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: 2.6.32-rc1-git2: Reported regressions from 2.6.31
+Date: Fri, 2 Oct 2009 19:32:27 +0200
+Cc: Jaswinder Singh Rajput <jaswinder@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <9UCePxij8cB.A.VCG.-3SxKB@chimera> <1254469139.3531.19.camel@ht.satnam> <4AC5F975.6060505@s5r6.in-berlin.de>
+In-Reply-To: <4AC5F975.6060505@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <873a63qe6e.fsf@purkki.valot.fi>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <200910021932.27789.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 01, 2009 at 07:20:09PM +0300, Kalle Valo wrote:
-> "John W. Linville" <linville@tuxdriver.com> writes:
+On Friday 02 October 2009, Stefan Richter wrote:
+> Jaswinder Singh Rajput wrote:
+> > If you add one more entry say "Suspected commit :" then it will be great
+> > and will solve regressions much faster.
 > 
-> > On Thu, Oct 01, 2009 at 05:18:33PM +0300, Kalle Valo wrote:
+> Will?  Might.
 
-> > Anyway, adding a couple of ioctl calls isn't a big deal.
+In fact I add the "First-Bad-Commit" annotation where there is a bisection
+result or it's possible to fix things by reverting a specific commit.
+
+> > You can request submitter to
+> > submit 'suspected commit' by git bisect and also specify git bisect
+> > links like : (for more information about git bisect check
+> > http://kerneltrap.org/node/11753)
 > 
-> Sure, but we need to support this forever. If, say after two years, we
-> decide that ethtool is not the way to go, it's very difficult to
-> remove it. The less interfaces we have, the easier it is to maintain
-> them.
-
-Just to be clear, I was taling about adding ioctl calls to a
-userland application (if you didn't want to use the ethtool utility).
-The required ioctls are already defined for ethtool in the kernel.
-
-> >>         ethtool -r|--negotiate DEVNAME  Restart N-WAY negotation
-> >
-> > Ethernet-specific...might could be overloaded for wireless to trigger
-> > reassoc...?
+> I disagree.  A reporter should only be asked to bisect (using git or
+> other tools) /if/ a developer determined that bisection may speed up the
+> debugging process or is the only remaining option to make progress with
+> a bug.
 > 
-> Please no, I don't want to see any reassociation or anything else
-> 802.11 state related in ethtool, nl80211 was created for this. This is
-> something I would object loudly :)
+> It would be wrong to steal a reporter's valuable time by asking for
+> bisection before anybody familiar with the matter even had a first look
+> at the report.
 
-Well, it was just a thought... :-)
+Agreed.
 
-> > Anyway, between the link detection and making distro scripts work
-> > plus enabling a familiar tool for basic driver info I think this is
-> > a win.  So much the better if some drivers move to ethtool for register
-> > dumping, setting message verbosity, querying/changing eeprom values,
-> > etc, etc...
-> 
-> Sounds good enough. As I said in my earlier email, I'm not going argue
-> about this for too long. You know this better than I do. So let's go
-> forward with ethtool. 
-> 
-> Thanks for listening to my concerns.
-
-Sure, np.  And FWIW, I don't predict a huge problem if there are
-valid extensions required for use by wireless drivers in the future.
-But for now, I'd like to see us make use of some of the debugging
-facilities available in the ethtool API -- hopefully the iwlwifi guys
-are listening... ;-)
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks,
+Rafael
