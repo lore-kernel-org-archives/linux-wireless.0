@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:47846 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbZJTSDr (ORCPT
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:55730 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758137AbZJBUsX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 14:03:47 -0400
-Received: by fxm18 with SMTP id 18so6726852fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 11:03:51 -0700 (PDT)
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Andrey Yurovsky <andrey@cozybit.com>
-Subject: [PATCH] mac80211: trivial: fix spelling in mesh_hwmp
-Date: Tue, 20 Oct 2009 11:04:22 -0700
-Message-Id: <1256061862-23368-1-git-send-email-andrey@cozybit.com>
+	Fri, 2 Oct 2009 16:48:23 -0400
+Received: by iwn8 with SMTP id 8so804947iwn.33
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2009 13:48:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4ac55601.EpUUwD1vnjBKSXDy%Larry.Finger@lwfinger.net>
+References: <4ac55601.EpUUwD1vnjBKSXDy%Larry.Finger@lwfinger.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 2 Oct 2009 13:48:07 -0700
+Message-ID: <43e72e890910021348g2054234ew88167df1a7c75e0d@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: Fix the bleeding-edge version to build
+	on 2.6.27
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a couple of typos in the description of hwmp_route_info_get(), no
-functional changes.
+On Thu, Oct 1, 2009 at 6:23 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Signed-off-by: Andrey Yurovsky <andrey@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+> I checked these patches on 2.6.27 and 2.6.31, but not for the intermediate
+> releases.
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index e12a786..c300911 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -259,12 +259,12 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
-  * @hwmp_ie: hwmp information element (PREP or PREQ)
-  *
-  * This function updates the path routing information to the originator and the
-- * transmitter of a HWMP PREQ or PREP fram.
-+ * transmitter of a HWMP PREQ or PREP frame.
-  *
-  * Returns: metric to frame originator or 0 if the frame should not be further
-  * processed
-  *
-- * Notes: this function is the only place (besides user-provided info) where
-+ * Notes: this function is the only place (beside user-provided info) where
-  * path routing information is updated.
-  */
- static u32 hwmp_route_info_get(struct ieee80211_sub_if_data *sdata,
--- 
-1.5.6.3
+That works for me thanks, applied with some minor modifications.
 
+> Index: compat-wireless-2009-09-05/include/net/compat-2.6.28.h
+> ===================================================================
+> --- compat-wireless-2009-09-05.orig/include/net/compat-2.6.28.h
+> +++ compat-wireless-2009-09-05/include/net/compat-2.6.28.h
+
+
+> Index: compat-wireless-2009-09-05/net/wireless/compat-2.6.28.c
+> ===================================================================
+> --- compat-wireless-2009-09-05.orig/net/wireless/compat-2.6.28.c
+> +++ compat-wireless-2009-09-05/net/wireless/compat-2.6.28.c
+
+Just a heads up, I don't keep these file at include/net or
+net/wireless on my git tree, instead I stash them into compat/. The
+./scripts/admin-update.sh then is used to cp then. I did this to make
+it clear that the compat stuff comes from outside.
+
+> Index: compat-wireless-2009-09-05/net/wireless/scan.c
+> ===================================================================
+> --- compat-wireless-2009-09-05.orig/net/wireless/scan.c
+> +++ compat-wireless-2009-09-05/net/wireless/scan.c
+> @@ -499,8 +499,10 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+>
+>        kref_init(&res->ref);
+>
+> +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+>        /* cfg80211_bss_update() eats up res - we ensure we free it there */
+>        kmemleak_ignore(res);
+> +#endif
+
+And this hunk should no longer be present on bleeding edge.
+
+Thanks!
+
+  Luis
