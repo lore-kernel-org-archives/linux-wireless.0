@@ -1,112 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51824 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755941AbZJFDx6 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:60314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbZJBIi2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 23:53:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: vasanth@atheros.com, linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 4/4] ath9k: rename ath_beaconq_setup() to ath9k_hw_beaconq_setup()
-Date: Mon,  5 Oct 2009 23:53:21 -0400
-Message-Id: <1254801201-15893-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
-References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 2 Oct 2009 04:38:28 -0400
+Subject: [PATCH] cfg80211: fix a wrong ifdef
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Oct 2009 10:38:28 +0200
+Message-Id: <1254472708.3959.74.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And move it to hw code on mac.c where it belongs.
+The wext refactoring replaced all
+	#ifdef CONFIG_WIRELESS_EXT
+in cfg80211 with
+	#ifdef CONFIG_CFG80211_WEXT
+but one -- that one needs fixing now.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
- drivers/net/wireless/ath/ath9k/beacon.c |   12 ------------
- drivers/net/wireless/ath/ath9k/mac.c    |   13 +++++++++++++
- drivers/net/wireless/ath/ath9k/mac.h    |    1 +
- drivers/net/wireless/ath/ath9k/main.c   |    2 +-
- 5 files changed, 15 insertions(+), 14 deletions(-)
+Might be worth rolling it into the refactor patch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 14ff38d..13dd020 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -421,7 +421,6 @@ struct ath_beacon {
- 
- void ath_beacon_tasklet(unsigned long data);
- void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
--int ath_beaconq_setup(struct ath_hw *ah);
- int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif);
- void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 54be876..b10c884 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -242,18 +242,6 @@ static void ath_beacon_start_adhoc(struct ath_softc *sc,
- 		  sc->beacon.beaconq, ito64(bf->bf_daddr), bf->bf_desc);
- }
- 
--int ath_beaconq_setup(struct ath_hw *ah)
--{
--	struct ath9k_tx_queue_info qi;
--
--	memset(&qi, 0, sizeof(qi));
--	qi.tqi_aifs = 1;
--	qi.tqi_cwmin = 0;
--	qi.tqi_cwmax = 0;
--	/* NB: don't enable any interrupts */
--	return ath9k_hw_setuptxqueue(ah, ATH9K_TX_QUEUE_BEACON, &qi);
--}
--
- int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
- {
- 	struct ath_softc *sc = aphy->sc;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index e2c1ba3..46466ff 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -1018,3 +1018,16 @@ bool ath9k_hw_stopdmarecv(struct ath_hw *ah)
- #undef AH_RX_STOP_DMA_TIMEOUT
- }
- EXPORT_SYMBOL(ath9k_hw_stopdmarecv);
-+
-+int ath9k_hw_beaconq_setup(struct ath_hw *ah)
-+{
-+	struct ath9k_tx_queue_info qi;
-+
-+	memset(&qi, 0, sizeof(qi));
-+	qi.tqi_aifs = 1;
-+	qi.tqi_cwmin = 0;
-+	qi.tqi_cwmax = 0;
-+	/* NB: don't enable any interrupts */
-+	return ath9k_hw_setuptxqueue(ah, ATH9K_TX_QUEUE_BEACON, &qi);
-+}
-+EXPORT_SYMBOL(ath9k_hw_beaconq_setup);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 9ab3431..fefb65d 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -667,5 +667,6 @@ void ath9k_hw_rxena(struct ath_hw *ah);
- void ath9k_hw_startpcureceive(struct ath_hw *ah);
- void ath9k_hw_stoppcurecv(struct ath_hw *ah);
- bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
-+int ath9k_hw_beaconq_setup(struct ath_hw *ah);
- 
- #endif /* MAC_H */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e6842dd..8325c91 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1703,7 +1703,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	 * priority.  Note that the hal handles reseting
- 	 * these queues at the needed time.
- 	 */
--	sc->beacon.beaconq = ath_beaconq_setup(ah);
-+	sc->beacon.beaconq = ath9k_hw_beaconq_setup(ah);
- 	if (sc->beacon.beaconq == -1) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to setup a beacon xmit queue\n");
--- 
-1.6.0.4
+ net/wireless/core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/wireless/core.c	2009-10-02 10:34:13.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2009-10-02 10:34:24.000000000 +0200
+@@ -669,7 +669,7 @@ static int cfg80211_netdev_notifier_call
+ 		wdev->netdev = dev;
+ 		wdev->sme_state = CFG80211_SME_IDLE;
+ 		mutex_unlock(&rdev->devlist_mtx);
+-#ifdef CONFIG_WIRELESS_EXT
++#ifdef CONFIG_CFG80211_WEXT
+ 		wdev->wext.default_key = -1;
+ 		wdev->wext.default_mgmt_key = -1;
+ 		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+
 
