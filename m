@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58348 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758585AbZJPLiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:38:55 -0400
-Subject: Re: [PATCH] wl1251: rename spi device to wl1251
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20091013174119.15796.81021.stgit@tikku>
-References: <20091013174119.15796.81021.stgit@tikku>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t6xpzvf2oaTFIrpOQQA4"
-Date: Fri, 16 Oct 2009 18:51:37 +0900
-Message-Id: <1255686697.4095.324.camel@johannes.local>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:40760 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756508AbZJBGwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 02:52:40 -0400
+From: Malte Gell <malte.gell@gmx.de>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH] ar9170usb: LEDs are confused
+Date: Fri, 2 Oct 2009 08:52:36 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, linville@tuxdriver.com
+References: <200910011654.10963.chunkeey@googlemail.com>
+In-Reply-To: <200910011654.10963.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <200910020852.36427.malte.gell@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-t6xpzvf2oaTFIrpOQQA4
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Christian Lamparter <chunkeey@googlemail.com> wrote
 
-On Tue, 2009-10-13 at 20:41 +0300, Kalle Valo wrote:
+> On 2009-10-01 06:32 AM, Malte Gell wrote:
+> >I first noticed the LEDs are confused,
+> 
+> no, the LED colors is not _confused_ at all.
+> This is simply different on.... well, you know: on a per-device base!
 
-> -MODULE_ALIAS("spi:wl12xx");
-> +MODULE_ALIAS("spi:wl1251");
-> diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wirel=
-ess/wl12xx/wl1251_spi.c
-> index 14eff2b..2cf8a21 100644
-> --- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-> +++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-> @@ -307,7 +307,7 @@ static int __devexit wl1251_spi_remove(struct spi_dev=
-ice *spi)
-> =20
->  static struct spi_driver wl1251_spi_driver =3D {
->  	.driver =3D {
-> -		.name		=3D "wl12xx",
-> +		.name		=3D "wl1251",
->  		.bus		=3D &spi_bus_type,
->  		.owner		=3D THIS_MODULE,
+Yeah, I guessed it. But, guess... i am not a real hacker so my dirty little 
+patch just is a trial by combat solution for my own boy ;-)
+ 
+> For example: The Netgear uses a single bi-color LED for their WNDA3100
+>  stick. It glows blue or/and orange depending on the selected band and
+>  current operation mode and state...
 
-IIRC there's a preprocessor symbol for the module name (MODULE_NAME?)
+The Netgear (WN?) 111 even only has one blue LED as far as I know. And 
+Neatgear sticks look ugly.
+ 
+> FYI: you can assign the LEDs under "/sys/class/leds/" with a different
+>  tigger without messing with the kernel source... An up-to-date README can
+>  be found in the kernel's documentation directory:
+>  Documentation/leds-class.txt , or you can look it up online as well:
+> http://www.mjmwired.net/kernel/Documentation/leds-class.txt (from 2.6.31)
 
-johannes
+Very good to know. This needs a udev rule, right?
 
---=-t6xpzvf2oaTFIrpOQQA4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+But, what about a USB ID based decission in the driver how to handle the LED? 
+I have a Fritz WLAN N, USB ID:  057c:8401
 
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2EIlAAoJEODzc/N7+QmaiZgQAMArhteSMbld2svoPpeS71A3
-3+rcbsSRDFV6G4XQYsg0NZqAQSLLA/FQqIfu/VsiEy+nI+I3czNnd27aimACP4e9
-hNOZHaaUWQcR+GB1ukeTrUwqPTaYfFFJFDuJlKQzwAEGu9wbBdm1feKLVq4ToBX7
-fcnI6isII52Up2p7w9yvpKQA85+naW/3VbbF/js/KnK4MI6JiFywz6Xw6l3c7mNC
-Qcr7Hdg68f8ZoDxQppZWSirX5MtZ1Vtu00onyKuy8w+JQF5K13jUvYne67bAP7yc
-l2vY6oTKaoo/rTq2YnTA7FDw4XSWDB4z66gJgAm9vzbXabCbcOMN0YCTdvPyla7J
-uQ3sffUIPmwKLWyvXO9M/vobi+ttMyy1TnUfEVXH+gpG1HvQyk0O5EBedOnOs5ez
-hHgmjJ07GxP/nWQ1rEmTElaRKXnUkbckN1GQ04XuQNTv4PKU6UZNsFwDyOqC24yy
-wFQfCep5UjzIEl158FSjr2Cu4rQkFMz2D0tbjeF2N3qjgpKUBSUJN4nLcTlOfk5C
-PTTetNG2Ibluw/y0fB1jpKi6H7vr1QCzsSgXStuVagtEQ4yvjDvFr7q0JSORWOVl
-How48AkYAIP2JHD5RSLA/qzFNqRUs6JvxZNDsQuvfF/xkQFVmJflf2qczN/1Enrp
-/MvqDXeAGpYhNpltYsL8
-=6OeD
------END PGP SIGNATURE-----
-
---=-t6xpzvf2oaTFIrpOQQA4--
-
+Regards
+Malte
