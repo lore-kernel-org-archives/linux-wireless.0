@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:34667 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757530AbZJBKGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 06:06:15 -0400
-From: Malte Gell <malte.gell@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ar9170usb: LEDs are confused
-Date: Fri, 2 Oct 2009 12:06:15 +0200
-References: <200910011654.10963.chunkeey@googlemail.com> <3ace41890910011424g3711ffbap2d4057776f10b6d8@mail.gmail.com> <200910020118.27545.chunkeey@googlemail.com>
-In-Reply-To: <200910020118.27545.chunkeey@googlemail.com>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:48189 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757732AbZJBNBi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 09:01:38 -0400
+Message-ID: <4AC5F975.6060505@s5r6.in-berlin.de>
+Date: Fri, 02 Oct 2009 15:00:37 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200910021206.16027.malte.gell@gmx.de>
+To: Jaswinder Singh Rajput <jaswinder@kernel.org>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.32-rc1-git2: Reported regressions from 2.6.31
+References: <9UCePxij8cB.A.VCG.-3SxKB@chimera> <1254469139.3531.19.camel@ht.satnam>
+In-Reply-To: <1254469139.3531.19.camel@ht.satnam>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Jaswinder Singh Rajput wrote:
+> If you add one more entry say "Suspected commit :" then it will be great
+> and will solve regressions much faster.
 
-Christian Lamparter <chunkeey@googlemail.com> wrote
+Will?  Might.
 
-> > >
-> > > and AFAIK: Malte uses an AVM FRITZ!WLAN Stick N (2.4?).
-> >
-> > I just remember the ID from Malte's ndiswrapper-list posting.
- 
-> indeed, he must have bought a WN111 v2 as well?!
+> You can request submitter to
+> submit 'suspected commit' by git bisect and also specify git bisect
+> links like : (for more information about git bisect check
+> http://kerneltrap.org/node/11753)
 
-Carefully observed ;-) Yes, I _had_ a WN111v2, but gave it back, my goal was 
-to get the Fritz WLAN N ( not the 2.4 version) working it it works now. I had 
-the WN111v2 just for a few days to be able to be online.
+I disagree.  A reporter should only be asked to bisect (using git or
+other tools) /if/ a developer determined that bisection may speed up the
+debugging process or is the only remaining option to make progress with
+a bug.
 
-Regards
-Malte
+It would be wrong to steal a reporter's valuable time by asking for
+bisection before anybody familiar with the matter even had a first look
+at the report.
+
+Remember:
+  - Not all bugs can be economically narrowed down by bisection.
+  - Bisection requires skills, rigor, and time.
+  - Alas there are considerable sections in our kernel history which
+    are not bisectable.
+-- 
+Stefan Richter
+-=====-==--= =-=- ---=-
+http://arcgraph.de/sr/
