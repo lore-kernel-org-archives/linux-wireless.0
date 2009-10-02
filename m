@@ -1,43 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37149 "EHLO mx1.suse.de"
+Received: from hera.kernel.org ([140.211.167.34]:57681 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759256AbZJPNY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 09:24:58 -0400
-Date: Fri, 16 Oct 2009 15:24:21 +0200 (CEST)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bonding-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, users@host1.serialmonkey.com,
-	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-ext4@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-sctp@vger.kernel.org
-Subject: Re: [PATCH 7/8] trivial: fix many typos s/untill/until/
-In-Reply-To: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
-Message-ID: <alpine.LSU.2.00.0910161523400.8582@wotan.suse.de>
-References: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1752977AbZJBHkl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 03:40:41 -0400
+Subject: Re: 2.6.32-rc1-git2: Reported regressions from 2.6.31
+From: Jaswinder Singh Rajput <jaswinder@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Adrian Bunk <bunk@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+In-Reply-To: <9UCePxij8cB.A.VCG.-3SxKB@chimera>
+References: <9UCePxij8cB.A.VCG.-3SxKB@chimera>
+Content-Type: text/plain
+Date: Fri, 02 Oct 2009 13:08:59 +0530
+Message-Id: <1254469139.3531.19.camel@ht.satnam>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 15 Oct 2009, Thadeu Lima de Souza Cascardo wrote:
+Hello Rafael,
 
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-> ---
->  drivers/infiniband/ulp/iser/iser_verbs.c |    2 +-
->  drivers/net/bonding/bond_alb.c           |    2 +-
->  drivers/net/wireless/rt2x00/rt2800usb.c  |    2 +-
->  drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
->  drivers/staging/rtl8187se/r8180.h        |    2 +-
->  fs/ext4/balloc.c                         |    2 +-
->  net/bluetooth/bnep/core.c                |    2 +-
->  net/sctp/sm_statefuns.c                  |    2 +-
->  8 files changed, 8 insertions(+), 8 deletions(-)
+On Thu, 2009-10-01 at 21:26 +0200, Rafael J. Wysocki wrote:
+> [Notes:
+> 
+>  * Here's the first summary report of known regressions from 2.6.31.  There's
+>    not too many of them at the moment, which is nice.
+> 
+>  * We're still getting quite a number of reports of regressions from 2.6.30 and
+>    it's been that way since 2.6.31 was released.  For details please see the
+>    summary report of regressions 2.6.30 -> 2.6.31 that will follow shortly.]
+> 
+> This message contains a list of some regressions from 2.6.31, for which there
+> are no fixes in the mainline I know of.  If any of them have been fixed already,
+> please let me know.
+> 
+> If you know of any other unresolved regressions from 2.6.31, please let me know
+> either and I'll add them to the list.  Also, please let me know if any of the
+> entries below are invalid.
+> 
+> Each entry from the list will be sent additionally in an automatic reply to
+> this message with CCs to the people involved in reporting and handling the
+> issue.
+> 
+> 
+> Listed regressions statistics:
+> 
+>   Date          Total  Pending  Unresolved
+>   ----------------------------------------
+>   2009-10-02       22       15           9
+> 
+> 
+> Unresolved regressions
+> ----------------------
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14299
+> Subject		: oops in wireless, iwl3945 related?
+> Submitter	: Pavel Machek <pavel@ucw.cz>
+> Date		: 2009-09-29 17:12 (3 days old)
+> References	: http://marc.info/?l=linux-kernel&m=125424439725743&w=4
+> 
 
-Merged together with patches 2-8 from your series and applied to trivial 
-queue.
+If you add one more entry say "Suspected commit :" then it will be great
+and will solve regressions much faster. You can request submitter to
+submit 'suspected commit' by git bisect and also specify git bisect
+links like : (for more information about git bisect check
+http://kerneltrap.org/node/11753)
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+Thanks,
+--
+JSR
+
