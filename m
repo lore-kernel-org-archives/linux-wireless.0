@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:20609 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757727AbZJOHfQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 03:35:16 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5] wl1271: fix sparse warnings about undeclared functions
-Date: Thu, 15 Oct 2009 10:33:27 +0300
-Message-Id: <1255592010-10287-3-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail.netcomga.sk ([217.118.103.2]:1865 "EHLO netcomga.sk"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754749AbZJBWBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 18:01:08 -0400
+Message-ID: <4AC67144.5060508@netcomga.sk>
+Date: Fri, 02 Oct 2009 23:31:48 +0200
+From: Trepak Vilmos <trepo@netcomga.sk>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <j@w1.fi>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: driver_nl80211 broken again
+References: <1251117161.22951.4.camel@maxim-laptop>	<1251122885.12007.12.camel@johannes.local>	<1251144381.9374.4.camel@maxim-laptop>	<1251147515.20161.3.camel@johannes.local>	<1252116503.2398.26.camel@maxim-laptop>	<1252423769.3806.4.camel@johannes.local>	<1252443260.16422.5.camel@maxim-laptop>	<1254273569.4499.8.camel@maxim-laptop>	<20090930221353.GB11052@jm.kir.nu> <1254386786.3959.18.camel@johannes.local>
+In-Reply-To: <1254386786.3959.18.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following sparse warnings were fixed:
+Johannes Berg wrote:
+> On Thu, 2009-10-01 at 01:13 +0300, Jouni Malinen wrote:
+>> To me, this looks broken. When wpa_supplicant requests a
+>> disassociastion, it is _only_ asking for disassociation, not
+>> deauthentication. cfg80211/mac80211 may not currently handle that, but
+>> as far as I can tell, it sounds like an issue there and not in
+>> wpa_supplicant. Johannes may disagree with this, though.
+>
+> cfg80211/mac80211 _do_ handle that. If you ask for disassociation, it
+> stays authenticated, and later expects you to still remember that and
+> refuses authentication since you're already authenticated.
+>
+>> I don't think either of those options would be acceptable for
+>> wpa_supplicant and the correct fix is to make cfg80211/mac80211 be able
+>> to handle authentication to a STA that is already authenticated. If
+>> that is not acceptable, this hack needs to be hidden in driver_nl80211.c
+>> instead of polluting core wpa_supplicant code which is supposed to be
+>> driver independent. In other words, make driver_nl80211.c deauth if auth
+>> fails and then try auth again. I don't really like that much, but if
+>> this needs to be worked around in wpa_supplicant, that is the most
+>> likely place where such a change could be considered.
+>
+> I still don't see how it makes sense to authenticate while still being
+> authenticated.
 
-drivers/net/wireless/wl12xx/wl1271_spi.c:199:6: warning: symbol 'wl1271_spi_read_busy' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1271_cmd.c:84:5: warning: symbol 'wl1271_cmd_cal_channel_tune' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1271_cmd.c:107:5: warning: symbol 'wl1271_cmd_cal_update_ref_point' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1271_cmd.c:132:5: warning: symbol 'wl1271_cmd_cal_p2g' was not declared. Should it be static?
-drivers/net/wireless/wl12xx/wl1271_cmd.c:153:5: warning: symbol 'wl1271_cmd_cal' was not declared. Should it be static?
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |    8 ++++----
- drivers/net/wireless/wl12xx/wl1271_spi.c |    5 ++++-
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 1d64aa4..195eee7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -81,7 +81,7 @@ out:
- 	return ret;
- }
- 
--int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
-+static int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
- {
- 	struct wl1271_cmd_cal_channel_tune *cmd;
- 	int ret = 0;
-@@ -104,7 +104,7 @@ int wl1271_cmd_cal_channel_tune(struct wl1271 *wl)
- 	return ret;
- }
- 
--int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
-+static int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
- {
- 	struct wl1271_cmd_cal_update_ref_point *cmd;
- 	int ret = 0;
-@@ -129,7 +129,7 @@ int wl1271_cmd_cal_update_ref_point(struct wl1271 *wl)
- 	return ret;
- }
- 
--int wl1271_cmd_cal_p2g(struct wl1271 *wl)
-+static int wl1271_cmd_cal_p2g(struct wl1271 *wl)
- {
- 	struct wl1271_cmd_cal_p2g *cmd;
- 	int ret = 0;
-@@ -150,7 +150,7 @@ int wl1271_cmd_cal_p2g(struct wl1271 *wl)
- 	return ret;
- }
- 
--int wl1271_cmd_cal(struct wl1271 *wl)
-+static int wl1271_cmd_cal(struct wl1271 *wl)
- {
- 	/*
- 	 * FIXME: we must make sure that we're not sleeping when calibration
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 3c5aa58..02978a1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -196,7 +196,9 @@ int wl1271_set_partition(struct wl1271 *wl,
- 
- #define WL1271_BUSY_WORD_TIMEOUT 1000
- 
--void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
-+/* FIXME: Check busy words, removed due to SPI bug */
-+#if 0
-+static void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
- {
- 	struct spi_transfer t[1];
- 	struct spi_message m;
-@@ -256,6 +258,7 @@ void wl1271_spi_read_busy(struct wl1271 *wl, void *buf, size_t len)
- 	memset(buf, 0, len);
- 	wl1271_error("SPI read busy-word timeout!\n");
- }
-+#endif
- 
- void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
- 			 size_t len, bool fixed)
--- 
-1.5.6.5
+The client might have lost state info (rebooted, etc.). Let it redo the
+auth if it wants to, deauth if it fails.
+~will~
 
