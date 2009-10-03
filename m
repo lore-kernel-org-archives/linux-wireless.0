@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37400 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754002AbZJLGzv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 02:55:51 -0400
-Date: Mon, 12 Oct 2009 09:55:07 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: deauthentication and disassociation nl80211 commands
-Message-ID: <20091012065507.GB25578@jm.kir.nu>
-References: <1254708707.24430.68.camel@maxim-laptop> <1255191866.4095.32.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1255191866.4095.32.camel@johannes.local>
+Received: from lo.gmane.org ([80.91.229.12]:35664 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754749AbZJCDAC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Oct 2009 23:00:02 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1Mtuqq-0000N7-11
+	for linux-wireless@vger.kernel.org; Sat, 03 Oct 2009 05:00:04 +0200
+Received: from knvl-01-1736.dsl.iowatelecom.net ([71.7.54.200])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2009 05:00:04 +0200
+Received: from vpndist100 by knvl-01-1736.dsl.iowatelecom.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Oct 2009 05:00:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Parker <vpndist100@yahoo.com>
+Subject: unable to compile - error: implicit declaration of function =?utf-8?b?4oCYRElWX1JPVU5EX0NMT1NFU1TigJk=?=
+Date: Sat, 3 Oct 2009 02:58:24 +0000 (UTC)
+Message-ID: <loom.20091003T045434-645@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 10, 2009 at 06:24:26PM +0200, Johannes Berg wrote:
-> On the other hand, I think Jouni's argument is that you should be able
-> to authenticate (force an auth frame exchange) even while authenticated.
-> I don't really disagree with that all that much, but I'm not sure how to
-> cleanly fit it in. mac80211 would have to reset the auth state without
-> sending a deauth.
+I'm trying to compile compat-wireless-2.6.32-rc1.
 
-Yes, this is exactly what I would like to see happening when using
-mac80211. For now, I think we can work around the issue in
-wpa_supplicant, but eventually, this change in mac80211 would allow the
-code in wpa_supplicant to be cleaned up and the need for an extra
-deauthentication frame could be removed.
+Here is my term output.  Not sure what's wrong.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+$ make
+make -C /lib/modules/2.6.28-11-generic/build
+M=/home/xxx/Desktop/compat-wireless-2.6.32-rc1 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.28-11-generic'
+  CC [M]  /home/xxx/Desktop/compat-wireless-2.6.32-rc1/drivers/net/b44.o
+/home/xxx/Desktop/compat-wireless-2.6.32-rc1/drivers/net/b44.c: In function
+‘b44_chip_reset’:
+/home/xxx/Desktop/compat-wireless-2.6.32-rc1/drivers/net/b44.c:1300: error:
+implicit declaration of function ‘DIV_ROUND_CLOSEST’
+make[3]: *** [/home/xxx/Desktop/compat-wireless-2.6.32-rc1/drivers/net/b44.o]
+Error 1
+make[2]: *** [/home/xxx/Desktop/compat-wireless-2.6.32-rc1/drivers/net] Error 2
+make[1]: *** [_module_/home/xxx/Desktop/compat-wireless-2.6.32-rc1] Error 2
+make[1]: Leaving directory `/usr/src/linux-headers-2.6.28-11-generic'
+make: *** [modules] Error 2
+
+
