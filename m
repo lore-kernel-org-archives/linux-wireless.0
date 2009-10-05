@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2135 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608AbZJNFUM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 01:20:12 -0400
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
- 2.6.32-rc3)
-From: Joe Perches <joe@perches.com>
-To: Greg KH <gregkh@suse.de>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:50750 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752139AbZJEOOK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2009 10:14:10 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Mon, 5 Oct 2009 16:13:31 +0200
+Cc: Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <20091014044519.GA19199@suse.de>
-References: <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-	 <20091009091538.GA4154@elte.hu>
-	 <1255097287.2934.21.camel@localhost.localdomain>
-	 <20091012130652.GB25464@elte.hu>
-	 <1255357148.2850.91.camel@localhost.localdomain>
-	 <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
-	 <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de>
-	 <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
-	 <20091014044519.GA19199@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Oct 2009 22:19:35 -0700
-Message-Id: <1255497575.1851.16.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+References: <200910051500.55875.elendil@planet.nl>
+In-Reply-To: <200910051500.55875.elendil@planet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910051613.32631.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
-> How about when it was scheduled to be removed, we put it in staging and
-> I'll add it to my announcements about the staging tree every release?
-> Unless you can think of a better way?
+On Monday 05 October 2009, Frans Pop wrote:
+> With .32-rc3 I'm getting occasional skips from amarok while playing
+> music from an NFS share (3 today so far), something I've not had in a
+> long time.
+>
+> The reason looks to be that latencytop consistently shows 'iwlagn' as
+> the top affected process with "Scheduler: waiting for CPU".
+> Values of 100-140 ms occur frequently, but I've also seen higher values
+> (180, 207). I don't remember seeing iwlagn high in the list before, but
+> I have not checked earlier kernels yet.
+>
+> Added to that 'phy0' also frequently shows high with values of 25-75 ms.
+>
+> The system is otherwise essentially idle. Other processes typically show
+> a latency < 5 ms.
 
-staging/to_be_removed_unless_fixed_by/v.x.y ?
-
-
+If I give the system some work to do (like compiling a kernel), the 
+latencies on iwlagn and phy0 disappear (values < 5 ms).
+Is this related to ondemand frequency scaling?
