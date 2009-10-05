@@ -1,116 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:33551 "EHLO mx2.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252AbZJLPnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 11:43:33 -0400
-Date: Mon, 12 Oct 2009 17:42:44 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Greg KH <gregkh@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
-	2.6.32-rc3)
-Message-ID: <20091012154244.GA13323@elte.hu>
-References: <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain> <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain> <20091008210737.GD29181@mit.edu> <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain> <20091009091538.GA4154@elte.hu> <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
+Received: from mail-yw0-f173.google.com ([209.85.211.173]:49548 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332AbZJEAVG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Oct 2009 20:21:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091012150911.GB1656@suse.de>
+In-Reply-To: <20091004174535.777d233c.kristoffer.ericson@gmail.com>
+References: <20090924121617.c0c7222d.kristoffer.ericson@gmail.com>
+	 <4ABBB9D3.4020200@gmail.com> <200909242155.49890.s.L-H@gmx.de>
+	 <4ABBD170.6060702@gmail.com>
+	 <20091004174535.777d233c.kristoffer.ericson@gmail.com>
+Date: Sun, 4 Oct 2009 17:20:28 -0700
+Message-ID: <dd18b0c30910041720r3af58c27ve139a3511aba7aee@mail.gmail.com>
+Subject: Re: Disassociating atheros wlan with 2.6.31
+From: Justin Mattock <justinmattock@gmail.com>
+To: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Oct 4, 2009 at 8:45 AM, Kristoffer Ericson
+<kristoffer.ericson@gmail.com> wrote:
+> Hi,
+>
+> Did a bisect or more exactly tried to do a bisect. Ive managed to bisect myself
+> into a deadend so far (must have marked good in wrong place). The disassociation happens
+> at seemingly regular intervalls but once I started bisecting it started
+> to be more irregular. Perhaps it was simply due to me not being able
+> to user internet (and share) since my 3G modem oopsed all the time.
+> Suspecting its load sensitive.
+>
+well, as easy as it seems I did at one point forget what was good/bad
+on a bisect a few weeks ago.(hey your human).
 
-* Greg KH <gregkh@suse.de> wrote:
+> Anyhow heres what I got so far. The bad versions should be correct
+> while the good versions might not be. Reason being that I didnt wait
+> long enough for the disassociation to appear and thus faulty marking
+> something as good.
+> Using the bad should however narrow it down somewhat. From what
+> I can see between my last good and bad is only non-related stuff,
+> so must be atleast one "good" mistake in there.
+>
+> git bisect start
+> # good: [07a2039b8eb0af4ff464efd3dfd95de5c02648c6] Linux 2.6.30
+> git bisect good 07a2039b8eb0af4ff464efd3dfd95de5c02648c6
+> # bad: [74fca6a42863ffacaf7ba6f1936a9f228950f657] Linux 2.6.31
+> git bisect bad 74fca6a42863ffacaf7ba6f1936a9f228950f657
+> # good: [925d74ae717c9a12d3618eb4b36b9fb632e2cef3] V4L/DVB (11736): videobuf: modify return value of VIDIOC_REQBUFS ioctl
+> git bisect good 925d74ae717c9a12d3618eb4b36b9fb632e2cef3
+> # bad: [a380137900fca5c79e6daa9500bdb6ea5649188e] ixgbe: Fix device capabilities of 82599 single speed fiber NICs.
+> git bisect bad a380137900fca5c79e6daa9500bdb6ea5649188e
+> # bad: [1dbb5765acc7a6fe4bc1957c001037cc9d02ae03] Staging: android: lowmemorykiller: fix up remaining checkpatch warnings
+> git bisect bad 1dbb5765acc7a6fe4bc1957c001037cc9d02ae03
+> # bad: [2b1b62e841867326fa260a581d97941c32abc35b] MIPS: Cavium-Octeon: Add more board type constants.
+> git bisect bad 2b1b62e841867326fa260a581d97941c32abc35b
+> # good: [517d08699b250021303f9a7cf0d758b6dc0748ed] Merge branch 'akpm'
+> git bisect good 517d08699b250021303f9a7cf0d758b6dc0748ed
+> # good: [5e2c217eee18a4627a32c49f57f47dbac67dcf23] V4L/DVB (11958): usbvision-core.c: vfree does its own NULL check
+> git bisect good 5e2c217eee18a4627a32c49f57f47dbac67dcf23
+> # bad: [a9349315f65cd6a16e8fab1f6cf0fd40f379c4db] V4L/DVB (11819): Siano: smscore - fix get_common_buffer bug
+> git bisect bad a9349315f65cd6a16e8fab1f6cf0fd40f379c4db
+> # good: [06f837cadbcdedb45f0702cb57c99c404ae921e6] V4L/DVB (11784): cx88: Fix race condition between cx8800 startup and hald
+> git bisect good 06f837cadbcdedb45f0702cb57c99c404ae921e6
+> # good: [1339f9108a84710969903e892dcf1849ae1215cf] V4L/DVB (11726): Modify the file license to match all other Siano's files
+> git bisect good 1339f9108a84710969903e892dcf1849ae1215cf
+>
+> Best wishes
+> Kristoffer Ericson
+>
 
-> > Sidenote, in fact i think we should expand on that: drivers/staging/ 
-> > should be used in the _other_ direction as well - to un-upstream 
-> > stale drivers that are abandoned and unused, in a gradual fashion. 
-> > 'git mv' is cheap.
-> 
-> Ok, this is about the 3rd or 4th time I've heard this, from totally 
-> different people lately. [...]
+When I get a chance I can try a bisect and see.
+If you decide to redu and come up with a specific
+commit then I guess well go from there.
 
-Heh. I guess i had a good crystal ball on that then - i raised that 
-issue in my very first comments on drivers/staging/, 2.5 years ago - see 
-the "Linux Kernel developer statement about closed source code" thread, 
-where i wrote:
-
-| - We must accept open-source drivers (which are license-compatible
-|   with the kernel) for new hardware the moment they are offered. No 
-|   ifs and when. No whining about quality, style, security, re-use, 
-|   non-reuse, obsolete APIs, overlapping functionality, the already 
-|   busy merge schedule of a maintainer or whatever other thing can come 
-|   up on lkml.
-|
-|   We can create arbitrary quarantine mechanisms we wish to use: 
-|   CONFIG_REALLY_BROKEN. We could even create drivers/staging/ as a 
-|   temporary staging area for drivers.
-|
-|   What we cannot do is to _deny_ the distribution channel and exclude 
-|   users. The moment we do that (and we still do that in way too many 
-|   areas of the kernel) we have lost the availability race.
-
-[...]
-
-| If it's not maintained actively(sc) (i.e. it's a fire-and-forget 
-| driver) then it can get marked BROKEN with time, and can get removed 
-| as well.
-
-Hm, i think i even gave drivers/staging/ its name?
-
-> [...] It seems that I'm the only one that has the ability to drop 
-> drivers out of the kernel tree, which is a funny situation :)
-
-You are the only one who has the ability to send a warning shot towards 
-drivers _without hurting users_, and by moving it into the focus of a 
-team of cleanup oriented developers.
-
-I think that's an important distinction ;-)
-
-> In thinking about this a lot more, I don't really mind it.  If people 
-> want to push stuff out of "real" places in the kernel, into 
-> drivers/staging/ and give the original authors and maintainers notice 
-> about what is going on, _and_ provide a TODO file for what needs to 
-> happen to get the code back into the main portion of the kernel tree, 
-> then I'll be happy to help out with this and manage it.
-> 
-> I think a 6-9 month window (basically 3 kernel releases) should be 
-> sufficient time to have a driver that has been in drivers/staging/ be 
-> cleaned up enough to move back into the main kernel tree.  If not, it 
-> could be easily dropped.
-> 
-> Any objections to this?
-
-Sounds excellent to me!
-
-> > Basically, drivers/staging/ gives us an excellent opportunity to 
-> > _increase_ the quality of drivers by applying stronger upstream 
-> > inclusion filters, without having to hurt users/developers in the 
-> > process. We just have to start using it that way as well.
-> 
-> I totally agree.  And so far, it does seem to be working well for 
-> this. A number of companies have used it to successfully get their 
-> code into the main kernel, as well as driving them to clean up their 
-> code better to keep it from having to go into the staging tree.
-
-Yeah. I think we were hurting from an under-estimated trust problem: 
-driver authors couldnt trust _us maintainers_ to follow through with 
-upstreaming. drivers/staging/ improved that IMHO.
-
-I.e. the old process of upstreaming drivers was too arbitrary, incurred 
-big latencies and was dependent on the whims of maintainers. I.e. new 
-developers got exposed to some of the worst social aspects of a 
-distributed development process.
-
-Now there's basically a single (and friendly! ;-) upstreaming channel 
-that people (yet-)unfamilar with Linux practices can standardize on. 
-This reduces the pressure on maintainers and also creates a reference 
-point for upstreaming honesty - which is almost unconditionally good i 
-think.
-
-	Ingo
+-- 
+Justin P. Mattock
