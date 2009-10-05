@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:45453 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754829AbZJKKSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 06:18:16 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: NOHZ: local_softirq_pending 08
-Date: Sun, 11 Oct 2009 12:17:30 +0200
-Cc: Dave Young <hidave.darkstar@gmail.com>,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-References: <20091011095217.GA2200@darkstar> <1255255735.4095.53.camel@johannes.local>
-In-Reply-To: <1255255735.4095.53.camel@johannes.local>
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:51490 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbZJEQV7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Oct 2009 12:21:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910111217.31883.mb@bu3sch.de>
+In-Reply-To: <200910050052.09085.rjw@sisk.pl>
+References: <200910050052.09085.rjw@sisk.pl>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 5 Oct 2009 16:21:02 +0000
+Message-ID: <43e72e890910050921q7f516c67ofe17603d6d873c4@mail.gmail.com>
+Subject: Re: [PATCH] Wireless / ath5k: Simplify suspend and resume callbacks
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, netdev@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 11 October 2009 12:08:55 Johannes Berg wrote:
-> On Sun, 2009-10-11 at 17:52 +0800, Dave Young wrote:
-> 
-> > With kernel 2.6.32-rc3-00052-g0eca52a I got following KERN_ERR
-> > messages just while using firefox:
-> > 
-> > [  130.527399] NOHZ: local_softirq_pending 08
-> 
-> > Any idea? or known issue?
-> 
-> Are you using b43 (or wl12x1)? If so, it's a known issue, but the driver
-> was recently left without an active maintainer in a brouhaha about a bug
-> fix.
-> 
-> Cf. http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440
-> 
-> Absent proof that mac80211 is safe to run with BHs enabled, the correct
-> solution is disabling tasklets around the RX function, unlike all the
-> proposed patches. However, Michael thinks it's such a bad solution that
-> he has refused to implement it.
+On Sun, Oct 4, 2009 at 10:52 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
+>
+> Simplify the suspend and resume callbacks of ath5k by converting the
+> driver to struct dev_pm_ops and allowing the PCI PM core to do the
+> PCI-specific suspend/resume handling.
+>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-Ehm, no. That's not exactly true.
-We call the non-_irqsafe functions, which by definition are designed to
-run in non-irq (soft or hard) context. At least that's how I understand the
-documentation, last time I read it.
-Why don't you simply do local_bh_disable() in those functions, if they
-require bh disabled, instead of depending on the driver doing it?
+Do you happen to know if the new dev_pm_ops thing handle WOL / WoW [1]?
 
-> FWIW, I believe the bug to be in b43 and wl12x1, and not as Michael
-> thinks in the stack.
+[1] http://wireless.kernel.org/en/users/Documentation/WoW
 
-If mac80211 requires BHs disabled, it should do this.
+>  #ifdef CONFIG_PM
+> -static int
+> -ath5k_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+> +static int ath5k_pci_suspend(struct device *dev)
+>  {
+> -       struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+> +       struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
+>        struct ath5k_softc *sc = hw->priv;
+>
+>        ath5k_led_off(sc);
+> -
+> -       pci_save_state(pdev);
+> -       pci_disable_device(pdev);
 
--- 
-Greetings, Michael.
+For WoW right here we'd do
+
+pci_prepare_to_sleep(pdev) and bail out.
+
+> -       pci_set_power_state(pdev, PCI_D3hot);
+
+And here we'd call something like this:
+
+pci_wake_from_d3(pdev, !!sc->wow_triggers_enabled);
+
+> -
+>        return 0;
+>  }
+
+Are all drivers being converted?
+
+It'll be a while before we get WoW enabled on ath5k but it is
+technically possible, the work was tested for ath9k back in July [2]
+but I never submitted this to be merged due to some inconsistent
+issues I was noticing with the hardware.
+
+[2] http://kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
+
+  Luis
