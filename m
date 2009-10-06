@@ -1,83 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp122.mail.ukl.yahoo.com ([77.238.184.53]:35100 "HELO
-	smtp122.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933358AbZJGQ6l (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:58132 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933247AbZJFVfF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 12:58:41 -0400
-Message-ID: <4ACCC893.1010402@yahoo.es>
-Date: Wed, 07 Oct 2009 18:57:55 +0200
-From: Albert Herranz <albert_herranz@yahoo.es>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: bcm43xx-dev@lists.berlios.de, mb@bu3sch.de,
+	Tue, 6 Oct 2009 17:35:05 -0400
+Subject: Re: [PATCH -next] wireless: fix CFG80211_WEXT build problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] b43: do not stack-allocate pio rx/tx header and tail
- buffers
-References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es> <4ACCC516.7050002@lwfinger.net>
-In-Reply-To: <4ACCC516.7050002@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20091006132729.8b4f9345.rdunlap@xenotime.net>
+References: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
+	 <20091006132729.8b4f9345.rdunlap@xenotime.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-mlIR3prWWHjimdDtAY9E"
+Date: Tue, 06 Oct 2009 23:33:49 +0200
+Message-Id: <1254864829.22426.44.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> Albert Herranz wrote:
->> The DMA-API debugging facility complains about b43 mapping memory from
->> stack for SDIO-based cards.
->>
->> Indeed, b43 currently allocates the PIO RX/TX header and tail buffers
->> from stack. The solution here is to use heap-allocated buffers instead.
->>
->> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
->> ---
->> v2
->> - embed buffers into struct b43_wl, and make them depend on CONFIG_B43_PIO
->> - take into account tail buffers for unaligned length transfers
->>
->>  drivers/net/wireless/b43/b43.h  |  168 +++++++++++++++++++++------------------
->>  drivers/net/wireless/b43/pio.c  |   78 +++++++++---------
->>  drivers/net/wireless/b43/xmit.c |    2 +-
->>  3 files changed, 132 insertions(+), 116 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
->> index fa1549a..6607162 100644
->> --- a/drivers/net/wireless/b43/b43.h
->> +++ b/drivers/net/wireless/b43/b43.h
->> @@ -607,82 +607,7 @@ struct b43_qos_params {
->>  	struct ieee80211_tx_queue_params p;
->>  };
->>  
->> -struct b43_wldev;
->> -
->> -/* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
->> -struct b43_wl {
->> -	/* Pointer to the active wireless device on this chip */
->> -	struct b43_wldev *current_dev;
->> -	/* Pointer to the ieee80211 hardware data structure */
->> -	struct ieee80211_hw *hw;
-> 
-> What is the reason for moving the definition of struct b43_wl?
-> 
-> Larry
-> 
-> 
 
-b43_new_kidx_api() (defined in xmit.h) needs struct b43_wldev defined because it dereferences it.
-With this patch, struct b43_wl (defined in b43.h) needs struct b43_rxhdr_fw4 and struct b43_txhdr (defined in xmit.h).
+--=-mlIR3prWWHjimdDtAY9E
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-So we have b43_wldev -> b43_rxhdr_fw4, b43_txhdr -> b43_wl (at least).
+On Tue, 2009-10-06 at 13:27 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+>=20
+> Fix CFG80211_WEXT build dependencies/errors:
+>=20
+> ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/orinoco/orinoco.ko] =
+undefined!
+> ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/orinoco/orinoco.ko] =
+undefined!
+> ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/orinoco/orinoco.ko]=
+ undefined!
+> ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/orinoco/orinoco.ko] =
+undefined!
+> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/orinoco/orinoco.ko] =
+undefined!
+> ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/orinoco/orinoco.ko] =
+undefined!
+> ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] =
+undefined!
+>=20
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+>  drivers/net/wireless/ipw2x00/Kconfig |    2 +-
+>  drivers/net/wireless/orinoco/Kconfig |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>=20
+> --- linux-next-20091006.orig/drivers/net/wireless/ipw2x00/Kconfig
+> +++ linux-next-20091006/drivers/net/wireless/ipw2x00/Kconfig
+> @@ -65,7 +65,7 @@ config IPW2100_DEBUG
+> =20
+>  config IPW2200
+>  	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
+> -	depends on PCI && WLAN_80211 && CFG80211
+> +	depends on PCI && WLAN_80211 && CFG80211 && CFG80211_WEXT
 
-Moving the definition of struct b43_wl after the definition of struct b43_wldev and placing the inclusion of xmit.h between them gets rid of the generated dependencies.
+Interesting approach, thanks. I completely forgot about the
+half-converted drivers. The alternative would be to ifdef the code
+blobs, but I'm happy with this.
 
-The patch hints too to other possible solution.
+johannes
 
->/*
-> * Include goes here to avoid a dependency problem.
-> * A better fix would be to integrate xmit.h into b43.h.
-> */
->#include "xmit.h"
+--=-mlIR3prWWHjimdDtAY9E
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Do you have any other solutions in mind?
+-----BEGIN PGP SIGNATURE-----
 
-Thanks,
-Albert
+iQIcBAABAgAGBQJKy7e6AAoJEODzc/N7+Qmat9QP/jU4JKxcY8zrwS3TBC8hWP4/
+LoVAXBV922pZ6mywE+J4DN3DCRYpBLYiMc7+6Ip5gosNSoRTv8p9+Nik3BeBKbR6
+9qxz1Nxq+9M+eQLkj0eMRI1CVGGFhh+2VyjPdN71WWUjL1/wyskLLVITL5La/aB6
+stbLBsnwNXnlgFvsEjWlgWUaGqjstpJrG2OK0mGMH9tDSF/RqLKnuwqxwTk4VyH8
+NLqhTbLHEBr3Pkjh0B/kM8HiZ43J7s0yvLpXZqPQaVOMHMGJ9onlFGc8n4Wit905
+hjxGLR0onTqijjkhw4ARXlGsb7iwGKbO7Q1uNkb5Lbdo3jg1XJlFNnf0gUBpmL+b
+3ws0l0yeUdNPRnKPVUlGkThyBgmtwE+ycyWRPusCoGt/efPwL1ssEAt9Jf2LJod/
+rEOzjGSTs1MYm3UVOQACqfGfo6CNFju47D7X7Kalb26M8vBRc7ItquaMN+1aWfMN
+aKowUw8Dhw6HjvcFS8ySfDn72tmXqquW806fAaJgQ9sQ2O8DK00UpZdpfNHWdC7v
+tZwRtlNlTKY6BX1FZnsCS2v2pZEtHSe3BV7MEu21qyW7WszbtxGnku19L5mhLcF2
+cY7/ZG3AzCIrnmNKt04U3XFlyr3Bf5yc1KCDoEUxq1jQD1uZDS6Wu6G/ko1hJ5KY
+hXsomFmGcu7ddhWxr1SY
+=Udyl
+-----END PGP SIGNATURE-----
+
+--=-mlIR3prWWHjimdDtAY9E--
 
