@@ -1,101 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:51336 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846AbZJLMRC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:17:02 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/16] wl1271: workaround to send a disconnect before rejoining
-Date: Mon, 12 Oct 2009 15:08:43 +0300
-Message-Id: <1255349337-9776-3-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:24072 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756219AbZJFFxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2009 01:53:06 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Oct 2009 22:53:10 -0700
+Date: Tue, 6 Oct 2009 11:22:23 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Luis Rodriguez <lrodriguez@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [RFT 0/4] ath9k: fix oops during driver unload
+Message-ID: <20091006055222.GA26591@vasanth-laptop>
+References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't get any indication from the stack when we have disassociated.  In
-wl1271, it is important to send a CMD_DISCONNECT before joining again,
-because the firmware cleans some things up.  So we check if we're already
-joined and disconnect if that's the case.
+On Tue, Oct 06, 2009 at 09:23:17AM +0530, Luis Rodriguez wrote:
+> This should fix an oops reported by Vasanth.
+> Vasanth my rc3 poos out, can you let me know if this
+> fixes the issue you saw?
+> 
+> Luis R. Rodriguez (4):
+>   ath9k: move common->debug_mask setting to ath_init_softc()
+>   ath9k: fix oops during unload -- initialize hw prior to debugfs
+>   ath9k: add helper to un-init the hw properly
+>   ath9k: rename ath_beaconq_setup() to ath9k_hw_beaconq_setup()
+> 
+>  drivers/net/wireless/ath/ath.h          |    6 ++++
+>  drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
+>  drivers/net/wireless/ath/ath9k/beacon.c |   12 -------
+>  drivers/net/wireless/ath/ath9k/debug.c  |    5 ---
+>  drivers/net/wireless/ath/ath9k/hw.c     |   11 ++++++-
+>  drivers/net/wireless/ath/ath9k/mac.c    |   13 ++++++++
+>  drivers/net/wireless/ath/ath9k/mac.h    |    1 +
+>  drivers/net/wireless/ath/ath9k/main.c   |   50 ++++++++++++++++++------------
+>  8 files changed, 60 insertions(+), 39 deletions(-)
+> 
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    3 +++
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   15 +++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c |    3 +++
- 3 files changed, 21 insertions(+), 0 deletions(-)
+The issue is not fixed completely, ah->common is used after ah is
+freed in ath_cleanup() which makes rmmod ath9k stuck in the middle.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 96a5813..858bf6b 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -422,6 +422,9 @@ struct wl1271 {
- 	struct wl1271_tx_hw_res_if *tx_res_if;
- 
- 	struct ieee80211_vif *vif;
-+
-+	/* Used for a workaround to send disconnect before rejoining */
-+	bool joined;
- };
- 
- int wl1271_plt_start(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index d09ad12..ef92834 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -191,6 +191,19 @@ int wl1271_cmd_join(struct wl1271 *wl)
- 			do_cal = false;
- 	}
- 
-+	/* FIXME: This is a workaround, because with the current stack, we
-+	 * cannot know when we have disassociated.  So, if we have already
-+	 * joined, we disconnect before joining again. */
-+	if (wl->joined) {
-+		ret = wl1271_cmd_disconnect(wl);
-+		if (ret < 0) {
-+			wl1271_error("failed to disconnect before rejoining");
-+			goto out;
-+		}
-+
-+		wl->joined = false;
-+	}
-+
- 	join = kzalloc(sizeof(*join), GFP_KERNEL);
- 	if (!join) {
- 		ret = -ENOMEM;
-@@ -245,6 +258,8 @@ int wl1271_cmd_join(struct wl1271 *wl)
- 		goto out_free;
- 	}
- 
-+	wl->joined = true;
-+
- 	/*
- 	 * ugly hack: we should wait for JOIN_EVENT_COMPLETE_ID but to
- 	 * simplify locking we just sleep instead, for now
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 3662715..b9f2091 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -648,6 +648,8 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_security_seq_32 = 0;
- 	wl->time_offset = 0;
- 	wl->session_counter = 0;
-+	wl->joined = false;
-+
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
- 		wl->tx_blocks_freed[i] = 0;
- 
-@@ -1395,6 +1397,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 	wl->basic_rate_set = WL1271_DEFAULT_BASIC_RATE_SET;
- 	wl->band = IEEE80211_BAND_2GHZ;
- 	wl->vif = NULL;
-+	wl->joined = false;
- 
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		wl->tx_frames[i] = NULL;
--- 
-1.5.6.5
-
+Vasanth
