@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:57504 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115AbZJKObT (ORCPT
+Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:54378 "EHLO
+	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757737AbZJFPtk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 10:31:19 -0400
-Message-ID: <4AD1EA65.3070805@lwfinger.net>
-Date: Sun, 11 Oct 2009 09:23:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 6 Oct 2009 11:49:40 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Tue, 6 Oct 2009 17:49:01 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200910051500.55875.elendil@planet.nl> <200910051613.32631.elendil@planet.nl> <20091005072428.16ce40e4@infradead.org>
+In-Reply-To: <20091005072428.16ce40e4@infradead.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Dave Young <hidave.darkstar@gmail.com>, akpm@linux-foundation.org,
-	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [mmotm 2009-10-09-01-07] b43/wireless possible circular locking
-References: <20091011094139.GA2778@darkstar> <1255254687.4095.46.camel@johannes.local>
-In-Reply-To: <1255254687.4095.46.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910061749.02805.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2009 04:51 AM, Johannes Berg wrote:
-> On Sun, 2009-10-11 at 17:41 +0800, Dave Young wrote:
->> Hi,
->>
->> I got lockdep warnings about possible circular lock with
->> b43 interface startup. It looks like a real problem.
->>
->> [   71.974542] wlan0: deauthenticating from 00:19:e0:db:24:de by local choice (reason=3)
->> [   72.004352] b43-phy0 debug: Removing Interface type 2
->> [   72.005431] 
->> [   72.005435] =======================================================
->> [   72.006168] [ INFO: possible circular locking dependency detected ]
->> [   72.006759] 2.6.32-rc3-mm1 #4
->> [   72.007047] -------------------------------------------------------
->> [   72.007617] ifconfig/2175 is trying to acquire lock:
->> [   72.007617]  (&(&rfkill->poll_work)->work){+.+...}, at: [<c0239375>] __cancel_work_timer+0x8c/0x18e
->> [   72.007617] 
->> [   72.007617] but task is already holding lock:
->> [   72.007617]  (&wl->mutex){+.+.+.}, at: [<f8fa5359>] b43_op_stop+0x28/0x6a [b43]
-> 
-> I believe this is already taken care of by Larry.
+On Monday 05 October 2009, Arjan van de Ven wrote:
+> On Mon, 5 Oct 2009 16:13:31 +0200 Frans Pop <elendil@planet.nl> wrote:
+> > On Monday 05 October 2009, Frans Pop wrote:
+> > > With .32-rc3 I'm getting occasional skips from amarok while playing
+> > > music from an NFS share (3 today so far), something I've not had in
+> > > a long time.
+> > >
+> > > The reason looks to be that latencytop consistently shows 'iwlagn'
+> > > as the top affected process with "Scheduler: waiting for CPU".
+> > > Values of 100-140 ms occur frequently, but I've also seen higher
+> > > values (180, 207). I don't remember seeing iwlagn high in the list
+> > > before, but I have not checked earlier kernels yet.
+> > >
+> > > Added to that 'phy0' also frequently shows high with values of
+> > > 25-75 ms.
 
-Yes, I introduced this bug and fixed it. The latest wireless-testing
-should have the fix. In addition, it is on its way to Linus through
-DameM. Unfortunately, that fix has another bug that will not show up
-in the logs. With it, it is impossible to turn the radio back on after
-it is killed via the rfkill switch. A "final" (And I hope that is
-true!) fix is out for testing; however, the OP for the bug that
-started this whole chain only has limited access to the machine in
-question.
+I've checked for 2.6.31.1 now and iwlagn is listed high there too when the 
+system is idle, but with normal values of 60-100 ms. And phy0 has normal 
+values of below 10 ms.
+I've now rebooted with today's mainline git; phy0 now frequently shows with 
+values of around 100 ms too (i.e. higher than last time).
 
-Larry
+Both still go way down as soon as the system is given work to do.
+
+> > If I give the system some work to do (like compiling a kernel), the
+> > latencies on iwlagn and phy0 disappear (values < 5 ms).
+> > Is this related to ondemand frequency scaling?
+>
+> shouldn't be.... but
+>
+> can you do a 5 second or so timechart recording of this?
+> That will capture all scheduler delays as well as the P states etc....
+
+With a 5 second sleep I was unable to get any significant latencies (I 
+started perf on a latencytop refresh and did a manual refresh as it 
+finished to see what happened during the perf run). The perf run does seem 
+to affect the latencies.
+I've uploaded a chart for a 10s sleep during which I got latencies of 101ms 
+for iwlagn and 77ms for phy0: http://people.debian.org/~fjp/tmp/kernel/.
+
+I've also uploaded the raw data as the colors in the chart looked off to me 
+(CPU bars were mostly black in Debian unstable's inkscape). I can't make 
+much from the chart TBH, but maybe you can.
+
+Not sure what to do with this. For now I'd suggest to ignore it as it's all 
+a bit vague. Unless of course you feel the latencies are higher than they 
+should be.
+I'll see if I get more skips and what latencies I get during them.
+
+Cheers,
+FJP
