@@ -1,90 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:59622 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756573AbZJVSxt (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:5661 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932650AbZJFOcn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:53:49 -0400
-Date: Thu, 22 Oct 2009 20:20:43 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
+	Tue, 6 Oct 2009 10:32:43 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/28] mwl8k: pci BAR mapping changes
-Message-ID: <20091022182043.GP1583@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH] libertas: separate libertas' Kconfig in it's own file
+Date: Tue, 6 Oct 2009 16:31:20 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910061631.20976.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Map BAR0 as well, as we need to write to it during init on some chips.
+Also sorts all "source" lines in the wireless/Kconfig.
 
-Also, if BAR0 is a 64bit BAR, the register BAR becomes BAR2, so try
-mapping BAR2 if mapping BAR1 fails.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   25 ++++++++++++++++++++++---
- 1 files changed, 22 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f282550..7aea8eb 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -123,6 +123,7 @@ struct mwl8k_firmware {
- };
+Index: linux-wl/drivers/net/wireless/Kconfig
+===================================================================
+--- linux-wl.orig/drivers/net/wireless/Kconfig	2009-10-06 07:55:26.000000000 +0200
++++ linux-wl/drivers/net/wireless/Kconfig	2009-10-06 07:58:05.000000000 +0200
+@@ -139,47 +139,6 @@ config PCMCIA_RAYCS
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called ray_cs.  If unsure, say N.
  
- struct mwl8k_priv {
-+	void __iomem *sram;
- 	void __iomem *regs;
- 	struct ieee80211_hw *hw;
+-config LIBERTAS
+-	tristate "Marvell 8xxx Libertas WLAN driver support"
+-	depends on WLAN_80211
+-	select WIRELESS_EXT
+-	select WEXT_SPY
+-	select LIB80211
+-	select FW_LOADER
+-	---help---
+-	  A library for Marvell Libertas 8xxx devices.
+-
+-config LIBERTAS_USB
+-	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
+-	depends on LIBERTAS && USB
+-	---help---
+-	  A driver for Marvell Libertas 8388 USB devices.
+-
+-config LIBERTAS_CS
+-	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
+-	depends on LIBERTAS && PCMCIA
+-	select FW_LOADER
+-	---help---
+-	  A driver for Marvell Libertas 8385 CompactFlash devices.
+-
+-config LIBERTAS_SDIO
+-	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
+-	depends on LIBERTAS && MMC
+-	---help---
+-	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
+-
+-config LIBERTAS_SPI
+-	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
+-	depends on LIBERTAS && SPI
+-	---help---
+-	  A driver for Marvell Libertas 8686 SPI devices.
+-
+-config LIBERTAS_DEBUG
+-	bool "Enable full debugging output in the Libertas module."
+-	depends on LIBERTAS
+-	---help---
+-	  Debugging support.
+-
+ config LIBERTAS_THINFIRM
+ 	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
+ 	depends on WLAN_80211 && MAC80211
+@@ -491,17 +450,18 @@ config MWL8K
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called mwl8k.  If unsure, say N.
  
-@@ -2986,13 +2987,27 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 	pci_set_drvdata(pdev, hw);
+-source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/ath/Kconfig"
+-source "drivers/net/wireless/ipw2x00/Kconfig"
+-source "drivers/net/wireless/iwlwifi/Kconfig"
+-source "drivers/net/wireless/hostap/Kconfig"
+ source "drivers/net/wireless/b43/Kconfig"
+ source "drivers/net/wireless/b43legacy/Kconfig"
+-source "drivers/net/wireless/zd1211rw/Kconfig"
+-source "drivers/net/wireless/rt2x00/Kconfig"
++source "drivers/net/wireless/hostap/Kconfig"
++source "drivers/net/wireless/ipw2x00/Kconfig"
++source "drivers/net/wireless/iwlwifi/Kconfig"
++source "drivers/net/wireless/iwmc3200wifi/Kconfig"
++source "drivers/net/wireless/libertas/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
++source "drivers/net/wireless/p54/Kconfig"
++source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
+-source "drivers/net/wireless/iwmc3200wifi/Kconfig"
++source "drivers/net/wireless/zd1211rw/Kconfig"
  
--	priv->regs = pci_iomap(pdev, 1, 0x10000);
--	if (priv->regs == NULL) {
--		printk(KERN_ERR "%s: Cannot map device memory\n",
-+	priv->sram = pci_iomap(pdev, 0, 0x10000);
-+	if (priv->sram == NULL) {
-+		printk(KERN_ERR "%s: Cannot map device SRAM\n",
- 		       wiphy_name(hw->wiphy));
- 		goto err_iounmap;
- 	}
+ endif # WLAN
+Index: linux-wl/drivers/net/wireless/libertas/Makefile
+===================================================================
+--- linux-wl.orig/drivers/net/wireless/libertas/Makefile	2009-10-06 07:55:26.000000000 +0200
++++ linux-wl/drivers/net/wireless/libertas/Makefile	2009-10-06 07:58:25.000000000 +0200
+@@ -1,5 +1,15 @@
+-libertas-objs := main.o wext.o rx.o tx.o cmd.o cmdresp.o scan.o 11d.o	\
+-		 debugfs.o persistcfg.o ethtool.o assoc.o
++libertas-y += 11d.o
++libertas-y += assoc.o
++libertas-y += cmd.o
++libertas-y += cmdresp.o
++libertas-y += debugfs.o
++libertas-y += ethtool.o
++libertas-y += main.o
++libertas-y += persistcfg.o
++libertas-y += rx.o
++libertas-y += scan.o
++libertas-y += tx.o
++libertas-y += wext.o
  
-+	/*
-+	 * If BAR0 is a 32 bit BAR, the register BAR will be BAR1.
-+	 * If BAR0 is a 64 bit BAR, the register BAR will be BAR2.
-+	 */
-+	priv->regs = pci_iomap(pdev, 1, 0x10000);
-+	if (priv->regs == NULL) {
-+		priv->regs = pci_iomap(pdev, 2, 0x10000);
-+		if (priv->regs == NULL) {
-+			printk(KERN_ERR "%s: Cannot map device registers\n",
-+			       wiphy_name(hw->wiphy));
-+			goto err_iounmap;
-+		}
-+	}
+ usb8xxx-objs += if_usb.o
+ libertas_cs-objs += if_cs.o
+Index: linux-wl/drivers/net/wireless/libertas/Kconfig
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-wl/drivers/net/wireless/libertas/Kconfig	2009-10-06 07:58:15.000000000 +0200
+@@ -0,0 +1,40 @@
++config LIBERTAS
++	tristate "Marvell 8xxx Libertas WLAN driver support"
++	depends on WLAN_80211
++	select WIRELESS_EXT
++	select WEXT_SPY
++	select LIB80211
++	select FW_LOADER
++	---help---
++	  A library for Marvell Libertas 8xxx devices.
 +
- 	memcpy(priv->channels, mwl8k_channels, sizeof(mwl8k_channels));
- 	priv->band.band = IEEE80211_BAND_2GHZ;
- 	priv->band.channels = priv->channels;
-@@ -3164,6 +3179,9 @@ err_iounmap:
- 	if (priv->regs != NULL)
- 		pci_iounmap(pdev, priv->regs);
- 
-+	if (priv->sram != NULL)
-+		pci_iounmap(pdev, priv->sram);
++config LIBERTAS_USB
++	tristate "Marvell Libertas 8388 USB 802.11b/g cards"
++	depends on LIBERTAS && USB
++	---help---
++	  A driver for Marvell Libertas 8388 USB devices.
 +
- 	pci_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(hw);
- 
-@@ -3211,6 +3229,7 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
- 	pci_free_consistent(priv->pdev, 4, priv->cookie, priv->cookie_dma);
- 
- 	pci_iounmap(pdev, priv->regs);
-+	pci_iounmap(pdev, priv->sram);
- 	pci_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(hw);
- 	pci_release_regions(pdev);
++config LIBERTAS_CS
++	tristate "Marvell Libertas 8385 CompactFlash 802.11b/g cards"
++	depends on LIBERTAS && PCMCIA
++	select FW_LOADER
++	---help---
++	  A driver for Marvell Libertas 8385 CompactFlash devices.
++
++config LIBERTAS_SDIO
++	tristate "Marvell Libertas 8385/8686/8688 SDIO 802.11b/g cards"
++	depends on LIBERTAS && MMC
++	---help---
++	  A driver for Marvell Libertas 8385/8686/8688 SDIO devices.
++
++config LIBERTAS_SPI
++	tristate "Marvell Libertas 8686 SPI 802.11b/g cards"
++	depends on LIBERTAS && SPI
++	---help---
++	  A driver for Marvell Libertas 8686 SPI devices.
++
++config LIBERTAS_DEBUG
++	bool "Enable full debugging output in the Libertas module."
++	depends on LIBERTAS
++	---help---
++	  Debugging support.
+
 -- 
-1.5.6.4
-
+http://www.holgerschurig.de
