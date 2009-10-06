@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:32863 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933036AbZJ3XWX convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:53135 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756033AbZJFMT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 19:22:23 -0400
+	Tue, 6 Oct 2009 08:19:27 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id 6C757148013
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2009 14:18:20 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id l1Yw+JDfYi-s for <linux-wireless@vger.kernel.org>;
+	Tue,  6 Oct 2009 14:18:20 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F9373.dip0.t-ipconnect.de [217.95.147.115])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 1535C148011
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2009 14:18:18 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id CFA701E0036
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2009 14:18:08 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: question about cfg80211_inform_bss()
+Date: Tue, 6 Oct 2009 14:18:04 +0200
 MIME-Version: 1.0
-In-Reply-To: <1256903425.3555.47.camel@johannes.local>
-References: <f7848160910291617q2b168089l5ce489d2f47ebe96@mail.gmail.com>
-	 <1256885343.3555.0.camel@johannes.local>
-	 <alpine.DEB.2.00.0910300652350.2223@parag-laptop>
-	 <1256903425.3555.47.camel@johannes.local>
-Date: Fri, 30 Oct 2009 19:22:27 -0400
-Message-ID: <f7848160910301622t2cf43b5bo5ffeda03ec2cdbfe@mail.gmail.com>
-Subject: Re: OOPS in cfg80211_conn_work
-From: Parag Warudkar <parag.lkml@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910061418.05039.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, October 30, 2009, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2009-10-30 at 06:57 -0400, Parag Warudkar wrote:
->>
->> On Fri, 30 Oct 2009, Johannes Berg wrote:
->>
->> > On Thu, 2009-10-29 at 19:17 -0400, Parag Warudkar wrote:
->> > > Oct 29 18:59:06 parag-laptop kernel: [  143.180037] wlan0:
->> > > deauthenticating from 00:16:01:d6:6f:12 by local choice (reason=3)
->> > > Oct 29 18:59:06 parag-laptop kernel: [  143.181137] wlan0: direct
->> > > probe to AP 00:16:01:d6:6f:12 (try 1)
->> >
->> > sorry, I can't read this log. please provide a non-wrapped version
->> >
->> How does this look? (Sorry sent it in a rush earlier.)
->> Below also is a disassembly of cfg80211_conn_work.
->
-> Thanks. I was going to ask for disassembly but you preempted me, I like
-> that :)
->
-> Since you say you can easily reproduce this, can you try the patch
-> below?
->
-> johannes
->
-> ---
->  net/wireless/sme.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
->
-> --- wireless-testing.orig/net/wireless/sme.c    2009-10-30 12:48:09.000000000 +0100
-> +++ wireless-testing/net/wireless/sme.c 2009-10-30 12:48:41.000000000 +0100
-> @@ -165,7 +165,7 @@ void cfg80211_conn_work(struct work_stru
->         struct cfg80211_registered_device *rdev =
->                 container_of(work, struct cfg80211_registered_device, conn_work);
->         struct wireless_dev *wdev;
-> -       u8 bssid[ETH_ALEN];
-> +       u8 bssid_buf[ETH_ALEN], *bssid = NULL;
->
->         rtnl_lock();
->         cfg80211_lock_rdev(rdev);
-> @@ -181,7 +181,10 @@ void cfg80211_conn_work(struct work_stru
->                         wdev_unlock(wdev);
->                         continue;
->                 }
-> -               memcpy(bssid, wdev->conn->params.bssid, ETH_ALEN);
-> +               if (wdev->conn->params.bssid) {
-> +                       memcpy(bssid_buf, wdev->conn->params.bssid, ETH_ALEN);
-> +                       bssid = bssid_buf;
-> +               }
->                 if (cfg80211_conn_do_work(wdev))
->                         __cfg80211_connect_result(
->                                         wdev->netdev, bssid,
->
->
-Seems to have fixed it.
+Hi !
 
-Thanks Johannes.
+I did implement the cfg80211 scan command in libertas. Now I'm 
+about to submit the results back to cfg80211. AFAIK I have to 
+use cfg80211_inform_bss() for this.
+
+There's just one subtle problem here:
+
+I tell the firmware of libertas card to scan on some channels, 
+e.g. on 4 channels at a time. The firmware does this, and then 
+sends me back a scan response. This scan response may contain 
+any number of APs, from different channels. I don't know which 
+BSS entry belongs to which channel --- unless I parse the 
+also-supplied IE.
+
+However, cfg80211_inform_bss() want's a channel. And it wants the 
+IEs as well. A presume it scans those IEs, too. So do we need to 
+parse the IEs twice?
+
+-- 
+http://www.holgerschurig.de
