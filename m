@@ -1,51 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f184.google.com ([209.85.212.184]:36090 "EHLO
-	mail-vw0-f184.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbZJXSzG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 14:55:06 -0400
-Received: by vws14 with SMTP id 14so651484vws.33
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Oct 2009 11:55:10 -0700 (PDT)
+Received: from ted.prima.de ([83.97.48.3]:47273 "EHLO ted.prima.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758364AbZJFTSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2009 15:18:17 -0400
+Received: from localhost ([127.0.0.1])
+	by ted.prima.de with esmtp (Exim 4.63)
+	(envelope-from <riffer@penny.prima.de>)
+	id 1MvFCz-0006qY-FS
+	for linux-wireless@vger.kernel.org; Tue, 06 Oct 2009 20:56:27 +0200
+Received: from ted.prima.de ([127.0.0.1])
+	by localhost (ted.prima.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id vmpw8tm774FL for <linux-wireless@vger.kernel.org>;
+	Tue,  6 Oct 2009 20:56:21 +0200 (CEST)
+Received: from marcy.prima.de ([83.97.48.8])
+	by ted.prima.de with esmtp (Exim 4.63)
+	(envelope-from <riffer@penny.prima.de>)
+	id 1MvFCv-0006qL-H0
+	for linux-wireless@vger.kernel.org; Tue, 06 Oct 2009 20:56:21 +0200
+Received: from uucp by marcy.prima.de with local-rmail (Exim 4.69)
+	(envelope-from <riffer@penny.prima.de>)
+	id 1MvFCt-0003nk-Fl
+	for linux-wireless@vger.kernel.org; Tue, 06 Oct 2009 20:56:21 +0200
+Received: from [192.168.0.127] (nb-riffer [192.168.0.127])
+	by penny.prima.de (Postfix) with ESMTP id D8BB411C0A1
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Oct 2009 20:57:20 +0200 (CEST)
+Message-ID: <4ACB91E7.5010405@penny.prima.de>
+Date: Tue, 06 Oct 2009 20:52:23 +0200
+From: Riffer <riffer@penny.prima.de>
 MIME-Version: 1.0
-Date: Sat, 24 Oct 2009 20:55:09 +0200
-Message-ID: <133e8d7e0910241155x4496b156p3c5d03450a71936a@mail.gmail.com>
-Subject: [PATCH] mac80211: fix for incorrect sequence number on hostapd
-	injected frames
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>, Joerg Pommnitz <pommnitz@yahoo.com>,
-	Will Dyson <will.dyson@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: Bleeding Edge b43 dated since 30 of september no longer working &
+ today does not even compile.
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When hostapd injects a frame, e.g. an authentication or association
-response, mac80211 looks for a suitable access point virtual interface
-to associate the frame with based on its source address. This makes it
-possible e.g. to correctly assign sequence numbers to the frames.
+Hello!
 
-A small typo in the ethernet address comparison statement caused a
-failure to find a suitable ap interface. Sequence numbers on such
-frames where therefore left unassigned causing some clients
-(especially windows-based 11b/g clients) to reject them and fail to
-authenticate or associate with the access point. This patch fixes the
-typo in the address comparison statement.
+The problem is described in the topic.
 
-Signed-off-by: Bj�rn Smedman <bjorn.smedman@venatech.se>
----
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index db4bda6..eaa4118 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1445,7 +1445,7 @@ static void ieee80211_xmit(struct
-ieee80211_sub_if_data *sdata,
-                                if (tmp_sdata->vif.type != NL80211_IFTYPE_AP)
-                                        continue;
-                                if (compare_ether_addr(tmp_sdata->dev->dev_addr,
--                                                      hdr->addr2)) {
-+                                                      hdr->addr2) == 0) {
-                                        dev_hold(tmp_sdata->dev);
-                                        dev_put(sdata->dev);
-                                        sdata = tmp_sdata;
+Symptons:
+
+The driver gets loaded and all depending drivers too but the wireless
+device does not come up (iwconfig shows nothing, "ADDRCONF(NETDEV_UP):"
+does not follow in /var/log/messages after modprobing).
+
+Any hints for me? Maybe a new functionality that has to be triggered?
+
+I am using the bleeding drivers on a Compaq 615 Notebook having PCI ID
+14e4:4315 (Broadcom) under Ubuntu 9.04 with kernel
+2.6.30-02063006-generic AMD64.
+
+Currently I am testing the bleeding edge driver nearly every day because
+I am a very curious man :-) and my hope is to one day find the best
+(fast and stable) wireless driver I can get for my notebook ;-)
+
+The most stable driver at the moment (for me) is the archive from the
+16th of september and as you can read here
+http://forums.opensuse.org/2045067-post38.html bleeding edge had already
+a failure that stopped working from 17th to 26th of september (for me)
+where Larry pointed to a problem with cfg80211 (I am using WPA2).
+
+Another problem is that the archive from today can not be compiled:
+
+/home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.o
+In file included from
+/home/riffer/bleeding/compat-wireless-2009-10-06/include/net/mac80211.h:22,
+                 from
+/home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/ath.h:22,
+                 from
+/home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.c:20:
+/home/riffer/bleeding/compat-wireless-2009-10-06/include/net/cfg80211.h:1146:
+Fehler: »ETHTOOL_BUSINFO_LEN« ist hier nicht deklariert (nicht in einer
+Funktion)
+(translation:
+Error »ETHTOOL_BUSINFO_LEN« is not declared here (not in a function))
+
+best regards
+
+p.s.:
+I am only a user and not a developer. If my posting to this mailing-list
+is a mistake please tell me!!!
+-- 
+Riffer
