@@ -1,52 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:35431 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756475AbZJ2R3b (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:40620 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757280AbZJFNrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 13:29:31 -0400
-Received: by pwj9 with SMTP id 9so176055pwj.21
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 10:29:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <0D107966AF6D79418315B7C5549F4B5101150D82@lemail1.le.imgtec.org>
-References: <1256687501-8636-1-git-send-email-andrey@cozybit.com>
-	 <0D107966AF6D79418315B7C5549F4B5101150D82@lemail1.le.imgtec.org>
-Date: Thu, 29 Oct 2009 10:29:36 -0700
-Message-ID: <45e8e6c40910291029nac07e96o5ea7cc95b2e24917@mail.gmail.com>
-Subject: Re: [PATCH] libertas: remove internal buffers from GSPI driver
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: George Shore <George.Shore@imgtec.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	sebatian@breakpoint.cc, dcbw@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 6 Oct 2009 09:47:20 -0400
+Subject: Re: [PATCH] mac80211: use kfree_skb() to free struct sk_buff
+ pointers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <4ACB4BA3.9090406@gmail.com>
+References: <4ACB4BA3.9090406@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-b29mnAxBK9qmTMjVuxyk"
+Date: Tue, 06 Oct 2009 15:46:09 +0200
+Message-Id: <1254836769.22426.23.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks George,
 
-On Thu, Oct 29, 2009 at 7:27 AM, George Shore <George.Shore@imgtec.com> wrote:
-> I've tested this on our in-house dev board with our in-house CPU, on the
-> 8686 in GSPI mode. Everything works as expected :)
->
-> Tested-by: George Shore <george.shore@imgtec.com>
+--=-b29mnAxBK9qmTMjVuxyk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Can you please tell us what you were able to test?  I'm curious about:
-1) were you able to turn IEEE PS on and off?
-2) were you able to use WPA2?
-3) were you able to use WPA2 with IEEE PS at the same time?
+On Tue, 2009-10-06 at 15:52 +0200, Roel Kluin wrote:
+> kfree_skb() should be used to free struct sk_buff pointers.
+>=20
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 
-(3) is really tricky and may need additional work.  One issue that I'm
-seeing is that the driver gets out of sync with the device, the way
-I'm reproducing this is:
+Indeed, thanks.
 
-1) use wpa_supplicant to associate to an AP with WPA2 security.
-2) iwconfig eth1 power on -- you should see the LED blinking to
-indicate IEEE PS (the LED is off while the device is sleeping)
-3) issue a command or two to temporarily take the device out of IEEE
-PS mode (ex: iwconfig with no arguments to look at the configuration
-and stats)
-4) the LED should be temporarily solid-on and then return to blinking
-after the driver re-enables IEEE PS mode
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Thanks again,
+> ---
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index dd65643..aeb65b3 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -339,7 +339,7 @@ void ieee80211_add_pending_skb(struct ieee80211_local=
+ *local,
+>  	struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
+> =20
+>  	if (WARN_ON(!info->control.vif)) {
+> -		kfree(skb);
+> +		kfree_skb(skb);
+>  		return;
+>  	}
+> =20
+> @@ -367,7 +367,7 @@ int ieee80211_add_pending_skbs(struct ieee80211_local=
+ *local,
+>  		struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
+> =20
+>  		if (WARN_ON(!info->control.vif)) {
+> -			kfree(skb);
+> +			kfree_skb(skb);
+>  			continue;
+>  		}
+> =20
+>=20
 
-  -Andrey
+
+--=-b29mnAxBK9qmTMjVuxyk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKy0ocAAoJEODzc/N7+QmaKrUQAIXi0SGF4ilDDgklTo9Je+UY
+2mUnVA5mab8U4JhqjPjsRnWoRXKGMPJGrsEBGVI78dJqR385PDBA6/+M8z7IX8Hh
+KTufGvYnUn2rFJv+KQkqr+cbXXio36pv/P1Qv7Ln6+Bp9c9ZrjTkJBi7xJBGbP3c
+nHhfYaL0cv35pxFcPHX7ggVDRSUIOtWB7H5cygYhNDfgwa+8/uTU9ELbliPjo4E8
+3BZeXW0OAYsQGOH0HkhYNVvBrpAFdMhv44KPMTEj49oeQVQ5J1REaqBvWsQZL/RK
+gqAD5OnEKMzDlm930l/BjrH/TqHHjvqOQDMSqbX6XY/aPMoAebqiezIKPxUDh+Sl
+nBF/yApiHc5zPbDdLjbrlgzI1bQAuTXZHVY0o6/WuLBvF5sGCFqcHU9vMeHPzeUQ
+I7XnRj+eoqUpVpRf4j49HuMfSoUYODPBnbju0fej2XhgPOY7s55KRNUYy3SBZ5gC
+jhD170eXt2CofuqmIhk4LjWZw89Ds0Wqs76skEkcHjFOwTT3pg+HsgEb15pbYudL
++eDP/fDeRoOtoY4cMbc7I+R1N+c8OGUW5JVv/qfrwWSZYuTI8KfnCTkOByVTMCUF
+FFfeHyCwI530we737t0LA3hFsfR2akzqLOOrS2iGXpzxsD9bm6grwcZ4Cnfueolr
+Vv2cFUJoIL2zER1Bxf5f
+=AoDq
+-----END PGP SIGNATURE-----
+
+--=-b29mnAxBK9qmTMjVuxyk--
+
