@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47122 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758300AbZJLVUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 17:20:44 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 7/9] [compat-2.6] b44 fix
-Date: Mon, 12 Oct 2009 23:19:16 +0200
-Message-Id: <1255382358-20760-9-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
-References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+Received: from xenotime.net ([72.52.64.118]:50159 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757703AbZJFUgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2009 16:36:00 -0400
+Received: from chimera.site ([96.253.169.185]) by xenotime.net for <linux-wireless@vger.kernel.org>; Tue, 6 Oct 2009 13:35:22 -0700
+Date: Tue, 6 Oct 2009 13:27:29 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, linville@tuxdriver.com
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH -next] wireless: fix CFG80211_WEXT build problems
+Message-Id: <20091006132729.8b4f9345.rdunlap@xenotime.net>
+In-Reply-To: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
+References: <20091006165220.b5cb1c44.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-encapsulate $ in bash script
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Fix CFG80211_WEXT build dependencies/errors:
+
+ERROR: "cfg80211_wext_siwscan" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_siwmode" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwrange" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwmode" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwscan" [drivers/net/wireless/orinoco/orinoco.ko] undefined!
+ERROR: "cfg80211_wext_giwname" [drivers/net/wireless/ipw2x00/ipw2200.ko] undefined!
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- scripts/admin-update.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ipw2x00/Kconfig |    2 +-
+ drivers/net/wireless/orinoco/Kconfig |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 84f58a4..f85dacf 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -149,7 +149,7 @@ done
- # b44 is dependent on ssb, so its has to be rebuilt as well.
- DIR="drivers/net"
- cp $GIT_TREE/$DIR/b44.[ch] $DIR
--echo "obj-$(CONFIG_B44) += b44.o" > $DIR/Makefile
-+echo "obj-\$(CONFIG_B44) += b44.o" > $DIR/Makefile
+--- linux-next-20091006.orig/drivers/net/wireless/ipw2x00/Kconfig
++++ linux-next-20091006/drivers/net/wireless/ipw2x00/Kconfig
+@@ -65,7 +65,7 @@ config IPW2100_DEBUG
  
- # Misc
- mkdir -p drivers/misc/eeprom/
--- 
-1.6.2.1
-
+ config IPW2200
+ 	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
+-	depends on PCI && WLAN_80211 && CFG80211
++	depends on PCI && WLAN_80211 && CFG80211 && CFG80211_WEXT
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
+ 	select WEXT_PRIV
+--- linux-next-20091006.orig/drivers/net/wireless/orinoco/Kconfig
++++ linux-next-20091006/drivers/net/wireless/orinoco/Kconfig
+@@ -1,7 +1,7 @@
+ config HERMES
+ 	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
+ 	depends on (PPC_PMAC || PCI || PCMCIA) && WLAN_80211
+-	depends on CFG80211
++	depends on CFG80211 && CFG80211_WEXT
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
+ 	select WEXT_PRIV
