@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:63055 "EHLO
+Received: from ey-out-2122.google.com ([74.125.78.24]:1904 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753760AbZJNGYE convert rfc822-to-8bit (ORCPT
+	with ESMTP id S932626AbZJFNo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 02:24:04 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so143879eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Oct 2009 23:22:57 -0700 (PDT)
+	Tue, 6 Oct 2009 09:44:58 -0400
+Received: by ey-out-2122.google.com with SMTP id 4so799735eyf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 06:43:50 -0700 (PDT)
+Message-ID: <4ACB4BA3.9090406@gmail.com>
+Date: Tue, 06 Oct 2009 15:52:35 +0200
+From: Roel Kluin <roel.kluin@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <43e72e890910131751k11f0d05ehea98c32d6195d4be@mail.gmail.com>
-References: <1255479847.6242.0.camel@shadow>
-	 <43e72e890910131751k11f0d05ehea98c32d6195d4be@mail.gmail.com>
-Date: Wed, 14 Oct 2009 08:22:57 +0200
-Message-ID: <2d0a357f0910132322l1ed6ccdak608d2b329389cc57@mail.gmail.com>
-Subject: Re: compat-wireless 2.6.32-rc4 failed to compile
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: aherrerag@uci.cu, linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH] mac80211: use kfree_skb() to free struct sk_buff pointers
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Linus-tree has not all patches from wireless-testing GIT master,
-only the ones from John's pull-requests.
-IIRC compat-wireless (bleeding edge) has the w-t ones included.
-c-w (stable-2.6.32-rc4) don't know...
+kfree_skb() should be used to free struct sk_buff pointers.
 
-- Sedat -
-
-On Wed, Oct 14, 2009 at 2:51 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Oct 13, 2009 at 5:24 PM, Anielkis Herrera Gonzalez
-> <aherrerag@uci.cu> wrote:
->> # uname -r
->> 2.6.32-rc4
->
-> Remind me why you are trying to compile
-> compat-wireless-stable-2.6.32-rc4 if you already are running
-> 2.6.32-rc4?
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index dd65643..aeb65b3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -339,7 +339,7 @@ void ieee80211_add_pending_skb(struct ieee80211_local *local,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 	if (WARN_ON(!info->control.vif)) {
+-		kfree(skb);
++		kfree_skb(skb);
+ 		return;
+ 	}
+ 
+@@ -367,7 +367,7 @@ int ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 		if (WARN_ON(!info->control.vif)) {
+-			kfree(skb);
++			kfree_skb(skb);
+ 			continue;
+ 		}
+ 
