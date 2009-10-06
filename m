@@ -1,96 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:45365 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755117AbZJLI54 (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:48225 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932881AbZJFTbU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 04:57:56 -0400
-Received: by ewy4 with SMTP id 4so2278610ewy.37
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 01:57:19 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Quintin Pitts <geek4linux@gmail.com>
-Subject: Re: [RFC] p54pci: skb_over_panic, soft lockup, stall under flood
-Date: Mon, 12 Oct 2009 10:57:10 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <4AD1EBA7.904@gmail.com> <4AD1FA5E.1010201@lwfinger.net> <4AD273B2.5000607@gmail.com>
-In-Reply-To: <4AD273B2.5000607@gmail.com>
+	Tue, 6 Oct 2009 15:31:20 -0400
+Received: by fxm27 with SMTP id 27so3986982fxm.17
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 12:30:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_m9u0KTW57ptgW6c"
-Message-Id: <200910121057.10381.chunkeey@googlemail.com>
+In-Reply-To: <4ACB91E7.5010405@penny.prima.de>
+References: <4ACB91E7.5010405@penny.prima.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 6 Oct 2009 21:30:23 +0200
+Message-ID: <69e28c910910061230s47fdf9b9sdb9790497704b288@mail.gmail.com>
+Subject: Re: Bleeding Edge b43 dated since 30 of september no longer working &
+	today does not even compile.
+To: Riffer <riffer@penny.prima.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_m9u0KTW57ptgW6c
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+On Tue, Oct 6, 2009 at 8:52 PM, Riffer <riffer@penny.prima.de> wrote:
+> Hello!
+>
+> The problem is described in the topic.
+>
+> Symptons:
+>
+> The driver gets loaded and all depending drivers too but the wireless
+> device does not come up (iwconfig shows nothing, "ADDRCONF(NETDEV_UP):"
+> does not follow in /var/log/messages after modprobing).
+>
+> Any hints for me? Maybe a new functionality that has to be triggered?
+>
+> I am using the bleeding drivers on a Compaq 615 Notebook having PCI ID
+> 14e4:4315 (Broadcom) under Ubuntu 9.04 with kernel
+> 2.6.30-02063006-generic AMD64.
+>
 
-On Monday 12 October 2009 02:09:22 Quintin Pitts wrote:
-> On Sun Oct 11 2009 10:31:42 GMT-0500 (CDT), Larry Finger wrote:
-> > On 10/11/2009 09:28 AM, Quintin Pitts wrote:
-> > As I understand it, this patch is to fix the driver to work around
-> > firmware errors. If that is correct, please state that clearly. If
-> > only partially correct, then indicate which parts are to fix firmware
-> > errors, and which are to fix driver errors. Has your analysis included
-> > thinking about where the driver might delay to avoid firmware problems.
-> 
-> I think Christian has hit the nail on the head.
-> Mostly flaky hardware or implementation (it8152 pci bridge) when pushed.
+That's probably "wext: refactor".
 
-hmm, flaky hardware or simply incomplete linux support.
-you've said that it works with win ce,
-so I suppose the code is missing some important bits.
+Try connecting manually using iw (not iwconfig).
 
-e.g.:
+> Currently I am testing the bleeding edge driver nearly every day because
+> I am a very curious man :-) and my hope is to one day find the best
+> (fast and stable) wireless driver I can get for my notebook ;-)
+>
+> The most stable driver at the moment (for me) is the archive from the
+> 16th of september and as you can read here
+> http://forums.opensuse.org/2045067-post38.html bleeding edge had already
+> a failure that stopped working from 17th to 26th of september (for me)
+> where Larry pointed to a problem with cfg80211 (I am using WPA2).
+>
+> Another problem is that the archive from today can not be compiled:
+>
+> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.o
+> In file included from
+> /home/riffer/bleeding/compat-wireless-2009-10-06/include/net/mac80211.h:22,
+>                 from
+> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/ath.h:22,
+>                 from
+> /home/riffer/bleeding/compat-wireless-2009-10-06/drivers/net/wireless/ath/main.c:20:
+> /home/riffer/bleeding/compat-wireless-2009-10-06/include/net/cfg80211.h:1146:
+> Fehler: »ETHTOOL_BUSINFO_LEN« ist hier nicht deklariert (nicht in einer
+> Funktion)
+> (translation:
+> Error »ETHTOOL_BUSINFO_LEN« is not declared here (not in a function))
+>
+> best regards
+>
+> p.s.:
+> I am only a user and not a developer. If my posting to this mailing-list
+> is a mistake please tell me!!!
+> --
+> Riffer
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-00:06.0 Network controller: Intersil Corporation ISL3886 [Prism Javelin/Prism Xbow] (rev 01)
-Subsystem: Intersil Corporation Device 0000
-Flags: bus master, medium devsel, latency 56, IRQ 217
 
-by the looks of it, something could wrong with the latency timer value.
-(what's lspci -vvnnxxx output for the card?)
 
-I've attached a minimal patch which c&p some latency-timer related logic
-from the original prism54 driver code to p54pci.
-Can you please give this a try?
-I don't have a p54pci available for testing right now.
-
-Regards,
-	Chr
-
---Boundary-00=_m9u0KTW57ptgW6c
-Content-Type: text/x-patch;
-  charset="UTF-8";
-  name="p54-latency.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="p54-latency.diff"
-
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index d348c26..c1b1bee 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -473,6 +473,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
- 	struct ieee80211_hw *dev;
- 	unsigned long mem_addr, mem_len;
- 	int err;
-+	u8 latency;
- 
- 	err = pci_enable_device(pdev);
- 	if (err) {
-@@ -493,6 +494,12 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
- 		goto err_disable_dev;
- 	}
- 
-+	pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &latency);
-+	if (latency < 64) {
-+		dev_info(&pdev->dev, "set latency timer\n");
-+		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 80);
-+	}
-+
- 	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
- 	    pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
- 		dev_err(&pdev->dev, "No suitable DMA available\n");
-
---Boundary-00=_m9u0KTW57ptgW6c--
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
