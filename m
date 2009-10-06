@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43332 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751982AbZJWNfS (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:51826 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756083AbZJFDx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:35:18 -0400
-Subject: Re: [RFC 1/3] mac80211: WIP - add operating BSSID to device
- configuration struct
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org, kalle.valo@nokia.com,
-	juuso.oikarinen@nokia.com
-In-Reply-To: <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
-References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>
-	 <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-0yEsO8kTiZKu5+Kvwr/S"
-Date: Thu, 22 Oct 2009 10:55:19 +0200
-Message-Id: <1256201719.12174.19.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 5 Oct 2009 23:53:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: vasanth@atheros.com, linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFT 3/4] ath9k: add helper to un-init the hw properly
+Date: Mon,  5 Oct 2009 23:53:20 -0400
+Message-Id: <1254801201-15893-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is used in several places, ensure we do it right in all
+callers by using a helper.
 
---=-0yEsO8kTiZKu5+Kvwr/S
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   23 ++++++++++++++---------
+ 1 files changed, 14 insertions(+), 9 deletions(-)
 
-On Fri, 2009-10-16 at 15:27 +0300, Luciano Coelho wrote:
-
-> @@ -2405,7 +2411,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_dat=
-a *sdata,
->  	 *	to sleep and then change channel etc.
->  	 */
->  	sdata->local->oper_channel =3D req->bss->channel;
-> -	ieee80211_hw_config(sdata->local, 0);
-> +
-> +	if (memcmp(sdata->local->hw.conf.oper_bssid,
-> +		   req->bss->bssid, ETH_ALEN)) {
-> +		config_changed |=3D IEEE80211_CONF_CHANGE_OPER_BSSID;
-> +		memcpy(sdata->local->hw.conf.oper_bssid,
-> +		       req->bss->bssid, ETH_ALEN);
-> +	}
-> +
-> +	ieee80211_hw_config(sdata->local, config_changed);
-> =20
-
-Is this really necessary before you can auth?
-
-If it is, you're going to have to do a lot more work and go all the way
-up to userspace so wpa_supplicant with -Dnl80211 knows about this too,
-and doesn't try to authenticate twice or do FT-OTA.
-
-johannes
-
---=-0yEsO8kTiZKu5+Kvwr/S
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK4B3zAAoJEODzc/N7+QmapPgQAL6P0xavQyAeBajlYbbsHKUQ
-0lf84g+Bmc8RspNHGi7xaB27hdDxadsn2bykRDsw7T8uPwxF9zQVfAxvYg79Zq44
-nKx6FY4OdmWNPfOCWjIJ4WLnfZi6REmD+fW04hhJE8F64BZ+Qm4fgB6hbHengFxE
-zKylp5uo6SOAwDNJKfB8BR7DRN88XQhxNaQKMrB7dKwj9KRhCMfvl5r096DKo8EW
-M+glSPzq1tbB6Zg2zYEeol/bhVMLFWpfcS8ygFgPUTJjpH/ae6V1Esc0E7+KywDA
-E1u0uADe9kdBfBw8O+ZmPHMfnCCzyV2umTtTLqWkb7MwvvZYO/mEMwM/MSyeprev
-4fNPpOLcnzroLMD9STR3BaMtoUn32qkvuSZIafqv5kjv9XxipIxUmERizFgllHwI
-TuBtW1oG3kdWJXxQ296po2t28degCcJ96vDRMoLXhmU8KA92pLiTPU3idNaOWfru
-/RzsR4KfZs0rOHgki+6ngnvfohtnwTLGqsfSi9k6ShFhfrrrxDzMtedd5PTB4ld8
-kTggn5uE7eNvBbt58Rj16nEkedLA9jKPJy/vO1dtRmg5YSRHKtLhYnfS0wxkmX0g
-PttZ5ReUbIBQ9x918nthM/nzwRIdANL8hipkI8haTx78qe4Vzw+PUg2VZXL3dgqt
-+6tGKvuPkdbpTRTAfen1
-=Qnh9
------END PGP SIGNATURE-----
-
---=-0yEsO8kTiZKu5+Kvwr/S--
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0fe915a..e6842dd 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1325,6 +1325,17 @@ void ath_cleanup(struct ath_softc *sc)
+ 	ieee80211_free_hw(sc->hw);
+ }
+ 
++static void ath9k_uninit_hw(struct ath_softc *sc)
++{
++	struct ath_hw *ah = sc->sc_ah;
++
++	BUG_ON(!ah);
++
++	ath9k_exit_debug(ah);
++	ath9k_hw_detach(ah);
++	sc->sc_ah = NULL;
++}
++
+ void ath_detach(struct ath_softc *sc)
+ {
+ 	struct ieee80211_hw *hw = sc->hw;
+@@ -1365,9 +1376,7 @@ void ath_detach(struct ath_softc *sc)
+ 	    ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
+ 		ath_gen_timer_free(ah, sc->btcoex.no_stomp_timer);
+ 
+-	ath9k_exit_debug(ah);
+-	ath9k_hw_detach(ah);
+-	sc->sc_ah = NULL;
++	ath9k_uninit_hw(sc);
+ }
+ 
+ static int ath9k_reg_notifier(struct wiphy *wiphy,
+@@ -1850,10 +1859,8 @@ bad2:
+ 		if (ATH_TXQ_SETUP(sc, i))
+ 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ 
+-	ath9k_exit_debug(ah);
+ bad_free_hw:
+-	ath9k_hw_detach(ah);
+-	sc->sc_ah = NULL;
++	ath9k_uninit_hw(sc);
+ 	return r;
+ }
+ 
+@@ -1966,9 +1973,7 @@ error_attach:
+ 		if (ATH_TXQ_SETUP(sc, i))
+ 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ 
+-	ath9k_exit_debug(ah);
+-	ath9k_hw_detach(ah);
+-	sc->sc_ah = NULL;
++	ath9k_uninit_hw(sc);
+ 
+ 	return error;
+ }
+-- 
+1.6.0.4
 
