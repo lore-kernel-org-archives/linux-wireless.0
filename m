@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55793
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753008AbZJLDJC (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33189 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758611AbZJGBTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 23:09:02 -0400
-Date: Sun, 11 Oct 2009 20:08:57 -0700 (PDT)
-Message-Id: <20091011.200857.141215452.davem@davemloft.net>
-To: kalle.valo@iki.fi
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	hidave.darkstar@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: fix ieee80211_rx() context
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87y6nhoqud.fsf@purkki.valot.fi>
-References: <873a5pq5vc.fsf@purkki.valot.fi>
-	<1255276971.4095.241.camel@johannes.local>
-	<87y6nhoqud.fsf@purkki.valot.fi>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 6 Oct 2009 21:19:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/6] ath9k: fix rmmod
+Date: Tue,  6 Oct 2009 21:19:05 -0400
+Message-Id: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sun, 11 Oct 2009 19:08:58 +0300
+This series fixes removing ath9k as a module as reported by
+Vasanth. I've now tested these as I was finally able to boot
+to 2.6.32-rc3.
 
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
->>> > +	local_bh_disable();
->>> >  	ieee80211_rx(dev->wl->hw, skb);
->>> > +	local_bh_enable();
->>> 
->>> This is a bit awkward from drivers' point of view, we have to add the
->>> same code to all mac80211 drivers using either SPI or SDIO buses.
->>> 
->>> What about adding a new inline function ieee80211_rx_ni() which would
->>> disable bottom halves like above and call ieee80211_rx()? IMHO that's
->>> easier for the driver developers to understand and also easier to
->>> document ("use this function when calling from process context"). If
->>> this is acceptable, I can create a patch.
->>
->> I really don't see the point, since it's just three lines of code, but I
->> wouldn't mind all that much either.
-> 
-> My worry are the developers who even don't know what is a bottom half
-> and might get it all wrong. (Yes, there really are such people.)
+Luis R. Rodriguez (6):
+  ath9k: move common->debug_mask setting to ath_init_softc()
+  ath9k: initialize hw prior to debugfs
+  ath9k: add helper to un-init the hw properly
+  ath9k: add a helper to clean the core driver upon module unload
+  ath9k: move ath_cleanup() below helpers to avoid forward declarations
+  ath9k: rename ath_beaconq_setup() to ath9k_hw_beaconq_setup()
 
-And the difference between this and knowing you need to call the
-ieee80211_rx_ni() thing is?
+ drivers/net/wireless/ath/ath.h          |    6 +++
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    1 -
+ drivers/net/wireless/ath/ath9k/beacon.c |   12 -----
+ drivers/net/wireless/ath/ath9k/debug.c  |    5 --
+ drivers/net/wireless/ath/ath9k/hw.c     |   11 ++++-
+ drivers/net/wireless/ath/ath9k/mac.c    |   13 ++++++
+ drivers/net/wireless/ath/ath9k/mac.h    |    1 +
+ drivers/net/wireless/ath/ath9k/main.c   |   72 +++++++++++++++++++------------
+ 8 files changed, 74 insertions(+), 47 deletions(-)
 
-You have to know what the heck a bottom half is to even know that you
-would need to call the ieee80211_rx_ni() thing.
-
-And that's the same amount of knowledge necessary to simply wrap the
-thing in a BH disable/enable sequence.
