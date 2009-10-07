@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Cpsmtpm-eml108.kpnxchange.com ([195.121.3.12]:54239 "EHLO
-	CPSMTPM-EML108.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753379AbZJMQ4D (ORCPT
+Received: from mail-ew0-f217.google.com ([209.85.219.217]:62872 "EHLO
+	mail-ew0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752877AbZJGDkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 12:56:03 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: 2.6.32-rc4 ipw2200: oops on missing firmware
-Date: Tue, 13 Oct 2009 18:55:24 +0200
-Cc: linux-kernel@vger.kernel.org, ipw2100-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-References: <87hbu3h023.fsf@tac.ki.iif.hu>
-In-reply-To: <87hbu3h023.fsf@tac.ki.iif.hu>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910131855.25878.elendil@planet.nl>
+	Tue, 6 Oct 2009 23:40:11 -0400
+Received: by ewy17 with SMTP id 17so193511ewy.39
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 20:39:33 -0700 (PDT)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: [PATCH] compat-2.6: adding ethtool.h to compat-2.6.31.h
+Date: Wed,  7 Oct 2009 04:39:22 +0100
+Message-Id: <1254886762-17211-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding relevant CCs. Original message follows.
+Between 2.6.30 and 2.6.31, linux/netdevice.h started
+to include linux/ethtool.h (commit b1b67dd45a6b629eb41553856805aaa1614fbb83,
+"net: factor out ethtool invocation of vlan/macvlan drivers"),
+and commit 7508e486965b0af13984bc6d9da62a8d8f0dc5f9,
+"cfg80211: add firmware and hardware version to wiphy", introduces
+dependency of ETHTOOL_BUSINFO_LEN from linux/ethtool.h
+to net/cfg80211.h .
 
-==============
-Hi,
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
+ compat/compat-2.6.31.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-See the screenshot at http://apt.niif.hu/ipw_oops.png.  During bootup,
-initramfs-tools tried to load the ipw2200 module, but nobody fed it
-the necessary firmware, so request_firmware timed out and the module
-unload cleanup oopsed in device_pm_remove:
+diff --git a/compat/compat-2.6.31.h b/compat/compat-2.6.31.h
+index 154209c..e46334a 100644
+--- a/compat/compat-2.6.31.h
++++ b/compat/compat-2.6.31.h
+@@ -12,6 +12,7 @@
+ #include <linux/interrupt.h>
+ #include <net/dst.h>
+ #include <net/genetlink.h>
++#include <linux/ethtool.h>
+ 
+ /*
+  * These macros allow us to backport rfkill without any
+-- 
+1.6.5.rc2
 
-void device_pm_remove(struct device *dev)
-{
-        pr_debug("PM: Removing info for %s:%s\n",
-                 dev->bus ? dev->bus->name : "No Bus",
-                 kobject_name(&dev->kobj));
-        mutex_lock(&dpm_list_mtx);
-        list_del_init(&dev->power.entry);
-        mutex_unlock(&dpm_list_mtx);
-        pm_runtime_remove(dev);
-}
-
-00000a0a <device_pm_remove>:
- a0a:   55                      push   %ebp
- a0b:   89 e5                   mov    %esp,%ebp
- a0d:   53                      push   %ebx
- a0e:   89 c3                   mov    %eax,%ebx
- a10:   b8 08 00 00 00          mov    $0x8,%eax
- a15:   e8 fc ff ff ff          call   a16 <device_pm_remove+0xc>
- a1a:   8d 4b 5c                lea    0x5c(%ebx),%ecx
- a1d:   8b 53 5c                mov    0x5c(%ebx),%edx
- a20:   8b 43 60                mov    0x60(%ebx),%eax
- a23:   89 42 04                mov    %eax,0x4(%edx)
- a26:   89 10                   mov    %edx,(%eax)
- a28:   89 4b 5c                mov    %ecx,0x5c(%ebx)
- a2b:   89 4b 60                mov    %ecx,0x60(%ebx)
- a2e:   b8 08 00 00 00          mov    $0x8,%eax
- a33:   e8 fc ff ff ff          call   a34 <device_pm_remove+0x2a>
- a38:   89 d8                   mov    %ebx,%eax
- a3a:   e8 fc ff ff ff          call   a3b <device_pm_remove+0x31>
- a3f:   5b                      pop    %ebx
- a40:   5d                      pop    %ebp
- a41:   c3                      ret    
-
-The offending IP translates to line a23, so the problem is edx being 0
-at that point.  I'm not sure which struct device field has offset
-0x5c, maybe power, but I'm lost at this point anyway.
-
-I don't know whether it's a new bug or not, never did such insane
-things previously.  rmmod ipw2200 definitely worked under 2.6.31, and
-it's possible that it works under 2.6.32-rc4 too, I forgot to check
-that (but will do so tonight).
-
---
-Regards,
-Feri.
