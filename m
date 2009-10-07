@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:54704 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756429AbZJNTCX (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:47176 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754078AbZJGTZ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 15:02:23 -0400
-Date: Wed, 14 Oct 2009 21:00:49 +0200 (CEST)
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
- 2.6.32-rc3)
-To: Ingo Molnar <mingo@elte.hu>
-cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091014183657.GB5133@elte.hu>
-Message-ID: <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
-References: <1255357148.2850.91.camel@localhost.localdomain>
- <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
- <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de>
- <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
- <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home>
- <20091014063308.GE784@elte.hu> <4AD60FF9.40200@s5r6.in-berlin.de>
- <20091014183657.GB5133@elte.hu>
+	Wed, 7 Oct 2009 15:25:28 -0400
+Received: by ewy4 with SMTP id 4so2193347ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 12:24:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Date: Wed, 7 Oct 2009 20:16:34 +0100
+Message-ID: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
+Subject: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6: adding
+	ethtool.h to compat-2.6.31.h)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 Oct, Ingo Molnar wrote:
-> * Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> How well do "git am", "quilt import" and friends cope with ever 
->> changing directories?
+On Wed, Oct 7, 2009 at 4:22 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Oct 7, 2009 at 10:45 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> On Wed, Oct 07, 2009 at 01:40:04AM -0400, Luis R. Rodriguez wrote:
+>>> On Tue, Oct 6, 2009 at 11:39 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+>>> > Between 2.6.30 and 2.6.31, linux/netdevice.h started
+>>> > to include linux/ethtool.h (commit b1b67dd45a6b629eb41553856805aaa1614fbb83,
+>>> > "net: factor out ethtool invocation of vlan/macvlan drivers"),
+>>> > and commit 7508e486965b0af13984bc6d9da62a8d8f0dc5f9,
+>>> > "cfg80211: add firmware and hardware version to wiphy", introduces
+>>> > dependency of ETHTOOL_BUSINFO_LEN from linux/ethtool.h
+>>> > to net/cfg80211.h .
+>>>
+>>> John's patch titled "cfg80211: fix compile error from missing
+>>> ethtool.h" seems to address this upstream. I'll wait until he applies
+>>> that to the tree.
+>>
+>> As Hin-Tak points-out, linux/netdevice.h is alreadying "doing the needful". :-)
+>>
+>> I'll just drop my patch and let this get sorted in compat-wireless.
+>
+> Heh ok applied, thanks.
+>
+>  Luis
+>
 
-[Perhaps the -p option does the trick.  And git-am could be done on a
-temporary branch from before the move of the files.]
+It is probably just a transient problem with recent activities - I had
+a NULL pointer deref from loading rtl8187 of compat-wireless
+v2.6.32-rc3-39563-g98c2609 -
 
-> Once a driver is in a tree it's in Git and git mv is easy. People 
-> working with Linux better familiarize themselves with Git workflow - the 
-> sooner the better.
+BUG: unable to handle kernel NULL pointer dereference at 000000000000003d
+IP: [<ffffffff8147822c>] wext_ioctl_dispatch+0xd9/0x180
+PGD 61c2b067 PUD 6246f067 PMD 0
+Oops: 0000 [#1] SMP
+...
+Call Trace:
+ [<ffffffff814783f5>] wext_handle_ioctl+0x4d/0x98
+ [<ffffffff813e53a5>] dev_ioctl+0x625/0x662
+ [<ffffffff813cfa45>] sock_ioctl+0x225/0x248
+ [<ffffffff811237a3>] vfs_ioctl+0x31/0xaa
+ [<ffffffff811e1801>] ? security_d_instantiate+0x37/0x4d
+ [<ffffffff81123c88>] do_vfs_ioctl+0x46c/0x4c3
+ [<ffffffff81123d44>] sys_ioctl+0x65/0x9c
+ [<ffffffff81012082>] system_call_fastpath+0x16/0x1b
 
-Even if author and committer both work with git, they often use e-mail
-to transfer patches.
-
-> If it's not in tree then it will adopt to whatever layout there is once 
-> it gets into Greg's tree.
-
-Many "good" drivers will start as "ugly" or "bad" ones.
-
->> How about using drivers/staging/this_driver/TODO and (or) its Kconfig 
->> help text to leave a note about the plans for this driver?
-> 
-> Well, the answer is obvious i think. Tell me, at a glance, if you see a 
-> patch on lkml, which one is for a staging driver to be obsoleted, and 
-> which one is the one going upstream real soon? The patches say:
-> 
->  +++ a/drivers/staging/foo/x.c
-> 
->  +++ a/drivers/staging/bar/y.c
-> 
-> Then tell me the same at a glance if you see patches for:
-> 
->  +++ a/drivers/staging/wip/x.c
-> 
->  +++ a/drivers/staging/bad/y.c
-
-Does this information matter much?
-
-What's more interesting is whether development activity will _lead_ to a
-driver being moved from bad or ugly to good.
--- 
-Stefan Richter
--=====-==--= =-=- -===-
-http://arcgraph.de/sr/
-
-
+I'm sure whatever changes made this happen will go away soon, so I'll
+just re-try in a few days... but if anybody knows what commit causes
+this (and what fixes it!), I'd like to know.
