@@ -1,39 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28147 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476AbZJPVZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:58 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/10] iwlwifi driver updates 10/16/2009
-Date: Fri, 16 Oct 2009 14:25:48 -0700
-Message-Id: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-vw0-f203.google.com ([209.85.212.203]:41482 "EHLO
+	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934357AbZJGVBY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 17:01:24 -0400
+Received: by vws41 with SMTP id 41so2842743vws.4
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 14:00:47 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 7 Oct 2009 16:00:47 -0500
+Message-ID: <167ae39b0910071400n218d3d9ey7711b1011f290a73@mail.gmail.com>
+Subject: Prism54/p54pci
+From: James Grossmann <cctsurf@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes include making the current power saving state available via
-debugfs and reworking static power save. This series also commence the work to
-support 6x50 devices. The rest is code cleanup and preparation for future
-changes.
-
-Abhijeet Kolekar (1):
-      iwl3945: disable all tx fifos
-
-Reinette Chatre (3):
-      iwlwifi: move iwl_setup_mac to iwlagn
-      iwlwifi: move rate scaling structures to header file
-      iwlagn: store station rate scale information in mac80211 station structure
-
-Wey-Yi Guy (6):
-      iwlwifi: show current power save status reported by uCode
-      iwlwifi: identify eeprom version for 6x50 series NIC
-      iwlwifi: fix incorrect otp blocks number for 6x50 series
-      iwlwifi: set auto clock gate disable bit for 6x00/6x50 series
-      iwlwifi: no chain noise support for 6x50 series
-      iwlwifi: rework for static power save
-
-Reinette
-
+I have the gigafast WF728-AEX, which doesn't seem to work with the
+p54pci drivers, I was previously using it with my Thinkpad T23 under
+Gentoo (gentoo kernels 2.6.29 and 2.6.30), and could only use the
+1.0.4.3 firmware, now, I am using it under Ubuntu 9.04
+(2.6.28-15-generic kernel) on the same computer, and find that I have
+to load the prism54 driver to make it work.
+I noticed that you were considering this to be depricated, I hope that
+you can help me to make p54pci work!
+Thanks
+James
