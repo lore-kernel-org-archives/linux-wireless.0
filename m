@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:44726 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752917AbZJIHKd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 03:10:33 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Peter Zijlstra <peterz@infradead.org>
-To: Mike Galbraith <efault@gmx.de>
-Cc: Frans Pop <elendil@planet.nl>,
-	Arjan van de Ven <arjan@infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>, linux-wireless@vger.kernel.org
-In-Reply-To: <1255070103.7639.30.camel@marge.simson.net>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910081655.37485.elendil@planet.nl>
-	 <1255026217.6643.12.camel@marge.simson.net>
-	 <200910082259.35204.elendil@planet.nl>
-	 <1255070103.7639.30.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Fri, 09 Oct 2009 09:13:53 +0200
-Message-Id: <1255072433.26976.351.camel@twins>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:39666 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932394AbZJGMAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 08:00:11 -0400
+Content-Type: text/plain; charset="iso-8859-1"
+Date: Wed, 07 Oct 2009 13:59:23 +0200
+From: berndl81@gmx.at
+Message-ID: <20091007115923.256060@gmx.net>
+MIME-Version: 1.0
+Subject: Bug: AR928x not working on 2.6.31.x
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-09 at 08:35 +0200, Mike Galbraith wrote:
-> 
-> sched: update the clock of runqueue select_task_rq() selected.
-> 
-> In try_to_wake_up(), we update the runqueue clock, but select_task_rq()
-> may select a different runqueue than the one we updated, leaving the new
-> runqueue's clock stale for a bit.
-> 
-> This patch cures occasional huge latencies reported by latencytop when
-> coming out of idle on a mostly idle NO_HZ box.
-> 
-> Signed-off-by: Mike Galbraith <efault@gmx.de>
-> Cc: Ingo Molnar <mingo@elte.hu>
-> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+I am using Archlinux on my Acer Extensa 7630EZ and realize that my wireless-device which is an
+ 
+Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
 
+according to lspci works very well using arch-stock kernel 2.6.30 and is not working any longer when using the 2.6.31.1 or 2.6.31.2 kernel from Arch's testing repository.
 
-Awesome catch Mike, seems I goofed up in my recent ttwu changes.
+When using the 2.6.30 kernel (wlan is working very well), I get the following dmesg-output:
+[bernhard@wallaby ~]$ dmesg |grep ath
+ath9k 0000:05:00.0: enabling device (0000 -> 0002)
+ath9k 0000:05:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ath9k 0000:05:00.0: setting latency timer to 64
+phy0: Selected rate control algorithm 'ath9k_rate_control'
+Registered led device: ath9k-phy0::radio
+Registered led device: ath9k-phy0::assoc
+Registered led device: ath9k-phy0::tx
+Registered led device: ath9k-phy0::rx
 
-Acked-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
+When upgrading to 2.6.31.x, i receive the following output:
+[bernhard@wallaby ~]$ dmesg |grep ath
+ath9k 0000:05:00.0: enabling device (0000 -> 0002)
+ath9k 0000:05:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ath9k 0000:05:00.0: setting latency timer to 64
+ath9k 0000:05:00.0: PCI INT A disabled
 
-> 
-> ---
->  kernel/sched.c |    8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/kernel/sched.c
-> ===================================================================
-> --- linux-2.6.orig/kernel/sched.c
-> +++ linux-2.6/kernel/sched.c
-> @@ -2311,7 +2311,7 @@ static int try_to_wake_up(struct task_st
->  {
->         int cpu, orig_cpu, this_cpu, success = 0;
->         unsigned long flags;
-> -       struct rq *rq;
-> +       struct rq *rq, *orig_rq;
->  
->         if (!sched_feat(SYNC_WAKEUPS))
->                 wake_flags &= ~WF_SYNC;
-> @@ -2319,7 +2319,7 @@ static int try_to_wake_up(struct task_st
->         this_cpu = get_cpu();
->  
->         smp_wmb();
-> -       rq = task_rq_lock(p, &flags);
-> +       rq = orig_rq = task_rq_lock(p, &flags);
->         update_rq_clock(rq);
->         if (!(p->state & state))
->                 goto out;
-> @@ -2350,6 +2350,10 @@ static int try_to_wake_up(struct task_st
->                 set_task_cpu(p, cpu);
->  
->         rq = task_rq_lock(p, &flags);
-> +
-> +       if (rq != orig_rq)
-> +               update_rq_clock(rq);
-> +
->         WARN_ON(p->state != TASK_WAKING);
->         cpu = task_cpu(p);
->  
-> 
-> 
-> 
+As I see it, the device is recognized and instantly disabled again. The device cannot be brought up too using ifconfig.
+
+I am quite clueless what do do aside from reporting the bug here as suggested in the original Arch-bugreport (http://bugs.archlinux.org/task/16413)
+
+If any further information is helpful, I will of course happily try to provide it.
+
+Bernhard
+-- 
+GRATIS für alle GMX-Mitglieder: Die maxdome Movie-FLAT!
+Jetzt freischalten unter http://portal.gmx.net/de/go/maxdome01
