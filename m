@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57327 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932111AbZJ3VgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 11/15] iwlagn: move rate scale initialization to init function
-Date: Fri, 30 Oct 2009 14:36:14 -0700
-Message-Id: <1256938578-9638-12-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:56059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755942AbZJGXP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 19:15:29 -0400
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <4ACD1C3D.3030506@oracle.com>
+References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
+	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
+	 <4ACD0E5A.7060106@oracle.com> <1254954842.3713.7.camel@johannes.local>
+	 <4ACD1C3D.3030506@oracle.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-i8HOQPuHxf1j810yA2nB"
+Date: Thu, 08 Oct 2009 01:14:16 +0200
+Message-Id: <1254957256.3713.10.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
 
-This fits better in how the callbacks operate (alloc does allocation and
-init does initialization). This also helps if we later want to do our own
-initialization without relying on the mac80211 allocation.
+--=-i8HOQPuHxf1j810yA2nB
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+On Wed, 2009-10-07 at 15:54 -0700, Randy Dunlap wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 27d4ece..43edd8f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2477,19 +2477,12 @@ static void *rs_alloc_sta(void *priv_rate, struct ieee80211_sta *sta,
- 	struct iwl_lq_sta *lq_sta;
- 	struct iwl_station_priv *sta_priv = (struct iwl_station_priv *) sta->drv_priv;
- 	struct iwl_priv *priv;
--	int i, j;
- 
- 	priv = (struct iwl_priv *)priv_rate;
- 	IWL_DEBUG_RATE(priv, "create station rate scale window\n");
- 
- 	lq_sta = &sta_priv->lq_sta;
- 
--	lq_sta->lq.sta_id = 0xff;
--
--	for (j = 0; j < LQ_SIZE; j++)
--		for (i = 0; i < IWL_RATE_COUNT; i++)
--			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
--
- 	return lq_sta;
- }
- 
-@@ -2502,6 +2495,12 @@ static void rs_rate_init(void *priv_r, struct ieee80211_supported_band *sband,
- 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
- 	struct iwl_lq_sta *lq_sta = priv_sta;
- 
-+	lq_sta->lq.sta_id = 0xff;
-+
-+	for (j = 0; j < LQ_SIZE; j++)
-+		for (i = 0; i < IWL_RATE_COUNT; i++)
-+			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
-+
- 	lq_sta->flush_timer = 0;
- 	lq_sta->supp_rates = sta->supp_rates[sband->band];
- 	for (j = 0; j < LQ_SIZE; j++)
--- 
-1.5.6.3
+> > But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
+> > turned on. Is it possible that is failing?
+>=20
+> # CONFIG_WIRELESS is not set
+> CONFIG_WIRELESS_EXT=3Dy
+> CONFIG_WEXT_SPY=3Dy
+> CONFIG_WEXT_PRIV=3Dy
+>=20
+> WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect "se=
+lect".
+
+Interesting.
+
+> but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
+
+Well, the way WEXT_CORE is defined as def_bool y ought to, no?
+
+johannes
+
+--=-i8HOQPuHxf1j810yA2nB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKzSDEAAoJEODzc/N7+QmaM+kQAIgIGAE4zkKCsckaF4tY7/DA
+iXsK8Jk1GS0nBrwZJ/hM9ivYkSPORALkSWbWxH1FNuJhZ0abrea/4ZGgmicqPa6Y
+HODRn5fSb2wY3IkHs2xxkZa80HqzWUquNWLY2Ko4QAll3M2MSnVS+K99HcHVRaW0
+BfLGFWbLOzehObuwW/5s9/NNn3iqqd+oJ9Q+GIh0AcMglxdWfSpgDCazI95qCeiE
+oxjCbob/Bmko4qqILTIwSC1lqpo+Fr0pPZlZvCeYYEKtT1BUSYXFUJmEFVvKuNbe
+nRHcXiDywe7UJH3R+UH3tNMyIA8BaFy2L/u68ixok0zfCSJIHvGUXgssb8GUHEMG
+FMjyEZJC+zqlLVX+GiobRmi0tvrZ8K4vnFWc4sh6dzQAz6TeK5zx35iGipf6oMU/
+NNZo0dxoRzVmYOR2PJ44mo7fMJrtAShg/KbmSwiEsigjuNLE5Y6/ehF1hRN4672b
+jNSC99YpdUdt9/i+kHQ8Ak6BnEI+A+mZl+VKeq/u84/U6R1fox+g7elWZNnWasrt
++MlctL4MiXmdL8QSiWkJE4y133KKKC2YKQbIqf1uYW88k2hV5oXVRV18qVxdj52r
+fTxcx3J/W9vva9kH0YSKIjAHaXhUeRICKXxEsh4ZoocCN1M1RKYz1eTsaWBN/3G7
+qRs+G5ya5Sc0bPCvydGD
+=sWN5
+-----END PGP SIGNATURE-----
+
+--=-i8HOQPuHxf1j810yA2nB--
 
