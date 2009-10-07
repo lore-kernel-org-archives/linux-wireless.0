@@ -1,96 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:46059 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755385AbZJLM3o (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:52062 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045AbZJGT3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 08:29:44 -0400
+	Wed, 7 Oct 2009 15:29:22 -0400
+Received: by bwz6 with SMTP id 6so234845bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 12:28:44 -0700 (PDT)
+Message-ID: <4ACCEBE8.8010803@lwfinger.net>
+Date: Wed, 07 Oct 2009 14:28:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Mon, 12 Oct 2009 08:28:36 -0400
-Message-ID: <a44ae5cd0910120528h6d8992fcn8b6592ee799fbfc5@mail.gmail.com>
-Subject: 2.6.32-rc4-git1 -- INFO: possible circular locking dependency
-	detected
-From: Miles Lane <miles.lane@gmail.com>
-To: LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: Fix locking problem when stopping rfkill polling
+References: <4accae5d.BgSJpcmlvg+W5PGM%Larry.Finger@lwfinger.net> <20091007190106.GB22394@tuxdriver.com>
+In-Reply-To: <20091007190106.GB22394@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[  823.466853] [ INFO: possible circular locking dependency detected ]
-[  823.466866] 2.6.32-rc4-git1 #2
-[  823.466873] -------------------------------------------------------
-[  823.466884] swapper/0 is trying to acquire lock:
-[  823.466893]  (&sta->lock){+.-...}, at: [<f857bda4>]
-sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
-[  823.466940]
-[  823.466943] but task is already holding lock:
-[  823.466953]
-(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}, at:
-[<c1032f22>] run_timer_softirq+0x125/0x1e5
-[  823.466984]
-[  823.466987] which lock already depends on the new lock.
-[  823.466991]
-[  823.467000]
-[  823.467002] the existing dependency chain (in reverse order) is:
-[  823.467013]
-[  823.467015] -> #1 (&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}:
-[  823.467037]        [<c104ac2c>] __lock_acquire+0x9fb/0xb6d
-[  823.467056]        [<c104adfa>] lock_acquire+0x5c/0x73
-[  823.467072]        [<c10336b8>] del_timer_sync+0x29/0x6c
-[  823.467089]        [<f857bceb>]
-ieee80211_process_addba_resp+0x49/0xa0 [mac80211]
-[  823.467121]        [<f8584585>] ieee80211_rx_h_action+0xeb/0x335 [mac80211]
-[  823.467157]        [<f8585654>]
-ieee80211_invoke_rx_handlers+0xe50/0x10d8 [mac80211]
-[  823.467193]        [<f8585d46>]
-__ieee80211_rx_handle_packet+0x46a/0x497 [mac80211]
-[  823.467229]        [<f8586475>] ieee80211_rx+0x4d1/0x530 [mac80211]
-[  823.467263]        [<f89936e3>] ath_rx_send_to_mac80211+0xa0/0xa8 [ath9k]
-[  823.467302]        [<f899439e>] ath_rx_tasklet+0x7b6/0x7f5 [ath9k]
-[  823.467338]        [<f8992115>] ath9k_tasklet+0x47/0xc7 [ath9k]
-[  823.467373]        [<c102f4a1>] tasklet_action+0x8e/0xe1
-[  823.467391]        [<c102f95b>] __do_softirq+0x8d/0x117
-[  823.467409]
-[  823.467412] -> #0 (&sta->lock){+.-...}:
-[  823.467430]        [<c104ab2e>] __lock_acquire+0x8fd/0xb6d
-[  823.467447]        [<c104adfa>] lock_acquire+0x5c/0x73
-[  823.467464]        [<c132526f>] _spin_lock_bh+0x2a/0x39
-[  823.467481]        [<f857bda4>]
-sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
-[  823.467514]        [<c1032f6d>] run_timer_softirq+0x170/0x1e5
-[  823.467531]        [<c102f95b>] __do_softirq+0x8d/0x117
-[  823.467548]
-[  823.467551] other info that might help us debug this:
-[  823.467555]
-[  823.467566] 1 lock held by swapper/0:
-[  823.467574]  #0:
-(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}, at:
-[<c1032f22>] run_timer_softirq+0x125/0x1e5
-[  823.467604]
-[  823.467607] stack backtrace:
-[  823.467619] Pid: 0, comm: swapper Not tainted 2.6.32-rc4-git1 #2
-[  823.467628] Call Trace:
-[  823.467643]  [<c13233c8>] ? printk+0xf/0x11
-[  823.467659]  [<c1049ef5>] print_circular_bug+0x8a/0x96
-[  823.467675]  [<c104ab2e>] __lock_acquire+0x8fd/0xb6d
-[  823.467694]  [<c104adfa>] lock_acquire+0x5c/0x73
-[  823.467725]  [<f857bda4>] ? sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
-[  823.467742]  [<c132526f>] _spin_lock_bh+0x2a/0x39
-[  823.467772]  [<f857bda4>] ? sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
-[  823.467803]  [<f857bda4>] sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
-[  823.467820]  [<c1032f6d>] run_timer_softirq+0x170/0x1e5
-[  823.467836]  [<c1032f22>] ? run_timer_softirq+0x125/0x1e5
-[  823.467866]  [<f857bd89>] ? sta_addba_resp_timer_expired+0x0/0x50 [mac80211]
-[  823.467885]  [<c102f95b>] __do_softirq+0x8d/0x117
-[  823.467901]  [<c102f8ce>] ? __do_softirq+0x0/0x117
-[  823.467911]  <IRQ>  [<c102faf5>] ? irq_exit+0x38/0x75
-[  823.467939]  [<c10045b1>] ? do_IRQ+0x88/0x9c
-[  823.467954]  [<c1003175>] ? common_interrupt+0x35/0x3c
-[  823.467971]  [<c104007b>] ? sched_clock_tick+0x31/0x77
-[  823.467989]  [<c11b84ff>] ? acpi_idle_enter_bm+0x233/0x25e
-[  823.468008]  [<c125c232>] ? cpuidle_idle_call+0x65/0x9b
-[  823.468023]  [<c1001cd1>] ? cpu_idle+0xb9/0xe8
-[  823.468041]  [<c131708b>] ? rest_init+0x67/0x69
-[  823.468058]  [<c14e28e8>] ? start_kernel+0x3a3/0x3aa
-[  823.468076]  [<c14e2098>] ? i386_start_kernel+0x98/0x9f
+John W. Linville wrote:
+> On Wed, Oct 07, 2009 at 10:06:05AM -0500, Larry Finger wrote:
+>> In commit 26e5ab35b4c7b1d4cb487a11084520aed9a8d05e entitled "b43: Fix PPC
+>> crash in rfkill polling on unload", the call to stop polling should not have
+>> been placed inside the wl->mutex. The result was incorrect locking messages.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> John,
+>>
+>> I had not intended for the previous patch to be applied as I was waiting for
+>> the Bugzilla OP to test. He promised to do that today. In any case, that patch
+>> introduced a locking problem that needs to be fixed.
+>>
+>> Why do the one-liners cause so many problems?
+>>
+>> Larry
+>> ---
+>>
+>> Index: wireless-testing/drivers/net/wireless/b43/main.c
+>> ===================================================================
+>> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
+>> +++ wireless-testing/drivers/net/wireless/b43/main.c
+>> @@ -4501,8 +4501,8 @@ static void b43_op_stop(struct ieee80211
+>>  
+>>  	cancel_work_sync(&(wl->beacon_update_trigger));
+>>  
+>> -	mutex_lock(&wl->mutex);
+>>  	wiphy_rfkill_stop_polling(hw->wiphy);
+>> +	mutex_lock(&wl->mutex);
+>>  	if (b43_status(dev) >= B43_STAT_STARTED) {
+>>  		dev = b43_wireless_core_stop(dev);
+>>  		if (!dev)
+> 
+> OK, but why do we start polling under the lock but stop polling without
+> the lock?  Should we start polling without holding the lock too?
+
+I'll test that, but I suspect it doesn't matter. Of course, the reason
+I put the stop under the lock was for symmetry, but then I got the
+following when shutting down:
+
+ b43-phy0 debug: Removing Interface type 2
+
+ =======================================================
+ [ INFO: possible circular locking dependency detected ]
+ 2.6.32-rc3-wl #225
+ -------------------------------------------------------
+ modprobe/25391 is trying to acquire lock:
+  (&(&rfkill->poll_work)->work){+.+...}, at: [<ffffffff81054a7f>]
+__cancel_work_timer+0xd9/0x224
+
+ but task is already holding lock:
+  (&wl->mutex){+.+.+.}, at: [<ffffffffa02ff3d0>] b43_op_stop+0x30/0x7f
+[b43]
+
+ which lock already depends on the new lock.
+
+
+ the existing dependency chain (in reverse order) is:
+
+ -> #1 (&wl->mutex){+.+.+.}:
+        [<ffffffff81069790>] __lock_acquire+0x140e/0x174d
+        [<ffffffff81069b8b>] lock_acquire+0xbc/0xd9
+        [<ffffffff8128d420>] mutex_lock_nested+0x58/0x29c
+        [<ffffffffa03150ea>] b43_rfkill_poll+0x3a/0xfc [b43]
+        [<ffffffffa02c2f33>] ieee80211_rfkill_poll+0x26/0x28 [mac80211]
+        [<ffffffffa027c028>] cfg80211_rfkill_poll+0x14/0x16 [cfg80211]
+        [<ffffffffa0271081>] rfkill_poll+0x23/0x3d [rfkill]
+        [<ffffffff81054224>] worker_thread+0x22c/0x332
+        [<ffffffff81057fd8>] kthread+0x7d/0x85
+        [<ffffffff8100caba>] child_rip+0xa/0x20
+
+Moving the stop ooutside the lock cured the problem.
+
+Larry
+
