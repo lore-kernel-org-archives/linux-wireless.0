@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:51191 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752621AbZJYPyT convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53584 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754661AbZJGUW4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2009 11:54:19 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: =?utf-8?q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: [PATCH] b43: LP-PHY: Begin implementing calibration & software RFKILL support
-Date: Sun, 25 Oct 2009 16:54:14 +0100
-Cc: John Linville <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>,
-	Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <1256484396-31063-1-git-send-email-netrolller.3d@gmail.com>
-In-Reply-To: <1256484396-31063-1-git-send-email-netrolller.3d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910251654.17050.mb@bu3sch.de>
+	Wed, 7 Oct 2009 16:22:56 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/2] ath9k_hw: run the carrier leakage calibration fix for ar9271 as well
+Date: Wed,  7 Oct 2009 16:22:18 -0400
+Message-Id: <1254946939-4943-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 October 2009 16:26:36 Gábor Stefanik wrote:
-> Michael, could you please do the PHY reset part? I can't seem to
-> understand its relationship to wireless_core_reset... also, it's
-> heavily ssb-speak, which I am not good at.
+This is required for the ar9271 hardware as well.
 
-Where are the specifications?
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index f46bd05..7aa3d1d 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -1070,6 +1070,7 @@ bool ath9k_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+ }
+ EXPORT_SYMBOL(ath9k_hw_calibrate);
+ 
++/* Carrier leakage Calibration fix */
+ static bool ar9285_clc(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -1115,7 +1116,7 @@ bool ath9k_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (AR_SREV_9285_12_OR_LATER(ah)) {
++	if (AR_SREV_9271(ah) || AR_SREV_9285_12_OR_LATER(ah)) {
+ 		if (!ar9285_clc(ah, chan))
+ 			return false;
+ 	} else {
 -- 
-Greetings, Michael.
+1.6.0.4
+
