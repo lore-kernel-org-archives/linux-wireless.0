@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46735 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753620AbZJ2S6w (ORCPT
+Received: from acsinet12.oracle.com ([141.146.126.234]:26083 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754690AbZJGW4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 14:58:52 -0400
-Subject: Re: [PATCH] mac80211: make align adjustment code support paged SKB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Zhu Yi <yi.zhu@intel.com>
-In-Reply-To: <43e72e890910291152g5325718ah1c55912e928896e3@mail.gmail.com>
-References: <1256760832-29063-1-git-send-email-reinette.chatre@intel.com>
-	 <43e72e890910290918v1ca66bbdk4270eabcae6f5798@mail.gmail.com>
-	 <43e72e890910291152g5325718ah1c55912e928896e3@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QtcsgfggvEtkoS/Ltp7m"
-Date: Thu, 29 Oct 2009 19:58:48 +0100
-Message-ID: <1256842728.3865.128.camel@johannes.local>
-Mime-Version: 1.0
+	Wed, 7 Oct 2009 18:56:35 -0400
+Message-ID: <4ACD1C3D.3030506@oracle.com>
+Date: Wed, 07 Oct 2009 15:54:53 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>	 <4ACD0E5A.7060106@oracle.com> <1254954842.3713.7.camel@johannes.local>
+In-Reply-To: <1254954842.3713.7.camel@johannes.local>
+Content-Type: text/plain; charset=windows-1251
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Johannes Berg wrote:
+> On Wed, 2009-10-07 at 14:55 -0700, Randy Dunlap wrote:
+>> John W. Linville wrote:
+>>> Should prevent this build error reported by Randy...
+>>>
+>>> net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
+>>> make[3]: *** [net/wireless/wext-priv.o] Error 1
+>>>
+>>> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> Sorry, it did not work for me.
+> 
+>> linux-next-20091007/net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
+>> make[3]: *** [net/wireless/wext-priv.o] Error 1
+>>
+>> Drivers like hostap and orinoco (hermes) select WEXT_PRIV regardless
+>> of the setting of WEXT_CORE.  oh, and staging/ drivers do that also.
+> 
+> But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
+> turned on. Is it possible that is failing?
 
---=-QtcsgfggvEtkoS/Ltp7m
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+# CONFIG_WIRELESS is not set
+CONFIG_WIRELESS_EXT=y
+CONFIG_WEXT_SPY=y
+CONFIG_WEXT_PRIV=y
 
-On Thu, 2009-10-29 at 11:52 -0700, Luis R. Rodriguez wrote:
+WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect "select".
 
-> > Can you elaborate on the planned paged skb support on mac80211 you
-> > have. Do you have any queued up patches I can look at this point?
->=20
-> OK I see git show 924e10
->=20
-> Anyone taking the mac80211 paged skb support on? Any idea how long it
-> may take to complete?
+but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
 
-It's not very hard.
-
-Step 1)
-  fix a few corner cases other drivers might have, and stick the bit of
-  code iwlwifi has right before passing the frame to mac80211 into
-  mac80211 as the first thing it does with the frame
-
-Step 2)
-  Look through rx.c and check how much stuff it really needs linearised,
-  and where. I suspect that most of the time it _only_ needs the first
-  two bytes, until it comes to actually passing the frame up.
-
-Step 3)
-  After the audit, push down the linearizing to where needed, i.e.
-  management frames completely, other frames up to and including the
-  ethernet header, software decryption all of the frame
-
-Step 4)
-  make software decryption aware of paged SKBs, and remove the
-  linearising in that case
-
-johannes
-
---=-QtcsgfggvEtkoS/Ltp7m
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK6eXiAAoJEODzc/N7+Qma08kP/iEY81c5SV84LDBwYRwrY/tt
-+GR4Lw2eM4B9pKBhMdro1Ei7R1jXdDPuCpqBYJQzvBENuJj5w2sT1t1yVvkg6QX7
-Gt6errQR16v06E0uMknNFIPcwnlQk5ZSHncdHR0jI8ccBya5UW1IQzxc8GtjX+Ko
-90FHD4L3jWXIj/dG3C4+P3URnoZoY2yauSAxD95LrBy58uHdCgKXA3WeODGpire5
-w2L8HXsaf46+1O8kCUdCt1JzeljZuryhI6S/9iMEFfyyHOJF2d2dMVyTbTGZppiJ
-xNJfIxyFxjStxalsjMFOAmEgeEQSsxwEODciuZXh1xc1jfU96srLRL9kC5m9Nrq+
-iVUPNslRu5jgz/W1MCRhdSkTgCNyDF4pwLxeSyHGDDGtnMIzNOzWu7luiOMdctIy
-Rd4f+NRABtNWFARWw0fqcOvYhn7D+AVtvWJSG/aPDclzO2P3BEFi/4kwcLUFIY7o
-H7lx8sjB9/X62GUGfUlX9bS6oV3onaEDVhIjAK/ahhhG6SMi44fDprGzRI5j1I0E
-aGiq2Pc5fQU5TLqRxaX+xOYRSBRceTZxOJ1fXFKL/He5pw4Ud5fsKY9zQ3WTd6eb
-iacpPKIvqdTkGhCXEceEZzMBqSUBTWrhkEdWep6TGggujNvhBGEA9qdhRyhaYQCA
-UvtKJAFEmSUZZ9O5ZjsO
-=5K89
------END PGP SIGNATURE-----
-
---=-QtcsgfggvEtkoS/Ltp7m--
-
+~Randy
