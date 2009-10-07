@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:54360 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756544AbZJAMk2 (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:43929 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933618AbZJGQnr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 08:40:28 -0400
-Date: Thu, 1 Oct 2009 15:40:16 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH]: nl80211: report age of scan results
-Message-ID: <20091001124016.GA17158@jm.kir.nu>
-References: <200909241055.51604.hs4233@mail.mn-solutions.de> <200909280914.48847.hs4233@mail.mn-solutions.de> <20090930212123.GA8616@jm.kir.nu> <200910010957.31558.hs4233@mail.mn-solutions.de>
+	Wed, 7 Oct 2009 12:43:47 -0400
+Received: by bwz6 with SMTP id 6so86727bwz.37
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 09:43:09 -0700 (PDT)
+Message-ID: <4ACCC516.7050002@lwfinger.net>
+Date: Wed, 07 Oct 2009 11:43:02 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200910010957.31558.hs4233@mail.mn-solutions.de>
+To: Albert Herranz <albert_herranz@yahoo.es>
+CC: bcm43xx-dev@lists.berlios.de, mb@bu3sch.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] b43: do not stack-allocate pio rx/tx header and tail
+ buffers
+References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es>
+In-Reply-To: <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 01, 2009 at 09:57:31AM +0200, Holger Schurig wrote:
-> Hmm, what would a scan-sequence help in the case when mac80211 updates
-> a BSS because of a received beacon?
+Albert Herranz wrote:
+> The DMA-API debugging facility complains about b43 mapping memory from
+> stack for SDIO-based cards.
+> 
+> Indeed, b43 currently allocates the PIO RX/TX header and tail buffers
+> from stack. The solution here is to use heap-allocated buffers instead.
+> 
+> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
+> ---
+> v2
+> - embed buffers into struct b43_wl, and make them depend on CONFIG_B43_PIO
+> - take into account tail buffers for unaligned length transfers
+> 
+>  drivers/net/wireless/b43/b43.h  |  168 +++++++++++++++++++++------------------
+>  drivers/net/wireless/b43/pio.c  |   78 +++++++++---------
+>  drivers/net/wireless/b43/xmit.c |    2 +-
+>  3 files changed, 132 insertions(+), 116 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> index fa1549a..6607162 100644
+> --- a/drivers/net/wireless/b43/b43.h
+> +++ b/drivers/net/wireless/b43/b43.h
+> @@ -607,82 +607,7 @@ struct b43_qos_params {
+>  	struct ieee80211_tx_queue_params p;
+>  };
+>  
+> -struct b43_wldev;
+> -
+> -/* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
+> -struct b43_wl {
+> -	/* Pointer to the active wireless device on this chip */
+> -	struct b43_wldev *current_dev;
+> -	/* Pointer to the ieee80211 hardware data structure */
+> -	struct ieee80211_hw *hw;
 
-I have been most interested in knowing whether the result was after the
-scan request or not; not necessarily receiving during the scan request
-itself.
+What is the reason for moving the definition of struct b43_wl?
 
-> scan trigger, seq 5:
->   find AP 'XXX', signal -50
->   find AP 'YYY', signal -60
-> scan trigger, seq 6:
->   find AP 'ZZZ', signal -55
-> normal operation:
->   beacon for 'YYY' comes in, signal -45
-> scan-dump:
->   get 'XXX', signal -50, seq 5
->   get 'ZZZ', signal -55, seq 6
->   get 'YYY', signal -45, but with which seq?
+Larry
 
-seq 6 based on the earlier discussion. However, there would be an option
-to increment the sequence number whenever a scan is terminated, i.e.,
-the move to normal operation would move to seq 7 and 'YYY' would
-actually show up with seq 7 here. The scan trigger command would return
-the sequence number for that particular scan (6 for the second one), so
-it would be possible to notice the difference between ZZZ and YYY.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
