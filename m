@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:50214 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758112AbZJBUfF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 16:35:05 -0400
-Received: by iwn8 with SMTP id 8so799074iwn.33
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Oct 2009 13:35:09 -0700 (PDT)
+Received: from web32505.mail.mud.yahoo.com ([68.142.207.215]:21851 "HELO
+	web32505.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933123AbZJGCHK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2009 22:07:10 -0400
+Message-ID: <911923.95402.qm@web32505.mail.mud.yahoo.com>
+Date: Tue, 6 Oct 2009 19:06:28 -0700 (PDT)
+From: Ahmed A <ahmedcali@yahoo.com>
+Subject: Re: Linux wifi development board
+To: David Acker <dacker@roinet.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4ACB42CB.7010403@roinet.com>
 MIME-Version: 1.0
-In-Reply-To: <9UCePxij8cB.A.VCG.-3SxKB@chimera>
-References: <9UCePxij8cB.A.VCG.-3SxKB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 2 Oct 2009 13:34:49 -0700
-Message-ID: <43e72e890910021334r7c838e9eyf684b7e533412f20@mail.gmail.com>
-Subject: Re: 2.6.32-rc1-git2: Reported regressions from 2.6.31
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not bad we have only 2 for wireless, so far:
+--- On Tue, 10/6/09, David Acker <dacker@roinet.com> wrote:
 
-On Thu, Oct 1, 2009 at 12:26 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: David Acker <dacker@roinet.com>
+> Subject: Re: Linux wifi development board
+> To: "Ahmed A" <ahmedcali@yahoo.com>
+> Cc: linux-wireless@vger.kernel.org
+> Date: Tuesday, October 6, 2009, 6:14 AM
+> Ahmed A wrote:
+> > Hello,
+> > 
+> > I have been looking online for a Linux wifi
+> development board.� I have come across a few from small
+> companies (reasonably priced), but most of those companies
+> seem to be out of business.� I would appreciate
+> suggestions from anyone that may have used one recently, or
+> suggest a link where I can more info some popular ones.
+> > 
+> > I am mostly interested in doing some software
+> development, prototyping on the "application processor", not
+> on the "baseband processor" (radio part).
+> > 
+> > If there is an alternate mailing list I can post my
+> question, I would appreciate that also.
+> 
+> I have had good luck with boards from Gateworks, http://www.gateworks.com/ and radios from Ubiquiti, http://ubnt.com/
+> . All of it is supported by OpenWRT, although I believe that
+> the gw2348-4 (avila) has mainline support.
+> -ack
+> 
 
-iwl3945:
+Hi David,
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14299
-> Subject         : oops in wireless, iwl3945 related?
-> Submitter       : Pavel Machek <pavel@ucw.cz>
-> Date            : 2009-09-29 17:12 (3 days old)
-> References      : http://marc.info/?l=linux-kernel&m=125424439725743&w=4
+Thank you for your response.  I would like to explain what I am trying to setup, and would appreciate your feedback please.  My setup would comprise of two parts. One part would be the wifi router (base station), on which I load linux image bundled with my special app onto it.  The other part would be the wifi client (CPE), that would connect to the router.  I would also like to be able to load my own kernel image bundled with my special app.
 
-b43:
+I am guessing from your email, I would have to get a board from gateworks, hook up an antenna to it from ubnt, load image from OpenWRT, that would be my wifi router.  Is that right? Which product would you recommend, the Avilla platform? Which antenna from ubnt?  Would there be issues getting these to work?  How about the components on the client side, same deal?
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=14277
-> Subject         : Caught 8-bit read from freed memory in b43 driver at association
-> Submitter       : Christian Casteyde <casteyde.christian@free.fr>
-> Date            : 2009-09-30 18:06 (2 days old)
+I have done some work/programming on the IXP, but I do prefer a board with non-IXP CPU, like PowerPC or XScale.
 
-  Luis
+Is there any solution out there, where the dev board and antenna come bundled, so I don't have to muck around getting them to work?
+
+Any decent alternate board supplier, the prices of boards from gateworks are a bit pricey for me.
+
+Thank you,
+Ahmed A.
+
+
+
+      
