@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.27]:1942 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935364AbZJOUFh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 16:05:37 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so297890eyd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Oct 2009 13:04:29 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-Date: Thu, 15 Oct 2009 22:04:14 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-References: <200910152137.58164.IvDoorn@gmail.com>
-In-Reply-To: <200910152137.58164.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <200910152204.16407.IvDoorn@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:63603 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933895AbZJGSMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 14:12:54 -0400
+Subject: Re: linux-next: Tree for October 7 (libertas build failure)
+From: Dan Williams <dcbw@redhat.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	libertas-dev@lists.infradead.org,
+	Holger Schurig <hs4233@mail.mn-solutions.de>
+In-Reply-To: <20091007105210.409a1991.randy.dunlap@oracle.com>
+References: <20091007173517.abfcfa2a.sfr@canb.auug.org.au>
+	 <20091007105210.409a1991.randy.dunlap@oracle.com>
+Content-Type: text/plain
+Date: Wed, 07 Oct 2009 11:12:00 -0700
+Message-Id: <1254939120.16001.45.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for the rt2860/rt3090 chipsets from Ralink.
+On Wed, 2009-10-07 at 10:52 -0700, Randy Dunlap wrote:
+> On Wed, 7 Oct 2009 17:35:17 +1100 Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20091006:
+> 
+> 
+> drivers/built-in.o: In function `lbs_cfg_free':
+> (.text+0x3479e0): undefined reference to `wiphy_unregister'
+> drivers/built-in.o: In function `lbs_cfg_free':
+> (.text+0x3479e7): undefined reference to `wiphy_free'
+> drivers/built-in.o: In function `lbs_cfg_register':
+> (.text+0x347a52): undefined reference to `wiphy_register'
+> drivers/built-in.o: In function `lbs_cfg_alloc':
+> (.text+0x347acf): undefined reference to `wiphy_new'
 
-Includes various patches from a lot of people who helped
-getting this driver into the current shape.
+Holger, perhaps we need some Kconfig updates to select cfg80211?
 
-Signed-off-by: Alban Browaeys <prahal@yahoo.com>
-Signed-off-by: Benoit PAPILLAULT <benoit.papillault@free.fr>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Luis Correia <luis.f.correia@gmail.com>
-Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
-Signed-off-by: Mark Asselstine <asselsm@gmail.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
-http://kernel.org/pub/linux/kernel/people/ivd/patches/0003-rt2x00-Implement-support-for-rt2800pci.patch
+Dan
+
+
