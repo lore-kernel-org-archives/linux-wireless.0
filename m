@@ -1,1026 +1,538 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pool-03dd6.externet.hu ([88.209.233.213]:40156 "EHLO
-	linux-c2pm.site" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752621AbZJYP1g (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:53318 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933517AbZJGB55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Oct 2009 11:27:36 -0400
-From: =?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
-To: John Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mark Huijgen <mark@huijgen.tk>
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] b43: LP-PHY: Begin implementing calibration & software RFKILL support
-Date: Sun, 25 Oct 2009 16:22:53 +0100
-Message-Id: <1256484173-30378-1-git-send-email-netrolller.3d@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Oct 2009 21:57:57 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2] libertas: Use lbs_is_cmd_allowed() check in command handling routines.
+Date: Tue,  6 Oct 2009 19:20:28 -0700
+Message-Id: <1254882028-26154-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This implements the following calibration functions:
--Set TX IQCC
--Set TX Power by Index
--PR41573 workaround (incomplete, needs PHY reset)
--Calc RX IQ Comp
--PHY Cordic
--Run Samples
--Start/Stop TX Tone
--part of PAPD Cal TX Power
--RX I/Q Calibration
--The basic structure of the periodic calibration wrapper
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Software RFKILL (required by calibration) is also implemented in
-this round.
+lbs_is_cmd_allowed() check is added in __lbs_cmd_async() and
+lbs_prepare_and_send_command(). The check is removed from other places.
 
-Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-Michael, could you please do the PHY reset part? I can't seem to
-understand its relationship to wireless_core_reset... also, it's
-heavily ssb-speak, which I am not good at.
+ drivers/net/wireless/libertas/cmd.c     |   34 ++++++++
+ drivers/net/wireless/libertas/debugfs.c |   46 -----------
+ drivers/net/wireless/libertas/decl.h    |    1 -
+ drivers/net/wireless/libertas/scan.c    |   11 ---
+ drivers/net/wireless/libertas/wext.c    |  133 -------------------------------
+ 5 files changed, 34 insertions(+), 191 deletions(-)
 
- drivers/net/wireless/b43/phy_lp.c |  783 ++++++++++++++++++++++++++++++-------
- drivers/net/wireless/b43/phy_lp.h |   11 +-
- 2 files changed, 658 insertions(+), 136 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index 07d9d03..9dcb39c 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -67,6 +67,7 @@ static void b43_lpphy_op_prepare_structs(struct b43_wldev *dev)
- 	struct b43_phy_lp *lpphy = phy->lp;
- 
- 	memset(lpphy, 0, sizeof(*lpphy));
-+	lpphy->antenna = B43_ANTENNA_DEFAULT;
- 
- 	//TODO
- }
-@@ -379,8 +380,6 @@ static void lpphy_save_dig_flt_state(struct b43_wldev *dev)
- 	}
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 3a3e894..0fb3125 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -75,6 +75,30 @@ static u8 is_command_allowed_in_ps(u16 cmd)
  }
  
--/* lpphy_restore_dig_flt_state is unused but kept as a reference */
--#if 0
- static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
- {
- 	static const u16 addr[] = {
-@@ -401,7 +400,6 @@ static void lpphy_restore_dig_flt_state(struct b43_wldev *dev)
- 	for (i = 0; i < ARRAY_SIZE(addr); i++)
- 		b43_phy_write(dev, addr[i], lpphy->dig_flt_state[i]);
- }
--#endif
- 
- static void lpphy_baseband_rev2plus_init(struct b43_wldev *dev)
- {
-@@ -754,11 +752,17 @@ static void lpphy_clear_deaf(struct b43_wldev *dev, bool user)
- 	}
- }
- 
-+static void lpphy_set_trsw_over(struct b43_wldev *dev, bool tx, bool rx)
-+{
-+	u16 trsw = (tx << 1) | rx;
-+	b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, trsw);
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
-+}
+ /**
++ *  @brief This function checks if the command is allowed.
++ *
++ *  @param priv         A pointer to lbs_private structure
++ *  @return             allowed or not allowed.
++ */
 +
- static void lpphy_disable_crs(struct b43_wldev *dev, bool user)
- {
- 	lpphy_set_deaf(dev, user);
--	b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x1);
--	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
-+	lpphy_set_trsw_over(dev, false, true);
- 	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFB);
- 	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x4);
- 	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFF7);
-@@ -793,6 +797,60 @@ static void lpphy_restore_crs(struct b43_wldev *dev, bool user)
- 
- struct lpphy_tx_gains { u16 gm, pga, pad, dac; };
- 
-+static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
++static int lbs_is_cmd_allowed(struct lbs_private *priv)
 +{
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFEF);
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFBF);
-+	if (dev->phy.rev >= 2) {
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
-+			b43_phy_mask(dev, B43_PHY_OFDM(0xE5), 0xFFF7);
++	int ret = 1;
++
++	lbs_deb_enter(LBS_DEB_CMD);
++
++	if (!priv->is_auto_deep_sleep_enabled) {
++		if (priv->is_deep_sleep) {
++			lbs_deb_cmd("command not allowed in deep sleep\n");
++			ret = 0;
 +		}
-+	} else {
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
 +	}
++
++	lbs_deb_leave(LBS_DEB_CMD);
++	return ret;
 +}
 +
-+static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
-+{
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1);
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x40);
-+	if (dev->phy.rev >= 2) {
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
-+		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
-+			b43_phy_set(dev, B43_PHY_OFDM(0xE5), 0x8);
-+		}
-+	} else {
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x200);
-+	}
-+}
-+
-+static void lpphy_disable_tx_gain_override(struct b43_wldev *dev)
-+{
-+	if (dev->phy.rev < 2)
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
-+	else {
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFF7F);
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xBFFF);
-+	}
-+	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFBF);
-+}
-+
-+static void lpphy_enable_tx_gain_override(struct b43_wldev *dev)
-+{
-+	if (dev->phy.rev < 2)
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
-+	else {
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x80);
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x4000);
-+	}
-+	b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 0x40);
-+}
-+
- static struct lpphy_tx_gains lpphy_get_tx_gains(struct b43_wldev *dev)
- {
- 	struct lpphy_tx_gains gains;
-@@ -822,6 +880,17 @@ static void lpphy_set_dac_gain(struct b43_wldev *dev, u16 dac)
- 	b43_phy_maskset(dev, B43_LPPHY_AFE_DAC_CTL, 0xF000, ctl);
- }
- 
-+static u16 lpphy_get_pa_gain(struct b43_wldev *dev)
-+{
-+	return b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x7F;
-+}
-+
-+static void lpphy_set_pa_gain(struct b43_wldev *dev, u16 gain)
-+{
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0xFB), 0xE03F, gain << 6);
-+	b43_phy_maskset(dev, B43_PHY_OFDM(0xFD), 0x80FF, gain << 8);
-+}
-+
- static void lpphy_set_tx_gains(struct b43_wldev *dev,
- 			       struct lpphy_tx_gains gains)
- {
-@@ -832,25 +901,22 @@ static void lpphy_set_tx_gains(struct b43_wldev *dev,
- 		b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
- 				0xF800, rf_gain);
- 	} else {
--		pa_gain = b43_phy_read(dev, B43_PHY_OFDM(0xFB)) & 0x1FC0;
--		pa_gain <<= 2;
-+		pa_gain = lpphy_get_pa_gain(dev);
- 		b43_phy_write(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
- 			      (gains.pga << 8) | gains.gm);
-+		/*
-+		 * SPEC FIXME The spec calls for (pa_gain << 8) here, but that
-+		 * conflicts with the spec for set_pa_gain! Vendor driver bug?
-+		 */
- 		b43_phy_maskset(dev, B43_PHY_OFDM(0xFB),
--				0x8000, gains.pad | pa_gain);
-+				0x8000, gains.pad | (pa_gain << 6));
- 		b43_phy_write(dev, B43_PHY_OFDM(0xFC),
- 			      (gains.pga << 8) | gains.gm);
- 		b43_phy_maskset(dev, B43_PHY_OFDM(0xFD),
--				0x8000, gains.pad | pa_gain);
-+				0x8000, gains.pad | (pa_gain << 8));
++/**
+  *  @brief Updates the hardware details like MAC address and regulatory region
+  *
+  *  @param priv    	A pointer to struct lbs_private structure
+@@ -1452,6 +1476,11 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 		goto done;
  	}
- 	lpphy_set_dac_gain(dev, gains.dac);
--	if (dev->phy.rev < 2) {
--		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF, 1 << 8);
--	} else {
--		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFF7F, 1 << 7);
--		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_2, 0xBFFF, 1 << 14);
+ 
++	if (!lbs_is_cmd_allowed(priv)) {
++		ret = -EBUSY;
++		goto done;
++	}
++
+ 	cmdnode = lbs_get_cmd_ctrl_node(priv);
+ 
+ 	if (cmdnode == NULL) {
+@@ -2104,6 +2133,11 @@ static struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+ 		goto done;
+ 	}
+ 
++	if (!lbs_is_cmd_allowed(priv)) {
++		cmdnode = ERR_PTR(-EBUSY);
++		goto done;
++	}
++
+ 	cmdnode = lbs_get_cmd_ctrl_node(priv);
+ 	if (cmdnode == NULL) {
+ 		lbs_deb_host("PREP_CMD: cmdnode is NULL\n");
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 8a7e931..893a55c 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -117,11 +117,6 @@ static ssize_t lbs_sleepparams_write(struct file *file,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out_unlock;
 -	}
--	b43_phy_maskset(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFBF, 1 << 6);
-+	lpphy_enable_tx_gain_override(dev);
+-
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, user_buf, buf_size)) {
+ 		ret = -EFAULT;
+@@ -162,11 +157,6 @@ static ssize_t lbs_sleepparams_read(struct file *file, char __user *userbuf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out_unlock;
+-	}
+-
+ 	ret = lbs_cmd_802_11_sleep_params(priv, CMD_ACT_GET, &sp);
+ 	if (ret)
+ 		goto out_unlock;
+@@ -233,9 +223,6 @@ static ssize_t lbs_threshold_read(uint16_t tlv_type, uint16_t event_mask,
+ 	u8 freq;
+ 	int events = 0;
+ 
+-	if (!lbs_is_cmd_allowed(priv))
+-		return -EBUSY;
+-
+ 	buf = (char *)get_zeroed_page(GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+@@ -288,9 +275,6 @@ static ssize_t lbs_threshold_write(uint16_t tlv_type, uint16_t event_mask,
+ 	char *buf;
+ 	int ret;
+ 
+-	if (!lbs_is_cmd_allowed(priv))
+-		return -EBUSY;
+-
+ 	buf = (char *)get_zeroed_page(GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+@@ -460,11 +444,6 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		free_page(addr);
+-		return -EBUSY;
+-	}
+-
+ 	offval.offset = priv->mac_offset;
+ 	offval.value = 0;
+ 
+@@ -517,11 +496,6 @@ static ssize_t lbs_wrmac_write(struct file *file,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		res = -EBUSY;
+-		goto out_unlock;
+-	}
+-
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+ 		res = -EFAULT;
+@@ -558,11 +532,6 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		free_page(addr);
+-		return -EBUSY;
+-	}
+-
+ 	offval.offset = priv->bbp_offset;
+ 	offval.value = 0;
+ 
+@@ -616,11 +585,6 @@ static ssize_t lbs_wrbbp_write(struct file *file,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		res = -EBUSY;
+-		goto out_unlock;
+-	}
+-
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+ 		res = -EFAULT;
+@@ -657,11 +621,6 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		free_page(addr);
+-		return -EBUSY;
+-	}
+-
+ 	offval.offset = priv->rf_offset;
+ 	offval.value = 0;
+ 
+@@ -715,11 +674,6 @@ static ssize_t lbs_wrrf_write(struct file *file,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		res = -EBUSY;
+-		goto out_unlock;
+-	}
+-
+ 	buf_size = min(count, len - 1);
+ 	if (copy_from_user(buf, userbuf, buf_size)) {
+ 		res = -EFAULT;
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index 44f0b24..fb91c36 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -34,7 +34,6 @@ int lbs_process_event(struct lbs_private *priv, u32 event);
+ void lbs_queue_event(struct lbs_private *priv, u32 event);
+ void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
+ int lbs_set_deep_sleep(struct lbs_private *priv, int deep_sleep);
+-int lbs_is_cmd_allowed(struct lbs_private *priv);
+ int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
+ int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
+ 
+diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
+index e468e15..6c95af3 100644
+--- a/drivers/net/wireless/libertas/scan.c
++++ b/drivers/net/wireless/libertas/scan.c
+@@ -950,11 +950,6 @@ int lbs_set_scan(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (!priv->radio_on) {
+ 		ret = -EINVAL;
+ 		goto out;
+@@ -1022,12 +1017,6 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		err = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", err);
+-		return err;
+-	}
+-
+ 	/* iwlist should wait until the current scan is finished */
+ 	if (priv->scan_channel)
+ 		return -EAGAIN;
+diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
+index 38a451e..69dd19b 100644
+--- a/drivers/net/wireless/libertas/wext.c
++++ b/drivers/net/wireless/libertas/wext.c
+@@ -46,32 +46,6 @@ static inline void lbs_cancel_association_work(struct lbs_private *priv)
  }
  
- static void lpphy_rev0_1_set_rx_gain(struct b43_wldev *dev, u32 gain)
-@@ -890,41 +956,6 @@ static void lpphy_rev2plus_set_rx_gain(struct b43_wldev *dev, u32 gain)
- 	}
- }
- 
--/* lpphy_disable_rx_gain_override is unused but kept as a reference */
--#if 0
--static void lpphy_disable_rx_gain_override(struct b43_wldev *dev)
+ /**
+- *  @brief This function checks if the command is allowed.
+- *
+- *  @param priv         A pointer to lbs_private structure
+- *  @return             allowed or not allowed.
+- */
+-
+-int lbs_is_cmd_allowed(struct lbs_private *priv)
 -{
--	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFE);
--	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFEF);
--	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFBF);
--	if (dev->phy.rev >= 2) {
--		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFEFF);
--		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFBFF);
--			b43_phy_mask(dev, B43_PHY_OFDM(0xE5), 0xFFF7);
+-	int         ret = 1;
+-
+-	lbs_deb_enter(LBS_DEB_WEXT);
+-
+-	if (!priv->is_auto_deep_sleep_enabled) {
+-		if (priv->is_deep_sleep) {
+-			lbs_deb_wext("IOCTLS called when station"
+-					"is in deep sleep\n");
+-			ret = 0;
 -		}
--	} else {
--		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFDFF);
--	}
--}
--#endif
--
--static void lpphy_enable_rx_gain_override(struct b43_wldev *dev)
--{
--	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1);
--	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x10);
--	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x40);
--	if (dev->phy.rev >= 2) {
--		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x100);
--		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x400);
--			b43_phy_set(dev, B43_PHY_OFDM(0xE5), 0x8);
--		}
--	} else {
--		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x200);
--	}
--}
--
- static void lpphy_set_rx_gain(struct b43_wldev *dev, u32 gain)
- {
- 	if (dev->phy.rev < 2)
-@@ -1009,8 +1040,7 @@ static int lpphy_loopback(struct b43_wldev *dev)
- 
- 	memset(&iq_est, 0, sizeof(iq_est));
- 
--	b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xFFFC, 0x3);
--	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x3);
-+	lpphy_set_trsw_over(dev, true, true);
- 	b43_phy_set(dev, B43_LPPHY_AFE_CTL_OVR, 1);
- 	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFFE);
- 	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x800);
-@@ -1132,7 +1162,7 @@ static void lpphy_set_tx_power_control(struct b43_wldev *dev,
- 			b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_NNUM,
- 					0x8FFF, ((u16)lpphy->tssi_npt << 16));
- 			//TODO Set "TSSI Transmit Count" variable to total transmitted frame count
--			//TODO Disable TX gain override
-+			lpphy_disable_tx_gain_override(dev);
- 			lpphy->tx_pwr_idx_over = -1;
- 		}
- 	}
-@@ -1318,15 +1348,73 @@ static void lpphy_calibrate_rc(struct b43_wldev *dev)
- 	}
- }
- 
-+static void b43_lpphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
-+{
-+	if (dev->phy.rev >= 2)
-+		return; // rev2+ doesn't support antenna diversity
-+
-+	if (B43_WARN_ON(antenna > B43_ANTENNA_AUTO1))
-+		return;
-+
-+	b43_hf_write(dev, b43_hf_read(dev) & ~B43_HF_ANTDIVHELP);
-+
-+	b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFFD, antenna & 0x2);
-+	b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFFE, antenna & 0x1);
-+
-+	b43_hf_write(dev, b43_hf_read(dev) | B43_HF_ANTDIVHELP);
-+
-+	dev->phy.lp->antenna = antenna;
-+}
-+
-+static void lpphy_set_tx_iqcc(struct b43_wldev *dev, u16 a, u16 b)
-+{
-+	u16 tmp[2];
-+
-+	tmp[0] = a;
-+	tmp[1] = b;
-+	b43_lptab_write_bulk(dev, B43_LPTAB16(0, 80), 2, tmp);
-+}
-+
- static void lpphy_set_tx_power_by_index(struct b43_wldev *dev, u8 index)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	struct lpphy_tx_gains gains;
-+	u32 iq_comp, tx_gain, coeff, rf_power;
- 
- 	lpphy->tx_pwr_idx_over = index;
-+	lpphy_read_tx_pctl_mode_from_hardware(dev);
- 	if (lpphy->txpctl_mode != B43_LPPHY_TXPCTL_OFF)
- 		lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_SW);
--
--	//TODO
-+	if (dev->phy.rev >= 2) {
-+		iq_comp = b43_lptab_read(dev, B43_LPTAB32(7, index + 320));
-+		tx_gain = b43_lptab_read(dev, B43_LPTAB32(7, index + 192));
-+		gains.pad = (tx_gain >> 16) & 0xFF;
-+		gains.gm = tx_gain & 0xFF;
-+		gains.pga = (tx_gain >> 8) & 0xFF;
-+		gains.dac = (iq_comp >> 28) & 0xFF;
-+		lpphy_set_tx_gains(dev, gains);
-+	} else {
-+		iq_comp = b43_lptab_read(dev, B43_LPTAB32(10, index + 320));
-+		tx_gain = b43_lptab_read(dev, B43_LPTAB32(10, index + 192));
-+		b43_phy_maskset(dev, B43_LPPHY_TX_GAIN_CTL_OVERRIDE_VAL,
-+				0xF800, (tx_gain >> 4) & 0x7FFF);
-+		lpphy_set_dac_gain(dev, tx_gain & 0x7);
-+		lpphy_set_pa_gain(dev, (tx_gain >> 24) & 0x7F);
-+	}
-+	lpphy_set_bb_mult(dev, (iq_comp >> 20) & 0xFF);
-+	lpphy_set_tx_iqcc(dev, (iq_comp >> 10) & 0x3FF, iq_comp & 0x3FF);
-+	if (dev->phy.rev >= 2) {
-+		coeff = b43_lptab_read(dev, B43_LPTAB32(7, index + 448));
-+	} else {
-+		coeff = b43_lptab_read(dev, B43_LPTAB32(10, index + 448));
-+	}
-+	b43_lptab_write(dev, B43_LPTAB16(0, 85), coeff & 0xFFFF);
-+	if (dev->phy.rev >= 2) {
-+		rf_power = b43_lptab_read(dev, B43_LPTAB32(7, index + 576));
-+		b43_phy_maskset(dev, B43_LPPHY_RF_PWR_OVERRIDE, 0xFF00,
-+				rf_power & 0xFFFF);//SPEC FIXME mask & set != 0
-+	}
-+	lpphy_enable_tx_gain_override(dev);
- }
- 
- static void lpphy_btcoex_override(struct b43_wldev *dev)
-@@ -1335,58 +1423,45 @@ static void lpphy_btcoex_override(struct b43_wldev *dev)
- 	b43_write16(dev, B43_MMIO_BTCOEX_TXCTL, 0xFF);
- }
- 
--static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-+static void b43_lpphy_op_software_rfkill(struct b43_wldev *dev,
-+					 bool blocked)
- {
--	struct b43_phy_lp *lpphy = dev->phy.lp;
--	u32 *saved_tab;
--	const unsigned int saved_tab_size = 256;
--	enum b43_lpphy_txpctl_mode txpctl_mode;
--	s8 tx_pwr_idx_over;
--	u16 tssi_npt, tssi_idx;
--
--	saved_tab = kcalloc(saved_tab_size, sizeof(saved_tab[0]), GFP_KERNEL);
--	if (!saved_tab) {
--		b43err(dev->wl, "PR41573 failed. Out of memory!\n");
--		return;
 -	}
 -
--	lpphy_read_tx_pctl_mode_from_hardware(dev);
--	txpctl_mode = lpphy->txpctl_mode;
--	tx_pwr_idx_over = lpphy->tx_pwr_idx_over;
--	tssi_npt = lpphy->tssi_npt;
--	tssi_idx = lpphy->tssi_idx;
--
--	if (dev->phy.rev < 2) {
--		b43_lptab_read_bulk(dev, B43_LPTAB32(10, 0x140),
--				    saved_tab_size, saved_tab);
-+	//TODO check MAC control register
-+	if (blocked) {
-+		if (dev->phy.rev >= 2) {
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0x83FF);
-+			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1F00);
-+			b43_phy_mask(dev, B43_LPPHY_AFE_DDFS, 0x80FF);
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2_VAL, 0xDFFF);
-+			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x0808);
-+		} else {
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0xE0FF);
-+			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x1F00);
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2_VAL, 0xFCFF);
-+			b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_2, 0x0018);
-+		}
- 	} else {
--		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
--				    saved_tab_size, saved_tab);
-+		b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xE0FF);
-+		if (dev->phy.rev >= 2)
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xF7F7);
-+		else
-+			b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_2, 0xFFE7);
- 	}
--	//TODO
--
--	kfree(saved_tab);
- }
- 
--static void lpphy_calibration(struct b43_wldev *dev)
-+/* This was previously called lpphy_japan_filter */
-+static void lpphy_set_analog_filter(struct b43_wldev *dev, int channel)
- {
- 	struct b43_phy_lp *lpphy = dev->phy.lp;
--	enum b43_lpphy_txpctl_mode saved_pctl_mode;
--
--	b43_mac_suspend(dev);
--
--	lpphy_btcoex_override(dev);
--	lpphy_read_tx_pctl_mode_from_hardware(dev);
--	saved_pctl_mode = lpphy->txpctl_mode;
--	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
--	//TODO Perform transmit power table I/Q LO calibration
--	if ((dev->phy.rev == 0) && (saved_pctl_mode != B43_LPPHY_TXPCTL_OFF))
--		lpphy_pr41573_workaround(dev);
--	//TODO If a full calibration has not been performed on this channel yet, perform PAPD TX-power calibration
--	lpphy_set_tx_power_control(dev, saved_pctl_mode);
--	//TODO Perform I/Q calibration with a single control value set
-+	u16 tmp = (channel == 14); //SPEC FIXME check japanwidefilter!
- 
--	b43_mac_enable(dev);
-+	if (dev->phy.rev < 2) { //SPEC FIXME Isn't this rev0/1-specific?
-+		b43_phy_maskset(dev, B43_LPPHY_LP_PHY_CTL, 0xFCFF, tmp << 9);
-+		if ((dev->phy.rev == 1) && (lpphy->rc_cap))
-+			lpphy_set_rc_cap(dev);
-+	} else {
-+		b43_radio_write(dev, B2063_TX_BB_SP3, 0x3F);
-+	}
- }
- 
- static void lpphy_set_tssi_mux(struct b43_wldev *dev, enum tssi_mux_mode mode)
-@@ -1495,6 +1570,473 @@ static void lpphy_tx_pctl_init(struct b43_wldev *dev)
- 	}
- }
- 
-+static void lpphy_pr41573_workaround(struct b43_wldev *dev)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	u32 *saved_tab;
-+	const unsigned int saved_tab_size = 256;
-+	enum b43_lpphy_txpctl_mode txpctl_mode;
-+	s8 tx_pwr_idx_over;
-+	u16 tssi_npt, tssi_idx;
-+
-+	saved_tab = kcalloc(saved_tab_size, sizeof(saved_tab[0]), GFP_KERNEL);
-+	if (!saved_tab) {
-+		b43err(dev->wl, "PR41573 failed. Out of memory!\n");
-+		return;
-+	}
-+
-+	lpphy_read_tx_pctl_mode_from_hardware(dev);
-+	txpctl_mode = lpphy->txpctl_mode;
-+	tx_pwr_idx_over = lpphy->tx_pwr_idx_over;
-+	tssi_npt = lpphy->tssi_npt;
-+	tssi_idx = lpphy->tssi_idx;
-+
-+	if (dev->phy.rev < 2) {
-+		b43_lptab_read_bulk(dev, B43_LPTAB32(10, 0x140),
-+				    saved_tab_size, saved_tab);
-+	} else {
-+		b43_lptab_read_bulk(dev, B43_LPTAB32(7, 0x140),
-+				    saved_tab_size, saved_tab);
-+	}
-+	//FIXME PHY reset
-+	lpphy_table_init(dev); //FIXME is table init needed?
-+	lpphy_baseband_init(dev);
-+	lpphy_tx_pctl_init(dev);
-+	b43_lpphy_op_software_rfkill(dev, false);
-+	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
-+	if (dev->phy.rev < 2) {
-+		b43_lptab_write_bulk(dev, B43_LPTAB32(10, 0x140),
-+				     saved_tab_size, saved_tab);
-+	} else {
-+		b43_lptab_write_bulk(dev, B43_LPTAB32(7, 0x140),
-+				     saved_tab_size, saved_tab);
-+	}
-+	b43_write16(dev, B43_MMIO_CHANNEL, lpphy->channel);
-+	lpphy->tssi_npt = tssi_npt;
-+	lpphy->tssi_idx = tssi_idx;
-+	lpphy_set_analog_filter(dev, lpphy->channel);
-+	if (tx_pwr_idx_over != -1)
-+		lpphy_set_tx_power_by_index(dev, tx_pwr_idx_over);
-+	if (lpphy->rc_cap)
-+		lpphy_set_rc_cap(dev);
-+	b43_lpphy_op_set_rx_antenna(dev, lpphy->antenna);
-+	lpphy_set_tx_power_control(dev, txpctl_mode);
-+	kfree(saved_tab);
-+}
-+
-+struct lpphy_rx_iq_comp { u8 chan; s8 c1, c0; };
-+
-+static const struct lpphy_rx_iq_comp lpphy_5354_iq_table[] = {
-+	{ .chan = 1, .c1 = -66, .c0 = 15, },
-+	{ .chan = 2, .c1 = -66, .c0 = 15, },
-+	{ .chan = 3, .c1 = -66, .c0 = 15, },
-+	{ .chan = 4, .c1 = -66, .c0 = 15, },
-+	{ .chan = 5, .c1 = -66, .c0 = 15, },
-+	{ .chan = 6, .c1 = -66, .c0 = 15, },
-+	{ .chan = 7, .c1 = -66, .c0 = 14, },
-+	{ .chan = 8, .c1 = -66, .c0 = 14, },
-+	{ .chan = 9, .c1 = -66, .c0 = 14, },
-+	{ .chan = 10, .c1 = -66, .c0 = 14, },
-+	{ .chan = 11, .c1 = -66, .c0 = 14, },
-+	{ .chan = 12, .c1 = -66, .c0 = 13, },
-+	{ .chan = 13, .c1 = -66, .c0 = 13, },
-+	{ .chan = 14, .c1 = -66, .c0 = 13, },
-+};
-+
-+static const struct lpphy_rx_iq_comp lpphy_rev0_1_iq_table[] = {
-+	{ .chan = 1, .c1 = -64, .c0 = 13, },
-+	{ .chan = 2, .c1 = -64, .c0 = 13, },
-+	{ .chan = 3, .c1 = -64, .c0 = 13, },
-+	{ .chan = 4, .c1 = -64, .c0 = 13, },
-+	{ .chan = 5, .c1 = -64, .c0 = 12, },
-+	{ .chan = 6, .c1 = -64, .c0 = 12, },
-+	{ .chan = 7, .c1 = -64, .c0 = 12, },
-+	{ .chan = 8, .c1 = -64, .c0 = 12, },
-+	{ .chan = 9, .c1 = -64, .c0 = 12, },
-+	{ .chan = 10, .c1 = -64, .c0 = 11, },
-+	{ .chan = 11, .c1 = -64, .c0 = 11, },
-+	{ .chan = 12, .c1 = -64, .c0 = 11, },
-+	{ .chan = 13, .c1 = -64, .c0 = 11, },
-+	{ .chan = 14, .c1 = -64, .c0 = 10, },
-+	{ .chan = 34, .c1 = -62, .c0 = 24, },
-+	{ .chan = 38, .c1 = -62, .c0 = 24, },
-+	{ .chan = 42, .c1 = -62, .c0 = 24, },
-+	{ .chan = 46, .c1 = -62, .c0 = 23, },
-+	{ .chan = 36, .c1 = -62, .c0 = 24, },
-+	{ .chan = 40, .c1 = -62, .c0 = 24, },
-+	{ .chan = 44, .c1 = -62, .c0 = 23, },
-+	{ .chan = 48, .c1 = -62, .c0 = 23, },
-+	{ .chan = 52, .c1 = -62, .c0 = 23, },
-+	{ .chan = 56, .c1 = -62, .c0 = 22, },
-+	{ .chan = 60, .c1 = -62, .c0 = 22, },
-+	{ .chan = 64, .c1 = -62, .c0 = 22, },
-+	{ .chan = 100, .c1 = -62, .c0 = 16, },
-+	{ .chan = 104, .c1 = -62, .c0 = 16, },
-+	{ .chan = 108, .c1 = -62, .c0 = 15, },
-+	{ .chan = 112, .c1 = -62, .c0 = 14, },
-+	{ .chan = 116, .c1 = -62, .c0 = 14, },
-+	{ .chan = 120, .c1 = -62, .c0 = 13, },
-+	{ .chan = 124, .c1 = -62, .c0 = 12, },
-+	{ .chan = 128, .c1 = -62, .c0 = 12, },
-+	{ .chan = 132, .c1 = -62, .c0 = 12, },
-+	{ .chan = 136, .c1 = -62, .c0 = 11, },
-+	{ .chan = 140, .c1 = -62, .c0 = 10, },
-+	{ .chan = 149, .c1 = -61, .c0 = 9, },
-+	{ .chan = 153, .c1 = -61, .c0 = 9, },
-+	{ .chan = 157, .c1 = -61, .c0 = 9, },
-+	{ .chan = 161, .c1 = -61, .c0 = 8, },
-+	{ .chan = 165, .c1 = -61, .c0 = 8, },
-+	{ .chan = 184, .c1 = -62, .c0 = 25, },
-+	{ .chan = 188, .c1 = -62, .c0 = 25, },
-+	{ .chan = 192, .c1 = -62, .c0 = 25, },
-+	{ .chan = 196, .c1 = -62, .c0 = 25, },
-+	{ .chan = 200, .c1 = -62, .c0 = 25, },
-+	{ .chan = 204, .c1 = -62, .c0 = 25, },
-+	{ .chan = 208, .c1 = -62, .c0 = 25, },
-+	{ .chan = 212, .c1 = -62, .c0 = 25, },
-+	{ .chan = 216, .c1 = -62, .c0 = 26, },
-+};
-+
-+static const struct lpphy_rx_iq_comp lpphy_rev2plus_iq_comp = {
-+	.chan = 0,
-+	.c1 = -64,
-+	.c0 = 0,
-+};
-+
-+static u8 lpphy_nbits(s32 val)
-+{
-+	u32 tmp = abs(val);
-+	u8 nbits = 0;
-+
-+	while (tmp != 0) {
-+		nbits++;
-+		tmp >>= 1;
-+	}
-+
-+	return nbits;
-+}
-+
-+static int lpphy_calc_rx_iq_comp(struct b43_wldev *dev, u16 samples)
-+{
-+	struct lpphy_iq_est iq_est;
-+	u16 c0, c1;
-+	int prod, ipwr, qpwr, prod_msb, q_msb, tmp1, tmp2, tmp3, tmp4, ret;
-+
-+	c1 = b43_phy_read(dev, B43_LPPHY_RX_COMP_COEFF_S);
-+	c0 = c1 >> 8;
-+	c1 |= 0xFF;
-+
-+	b43_phy_maskset(dev, B43_LPPHY_RX_COMP_COEFF_S, 0xFF00, 0x00C0);
-+	b43_phy_mask(dev, B43_LPPHY_RX_COMP_COEFF_S, 0x00FF);
-+
-+	ret = lpphy_rx_iq_est(dev, samples, 32, &iq_est);
-+	if (!ret)
-+		goto out;
-+
-+	prod = iq_est.iq_prod;
-+	ipwr = iq_est.i_pwr;
-+	qpwr = iq_est.q_pwr;
-+
-+	if (ipwr + qpwr < 2) {
-+		ret = 0;
-+		goto out;
-+	}
-+
-+	prod_msb = lpphy_nbits(prod);
-+	q_msb = lpphy_nbits(qpwr);
-+	tmp1 = prod_msb - 20;
-+
-+	if (tmp1 >= 0) {
-+		tmp3 = ((prod << (30 - prod_msb)) + (ipwr >> (1 + tmp1))) /
-+			(ipwr >> tmp1);
-+	} else {
-+		tmp3 = ((prod << (30 - prod_msb)) + (ipwr << (-1 - tmp1))) /
-+			(ipwr << -tmp1);
-+	}
-+
-+	tmp2 = q_msb - 11;
-+
-+	if (tmp2 >= 0)
-+		tmp4 = (qpwr << (31 - q_msb)) / (ipwr >> tmp2);
-+	else
-+		tmp4 = (qpwr << (31 - q_msb)) / (ipwr << -tmp2);
-+
-+	tmp4 -= tmp3 * tmp3;
-+	tmp4 = -int_sqrt(tmp4);
-+
-+	c0 = tmp3 >> 3;
-+	c1 = tmp4 >> 4;
-+
-+out:
-+	b43_phy_maskset(dev, B43_LPPHY_RX_COMP_COEFF_S, 0xFF00, c1);
-+	b43_phy_maskset(dev, B43_LPPHY_RX_COMP_COEFF_S, 0x00FF, c0 << 8);
-+	return ret;
-+}
-+
-+/* Complex number using 2 32-bit signed integers */
-+typedef struct {s32 i, q;} lpphy_c32;
-+
-+static lpphy_c32 lpphy_cordic(int theta)
-+{
-+	u32 arctg[] = { 2949120, 1740967, 919879, 466945, 234379, 117304,
-+		      58666, 29335, 14668, 7334, 3667, 1833, 917, 458,
-+		      229, 115, 57, 29, };
-+	int i, tmp, signx = 1, angle = 0;
-+	lpphy_c32 ret = { .i = 39797, .q = 0, };
-+
-+	theta = clamp_t(int, theta, -180, 180);
-+
-+	if (theta > 90) {
-+		theta -= 180;
-+		signx = -1;
-+	} else if (theta < -90) {
-+		theta += 180;
-+		signx = -1;
-+	}
-+
-+	for (i = 0; i <= 17; i++) {
-+		if (theta > angle) {
-+			tmp = ret.i - (ret.q >> i);
-+			ret.q += ret.i >> i;
-+			ret.i = tmp;
-+			angle += arctg[i];
-+		} else {
-+			tmp = ret.i + (ret.q >> i);
-+			ret.q -= ret.i >> i;
-+			ret.i = tmp;
-+			angle -= arctg[i];
-+		}
-+	}
-+
-+	ret.i *= signx;
-+	ret.q *= signx;
-+
-+	return ret;
-+}
-+
-+static void lpphy_run_samples(struct b43_wldev *dev, u16 samples, u16 loops,
-+			      u16 wait)
-+{
-+	b43_phy_maskset(dev, B43_LPPHY_SMPL_PLAY_BUFFER_CTL,
-+			0xFFC0, samples - 1);
-+	if (loops != 0xFFFF)
-+		loops--;
-+	b43_phy_maskset(dev, B43_LPPHY_SMPL_PLAY_COUNT, 0xF000, loops);
-+	b43_phy_maskset(dev, B43_LPPHY_SMPL_PLAY_BUFFER_CTL, 0x3F, wait << 6);
-+	b43_phy_set(dev, B43_LPPHY_A_PHY_CTL_ADDR, 0x1);
-+}
-+
-+//SPEC FIXME what does a negative freq mean?
-+static void lpphy_start_tx_tone(struct b43_wldev *dev, s32 freq, u16 max)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	u16 buf[64];
-+	int i, samples = 0, angle = 0, rotation = (9 * freq) / 500;
-+	lpphy_c32 sample;
-+
-+	lpphy->tx_tone_freq = freq;
-+
-+	if (freq) {
-+		/* Find i for which abs(freq) integrally divides 20000 * i */
-+		for (i = 1; samples * abs(freq) != 20000 * i; i++) {
-+			samples = (20000 * i) / abs(freq);
-+			if(B43_WARN_ON(samples > 63))
-+				return;
-+		}
-+	} else {
-+		samples = 2;
-+	}
-+
-+	for (i = 0; i < samples; i++) {
-+		sample = lpphy_cordic(angle);
-+		angle += rotation;
-+		buf[i] = ((sample.i * max) & 0xFF) << 8;
-+		buf[i] |= (sample.q * max) & 0xFF;
-+	}
-+
-+	b43_lptab_write_bulk(dev, B43_LPTAB16(5, 0), samples, buf);
-+
-+	lpphy_run_samples(dev, samples, 0xFFFF, 0);
-+}
-+
-+static void lpphy_stop_tx_tone(struct b43_wldev *dev)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	int i;
-+
-+	lpphy->tx_tone_freq = 0;
-+
-+	b43_phy_mask(dev, B43_LPPHY_SMPL_PLAY_COUNT, 0xF000);
-+	for (i = 0; i < 31; i++) {
-+		if (!(b43_phy_read(dev, B43_LPPHY_A_PHY_CTL_ADDR) & 0x1))
-+			break;
-+		udelay(100);
-+	}
-+}
-+
-+
-+static void lpphy_papd_cal(struct b43_wldev *dev, struct lpphy_tx_gains gains,
-+			   int mode, bool useindex, u8 index)
-+{
-+	//TODO
-+}
-+
-+static void lpphy_papd_cal_txpwr(struct b43_wldev *dev)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	struct ssb_bus *bus = dev->dev->bus;
-+	struct lpphy_tx_gains gains, oldgains;
-+	int old_txpctl, old_afe_ovr, old_rf, old_bbmult;
-+
-+	lpphy_read_tx_pctl_mode_from_hardware(dev);
-+	old_txpctl = lpphy->txpctl_mode;
-+	old_afe_ovr = b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40;
-+	if (old_afe_ovr)
-+		oldgains = lpphy_get_tx_gains(dev);
-+	old_rf = b43_phy_read(dev, B43_LPPHY_RF_PWR_OVERRIDE) & 0xFF;
-+	old_bbmult = lpphy_get_bb_mult(dev);
-+
-+	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
-+
-+	if (bus->chip_id == 0x4325 && bus->chip_rev == 0)
-+		lpphy_papd_cal(dev, gains, 0, 1, 30);
-+	else
-+		lpphy_papd_cal(dev, gains, 0, 1, 65);
-+
-+	if (old_afe_ovr)
-+		lpphy_set_tx_gains(dev, oldgains);
-+	lpphy_set_bb_mult(dev, old_bbmult);
-+	lpphy_set_tx_power_control(dev, old_txpctl);
-+	b43_phy_maskset(dev, B43_LPPHY_RF_PWR_OVERRIDE, 0xFF00, old_rf);
-+}
-+
-+static int lpphy_rx_iq_cal(struct b43_wldev *dev, bool noise, bool tx,
-+			    bool rx, bool pa, struct lpphy_tx_gains *gains)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	struct ssb_bus *bus = dev->dev->bus;
-+	const struct lpphy_rx_iq_comp *iqcomp = NULL;
-+	struct lpphy_tx_gains nogains, oldgains;
-+	u16 tmp;
-+	int i, ret;
-+
-+	memset(&nogains, 0, sizeof(nogains));
-+	memset(&oldgains, 0, sizeof(oldgains));
-+
-+	if (bus->chip_id == 0x5354) {
-+		for (i = 0; i < ARRAY_SIZE(lpphy_5354_iq_table); i++) {
-+			if (lpphy_5354_iq_table[i].chan == lpphy->channel) {
-+				iqcomp = &lpphy_5354_iq_table[i];
-+			}
-+		}
-+	} else if (dev->phy.rev >= 2) {
-+		iqcomp = &lpphy_rev2plus_iq_comp;
-+	} else {
-+		for (i = 0; i < ARRAY_SIZE(lpphy_rev0_1_iq_table); i++) {
-+			if (lpphy_rev0_1_iq_table[i].chan == lpphy->channel) {
-+				iqcomp = &lpphy_rev0_1_iq_table[i];
-+			}
-+		}
-+	}
-+
-+	if (B43_WARN_ON(!iqcomp))
-+		return 0;
-+
-+	b43_phy_maskset(dev, B43_LPPHY_RX_COMP_COEFF_S, 0xFF00, iqcomp->c1);
-+	b43_phy_maskset(dev, B43_LPPHY_RX_COMP_COEFF_S,
-+			0x00FF, iqcomp->c0 << 8);
-+
-+	if (noise) {
-+		tx = true;
-+		rx = false;
-+		pa = false;
-+	}
-+
-+	lpphy_set_trsw_over(dev, tx, rx);
-+
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x8);
-+		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0,
-+				0xFFF7, pa << 3);
-+	} else {
-+		b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x20);
-+		b43_phy_maskset(dev, B43_LPPHY_RF_OVERRIDE_VAL_0,
-+				0xFFDF, pa << 5);
-+	}
-+
-+	tmp = b43_phy_read(dev, B43_LPPHY_AFE_CTL_OVR) & 0x40;
-+
-+	if (noise)
-+		lpphy_set_rx_gain(dev, 0x2D5D);
-+	else {
-+		if (tmp)
-+			oldgains = lpphy_get_tx_gains(dev);
-+		if (!gains)
-+			gains = &nogains;
-+		lpphy_set_tx_gains(dev, *gains);
-+	}
-+
-+	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFFE);
-+	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xFFFE);
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_0, 0x800);
-+	b43_phy_set(dev, B43_LPPHY_RF_OVERRIDE_VAL_0, 0x800);
-+	lpphy_set_deaf(dev, false);
-+	if (noise)
-+		ret = lpphy_calc_rx_iq_comp(dev, 0xFFF0);
-+	else {
-+		lpphy_start_tx_tone(dev, 4000, 100);
-+		ret = lpphy_calc_rx_iq_comp(dev, 0x4000);
-+		lpphy_stop_tx_tone(dev);
-+	}
-+	lpphy_clear_deaf(dev, false);
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFFC);
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFF7);
-+	b43_phy_mask(dev, B43_LPPHY_RF_OVERRIDE_0, 0xFFDF);
-+	if (!noise) {
-+		if (tmp)
-+			lpphy_set_tx_gains(dev, oldgains);
-+		else
-+			lpphy_disable_tx_gain_override(dev);
-+	}
-+	lpphy_disable_rx_gain_override(dev);
-+	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVR, 0xFFFE);
-+	b43_phy_mask(dev, B43_LPPHY_AFE_CTL_OVRVAL, 0xF7FF);
-+	return ret;
-+}
-+
-+static void lpphy_calibration(struct b43_wldev *dev)
-+{
-+	struct b43_phy_lp *lpphy = dev->phy.lp;
-+	enum b43_lpphy_txpctl_mode saved_pctl_mode;
-+	bool full_cal = false;
-+
-+	if (lpphy->full_calib_chan != lpphy->channel) {
-+		full_cal = true;
-+		lpphy->full_calib_chan = lpphy->channel;
-+	}
-+
-+	b43_mac_suspend(dev);
-+
-+	lpphy_btcoex_override(dev);
-+	if (dev->phy.rev >= 2)
-+		lpphy_save_dig_flt_state(dev);
-+	lpphy_read_tx_pctl_mode_from_hardware(dev);
-+	saved_pctl_mode = lpphy->txpctl_mode;
-+	lpphy_set_tx_power_control(dev, B43_LPPHY_TXPCTL_OFF);
-+	//TODO Perform transmit power table I/Q LO calibration
-+	if ((dev->phy.rev == 0) && (saved_pctl_mode != B43_LPPHY_TXPCTL_OFF))
-+		lpphy_pr41573_workaround(dev);
-+	if ((dev->phy.rev >= 2) && full_cal) {
-+		lpphy_papd_cal_txpwr(dev);
-+	}
-+	lpphy_set_tx_power_control(dev, saved_pctl_mode);
-+	if (dev->phy.rev >= 2)
-+		lpphy_restore_dig_flt_state(dev);
-+	lpphy_rx_iq_cal(dev, true, true, false, false, NULL);
-+
-+	b43_mac_enable(dev);
-+}
-+
- static u16 b43_lpphy_op_read(struct b43_wldev *dev, u16 reg)
- {
- 	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
-@@ -1539,12 +2081,6 @@ static void b43_lpphy_op_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
- 	b43_write16(dev, B43_MMIO_RADIO_DATA_LOW, value);
- }
- 
--static void b43_lpphy_op_software_rfkill(struct b43_wldev *dev,
--					 bool blocked)
--{
--	//TODO
+-	lbs_deb_leave(LBS_DEB_WEXT);
+-	return ret;
 -}
 -
- struct b206x_channel {
- 	u8 channel;
- 	u16 freq;
-@@ -2010,22 +2546,6 @@ static int lpphy_b2062_tune(struct b43_wldev *dev,
- 	return err;
- }
+-
+-/**
+  *  @brief Find the channel frequency power info with specific channel
+  *
+  *  @param priv 	A pointer to struct lbs_private structure
+@@ -193,11 +167,6 @@ static int lbs_get_freq(struct net_device *dev, struct iw_request_info *info,
  
--
--/* This was previously called lpphy_japan_filter */
--static void lpphy_set_analog_filter(struct b43_wldev *dev, int channel)
--{
--	struct b43_phy_lp *lpphy = dev->phy.lp;
--	u16 tmp = (channel == 14); //SPEC FIXME check japanwidefilter!
--
--	if (dev->phy.rev < 2) { //SPEC FIXME Isn't this rev0/1-specific?
--		b43_phy_maskset(dev, B43_LPPHY_LP_PHY_CTL, 0xFCFF, tmp << 9);
--		if ((dev->phy.rev == 1) && (lpphy->rc_cap))
--			lpphy_set_rc_cap(dev);
--	} else {
--		b43_radio_write(dev, B2063_TX_BB_SP3, 0x3F);
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		lbs_deb_leave(LBS_DEB_WEXT);
+-		return -EBUSY;
 -	}
--}
 -
- static void lpphy_b2063_vco_calib(struct b43_wldev *dev)
- {
- 	u16 tmp;
-@@ -2210,18 +2730,6 @@ static int b43_lpphy_op_init(struct b43_wldev *dev)
- 	return 0;
- }
+ 	cfp = lbs_find_cfp_by_band_and_channel(priv, 0,
+ 					   priv->curbssparams.channel);
  
--static void b43_lpphy_op_set_rx_antenna(struct b43_wldev *dev, int antenna)
--{
--	if (dev->phy.rev >= 2)
--		return; // rev2+ doesn't support antenna diversity
+@@ -308,12 +277,6 @@ static int lbs_set_rts(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
 -
--	if (B43_WARN_ON(antenna > B43_ANTENNA_AUTO1))
--		return;
+ 	if (vwrq->disabled)
+ 		val = MRVDRV_RTS_MAX_VALUE;
+ 
+@@ -335,11 +298,6 @@ static int lbs_get_rts(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
 -
--	b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFFD, antenna & 0x2);
--	b43_phy_maskset(dev, B43_LPPHY_CRSGAIN_CTL, 0xFFFE, antenna & 0x1);
--}
+ 	ret = lbs_get_snmp_mib(priv, SNMP_MIB_OID_RTS_THRESHOLD, &val);
+ 	if (ret)
+ 		goto out;
+@@ -362,12 +320,6 @@ static int lbs_set_frag(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
 -
- static void b43_lpphy_op_adjust_txpower(struct b43_wldev *dev)
- {
- 	//TODO
-@@ -2244,6 +2752,11 @@ void b43_lpphy_op_switch_analog(struct b43_wldev *dev, bool on)
-        }
- }
+ 	if (vwrq->disabled)
+ 		val = MRVDRV_FRAG_MAX_VALUE;
  
-+static void b43_lpphy_op_pwork_15sec(struct b43_wldev *dev)
-+{
-+	//TODO
-+}
-+
- const struct b43_phy_operations b43_phyops_lp = {
- 	.allocate		= b43_lpphy_op_allocate,
- 	.free			= b43_lpphy_op_free,
-@@ -2261,4 +2774,6 @@ const struct b43_phy_operations b43_phyops_lp = {
- 	.set_rx_antenna		= b43_lpphy_op_set_rx_antenna,
- 	.recalc_txpower		= b43_lpphy_op_recalc_txpower,
- 	.adjust_txpower		= b43_lpphy_op_adjust_txpower,
-+	.pwork_15sec		= b43_lpphy_op_pwork_15sec,
-+	.pwork_60sec		= lpphy_calibration,
- };
-diff --git a/drivers/net/wireless/b43/phy_lp.h b/drivers/net/wireless/b43/phy_lp.h
-index c3232c1..62737f7 100644
---- a/drivers/net/wireless/b43/phy_lp.h
-+++ b/drivers/net/wireless/b43/phy_lp.h
-@@ -286,6 +286,7 @@
- #define B43_LPPHY_TR_LOOKUP_6			B43_PHY_OFDM(0xC8) /* TR Lookup 6 */
- #define B43_LPPHY_TR_LOOKUP_7			B43_PHY_OFDM(0xC9) /* TR Lookup 7 */
- #define B43_LPPHY_TR_LOOKUP_8			B43_PHY_OFDM(0xCA) /* TR Lookup 8 */
-+#define B43_LPPHY_RF_PWR_OVERRIDE		B43_PHY_OFDM(0xD3) /* RF power override */
+@@ -389,11 +341,6 @@ static int lbs_get_frag(struct net_device *dev, struct iw_request_info *info,
  
+ 	lbs_deb_enter(LBS_DEB_WEXT);
  
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	ret = lbs_get_snmp_mib(priv, SNMP_MIB_OID_FRAG_THRESHOLD, &val);
+ 	if (ret)
+ 		goto out;
+@@ -443,11 +390,6 @@ static int lbs_get_txpow(struct net_device *dev,
  
-@@ -871,12 +872,12 @@ struct b43_phy_lp {
- 	u8 rssi_gs;
+ 	lbs_deb_enter(LBS_DEB_WEXT);
  
- 	/* RC cap */
--	u8 rc_cap; /* FIXME initial value? */
-+	u8 rc_cap;
- 	/* BX arch */
- 	u8 bx_arch;
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (!priv->radio_on) {
+ 		lbs_deb_wext("tx power off\n");
+ 		vwrq->value = 0;
+@@ -481,11 +423,6 @@ static int lbs_set_retry(struct net_device *dev, struct iw_request_info *info,
  
- 	/* Full calibration channel */
--	u8 full_calib_chan; /* FIXME initial value? */
-+	u8 full_calib_chan;
+ 	lbs_deb_enter(LBS_DEB_WEXT);
  
- 	/* Transmit iqlocal best coeffs */
- 	bool tx_iqloc_best_coeffs_valid;
-@@ -891,6 +892,12 @@ struct b43_phy_lp {
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+         if ((vwrq->flags & IW_RETRY_TYPE) != IW_RETRY_LIMIT)
+                 return -EOPNOTSUPP;
  
- 	/* The channel we are tuned to */
- 	u8 channel;
-+
-+	/* The active antenna diversity mode */
-+	int antenna;
-+
-+	/* Frequency of the active TX tone */
-+	int tx_tone_freq;
- };
+@@ -534,11 +471,6 @@ static int lbs_get_retry(struct net_device *dev, struct iw_request_info *info,
  
- enum tssi_mux_mode {
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	vwrq->disabled = 0;
+ 
+ 	if (vwrq->flags & IW_RETRY_LONG) {
+@@ -907,9 +839,6 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv))
+-		return NULL;
+-
+ 	priv->wstats.status = priv->mode;
+ 
+ 	/* If we're not associated, all quality values are meaningless */
+@@ -1010,12 +939,6 @@ static int lbs_set_freq(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	mutex_lock(&priv->lock);
+ 	assoc_req = lbs_get_association_request(priv);
+ 	if (!assoc_req) {
+@@ -1125,11 +1048,6 @@ static int lbs_set_rate(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	lbs_deb_wext("vwrq->value %d\n", vwrq->value);
+ 	lbs_deb_wext("vwrq->fixed %d\n", vwrq->fixed);
+ 
+@@ -1188,11 +1106,6 @@ static int lbs_get_rate(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		lbs_deb_leave(LBS_DEB_WEXT);
+-		return -EBUSY;
+-	}
+-
+ 	if (priv->connect_status == LBS_CONNECTED) {
+ 		vwrq->value = priv->cur_rate * 500000;
+ 
+@@ -1219,11 +1132,6 @@ static int lbs_set_mode(struct net_device *dev,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (   (*uwrq != IW_MODE_ADHOC)
+ 	    && (*uwrq != IW_MODE_INFRA)
+ 	    && (*uwrq != IW_MODE_AUTO)) {
+@@ -1465,12 +1373,6 @@ static int lbs_set_encode(struct net_device *dev,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	mutex_lock(&priv->lock);
+ 	assoc_req = lbs_get_association_request(priv);
+ 	if (!assoc_req) {
+@@ -1654,12 +1556,6 @@ static int lbs_set_encodeext(struct net_device *dev,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	mutex_lock(&priv->lock);
+ 	assoc_req = lbs_get_association_request(priv);
+ 	if (!assoc_req) {
+@@ -1872,12 +1768,6 @@ static int lbs_set_auth(struct net_device *dev,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	mutex_lock(&priv->lock);
+ 	assoc_req = lbs_get_association_request(priv);
+ 	if (!assoc_req) {
+@@ -1980,12 +1870,6 @@ static int lbs_get_auth(struct net_device *dev,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	switch (dwrq->flags & IW_AUTH_INDEX) {
+ 	case IW_AUTH_KEY_MGMT:
+ 		dwrq->value = priv->secinfo.key_mgmt;
+@@ -2028,11 +1912,6 @@ static int lbs_set_txpow(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	if (vwrq->disabled) {
+ 		lbs_set_radio(priv, RADIO_PREAMBLE_AUTO, 0);
+ 		goto out;
+@@ -2152,12 +2031,6 @@ static int lbs_set_essid(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	if (!priv->radio_on) {
+ 		ret = -EINVAL;
+ 		goto out;
+@@ -2285,12 +2158,6 @@ static int lbs_set_wap(struct net_device *dev, struct iw_request_info *info,
+ 
+ 	lbs_deb_enter(LBS_DEB_WEXT);
+ 
+-	if (!lbs_is_cmd_allowed(priv)) {
+-		ret = -EBUSY;
+-		lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", ret);
+-		return ret;
+-	}
+-
+ 	if (!priv->radio_on)
+ 		return -EINVAL;
+ 
 -- 
-1.6.4.2
+1.5.4.3
 
