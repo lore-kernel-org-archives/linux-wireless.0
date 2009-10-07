@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web53903.mail.re2.yahoo.com ([206.190.36.126]:23169 "HELO
-	web53903.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753698AbZJXNvX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 09:51:23 -0400
-Message-ID: <177253.23325.qm@web53903.mail.re2.yahoo.com>
-Date: Sat, 24 Oct 2009 06:44:31 -0700 (PDT)
-From: Frederik Nosi <fredin77@yahoo.com>
-Subject: iwl3945, after a while stops working with "No space for Tx"
-To: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from xc.sipsolutions.net ([83.246.72.84]:34460 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353AbZJGWfT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 18:35:19 -0400
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <4ACD0E5A.7060106@oracle.com>
+References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
+	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
+	 <4ACD0E5A.7060106@oracle.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-e0CVf0NC0EeLBaOtXwMm"
+Date: Thu, 08 Oct 2009 00:34:02 +0200
+Message-Id: <1254954842.3713.7.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-first sorry if somebody is not the right contact, got the adressess from ./scripts/get_maintainer.pl -f drivers/net/wireless/iwlwifi.
->From some kernel versions now, after some time that im using this card it stops working and on messages i get this errors:
 
-Oct 24 14:38:24 kotys NetworkManager: <info>  Activation (wlan0) Stage 5 of 5 (IP Configure Commit) complete.
-[snip pulseaudio's stuppid log spam warning]
-Oct 24 14:40:07 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-Oct 24 14:40:09 kotys pulseaudio[16469]: sap.c: sendmsg() failed: Invalid argument
-Oct 24 14:40:10 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
-Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0: Error sending POWER_TABLE_CMD: time out after 500ms.
-Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: set power fail, ret = -110
-Oct 24 14:40:14 kotys kernel: No probe response from AP 00:1c:df:82:63:c9 after 500ms, disconnecting.
-Oct 24 14:40:14 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  completed -> disconnected
-Oct 24 14:40:14 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  disconnected -> scanning
-Oct 24 14:40:14 kotys pulseaudio[16469]: sap.c: sendmsg() failed: Invalid argument
-Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
-Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
-Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
-Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 1)
-Oct 24 14:40:15 kotys NetworkManager: <info>  (wlan0): supplicant connection state:  scanning -> associating
-Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 2)
-Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 (try 3)
-Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
-Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
-Oct 24 14:40:15 kotys kernel: wlan0: direct probe to AP 00:1c:df:82:63:c9 timed out
-Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error sending REPLY_RXON: time out after 500ms.
-Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0: Error setting new configuration (-110).
+--=-e0CVf0NC0EeLBaOtXwMm
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2009-10-07 at 14:55 -0700, Randy Dunlap wrote:
+> John W. Linville wrote:
+> > Should prevent this build error reported by Randy...
+> >=20
+> > net/wireless/wext-priv.c:206: error: implicit declaration of function '=
+call_commit_handler'
+> > make[3]: *** [net/wireless/wext-priv.o] Error 1
+> >=20
+> > Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>=20
+> Sorry, it did not work for me.
 
-When this happens i am able to use the card only after reloading the related modules, iwl3945 ecc. But the problem happens again after some minutes that im connected.
+> linux-next-20091007/net/wireless/wext-priv.c:206: error: implicit declara=
+tion of function 'call_commit_handler'
+> make[3]: *** [net/wireless/wext-priv.o] Error 1
+>=20
+> Drivers like hostap and orinoco (hermes) select WEXT_PRIV regardless
+> of the setting of WEXT_CORE.  oh, and staging/ drivers do that also.
 
-Kernel is 2.6.32-rc5 but his started happening around 2.6.31, not sure exactly what version as i update kernel often. Firmware is iwl3945-ucode-15.32.2.9.
+But they also select WIRELESS_EXT, which should cause WEXT_CORE to be
+turned on. Is it possible that is failing?
 
-Every other info that you need just ask. I hope i dont have to bisect as this is the laptop i use for work too, but if it's needed i'll do.
+johannes
 
-I'm not subscribed on any ML, so in case please cc me.
+--=-e0CVf0NC0EeLBaOtXwMm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thanks for all the work!
+-----BEGIN PGP SIGNATURE-----
 
-F.
+iQIcBAABAgAGBQJKzRdWAAoJEODzc/N7+QmavbMQALtPSgL2BphPT3Aw3V1x6YG0
+s0GGZSz8QNt8xBU/ZIjnAWSH7B8NTox4Kl9gZZY5VG2d5MkYv1Vpz1rWiftj1ezc
+vjfSUVWNQWa9uAZDXmlTTLbV3ag6XsY46eVwTi2jwSkuSyfTSPi9FQrXaxDk+Al8
++AkiY7Qdv5DChfkKMZGSI+1FZ3PFa/ol/YzMnXwBWq6zUH+RootUfYKG3nSlnLv2
+Tbigs2CBI0wXCkQaOqWWXkl0pM7KO2EwIq9ZB563TifLuGRcWV71k0KeY9U/ylnZ
+StfkT1w426ojxWJoljjjlstrq39T6VZgJ/zTZMNTMxRlwOogMDAiXwvbYierKcHR
+dBCadyzIExbRrGmOzDQ4xUJtUS/yO1Q3Qr/GxFn9/ZrqUAXbZECMhvTfwG7FLCwc
+RSTTnrYLjXpo8SUy3emROZSvhJAnoRyQYF8rZUAkwd6Zz9DiUbj+BYDCP0ozbI5z
+wQdfVEyxcNQTuoBi6QRySIY0N/vwN7SLDudBUawK93oNObx7LQnfTCL69nik58tb
+792auPqfTunxqBqgwqIn6CKiJ6XK6cYHUxZr2RPlguDVQUh6M7SBCejv9m4PKyy7
+2O+eG1SqNBt98ATe/TMgKZjNqgFxPtRMDopX5nFhUklncDzsC8phmM3/xUyT0NQp
+U+vyBOk//kjYIPGK4sf2
+=JxHo
+-----END PGP SIGNATURE-----
 
+--=-e0CVf0NC0EeLBaOtXwMm--
 
-
-      
