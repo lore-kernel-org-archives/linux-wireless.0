@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13245 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752542AbZJQT0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 15:26:49 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: davem@davemloft.net, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Cc: yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com, Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH net-next V2 2/3] iwmc3200wifi: select IWMC3200TOP in Kconfig
-Date: Sat, 17 Oct 2009 21:09:35 +0200
-Message-Id: <1255806576-26869-2-git-send-email-tomas.winkler@intel.com>
-In-Reply-To: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:55463 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138AbZJGFlj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 01:41:39 -0400
+Received: by mail-iw0-f178.google.com with SMTP id 8so2683907iwn.33
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 22:41:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3ace41890910062045s626777dew4b47fe18bc8d9aee@mail.gmail.com>
+References: <1254886762-17211-1-git-send-email-HinTak.Leung@gmail.com>
+	<3ace41890910062045s626777dew4b47fe18bc8d9aee@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 7 Oct 2009 01:41:08 -0400
+Message-ID: <43e72e890910062241k3c4660eaobbcee4456485be93@mail.gmail.com>
+Subject: Re: [PATCH] compat-2.6: adding ethtool.h to compat-2.6.31.h
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwmc3200wifi requires iwmc3200top  for its operation
+On Tue, Oct 6, 2009 at 11:45 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Acked-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> warning: type defaults to ‘int’ in declaration of ‘SIMPLE_DEV_PM_OPS’
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/Kconfig b/drivers/net/wireless/iwmc3200wifi/Kconfig
-index c25a043..9606b31 100644
---- a/drivers/net/wireless/iwmc3200wifi/Kconfig
-+++ b/drivers/net/wireless/iwmc3200wifi/Kconfig
-@@ -3,6 +3,7 @@ config IWM
- 	depends on MMC && WLAN_80211 && EXPERIMENTAL
- 	depends on CFG80211
- 	select FW_LOADER
-+	select IWMC3200TOP
- 	help
- 	  The Intel Wireless Multicomm 3200 hardware is a combo
- 	  card with GPS, Bluetooth, WiMax and 802.11 radios. It
--- 
-1.6.0.6
+Yeah we need to backport this stuff, it seems all drivers are intended
+to be moved to use these simple dev pm ops so we might as well.
 
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
-
+  Luis
