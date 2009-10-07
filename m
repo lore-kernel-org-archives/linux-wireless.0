@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30377 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828AbZJPQ3I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 12:29:08 -0400
-Subject: Re: [PATCH] libertas: make lbs_get_channel() static
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910161733.56111.hs4233@mail.mn-solutions.de>
-References: <200910161733.56111.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Fri, 16 Oct 2009 09:29:11 -0700
-Message-Id: <1255710551.14241.29.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from cpsmtpm-eml103.kpnxchange.com ([195.121.3.7]:61542 "EHLO
+	CPSMTPM-EML103.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756662AbZJGSfe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 14:35:34 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Wed, 7 Oct 2009 20:34:55 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200910051500.55875.elendil@planet.nl> <200910061749.02805.elendil@planet.nl> <200910071910.53907.elendil@planet.nl>
+In-Reply-To: <200910071910.53907.elendil@planet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910072034.57511.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2009-10-16 at 17:33 +0200, Holger Schurig wrote:
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-> 
+On Wednesday 07 October 2009, Frans Pop wrote:
+> On Tuesday 06 October 2009, Frans Pop wrote:
+> > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
+> > the system is idle, but with normal values of 60-100 ms. And phy0 has
+> > normal values of below 10 ms.
+> > I've now rebooted with today's mainline git; phy0 now frequently shows
+> > with values of around 100 ms too (i.e. higher than last time).
+>
+> Mike privately sent me a script to try to capture the latencies with
+> perf, but the perf output does not show any high latencies at all. It
+> looks as if we may have found a bug in latencytop here instead.
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Not sure if it's relevant nor what it means, but I frequently see two lines 
+for iwlagn, e.g:
 
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.c
-> +++ linux-wl/drivers/net/wireless/libertas/cmd.c
-> @@ -880,7 +880,7 @@
->   *
->   *  @return 	   	The channel on success, error on failure
->   */
-> -int lbs_get_channel(struct lbs_private *priv)
-> +static int lbs_get_channel(struct lbs_private *priv)
->  {
->  	struct cmd_ds_802_11_rf_channel cmd;
->  	int ret = 0;
-> --- linux-wl.orig/drivers/net/wireless/libertas/cmd.h
-> +++ linux-wl/drivers/net/wireless/libertas/cmd.h
-> @@ -82,8 +82,6 @@
->  
->  int lbs_update_hw_spec(struct lbs_private *priv);
->  
-> -int lbs_get_channel(struct lbs_private *priv);
-> -
->  int lbs_set_channel(struct lbs_private *priv, u8 channel);
->  
->  int lbs_update_channel(struct lbs_private *priv);
-> 
+    Scheduler: waiting for cpu              102.4 msec         99.7 %
+    .                                         3.3 msec          0.3 %
 
+I get the same results with both latencytop 0.4 and 0.5.
