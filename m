@@ -1,199 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13321 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760128AbZJMR0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 13:26:46 -0400
-Subject: Re: [PATCH] libertas: Check return status of command functions
-From: Dan Williams <dcbw@redhat.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-In-Reply-To: <1255055925-2013-1-git-send-email-bzhao@marvell.com>
-References: <1255055925-2013-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain
-Date: Tue, 13 Oct 2009 10:26:14 -0700
-Message-Id: <1255454774.2196.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-ew0-f217.google.com ([209.85.219.217]:53307 "EHLO
+	mail-ew0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580AbZJGCww (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Oct 2009 22:52:52 -0400
+Received: by ewy17 with SMTP id 17so169810ewy.39
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 19:52:15 -0700 (PDT)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Cc: Hin-Tak Leung <HinTak.Leung@gmail.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: [PATCH] compat-2.6: adjusting 01-netdev.patch for libertas cfg80211 support
+Date: Wed,  7 Oct 2009 03:50:57 +0100
+Message-Id: <1254883857-2252-1-git-send-email-HinTak.Leung@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 19:38 -0700, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Return status of lbs_prepare_and_send_command and lbs_cmd_with_response
-> functions is not checked at some places. Those checks are added.
+Adjusting the netdev patch slightly to cope with recent change
+in libertas regarding cfg80211 support:
 
-Some of those look OK, but others didn't check the return value because
-it wasn't a big deal if the calls failed.  For example, updating the
-RSSI in get_wireless_stats.  I don't really have a strong feeling either
-way.
+    commit 6c65edc7a3e9452509a898cc9bbc210b0121617f
+    Author: Holger Schurig <hs4233@mail.mn-solutions.de>
+    Date:   Tue Oct 6 16:31:54 2009 +0200
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+        libertas: first stab at cfg80211 support
 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
->  drivers/net/wireless/libertas/debugfs.c |   27 ++++++++++++++++++---------
->  drivers/net/wireless/libertas/main.c    |    2 ++
->  drivers/net/wireless/libertas/scan.c    |   11 +++++++----
->  drivers/net/wireless/libertas/wext.c    |   10 +++++++---
->  4 files changed, 34 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-> index 893a55c..587b0cb 100644
-> --- a/drivers/net/wireless/libertas/debugfs.c
-> +++ b/drivers/net/wireless/libertas/debugfs.c
-> @@ -451,10 +451,12 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
->  				CMD_MAC_REG_ACCESS, 0,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
-> -	pos += snprintf(buf+pos, len-pos, "MAC[0x%x] = 0x%08x\n",
-> +	if (!ret) {
-> +		pos += snprintf(buf+pos, len-pos, "MAC[0x%x] = 0x%08x\n",
->  				priv->mac_offset, priv->offsetvalue.value);
->  
-> -	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +	}
->  	free_page(addr);
->  	return ret;
->  }
-> @@ -514,7 +516,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
->  
-> -	res = count;
-> +	if (!res)
-> +		res = count;
->  out_unlock:
->  	free_page(addr);
->  	return res;
-> @@ -539,10 +542,12 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
->  				CMD_BBP_REG_ACCESS, 0,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
-> -	pos += snprintf(buf+pos, len-pos, "BBP[0x%x] = 0x%08x\n",
-> +	if (!ret) {
-> +		pos += snprintf(buf+pos, len-pos, "BBP[0x%x] = 0x%08x\n",
->  				priv->bbp_offset, priv->offsetvalue.value);
->  
-> -	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +	}
->  	free_page(addr);
->  
->  	return ret;
-> @@ -603,7 +608,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
->  
-> -	res = count;
-> +	if (!res)
-> +		res = count;
->  out_unlock:
->  	free_page(addr);
->  	return res;
-> @@ -628,10 +634,12 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
->  				CMD_RF_REG_ACCESS, 0,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
-> -	pos += snprintf(buf+pos, len-pos, "RF[0x%x] = 0x%08x\n",
-> +	if (!ret) {
-> +		pos += snprintf(buf+pos, len-pos, "RF[0x%x] = 0x%08x\n",
->  				priv->rf_offset, priv->offsetvalue.value);
->  
-> -	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-> +	}
->  	free_page(addr);
->  
->  	return ret;
-> @@ -692,7 +700,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
->  				CMD_OPTION_WAITFORRSP, 0, &offval);
->  	mdelay(10);
->  
-> -	res = count;
-> +	if (!res)
-> +		res = count;
->  out_unlock:
->  	free_page(addr);
->  	return res;
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 3b14fcc..bce752c 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -1087,6 +1087,8 @@ static void auto_deepsleep_timer_fn(unsigned long data)
->  			ret = lbs_prepare_and_send_command(priv,
->  					CMD_802_11_DEEP_SLEEP, 0,
->  					0, 0, NULL);
-> +			if (ret)
-> +				lbs_pr_err("Enter Deep Sleep command failed\n");
->  		}
->  	}
->  	mod_timer(&priv->auto_deepsleep_timer , jiffies +
-> diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-> index 6c95af3..d8fc2b8 100644
-> --- a/drivers/net/wireless/libertas/scan.c
-> +++ b/drivers/net/wireless/libertas/scan.c
-> @@ -1022,9 +1022,12 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
->  		return -EAGAIN;
->  
->  	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
-> -	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate)
-> -		lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
-> -					     CMD_OPTION_WAITFORRSP, 0, NULL);
-> +	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate) {
-> +		err = lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
-> +				CMD_OPTION_WAITFORRSP, 0, NULL);
-> +		if (err)
-> +			goto out;
-> +	}
->  
->  	mutex_lock(&priv->lock);
->  	list_for_each_entry_safe (iter_bss, safe, &priv->network_list, list) {
-> @@ -1058,7 +1061,7 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
->  
->  	dwrq->length = (ev - extra);
->  	dwrq->flags = 0;
-> -
-> +out:
->  	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", err);
->  	return err;
->  }
-> diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-> index 69dd19b..4594841 100644
-> --- a/drivers/net/wireless/libertas/wext.c
-> +++ b/drivers/net/wireless/libertas/wext.c
-> @@ -832,7 +832,7 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
->  	u32 rssi_qual;
->  	u32 tx_qual;
->  	u32 quality = 0;
-> -	int stats_valid = 0;
-> +	int ret, stats_valid = 0;
->  	u8 rssi;
->  	u32 tx_retries;
->  	struct cmd_ds_802_11_get_log log;
-> @@ -881,7 +881,9 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
->  
->  	memset(&log, 0, sizeof(log));
->  	log.hdr.size = cpu_to_le16(sizeof(log));
-> -	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
-> +	ret = lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
-> +	if (ret)
-> +		goto out;
->  
->  	tx_retries = le32_to_cpu(log.retry);
->  
-> @@ -909,8 +911,10 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
->  	stats_valid = 1;
->  
->  	/* update stats asynchronously for future calls */
-> -	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
-> +	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
->  					0, 0, NULL);
-> +	if (ret)
-> +		lbs_pr_err("RSSI command failed\n");
->  out:
->  	if (!stats_valid) {
->  		priv->wstats.miss.beacon = 0;
+Signed-off-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+---
+ compat/patches/01-netdev.patch |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/compat/patches/01-netdev.patch b/compat/patches/01-netdev.patch
+index 141f80b..f6bca3e 100644
+--- a/compat/patches/01-netdev.patch
++++ b/compat/patches/01-netdev.patch
+@@ -416,9 +416,9 @@ without creating a headache on maintenance of the pathes.
+  /**
+   * @brief This function adds the card. it will probe the
+ @@ -1270,7 +1272,16 @@
+- 	priv->infra_open = 0;
++ 	wdev->netdev = dev;
++ 	priv->dev = dev;
+  
+- 	/* Setup the OS Interface to our functions */
+ +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
+   	dev->netdev_ops = &lbs_netdev_ops;
+ +#else
+-- 
+1.6.5.rc2
 
