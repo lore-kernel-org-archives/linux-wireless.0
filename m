@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:52993 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756671AbZJ3LoV (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:35344 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758477AbZJGApL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 07:44:21 -0400
-Message-ID: <4AEAD177.40701@nokia.com>
-Date: Fri, 30 Oct 2009 13:43:51 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2.6.32] mac80211: split hardware scan by band
-References: <1256673595.4237.24.camel@johannes.local> <1256675077.4237.26.camel@johannes.local>
-In-Reply-To: <1256675077.4237.26.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 6 Oct 2009 20:45:11 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 5/7] ath5k: remove temporary low_id and high_id vars on ath5k_hw_set_associd()
+Date: Tue,  6 Oct 2009 20:44:32 -0400
+Message-Id: <1254876274-1145-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Tue, 2009-10-27 at 20:59 +0100, Johannes Berg wrote:
-> 
->> Fix this by splitting up cfg80211 scan requests by
->> band -- recalculating the IEs every time -- and
->> requesting only per-band scans from the driver.
-> 
-> Incidentally, this means that dual-band drivers now absolutely need to
-> take a look at the scan channel list that is provided since if they
-> ignore it they will end up doing two full scans instead of one. Since
-> wl1271 is the only driver this affects right now, and its 5ghz support
-> is disabled, this seems ok to me.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath5k/pcu.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
-Sorry for the late response.
-
-This is fine with me.  We added one item to handle this on our 5GHz TODO list. 
-We're unfortunately not working with 5GHz at the moment, but we'll hopefully do 
-so in the near future (prioritization and stuff).
-
-I said to you that I would add a FIXME in the code, but I think this is not 
-really necessary, because 5GHz is not fully working anyway, there is definitely 
-still some work to be done (and that's why it is disabled).
-
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 23e5e7e..2ab9c0e 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -282,7 +282,6 @@ int ath5k_hw_set_lladdr(struct ath5k_hw *ah, const u8 *mac)
+ void ath5k_hw_set_associd(struct ath5k_hw *ah)
+ {
+ 	struct ath_common *common = ath5k_hw_common(ah);
+-	u32 low_id, high_id;
+ 	u16 tim_offset = 0;
+ 
+ 	/*
+@@ -294,11 +293,13 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah)
+ 	/*
+ 	 * Set BSSID which triggers the "SME Join" operation
+ 	 */
+-	low_id = get_unaligned_le32(common->curbssid);
+-	high_id = get_unaligned_le16(common->curbssid + 4);
+-	ath5k_hw_reg_write(ah, low_id, AR_BSSMSKL);
+-	ath5k_hw_reg_write(ah, high_id | ((common->curaid & 0x3fff) <<
+-				AR5K_BSS_ID1_AID_S), AR_BSSMSKU);
++	ath5k_hw_reg_write(ah,
++			   get_unaligned_le32(common->curbssid),
++			   AR_BSSMSKL);
++	ath5k_hw_reg_write(ah,
++			   get_unaligned_le16(common->curbssid + 4) |
++			   ((common->curaid & 0x3fff) << AR5K_BSS_ID1_AID_S),
++			   AR_BSSMSKU);
+ 
+ 	if (common->curaid == 0) {
+ 		ath5k_hw_disable_pspoll(ah);
+@@ -306,7 +307,7 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah)
+ 	}
+ 
+ 	AR5K_REG_WRITE_BITS(ah, AR5K_BEACON, AR5K_BEACON_TIM,
+-			tim_offset ? tim_offset + 4 : 0);
++			    tim_offset ? tim_offset + 4 : 0);
+ 
+ 	ath5k_hw_enable_pspoll(ah, NULL, 0);
+ }
 -- 
-Cheers,
-Luca.
+1.6.0.4
+
