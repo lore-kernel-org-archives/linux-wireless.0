@@ -1,98 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f210.google.com ([209.85.218.210]:52062 "EHLO
-	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045AbZJGT3W (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:55952 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755786AbZJGWiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 15:29:22 -0400
-Received: by bwz6 with SMTP id 6so234845bwz.37
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 12:28:44 -0700 (PDT)
-Message-ID: <4ACCEBE8.8010803@lwfinger.net>
-Date: Wed, 07 Oct 2009 14:28:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
+	Wed, 7 Oct 2009 18:38:05 -0400
 Subject: Re: [PATCH] b43: Fix locking problem when stopping rfkill polling
-References: <4accae5d.BgSJpcmlvg+W5PGM%Larry.Finger@lwfinger.net> <20091007190106.GB22394@tuxdriver.com>
-In-Reply-To: <20091007190106.GB22394@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4ACCEBE8.8010803@lwfinger.net>
+References: <4accae5d.BgSJpcmlvg+W5PGM%Larry.Finger@lwfinger.net>
+	 <20091007190106.GB22394@tuxdriver.com>  <4ACCEBE8.8010803@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-87cPhJtEKAm5nmUa8dGi"
+Date: Thu, 08 Oct 2009 00:36:55 +0200
+Message-Id: <1254955015.3713.9.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Wed, Oct 07, 2009 at 10:06:05AM -0500, Larry Finger wrote:
->> In commit 26e5ab35b4c7b1d4cb487a11084520aed9a8d05e entitled "b43: Fix PPC
->> crash in rfkill polling on unload", the call to stop polling should not have
->> been placed inside the wl->mutex. The result was incorrect locking messages.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> John,
->>
->> I had not intended for the previous patch to be applied as I was waiting for
->> the Bugzilla OP to test. He promised to do that today. In any case, that patch
->> introduced a locking problem that needs to be fixed.
->>
->> Why do the one-liners cause so many problems?
->>
->> Larry
->> ---
->>
->> Index: wireless-testing/drivers/net/wireless/b43/main.c
->> ===================================================================
->> --- wireless-testing.orig/drivers/net/wireless/b43/main.c
->> +++ wireless-testing/drivers/net/wireless/b43/main.c
->> @@ -4501,8 +4501,8 @@ static void b43_op_stop(struct ieee80211
->>  
->>  	cancel_work_sync(&(wl->beacon_update_trigger));
->>  
->> -	mutex_lock(&wl->mutex);
->>  	wiphy_rfkill_stop_polling(hw->wiphy);
->> +	mutex_lock(&wl->mutex);
->>  	if (b43_status(dev) >= B43_STAT_STARTED) {
->>  		dev = b43_wireless_core_stop(dev);
->>  		if (!dev)
-> 
-> OK, but why do we start polling under the lock but stop polling without
-> the lock?  Should we start polling without holding the lock too?
 
-I'll test that, but I suspect it doesn't matter. Of course, the reason
-I put the stop under the lock was for symmetry, but then I got the
-following when shutting down:
+--=-87cPhJtEKAm5nmUa8dGi
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
- b43-phy0 debug: Removing Interface type 2
+On Wed, 2009-10-07 at 14:28 -0500, Larry Finger wrote:
 
- =======================================================
- [ INFO: possible circular locking dependency detected ]
- 2.6.32-rc3-wl #225
- -------------------------------------------------------
- modprobe/25391 is trying to acquire lock:
-  (&(&rfkill->poll_work)->work){+.+...}, at: [<ffffffff81054a7f>]
-__cancel_work_timer+0xd9/0x224
+> > OK, but why do we start polling under the lock but stop polling without
+> > the lock?  Should we start polling without holding the lock too?
+>=20
+> I'll test that, but I suspect it doesn't matter. Of course, the reason
+> I put the stop under the lock was for symmetry, but then I got the
+> following when shutting down:
+>=20
+>  b43-phy0 debug: Removing Interface type 2
+>=20
+>  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>  [ INFO: possible circular locking dependency detected ]
+>  2.6.32-rc3-wl #225
+>  -------------------------------------------------------
+>  modprobe/25391 is trying to acquire lock:
+>   (&(&rfkill->poll_work)->work){+.+...}, at: [<ffffffff81054a7f>]
+> __cancel_work_timer+0xd9/0x224
 
- but task is already holding lock:
-  (&wl->mutex){+.+.+.}, at: [<ffffffffa02ff3d0>] b43_op_stop+0x30/0x7f
-[b43]
+This is because when stopping polling we need to cancel the work and
+sync on it, but when starting it's completely async so starting can be
+in any context.
 
- which lock already depends on the new lock.
+johannes
 
+--=-87cPhJtEKAm5nmUa8dGi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
- the existing dependency chain (in reverse order) is:
+-----BEGIN PGP SIGNATURE-----
 
- -> #1 (&wl->mutex){+.+.+.}:
-        [<ffffffff81069790>] __lock_acquire+0x140e/0x174d
-        [<ffffffff81069b8b>] lock_acquire+0xbc/0xd9
-        [<ffffffff8128d420>] mutex_lock_nested+0x58/0x29c
-        [<ffffffffa03150ea>] b43_rfkill_poll+0x3a/0xfc [b43]
-        [<ffffffffa02c2f33>] ieee80211_rfkill_poll+0x26/0x28 [mac80211]
-        [<ffffffffa027c028>] cfg80211_rfkill_poll+0x14/0x16 [cfg80211]
-        [<ffffffffa0271081>] rfkill_poll+0x23/0x3d [rfkill]
-        [<ffffffff81054224>] worker_thread+0x22c/0x332
-        [<ffffffff81057fd8>] kthread+0x7d/0x85
-        [<ffffffff8100caba>] child_rip+0xa/0x20
+iQIcBAABAgAGBQJKzRgEAAoJEODzc/N7+Qma5QsQAM/VBSHyoUv4cI2OY7RspeS9
+9Gfr5fjrueojUQEVBj91VcYI6vQpPheb74TiaPXT+MkGtXW7rMIToCRt4pxXYJ4I
+yUrbqt6huVKvqN6ZFZLkMIw/nxgKDupvTYqWIHckCnmjx2zsuo8KGRepT85NDgEB
+YEVpmwx3XyxU6ecmxESCPCZ9Z6UwGUpdIsjzlIRtXUs0UXEIH8qCGOCQB7EXsfuY
+2FGS3gmemF8mVBmNFruAp7phzP8743Gebuumw3g/o5Abv+Ulvosmro70gqhKRjmS
+Bk+1UXDkiiSTXl1tdktyHAjxjALEeyUj5MvXWnY7GWD26xKn4SE3NUAI9cRU47Yq
+zjS5bgqSmc2YOXiNndLW/e2PxTj1AMubHIQvJp1u5FsHf3KCzbVs/oIil7GvthsI
+xnQeDCVSXEOUpfQQYMYwtmbWRmgKZcOq7B8TarUEv7cA544yKXGpUk3Co0x4yQlb
+QkZ6vzhLD2AJmEVLfeYbtquWlQH5F9TE1BuqRETgBWBiDCLTpgtsoPQchH7yBaC2
+RB0o9NUqQaq5SqxNQ7Jwqw+df+uXbe1+UsTM9EcA0SoJE8JafeGS1psDR1jSrgRu
+Zzo3fFsXNlwgyjy/MerD1zEZWVdu6DGAMRxtfY+iS3BvpLX9llxQuYMB/9n/+G+1
+1Li3ExTA8OHWwuGXinSg
+=WKvs
+-----END PGP SIGNATURE-----
 
-Moving the stop ooutside the lock cured the problem.
-
-Larry
+--=-87cPhJtEKAm5nmUa8dGi--
 
