@@ -1,92 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hosting.visp.net.lb ([194.146.153.11]:37361 "EHLO
-	hosting.visp.net.lb" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755390AbZJ0BGx (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:33179 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758608AbZJGBTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 21:06:53 -0400
-From: Denys Fedoryschenko <denys@visp.net.lb>
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: ath5k, too high output power?
-Date: Tue, 27 Oct 2009 02:59:09 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910270259.09787.denys@visp.net.lb>
+	Tue, 6 Oct 2009 21:19:48 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, vasanth@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/6] ath9k: move common->debug_mask setting to ath_init_softc()
+Date: Tue,  6 Oct 2009 21:19:06 -0400
+Message-Id: <1254878351-32433-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have laptop with ath5k card, and just tried to run it with ath5k driver.
-I notice strange thing:
+What this means is we can enable now debug prints without
+requiring CONFIG_ATH9K_DEBUG.
 
-lappi ~ # iw phy phy0 info
-Wiphy phy0
-        Band 1:
-                Frequencies:
-                        * 2412 MHz [1] (20.0 dBm)
-                        * 2417 MHz [2] (20.0 dBm)
-                        * 2422 MHz [3] (20.0 dBm)
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    5 -----
+ drivers/net/wireless/ath/ath9k/main.c  |    5 +++++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-I guess it is too high. I am not sure it is actual value, but if it is right 
-and actual value, then i am exceeding local regulations.
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 25ae88e..84f4426 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -23,9 +23,6 @@
+ #define REG_READ_D(_ah, _reg) \
+ 	ath9k_hw_common(_ah)->ops->read((_ah), (_reg))
+ 
+-static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
+-module_param_named(debug, ath9k_debug, uint, 0);
+-
+ static struct dentry *ath9k_debugfs_root;
+ 
+ static int ath9k_debugfs_open(struct inode *inode, struct file *file)
+@@ -565,8 +562,6 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath_softc *sc = (struct ath_softc *) common->priv;
+ 
+-	common->debug_mask = ath9k_debug;
+-
+ 	if (!ath9k_debugfs_root)
+ 		return -ENOENT;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 86374ad..7f90cb8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -29,6 +29,10 @@ static int modparam_nohwcrypt;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
++static unsigned int ath9k_debug = ATH_DBG_DEFAULT;
++module_param_named(debug, ath9k_debug, uint, 0);
++MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
++
+ /* We use the hw_value as an index into our private channel structure */
+ 
+ #define CHAN2G(_freq, _idx)  { \
+@@ -1637,6 +1641,7 @@ static int ath_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	common->ah = ah;
+ 	common->hw = sc->hw;
+ 	common->priv = sc;
++	common->debug_mask = ath9k_debug;
+ 
+ 	/*
+ 	 * Cache line size is used to size and align various
+-- 
+1.6.0.4
 
-I have simple spectrum analyzer (spectran), and i can try to test actual 
-output power if required.
-
-Another thing, is it possible to change antenna output?
-
-
-Hardware:
-01:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg 
-Wireless PCI Express Adapter (rev 01)
-        Subsystem: Hewlett-Packard Company Device 137a
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 128 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: Memory at d1300000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: [40] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] Message Signalled Interrupts: Mask- 64bit- 
-Count=1/1 Enable-
-                Address: 00000000  Data: 0000
-        Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, 
-L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- 
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- 
-TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency 
-L0 <512ns, L1 <64us
-                        ClockPM- Suprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- 
-CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ 
-DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [90] MSI-X: Enable- Mask- TabSize=1
-                Vector table: BAR=0 offset=00000000
-                PBA: BAR=0 offset=00000000
-        Capabilities: [100] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO+ CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq- ACSVoil-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq- ACSVoil-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF+ MalfTLP+ ECRC- UnsupReq- ACSVoil-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-NonFatalErr-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-NonFatalErr-
-                AERCap: First Error Pointer: 0e, GenCap+ CGenEn- ChkCap+ 
-ChkEn-
-        Capabilities: [140] Virtual Channel <?>
-        Kernel driver in use: ath5k
-        Kernel modules: ath5k
