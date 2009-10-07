@@ -1,157 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:59624 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756580AbZJVSxt (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:59889 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753AbZJGVao (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 14:53:49 -0400
-Date: Thu, 22 Oct 2009 20:20:47 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
+	Wed, 7 Oct 2009 17:30:44 -0400
+Received: by ewy4 with SMTP id 4so2314045ewy.37
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 14:30:07 -0700 (PDT)
+From: David Kilroy <kilroyd@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/28] mwl8k: change pci id table driver data to a structure pointer
-Message-ID: <20091022182046.GQ1583@mail.wantstofly.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: use cfg80211 ethtool ops
+Date: Wed,  7 Oct 2009 22:23:32 +0100
+Message-Id: <1254950612-14007-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To prepare for adding support for more device types, introduce a
-new structure, mwl8k_device_info, where per-device information can
-be stored, and change the pci id table driver data from an integer
-indicating only the part number to a pointer to a mwl8k_device_info
-structure.
-
-Signed-off-by: Lennert Buytenhek <buytenh@marvell.com>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
 ---
- drivers/net/wireless/mwl8k.c |   47 ++++++++++++++++++++++++++---------------
- 1 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/net/wireless/orinoco/hw.c      |   33 +++++++++++++++++++++++--------
+ drivers/net/wireless/orinoco/hw.h      |    3 +-
+ drivers/net/wireless/orinoco/main.c    |   33 +++++--------------------------
+ drivers/net/wireless/orinoco/orinoco.h |    1 -
+ 4 files changed, 32 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 7aea8eb..49edd0c 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -27,13 +27,6 @@
- #define MWL8K_NAME	KBUILD_MODNAME
- #define MWL8K_VERSION	"0.10"
+diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
+index 359652d..404830f 100644
+--- a/drivers/net/wireless/orinoco/hw.c
++++ b/drivers/net/wireless/orinoco/hw.c
+@@ -60,8 +60,15 @@ static inline fwtype_t determine_firmware_type(struct comp_id *nic_id)
+ /* Set priv->firmware type, determine firmware properties
+  * This function can be called before we have registerred with netdev,
+  * so all errors go out with dev_* rather than printk
++ *
++ * If non-NULL stores a firmware description in fw_name.
++ * If non-NULL stores a HW version in hw_ver
++ *
++ * These are output via generic cfg80211 ethtool support.
+  */
+-int determine_fw_capabilities(struct orinoco_private *priv)
++int determine_fw_capabilities(struct orinoco_private *priv,
++			      char *fw_name, size_t fw_name_len,
++			      u32 *hw_ver)
+ {
+ 	struct device *dev = priv->dev;
+ 	hermes_t *hw = &priv->hw;
+@@ -85,6 +92,12 @@ int determine_fw_capabilities(struct orinoco_private *priv)
+ 	dev_info(dev, "Hardware identity %04x:%04x:%04x:%04x\n",
+ 		 nic_id.id, nic_id.variant, nic_id.major, nic_id.minor);
  
--static DEFINE_PCI_DEVICE_TABLE(mwl8k_table) = {
--	{ PCI_VDEVICE(MARVELL, 0x2a2b), .driver_data = 8687, },
--	{ PCI_VDEVICE(MARVELL, 0x2a30), .driver_data = 8687, },
--	{ }
++	if (hw_ver)
++		*hw_ver = (((nic_id.id & 0xff) << 24) |
++			   ((nic_id.variant & 0xff) << 16) |
++			   ((nic_id.major & 0xff) << 8) |
++			   (nic_id.minor & 0xff));
++
+ 	priv->firmware_type = determine_firmware_type(&nic_id);
+ 
+ 	/* Get the firmware version */
+@@ -135,8 +148,9 @@ int determine_fw_capabilities(struct orinoco_private *priv)
+ 	case FIRMWARE_TYPE_AGERE:
+ 		/* Lucent Wavelan IEEE, Lucent Orinoco, Cabletron RoamAbout,
+ 		   ELSA, Melco, HP, IBM, Dell 1150, Compaq 110/210 */
+-		snprintf(priv->fw_name, sizeof(priv->fw_name) - 1,
+-			 "Lucent/Agere %d.%02d", sta_id.major, sta_id.minor);
++		if (fw_name)
++			snprintf(fw_name, fw_name_len, "Lucent/Agere %d.%02d",
++				 sta_id.major, sta_id.minor);
+ 
+ 		firmver = ((unsigned long)sta_id.major << 16) | sta_id.minor;
+ 
+@@ -185,8 +199,8 @@ int determine_fw_capabilities(struct orinoco_private *priv)
+ 			tmp[SYMBOL_MAX_VER_LEN] = '\0';
+ 		}
+ 
+-		snprintf(priv->fw_name, sizeof(priv->fw_name) - 1,
+-			 "Symbol %s", tmp);
++		if (fw_name)
++			snprintf(fw_name, fw_name_len, "Symbol %s", tmp);
+ 
+ 		priv->has_ibss = (firmver >= 0x20000);
+ 		priv->has_wep = (firmver >= 0x15012);
+@@ -224,9 +238,9 @@ int determine_fw_capabilities(struct orinoco_private *priv)
+ 		 * different and less well tested */
+ 		/* D-Link MAC : 00:40:05:* */
+ 		/* Addtron MAC : 00:90:D1:* */
+-		snprintf(priv->fw_name, sizeof(priv->fw_name) - 1,
+-			 "Intersil %d.%d.%d", sta_id.major, sta_id.minor,
+-			 sta_id.variant);
++		if (fw_name)
++			snprintf(fw_name, fw_name_len, "Intersil %d.%d.%d",
++				 sta_id.major, sta_id.minor, sta_id.variant);
+ 
+ 		firmver = ((unsigned long)sta_id.major << 16) |
+ 			((unsigned long)sta_id.minor << 8) | sta_id.variant;
+@@ -245,7 +259,8 @@ int determine_fw_capabilities(struct orinoco_private *priv)
+ 		}
+ 		break;
+ 	}
+-	dev_info(dev, "Firmware determined as %s\n", priv->fw_name);
++	if (fw_name)
++		dev_info(dev, "Firmware determined as %s\n", fw_name);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/orinoco/hw.h b/drivers/net/wireless/orinoco/hw.h
+index 8df6e87..e2f7fdc 100644
+--- a/drivers/net/wireless/orinoco/hw.h
++++ b/drivers/net/wireless/orinoco/hw.h
+@@ -24,7 +24,8 @@
+ struct orinoco_private;
+ struct dev_addr_list;
+ 
+-int determine_fw_capabilities(struct orinoco_private *priv);
++int determine_fw_capabilities(struct orinoco_private *priv, char *fw_name,
++			      size_t fw_name_len, u32 *hw_ver);
+ int orinoco_hw_read_card_settings(struct orinoco_private *priv, u8 *dev_addr);
+ int orinoco_hw_allocate_fid(struct orinoco_private *priv);
+ int orinoco_get_bitratemode(int bitrate, int automatic);
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index 7a32bcb..c0c8ff6 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -83,7 +83,6 @@
+ #include <linux/device.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+-#include <linux/ethtool.h>
+ #include <linux/suspend.h>
+ #include <linux/if_arp.h>
+ #include <linux/wireless.h>
+@@ -162,8 +161,6 @@ static const u8 encaps_hdr[] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
+ 				 | HERMES_EV_WTERR | HERMES_EV_INFO \
+ 				 | HERMES_EV_INFDROP)
+ 
+-static const struct ethtool_ops orinoco_ethtool_ops;
+-
+ /********************************************************************/
+ /* Data types                                                       */
+ /********************************************************************/
+@@ -1994,7 +1991,9 @@ int orinoco_init(struct orinoco_private *priv)
+ 		goto out;
+ 	}
+ 
+-	err = determine_fw_capabilities(priv);
++	err = determine_fw_capabilities(priv, wiphy->fw_version,
++					sizeof(wiphy->fw_version),
++					&wiphy->hw_version);
+ 	if (err != 0) {
+ 		dev_err(dev, "Incompatible firmware, aborting\n");
+ 		goto out;
+@@ -2010,7 +2009,9 @@ int orinoco_init(struct orinoco_private *priv)
+ 			priv->do_fw_download = 0;
+ 
+ 		/* Check firmware version again */
+-		err = determine_fw_capabilities(priv);
++		err = determine_fw_capabilities(priv, wiphy->fw_version,
++						sizeof(wiphy->fw_version),
++						&wiphy->hw_version);
+ 		if (err != 0) {
+ 			dev_err(dev, "Incompatible firmware, aborting\n");
+ 			goto out;
+@@ -2212,7 +2213,6 @@ int orinoco_if_add(struct orinoco_private *priv,
+ 	dev->ieee80211_ptr = wdev;
+ 	dev->netdev_ops = &orinoco_netdev_ops;
+ 	dev->watchdog_timeo = HZ; /* 1 second timeout */
+-	dev->ethtool_ops = &orinoco_ethtool_ops;
+ 	dev->wireless_handlers = &orinoco_handler_def;
+ #ifdef WIRELESS_SPY
+ 	dev->wireless_data = &priv->wireless_data;
+@@ -2348,27 +2348,6 @@ void orinoco_down(struct orinoco_private *priv)
+ }
+ EXPORT_SYMBOL(orinoco_down);
+ 
+-static void orinoco_get_drvinfo(struct net_device *dev,
+-				struct ethtool_drvinfo *info)
+-{
+-	struct orinoco_private *priv = ndev_priv(dev);
+-
+-	strncpy(info->driver, DRIVER_NAME, sizeof(info->driver) - 1);
+-	strncpy(info->version, DRIVER_VERSION, sizeof(info->version) - 1);
+-	strncpy(info->fw_version, priv->fw_name, sizeof(info->fw_version) - 1);
+-	if (dev->dev.parent)
+-		strncpy(info->bus_info, dev_name(dev->dev.parent),
+-			sizeof(info->bus_info) - 1);
+-	else
+-		snprintf(info->bus_info, sizeof(info->bus_info) - 1,
+-			 "PCMCIA %p", priv->hw.iobase);
+-}
+-
+-static const struct ethtool_ops orinoco_ethtool_ops = {
+-	.get_drvinfo = orinoco_get_drvinfo,
+-	.get_link = ethtool_op_get_link,
 -};
--MODULE_DEVICE_TABLE(pci, mwl8k_table);
 -
- /* Register definitions */
- #define MWL8K_HIU_GEN_PTR			0x00000c10
- #define  MWL8K_MODE_STA				 0x0000005a
-@@ -86,6 +79,10 @@ MODULE_DEVICE_TABLE(pci, mwl8k_table);
- #define MWL8K_RX_QUEUES		1
- #define MWL8K_TX_QUEUES		4
+ /********************************************************************/
+ /* Module initialization                                            */
+ /********************************************************************/
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index 9ac6f1d..665ef56 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -93,7 +93,6 @@ struct orinoco_private {
  
-+struct mwl8k_device_info {
-+	int part_num;
-+};
-+
- struct mwl8k_rx_queue {
- 	int rxd_count;
- 
-@@ -129,9 +126,10 @@ struct mwl8k_priv {
- 
- 	struct pci_dev *pdev;
- 
-+	struct mwl8k_device_info *device_info;
-+
- 	/* firmware files and meta data */
- 	struct mwl8k_firmware fw;
--	u32 part_num;
- 
- 	/* firmware access */
- 	struct mutex fw_mutex;
-@@ -355,15 +353,13 @@ static int mwl8k_request_fw(struct mwl8k_priv *priv,
- 				fname, &priv->pdev->dev);
- }
- 
--static int mwl8k_request_firmware(struct mwl8k_priv *priv, u32 part_num)
-+static int mwl8k_request_firmware(struct mwl8k_priv *priv)
- {
- 	u8 filename[64];
- 	int rc;
- 
--	priv->part_num = part_num;
--
- 	snprintf(filename, sizeof(filename),
--		 "mwl8k/helper_%u.fw", priv->part_num);
-+		 "mwl8k/helper_%u.fw", priv->device_info->part_num);
- 
- 	rc = mwl8k_request_fw(priv, filename, &priv->fw.helper);
- 	if (rc) {
-@@ -373,7 +369,7 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv, u32 part_num)
- 	}
- 
- 	snprintf(filename, sizeof(filename),
--		 "mwl8k/fmimage_%u.fw", priv->part_num);
-+		 "mwl8k/fmimage_%u.fw", priv->device_info->part_num);
- 
- 	rc = mwl8k_request_fw(priv, filename, &priv->fw.ucode);
- 	if (rc) {
-@@ -2940,6 +2936,22 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
- 	priv->beacon_skb = NULL;
- }
- 
-+static struct mwl8k_device_info di_8687 = {
-+	.part_num	= 8687,
-+};
-+
-+static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
-+	{
-+		PCI_VDEVICE(MARVELL, 0x2a2b),
-+		.driver_data = (unsigned long)&di_8687,
-+	}, {
-+		PCI_VDEVICE(MARVELL, 0x2a30),
-+		.driver_data = (unsigned long)&di_8687,
-+	}, {
-+	},
-+};
-+MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
-+
- static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 				 const struct pci_device_id *id)
- {
-@@ -2980,6 +2992,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	priv = hw->priv;
- 	priv->hw = hw;
- 	priv->pdev = pdev;
-+	priv->device_info = (void *)id->driver_data;
- 	priv->sniffer_enabled = false;
- 	priv->wmm_enabled = false;
- 	priv->pending_tx_pkts = 0;
-@@ -3091,7 +3104,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	mwl8k_hw_reset(priv);
- 
- 	/* Ask userland hotplug daemon for the device firmware */
--	rc = mwl8k_request_firmware(priv, (u32)id->driver_data);
-+	rc = mwl8k_request_firmware(priv);
- 	if (rc) {
- 		printk(KERN_ERR "%s: Firmware files not found\n",
- 		       wiphy_name(hw->wiphy));
-@@ -3151,8 +3164,8 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
- 	}
- 
- 	printk(KERN_INFO "%s: 88w%u v%d, %pM, firmware version %u.%u.%u.%u\n",
--	       wiphy_name(hw->wiphy), priv->part_num, priv->hw_rev,
--	       hw->wiphy->perm_addr,
-+	       wiphy_name(hw->wiphy), priv->device_info->part_num,
-+	       priv->hw_rev, hw->wiphy->perm_addr,
- 	       (priv->fw_rev >> 24) & 0xff, (priv->fw_rev >> 16) & 0xff,
- 	       (priv->fw_rev >> 8) & 0xff, priv->fw_rev & 0xff);
- 
-@@ -3238,7 +3251,7 @@ static void __devexit mwl8k_remove(struct pci_dev *pdev)
- 
- static struct pci_driver mwl8k_driver = {
- 	.name		= MWL8K_NAME,
--	.id_table	= mwl8k_table,
-+	.id_table	= mwl8k_pci_id_table,
- 	.probe		= mwl8k_probe,
- 	.remove		= __devexit_p(mwl8k_remove),
- 	.shutdown	= __devexit_p(mwl8k_shutdown),
+ 	/* Capabilities of the hardware/firmware */
+ 	fwtype_t firmware_type;
+-	char fw_name[32];
+ 	int ibss_port;
+ 	int nicbuf_size;
+ 	u16 channel_mask;
 -- 
-1.5.6.4
+1.6.3.3
+
