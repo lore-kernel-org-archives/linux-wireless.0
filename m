@@ -1,76 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:33622 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbZJQJoh convert rfc822-to-8bit (ORCPT
+Received: from smtp122.mail.ukl.yahoo.com ([77.238.184.53]:35100 "HELO
+	smtp122.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933358AbZJGQ6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 05:44:37 -0400
-Received: by iwn8 with SMTP id 8so1520542iwn.33
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Oct 2009 02:44:42 -0700 (PDT)
+	Wed, 7 Oct 2009 12:58:41 -0400
+Message-ID: <4ACCC893.1010402@yahoo.es>
+Date: Wed, 07 Oct 2009 18:57:55 +0200
+From: Albert Herranz <albert_herranz@yahoo.es>
 MIME-Version: 1.0
-In-Reply-To: <1255739280.4095.343.camel@johannes.local>
-References: <1255481442-27130-1-git-send-email-lrodriguez@atheros.com>
-	<1255562895.4095.297.camel@johannes.local> <20091014233528.GA4172@tux>
-	<1255685492.4095.309.camel@johannes.local> <20091016182039.GC6438@tuxdriver.com>
-	<1255739280.4095.343.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 17 Oct 2009 02:44:22 -0700
-Message-ID: <43e72e890910170244l552df4f8r3d174f87f006d074@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix SME warning by removing stale BSS upon
-	assoc failure
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ic.felix@gmail.com" <ic.felix@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: bcm43xx-dev@lists.berlios.de, mb@bu3sch.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] b43: do not stack-allocate pio rx/tx header and tail
+ buffers
+References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es> <4ACCC516.7050002@lwfinger.net>
+In-Reply-To: <4ACCC516.7050002@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 16, 2009 at 5:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2009-10-16 at 14:20 -0400, John W. Linville wrote:
->> On Fri, Oct 16, 2009 at 06:31:32PM +0900, Johannes Berg wrote:
->> > On Wed, 2009-10-14 at 16:35 -0700, Luis R. Rodriguez wrote:
->> >
->> > > Well sure, but why do we want to keep the authentication present if
->> > > association failed? And as a matter of fact it lingers there forever.
->> > > Is that desired behaviour?
->> >
->> > Yes, well, the SME is supposed to clean it up or try the association
->> > again (possibly with different parameters in the IEs, e.g. different WPA
->> > settings). The cfg80211 SME certainly does so (it deauthenticates).
->> >
->> > > > > +++ b/net/mac80211/mlme.c
->> > > > > @@ -1463,11 +1463,11 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
->> > > > >       if (status_code != WLAN_STATUS_SUCCESS) {
->> > > > >               printk(KERN_DEBUG "%s: AP denied association (code=%d)\n",
->> > > > >                      sdata->dev->name, status_code);
->> > > > >               list_del(&wk->list);
->> > > > >               kfree(wk);
->> > > > > -             return RX_MGMT_CFG80211_ASSOC;
->> > > > > +             return RX_MGMT_CFG80211_DEAUTH;
->> > > >
->> > > > I'm sure this is correct. Maybe cfg80211 doesn't react properly to
->> > > > getting an assoc frame with non-zero status?
->> > >
->> > > I see, will have to take a look when I get a chance then, not now though.
->> >
->> > > Actually can you elaborate a little on the logic here as to why
->> > > we want to issue an association command with non-zero status to
->> > > cfg80211 instead of just knocking off the current authentication
->> > > and killing the BSS?
->> >
->> > Is the above sufficient? Btw, please don't talk about "killing the BSS",
->> > you're not talking about a BSS struct but rather one of the mlme work
->> > structs.
+Larry Finger wrote:
+> Albert Herranz wrote:
+>> The DMA-API debugging facility complains about b43 mapping memory from
+>> stack for SDIO-based cards.
 >>
->> So, should this patch be dropped?  It is currently in w-t...
->
-> Yes.
+>> Indeed, b43 currently allocates the PIO RX/TX header and tail buffers
+>> from stack. The solution here is to use heap-allocated buffers instead.
+>>
+>> Signed-off-by: Albert Herranz <albert_herranz@yahoo.es>
+>> ---
+>> v2
+>> - embed buffers into struct b43_wl, and make them depend on CONFIG_B43_PIO
+>> - take into account tail buffers for unaligned length transfers
+>>
+>>  drivers/net/wireless/b43/b43.h  |  168 +++++++++++++++++++++------------------
+>>  drivers/net/wireless/b43/pio.c  |   78 +++++++++---------
+>>  drivers/net/wireless/b43/xmit.c |    2 +-
+>>  3 files changed, 132 insertions(+), 116 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+>> index fa1549a..6607162 100644
+>> --- a/drivers/net/wireless/b43/b43.h
+>> +++ b/drivers/net/wireless/b43/b43.h
+>> @@ -607,82 +607,7 @@ struct b43_qos_params {
+>>  	struct ieee80211_tx_queue_params p;
+>>  };
+>>  
+>> -struct b43_wldev;
+>> -
+>> -/* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
+>> -struct b43_wl {
+>> -	/* Pointer to the active wireless device on this chip */
+>> -	struct b43_wldev *current_dev;
+>> -	/* Pointer to the ieee80211 hardware data structure */
+>> -	struct ieee80211_hw *hw;
+> 
+> What is the reason for moving the definition of struct b43_wl?
+> 
+> Larry
+> 
+> 
 
-This issue is also present on 2.6.32 I believe, I am curious if we'll
-come up with something as small as this for a fix there.
+b43_new_kidx_api() (defined in xmit.h) needs struct b43_wldev defined because it dereferences it.
+With this patch, struct b43_wl (defined in b43.h) needs struct b43_rxhdr_fw4 and struct b43_txhdr (defined in xmit.h).
 
-  Luis
+So we have b43_wldev -> b43_rxhdr_fw4, b43_txhdr -> b43_wl (at least).
 
-  Luis
+Moving the definition of struct b43_wl after the definition of struct b43_wldev and placing the inclusion of xmit.h between them gets rid of the generated dependencies.
+
+The patch hints too to other possible solution.
+
+>/*
+> * Include goes here to avoid a dependency problem.
+> * A better fix would be to integrate xmit.h into b43.h.
+> */
+>#include "xmit.h"
+
+Do you have any other solutions in mind?
+
+Thanks,
+Albert
+
