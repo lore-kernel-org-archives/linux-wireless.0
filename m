@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:59711 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934526AbZJORxw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 13:53:52 -0400
-Message-ID: <4AD76184.6030900@gmail.com>
-Date: Thu, 15 Oct 2009 19:53:08 +0200
-From: Jarek Poplawski <jarkao2@gmail.com>
+Received: from ted.prima.de ([83.97.48.3]:42541 "EHLO ted.prima.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757640AbZJGSgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Oct 2009 14:36:39 -0400
+Message-ID: <4ACCDF24.7050002@penny.prima.de>
+Date: Wed, 07 Oct 2009 20:34:12 +0200
+From: Riffer <riffer@penny.prima.de>
 MIME-Version: 1.0
-To: Tilman Schmidt <tilman@imap.cc>
-CC: David Miller <davem@davemloft.net>, johannes@sipsolutions.net,
-	hidave.darkstar@gmail.com, linux-kernel@vger.kernel.org,
-	tglx@linutronix.de, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org, netdev@vger.kernel.org, paulus@samba.org
-Subject: Re: NOHZ: local_softirq_pending 08
-References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>
-In-Reply-To: <20091015114052.GA9870@ff.dom.local>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Bleeding Edge does not compile (was Re: Bleeding Edge b43 dated since
+ 30 of september no longer	working & today does not even compile.)
+References: <4ACB91E7.5010405@penny.prima.de> <20091006211102.GC2911@tuxdriver.com>
+In-Reply-To: <20091006211102.GC2911@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jarek Poplawski wrote, On 10/15/2009 01:40 PM:
+Hello!
 
-> On 12-10-2009 13:25, Tilman Schmidt wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>
->> On Mon, 12 Oct 2009 03:32:46 -0700 (PDT), David Miller wrote:
->>> The PPP receive paths in ppp_generic.c do a local_bh_disable()/
->>> local_bh_enable() around packet receiving (via ppp_recv_lock()/
->>> ppp_recv_unlock() in ppp_do_recv).
->>>
->>> So at least that part is perfectly fine.
->>>
->>> ppp_input(), as called from ppp_sync_process(), also disables BH's
->>> around ppp_do_recv() calls (via read_lock_bh()/read_unlock_bh()).
->>>
->>> So that's fine too.
->>>
->>> Do you have a bug report or are you just scanning around looking
->>> for trouble? :-)
->> I have encountered the message in the subject during a test of
->> the Gigaset CAPI driver, and would like to determine whether
->> it's a bug in the driver, a bug somewhere else, or no bug at
->> all. The test scenario was PPP over ISDN with pppd+capiplugin.
->> In an alternative scenario, also PPP over ISDN but with
->> smpppd+capidrv, the message did not occur.
->>
->> Johannes' answer pointed me to the netif_rx() function.
->> The Gigaset driver itself doesn't call that function at all.
->> In the scenario where I saw the message, it was the SYNC_PPP
->> line discipline that did. But from your explanation I gather
->> that the cause cannot lie there.
->>
->> So now I'm looking for other possible causes of that message.
+Thanks for your reply!
 
+Besides the other failure mentioned after patching the version of 06th
+there is a new problem with the one from today (7th of oct):
 
-BTW, it seems calling napi_schedule() from process context should
-trigger such a warning too.
+----
+/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k/base.c:
+In Funktion »ath5k_pci_suspend_compat«:
+/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k/base.c:206:
+Fehler: Inkompatibler Typ für Argument 1 von »ath5k_pci_suspend«
+/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k/base.c:
+In Funktion »ath5k_pci_resume_compat«:
+/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k/base.c:224:
+Fehler: Inkompatibler Typ für Argument 1 von »ath5k_pci_resume«
+make[5]: ***
+[/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k/base.o]
+Fehler 1
+make[4]: ***
+[/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath/ath5k]
+Fehler 2
+make[3]: ***
+[/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless/ath]
+Fehler 2
+make[2]: ***
+[/home/riffer/bleeding/compat-wireless-2009-10-07/drivers/net/wireless]
+Fehler 2
+make[1]: *** [_module_/home/riffer/bleeding/compat-wireless-2009-10-07]
+Fehler 2
+make[1]: Verlasse Verzeichnis
+'/usr/src/linux-headers-2.6.30-02063006-generic'
+make: *** [modules] Fehler 2
 
-Jarek P.
+----
 
-> 
-> Anyway, I agree with Michael Buesch there is no reason to waste time
-> for tracking all netif_rx vs netif_rx_ni uses, and it seems we could
-> avoid it by using the "proper" version of raise_softirq_irqoff() in
-> __napi_schedule(). Could anybody try if I'm not wrong?
-> 
-> Thanks,
-> Jarek P.
-> ---
-> 
->  net/core/dev.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/core/dev.c b/net/core/dev.c
-> index 28b0b9e..7fc4009 100644
-> --- a/net/core/dev.c
-> +++ b/net/core/dev.c
-> @@ -2728,7 +2728,7 @@ void __napi_schedule(struct napi_struct *n)
->  
->  	local_irq_save(flags);
->  	list_add_tail(&n->poll_list, &__get_cpu_var(softnet_data).poll_list);
-> -	__raise_softirq_irqoff(NET_RX_SOFTIRQ);
-> +	raise_softirq_irqoff(NET_RX_SOFTIRQ);
->  	local_irq_restore(flags);
->  }
->  EXPORT_SYMBOL(__napi_schedule);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ppp" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+-- 
+Best regards,
+Riffer
