@@ -1,194 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56874 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758147AbZJHS7g (ORCPT
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:64899 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759515AbZJGRLc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:59:36 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 03/20] wl1271: Security sequence number handling for TX (for WPA)
-Date: Thu,  8 Oct 2009 21:56:19 +0300
-Message-Id: <1255028196-6565-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 7 Oct 2009 13:11:32 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Wed, 7 Oct 2009 19:10:52 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200910051500.55875.elendil@planet.nl> <20091005072428.16ce40e4@infradead.org> <200910061749.02805.elendil@planet.nl>
+In-Reply-To: <200910061749.02805.elendil@planet.nl>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910071910.53907.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Tuesday 06 October 2009, Frans Pop wrote:
+> I've checked for 2.6.31.1 now and iwlagn is listed high there too when
+> the system is idle, but with normal values of 60-100 ms. And phy0 has
+> normal values of below 10 ms.
+> I've now rebooted with today's mainline git; phy0 now frequently shows
+> with values of around 100 ms too (i.e. higher than last time).
+>
+> Both still go way down as soon as the system is given work to do.
+>
+> With a 5 second sleep I was unable to get any significant latencies (I
+> started perf on a latencytop refresh and did a manual refresh as it
+> finished to see what happened during the perf run). The perf run does
+> seem to affect the latencies.
+> I've uploaded a chart for a 10s sleep during which I got latencies of
+> 101ms for iwlagn and 77ms for phy0:
+> http://people.debian.org/~fjp/tmp/kernel/.
 
-Add security sequence number handling to the driver TX data path needed
-by WPA.
+Mike privately sent me a script to try to capture the latencies with perf,
+but the perf output does not show any high latencies at all. It looks as if
+we may have found a bug in latencytop here instead.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    5 +++++
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   11 +++++++++--
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    3 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c |   13 +++++++++++--
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   11 +++++++++++
- 5 files changed, 38 insertions(+), 5 deletions(-)
+Below a relevant quote from our private mails and the data I captured with
+Mike's script.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 55818f9..e575dcc 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -337,6 +337,11 @@ struct wl1271 {
- 	/* Pending TX frames */
- 	struct sk_buff *tx_frames[16];
- 
-+	/* Security sequence number counters */
-+	u8 tx_security_last_seq;
-+	u16 tx_security_seq_16;
-+	u32 tx_security_seq_32;
-+
- 	/* FW Rx counter */
- 	u32 rx_counter;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 2a4351f..1ee1b2b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -228,6 +228,10 @@ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type, u8 dtim_interval,
- 
- 	join->ctrl |= wl->session_counter << WL1271_JOIN_CMD_TX_SESSION_OFFSET;
- 
-+	/* reset TX security counters */
-+	wl->tx_security_last_seq = 0;
-+	wl->tx_security_seq_16 = 0;
-+	wl->tx_security_seq_32 = 0;
- 
- 	ret = wl1271_cmd_send(wl, CMD_START_JOIN, join, sizeof(*join));
- 	if (ret < 0) {
-@@ -759,7 +763,8 @@ out:
- }
- 
- int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--		       u8 key_size, const u8 *key, const u8 *addr)
-+		       u8 key_size, const u8 *key, const u8 *addr,
-+		       u32 tx_seq_32, u16 tx_seq_16)
- {
- 	struct wl1271_cmd_set_keys *cmd;
- 	int ret = 0;
-@@ -777,12 +782,14 @@ int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
- 	cmd->key_size = key_size;
- 	cmd->key_type = key_type;
- 
-+	cmd->ac_seq_num16[0] = tx_seq_16;
-+	cmd->ac_seq_num32[0] = tx_seq_32;
-+
- 	/* we have only one SSID profile */
- 	cmd->ssid_profile = 0;
- 
- 	cmd->id = id;
- 
--	/* FIXME: this is from wl1251, needs to be checked */
- 	if (key_type == KEY_TKIP) {
- 		/*
- 		 * We get the key in the following form:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 951a844..7c4d3aa 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -49,7 +49,8 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, u16 aid);
- int wl1271_cmd_build_probe_req(struct wl1271 *wl, u8 *ssid, size_t ssid_len);
- int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
- int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
--		       u8 key_size, const u8 *key, const u8 *addr);
-+		       u8 key_size, const u8 *key, const u8 *addr,
-+		       u32 tx_seq_32, u16 tx_seq_16);
- 
- enum wl1271_commands {
- 	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 27298b1..bedd19b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -592,6 +592,9 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_blocks_available = 0;
- 	wl->tx_results_count = 0;
- 	wl->tx_packets_count = 0;
-+	wl->tx_security_last_seq = 0;
-+	wl->tx_security_seq_16 = 0;
-+	wl->tx_security_seq_32 = 0;
- 	wl->time_offset = 0;
- 	wl->session_counter = 0;
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
-@@ -823,6 +826,8 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	struct wl1271 *wl = hw->priv;
- 	const u8 *addr;
- 	int ret;
-+	u32 tx_seq_32 = 0;
-+	u16 tx_seq_16 = 0;
- 	u8 key_type;
- 
- 	static const u8 bcast_addr[ETH_ALEN] =
-@@ -861,11 +866,15 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key_type = KEY_TKIP;
- 
- 		key_conf->hw_key_idx = key_conf->keyidx;
-+		tx_seq_32 = wl->tx_security_seq_32;
-+		tx_seq_16 = wl->tx_security_seq_16;
- 		break;
- 	case ALG_CCMP:
- 		key_type = KEY_AES;
- 
- 		key_conf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		tx_seq_32 = wl->tx_security_seq_32;
-+		tx_seq_16 = wl->tx_security_seq_16;
- 		break;
- 	default:
- 		wl1271_error("Unknown key algo 0x%x", key_conf->alg);
-@@ -879,7 +888,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = wl1271_cmd_set_key(wl, KEY_ADD_OR_REPLACE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
--					 addr);
-+					 addr, tx_seq_32, tx_seq_16);
- 		if (ret < 0) {
- 			wl1271_error("Could not add or replace key");
- 			goto out_sleep;
-@@ -890,7 +899,7 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		ret = wl1271_cmd_set_key(wl, KEY_REMOVE,
- 					 key_conf->keyidx, key_type,
- 					 key_conf->keylen, key_conf->key,
--					 addr);
-+					 addr, 0, 0);
- 		if (ret < 0) {
- 			wl1271_error("Could not remove key");
- 			goto out_sleep;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index 0c19688..162f026 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -258,6 +258,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	struct ieee80211_tx_info *info;
- 	struct sk_buff *skb;
- 	u32 header_len;
-+	u16 seq;
- 	int id = result->id;
- 
- 	/* check for id legality */
-@@ -284,6 +285,16 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	/* info->status.retry_count = result->ack_failures; */
- 	wl->stats.retry_count += result->ack_failures;
- 
-+	/* update security sequence number */
-+	seq = wl->tx_security_seq_16 +
-+		(result->lsb_security_sequence_number -
-+		 wl->tx_security_last_seq);
-+	wl->tx_security_last_seq = result->lsb_security_sequence_number;
-+
-+	if (seq < wl->tx_security_seq_16)
-+		wl->tx_security_seq_32++;
-+	wl->tx_security_seq_16 = seq;
-+
- 	/* get header len */
- 	if (info->control.hw_key &&
- 	    info->control.hw_key->alg == ALG_TKIP)
--- 
-1.5.6.5
+Cheers,
+FJP
 
+On Wednesday 07 October 2009, Mike Galbraith wrote:
+> On Wed, 2009-10-07 at 17:53 +0200, Frans Pop wrote:
+> > I had latencytop running at the same time and that happily showed
+> > values of 160 and 102 ms for iwlagn during the same period.
+> > The highest values I see from your script for any process are ~12 ms.
+> >
+> > Does this mean there is a bug in latencytop somewhere? Or is there
+> > something else going on?
+>
+> I suspect a bug in latencytop.. Arjan might suspect perf ;-)
+>
+> The only way you can get a 100+ ms latency hit on a mostly idle box is
+> for there to be a problem with the clock, _and_ have multiple runnable
+> heavy cpu using tasks on the runqueue so you can have a wide vruntime
+> spread.  Peter's been all over the vruntime update logic, and if it or
+> the clock were generally screwed, you'd see latency spikes all over
+> creation.  It _could_ be some rare event though, why I hacked script
+> together to chop off bite sized chunks for analysis.  Since nothing
+> showed up there, and nothing's showing up here doing the same amarok+nfs
+> thing, I'll place my bet on latencytop.. for now.
+>
+> > At the bottom a sample from your unmodified script. That one is fairly
+> > typical, although it has does have about the highest value I've seen
+> > for iwlagn.
+>
+> Yeah, looks perfectly normal.  Which leaves us at square one :-/
+
+
+
+Typical output from perf (with fairly high phy0 and iwlagn):
+ -----------------------------------------------------------------------------------------
+  Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms |
+ -----------------------------------------------------------------------------------------
+  kondemand/0:282       |      2.085 ms |      123 | avg:    0.152 ms | max:    7.007 ms |
+  amarokapp:5485        |    123.867 ms |      240 | avg:    0.120 ms | max:    5.260 ms |
+  kondemand/1:283       |      1.977 ms |      119 | avg:    0.107 ms | max:    4.781 ms |
+  phy0:2750             |      0.684 ms |       28 | avg:    0.181 ms | max:    3.921 ms |
+  iwlagn:2749           |      0.668 ms |       28 | avg:    0.196 ms | max:    3.697 ms |
+  Xorg:4147             |     40.570 ms |      224 | avg:    0.109 ms | max:    3.615 ms |
+  kblockd/0:78          |      0.013 ms |        1 | avg:    3.121 ms | max:    3.121 ms |
+  kcryptd:1520          |     64.962 ms |       11 | avg:    0.347 ms | max:    2.812 ms |
+  perf:9451             |    322.937 ms |       40 | avg:    0.144 ms | max:    2.198 ms |
+  :5662:5662            |     50.572 ms |      147 | avg:    0.087 ms | max:    2.141 ms |
+  head:9452             |      2.589 ms |        4 | avg:    0.454 ms | max:    1.648 ms |
+  :9439:9439            |      6.670 ms |      225 | avg:    0.127 ms | max:    1.574 ms |
+  kicker:5451           |     24.650 ms |      102 | avg:    0.158 ms | max:    1.465 ms |
+  ksysguardd:5454       |      6.614 ms |        7 | avg:    0.283 ms | max:    1.218 ms |
+  :5661:5661            |      0.208 ms |        9 | avg:    0.130 ms | max:    1.024 ms |
+  latencytop:7776       |      2.010 ms |        4 | avg:    0.256 ms | max:    0.980 ms |
+
+Series of greps from that output for only iwlagn and phy0:
+Oct 07 17:23:39   iwlagn:2749           |      0.721 ms |       35 | avg:    0.050 ms | max:    0.083 ms |
+Oct 07 17:23:39   phy0:2750             |      0.779 ms |       35 | avg:    0.032 ms | max:    0.036 ms |
+Oct 07 17:23:46   iwlagn:2749           |      0.617 ms |       32 | avg:    0.107 ms | max:    1.753 ms |
+Oct 07 17:23:46   phy0:2750             |      0.783 ms |       32 | avg:    0.123 ms | max:    1.745 ms |
+Oct 07 17:23:53   iwlagn:2749           |      0.629 ms |       31 | avg:    0.055 ms | max:    0.109 ms |
+Oct 07 17:23:53   phy0:2750             |      0.774 ms |       31 | avg:    0.029 ms | max:    0.050 ms |
+Oct 07 17:24:01   iwlagn:2749           |      0.908 ms |       35 | avg:    0.054 ms | max:    0.097 ms |
+Oct 07 17:24:01   phy0:2750             |      0.839 ms |       35 | avg:    0.033 ms | max:    0.056 ms |
+Oct 07 17:24:08   phy0:2750             |      0.742 ms |       32 | avg:    0.033 ms | max:    0.124 ms |
+Oct 07 17:24:08   iwlagn:2749           |      0.734 ms |       32 | avg:    0.050 ms | max:    0.083 ms |
+Oct 07 17:24:15   phy0:2750             |      0.963 ms |       41 | avg:    0.034 ms | max:    0.164 ms |
+Oct 07 17:24:15   iwlagn:2749           |      0.721 ms |       41 | avg:    0.049 ms | max:    0.118 ms |
+Oct 07 17:24:23   iwlagn:2749           |      6.434 ms |       73 | avg:    0.052 ms | max:    0.153 ms |
+Oct 07 17:24:23   phy0:2750             |      0.620 ms |       22 | avg:    0.023 ms | max:    0.094 ms |
+Oct 07 17:24:30   iwlagn:2749           |      0.934 ms |       38 | avg:    0.055 ms | max:    0.194 ms |
+Oct 07 17:24:30   phy0:2750             |      0.941 ms |       37 | avg:    0.033 ms | max:    0.123 ms |
+Oct 07 17:24:37   iwlagn:2749           |      5.324 ms |       74 | avg:    0.054 ms | max:    0.106 ms |
+Oct 07 17:24:37   phy0:2750             |      0.993 ms |       36 | avg:    0.030 ms | max:    0.050 ms |
+Oct 07 17:24:45   iwlagn:2749           |      0.844 ms |       36 | avg:    0.049 ms | max:    0.080 ms |
+Oct 07 17:24:45   phy0:2750             |      0.770 ms |       34 | avg:    0.032 ms | max:    0.043 ms |
+Oct 07 17:24:52   phy0:2750             |      0.832 ms |       36 | avg:    0.044 ms | max:    0.185 ms |
+Oct 07 17:24:52   iwlagn:2749           |      0.923 ms |       36 | avg:    0.050 ms | max:    0.081 ms |
+Oct 07 17:24:59   iwlagn:2749           |      0.778 ms |       35 | avg:    0.054 ms | max:    0.104 ms |
+Oct 07 17:24:59   phy0:2750             |      0.778 ms |       34 | avg:    0.025 ms | max:    0.041 ms |
+Oct 07 17:25:07   iwlagn:2749           |      0.854 ms |       34 | avg:    0.056 ms | max:    0.103 ms |
+Oct 07 17:25:07   phy0:2750             |      0.780 ms |       34 | avg:    0.027 ms | max:    0.040 ms |
+Oct 07 17:25:14   phy0:2750             |      0.762 ms |       33 | avg:    0.035 ms | max:    0.168 ms |
+Oct 07 17:25:14   iwlagn:2749           |      0.853 ms |       33 | avg:    0.051 ms | max:    0.080 ms |
+Oct 07 17:25:21   iwlagn:2749           |      0.892 ms |       34 | avg:    0.053 ms | max:    0.144 ms |
+Oct 07 17:25:21   phy0:2750             |      0.780 ms |       34 | avg:    0.029 ms | max:    0.040 ms |
+Oct 07 17:25:29   iwlagn:2749           |      0.972 ms |       39 | avg:    0.046 ms | max:    0.079 ms |
+Oct 07 17:25:29   phy0:2750             |      0.843 ms |       38 | avg:    0.031 ms | max:    0.040 ms |
+Oct 07 17:25:36   iwlagn:2749           |      0.896 ms |       39 | avg:    0.054 ms | max:    0.106 ms |
+Oct 07 17:25:36   phy0:2750             |      0.873 ms |       37 | avg:    0.032 ms | max:    0.070 ms |
+Oct 07 17:25:43   phy0:2750             |      0.919 ms |       39 | avg:    0.083 ms | max:    2.161 ms |
+Oct 07 17:25:43   iwlagn:2749           |      0.950 ms |       40 | avg:    0.050 ms | max:    0.102 ms |
