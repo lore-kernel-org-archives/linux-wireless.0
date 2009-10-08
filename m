@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40823 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752186AbZJPFVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 01:21:09 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH 11/16] iwmc3200wifi: Check for cmd pointer before dereferencing it
-Date: Fri, 16 Oct 2009 13:18:55 +0800
-Message-Id: <1255670340-22565-12-git-send-email-yi.zhu@intel.com>
-In-Reply-To: <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-2-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-3-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-4-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-5-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-6-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
- <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
+Received: from Cpsmtpm-eml109.kpnxchange.com ([195.121.3.13]:64685 "EHLO
+	CPSMTPM-EML109.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758009AbZJHNJn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 09:09:43 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Mike Galbraith <efault@gmx.de>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Thu, 8 Oct 2009 15:09:04 +0200
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+References: <200910051500.55875.elendil@planet.nl> <200910072034.57511.elendil@planet.nl> <1255001062.7500.1.camel@marge.simson.net>
+In-Reply-To: <1255001062.7500.1.camel@marge.simson.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200910081509.05394.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Ortiz <sameo@linux.intel.com>
+On Thursday 08 October 2009, Mike Galbraith wrote:
+> Care to try a patch?
+>
+> latencytop: only account on-runqueue wait time as being scheduler
+> latency.
+>
+> Latencytop was accounting uninterruptible and interruptible sleep time
+> up to 5ms, which is not the latency the user is looking for.  Account
+> time waiting on-runqueue instead.  Also add a clock update to
+> update_curr() for the case where there's nobody home.  When coming out
+> of idle with NO_HZ, not updating the clock leads to bogus max latency
+> report.
 
-The wifi_if_wrapper notification handling code uses a cmd pointer without
-checking if it's valid or not. We're dereferencing it because we assume that
-we only get to that point if there was a pending command for us. That's not
-always true, so we'd better check.
+With this patch the high values for iwlagn and phy0 are gone. The values 
+now match roughly with the output of your script.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
----
- drivers/net/wireless/iwmc3200wifi/rx.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+If (un)interruptible sleep is worth displaying in latencytop then maybe it 
+should be identified as a separate cause instead of lumped under "waiting 
+for CPU"?
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index a6b1811..0fa3f5c 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -1058,8 +1058,14 @@ static int iwm_ntf_wifi_if_wrapper(struct iwm_priv *iwm, u8 *buf,
- 				   unsigned long buf_size,
- 				   struct iwm_wifi_cmd *cmd)
- {
--	struct iwm_umac_wifi_if *hdr =
--			(struct iwm_umac_wifi_if *)cmd->buf.payload;
-+	struct iwm_umac_wifi_if *hdr;
-+
-+	if (cmd == NULL) {
-+		IWM_ERR(iwm, "Couldn't find expected wifi command\n");
-+		return -EINVAL;
-+	}
-+
-+	hdr = (struct iwm_umac_wifi_if *)cmd->buf.payload;
- 
- 	IWM_DBG_NTF(iwm, DBG, "WIFI_IF_WRAPPER cmd is delivered to UMAC: "
- 		    "oid is 0x%x\n", hdr->oid);
--- 
-1.6.0.4
+> TODO: Figure out where the heck empty braces come from.
 
+I also see these lines with "[]" sometimes; looks to come from 'sleep'.
+
+And I still see lines with only a "." as the cause; this seems specific to 
+targets marked with the penguin (work queues?).
+
+> Signed-off-by: Mike Galbraith <efault@gmx.de>
+> Arjan van de Ven <arjan@infradead.org>
+> Cc: Ingo Molnar <mingo@elte.hu>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+> LKML-Reference: <new-submission>
+
+If Arjan is happy with the patch, please add my:
+
+Reported-and-tested-by: Frans Pop <elendil@planet.nl>
+
+Thanks,
+FJP
