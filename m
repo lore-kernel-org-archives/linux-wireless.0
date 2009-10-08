@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:32800 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbZJRIeI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Oct 2009 04:34:08 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1MzRDP-0000Go-C4
-	for linux-wireless@vger.kernel.org; Sun, 18 Oct 2009 10:34:11 +0200
-Received: from 119.152.101.234 ([119.152.101.234])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 10:34:11 +0200
-Received: from Azhar.iq by 119.152.101.234 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Oct 2009 10:34:11 +0200
-To: linux-wireless@vger.kernel.org
-From: Azhar <Azhar.iq@gmail.com>
-Subject: Re: TL-WN721N
-Date: Sun, 18 Oct 2009 08:33:46 +0000 (UTC)
-Message-ID: <loom.20091018T103209-571@post.gmane.org>
-References: <loom.20091015T161901-805@post.gmane.org> <20091015151058.GC2809@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.nokia.com ([192.100.105.134]:61711 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759763AbZJHS6s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 14:58:48 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 20/20] wl1271: Mask unneeded events from firmware to conserve power
+Date: Thu,  8 Oct 2009 21:56:36 +0300
+Message-Id: <1255028196-6565-21-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville <linville@...> writes:
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-> 
-> On Thu, Oct 15, 2009 at 02:20:52PM +0000, Azhar wrote:
-> > Hi all,
-> > 
-> > I am looking for drivers of TL-WN721N (for linux)...i have been going through
-> > pages aand pages of documentation....but every other link seems to route
-> > here...i would really appreciate if you could guide me
-> > 
-> > Thanks
-> > 
-> > Azhar
-> 
-> Is it PCI?  USB?  The output of lspci or lsusb would be helpful
-> to know.  Of course, in most cases you distribution would have the
-> driver auto-loaded for you if it was supported at all...
-> 
-> John
+Currently several events are enabled from the firmware for which there
+is no handling. This wakes up the host unnecessarily. Mask those
+unneeded events.
 
-ndiswrapper -l
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-WARNING: All config files need .conf: /etc/modprobe.d/ndiswrapper, it will be
-ignored in a future release.
-WARNING: All config files need .conf: /etc/modprobe.d/blacklist, it will be
-ignored in a future release.
-netathur : driver installed
-device (0CF3:9271) present
-
-
-lsusb
-
-Bus 001 Device 003: ID 0cf3:9271 Atheros Communications, Inc.
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
-
-
-
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 7640313..140e943 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -390,8 +390,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 	/* enable gpio interrupts */
+ 	wl1271_boot_enable_interrupts(wl);
+ 
+-	/* unmask all mbox events  */
+-	wl->event_mask = 0xffffffff;
++	/* unmask required mbox events  */
++	wl->event_mask = BSS_LOSE_EVENT_ID |
++		SCAN_COMPLETE_EVENT_ID;
+ 
+ 	ret = wl1271_event_unmask(wl);
+ 	if (ret < 0) {
+-- 
+1.5.6.5
 
