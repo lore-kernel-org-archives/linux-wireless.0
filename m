@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:51826 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756083AbZJFDx6 (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:61561 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754273AbZJHPAM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 23:53:58 -0400
+	Thu, 8 Oct 2009 11:00:12 -0400
+Received: by iwn10 with SMTP id 10so647944iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 07:59:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20091008144352.GA2869@tuxdriver.com>
+References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
+	<3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
+	<1254952886.3713.4.camel@johannes.local> <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
+	<1254995514.3713.22.camel@johannes.local> <1255002647.3713.25.camel@johannes.local>
+	<43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
+	<43e72e890910080728ra63f1e7w6be3a2af65bc4766@mail.gmail.com>
+	<20091008144352.GA2869@tuxdriver.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: vasanth@atheros.com, linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 3/4] ath9k: add helper to un-init the hw properly
-Date: Mon,  5 Oct 2009 23:53:20 -0400
-Message-Id: <1254801201-15893-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
-References: <1254801201-15893-1-git-send-email-lrodriguez@atheros.com>
+Date: Thu, 8 Oct 2009 10:59:15 -0400
+Message-ID: <43e72e890910080759s17d26989mc96170a6de18226b@mail.gmail.com>
+Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6: adding
+	ethtool.h to compat-2.6.31.h)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is used in several places, ensure we do it right in all
-callers by using a helper.
+On Thu, Oct 8, 2009 at 10:43 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Oct 08, 2009 at 10:28:33AM -0400, Luis R. Rodriguez wrote:
+>> On Thu, Oct 8, 2009 at 9:43 AM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com> wrote:
+>> > On Thu, Oct 8, 2009 at 7:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> >> On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
+>> >>
+>> >>> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
+>> >>> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
+>> >>> defining is simply too small?
+>> >>
+>> >> That is apparently what is happening since compat-wireless ships
+>> >> iw_handler.h. This is wrong, as wext functionality is built into the
+>> >> kernel image so you can't use a newer header file with it.
+>> >
+>> > Dah, thanks for looking into this! This must've been there this way
+>> > for ages and we hadn't noticed until now. This is now fixed, and a new
+>> > tarball pushed out. I'll fix on the stable stuff as well, although I
+>> > doubt the header has changed much except now.
+>>
+>> OK so iw_handler added the libipw pointer, so libipw and friends are
+>> now messed up on compat-wireless. Do we care? I'll disable them for
+>> now. Can't think of a way to backport this easily.
+>>
+>>   CC [M]  /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o
+>> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:
+>> In function ‘ipw2100_alloc_device’:
+>> /home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.c:6060:
+>> error: ‘struct iw_public_data’ has no member named ‘libipw’
+>> make[4]: *** [/home/mcgrof/devel/compat-wireless-2.6/drivers/net/wireless/ipw2x00/ipw2100.o]
+>> Error 1
+>
+> -       /* Structure managed by the in-kernel IEEE 802.11 layer */
+> -       struct ieee80211_device *       ieee80211;
+> +       /* Legacy structure managed by the ipw2x00-specific IEEE 802.11 layer */
+> +       struct libipw_device *          libipw;
+>
+> Really just a name change, FWIW...
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   23 ++++++++++++++---------
- 1 files changed, 14 insertions(+), 9 deletions(-)
+oh ok thanks, thought the struct changed too -- then is be easy to backport
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0fe915a..e6842dd 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1325,6 +1325,17 @@ void ath_cleanup(struct ath_softc *sc)
- 	ieee80211_free_hw(sc->hw);
- }
- 
-+static void ath9k_uninit_hw(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	BUG_ON(!ah);
-+
-+	ath9k_exit_debug(ah);
-+	ath9k_hw_detach(ah);
-+	sc->sc_ah = NULL;
-+}
-+
- void ath_detach(struct ath_softc *sc)
- {
- 	struct ieee80211_hw *hw = sc->hw;
-@@ -1365,9 +1376,7 @@ void ath_detach(struct ath_softc *sc)
- 	    ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
- 		ath_gen_timer_free(ah, sc->btcoex.no_stomp_timer);
- 
--	ath9k_exit_debug(ah);
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
- }
- 
- static int ath9k_reg_notifier(struct wiphy *wiphy,
-@@ -1850,10 +1859,8 @@ bad2:
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
- 
--	ath9k_exit_debug(ah);
- bad_free_hw:
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
- 	return r;
- }
- 
-@@ -1966,9 +1973,7 @@ error_attach:
- 		if (ATH_TXQ_SETUP(sc, i))
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
- 
--	ath9k_exit_debug(ah);
--	ath9k_hw_detach(ah);
--	sc->sc_ah = NULL;
-+	ath9k_uninit_hw(sc);
- 
- 	return error;
- }
--- 
-1.6.0.4
-
+  Luis
