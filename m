@@ -1,83 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24351 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbZJWUms (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:48 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 17/18] iwlwifi: make sure device is reset when unloading driver
-Date: Fri, 23 Oct 2009 13:42:35 -0700
-Message-Id: <1256330556-20997-18-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail.gmx.net ([213.165.64.20]:35591 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751109AbZJHGYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 02:24:13 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Mike Galbraith <efault@gmx.de>
+To: Frans Pop <elendil@planet.nl>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1254974743.7797.21.camel@marge.simson.net>
+References: <200910051500.55875.elendil@planet.nl>
+	 <200910061749.02805.elendil@planet.nl>
+	 <200910071910.53907.elendil@planet.nl>
+	 <200910072034.57511.elendil@planet.nl>
+	 <1254974743.7797.21.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Thu, 08 Oct 2009 08:23:23 +0200
+Message-Id: <1254983003.14810.13.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
+On Thu, 2009-10-08 at 06:05 +0200, Mike Galbraith wrote:
+> On Wed, 2009-10-07 at 20:34 +0200, Frans Pop wrote:
+> > On Wednesday 07 October 2009, Frans Pop wrote:
+> > > On Tuesday 06 October 2009, Frans Pop wrote:
+> > > > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
+> > > > the system is idle, but with normal values of 60-100 ms. And phy0 has
+> > > > normal values of below 10 ms.
+> > > > I've now rebooted with today's mainline git; phy0 now frequently shows
+> > > > with values of around 100 ms too (i.e. higher than last time).
+> > >
+> > > Mike privately sent me a script to try to capture the latencies with
+> > > perf, but the perf output does not show any high latencies at all. It
+> > > looks as if we may have found a bug in latencytop here instead.
+> > 
+> > Not sure if it's relevant nor what it means, but I frequently see two lines 
+> > for iwlagn, e.g:
+> > 
+> >     Scheduler: waiting for cpu              102.4 msec         99.7 %
+> >     .                                         3.3 msec          0.3 %
+> > 
+> > I get the same results with both latencytop 0.4 and 0.5.
+> 
+> OK, I see latencytop spikes here on an idle box too, to the tune of up
+> to a _second_.  Booting with nohz=off seems to have cured it.
+> 
+> I wanted to see if that's also the perf sched record -C N trouble I
+> warned you not to try when recording with script, but unfortunately,
+> after pulling this morning...
+> 
+> marge:/root/tmp # perf sched lat --sort=max
+> Segmentation fault
+> 
+> ...perf sched got busted.  Seems likely to be same thing for both
+> though, as magnitude/frequency of bogons is very similar.
 
-Add unconditional call to apm_ops.stop() to reset device to low power state
-when unloading driver.  Some paths have existed to unload driver *without*
-resetting device, therefore some errors have persisted through multiple
-load/unload cycles, until the whole platform gets rebooted; this is an
-attempt to remedy some of those situations.  Sorry, I can't seem to find
-a bughost.org bug that specifically has these symptoms, but I had it happen
-recently here.
+Reverting problematic commit showed that nohz isn't the source of perf
+sched record -C N oddity.
 
-Note that this will *not* fix situations in which the PCI express bus has
-crashed (evidenced by register reads showing "0xffffffff"), e.g. bughost.org
-1855 and 2096; device is unreachable from driver in those cases.
+However, aside from latencytop seemingly having trouble with nohz, there
+appears to be a problem with perf sched record -a as well, the same one
+Arjan just fixed for perf timechart.
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+In thread - [PATCH] perf timechart: Work around commit 42e59d7d19dc4b4,
+Arjan said..
+<quote>
+Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
+.. however it unfortunately changed how perf events get recorded,..
+</quote>
+
+Monkey see monkey (eep) do, and record mostly idle box, only amarok
+doing it's thing...
+
+Before:
+marge:/root/tmp # perf sched record sleep 1
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.279 MB perf.data (~12208 samples) ]
+
+After:
+marge:/root/tmp # perf sched record sleep 1
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.649 MB perf.data (~28349 samples) ]
+
+
+perf_counter tools: make perf sched pass -F 0 to record
+
+Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
+.. however it unfortunately changed how perf events get recorded,
+and caused sched to miss events.
+
+This patch causes the sched code to use -F 0 to not use the
+new framework when recording sched data.
+
+Signed-off-by: Mike Galbraith <efault@gmx.de>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+LKML-Reference: <new-submission>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 +++++++++
- 2 files changed, 18 insertions(+), 0 deletions(-)
+ tools/perf/builtin-sched.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ea1b931..fa1672e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3256,6 +3256,15 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
- 		iwl_down(priv);
- 	}
- 
-+	/*
-+	 * Make sure device is reset to low power before unloading driver.
-+	 * This may be redundant with iwl_down(), but there are paths to
-+	 * run iwl_down() without calling apm_ops.stop(), and there are
-+	 * paths to avoid running iwl_down() at all before leaving driver.
-+	 * This (inexpensive) call *makes sure* device is reset.
-+	 */
-+	priv->cfg->ops->lib->apm_ops.stop(priv);
-+
- 	iwl_tt_exit(priv);
- 
- 	/* make sure we flush any pending irq or
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 9a430ee..bfd7f49 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4135,6 +4135,15 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 		iwl3945_down(priv);
- 	}
- 
-+	/*
-+	 * Make sure device is reset to low power before unloading driver.
-+	 * This may be redundant with iwl_down(), but there are paths to
-+	 * run iwl_down() without calling apm_ops.stop(), and there are
-+	 * paths to avoid running iwl_down() at all before leaving driver.
-+	 * This (inexpensive) call *makes sure* device is reset.
-+	 */
-+	priv->cfg->ops->lib->apm_ops.stop(priv);
-+
- 	/* make sure we flush any pending irq or
- 	 * tasklet for the driver
- 	 */
--- 
-1.5.6.3
+Index: linux-2.6/tools/perf/builtin-sched.c
+===================================================================
+--- linux-2.6.orig/tools/perf/builtin-sched.c
++++ linux-2.6/tools/perf/builtin-sched.c
+@@ -1902,6 +1902,7 @@ static const char *record_args[] = {
+ 	"-f",
+ 	"-m", "1024",
+ 	"-c", "1",
++	"-F", "0",
+ 	"-e", "sched:sched_switch:r",
+ 	"-e", "sched:sched_stat_wait:r",
+ 	"-e", "sched:sched_stat_sleep:r",
+
+
 
