@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:35227 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751604AbZJWOjG (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:64545 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757801AbZJHXWX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 10:39:06 -0400
-Message-ID: <4AE1C00B.5010008@imap.cc>
-Date: Fri, 23 Oct 2009 16:39:07 +0200
-From: Tilman Schmidt <tilman@imap.cc>
+	Thu, 8 Oct 2009 19:22:23 -0400
+Received: by mail-ew0-f208.google.com with SMTP id 4so150864ewy.37
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 16:22:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jarek Poplawski <jarkao2@gmail.com>,
-	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, paulus@samba.org,
-	Michael Buesch <mb@bu3sch.de>,
-	Oliver Hartkopp <oliver@hartkopp.net>
-Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
-References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>	 <20091021211906.GA11401@ami.dom.local>	 <1256160330.12174.2.camel@johannes.local>	 <20091021213947.GA12202@ami.dom.local> <1256200021.12174.11.camel@johannes.local>
-In-Reply-To: <1256200021.12174.11.camel@johannes.local>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
+References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
+	 <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
+	 <1254952886.3713.4.camel@johannes.local>
+	 <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
+	 <1254995514.3713.22.camel@johannes.local>
+	 <1255002647.3713.25.camel@johannes.local>
+	 <43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
+Date: Fri, 9 Oct 2009 00:22:11 +0100
+Message-ID: <3ace41890910081622k7c86453dm72e5584f4adbb763@mail.gmail.com>
+Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6: adding
+	ethtool.h to compat-2.6.31.h)
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, Oct 8, 2009 at 2:43 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Thu, Oct 8, 2009 at 7:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
+>>
+>>> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
+>>> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
+>>> defining is simply too small?
+>>
+>> That is apparently what is happening since compat-wireless ships
+>> iw_handler.h. This is wrong, as wext functionality is built into the
+>> kernel image so you can't use a newer header file with it.
+>
+> Dah, thanks for looking into this! This must've been there this way
+> for ages and we hadn't noticed until now. This is now fixed, and a new
+> tarball pushed out. I'll fix on the stable stuff as well, although I
+> doubt the header has changed much except now.
+>
+>  Luis
+>
 
-Johannes Berg schrieb:
-> On Wed, 2009-10-21 at 23:39 +0200, Jarek Poplawski wrote:
-> 
->> I'm not sure I can understand your question. This patch is mainly to
->> avoid using netif_rx()/netif_rx_ni() pair as a test of proper process
->> context handling; IMHO there're better tools for this (lockdep,
->> WARN_ON's).
-> 
-> I'm saying that it seems to me, as indicated by the API (and without
-> proof otherwise that's how it is) the networking layer needs to have
-> packets handed to it with softirqs disabled.
+Thanks everybody! Works alright now, after 'compat-2.6: stop shipping
+bleeding edge iw_handler.h' .
 
-Strange. Then what are the two separate functions netif_rx() and
-netif_rx_ni() for?
+There are some harmless warnings from using the old header, but
+otherwise it is working as it should:
+  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.o
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c: In
+function ë__cfg80211_connect_resultí:
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:370:
+warning: passing argument 4 of ëwireless_send_eventí discards
+qualifiers from pointer target type
+include/net/iw_handler.h:443: note: expected ëchar *í but argument is
+of type ëconst u8 *í
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:376:
+warning: passing argument 4 of ëwireless_send_eventí discards
+qualifiers from pointer target type
+include/net/iw_handler.h:443: note: expected ëchar *í but argument is
+of type ëconst u8 *í
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c: In
+function ë__cfg80211_roamedí:
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:520:
+warning: passing argument 4 of ëwireless_send_eventí discards
+qualifiers from pointer target type
+include/net/iw_handler.h:443: note: expected ëchar *í but argument is
+of type ëconst u8 *í
+/home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:527:
+warning: passing argument 4 of ëwireless_send_eventí discards
+qualifiers from pointer target type
+include/net/iw_handler.h:443: note: expected ëchar *í but argument is
+of type ëconst u8 *í
 
-> This really should be obvious. You're fixing the warning at the source
-> of the warning, rather than the source of the problem.
 
-Good idea. So please do tell us where the source of the problem is.
-
-Thanks,
-Tilman
-
-- --
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Unge√∂ffnet mindestens haltbar bis: (siehe R√ºckseite)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.4 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFK4cALQ3+did9BuFsRAnW8AKCP4ey+gT2RZBYpzx91PaXd11A/PwCgh35g
-fhEbJs++1BRIQ3encV8fIm4=
-=SSaA
------END PGP SIGNATURE-----
+Hin-Tak
