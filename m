@@ -1,177 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:44984 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755841AbZJVNej (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23058 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759611AbZJHS60 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 09:34:39 -0400
-Message-Id: <20091022133405.685612216@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-Date: Thu, 22 Oct 2009 15:30:46 +0200
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH 03/19] libertas: remove unused 11d.h as well, priv->countryinfo
+	Thu, 8 Oct 2009 14:58:26 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 02/20] wl1271: Correction to TX block allocation calculation
+Date: Thu,  8 Oct 2009 21:56:18 +0300
+Message-Id: <1255028196-6565-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-Acked-by: Dan Williams <dcbw@redhat.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
---- linux-wl.orig/drivers/net/wireless/libertas/11d.h
-+++ /dev/null
-@@ -1,82 +0,0 @@
--/**
--  * This header file contains data structures and
--  * function declarations of 802.11d
--  */
--#ifndef _LBS_11D_
--#define _LBS_11D_
--
--#include "types.h"
--#include "defs.h"
--
--#define UNIVERSAL_REGION_CODE			0xff
--
--/** (Beaconsize(256)-5(IEId,len,contrystr(3))/3(FirstChan,NoOfChan,MaxPwr)
-- */
--#define MRVDRV_MAX_SUBBAND_802_11D		83
--
--#define COUNTRY_CODE_LEN			3
--#define MAX_NO_OF_CHAN 				40
--
--struct cmd_ds_command;
--
--/** Data structure for Country IE*/
--struct ieee_subbandset {
--	u8 firstchan;
--	u8 nrchan;
--	u8 maxtxpwr;
--} __attribute__ ((packed));
--
--struct ieee_ie_country_info_set {
--	struct ieee_ie_header header;
--
--	u8 countrycode[COUNTRY_CODE_LEN];
--	struct ieee_subbandset subband[1];
--};
--
--struct ieee_ie_country_info_full_set {
--	struct ieee_ie_header header;
--
--	u8 countrycode[COUNTRY_CODE_LEN];
--	struct ieee_subbandset subband[MRVDRV_MAX_SUBBAND_802_11D];
--} __attribute__ ((packed));
--
--struct mrvl_ie_domain_param_set {
--	struct mrvl_ie_header header;
--
--	u8 countrycode[COUNTRY_CODE_LEN];
--	struct ieee_subbandset subband[1];
--} __attribute__ ((packed));
--
--struct cmd_ds_802_11d_domain_info {
--	__le16 action;
--	struct mrvl_ie_domain_param_set domain;
--} __attribute__ ((packed));
--
--/** domain regulatory information */
--struct lbs_802_11d_domain_reg {
--	/** country Code*/
--	u8 countrycode[COUNTRY_CODE_LEN];
--	/** No. of subband*/
--	u8 nr_subband;
--	struct ieee_subbandset subband[MRVDRV_MAX_SUBBAND_802_11D];
--};
--
--struct chan_power_11d {
--	u8 chan;
--	u8 pwr;
--} __attribute__ ((packed));
--
--struct parsed_region_chan_11d {
--	u8 band;
--	u8 region;
--	s8 countrycode[COUNTRY_CODE_LEN];
--	struct chan_power_11d chanpwr[MAX_NO_OF_CHAN];
--	u8 nr_chan;
--} __attribute__ ((packed));
--
--struct region_code_mapping {
--	u8 region[COUNTRY_CODE_LEN];
--	u8 code;
--};
--
--#endif
---- linux-wl.orig/drivers/net/wireless/libertas/dev.h
-+++ linux-wl/drivers/net/wireless/libertas/dev.h
-@@ -360,8 +360,6 @@
- 	union ieee_phy_param_set phy;
- 	union ieee_ss_param_set ss;
- 
--	struct ieee_ie_country_info_full_set countryinfo;
--
- 	u8 wpa_ie[MAX_WPA_IE_LEN];
- 	size_t wpa_ie_len;
- 	u8 rsn_ie[MAX_WPA_IE_LEN];
---- linux-wl.orig/drivers/net/wireless/libertas/host.h
-+++ linux-wl/drivers/net/wireless/libertas/host.h
-@@ -6,7 +6,8 @@
- #ifndef _LBS_HOST_H_
- #define _LBS_HOST_H_
- 
--#include "11d.h"
-+#include "types.h"
-+#include "defs.h"
- 
- #define DEFAULT_AD_HOC_CHANNEL                  6
- 
-@@ -961,9 +962,6 @@
- 		struct cmd_ds_bbp_reg_access bbpreg;
- 		struct cmd_ds_rf_reg_access rfreg;
- 
--		struct cmd_ds_802_11d_domain_info domaininfo;
--		struct cmd_ds_802_11d_domain_info domaininforesp;
--
- 		struct cmd_ds_802_11_tpc_cfg tpccfg;
- 		struct cmd_ds_802_11_afc afc;
- 		struct cmd_ds_802_11_led_ctrl ledgpio;
---- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-+++ linux-wl/drivers/net/wireless/libertas/scan.c
-@@ -503,7 +503,6 @@
- 	struct ieee_ie_cf_param_set *cf;
- 	struct ieee_ie_ibss_param_set *ibss;
- 	DECLARE_SSID_BUF(ssid);
--	struct ieee_ie_country_info_set *pcountryinfo;
- 	uint8_t *pos, *end, *p;
- 	uint8_t n_ex_rates = 0, got_basic_rates = 0, n_basic_rates = 0;
- 	uint16_t beaconsize = 0;
-@@ -626,26 +625,6 @@
- 			lbs_deb_scan("got IBSS IE\n");
- 			break;
- 
--		case WLAN_EID_COUNTRY:
--			pcountryinfo = (struct ieee_ie_country_info_set *) pos;
--			lbs_deb_scan("got COUNTRY IE\n");
--			if (pcountryinfo->header.len < sizeof(pcountryinfo->countrycode)
--			    || pcountryinfo->header.len > 254) {
--				lbs_deb_scan("%s: 11D- Err CountryInfo len %d, min %zd, max 254\n",
--					     __func__,
--					     pcountryinfo->header.len,
--					     sizeof(pcountryinfo->countrycode));
--				ret = -1;
--				goto done;
--			}
--
--			memcpy(&bss->countryinfo, pcountryinfo,
--				pcountryinfo->header.len + 2);
--			lbs_deb_hex(LBS_DEB_SCAN, "process_bss: 11d countryinfo",
--				    (uint8_t *) pcountryinfo,
--				    (int) (pcountryinfo->header.len + 2));
--			break;
--
- 		case WLAN_EID_EXT_SUPP_RATES:
- 			/* only process extended supported rate if data rate is
- 			 * already found. Data rate IE should come before
+Correct the TX path implementation to allocate sufficient blocks in the
+firmware for TX packets.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Kalle Valo <kalle.valo@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index ff22125..0c19688 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -58,7 +58,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
+ 	/* approximate the number of blocks required for this packet
+ 	   in the firmware */
+ 	/* FIXME: try to figure out what is done here and make it cleaner */
+-	total_blocks = (skb->len) >> TX_HW_BLOCK_SHIFT_DIV;
++	total_blocks = (total_len) >> TX_HW_BLOCK_SHIFT_DIV;
+ 	excluded = (total_blocks << 2) + (skb->len & 0xff) + 34;
+ 	total_blocks += (excluded > 252) ? 2 : 1;
+ 	total_blocks += TX_HW_BLOCK_SPARE;
 -- 
+1.5.6.5
+
