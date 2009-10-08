@@ -1,74 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64627 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757502AbZJOHfO (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:54507 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753846AbZJHTwe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 03:35:14 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] wl1271: added missing packed modifier in some acx structs
-Date: Thu, 15 Oct 2009 10:33:28 +0300
-Message-Id: <1255592010-10287-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255592010-10287-1-git-send-email-luciano.coelho@nokia.com>
+	Thu, 8 Oct 2009 15:52:34 -0400
+Received: by iwn10 with SMTP id 10so811271iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 12:51:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <b6c5339f0910081126h3fe2dd25x9198dedf09a20cea@mail.gmail.com>
+References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+	<1254876274-1145-8-git-send-email-lrodriguez@atheros.com>
+	<b6c5339f0910081126h3fe2dd25x9198dedf09a20cea@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 8 Oct 2009 15:51:38 -0400
+Message-ID: <43e72e890910081251x4103a544s504f33f1511caa49@mail.gmail.com>
+Subject: Re: [PATCH 7/7] ath5k: enable Power-Save Polls by setting the
+	association ID
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the struct definitions in the wl1271_acx.h file were missing the
-__attribute__ ((packed)) modifier.
+On Thu, Oct 8, 2009 at 2:26 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, Oct 6, 2009 at 8:44 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> @@ -3226,6 +3225,14 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
+>>                        set_beacon_filter(hw, sc->assoc);
+>>                ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
+>>                        AR5K_LED_ASSOC : AR5K_LED_INIT);
+>> +               if (bss_conf->assoc) {
+>> +                       ATH5K_DBG(sc, ATH5K_DEBUG_ANY,
+>> +                                 "Bss Info ASSOC %d, bssid: %pM\n",
+>> +                                 bss_conf->aid, common->curbssid);
+>> +                       common->curaid = bss_conf->aid;
+>> +                       ath5k_hw_set_associd(ah);
+>> +                       /* Once ANI is available you would start it here */
+>> +               }
+>
+> Just quick question - do we only want to call this if we are associated?
+>
+> Or maybe we should call it to reset the mask if we are unassociated...
+>
+> I wrote a patch a while ago to the ath5k list that did something similar,
+> but I did:
+>
+>       if (changes & (BSS_CHANGED_BSSID | BSS_CHANGED_ASSOC)) {
+>               ath5k_hw_set_associd(ah, ah->ah_bssid, ah->ah_aid);
+>       }
+>
+> Thus if it changed regardless of the reason why, we update the mask.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.h |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+Yeah might be a good idea to do it that way -- although upon disassoc
+you should also just disable ps.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 1580314..5085497 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -75,7 +75,7 @@ struct acx_header {
- 
- 	/* payload length (not including headers */
- 	u16 len;
--};
-+} __attribute__ ((packed));
- 
- struct acx_error_counter {
- 	struct acx_header header;
-@@ -390,7 +390,7 @@ struct acx_conn_monit_params {
- 
-        u32 synch_fail_thold; /* number of beacons missed */
-        u32 bss_lose_timeout; /* number of TU's from synch fail */
--};
-+} __attribute__ ((packed));
- 
- enum {
- 	SG_ENABLE = 0,
-@@ -420,19 +420,19 @@ struct acx_smart_reflex_state {
- 
- 	u8 enable;
- 	u8 padding[3];
--};
-+} __attribute__ ((packed));
- 
- struct smart_reflex_err_table {
- 	u8 len;
- 	s8 upper_limit;
- 	s8 values[14];
--};
-+} __attribute__ ((packed));
- 
- struct acx_smart_reflex_config_params {
- 	struct acx_header header;
- 
- 	struct smart_reflex_err_table error_table[3];
--};
-+} __attribute__ ((packed));
- 
- #define PTA_ANTENNA_TYPE_DEF		  (0)
- #define PTA_BT_HP_MAXTIME_DEF		  (2000)
--- 
-1.5.6.5
-
+  Luis
