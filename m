@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f188.google.com ([209.85.210.188]:35810 "EHLO
-	mail-yx0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932188AbZJSPuV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 11:50:21 -0400
-Received: by yxe26 with SMTP id 26so3750496yxe.4
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 08:50:26 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 19 Oct 2009 11:50:25 -0400
-Message-ID: <86201b3f0910190850g3f014abbi9e2fa3f89463e7c6@mail.gmail.com>
-Subject: How do you set the rate algorithm from the command line
-From: Charles Gordon <digigordo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.gmx.net ([213.165.64.20]:35367 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754643AbZJHOQC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 10:16:02 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Mike Galbraith <efault@gmx.de>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Frans Pop <elendil@planet.nl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20091008064521.07fae137@infradead.org>
+References: <200910051500.55875.elendil@planet.nl>
+	 <200910061749.02805.elendil@planet.nl>
+	 <200910071910.53907.elendil@planet.nl>
+	 <200910072034.57511.elendil@planet.nl>
+	 <1255001062.7500.1.camel@marge.simson.net>
+	 <20091008064521.07fae137@infradead.org>
+Content-Type: text/plain
+Date: Thu, 08 Oct 2009 16:15:12 +0200
+Message-Id: <1255011312.7294.3.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2009-10-08 at 06:45 -0700, Arjan van de Ven wrote:
+> On Thu, 08 Oct 2009 13:24:22 +0200
+> Mike Galbraith <efault@gmx.de> wrote:
+> > Latencytop was accounting uninterruptible and interruptible sleep
+> > time up to 5ms, which is not the latency the user is looking for.
+> 
+> it is for everything but the scheduler latency!
+> 
+> latencytop wants to show where you're waiting for disk, etc etc.
+> that's not "time on runqueue".
+> 
+> for the scheduler delays a whole different codepath is used!
 
-I'm using mac80211 in an embedded system.  I can build the driver so
-that more than one wifi rate algorithm is included, and one is set as
-the default.  It is not clear to me how to set the rate algorithm at
-run time.  Is there a command line utility that does this?
+That explains.. a few things.
 
-Suppose I build the driver so that both the PID and Mistrel algorithms
-are included, and the Minstrel algorithm is the default.  How can I
-switch to the PID algorithm at run time?
+	-Mike
 
-Thanks for your help.
