@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6423 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752466AbZJQIYN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 04:24:13 -0400
-From: "Zhu, Yi" <yi.zhu@intel.com>
-To: Tomas Winkler <tomasw@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Sat, 17 Oct 2009 16:18:55 +0800
-Subject: RE: [PATCH 14/16] iwmc3200wifi: Support unexpected reboot barker
-Message-ID: <AFAB8585072C7E48BC5C6F9C87F9B79703BED11C4E@pdsmsx502.ccr.corp.intel.com>
-References: <1255670340-22565-1-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-7-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-8-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-9-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-10-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-11-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-12-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-13-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-14-git-send-email-yi.zhu@intel.com>
-	 <1255670340-22565-15-git-send-email-yi.zhu@intel.com>
- <1ba2fa240910161506n6c519398h7795656309bffd93@mail.gmail.com>
-In-Reply-To: <1ba2fa240910161506n6c519398h7795656309bffd93@mail.gmail.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from mail-iw0-f178.google.com ([209.85.223.178]:63416 "EHLO
+	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbZJHE7D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 00:59:03 -0400
+Received: by iwn8 with SMTP id 8so3233876iwn.33
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Oct 2009 21:58:26 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20091008043426.GA5760@bombadil.infradead.org>
+References: <1254878351-32433-1-git-send-email-lrodriguez@atheros.com>
+	<1254878351-32433-2-git-send-email-lrodriguez@atheros.com>
+	<20091008043426.GA5760@bombadil.infradead.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 8 Oct 2009 00:58:06 -0400
+Message-ID: <43e72e890910072158p6286f7f2va4954eb870ec9918@mail.gmail.com>
+Subject: Re: [PATCH 1/6] ath9k: move common->debug_mask setting to
+	ath_init_softc()
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	vasanth@atheros.com, Sujith.Manoharan@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgVG9tYXMhDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVG9tYXMg
-V2lua2xlciBbbWFpbHRvOnRvbWFzd0BnbWFpbC5jb21dDQo+IFNlbnQ6IDIwMDnE6jEw1MIxN8jV
-IDY6MDcNCj4gVG86IFpodSwgWWkNCj4gQ2M6IGxpbnZpbGxlQHR1eGRyaXZlci5jb207IGxpbnV4
-LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgU2FtdWVsIE9ydGl6DQo+IFN1YmplY3Q6IFJlOiBb
-UEFUQ0ggMTQvMTZdIGl3bWMzMjAwd2lmaTogU3VwcG9ydCB1bmV4cGVjdGVkIHJlYm9vdCBiYXJr
-ZXINCj4gDQo+IE9uIEZyaSwgT2N0IDE2LCAyMDA5IGF0IDc6MTggQU0sIFpodSBZaSA8eWkuemh1
-QGludGVsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogU2FtdWVsIE9ydGl6IDxzYW1lb0BsaW51eC5p
-bnRlbC5jb20+DQo+ID4NCj4gPiBXZSBjYW4gcmVjZWl2ZSB1bmV4cGVjdGVkIHJlYm9vdCBiYXJr
-ZXIgYXQgYW55IHRpbWUsIGFuZCB3ZSdyZSBzdXBwb3NlZCB0bw0KPiA+IHJlc2V0IHRoZSB3aG9s
-ZSBkZXZpY2UgdGhlbi4NCj4gDQo+IFdoYXQgZG8geW8gbWVhbiwgYnkgd2hvbGUgZGV2aWNlID8g
-QW5kIHdobyBpcyB3ZSBpbiB0aGlzIGNvbnRleHQ/DQoNCldlIGFyZSB0YWxraW5nIGZyb20gdGhl
-IHdpZmkgZHJpdmVyJ3MgcGVyc3BlY3RpdmUuIFRoZSBjb2RlIGlzIG9yaWdpbmFsbHkgdXNlZCBv
-bmx5IGZvciBTViB0ZXN0aW5nLiBUaGVuIHdlIGZpbmQgaXQgbWlnaHQgYmUgdXNlZnVsIGluIHRo
-ZSBnZW5lcmFsIGNhc2UuIFN1cHBvc2UgdGhlIGRyaXZlciBnZXQgYSBSRUJPT1RfQkFSS0VSIGZy
-b20gdGhlIGNhcmQgKGZvciB3aGF0ZXZlciByZWFzb24pLCBpcyByZXNldHRpbmcgdGhlIGRldmlj
-ZSB0aGUgY29ycmVjdCBiZWhhdmlvcj8NCg0KVGhhbmtzLA0KLXlpDQo=
+On Thu, Oct 8, 2009 at 12:34 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Oct 06, 2009 at 09:19:06PM -0400, Luis R. Rodriguez wrote:
+>> What this means is we can enable now debug prints without
+>> requiring CONFIG_ATH9K_DEBUG.
+>>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>
+>> +MODULE_PARM_DESC(ath9k_debug, "Debugging mask");
+>
+> John, as sujith notes, this should be MODULE_PARM_DESC(debug ...
+>
+> Thanks sujith.
+>
+> so here's v2:
+
+Oh this is merged already -- either you can take this one or I'll send
+a fix now.
+
+  Luis
