@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:45586 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753285AbZJNRYX (ORCPT
+Received: from mail-vw0-f203.google.com ([209.85.212.203]:57103 "EHLO
+	mail-vw0-f203.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754502AbZJHSQa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 13:24:23 -0400
-Date: Wed, 14 Oct 2009 19:22:13 +0200
-From: "Carlos R. Mafra" <crmafra2@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	johannes@sipsolutions.net
-Subject: Re: [2.6.32-rc3] iwlagn lost connection after s2ram (with warnings)
-Message-ID: <20091014172213.GA18839@Pilar.aei.mpg.de>
-References: <20091007142031.GA7495@Pilar.aei.mpg.de> <1255023883.26521.13298.camel@rc-desk> <20091014151529.GA6602@Pilar.aei.mpg.de> <43e72e890910140944y23399b71sf20cd37e003c9729@mail.gmail.com>
+	Thu, 8 Oct 2009 14:16:30 -0400
+Received: by vws41 with SMTP id 41so3351036vws.4
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 11:15:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43e72e890910140944y23399b71sf20cd37e003c9729@mail.gmail.com>
+In-Reply-To: <4ACBF821.8030508@cmu.edu>
+References: <43e72e890910061721o5f78f82cvfaa216a4d887e4f8@mail.gmail.com>
+	 <4ACBF821.8030508@cmu.edu>
+Date: Thu, 8 Oct 2009 14:15:53 -0400
+Message-ID: <b6c5339f0910081115u3d6aea09l8ed8c104e7e6d2b4@mail.gmail.com>
+Subject: Re: [ath5k-devel] Regarding changing channel widthlin
+From: Bob Copeland <me@bobcopeland.com>
+To: Aditya Bhave <aybhave@cmu.edu>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 14.Oct'09 at  9:44:10 -0700, Luis R. Rodriguez wrote:
+On Tue, Oct 6, 2009 at 10:08 PM, Aditya Bhave <aybhave@cmu.edu> wrote:
+> Is there any detailed documentation on the internals of ath5k code?
+>
+> 1. Description of the data structures
+> 2. Flow-diagram of function calls
+> 3. What register is used for what aspect of WiFi etc etc
 
-> > [15443.032706] ------------[ cut here ]------------
-> > [15443.032723] WARNING: at net/wireless/sme.c:620 __cfg80211_disconnected+0x232/0x240()
-> > [15443.032728] Hardware name: VGN-FZ240E
-> > [15443.032732] deauth failed: -67
-> 
-> Can you reproduce ? 
+Nope (I think you'll find this is true of most/all drivers).
 
-Unfortunately I can not reproduce it reliably (I think today's warning
-was ~4 days after the last one). If I could, I would have bisected it
-already.
+Most of the intelligence is in the upper layers (mac80211), which are
+documented on http://wireless.kernel.org/.  Most of the work to enable
+it will be in those layers, as Luis said.  BTW search the list, several
+people have proposed ideas for an infrastructure for channel width
+setting.
 
-> If so then please try my patch titled:
-> [PATCH] mac80211: fix SME warning by removing stale BSS upon assoc failure
-> 
-> and see if that still happens.
-
-I will apply it, just in case. Thanks.
+-- 
+Bob Copeland %% www.bobcopeland.com
