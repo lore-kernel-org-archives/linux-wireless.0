@@ -1,149 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:53682 "EHLO
-	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752346AbZJPKFi (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23095 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759443AbZJHS64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 06:05:38 -0400
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Subject: Re: [PATCH 7/8] trivial: fix many typos s/untill/until/
-Date: Fri, 16 Oct 2009 12:04:56 +0200
-Cc: trivial@kernel.org, linux-rdma@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bonding-devel@lists.sourceforge.net,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, linux-scsi@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-ext4@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-sctp@vger.kernel.org
-References: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
-In-Reply-To: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910161204.56879.IvDoorn@gmail.com>
+	Thu, 8 Oct 2009 14:58:56 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 16/20] wl1271: Use vmalloc to allocate memory for firmware
+Date: Thu,  8 Oct 2009 21:56:32 +0300
+Message-Id: <1255028196-6565-17-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 October 2009, Thadeu Lima de Souza Cascardo wrote:
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-For rt2800usb
+Use vmalloc to allocate memory for the firmware image, and use a smaller
+linear buffer for the actual transfer of the firmware to the chipset.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+This patch is an adaptation of a similar patch for wl1251 by Kalle Valo.
 
-> ---
->  drivers/infiniband/ulp/iser/iser_verbs.c |    2 +-
->  drivers/net/bonding/bond_alb.c           |    2 +-
->  drivers/net/wireless/rt2x00/rt2800usb.c  |    2 +-
->  drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
->  drivers/staging/rtl8187se/r8180.h        |    2 +-
->  fs/ext4/balloc.c                         |    2 +-
->  net/bluetooth/bnep/core.c                |    2 +-
->  net/sctp/sm_statefuns.c                  |    2 +-
->  8 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-> index ea9e155..8579f32 100644
-> --- a/drivers/infiniband/ulp/iser/iser_verbs.c
-> +++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-> @@ -499,7 +499,7 @@ void iser_conn_init(struct iser_conn *ib_conn)
->  
->   /**
->   * starts the process of connecting to the target
-> - * sleeps untill the connection is established or rejected
-> + * sleeps until the connection is established or rejected
->   */
->  int iser_connect(struct iser_conn   *ib_conn,
->  		 struct sockaddr_in *src_addr,
-> diff --git a/drivers/net/bonding/bond_alb.c b/drivers/net/bonding/bond_alb.c
-> index 9b5936f..a1e7eb9 100644
-> --- a/drivers/net/bonding/bond_alb.c
-> +++ b/drivers/net/bonding/bond_alb.c
-> @@ -559,7 +559,7 @@ static void rlb_update_rx_clients(struct bonding *bond)
->  		}
->  	}
->  
-> -	/* do not update the entries again untill this counter is zero so that
-> +	/* do not update the entries again until this counter is zero so that
->  	 * not to confuse the clients.
->  	 */
->  	bond_info->rlb_update_delay_counter = RLB_UPDATE_DELAY;
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index a084077..449886c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -1257,7 +1257,7 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
->  	unsigned int i;
->  
->  	/*
-> -	 * Wait untill BBP and RF are ready.
-> +	 * Wait until BBP and RF are ready.
->  	 */
->  	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
->  		rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
-> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> index cafb888..10110be 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> @@ -1883,7 +1883,7 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
->  
->  	bnx2i_ep = ep->dd_data;
->  
-> -	/* driver should not attempt connection cleanup untill TCP_CONNECT
-> +	/* driver should not attempt connection cleanup until TCP_CONNECT
->  	 * completes either successfully or fails. Timeout is 9-secs, so
->  	 * wait for it to complete
->  	 */
-> diff --git a/drivers/staging/rtl8187se/r8180.h b/drivers/staging/rtl8187se/r8180.h
-> index 8216d7e..35ed60b 100644
-> --- a/drivers/staging/rtl8187se/r8180.h
-> +++ b/drivers/staging/rtl8187se/r8180.h
-> @@ -521,7 +521,7 @@ typedef struct r8180_priv
->  	//u32 NumTxOkInPeriod;   //YJ,del,080828
->  	u8   TxPollingTimes;
->  
-> -	bool	bApBufOurFrame;// TRUE if AP buffer our unicast data , we will keep eAwake untill receive data or timeout.
-> +	bool	bApBufOurFrame;// TRUE if AP buffer our unicast data , we will keep eAwake until receive data or timeout.
->  	u8	WaitBufDataBcnCount;
->  	u8	WaitBufDataTimeOut;
->  
-> diff --git a/fs/ext4/balloc.c b/fs/ext4/balloc.c
-> index 1d04189..2565b8c 100644
-> --- a/fs/ext4/balloc.c
-> +++ b/fs/ext4/balloc.c
-> @@ -519,7 +519,7 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
->  		metadata = 1;
->  
->  	/* We need to make sure we don't reuse
-> -	 * block released untill the transaction commit.
-> +	 * block released until the transaction commit.
->  	 * writeback mode have weak data consistency so
->  	 * don't force data as metadata when freeing block
->  	 * for writeback mode.
-> diff --git a/net/bluetooth/bnep/core.c b/net/bluetooth/bnep/core.c
-> index 1bd9398..9ac0497 100644
-> --- a/net/bluetooth/bnep/core.c
-> +++ b/net/bluetooth/bnep/core.c
-> @@ -629,7 +629,7 @@ int bnep_del_connection(struct bnep_conndel_req *req)
->  	s = __bnep_get_session(req->dst);
->  	if (s) {
->  		/* Wakeup user-space which is polling for socket errors.
-> -		 * This is temporary hack untill we have shutdown in L2CAP */
-> +		 * This is temporary hack until we have shutdown in L2CAP */
->  		s->sock->sk->sk_err = EUNATCH;
->  
->  		/* Kill session thread */
-> diff --git a/net/sctp/sm_statefuns.c b/net/sctp/sm_statefuns.c
-> index c8fae19..ba2f66d 100644
-> --- a/net/sctp/sm_statefuns.c
-> +++ b/net/sctp/sm_statefuns.c
-> @@ -3569,7 +3569,7 @@ sctp_disposition_t sctp_sf_do_asconf(const struct sctp_endpoint *ep,
->  	 * To do this properly, we'll set the destination address of the chunk
->  	 * and at the transmit time, will try look up the transport to use.
->  	 * Since ASCONFs may be bundled, the correct transport may not be
-> -	 * created untill we process the entire packet, thus this workaround.
-> +	 * created until we process the entire packet, thus this workaround.
->  	 */
->  	asconf_ack->dest = chunk->source;
->  	sctp_add_cmd_sf(commands, SCTP_CMD_REPLY, SCTP_CHUNK(asconf_ack));
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_boot.c |   16 ++++++++++++----
+ drivers/net/wireless/wl12xx/wl1271_main.c |    5 +++--
+ 2 files changed, 15 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index 8228ef4..7640313 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -94,7 +94,7 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+ 					     size_t fw_data_len, u32 dest)
+ {
+ 	int addr, chunk_num, partition_limit;
+-	u8 *p;
++	u8 *p, *chunk;
+ 
+ 	/* whal_FwCtrl_LoadFwImageSm() */
+ 
+@@ -103,12 +103,17 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+ 	wl1271_debug(DEBUG_BOOT, "fw_data_len %zd chunk_size %d",
+ 		     fw_data_len, CHUNK_SIZE);
+ 
+-
+ 	if ((fw_data_len % 4) != 0) {
+ 		wl1271_error("firmware length not multiple of four");
+ 		return -EIO;
+ 	}
+ 
++	chunk = kmalloc(CHUNK_SIZE, GFP_KERNEL);
++	if (!buf) {
++		wl1271_error("allocation for firmware upload chunk failed");
++		return -ENOMEM;
++	}
++
+ 	wl1271_set_partition(wl, dest,
+ 			     part_table[PART_DOWN].mem.size,
+ 			     part_table[PART_DOWN].reg.start,
+@@ -137,9 +142,10 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+ 		/* 10.3 upload the chunk */
+ 		addr = dest + chunk_num * CHUNK_SIZE;
+ 		p = buf + chunk_num * CHUNK_SIZE;
++		memcpy(chunk, p, CHUNK_SIZE);
+ 		wl1271_debug(DEBUG_BOOT, "uploading fw chunk 0x%p to 0x%x",
+ 			     p, addr);
+-		wl1271_spi_mem_write(wl, addr, p, CHUNK_SIZE);
++		wl1271_spi_mem_write(wl, addr, chunk, CHUNK_SIZE);
+ 
+ 		chunk_num++;
+ 	}
+@@ -147,10 +153,12 @@ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+ 	/* 10.4 upload the last chunk */
+ 	addr = dest + chunk_num * CHUNK_SIZE;
+ 	p = buf + chunk_num * CHUNK_SIZE;
++	memcpy(chunk, p, fw_data_len % CHUNK_SIZE);
+ 	wl1271_debug(DEBUG_BOOT, "uploading fw last chunk (%zd B) 0x%p to 0x%x",
+ 		     fw_data_len % CHUNK_SIZE, p, addr);
+-	wl1271_spi_mem_write(wl, addr, p, fw_data_len % CHUNK_SIZE);
++	wl1271_spi_mem_write(wl, addr, chunk, fw_data_len % CHUNK_SIZE);
+ 
++	kfree(chunk);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 09fe968..d22de23 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -30,6 +30,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/crc32.h>
+ #include <linux/etherdevice.h>
++#include <linux/vmalloc.h>
+ #include <linux/spi/wl12xx.h>
+ 
+ #include "wl1271.h"
+@@ -231,7 +232,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 	}
+ 
+ 	wl->fw_len = fw->size;
+-	wl->fw = kmalloc(wl->fw_len, GFP_KERNEL);
++	wl->fw = vmalloc(wl->fw_len);
+ 
+ 	if (!wl->fw) {
+ 		wl1271_error("could not allocate memory for the firmware");
+@@ -1484,7 +1485,7 @@ static int __devexit wl1271_remove(struct spi_device *spi)
+ 	platform_device_unregister(&wl1271_device);
+ 	free_irq(wl->irq, wl);
+ 	kfree(wl->target_mem_map);
+-	kfree(wl->fw);
++	vfree(wl->fw);
+ 	wl->fw = NULL;
+ 	kfree(wl->nvs);
+ 	wl->nvs = NULL;
+-- 
+1.5.6.5
 
