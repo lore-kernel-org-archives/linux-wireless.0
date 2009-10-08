@@ -1,64 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9059 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757449AbZJ3VgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:16 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 07/15] iwlwifi: unmap memory before use
-Date: Fri, 30 Oct 2009 14:36:10 -0700
-Message-Id: <1256938578-9638-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from casper.infradead.org ([85.118.1.10]:45250 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758347AbZJHNku convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 09:40:50 -0400
+Date: Thu, 8 Oct 2009 06:40:41 -0700
+From: Arjan van de Ven <arjan@infradead.org>
+To: Mike Galbraith <efault@gmx.de>
+Cc: Frans Pop <elendil@planet.nl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+Message-ID: <20091008064041.67219b13@infradead.org>
+In-Reply-To: <1254974743.7797.21.camel@marge.simson.net>
+References: <200910051500.55875.elendil@planet.nl>
+	<200910061749.02805.elendil@planet.nl>
+	<200910071910.53907.elendil@planet.nl>
+	<200910072034.57511.elendil@planet.nl>
+	<1254974743.7797.21.camel@marge.simson.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+On Thu, 08 Oct 2009 06:05:43 +0200
+Mike Galbraith <efault@gmx.de> wrote:
 
-Handling responses to driver originated commands include passing the
-original command buffer to the caller. At this time it is possible for a
-callback to be invoked that is passed this command buffer and thus likely
-to access it.
+> On Wed, 2009-10-07 at 20:34 +0200, Frans Pop wrote:
+> > On Wednesday 07 October 2009, Frans Pop wrote:
+> > > On Tuesday 06 October 2009, Frans Pop wrote:
+> > > > I've checked for 2.6.31.1 now and iwlagn is listed high there
+> > > > too when the system is idle, but with normal values of 60-100
+> > > > ms. And phy0 has normal values of below 10 ms.
+> > > > I've now rebooted with today's mainline git; phy0 now
+> > > > frequently shows with values of around 100 ms too (i.e. higher
+> > > > than last time).
+> > >
+> > > Mike privately sent me a script to try to capture the latencies
+> > > with perf, but the perf output does not show any high latencies
+> > > at all. It looks as if we may have found a bug in latencytop here
+> > > instead.
+> > 
+> > Not sure if it's relevant nor what it means, but I frequently see
+> > two lines for iwlagn, e.g:
+> > 
+> >     Scheduler: waiting for cpu              102.4 msec         99.7
+> > % .                                         3.3 msec          0.3 %
+> > 
+> > I get the same results with both latencytop 0.4 and 0.5.
+> 
+> OK, I see latencytop spikes here on an idle box too, to the tune of up
+> to a _second_.  Booting with nohz=off seems to have cured it.
 
-We need to make sure that the memory associated with that buffer is not DMA
-mapped at the time.
+interesting..
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+
+by chance, does this patch fix it ?
+
+>From 33725d4939f457b12d7bc1bcbcc0dfb8b2f5bd48 Mon Sep 17 00:00:00 2001
+From: Arjan van de Ven <arjan@linux.intel.com>
+Date: Thu, 24 Sep 2009 13:24:16 +0200
+Subject: [PATCH] x86, timers: check for pending timers after (device) interrupts
+
+Now that range timers and deferred timers are common, I found a
+problem with these using the "perf timechart" tool.
+
+It turns out that on x86, these two 'opportunistic' timers only
+get checked when another "real" timer happens.
+These opportunistic timers have the objective to save power by
+hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
+as much as possible.
+
+The change in this patch runs this check not only at timer interrupts,
+but at all (device) interrupts. The effect is that
+1) the deferred timers/range timers get delayed less
+2) the range timers cause less wakeups by themselves because
+   the percentage of hitchhiking on existing wakeup events goes up.
+
+I've verified the working of the patch using "perf timechart",
+the original exposed bug is gone with this patch.
+
+Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-tx.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ arch/x86/kernel/irq.c |    2 ++
+ arch/x86/kernel/smp.c |    1 +
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 2afa003..1868093 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -1122,11 +1122,6 @@ static void iwl_hcmd_queue_reclaim(struct iwl_priv *priv, int txq_id,
- 		return;
+diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
+index 74656d1..3912061 100644
+--- a/arch/x86/kernel/irq.c
++++ b/arch/x86/kernel/irq.c
+@@ -244,6 +244,7 @@ unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
+ 				__func__, smp_processor_id(), vector, irq);
  	}
  
--	pci_unmap_single(priv->pci_dev,
--		pci_unmap_addr(&txq->meta[cmd_idx], mapping),
--		pci_unmap_len(&txq->meta[cmd_idx], len),
--		PCI_DMA_BIDIRECTIONAL);
--
- 	for (idx = iwl_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
- 	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd)) {
++	run_local_timers();
+ 	irq_exit();
  
-@@ -1174,6 +1169,11 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	cmd = priv->txq[IWL_CMD_QUEUE_NUM].cmd[cmd_index];
- 	meta = &priv->txq[IWL_CMD_QUEUE_NUM].meta[cmd_index];
+ 	set_irq_regs(old_regs);
+@@ -268,6 +269,7 @@ void smp_generic_interrupt(struct pt_regs *regs)
+ 	if (generic_interrupt_extension)
+ 		generic_interrupt_extension();
  
-+	pci_unmap_single(priv->pci_dev,
-+			 pci_unmap_addr(meta, mapping),
-+			 pci_unmap_len(meta, len),
-+			 PCI_DMA_BIDIRECTIONAL);
-+
- 	/* Input error checking is done when commands are added to queue. */
- 	if (meta->flags & CMD_WANT_SKB) {
- 		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
++	run_local_timers();
+ 	irq_exit();
+ 
+ 	set_irq_regs(old_regs);
+diff --git a/arch/x86/kernel/smp.c b/arch/x86/kernel/smp.c
+index ec1de97..d915d95 100644
+--- a/arch/x86/kernel/smp.c
++++ b/arch/x86/kernel/smp.c
+@@ -198,6 +198,7 @@ void smp_reschedule_interrupt(struct pt_regs *regs)
+ {
+ 	ack_APIC_irq();
+ 	inc_irq_stat(irq_resched_count);
++	run_local_timers();
+ 	/*
+ 	 * KVM uses this interrupt to force a cpu out of guest mode
+ 	 */
 -- 
-1.5.6.3
+1.6.0.6
 
+
+-- 
+Arjan van de Ven 	Intel Open Source Technology Centre
+For development, discussion and tips for power savings, 
+visit http://www.lesswatts.org
