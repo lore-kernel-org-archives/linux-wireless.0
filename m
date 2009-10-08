@@ -1,113 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:53696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757172AbZJaKCp (ORCPT
+Received: from smtp-out-068.synserver.de ([212.40.180.68]:1043 "HELO
+	smtp-out-067.synserver.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1755814AbZJHUlp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 06:02:45 -0400
-Subject: Re: [PATCH 1/2] Allow scanning while in authenticated only state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-In-Reply-To: <1256982381.3089.10.camel@maxim-laptop>
-References: <1256939391.31271.11.camel@maxim-laptop>
-	 <1256939549.31271.14.camel@maxim-laptop>
-	 <1256967782.3555.69.camel@johannes.local>
-	 <1256982381.3089.10.camel@maxim-laptop>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-EbkFh5ptUx/hxm0uEkTV"
-Date: Sat, 31 Oct 2009 11:02:46 +0100
-Message-ID: <1256983366.3555.119.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 8 Oct 2009 16:41:45 -0400
+Date: Thu, 8 Oct 2009 22:34:26 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Mike Galbraith <efault@gmx.de>
+Cc: Frans Pop <elendil@planet.nl>,
+	Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+Message-ID: <20091008203426.GA1946@phenom2.trippelsdorf.de>
+References: <200910051500.55875.elendil@planet.nl>
+ <1254974743.7797.21.camel@marge.simson.net>
+ <20091008064041.67219b13@infradead.org>
+ <200910081655.37485.elendil@planet.nl>
+ <1255026217.6643.12.camel@marge.simson.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255026217.6643.12.camel@marge.simson.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 08, 2009 at 08:23:37PM +0200, Mike Galbraith wrote:
+> On Thu, 2009-10-08 at 16:55 +0200, Frans Pop wrote:
+> > On Thursday 08 October 2009, Arjan van de Ven wrote:
+> > > From: Arjan van de Ven <arjan@linux.intel.com>
+> > > Date: Thu, 24 Sep 2009 13:24:16 +0200
+> > > Subject: [PATCH] x86, timers: check for pending timers after (device)
+> > > interrupts
+> > >
+> > > Now that range timers and deferred timers are common, I found a
+> > > problem with these using the "perf timechart" tool.
+> > >
+> > > It turns out that on x86, these two 'opportunistic' timers only
+> > > get checked when another "real" timer happens.
+> > > These opportunistic timers have the objective to save power by
+> > > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
+> > > as much as possible.
+> > 
+> > This patch makes quite a difference for me. iwlagn and phy0 now 
+> > consistently show at ~10 ms or lower.
+> > 
+> > I do still get occasional high latencies, but those are for things like
+> > "[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
+> > expect them. Those high latencies are mostly only listed for "Global" and 
+> > don't translate to individual processes.
+> 
+> I still see very high latencies coming out of idle (last noted was >
+> 300ms, NO_HZ) with this patch, and wonder if the hunk below makes any
+> difference whatsoever for you.  Here, it definitely does. (shouldn't)
 
---=-EbkFh5ptUx/hxm0uEkTV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I'm also seeing these strange, very high latencies here. Your patch
+didn't help unfortunately.
 
-On Sat, 2009-10-31 at 11:46 +0200, Maxim Levitsky wrote:
+This is from an otherwise idle NO_NZ system:
 
-> > I think you just need this wpa_supplicant patch:
-> > http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/=
-deauth-on-disassoc.patch
->=20
-> Nope, this patch doesn't help.
->=20
-> if I remove the bssid_changed, then it seems to work when connecting to
-> same AP, but still scan hangs when connecting to different.
+# ./perf sched latency
 
-Hmm, Luis said it worked when connecting to a different AP. But he got
-assoc refused and/or disassoc from the AP
+ -----------------------------------------------------------------------------------------
+  Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms |
+ -----------------------------------------------------------------------------------------
+  ksoftirqd/0:4         |      2.216 ms |      170 | avg:   24.235 ms | max:  808.356 ms |
+  ksoftirqd/1:6         |      2.611 ms |      205 | avg:    4.334 ms | max:  165.553 ms |
+  migration/2:7         |      0.000 ms |        1 | avg:    3.060 ms | max:    3.060 ms |
 
-> The problem is that wpa_supplicant doesn't do deauthentication
-> explicitly, and I was told that this is right thing to do. This confuses
-> all the nl80211 and mac80211...
+With latencytop the ksoftirqd latency is over 1 sec frequently. (Could be
+ondemand CPUfreq governor related?)
 
-I thought Jouni committed that workaround. I'm still not convinced that
-wpa_supplicant is doing the right thing.
-
-> I also think that its best just to do both deauthentication and
-> disassociation in same time.
-
-But then why do we bother?
-
-> Yet, I think this path is ok, that is, when you disallow scanning, you
-> can be sure that wifi will be dead, and this patch catches the situation
-> when it for sure will disallowed  forever.
-
-True, in some sense, but the real problem is that the authentication is
-lingering along. If we really need to clean that up in the kernel then
-we'd have to time out authentication structs that didn't get promoted to
-association, instead of just ignoring them like your two patches
-implement [1]. However, since we put control of all this into
-wpa_supplicant, I don't know whether the kernel really should be
-required to clean up -- I was going to write "clean up after it" but
-that's not true [2], you're proposing that the kernel clean up *while*
-wpa_supplicant is in control. I don't think that's right, since it might
-actually want to hang on for an authentication while doing something
-else, for a while at least. How can we calculate an upper bound on that
-in the kernel?
-
-Now, I can kinda agree that we should allow authentication frames to go
-through while already authenticated, but that's something quite
-different although your patches here would also allow that in some
-hackish way (by accumulating more and more authentication structs that
-are then ignored).
-
-Now, especially since you say that this still runs into problems while
-connecting to a new AP, I think that wpa_supplicant should
-deauthenticate from the old AP. After all, it wants to eventually
-control FT and anything we do in the kernel will come back and interfere
-with that.
-
-johannes
-
-[1] and that'd have to be in cfg80211
-[2] Except when the interface is taken down, but that is already cleaned
-up by cfg80211.
-
-
---=-EbkFh5ptUx/hxm0uEkTV
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK7AtDAAoJEODzc/N7+QmaiwsQAMhhRM9JvkTNUW+D7iZrAL2H
-zc6gBXydZQEPMCGptmP74UoyjrJgHCM1b81RSFKyo1CD5sr1mbMEryuA3efAMikr
-cIRa/VYGhJze/DMGubRjqaoLcmHOUzrPUh9fQMqcY5PVsvS3CqaG8zLFa2sw4w34
-ss2Nt1KfASe0CC3fpJu0bDyhOqcqhWoQKzhQ3pwsD+KfBYCAmvntvXKdWqIejEy/
-anwoHM1muTXVEq6I3Tg/mhjO/za2YdThj981DyK2OjC9RIi5UPlMm57fVmQRHBgw
-98hG34tS1dXPaLrZdpga/ozEMIScCa8X112li4ywkadHnjqtxSLfhP4Q36BefeB3
-4HxM2q3UPAz3+vsw1JXSqgf3OBdKSzxdaCY9geMvCLq3cWxSRqt+h2T9X1MuhL1I
-emTvWB2C+8xoLyB0zclNWE4kQWEtRTUGcajC3D8yxfI2desMH0gr/eG9ona5ys7I
-8yQMcqlHXUo7CWHc7ZAWBIECrSJFmkMtNfJNY6vxp3ima1EpPbgJwERt0DKqGWB5
-oYYc3Z5Yj5m5ZRXKgKBxbOBchHlpR62az/xUcgUg4YyYKPWEvsmvK36a1N7EpXBi
-wRBMIppKupdOY4MO+OWKrAVl2orjw2BtzGHPNC22X3pC0lX7+4yskOT6y42MQOjC
-5PkqCW5jOZBM8w/FDCr4
-=W1Ya
------END PGP SIGNATURE-----
-
---=-EbkFh5ptUx/hxm0uEkTV--
-
+-- 
+Markus
