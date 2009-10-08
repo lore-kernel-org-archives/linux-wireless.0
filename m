@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38594 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756579AbZJGSLk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 14:11:40 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Frans Pop <elendil@planet.nl>
-Cc: Arjan van de Ven <arjan@infradead.org>,
+Received: from cpsmtpm-eml104.kpnxchange.com ([195.121.3.8]:63494 "EHLO
+	CPSMTPM-EML104.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932437AbZJHO4P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 10:56:15 -0400
+From: Frans Pop <elendil@planet.nl>
+To: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
+Date: Thu, 8 Oct 2009 16:55:36 +0200
+Cc: Mike Galbraith <efault@gmx.de>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Ingo Molnar <mingo@elte.hu>,
 	Peter Zijlstra <peterz@infradead.org>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <200910071910.53907.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	 <20091005072428.16ce40e4@infradead.org>
-	 <200910061749.02805.elendil@planet.nl>
-	 <200910071910.53907.elendil@planet.nl>
-Content-Type: text/plain
-Date: Wed, 07 Oct 2009 20:10:40 +0200
-Message-Id: <1254939040.7523.9.camel@marge.simson.net>
-Mime-Version: 1.0
+References: <200910051500.55875.elendil@planet.nl> <1254974743.7797.21.camel@marge.simson.net> <20091008064041.67219b13@infradead.org>
+In-Reply-To: <20091008064041.67219b13@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910081655.37485.elendil@planet.nl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-10-07 at 19:10 +0200, Frans Pop wrote:
-> On Tuesday 06 October 2009, Frans Pop wrote:
-> > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
-> > the system is idle, but with normal values of 60-100 ms. And phy0 has
-> > normal values of below 10 ms.
-> > I've now rebooted with today's mainline git; phy0 now frequently shows
-> > with values of around 100 ms too (i.e. higher than last time).
-> >
-> > Both still go way down as soon as the system is given work to do.
-> >
-> > With a 5 second sleep I was unable to get any significant latencies (I
-> > started perf on a latencytop refresh and did a manual refresh as it
-> > finished to see what happened during the perf run). The perf run does
-> > seem to affect the latencies.
-> > I've uploaded a chart for a 10s sleep during which I got latencies of
-> > 101ms for iwlagn and 77ms for phy0:
-> > http://people.debian.org/~fjp/tmp/kernel/.
-> 
-> Mike privately sent me a script to try to capture the latencies with perf,
-> but the perf output does not show any high latencies at all. It looks as if
-> we may have found a bug in latencytop here instead.
+On Thursday 08 October 2009, Arjan van de Ven wrote:
+> From: Arjan van de Ven <arjan@linux.intel.com>
+> Date: Thu, 24 Sep 2009 13:24:16 +0200
+> Subject: [PATCH] x86, timers: check for pending timers after (device)
+> interrupts
+>
+> Now that range timers and deferred timers are common, I found a
+> problem with these using the "perf timechart" tool.
+>
+> It turns out that on x86, these two 'opportunistic' timers only
+> get checked when another "real" timer happens.
+> These opportunistic timers have the objective to save power by
+> hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
+> as much as possible.
 
-Maybe.  I have a little perturbation measurement proggy which I just
-fired up to verify both perf and latencytop's numbers here.  It's a dirt
-simply cycle counter tool, which calibrates itself, sums perturbations
-over a period of time and emit stats.  Here, all three are in violent
-agreement wrt how long "pert" is waiting for cpu.
+This patch makes quite a difference for me. iwlagn and phy0 now 
+consistently show at ~10 ms or lower.
 
-	-Mike
+I do still get occasional high latencies, but those are for things like
+"[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
+expect them. Those high latencies are mostly only listed for "Global" and 
+don't translate to individual processes.
 
+On Thursday 08 October 2009, Arjan van de Ven wrote:
+> On Thu, 08 Oct 2009 13:24:22 +0200 Mike Galbraith <efault@gmx.de> wrote:
+> > Latencytop was accounting uninterruptible and interruptible sleep
+> > time up to 5ms, which is not the latency the user is looking for.
+>
+> it is for everything but the scheduler latency!
+>
+> latencytop wants to show where you're waiting for disk, etc etc.
+> that's not "time on runqueue".
+
+The ~10 ms I still get for iwlagn and phy0 (and sometimes higher (~30 ms) 
+for others like Xorg and artsd) is still "Scheduler: waiting for cpu'. If 
+it is actually due to (un)interuptable sleep, isn't that a misleading 
+label? I directly associated that with scheduler latency.
+
+Or are those that are left now real scheduler latencies? The values are now 
+low enough that they don't indicate a problem.
+
+Thanks,
+FJP
+
+P.S. I may be seeing another issue in the latencytop GUI. Sometimes I see
+"fsync() on a file (type 'F' for details)". But typing 'F' only gets me a 
+search for a target starting with "F", no details.
