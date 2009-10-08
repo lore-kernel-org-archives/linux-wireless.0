@@ -1,81 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:50543 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755918AbZJ2Vdl (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:56583 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759595AbZJHS6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 17:33:41 -0400
-Received: by iwn10 with SMTP id 10so1701418iwn.4
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Oct 2009 14:33:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1256851738.3865.149.camel@johannes.local>
-References: <20091028183726.GA4952@tux> <1256761485.4237.260.camel@johannes.local>
-	<43e72e890910291355l5fc4ec2ctb9a777b6e8b07baa@mail.gmail.com>
-	<43e72e890910291419j7feb7a3dg33cd5b02e064eeee@mail.gmail.com>
-	<1256851738.3865.149.camel@johannes.local>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 29 Oct 2009 14:33:26 -0700
-Message-ID: <43e72e890910291433k62e9a3a7oa15d8cc8f175bf93@mail.gmail.com>
-Subject: Re: odd state reached when AP deauths you after assoc
-To: Johannes Berg <johannes@sipsolutions.net>
+	Thu, 8 Oct 2009 14:58:24 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Jouni.Malinen" <Jouni.Malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 05/20] wl1271: Implement delayed entry into ELP
+Date: Thu,  8 Oct 2009 21:56:21 +0300
+Message-Id: <1255028196-6565-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 29, 2009 at 2:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2009-10-29 at 14:19 -0700, Luis R. Rodriguez wrote:
->> On Thu, Oct 29, 2009 at 1:55 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->> > On Wed, Oct 28, 2009 at 1:24 PM, Johannes Berg
->> > <johannes@sipsolutions.net> wrote:
->> >> On Wed, 2009-10-28 at 11:37 -0700, Luis R. Rodriguez wrote:
->> >>> I ran into this when ath5k with wpa_supplicant with config file with
->> >>> a wrong password against a Cisco AP. It seems the Cisco AP auths you
->> >>> and lets you assoc but later it deauths you -- I guess after it
->> >>> determines you are auth credentials failed. When this happens I get:
->> >>>
->> >>> mcgrof@tux ~ $ iw dev wlan0 link
->> >>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
->> >>> Not connected.
->> >>
->> >> I'm guessing that you're using -Dnl80211. You need this patch, or
->> >> equivalent:
->> >> http://johannes.sipsolutions.net/patches/hostap/all/2009-10-26-12%3a59/deauth-on-disassoc.patch
->> >
->> > Indeed, it fixes my woes, thanks.
->>
->> Well almost, after a while of being connected it then does this:
->>
->> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
->> CTRL-EVENT-SCAN-RESULTS
->> Trying to authenticate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
->> Trying to associate with 00:0b:85:5b:8d:6c (SSID='ATH-GLOBAL' freq=2462 MHz)
->> Associated with 00:0b:85:5b:8d:6c
->> CTRL-EVENT-DISCONNECTED - Disconnect event - remove keys
->> CTRL-EVENT-SCAN-RESULTS
->> Trying to authenticate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
->> Trying to associate with 00:0b:85:5b:9a:bc (SSID='ATH-GLOBAL' freq=2412 MHz)
->> Associated with 00:0b:85:5b:9a:bc
->> CTRL-EVENT-EAP-STARTED EAP authentication started
->> CTRL-EVENT-EAP-STARTED EAP authentication started
->> CTRL-EVENT-EAP-METHOD EAP vendor 0 method 25 (PEAP) selected
->> OpenSSL: tls_connection_handshake - Failed to read possible
->> Application Data error:00000000:lib(0):func(0):reason(0)
->>
->> And I then end up with the same:
->>
->> >>> mcgrof@tux ~ $ iw dev wlan0 link
->> >>> Authenticated with 00:0b:85:5b:8d:6c (on wlan0)
->> >>> Not connected.
->
-> Might be due to that bssid_changed check I was unsure about -- try
-> removing that.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-OK will do -- it took a while to trigger so will wait and see if it
-happens again, and if it happens often enough I can at least confirm
-it would fix it. Otherwise not sure what triggered it. I failed to
-check the logs to see what disconnect event exactly triggered.
+Implement delayed entry into ELP. This will promote the following:
+ - Less redundant sleep/wake cycles (better perf)
+ - Avoids known firmware issues with going to ELP too fast after an
+   operation
 
-  Luis
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Vidhya Govindan <vidhya.govindan@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_ps.c   |   46 ++++++++++++++++++++---------
+ drivers/net/wireless/wl12xx/wl1271_ps.h   |    2 +-
+ 4 files changed, 35 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index e575dcc..c455dcb 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -373,6 +373,7 @@ struct wl1271 {
+ 	bool elp;
+ 
+ 	struct completion *elp_compl;
++	struct delayed_work elp_work;
+ 
+ 	/* we can be in psm, but not in elp, we have to differentiate */
+ 	bool psm;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 3d629da..cc5c328 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1226,6 +1226,7 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 	skb_queue_head_init(&wl->tx_queue);
+ 
+ 	INIT_WORK(&wl->filter_work, wl1271_filter_work);
++	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	wl->channel = WL1271_DEFAULT_CHANNEL;
+ 	wl->scanning = false;
+ 	wl->default_key = 0;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index 1dc74b0..0f6ea16 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -27,25 +27,43 @@
+ 
+ #define WL1271_WAKEUP_TIMEOUT 500
+ 
+-/* Routines to toggle sleep mode while in ELP */
+-void wl1271_ps_elp_sleep(struct wl1271 *wl)
++void wl1271_elp_work(struct work_struct *work)
+ {
++	struct delayed_work *dwork;
++	struct wl1271 *wl;
++
++	dwork = container_of(work, struct delayed_work, work);
++	wl = container_of(dwork, struct wl1271, elp_work);
++
++	wl1271_debug(DEBUG_PSM, "elp work");
++
++	mutex_lock(&wl->mutex);
++
+ 	/*
+-	 * FIXME: due to a problem in the firmware (causing a firmware
+-	 * crash), ELP entry is prevented below. Remove the "true" to
+-	 * re-enable ELP entry.
++	 * FIXME: below, by means of the "true", ELP has been disabled for now
++	 * to work around a firmware bug. To be enabled upon receiving a new
++	 * firmware version.
+ 	 */
+ 	if (true || wl->elp || !wl->psm)
+-		return;
++		goto out;
+ 
+-	/*
+-	 * Go to ELP unless there is work already pending - pending work
+-	 * will immediately wakeup the chipset anyway.
+-	 */
+-	if (!work_pending(&wl->irq_work) && !work_pending(&wl->tx_work)) {
+-		wl1271_debug(DEBUG_PSM, "chip to elp");
+-		wl1271_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
+-		wl->elp = true;
++	wl1271_debug(DEBUG_PSM, "chip to elp");
++	wl1271_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
++	wl->elp = true;
++
++out:
++	mutex_unlock(&wl->mutex);
++}
++
++#define ELP_ENTRY_DELAY  5
++
++/* Routines to toggle sleep mode while in ELP */
++void wl1271_ps_elp_sleep(struct wl1271 *wl)
++{
++	if (wl->psm) {
++		cancel_delayed_work(&wl->elp_work);
++		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
++					msecs_to_jiffies(ELP_ENTRY_DELAY));
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.h b/drivers/net/wireless/wl12xx/wl1271_ps.h
+index de2bd3c..779653d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.h
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.h
+@@ -30,6 +30,6 @@
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode);
+ void wl1271_ps_elp_sleep(struct wl1271 *wl);
+ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
+-
++void wl1271_elp_work(struct work_struct *work);
+ 
+ #endif /* __WL1271_PS_H__ */
+-- 
+1.5.6.5
+
