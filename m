@@ -1,76 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:43338 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbZJWNfY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:35:24 -0400
-Subject: Re: NOHZ: local_softirq_pending 08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tilman Schmidt <tilman@imap.cc>
-Cc: Jarek Poplawski <jarkao2@gmail.com>,
-	David Miller <davem@davemloft.net>, hidave.darkstar@gmail.com,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless@vger.kernel.org, linux-ppp@vger.kernel.org,
-	netdev@vger.kernel.org, paulus@samba.org,
-	isdn4linux <isdn4linux@listserv.isdn4linux.de>,
-	i4ldeveloper <i4ldeveloper@listserv.isdn4linux.de>,
-	Karsten Keil <isdn@linux-pingi.de>
-In-Reply-To: <4AE0ECCE.2020407@imap.cc>
-References: <4AD31213.6020006@imap.cc> <20091015114052.GA9870@ff.dom.local>
-	 <4AD76184.6030900@gmail.com> <4ADF5710.4030505@imap.cc>
-	 <4AE0ECCE.2020407@imap.cc>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-7NtKIoavohHzeLGIUrpI"
-Date: Fri, 23 Oct 2009 15:34:29 +0200
-Message-Id: <1256304869.12174.20.camel@johannes.local>
+Received: from mail.gmx.net ([213.165.64.20]:52346 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932435AbZJHOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 10:55:43 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Mike Galbraith <efault@gmx.de>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Frans Pop <elendil@planet.nl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1255011186.7294.1.camel@marge.simson.net>
+References: <200910051500.55875.elendil@planet.nl>
+	 <200910061749.02805.elendil@planet.nl>
+	 <200910071910.53907.elendil@planet.nl>
+	 <200910072034.57511.elendil@planet.nl>
+	 <1254974743.7797.21.camel@marge.simson.net>
+	 <20091008064041.67219b13@infradead.org>
+	 <1255011186.7294.1.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Thu, 08 Oct 2009 16:54:54 +0200
+Message-Id: <1255013694.7309.7.camel@marge.simson.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2009-10-08 at 16:13 +0200, Mike Galbraith wrote:
+> On Thu, 2009-10-08 at 06:40 -0700, Arjan van de Ven wrote:
+> > On Thu, 08 Oct 2009 06:05:43 +0200
+> > Mike Galbraith <efault@gmx.de> wrote:
+> 
+> > > OK, I see latencytop spikes here on an idle box too, to the tune of up
+> > > to a _second_.  Booting with nohz=off seems to have cured it.
+> > 
+> > interesting..
+> > 
+> > 
+> > by chance, does this patch fix it ?
+> 
+> I haven't seen incredible yet, but with idle box, have seen > 200ms, so
+> would say no.
 
---=-7NtKIoavohHzeLGIUrpI
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+But this dinky hunk of my patchlet does indeed still fix it right up.
 
-On Fri, 2009-10-23 at 01:37 +0200, Tilman Schmidt wrote:
+Index: linux-2.6/kernel/sched_fair.c
+===================================================================
+--- linux-2.6.orig/kernel/sched_fair.c
++++ linux-2.6/kernel/sched_fair.c
+@@ -495,8 +495,10 @@ static void update_curr(struct cfs_rq *c
+ 	u64 now = rq_of(cfs_rq)->clock;
+ 	unsigned long delta_exec;
+ 
+-	if (unlikely(!curr))
++	if (unlikely(!curr)) {
++		update_rq_clock(rq_of(cfs_rq));
+ 		return;
++	}
+ 
+ 	/*
+ 	 * Get the amount of time the current task was running
 
-> --- a/drivers/isdn/i4l/isdn_ppp.c
-> +++ b/drivers/isdn/i4l/isdn_ppp.c
-> @@ -1174,7 +1174,10 @@ isdn_ppp_push_higher(isdn_net_dev * net_dev, isdn_=
-net_local * lp, struct sk_buff
->  #endif /* CONFIG_IPPP_FILTER */
->  	skb->dev =3D dev;
->  	skb_reset_mac_header(skb);
-> -	netif_rx(skb);
-> +	if (in_interrupt())
-> +		netif_rx(skb);
-> +	else
-> +		netif_rx_ni(skb);
+We have a clock problem with NO_HZ coming out of idle, so we may well
+have real latency issues at the same time, not bogons.
 
-So you've verified that the entire i4l stack can cope with being called
-twice on the same CPU, from different contexts?
-
-johannes
-
---=-7NtKIoavohHzeLGIUrpI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK4bDiAAoJEODzc/N7+Qmar1IQAKGLYK9REsXEg22lyNTnuO/O
-LHksLqfsQCGlCrc8mV/TBFudWTtOI8WadqlTRNtRyST2c5X+9hB7CAfaXL59liDn
-b8h5D0B9dvFoOSkPtyFC9pW9Nw8QEGNym+wv+q/FJvoA1jyAhsAhCTkR63jUhFCk
-Zf9d1xE6DtIVHyir7jYgxysVNcZdEQ25hf+s+OM31aMaafWdz83wJB0LWk7DiSjQ
-i2U/bJXsFy67cUjFapr6Pl8ZoGQt8Kjama6+ttN91PqcHxREYyC0Yov+jhYiZ3cF
-T0qDKUy7W9Jxnpnfmp5ZQ9TDsml//e0klWPKuWCl9gm3y8resgqJcxhAsjkdPcP1
-W/FZ3rUiUqdNYsvLZBT3mJcPWApncvvMsfAqd4ziFcFGkbnxkhqD+PC59jlOvJkB
-FhVp0V/m5eUawHWtVGHYyjBXEmtAA/c6AUuXvFRLMWfGdou5KOjtHgjG1bp4Umuo
-SwZiNhgzTagTGLw1C7oXhny6zm4kU6dOlcT/DFEjpIsMqG9AiWL8EOkw5TI7FQr+
-/exgN7g7myiOLL6coLO91+kX1ajPNDEay32S3SdLXdWkls6qR3qysQC6XALfGtAy
-q+yR9nLme1Q6I5Rz56USB42iG44Gyb+gqH2BqKZbiNJ3LqrN6XYIwkKmVvkx/3uh
-/jYxJWtRCmAc2HcP7gne
-=N3Jb
------END PGP SIGNATURE-----
-
---=-7NtKIoavohHzeLGIUrpI--
+	-Mike
 
