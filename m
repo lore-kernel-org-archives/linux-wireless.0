@@ -1,136 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web53901.mail.re2.yahoo.com ([206.190.36.211]:36425 "HELO
-	web53901.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752469AbZJZREv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 13:04:51 -0400
-Message-ID: <776769.29896.qm@web53901.mail.re2.yahoo.com>
-Date: Mon, 26 Oct 2009 10:04:55 -0700 (PDT)
-From: Fredi <fredin77@yahoo.com>
-Subject: Re: iwl3945, after a while stops working with "No space for Tx"
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: YiZhu <yi.zhu@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	TomasWinkler <tomas.winkler@intel.com>,
-	AbhijeetKolekar <abhijeet.kolekar@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1256574352.21134.7591.camel@rc-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from xc.sipsolutions.net ([83.246.72.84]:48799 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757114AbZJHJtT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 05:49:19 -0400
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20091007171235.d40f0cc2.randy.dunlap@oracle.com>
+References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
+	 <1254949672-24022-1-git-send-email-linville@tuxdriver.com>
+	 <4ACD0E5A.7060106@oracle.com> <1254954842.3713.7.camel@johannes.local>
+	 <4ACD1C3D.3030506@oracle.com> <1254957256.3713.10.camel@johannes.local>
+	 <20091007171235.d40f0cc2.randy.dunlap@oracle.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-dfkZ1gzpcmc9jolCSbew"
+Date: Thu, 08 Oct 2009 11:48:02 +0200
+Message-Id: <1254995282.3713.18.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-first thanks for your reply,
---- On Mon, 26/10/09, reinette chatre <reinette.chatre@intel.com> wrote:
 
-> From: reinette chatre <reinette.chatre@intel.com>
-> Subject: Re: iwl3945, after a while stops working with "No space for Tx"
-> To: "Frederik Nosi" <fredin77@yahoo.com>
-> Cc: "Zhu, Yi" <yi.zhu@intel.com>, "Intel Linux Wireless" <ilw@linux.intel.com>, "John W. Linville" <linville@tuxdriver.com>, "Winkler, Tomas" <tomas.winkler@intel.com>, "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-> Date: Monday, 26 October, 2009, 5:25 PM
-> On Sat, 2009-10-24 at 06:44 -0700,
-> Frederik Nosi wrote:
-> > Hi,
-> > first sorry if somebody is not the right contact, got
-> the adressess from ./scripts/get_maintainer.pl -f
-> drivers/net/wireless/iwlwifi.
-> > From some kernel versions now, after some time that im
-> using this card it stops working and on messages i get this
-> errors:
-> > 
-> > Oct 24 14:38:24 kotys NetworkManager:
-> <info>  Activation (wlan0) Stage 5 of 5 (IP
-> Configure Commit) complete.
-> > [snip pulseaudio's stuppid log spam warning]
-> > Oct 24 14:40:07 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-> > Oct 24 14:40:09 kotys pulseaudio[16469]: sap.c:
-> sendmsg() failed: Invalid argument
-> > Oct 24 14:40:10 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_SCAN_CMD: time out after 500ms.
-> > Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-> > Oct 24 14:40:11 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending POWER_TABLE_CMD: time out after 500ms.
-> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
-> set power fail, ret = -110
-> > Oct 24 14:40:14 kotys kernel: No probe response from
-> AP 00:1c:df:82:63:c9 after 500ms, disconnecting.
-> > Oct 24 14:40:14 kotys NetworkManager:
-> <info>  (wlan0): supplicant connection
-> state:  completed -> disconnected
-> > Oct 24 14:40:14 kotys NetworkManager:
-> <info>  (wlan0): supplicant connection
-> state:  disconnected -> scanning
-> > Oct 24 14:40:14 kotys pulseaudio[16469]: sap.c:
-> sendmsg() failed: Invalid argument
-> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_RXON: time out after 500ms.
-> > Oct 24 14:40:14 kotys kernel: iwl3945 0000:04:00.0:
-> Error setting new configuration (-110).
-> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_SCAN_CMD: time out after 500ms.
-> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
-> AP 00:1c:df:82:63:c9 (try 1)
-> > Oct 24 14:40:15 kotys NetworkManager:
-> <info>  (wlan0): supplicant connection
-> state:  scanning -> associating
-> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
-> AP 00:1c:df:82:63:c9 (try 2)
-> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
-> AP 00:1c:df:82:63:c9 (try 3)
-> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_RXON: time out after 500ms.
-> > Oct 24 14:40:15 kotys kernel: iwl3945 0000:04:00.0:
-> Error setting new configuration (-110).
-> > Oct 24 14:40:15 kotys kernel: wlan0: direct probe to
-> AP 00:1c:df:82:63:c9 timed out
-> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_TX_PWR_TABLE_CMD: time out after 500ms.
-> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
-> Error sending REPLY_RXON: time out after 500ms.
-> > Oct 24 14:40:16 kotys kernel: iwl3945 0000:04:00.0:
-> Error setting new configuration (-110).
-> > 
-> > 
-> > When this happens i am able to use the card only after
-> reloading the related modules, iwl3945 ecc. But the problem
-> happens again after some minutes that im connected.
-> > 
-> > Kernel is 2.6.32-rc5 but his started happening around
-> 2.6.31, not sure exactly what version as i update kernel
-> often. Firmware is iwl3945-ucode-15.32.2.9.
-> > 
-> > Every other info that you need just ask. I hope i dont
-> have to bisect as this is the laptop i use for work too, but
-> if it's needed i'll do.
-> > 
-> > I'm not subscribed on any ML, so in case please cc
-> me.
-> > 
-> 
-> We currently have a bug open for this issue. Could you
-> please add this
->
-> information to
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1944
-> ?
+--=-dfkZ1gzpcmc9jolCSbew
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Done, noticed that there's a patch for this issue. Will try and tell the results. And noticed the link on how to report possible firmware problems, will follow that procedure and post the results of that too.
- 
-> Thank you
+On Wed, 2009-10-07 at 17:12 -0700, Randy Dunlap wrote:
 
-Thaks for pointing me on the right direction!
+> > > # CONFIG_WIRELESS is not set
+> > > CONFIG_WIRELESS_EXT=3Dy
+> > > CONFIG_WEXT_SPY=3Dy
+> > > CONFIG_WEXT_PRIV=3Dy
+> > >=20
+> > > WEXT_CORE is not enabled.  I haven't found the culprit, but I suspect=
+ "select".
+> >=20
+> > Interesting.
+> >=20
+> > > but what in WIRELESS_EXT would also cause WEXT_CORE to be enabled?
+> >=20
+> > Well, the way WEXT_CORE is defined as def_bool y ought to, no?
+>=20
+> Ah, I see what you mean.
+>=20
+> Here's what's happening:
+>=20
+> net/wireless/Kconfig says:
+>=20
+> config WEXT_CORE
+> 	def_bool y
+> 	depends on CFG80211_WEXT || WIRELESS_EXT
+>=20
+>=20
+> and net/Kconfig says:
+>=20
+> if WIRELESS
+>=20
+> source "net/wireless/Kconfig"
+> source "net/mac80211/Kconfig"
+>=20
+> endif # WIRELESS
+>=20
+>=20
+> so WEXT_CORE actually depends on NET && WIRELESS && (CFG80211_WEXT || WIR=
+ELESS_EXT)
+> (that's what xconfig shows me).
+> But WIRELESS is not enabled.  Pooh.
+>=20
+> I was already toying with making CONFIG_WIRELESS a real/usable kconfig sy=
+mbol.
+> That may have to be done unless someone else comes up with another soluti=
+on.
 
-> Reinette
-> 
-> 
+Ah!
 
-Frederik
+It's kinda strange though that you can select wireless drivers without
+selecting WIRELESS. Maybe the solution is as simple as making WLAN
+(drivers/net/wireless/Kconfig) depend on WIRELESS?
 
+johannes
 
-      
+--=-dfkZ1gzpcmc9jolCSbew
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJKzbVPAAoJEODzc/N7+QmakPEP/RMvVJ8rGd03pyvZ9/NjTewZ
+l/zyyE6HgrJE+nH73NOVUvF1MjJU/6mfYpvhuiSUozA5thzASE6qYVHwRXsn42KZ
+lWN4Be0p8yew/RoVmCT6jqcsKNXfcCr/1bV5esB2UqcdLUiR0urUzAZs25iyPtW0
+AXOcG/AxtJkfHp59oqesEixguJ26Soid0C3MHYRW11cW3MwrOBsZbPiplhlWRxDz
+k4y7KlknrMCq9gxmA27mqY2VQNgD/TBcR6zeqUYBdnP1uUyW8kKLCU7Q6Y1hvDk6
+gbTTHI+5SYeoQiXIE61iq1SYACfuCAb82ZZG9LpTF4D1pn9rcXtAKyQxP7z/VXnm
+7XCojJwIlqbTQcK0ItQBH1izfgiYL1k4D7Re2L7cy7w0TwGyjPrGabQBj32V9gXj
+eNMdsiE7+EnQ4cMpnqseJMCUjBnjcMZKbzry3LkCIBBv2NpfpVFpjhgdveNTj3pL
+/Le/rE8XE//Tl9io2PAbyv/zU+TsvNwxEg3XDzp1TPaa0plyEBiDy+oKEKomgB1A
+qHhwbbDJex8HC9NWqvy1ers3q74/uHAjVnKkDsZwN1RBU7a+9YPFVwtfLcvp7vp8
+tAcMCrEnxYlroaigKg1yJt6o7oev/eHqpWBlAE0tqiSV5LHy8uTu8gg8AOT8j8oZ
+SCNovKR/dHqnAYDcqU6k
+=it2l
+-----END PGP SIGNATURE-----
+
+--=-dfkZ1gzpcmc9jolCSbew--
+
