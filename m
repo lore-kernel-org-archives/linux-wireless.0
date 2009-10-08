@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:50618 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758477AbZJNTQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 15:16:31 -0400
-Date: Wed, 14 Oct 2009 12:11:36 -0700
-From: Greg KH <gregkh@suse.de>
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Joe Perches <joe@perches.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	James Bottomley <James.Bottomley@suse.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
- 2.6.32-rc3)
-Message-ID: <20091014191136.GA4874@suse.de>
-References: <20091012130652.GB25464@elte.hu>
- <1255357148.2850.91.camel@localhost.localdomain>
- <20091012145453.GD4565@elte.hu>
- <20091012150911.GB1656@suse.de>
- <20091012154244.GA13323@elte.hu>
- <20091012232429.GA24254@suse.de>
- <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
- <20091014044519.GA19199@suse.de>
- <1255497575.1851.16.camel@Joe-Laptop.home>
- <20091014063308.GE784@elte.hu>
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:63301 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752078AbZJHUYS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 16:24:18 -0400
+Received: by bwz6 with SMTP id 6so1129293bwz.37
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 13:23:40 -0700 (PDT)
+Message-ID: <4ACE4A48.9070901@lwfinger.net>
+Date: Thu, 08 Oct 2009 15:23:36 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20091014063308.GE784@elte.hu>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+Subject: Re: [PATCH] b43: Fix locking problem when stopping rfkill polling
+References: <4accae5d.BgSJpcmlvg+W5PGM%Larry.Finger@lwfinger.net> <20091007190106.GB22394@tuxdriver.com>
+In-Reply-To: <20091007190106.GB22394@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 14, 2009 at 08:33:08AM +0200, Ingo Molnar wrote:
-> 
-> * Joe Perches <joe@perches.com> wrote:
-> 
-> > On Tue, 2009-10-13 at 21:45 -0700, Greg KH wrote:
-> > > How about when it was scheduled to be removed, we put it in staging and
-> > > I'll add it to my announcements about the staging tree every release?
-> > > Unless you can think of a better way?
-> > 
-> > staging/to_be_removed_unless_fixed_by/v.x.y ?
-> 
-> Yes, that's a real worry. Some time ago i suggested:
-> 
->   drivers/staging/good/
->   drivers/staging/bad/
->   drivers/staging/ugly/
-> 
->  good:  drivers that are to go upstream in the next cycle 
->  bad:   outgoing drivers being obsoleted or abandoned
->  ugly:  incoming messy drivers with active developers
-> 
-> The messaging of this looks nice and the names are short and obvious.
+On 10/07/2009 02:01 PM, John W. Linville wrote:
+> OK, but why do we start polling under the lock but stop polling without
+> the lock?  Should we start polling without holding the lock too?
 
-Yeah, but they make my life much harder than it needs to be.
+I see that this patch was committed. I hope that you will be sending 
+it upstream for 2.6.32. The correct version has been sent to stable 
+for inclusion in 2.6.31, but as usual, a mainline commit ID will be 
+needed.
 
-I'd prefer to stick with the directory naming scheme we have today, it
-seems to work well so far.
-
-thanks,
-
-greg k-h
+Larry
