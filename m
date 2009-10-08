@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:51374 "EHLO
+Received: from xc.sipsolutions.net ([83.246.72.84]:56570 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932977AbZJaTXe (ORCPT
+	with ESMTP id S1754728AbZJHLwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Oct 2009 15:23:34 -0400
-Subject: Re: [PATCH 14/15] iwlwifi: add SM PS support for 6x50 series
+	Thu, 8 Oct 2009 07:52:01 -0400
+Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6:
+ adding  ethtool.h to compat-2.6.31.h)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1257011058.8387.14.camel@wwguy-ubuntu>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-	 <1256938578-9638-15-git-send-email-reinette.chatre@intel.com>
-	 <1256968411.3555.77.camel@johannes.local>
-	 <1257011058.8387.14.camel@wwguy-ubuntu>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZmeeEguAGWqaAo7vGVs0"
-Date: Sat, 31 Oct 2009 20:23:30 +0100
-Message-ID: <1257017010.3555.139.camel@johannes.local>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1254995514.3713.22.camel@johannes.local>
+References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
+	 <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
+	 <1254952886.3713.4.camel@johannes.local>
+	 <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
+	 <1254995514.3713.22.camel@johannes.local>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tPlL29C7sp9Nrvx9nBlr"
+Date: Thu, 08 Oct 2009 13:50:47 +0200
+Message-Id: <1255002647.3713.25.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-ZmeeEguAGWqaAo7vGVs0
+--=-tPlL29C7sp9Nrvx9nBlr
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 2009-10-31 at 10:44 -0700, Guy, Wey-Yi wrote:
+On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
 
-> > >  	ht_info->cap |=3D IEEE80211_HT_CAP_SGI_20;
-> > > -	ht_info->cap |=3D (IEEE80211_HT_CAP_SM_PS &
-> > > -			     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> > > +	if (priv->cfg->support_sm_ps)
-> > > +		ht_info->cap |=3D (IEEE80211_HT_CAP_SM_PS &
-> > > +				     (WLAN_HT_CAP_SM_PS_DYNAMIC << 2));
-> > > +	else
-> > > +		ht_info->cap |=3D (IEEE80211_HT_CAP_SM_PS &
-> > > +				     (WLAN_HT_CAP_SM_PS_DISABLED << 2));
-> >=20
-> > here we always and unconditionally advertise dynamic SM-PS mode?
->=20
-> I am confuse, it is based on "priv->cfg->support_sm_ps", so it is not
-> always dynamic SM-PS mode.
+> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
+> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
+> defining is simply too small?
 
-Right, sorry -- but here it _only_ depends on "support_sm_ps", whereas
-
-> > > +	if (priv->cfg->support_sm_ps) {
-> > > +		/* # Rx chains when idling and maybe trying to save power */
-> > > +		switch (priv->current_ht_config.sm_ps) {
-
-Here it also depends on current_ht_config.sm_ps, which is not very
-useful. Using the AP setting is wrong, and above, assuming
-"support_sm_ps" [1] is true, this should just always fall into the
-dynamic case so the value "current_ht_config.sm_ps" isn't useful and can
-imho be removed.
+That is apparently what is happening since compat-wireless ships
+iw_handler.h. This is wrong, as wext functionality is built into the
+kernel image so you can't use a newer header file with it.
 
 johannes
 
-[1] which btw I'd have called "use_sm_ps" since all hardware supports it
-afaik
-
---=-ZmeeEguAGWqaAo7vGVs0
+--=-tPlL29C7sp9Nrvx9nBlr
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIcBAABAgAGBQJK7I6vAAoJEODzc/N7+QmaMn0QAIazj62oHZoqwXpw49b1rVoQ
-Sl7E/DuLg7AFbLEV67kihx1qkBU1UlFw16/VmbGcuMGomH69LN7p86EsUs86ah8l
-s7SHDJEit4iMGURy2gva40FeedkpBb0uEHqwUqvXqkpsNCsaRx1UcEyYgQXe5tO2
-Ge0KtyyPbgBwnRjqL2H090qbbW/4/eOjEsX4PKPCP/bLUh1bvlbr6PmfAFX4VTH5
-rLK6kWrc7SICe1Os6ly6Zbq4E86xXBHGou4/pwbn5z5Dnz9rCJCDwvwNZ3sE5kB3
-+fiELU/7JTYdQtIQajdJQelFhADL6wQjWfFVIkbYTUSXwxnCtnS5vzFts3L1GXOm
-gz+pirSYthDqpiKQp5Rrt1Qw9fdJolGYkyCTXP9/AF/tlZ8OOcGxqdkK1Jgd5Gd4
-vx7Tv/UUO8LxEZRPc9U3VDkh0EsQVd1QNWeGTQrgKfjY14l0b5u3A/4ahOdx+z0L
-fkl5/OWm6lxiHa+kmwd6IMU77z4XCUy7tZVgnprFhGvtz8ZfXJ1KG6bFZZfBTv00
-nMnsSq52+nBIFjCFYa3YStcHDaDtsnt9ormzAn0wmXpVMyebC5XxsYs4n8RmfyH/
-s9+yL9owPi+qT/86JEgViD7wDh7s9dl9/r/XDxzjCZlbCca7d9Dhs3H+uB8QtGrz
-T+fdHbd1fIxbN2yFjPcF
-=WSyx
+iQIcBAABAgAGBQJKzdITAAoJEODzc/N7+Qma90gP/RVGBO8raSqpE/W3K+CdSBQu
+tBpRZvZO+KrFn9Ke9Ymafd8gl//Wm9wZMudYq353FRfcatz1FjRTIauILSep5MGy
+6l0IQ2AFLxDZ554eI7GF3TuCHQVhTQrxrhZVR9/PwV/uiPHfAoBUkzShueOtD+g0
+PtNKgXorfEKrgq/OEKDHvJKX1ka54MMCBhdfOmiSLyhbSAIyc4v252kj8PFmoXyw
+NGdFsyHn4cooxRKjsIpAt/HDoMeBDMcqusGseIFYi7521qkJ7Rg0ohYrS6y2Tizj
+GIbS0X3q307mRPN86HOwsgOabhxWIUhfERBGwCK3QwI9LJguSQTe8DYBLRdkQWac
+JQqCGvXN5Pfh5jr7o+IYCXAUEUnPPd5I1ErUAKHyNqNJudDO8nEkGpYH/60LqMOj
+F+kdqKIs7pD7WqqNxuuT6P0vW+BYLd1/g/+uWTunZt/IvlDmnk9TkYdBKAWvvP/b
+Ybov2fWJxKSRo5H1OLQmlNgH5CKhuINUQUla7UZytcPcXuDNu1E6xG0WDPVrRGcN
+S1h4M6DpsJBUileRvCkWf69sR4O9ySNuco+khshnaas/Dgi8kZFSxEW9VWFwnB4j
+C6OyAWGvxB8o4Uxlunq/V1OT/goklgYOyj7KnfvB6vXSV1E9VQB/r2U06UKl7cdj
+OIRuw5VqE72ut2+ka1OI
+=7OEX
 -----END PGP SIGNATURE-----
 
---=-ZmeeEguAGWqaAo7vGVs0--
+--=-tPlL29C7sp9Nrvx9nBlr--
 
