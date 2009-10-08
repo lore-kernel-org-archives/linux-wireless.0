@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48954 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437AbZJEOYk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 10:24:40 -0400
-Date: Mon, 5 Oct 2009 07:24:28 -0700
-From: Arjan van de Ven <arjan@infradead.org>
+Received: from mail.gmx.net ([213.165.64.20]:54957 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750726AbZJHEGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 00:06:37 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Mike Galbraith <efault@gmx.de>
 To: Frans Pop <elendil@planet.nl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Ingo Molnar <mingo@elte.hu>,
 	Peter Zijlstra <peterz@infradead.org>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-Message-ID: <20091005072428.16ce40e4@infradead.org>
-In-Reply-To: <200910051613.32631.elendil@planet.nl>
+In-Reply-To: <200910072034.57511.elendil@planet.nl>
 References: <200910051500.55875.elendil@planet.nl>
-	<200910051613.32631.elendil@planet.nl>
+	 <200910061749.02805.elendil@planet.nl>
+	 <200910071910.53907.elendil@planet.nl>
+	 <200910072034.57511.elendil@planet.nl>
+Content-Type: text/plain
+Date: Thu, 08 Oct 2009 06:05:43 +0200
+Message-Id: <1254974743.7797.21.camel@marge.simson.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 5 Oct 2009 16:13:31 +0200
-Frans Pop <elendil@planet.nl> wrote:
-
-> On Monday 05 October 2009, Frans Pop wrote:
-> > With .32-rc3 I'm getting occasional skips from amarok while playing
-> > music from an NFS share (3 today so far), something I've not had in
-> > a long time.
+On Wed, 2009-10-07 at 20:34 +0200, Frans Pop wrote:
+> On Wednesday 07 October 2009, Frans Pop wrote:
+> > On Tuesday 06 October 2009, Frans Pop wrote:
+> > > I've checked for 2.6.31.1 now and iwlagn is listed high there too when
+> > > the system is idle, but with normal values of 60-100 ms. And phy0 has
+> > > normal values of below 10 ms.
+> > > I've now rebooted with today's mainline git; phy0 now frequently shows
+> > > with values of around 100 ms too (i.e. higher than last time).
 > >
-> > The reason looks to be that latencytop consistently shows 'iwlagn'
-> > as the top affected process with "Scheduler: waiting for CPU".
-> > Values of 100-140 ms occur frequently, but I've also seen higher
-> > values (180, 207). I don't remember seeing iwlagn high in the list
-> > before, but I have not checked earlier kernels yet.
-> >
-> > Added to that 'phy0' also frequently shows high with values of
-> > 25-75 ms.
-> >
-> > The system is otherwise essentially idle. Other processes typically
-> > show a latency < 5 ms.
+> > Mike privately sent me a script to try to capture the latencies with
+> > perf, but the perf output does not show any high latencies at all. It
+> > looks as if we may have found a bug in latencytop here instead.
 > 
-> If I give the system some work to do (like compiling a kernel), the 
-> latencies on iwlagn and phy0 disappear (values < 5 ms).
-> Is this related to ondemand frequency scaling?
+> Not sure if it's relevant nor what it means, but I frequently see two lines 
+> for iwlagn, e.g:
+> 
+>     Scheduler: waiting for cpu              102.4 msec         99.7 %
+>     .                                         3.3 msec          0.3 %
+> 
+> I get the same results with both latencytop 0.4 and 0.5.
 
-shouldn't be.... but
+OK, I see latencytop spikes here on an idle box too, to the tune of up
+to a _second_.  Booting with nohz=off seems to have cured it.
 
-can you do a 5 second or so timechart recording of this?
-That will capture all scheduler delays as well as the P states etc....
+I wanted to see if that's also the perf sched record -C N trouble I
+warned you not to try when recording with script, but unfortunately,
+after pulling this morning...
 
-(to do a timechart recording, first make sure debugfs is mounted, and
-then do in tools/perf 
+marge:/root/tmp # perf sched lat --sort=max
+Segmentation fault
 
-./perf timechart record sleep 5
+...perf sched got busted.  Seems likely to be same thing for both
+though, as magnitude/frequency of bogons is very similar.
 
-then you can turn it into an SVG with
+	-Mike
 
-./perf timechart
-
-)
-
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
