@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35097 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbZJUMxJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 08:53:09 -0400
-Subject: Re: [PATCH net-next V2 1/3] iwmc3200top: Add Intel Wireless
- MultiCom  3200 top driver.
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Tomas Winkler <tomasw@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, yi.zhu@intel.com,
-	inaky.perez-gonzalez@intel.com, cindy.h.kao@intel.com,
-	guy.cohen@intel.com, ron.rindjunsky@intel.com
-In-Reply-To: <1ba2fa240910200453k4638dc6cm8c8911353ea85b60@mail.gmail.com>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-	 <20091019.215457.43252934.davem@davemloft.net>
-	 <1ba2fa240910200453k4638dc6cm8c8911353ea85b60@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 21 Oct 2009 21:52:47 +0900
-Message-Id: <1256129568.7737.1.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from bu3sch.de ([62.75.166.246]:59922 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932977AbZJHXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 19:08:50 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: pull request: wireless-2.6 2009-10-08
+Date: Fri, 9 Oct 2009 01:08:06 +0200
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20091008223454.GB2798@tuxdriver.com>
+In-Reply-To: <20091008223454.GB2798@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910090108.08838.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tomas,
+On Friday 09 October 2009 00:34:54 John W. Linville wrote:
+> Albert Herranz (1):
+>       b43: do not stack-allocate pio rx/tx header and tail buffers
 
-> >> This patch adds Intel Wireless MultiCom 3200 top driver.
-> >> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
-> >> Top driver is responsible for device initialization and firmware download.
-> >> Firmware handled by top is responsible for top itself and
-> >> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own firmware)
-> >> In addition top driver is used to retrieve firmware logs
-> >> and supports other debugging features
-> >>
-> >> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> >
-> > Applied to net-next-2.6
-> 
-> Thanks Dave
-> 
-> Marcel
-> I want to send out now the BT driver, would like the patch against
-> bluetooth-next-2.6.git, then I wait till you sync or can you also pick
-> it from net-next if Dave is OK with that?
+Come on, this is _not_ funny anymore. I did _not_ ack this patch, because I do _not_ like it.
+I was planning to do a better solution, but I didn't have the time, yet.
+Can you _please_ either:
+- Wait for my ack before you apply random b43 patches
+or
+- Remove me from MAINTAINERS
 
-send it against net-next since you are working in drivers/bluetooth/, we
-will have not conflicts.
-
-Regards
-
-Marcel
-
-
+-- 
+Greetings, Michael.
