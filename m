@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:63591 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932605AbZJ3Q6T (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:43319 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932730AbZJIHL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 12:58:19 -0400
-Date: Fri, 30 Oct 2009 11:58:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
-Subject: [PATCH] b43legacy: Fix DMA TX bounce buffer copying
-Message-ID: <4aeb1b2d.68WA7BjDMaGvZ8qT%Larry.Finger@lwfinger.net>
+	Fri, 9 Oct 2009 03:11:58 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH] libertas: depend on CONFIG_CFG80211
+Date: Fri, 9 Oct 2009 09:10:34 +0200
+Cc: John W Linville <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910090910.34988.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is adapted from the submission by Michael Buesch <mb@bu3sch.de>
-for a bounce-buffer copying problem with b43.
+Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
 
-John,
+Fixes bug noted by Stephen Rothwell:
 
-Full testing of this patch is a problem as the bounce buffer can come into
-play only when the test machine has more than 1 GB RAM. When I coded the
-original bounce-buffer code for bcm43xx, I had such a machine, but it
-died. I tested the patch on a machine with 256 MB and it works. As it
-is a line-by-line copy of Michael's patch, it should be OK. In any case, this
-is 2.6.33 material.
+> On Wed, 7 Oct 2009 17:35:17 +1100 Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20091006:
+> 
+> 
+> drivers/built-in.o: In function `lbs_cfg_free':
+> (.text+0x3479e0): undefined reference to `wiphy_unregister'
+> drivers/built-in.o: In function `lbs_cfg_free':
+> (.text+0x3479e7): undefined reference to `wiphy_free'
+> drivers/built-in.o: In function `lbs_cfg_register':
+> (.text+0x347a52): undefined reference to `wiphy_register'
+> drivers/built-in.o: In function `lbs_cfg_alloc':
+> (.text+0x347acf): undefined reference to `wiphy_new'
 
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/b43legacy/dma.c
+Index: linux-wl/drivers/net/wireless/libertas/Kconfig
 ===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43legacy/dma.c
-+++ wireless-testing/drivers/net/wireless/b43legacy/dma.c
-@@ -1240,8 +1240,9 @@ struct b43legacy_dmaring *parse_cookie(s
- }
- 
- static int dma_tx_fragment(struct b43legacy_dmaring *ring,
--			    struct sk_buff *skb)
-+			    struct sk_buff **in_skb)
- {
-+	struct sk_buff *skb = *in_skb;
- 	const struct b43legacy_dma_ops *ops = ring->ops;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	u8 *header;
-@@ -1305,8 +1306,14 @@ static int dma_tx_fragment(struct b43leg
- 		}
- 
- 		memcpy(skb_put(bounce_skb, skb->len), skb->data, skb->len);
-+		memcpy(bounce_skb->cb, skb->cb, sizeof(skb->cb));
-+		bounce_skb->dev = skb->dev;
-+		skb_set_queue_mapping(bounce_skb, skb_get_queue_mapping(skb));
-+		info = IEEE80211_SKB_CB(bounce_skb);
-+
- 		dev_kfree_skb_any(skb);
- 		skb = bounce_skb;
-+		*in_skb = bounce_skb;
- 		meta->skb = skb;
- 		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
-@@ -1360,8 +1367,10 @@ int b43legacy_dma_tx(struct b43legacy_wl
- 		     struct sk_buff *skb)
- {
- 	struct b43legacy_dmaring *ring;
-+	struct ieee80211_hdr *hdr;
- 	int err = 0;
- 	unsigned long flags;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
- 	ring = priority_to_txring(dev, skb_get_queue_mapping(skb));
- 	spin_lock_irqsave(&ring->lock, flags);
-@@ -1386,7 +1395,11 @@ int b43legacy_dma_tx(struct b43legacy_wl
- 		goto out_unlock;
- 	}
- 
--	err = dma_tx_fragment(ring, skb);
-+	/* dma_tx_fragment might reallocate the skb, so invalidate pointers pointing
-+	 * into the skb data or cb now. */
-+	hdr = NULL;
-+	info = NULL;
-+	err = dma_tx_fragment(ring, &skb);
- 	if (unlikely(err == -ENOKEY)) {
- 		/* Drop this packet, as we don't have the encryption key
- 		 * anymore and must not transmit it unencrypted. */
+--- linux-wl.orig/drivers/net/wireless/libertas/Kconfig	2009-10-09 08:00:03.000000000 +0200
++++ linux-wl/drivers/net/wireless/libertas/Kconfig	2009-10-09 08:00:27.000000000 +0200
+@@ -1,6 +1,6 @@
+ config LIBERTAS
+ 	tristate "Marvell 8xxx Libertas WLAN driver support"
+-	depends on WLAN_80211
++	depends on WLAN_80211 && CFG80211
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
+ 	select LIB80211
 
+-- 
+http://www.holgerschurig.de
