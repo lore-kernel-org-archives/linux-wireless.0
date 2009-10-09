@@ -1,82 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f178.google.com ([209.85.223.178]:64680 "EHLO
-	mail-iw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133AbZJRDIj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 23:08:39 -0400
+Received: from bu3sch.de ([62.75.166.246]:49932 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753938AbZJII6D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 04:58:03 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: David Miller <davem@davemloft.net>
+Subject: Re: pull request: wireless-2.6 2009-10-08
+Date: Fri, 9 Oct 2009 10:57:19 +0200
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20091008223454.GB2798@tuxdriver.com> <200910090108.08838.mb@bu3sch.de> <20091008.180119.242402327.davem@davemloft.net>
+In-Reply-To: <20091008.180119.242402327.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <200910171654.03344.bzolnier@gmail.com>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910152204.16407.IvDoorn@gmail.com>
-	<200910171654.03344.bzolnier@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 18 Oct 2009 14:08:23 +1100
-Message-ID: <646765f40910172008r1309126fla6897d4289004934@mail.gmail.com>
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <200910091057.21269.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 18, 2009 at 01:54, Bartlomiej Zolnierkiewicz
-<bzolnier@gmail.com> wrote:
-> Now to the less happy part..
->
-> I also used the opportunity to take a closer look at this driver and
-> it seems that it needlessly adds around 2 KLOC to kernel by duplicating
-> the common content of rt2800usb.h to rt2800pci.h instead of moving it
-> to the shared header (like it is done in the staging crap drivers):
->
-> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h
->  1951 drivers/net/wireless/rt2x00/rt2800usb.h
->  1960 drivers/net/wireless/rt2x00/rt2800pci.h
->  3911 total
->
-> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.h drivers/net/wireless/rt2x00/rt2800pci.h|diffstat
->  rt2800pci.h |  213 +++++++++++++++++++++++++++++++-----------------------------
->  1 file changed, 111 insertions(+), 102 deletions(-)
->
-> Similarly it looks like most of the code between rt2800usb.c and rt2800pci.c
-> could also be shared (up to another 2 KLOC saved) by adding abstraction layer
-> for accessing chipset registers over different buses (again like it is done
-> in staging crap drivers):
->
-> $ wc -l drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c
->  3077 drivers/net/wireless/rt2x00/rt2800usb.c
->  3323 drivers/net/wireless/rt2x00/rt2800pci.c
->  6400 total
->
-> $ diff -u drivers/net/wireless/rt2x00/rt2800usb.c drivers/net/wireless/rt2x00/rt2800pci.c|diffstat
->  rt2800pci.c | 2190 +++++++++++++++++++++++++++++++++---------------------------
->  1 file changed, 1218 insertions(+), 972 deletions(-)
+On Friday 09 October 2009 03:01:19 David Miller wrote:
+> From: Michael Buesch <mb@bu3sch.de>
+> Date: Fri, 9 Oct 2009 01:08:06 +0200
+> 
+> > I was planning to do a better solution, but I didn't have the time, yet.
+> 
+> The change is harmless while we're twiddling our thumbs waiting
+> for you to implement the fix "properly."
+> 
+> Not having the fix in is a developer burdon because people turn
+> on the DMA API debugger and are going to keep reporting it's
+> complaints here and elsewhere.
+> 
+> Get over your Napoleon complex, and let reasonable working fixes
+> get into the tree even if you don't find them optimal.  You can
+> always improve them later, "when you get around to it."
+> 
+> People put fixes in without my ACK in my areas of expertiece all
+> the time.  I got over it a long time ago, it's OK, and not worth
+> stressing out over.
 
-Nobody else has said it, so:
+Ok, that's enough. If you do not need a maintainer, then work without one.
+What's a maintainer good for, if it's not for maintaining the code quality?
 
-Patches welcome!
+The patch needlessly moves huge chunks of crap, adds stupid comments, wastes memory.
+If that's what you want just to remove a debugging message on devices that virtually
+nobody owns, so be it.
 
-Your points with the vendor drivers apply here too - consolidating the
-common parts of the drivers will enhance readability, and make
-development easier, and mean that, with your help, these might get to
-a everyday usable state quicker.
 
-And remember that this is a preliminary release of the code. There's
-still a long way to go.
+---
+ MAINTAINERS |    1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks,
+--- wireless-testing.orig/MAINTAINERS
++++ wireless-testing/MAINTAINERS
+@@ -1066,7 +1066,6 @@ F:	include/net/ax25.h
+ F:	net/ax25/
+ 
+ B43 WIRELESS DRIVER
+-M:	Michael Buesch <mb@bu3sch.de>
+ M:	Stefano Brivio <stefano.brivio@polimi.it>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://linuxwireless.org/en/users/Drivers/b43
+
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+Greetings, Michael.
