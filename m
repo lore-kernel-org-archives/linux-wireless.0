@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:33641 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbZJTUVr (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:44726 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917AbZJIHKd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 16:21:47 -0400
-Received: by fxm18 with SMTP id 18so6877661fxm.37
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Oct 2009 13:21:51 -0700 (PDT)
-Date: Tue, 20 Oct 2009 21:21:48 +0100
-From: Rui Paulo <rpaulo@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mesh: use set_bit() to set MESH_WORK_HOUSEKEEPING.
-Message-ID: <20091020202148.GA29602@asus-p5b.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 9 Oct 2009 03:10:33 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Peter Zijlstra <peterz@infradead.org>
+To: Mike Galbraith <efault@gmx.de>
+Cc: Frans Pop <elendil@planet.nl>,
+	Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>, linux-wireless@vger.kernel.org
+In-Reply-To: <1255070103.7639.30.camel@marge.simson.net>
+References: <200910051500.55875.elendil@planet.nl>
+	 <200910081655.37485.elendil@planet.nl>
+	 <1255026217.6643.12.camel@marge.simson.net>
+	 <200910082259.35204.elendil@planet.nl>
+	 <1255070103.7639.30.camel@marge.simson.net>
+Content-Type: text/plain
+Date: Fri, 09 Oct 2009 09:13:53 +0200
+Message-Id: <1255072433.26976.351.camel@twins>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the mesh housekeeping timer work properly on big endian
-systems.
+On Fri, 2009-10-09 at 08:35 +0200, Mike Galbraith wrote:
+> 
+> sched: update the clock of runqueue select_task_rq() selected.
+> 
+> In try_to_wake_up(), we update the runqueue clock, but select_task_rq()
+> may select a different runqueue than the one we updated, leaving the new
+> runqueue's clock stale for a bit.
+> 
+> This patch cures occasional huge latencies reported by latencytop when
+> coming out of idle on a mostly idle NO_HZ box.
+> 
+> Signed-off-by: Mike Galbraith <efault@gmx.de>
+> Cc: Ingo Molnar <mingo@elte.hu>
+> Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
 
-Signed-off-by: Rui Paulo <rpaulo@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index f7364e5..9a73389 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -50,7 +50,7 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
--	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
-+	set_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags);
- 
- 	if (local->quiescing) {
- 		set_bit(TMR_RUNNING_HK, &ifmsh->timers_running);
-@@ -480,7 +480,7 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
- 
--	ifmsh->wrkq_flags |= MESH_WORK_HOUSEKEEPING;
-+	set_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags);
- 	ieee80211_queue_work(&local->hw, &ifmsh->work);
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
--- 
-1.6.4.3
+Awesome catch Mike, seems I goofed up in my recent ttwu changes.
 
+Acked-by: Peter Zijlstra <a.p.zijlstra@chello.nl>
+
+> 
+> ---
+>  kernel/sched.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/kernel/sched.c
+> ===================================================================
+> --- linux-2.6.orig/kernel/sched.c
+> +++ linux-2.6/kernel/sched.c
+> @@ -2311,7 +2311,7 @@ static int try_to_wake_up(struct task_st
+>  {
+>         int cpu, orig_cpu, this_cpu, success = 0;
+>         unsigned long flags;
+> -       struct rq *rq;
+> +       struct rq *rq, *orig_rq;
+>  
+>         if (!sched_feat(SYNC_WAKEUPS))
+>                 wake_flags &= ~WF_SYNC;
+> @@ -2319,7 +2319,7 @@ static int try_to_wake_up(struct task_st
+>         this_cpu = get_cpu();
+>  
+>         smp_wmb();
+> -       rq = task_rq_lock(p, &flags);
+> +       rq = orig_rq = task_rq_lock(p, &flags);
+>         update_rq_clock(rq);
+>         if (!(p->state & state))
+>                 goto out;
+> @@ -2350,6 +2350,10 @@ static int try_to_wake_up(struct task_st
+>                 set_task_cpu(p, cpu);
+>  
+>         rq = task_rq_lock(p, &flags);
+> +
+> +       if (rq != orig_rq)
+> +               update_rq_clock(rq);
+> +
+>         WARN_ON(p->state != TASK_WAKING);
+>         cpu = task_cpu(p);
+>  
+> 
+> 
+> 
