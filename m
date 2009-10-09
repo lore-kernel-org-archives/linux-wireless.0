@@ -1,190 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:56731 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758747AbZJICQK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 22:16:10 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] libertas: Check return status of command functions
-Date: Thu,  8 Oct 2009 19:38:45 -0700
-Message-Id: <1255055925-2013-1-git-send-email-bzhao@marvell.com>
+Received: from mga03.intel.com ([143.182.124.21]:28629 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757233AbZJIUVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 16:21:53 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/17 w-t] iwl3945: update iwl3945_apm_init()
+Date: Fri,  9 Oct 2009 13:20:19 -0700
+Message-Id: <1255119634-3060-4-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-Return status of lbs_prepare_and_send_command and lbs_cmd_with_response
-functions is not checked at some places. Those checks are added.
+Update iwl3945_apm_init() to set up device registers in sequence most recently
+recommended by factory.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Add resets for APMG interrupts and radio chip, formerly done only in
+iwl3945_apm_reset(); moving them here assures that apm_init() will do
+a complete job of preparing hardware not only after platform boot,
+but also after apm_stop() has executed (due to rfkill, ifconfig down,
+driver unload, etc.).  This is in preparation to completely remove apm_reset().
+
+Add some comments.
+
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/libertas/debugfs.c |   27 ++++++++++++++++++---------
- drivers/net/wireless/libertas/main.c    |    2 ++
- drivers/net/wireless/libertas/scan.c    |   11 +++++++----
- drivers/net/wireless/libertas/wext.c    |   10 +++++++---
- 4 files changed, 34 insertions(+), 16 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   42 ++++++++++++++++++++++++++----
+ 1 files changed, 36 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 893a55c..587b0cb 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -451,10 +451,12 @@ static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
- 				CMD_MAC_REG_ACCESS, 0,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
--	pos += snprintf(buf+pos, len-pos, "MAC[0x%x] = 0x%08x\n",
-+	if (!ret) {
-+		pos += snprintf(buf+pos, len-pos, "MAC[0x%x] = 0x%08x\n",
- 				priv->mac_offset, priv->offsetvalue.value);
- 
--	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+	}
- 	free_page(addr);
- 	return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 4115672..89f8239 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -982,23 +982,45 @@ static int iwl3945_txq_ctx_reset(struct iwl_priv *priv)
+ 	return rc;
  }
-@@ -514,7 +516,8 @@ static ssize_t lbs_wrmac_write(struct file *file,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
  
--	res = count;
-+	if (!res)
-+		res = count;
- out_unlock:
- 	free_page(addr);
- 	return res;
-@@ -539,10 +542,12 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
- 				CMD_BBP_REG_ACCESS, 0,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
--	pos += snprintf(buf+pos, len-pos, "BBP[0x%x] = 0x%08x\n",
-+	if (!ret) {
-+		pos += snprintf(buf+pos, len-pos, "BBP[0x%x] = 0x%08x\n",
- 				priv->bbp_offset, priv->offsetvalue.value);
++/*
++ * Start up NIC's basic functionality after it has been reset
++ * (e.g. after platform boot, or shutdown via iwl3945_apm_stop())
++ * NOTE:  This does not load uCode nor start the embedded processor
++ */
+ static int iwl3945_apm_init(struct iwl_priv *priv)
+ {
+ 	int ret;
  
--	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+	}
- 	free_page(addr);
+ 	iwl_power_initialize(priv);
  
- 	return ret;
-@@ -603,7 +608,8 @@ static ssize_t lbs_wrbbp_write(struct file *file,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
++	/* Configure chip clock phase-lock-loop */
++	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR39_ANA_PLL_CFG_VAL);
++
++	/*
++	 * Disable L0S exit timer (platform NMI Work/Around)
++	 * (does this do anything on 3945, or just 4965 and beyond?)
++	 */
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
  
--	res = count;
-+	if (!res)
-+		res = count;
- out_unlock:
- 	free_page(addr);
- 	return res;
-@@ -628,10 +634,12 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
- 				CMD_RF_REG_ACCESS, 0,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
--	pos += snprintf(buf+pos, len-pos, "RF[0x%x] = 0x%08x\n",
-+	if (!ret) {
-+		pos += snprintf(buf+pos, len-pos, "RF[0x%x] = 0x%08x\n",
- 				priv->rf_offset, priv->offsetvalue.value);
+-	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	/* Disable L0s without affecting L1; don't wait for ICH (L0s bug W/A) */
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
  
--	ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
-+	}
- 	free_page(addr);
+-	/* set "initialization complete" bit to move adapter
+-	* D0U* --> D0A* state */
++	/* Set FH wait threshold to maximum (HW error during stress W/A) */
++	iwl_set_bit(priv, CSR_DBG_HPET_MEM_REG, CSR_DBG_HPET_MEM_REG_VAL);
++
++	/*
++	 * Set "initialization complete" bit to move adapter from
++	 * D0U* --> D0A* (powered-up active) state.
++	 */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
  
- 	return ret;
-@@ -692,7 +700,8 @@ static ssize_t lbs_wrrf_write(struct file *file,
- 				CMD_OPTION_WAITFORRSP, 0, &offval);
- 	mdelay(10);
- 
--	res = count;
-+	if (!res)
-+		res = count;
- out_unlock:
- 	free_page(addr);
- 	return res;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 3b14fcc..bce752c 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1087,6 +1087,8 @@ static void auto_deepsleep_timer_fn(unsigned long data)
- 			ret = lbs_prepare_and_send_command(priv,
- 					CMD_802_11_DEEP_SLEEP, 0,
- 					0, 0, NULL);
-+			if (ret)
-+				lbs_pr_err("Enter Deep Sleep command failed\n");
- 		}
++	/*
++	 * Wait for clock stabilization; once stabilized, access to
++	 * device-internal resources is supported, e.g. iwl_write_prph()
++	 * and accesses to uCode SRAM.
++	 */
+ 	ret = iwl_poll_bit(priv, CSR_GP_CNTRL,
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY,
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+@@ -1007,13 +1029,21 @@ static int iwl3945_apm_init(struct iwl_priv *priv)
+ 		goto out;
  	}
- 	mod_timer(&priv->auto_deepsleep_timer , jiffies +
-diff --git a/drivers/net/wireless/libertas/scan.c b/drivers/net/wireless/libertas/scan.c
-index 6c95af3..d8fc2b8 100644
---- a/drivers/net/wireless/libertas/scan.c
-+++ b/drivers/net/wireless/libertas/scan.c
-@@ -1022,9 +1022,12 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
- 		return -EAGAIN;
  
- 	/* Update RSSI if current BSS is a locally created ad-hoc BSS */
--	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate)
--		lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
--					     CMD_OPTION_WAITFORRSP, 0, NULL);
-+	if ((priv->mode == IW_MODE_ADHOC) && priv->adhoccreate) {
-+		err = lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
-+				CMD_OPTION_WAITFORRSP, 0, NULL);
-+		if (err)
-+			goto out;
-+	}
- 
- 	mutex_lock(&priv->lock);
- 	list_for_each_entry_safe (iter_bss, safe, &priv->network_list, list) {
-@@ -1058,7 +1061,7 @@ int lbs_get_scan(struct net_device *dev, struct iw_request_info *info,
- 
- 	dwrq->length = (ev - extra);
- 	dwrq->flags = 0;
+-	/* enable DMA */
++	/* Enable DMA and BSM clocks, wait for them to stabilize */
+ 	iwl_write_prph(priv, APMG_CLK_CTRL_REG, APMG_CLK_VAL_DMA_CLK_RQT |
+ 						APMG_CLK_VAL_BSM_CLK_RQT);
 -
-+out:
- 	lbs_deb_leave_args(LBS_DEB_WEXT, "ret %d", err);
- 	return err;
- }
-diff --git a/drivers/net/wireless/libertas/wext.c b/drivers/net/wireless/libertas/wext.c
-index 69dd19b..4594841 100644
---- a/drivers/net/wireless/libertas/wext.c
-+++ b/drivers/net/wireless/libertas/wext.c
-@@ -832,7 +832,7 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
- 	u32 rssi_qual;
- 	u32 tx_qual;
- 	u32 quality = 0;
--	int stats_valid = 0;
-+	int ret, stats_valid = 0;
- 	u8 rssi;
- 	u32 tx_retries;
- 	struct cmd_ds_802_11_get_log log;
-@@ -881,7 +881,9 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
+ 	udelay(20);
  
- 	memset(&log, 0, sizeof(log));
- 	log.hdr.size = cpu_to_le16(sizeof(log));
--	lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
-+	ret = lbs_cmd_with_response(priv, CMD_802_11_GET_LOG, &log);
-+	if (ret)
-+		goto out;
+-	/* disable L1-Active */
++	/* Clear APMG (NIC's internal power management) interrupts */
++	iwl_write_prph(priv, APMG_RTC_INT_MSK_REG, 0x0);
++	iwl_write_prph(priv, APMG_RTC_INT_STT_REG, 0xFFFFFFFF);
++
++	/* Reset radio chip */
++	iwl_set_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
++	udelay(5);
++	iwl_clear_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
++
++	/* Disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+ 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
  
- 	tx_retries = le32_to_cpu(log.retry);
- 
-@@ -909,8 +911,10 @@ static struct iw_statistics *lbs_get_wireless_stats(struct net_device *dev)
- 	stats_valid = 1;
- 
- 	/* update stats asynchronously for future calls */
--	lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
-+	ret = lbs_prepare_and_send_command(priv, CMD_802_11_RSSI, 0,
- 					0, 0, NULL);
-+	if (ret)
-+		lbs_pr_err("RSSI command failed\n");
- out:
- 	if (!stats_valid) {
- 		priv->wstats.miss.beacon = 0;
 -- 
-1.5.4.3
+1.5.6.3
 
