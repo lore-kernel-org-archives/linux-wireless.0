@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:35734 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751596AbZJWNYF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 09:24:05 -0400
-Message-ID: <4AE1AE74.4020600@wpkg.org>
-Date: Fri, 23 Oct 2009 15:24:04 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org, linux-net@vger.kernel.org,
-	linux-mips@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: Re: ath5k AP kernel panic when client uses SCP
-References: <4AD21AB4.6010208@wpkg.org> <4AE1AC69.7010904@wpkg.org> <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
-In-Reply-To: <69e28c910910230621j2176813dpe7f77b7dff5b1b44@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:17633 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761358AbZJIUWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 16:22:30 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 09/17] iwl3945: streamline iwl3945_rfkill_poll()
+Date: Fri,  9 Oct 2009 13:20:26 -0700
+Message-Id: <1255119634-3060-11-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gábor Stefanik wrote:
-> On Fri, Oct 23, 2009 at 3:15 PM, Tomasz Chmielewski <mangoo@wpkg.org> wrote:
->> Bob Copeland wrote:
->>> CONFIG_DEBUG_INFO is the basic switch.  I don't know if MIPS needs
->>> CONFIG_FRAME_POINTER but that could help too.
->> I don't see CONFIG_FRAME_POINTER available.
->> I compiled with CONFIG_DEBUG_INFO; let me know if I should enable some other
->> DEBUG options as well (see below what's enabled and available).
->>
->> Before it oopses, I see lots of order 0 page allocation failures (there are
->> some extra spaces at the end of each line due to the broken konsole in
->> KDE4):
->>
->> http://www1.wpkg.org/oops2.txt
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-> Is CONFIG_KALLSYMS set?
+iwl3945_rfkill_poll() has been silently calling wiphy_rfkill_set_hw_state()
+every 2 seconds, regardless of whether hardware RF KILL switch changed state.
 
-Good clue:
+Call wiphy_rfkill_set_hw_state() only when RFKILL switch changes.
+Add IWL_DEBUG_RF_KILL log message and documentation.
 
-# zgrep KALL /proc/config.gz
-# CONFIG_KALLSYMS is not set
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   27 +++++++++++++++++++++------
+ 1 files changed, 21 insertions(+), 6 deletions(-)
 
-I'll recompile...
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index ab4c4ba..2406b73 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2717,19 +2717,34 @@ static void iwl3945_bg_alive_start(struct work_struct *data)
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
++/*
++ * 3945 cannot interrupt driver when hardware rf kill switch toggles;
++ * driver must poll CSR_GP_CNTRL_REG register for change.  This register
++ * *is* readable even when device has been SW_RESET into low power mode
++ * (e.g. during RF KILL).
++ */
+ static void iwl3945_rfkill_poll(struct work_struct *data)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, rfkill_poll.work);
++	bool old_rfkill = test_bit(STATUS_RF_KILL_HW, &priv->status);
++	bool new_rfkill = !(iwl_read32(priv, CSR_GP_CNTRL)
++			& CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
+ 
+-	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
+-		clear_bit(STATUS_RF_KILL_HW, &priv->status);
+-	else
+-		set_bit(STATUS_RF_KILL_HW, &priv->status);
++	if (new_rfkill != old_rfkill) {
++		if (new_rfkill)
++			set_bit(STATUS_RF_KILL_HW, &priv->status);
++		else
++			clear_bit(STATUS_RF_KILL_HW, &priv->status);
+ 
+-	wiphy_rfkill_set_hw_state(priv->hw->wiphy,
+-			test_bit(STATUS_RF_KILL_HW, &priv->status));
++		wiphy_rfkill_set_hw_state(priv->hw->wiphy, new_rfkill);
++
++		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
++				new_rfkill ? "disable radio" : "enable radio");
++	}
+ 
++	/* Keep this running, even if radio now enabled.  This will be
++	 * cancelled in mac_start() if system decides to start again */
+ 	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
+ 			   round_jiffies_relative(2 * HZ));
+ 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+1.5.6.3
 
