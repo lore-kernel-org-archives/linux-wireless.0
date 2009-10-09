@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63603 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:48433 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933895AbZJGSMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Oct 2009 14:12:54 -0400
-Subject: Re: linux-next: Tree for October 7 (libertas build failure)
-From: Dan Williams <dcbw@redhat.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	libertas-dev@lists.infradead.org,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-In-Reply-To: <20091007105210.409a1991.randy.dunlap@oracle.com>
-References: <20091007173517.abfcfa2a.sfr@canb.auug.org.au>
-	 <20091007105210.409a1991.randy.dunlap@oracle.com>
-Content-Type: text/plain
-Date: Wed, 07 Oct 2009 11:12:00 -0700
-Message-Id: <1254939120.16001.45.camel@localhost.localdomain>
-Mime-Version: 1.0
+	id S1758882AbZJIQkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 12:40:43 -0400
+Date: Fri, 9 Oct 2009 09:32:02 -0700
+From: Greg KH <gregkh@suse.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, devel@driverdev.osuosl.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+Message-ID: <20091009163202.GA3342@suse.de>
+References: <4ACD0E5A.7060106@oracle.com>
+ <1254954842.3713.7.camel@johannes.local>
+ <4ACD1C3D.3030506@oracle.com>
+ <1254957256.3713.10.camel@johannes.local>
+ <20091007171235.d40f0cc2.randy.dunlap@oracle.com>
+ <1254995282.3713.18.camel@johannes.local>
+ <20091008080615.09c8b803.randy.dunlap@oracle.com>
+ <1255026563.3713.28.camel@johannes.local>
+ <20091009090601.73de5dc6.randy.dunlap@oracle.com>
+ <1255104846.4095.2.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255104846.4095.2.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2009-10-07 at 10:52 -0700, Randy Dunlap wrote:
-> On Wed, 7 Oct 2009 17:35:17 +1100 Stephen Rothwell wrote:
+On Fri, Oct 09, 2009 at 06:14:06PM +0200, Johannes Berg wrote:
+> On Fri, 2009-10-09 at 09:06 -0700, Randy Dunlap wrote:
 > 
-> > Hi all,
+> > >  menuconfig WLAN
+> > >  	bool "Wireless LAN"
+> > >  	depends on !S390
+> > > +	select WIRELESS
+> > >  	default y
+> > >  	---help---
+> > >  	  This section contains all the pre 802.11 and 802.11 wireless
 > > 
-> > Changes since 20091006:
+> > 
+> > I suppose that's OK, although I prefer "depends" rather than "select".
 > 
+> I tend to as well, but in this case the WIRELESS itself is just an
+> option that makes other options invisible, it's not used elsewhere, and
+> as such I think this is ok -- why hide the wireless drivers unless the
+> user first selects the wireless core options?
 > 
-> drivers/built-in.o: In function `lbs_cfg_free':
-> (.text+0x3479e0): undefined reference to `wiphy_unregister'
-> drivers/built-in.o: In function `lbs_cfg_free':
-> (.text+0x3479e7): undefined reference to `wiphy_free'
-> drivers/built-in.o: In function `lbs_cfg_register':
-> (.text+0x347a52): undefined reference to `wiphy_register'
-> drivers/built-in.o: In function `lbs_cfg_alloc':
-> (.text+0x347acf): undefined reference to `wiphy_new'
+> OTOH, you already need to select cfg80211/mac80211 for most drivers, so
+> I suppose "depends on WIRELESS" would be ok too.
+> 
+> > I tracked down one of the problems that I was seeing:
+> > 
+> > net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
+> > 
+> > with:
+> > # CONFIG_WIRELESS is not set
+> > CONFIG_WIRELESS_EXT=y
+> > CONFIG_WEXT_PRIV=y
+> > 
+> > This is being caused by several drivers in drivers/staging/ doing
+> > 	select WEXT_PRIV
+> > without using either enough dependencies or even more (ugly) selects.
+> > (or just because kconfig isn't sufficient)
+> 
+> Hah, staging/, well, that's kinda hard to solve I guess. Except by
+> fixing all the staging/ drivers to depend on WIRELESS too, like the
+> patch would do for the regular drivers.
 
-Holger, perhaps we need some Kconfig updates to select cfg80211?
+That's fine, I'll gladly take patches to do that.
 
-Dan
+thanks,
 
-
+greg k-h
