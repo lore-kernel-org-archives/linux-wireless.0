@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35353 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758481AbZJGApL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57511 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbZJINbn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 20:45:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/7] ath5k: use ath_hw_setbssidmask() for bssid mask setting upon assoc
-Date: Tue,  6 Oct 2009 20:44:29 -0400
-Message-Id: <1254876274-1145-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 9 Oct 2009 09:31:43 -0400
+Date: Fri, 9 Oct 2009 09:23:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-10-08
+Message-ID: <20091009132317.GA22719@tuxdriver.com>
+References: <20091008223454.GB2798@tuxdriver.com> <200910090108.08838.mb@bu3sch.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <200910090108.08838.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This should avoid future typos.
+On Fri, Oct 09, 2009 at 01:08:06AM +0200, Michael Buesch wrote:
+> On Friday 09 October 2009 00:34:54 John W. Linville wrote:
+> > Albert Herranz (1):
+> >       b43: do not stack-allocate pio rx/tx header and tail buffers
+> 
+> Come on, this is _not_ funny anymore. I did _not_ ack this patch, because I do _not_ like it.
+> I was planning to do a better solution, but I didn't have the time, yet.
+> Can you _please_ either:
+> - Wait for my ack before you apply random b43 patches
+> or
+> - Remove me from MAINTAINERS
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c |    9 ++-------
- 1 files changed, 2 insertions(+), 7 deletions(-)
+Michael,
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 0385e80..32fd5f8 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -288,13 +288,8 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah, const u8 *bssid, u16 assoc_id)
- 	/*
- 	 * Set simple BSSID mask on 5212
- 	 */
--	if (ah->ah_version == AR5K_AR5212) {
--		ath5k_hw_reg_write(ah, get_unaligned_le32(common->bssidmask),
--				   AR_BSSMSKL);
--		ath5k_hw_reg_write(ah,
--				   get_unaligned_le16(common->bssidmask + 4),
--				   AR_BSSMSKU);
--	}
-+	if (ah->ah_version == AR5K_AR5212)
-+		ath_hw_setbssidmask(common);
- 
- 	/*
- 	 * Set BSSID which triggers the "SME Join" operation
+After Albert posted his first version of the patch, you said:
+
+"Just embed it into struct b43_wl (surround it by #ifdef CONFIG_B43_PIO). No need
+to kzalloc then and it saves some memory.
+You also need to alloc 4 bytes for the tail buffer (that currently is on the stack, too)."
+
+AFAICT he complied with that request when he posted the second version.
+Since the patch seemed fine otherwise, I applied it; and since it is
+a fix I sent it on for 2.6.32.
+
+As Dave suggested, there is plenty of time to fix it "properly"
+for 2.6.33 and beyond.  I'm happy to accomodate you.
+
+John
+
+P.S.  Please understand that while some driver maintainers want to
+ack every patch, others see that as a burden and get annoyed with me
+if I don't apply reasonable patches without bothering them.  It can
+be a bit difficult these things...
 -- 
-1.6.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
