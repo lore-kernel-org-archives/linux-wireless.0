@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f208.google.com ([209.85.219.208]:58086 "EHLO
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:36029 "EHLO
 	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871AbZJQGQo (ORCPT
+	with ESMTP id S1755362AbZJIOOo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 02:16:44 -0400
-Received: by ewy4 with SMTP id 4so19576ewy.37
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Oct 2009 23:16:48 -0700 (PDT)
-To: Bob Copeland <me@bobcopeland.com>
-Cc: John Willis <John.Willis@Distant-earth.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] WL1251: Very crude EEPROM reading support for the WL1251 driver
-References: <01c901ca4daf$6e3d7f20$4ab87d60$@Willis@Distant-earth.com>
-	<20091016115909.GB341@hash.localnet>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Sat, 17 Oct 2009 09:16:46 +0300
-In-Reply-To: <20091016115909.GB341@hash.localnet> (Bob Copeland's message of "Fri\, 16 Oct 2009 07\:59\:09 -0400")
-Message-ID: <87aazqmto1.fsf@purkki.valot.fi>
+	Fri, 9 Oct 2009 10:14:44 -0400
+From: Miguel Boton <waninkoko@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] b43: add 'struct b43_wl' missing declaration
+Date: Fri, 9 Oct 2009 16:13:53 +0200
+Cc: linux-kernel@vger.kernel.org, mb@bu3sch.de, linville@tuxdriver.com,
+	bcm43xx-dev@lists.berlios.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910091613.53960.mboton@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+'struct b43_wl' declaration is missing at 'leds.h'.
+It should be declared to avoid getting some GCC warnings at 'b43_leds_unregister'.
 
-> On Thu, Oct 15, 2009 at 04:51:49PM +0100, John Willis wrote:
->> The patches are not yet complete but they do work for me (tm) so I would be
->> very interested in seeing if these hacks also allow us to use the EEPROM on
->> the HTC Dream (Bob, can you try that?, no rush however).
->
-> Yeah, I'll give it a spin.  It'd be really nice if people don't need to
-> use the NVS file.
+Signed-off-by: Miguel Botón <mboton@gmail.com>
 
-Didn't HTC Dream store the NVS file in the main flash memory? AFAIK
-the EEPROM support in wl1251 needs a separate chip for the EEPROM, so
-if someone has stored the NVS file to the main flash memory I really
-doubt that they would still use EEPROM with wl1251. So the NVS file is
-stored either to somewhere outside wl1251 or to the EEPROM, but not
-both.
+---
 
--- 
-Kalle Valo
+ drivers/net/wireless/b43/leds.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/leds.h b/drivers/net/wireless/b43/leds.h
+index 4c56187..32b66d5 100644
+--- a/drivers/net/wireless/b43/leds.h
++++ b/drivers/net/wireless/b43/leds.h
+@@ -1,6 +1,7 @@
+ #ifndef B43_LEDS_H_
+ #define B43_LEDS_H_
+ 
++struct b43_wl;
+ struct b43_wldev;
+ 
+ #ifdef CONFIG_B43_LEDS
