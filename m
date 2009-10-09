@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:59224 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945AbZJQPUG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Oct 2009 11:20:06 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] rt2x00: Implement support for rt2800pci
-Date: Sat, 17 Oct 2009 17:19:23 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Alban Browaeys <prahal@yahoo.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Luis Correia <luis.f.correia@gmail.com>,
-	Mattias Nissler <mattias.nissler@gmx.de>,
-	Mark Asselstine <asselsm@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <200910152137.58164.IvDoorn@gmail.com> <200910171654.03344.bzolnier@gmail.com> <1255792104.3434.2.camel@johannes.local>
-In-Reply-To: <1255792104.3434.2.camel@johannes.local>
-MIME-Version: 1.0
-Message-Id: <200910171719.24093.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Received: from mail.gmx.net ([213.165.64.20]:38364 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932308AbZJIDFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Oct 2009 23:05:23 -0400
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+From: Mike Galbraith <efault@gmx.de>
+To: Frans Pop <elendil@planet.nl>
+Cc: Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <200910082259.35204.elendil@planet.nl>
+References: <200910051500.55875.elendil@planet.nl>
+	 <200910081655.37485.elendil@planet.nl>
+	 <1255026217.6643.12.camel@marge.simson.net>
+	 <200910082259.35204.elendil@planet.nl>
+Content-Type: text/plain
+Date: Fri, 09 Oct 2009 05:04:33 +0200
+Message-Id: <1255057473.6600.11.camel@marge.simson.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 October 2009 17:08:24 Johannes Berg wrote:
-> On Sat, 2009-10-17 at 16:54 +0200, Bartlomiej Zolnierkiewicz wrote:
+On Thu, 2009-10-08 at 22:59 +0200, Frans Pop wrote:
+> On Thursday 08 October 2009, Mike Galbraith wrote:
+> > I still see very high latencies coming out of idle (last noted was >
+> > 300ms, NO_HZ) with this patch,
+> >
+> > Like this:
+> >
+> > Cause                                           Maximum    Percentage
+> > Scheduler: waiting for cpu                   604.2 msec        49.0 %
 > 
-> > I also used the opportunity to take a closer look at this driver and
-> > it seems that it needlessly adds around 2 KLOC to kernel by duplicating
-> > the common content of rt2800usb.h to rt2800pci.h instead of moving it
-> > to the shared header (like it is done in the staging crap drivers):
+> I'm not seeing anything even remotely like that.
 > 
-> Tell me you're kidding -- comparing 2k duplicated LOC with a driver that
-> ships its own wifi stack?
+> I've tried quieting the system down as much as possible, but that made
+> no difference. I do have NO_HZ set; will send my full config privately.
+> 
+> If you'd still like me to try your patch I will, but I'm not sure if
+> that has much value.
 
-Why would I be?
+No, if you watch for a bit with box mostly idle, and don't see > 100ms
+hits occasionally, testing patchlet is likely a waste of time.  To get
+one like the above, I have to hold my tongue just right ;-) they're not
+common.
 
-1) The patch is submitted to kernel _proper_ not kernel staging so I see
-no excuse for duplicating 2-4 KLOC and it should be fixed.
+	-Mike
 
-2) The fact that the some staging driver consists in 90% of crap doesn't
-mean that it doesn't have some good design ideas..  (i.e. abstracting chipset
-registers access in a discussed case)
