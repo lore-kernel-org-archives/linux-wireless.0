@@ -1,48 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59165 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933478AbZJNOQu (ORCPT
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:49852 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962AbZJISxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 10:16:50 -0400
-Date: Wed, 14 Oct 2009 10:14:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luis Correia <luis.f.correia@gmail.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Message-ID: <20091014141405.GB2890@tuxdriver.com>
-References: <4AD46380.9020308@pardus.org.tr> <200910132121.25743.bzolnier@gmail.com> <1255464940.10798.10.camel@localhost.localdomain> <200910132357.57094.bzolnier@gmail.com> <efe7343f0910131521u608d66f5r670dd1cf00322d0b@mail.gmail.com>
+	Fri, 9 Oct 2009 14:53:19 -0400
+Received: by fxm27 with SMTP id 27so6669252fxm.17
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2009 11:52:42 -0700 (PDT)
+Date: Fri, 9 Oct 2009 16:39:22 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: 2.6.31.[12] ath5k regression
+Message-ID: <20091009143922.GA7848@linux-m68k.org>
+References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <efe7343f0910131521u608d66f5r670dd1cf00322d0b@mail.gmail.com>
+In-Reply-To: <20090705123105.GE2132@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 11:21:53PM +0100, Luis Correia wrote:
+Hi,
 
-> Since some days now, we have someone in the team which works for
-> Ralink, I'm hopefull that he can find some time to help us make the
-> driver better.
+ath5k no longer works for me in 2.6.31.[1-2]. 
 
-This (I hope) is the future.  If we can get the vendors to cooperate
-with us at this level then we can eliminate the vendor/upstream
-driver distinction.
+2.6.31 worked good enough even though in patched 2.6.30.3 the connection and association 
+is seemingly more stable.
 
-While I try to be ambivalent about drivers/staging, I _do_ think that
-it tends to enable vendors to get aways with _less_ support of the
-community by facilitating them in taking advantage of the "pragmatic"
-among us.
+All tests done in ad-hoc mode with 2 computers, the other end is a rt73usb which
+is not quite trouble free either.
 
-> And now, i'm going back to my lovely hole, having added nothing to
-> this conversation.
+I have now confirmed that going back to 2.6.31 the wlan works at least most of the
+time and completely stops working after applying this patch on top of 2.6.31
 
-I disagree! :-)
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 029c1bc..ba6d225 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2676,7 +2676,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+                sc->curchan = chan;
+                sc->curband = &sc->sbands[chan->band];
+        }
+-       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
++       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
+        if (ret) {
+                ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+                goto err;
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+One more odd observation - since 2.6.31 "iwlist wlan0 scan" will list my own ad-hoc
+network twice although there are really only 2 machines.
+
+messages:
+Oct  8 10:44:09 richard kernel: [ 5818.459845] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+Oct  8 10:44:09 richard kernel: [ 5818.460301] ath5k 0000:02:00.0: registered as 'phy0'
+Oct  8 10:44:09 richard kernel: [ 5818.564470] ath5k phy0: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+
+lspci:
+02:00.0 Ethernet controller: Atheros Communications Inc. AR242x 802.11abg Wireless PCI Express Adapter (rev 01)
+
+Some messages I caught on the other end of the connection:
+- after cold booting the ath5k device:
+[26996.271773] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSI
+D=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[27302.312129] wlan0: sta_find_ibss (active_ibss=0)
+[27302.312134]    sta_find_ibss: selected da:d2:d4:53:53:03 current da:d2:d4:53:
+53:03
+[27302.312136]    did not try to join ibss
+
+
+- after warm reboot from working 2.6.30.3
+
+[26763.469116] wlan0: dropped frame to 00:22:43:2c:76:0f (unauthorized port)
+[26763.931242] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSI
+D=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[26763.931248] wlan0: Sending ProbeResp to 00:22:43:2c:76:0f
+[26764.469021] wlan0: dropped frame to 00:22:43:2c:76:0f (unauthorized port)
+[26764.469115] wlan0: dropped frame to 00:22:43:2c:76:0f (unauthorized port)
+[26766.151827] wlan0: RX ProbeReq SA=00:22:43:2c:76:0f DA=ff:ff:ff:ff:ff:ff BSSI
+D=ff:ff:ff:ff:ff:ff (tx_last_beacon=1)
+[26766.151833] wlan0: Sending ProbeResp to 00:22:43:2c:76:0f
+
+
+Richard
