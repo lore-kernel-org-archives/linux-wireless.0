@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback3.mail.ru ([94.100.176.58]:33668 "EHLO
-	fallback3.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757388AbZJ3TxX (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58013
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753846AbZJIAz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 15:53:23 -0400
-Received: from mx38.mail.ru (mx38.mail.ru [94.100.176.52])
-	by fallback3.mail.ru (mPOP.Fallback_MX) with ESMTP id 7FEB3506628
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 22:53:27 +0300 (MSK)
-Received: from [94.242.37.174] (port=43384 helo=zhubr.mshome.net)
-	by mx38.mail.ru with asmtp
-	id 1N3xWq-0006tH-00
-	for linux-wireless@vger.kernel.org; Fri, 30 Oct 2009 22:52:56 +0300
-Date: Fri, 30 Oct 2009 23:00:28 +0300
-From: Nikolai ZHUBR <zhubr@mail.ru>
-Message-ID: <1094614475.20091030230028@mail.ru>
-To: linux-wireless@vger.kernel.org
-Subject: ieee80211_tx_status: headroom too small
+	Thu, 8 Oct 2009 20:55:58 -0400
+Date: Thu, 08 Oct 2009 17:55:53 -0700 (PDT)
+Message-Id: <20091008.175553.139810708.davem@davemloft.net>
+To: mb@bu3sch.de
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2009-10-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <200910090116.46513.mb@bu3sch.de>
+References: <20091008223454.GB2798@tuxdriver.com>
+	<200910090108.08838.mb@bu3sch.de>
+	<200910090116.46513.mb@bu3sch.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello people,
+From: Michael Buesch <mb@bu3sch.de>
+Date: Fri, 9 Oct 2009 01:16:44 +0200
 
-I'm using compat-wireless-2009-09-14 with 2.6.25.20 and I have
-recently noticed lots of these in syslog:
+> And there's no reason to rush this fix into mainline.
 
-ieee80211_tx_status: headroom too small
-ieee80211_tx_status: headroom too small
-ieee80211_tx_status: headroom too small
+I think it's worthwhile because people turn the DMA API debugger on
+and it's going to spit out warnings that "don't matter" until you guys
+fix this.
 
-The wireless (access point) works fine, though maybe not very
-fast. However, this warning somehow bothers me. Is it important?
-Does it mean something critical? Maybe I should just comment
-it out in the code? I don't like syslog being filled up this
-way...
+I looked at the patch you guys are so up in arms about, and frankly it
+looks perfectly fine to me.
 
-Thank you.
+If you want to implement the fix "perfectly", and "to your standards",
+then fine.  But do it in net-next-2.6 as a follow-on patch to this
+one.
 
-Nikolai ZHUBR
-
-
+I'm not undoing John's pull request just for this. :-)
