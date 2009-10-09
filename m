@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f216.google.com ([209.85.217.216]:40852 "EHLO
-	mail-gx0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbZJXCgo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 22:36:44 -0400
-Message-ID: <4AE2683D.4020000@gmail.com>
-Date: Fri, 23 Oct 2009 22:36:45 -0400
-From: Miles Lane <miles.lane@gmail.com>
+Received: from bu3sch.de ([62.75.166.246]:41279 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761306AbZJIScw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 14:32:52 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ssb: Put host pointers into a union
+Date: Fri, 9 Oct 2009 20:32:10 +0200
+Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: 2.6.32-rc5-git3 -- EIP is at cfg80211_conn_work+0x73/0xd6 [cfg80211]
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910092032.10324.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let me know if you need my .config
+This slightly shrinks the structure.
 
-*pde = 00000000
-Modules linked in: ipv6 af_packet iptable_filter snd_hda_codec_realtek ip_tables snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm ath9k rtc_cmos uvcvideo eeepc_laptop mac80211 snd_timer rtc_core hwmon videodev ath cfg80211 v4l1_compat rtc_lib rfkill snd_page_alloc rng_core battery ac led_class pci_hotplug processor fan sg sd_mod ehci_hcd atl1e uhci_hcd thermal
+Signed-off-by: Michael Buesch <mb@bu3sch.de>
 
-Pid: 10, comm: events/1 Not tainted (2.6.32-rc5-git3 #4) 1000HE
-EIP: 0060:[<f858ac49>] EFLAGS: 00010246 CPU: 1
-EIP is at cfg80211_conn_work+0x73/0xd6 [cfg80211]
-EAX: 00000000 EBX: f71ae5e8 ECX: 00000000 EDX: c16754e4
-ESI: ead9c0c4 EDI: ead9c000 EBP: f7136f34 ESP: f7136f20
-  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-  ead9c084 ead9c00c c2e09700 ead9c164 f7136f94 f7136fa0 c103d5f5 00000000
-<0> 00000002 00000000 c103d5b3 f7136f88 f7146c50 f7146900 f7146900 c2e09724
-<0> c2e0971c f858abd6 ead9c148 f7146900 c2e09700 00000000 f7146900 c1040721
-  [<c103d5f5>] ? worker_thread+0x161/0x233
-  [<c103d5b3>] ? worker_thread+0x11f/0x233
-  [<f858abd6>] ? cfg80211_conn_work+0x0/0xd6 [cfg80211]
-  [<c1040721>] ? autoremove_wake_function+0x0/0x2f
-  [<c103d494>] ? worker_thread+0x0/0x233
-  [<c1040527>] ? kthread+0x5f/0x64
-  [<c10404c8>] ? kthread+0x0/0x64
-  [<c1003e9f>] ? kernel_thread_helper+0x7/0x1a
----[ end trace b24f325f9540f193 ]---
+---
+
+Index: wireless-testing/drivers/ssb/driver_pcicore.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-07-20 12:09:34.000000000 +0200
++++ wireless-testing/drivers/ssb/driver_pcicore.c	2009-10-09 19:01:59.000000000 +0200
+@@ -551,13 +551,13 @@ int ssb_pcicore_dev_irqvecs_enable(struc
+ 	might_sleep_if(pdev->id.coreid != SSB_DEV_PCI);
+ 
+ 	/* Enable interrupts for this device. */
+-	if (bus->host_pci &&
+-	    ((pdev->id.revision >= 6) || (pdev->id.coreid == SSB_DEV_PCIE))) {
++	if ((pdev->id.revision >= 6) || (pdev->id.coreid == SSB_DEV_PCIE)) {
+ 		u32 coremask;
+ 
+ 		/* Calculate the "coremask" for the device. */
+ 		coremask = (1 << dev->core_index);
+ 
++		SSB_WARN_ON(bus->bustype != SSB_BUSTYPE_PCI);
+ 		err = pci_read_config_dword(bus->host_pci, SSB_PCI_IRQMASK, &tmp);
+ 		if (err)
+ 			goto out;
+Index: wireless-testing/include/linux/ssb/ssb.h
+===================================================================
+--- wireless-testing.orig/include/linux/ssb/ssb.h	2009-09-11 21:27:27.000000000 +0200
++++ wireless-testing/include/linux/ssb/ssb.h	2009-10-09 19:10:42.000000000 +0200
+@@ -269,7 +269,8 @@ struct ssb_bus {
+ 
+ 	const struct ssb_bus_ops *ops;
+ 
+-	/* The core in the basic address register window. (PCI bus only) */
++	/* The core currently mapped into the MMIO window.
++	 * Not valid on all host-buses. So don't use outside of SSB. */
+ 	struct ssb_device *mapped_device;
+ 	union {
+ 		/* Currently mapped PCMCIA segment. (bustype == SSB_BUSTYPE_PCMCIA only) */
+@@ -281,14 +282,17 @@ struct ssb_bus {
+ 	 * On PCMCIA-host busses this is used to protect the whole MMIO access. */
+ 	spinlock_t bar_lock;
+ 
+-	/* The bus this backplane is running on. */
++	/* The host-bus this backplane is running on. */
+ 	enum ssb_bustype bustype;
+-	/* Pointer to the PCI bus (only valid if bustype == SSB_BUSTYPE_PCI). */
+-	struct pci_dev *host_pci;
+-	/* Pointer to the PCMCIA device (only if bustype == SSB_BUSTYPE_PCMCIA). */
+-	struct pcmcia_device *host_pcmcia;
+-	/* Pointer to the SDIO device (only if bustype == SSB_BUSTYPE_SDIO). */
+-	struct sdio_func *host_sdio;
++	/* Pointers to the host-bus. Check bustype before using any of these pointers. */
++	union {
++		/* Pointer to the PCI bus (only valid if bustype == SSB_BUSTYPE_PCI). */
++		struct pci_dev *host_pci;
++		/* Pointer to the PCMCIA device (only if bustype == SSB_BUSTYPE_PCMCIA). */
++		struct pcmcia_device *host_pcmcia;
++		/* Pointer to the SDIO device (only if bustype == SSB_BUSTYPE_SDIO). */
++		struct sdio_func *host_sdio;
++	};
+ 
+ 	/* See enum ssb_quirks */
+ 	unsigned int quirks;
+
+-- 
+Greetings, Michael.
