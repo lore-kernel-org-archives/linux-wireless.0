@@ -1,77 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:41937 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752288AbZJXFef (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 01:34:35 -0400
-Message-ID: <4AE291DC.3010505@nokia.com>
-Date: Sat, 24 Oct 2009 08:34:20 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Valo Kalle (Nokia-D/Tampere)" <Kalle.Valo@nokia.com>,
-	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>
-Subject: Re: [RFC 1/3] mac80211: WIP - add operating BSSID to device configuration
- struct
-References: <1255696042-28413-1-git-send-email-luciano.coelho@nokia.com>	 <1255696042-28413-2-git-send-email-luciano.coelho@nokia.com> <1256201719.12174.19.camel@johannes.local>
-In-Reply-To: <1256201719.12174.19.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:17633 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754902AbZJIUVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 16:21:43 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/17 v2.6.32] iwl3945: update iwl3945_apm_init()
+Date: Fri,  9 Oct 2009 13:20:18 -0700
+Message-Id: <1255119634-3060-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ext Johannes Berg wrote:
-> On Fri, 2009-10-16 at 15:27 +0300, Luciano Coelho wrote:
-> 
->> @@ -2405,7 +2411,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
->>  	 *	to sleep and then change channel etc.
->>  	 */
->>  	sdata->local->oper_channel = req->bss->channel;
->> -	ieee80211_hw_config(sdata->local, 0);
->> +
->> +	if (memcmp(sdata->local->hw.conf.oper_bssid,
->> +		   req->bss->bssid, ETH_ALEN)) {
->> +		config_changed |= IEEE80211_CONF_CHANGE_OPER_BSSID;
->> +		memcpy(sdata->local->hw.conf.oper_bssid,
->> +		       req->bss->bssid, ETH_ALEN);
->> +	}
->> +
->> +	ieee80211_hw_config(sdata->local, config_changed);
->>  
-> 
-> Is this really necessary before you can auth?
+From: Ben Cahill <ben.m.cahill@intel.com>
 
-As we discussed on IRC, it is really needed.  We must always provide a BSSID 
-when changing channels in preparation for an association.  For this reason (and 
-others) the wl1271 with the current firmware does not support promiscuous mode 
-or frame injections.
+Update iwl3945_apm_init() to set up device registers in sequence most recently
+recommended by factory.
 
-I'll ask TI next time we meet them, if there is any possibility to remove the 
-need for the BSSID at this point, so things will be greatly simplified.  There 
-is a very slight chance that this could be possible for wl1271, but for wl1251 I 
-think there's no hope to change it anymore.  So in any case, we will need to 
-support this on the stack if we want to have wl1251 to work correctly. :(
+Add resets for APMG interrupts and radio chip, formerly done only in
+iwl3945_apm_reset(); moving them here assures that apm_init() will do
+a complete job of preparing hardware not only after platform boot,
+but also after apm_stop() has executed (due to rfkill, ifconfig down,
+driver unload, etc.).  This is in preparation to completely remove apm_reset().
 
-Also, I'm not 100% sure, but IIRC Kalle has mentioned that the at76c50x-usb card 
-also needs this feature.
+Add some comments.
 
+Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   42 ++++++++++++++++++++++++++----
+ 1 files changed, 36 insertions(+), 6 deletions(-)
 
-> If it is, you're going to have to do a lot more work and go all the way
-> up to userspace so wpa_supplicant with -Dnl80211 knows about this too,
-> and doesn't try to authenticate twice or do FT-OTA.
-
-Thanks a lot for pointing this out.  I think I understand it better after our 
-discussion on IRC.  I'll have to study more the authentication mechanism and 
-figure out how to deal with multiple authentications, as you pointed out.
-
-These are definitely details that I'll need to sort out.  But in principle, do 
-you agree with the idea of passing the "operating" BSSID down to the driver in 
-the hw_config op? And saving it as a hardware configuration parameter in 
-local->hw.conf?
-
-Once again, I really appreciate your help and the time you spend discussing and 
-explaining these things in detail to me! :)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 4115672..89f8239 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -982,23 +982,45 @@ static int iwl3945_txq_ctx_reset(struct iwl_priv *priv)
+ 	return rc;
+ }
+ 
++/*
++ * Start up NIC's basic functionality after it has been reset
++ * (e.g. after platform boot, or shutdown via iwl3945_apm_stop())
++ * NOTE:  This does not load uCode nor start the embedded processor
++ */
+ static int iwl3945_apm_init(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+ 	iwl_power_initialize(priv);
+ 
++	/* Configure chip clock phase-lock-loop */
++	iwl_set_bit(priv, CSR_ANA_PLL_CFG, CSR39_ANA_PLL_CFG_VAL);
++
++	/*
++	 * Disable L0S exit timer (platform NMI Work/Around)
++	 * (does this do anything on 3945, or just 4965 and beyond?)
++	 */
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_DIS_L0S_EXIT_TIMER);
+ 
+-	/* disable L0s without affecting L1 :don't wait for ICH L0s bug W/A) */
++	/* Disable L0s without affecting L1; don't wait for ICH (L0s bug W/A) */
+ 	iwl_set_bit(priv, CSR_GIO_CHICKEN_BITS,
+ 			  CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX);
+ 
+-	/* set "initialization complete" bit to move adapter
+-	* D0U* --> D0A* state */
++	/* Set FH wait threshold to maximum (HW error during stress W/A) */
++	iwl_set_bit(priv, CSR_DBG_HPET_MEM_REG, CSR_DBG_HPET_MEM_REG_VAL);
++
++	/*
++	 * Set "initialization complete" bit to move adapter from
++	 * D0U* --> D0A* (powered-up active) state.
++	 */
+ 	iwl_set_bit(priv, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+ 
++	/*
++	 * Wait for clock stabilization; once stabilized, access to
++	 * device-internal resources is supported, e.g. iwl_write_prph()
++	 * and accesses to uCode SRAM.
++	 */
+ 	ret = iwl_poll_direct_bit(priv, CSR_GP_CNTRL,
+ 			    CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY, 25000);
+ 	if (ret < 0) {
+@@ -1007,13 +1029,21 @@ static int iwl3945_apm_init(struct iwl_priv *priv)
+ 		goto out;
+ 	}
+ 
+-	/* enable DMA */
++	/* Enable DMA and BSM clocks, wait for them to stabilize */
+ 	iwl_write_prph(priv, APMG_CLK_CTRL_REG, APMG_CLK_VAL_DMA_CLK_RQT |
+ 						APMG_CLK_VAL_BSM_CLK_RQT);
+-
+ 	udelay(20);
+ 
+-	/* disable L1-Active */
++	/* Clear APMG (NIC's internal power management) interrupts */
++	iwl_write_prph(priv, APMG_RTC_INT_MSK_REG, 0x0);
++	iwl_write_prph(priv, APMG_RTC_INT_STT_REG, 0xFFFFFFFF);
++
++	/* Reset radio chip */
++	iwl_set_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
++	udelay(5);
++	iwl_clear_bits_prph(priv, APMG_PS_CTRL_REG, APMG_PS_CTRL_VAL_RESET_REQ);
++
++	/* Disable L1-Active */
+ 	iwl_set_bits_prph(priv, APMG_PCIDEV_STT_REG,
+ 			  APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+ 
 -- 
-Cheers,
-Luca.
+1.5.6.3
+
