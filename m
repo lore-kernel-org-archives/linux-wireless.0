@@ -1,32 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37196
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752103AbZJ2IGl (ORCPT
+Received: from rcsinet11.oracle.com ([148.87.113.123]:59585 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933516AbZJIQHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 04:06:41 -0400
-Date: Thu, 29 Oct 2009 01:07:05 -0700 (PDT)
-Message-Id: <20091029.010705.106875451.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2009-10-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091028205346.GE2856@tuxdriver.com>
-References: <20091028205346.GE2856@tuxdriver.com>
+	Fri, 9 Oct 2009 12:07:54 -0400
+Date: Fri, 9 Oct 2009 09:06:01 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>, gregkh@suse.de,
+	devel@driverdev.osuosl.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wireless: make WEXT_SPY and WEXT_PRIV select WEXT_CORE
+Message-Id: <20091009090601.73de5dc6.randy.dunlap@oracle.com>
+In-Reply-To: <1255026563.3713.28.camel@johannes.local>
+References: <20091007105720.a2457e5b.randy.dunlap@oracle.com>
+	<1254949672-24022-1-git-send-email-linville@tuxdriver.com>
+	<4ACD0E5A.7060106@oracle.com>
+	<1254954842.3713.7.camel@johannes.local>
+	<4ACD1C3D.3030506@oracle.com>
+	<1254957256.3713.10.camel@johannes.local>
+	<20091007171235.d40f0cc2.randy.dunlap@oracle.com>
+	<1254995282.3713.18.camel@johannes.local>
+	<20091008080615.09c8b803.randy.dunlap@oracle.com>
+	<1255026563.3713.28.camel@johannes.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 28 Oct 2009 16:53:46 -0400
+On Thu, 08 Oct 2009 20:29:23 +0200 Johannes Berg wrote:
 
-> Here is a collection of fixes (mostly (almost-)one-liners) intended
-> for 2.6.32.  There are a couple of fixes relating to behavior when an
-> association failes, as well as spelling fixes, simply endian fixes,
-> a MAINTAINERS change...I don't think there is anything controversial
-> here...
+> On Thu, 2009-10-08 at 08:06 -0700, Randy Dunlap wrote:
 > 
-> Please let me know if there are problems!
+> > > It's kinda strange though that you can select wireless drivers without
+> > > selecting WIRELESS. Maybe the solution is as simple as making WLAN
+> > > (drivers/net/wireless/Kconfig) depend on WIRELESS?
+> > 
+> > Yes, I think that would be a very good start.
+> 
+> On the other hand, of course, the whole WIRELESS thing is somewhat
+> stupid. How about this?
+> 
+> johannes
+> 
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Subject: wireless: make wireless drivers select core
+> 
+> It is somewhat non-sensical to allow selecting wireless
+> drivers without showing wireless core code options, and
+> since the wext refactoring this has made it possible to
+> generate configurations that will not build. Avoid this
+> and make wireless drivers select the wireless options.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/Kconfig |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- wireless-testing.orig/drivers/net/wireless/Kconfig	2009-10-08 20:25:04.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/Kconfig	2009-10-08 20:27:38.000000000 +0200
+> @@ -5,6 +5,7 @@
+>  menuconfig WLAN
+>  	bool "Wireless LAN"
+>  	depends on !S390
+> +	select WIRELESS
+>  	default y
+>  	---help---
+>  	  This section contains all the pre 802.11 and 802.11 wireless
 
-Pulled, thanks a lot John.
+
+I suppose that's OK, although I prefer "depends" rather than "select".
+
+I tracked down one of the problems that I was seeing:
+
+net/wireless/wext-priv.c:206: error: implicit declaration of function 'call_commit_handler'
+
+with:
+# CONFIG_WIRELESS is not set
+CONFIG_WIRELESS_EXT=y
+CONFIG_WEXT_PRIV=y
+
+This is being caused by several drivers in drivers/staging/ doing
+	select WEXT_PRIV
+without using either enough dependencies or even more (ugly) selects.
+(or just because kconfig isn't sufficient)
+
+
+---
+~Randy
