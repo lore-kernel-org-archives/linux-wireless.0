@@ -1,56 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:46283 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbZJAV1t (ORCPT
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:62915 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755182AbZJIAP0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 17:27:49 -0400
-Subject: Re: 2.6.32-rc0-git: oops in wireless, iwl3945 related?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-kernel@vger.kernel.org, yi.zhu@intel.com,
-	reinette.chatre@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1254431783.3959.45.camel@johannes.local>
-References: <20090929171249.GB14405@elf.ucw.cz>
-	 <1254431783.3959.45.camel@johannes.local>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Oct 2009 23:27:49 +0200
-Message-Id: <1254432469.3959.46.camel@johannes.local>
-Mime-Version: 1.0
+	Thu, 8 Oct 2009 20:15:26 -0400
+Received: by iwn10 with SMTP id 10so928106iwn.4
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Oct 2009 17:14:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <3ace41890910081622k7c86453dm72e5584f4adbb763@mail.gmail.com>
+References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
+	<3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
+	<1254952886.3713.4.camel@johannes.local> <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
+	<1254995514.3713.22.camel@johannes.local> <1255002647.3713.25.camel@johannes.local>
+	<43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
+	<3ace41890910081622k7c86453dm72e5584f4adbb763@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 8 Oct 2009 20:14:28 -0400
+Message-ID: <43e72e890910081714u7e1d2168u98c0ccb74915c94c@mail.gmail.com>
+Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6: adding
+	ethtool.h to compat-2.6.31.h)
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-01 at 23:16 +0200, Johannes Berg wrote:
+On Thu, Oct 8, 2009 at 7:22 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
+> On Thu, Oct 8, 2009 at 2:43 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Thu, Oct 8, 2009 at 7:50 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> On Thu, 2009-10-08 at 11:51 +0200, Johannes Berg wrote:
+>>>
+>>>> Ok, that's odd. Is it possible that somehow cfg80211 is picking up an
+>>>> #ifdef'ed copy of "struct iw_handler_def", and thus the struct it is
+>>>> defining is simply too small?
+>>>
+>>> That is apparently what is happening since compat-wireless ships
+>>> iw_handler.h. This is wrong, as wext functionality is built into the
+>>> kernel image so you can't use a newer header file with it.
+>>
+>> Dah, thanks for looking into this! This must've been there this way
+>> for ages and we hadn't noticed until now. This is now fixed, and a new
+>> tarball pushed out. I'll fix on the stable stuff as well, although I
+>> doubt the header has changed much except now.
+>>
+>>  Luis
+>>
+>
+> Thanks everybody! Works alright now, after 'compat-2.6: stop shipping
+> bleeding edge iw_handler.h' .
+>
+> There are some harmless warnings from using the old header, but
+> otherwise it is working as it should:
+>  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.o
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c: In
+> function ‘__cfg80211_connect_result’:
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:370:
+> warning: passing argument 4 of ‘wireless_send_event’ discards
+> qualifiers from pointer target type
+> include/net/iw_handler.h:443: note: expected ‘char *’ but argument is
+> of type ‘const u8 *’
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:376:
+> warning: passing argument 4 of ‘wireless_send_event’ discards
+> qualifiers from pointer target type
+> include/net/iw_handler.h:443: note: expected ‘char *’ but argument is
+> of type ‘const u8 *’
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c: In
+> function ‘__cfg80211_roamed’:
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:520:
+> warning: passing argument 4 of ‘wireless_send_event’ discards
+> qualifiers from pointer target type
+> include/net/iw_handler.h:443: note: expected ‘char *’ but argument is
+> of type ‘const u8 *’
+> /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:527:
+> warning: passing argument 4 of ‘wireless_send_event’ discards
+> qualifiers from pointer target type
+> include/net/iw_handler.h:443: note: expected ‘char *’ but argument is
+> of type ‘const u8 *’
 
-> > wlan0: Selected IBSS BSSID 02:18:41:de:3f:02 based on configured SSID
-> > wlan0: Trigger new scan to find an IBSS to join
-> > wlan0: Trigger new scan to find an IBSS to join
-> > wlan0: Creating new IBSS network, BSSID f2:d3:80:82:ed:6a
-> > wlan0: Creating new IBSS network, BSSID 52:17:bf:45:d6:9d
-> > skb_over_panic: text:c07b4113 len:130 put:36 head:e4c3edf0
-> 
-> This entire log is very odd ... can you reproduce this easily? printk
-> timestamps would be useful.
+The last argument to wireless_send_event() was changed to be const on
+2.6.32, cant think of a way to avoid this warning.
 
-Kinda looks like a race condition, but it's rather odd. I think there's
-a race condition, so I'm going to submit this patch regardless after
-some testing, but if you want please try the patch below.
-
-johannes
-
----
- net/mac80211/ibss.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- wireless-testing.orig/net/mac80211/ibss.c	2009-10-01 23:21:11.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2009-10-01 23:22:24.000000000 +0200
-@@ -831,7 +831,7 @@ void ieee80211_ibss_notify_scan_complete
- 		if (!sdata->u.ibss.ssid_len)
- 			continue;
- 		sdata->u.ibss.last_scan_completed = jiffies;
--		ieee80211_sta_find_ibss(sdata);
-+		mod_timer(&ifibss->timer, 0);
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- }
-
-
+  Luis
