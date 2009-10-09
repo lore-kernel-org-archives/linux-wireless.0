@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gv-out-0910.google.com ([216.239.58.185]:14824 "EHLO
-	gv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934311AbZJNPbY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 11:31:24 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Wed, 14 Oct 2009 17:28:21 +0200
-Cc: Dan Williams <dcbw@redhat.com>, Ivo van Doorn <ivdoorn@gmail.com>,
-	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910141652.41041.bzolnier@gmail.com> <20091014145605.GE2890@tuxdriver.com>
-In-Reply-To: <20091014145605.GE2890@tuxdriver.com>
+Received: from bu3sch.de ([62.75.166.246]:35140 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758720AbZJISGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 14:06:39 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: b43: do not stack-allocate pio rx/tx header and tail buffers (was: pull request: wireless-2.6 2009-10-08)
+Date: Fri, 9 Oct 2009 20:05:58 +0200
+Cc: bcm43xx-dev@lists.berlios.de, linux-netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <200910062252.17565.mb@bu3sch.de> <4ACCD765.7080604@lwfinger.net> <4ACF76F7.30406@yahoo.es>
+In-Reply-To: <4ACF76F7.30406@yahoo.es>
 MIME-Version: 1.0
-Message-Id: <200910141728.21491.bzolnier@gmail.com>
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="iso-8859-1"
+Message-Id: <200910092005.59916.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 October 2009 16:56:05 John W. Linville wrote:
-> On Wed, Oct 14, 2009 at 04:52:40PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > On Wednesday 14 October 2009 16:09:24 John W. Linville wrote:
-> > > On Tue, Oct 13, 2009 at 11:57:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > 
-> > > > Several months later (after all current users are happy with the improved
-> > > > drivers) the old drivers will be removed from staging..
-> > > 
-> > > I _really_ hope this isn't the standard.  By that measure, nothing
-> > > will ever leave staging as _someone_ will always have some use case
-> > > that makes the other driver better for them.
-> > 
-> > Doesn't seem to be the case with all other drivers except wireless ones
-> > and the only real reason why wireless ones are so special is because of:
-> > 
-> > "But then there's the users, who bitch about everything and simply do
-> > not understand what it is at stake.
-> > 
-> > And all this is becoming way too messy for us to handle.
-> > 
-> > Personally all I see around me is people bitching and complaining, and
-> > no code being ported."
-> > 
-> > attitude which pretty much explains the problem..
-> > 
-> > Please adjust the process to fix the problem yourself or if you do not
-> > want to do it just make the room for people who do.
+On Friday 09 October 2009 19:46:31 Albert Herranz wrote:
+> I'm not arguing if the patch should have been immediately merged upstream or not without your ack (I'm probably more on your side here, as the patch was still being discussed on the ML).
+> The patch [1] may not be up to your quality standards or may not take into account other requirements (that you have not expressed nor on the ML nor on IRC) but I'm sure it's far from being "random", "move crap" or "add stupid comments". That's the unfair part.
 > 
-> Alright Bartlomiej, you've had your say.  Perhaps you should go about
-> your business now.
+> The reason I posted the initial patch for review was because you kind of told me [2].
 > 
-> John
-> 
-> P.S. For the record, the "But then there's the users..." quote is
-> from someone else...
+> [20:06] <mb_> Anyway, I'm not going to fix this. If you need it fixed, please send patches
 
-..but you're still fine with its content, right?
+Yeah, but that doesn't mean that either hack is acceptable. It just means that my time is limited
+and I added this non-issue (which I still think it is) to the very bottom of my priority list.
 
-I also wonder who is really taking advantage of who here (your other mail)..
+> After ~22 hours if I'm not mistaken (yes, less than 24...) John, who had previously expressed his intentions to merge the patch [5], picked it for wireless-2.6.
+> And a day later, more or less again, John did the GIT PULL request.
 
-You're holding users as hostages to pressure vendors to fund your projects
-and try to lure outside developers with the lovely perspective of doing
-the hardest parts of said projects.
+My impression was, that if the maintainer rejects a patch and asks for a new version,
+the upstream maintainer must not take the patch until the maintainer acked the new version.
+It seems I was wrong, though.
 
-I don't have a have a problem with it personally as long as people accept
-the competition..  but instead of working on _their_ projects they go around
-screaming at everybody who does not want to spin inside the great process
-designed by them..
+> My point here is that there's no reason for such strong words concerning the quality of the patch code. It's really not that bad for such wording.
+> I'm sure that if the patch was really crap it would have been immediately NAK'ed by you or by any sane maintainer.
+
+It _was_ immediately NAK'ed by me. I did not know that I need to NAK
+every single new version of a patch explicitely.
+I thought NAK-ing a patch would put it into some special state that only an explicit ACK could
+take it out of.
+
+-- 
+Greetings, Michael.
