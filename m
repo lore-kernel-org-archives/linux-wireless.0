@@ -1,142 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f227.google.com ([209.85.220.227]:47804 "EHLO
-	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756841AbZJOJse (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.154]:34954 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760525AbZJIKQM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Oct 2009 05:48:34 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: Current status of rt2800usb and staging/rt2870
-Date: Thu, 15 Oct 2009 11:47:29 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>,
-	Ozan =?utf-8?q?=C3=87a=C4=9Flayan?= <ozan@pardus.org.tr>,
-	linux-wireless@vger.kernel.org,
-	"linux-kernel" <linux-kernel@vger.kernel.org>
-References: <4AD46380.9020308@pardus.org.tr> <200910142210.25080.bzolnier@gmail.com> <14add3d10910142328xffa8e91re7902aa3bd04b52d@mail.gmail.com>
-In-Reply-To: <14add3d10910142328xffa8e91re7902aa3bd04b52d@mail.gmail.com>
+	Fri, 9 Oct 2009 06:16:12 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so250492fge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2009 03:14:24 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <200910151147.29739.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+In-Reply-To: <200910091139.36089.mb@bu3sch.de>
+References: <200910091139.36089.mb@bu3sch.de>
+Date: Fri, 9 Oct 2009 12:14:24 +0200
+Message-ID: <69e28c910910090314j4e9885dfofbc58e901965b4ab@mail.gmail.com>
+Subject: Re: Broadcom cards for free
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+To: Michael Buesch <mb@bu3sch.de>
+Cc: bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 October 2009 08:28:07 Gertjan van Wingerde wrote:
-> On Wed, Oct 14, 2009 at 10:10 PM, Bartlomiej Zolnierkiewicz
-> <bzolnier@gmail.com> wrote:
-> > On Wednesday 14 October 2009 20:56:17 Ivo van Doorn wrote:
-> >> Hi,
-> >>
-> >> > > On Wed, Oct 14, 2009 at 05:28:21PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> >> > >
-> >> > > > I don't have a have a problem with it personally as long as people accept
-> >> > > > the competition..  but instead of working on _their_ projects they go around
-> >> > > > screaming at everybody who does not want to spin inside the great process
-> >> > > > designed by them..
-> >> > >
-> >> > > Please whine somewhere else.  You have the freedom to work in
-> >> > > drivers/staging all you want.  You do not have the power to force us to
-> >> > > like it -- especially in a case where you are diverting attention from
-> >> > > the community-maintained drivers instead of cooperating with them.
-> >> >
-> >> > Cooperating you say.
-> >> >
-> >> > rtl8187 -- before starting the work on rtl8187se I've pinged the maintainer
-> >> > to coordinate the effort and hear his opinion on how to progress..
-> >> >
-> >> > I've never heard back.
-> >> >
-> >> > rt2x00 -- I know that people have datasheets for some chipsets but I've
-> >> > never heard "How can we help you" etc. thing.
-> >>
-> >> The rt2x00 members received the specsheets under the condition that we didn't
-> >> distribute them further.
-> >>
-> >> So everybody which requested the datasheets from the rt2x00 project were presented
-> >> with a choice:
-> >> 1) We provide the email address of the Ralink contact person which can device if you
-> >> can get the specsheet or not (possibly under NDA, but this isn't always the case).
-> >> 2) Specific questions about the registers can be asked and we give all the information we
-> >> know from our work on the rt2x00 project plus additional information from the specsheet.
-> >> Seeing that the specsheet doesn't always match reality, you get the better answers with
-> >> this option, but some people just hate it when they need to ask other people for stuff.
-> >>
-> >> > All I've ever heard was _lies_ about current state of affairs or that
-> >> > my work is in the way.
-> >>
-> >> I have encounterd your email address in only 2 rt2x00 related discussions
-> >> (yes I have checked my entire email archive). Both cases were regarding
-> >> staging vs rt2x00.
-> >>
-> >> So far I never said rt2800usb or rt2800pci were high quality, I never said they were in a good
-> >> shape. On the other hand, I often talked about the problems with the drivers, requesting help
-> >> to improve the drivers, etc etc.
-> >>
-> >> So are you basing this "I am hearing lies" about a random person talking on the street
-> >> about rt2x00 which is telling the lie?
-> >
-> > Maybe I've used a bit too strong wording but the fact is that vendor drivers
-> > are useful for providing users with *unsupported* and *temporary* solution
-> > until the proper drivers are in place have been questioned a lot in the past,
-> > and sorry but it is a fact (it may be hard to swallow but it shouldn't be
-> > discussed about).
-> >
-> > The staging is a new game in town and provides real benefit for end-users
-> > to use their hardware early while proper solutions are being worked on (not
-> > like most of distributions weren't shipping crap drivers anyway -- now at
-> > least we have some control over it).
-> >
-> > This is extremely important in segments where Linux is still not the leading
-> > OS.  We cannot tell users to go hike -- they are our users! Moreover they
-> > are quite smart so they will use what works best for their needs anyway,
-> > not necessarily what is the easiest for us to maintain in the long-term or
-> > work on.
-> >
-> > Staging also helps companies involved to transform their software offerings
-> > in a more smooth way.  Often such transition requires long process and much
-> > work on the company side to adapt to our model of doing things so patience
-> > is recommended.  (Lets not forget that staging provides also a stick part,
-> > drivers are removed from staging if nobody cares about them and even if
-> > there are volunteers caring about support for certain hardware the company
-> > will still get a bad publicity if it doesn't participate in the process)..
-> >
-> > So staging is here to stay and it is up to particular maintainers how they
-> > are going to it use this "tool" and integrate it into their current mode of
-> > operation..
-> >
-> > I'm sorry if my words were offending to you or other wireless developers.
-> > I kind of feel the frustration of people who had put years of effort into
-> > providing the proper wireless infrastructure + drivers and are ignored
-> > by vendors.  However we have to keep the ball rolling and cannot dismiss
-> > valid user complaints or ignore other possibilities of doing things.
-> >
-> 
-> All,
-> 
-> I don't think this discussion is leading us anywhere.
-> I believe everybody agrees with the "staging"/Ralink provided drivers to be good
-> to provide end-users a working solution until the rt2x00 driver has
-> been completed.
-> 
-> However, the problem that we have seen (from the rt2x00 project point
-> of view) is that
-> the Ralink drivers that are in staging are confusing / distraction
-> developer attention. We
-> have had quite a few occasions where new developers started to work on
-> the staging
-> drivers, as they thought these were "the way to go".
-> 
-> I think that can be easily solved by including in the Ralink staging
-> drivers a README
-> file pointing to the rt2x00 drivers, and a note stating that the
-> rt2x00 drivers are the ones
-> for long-term Linux support, and that the staging drivers are there
-> just to help users making
-> their hardware work.
+Sounds interesting... especially now that N-PHY is actually being
+reverse-engineered (or is it?).
 
-I think that there is already a note stating something like that.
+The modded 4320 is an attempt to replace the built-in OS and use it
+with b43 as a softmac device... am I right?
 
-However if you think that something needs to be added or changed then
-please just send Greg a patch
+On 10/9/09, Michael Buesch <mb@bu3sch.de> wrote:
+> Hi,
+>
+> I've currently got two Broadcom cards to offer for free.
+> http://bu3sch.de/misc/bcmcards.JPG
+>
+> The cardbus one is a WPC300N V1 802.11n card.
+> It can be used for development of the b43 N-PHY code.
+>
+> The USB one is BCM4320 which works over RNDIS-WLAN.
+> This device is disassembled and the EEPROM, which contains
+> the on-board operating system, is unsoldered and connected through a
+> pinheader.
+> That means it can be read and/or reprogrammed outside of the device.
+> The RF-shield on the RF-side of the board was removed.
+> The device should work properly. It properly registers to the kernel, but I
+> did
+> not try if it works with the rndis-wlan driver.
+>
+> --
+> Greetings, Michael.
+> _______________________________________________
+> Bcm43xx-dev mailing list
+> Bcm43xx-dev@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/bcm43xx-dev
+>
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
