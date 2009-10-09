@@ -1,257 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx03.syneticon.net ([78.111.66.105]:35899 "EHLO
-	mx03.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755658AbZJKRuX (ORCPT
+Received: from smtp-out-068.synserver.de ([212.40.180.68]:1062 "HELO
+	smtp-out-068.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760247AbZJIDvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 13:50:23 -0400
-Message-ID: <4AD21AB4.6010208@wpkg.org>
-Date: Sun, 11 Oct 2009 19:49:40 +0200
-From: Tomasz Chmielewski <mangoo@wpkg.org>
+	Thu, 8 Oct 2009 23:51:55 -0400
+Date: Fri, 9 Oct 2009 05:51:17 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Mike Galbraith <efault@gmx.de>
+Cc: Frans Pop <elendil@planet.nl>,
+	Arjan van de Ven <arjan@infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <peterz@infradead.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
+ CPU"
+Message-ID: <20091009035117.GB1985@phenom2.trippelsdorf.de>
+References: <200910051500.55875.elendil@planet.nl>
+ <1254974743.7797.21.camel@marge.simson.net>
+ <20091008064041.67219b13@infradead.org>
+ <200910081655.37485.elendil@planet.nl>
+ <1255026217.6643.12.camel@marge.simson.net>
+ <20091008203426.GA1946@phenom2.trippelsdorf.de>
+ <1255059318.7236.13.camel@marge.simson.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, linux-netdev@vger.kernel.org,
-	linux-mips@vger.kernel.org
-Subject: ath5k AP kernel panic when client uses SCP
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255059318.7236.13.camel@marge.simson.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am able to trigger this kernel panic when a client copies data using SCP to another client using the same AP:
+On Fri, Oct 09, 2009 at 05:35:18AM +0200, Mike Galbraith wrote:
+> On Thu, 2009-10-08 at 22:34 +0200, Markus Trippelsdorf wrote:
+> > On Thu, Oct 08, 2009 at 08:23:37PM +0200, Mike Galbraith wrote:
+> > > On Thu, 2009-10-08 at 16:55 +0200, Frans Pop wrote:
+> > > > On Thursday 08 October 2009, Arjan van de Ven wrote:
+> > > > > From: Arjan van de Ven <arjan@linux.intel.com>
+> > > > > Date: Thu, 24 Sep 2009 13:24:16 +0200
+> > > > > Subject: [PATCH] x86, timers: check for pending timers after (device)
+> > > > > interrupts
+> > > > >
+> > > > > Now that range timers and deferred timers are common, I found a
+> > > > > problem with these using the "perf timechart" tool.
+> > > > >
+> > > > > It turns out that on x86, these two 'opportunistic' timers only
+> > > > > get checked when another "real" timer happens.
+> > > > > These opportunistic timers have the objective to save power by
+> > > > > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
+> > > > > as much as possible.
+> > > > 
+> > > > This patch makes quite a difference for me. iwlagn and phy0 now 
+> > > > consistently show at ~10 ms or lower.
+> > > > 
+> > > > I do still get occasional high latencies, but those are for things like
+> > > > "[rpc_wait_bit_killable]" or "Writing a page to disk", where I guess you'd 
+> > > > expect them. Those high latencies are mostly only listed for "Global" and 
+> > > > don't translate to individual processes.
+> > > 
+> > > I still see very high latencies coming out of idle (last noted was >
+> > > 300ms, NO_HZ) with this patch, and wonder if the hunk below makes any
+> > > difference whatsoever for you.  Here, it definitely does. (shouldn't)
+> > 
+> > I'm also seeing these strange, very high latencies here. Your patch
+> > didn't help unfortunately.
+> > 
+> > This is from an otherwise idle NO_NZ system:
+> > 
+> > # ./perf sched latency
+> > 
+> >  -----------------------------------------------------------------------------------------
+> >   Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms |
+> >  -----------------------------------------------------------------------------------------
+> >   ksoftirqd/0:4         |      2.216 ms |      170 | avg:   24.235 ms | max:  808.356 ms |
+> >   ksoftirqd/1:6         |      2.611 ms |      205 | avg:    4.334 ms | max:  165.553 ms |
+> >   migration/2:7         |      0.000 ms |        1 | avg:    3.060 ms | max:    3.060 ms |
+> > 
+> > With latencytop the ksoftirqd latency is over 1 sec frequently. (Could be
+> > ondemand CPUfreq governor related?)
+> 
+> That's a separate issue, which Arjan was nice enough to fix for me.  He
+> even wrote the changelog, and used my mouse to do so ;-)
+> 
+> 
+> Repeatable.  Apply patchlet, and the numbers below become repeatable.
+> 
+> perf_counter tools: make perf sched pass -F 0 to record
+> 
+> Commit 42e59d7d19dc4b4 introduced a sample frequency framework..
+> .. however it unfortunately changed how perf events get recorded,
+> and caused sched to miss events.
+> 
+> This patch causes the sched code to use -F 0 to not use the
+> new framework when recording sched data.
 
-client_1 <---wired---> AP <---wireless---> client_2
-
-The panic happens after transferring around 30-40 MB of data.
-
-
-The AP behaves stable with normal traffic (HTTP, HTTPS, IMAPS, text SSH).
-
-
-
-The AP is Asus WL-500gP, it's a MIPS platform, running 2.6.31.1 kernel, hostapd v0.6.9.
-
-I can reproduce the issue reliably.
-
-Let me know if you need more info here.
-
-[67359.700000] ------------[ cut here ]------------
-[67359.710000] WARNING: at net/core/dev.c:1566 0x80280890()
-[67359.710000] b44: caps=(0x0, 0x0) len=80 data_len=0 ip_summed=1
-[67359.720000] Modules linked in: tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conntrack_ipv4 nf_defrag1
-[67359.740000] Call Trace:[<8002df58>] 0x8002df58
-[67359.750000] [<8001371c>] 0x8001371c
-[67359.750000] [<8001371c>] 0x8001371c
-[67359.750000] [<8002cfb0>] 0x8002cfb0
-[67359.760000] [<80280890>] 0x80280890
-[67359.760000] [<8002d018>] 0x8002d018
-[67359.770000] [<80280890>] 0x80280890
-[67359.770000] [<80280c9c>] 0x80280c9c
-[67359.770000] [<80280c20>] 0x80280c20
-[67359.780000] [<802980e0>] 0x802980e0
-[67359.780000] [<80298078>] 0x80298078
-[67359.780000] [<8030dd3c>] 0x8030dd3c
-[67359.790000] [<80284fbc>] 0x80284fbc
-[67359.790000] [<80284f18>] 0x80284f18
-[67359.790000] [<8030dd3c>] 0x8030dd3c
-[67359.800000] [<803089d4>] 0x803089d4
-[67359.800000] [<8030893c>] 0x8030893c
-[67359.800000] [<8030ea74>] 0x8030ea74
-[67359.810000] [<8030dd3c>] 0x8030dd3c
-[67359.810000] [<8030dd3c>] 0x8030dd3c
-[67359.820000] [<802a52f0>] 0x802a52f0
-[67359.820000] [<8030893c>] 0x8030893c
-[67359.820000] [<8030893c>] 0x8030893c
-[67359.830000] [<8030893c>] 0x8030893c
-[67359.830000] [<802a5440>] 0x802a5440
-[67359.830000] [<8030893c>] 0x8030893c
-[67359.840000] [<803089e8>] 0x803089e8
-[67359.840000] [<80308a3c>] 0x80308a3c
-[67359.840000] [<8030893c>] 0x8030893c
-[67359.850000] [<8030dec8>] 0x8030dec8
-[67359.850000] [<803089e8>] 0x803089e8
-[67359.850000] [<803089e8>] 0x803089e8
-[67359.860000] [<8030efa8>] 0x8030efa8
-[67359.860000] [<8030ddb4>] 0x8030ddb4
-[67359.870000] [<8030ddb4>] 0x8030ddb4
-[67359.870000] [<802a52f0>] 0x802a52f0
-[67359.870000] [<803089e8>] 0x803089e8
-[67359.880000] [<803089e8>] 0x803089e8
-[67359.880000] [<802a5440>] 0x802a5440
-[67359.880000] [<806a5858>] 0x806a5858
-[67359.890000] [<803089e8>] 0x803089e8
-[67359.890000] [<80309978>] 0x80309978
-[67359.890000] [<80308af4>] 0x80308af4
-[67359.900000] [<80309978>] 0x80309978
-[67359.900000] [<802a5440>] 0x802a5440
-[67359.900000] [<803089e8>] 0x803089e8
-[67359.910000] [<80309ae0>] 0x80309ae0
-[67359.910000] [<80309978>] 0x80309978
-[67359.920000] [<8030e668>] 0x8030e668
-[67359.920000] [<8030e60c>] 0x8030e60c
-[67359.920000] [<8030e25c>] 0x8030e25c
-[67359.930000] [<80309978>] 0x80309978
-[67359.930000] [<8030e25c>] 0x8030e25c
-[67359.930000] [<802a5440>] 0x802a5440
-[67359.940000] [<80014aa0>] 0x80014aa0
-[67359.940000] [<8030e25c>] 0x8030e25c
-[67359.940000] [<8030f96c>] 0x8030f96c
-[67359.950000] [<8079301c>] 0x8079301c
-[67359.950000] [<8030e25c>] 0x8030e25c
-[67359.950000] [<802a52f0>] 0x802a52f0
-[67359.960000] [<80309978>] 0x80309978
-[67359.960000] [<80309978>] 0x80309978
-[67359.970000] [<802a5440>] 0x802a5440
-[67359.970000] [<8008feec>] 0x8008feec
-[67359.970000] [<80309978>] 0x80309978
-[67359.980000] [<80309d44>] 0x80309d44
-[67359.980000] [<8008feec>] 0x8008feec
-[67359.980000] [<8008ffdc>] 0x8008ffdc
-[67359.990000] [<80276190>] 0x80276190
-[67359.990000] [<80309978>] 0x80309978
-[67359.990000] [<800900a4>] 0x800900a4
-[67360.000000] [<8027fe3c>] 0x8027fe3c
-[67360.000000] [<802964f8>] 0x802964f8
-[67360.000000] [<8008feec>] 0x8008feec
-[67360.010000] [<802828e8>] 0x802828e8
-[67360.010000] [<80276190>] 0x80276190
-[67360.020000] [<80283b40>] 0x80283b40
-[67360.020000] [<80282a94>] 0x80282a94
-[67360.020000] [<80033764>] 0x80033764
-[67360.030000] [<8005d0f0>] 0x8005d0f0
-[67360.030000] [<800543e0>] 0x800543e0
-[67360.030000] [<80033874>] 0x80033874
-[67360.040000] [<80033d74>] 0x80033d74
-[67360.040000] [<80001844>] 0x80001844
-[67360.040000] [<80001844>] 0x80001844
-[67360.050000] [<80001a60>] 0x80001a60
-[67360.050000] [<800149fc>] 0x800149fc
-[67360.050000] [<8000efc8>] 0x8000efc8
-[67360.060000] [<8000efc8>] 0x8000efc8
-[67360.060000] [<8039c9ec>] 0x8039c9ec
-[67360.070000] [<8039c9d0>] 0x8039c9d0
-[67360.070000] [<8039c110>] 0x8039c110
-[67360.070000]
-[67360.070000] ---[ end trace 94ff764c3a95abf9 ]---
-[67360.080000] Unhandled kernel unaligned access[#1]:
-[67360.080000] Cpu 0
-[67360.080000] $ 0   : 00000000 1000dc00 00000001 81445a40
-[67360.080000] $ 4   : 05f20d4d 00000000 00000001 00000083
-[67360.080000] $ 8   : 00000000 00000083 803d0000 ffffffea
-[67360.080000] $12   : 803d0000 00000000 00000000 00000000
-[67360.080000] $16   : 0000000c 00000001 8099ee20 81c72000
-[67360.080000] $20   : 81d17e00 80330090 8030893c 81c72000
-[67360.080000] $24   : 00010720 802ced34
-[67360.080000] $28   : 8037c000 8037d880 00000010 80276890
-[67360.080000] Hi    : 00000000
-[67360.080000] Lo    : 00000000
-[67360.080000] epc   : 8006f058 0x8006f058
-[67360.080000]     Tainted: G        W
-[67360.080000] ra    : 80276890 0x80276890
-[67360.080000] Status: 1000dc03    KERNEL EXL IE
-[67360.080000] Cause : 00800010
-[67360.080000] BadVA : 05f20d4d
-[67360.080000] PrId  : 00029006 (Broadcom BCM3302)
-[67360.080000] Modules linked in: tun sch_sfq cls_fw sch_htb ipt_MASQUERADE iptable_nat nf_nat xt_MARK iptable_mangle ipt_ULOG xt_recent nf_conntrack_ipv4 nf_defrag1
-[67360.080000] Process swapper (pid: 0, threadinfo=8037c000, task=8037e000, tls=00000000)
-[67360.080000] Stack : 8099ee20 80276190 00000000 00000000 8099ee20 803d80a8 8099ee20 802761f0
-[67360.080000]         81d17e00 803d80a8 8099ee20 81c72000 81d17e00 80280d50 8099ee20 81404f80
-[67360.080000]         8037d900 80da8000 80da8000 81d17e00 81d17e00 00000001 80da8000 8099ee20
-[67360.080000]         81c72000 00665332 802980e0 80298078 80da8000 00000002 00000000 8030dd3c
-[67360.080000]         80da8000 81d17e00 8099ee20 00000000 803d86e0 80000000 80284fbc 80284f18
-[67360.080000]         ...
-[67360.080000] Call Trace:[<80276190>] 0x80276190
-[67360.080000] [<802761f0>] 0x802761f0
-[67360.080000] [<80280d50>] 0x80280d50
-[67360.080000] [<802980e0>] 0x802980e0
-[67360.080000] [<80298078>] 0x80298078
-[67360.080000] [<8030dd3c>] 0x8030dd3c
-[67360.080000] [<80284fbc>] 0x80284fbc
-[67360.080000] [<80284f18>] 0x80284f18
-[67360.080000] [<8030dd3c>] 0x8030dd3c
-[67360.080000] [<803089d4>] 0x803089d4
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<8030ea74>] 0x8030ea74
-[67360.080000] [<8030dd3c>] 0x8030dd3c
-[67360.080000] [<8030dd3c>] 0x8030dd3c
-[67360.080000] [<802a52f0>] 0x802a52f0
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<802a5440>] 0x802a5440
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<80308a3c>] 0x80308a3c
-[67360.080000] [<8030893c>] 0x8030893c
-[67360.080000] [<8030dec8>] 0x8030dec8
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<8030efa8>] 0x8030efa8
-[67360.080000] [<8030ddb4>] 0x8030ddb4
-[67360.080000] [<8030ddb4>] 0x8030ddb4
-[67360.080000] [<802a52f0>] 0x802a52f0
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<802a5440>] 0x802a5440
-[67360.080000] [<806a5858>] 0x806a5858
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<80308af4>] 0x80308af4
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<802a5440>] 0x802a5440
-[67360.080000] [<803089e8>] 0x803089e8
-[67360.080000] [<80309ae0>] 0x80309ae0
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<8030e668>] 0x8030e668
-[67360.080000] [<8030e60c>] 0x8030e60c
-[67360.080000] [<8030e25c>] 0x8030e25c
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<8030e25c>] 0x8030e25c
-[67360.080000] [<802a5440>] 0x802a5440
-[67360.080000] [<80014aa0>] 0x80014aa0
-[67360.080000] [<8030e25c>] 0x8030e25c
-[67360.080000] [<8030f96c>] 0x8030f96c
-[67360.080000] [<8079301c>] 0x8079301c
-[67360.080000] [<8030e25c>] 0x8030e25c
-[67360.080000] [<802a52f0>] 0x802a52f0
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<802a5440>] 0x802a5440
-[67360.080000] [<8008feec>] 0x8008feec
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<80309d44>] 0x80309d44
-[67360.080000] [<8008feec>] 0x8008feec
-[67360.080000] [<8008ffdc>] 0x8008ffdc
-[67360.080000] [<80276190>] 0x80276190
-[67360.080000] [<80309978>] 0x80309978
-[67360.080000] [<800900a4>] 0x800900a4
-[67360.080000] [<8027fe3c>] 0x8027fe3c
-[67360.080000] [<802964f8>] 0x802964f8
-[67360.080000] [<8008feec>] 0x8008feec
-[67360.080000] [<802828e8>] 0x802828e8
-[67360.080000] [<80276190>] 0x80276190
-[67360.080000] [<80283b40>] 0x80283b40
-[67360.080000] [<80282a94>] 0x80282a94
-[67360.080000] [<80033764>] 0x80033764
-[67360.080000] [<8005d0f0>] 0x8005d0f0
-[67360.080000] [<800543e0>] 0x800543e0
-[67360.080000] [<80033874>] 0x80033874
-[67360.080000] [<80033d74>] 0x80033d74
-[67360.080000] [<80001844>] 0x80001844
-[67360.080000] [<80001844>] 0x80001844
-[67360.080000] [<80001a60>] 0x80001a60
-[67360.080000] [<800149fc>] 0x800149fc
-[67360.080000] [<8000efc8>] 0x8000efc8
-[67360.080000] [<8000efc8>] 0x8000efc8
-[67360.080000] [<8039c9ec>] 0x8039c9ec
-[67360.080000] [<8039c9d0>] 0x8039c9d0
-[67360.080000] [<8039c110>] 0x8039c110
-[67360.080000]
-[67360.080000]
-[67360.080000] Code: 3c048007  08010471  2484f044 <8c820000> 3042c000  10400003  00803821  0801b8d1  00000000
-[67360.080000] Disabling lock debugging due to kernel taint
-[67360.560000] Kernel panic - not syncing: Fatal exception in interrupt
-
-
-
+Yes, your're right. With this patch applied perf sched latency is back
+to normal.
 
 -- 
-Tomasz Chmielewski
-http://wpkg.org
+Markus
