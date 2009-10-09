@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:41279 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761306AbZJIScw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 14:32:52 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ssb: Put host pointers into a union
-Date: Fri, 9 Oct 2009 20:32:10 +0200
-Cc: Broadcom Wireless <bcm43xx-dev@lists.berlios.de>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
+Received: from smtp129.mail.ukl.yahoo.com ([77.238.184.60]:23512 "HELO
+	smtp129.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933124AbZJISx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 14:53:26 -0400
+Message-ID: <4ACF867E.5000006@yahoo.es>
+Date: Fri, 09 Oct 2009 20:52:46 +0200
+From: Albert Herranz <albert_herranz@yahoo.es>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910092032.10324.mb@bu3sch.de>
+To: Michael Buesch <mb@bu3sch.de>
+CC: bcm43xx-dev@lists.berlios.de, linux-netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: b43: do not stack-allocate pio rx/tx header and tail buffers
+References: <200910062252.17565.mb@bu3sch.de> <4ACCD765.7080604@lwfinger.net> <4ACF76F7.30406@yahoo.es> <200910092005.59916.mb@bu3sch.de>
+In-Reply-To: <200910092005.59916.mb@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This slightly shrinks the structure.
+Michael Buesch wrote:
+>> The reason I posted the initial patch for review was because you kind of told me [2].
+>>
+>> [20:06] <mb_> Anyway, I'm not going to fix this. If you need it fixed, please send patches
+> 
+> Yeah, but that doesn't mean that either hack is acceptable. It just means that my time is limited
+> and I added this non-issue (which I still think it is) to the very bottom of my priority list.
 
-Signed-off-by: Michael Buesch <mb@bu3sch.de>
+The patch got elaborated and discussed publicly (successfully or not) by following your instructions.
 
----
+>> My point here is that there's no reason for such strong words concerning the quality of the patch code. It's really not that bad for such wording.
+>> I'm sure that if the patch was really crap it would have been immediately NAK'ed by you or by any sane maintainer.
+> 
+> It _was_ immediately NAK'ed by me. I did not know that I need to NAK
+> every single new version of a patch explicitely.
+> I thought NAK-ing a patch would put it into some special state that only an explicit ACK could
+> take it out of.
 
-Index: wireless-testing/drivers/ssb/driver_pcicore.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_pcicore.c	2008-07-20 12:09:34.000000000 +0200
-+++ wireless-testing/drivers/ssb/driver_pcicore.c	2009-10-09 19:01:59.000000000 +0200
-@@ -551,13 +551,13 @@ int ssb_pcicore_dev_irqvecs_enable(struc
- 	might_sleep_if(pdev->id.coreid != SSB_DEV_PCI);
- 
- 	/* Enable interrupts for this device. */
--	if (bus->host_pci &&
--	    ((pdev->id.revision >= 6) || (pdev->id.coreid == SSB_DEV_PCIE))) {
-+	if ((pdev->id.revision >= 6) || (pdev->id.coreid == SSB_DEV_PCIE)) {
- 		u32 coremask;
- 
- 		/* Calculate the "coremask" for the device. */
- 		coremask = (1 << dev->core_index);
- 
-+		SSB_WARN_ON(bus->bustype != SSB_BUSTYPE_PCI);
- 		err = pci_read_config_dword(bus->host_pci, SSB_PCI_IRQMASK, &tmp);
- 		if (err)
- 			goto out;
-Index: wireless-testing/include/linux/ssb/ssb.h
-===================================================================
---- wireless-testing.orig/include/linux/ssb/ssb.h	2009-09-11 21:27:27.000000000 +0200
-+++ wireless-testing/include/linux/ssb/ssb.h	2009-10-09 19:10:42.000000000 +0200
-@@ -269,7 +269,8 @@ struct ssb_bus {
- 
- 	const struct ssb_bus_ops *ops;
- 
--	/* The core in the basic address register window. (PCI bus only) */
-+	/* The core currently mapped into the MMIO window.
-+	 * Not valid on all host-buses. So don't use outside of SSB. */
- 	struct ssb_device *mapped_device;
- 	union {
- 		/* Currently mapped PCMCIA segment. (bustype == SSB_BUSTYPE_PCMCIA only) */
-@@ -281,14 +282,17 @@ struct ssb_bus {
- 	 * On PCMCIA-host busses this is used to protect the whole MMIO access. */
- 	spinlock_t bar_lock;
- 
--	/* The bus this backplane is running on. */
-+	/* The host-bus this backplane is running on. */
- 	enum ssb_bustype bustype;
--	/* Pointer to the PCI bus (only valid if bustype == SSB_BUSTYPE_PCI). */
--	struct pci_dev *host_pci;
--	/* Pointer to the PCMCIA device (only if bustype == SSB_BUSTYPE_PCMCIA). */
--	struct pcmcia_device *host_pcmcia;
--	/* Pointer to the SDIO device (only if bustype == SSB_BUSTYPE_SDIO). */
--	struct sdio_func *host_sdio;
-+	/* Pointers to the host-bus. Check bustype before using any of these pointers. */
-+	union {
-+		/* Pointer to the PCI bus (only valid if bustype == SSB_BUSTYPE_PCI). */
-+		struct pci_dev *host_pci;
-+		/* Pointer to the PCMCIA device (only if bustype == SSB_BUSTYPE_PCMCIA). */
-+		struct pcmcia_device *host_pcmcia;
-+		/* Pointer to the SDIO device (only if bustype == SSB_BUSTYPE_SDIO). */
-+		struct sdio_func *host_sdio;
-+	};
- 
- 	/* See enum ssb_quirks */
- 	unsigned int quirks;
+We all sure had a communication issue here.
 
--- 
-Greetings, Michael.
+What you thought it was an (implicit) NAK for the _initial_ version of the patch, others took that as "fix-those-concerns-and-its-fine".
+And the expressed concerns where addressed later in the merged patch, sub-optimally (not crappily).
+
+Looking at your new "[PATCH] b43: Optimize PIO scratchbuffer usage" to address the changes introduced by the merged patch, the merged solution is not that _blatantly_ far from your solution.
+The patch would have probably got there in one iteration if you have had the chance again to express your new concerns about v2.
+
+I'm sure we can avoid this in the future by being a bit more explicit.
+
+Thanks,
+Albert
+
