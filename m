@@ -1,120 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:60190 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751815AbZJVUq2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 16:46:28 -0400
-From: "Dr. Axel Braun" <axel.braun@gmx.de>
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: [Bug 300794] Installation of WiFi Cards w firmware fails
-Date: Thu, 22 Oct 2009 22:46:30 +0200
-MIME-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_mSM4K8kwZ+iuxKD"
-Message-Id: <200910222246.30668.axel.braun@gmx.de>
+Received: from mga03.intel.com ([143.182.124.21]:28629 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761393AbZJIUW4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 16:22:56 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/17] iwlwifi/iwl3945: unify rts_tx_cmd_flag
+Date: Fri,  9 Oct 2009 13:20:30 -0700
+Message-Id: <1255119634-3060-15-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Boundary-00=_mSM4K8kwZ+iuxKD
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Gents,
+3945 and 4965 share the functionality for setting RTS and CTS to
+the tx_cmd. Unify these functions and move the common
+functionality to core.
 
-for some reason there are uncertainties about the license of the p54 firmware 
-for the prism chips, which stop the openSUSE project for the moment to ship 
-the firmware.
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   14 +-------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   17 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 ++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 +--------
+ 5 files changed, 22 insertions(+), 21 deletions(-)
 
-Can you clarify the license question?
-
-Thanks
-Axel
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index cee03e7..1372ce4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2826,6 +2826,7 @@ static struct iwl_lib_ops iwl3945_lib = {
+ static struct iwl_hcmd_utils_ops iwl3945_hcmd_utils = {
+ 	.get_hcmd_size = iwl3945_get_hcmd_size,
+ 	.build_addsta_hcmd = iwl3945_build_addsta_hcmd,
++	.rts_tx_cmd_flag = iwlcore_rts_tx_cmd_flag,
+ };
+ 
+ static struct iwl_ops iwl3945_ops = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index c9d9016..6d77039 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -484,18 +484,6 @@ static void iwl4965_gain_computation(struct iwl_priv *priv,
+ 	data->beacon_count = 0;
+ }
+ 
+-static void iwl4965_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+-			__le32 *tx_flags)
+-{
+-	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+-		*tx_flags |= TX_CMD_FLG_RTS_MSK;
+-		*tx_flags &= ~TX_CMD_FLG_CTS_MSK;
+-	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+-		*tx_flags &= ~TX_CMD_FLG_RTS_MSK;
+-		*tx_flags |= TX_CMD_FLG_CTS_MSK;
+-	}
+-}
+-
+ static void iwl4965_bg_txpower_work(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv,
+@@ -2212,7 +2200,7 @@ static struct iwl_hcmd_utils_ops iwl4965_hcmd_utils = {
+ 	.build_addsta_hcmd = iwl4965_build_addsta_hcmd,
+ 	.chain_noise_reset = iwl4965_chain_noise_reset,
+ 	.gain_computation = iwl4965_gain_computation,
+-	.rts_tx_cmd_flag = iwl4965_rts_tx_cmd_flag,
++	.rts_tx_cmd_flag = iwlcore_rts_tx_cmd_flag,
+ 	.calc_rssi = iwl4965_calc_rssi,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index c40c7e2..1e0021f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -604,6 +604,23 @@ void iwlcore_free_geos(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwlcore_free_geos);
+ 
++/*
++ *  iwlcore_rts_tx_cmd_flag: Set rts/cts. 3945 and 4965 only share this
++ *  function.
++ */
++void iwlcore_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
++				__le32 *tx_flags)
++{
++	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) {
++		*tx_flags |= TX_CMD_FLG_RTS_MSK;
++		*tx_flags &= ~TX_CMD_FLG_CTS_MSK;
++	} else if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++		*tx_flags &= ~TX_CMD_FLG_RTS_MSK;
++		*tx_flags |= TX_CMD_FLG_CTS_MSK;
++	}
++}
++EXPORT_SYMBOL(iwlcore_rts_tx_cmd_flag);
++
+ static bool is_single_rx_stream(struct iwl_priv *priv)
+ {
+ 	return !priv->current_ht_config.is_ht ||
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3679c2c..cec673b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -329,6 +329,8 @@ int iwl_mac_get_tx_stats(struct ieee80211_hw *hw,
+ void iwl_mac_reset_tsf(struct ieee80211_hw *hw);
+ int iwl_alloc_txq_mem(struct iwl_priv *priv);
+ void iwl_free_txq_mem(struct iwl_priv *priv);
++void iwlcore_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
++				__le32 *tx_flags);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ int iwl_alloc_traffic_mem(struct iwl_priv *priv);
+ void iwl_free_traffic_mem(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 66da441..f4d4353 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -408,7 +408,6 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
+ 	struct iwl3945_tx_cmd *tx = (struct iwl3945_tx_cmd *)cmd->cmd.payload;
+ 	__le32 tx_flags = tx->tx_flags;
+ 	__le16 fc = hdr->frame_control;
+-	u8 rc_flags = info->control.rates[0].flags;
+ 
+ 	tx->stop_time.life_time = TX_CMD_LIFE_TIME_INFINITE;
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK)) {
+@@ -435,13 +434,7 @@ static void iwl3945_build_tx_cmd_basic(struct iwl_priv *priv,
+ 		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
+ 	}
+ 
+-	if (rc_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+-		tx_flags |= TX_CMD_FLG_RTS_MSK;
+-		tx_flags &= ~TX_CMD_FLG_CTS_MSK;
+-	} else if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+-		tx_flags &= ~TX_CMD_FLG_RTS_MSK;
+-		tx_flags |= TX_CMD_FLG_CTS_MSK;
+-	}
++	priv->cfg->ops->utils->rts_tx_cmd_flag(info, &tx_flags);
+ 
+ 	if ((tx_flags & TX_CMD_FLG_RTS_MSK) || (tx_flags & TX_CMD_FLG_CTS_MSK))
+ 		tx_flags |= TX_CMD_FLG_FULL_TXOP_PROT_MSK;
 -- 
-Dr.-Ing. Axel K. Braun
-Mobile: +49.173.7003.154
-VoIP/Skype: axxite
-PGP Fingerprint: CB03 964D 1CFA E87B AA63 53F3 1BD6 F53A EB48 EF22
-Public Key available at http://www.axxite.com/axel.braun@gmx.de.asc
+1.5.6.3
 
-This mail was *not scanned* before sending.
-It was sended from a secure Linux desktop.
-
---Boundary-00=_mSM4K8kwZ+iuxKD
-Content-Type: message/rfc822;
-  name="forwarded message"
-Content-Transfer-Encoding: 7bit
-Content-Description: bugzilla_noreply@novell.com: [Bug 300794] Installation of WiFi Cards w firmware fails
-Content-Disposition: inline
-
-Return-Path: <bugzilla_noreply@novell.com>
-Delivered-To: GMX delivery to axel.braun@gmx.de
-Received: (qmail invoked by alias); 22 Oct 2009 17:58:28 -0000
-Received: from monroe.provo.novell.com (EHLO monroe.provo.novell.com) [137.65.250.171]
-  by mx0.gmx.net (mx081) with SMTP; 22 Oct 2009 19:58:28 +0200
-Received: from soval.provo.novell.com ([137.65.250.5])
-	by monroe.provo.novell.com with ESMTP; Thu, 22 Oct 2009 11:58:26 -0600
-Received: from bugzilla.novell.com (localhost [127.0.0.1])
-	by soval.provo.novell.com (Postfix) with ESMTP id 0057DCC7CD
-	for <axel.braun@gmx.de>; Thu, 22 Oct 2009 11:58:25 -0600 (MDT)
-From: bugzilla_noreply@novell.com
-To: axel.braun@gmx.de
-Subject: [Bug 300794] Installation of WiFi Cards w firmware fails
-X-Bugzilla-Reason: Reporter
-X-Bugzilla-Type: newchanged
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Classification: openSUSE
-X-Bugzilla-Product: openSUSE 11.2
-X-Bugzilla-Component: Network
-X-Bugzilla-Severity: Normal
-X-Bugzilla-Who: vbotka@novell.com
-X-Bugzilla-Status: CLOSED
-X-Bugzilla-Priority: P4 - Low
-X-Bugzilla-Assigned-To: vbotka@novell.com
-X-Bugzilla-Target-Milestone: Milestone 4
-X-Bugzilla-Changed-Fields: Status Version Resolution
-In-Reply-To: <bug-300794-15901@http.bugzilla.novell.com/>
-References: <bug-300794-15901@http.bugzilla.novell.com/>
-Auto-Submitted: auto-generated
-Content-Type: text/plain;
-  charset="UTF-8"
-MIME-Version: 1.0
-Date: Thu, 22 Oct 2009 11:58:25 -0600
-Message-Id: <20091022175826.0057DCC7CD@soval.provo.novell.com>
-X-Length: 2777
-X-UID: 798
-X-GMX-UID: pa/SeVYvPTRtGeNIMjIwsTA0c2tpZIs5
-X-Flags: 1000
-
-http://bugzilla.novell.com/show_bug.cgi?id=300794
-
-User vbotka@novell.com added comment
-http://bugzilla.novell.com/show_bug.cgi?id=300794#c25
-
-
-Vladimir Botka <vbotka@novell.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|ASSIGNED                    |CLOSED
-            Version|Milestone 3                 |RC 1
-         Resolution|                            |WONTFIX
-
-
-
-
---- Comment #25 from Vladimir Botka <vbotka@novell.com>  2009-10-22 11:58:17 MDT ---
-I am going to close this issue as WONTFIX.
-
-The license of the firmware [1] [2] is not very clear. If I ask for fate it
-will land by me for evaluation anyway. If you can point me to the clear license
-reopen.
-
-[1] http://wireless.kernel.org/en/users/Drivers/p54#p54
-[2] http://daemonizer.de/prism54/prism54-fw/
-
--- 
-Configure bugmail: http://bugzilla.novell.com/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You reported the bug.
-
---Boundary-00=_mSM4K8kwZ+iuxKD--
