@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21877 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757338AbZJJAnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 20:43:13 -0400
-Subject: Re: mmotm 2009-10-09-01-07 - iwl3945 fails to do firmware load
- request
-From: Zhu Yi <yi.zhu@intel.com>
-To: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <16108.1255133561@turing-police.cc.vt.edu>
-References: <200910090830.n998Ubvv020464@imap1.linux-foundation.org>
-	 <16108.1255133561@turing-police.cc.vt.edu>
-Content-Type: text/plain
-Date: Sat, 10 Oct 2009 08:42:35 +0800
-Message-Id: <1255135355.3719.22.camel@debian>
-Mime-Version: 1.0
+Received: from smtp143.mail.ukl.yahoo.com ([77.238.184.74]:22961 "HELO
+	smtp143.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933728AbZJIRrR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Oct 2009 13:47:17 -0400
+Message-ID: <4ACF76F7.30406@yahoo.es>
+Date: Fri, 09 Oct 2009 19:46:31 +0200
+From: Albert Herranz <albert_herranz@yahoo.es>
+MIME-Version: 1.0
+To: mb@bu3sch.de
+CC: bcm43xx-dev@lists.berlios.de, linux-netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: b43: do not stack-allocate pio rx/tx header and tail buffers (was:
+ pull request: wireless-2.6 2009-10-08)
+References: <200910062252.17565.mb@bu3sch.de> <1254866864-18265-1-git-send-email-albert_herranz@yahoo.es> <4ACCC516.7050002@lwfinger.net> <4ACCC893.1010402@yahoo.es> <4ACCD765.7080604@lwfinger.net>
+In-Reply-To: <4ACCD765.7080604@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2009-10-10 at 08:12 +0800, Valdis.Kletnieks@vt.edu wrote:
-> On Fri, 09 Oct 2009 01:07:49 PDT, akpm@linux-foundation.org said:
-> > The mm-of-the-moment snapshot 2009-10-09-01-07 has been uploaded to
-> > 
-> >    http://userweb.kernel.org/~akpm/mmotm/
-> 
-> Broke my iwl3945 wireless card:
-> 
-> Good (2.6.31-mmotm0917)
-> Oct  8 09:55:33 turing-police kernel: [    0.809101] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26ks
-> Oct  8 09:55:33 turing-police kernel: [    0.809106] iwl3945: Copyright(c) 2003-2009 Intel Corporation
-> Oct  8 09:55:33 turing-police kernel: [    0.809201] iwl3945 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> Oct  8 09:55:33 turing-police kernel: [    0.879463] iwl3945 0000:0c:00.0: Tunable channels: 11 802.11bg, 13 802.11a channels
-> Oct  8 09:55:33 turing-police kernel: [    0.879466] iwl3945 0000:0c:00.0: Detected Intel Wireless WiFi Link 3945ABG
-> ...
-> Oct  8 09:55:35 turing-police kernel: [   31.599751] iwl3945 0000:0c:00.0: firmware: requesting iwlwifi-3945-2.ucode
-> Oct  8 09:55:35 turing-police kernel: [   31.697046] iwl3945 0000:0c:00.0: loaded firmware version 15.28.2.8
-> Oct  8 09:55:35 turing-police kernel: [   31.777214] Registered led device: iwl-phy0::radio
-> Oct  8 09:55:35 turing-police kernel: [   31.777430] Registered led device: iwl-phy0::assoc
-> Oct  8 09:55:35 turing-police kernel: [   31.777545] Registered led device: iwl-phy0::RX
-> Oct  8 09:55:35 turing-police kernel: [   31.777676] Registered led device: iwl-phy0::TX
-> Oct  8 09:55:35 turing-police kernel: [   31.789446] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> (and then wpa-supplicant is able to bring the card up when it finally gets launched by initscripts)
-> 
-> Bad 2.6.32-rc3-mmotm1009:
-> 
-> Oct  9 13:50:19 turing-police kernel: [    0.931788] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, 1.2.26ks
-> Oct  9 13:50:19 turing-police kernel: [    0.944678] iwl3945: Copyright(c) 2003-2009 Intel Corporation
-> Oct  9 13:50:19 turing-police kernel: [    0.957831] iwl3945 0000:0c:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> Oct  9 13:50:19 turing-police kernel: [    1.038946] iwl3945 0000:0c:00.0: Tunable channels: 11 802.11bg, 13 802.11a channels
-> Oct  9 13:50:19 turing-police kernel: [    1.038950] iwl3945 0000:0c:00.0: Detected Intel Wireless WiFi Link 3945ABG
-> 
-> We never see the firmware load request, and of course everything goes
-> pear-shaped after that doesn't happen....
+Michael,
 
-The firmware loading happens when the user space brings the interface
-up. Can you check NM is running for the bad case?
+> Wait for my ack before you apply random b43 patches
+                                   ^^^^^^
+> The patch needlessly moves huge chunks of crap, adds stupid comments, wastes memory.
+                                  ^^^^^^^^^^^^^^       ^^^^^^^^^^^^^^^
+> This touched a lot of crap for fixing something that
+       ^^^^^^^^^^^^^^^^^^^^^
+
+If using that strong language helps you get your anger out of you I'm fine with that. But I think it is a bit unfair.
+
+I'm not arguing if the patch should have been immediately merged upstream or not without your ack (I'm probably more on your side here, as the patch was still being discussed on the ML).
+The patch [1] may not be up to your quality standards or may not take into account other requirements (that you have not expressed nor on the ML nor on IRC) but I'm sure it's far from being "random", "move crap" or "add stupid comments". That's the unfair part.
+
+The reason I posted the initial patch for review was because you kind of told me [2].
+
+[20:06] <mb_> Anyway, I'm not going to fix this. If you need it fixed, please send patches
+
+Then I tried to address your concerns [3] and sent v2 (the patch merged).
+In that patch I moved slightly struct b43_wl within b43.h to satisfy the dependencies generated by the addition of the new members to that struct (which was one of your concerns).
+There was even a bit of public discussion about the relocation of the struct declaration [4].
+
+After ~22 hours if I'm not mistaken (yes, less than 24...) John, who had previously expressed his intentions to merge the patch [5], picked it for wireless-2.6.
+And a day later, more or less again, John did the GIT PULL request.
+
+That's it. IMHO, even if the patch was (mistakenly) merged too early for your standards, it doesn't break anything (AFAIK) and delivers what promises.
+And (yes!) it can still be modeled to perfection later.
+
+My point here is that there's no reason for such strong words concerning the quality of the patch code. It's really not that bad for such wording.
+I'm sure that if the patch was really crap it would have been immediately NAK'ed by you or by any sane maintainer.
+
+Other than that, I'm happy to see that the side conflict generated seems to be in a good shape now.
+It would have been a total waste otherwise.
 
 Thanks,
--yi
+Albert
+
+PS: Sorry to generate a new post, but I wasn't directly CC'ed on this and I'm not subscribed to the MLs. And I did also want to express my opinion! :)
+
+[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-2.6.git;a=commitdiff;h=7e937c633f718e0916a294db7282c922c1bf3ce3
+[2] http://bcm-specs.sipsolutions.net/irc-logs/bcm-specs.2009-10-01
+[3] http://marc.info/?l=linux-wireless&m=125486249831043
+[4] http://marc.info/?l=linux-wireless&m=125493883613139
+[5] http://marc.info/?l=linux-wireless&m=125486386100505
 
