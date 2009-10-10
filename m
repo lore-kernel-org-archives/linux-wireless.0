@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:54978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933097AbZJNNnN (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:1634 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971AbZJJM7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Oct 2009 09:43:13 -0400
-Subject: Re: cfg80211 question: impedance mismatch of .connect versus .assoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
+	Sat, 10 Oct 2009 08:59:30 -0400
+Date: Sat, 10 Oct 2009 08:58:24 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Richard Zidlicky <rz@linux-m68k.org>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910141136.03288.hs4233@mail.mn-solutions.de>
-References: <200910141136.03288.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tvH/v6FAyDpopk8292kq"
-Date: Wed, 14 Oct 2009 22:41:58 +0900
-Message-Id: <1255527718.4095.292.camel@johannes.local>
-Mime-Version: 1.0
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091010125824.GA18841@hash.localnet>
+References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091009143922.GA7848@linux-m68k.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 09, 2009 at 04:39:22PM +0200, Richard Zidlicky wrote:
+> -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+> +       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
+>         if (ret) {
+>                 ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+>                 goto err;
 
---=-tvH/v6FAyDpopk8292kq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+So, this change effectively just ensures we now program the pcu registers
+at startup (every other time chan should not be null).  So my guess is
+programming the pcu actually causes some problem.  Can you try this patch
+instead?
 
-On Wed, 2009-10-14 at 11:36 +0200, Holger Schurig wrote:
-> While playing with .auth/.deauth/.assoc/.disassoc=20
-> versus .connect/.disconnect in libertas, I notices two things=20
-> that makes things a bit hard for me.
+Also, since you're using adhoc there may be a path that's somewhat
+different from infrastructure mode, please check dmesg after applying the
+patch and be sure that you only see "ath5k: reset with change_channel=true"
+once per driver load.
 
-> This makes the "iw connect" command only work if an "iw scan" did=20
-> just take place and I provide an BSS on the command line.=20
->=20
-> So maybe net/wireless/sme.c should be generalized ?
->=20
->=20
->=20
-> BSSID for .deauth/.disassoc vs. .disconnect
-> -------------------------------------------
-> Both the .deauth and .disassoc get the cfg80211_bss entry to=20
-> deauth / disassociate against.
->=20
-> .disconnect doesn't get this.
 
-This was intentional, as with ->connect() the driver is supposed to
-handle roaming/pre-connect scanning etc. Basically it's mostly for the
-case of full-mac drivers that do that in the device firmware.
+diff --git a/drivers/net/wireless/ath/ath5k/initvals.c b/drivers/net/wireless/ath/ath5k/initvals.c
+index 8fa4393..c099fa2 100644
+--- a/drivers/net/wireless/ath/ath5k/initvals.c
++++ b/drivers/net/wireless/ath/ath5k/initvals.c
+@@ -1376,9 +1376,8 @@ static void ath5k_hw_ini_registers(struct ath5k_hw *ah, unsigned int size,
+ 	for (i = 0; i < size; i++) {
+ 		/* On channel change there is
+ 		 * no need to mess with PCU */
+-		if (change_channel &&
+-				ini_regs[i].ini_register >= AR5K_PCU_MIN &&
+-				ini_regs[i].ini_register <= AR5K_PCU_MAX)
++		if (ini_regs[i].ini_register >= AR5K_PCU_MIN &&
++		    ini_regs[i].ini_register <= AR5K_PCU_MAX)
+ 			continue;
+ 
+ 		switch (ini_regs[i].ini_mode) {
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 3dab3d8..4b8ccbe 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -880,6 +880,9 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 
+ 	ATH5K_TRACE(ah->ah_sc);
+ 
++	if (!change_channel)
++		printk(KERN_DEBUG "ath5k: reset with change_channel=true\n");
++
+ 	s_ant = 0;
+ 	ee_mode = 0;
+ 	staid1_flags = 0;
 
-What you perceive as a "mismatch" is fully intentional, due to the
-separation of where roaming is handled.
-
-johannes
-
---=-tvH/v6FAyDpopk8292kq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK1dUjAAoJEODzc/N7+Qmaab4QAJlb/K6Vt7fyJ3696xRj3tgv
-ovKIcm4CglqCF+Pi8IT9rL98Mz8DFg1XheM4pEoUqaWZrMq8N4h9REz7KfIevILN
-jcBEwcgxR/fZPQvbVisfheXqN//IG1X7B7TLOFHMjKcY8YM0jpu+h28Kmu4cGtr5
-2hdcom+Uxm7yPhnLmCubcPnsKZqGSnAr8sNIldZyX//ucL1gdOXATkK3LOXdmeCc
-KZM65g7lfVCYt7VbuZjTZ7xc00hUqFV6Mzookh3afA5dAPNbYZRFcLtR/vs9tKK7
-bZxQaUM/AnADZmK5BMWC8JIpwBR8P+D4Zo4rWhXSPZl/MrQ5RsJIXm0sSrLokym1
-sQp/DziO1Gn1M2nnMHImCPC26hTxT1tDNOpFMpAFZisJKSeDAFYdUIrXVv+v0fjw
-Zs1zqDqDtAdf7ub6+2JPKARJquQQ9uc+TvKb1lco+FORhedg7jaPx2LMsdMhv8Re
-7+cI6D35MMyNkDxAJORF9cpoduOdzz/FHI4xs5ZNM3yK1lNF7owXdmb4NvMRKckG
-Ir4mwbjRTt/1MBfXYHwSczZKmPvufcUUDp0r5LRbFsEQR/elmPPCuCqBZhTrVzOC
-1CG3Vqwcwlu3+60nXM52E+OMVixfSdD0Uth2NLgX/vPiKmR6LLdYt6l2MqWdAOaQ
-euxU7S9uf3zn3F213Ir3
-=Ah4j
------END PGP SIGNATURE-----
-
---=-tvH/v6FAyDpopk8292kq--
+-- 
+Bob Copeland %% www.bobcopeland.com
 
