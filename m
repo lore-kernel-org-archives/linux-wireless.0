@@ -1,107 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49737 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932570AbZJLPnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 11:43:50 -0400
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
- 2.6.32-rc3)
-From: James Bottomley <James.Bottomley@suse.de>
-To: Greg KH <gregkh@suse.de>
-Cc: Ingo Molnar <mingo@elte.hu>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Tso <tytso@mit.edu>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20091012150911.GB1656@suse.de>
-References: <1255031298.4187.260.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
-	 <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
-	 <20091008210737.GD29181@mit.edu>
-	 <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-	 <20091009091538.GA4154@elte.hu>
-	 <1255097287.2934.21.camel@localhost.localdomain>
-	 <20091012130652.GB25464@elte.hu>
-	 <1255357148.2850.91.camel@localhost.localdomain>
-	 <20091012145453.GD4565@elte.hu>  <20091012150911.GB1656@suse.de>
-Content-Type: text/plain
-Date: Mon, 12 Oct 2009 10:43:06 -0500
-Message-Id: <1255362186.2850.348.camel@localhost.localdomain>
+Received: from xc.sipsolutions.net ([83.246.72.84]:45157 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934617AbZJJSlL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Oct 2009 14:41:11 -0400
+Subject: Re: BUG?  I can reproduce "Association request to the driver
+ failed" at will
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	hostap@lists.shmoo.com
+In-Reply-To: <200909211309.40476.hs4233@mail.mn-solutions.de>
+References: <200909211309.40476.hs4233@mail.mn-solutions.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-C6Ko+frAg9bkBRBAn+Ia"
+Date: Sat, 10 Oct 2009 20:40:05 +0200
+Message-Id: <1255200005.4095.42.camel@johannes.local>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-12 at 08:09 -0700, Greg KH wrote:
-> adding David Miller and the wireless developers who had this idea as
-> well...
-> 
-> On Mon, Oct 12, 2009 at 04:54:53PM +0200, Ingo Molnar wrote:
-> > I think your interpretation is arbitrary - where did you get that ABI 
-> > rule from? I'm sure it cannot be from any of the drivers/staging/ 
-> > discussions on lkml, i've followed them quite closely. If 'has a messy 
-> > ABI' was the only requirement for drivers/staging/ then we could move 
-> > 90% of drivers/staging/ into drivers/ straight away - and that would be 
-> > counter-productive IMHO.
-> 
-> I agree with this, and the other points you raised that I snipped out.
-> 
-> > Sidenote, in fact i think we should expand on that: drivers/staging/ 
-> > should be used in the _other_ direction as well - to un-upstream stale 
-> > drivers that are abandoned and unused, in a gradual fashion. 'git mv' is 
-> > cheap.
-> 
-> Ok, this is about the 3rd or 4th time I've heard this, from totally
-> different people lately.  It seems that I'm the only one that has the
-> ability to drop drivers out of the kernel tree, which is a funny
-> situation :)
-> 
-> In thinking about this a lot more, I don't really mind it.  If people
-> want to push stuff out of "real" places in the kernel, into
-> drivers/staging/ and give the original authors and maintainers notice
-> about what is going on, _and_ provide a TODO file for what needs to
-> happen to get the code back into the main portion of the kernel tree,
-> then I'll be happy to help out with this and manage it.
-> 
-> I think a 6-9 month window (basically 3 kernel releases) should be
-> sufficient time to have a driver that has been in drivers/staging/ be
-> cleaned up enough to move back into the main kernel tree.  If not, it
-> could be easily dropped.
-> 
-> Any objections to this?
 
-Not as an optional tool to use when necessary.
+--=-C6Ko+frAg9bkBRBAn+Ia
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-If you want to make this a mandatory path for old drivers, then, I think
-it's far too rigid, yes.   There's a huge amount of danger to changing
-working drivers simply on grounds of code cleanup and that danger
-increases exponentially as they get older and the hardware gets rarer.
-Look at what happened to the initio driver in 2008 for instance.  That
-was cleaned up by Alan Cox, no mean expert in the field, with the
-assistance of a tester with the actual card, so basically a textbook
-operation.  However, a bug crept in during this process that wasn't
-spotted by the tester.  When it was spotted (bug report ~6 months later)
-the original tester wasn't available and code inspection across the
-cleanup was very hard.  Fortunately, the reporter was motivated to track
-down and patch the driver, so it worked out all right in the end, but a
-lot of bug reporters aren't so capable (or so motivated).  Plus most
-clean up patches for old hardware tend only to be compile tested, so the
-potential for bugs is far greater.
+Sorry to warm this up ...
 
-James
+> 1253527140.795498: State: COMPLETED -> AUTHENTICATING
+> 1253527140.795515: EAPOL: External notification - EAP success=3D0
+> 1253527140.795530: EAPOL: External notification - EAP fail=3D0
+> 1253527140.795542: EAPOL: External notification - portControl=3DAuto
+> 1253527140.795559: nl80211: Authenticate (ifindex=3D34)
+> 1253527140.795572:   * bssid=3D00:13:19:80:da:30
+> 1253527140.795587:   * freq=3D2412
+> 1253527140.795598:   * SSID - hexdump_ascii(len=3D5):
+>      4d 4e 57 50 41                                    MNWPA
+> 1253527140.795630:   * IEs - hexdump(len=3D0): [NULL]
+> 1253527140.795643:   * Auth Type 0
+> 1253527140.795683: nl80211: Authentication request send successfully
+> 1253527140.795707: RTM_NEWLINK: operstate=3D1 ifi_flags=3D0x11043 ([UP][R=
+UNNING][LOWER_UP])
+> 1253527140.795725: RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+> 1253527140.953161: nl80211: Event message available
+> 1253527140.953200: nl80211: MLME event 37
+> 1253527140.953216: SME: Authentication response: peer=3D00:13:19:80:da:30=
+ auth_type=3D0 status_code=3D0
+> 1253527140.953243: Trying to associate with 00:13:19:80:da:30 (SSID=3D'MN=
+WPA' freq=3D2412 MHz)
+> 1253527140.953257: State: AUTHENTICATING -> ASSOCIATING
+> 1253527140.953270: wpa_driver_nl80211_set_operstate: operstate 1->0 (DORM=
+ANT)
+> 1253527140.953284: nl80211: Operstate: linkmode=3D-1, operstate=3D5
+> 1253527140.953901: nl80211: Associate (ifindex=3D34)
+> 1253527140.953919:   * bssid=3D00:13:19:80:da:30
+> 1253527140.953934:   * freq=3D2412
+> 1253527140.953945:   * SSID - hexdump_ascii(len=3D5):
+>      4d 4e 57 50 41                                    MNWPA
+> 1253527140.953977:   * IEs - hexdump(len=3D24): dd 16 00 50 f2 01 01 00 0=
+0 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+> 1253527140.954064: nl80211: MLME command failed: ret=3D-114 (Operation al=
+ready in progress)
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^=
+^^^^^^^^^^^^^^^^
+> 1253527140.954086: Association request to the driver failed
+> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 1253527140.954113: RTM_NEWLINK: operstate=3D0 ifi_flags=3D0x11003 ([UP][L=
+OWER_UP])
+> 1253527140.954131: RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+>=20
+>=20
+> The "Association request to the driver failed" will
+> be shown even without "-d". Also note that the association
+> seems to actually work, e.g. I can ping throught the
+> connection.
 
-> > Basically, drivers/staging/ gives us an excellent opportunity to 
-> > _increase_ the quality of drivers by applying stronger upstream 
-> > inclusion filters, without having to hurt users/developers in the 
-> > process. We just have to start using it that way as well.
-> 
-> I totally agree.  And so far, it does seem to be working well for this.
-> A number of companies have used it to successfully get their code into
-> the main kernel, as well as driving them to clean up their code better
-> to keep it from having to go into the staging tree.
-> 
-> thanks,
-> 
-> greg k-h
+Could this be related to the problem Maxim has been seeing? I'm not sure
+how else this could happen since you seem to auth but then assoc doesn't
+work, but I can't see how that could possibly happen.
+
+johannes
+
+--=-C6Ko+frAg9bkBRBAn+Ia
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK0NT/AAoJEODzc/N7+QmaNiQQAMD1a0mspVKaVC07y0BlYhPb
+bsJGUIj7sKRLYOIQSGmuaHqG2Cv5stRAlHG/3wEJXmK3Ja9Xs7YKlLpx6ioL495E
+8zFUwmJvAwHEtpNpH2ten/ot0WqVUTy8qrhwLsbipu4D7CY66PZfIrO+UatoeDu2
+9wtz4yehyktqFzBWmvMRqR3TFMh7HY5owdslDrkVtF9ApZJ+FCg/RGndNoivR4PS
+c8B1HA8NknmTGRGEbo+F8Y56Dz4OrH4hjaXQ1F46dq3AKmEDmSei9lUeCkd3AECW
+XLJZgl8q4FIbgfTskTueCGuxh6yTcpAZXqvObh+OyGwDXmURc4ByQJnM4VsDyExR
+Q9e8QvkD9XFz89a3xQqNhLZfCXYPdrB/x9N/1dewjtogShfzO7u/HBXoXrVoHVpc
+ixcnGfPWMer7LXXkpBdvGNxJHyth0q7dHpmz6omkHzhN/z68PmMLKiDMW/yOU6YL
+UHyNF0abC7bh68CzPe+7/lnDInhAcAHIwjxaqdF/f/L2tfdYcQwCKtb31WIUIZql
+3ZRJIiTxxK3jLnXlzm2IPJ+NO3VslPNEK1FN6n+a7uhKdMmrvLrXd9OvquGarSva
+J+bd02OIkerpaMUaA4TyZsBLKRtxlb0MRnSAzo5IPmUnhQS6HIa45Yr/SoCo5meM
+S5voYRZr54PzvcKDOMax
+=a2Cs
+-----END PGP SIGNATURE-----
+
+--=-C6Ko+frAg9bkBRBAn+Ia--
 
