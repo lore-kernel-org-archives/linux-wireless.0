@@ -1,40 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:64869 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756855AbZJ3UDf (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.156]:57926 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbZJJDrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 16:03:35 -0400
-Received: by iwn10 with SMTP id 10so2389988iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 13:03:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1094614475.20091030230028@mail.ru>
-References: <1094614475.20091030230028@mail.ru>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 30 Oct 2009 13:03:20 -0700
-Message-ID: <43e72e890910301303r67fea6b1m3e04b267aceec66b@mail.gmail.com>
-Subject: Re: ieee80211_tx_status: headroom too small
-To: Nikolai ZHUBR <zhubr@mail.ru>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 9 Oct 2009 23:47:33 -0400
+Received: by fg-out-1718.google.com with SMTP id 22so500457fge.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Oct 2009 20:45:45 -0700 (PDT)
+Subject: Re: deauthentication and disassociation nl80211 commands
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1254708707.24430.68.camel@maxim-laptop>
+References: <1254708707.24430.68.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 10 Oct 2009 05:45:40 +0200
+Message-Id: <1255146340.3542.10.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2009 at 1:00 PM, Nikolai ZHUBR <zhubr@mail.ru> wrote:
-> Hello people,
->
-> I'm using compat-wireless-2009-09-14 with 2.6.25.20 and I have
-> recently noticed lots of these in syslog:
->
-> ieee80211_tx_status: headroom too small
-> ieee80211_tx_status: headroom too small
-> ieee80211_tx_status: headroom too small
->
-> The wireless (access point) works fine, though maybe not very
-> fast. However, this warning somehow bothers me. Is it important?
-> Does it mean something critical? Maybe I should just comment
-> it out in the code? I don't like syslog being filled up this
-> way...
+On Mon, 2009-10-05 at 04:11 +0200, Maxim Levitsky wrote: 
+> Here I want to ask and summarize problems we found in thread
+> 'driver_nl80211 broken again'
+> 
+> 
+> First of all it it known that lifetime of connection to access point is
+> typically:
+> 
+> authentication request/response
+> association request/response
+> 
+> EAPOL 4 way handshake (for WPA)
+> 
+> <session>
+> 
+> disassociation
+> deauthentication
+> 
+> Today kernel explicitly requests the driver to perform both
+> disassociation and deauthentication in that order.
+> It is also possible to do disassociation and then association, skipping
+> the authentication step.
+> 
+> However, currently wpa_supplicant assumes that once it called
+> wpa_drv_disassociate it can again start the complete connect sequence
+> from the authentication.
+> 
+> In fact I have carefully studied the code and found that calls to
+> wpa_supplicant_deauthenticate (which is the only user of
+> wpa_drv_deauthenticate) only happen at deinitialization of wireless
+> interface and when wpa_supplicant really has to do it, that is if there
+> is a failure (mic failure for example).
+> 
+> My hacky patch that was rejected on the grounds that it is not right to
+> introduce the driver dependent behavior might actually be the correct
+> solution. It just makes the wpa_supplicant_disassociate do both
+> disassociation and deauthentication, as was always assumed by the
+> wpa_supplicant core.
+> 
+> 
+> Or kernel should became smarter and do the work for wpa_supplicant. 
+> 
+> In this case it should work like that:
+> 
+> If mac80211 is already authenticated to the AP that was requested, it
+> should just return success.
+> However currently (and I was told that this is feature, not a bug)
+> mac80211 would flatly refuse to do any scanning while it is in
+> authenticated but not associated state.
+> 
+> If it isn't authenticated to new AP then, new authentication should be
+> made.
+> (and old one can be kept, but removed after a timeout)
+> 
+> 
+> And the last question.
+> When do you plan to switch officially the wpa_supplicant to
+> driver_nl80211?
+> 
+> Currently it has this issue, and another issue that it (nl80211) reports
+> signal levels in another format that NetworkManager doesn't understand.
+> 
+> Other that that it is faster, and especially it allows me to bring
+> network up, when I press rfkill button within 4 seconds or less.
+> 
+> 
+> Best regards,
+> Maxim Levitsky
+> 
 
-You're lucky it even worked on 2.6.25.
+Nobody uses driver_nl80211 but me?
 
-  Luis
+Best regards,
+Maxim Levitsky
+
