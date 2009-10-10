@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:36637 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932208AbZJHPJi (ORCPT
+Received: from lennier.cc.vt.edu ([198.82.162.213]:59248 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490AbZJJFXU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 11:09:38 -0400
-Date: Thu, 8 Oct 2009 08:09:36 -0700
-From: Arjan van de Ven <arjan@infradead.org>
-To: Frans Pop <elendil@planet.nl>
-Cc: Mike Galbraith <efault@gmx.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-Message-ID: <20091008080936.5f3b0e1b@infradead.org>
-In-Reply-To: <200910081655.37485.elendil@planet.nl>
-References: <200910051500.55875.elendil@planet.nl>
-	<1254974743.7797.21.camel@marge.simson.net>
-	<20091008064041.67219b13@infradead.org>
-	<200910081655.37485.elendil@planet.nl>
+	Sat, 10 Oct 2009 01:23:20 -0400
+To: Zhu Yi <yi.zhu@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mmotm 2009-10-09-01-07 - iwl3945 fails to do firmware load request
+In-Reply-To: Your message of "Sat, 10 Oct 2009 08:42:35 +0800."
+             <1255135355.3719.22.camel@debian>
+From: Valdis.Kletnieks@vt.edu
+References: <200910090830.n998Ubvv020464@imap1.linux-foundation.org> <16108.1255133561@turing-police.cc.vt.edu>
+            <1255135355.3719.22.camel@debian>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/signed; boundary="==_Exmh_1255152144_250202P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Sat, 10 Oct 2009 01:22:24 -0400
+Message-ID: <252795.1255152144@turing-police.cc.vt.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 8 Oct 2009 16:55:36 +0200
-Frans Pop <elendil@planet.nl> wrote:
-> > It turns out that on x86, these two 'opportunistic' timers only
-> > get checked when another "real" timer happens.
-> > These opportunistic timers have the objective to save power by
-> > hitchhiking on other wakeups, as to avoid CPU wakeups by themselves
-> > as much as possible.
-> 
-> This patch makes quite a difference for me. iwlagn and phy0 now 
-> consistently show at ~10 ms or lower.\
+--==_Exmh_1255152144_250202P
+Content-Type: text/plain; charset=us-ascii
 
-most excellent
+On Sat, 10 Oct 2009 08:42:35 +0800, Zhu Yi said:
 
- 
-> I do still get occasional high latencies, but those are for things
-> like "[rpc_wait_bit_killable]" or "Writing a page to disk", where I
-> guess you'd expect them. Those high latencies are mostly only listed
-> for "Global" and don't translate to individual processes.
+> The firmware loading happens when the user space brings the interface
+> up. Can you check NM is running for the bad case?
 
-and they're very different types of latencies, caused by disk and such.
+I'm not using NM, because I've never figured out how to get it to DTRT for
+my network config, so I run wpa_supplicant directly.  It's looking like
+a bad update to dbus was the actual root cause.
 
+(Did I mention how I loath dbus?  Or at least the fact that if it breaks,
+everything from wireless to pulseaudio immediately craps out too.  That and
+'hald' are my two favorite "only on this laptop because stuff refuses to
+work without them"....)
 
-> The ~10 ms I still get for iwlagn and phy0 (and sometimes higher (~30
-> ms) for others like Xorg and artsd) is still "Scheduler: waiting for
-> cpu'. If it is actually due to (un)interuptable sleep, isn't that a
-> misleading label? I directly associated that with scheduler latency.
+--==_Exmh_1255152144_250202P
+Content-Type: application/pgp-signature
 
-it's actually the time between wakeup and running, as measured by
-scheduler statistics
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+iD8DBQFK0BoQcC3lWbTT17ARAhFMAKDJ2ReXz//1q9KFawFaDkdeJSmvbgCeOuwN
+V8K6LJF+xKnfAkVgzbkCmhU=
+=ULSW
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1255152144_250202P--
+
