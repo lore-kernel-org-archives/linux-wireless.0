@@ -1,81 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:17633 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761358AbZJIUWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 16:22:30 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Ben Cahill <ben.m.cahill@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 09/17] iwl3945: streamline iwl3945_rfkill_poll()
-Date: Fri,  9 Oct 2009 13:20:26 -0700
-Message-Id: <1255119634-3060-11-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
-References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:44556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761948AbZJJQZH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Oct 2009 12:25:07 -0400
+Subject: Re: deauthentication and disassociation nl80211 commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1254708707.24430.68.camel@maxim-laptop>
+References: <1254708707.24430.68.camel@maxim-laptop>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-oenLuIt1RNko3lR0vlxi"
+Date: Sat, 10 Oct 2009 18:24:26 +0200
+Message-Id: <1255191866.4095.32.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Cahill <ben.m.cahill@intel.com>
 
-iwl3945_rfkill_poll() has been silently calling wiphy_rfkill_set_hw_state()
-every 2 seconds, regardless of whether hardware RF KILL switch changed state.
+--=-oenLuIt1RNko3lR0vlxi
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Call wiphy_rfkill_set_hw_state() only when RFKILL switch changes.
-Add IWL_DEBUG_RF_KILL log message and documentation.
+On Mon, 2009-10-05 at 04:11 +0200, Maxim Levitsky wrote:
 
-Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   27 +++++++++++++++++++++------
- 1 files changed, 21 insertions(+), 6 deletions(-)
+> My hacky patch that was rejected on the grounds that it is not right to
+> introduce the driver dependent behavior might actually be the correct
+> solution. It just makes the wpa_supplicant_disassociate do both
+> disassociation and deauthentication, as was always assumed by the
+> wpa_supplicant core.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index ab4c4ba..2406b73 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2717,19 +2717,34 @@ static void iwl3945_bg_alive_start(struct work_struct *data)
- 	mutex_unlock(&priv->mutex);
- }
- 
-+/*
-+ * 3945 cannot interrupt driver when hardware rf kill switch toggles;
-+ * driver must poll CSR_GP_CNTRL_REG register for change.  This register
-+ * *is* readable even when device has been SW_RESET into low power mode
-+ * (e.g. during RF KILL).
-+ */
- static void iwl3945_rfkill_poll(struct work_struct *data)
- {
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, rfkill_poll.work);
-+	bool old_rfkill = test_bit(STATUS_RF_KILL_HW, &priv->status);
-+	bool new_rfkill = !(iwl_read32(priv, CSR_GP_CNTRL)
-+			& CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
- 
--	if (iwl_read32(priv, CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
--		clear_bit(STATUS_RF_KILL_HW, &priv->status);
--	else
--		set_bit(STATUS_RF_KILL_HW, &priv->status);
-+	if (new_rfkill != old_rfkill) {
-+		if (new_rfkill)
-+			set_bit(STATUS_RF_KILL_HW, &priv->status);
-+		else
-+			clear_bit(STATUS_RF_KILL_HW, &priv->status);
- 
--	wiphy_rfkill_set_hw_state(priv->hw->wiphy,
--			test_bit(STATUS_RF_KILL_HW, &priv->status));
-+		wiphy_rfkill_set_hw_state(priv->hw->wiphy, new_rfkill);
-+
-+		IWL_DEBUG_RF_KILL(priv, "RF_KILL bit toggled to %s.\n",
-+				new_rfkill ? "disable radio" : "enable radio");
-+	}
- 
-+	/* Keep this running, even if radio now enabled.  This will be
-+	 * cancelled in mac_start() if system decides to start again */
- 	queue_delayed_work(priv->workqueue, &priv->rfkill_poll,
- 			   round_jiffies_relative(2 * HZ));
- 
--- 
-1.5.6.3
+Jouni just wanted to have what he felt was a workaround in
+driver_nl80211.c rather than the core code.
+
+> Or kernel should became smarter and do the work for wpa_supplicant.=20
+
+I still disagree. Why should the kernel deauthenticate when userspace
+disassociated.
+
+On the other hand, I think Jouni's argument is that you should be able
+to authenticate (force an auth frame exchange) even while authenticated.
+I don't really disagree with that all that much, but I'm not sure how to
+cleanly fit it in. mac80211 would have to reset the auth state without
+sending a deauth.
+
+johannes
+
+(NB: I'm off to Japan on Monday. Sorry I've been slow with email, but
+had lots of stuff to do and then planning the next trip, I hope it'll
+improve once I return on the 22nd -- well after the weekend then)
+
+--=-oenLuIt1RNko3lR0vlxi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK0LU3AAoJEODzc/N7+QmaM6MP/ivcVz9toPRlmD/VlYGPZuvD
+MgepynFAXxEPeqUuQVqcreu0Z8A+95ZTdq+LN1uvsKBGUm8OZgJfJDNzjNG6RDH+
+wiHGFNbLdIsPNfr6AJRyYzFlXRrgBaDG+ELWKNsNCnCWU0rbLkubzIo8YSUPRepa
+zMoSM9o+IE2eBgxz6z5XO9a053FlggwEV2Za8I6seTPc4KQFtQJ517AmNGVJO/Cp
+PSUNvzm4snMacIsud9sfEFwaxLbU/yRQkLaPqN2WAg7yN0r/d4DWJ5qFpdBiLRuF
+6UC/s2iQnmpegIyY9OajoOLNuTcBVNAw073NYdilkYq6Mo2Hb5m+WSqExyOD/xy2
+wKUDckuHSuPaeujAZVa/PsKnCjSZboMcZnPYFakDcE8QhmijBAvTdDeux5TaPTKY
+YfPThtvaEFR50OpJDB2tyl9tTOb8CDnG2yRv2ETKMTaPk46o2OekMTwI0UWK8XP4
+yiAckfHLOSA8moNPeL0CDny6iXQovKsKkb7WGrs7ASvS3s3xmZwUaxPpkd+C9/Ue
+HgHMfU/71CLF+QNCH8s2HQZgnEr82N22IZbEY4kwircUxzUrjDjk1ir+8fpOL0QL
+KYHn0nlwlp5B6XZ2eQc+y9KmZ/SQjwHYTewsK+Ws/jTPvJpVXcYv4TLr6qZXzlaD
+8W/jJ+ihXjGWw0zWx/yj
+=GCam
+-----END PGP SIGNATURE-----
+
+--=-oenLuIt1RNko3lR0vlxi--
 
