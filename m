@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:47704 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750941AbZJWAnl (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4098 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbZJKWY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 20:43:41 -0400
-Date: Thu, 22 Oct 2009 17:43:28 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Will Dyson <will.dyson@gmail.com>
-Cc: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>,
-	ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: Re: [ath9k-devel] mac80211/ath9k/hostapd: Some clients unable to
-	associate with AP
-Message-ID: <20091023004328.GA27049@jm.kir.nu>
-References: <133e8d7e0910200711s7c44b899nbcd5f1037cc5ee49@mail.gmail.com> <133e8d7e0910210448y39551160o7a12a8af2da43f85@mail.gmail.com> <20091022161021.GA5532@jm.kir.nu> <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
+	Sun, 11 Oct 2009 18:24:58 -0400
+From: "Bob Copeland" <me@bobcopeland.com>
+To: Richard Zidlicky <rz@linux-m68k.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Date: Sun, 11 Oct 2009 18:23:56 -0400
+Message-Id: <20091011222142.M14763@bobcopeland.com>
+In-Reply-To: <20091011220002.GA11603@linux-m68k.org>
+References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e6f94720910221645n2b0b1edcq29358f175a41d3ad@mail.gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 22, 2009 at 07:45:29PM -0400, Will Dyson wrote:
+On Mon, 12 Oct 2009 00:00:02 +0200, Richard Zidlicky wrote:
+> so the results are same like before. The printk message came once only,
+> I will try to gather more debug info tomorrow.
 
-> I also have an ath9k-based OpenWrt router, and see the same issue when
-> running the latest builds.
-> 
-> I've reproduced the problem with the very latest svn (which uses
-> compat-wireless 2009-10-09 and kernel 2.6.30.8) and the tree as of
-> 2009-06-20 (which uses compat-wirless 2009-06-02 and a local patch to
-> use kernel 2.6.30). Both have hostapd 0.6.9.
-
-> Attached are the complete binary dumps, fail.pcap and win.pcap.
-
-Thanks! This seems to confirm that the issue is indeed related to the
-sequence number on the frames not being set correctly (for other than
-Beacon frames).
+Meaning it works the same as with your change (replacing "chan != null"
+with "true") or it works the same as mainline, i.e. it fails?
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Bob Copeland %% www.bobcopeland.com
+
+
