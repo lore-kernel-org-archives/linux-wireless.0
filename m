@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58339 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbZJPLih (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52257
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753571AbZJKKgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:38:37 -0400
-Subject: Re: [WIP, RFC] libertas: allow scanning via "iw"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910141652.11203.hs4233@mail.mn-solutions.de>
-References: <200910141652.11203.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-4oD/HUtxHZnQl1RPoAbb"
-Date: Fri, 16 Oct 2009 18:50:11 +0900
-Message-Id: <1255686611.4095.323.camel@johannes.local>
+	Sun, 11 Oct 2009 06:36:52 -0400
+Date: Sun, 11 Oct 2009 03:36:47 -0700 (PDT)
+Message-Id: <20091011.033647.66923614.davem@davemloft.net>
+To: tomasw@gmail.com
+Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
+	cindy.h.kao@intel.com, guy.cohen@intel.com,
+	ron.rindjunsky@intel.com
+Subject: Re: [PATCH 1/3] iwmc3200top: Add Intel Wireless MultiCom 3200 top
+ driver.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240910110105x33fb251ar3437dd5fee552735@mail.gmail.com>
+References: <1ba2fa240910100238s709c31d3s6cb612f502b1086f@mail.gmail.com>
+	<20091010.185852.133969433.davem@davemloft.net>
+	<1ba2fa240910110105x33fb251ar3437dd5fee552735@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tomas Winkler <tomasw@gmail.com>
+Date: Sun, 11 Oct 2009 10:05:20 +0200
 
---=-4oD/HUtxHZnQl1RPoAbb
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Just close my eyes and there is new game to play. :)
+> It's not in the patchwork, so is there any reason you are not planning
+> to add it.   The patch intention was for net-next, it looks like
+> I didn't mark it as such, my fault.
 
-On Wed, 2009-10-14 at 16:52 +0200, Holger Schurig wrote:
-> Do not apply, but please look at the code and comment harshly :-)
+Because there still seems to be some confusion between which of these
+bits go through John Linville as a wireless driver and which bits
+go directly through me.
 
-> =20
-> +#ifdef TODO
->  	/* Scan results list */
->  	struct list_head network_list;
->  	struct list_head network_free_list;
->  	struct bss_descriptor *networks;
-> +#endif
+By default I assume John picks up "wireless" drivers and send them
+to me in his wireless merges to me.
 
-It'd be easier to read and see what the patch does if you actually
-removed all the stuff that is no longer necessary :)
-
-johannes
-
---=-4oD/HUtxHZnQl1RPoAbb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2EHPAAoJEODzc/N7+Qma0tYP/iv9EQ0Fg6hhKHli9C4odDLI
-vKnX8j6gdapHW3mUmqJSDIiHYTcMZEX1jFmMau5Cn2VMd7R8aDz3A9rRCfxWWBNe
-IoO+GDHMq+RfEc+v7jMwZNcnZXKN8zjwW429bE6oZ8/Ac+kb1crSsmHT9poONNqr
-3r/ayCjNdlXkG6mTlS2m8Ecg7E05aIG987rckKSRjWM7UPPMZ+FPjvJT+VU7ySPt
-Um5GuEhmItT/NGh1W4lPGmSEogiZP5SUtGrI0ANIg2WsACZPqv+db5GhJn5eeMv1
-bP4CxxFwT1E2iZo0ABKG29S7MJOrDKcrDgl7LqHVNo4C89PbnxHMzdbUzKUPlc7B
-EotGNNxE9dPNHj/tUCWkkVhqBOT8ZdzYhKUw3gGpzw0JJ8hYci0thvPDQUtEEofj
-xIRl/2I2Xs+Kh8HtbsxEzMsMZ0rDLt++0shBfONQxPbHEE4HxANeVT15lAy/noDh
-GHP2uiIr6Is7tNR4pswhq48e9mG30EtFsBLG/B+YC7lXCcqBSYP8FOsTmcJsfr5y
-wsM8kXEwedmJBty9h7+F6hRktwdPN5jDyExhwGHIFtqn3jFXp/lcqL5uN+SVxNPq
-PLZ6H3AJHjgWpx1eOfArY9T6SSmB1uWfD27S6Icp5KjOE9Mfk5NASSMHKvBqXHrI
-FK8Qazp4O+VXSWo8uy0A
-=lHS/
------END PGP SIGNATURE-----
-
---=-4oD/HUtxHZnQl1RPoAbb--
+If that's not the case, explicitly do a fresh submission of this patch
+and explicitly ask me to merge it.
 
