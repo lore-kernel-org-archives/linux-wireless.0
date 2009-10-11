@@ -1,256 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:37630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751992AbZJZQMl (ORCPT
+Received: from qw-out-2122.google.com ([74.125.92.25]:43060 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbZJKVca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 12:12:41 -0400
-Subject: [RFC] firmware_class: make request_firmware_nowait more useful
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Oct 2009 17:12:41 +0100
-Message-ID: <1256573561.12462.14.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 11 Oct 2009 17:32:30 -0400
+Received: by qw-out-2122.google.com with SMTP id 9so411788qwb.37
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 14:31:24 -0700 (PDT)
+Message-ID: <4AD24EAA.4090907@lwfinger.net>
+Date: Sun, 11 Oct 2009 16:31:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] compat-wireless: Fix the bleeding-edge version to build
+ on 2.6.27
+References: <4ac55601.EpUUwD1vnjBKSXDy%Larry.Finger@lwfinger.net> <4AD22B39.3070006@hauke-m.de>
+In-Reply-To: <4AD22B39.3070006@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unfortunately, one cannot hold on to the struct firmware
-that request_firmware_nowait() hands off, which is needed
-in some cases. Allow this by requiring the callback to
-free it (via release_firmware).
+On 10/11/2009 02:00 PM, Hauke Mehrtens wrote:
+> Larry Finger wrote:
+>> When building the bleeding-edge compat-wireless for kernel 2.6.27,
+>> several compilation errors were detected.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> Luis,
+>>
+>> I checked these patches on 2.6.27 and 2.6.31, but not for the intermediate
+>> releases.
+>>
+>> Larry
+>> ---
+>>
+>> Index: compat-wireless-2009-09-05/include/net/compat-2.6.28.h
+>> ===================================================================
+>> --- compat-wireless-2009-09-05.orig/include/net/compat-2.6.28.h
+>> +++ compat-wireless-2009-09-05/include/net/compat-2.6.28.h
+>> @@ -149,6 +149,7 @@ static inline void skb_queue_splice_tail
+>>  struct module;
+>>  struct tracepoint;
+>>  
+>> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+>>  struct tracepoint {
+>>  	const char *name;		/* Tracepoint name */
+>>  	int state;			/* State. */
+>> @@ -159,6 +160,7 @@ struct tracepoint {
+>>  					 * align these on the structure size.
+>>  					 * Keep in sync with vmlinux.lds.h.
+>>  					 */
+>> +#endif
+>>  
+>>  #ifndef DECLARE_TRACE
+>>  
+>> @@ -179,13 +181,17 @@ struct tracepoint {
+>>  		return -ENOSYS;						\
+>>  	}
+>>  
+>> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+>>  #define DEFINE_TRACE(name)
+>> +#endif
+>>  #define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
+>>  #define EXPORT_TRACEPOINT_SYMBOL(name)
+>>  
+>> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+>>  static inline void tracepoint_update_probe_range(struct tracepoint *begin,
+>>  	struct tracepoint *end)
+>>  { }
+>> +#endif
+>>  
+>>  #endif
+>>  
+> 
+> LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) can not be true in
+> compat-2.6.28.h. The definitions are not needed in compat-wireless any
+> more. Removing this does not break compiling with mainline kernel 2.6.25
+> to 2.6.32
 
-Additionally, give it a gfp_t parameter -- all the current
-users call it from a GFP_KERNEL context so the GFP_ATOMIC
-isn't necessary. This also marks an API break which is
-useful in a sense, although that is obviously not the
-primary purpose of this change.
+Well... I was using the openSUSE 2.6.27 kernel, and it broke without
+this statement, as did the compilation of the user on the o-penSUSE
+forums!
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
-This is a prerequisite for many drivers' conversion to the firmware
-loading scheme we talked about at the wireless summit. Due to
-suspend/hibernate we need to keep a copy of the firmware loaded, but
-because we cannot request_firmware() during probe() we want to use
-_nowait() and then proceed registration (or unbind) on the callback.
+>> Index: compat-wireless-2009-09-05/net/wireless/compat-2.6.28.c
+>> ===================================================================
+>> --- compat-wireless-2009-09-05.orig/net/wireless/compat-2.6.28.c
+>> +++ compat-wireless-2009-09-05/net/wireless/compat-2.6.28.c
+>> @@ -260,6 +260,7 @@ static unsigned long round_jiffies_commo
+>>  	return j;
+>>  }
+>>  
+>> +#if 0
+>>  /**
+>>   * round_jiffies_up - function to round jiffies up to a full second
+>>   * @j: the time in (absolute) jiffies that should be rounded
+>> @@ -274,5 +275,6 @@ unsigned long round_jiffies_up(unsigned
+>>  	return round_jiffies_common(j, raw_smp_processor_id(), true);
+>>  }
+>>  EXPORT_SYMBOL_GPL(round_jiffies_up);
+>> +#endif
+>>  
+>>  #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
+> 
+> The mainline kernel 2.6.27 does not contain round_jiffies_up. Are you
+> using Suse? Suse adds some extra extensions into the kernel, we need an
+> other way to deactivate the round_jiffies_up export. With this patch
+> this symbol is missing while compiling against mainline kernel <=
+> 2.6.27. An other user reported a problem with the Suse kernel in:
+> http://marc.info/?l=linux-wireless&m=125393384728475
 
- drivers/base/firmware_class.c               |   14 ++++++--------
- drivers/firmware/dell_rbu.c                 |    9 +++++++--
- drivers/serial/ucc_uart.c                   |    8 +++++---
- drivers/staging/comedi/drivers/usbdux.c     |    5 ++++-
- drivers/staging/comedi/drivers/usbduxfast.c |    5 ++++-
- drivers/usb/atm/ueagle-atm.c                |    7 ++++---
- include/linux/firmware.h                    |    5 +++--
- 7 files changed, 33 insertions(+), 20 deletions(-)
+Yes, the openSUSE patched kernel sources for 2.6.27.
 
---- wireless-testing.orig/drivers/base/firmware_class.c	2009-10-26 16:45:18.000000000 +0100
-+++ wireless-testing/drivers/base/firmware_class.c	2009-10-26 17:08:10.000000000 +0100
-@@ -601,12 +601,9 @@ request_firmware_work_func(void *arg)
- 	}
- 	ret = _request_firmware(&fw, fw_work->name, fw_work->device,
- 		fw_work->uevent);
--	if (ret < 0)
--		fw_work->cont(NULL, fw_work->context);
--	else {
--		fw_work->cont(fw, fw_work->context);
--		release_firmware(fw);
--	}
-+
-+	fw_work->cont(fw, fw_work->context);
-+
- 	module_put(fw_work->module);
- 	kfree(fw_work);
- 	return ret;
-@@ -619,6 +616,7 @@ request_firmware_work_func(void *arg)
-  *	is non-zero else the firmware copy must be done manually.
-  * @name: name of firmware file
-  * @device: device for which firmware is being loaded
-+ * @gfp: allocation flags
-  * @context: will be passed over to @cont, and
-  *	@fw may be %NULL if firmware request fails.
-  * @cont: function will be called asynchronously when the firmware
-@@ -631,12 +629,12 @@ request_firmware_work_func(void *arg)
- int
- request_firmware_nowait(
- 	struct module *module, int uevent,
--	const char *name, struct device *device, void *context,
-+	const char *name, struct device *device, gfp_t gfp, void *context,
- 	void (*cont)(const struct firmware *fw, void *context))
- {
- 	struct task_struct *task;
- 	struct firmware_work *fw_work = kmalloc(sizeof (struct firmware_work),
--						GFP_ATOMIC);
-+						gfp);
- 
- 	if (!fw_work)
- 		return -ENOMEM;
---- wireless-testing.orig/include/linux/firmware.h	2009-10-26 16:45:53.000000000 +0100
-+++ wireless-testing/include/linux/firmware.h	2009-10-26 17:03:56.000000000 +0100
-@@ -4,6 +4,7 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/compiler.h>
-+#include <linux/gfp.h>
- 
- #define FW_ACTION_NOHOTPLUG 0
- #define FW_ACTION_HOTPLUG 1
-@@ -38,7 +39,7 @@ int request_firmware(const struct firmwa
- 		     struct device *device);
- int request_firmware_nowait(
- 	struct module *module, int uevent,
--	const char *name, struct device *device, void *context,
-+	const char *name, struct device *device, gfp_t gfp, void *context,
- 	void (*cont)(const struct firmware *fw, void *context));
- 
- void release_firmware(const struct firmware *fw);
-@@ -51,7 +52,7 @@ static inline int request_firmware(const
- }
- static inline int request_firmware_nowait(
- 	struct module *module, int uevent,
--	const char *name, struct device *device, void *context,
-+	const char *name, struct device *device, gfp_t gfp, void *context,
- 	void (*cont)(const struct firmware *fw, void *context))
- {
- 	return -EINVAL;
---- wireless-testing.orig/drivers/firmware/dell_rbu.c	2009-10-26 16:49:06.000000000 +0100
-+++ wireless-testing/drivers/firmware/dell_rbu.c	2009-10-26 16:49:52.000000000 +0100
-@@ -544,9 +544,12 @@ static void callbackfn_rbu(const struct 
- {
- 	rbu_data.entry_created = 0;
- 
--	if (!fw || !fw->size)
-+	if (!fw)
- 		return;
- 
-+	if (!fw->size)
-+		goto out;
-+
- 	spin_lock(&rbu_data.lock);
- 	if (!strcmp(image_type, "mono")) {
- 		if (!img_update_realloc(fw->size))
-@@ -568,6 +571,8 @@ static void callbackfn_rbu(const struct 
- 	} else
- 		pr_debug("invalid image type specified.\n");
- 	spin_unlock(&rbu_data.lock);
-+ out:
-+	release_firmware(fw);
- }
- 
- static ssize_t read_rbu_image_type(struct kobject *kobj,
-@@ -615,7 +620,7 @@ static ssize_t write_rbu_image_type(stru
- 			spin_unlock(&rbu_data.lock);
- 			req_firm_rc = request_firmware_nowait(THIS_MODULE,
- 				FW_ACTION_NOHOTPLUG, "dell_rbu",
--				&rbu_device->dev, &context,
-+				&rbu_device->dev, GFP_KERNEL, &context,
- 				callbackfn_rbu);
- 			if (req_firm_rc) {
- 				printk(KERN_ERR
---- wireless-testing.orig/drivers/serial/ucc_uart.c	2009-10-26 16:50:04.000000000 +0100
-+++ wireless-testing/drivers/serial/ucc_uart.c	2009-10-26 16:51:10.000000000 +0100
-@@ -1179,16 +1179,18 @@ static void uart_firmware_cont(const str
- 
- 	if (firmware->header.length != fw->size) {
- 		dev_err(dev, "invalid firmware\n");
--		return;
-+		goto out;
- 	}
- 
- 	ret = qe_upload_firmware(firmware);
- 	if (ret) {
- 		dev_err(dev, "could not load firmware\n");
--		return;
-+		goto out;
- 	}
- 
- 	firmware_loaded = 1;
-+ out:
-+	release_firmware(fw);
- }
- 
- static int ucc_uart_probe(struct of_device *ofdev,
-@@ -1247,7 +1249,7 @@ static int ucc_uart_probe(struct of_devi
- 			 */
- 			ret = request_firmware_nowait(THIS_MODULE,
- 				FW_ACTION_HOTPLUG, filename, &ofdev->dev,
--				&ofdev->dev, uart_firmware_cont);
-+				GFP_KERNEL, &ofdev->dev, uart_firmware_cont);
- 			if (ret) {
- 				dev_err(&ofdev->dev,
- 					"could not load firmware %s\n",
---- wireless-testing.orig/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:16.000000000 +0100
-+++ wireless-testing/drivers/staging/comedi/drivers/usbdux.c	2009-10-26 16:51:52.000000000 +0100
-@@ -2327,9 +2327,11 @@ static void usbdux_firmware_request_comp
- 	if (ret) {
- 		dev_err(&usbdev->dev,
- 			"Could not upload firmware (err=%d)\n", ret);
--		return;
-+		goto out;
- 	}
- 	comedi_usb_auto_config(usbdev, BOARDNAME);
-+ out:
-+	release_firmware(fw);
- }
- 
- /* allocate memory for the urbs and initialise them */
-@@ -2580,6 +2582,7 @@ static int usbduxsub_probe(struct usb_in
- 				      FW_ACTION_HOTPLUG,
- 				      "usbdux_firmware.bin",
- 				      &udev->dev,
-+				      GFP_KERNEL,
- 				      usbduxsub + index,
- 				      usbdux_firmware_request_complete_handler);
- 
---- wireless-testing.orig/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:20.000000000 +0100
-+++ wireless-testing/drivers/staging/comedi/drivers/usbduxfast.c	2009-10-26 17:01:47.000000000 +0100
-@@ -1451,10 +1451,12 @@ static void usbduxfast_firmware_request_
- 	if (ret) {
- 		dev_err(&usbdev->dev,
- 			"Could not upload firmware (err=%d)\n", ret);
--		return;
-+		goto out;
- 	}
- 
- 	comedi_usb_auto_config(usbdev, BOARDNAME);
-+ out:
-+	release_firmware(fw);
- }
- 
- /*
-@@ -1569,6 +1571,7 @@ static int usbduxfastsub_probe(struct us
- 				      FW_ACTION_HOTPLUG,
- 				      "usbduxfast_firmware.bin",
- 				      &udev->dev,
-+				      GFP_KERNEL,
- 				      usbduxfastsub + index,
- 				      usbduxfast_firmware_request_complete_handler);
- 
---- wireless-testing.orig/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:01:48.000000000 +0100
-+++ wireless-testing/drivers/usb/atm/ueagle-atm.c	2009-10-26 17:03:29.000000000 +0100
-@@ -667,12 +667,12 @@ static void uea_upload_pre_firmware(cons
- 	else
- 		uea_info(usb, "firmware uploaded\n");
- 
--	uea_leaves(usb);
--	return;
-+	goto err;
- 
- err_fw_corrupted:
- 	uea_err(usb, "firmware is corrupted\n");
- err:
-+	release_firmware(fw_entry);
- 	uea_leaves(usb);
- }
- 
-@@ -705,7 +705,8 @@ static int uea_load_firmware(struct usb_
- 		break;
- 	}
- 
--	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev, usb, uea_upload_pre_firmware);
-+	ret = request_firmware_nowait(THIS_MODULE, 1, fw_name, &usb->dev,
-+				      GFP_KERNEL, usb, uea_upload_pre_firmware);
- 	if (ret)
- 		uea_err(usb, "firmware %s is not available\n", fw_name);
- 	else
-
-
+Larry
