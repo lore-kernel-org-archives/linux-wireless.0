@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:43118 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756168AbZJ0Q40 (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:34163 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754204AbZJKJn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:56:26 -0400
-Received: by bwz19 with SMTP id 19so430786bwz.28
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 09:56:30 -0700 (PDT)
-Message-ID: <4AE72639.9020402@lwfinger.net>
-Date: Tue, 27 Oct 2009 11:56:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Richard Farina <sidhayn@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187: kernel oops when leds enabled
-References: <4AE5BD6C.2050303@gmail.com>
-In-Reply-To: <4AE5BD6C.2050303@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 11 Oct 2009 05:43:58 -0400
+Subject: Re: [PATCH] mac80211: fix logic error ibss merge bssid check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4AD14F26.6030304@openwrt.org>
+References: <4AD14F26.6030304@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-zCJ/2E7WuAGDLGTgnALp"
+Date: Sun, 11 Oct 2009 11:43:16 +0200
+Message-Id: <1255254196.4095.44.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Richard Farina wrote:
-> Using kernel 2.6.31 and compat-wireless stable 2.6.32_rc5 I get this
-> kernel oops nearly 100% of the time when I unplug the device.  I have
-> tried with the device down, up, and while transmitting, here are the
-> three oopses.  Sorry it took me so long for this report, it is an odd
-> bug.  When I was running older kernel/compat-wireless this oops was
-> about 4-5 screens longs so I couldn't take a picture.  Additionally I
-> took the advice of a few of the list members to try the crashkernel
-> feature (which is AWESOME  btw) but it doesn't work for this oops.  Let
-> me be more specific, I can trigger an oops and the crash kernel kicks
-> in, but with this oops the crash kernel never kicks in so I am guessing
-> this is bad news.
 
-I have a bit more information about this crash. It shows up as either
-a "BUG: Scheduling while atomic" or "Kernel panic - not synching:
-Fatal exception in interrupt". I could also trigger this oops by
-running a rmmod/insmod loop, which makes testing easier in that I can
-walk away and let the machine do the testing.
+--=-zCJ/2E7WuAGDLGTgnALp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As you noted, the problem does not appear when the LED code is not
-enabled. I tried to find a problem in the rtl8187 LED code without
-success, then discovered that the problem is present in mainline
-2.6.32-rc5, but not in 2.6.31. One does not need compat-wireless. Note
-that the rtl8187 LED code did not change in that time. It seems likely
-that there is a bug in some other part of the system that rtl8187 is
-triggering. In any case, I now have a starting point for bisection,
-which is my next step.
+On Sun, 2009-10-11 at 05:21 +0200, Felix Fietkau wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>=20
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -544,7 +544,7 @@ static void ieee80211_sta_find_ibss(stru
+>  		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
+>  #endif /* CONFIG_MAC80211_IBSS_DEBUG */
+>=20
+> -	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
+> +	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
 
-This problem is clearly a regression between 2.6.31 and 2.6.32-rc5. I
-will file a Bugzilla on it once I know the commit that broke the system.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Larry
+I'll also send the race fix now, would appreciate you giving it a try.
+
+Thanks,
+johannes
+
+--=-zCJ/2E7WuAGDLGTgnALp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABAgAGBQJK0aixAAoJEODzc/N7+Qmal7gP/2dyfZEwEDYqjpOp/LC3X4MV
+QwNs5avdsLFPclVpGNoyUQO6FXlrUCJdPWhqoJc7LXDCA7cEemh2gxMH3Ghp+NbY
+grXMxp0hB5FQrYIt+QV8t5NeAUo7QJuVKHSvLqaq6TJ7WSavV0PU0ZlO8OUd41Y9
+NPZgUVocuWDSLmq3+PCWSZpJzKV5BcWmd47lrUuTDv3y3zGHtBy0arCr+SUDx6nx
+OHK7qto0NHkg0hggCRvqTiob66ARgjZ+PS4K2S7bbx8AFQtm1u/1DsV59dgZ68S6
+mxIn7dERMyqTk/7216HG3dZEojg9uOoQwpQI9ZDPUrubZILdUzJAnxqGKYrWmckC
+qaeZf6aBjE0A/tZAGaFFYHtezD8/+wieuhkqsX0VUrrnfWI4iUu9bcLfPtWtw+lk
+gziZNITH6m62f6Yy7T1n9lXWtTRsfMeCgnXfq9r2LWLsigT7z1BMT1xhpjVOOvXO
+uAh/ChypsS53c0CS+IQGvm/iaQERtI5eqKsst+6GfJGfeTX7vkiTUqZ91GhJk5oV
+5lR5y7f5QHPs0mssipC5x9S2L4+LPN9lyIc/TWoH2bxERr/2OPIViteJcLV4KZs5
+Pi6p/77Ht0CVxzQoKozgbdfbUoRT06F67ll4MplzcWFi/RDmXmsR+W2NtlEPyOrc
+px/5mrW2k4MjBNgvSb6I
+=PH71
+-----END PGP SIGNATURE-----
+
+--=-zCJ/2E7WuAGDLGTgnALp--
 
