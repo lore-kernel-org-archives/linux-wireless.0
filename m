@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16722 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933409AbZJHURh (ORCPT
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:57504 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754115AbZJKObT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 16:17:37 -0400
-Message-ID: <4ACE4877.50308@nokia.com>
-Date: Thu, 08 Oct 2009 23:15:51 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Sun, 11 Oct 2009 10:31:19 -0400
+Message-ID: <4AD1EA65.3070805@lwfinger.net>
+Date: Sun, 11 Oct 2009 09:23:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: ext Johannes Berg <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Oikarinen Juuso (Nokia-D/Tampere)" <juuso.oikarinen@nokia.com>
-Subject: Re: [PATCH 15/20] wl1271: Multicast filtering configuration
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>	 <1255028196-6565-16-git-send-email-luciano.coelho@nokia.com> <1255032103.3713.33.camel@johannes.local>
-In-Reply-To: <1255032103.3713.33.camel@johannes.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Dave Young <hidave.darkstar@gmail.com>, akpm@linux-foundation.org,
+	bcm43xx-dev@lists.berlios.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [mmotm 2009-10-09-01-07] b43/wireless possible circular locking
+References: <20091011094139.GA2778@darkstar> <1255254687.4095.46.camel@johannes.local>
+In-Reply-To: <1255254687.4095.46.camel@johannes.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-ext Johannes Berg wrote:
-> On Thu, 2009-10-08 at 21:56 +0300, Luciano Coelho wrote:
+On 10/11/2009 04:51 AM, Johannes Berg wrote:
+> On Sun, 2009-10-11 at 17:41 +0800, Dave Young wrote:
+>> Hi,
+>>
+>> I got lockdep warnings about possible circular lock with
+>> b43 interface startup. It looks like a real problem.
+>>
+>> [   71.974542] wlan0: deauthenticating from 00:19:e0:db:24:de by local choice (reason=3)
+>> [   72.004352] b43-phy0 debug: Removing Interface type 2
+>> [   72.005431] 
+>> [   72.005435] =======================================================
+>> [   72.006168] [ INFO: possible circular locking dependency detected ]
+>> [   72.006759] 2.6.32-rc3-mm1 #4
+>> [   72.007047] -------------------------------------------------------
+>> [   72.007617] ifconfig/2175 is trying to acquire lock:
+>> [   72.007617]  (&(&rfkill->poll_work)->work){+.+...}, at: [<c0239375>] __cancel_work_timer+0x8c/0x18e
+>> [   72.007617] 
+>> [   72.007617] but task is already holding lock:
+>> [   72.007617]  (&wl->mutex){+.+.+.}, at: [<f8fa5359>] b43_op_stop+0x28/0x6a [b43]
 > 
->> +	/* first, get the filter parameters */
->> +	spin_lock_irqsave(&wl->wl_lock, flags);
->> +	fp = wl->filter_params;
->> +	wl->filter_params = NULL;
->> +	spin_unlock_irqrestore(&wl->wl_lock, flags);
->> +
->> +	if (!fp)
->> +		return;
-> 
->> +	kfree(fp);
-> 
->> +static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
->> +				       struct dev_addr_list *mc_list)
->> +{
->> +	struct wl1271 *wl = hw->priv;
->> +	struct wl1271_filter_params *fp;
->> +	unsigned long flags;
->> +	int i;
->> +
->> +	/*
->> +	 * FIXME: we should return a hash that will be passed to
->> +	 * configure_filter() instead of saving everything in the context.
->> +	 */
->> +
->> +	fp = kzalloc(sizeof(*fp), GFP_KERNEL);
->> +	if (!fp) {
->> +		wl1271_error("Out of memory setting filters.");
->> +		return 0;
->> +	}
-> 
-> It's a u64 on purpose, you can return the parameters struct to pass it
-> through to configure_filter.
+> I believe this is already taken care of by Larry.
 
-Yes, you're right.  It's just that I have forwarded-ported loads of patches at 
-once, so I just made a quick hack to get this to compile and work before the 
-real thing is done.  Juuso Oikarinen (who is also working on the wl1271) has 
-already implemented the final solution for this and his patch will be included 
-in one of my next batches ;)
+Yes, I introduced this bug and fixed it. The latest wireless-testing
+should have the fix. In addition, it is on its way to Linus through
+DameM. Unfortunately, that fix has another bug that will not show up
+in the logs. With it, it is impossible to turn the radio back on after
+it is killed via the rfkill switch. A "final" (And I hope that is
+true!) fix is out for testing; however, the OP for the bug that
+started this whole chain only has limited access to the machine in
+question.
 
-Thanks a lot for your timely comment (as usual).
-
---
-Cheers,
-Luca.
+Larry
