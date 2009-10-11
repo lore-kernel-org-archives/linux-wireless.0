@@ -1,115 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52860 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344AbZJABUT (ORCPT
+Received: from mail1.gibraltar.at ([80.120.3.98]:56738 "EHLO
+	mail1.gibraltar.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbZJKTOe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Sep 2009 21:20:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Kalle Valo <kalle.valo@nokia.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/3] cfg80211: add firmware and hardware version to wiphy
-Date: Wed, 30 Sep 2009 21:19:01 -0400
-Message-Id: <1254359942-3483-2-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
-References: <20091001011340.GA3123@tuxdriver.com>
- <1254359942-3483-1-git-send-email-linville@tuxdriver.com>
+	Sun, 11 Oct 2009 15:14:34 -0400
+Date: Sun, 11 Oct 2009 21:13:47 +0200
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	leitner@esys.at
+From: Rene Mayrhofer <rene.mayrhofer@gibraltar.at>
+Subject: Re: Massive packet loss with ath9k, AR9280, hostapd in 802.11n mode
+Message-ID: <e193131e154b38ff58f37adc1acbf8ab@www.gibraltar.at>
+In-Reply-To: <200909280956.23887.hs4233@mail.mn-solutions.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+Hi everybody,
+ 
+>> [ 1698.498801] ath: EEPROM regdomain: 0x0 
+>> 
+>> Does this indicate that the EEPROM is locked to country code
+>> 0x0 (whatever that is, probably US)? "iw reg" doesn't seem to
+>> change anything: 
+> 
+> Yep, that's the case.
+> 
+> However, "iw XXX reg set XX" should *STILL* change some things, 
+> so I guess that crda/regdb isn't still correctly installed. And 
+> you should still see something in your "dmesg" output. Hey, 
+> even "COUNTRY=AT crda" should change/produce something, e.g. 
+> check "dmesg" and "iw list".
 
-It's useful to provide firmware and hardware version to user space and have a
-generic interface to retrieve them. Users can provide the version information
-in bug reports etc.
+After installing Ubuntu's wireless-crda package (which includes crda, the
+regulatory.bin, and the udev rule), things started to work. One kernel
+module update later, I was able to issue "iw reg set AT" manually and via
+hostapd and it seems to do something - "iw reg get" now returns "country
+98". This should now let me use channel 40 (5GHz band), which I will try
+later on this week.
+ 
+> Oh, and what I'm not yet getting: how can a wrong country setting 
+> lead to so much packet-loss?
 
-Add fields for firmware and hardware version to struct wiphy.
+I can now confirm that the country setting was only a side issue that
+prevented me from switching to the 5GHz band, but had nothing to do with the
+massive packet loss issue. With or without the correct country setting, the
+packet loss happened.
 
-(Dropped nl80211 bits for now and modified remaining bits in favor of
-ethtool. -- JWL)
 
-Cc: Kalle Valo <kalle.valo@nokia.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/cfg80211.h |    3 +++
- net/wireless/ethtool.c |   23 ++++++++++++++++++++++-
- net/wireless/ethtool.h |    3 +++
- 3 files changed, 28 insertions(+), 1 deletions(-)
+However, a (very) recent update seems to have solved this problem. While (if
+I remember correctly) compat-wireless-2009-09-25 still caused the packet
+loss, compat-wireless-2009-10-09 seems to be stable. With kernel 2.6.30.9
+and compat-wireless-2009-10-09, scripts/driver-select set to "ath" and
+loading the updated modules, I have now had a stable (nearly
+packet-loss-free) connection for nearly 2h. This is a new record ;-) 
+Unfortunately, the connection to a Linksys WUSB600N v2 in client mode at
+about 1m distance from the miniPCI Atheros AR9280 with two antennas in
+access point mode is still limited to a maximum of roughly 30MBit/s of
+actual transfer rate as measured with iperf (the Windows client with Linksys
+rt2870 drivers reports a connection speed of 270 to 300MBit/s). hostapd is
+set to 
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 241ea14..6f4862b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1142,6 +1142,9 @@ struct wiphy {
- 	u32 frag_threshold;
- 	u32 rts_threshold;
- 
-+	char fw_version[ETHTOOL_BUSINFO_LEN];
-+	u32 hw_version;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-index 94ca377..3c59549 100644
---- a/net/wireless/ethtool.c
-+++ b/net/wireless/ethtool.c
-@@ -4,6 +4,8 @@
- 
- const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_drvinfo = cfg80211_get_drvinfo,
-+	.get_regs_len = cfg80211_get_regs_len,
-+	.get_regs = cfg80211_get_regs,
- 	.get_link = ethtool_op_get_link,
- };
- 
-@@ -18,10 +20,29 @@ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
- 	strncpy(info->version, UTS_RELEASE, sizeof(info->version));
- 	info->version[sizeof(info->version) - 1] = '\0';
- 
--	strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
-+	if (wdev->wiphy->fw_version[0])
-+		strncpy(info->fw_version, wdev->wiphy->fw_version,
-+			sizeof(info->fw_version));
-+	else
-+		strncpy(info->fw_version, "N/A", sizeof(info->fw_version));
- 	info->fw_version[sizeof(info->fw_version) - 1] = '\0';
- 
- 	strncpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
- 		sizeof(info->bus_info));
- 	info->bus_info[sizeof(info->bus_info) - 1] = '\0';
- }
-+
-+int cfg80211_get_regs_len(struct net_device *dev)
-+{
-+	/* For now, return 0... */
-+	return 0;
-+}
-+
-+void cfg80211_get_regs(struct net_device *dev, struct ethtool_regs *regs,
-+			void *data)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+
-+	regs->version = wdev->wiphy->hw_version;
-+	regs->len = 0;
-+}
-diff --git a/net/wireless/ethtool.h b/net/wireless/ethtool.h
-index a51b470..2d4602a 100644
---- a/net/wireless/ethtool.h
-+++ b/net/wireless/ethtool.h
-@@ -4,6 +4,9 @@
- #include <linux/ethtool.h>
- 
- extern void cfg80211_get_drvinfo(struct net_device *, struct ethtool_drvinfo *);
-+extern int cfg80211_get_regs_len(struct net_device *);
-+extern void cfg80211_get_regs(struct net_device *, struct ethtool_regs *,
-+				void *);
- 
- extern const struct ethtool_ops cfg80211_ethtool_ops;
- 
--- 
-1.6.2.5
+channel=6
+ieee80211n=1
+ht_capab=[HT40-][SHORT-GI-40]
+wpa=3
+wpa_passphrase=long...
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=CCMP
+rsn_pairwise=CCMP
+wme_enabled=1
+#
+# Low priority / AC_BK = background
+wme_ac_bk_cwmin=4
+wme_ac_bk_cwmax=10
+wme_ac_bk_aifs=7
+wme_ac_bk_txop_limit=0
+wme_ac_bk_acm=0
+# Note: for IEEE 802.11b mode: cWmin=5 cWmax=10
+#
+# Normal priority / AC_BE = best effort
+wme_ac_be_aifs=3
+wme_ac_be_cwmin=4
+wme_ac_be_cwmax=10
+wme_ac_be_txop_limit=0
+wme_ac_be_acm=0
+# Note: for IEEE 802.11b mode: cWmin=5 cWmax=7
+#
+# High priority / AC_VI = video
+wme_ac_vi_aifs=2
+wme_ac_vi_cwmin=3
+wme_ac_vi_cwmax=4
+wme_ac_vi_txop_limit=94
+wme_ac_vi_acm=0
+# Note: for IEEE 802.11b mode: cWmin=4 cWmax=5 txop_limit=188
+#
+# Highest priority / AC_VO = voice
+wme_ac_vo_aifs=2
+wme_ac_vo_cwmin=2
+wme_ac_vo_cwmax=3
+wme_ac_vo_txop_limit=47
+wme_ac_vo_acm=0
+# Note: for IEEE 802.11b mode: cWmin=3 cWmax=4 burst=102
+
+Should the current ath9k code in access point be able to provide higher
+throughput? The Linksys WUSB600N v2 is, according to multiple reviews,
+capable of much more (which is the reason why I bought it as a test client).
+
+On a side note, "rmmod cfg80211" causes a kernel BUG with subsequent network
+subsystem instability independently of the module version (upstream
+2.6.30.9, compat-wireless-2009-09-25 and 2009-10-09).
+
+best regards,
+Rene
+
 
