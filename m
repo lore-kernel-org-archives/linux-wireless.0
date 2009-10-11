@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:39367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754822AbZJIIGc (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.211.176]:47172 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753838AbZJKMce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Oct 2009 04:06:32 -0400
-Subject: Re: NULL pointer deref at wext ioctl (Re: [PATCH] compat-2.6:
- adding  ethtool.h to compat-2.6.31.h)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <43e72e890910081714u7e1d2168u98c0ccb74915c94c@mail.gmail.com>
-References: <3ace41890910071216y69b8bc9la67b8f0ce5890cd8@mail.gmail.com>
-	 <3ace41890910071228i786d4097w69dc7a3dfeb64afe@mail.gmail.com>
-	 <1254952886.3713.4.camel@johannes.local>
-	 <3ace41890910072328n1460ee34v1fe7ca9b78eb646f@mail.gmail.com>
-	 <1254995514.3713.22.camel@johannes.local>
-	 <1255002647.3713.25.camel@johannes.local>
-	 <43e72e890910080643h282c4bf1xf972f15f13eae755@mail.gmail.com>
-	 <3ace41890910081622k7c86453dm72e5584f4adbb763@mail.gmail.com>
-	 <43e72e890910081714u7e1d2168u98c0ccb74915c94c@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kDgxoEXYJENjLA3ptDOR"
-Date: Fri, 09 Oct 2009 10:05:19 +0200
-Message-Id: <1255075519.3713.34.camel@johannes.local>
-Mime-Version: 1.0
+	Sun, 11 Oct 2009 08:32:34 -0400
+Received: by ywh6 with SMTP id 6so7458032ywh.4
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 05:31:58 -0700 (PDT)
+Date: Sun, 11 Oct 2009 14:26:16 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091011122616.GA27105@linux-m68k.org>
+References: <20090621134954.GA31505@linux-m68k.org> <20090621180447.GA29469@hash.localnet> <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091010125824.GA18841@hash.localnet>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 10, 2009 at 08:58:24AM -0400, Bob Copeland wrote:
+> On Fri, Oct 09, 2009 at 04:39:22PM +0200, Richard Zidlicky wrote:
+> > -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+> > +       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
+> >         if (ret) {
+> >                 ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+> >                 goto err;
+> 
+> So, this change effectively just ensures we now program the pcu registers
+> at startup (every other time chan should not be null).  So my guess is
+> programming the pcu actually causes some problem.  Can you try this patch
+> instead?
 
---=-kDgxoEXYJENjLA3ptDOR
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+thanks, compiling it right now. Not quite sure - which version of this
+> > -       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, true);
+> > +       ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
 
-On Thu, 2009-10-08 at 20:14 -0400, Luis R. Rodriguez wrote:
+is it supposed to be tested with?
 
-> > There are some harmless warnings from using the old header, but
-> > otherwise it is working as it should:
-> >  CC [M]  /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.o
-> > /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c: In
-> > function =E2=80=98__cfg80211_connect_result=E2=80=99:
-> > /home/Hin-Tak/tmp-git/compat-wireless-2.6/net/wireless/sme.c:370:
-> > warning: passing argument 4 of =E2=80=98wireless_send_event=E2=80=99 di=
-scards
-> > qualifiers from pointer target type
-> > include/net/iw_handler.h:443: note: expected =E2=80=98char *=E2=80=99 b=
-ut argument is
-> > of type =E2=80=98const u8 *=E2=80=99
-
-> The last argument to wireless_send_event() was changed to be const on
-> 2.6.32, cant think of a way to avoid this warning.
-
-Yeah, it was never modified though so the warning is harmless.
-
-johannes
-
---=-kDgxoEXYJENjLA3ptDOR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJKzu68AAoJEODzc/N7+Qma6NAQAL0by46YCXc4pUqx84QM6WsF
-8zGNkqJ4TKIaej71brG/ZVzyvxTeHcAbVQDM1eDK4JV+3lI93wGfPG6Q0LPnSYcr
-Bx/2VYZOHswYITGU4d+S2WzCq+Eek3yFdm/DNSnbBtnvJVvtU1YFPQjLChQ+LivO
-FnXYt1WDZD3tDU1DNvsHtL3ePnd4qCAjXVO3R3i7KWM99RjstNSH/qbpv+AngoqG
-RKdJxQzl+s5PTVqucjB2ldMucLCWxRGO5H8ljc+pL6+VHYC8KMPtqCZ58x52mlwO
-AUXs9eE3PV6eYS6fD8th9RqDqBj+vg73xaf6tpyTMlJ59r40nKaBRBRpgq13s7B+
-caB4xskX3RO8Jo3UDemD3Ugc1dfUX6vCuClR+E527c0YoXg5eZFiQjQ0n+JryZ+y
-fExkIOEk1OJe71GByY/v4t760DpHCofyY+NpMy4z+D/h3wgMoSAYEjwVXhA+yNG5
-4ekRxDpQlnrHqrtFBQRkWhOj83EOtLE6tNwloutsfLAPu57C3LKIvl4+E/+7CQdd
-Oc4tQQ2uer5wPXykmfKlY4Br+20WqzGYfSpqxhTFf4rCCu1SVcSnHFPu+DHCJLzG
-hYm+l94oIvDL0iLx1CYQojAd3HNSVVKfjPpM7WJPLXwBlcsiCcd+BmvAdc3fupyk
-Ui1uxvjCb9fd7F/Io54t
-=r4rV
------END PGP SIGNATURE-----
-
---=-kDgxoEXYJENjLA3ptDOR--
-
+Richard
