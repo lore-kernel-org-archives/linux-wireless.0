@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:46036 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755899AbZJ0QSH (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:56273 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587AbZJKKUF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 12:18:07 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so75711eyd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Oct 2009 09:18:10 -0700 (PDT)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] mac80211: fix dynamic power save for devices with nullfunc support in hw
-References: <20091027153608.27827.70629.stgit@tikku>
-	<20091027153616.27827.46490.stgit@tikku>
-	<1256659688.4237.21.camel@johannes.local>
-From: Kalle Valo <kalle.valo@iki.fi>
-Date: Tue, 27 Oct 2009 18:18:08 +0200
-In-Reply-To: <1256659688.4237.21.camel@johannes.local> (Johannes Berg's message of "Tue\, 27 Oct 2009 17\:08\:08 +0100")
-Message-ID: <87zl7cg69r.fsf@purkki.valot.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 11 Oct 2009 06:20:05 -0400
+Subject: [PATCH] b43: fix ieee80211_rx() context
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: David Miller <davem@davemloft.net>, Kalle Valo <kalle.valo@iki.fi>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 11 Oct 2009 12:19:21 +0200
+Message-Id: <1255256361.4095.56.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Due to the way it interacts with the networking
+stack and other parts of mac80211, ieee80211_rx()
+must be called with disabled softirqs.
 
-> On Tue, 2009-10-27 at 17:36 +0200, Kalle Valo wrote:
->> From: Kalle Valo <kalle.valo@nokia.com>
->> 
->> In TX path it was assumed that dynamic power save works only if
->> IEEE80211_HW_PS_NULLFUNC_STACK is set. But is not the case, there are
->> devices which have nullfunc support in hardware but need mac80211
->> to handle dynamic power save timers, TI's wl1251 is one of them.
->> 
->> The fix is to not check for IEEE80211_HW_PS_NULLFUNC_STACK in
->> is_dynamic_ps_enabled(), instead check IEEE80211_HW_SUPPORTS_PS and
->> IEEE80211_HW_SUPPORTS_DYNAMIC_PS flags and act accordingly.
->> 
->> Tested with wl1251.
->> 
->> Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
->
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Michael, the former maintainer of this driver,
+has refused to fix the problem this way instead
+proposing a much more invasive patch that could
+not even be proved correct wrt. locking inside
+mac80211. Regardless of that, he believes this
+to be a bug in mac80211, and has also publicly
+stated [1] that he does not care about this even
+though it is a regression introduced by his own
+patches.
 
-Thanks!
+Since nobody else seems to be wanting to fix the
+problem, I'll just fix it for the benefit of the
+many users of this driver.
 
-For the record, I sent v1 back in August:
+[1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440/focus=40266
 
-http://www.spinics.net/lists/linux-wireless/msg37717.html
+Reported-by: Dave Young <hidave.darkstar@gmail.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/b43/xmit.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Better late than ever :)
+--- wireless-testing.orig/drivers/net/wireless/b43/xmit.c	2009-10-11 12:11:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/b43/xmit.c	2009-10-11 12:12:06.000000000 +0200
+@@ -690,7 +690,10 @@ void b43_rx(struct b43_wldev *dev, struc
+ 	}
+ 
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++
++	local_bh_disable();
+ 	ieee80211_rx(dev->wl->hw, skb);
++	local_bh_enable();
+ 
+ #if B43_DEBUG
+ 	dev->rx_count++;
 
--- 
-Kalle Valo
+
