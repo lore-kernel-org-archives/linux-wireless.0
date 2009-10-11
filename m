@@ -1,134 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28147 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbZJPVZ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 17:25:57 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 02/10] iwlwifi: show current power save status reported by uCode
-Date: Fri, 16 Oct 2009 14:25:50 -0700
-Message-Id: <1255728358-29976-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
-References: <1255728358-29976-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:60594 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755079AbZJKK4T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Oct 2009 06:56:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <1255255735.4095.53.camel@johannes.local>
+References: <20091011095217.GA2200@darkstar>
+	 <1255255735.4095.53.camel@johannes.local>
+Date: Sun, 11 Oct 2009 18:55:41 +0800
+Message-ID: <a8e1da0910110355xd47767djaabb653e46a12efc@mail.gmail.com>
+Subject: Re: NOHZ: local_softirq_pending 08
+From: Dave Young <hidave.darkstar@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Sun, Oct 11, 2009 at 6:08 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2009-10-11 at 17:52 +0800, Dave Young wrote:
+>
+>> With kernel 2.6.32-rc3-00052-g0eca52a I got following KERN_ERR
+>> messages just while using firefox:
+>>
+>> [  130.527399] NOHZ: local_softirq_pending 08
+>
+>> Any idea? or known issue?
+>
+> Are you using b43 (or wl12x1)? If so, it's a known issue, but the driver
+> was recently left without an active maintainer in a brouhaha about a bug
+> fix.
 
-Power save request is sent from driver to uCode, but there is no
-indication from uCode about the current device power save state.
+Yes, I'm using b43. I will test the patch you posted in another thread.
 
-Reading GP_CNTRL register bit 25:24 to show the current power save
-status
+>
+> Cf. http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440
+>
+> Absent proof that mac80211 is safe to run with BHs enabled, the correct
+> solution is disabling tasklets around the RX function, unlike all the
+> proposed patches. However, Michael thinks it's such a bad solution that
+> he has refused to implement it. So far, nobody has bothered to fix the
+> drivers.
+>
+> FWIW, I believe the bug to be in b43 and wl12x1, and not as Michael
+> thinks in the stack.
+>
+> johannes
+>
+>
 
-00: no power save
-01: MAC power down
-10: PHY power down
-11: Error
 
-The uCode could switch in and out of power save mode in the order of
-once per 100-300 ms in many cases. The reading here should just be used for
-reference on the current uCode power save status. Do not confuse this
-reading with the PowerSave set by driver and mac80211.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-csr.h     |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-debug.h   |    1 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   26 ++++++++++++++++++++++++++
- 3 files changed, 32 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 8f183e0..401e1e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -235,6 +235,11 @@
- #define CSR_OTP_GP_REG_OTP_ACCESS_MODE	(0x00020000) /* 0 - absolute, 1 - relative */
- #define CSR_OTP_GP_REG_ECC_CORR_STATUS_MSK          (0x00100000) /* bit 20 */
- #define CSR_OTP_GP_REG_ECC_UNCORR_STATUS_MSK        (0x00200000) /* bit 21 */
-+#define CSR_GP_REG_POWER_SAVE_STATUS_MSK            (0x03000000) /* bit 24/25 */
-+#define CSR_GP_REG_NO_POWER_SAVE            (0x00000000)
-+#define CSR_GP_REG_MAC_POWER_SAVE           (0x01000000)
-+#define CSR_GP_REG_PHY_POWER_SAVE           (0x02000000)
-+#define CSR_GP_REG_POWER_SAVE_ERROR         (0x03000000)
- 
- /* EEPROM signature */
- #define CSR_EEPROM_GP_BAD_SIGNATURE_BOTH_EEP_AND_OTP	(0x00000000)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index b9ca475..96c92ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -106,6 +106,7 @@ struct iwl_debugfs {
- 		struct dentry *file_sensitivity;
- 		struct dentry *file_chain_noise;
- 		struct dentry *file_tx_power;
-+		struct dentry *file_power_save_status;
- 	} dbgfs_debug_files;
- 	u32 sram_offset;
- 	u32 sram_len;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 2cd11ba..e78cd26 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1802,6 +1802,29 @@ static ssize_t iwl_dbgfs_tx_power_read(struct file *file,
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
- 
-+static ssize_t iwl_dbgfs_power_save_status_read(struct file *file,
-+						    char __user *user_buf,
-+						    size_t count, loff_t *ppos)
-+{
-+	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	char buf[60];
-+	int pos = 0;
-+	const size_t bufsz = sizeof(buf);
-+	u32 pwrsave_status;
-+
-+	pwrsave_status = iwl_read32(priv, CSR_GP_CNTRL) &
-+			CSR_GP_REG_POWER_SAVE_STATUS_MSK;
-+
-+	pos += scnprintf(buf + pos, bufsz - pos, "Power Save Status: ");
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s\n",
-+		(pwrsave_status == CSR_GP_REG_NO_POWER_SAVE) ? "none" :
-+		(pwrsave_status == CSR_GP_REG_MAC_POWER_SAVE) ? "MAC" :
-+		(pwrsave_status == CSR_GP_REG_PHY_POWER_SAVE) ? "PHY" :
-+		"error");
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+}
-+
- DEBUGFS_READ_WRITE_FILE_OPS(rx_statistics);
- DEBUGFS_READ_WRITE_FILE_OPS(tx_statistics);
- DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
-@@ -1813,6 +1836,7 @@ DEBUGFS_READ_FILE_OPS(ucode_general_stats);
- DEBUGFS_READ_FILE_OPS(sensitivity);
- DEBUGFS_READ_FILE_OPS(chain_noise);
- DEBUGFS_READ_FILE_OPS(tx_power);
-+DEBUGFS_READ_FILE_OPS(power_save_status);
- 
- /*
-  * Create the debugfs files and directories
-@@ -1860,6 +1884,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_FILE(rx_queue, debug);
- 	DEBUGFS_ADD_FILE(tx_queue, debug);
- 	DEBUGFS_ADD_FILE(tx_power, debug);
-+	DEBUGFS_ADD_FILE(power_save_status, debug);
- 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
- 		DEBUGFS_ADD_FILE(ucode_rx_stats, debug);
- 		DEBUGFS_ADD_FILE(ucode_tx_stats, debug);
-@@ -1912,6 +1937,7 @@ void iwl_dbgfs_unregister(struct iwl_priv *priv)
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_rx_queue);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_tx_queue);
- 	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_tx_power);
-+	DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.file_power_save_status);
- 	if ((priv->hw_rev & CSR_HW_REV_TYPE_MSK) != CSR_HW_REV_TYPE_3945) {
- 		DEBUGFS_REMOVE(priv->dbgfs->dbgfs_debug_files.
- 			file_ucode_rx_stats);
 -- 
-1.5.6.3
-
+Regards
+dave
