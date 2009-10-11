@@ -1,98 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:52224 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbZJZM7p (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:53411 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757603AbZJKLyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 08:59:45 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Questions about cfg80211's cfg80211_connect_params->crypto settings
-Date: Mon, 26 Oct 2009 13:59:13 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <200910260947.48365.hs4233@mail.mn-solutions.de> <200910261311.47164.hs4233@mail.mn-solutions.de> <1256559734.28230.23.camel@johannes.local>
-In-Reply-To: <1256559734.28230.23.camel@johannes.local>
+	Sun, 11 Oct 2009 07:54:31 -0400
+Received: by ewy4 with SMTP id 4so1780221ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 04:53:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910261359.13658.hs4233@mail.mn-solutions.de>
+In-Reply-To: <20091011.033907.35699436.davem@davemloft.net>
+References: <1255256361.4095.56.camel@johannes.local>
+	 <20091011.033907.35699436.davem@davemloft.net>
+Date: Sun, 11 Oct 2009 19:53:54 +0800
+Message-ID: <a8e1da0910110453t144973cfmd0fb61120a9e497b@mail.gmail.com>
+Subject: Re: [PATCH] b43: fix ieee80211_rx() context
+From: Dave Young <hidave.darkstar@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	kalle.valo@iki.fi, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > inside .connect() if I check sme->crypto.cipher_suite for
-> > 
-> >   WLAN_CIPHER_SUITE_WEP40
-> >   WLAN_CIPHER_SUITE_WEP104
-> >   WLAN_CIPHER_SUITE_TKIP
-> >   WLAN_CIPHER_SUITE_CCMP
-> >   0  (meaning no encryption/WEP obfuscation)
-> 
-> But why would you look at that? It sounds like you want 
-sme->privacy to
-> know whether to select an AP that advertises privacy or not?
+On Sun, Oct 11, 2009 at 6:39 PM, David Miller <davem@davemloft.net> wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Sun, 11 Oct 2009 12:19:21 +0200
+>
+>> Due to the way it interacts with the networking
+>> stack and other parts of mac80211, ieee80211_rx()
+>> must be called with disabled softirqs.
+>>
+>> Michael, the former maintainer of this driver,
+>> has refused to fix the problem this way instead
+>> proposing a much more invasive patch that could
+>> not even be proved correct wrt. locking inside
+>> mac80211. Regardless of that, he believes this
+>> to be a bug in mac80211, and has also publicly
+>> stated [1] that he does not care about this even
+>> though it is a regression introduced by his own
+>> patches.
+>>
+>> Since nobody else seems to be wanting to fix the
+>> problem, I'll just fix it for the benefit of the
+>> many users of this driver.
+>>
+>> [1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440/focus=40266
+>>
+>> Reported-by: Dave Young <hidave.darkstar@gmail.com>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> Acked-by: David S. Miller <davem@davemloft.net>
+>
 
-Libertas' firmware doesn't have a capability of to "select an AP
-that advertises privacy". So in practice it's wpa_supplicant that 
-selects this, because pure iw/cfg80211 can't select an AP for 
-me.
-
-My connect method does this:
-
-lbs_cfg_connect:
-    if (sme->bssid set)  {
-        # I need a full cfg80211_bss entry, because I can only
-        # associate to a specific bss via CMD_802_11_ASSOCIATE
-	# and I need
-	#   bss->capability
-	#   bss->bssid
-	#   bss->get_ie(WLAN_EID_SSID)
-	#   bss->channel
-	#   bss->rates
-        bss = cfg80211_get_bss()
-    } else {
-        error_out
-    }
-
-    clear_local_wep_key_copy
-    switch (sme->cryto.cipher_group) {
-    case WEP40, WEP104:
-        store_key_keyidx_locally
-        set_wep_keys
-        enable_wep_in_lbs_mac
-        disable_rsn
-        break;
-    case no_encryption:
-    case WPA, WPA2:
-        remove_wep_keys
-        disable_wep_in_lbs_mac
-        clear_wpa_wpa2_unicast_multicast_key
-        unless no_encryption:
-           enable_rsn
-    }
-    build_and_submit_set_authtype_command_for_the_firmware
-    build_and_submit_associate_command_for_the_firmware
-        
-
-You see, nowhere do I actually need sme->privacy, all info is in 
-sme->crypto.cipher_group.
-
-
-However, this current setup makes "iw abc connect SSID" 
-non-working with libertas. It would work with libertas if I 
-would use the .auth/.assoc API, because then net/wireless/sme.c 
-would scan for me. But in the .connect API case, it doesn't do 
-this.
-
-But information I get in the .connect() call aren't sufficuent 
-for the Libertas firmware interface, I need more data, which I 
-can get from a cfg80211_bss entry.
-
-One possiblity is that net/wireless/sme.c get's more general and 
-does scan in the .connect() case, too.
-
-Or I could substitute the "error_out" with a local scan, and then 
-select the "best" AP from the bss list. I fear however that such 
-a selection function might already be somewhere inside 
-net/wireless/*.c, I'll need to search for that.
+Tested-by: Dave Young <hidave.darkstar@gmail.com>
 
 -- 
-http://www.holgerschurig.de
+Regards
+dave
