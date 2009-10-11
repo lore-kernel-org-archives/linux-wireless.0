@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34434 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754049AbZJLHQf (ORCPT
+Received: from xc.sipsolutions.net ([83.246.72.84]:33096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760633AbZJKLll (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 03:16:35 -0400
-Date: Mon, 12 Oct 2009 10:15:50 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	hostap@lists.shmoo.com
-Subject: Re: BUG? I can reproduce "Association request to the driver
-	failed" at will
-Message-ID: <20091012071550.GD25578@jm.kir.nu>
-References: <200909211309.40476.hs4233@mail.mn-solutions.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <200909211309.40476.hs4233@mail.mn-solutions.de>
+	Sun, 11 Oct 2009 07:41:41 -0400
+Subject: Re: NOHZ: local_softirq_pending 08
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tilman Schmidt <t.schmidt@phoenixsoftware.de>
+Cc: Dave Young <hidave.darkstar@gmail.com>,
+	linux-kernel@vger.kernel.org, tglx@linutronix.de,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+In-Reply-To: <4AD1BF06.3050103@phoenixsoftware.de>
+References: <20091011095217.GA2200@darkstar>
+	 <1255255735.4095.53.camel@johannes.local>
+	 <4AD1BF06.3050103@phoenixsoftware.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-x1esR/MCyQ1Jo0nOU/DC"
+Date: Sun, 11 Oct 2009 13:40:51 +0200
+Message-Id: <1255261251.4095.143.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 21, 2009 at 01:09:40PM +0200, Holger Schurig wrote:
-> The following is an indication about yet another MLME problem:
-> 
-> Two APs, both set to the MNHS/WPA.
-> 
-> Let wpa_supplicant associate. Turn one AP off. wpa_supplicant
-> automatically associates to the second.
 
-Though, even in this case, there is actually a bug somewhere (in
-mac80211, I would assume).. The authentication attempt with the second
-AP times out because mac80211 ends up sending the direct probes to the
-MAC address of the old AP (which is now turned off). When wpa_supplicant
-tries to authenticate again, the direct probes are going to the correct
-destination and connection can be established.
+--=-x1esR/MCyQ1Jo0nOU/DC
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Now turn the first AP on again. Issue a manual scan command:
+On Sun, 2009-10-11 at 13:18 +0200, Tilman Schmidt wrote:
 
-..
+> Can you explain a bit more what that message is about?
+> I am encountering it in a completely different context
+> (PPP over ISDN) and I would like to know where to start
+> looking for the cause and developing a fix. The thread
+> on linux.kernel.wireless.general only seems to address
+> the specific situation in the wireless stack.
 
-> 1253527140.953161: nl80211: Event message available
-> 1253527140.953200: nl80211: MLME event 37
-> 1253527140.953216: SME: Authentication response: peer=00:13:19:80:da:30 auth_type=0 status_code=0
-> 1253527140.953243: Trying to associate with 00:13:19:80:da:30 (SSID='MNWPA' freq=2412 MHz)
-> 1253527140.953257: State: AUTHENTICATING -> ASSOCIATING
-> 1253527140.953270: wpa_driver_nl80211_set_operstate: operstate 1->0 (DORMANT)
-> 1253527140.953284: nl80211: Operstate: linkmode=-1, operstate=5
-> 1253527140.953901: nl80211: Associate (ifindex=34)
-> 1253527140.953919:   * bssid=00:13:19:80:da:30
-> 1253527140.953934:   * freq=2412
-> 1253527140.953945:   * SSID - hexdump_ascii(len=5):
->      4d 4e 57 50 41                                    MNWPA
-> 1253527140.953977:   * IEs - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
-> 1253527140.954064: nl80211: MLME command failed: ret=-114 (Operation already in progress)
-> 1253527140.954086: Association request to the driver failed
+Basically, calling netif_rx() with softirqs enabled.
 
-I can reproduce this with the current wpa_supplicant (that has a
-workaround for this EALREADY for authentication case, but not for
-assoc) and the current wireless-testing. Roaming will get mac80211 into
-very odd state..
+johannes
 
-Not only is this association failing (after the authentication with the
-same AP actually worked), but the scanning state will also get quite
-confused.. The next scan trigger after this is never completed (iw scan
-gets stuck). Or well, actually, once I wait long enough for the AP to
-deauthenticate the client, it looks like mac80211 can recover. The scan
-command returned after five minutes of waiting.. ;-)
+--=-x1esR/MCyQ1Jo0nOU/DC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-> The "Association request to the driver failed" will
-> be shown even without "-d". Also note that the association
-> seems to actually work, e.g. I can ping throught the
-> connection.
+-----BEGIN PGP SIGNATURE-----
 
-mac80211 remains associated with the old AP (I think) and somehow
-remains in the state between authentication and association (with the
-new AP) which will block scans.
+iQIcBAABAgAGBQJK0cRAAAoJEODzc/N7+QmaOEgQAKay17lYOfLkKKBXpej1nva4
+i/XvNBAtRDwmOBVG/qG/2MLGMi6mJXdUMya1oJv8JbVAprzNkIMaeXgnDDNKVAsm
+szqT3e9rd//NrUSMc2c11DugOzvIncuzC6TbwJX7r574IT/6rw/YRxAW6+4s881N
+t3zP2soCwpez8BqNv9yqrNuPc8oU28lVzqhfNE0+76Bc277wE50g52pa0fyF+buw
+dpVVGWWpxcwgRZHxLkHK9ivm6RBjieisxqnVAw6kASb2bVuCgucKNSEwnT4ze+4G
+aVTVYNAaAYBsg4p9cg8knFei0+fEabiw8agOd8y8oKzGrVhFqapVgB5MP64M1VNa
+O79lhv6kk66usqnYro+lrAxVT1hJ0O1mIPQRpDz5HrdkgSxU4gV+tlprA4DSYePo
+/XJ1HBlO5bhG8kU8QQ/3YxWYvnfvMJgiSc8fIu8EwW2DBJ5Q8nvhxa/DrHry2zqK
+xt53Ay5LNJat9yFHistRlEOMNDZi6FsvcrhD91/vRY9f1xYcDjlB+e/l5ro6MraX
+HoqSTsRkVAtnGVIhmr5VDu3L/GivE4YQ6wzc0umh/USyAN0lHzOVBavpTCCqpmEv
+RXvpSie2HaMoz9jtd1935DNg9zVlQbFYiz8VydsKu+2yvExEy/3/iNs059mWen8e
+T9EARp4mnhCUqlxj5za/
+=jhS/
+-----END PGP SIGNATURE-----
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--=-x1esR/MCyQ1Jo0nOU/DC--
+
