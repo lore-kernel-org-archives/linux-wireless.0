@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42240
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754613AbZJ2OTh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:19:37 -0400
-Date: Thu, 29 Oct 2009 07:20:01 -0700 (PDT)
-Message-Id: <20091029.072001.153801635.davem@davemloft.net>
-To: bzolnier@gmail.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <200910291513.54326.bzolnier@gmail.com>
-References: <200910291435.54203.bzolnier@gmail.com>
-	<20091029.065336.119302168.davem@davemloft.net>
-	<200910291513.54326.bzolnier@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bu3sch.de ([62.75.166.246]:46927 "EHLO vs166246.vserver.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756927AbZJKK11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Oct 2009 06:27:27 -0400
+From: Michael Buesch <mb@bu3sch.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: fix ieee80211_rx() context
+Date: Sun, 11 Oct 2009 12:26:42 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1255256361.4095.56.camel@johannes.local>
+In-Reply-To: <1255256361.4095.56.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <200910111226.44778.mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 29 Oct 2009 15:13:54 +0100
+On Sunday 11 October 2009 12:19:21 Johannes Berg wrote:
+> Due to the way it interacts with the networking
+> stack and other parts of mac80211, ieee80211_rx()
+> must be called with disabled softirqs.
 
-> John has chosen to ignore my concerns and you are sending me back to him?
+Is this stated in the documentation somewhere?
 
-That's exactly why I won't overreach his maintainership role,
-because you're inability to interact with and work with the
-wireless maintainer isn't my problem.
+> Michael, the former maintainer of this driver,
+> has refused to fix the problem this way instead
+> proposing a much more invasive patch that could
+> not even be proved correct wrt. locking inside
+> mac80211. Regardless of that, he believes this
+> to be a bug in mac80211, and has also publicly
+> stated [1] that he does not care about this even
+> though it is a regression introduced by his own
+> patches.
 
-In case you're concerned, I actually agree with John and others
-on this issue, and disagree with your position.
+What if we leave slander out of the commit messages?
 
-So even if I felt it legitimate to overreach John, I still wouldn't
-make the change you are requesting in this case.
+> Since nobody else seems to be wanting to fix the
+> problem, I'll just fix it for the benefit of the
+> many users of this driver.
+> 
+> [1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/39440/focus=40266
+> 
+> Reported-by: Dave Young <hidave.darkstar@gmail.com>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  drivers/net/wireless/b43/xmit.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> --- wireless-testing.orig/drivers/net/wireless/b43/xmit.c	2009-10-11 12:11:50.000000000 +0200
+> +++ wireless-testing/drivers/net/wireless/b43/xmit.c	2009-10-11 12:12:06.000000000 +0200
+> @@ -690,7 +690,10 @@ void b43_rx(struct b43_wldev *dev, struc
+>  	}
+>  
+>  	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
+> +
+> +	local_bh_disable();
+>  	ieee80211_rx(dev->wl->hw, skb);
+> +	local_bh_enable();
+>  
+>  #if B43_DEBUG
+>  	dev->rx_count++;
 
-Does it really eat you so hard when someone disagrees with you?
 
-That's not going to work in the long term Bart, if John disagrees with
-you he's the maintainer of wireless and that's it.  You're going to
-have to learn to work with people, and not just automatically go to a
-"higher power" as soon as someone disagrees with you.
+
+-- 
+Greetings, Michael.
