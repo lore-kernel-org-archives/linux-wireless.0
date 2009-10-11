@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24332 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751604AbZJWUmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:33 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 00/18] iwlwifi updates 10/23/2009
-Date: Fri, 23 Oct 2009 13:42:18 -0700
-Message-Id: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:55508 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754286AbZJKNLU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Oct 2009 09:11:20 -0400
+Subject: [PATCH] mac80211: document ieee80211_rx() context requirement
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 11 Oct 2009 15:10:40 +0200
+Message-Id: <1255266640.4095.235.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series includes the cleanup patch promised after feedback on "iwlwifi:
-rework for static power save" from previous series.
+ieee80211_rx() must be called with softirqs disabled
+since the networking stack requires this for netif_rx()
+and some code in mac80211 can assume that it can not
+be processing its own tasklet and this call at the same
+time.
 
-Ben M Cahill (2):
-  iwlwifi: consolidate apm_init() functions
-  iwlwifi: make sure device is reset when unloading driver
+It may be possible to remove this requirement after a
+careful audit of mac80211 and doing any needed locking
+improvements in it along with disabling softirqs around
+netif_rx(). An alternative might be to push all packet
+processing to process context in mac80211, instead of
+to the tasklet, and add other synchronisation.
 
-Jay Sternberg (1):
-  iwlwifi: add missing commands to syslog messages
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ include/net/mac80211.h |    2 ++
+ net/mac80211/rx.c      |    2 ++
+ 2 files changed, 4 insertions(+)
 
-Reinette Chatre (1):
-  iwlwifi: remove duplicate defines
+--- wireless-testing.orig/include/net/mac80211.h	2009-10-11 12:19:54.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2009-10-11 12:20:41.000000000 +0200
+@@ -1669,6 +1669,8 @@ void ieee80211_restart_hw(struct ieee802
+  * to this function and ieee80211_rx_irqsafe() may not be mixed for a
+  * single hardware.
+  *
++ * Note that right now, this function must be called with softirqs disabled.
++ *
+  * @hw: the hardware this frame came in on
+  * @skb: the buffer to receive, owned by mac80211 after this call
+  */
+--- wireless-testing.orig/net/mac80211/rx.c	2009-10-11 12:24:39.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2009-10-11 12:38:22.000000000 +0200
+@@ -2453,6 +2453,8 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 
++	WARN_ON_ONCE(softirq_count() == 0);
++
+ 	if (WARN_ON(status->band < 0 ||
+ 		    status->band >= IEEE80211_NUM_BANDS))
+ 		goto drop;
 
-Wey-Yi Guy (12):
-  iwlwifi: fix gain computation for 5000 series and up
-  iwlwifi: separate led function from statistic notification
-  iwlwifi: update bt co-exit configuration parameter
-  iwlwifi: specify the valid tx/rx chain in device config structure
-  iwlwifi: increase max tfd payload size
-  iwlwifi: choose thermal throttle method based on device config
-  iwlwifi: issue ct_kill host command based on device config
-  iwlwifi: add channel switch support to 5000 series and up
-  iwlwifi: remove unused parameters
-  iwlwifi: remove duplicated define
-  iwlwifi: update lowest API version support for 6x00 & 6x50 series
-  iwlwifi: minor comments changes for wimax co-exist command
-
-Zhu Yi (2):
-  iwlwifi: fix use after free bug for paged rx
-  iwlwifi: reuse page for notification packets
-
- drivers/net/wireless/iwlwifi/iwl-1000.c     |   12 ++-
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h  |    6 -
- drivers/net/wireless/iwlwifi/iwl-3945.c     |   79 +++-----------
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    8 --
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   78 +++-----------
- drivers/net/wireless/iwlwifi/iwl-5000.c     |  120 ++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-6000.c     |   98 +++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   49 ++++++---
- drivers/net/wireless/iwlwifi/iwl-commands.h |   16 +++-
- drivers/net/wireless/iwlwifi/iwl-core.c     |  150 ++++++++++++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-core.h     |   13 ++-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   18 ++--
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 +
- drivers/net/wireless/iwlwifi/iwl-power.c    |   12 +--
- drivers/net/wireless/iwlwifi/iwl-power.h    |    2 -
- drivers/net/wireless/iwlwifi/iwl-rx.c       |   24 +++--
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    9 +--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   54 +++++++---
- 18 files changed, 446 insertions(+), 304 deletions(-)
 
