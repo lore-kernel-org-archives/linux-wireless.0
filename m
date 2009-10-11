@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpm-eml101.kpnxchange.com ([195.121.3.5]:63274 "EHLO
-	CPSMTPM-EML101.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751585AbZJENBd (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42254
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755674AbZJKB7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Oct 2009 09:01:33 -0400
-From: Frans Pop <elendil@planet.nl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [.32-rc3] scheduler: iwlagn consistently high in "waiting for CPU"
-Date: Mon, 5 Oct 2009 15:00:54 +0200
-Cc: Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910051500.55875.elendil@planet.nl>
+	Sat, 10 Oct 2009 21:59:41 -0400
+Date: Sat, 10 Oct 2009 18:59:37 -0700 (PDT)
+Message-Id: <20091010.185937.01963904.davem@davemloft.net>
+To: tomasw@gmail.com
+Cc: marcel@holtmann.org, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, yi.zhu@intel.com,
+	inaky.perez-gonzalez@intel.com, cindy.h.kao@intel.com,
+	guy.cohen@intel.com, ron.rindjunsky@intel.com
+Subject: Re: [PATCH 1/3] iwmc3200top: Add Intel Wireless MultiCom 3200 top
+ driver.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1ba2fa240910101105y77171591j32e6759f28556566@mail.gmail.com>
+References: <1253662724-16497-2-git-send-email-tomas.winkler@intel.com>
+	<1255172508.19127.22.camel@localhost.localdomain>
+	<1ba2fa240910101105y77171591j32e6759f28556566@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With .32-rc3 I'm getting occasional skips from amarok while playing music 
-from an NFS share (3 today so far), something I've not had in a long time.
 
-The reason looks to be that latencytop consistently shows 'iwlagn' as the 
-top affected process with "Scheduler: waiting for CPU".
-Values of 100-140 ms occur frequently, but I've also seen higher values 
-(180, 207). I don't remember seeing iwlagn high in the list before, but I 
-have not checked earlier kernels yet.
+PLEASE!
 
-Added to that 'phy0' also frequently shows high with values of 25-75 ms.
+Don't quote all of a big huge driver patch like that.  Just quote the
+parts you want to comment on!
 
-The system is otherwise essentially idle. Other processes typically show a 
-latency < 5 ms.
-
-System: HP 2510p notebook, x86_64, Core2 Duo, Debian stable
-
-Cheers,
-FJP
+Thank you.
