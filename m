@@ -1,50 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35350 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758405AbZJGApL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 20:45:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 6/7] ath5k: fix regression which triggers an SME join upon assoc
-Date: Tue,  6 Oct 2009 20:44:33 -0400
-Message-Id: <1254876274-1145-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
-References: <1254876274-1145-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:60117 "EHLO ds10.mine.nu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756005AbZJKDm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Oct 2009 23:42:28 -0400
+Message-ID: <4AD14F26.6030304@openwrt.org>
+Date: Sun, 11 Oct 2009 05:21:10 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix logic error ibss merge bssid check
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a regression introduced by patch titled:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-"atheros: define shared bssidmask setting"
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -544,7 +544,7 @@ static void ieee80211_sta_find_ibss(stru
+ 		       "%pM\n", bss->cbss.bssid, ifibss->bssid);
+ #endif /* CONFIG_MAC80211_IBSS_DEBUG */
 
-The register for the BSSID was exchanged for the bssid mask register.
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 2ab9c0e..64fc1eb 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -295,11 +295,11 @@ void ath5k_hw_set_associd(struct ath5k_hw *ah)
- 	 */
- 	ath5k_hw_reg_write(ah,
- 			   get_unaligned_le32(common->curbssid),
--			   AR_BSSMSKL);
-+			   AR5K_BSS_ID0);
- 	ath5k_hw_reg_write(ah,
- 			   get_unaligned_le16(common->curbssid + 4) |
- 			   ((common->curaid & 0x3fff) << AR5K_BSS_ID1_AID_S),
--			   AR_BSSMSKU);
-+			   AR5K_BSS_ID1);
- 
- 	if (common->curaid == 0) {
- 		ath5k_hw_disable_pspoll(ah);
--- 
-1.6.0.4
-
+-	if (bss && memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
++	if (bss && !memcmp(ifibss->bssid, bss->cbss.bssid, ETH_ALEN)) {
+ 		printk(KERN_DEBUG "%s: Selected IBSS BSSID %pM"
+ 		       " based on configured SSID\n",
+ 		       sdata->dev->name, bss->cbss.bssid);
