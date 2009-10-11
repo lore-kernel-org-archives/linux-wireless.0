@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40961
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751186AbZJTEyf (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:51560 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbZJKP7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 00:54:35 -0400
-Date: Mon, 19 Oct 2009 21:54:57 -0700 (PDT)
-Message-Id: <20091019.215457.43252934.davem@davemloft.net>
-To: tomas.winkler@intel.com
-Cc: linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	yi.zhu@intel.com, inaky.perez-gonzalez@intel.com,
-	cindy.h.kao@intel.com, guy.cohen@intel.com,
-	ron.rindjunsky@intel.com
-Subject: Re: [PATCH net-next V2 1/3] iwmc3200top: Add Intel Wireless
- MultiCom 3200 top driver.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-References: <1255806576-26869-1-git-send-email-tomas.winkler@intel.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 11 Oct 2009 11:59:42 -0400
+Received: by ewy4 with SMTP id 4so1878027ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 08:59:05 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: fix ieee80211_rx() context
+References: <1255256361.4095.56.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 11 Oct 2009 18:59:03 +0300
+In-Reply-To: <1255256361.4095.56.camel@johannes.local> (Johannes Berg's message of "Sun\, 11 Oct 2009 12\:19\:21 +0200")
+Message-ID: <873a5pq5vc.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
-Date: Sat, 17 Oct 2009 21:09:34 +0200
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-> This patch adds Intel Wireless MultiCom 3200 top driver.
-> IWMC3200 is 4Wireless Com CHIP (GPS/BT/WiFi/WiMAX).
-> Top driver is responsible for device initialization and firmware download.
-> Firmware handled by top is responsible for top itself and
-> as well as bluetooth and GPS coms. (Wifi and WiMax provide their own firmware)
-> In addition top driver is used to retrieve firmware logs
-> and supports other debugging features
-> 
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> Due to the way it interacts with the networking
+> stack and other parts of mac80211, ieee80211_rx()
+> must be called with disabled softirqs.
 
-Applied to net-next-2.6
+[...]
+
+> +	local_bh_disable();
+>  	ieee80211_rx(dev->wl->hw, skb);
+> +	local_bh_enable();
+
+This is a bit awkward from drivers' point of view, we have to add the
+same code to all mac80211 drivers using either SPI or SDIO buses.
+
+What about adding a new inline function ieee80211_rx_ni() which would
+disable bottom halves like above and call ieee80211_rx()? IMHO that's
+easier for the driver developers to understand and also easier to
+document ("use this function when calling from process context"). If
+this is acceptable, I can create a patch.
+
+-- 
+Kalle Valo
