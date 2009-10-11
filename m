@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:52346 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932435AbZJHOzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 10:55:43 -0400
-Subject: Re: [.32-rc3] scheduler: iwlagn consistently high in "waiting for
- CPU"
-From: Mike Galbraith <efault@gmx.de>
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Frans Pop <elendil@planet.nl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Peter Zijlstra <peterz@infradead.org>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1255011186.7294.1.camel@marge.simson.net>
-References: <200910051500.55875.elendil@planet.nl>
-	 <200910061749.02805.elendil@planet.nl>
-	 <200910071910.53907.elendil@planet.nl>
-	 <200910072034.57511.elendil@planet.nl>
-	 <1254974743.7797.21.camel@marge.simson.net>
-	 <20091008064041.67219b13@infradead.org>
-	 <1255011186.7294.1.camel@marge.simson.net>
-Content-Type: text/plain
-Date: Thu, 08 Oct 2009 16:54:54 +0200
-Message-Id: <1255013694.7309.7.camel@marge.simson.net>
-Mime-Version: 1.0
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:58092 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbZJKQJh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Oct 2009 12:09:37 -0400
+Received: by ewy4 with SMTP id 4so1882330ewy.37
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 09:09:00 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: fix ieee80211_rx() context
+References: <1255256361.4095.56.camel@johannes.local>
+	<873a5pq5vc.fsf@purkki.valot.fi>
+	<1255276971.4095.241.camel@johannes.local>
+From: Kalle Valo <kalle.valo@iki.fi>
+Date: Sun, 11 Oct 2009 19:08:58 +0300
+In-Reply-To: <1255276971.4095.241.camel@johannes.local> (Johannes Berg's message of "Sun\, 11 Oct 2009 18\:02\:51 +0200")
+Message-ID: <87y6nhoqud.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2009-10-08 at 16:13 +0200, Mike Galbraith wrote:
-> On Thu, 2009-10-08 at 06:40 -0700, Arjan van de Ven wrote:
-> > On Thu, 08 Oct 2009 06:05:43 +0200
-> > Mike Galbraith <efault@gmx.de> wrote:
-> 
-> > > OK, I see latencytop spikes here on an idle box too, to the tune of up
-> > > to a _second_.  Booting with nohz=off seems to have cured it.
-> > 
-> > interesting..
-> > 
-> > 
-> > by chance, does this patch fix it ?
-> 
-> I haven't seen incredible yet, but with idle box, have seen > 200ms, so
-> would say no.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-But this dinky hunk of my patchlet does indeed still fix it right up.
+>> > +	local_bh_disable();
+>> >  	ieee80211_rx(dev->wl->hw, skb);
+>> > +	local_bh_enable();
+>> 
+>> This is a bit awkward from drivers' point of view, we have to add the
+>> same code to all mac80211 drivers using either SPI or SDIO buses.
+>> 
+>> What about adding a new inline function ieee80211_rx_ni() which would
+>> disable bottom halves like above and call ieee80211_rx()? IMHO that's
+>> easier for the driver developers to understand and also easier to
+>> document ("use this function when calling from process context"). If
+>> this is acceptable, I can create a patch.
+>
+> I really don't see the point, since it's just three lines of code, but I
+> wouldn't mind all that much either.
 
-Index: linux-2.6/kernel/sched_fair.c
-===================================================================
---- linux-2.6.orig/kernel/sched_fair.c
-+++ linux-2.6/kernel/sched_fair.c
-@@ -495,8 +495,10 @@ static void update_curr(struct cfs_rq *c
- 	u64 now = rq_of(cfs_rq)->clock;
- 	unsigned long delta_exec;
- 
--	if (unlikely(!curr))
-+	if (unlikely(!curr)) {
-+		update_rq_clock(rq_of(cfs_rq));
- 		return;
-+	}
- 
- 	/*
- 	 * Get the amount of time the current task was running
+My worry are the developers who even don't know what is a bottom half
+and might get it all wrong. (Yes, there really are such people.)
 
-We have a clock problem with NO_HZ coming out of idle, so we may well
-have real latency issues at the same time, not bogons.
+But if you don't see any benefit from adding a new function, I'll drop
+the idea. No need to complicate this anymore :)
 
-	-Mike
-
+-- 
+Kalle Valo
