@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24332 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820AbZJWUmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Oct 2009 16:42:33 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 01/18] iwlwifi: add missing commands to syslog messages
-Date: Fri, 23 Oct 2009 13:42:19 -0700
-Message-Id: <1256330556-20997-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
-References: <1256330556-20997-1-git-send-email-reinette.chatre@intel.com>
+Received: from xc.sipsolutions.net ([83.246.72.84]:59225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587AbZJKJsf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Oct 2009 05:48:35 -0400
+Subject: [PATCH] mac80211: fix ibss race
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 11 Oct 2009 11:47:57 +0200
+Message-Id: <1255254477.4095.45.camel@johannes.local>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+When a scan completes, we call ieee80211_sta_find_ibss(),
+which is also called from other places. When the scan was
+done in software, there's no problem as both run from the
+single-threaded mac80211 workqueue and are thus serialised
+against each other, but with hardware scan the completion
+can be in a different context and race against callers of
+this function from the workqueue (e.g. due to beacon RX).
+So instead of calling ieee80211_sta_find_ibss() directly,
+just arm the timer and have it fire, scheduling the work,
+which will invoke ieee80211_sta_find_ibss() (if that is
+appropriate in the current state).
 
-Two commands missing from list of commands such that when debug is
-enabled, these commands are shown as UNKNOWN.
-
-Missing commands are TX_ANT_CONFIGURATION_CMD and
-TEMPERATURE_NOTIFICATION.
-
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
- drivers/net/wireless/iwlwifi/iwl-hcmd.c     |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
+ net/mac80211/ibss.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 7d4f131..1a7c0d0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -114,6 +114,7 @@ enum {
- 	COEX_EVENT_CMD = 0x5c,
- 
- 	/* Calibration */
-+	TEMPERATURE_NOTIFICATION = 0x62,
- 	CALIBRATION_CFG_CMD = 0x65,
- 	CALIBRATION_RES_NOTIFICATION = 0x66,
- 	CALIBRATION_COMPLETE_NOTIFICATION = 0x67,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-index 22a21a1..f2a60dc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-hcmd.c
-@@ -92,6 +92,8 @@ const char *get_cmd_string(u8 cmd)
- 		IWL_CMD(CALIBRATION_RES_NOTIFICATION);
- 		IWL_CMD(CALIBRATION_COMPLETE_NOTIFICATION);
- 		IWL_CMD(REPLY_TX_POWER_DBM_CMD);
-+		IWL_CMD(TEMPERATURE_NOTIFICATION);
-+		IWL_CMD(TX_ANT_CONFIGURATION_CMD);
- 	default:
- 		return "UNKNOWN";
- 
--- 
-1.5.6.3
+--- wireless-testing.orig/net/mac80211/ibss.c	2009-10-02 10:41:44.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2009-10-06 14:57:27.000000000 +0200
+@@ -831,7 +831,7 @@ void ieee80211_ibss_notify_scan_complete
+ 		if (!sdata->u.ibss.ssid_len)
+ 			continue;
+ 		sdata->u.ibss.last_scan_completed = jiffies;
+-		ieee80211_sta_find_ibss(sdata);
++		mod_timer(&sdata->u.ibss.timer, 0);
+ 	}
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+
 
