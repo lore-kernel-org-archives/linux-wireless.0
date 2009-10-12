@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38916
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754362AbZJVL3Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49678 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbZJLTQs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Oct 2009 07:29:16 -0400
-Date: Thu, 22 Oct 2009 04:29:39 -0700 (PDT)
-Message-Id: <20091022.042939.95166154.davem@davemloft.net>
-To: jarkao2@gmail.com
-Cc: johannes@sipsolutions.net, tilman@imap.cc,
-	hidave.darkstar@gmail.com, linux-kernel@vger.kernel.org,
-	tglx@linutronix.de, linux-wireless@vger.kernel.org,
-	linux-ppp@vger.kernel.org, netdev@vger.kernel.org,
-	paulus@samba.org, mb@bu3sch.de, oliver@hartkopp.net
-Subject: Re: [PATCH] net: Adjust softirq raising in __napi_schedule
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20091021213947.GA12202@ami.dom.local>
-References: <20091021211906.GA11401@ami.dom.local>
-	<1256160330.12174.2.camel@johannes.local>
-	<20091021213947.GA12202@ami.dom.local>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 12 Oct 2009 15:16:48 -0400
+Date: Mon, 12 Oct 2009 15:00:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>
+Subject: Re: [PATCH 03/17 v2.6.32 and w-t] iwlwifi: turn off device when
+	not used.
+Message-ID: <20091012190053.GD2794@tuxdriver.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com> <1255119634-3060-5-git-send-email-reinette.chatre@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255119634-3060-5-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jarek Poplawski <jarkao2@gmail.com>
-Date: Wed, 21 Oct 2009 23:39:47 +0200
+On Fri, Oct 09, 2009 at 01:20:20PM -0700, Reinette Chatre wrote:
+> From: Ben Cahill <ben.m.cahill@intel.com>
+> 
+> In some cases (e.g. when mac80211 calls iwl_mac_stop() for suspend or user
+> no longer wants device active), device has not been going into low power state
+> via __iwl_down().  apm_ops.reset() does not put device into low power state;
+> instead it resets the device, then puts it into a powered-up state ready to be
+> re-loaded with uCode and re-started.  This has needlessly warmed up user's
+> laptops and drained batteries.
+> 
+> With current architecture in which mac80211 controls device up/down (including
+> resetting device after firmware errors), there is no need for apm_ops.reset()
+> any more; apm_ops.reset() is basically a combination of apm_ops.stop() and
+> apm_ops.init().
+> 
+> Instead, __iwl_down() now unconditionally places the device into a low-power
+> state via apm_ops.stop(). Device may be re-started via __iwl_up() calling
+> apm_ops.init() as soon as it may be needed (e.g. quickly for firmware errors),
+> but in the meantime, device will stop wasting energy.
+> 
+> Note that, even in this low power state, if driver re-enables interrupts,
+> the device retains the ability to sense the hardware RF-KILL switch, and
+> (except for 3945) interrupt the host when it changes.
+> 
+> Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-> I'm not sure I can understand your question. This patch is mainly to
-> avoid using netif_rx()/netif_rx_ni() pair as a test of proper process
-> context handling; IMHO there're better tools for this (lockdep,
-> WARN_ON's).
+It this a regression?  Bug reference?
 
-Semantically I think your patch is correct, but I wonder about cost.
-
-Something that is a simply per-cpu inline "or" operation is now a
-function call and potentially mispredicted branch inside of
-raise_softirq_irqoff().
-
-And netif_rx() is indeed a fast path for tunnels and other users so
-this does matter.
-
-I like having people call things in the correct context the function
-was built for, and thus we can avoiryd completely useless operations and
-tests as we can now in netif_rx().
-
-Makaing things general purpose costs something, and it costs too much
-here for this critical routine, sorry.
-
-I was just having a talk with Nick Piggin about these kinds of issues
-today, too few people care about these ever encrouching tiny pieces
-of bloat that slow the kernel down gradually over time, and I simply
-won't stand for it when I notice it :-)
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
