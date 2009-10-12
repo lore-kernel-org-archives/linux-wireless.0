@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:50651 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661AbZJXSFR (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:55511 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753549AbZJLLZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Oct 2009 14:05:17 -0400
-Subject: Re: 2.6.32-rc5-git3 -- EIP is at cfg80211_conn_work+0x73/0xd6
- [cfg80211]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Miles Lane <miles.lane@gmail.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4AE2683D.4020000@gmail.com>
-References: <4AE2683D.4020000@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-ZZOqihymNpO7mnTifU5c"
-Date: Sat, 24 Oct 2009 20:05:19 +0200
-Message-Id: <1256407519.12174.502.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 12 Oct 2009 07:25:47 -0400
+Message-ID: <4AD31213.6020006@imap.cc>
+Date: Mon, 12 Oct 2009 13:25:07 +0200
+From: Tilman Schmidt <tilman@imap.cc>
+MIME-Version: 1.0
+To: David Miller <davem@davemloft.net>
+CC: tilman@imap.cc, johannes@sipsolutions.net,
+	hidave.darkstar@gmail.com, linux-kernel@vger.kernel.org,
+	tglx@linutronix.de, linux-wireless@vger.kernel.org,
+	linux-ppp@vger.kernel.org, netdev@vger.kernel.org, paulus@samba.org
+Subject: Re: NOHZ: local_softirq_pending 08
+References: <4AD1BF06.3050103@phoenixsoftware.de>	<1255261251.4095.143.camel@johannes.local>	<4AD2E8C8.4060205@imap.cc> <20091012.033246.56701176.davem@davemloft.net>
+In-Reply-To: <20091012.033246.56701176.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
---=-ZZOqihymNpO7mnTifU5c
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Mon, 12 Oct 2009 03:32:46 -0700 (PDT), David Miller wrote:
+> The PPP receive paths in ppp_generic.c do a local_bh_disable()/
+> local_bh_enable() around packet receiving (via ppp_recv_lock()/
+> ppp_recv_unlock() in ppp_do_recv).
+> 
+> So at least that part is perfectly fine.
+> 
+> ppp_input(), as called from ppp_sync_process(), also disables BH's
+> around ppp_do_recv() calls (via read_lock_bh()/read_unlock_bh()).
+> 
+> So that's fine too.
+> 
+> Do you have a bug report or are you just scanning around looking
+> for trouble? :-)
 
-On Fri, 2009-10-23 at 22:36 -0400, Miles Lane wrote:
+I have encountered the message in the subject during a test of
+the Gigaset CAPI driver, and would like to determine whether
+it's a bug in the driver, a bug somewhere else, or no bug at
+all. The test scenario was PPP over ISDN with pppd+capiplugin.
+In an alternative scenario, also PPP over ISDN but with
+smpppd+capidrv, the message did not occur.
 
-> EIP is at cfg80211_conn_work+0x73/0xd6 [cfg80211]
+Johannes' answer pointed me to the netif_rx() function.
+The Gigaset driver itself doesn't call that function at all.
+In the scenario where I saw the message, it was the SYNC_PPP
+line discipline that did. But from your explanation I gather
+that the cause cannot lie there.
 
-That's strange. What actually happened here? NULL ptr deref?
+So now I'm looking for other possible causes of that message.
 
-johannes
-
---=-ZZOqihymNpO7mnTifU5c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
+- --
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Ungeöffnet mindestens haltbar bis: (siehe Rückseite)
 -----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.4 (MingW32)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-iQIcBAABAgAGBQJK40HYAAoJEODzc/N7+Qma5P4P/jg8tR/Sq8SK1P4yDdT6cBrA
-vlDaGV+L+kHcQ0ADjlW/t/4XRCN/eIz2soOtwlGNvXE6k4gwIhEeANMxTqF74I49
-bH0FpY+VHpDopwML8qV45kRTb52wy6c98WH+KTpXhMAXZqaaUVqWZ0k0cNfL+m/I
-K48YREIFo8hh4J3qJT3zDjs8HjbzHZvVFVYT1WfP5hNEtzenyI5e4ZxWLuiWBwQB
-BGZihzDOjPjdGflDGMNXdwz3TwT4oL1iFv4DdLuXw0BiqgV0vYfYg1/+oDyR19ND
-VDT8YmEN9DRbT+YPSzy86sv2Bl9h1gFok37S8+B9MJ7FFw4zaUiYCBfy2ra9zd8D
-E/DjkuMiXeRS+2aGBBibvgWvdeZRJjduVqMnb1zqMsw/Kqn2x3hMV60LeQy+2nUC
-qaKQrTKPzUoY3YzKAWSVhYdbHSHWaCIRKbUXQfFgHRkZEk7gwel8AFmTQcbxC8tN
-+Zwo2vvc6nwWqwVTvX1bfzqYUBAiQeLDE7t6Rc6hFN44u6R1JncN9l0ZmfTGLHwX
-H+aMuwG7povA4SDVsdWDrqo7CkLkZaVpTbaxBOpwT8w7kdzC0cM9vfbn/f8Q8gCG
-zwtHXtr4SShtAwnghocV9iLk+mZoJZQnvlxN0r6oB5aG97GVxlKWF46j0l3gDhav
-PqOec63UQbmccUYFXkbC
-=KYM8
+iD8DBQFK0xITQ3+did9BuFsRAmXGAKCIiqJffUnuKw9rPjxHwbj9AnXOigCdGgS9
+MpxRNGs0A4GTydYJaylbjyo=
+=LFxi
 -----END PGP SIGNATURE-----
-
---=-ZZOqihymNpO7mnTifU5c--
-
