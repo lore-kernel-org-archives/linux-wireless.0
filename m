@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:57040 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223AbZJNAv3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 20:51:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <4AD51A7C.9060207@canonical.com>
-References: <43e72e890910131542k376a87c5rc30feb6491a06867@mail.gmail.com>
-	<4AD51A7C.9060207@canonical.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 13 Oct 2009 17:50:33 -0700
-Message-ID: <43e72e890910131750s4d2cdb20o76d721087d9b3aaf@mail.gmail.com>
-Subject: Re: Stable compat-wireless 2.6.32-rc4 released
-To: tim.gardner@canonical.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47124 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758313AbZJLVUq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 9/9] [compat-2.6] Add skb_add_rx_frag to backport.
+Date: Mon, 12 Oct 2009 23:19:18 +0200
+Message-Id: <1255382358-20760-11-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 13, 2009 at 5:25 PM, Tim Gardner <tim.gardner@canonical.com> wrote:
-> Luis R. Rodriguez wrote:
->>
->> As the kernel moves along so does the automatic stable backports for
->> the wireless subsystem [1]. We are now on 2.6.32-rc4. Besides getting
->> the same fixes from rc1..rc4 some backport changes were made as well,
->> most importantly that of relying on your own kernel's iw_handler.h.
->> I've tested this release with 2.6.28.
->>
->> Please report any issues you see.
->>
->> [1] http://wireless.kernel.org/en/users/Download/stable
->>
->> PS. If you maintain a distribution and rely on stable compat-wireless
->> releases please let me know so I can CC you when further updates are
->> made.
->>
->>  Luis
->>
->
-> Speaking as a distro, what advantage does the stable wireless backport offer
-> for the currently released kernel if we are already consumers of stable
-> updates?
+This is needed by iwl-3945.c.
 
-Well if you are a distro stuck on the 2.6.31 kernel the stable
-compat-wireless-2.6.32 gets you 2.6.32 wireless bits on 2.6.31 and
-that means any features/drivers/large fixes/enhancements that didn't
-make it to 2.6.31.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.c |   10 ++++++++++
+ compat/compat-2.6.28.h |    3 +++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
+index 33871a2..c379b19 100644
+--- a/compat/compat-2.6.28.c
++++ b/compat/compat-2.6.28.c
+@@ -275,4 +275,14 @@ unsigned long round_jiffies_up(unsigned long j)
+ }
+ EXPORT_SYMBOL_GPL(round_jiffies_up);
+ 
++void skb_add_rx_frag(struct sk_buff *skb, int i, struct page *page, int off,
++		int size)
++{
++	skb_fill_page_desc(skb, i, page, off, size);
++	skb->len += size;
++	skb->data_len += size;
++	skb->truesize += size;
++}
++EXPORT_SYMBOL(skb_add_rx_frag);
++
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
+diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
+index dd223c6..f158cbe 100644
+--- a/compat/compat-2.6.28.h
++++ b/compat/compat-2.6.28.h
+@@ -178,6 +178,9 @@ static inline void skb_queue_splice_tail_init(struct sk_buff_head *list,
+ 
+ unsigned long round_jiffies_up(unsigned long j);
+ 
++extern void skb_add_rx_frag(struct sk_buff *skb, int i, struct page *page,
++			    int off, int size);
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
+ 
+ #endif /* LINUX_26_28_COMPAT_H */
+-- 
+1.6.2.1
+
