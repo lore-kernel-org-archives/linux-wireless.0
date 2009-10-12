@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:56344 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755315AbZJLNJF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 09:09:05 -0400
-Subject: Re: WARNING: slow-path
-From: David Woodhouse <dwmw2@infradead.org>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <200910121335.21807.hs4233@mail.mn-solutions.de>
-References: <200910121335.21807.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Oct 2009 14:08:26 +0100
-Message-Id: <1255352906.30919.11.camel@macbook.infradead.org>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56596 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758068AbZJLVUE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/9] [compat-2.6 and compat-stable] Remove unused code
+Date: Mon, 12 Oct 2009 23:19:11 +0200
+Message-Id: <1255382358-20760-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-12 at 13:35 +0200, Holger Schurig wrote:
-> [   33.369923] WARNING: at net/wireless/mlme.c:135 __cfg80211_send_deauth+0x3f/0x1e1 [cfg80211]()
+LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) can not be true in
+compat-2.6.28.h. The definitions are not needed in compat-wireless any
+more. Removing this does not break compiling with mainline kernel 2.6.25
+to 2.6.32
 
-You're triggering the warning at line 135 of net/wireless/mlme.c, which
-is 'ASSERT_WDEV_LOCK(wdev)' -- it's complaining that the lock isn't
-held.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.h |   24 ------------------------
+ 1 files changed, 0 insertions(+), 24 deletions(-)
+
+diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
+index 90d080c..dd223c6 100644
+--- a/compat/compat-2.6.28.h
++++ b/compat/compat-2.6.28.h
+@@ -146,22 +146,6 @@ static inline void skb_queue_splice_tail_init(struct sk_buff_head *list,
+ 	}
+ } /* From include/linux/skbuff.h */
  
-> static int lbs_cfg_ret_deauth(struct lbs_private *priv, unsigned long dummy,
->                            struct cmd_header *resp)
->         cfg80211_send_deauth(priv->dev, (u8 *)&mgmt, sizeof(mgmt),
->                              (void *)dummy); 
-
-What happens if you make that last argument NULL instead of passing
-'dummy' back to it? That makes cfg80211_send_deauth() magically do
-different things w.r.t. locking. Johannes, this is _evil_:
-
-void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
-                          void *cookie)
-{
-        struct wireless_dev *wdev = dev->ieee80211_ptr;
-
-        BUG_ON(cookie && wdev != cookie);
-
-        if (cookie) {
-                /* called within callback */
-                __cfg80211_send_deauth(dev, buf, len);
-        } else {
-                wdev_lock(wdev);
-                __cfg80211_send_deauth(dev, buf, len);
-                wdev_unlock(wdev);
-        }
-}
-
-
+-struct module;
+-struct tracepoint;
+-
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+-struct tracepoint {
+-	const char *name;		/* Tracepoint name */
+-	int state;			/* State. */
+-	void **funcs;
+-} __attribute__((aligned(32)));		/*
+-					 * Aligned on 32 bytes because it is
+-					 * globally visible and gcc happily
+-					 * align these on the structure size.
+-					 * Keep in sync with vmlinux.lds.h.
+-					 */
+-#endif
+-
+ #ifndef DECLARE_TRACE
+ 
+ #define TP_PROTO(args...)	args
+@@ -181,17 +165,9 @@ struct tracepoint {
+ 		return -ENOSYS;						\
+ 	}
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+-#define DEFINE_TRACE(name)
+-#endif
+ #define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
+ #define EXPORT_TRACEPOINT_SYMBOL(name)
+ 
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28))
+-static inline void tracepoint_update_probe_range(struct tracepoint *begin,
+-	struct tracepoint *end)
+-{ }
+-#endif
+ 
+ #endif
+ 
 -- 
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
+1.6.2.1
 
