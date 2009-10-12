@@ -1,180 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36111 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933734AbZJMJt6 (ORCPT
+Received: from mail-gx0-f212.google.com ([209.85.217.212]:45220 "EHLO
+	mail-gx0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbZJLA13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:49:58 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 08/22] wl1271: Fix IRQ enable handling on FW init failure
-Date: Tue, 13 Oct 2009 12:47:45 +0300
-Message-Id: <1255427279-1224-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 11 Oct 2009 20:27:29 -0400
+Received: by gxk4 with SMTP id 4so9599987gxk.8
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Oct 2009 17:26:52 -0700 (PDT)
+Message-ID: <4AD277C9.7090209@gmail.com>
+Date: Sun, 11 Oct 2009 19:26:49 -0500
+From: Quintin Pitts <geek4linux@gmail.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] p54pci: skb_over_panic, soft lockup, stall under flood
+References: <4AD1EBA7.904@gmail.com> <4AD1FA5E.1010201@lwfinger.net> <200910112141.01747.chunkeey@googlemail.com>
+In-Reply-To: <200910112141.01747.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Sun Oct 11 2009 14:41:01 GMT-0500 (CDT), Christian Lamparter wrote:
+> On Sunday 11 October 2009 17:31:42 Larry Finger wrote:
+>>> In trying to get p54pci driver to be stable on my platform and hardware
+>>> - here is a generic patch that seems to accomplish that.  Since the
+>>> ViewSonic V210 uses the IT8152 pci bridge - some attention was needed to
+>>> get dma related allocation in the first physical 64M.  I have verified
+>>> that the dma related allocation is in the first 64M and dmabounce is not
+>>> being used - just for those wondering if that was part of the problems.
+> 
+> it8152 was an important bit:
+> 
+> http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/0645.html
+> 
+> the commit sparked a discussion about it8152 pci reliability.
+> It doesn't look good:
+> 
+> (commit author):
+> "I have no idea if it's possible to get a reliable PCI bus or
+> not with this chip. Right now, we only use it for it's built-in OHCI
+> USB host controller and UART. You're making me hope I never have to
+> use it for interfacing a PCI card!"
+> 
+> ( http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/1907.html )
+> 
+> [...]
+> 
+> "Well on the system on a board we were trying, using the development
+> baseboard from the same supplier, by simply doing a ping flood through
+> the onboard rtl8139 I managed to get corrupted ethernet packets fairly
+> frequently. "
+> ( http://lkml.indiana.edu/hypermail/linux/kernel/0702.1/1917.html )
+> 
+> the sad conclusion is that: no matter what fixes you throw
+> at the driver (BTW: isl38xx isn't 100% pci v2.1 compliance either)
+> your chances of getting the device (with the softmac fw)
+> working properly with that board are next to... not,
+> unless you can magically fix the pci-bridge issues.
 
-Disable IRQ's after FW initialization failure - originally this was not
-done in all cases, and it resulted in a kernel warning if firmware
-initialization was tried again without reboot.
+I feared as much.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c |    6 ++--
- drivers/net/wireless/wl12xx/wl1271_init.c |    4 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   42 ++++++++++++++++++++--------
- 3 files changed, 35 insertions(+), 17 deletions(-)
+At least that patch has given me hope.  It survives a iperf and ping
+flood now with out going belly up.  Device has been up for three days
+now with network still working.   But likely glitches will show up.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index a27601d..b8a37a8 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -400,9 +400,6 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 	 * ready to receive event from the command mailbox
- 	 */
- 
--	/* enable gpio interrupts */
--	wl1271_boot_enable_interrupts(wl);
--
- 	/* unmask required mbox events  */
- 	wl->event_mask = BSS_LOSE_EVENT_ID |
- 		SCAN_COMPLETE_EVENT_ID;
-@@ -540,6 +537,9 @@ int wl1271_boot(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out;
- 
-+	/* Enable firmware interrupts now */
-+	wl1271_boot_enable_interrupts(wl);
-+
- 	/* set the wl1271 default filters */
- 	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
- 	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 5c2cf1e..6f21eea 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -315,8 +315,8 @@ int wl1271_hw_init(struct wl1271 *wl)
- 
- 	/* RX config */
- 	ret = wl1271_init_rx_config(wl,
--				       RX_CFG_PROMISCUOUS | RX_CFG_TSF,
--				       RX_FILTER_OPTION_DEF);
-+				    RX_CFG_PROMISCUOUS | RX_CFG_TSF,
-+				    RX_FILTER_OPTION_DEF);
- 	/* RX_CONFIG_OPTION_ANY_DST_ANY_BSS,
- 	   RX_FILTER_OPTION_FILTER_ALL); */
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index eba38df..7f1093c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -625,7 +625,7 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
--			goto out;
-+			goto out_power_off;
- 		break;
- 	case CHIP_ID_1271_PG20:
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
-@@ -633,27 +633,32 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 
- 		ret = wl1271_setup(wl);
- 		if (ret < 0)
--			goto out;
-+			goto out_power_off;
- 		break;
- 	default:
- 		wl1271_error("unsupported chip id: 0x%x", wl->chip.id);
- 		ret = -ENODEV;
--		goto out;
-+		goto out_power_off;
- 	}
- 
- 	if (wl->fw == NULL) {
- 		ret = wl1271_fetch_firmware(wl);
- 		if (ret < 0)
--			goto out;
-+			goto out_power_off;
- 	}
- 
- 	/* No NVS from netlink, try to get it from the filesystem */
- 	if (wl->nvs == NULL) {
- 		ret = wl1271_fetch_nvs(wl);
- 		if (ret < 0)
--			goto out;
-+			goto out_power_off;
- 	}
- 
-+	goto out;
-+
-+out_power_off:
-+	wl1271_power_off(wl);
-+
- out:
- 	return ret;
- }
-@@ -749,13 +754,21 @@ int wl1271_plt_start(struct wl1271 *wl)
- 
- 	ret = wl1271_boot(wl);
- 	if (ret < 0)
--		goto out;
-+		goto out_power_off;
- 
- 	wl1271_notice("firmware booted in PLT mode (%s)", wl->chip.fw_ver);
- 
- 	ret = wl1271_plt_init(wl);
- 	if (ret < 0)
--		goto out;
-+		goto out_irq_disable;
-+
-+	goto out;
-+
-+out_irq_disable:
-+	wl1271_disable_interrupts(wl);
-+
-+out_power_off:
-+	wl1271_power_off(wl);
- 
- out:
- 	mutex_unlock(&wl->mutex);
-@@ -843,20 +856,25 @@ static int wl1271_op_start(struct ieee80211_hw *hw)
- 
- 	ret = wl1271_boot(wl);
- 	if (ret < 0)
--		goto out;
-+		goto out_power_off;
- 
- 	ret = wl1271_hw_init(wl);
- 	if (ret < 0)
--		goto out;
-+		goto out_irq_disable;
- 
- 	wl->state = WL1271_STATE_ON;
- 
- 	wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
- 
--out:
--	if (ret < 0)
--		wl1271_power_off(wl);
-+	goto out;
-+
-+out_irq_disable:
-+	wl1271_disable_interrupts(wl);
- 
-+out_power_off:
-+	wl1271_power_off(wl);
-+
-+out:
- 	mutex_unlock(&wl->mutex);
- 
- 	return ret;
--- 
-1.5.6.5
+iperf tests at about 9.6 to 15 Mbits/sec on a 802.11g WPA network which is
+about 2 times faster than what I had under WinCE.
+
+web browsing and ssh and scp all work great at the moment.
+
+Time will tell...
+
+Thanks much!
+
+Quintin.
 
