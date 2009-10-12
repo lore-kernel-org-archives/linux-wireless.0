@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:53720 "EHLO vs166246.vserver.de"
+Received: from ogre.sisk.pl ([217.79.144.158]:36364 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754988AbZJ2OsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Oct 2009 10:48:25 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: pull request: wireless-next-2.6 2009-10-28
-Date: Thu, 29 Oct 2009 15:48:25 +0100
-Cc: David Miller <davem@davemloft.net>, bzolnier@gmail.com,
-	penberg@cs.helsinki.fi, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linville@tuxdriver.com
-References: <200910291435.54203.bzolnier@gmail.com> <200910291539.16476.mb@bu3sch.de> <14add3d10910290744n3abd1cf8w42a6311108eb2fa7@mail.gmail.com>
-In-Reply-To: <14add3d10910290744n3abd1cf8w42a6311108eb2fa7@mail.gmail.com>
+	id S1755575AbZJLVnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:43:05 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
+Date: Mon, 12 Oct 2009 23:43:48 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera> <4AD26926.9030306@lwfinger.net>
+In-Reply-To: <4AD26926.9030306@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910291548.27235.mb@bu3sch.de>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910122343.48373.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 29 October 2009 15:44:42 Gertjan van Wingerde wrote:
-> Hold on here. In this case it is the driver maintainer (i.e. Ivo for
-> the rt2x00 project) that
-> submitted this driver for inclusion, so the driver maintainer has not
-> been bypassed in
-> this case.
+On Monday 12 October 2009, Larry Finger wrote:
+> On 10/11/2009 05:41 PM, Rafael J. Wysocki wrote:
+> > [Note:
+> >   10 new reports in the last 10 days, but fortunately we're fixing them faster
+> >   than they're being reported.]
 > 
-> Apparently Bart has issues with the code submitted by the maintainers
-> and has been
-> unsuccessful in convincing others about these issues.
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14181
+> > Subject		: b43 causes panic at ifconfig down / shutdown
+> > Submitter	: Jeremy Huddleston <jeremyhu@freedesktop.org>
+> > Date		: 2009-09-15 18:34 (27 days old)
+> 
+> A patch to fix this one is in the hands of the OP. It should be tested
+> within the next couple of days.
 
-So Bart is not a maintainer? That of course changes the situation.
+Great, thanks for the update.
 
--- 
-Greetings, Michael.
+Rafael
