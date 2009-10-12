@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:65496 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754172AbZJUVet (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:64656 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755590AbZJLMLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 17:34:49 -0400
-Received: by fxm18 with SMTP id 18so8288869fxm.37
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Oct 2009 14:34:53 -0700 (PDT)
-Date: Wed, 21 Oct 2009 17:34:49 -0400
-From: Celejar <celejar@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Broadcom 4318 not working with bleeding edge kernels
-Message-Id: <20091021173449.0a3ec80f.celejar@gmail.com>
-In-Reply-To: <1256138957.26054.4.camel@mj>
-References: <20091020214702.a76fa4aa.celejar@gmail.com>
-	<1256138957.26054.4.camel@mj>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 12 Oct 2009 08:11:05 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 12/16] wl1271: Update TX path block calucation algo
+Date: Mon, 12 Oct 2009 15:08:53 +0300
+Message-Id: <1255349337-9776-13-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Oct 2009 11:29:17 -0400
-Pavel Roskin <proski@gnu.org> wrote:
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-> On Tue, 2009-10-20 at 21:47 -0400, Celejar wrote:
-> 
-> > Oct 17 19:44:19 localhost wpa_supplicant[3477]: Trying to associate
-> > with 00:14:d1:3e:ff:30 (SSID='cranford' freq=2437 MHz) Oct 17
-> > 19:44:19 localhost wpa_supplicant[3477]: Association request to the
-> > driver failed
-> 
-> Since the message is from wpa_supplicant, it must be something between
-> wpa_supplicant and mac80211.  I don't think any code in b43 is
-> involved.
-> 
-> Perhaps you should include some information about wpa_supplicant, i.e.
-> its version and the command line.  Please try the latest
-> wpa_supplicant. Please try both wext and nl80211 drivers.  That would
-> help understand the extent of the problem.
+Update the TX path block calculation algorithm based on TI reference.
 
-Version is 0.6.9, from the Debian package version 0.6.9.3.  I don't
-know the exact command line, since I've been invoking it through the
-Debian ifupdown scripts.  I haven't been specifying a backend, and the
-Debian documentation states that wext is used in that case.
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I have been playing with it some more, and it sometimes works, and
-sometimes doesn't.  The only absolutely consistent pattern that I've
-seen is that (in my limited testing) it seems to always work right
-after unloading / reloading the driver (b43) (or a fresh boot).
-
-As I mentioned, I've been using the Debian ifupdown scripts.  I have
-now tried running wpa_supplicant directly, and so far it has worked
-consistently, with a very minimal, mostly default config:
-
-'wpa_supplicant -iwlan0 -c/wpa.conf'
-
-where wpa.conf contains:
-
-ctrl_interface=/var/run/wpa_supplicant
-
-network={
-        ssid="my-ssid"
-        psk="my passphrase"
-}
-
-
-So at this point, I guess the problem is something that I need to
-report to Debian, some sort of bugginess with their scripts.  Thanks
-for the help ;)
-
-Celejar
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index 5d3aa4b..56a7f36 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -57,8 +57,8 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra)
+ 	/* approximate the number of blocks required for this packet
+ 	   in the firmware */
+ 	/* FIXME: try to figure out what is done here and make it cleaner */
+-	total_blocks = (total_len) >> TX_HW_BLOCK_SHIFT_DIV;
+-	excluded = (total_blocks << 2) + (skb->len & 0xff) + 34;
++	total_blocks = (total_len + 20) >> TX_HW_BLOCK_SHIFT_DIV;
++	excluded = (total_blocks << 2) + ((total_len + 20) & 0xff) + 34;
+ 	total_blocks += (excluded > 252) ? 2 : 1;
+ 	total_blocks += TX_HW_BLOCK_SPARE;
+ 
 -- 
-mailmin.sourceforge.net - remote access via secure (OpenPGP) email
-ssuds.sourceforge.net - A Simple Sudoku Solver and Generator
+1.5.6.5
 
