@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:34227 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755559AbZJ0Pgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Oct 2009 11:36:32 -0400
-From: Kalle Valo <kalle.valo@iki.fi>
-Subject: [PATCH v2 2/3] mac80211: fix dynamic power save for devices with
-	nullfunc support in hw
-To: linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Tue, 27 Oct 2009 17:36:17 +0200
-Message-ID: <20091027153616.27827.46490.stgit@tikku>
-In-Reply-To: <20091027153608.27827.70629.stgit@tikku>
-References: <20091027153608.27827.70629.stgit@tikku>
+Received: from ogre.sisk.pl ([217.79.144.158]:36405 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755338AbZJLVrc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:47:32 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
+Date: Mon, 12 Oct 2009 23:48:33 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera> <1255377529.9544.63.camel@bluto.andrew>
+In-Reply-To: <1255377529.9544.63.camel@bluto.andrew>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <200910122348.33588.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kalle.valo@nokia.com>
+On Monday 12 October 2009, Andrew Patterson wrote:
+> On Mon, 2009-10-12 at 00:41 +0200, Rafael J. Wysocki wrote:
+> > 
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14309
+> > Subject		: MCA on hp rx8640
+> > Submitter	: Andrew Patterson <andrew.patterson@hp.com>
+> > Date		: 2009-09-29 17:20 (13 days old)
+> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=db8be50c4307dac2b37305fc59c8dc0f978d09ea
+> > References	: http://www.spinics.net/lists/linux-usb/msg22799.html
+> > 
+> 
+> Linus fixed this one with d93a8f829fe1d2f3002f2c6ddb553d12db420412.  It
+> also looks like a duplicate of
+> http://bugzilla.kernel.org/show_bug.cgi?id=14374
 
-In TX path it was assumed that dynamic power save works only if
-IEEE80211_HW_PS_NULLFUNC_STACK is set. But is not the case, there are
-devices which have nullfunc support in hardware but need mac80211
-to handle dynamic power save timers, TI's wl1251 is one of them.
+Thanks, I closed #14309 as a duplicate of #14374 that's already closed.
 
-The fix is to not check for IEEE80211_HW_PS_NULLFUNC_STACK in
-is_dynamic_ps_enabled(), instead check IEEE80211_HW_SUPPORTS_PS and
-IEEE80211_HW_SUPPORTS_DYNAMIC_PS flags and act accordingly.
-
-Tested with wl1251.
-
-Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
----
-
- net/mac80211/tx.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c59ed84..66dab40 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1390,7 +1390,11 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
- static bool need_dynamic_ps(struct ieee80211_local *local)
- {
- 	/* driver doesn't support power save */
--	if (!(local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK))
-+	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS))
-+		return false;
-+
-+	/* hardware does dynamic power save */
-+	if (local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS)
- 		return false;
- 
- 	/* dynamic power save disabled */
-
+Best,
+Rafael
