@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f177.google.com ([209.85.222.177]:38649 "EHLO
-	mail-pz0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbZJGBBv convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f210.google.com ([209.85.218.210]:33209 "EHLO
+	mail-bw0-f210.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757883AbZJLU1w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Oct 2009 21:01:51 -0400
-Received: by pzk7 with SMTP id 7so4378684pzk.33
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Oct 2009 18:01:14 -0700 (PDT)
+	Mon, 12 Oct 2009 16:27:52 -0400
+Received: by bwz6 with SMTP id 6so3411456bwz.37
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 13:27:15 -0700 (PDT)
+Date: Mon, 12 Oct 2009 22:23:16 +0200
+From: Richard Zidlicky <rz@linux-m68k.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091012202316.GA8310@linux-m68k.org>
+References: <20090623174616.GA3914@linux-m68k.org> <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org> <20091011222142.M14763@bobcopeland.com>
 MIME-Version: 1.0
-In-Reply-To: <1254873770-31241-1-git-send-email-bzhao@marvell.com>
-References: <1254873770-31241-1-git-send-email-bzhao@marvell.com>
-Date: Tue, 6 Oct 2009 18:01:14 -0700
-Message-ID: <45e8e6c40910061801u2b67abb5v4658a7bbf1e0726a@mail.gmail.com>
-Subject: Re: [PATCH] libertas: Use lbs_is_cmd_allowed() check in command
-	handling routines.
-From: Andrey Yurovsky <andrey@cozybit.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091011222142.M14763@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+On Sun, Oct 11, 2009 at 06:23:56PM -0400, Bob Copeland wrote:
+> On Mon, 12 Oct 2009 00:00:02 +0200, Richard Zidlicky wrote:
+> > so the results are same like before. The printk message came once only,
+> > I will try to gather more debug info tomorrow.
+> 
+> Meaning it works the same as with your change (replacing "chan != null"
+> with "true") or it works the same as mainline, i.e. it fails?
 
-On Tue, Oct 6, 2009 at 5:02 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> +static int lbs_is_cmd_allowed(struct lbs_private *priv)
-> +{
-> +       int         ret = 1;
-> +
-> +       lbs_deb_enter(LBS_DEB_CMD);
-> +
-> +       if (!priv->is_auto_deep_sleep_enabled) {
-> +               if (priv->is_deep_sleep) {
-> +                       lbs_deb_cmd("IOCTLS called when station"
-> +                                       " is in deep sleep\n");
-> +                       ret = 0;
-> +               }
-> +       }
+it works like in mainline and fails.
 
-Can this debug message be something like "command not allowed in deep
-sleep" instead of mentioning IOCTLS?
-
-  -Andrey
+Richard
