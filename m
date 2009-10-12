@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932147AbZJ3VgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:36:17 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 12/15] iwlwifi: print warning when sending host command fails
-Date: Fri, 30 Oct 2009 14:36:15 -0700
-Message-Id: <1256938578-9638-13-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
-References: <1256938578-9638-1-git-send-email-reinette.chatre@intel.com>
+Received: from mx51.mymxserver.com ([85.199.173.110]:13301 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754516AbZJLH2Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 03:28:24 -0400
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] b43: fix ieee80211_rx() context
+Date: Mon, 12 Oct 2009 09:27:02 +0200
+Cc: Michael Buesch <mb@bu3sch.de>,
+	John Linville <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Dave Young <hidave.darkstar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <1255256361.4095.56.camel@johannes.local> <200910111226.44778.mb@bu3sch.de> <1255257066.4095.66.camel@johannes.local>
+In-Reply-To: <1255257066.4095.66.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Message-Id: <200910120927.02298.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+> As far as I know, it is an accurate account of what happened in the
+> other thread, and as such is not slander. 
 
-More information than the "-EIO" return code will be useful here.
+It might not be slander, but it's still not polite.
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-tx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 1868093..b1a2de8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -980,7 +980,8 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	       !(cmd->flags & CMD_SIZE_HUGE));
- 
- 	if (iwl_is_rfkill(priv) || iwl_is_ctkill(priv)) {
--		IWL_DEBUG_INFO(priv, "Not sending command - RF/CT KILL\n");
-+		IWL_WARN(priv, "Not sending command - %s KILL\n",
-+			 iwl_is_rfkill(priv) ? "RF" : "CT");
- 		return -EIO;
- 	}
- 
 -- 
-1.5.6.3
-
+http://www.holgerschurig.de
