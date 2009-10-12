@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:30262 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbZJZOai convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:59071 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756426AbZJLMOY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 10:30:38 -0400
-From: Holger Schurig <h.schurig@mn-solutions.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: RECAP: indication of channel noise
-Date: Mon, 26 Oct 2009 15:30:03 +0100
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-References: <200910261442.44774.h.schurig@mn-solutions.de> <1256565132.12462.9.camel@johannes.local>
-In-Reply-To: <1256565132.12462.9.camel@johannes.local>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910261530.03422.h.schurig@mn-solutions.de>
+	Mon, 12 Oct 2009 08:14:24 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 14/16] wl1271: Update boot time configuration for the new firmware
+Date: Mon, 12 Oct 2009 15:08:55 +0300
+Message-Id: <1255349337-9776-15-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >   NL80211_BSS_NOISE_MBM
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Hmm, this could better be NL80211_CHANNEL_NOISE_MBM, to make
-clear that this is not heat-related internal noise of the chip.
+Update the magic values of the wl1271 boot time config according to the new
+reference driver.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-For the rest of your remarks: ok
-
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index f9315f6..e45af07 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -202,7 +202,7 @@ static int wl1271_init_general_parms(struct wl1271 *wl)
+ 	gen_parms->clk_valid_on_wakeup = 0;
+ 	gen_parms->dc2dcmode = 0;
+ 	gen_parms->single_dual_band = 0;
+-	gen_parms->tx_bip_fem_autodetect = 1;
++	gen_parms->tx_bip_fem_autodetect = 0;
+ 	gen_parms->tx_bip_fem_manufacturer = 1;
+ 	gen_parms->settings = 1;
+ 
 -- 
-M&N Solutions GmbH          Ein Unternehmen der Datagroup AG
-Holger Schurig
-Raiffeisenstr. 10
-61191 Rosbach
-Tel: 06003/9141-15          Fax 06003/9141-49
-http://www.mn-solutions.de/
+1.5.6.5
 
-Handelsregister Friedberg, HRB 5903
-Geschäftsführer: P.Schrittenlocher
