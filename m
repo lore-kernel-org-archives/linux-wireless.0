@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:58329 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbZJPLhT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Oct 2009 07:37:19 -0400
-Subject: Re: [PATCH] cfg80211: remove warning in deauth case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <200910131345.28395.hs4233@mail.mn-solutions.de>
-References: <200910131345.28395.hs4233@mail.mn-solutions.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-20pHizOLwsMa5AcazcSQ"
-Date: Fri, 16 Oct 2009 18:32:18 +0900
-Message-Id: <1255685538.4095.310.camel@johannes.local>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:36492 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932448AbZJLVyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:54:52 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Fabio Comolli <fabio.comolli@gmail.com>
+Subject: Re: [Bug #14372] Wireless not working after suspend-resume
+Date: Mon, 12 Oct 2009 23:55:38 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <zJ_pXHNwoHC.A.akB.Aal0KB@chimera> <r-4Wjt4coy.A.TPD.dal0KB@chimera> <b637ec0b0910121148g34f46481n1d5d4edb67b0ac55@mail.gmail.com>
+In-Reply-To: <b637ec0b0910121148g34f46481n1d5d4edb67b0ac55@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <200910122355.38980.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 12 October 2009, Fabio Comolli wrote:
+> Still present with -rc4.
+> 
+> Error is:
+> 
+> [  690.547660] wlan0: direct probe to AP 00:11:95:09:2c:e0 (try 1)
+> [  690.550064] wlan0: direct probe responded
+> [  690.550074] wlan0: authenticate with AP 00:11:95:09:2c:e0 (try 1)
+> [  690.551629] wlan0: authenticated
+> [  690.551663] wlan0: associate with AP 00:11:95:09:2c:e0 (try 1)
+> [  690.553289] wlan0: RX AssocResp from 00:11:95:09:2c:e0 (capab=0x451
+> status=12 aid=1)
+> [  690.553298] wlan0: AP denied association (code=12)
+> 
+> rfkill-ing the device off and then on fixes the problem.
 
---=-20pHizOLwsMa5AcazcSQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thanks for the update.
 
-On Tue, 2009-10-13 at 13:45 +0200, Holger Schurig wrote:
-> It might be the case that __cfg80211_disconnected() has already
-> cleaned up wdev->current_bss() for us. The old code didn't catch
-> that situation and didn't warn needlessly.
-
-Care to explain how that can happen?
-
-> Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
->=20
-> ---
->=20
-> For more info, see mail "cfg80211 / libertas: an unusual race"
-> in the linux-wireless mailing list.
-
-Oh ok, I suppose that explains it?
-
-johannes
-
---=-20pHizOLwsMa5AcazcSQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK2D2fAAoJEODzc/N7+QmaQvEQAJlaFSjth8XpDK0rylxImmn0
-NYK8LzEi/mda3XJttsWtRafVMFokhEE2lZ/5PQMBJh7FxLmYXF8sJ3gfj9IwERNo
-VU/AR+JQqAFl/ubUgDNxxnwCUgr58x9x4Cl87X06rjfFULCC020G76fPA2OkLxzW
-2kqHrQMflUC770MpY03UvKdzwYUFqY3BbxprVwIVIEwtIIkjxBvWkgw19rpAZu+3
-JWJsJOu94chn1WzGXEaF7efaN1CXPYEqY7vkVQpWMrSPRo7KZsMqMWF+cOfXwALf
-b/wS+tYYcKj42haVD8UrzYmkybCqRGxmnRAo4a1k0H0KUUARi55y2wkM6WUlaLVg
-V17U7pqrTIt3ep/9Cme5SK+WiuENW/wl/hdzL/xncmkAS/TQurXBM+o+wzJ2NJUL
-imtrJVHIEZk+GEJPpwQ+cj5hlmTOYpyDlZduU4cE9+D/s/5XZAEBSR66ovHm2Bkn
-Lwo3a6kh1TLhCd0VqBdhxFFBRhkDCSIUH+6WY7ChT2cJ0Zyaj7iJGKN97/fmwB/Q
-r0s4YKN+KagFxHfWT8TPoeEMj4kXln+jVmY1GCuswhCGZ7D3+UgamlDma0/3Tl0H
-YYIvDtktX20ifKhLP+L95O8XpYPPr6n1XDd2rYpxt5bCAHcUU7wCiObd7Vqaq/nn
-mugsbXvVOnvWMjBO70OL
-=fQeP
------END PGP SIGNATURE-----
-
---=-20pHizOLwsMa5AcazcSQ--
-
+Rafael
