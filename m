@@ -1,62 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:42210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbZJ1Oyh (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:49269 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755856AbZJLMNa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Oct 2009 10:54:37 -0400
-Subject: Re: iwlist wlan0 scan disrupts communications
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Charles Gordon <digigordo@gmail.com>
+	Mon, 12 Oct 2009 08:13:30 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <86201b3f0910280747q557a6153oec929e8235459c8f@mail.gmail.com>
-References: <86201b3f0910271340t51aa6c0bgff43e6e7211a0dee@mail.gmail.com>
-	 <1256676190.4237.27.camel@johannes.local>
-	 <86201b3f0910280747q557a6153oec929e8235459c8f@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-WS34He4sDkt6xDrlOp5B"
-Date: Wed, 28 Oct 2009 15:54:11 +0100
-Message-ID: <1256741651.4237.112.camel@johannes.local>
-Mime-Version: 1.0
+Subject: [PATCH 01/16] wl1271: implement cmd_disconnect
+Date: Mon, 12 Oct 2009 15:08:42 +0300
+Message-Id: <1255349337-9776-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch implements the CMD_DISCONNECT command, which should be sent to the
+firmware when we are disassociated.
 
---=-WS34He4sDkt6xDrlOp5B
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c |   32 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/wl1271_cmd.h |   27 +++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+), 1 deletions(-)
 
-On Wed, 2009-10-28 at 10:47 -0400, Charles Gordon wrote:
-
-> Thanks for the information.  After doing some more testing I found
-> that the association to the AP is sometimes lost and that mac80211
-> does not recover automatically.  You have to type the command "wpa_cli
-> reassociate" to trigger the stack to reassociate with the AP.  Is this
-> one of the things that is, or will be, fixed in later releases?
-
-I don't know. Normally, wpa_supplicant should notice this and re-connect
-by itself.
-
-johannes
-
---=-WS34He4sDkt6xDrlOp5B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK6FsPAAoJEODzc/N7+QmacpEP/RRgV5vY6Fujmohmo2CYsWHu
-GqmsfNYKBw9KNjsv0NCeWB1Tc0ZnxzjRFLe6Hx69QVUtoy5/Bage6aYV4U6uydM6
-uaTVkzk2fOTAcXmgpG80HKs5VnZkA8LMcRbrvsepJ1G+7CBA+ox4jdKfZkMWws9L
-w/YCvMsf93gL/zcm7F13VTyeORRoZKzPkWkOJcapZLq/drGXMFXOsJ/9RyeVO+rt
-k7TrQx055QTibveMw0fv+BkhFVV3gZFGZgZ9S4buQD9hKhPOXxUPXDzhn3B+zLAl
-ejh4ceMh9m4pDc8JmR7jnSBtLnffvKZP37CMVMhlvWP5x/nDJsOijH4gIikOPX4z
-Rlznp+tAc3ceyiICSMkbLGSvkb9RAkZaRUk5ZUZ1+FtwaHApE1f0Jr0JYtk3yTYT
-aPMAzz5DH/Z5V2O1t935rLBFg1NmGse98Yz5HL5sbo2o5R4+vBvGb+z326RhftBS
-H/dyrxon3TNLJn5p+jviO4Lb9QuNFkCvjOQJyQ5PWhseHMgjHi2O7lYGsVa0XEUu
-nBsg1o42rYOS4deTfuca8TiVoOtKecCZ4AMBNCNcw9FgefE9QplaowYu/NTxVnmL
-5xgy/lzVwjILzgQ4gRlgmLvU4zrgkwpnVlc7yEtj4NFvzBuysz599Flc/1Sprnk5
-swIInfKg7EHgKqOGFqht
-=FDC7
------END PGP SIGNATURE-----
-
---=-WS34He4sDkt6xDrlOp5B--
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index ac93efd..d09ad12 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -191,7 +191,6 @@ int wl1271_cmd_join(struct wl1271 *wl)
+ 			do_cal = false;
+ 	}
+ 
+-
+ 	join = kzalloc(sizeof(*join), GFP_KERNEL);
+ 	if (!join) {
+ 		ret = -ENOMEM;
+@@ -825,3 +824,34 @@ out:
+ 
+ 	return ret;
+ }
++
++int wl1271_cmd_disconnect(struct wl1271 *wl)
++{
++	struct wl1271_cmd_disconnect *cmd;
++	int ret = 0;
++
++	wl1271_debug(DEBUG_CMD, "cmd disconnect");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	cmd->rx_config_options = wl->rx_config;
++	cmd->rx_filter_options = wl->rx_filter;
++	/* disconnect reason is not used in immediate disconnections */
++	cmd->type = DISCONNECT_IMMEDIATE;
++
++	ret = wl1271_cmd_send(wl, CMD_DISCONNECT, cmd, sizeof(*cmd));
++	if (ret < 0) {
++		wl1271_error("failed to send disconnect command");
++		goto out_free;
++	}
++
++out_free:
++	kfree(cmd);
++
++out:
++	return ret;
++}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index 63bc441..0219664 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -50,6 +50,7 @@ int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
+ int wl1271_cmd_set_key(struct wl1271 *wl, u16 action, u8 id, u8 key_type,
+ 		       u8 key_size, const u8 *key, const u8 *addr,
+ 		       u32 tx_seq_32, u16 tx_seq_16);
++int wl1271_cmd_disconnect(struct wl1271 *wl);
+ 
+ enum wl1271_commands {
+ 	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
+@@ -461,4 +462,30 @@ struct wl1271_cmd_cal_p2g {
+ 	u8  padding2;
+ } __attribute__ ((packed));
+ 
++
++/*
++ * There are three types of disconnections:
++ *
++ * DISCONNECT_IMMEDIATE: the fw doesn't send any frames
++ * DISCONNECT_DEAUTH:    the fw generates a DEAUTH request with the reason
++ *                       we have passed
++ * DISCONNECT_DISASSOC:  the fw generates a DESASSOC request with the reason
++ *                       we have passed
++ */
++enum wl1271_disconnect_type {
++	DISCONNECT_IMMEDIATE,
++	DISCONNECT_DEAUTH,
++	DISCONNECT_DISASSOC
++};
++
++struct wl1271_cmd_disconnect {
++	u32 rx_config_options;
++	u32 rx_filter_options;
++
++	u16 reason;
++	u8  type;
++
++	u8  padding;
++} __attribute__ ((packed));
++
+ #endif /* __WL1271_CMD_H__ */
+-- 
+1.5.6.5
 
