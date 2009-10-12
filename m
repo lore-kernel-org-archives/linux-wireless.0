@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:56780 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbZJSKEO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43747 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750883AbZJLTBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 06:04:14 -0400
-Received: by ewy3 with SMTP id 3so3395272ewy.17
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Oct 2009 03:04:18 -0700 (PDT)
-Message-ID: <4ADC399C.4010209@gmail.com>
-Date: Mon, 19 Oct 2009 12:04:12 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Mon, 12 Oct 2009 15:01:50 -0400
+Date: Mon, 12 Oct 2009 14:59:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Ben Cahill <ben.m.cahill@intel.com>
+Subject: Re: [PATCH 02/17 v2.6.32] iwl3945: update iwl3945_apm_init()
+Message-ID: <20091012185943.GC2794@tuxdriver.com>
+References: <1255119634-3060-1-git-send-email-reinette.chatre@intel.com> <1255119634-3060-3-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-To: Luis Correia <luis.f.correia@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com
-Subject: Re: [PATCH] rt73usb.c : more ids
-References: <4ADC368F.1050709@gmail.com>	 <efe7343f0910190255o37e6f9foe5c71226fda80d26@mail.gmail.com> <efe7343f0910190258r45dc531bi2437a0b0ea507001@mail.gmail.com>
-In-Reply-To: <efe7343f0910190258r45dc531bi2437a0b0ea507001@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255119634-3060-3-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/19/2009 11:58 AM, Luis Correia wrote:
+On Fri, Oct 09, 2009 at 01:20:18PM -0700, Reinette Chatre wrote:
+> From: Ben Cahill <ben.m.cahill@intel.com>
+> 
+> Update iwl3945_apm_init() to set up device registers in sequence most recently
+> recommended by factory.
+> 
+> Add resets for APMG interrupts and radio chip, formerly done only in
+> iwl3945_apm_reset(); moving them here assures that apm_init() will do
+> a complete job of preparing hardware not only after platform boot,
+> but also after apm_stop() has executed (due to rfkill, ifconfig down,
+> driver unload, etc.).  This is in preparation to completely remove apm_reset().
+> 
+> Add some comments.
+> 
+> Signed-off-by: Ben Cahill <ben.m.cahill@intel.com>
+> Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 
-> I'm sorry, please disregard my last email (too early and zero coffee....)
+Is this actually a regression?  Can you provide a reference to the bug report?
 
-Don't worry,  lately with thunderbird from fedora-updates-testing
-anything is possible :-)
-
-regards,
+John
 -- 
-«Allá muevan feroz guerra, ciegos reyes por un palmo más de tierra;
-que yo aquí tengo por mío cuanto abarca el mar bravío, a quien nadie
-impuso leyes. Y no hay playa, sea cualquiera, ni bandera de esplendor,
-que no sienta mi derecho y dé pecho a mi valor.»
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
