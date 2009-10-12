@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:51736 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933840AbZJMJuz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:55 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 15/22] wl1271: Checking of rx descriptor status fixed
-Date: Tue, 13 Oct 2009 12:47:52 +0300
-Message-Id: <1255427279-1224-16-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47119 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758229AbZJLVUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:43 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/9] [compat-2.6] Fix compile bug with kernel 2.6.32
+Date: Mon, 12 Oct 2009 23:19:13 +0200
+Message-Id: <1255382358-20760-6-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 
-Fixed checking of status of the received packet. On wl1251 status is in the
-flags field of the descriptor, on wl1271 there is a separate status field.
-
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/wl12xx/wl1271_rx.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+ compat/patches/12-iw_handler-changes.patch |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 1dd8458..1ea3f41 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -142,15 +142,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 	if (desc->flags & WL1271_RX_DESC_ENCRYPT_MASK) {
- 		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
- 
--		if (likely(!(desc->flags & WL1271_RX_DESC_DECRYPT_FAIL)))
-+		if (likely(!(desc->status & WL1271_RX_DESC_DECRYPT_FAIL)))
- 			status->flag |= RX_FLAG_DECRYPTED;
--		/* FIXME: Flag should be also set when using 5 GHz band.
--		 * At the moment chip reports MIC failed on all packets,
--		 * so flag is silently discarded.
--		 */
--		if (unlikely(desc->flags & WL1271_RX_DESC_MIC_FAIL))
--			if (status->band != IEEE80211_BAND_5GHZ)
--				status->flag |= RX_FLAG_MMIC_ERROR;
-+		if (unlikely(desc->status & WL1271_RX_DESC_MIC_FAIL))
-+			status->flag |= RX_FLAG_MMIC_ERROR;
- 	}
- }
- 
+diff --git a/compat/patches/12-iw_handler-changes.patch b/compat/patches/12-iw_handler-changes.patch
+index 50c9b1a..7a700b1 100644
+--- a/compat/patches/12-iw_handler-changes.patch
++++ b/compat/patches/12-iw_handler-changes.patch
+@@ -1,11 +1,14 @@
+ --- a/drivers/net/wireless/ipw2x00/ipw2100.c	2009-10-08 11:01:52.000000000 -0400
+ +++ b/drivers/net/wireless/ipw2x00/ipw2100.c	2009-10-08 11:01:43.000000000 -0400
+-@@ -6057,7 +6057,7 @@
++@@ -6057,7 +6057,11 @@
+  
+  	dev->ethtool_ops = &ipw2100_ethtool_ops;
+  	dev->wireless_handlers = &ipw2100_wx_handler_def;
+--	priv->wireless_data.libipw = priv->ieee;
+++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
++ 	priv->wireless_data.libipw = priv->ieee;
+++#else
+ +	priv->wireless_data.ieee80211 = (struct ieee80211_device *) priv->ieee;
+++#endif
+  	dev->wireless_data = &priv->wireless_data;
+  	dev->watchdog_timeo = 3 * HZ;
+  	dev->irq = 0;
 -- 
-1.5.6.5
+1.6.2.1
 
