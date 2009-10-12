@@ -1,337 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56663 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759734AbZJHS6q (ORCPT
+Received: from mx51.mymxserver.com ([85.199.173.110]:30072 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317AbZJLLgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Oct 2009 14:58:46 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 15/20] wl1271: Multicast filtering configuration
-Date: Thu,  8 Oct 2009 21:56:31 +0300
-Message-Id: <1255028196-6565-16-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255028196-6565-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 12 Oct 2009 07:36:40 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by localhost.mx51.mymxserver.com (Postfix) with ESMTP id EE36A4B009
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 13:35:32 +0200 (CEST)
+Received: from mx51.mymxserver.com ([127.0.0.1])
+	by localhost (mx51.mymxserver.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Quuuqs88mTEN for <linux-wireless@vger.kernel.org>;
+	Mon, 12 Oct 2009 13:35:32 +0200 (CEST)
+Received: from lin01.mn-solutions.de (pD95F92E8.dip0.t-ipconnect.de [217.95.146.232])
+	by mx51.mymxserver.com (Postfix) with ESMTP id 5DF544B006
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 13:35:32 +0200 (CEST)
+Received: from mnz66.mn-solutions.de (mnz66.mn-solutions.de [192.168.233.66])
+	by lin01.mn-solutions.de (Postfix) with ESMTP id 93AA31E0010
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 13:35:22 +0200 (CEST)
+From: Holger Schurig <hs4233@mail.mn-solutions.de>
+To: linux-wireless@vger.kernel.org
+Subject: WARNING: slow-path
+Date: Mon, 12 Oct 2009 13:35:21 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <200910121335.21807.hs4233@mail.mn-solutions.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+I'm getting a "slow-path" warning that I don't really comprehend:
 
-Enable multicast filtering. This way by default no multicast frames will
-reach the host, and when needed, only required multicast frames can be
-passed from the WLAN chipset to the host.
+[   33.357576] libertas leave: lbs_cfg_scan_worker()
+[   33.368197] libertas enter: lbs_cfg_auth()
+[   33.368356] libertas leave: lbs_cfg_auth(), ret 0
+[   33.368554] libertas enter: lbs_cfg_ret_auth()
+[   33.368746] libertas leave: lbs_cfg_ret_auth()
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    7 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    9 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    8 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |  121 +++++++++++++++++++++++++----
- 5 files changed, 120 insertions(+), 27 deletions(-)
+Next comes the .assoc function. This isn't yet coded so I return -ENOTSUPP
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 0b4744d..34a52b3 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -97,7 +97,8 @@ enum {
- 	} while (0)
- 
- #define WL1271_DEFAULT_RX_CONFIG (CFG_UNI_FILTER_EN |	\
--				  CFG_BSSID_FILTER_EN)
-+				  CFG_BSSID_FILTER_EN | \
-+				  CFG_MC_FILTER_EN)
- 
- #define WL1271_DEFAULT_RX_FILTER (CFG_RX_RCTS_ACK | CFG_RX_PRSP_EN |  \
- 				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN |   \
-@@ -123,7 +124,7 @@ enum {
- #define WL1271_DEFAULT_BEACON_INT  100
- #define WL1271_DEFAULT_DTIM_PERIOD 1
- 
--#define ACX_TX_DESCRIPTORS    32
-+#define ACX_TX_DESCRIPTORS         32
- 
- enum wl1271_state {
- 	WL1271_STATE_OFF,
-@@ -345,7 +346,9 @@ struct wl1271 {
- 	bool tx_queue_stopped;
- 
- 	struct work_struct tx_work;
-+
- 	struct work_struct filter_work;
-+	struct wl1271_filter_params *filter_params;
- 
- 	/* Pending TX frames */
- 	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index 2ae1081..a457123 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -300,7 +300,8 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_group_address_tbl(struct wl1271 *wl)
-+int wl1271_acx_group_address_tbl(struct wl1271 *wl, bool enable,
-+				 void *mc_list, u32 mc_list_len)
- {
- 	struct acx_dot11_grp_addr_tbl *acx;
- 	int ret;
-@@ -314,9 +315,9 @@ int wl1271_acx_group_address_tbl(struct wl1271 *wl)
- 	}
- 
- 	/* MAC filtering */
--	acx->enabled = 0;
--	acx->num_groups = 0;
--	memset(acx->mac_table, 0, ADDRESS_GROUP_MAX_LEN);
-+	acx->enabled = enable;
-+	acx->num_groups = mc_list_len;
-+	memcpy(acx->mac_table, mc_list, mc_list_len * ETH_ALEN);
- 
- 	ret = wl1271_cmd_configure(wl, DOT11_GROUP_ADDRESS_TBL,
- 				   acx, sizeof(*acx));
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index c177345..dae1fed 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -301,8 +301,8 @@ struct acx_slot {
- } __attribute__ ((packed));
- 
- 
--#define ADDRESS_GROUP_MAX	(8)
--#define ADDRESS_GROUP_MAX_LEN	(ETH_ALEN * ADDRESS_GROUP_MAX)
-+#define ACX_MC_ADDRESS_GROUP_MAX	(8)
-+#define ADDRESS_GROUP_MAX_LEN	        (ETH_ALEN * ACX_MC_ADDRESS_GROUP_MAX)
- 
- struct acx_dot11_grp_addr_tbl {
- 	struct acx_header header;
-@@ -313,7 +313,6 @@ struct acx_dot11_grp_addr_tbl {
- 	u8 mac_table[ADDRESS_GROUP_MAX_LEN];
- } __attribute__ ((packed));
- 
--
- #define  RX_TIMEOUT_PS_POLL_MIN    0
- #define  RX_TIMEOUT_PS_POLL_MAX    (200000)
- #define  RX_TIMEOUT_PS_POLL_DEF    (15)
-@@ -1193,7 +1192,8 @@ int wl1271_acx_rx_msdu_life_time(struct wl1271 *wl, u32 life_time);
- int wl1271_acx_rx_config(struct wl1271 *wl, u32 config, u32 filter);
- int wl1271_acx_pd_threshold(struct wl1271 *wl);
- int wl1271_acx_slot(struct wl1271 *wl, enum acx_slot_type slot_time);
--int wl1271_acx_group_address_tbl(struct wl1271 *wl);
-+int wl1271_acx_group_address_tbl(struct wl1271 *wl, bool enable,
-+				 void *mc_list, u32 mc_list_len);
- int wl1271_acx_service_period_timeout(struct wl1271 *wl);
- int wl1271_acx_rts_threshold(struct wl1271 *wl, u16 rts_threshold);
- int wl1271_acx_beacon_filter_opt(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index eb6b91a..49ff407 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -117,7 +117,7 @@ static int wl1271_init_phy_config(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wl1271_acx_group_address_tbl(wl);
-+	ret = wl1271_acx_group_address_tbl(wl, true, NULL, 0);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index d104230..09fe968 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -379,12 +379,39 @@ out:
- 	return ret;
- }
- 
-+struct wl1271_filter_params {
-+	unsigned int filters;
-+	unsigned int changed;
-+	int mc_list_length;
-+	u8 mc_list[ACX_MC_ADDRESS_GROUP_MAX][ETH_ALEN];
-+};
-+
-+#define WL1271_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
-+				  FIF_ALLMULTI | \
-+				  FIF_FCSFAIL | \
-+				  FIF_BCN_PRBRESP_PROMISC | \
-+				  FIF_CONTROL | \
-+				  FIF_OTHER_BSS)
-+
- static void wl1271_filter_work(struct work_struct *work)
- {
- 	struct wl1271 *wl =
- 		container_of(work, struct wl1271, filter_work);
-+	struct wl1271_filter_params *fp;
-+	unsigned long flags;
-+	bool enabled = true;
- 	int ret;
- 
-+	/* first, get the filter parameters */
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	fp = wl->filter_params;
-+	wl->filter_params = NULL;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+	if (!fp)
-+		return;
-+
-+	/* then, lock the mutex without risk of lock-up */
- 	mutex_lock(&wl->mutex);
- 
- 	if (wl->state == WL1271_STATE_OFF)
-@@ -394,6 +421,20 @@ static void wl1271_filter_work(struct work_struct *work)
- 	if (ret < 0)
- 		goto out;
- 
-+	/* configure the mc filter regardless of the changed flags */
-+	if (fp->filters & FIF_ALLMULTI)
-+		enabled = false;
-+
-+	ret = wl1271_acx_group_address_tbl(wl, enabled,
-+					   fp->mc_list, fp->mc_list_length);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+	/* determine, whether supported filter values have changed */
-+	if (fp->changed == 0)
-+		goto out;
-+
-+	/* apply configured filters */
- 	ret = wl1271_cmd_join(wl);
- 	if (ret < 0)
- 		goto out_sleep;
-@@ -403,6 +444,7 @@ out_sleep:
- 
- out:
- 	mutex_unlock(&wl->mutex);
-+	kfree(fp);
- }
- 
- int wl1271_plt_start(struct wl1271 *wl)
-@@ -544,12 +586,20 @@ out:
- static void wl1271_op_stop(struct ieee80211_hw *hw)
- {
- 	struct wl1271 *wl = hw->priv;
-+	unsigned long flags;
- 	int i;
- 
- 	wl1271_info("down");
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 stop");
- 
-+	/* complete/cancel ongoing work */
-+	cancel_work_sync(&wl->filter_work);
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	kfree(wl->filter_params);
-+	wl->filter_params = NULL;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
- 	mutex_lock(&wl->mutex);
- 
- 	WARN_ON(wl->state != WL1271_STATE_ON);
-@@ -784,16 +834,52 @@ out:
- 	return ret;
- }
- 
--#define WL1271_SUPPORTED_FILTERS (FIF_PROMISC_IN_BSS | \
--				  FIF_ALLMULTI | \
--				  FIF_FCSFAIL | \
--				  FIF_BCN_PRBRESP_PROMISC | \
--				  FIF_CONTROL | \
--				  FIF_OTHER_BSS)
-+static u64 wl1271_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
-+				       struct dev_addr_list *mc_list)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl1271_filter_params *fp;
-+	unsigned long flags;
-+	int i;
-+
-+	/*
-+	 * FIXME: we should return a hash that will be passed to
-+	 * configure_filter() instead of saving everything in the context.
-+	 */
-+
-+	fp = kzalloc(sizeof(*fp), GFP_KERNEL);
-+	if (!fp) {
-+		wl1271_error("Out of memory setting filters.");
-+		return 0;
-+	}
-+
-+	/* update multicast filtering parameters */
-+	if (mc_count > ACX_MC_ADDRESS_GROUP_MAX) {
-+		mc_count = 0;
-+		fp->filters |= FIF_ALLMULTI;
-+	}
-+
-+	fp->mc_list_length = 0;
-+	for (i = 0; i < mc_count; i++) {
-+		if (mc_list->da_addrlen == ETH_ALEN) {
-+			memcpy(fp->mc_list[fp->mc_list_length],
-+			       mc_list->da_addr, ETH_ALEN);
-+			fp->mc_list_length++;
-+		} else
-+			wl1271_warning("Unknown mc address length.");
-+	}
-+
-+	spin_lock_irqsave(&wl->wl_lock, flags);
-+	kfree(wl->filter_params);
-+	wl->filter_params = fp;
-+	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+	return 1;
-+}
- 
- static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 				       unsigned int changed,
--				       unsigned int *total,u64 multicast)
-+				       unsigned int *total, u64 multicast)
- {
- 	struct wl1271 *wl = hw->priv;
- 
-@@ -802,19 +888,21 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 	*total &= WL1271_SUPPORTED_FILTERS;
- 	changed &= WL1271_SUPPORTED_FILTERS;
- 
--	if (changed == 0)
-+	if (!multicast)
- 		return;
- 
--	/* FIXME: wl->rx_config and wl->rx_filter are not protected */
--	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
--	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
--
- 	/*
--	 * FIXME: workqueues need to be properly cancelled on stop(), for
--	 * now let's just disable changing the filter settings. They will
--	 * be updated any on config().
-+	 * FIXME: for now we are still using a workqueue for filter
-+	 * configuration, but with the new mac80211, this is not needed,
-+	 * since configure_filter can now sleep.  We now have
-+	 * prepare_multicast, which needs to be atomic instead.
- 	 */
--	/* schedule_work(&wl->filter_work); */
-+
-+	/* store current filter config */
-+	wl->filter_params->filters = *total;
-+	wl->filter_params->changed = changed;
-+
-+	ieee80211_queue_work(wl->hw, &wl->filter_work);
- }
- 
- static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-@@ -1177,6 +1265,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.remove_interface = wl1271_op_remove_interface,
- 	.config = wl1271_op_config,
- /* 	.config_interface = wl1271_op_config_interface, */
-+	.prepare_multicast = wl1271_op_prepare_multicast,
- 	.configure_filter = wl1271_op_configure_filter,
- 	.tx = wl1271_op_tx,
- 	.set_key = wl1271_op_set_key,
+[   33.368832] libertas enter: lbs_cfg_assoc()
+[   33.368902] libertas leave: lbs_cfg_assoc(-ENOTSUPP)
+
+... with makes mlme.c call my .deauth function:
+
+[   33.368970] libertas enter: lbs_cfg_deauth()
+[   33.369768] libertas enter: lbs_cfg_ret_deauth()
+[   33.369838] ------------[ cut here ]------------
+[   33.369923] WARNING: at net/wireless/mlme.c:135 __cfg80211_send_deauth+0x3f/0x1e1 [cfg80211]()
+[   33.370028] Hardware name: Amilo M1425
+[   33.370096] Modules linked in: libertas_cs libertas cfg80211 lib80211 psmouse uhci_hcd [last unloaded: cfg80211]
+[   33.370461] Pid: 1700, comm: lbs_main Not tainted 2.6.32-rc3-wl #21
+[   33.370532] Call Trace:
+[   33.370604]  [<c012395a>] warn_slowpath_common+0x60/0x77
+[   33.370676]  [<c012397e>] warn_slowpath_null+0xd/0x10
+[   33.370754]  [<f91205c0>] __cfg80211_send_deauth+0x3f/0x1e1 [cfg80211]
+[   33.370834]  [<f9120c85>] cfg80211_send_deauth+0x33/0x5a [cfg80211]
+[   33.370916]  [<f93324cc>] lbs_cfg_ret_deauth+0x9d/0xe7 [libertas]
+[   33.370993]  [<f933242f>] ? lbs_cfg_ret_deauth+0x0/0xe7 [libertas]
+[   33.371071]  [<f93380bc>] lbs_process_command_response+0x538/0xa96 [libertas]
+[   33.371147]  [<c0399f7a>] ? _spin_unlock_irq+0x22/0x3b
+[   33.371225]  [<f933ca77>] lbs_thread+0x358/0x747 [libertas]
+[   33.371300]  [<c011ebbc>] ? default_wake_function+0x0/0xd
+[   33.371377]  [<f933c71f>] ? lbs_thread+0x0/0x747 [libertas]
+[   33.371450]  [<c0133c9c>] kthread+0x61/0x69
+[   33.371520]  [<c0133c3b>] ? kthread+0x0/0x69
+[   33.371591]  [<c010334b>] kernel_thread_helper+0x7/0x10
+[   33.371661] ---[ end trace f5da223917368c61 ]---
+[   33.371756] libertas leave: lbs_cfg_ret_deauth()
+
+Bellow is lbs_cfg_deauth. I know from friday's debugging, that
+__lbs_cmd_async also does a preempt (CONFIG_PREEMPT). That
+might have something do to with it.
+
+
+static int lbs_cfg_deauth(struct wiphy *wiphy, struct net_device *dev,
+			  struct cfg80211_deauth_request *req,
+			  void *cookie)
+{
+	struct lbs_private *priv = wiphy_priv(wiphy);
+	struct cmd_ds_802_11_deauthenticate cmd;
+	lbs_deb_enter(LBS_DEB_CFG80211);
+
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
+	memcpy(cmd.macaddr, &req->bss->bssid, ETH_ALEN);
+	cmd.reasoncode = cpu_to_le16(req->reason_code);
+
+	__lbs_cmd_async(priv, CMD_802_11_DEAUTHENTICATE,
+			&cmd.hdr, sizeof(cmd),
+			lbs_cfg_ret_deauth, (unsigned long) cookie);
+
+	return 0;
+}
+
+
+lbs_cfg_ret_deauth() get's called as soon as the
+firmware sends me back some response.
+
+
+static int lbs_cfg_ret_deauth(struct lbs_private *priv, unsigned long dummy,
+			    struct cmd_header *resp)
+{
+	struct cmd_ds_802_11_deauthenticate *deauth_resp = (void *)resp;
+	struct ieee80211_mgmt mgmt;
+
+	lbs_deb_enter(LBS_DEB_CFG80211);
+
+	/* Fake a management frame */
+	memset(&mgmt, 0, sizeof(mgmt));
+	memcpy(mgmt.bssid, deauth_resp->macaddr, ETH_ALEN);
+	memcpy(mgmt.sa, deauth_resp->macaddr, ETH_ALEN);
+	memcpy(mgmt.da, priv->current_addr, ETH_ALEN);
+	cfg80211_send_deauth(priv->dev, (u8 *)&mgmt, sizeof(mgmt),
+			     (void *)dummy);
+
+	lbs_deb_leave(LBS_DEB_CFG80211);
+	return 0;
+}
+
+
+
+Any idea on how to fix that?
+
 -- 
-1.5.6.5
-
+http://www.holgerschurig.de
