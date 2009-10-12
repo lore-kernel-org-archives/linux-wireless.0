@@ -1,136 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:31145 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbZJTMoz (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4820 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755549AbZJLXzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Oct 2009 08:44:55 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH, v2] libertas: sort and categorize entries in decl.h
-Date: Tue, 20 Oct 2009 14:44:34 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-References: <200910191527.04100.hs4233@mail.mn-solutions.de>
-In-Reply-To: <200910191527.04100.hs4233@mail.mn-solutions.de>
+	Mon, 12 Oct 2009 19:55:43 -0400
+Date: Mon, 12 Oct 2009 19:54:38 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Richard Zidlicky <rz@linux-m68k.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: 2.6.31.[12] ath5k regression
+Message-ID: <20091012235438.GA24539@hash.localnet>
+References: <20090623202541.GA3635@hash.localnet> <20090625083636.GA6323@linux-m68k.org> <20090705123105.GE2132@hash.localnet> <20091009143922.GA7848@linux-m68k.org> <20091010125824.GA18841@hash.localnet> <20091011122616.GA27105@linux-m68k.org> <20091011133010.GA21494@hash.localnet> <20091011220002.GA11603@linux-m68k.org> <20091011222142.M14763@bobcopeland.com> <20091012202316.GA8310@linux-m68k.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <200910201444.35005.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091012202316.GA8310@linux-m68k.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[PATCH, v2] libertas: sort and categorize entries in decl.h
+On Mon, Oct 12, 2009 at 10:23:16PM +0200, Richard Zidlicky wrote:
+> it works like in mainline and fails.
 
-This now makes decl.h only contain declarations for functions that don't
-have their own *.h file.
-
-No functional change.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
----
-v2: compilation fix
-
---- linux-wl.orig/drivers/net/wireless/libertas/decl.h
-+++ linux-wl/drivers/net/wireless/libertas/decl.h
-@@ -8,46 +8,30 @@
- 
- #include <linux/netdevice.h>
- 
--#include "defs.h"
- 
--
--extern const struct ethtool_ops lbs_ethtool_ops;
--
--/** Function Prototype Declaration */
- struct lbs_private;
- struct sk_buff;
- struct net_device;
--struct cmd_ctrl_node;
--struct cmd_ds_command;
- 
--int lbs_suspend(struct lbs_private *priv);
--void lbs_resume(struct lbs_private *priv);
--
--void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count);
- 
--void lbs_queue_event(struct lbs_private *priv, u32 event);
--void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
--int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
--int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
-+/* ethtool.c */
-+extern const struct ethtool_ops lbs_ethtool_ops;
- 
--u32 lbs_fw_index_to_data_rate(u8 index);
--u8 lbs_data_rate_to_fw_index(u32 rate);
- 
--/** The proc fs interface */
-+/* tx.c */
-+void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count);
- netdev_tx_t lbs_hard_start_xmit(struct sk_buff *skb,
- 				struct net_device *dev);
- 
-+/* rx.c */
- int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
- 
--struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
--	struct lbs_private *priv,
--	u8 band,
--	u16 channel);
- 
- /* persistcfg.c */
- void lbs_persist_config_init(struct net_device *net);
- void lbs_persist_config_remove(struct net_device *net);
- 
-+
- /* main.c */
- struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
- void lbs_remove_card(struct lbs_private *priv);
-@@ -55,5 +39,17 @@
- void lbs_stop_card(struct lbs_private *priv);
- void lbs_host_to_card_done(struct lbs_private *priv);
- 
-+int lbs_suspend(struct lbs_private *priv);
-+void lbs_resume(struct lbs_private *priv);
-+
-+void lbs_queue_event(struct lbs_private *priv, u32 event);
-+void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
-+
-+int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
-+int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
-+
-+u32 lbs_fw_index_to_data_rate(u8 index);
-+u8 lbs_data_rate_to_fw_index(u32 rate);
-+
- 
- #endif
---- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-+++ linux-wl/drivers/net/wireless/libertas/scan.c
-@@ -12,10 +12,10 @@
- #include <net/lib80211.h>
- 
- #include "host.h"
--#include "decl.h"
- #include "dev.h"
- #include "scan.h"
- #include "assoc.h"
-+#include "wext.h"
- #include "cmd.h"
- 
- //! Approximate amount of data needed to pass a scan result back to iwlist
---- linux-wl.orig/drivers/net/wireless/libertas/wext.h
-+++ linux-wl/drivers/net/wireless/libertas/wext.h
-@@ -10,4 +10,9 @@
- extern struct iw_handler_def lbs_handler_def;
- extern struct iw_handler_def mesh_handler_def;
- 
-+struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
-+	struct lbs_private *priv,
-+	u8 band,
-+	u16 channel);
-+
- #endif
-
+Huh, well it should be equivalent to your patch, so I'm stumped
+as to why.
 
 -- 
-http://www.holgerschurig.de
+Bob Copeland %% www.bobcopeland.com
+
