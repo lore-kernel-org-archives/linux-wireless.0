@@ -1,130 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:34789 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932126AbZJSOja (ORCPT
+Received: from ey-out-2122.google.com ([74.125.78.25]:46059 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755385AbZJLM3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 10:39:30 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Dan Williams <dcbw@redhat.com>
-Subject: [PATCH] libertas: sort and categorize entries in decl.h
-Date: Mon, 19 Oct 2009 15:27:04 +0200
+	Mon, 12 Oct 2009 08:29:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <200910191527.04100.hs4233@mail.mn-solutions.de>
+Date: Mon, 12 Oct 2009 08:28:36 -0400
+Message-ID: <a44ae5cd0910120528h6d8992fcn8b6592ee799fbfc5@mail.gmail.com>
+Subject: 2.6.32-rc4-git1 -- INFO: possible circular locking dependency
+	detected
+From: Miles Lane <miles.lane@gmail.com>
+To: LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also make lbs_find_cfp_by_band_and_channel() as static, as it's only used
-inside wext.c.
-
-This now makes decl.h only contain declarations for functions that don't
-have their own *.h file.
-
-No function change.
-
-Signed-off-by: Holger Schurig <hs4233@mail.mn-solutions.de>
-
---- linux-wl.orig/drivers/net/wireless/libertas/decl.h
-+++ linux-wl/drivers/net/wireless/libertas/decl.h
-@@ -8,46 +8,30 @@
- 
- #include <linux/netdevice.h>
- 
--#include "defs.h"
- 
--
--extern const struct ethtool_ops lbs_ethtool_ops;
--
--/** Function Prototype Declaration */
- struct lbs_private;
- struct sk_buff;
- struct net_device;
--struct cmd_ctrl_node;
--struct cmd_ds_command;
- 
--int lbs_suspend(struct lbs_private *priv);
--void lbs_resume(struct lbs_private *priv);
--
--void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count);
- 
--void lbs_queue_event(struct lbs_private *priv, u32 event);
--void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
--int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
--int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
-+/* ethtool.c */
-+extern const struct ethtool_ops lbs_ethtool_ops;
- 
--u32 lbs_fw_index_to_data_rate(u8 index);
--u8 lbs_data_rate_to_fw_index(u32 rate);
- 
--/** The proc fs interface */
-+/* tx.c */
-+void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count);
- netdev_tx_t lbs_hard_start_xmit(struct sk_buff *skb,
- 				struct net_device *dev);
- 
-+/* rx.c */
- int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *);
- 
--struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
--	struct lbs_private *priv,
--	u8 band,
--	u16 channel);
- 
- /* persistcfg.c */
- void lbs_persist_config_init(struct net_device *net);
- void lbs_persist_config_remove(struct net_device *net);
- 
-+
- /* main.c */
- struct lbs_private *lbs_add_card(void *card, struct device *dmdev);
- void lbs_remove_card(struct lbs_private *priv);
-@@ -55,5 +39,17 @@
- void lbs_stop_card(struct lbs_private *priv);
- void lbs_host_to_card_done(struct lbs_private *priv);
- 
-+int lbs_suspend(struct lbs_private *priv);
-+void lbs_resume(struct lbs_private *priv);
-+
-+void lbs_queue_event(struct lbs_private *priv, u32 event);
-+void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx);
-+
-+int lbs_enter_auto_deep_sleep(struct lbs_private *priv);
-+int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
-+
-+u32 lbs_fw_index_to_data_rate(u8 index);
-+u8 lbs_data_rate_to_fw_index(u32 rate);
-+
- 
- #endif
---- linux-wl.orig/drivers/net/wireless/libertas/scan.c
-+++ linux-wl/drivers/net/wireless/libertas/scan.c
-@@ -12,10 +12,10 @@
- #include <net/lib80211.h>
- 
- #include "host.h"
--#include "decl.h"
- #include "dev.h"
- #include "scan.h"
- #include "assoc.h"
-+#include "wext.h"
- #include "cmd.h"
- 
- //! Approximate amount of data needed to pass a scan result back to iwlist
---- linux-wl.orig/drivers/net/wireless/libertas/wext.c
-+++ linux-wl/drivers/net/wireless/libertas/wext.c
-@@ -86,7 +86,7 @@
-  *  @param channel      the channel for looking
-  *  @return 	   	A pointer to struct chan_freq_power structure or NULL if not find.
-  */
--struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
-+static struct chan_freq_power *lbs_find_cfp_by_band_and_channel(
- 	struct lbs_private *priv,
- 	u8 band,
- 	u16 channel)
-
--- 
-http://www.holgerschurig.de
+[  823.466853] [ INFO: possible circular locking dependency detected ]
+[  823.466866] 2.6.32-rc4-git1 #2
+[  823.466873] -------------------------------------------------------
+[  823.466884] swapper/0 is trying to acquire lock:
+[  823.466893]  (&sta->lock){+.-...}, at: [<f857bda4>]
+sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
+[  823.466940]
+[  823.466943] but task is already holding lock:
+[  823.466953]
+(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}, at:
+[<c1032f22>] run_timer_softirq+0x125/0x1e5
+[  823.466984]
+[  823.466987] which lock already depends on the new lock.
+[  823.466991]
+[  823.467000]
+[  823.467002] the existing dependency chain (in reverse order) is:
+[  823.467013]
+[  823.467015] -> #1 (&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}:
+[  823.467037]        [<c104ac2c>] __lock_acquire+0x9fb/0xb6d
+[  823.467056]        [<c104adfa>] lock_acquire+0x5c/0x73
+[  823.467072]        [<c10336b8>] del_timer_sync+0x29/0x6c
+[  823.467089]        [<f857bceb>]
+ieee80211_process_addba_resp+0x49/0xa0 [mac80211]
+[  823.467121]        [<f8584585>] ieee80211_rx_h_action+0xeb/0x335 [mac80211]
+[  823.467157]        [<f8585654>]
+ieee80211_invoke_rx_handlers+0xe50/0x10d8 [mac80211]
+[  823.467193]        [<f8585d46>]
+__ieee80211_rx_handle_packet+0x46a/0x497 [mac80211]
+[  823.467229]        [<f8586475>] ieee80211_rx+0x4d1/0x530 [mac80211]
+[  823.467263]        [<f89936e3>] ath_rx_send_to_mac80211+0xa0/0xa8 [ath9k]
+[  823.467302]        [<f899439e>] ath_rx_tasklet+0x7b6/0x7f5 [ath9k]
+[  823.467338]        [<f8992115>] ath9k_tasklet+0x47/0xc7 [ath9k]
+[  823.467373]        [<c102f4a1>] tasklet_action+0x8e/0xe1
+[  823.467391]        [<c102f95b>] __do_softirq+0x8d/0x117
+[  823.467409]
+[  823.467412] -> #0 (&sta->lock){+.-...}:
+[  823.467430]        [<c104ab2e>] __lock_acquire+0x8fd/0xb6d
+[  823.467447]        [<c104adfa>] lock_acquire+0x5c/0x73
+[  823.467464]        [<c132526f>] _spin_lock_bh+0x2a/0x39
+[  823.467481]        [<f857bda4>]
+sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
+[  823.467514]        [<c1032f6d>] run_timer_softirq+0x170/0x1e5
+[  823.467531]        [<c102f95b>] __do_softirq+0x8d/0x117
+[  823.467548]
+[  823.467551] other info that might help us debug this:
+[  823.467555]
+[  823.467566] 1 lock held by swapper/0:
+[  823.467574]  #0:
+(&sta->ampdu_mlme.tid_tx[tid]->addba_resp_timer){+.-...}, at:
+[<c1032f22>] run_timer_softirq+0x125/0x1e5
+[  823.467604]
+[  823.467607] stack backtrace:
+[  823.467619] Pid: 0, comm: swapper Not tainted 2.6.32-rc4-git1 #2
+[  823.467628] Call Trace:
+[  823.467643]  [<c13233c8>] ? printk+0xf/0x11
+[  823.467659]  [<c1049ef5>] print_circular_bug+0x8a/0x96
+[  823.467675]  [<c104ab2e>] __lock_acquire+0x8fd/0xb6d
+[  823.467694]  [<c104adfa>] lock_acquire+0x5c/0x73
+[  823.467725]  [<f857bda4>] ? sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
+[  823.467742]  [<c132526f>] _spin_lock_bh+0x2a/0x39
+[  823.467772]  [<f857bda4>] ? sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
+[  823.467803]  [<f857bda4>] sta_addba_resp_timer_expired+0x1b/0x50 [mac80211]
+[  823.467820]  [<c1032f6d>] run_timer_softirq+0x170/0x1e5
+[  823.467836]  [<c1032f22>] ? run_timer_softirq+0x125/0x1e5
+[  823.467866]  [<f857bd89>] ? sta_addba_resp_timer_expired+0x0/0x50 [mac80211]
+[  823.467885]  [<c102f95b>] __do_softirq+0x8d/0x117
+[  823.467901]  [<c102f8ce>] ? __do_softirq+0x0/0x117
+[  823.467911]  <IRQ>  [<c102faf5>] ? irq_exit+0x38/0x75
+[  823.467939]  [<c10045b1>] ? do_IRQ+0x88/0x9c
+[  823.467954]  [<c1003175>] ? common_interrupt+0x35/0x3c
+[  823.467971]  [<c104007b>] ? sched_clock_tick+0x31/0x77
+[  823.467989]  [<c11b84ff>] ? acpi_idle_enter_bm+0x233/0x25e
+[  823.468008]  [<c125c232>] ? cpuidle_idle_call+0x65/0x9b
+[  823.468023]  [<c1001cd1>] ? cpu_idle+0xb9/0xe8
+[  823.468041]  [<c131708b>] ? rest_init+0x67/0x69
+[  823.468058]  [<c14e28e8>] ? start_kernel+0x3a3/0x3aa
+[  823.468076]  [<c14e2098>] ? i386_start_kernel+0x98/0x9f
