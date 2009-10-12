@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36405 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755338AbZJLVrc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Oct 2009 17:47:32 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
-Date: Mon, 12 Oct 2009 23:48:33 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Natalie Protasevich <protasnb@gmail.com>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera> <1255377529.9544.63.camel@bluto.andrew>
-In-Reply-To: <1255377529.9544.63.camel@bluto.andrew>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <200910122348.33588.rjw@sisk.pl>
+Received: from casper.infradead.org ([85.118.1.10]:56344 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755315AbZJLNJF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 09:09:05 -0400
+Subject: Re: WARNING: slow-path
+From: David Woodhouse <dwmw2@infradead.org>
+To: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <200910121335.21807.hs4233@mail.mn-solutions.de>
+References: <200910121335.21807.hs4233@mail.mn-solutions.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Oct 2009 14:08:26 +0100
+Message-Id: <1255352906.30919.11.camel@macbook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 October 2009, Andrew Patterson wrote:
-> On Mon, 2009-10-12 at 00:41 +0200, Rafael J. Wysocki wrote:
-> > 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14309
-> > Subject		: MCA on hp rx8640
-> > Submitter	: Andrew Patterson <andrew.patterson@hp.com>
-> > Date		: 2009-09-29 17:20 (13 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=db8be50c4307dac2b37305fc59c8dc0f978d09ea
-> > References	: http://www.spinics.net/lists/linux-usb/msg22799.html
-> > 
-> 
-> Linus fixed this one with d93a8f829fe1d2f3002f2c6ddb553d12db420412.  It
-> also looks like a duplicate of
-> http://bugzilla.kernel.org/show_bug.cgi?id=14374
+On Mon, 2009-10-12 at 13:35 +0200, Holger Schurig wrote:
+> [   33.369923] WARNING: at net/wireless/mlme.c:135 __cfg80211_send_deauth+0x3f/0x1e1 [cfg80211]()
 
-Thanks, I closed #14309 as a duplicate of #14374 that's already closed.
+You're triggering the warning at line 135 of net/wireless/mlme.c, which
+is 'ASSERT_WDEV_LOCK(wdev)' -- it's complaining that the lock isn't
+held.
+ 
+> static int lbs_cfg_ret_deauth(struct lbs_private *priv, unsigned long dummy,
+>                            struct cmd_header *resp)
+>         cfg80211_send_deauth(priv->dev, (u8 *)&mgmt, sizeof(mgmt),
+>                              (void *)dummy); 
 
-Best,
-Rafael
+What happens if you make that last argument NULL instead of passing
+'dummy' back to it? That makes cfg80211_send_deauth() magically do
+different things w.r.t. locking. Johannes, this is _evil_:
+
+void cfg80211_send_deauth(struct net_device *dev, const u8 *buf, size_t len,
+                          void *cookie)
+{
+        struct wireless_dev *wdev = dev->ieee80211_ptr;
+
+        BUG_ON(cookie && wdev != cookie);
+
+        if (cookie) {
+                /* called within callback */
+                __cfg80211_send_deauth(dev, buf, len);
+        } else {
+                wdev_lock(wdev);
+                __cfg80211_send_deauth(dev, buf, len);
+                wdev_unlock(wdev);
+        }
+}
+
+
+-- 
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
