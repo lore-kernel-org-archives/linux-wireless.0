@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([85.199.173.110]:56755 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140AbZJSHCs (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:64851 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755051AbZJLMNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Oct 2009 03:02:48 -0400
-From: Holger Schurig <hs4233@mail.mn-solutions.de>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: libertas + cfg80211: road for kernel inclusion?
-Date: Mon, 19 Oct 2009 09:02:29 +0200
+	Mon, 12 Oct 2009 08:13:22 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-References: <200910161426.22206.hs4233@mail.mn-solutions.de> <1255709780.14241.26.camel@localhost.localdomain>
-In-Reply-To: <1255709780.14241.26.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Message-Id: <200910190902.29352.hs4233@mail.mn-solutions.de>
+Subject: [PATCH 04/16] wl1271: enable HW_AVAILABLE interrupt to fix ELP
+Date: Mon, 12 Oct 2009 15:08:45 +0300
+Message-Id: <1255349337-9776-5-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
+References: <1255349337-9776-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> BTW, do you have any rough counts of the LoC you've removed from the
-> driver as a result of this?  Ideally you could remove a cargo-ship's
-> worth of work I did back in 2007 and you know what?  I like that :)
+We need to listen to HW_AVAILABLE interrupts when using ELP with firmware
+revision 6.1.0.0.241.  Add WL1271_ACX_INTR_HW_AVAILABLE to the interrupts that
+are enabled by default.
 
-Oh, that's easy. The last diffstat for my cfg80211 patch was 
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.h |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
- 22 files changed, 2107 insertions(+), 1855 deletions(-)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 0c2a107..07256d2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -61,8 +61,9 @@
+ 					    WL1271_ACX_INTR_HW_AVAILABLE  | \
+ 					    WL1271_ACX_INTR_DATA)
+ 
+-#define WL1271_INTR_MASK                   (WL1271_ACX_INTR_EVENT_A |	\
+-					    WL1271_ACX_INTR_EVENT_B | \
++#define WL1271_INTR_MASK                   (WL1271_ACX_INTR_EVENT_A      | \
++					    WL1271_ACX_INTR_EVENT_B      | \
++					    WL1271_ACX_INTR_HW_AVAILABLE | \
+ 					    WL1271_ACX_INTR_DATA)
+ 
+ /* Target's information element */
+-- 
+1.5.6.5
 
-
-But the patch doesn't currently remove some files, so if I do
-
-$ wc --lines wext.* 11d.* scan.* assoc.*
-  2320 wext.c
-    10 wext.h
-   696 11d.c
-   105 11d.h
-  1212 scan.c
-    33 scan.h
-  1865 assoc.c
-    16 assoc.h
-  6257 tota
-
-So, we have 1855 + 6257 = 8112 deletions.
