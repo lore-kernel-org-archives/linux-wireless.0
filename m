@@ -1,32 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx71.mail.ru ([94.100.176.85]:57382 "EHLO mx71.mail.ru"
+Received: from cantor.suse.de ([195.135.220.2]:36221 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932098AbZJ3VtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 17:49:08 -0400
-Date: Sat, 31 Oct 2009 00:56:44 +0300
-From: Nikolai ZHUBR <zhubr@mail.ru>
-Message-ID: <7111590175.20091031005644@mail.ru>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re[2]: ieee80211_tx_status: headroom too small
-In-reply-To: <1256936341.3555.67.camel@johannes.local>
-References: <1094614475.20091030230028@mail.ru>
- <1256936341.3555.67.camel@johannes.local>
-Mime-Version: 1.0
+	id S1755752AbZJLXjQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 19:39:16 -0400
+Date: Mon, 12 Oct 2009 16:24:29 -0700
+From: Greg KH <gregkh@suse.de>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: James Bottomley <James.Bottomley@suse.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Tso <tytso@mit.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+Message-ID: <20091012232429.GA24254@suse.de>
+References: <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
+ <20091008210737.GD29181@mit.edu>
+ <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+ <20091009091538.GA4154@elte.hu>
+ <1255097287.2934.21.camel@localhost.localdomain>
+ <20091012130652.GB25464@elte.hu>
+ <1255357148.2850.91.camel@localhost.localdomain>
+ <20091012145453.GD4565@elte.hu>
+ <20091012150911.GB1656@suse.de>
+ <20091012154244.GA13323@elte.hu>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20091012154244.GA13323@elte.hu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Friday, October 30, 2009, 11:59:01 PM, Johannes Berg wrote:
->>
->> ieee80211_tx_status: headroom too small
+On Mon, Oct 12, 2009 at 05:42:44PM +0200, Ingo Molnar wrote:
+> Hm, i think i even gave drivers/staging/ its name?
 
-> What driver are you using?
+Yes you did, and I appreciate it :)
 
-Ah, sorry, forgot to mention. It is rt61pci (RaLink mini-PCI card)
+> > [...] It seems that I'm the only one that has the ability to drop 
+> > drivers out of the kernel tree, which is a funny situation :)
+> 
+> You are the only one who has the ability to send a warning shot towards 
+> drivers _without hurting users_, and by moving it into the focus of a 
+> team of cleanup oriented developers.
+> 
+> I think that's an important distinction ;-)
 
-Nikolai ZHUBR
+Good point.
 
-> johannes
+> > In thinking about this a lot more, I don't really mind it.  If people 
+> > want to push stuff out of "real" places in the kernel, into 
+> > drivers/staging/ and give the original authors and maintainers notice 
+> > about what is going on, _and_ provide a TODO file for what needs to 
+> > happen to get the code back into the main portion of the kernel tree, 
+> > then I'll be happy to help out with this and manage it.
+> > 
+> > I think a 6-9 month window (basically 3 kernel releases) should be 
+> > sufficient time to have a driver that has been in drivers/staging/ be 
+> > cleaned up enough to move back into the main kernel tree.  If not, it 
+> > could be easily dropped.
+> > 
+> > Any objections to this?
+> 
+> Sounds excellent to me!
 
+Great, I'll await the patches to move stuff to drivers/staging/ now.
 
+Wireless developers, warm up your editors :)
+
+thanks,
+
+greg k-h
