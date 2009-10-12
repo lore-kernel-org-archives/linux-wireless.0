@@ -1,65 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26672 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758197AbZJBUtu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Oct 2009 16:49:50 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Huaxu Wan <huaxu.wan@linux.intel.com>,
-	Guo Chaohong <chaohong.guo@linux.intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 06/13] iwlwifi: clear the translate table area
-Date: Fri,  2 Oct 2009 13:44:00 -0700
-Message-Id: <1254516247-4085-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
-References: <1254516247-4085-1-git-send-email-reinette.chatre@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56601 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757662AbZJLVUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:06 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [compat-stable] fix build with recent mainline kernel
+Date: Mon, 12 Oct 2009 23:19:10 +0200
+Message-Id: <1255382358-20760-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Huaxu Wan <huaxu.wan@linux.intel.com>
+DIV_ROUND_CLOSEST is needed by the b44 driver
+refresh patch for rfkill
 
-Driver should clear the translate table area after receiving "Alive"
-response from uCode. This patch corrects a mistake when doing this.
-
-Signed-off-by: Huaxu Wan <huaxu.wan@linux.intel.com>
-Signed-off-by: Guo Chaohong <chaohong.guo@linux.intel.com>
-Acked-by: Ben M Cahill  <ben.m.cahill@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ compat/compat-2.6.29.h         |    7 +++++++
+ compat/patches/03-rfkill.patch |   22 +++++++++++-----------
+ 2 files changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 4e492c1..0921e45 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -663,7 +663,8 @@ static int iwl4965_alive_notify(struct iwl_priv *priv)
- 		iwl_write_targ_mem(priv, a, 0);
- 	for (; a < priv->scd_base_addr + IWL49_SCD_TRANSLATE_TBL_OFFSET; a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
--	for (; a < sizeof(u16) * priv->hw_params.max_txq_num; a += 4)
-+	for (; a < priv->scd_base_addr +
-+	       IWL49_SCD_TRANSLATE_TBL_OFFSET_QUEUE(priv->hw_params.max_txq_num); a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
+diff --git a/compat/compat-2.6.29.h b/compat/compat-2.6.29.h
+index 8ea43cb..fc7d983 100644
+--- a/compat/compat-2.6.29.h
++++ b/compat/compat-2.6.29.h
+@@ -43,6 +43,13 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
  
- 	/* Tel 4965 where to find Tx byte count tables */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 660fd51..01d53eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -748,7 +748,8 @@ int iwl5000_alive_notify(struct iwl_priv *priv)
- 	for (; a < priv->scd_base_addr + IWL50_SCD_TRANSLATE_TBL_OFFSET;
- 		a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
--	for (; a < sizeof(u16) * priv->hw_params.max_txq_num; a += 4)
-+	for (; a < priv->scd_base_addr +
-+	       IWL50_SCD_TRANSLATE_TBL_OFFSET_QUEUE(priv->hw_params.max_txq_num); a += 4)
- 		iwl_write_targ_mem(priv, a, 0);
+ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
  
- 	iwl_write_prph(priv, IWL50_SCD_DRAM_BASE_ADDR,
++#define DIV_ROUND_CLOSEST(x, divisor)(			\
++{							\
++	typeof(divisor) __divisor = divisor;		\
++	(((x) + ((__divisor) / 2)) / (__divisor));	\
++}							\
++)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /*  LINUX_26_29_COMPAT_H */
+diff --git a/compat/patches/03-rfkill.patch b/compat/patches/03-rfkill.patch
+index dadcb9a..d7a7e7f 100644
+--- a/compat/patches/03-rfkill.patch
++++ b/compat/patches/03-rfkill.patch
+@@ -71,10 +71,10 @@ This would do the policing from within mac80211.
+  #include <linux/mutex.h>
+ -#include <linux/rfkill.h>
+ +#include <linux/rfkill_backport.h>
++ #include <linux/sched.h>
+  #include <linux/spinlock.h>
+  #include <linux/miscdevice.h>
+- #include <linux/wait.h>
+-@@ -61,7 +61,7 @@
++@@ -62,7 +62,7 @@
+  	const struct rfkill_ops	*ops;
+  	void			*data;
+  
+@@ -83,7 +83,7 @@ This would do the policing from within mac80211.
+  	struct led_trigger	led_trigger;
+  	const char		*ledtrigname;
+  #endif
+-@@ -122,7 +122,7 @@
++@@ -123,7 +123,7 @@
+  static bool rfkill_epo_lock_active;
+  
+  
+@@ -92,7 +92,7 @@ This would do the policing from within mac80211.
+  static void rfkill_led_trigger_event(struct rfkill *rfkill)
+  {
+  	struct led_trigger *trigger;
+-@@ -316,7 +316,7 @@
++@@ -317,7 +317,7 @@
+  	rfkill_event(rfkill);
+  }
+  
+@@ -101,7 +101,7 @@ This would do the policing from within mac80211.
+  static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+  
+  /**
+-@@ -776,7 +776,7 @@
++@@ -777,7 +777,7 @@
+  }
+  
+  static struct class rfkill_class = {
+@@ -110,7 +110,7 @@ This would do the policing from within mac80211.
+  	.dev_release	= rfkill_release,
+  	.dev_attrs	= rfkill_dev_attrs,
+  	.dev_uevent	= rfkill_dev_uevent,
+-@@ -922,7 +922,7 @@
++@@ -923,7 +923,7 @@
+  	if (!rfkill->persistent || rfkill_epo_lock_active) {
+  		schedule_work(&rfkill->sync_work);
+  	} else {
+@@ -119,7 +119,7 @@ This would do the policing from within mac80211.
+  		bool soft_blocked = !!(rfkill->state & RFKILL_BLOCK_SW);
+  
+  		if (!atomic_read(&rfkill_input_disabled))
+-@@ -1150,7 +1150,7 @@
++@@ -1151,7 +1151,7 @@
+  	list_for_each_entry_safe(ev, tmp, &data->events, list)
+  		kfree(ev);
+  
+@@ -128,7 +128,7 @@ This would do the policing from within mac80211.
+  	if (data->input_handler)
+  		if (atomic_dec_return(&rfkill_input_disabled) == 0)
+  			printk(KERN_DEBUG "rfkill: input handler enabled\n");
+-@@ -1161,7 +1161,7 @@
++@@ -1162,7 +1162,7 @@
+  	return 0;
+  }
+  
+@@ -137,7 +137,7 @@ This would do the policing from within mac80211.
+  static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
+  			     unsigned long arg)
+  {
+-@@ -1193,7 +1193,7 @@
++@@ -1194,7 +1194,7 @@
+  	.write		= rfkill_fop_write,
+  	.poll		= rfkill_fop_poll,
+  	.release	= rfkill_fop_release,
+@@ -146,7 +146,7 @@ This would do the policing from within mac80211.
+  	.unlocked_ioctl	= rfkill_fop_ioctl,
+  	.compat_ioctl	= rfkill_fop_ioctl,
+  #endif
+-@@ -1223,7 +1223,7 @@
++@@ -1224,7 +1224,7 @@
+  		goto out;
+  	}
+  
+@@ -155,7 +155,7 @@ This would do the policing from within mac80211.
+  	error = rfkill_handler_init();
+  	if (error) {
+  		misc_deregister(&rfkill_miscdev);
+-@@ -1239,7 +1239,7 @@
++@@ -1240,7 +1240,7 @@
+  
+  static void __exit rfkill_exit(void)
+  {
 -- 
-1.5.6.3
+1.6.2.1
 
