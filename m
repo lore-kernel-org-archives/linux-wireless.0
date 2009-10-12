@@ -1,51 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:63159 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932246AbZJ3PCl convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f208.google.com ([209.85.219.208]:37168 "EHLO
+	mail-ew0-f208.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757784AbZJLSrX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Oct 2009 11:02:41 -0400
-Received: by mail-iw0-f180.google.com with SMTP id 10so2176927iwn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Oct 2009 08:02:46 -0700 (PDT)
+	Mon, 12 Oct 2009 14:47:23 -0400
+Received: by ewy4 with SMTP id 4so2700881ewy.37
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Oct 2009 11:46:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1256896722.3555.39.camel@johannes.local>
-References: <1256896722.3555.39.camel@johannes.local>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 30 Oct 2009 08:02:26 -0700
-Message-ID: <43e72e890910300802v25ba6211s4e9302dd1968230e@mail.gmail.com>
-Subject: Re: [RFC] mac80211: make ieee80211_find_sta per virtual interface
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1df1788c0910121117g5ad66013g95e2231fd983bb23@mail.gmail.com>
+References: <1df1788c0910110455q570ca89fy6edbda3235a7a35e@mail.gmail.com>
+	 <1df1788c0910110513j6847bf97q71059fec4ae9722b@mail.gmail.com>
+	 <1df1788c0910110518l1d120983id2bf997d2446b4a7@mail.gmail.com>
+	 <20091012134325.GC27575@tuxdriver.com>
+	 <1df1788c0910121112v13b5f16fy5b3b79dcd86e37d5@mail.gmail.com>
+	 <1df1788c0910121117g5ad66013g95e2231fd983bb23@mail.gmail.com>
+Date: Mon, 12 Oct 2009 19:46:44 +0100
+Message-ID: <efe7343f0910121146t50a08a8fucd295e29419e2394@mail.gmail.com>
+Subject: Re: RaLink 148f:3070 not working since upgrade from 2.6.30 to 2.6.31
+From: Luis Correia <luis.f.correia@gmail.com>
+To: =?ISO-8859-1?Q?Br=E1ulio_B_O_Bhavamitra?= <brauliobo@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 30, 2009 at 2:58 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Since we have a TODO item to make all station
-> management dependent on virtual interfaces, I
-> figured I'd start with pushing such a change
-> to drivers before more drivers use this kind
-> of functionality...
->
-> The iwlwifi bits are easy, but I don't know
-> what to do about the ath9k bits. Any ideas?
+Hi,
 
-> --- wireless-testing.orig/drivers/net/wireless/ath/ath9k/xmit.c 2009-10-30 10:54:10.000000000 +0100
-> +++ wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c Â  Â  Â 2009-10-30 10:55:48.000000000 +0100
-> @@ -282,7 +282,7 @@ static void ath_tx_complete_aggr(struct
->
-> Â  Â  Â  Â rcu_read_lock();
->
-> - Â  Â  Â  sta = ieee80211_find_sta(sc->hw, hdr->addr1);
-> + Â  Â  Â  sta = ieee80211_find_sta(/*??????*/, hdr->addr1);
+2009/10/12 Bráulio B O Bhavamitra <brauliobo@gmail.com>:
+> 2009/10/12 Bráulio B O Bhavamitra <brauliobo@gmail.com>
+>>
+>> 2009/10/12 John W. Linville <linville@tuxdriver.com>
+>>>
+>>> On Sun, Oct 11, 2009 at 09:18:24AM -0300, Bráulio B O Bhavamitra wrote:
+>>> > Also in Ubuntu Karmic Beta (where the firmware is present) it doesn't
+>>> > work (radio not working, can't find any access point)
+>>> >
+>>> > 2009/10/11 Bráulio B O Bhavamitra <brauliobo@gmail.com>:
+>>> > > Since the upgrade from kernel 2.6.30 to 2.6.31 on archlinux the usb
+>>> > > wireless from Ralink doesn't work anymore.
+>>> > > Please ask for more info if necessary.
+>>>
+>>> This commit is post-2.6.30 (and pre-2.6.31):
+>>>
+>>> commit d53d9e67b55f6a9fc3f836c5c392eb41ce5676f4
+>>> Author: Ivo van Doorn <IvDoorn@gmail.com>
+>>> Date:   Sun Apr 26 15:47:48 2009 +0200
+>>>
+>>>    rt2x00: Implement support for rt2800usb
+>>>
+>>>    Add support for the rt2800usb chipset.
+>>>
+>>>    Current problems:
+>>>     * Cannot scan 11n AP's
+>>>     * No TX during first minute after association
+>>>     * Broken Hardware encryption
+>>>
+>>>    Includes various patches from Mattias, Felix, Xose and Axel.
+>>>
+>>>    Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+>>>    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>    Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>>>    Signed-off-by: Axel Kollhofer <rain_maker@root-forum.org>
+>>>    Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+>>>    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>>
+>>> That is the first time 148f:3070 is supported by the rt2x00 drivers.
+>>> I have no idea what you were using up to 2.6.30...
+>>
+>> Ow, this is really strange.
+>> I was using the ArchLinux's 2.6.30.6 kernel which is an almost vanilla kernel.
+>> Very strange, I remember seeing it loading the <something>2870sta module and worked perfectly.
 
-Not sure but I just wanted to point out the that the sc->hw above here
-was wrong anyway for virtual wiphy support, this should instead
-probably look for the aphy with ath_get_virt_hw() as is done with
-ath_rx_prepare().
+That's the driver in staging, known as crap.
 
-  Luis
+It has nothing to do with the rt2x00 project.
+
+
+
+Luis Correia
+rt2x00 project admin
