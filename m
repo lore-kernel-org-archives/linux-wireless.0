@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f218.google.com ([209.85.220.218]:50773 "EHLO
-	mail-fx0-f218.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734AbZJUMoA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Oct 2009 08:44:00 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Greg KH <gregkh@suse.de>
-Subject: [PATCH] Staging: update TODO files
-Date: Wed, 21 Oct 2009 14:42:11 +0200
-Cc: "linux-kernel" <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <200910211442.11785.bzolnier@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47121 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758299AbZJLVUn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:43 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/9] [compat-2.6] Fix build with kernel < 2.6.27
+Date: Mon, 12 Oct 2009 23:19:15 +0200
+Message-Id: <1255382358-20760-8-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] Staging: update TODO files
+iw_handler.h have changed in kernel 2.6.27.
+For older kernel we need some extra backport code.
 
-Remove my mail address.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/staging/rtl8187se/TODO |    3 +--
- drivers/staging/rtl8192su/TODO |    3 +--
- drivers/staging/vt6655/TODO    |    5 ++---
- drivers/staging/vt6656/TODO    |    5 ++---
- 4 files changed, 6 insertions(+), 10 deletions(-)
+ compat/compat-2.6.27.h |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-Index: b/drivers/staging/rtl8187se/TODO
-===================================================================
---- a/drivers/staging/rtl8187se/TODO
-+++ b/drivers/staging/rtl8187se/TODO
-@@ -11,5 +11,4 @@ TODO:
- - sparse fixes
- - integrate with drivers/net/wireless/rtl818x
+diff --git a/compat/compat-2.6.27.h b/compat/compat-2.6.27.h
+index 2543482..8cc6c22 100644
+--- a/compat/compat-2.6.27.h
++++ b/compat/compat-2.6.27.h
+@@ -163,6 +163,26 @@ static inline void list_splice_tail_init(struct list_head *list,
+ extern unsigned int mmc_align_data_size(struct mmc_card *, unsigned int);
+ extern unsigned int sdio_align_size(struct sdio_func *func, unsigned int sz);
  
--Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
--Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
-+Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
-Index: b/drivers/staging/rtl8192su/TODO
-===================================================================
---- a/drivers/staging/rtl8192su/TODO
-+++ b/drivers/staging/rtl8192su/TODO
-@@ -14,5 +14,4 @@ TODO:
- - sparse fixes
- - integrate with drivers/net/wireless/rtl818x
++/** Include iw_handler.h before we redefine some methods **/
++#include <net/iw_handler.h>
++
++#define iwe_stream_add_value(info, event, value, ends, iwe, event_len) iwe_stream_add_value(event, value, ends, iwe, event_len)
++#define iwe_stream_add_point(info, stream, ends, iwe, extra) iwe_stream_add_point(stream, ends, iwe, extra)
++#define iwe_stream_add_event(info, stream, ends, iwe, event_len) iwe_stream_add_event(stream, ends, iwe, event_len)
++
++/* Flags available in struct iw_request_info */
++#define IW_REQUEST_FLAG_COMPAT	0x0001	/* Compat ioctl call */
++
++static inline int iwe_stream_lcp_len(struct iw_request_info *info)
++{
++#ifdef CONFIG_COMPAT
++	if (info->flags & IW_REQUEST_FLAG_COMPAT)
++		return IW_EV_COMPAT_LCP_LEN;
++#endif
++	return IW_EV_LCP_LEN;
++}
++/** source: include/net/iw_handler.h **/
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)) */
  
--Please send any patches to Greg Kroah-Hartman <greg@kroah.com> and
--Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>.
-+Please send any patches to Greg Kroah-Hartman <greg@kroah.com>.
-Index: b/drivers/staging/vt6655/TODO
-===================================================================
---- a/drivers/staging/vt6655/TODO
-+++ b/drivers/staging/vt6655/TODO
-@@ -16,6 +16,5 @@ TODO:
- - sparse fixes
- - integrate with drivers/net/wireless
- 
--Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
--Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
--<bzolnier@gmail.com>.
-+Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
-+and Forest Bond <forest@alittletooquiet.net>.
-Index: b/drivers/staging/vt6656/TODO
-===================================================================
---- a/drivers/staging/vt6656/TODO
-+++ b/drivers/staging/vt6656/TODO
-@@ -15,6 +15,5 @@ TODO:
- - sparse fixes
- - integrate with drivers/net/wireless
- 
--Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
--Forest Bond <forest@alittletooquiet.net> and Bartlomiej Zolnierkiewicz
--<bzolnier@gmail.com>.
-+Please send any patches to Greg Kroah-Hartman <greg@kroah.com>
-+and Forest Bond <forest@alittletooquiet.net>.
+ #endif /* LINUX_26_27_COMPAT_H */
+-- 
+1.6.2.1
+
