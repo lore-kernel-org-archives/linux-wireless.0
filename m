@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36166 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933760AbZJMJuD (ORCPT
+Received: from g6t0185.atlanta.hp.com ([15.193.32.62]:3182 "EHLO
+	g6t0185.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755400AbZJLT70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Oct 2009 05:50:03 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 21/22] wl1271: make sure PS is disabled in PLT
-Date: Tue, 13 Oct 2009 12:47:58 +0300
-Message-Id: <1255427279-1224-22-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
-References: <1255427279-1224-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 12 Oct 2009 15:59:26 -0400
+Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
+From: Andrew Patterson <andrew.patterson@hp.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Natalie Protasevich <protasnb@gmail.com>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+In-Reply-To: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
+References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
+Content-Type: text/plain
+Date: Mon, 12 Oct 2009 13:58:48 -0600
+Message-Id: <1255377529.9544.63.camel@bluto.andrew>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We cannot be in PS mode when running PLT tests, so we need to make sure we're
-in active mode.  Also, we need to clear up the rx_counter when we stop PLT,
-otherwise it could cause problems when entering PLT again.
+On Mon, 2009-10-12 at 00:41 +0200, Rafael J. Wysocki wrote:
+> 
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14309
+> Subject		: MCA on hp rx8640
+> Submitter	: Andrew Patterson <andrew.patterson@hp.com>
+> Date		: 2009-09-29 17:20 (13 days old)
+> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=db8be50c4307dac2b37305fc59c8dc0f978d09ea
+> References	: http://www.spinics.net/lists/linux-usb/msg22799.html
+> 
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Linus fixed this one with d93a8f829fe1d2f3002f2c6ddb553d12db420412.  It
+also looks like a duplicate of
+http://bugzilla.kernel.org/show_bug.cgi?id=14374
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index dfa08a1..7b8d279 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -774,6 +774,11 @@ int wl1271_plt_start(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out_irq_disable;
- 
-+	/* Make sure power saving is disabled */
-+	ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+	if (ret < 0)
-+		goto out_irq_disable;
-+
- 	goto out;
- 
- out_irq_disable:
-@@ -807,6 +812,7 @@ int wl1271_plt_stop(struct wl1271 *wl)
- 	wl1271_power_off(wl);
- 
- 	wl->state = WL1271_STATE_OFF;
-+	wl->rx_counter = 0;
- 
- out:
- 	mutex_unlock(&wl->mutex);
+Thanks,
+
+Andrew
 -- 
-1.5.6.5
+Andrew Patterson
+Hewlett-Packard
 
