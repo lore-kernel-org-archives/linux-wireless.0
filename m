@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f211.google.com ([209.85.219.211]:63475 "EHLO
-	mail-ew0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932600AbZJAOcn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40747 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbZJLNqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Oct 2009 10:32:43 -0400
-Received: by ewy7 with SMTP id 7so237690ewy.17
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Oct 2009 07:32:46 -0700 (PDT)
+	Mon, 12 Oct 2009 09:46:46 -0400
+Date: Mon, 12 Oct 2009 09:43:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Br=E1ulio?= B O Bhavamitra <brauliobo@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RaLink 148f:3070 not working since upgrade from 2.6.30 to
+	2.6.31
+Message-ID: <20091012134325.GC27575@tuxdriver.com>
+References: <1df1788c0910110455q570ca89fy6edbda3235a7a35e@mail.gmail.com> <1df1788c0910110513j6847bf97q71059fec4ae9722b@mail.gmail.com> <1df1788c0910110518l1d120983id2bf997d2446b4a7@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1254341787.3959.11.camel@johannes.local>
-References: <57b62e7d0909291754x352ae254sa33ee7efb430d497@mail.gmail.com>
-	 <1254341787.3959.11.camel@johannes.local>
-Date: Thu, 1 Oct 2009 16:32:46 +0200
-Message-ID: <57b62e7d0910010732m38ab57k916662f9047fcc91@mail.gmail.com>
-Subject: Re: VLAN traffic appearing on the wrong iface
-From: =?UTF-8?B?Qmxhxb4gQmHEjW5paw==?= <bacnik@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1df1788c0910110518l1d120983id2bf997d2446b4a7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 30, 2009 at 10:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> I can't reproduce that oops, but we have a fix to the issue which I'll
-> send separately.
+On Sun, Oct 11, 2009 at 09:18:24AM -0300, Bráulio B O Bhavamitra wrote:
+> Also in Ubuntu Karmic Beta (where the firmware is present) it doesn't
+> work (radio not working, can't find any access point)
+> 
+> 2009/10/11 Bráulio B O Bhavamitra <brauliobo@gmail.com>:
+> > Since the upgrade from kernel 2.6.30 to 2.6.31 on archlinux the usb
+> > wireless from Ralink doesn't work anymore.
+> > Please ask for more info if necessary.
 
-Thanks for patches. However, I've investigated that oops and I don't really
-understand it. Problem seems to be in __sta_info_unlink where code checks
-if vif is a mesh. Since this is a vlan iface, sdata used actually belongs to ap
-iface due to previous if but that really shouldn't be a problem since ap's
-sdata should have vif->type as well, right?
+This commit is post-2.6.30 (and pre-2.6.31):
 
-While testing I've found out that sdata_of_ap->vif points to funny addresses
-like 248 and such. So I've changed the code and that seems to have fixed
-oops. I think this is now the right behaviour, anyway.
+commit d53d9e67b55f6a9fc3f836c5c392eb41ce5676f4
+Author: Ivo van Doorn <IvDoorn@gmail.com>
+Date:   Sun Apr 26 15:47:48 2009 +0200
 
---- a/net/mac80211/sta_info.c	2009-10-01 16:27:31.000000000 +0200
-+++ b/net/mac80211/sta_info.c	2009-10-01 16:24:34.000000000 +0200
-@@ -498,7 +498,7 @@ static void __sta_info_unlink(struct sta
- 			       &(*sta)->sta);
- 	}
+    rt2x00: Implement support for rt2800usb
+    
+    Add support for the rt2800usb chipset.
+    
+    Current problems:
+     * Cannot scan 11n AP's
+     * No TX during first minute after association
+     * Broken Hardware encryption
+    
+    Includes various patches from Mattias, Felix, Xose and Axel.
+    
+    Signed-off-by: Mattias Nissler <mattias.nissler@gmx.de>
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+    Signed-off-by: Axel Kollhofer <rain_maker@root-forum.org>
+    Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
--	if (ieee80211_vif_is_mesh(&(*sta)->sdata->vif)) {
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		mesh_accept_plinks_update(sdata);
- #ifdef CONFIG_MAC80211_MESH
- 		del_timer(&(*sta)->plink_timer);
+That is the first time 148f:3070 is supported by the rt2x00 drivers.
+I have no idea what you were using up to 2.6.30...
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
