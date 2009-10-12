@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54933 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753762AbZJZUQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Oct 2009 16:16:45 -0400
-Subject: Re: [PATCH 17/19] [RFC, v2] libertas: Kconfig entry for
- libertas+cfg80211
-From: Dan Williams <dcbw@redhat.com>
-To: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <200910260904.12417.hs4233@mail.mn-solutions.de>
-References: <20091022133043.185554096@mail.mn-solutions.de>
-	 <1256315415.2164.46.camel@localhost.localdomain>
-	 <20091025033853.GA25873@infradead.org>
-	 <200910260904.12417.hs4233@mail.mn-solutions.de>
-Content-Type: text/plain
-Date: Mon, 26 Oct 2009 13:16:35 -0700
-Message-Id: <1256588195.2110.32.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56583 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757642AbZJLVUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Oct 2009 17:20:01 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	larry.finger@gmail.com
+Subject: [PATCH 1/9] [compat-2.6 and compat-stable] Export round_jiffies_up again.
+Date: Mon, 12 Oct 2009 23:19:09 +0200
+Message-Id: <1255382358-20760-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
+References: <1255382358-20760-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2009-10-26 at 09:04 +0100, Holger Schurig wrote:
-> > How much does mesh actually get used?  AFAICS it's a
-> > OLPC-specific one off.
-> 
-> A good question, I don't know no-one that uses mesh outside of 
-> OLPC.
+The 2.6.27 mainline kernel does not export round_jiffies_up. It looks
+like the openSuse kernel 2.6.27 does export this symbol. Rename the
+compat symbol to not conflict with the openSuse kernel.
 
-Nobody uses the custom libertas mesh stuff outside OLPC.  I tend to look
-at it as just not being a dick, subject to the limitations of testing
-ability.  Obviously OLPC are the only ones who can do in-depth testing
-of mesh-related changes since those of us outside OLPC only have a few
-OLPCs/dongles to mesh together.
+CC: larry.finger@gmail.com
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ compat/compat-2.6.28.c |    2 --
+ compat/compat-2.6.28.h |    5 +++++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-> 
-> > So unless OLPC people come up and fix it why do people even
-> > bother with it? 
-> 
-> In some way the OLPC people won't be bothered, they don't
-> follow linux-git or linux-wireless, they are stuck to some
-> old kernel (2.6.25 AFAIK). So they don't even notice :-)
-
-Actually untrue; the *shipping* products are still at 2.6.25, but there
-are fairly recent kernel trees, especially for the G1.5 machines (which
-admittedly don't have the mesh capability anyway, but they do use the
-Libertas sd8686).
-
-> However, they need MESH, so if I now rip MESH out completely
-> just because I change some configuration API, that would
-> bring more burden to them.
-
-Yeah, I don't think it's normal practice in kernel drivers to just rip
-something out that we know people are using, we at least put in a modest
-amount of effort to not break it completely.  At least basic sanity
-testing of mesh start/stop, and if possible, meshing two machines
-together with static IP and making sure they can ping each other.  More
-extensive testing needs to be done by the organization set up for that.
-
-Dan
-
+diff --git a/compat/compat-2.6.28.c b/compat/compat-2.6.28.c
+index 613b009..33871a2 100644
+--- a/compat/compat-2.6.28.c
++++ b/compat/compat-2.6.28.c
+@@ -260,7 +260,6 @@ static unsigned long round_jiffies_common(unsigned long j, int cpu,
+ 	return j;
+ }
+ 
+-#if 0
+ /**
+  * round_jiffies_up - function to round jiffies up to a full second
+  * @j: the time in (absolute) jiffies that should be rounded
+@@ -275,6 +274,5 @@ unsigned long round_jiffies_up(unsigned long j)
+ 	return round_jiffies_common(j, raw_smp_processor_id(), true);
+ }
+ EXPORT_SYMBOL_GPL(round_jiffies_up);
+-#endif
+ 
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
+diff --git a/compat/compat-2.6.28.h b/compat/compat-2.6.28.h
+index 4e5a2ef..90d080c 100644
+--- a/compat/compat-2.6.28.h
++++ b/compat/compat-2.6.28.h
+@@ -195,6 +195,11 @@ static inline void tracepoint_update_probe_range(struct tracepoint *begin,
+ 
+ #endif
+ 
++/* openSuse includes round_jiffies_up in it's kernel 2.6.27.
++ * This is needed to prevent conflicts with the openSuse definition.
++ */
++#define round_jiffies_up backport_round_jiffies_up
++
+ unsigned long round_jiffies_up(unsigned long j);
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
+-- 
+1.6.2.1
 
