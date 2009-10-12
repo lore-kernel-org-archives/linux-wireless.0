@@ -1,83 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xc.sipsolutions.net ([83.246.72.84]:55327 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754829AbZJKKiV (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37400 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754002AbZJLGzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Oct 2009 06:38:21 -0400
-Subject: Re: NOHZ: local_softirq_pending 08
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Buesch <mb@bu3sch.de>
-Cc: Dave Young <hidave.darkstar@gmail.com>,
-	linux-kernel@vger.kernel.org, tglx@linutronix.de,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-In-Reply-To: <200910111217.31883.mb@bu3sch.de>
-References: <20091011095217.GA2200@darkstar>
-	 <1255255735.4095.53.camel@johannes.local> <200910111217.31883.mb@bu3sch.de>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-CGfYXcgFHCLBiKqwWH+O"
-Date: Sun, 11 Oct 2009 12:37:42 +0200
-Message-Id: <1255257462.4095.79.camel@johannes.local>
-Mime-Version: 1.0
+	Mon, 12 Oct 2009 02:55:51 -0400
+Date: Mon, 12 Oct 2009 09:55:07 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: deauthentication and disassociation nl80211 commands
+Message-ID: <20091012065507.GB25578@jm.kir.nu>
+References: <1254708707.24430.68.camel@maxim-laptop> <1255191866.4095.32.camel@johannes.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1255191866.4095.32.camel@johannes.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Oct 10, 2009 at 06:24:26PM +0200, Johannes Berg wrote:
+> On the other hand, I think Jouni's argument is that you should be able
+> to authenticate (force an auth frame exchange) even while authenticated.
+> I don't really disagree with that all that much, but I'm not sure how to
+> cleanly fit it in. mac80211 would have to reset the auth state without
+> sending a deauth.
 
---=-CGfYXcgFHCLBiKqwWH+O
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Yes, this is exactly what I would like to see happening when using
+mac80211. For now, I think we can work around the issue in
+wpa_supplicant, but eventually, this change in mac80211 would allow the
+code in wpa_supplicant to be cleaned up and the need for an extra
+deauthentication frame could be removed.
 
-On Sun, 2009-10-11 at 12:17 +0200, Michael Buesch wrote:
-
-> Ehm, no. That's not exactly true.
-> We call the non-_irqsafe functions, which by definition are designed to
-> run in non-irq (soft or hard) context. At least that's how I understand t=
-he
-> documentation, last time I read it.
-
-So maybe the documentation is not entirely accurate. Such happens. From
-this and previous threads tt's pretty obvious that these functions
-cannot be called with softirqs enabled. And I've also stated before that
-I do not believe that we should call them with softirqs enabled without
-auditing the code for locking, which historically has been a weak point
-of mac80211.
-
-> Why don't you simply do local_bh_disable() in those functions, if they
-> require bh disabled, instead of depending on the driver doing it?
->=20
-> > FWIW, I believe the bug to be in b43 and wl12x1, and not as Michael
-> > thinks in the stack.
->=20
-> If mac80211 requires BHs disabled, it should do this.
-
-I don't believe adding that into mac80211, even though it nests, is a
-good idea for the case of many drivers where mac80211 and/or the driver
-knows. It's pretty damn trivial to add two lines of code to the driver,
-instead of penalising every other driver. The typical kernel style is
-making things provide the required context, not a function take any
-possible context.
-
-johannes
-
---=-CGfYXcgFHCLBiKqwWH+O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABAgAGBQJK0bVzAAoJEODzc/N7+QmaBwkP/0JMM9TAI2NMmSgalTvIbXS1
-t45wqJTNuzvyGuC6YeFwGkgV9jFMbjdCOLT2aQSwqa0Mk1sj/qvv3mLQldndAl3e
-ekYrMEDAARuxZfx2RJ5OVgd2MgjkZzPwjzFela7HlA/PXyGFcOF/wogDsAdOcOwY
-gECGri56/4Trn81AKeXkIT+QsekODB4oM6UnBtIrHl/sKjpi0Bot+6HEdjcaW6l2
-vTPp0uRMw59qzno6cYOtXdXRvbe1xdDK1KjIHP+vHuqLn2KKzPaFJNOeFhVS/uZC
-WA3inwvarnXAzufZi3mX9kJbgd1XWLU6rEuZnwYAjwB61z0Qr2TacYtheRh1soWS
-gygJ60/+fgOwjSuCGxeBC7GBXHbWvPWa7ArcHOzN+4wgCDljjkEAF8UWPi3tNGsF
-lwxbaUbMt1bu+w9b+TizAPfoDGCHGBmxHScfeDHVNBoFZxhrgtHFxjr7S3h+H2Iu
-sXt9yyaOwas3IG0urli/W962D62FdcnkauI98TcZx6hzWMtRwHD02rtkh5Mc8eeV
-6a6/oRO6n6pRfKG0nJkoe+mH/8QyvDpYiO0Kj5/JxFJDhFOrKHzvnfVbZH83cyfB
-15tCLqLkai428vd/ubBEYoqczMRwh8/798Y4x+GP+/MtenJpx5V3B000UDE0qvBd
-mYCHAqNIy24CfzGWApmt
-=1qH7
------END PGP SIGNATURE-----
-
---=-CGfYXcgFHCLBiKqwWH+O--
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
